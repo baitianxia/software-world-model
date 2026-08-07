@@ -25,5 +25,6 @@ demo/.swm-demo/
 var/
 
 # External validation fixtures are independent repositories and must not become
-# gitlinks or import their histories into this repository.
-validation-projects/
+# gitlinks or import their histories into this repository. Keep only setup docs.
+validation-projects/*
+!validation-projects/README.md

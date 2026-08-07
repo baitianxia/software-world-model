@@ -1,0 +1,98 @@
+schema_version: 1
+iteration:
+  id: ITER-001
+  status: completed
+  outcome_scope: local-experience
+  production_activation: not-executed
+  migration: reconstructed-from-existing-iteration-records
+
+history:
+  pre_refactor_git_baseline: 476517b5baf62abcc5a6ddda30b33335d262a8f3
+  original_design_baseline: SWM-DBM-ITER-001-REV-002
+  original_implementation_baseline: SWM-IBM-ITER-001-REV-002
+  note: The original implementation baseline predates repository Git initialization.
+
+accepted_strategy_subject:
+  repository_identity_at_run: unavailable-not-versioned
+  post_hoc_repository_capture: 476517b5baf62abcc5a6ddda30b33335d262a8f3
+  capture_note: The commit freezes the repository immediately before document refactoring; it was not an input to the historical runs and is not asserted to be their exact whole-repository identity.
+  strategy_id: reviewed-model-software-knowledge-task
+  strategy_version: 1.38.0
+  strategy_implementation_digest: sha256:8973e07290336c5443f00a93f00ac27401423fbf2e7e02b17c2b250b3159f301
+
+current_system_mapping:
+  note: These IDs map the historical implementation to the post-migration current system documents; they were not the original files.
+  ids:
+    - SYS-ARCH-INVARIANTS
+    - SYS-CONTRACT-SOURCE-DATA-SOURCE
+    - SYS-CONTRACT-SOURCE-ARTIFACT
+    - SYS-CONTRACT-KNOWLEDGE-ADMISSION
+    - SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+    - SYS-CONTRACT-APPLICATION-AGENTIC-TASK
+    - SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-CONTRACT-AI-CAPABILITY-EVALUATION
+
+provider:
+  type: VOLCENGINE_ARK
+  protocol: OPENAI_COMPATIBLE_CHAT_COMPLETIONS
+  adapter: openai-chat-completions-no-tools@8
+  request_model_ref: glm-5-2-260617
+  observed_model_identity: glm-5.2
+  secret_reference: env:ARK_API_KEY
+  non_sensitive_config_digest: sha256:420f553a3ce0075818550e08cb1351ce69eaf9871c5a0257aecf88b7b32b88fd
+
+evidence:
+  contract_conformance:
+    run_id: ccrun_66bbedf18020445c9df5fac11526fda1
+    digest: sha256:dee384a90d89193952a83959ba9e9fed9e07faa2edbfabf13b094f47d740668f
+    adapter_implementation_digest: sha256:b0eed0252ab7bfd723bf9cb06b0e48d3ccd2e1c6f6d51ee2c26cdc027509d774
+    fixture_id: CC-ARK-CHAT-NO-TOOLS-001
+    fixture_version: 1.6.0
+    completed_at: "2026-08-06T21:04:18.073701Z"
+    valid_until: "2026-09-05T21:04:18.073701Z"
+  general_capability:
+    status: pass
+    applicability: accepted-implementation-only
+    evaluation_id: general-software-knowledge-task
+    evaluation_version: 1.0.0
+    definition_digest: sha256:6c0c74f281c3eb5ee11abc406408e3e68f345451c80e5ad2f71159598f8c494e
+    run_id: evaluation_run_569284c56c784beaaea82b75045788a5
+    result_id: evaluation_result_2d7ecbb9893c42fba3acdb547a9a866b
+    result_digest: sha256:9f752f8c6f4fa5249f8f918f0013251e50b235a65ed4ca2cdd2fe6cf5d361206
+    completed_at: "2026-08-07T03:14:25.299718Z"
+    qualification_digest: sha256:9ad50c7a91a8a2726bc055d37c0f978cdeb6307f08e5d4af42cdc283a06dbf94
+    qualification_document_digest: sha256:0ca8c926f21e4ee0bb59349e8f2a90cf5910862ea6b6a213f72aeb63ff4b1800
+    validity_ref: evaluation_validity_61ec91e42d3d461c8b48d771344a7205@1
+    validity_decision_digest: sha256:d2e011779c0f3130efbb1c2ff4cd980c6a0b4fcf53e5a831cb6146bb47c85231
+    valid_until: "2026-08-14T03:14:25.299718Z"
+  product_validation:
+    status: pass
+    applicability: accepted-implementation-only
+    record_id: product_validation_158ce6cc0a4398e932c497a7fea34110
+    digest: sha256:67b6a7e6db3bbeded2707d00f4e59b013455d93366badcf026948b74197d00f9
+    holdout_suite_ref: product-unseen-repositories-2026-08-07@2.0.1
+    holdout_suite_digest: sha256:b4821e583a038bbeb2bb08006f1094c552427d53927ff762b780dcccbadb2fc7
+    qualification_digest: sha256:9ad50c7a91a8a2726bc055d37c0f978cdeb6307f08e5d4af42cdc283a06dbf94
+    recorded_at: "2026-08-07T03:40:46.485258Z"
+    valid_until: "2026-08-14T03:40:46.485258Z"
+
+  local_browser_activation:
+    decision_id: activation_decision_08f2f2715a1a4a94bcbe9a2f124e120c
+    decision_digest: sha256:0251c27f992ff828375b91e61dbb5220128f935504b9fff42e514d06ff01d9bf
+    decided_at: "2026-08-07T04:14:32.872958Z"
+    activation_scope: environment=local-browser
+    qualification_digest: sha256:9ad50c7a91a8a2726bc055d37c0f978cdeb6307f08e5d4af42cdc283a06dbf94
+    repository_commit_binding: absent
+    browser_product_attestation_digest: sha256:f45028272fd29eefe63d7fb04e6781e6d2477249671412132941d27b70aa0de9
+    browser_product_attestation_recorded_at: "2026-08-07T04:14:27.424071Z"
+    browser_product_attestation_valid_until: "2026-08-14T04:14:27.424071Z"
+    limitation: The browser database reissued the same logical product attestation ID with a new issuance time and digest; the activation decision does not bind a Git commit or this exact product attestation digest.
+
+runtime_evidence:
+  repository_status_at_evidence_time: not-versioned
+  current_repository_status: versioned-after-evidence
+  location: var/
+  note: Versioned result documents are summaries and attestations; raw local runtime databases and result files were intentionally excluded from Git.

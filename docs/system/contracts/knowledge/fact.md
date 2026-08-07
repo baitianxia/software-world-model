@@ -1,0 +1,37 @@
+---
+id: SYS-CONTRACT-KNOWLEDGE-FACT
+kind: system-contract
+status: current
+authority: normative
+owners: [knowledge]
+depends_on: [SYS-CONTRACT-KNOWLEDGE-EVIDENCE, SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON]
+derived_from: [DD-KNW-FACT]
+code: [src/software_world_model/knowledge_engine/formal.py]
+tests: [tests/test_formal_knowledge.py]
+---
+
+# Fact
+
+## Purpose and scope
+
+Fact 是在明确 Context 下由直接 Evidence 完整复核的命题，不是脱离版本和观察方式的绝对真相。Fact 与 Inference 按支持关系区分，而不是按生成者或模型是否参与区分。
+
+## Owner and public contract
+
+Knowledge Engine 拥有 Fact Root、Candidate、Support 与 Snapshot State。调用方只能使用已发布 ASSERTED Fact；Candidate 不得进入生产读取。
+
+## Invariants
+
+1. Observation modality 是 Proposition 的组成部分；所有用户可见语义必须显式进入命题，不能藏在标签或 Evidence 摘要中。
+2. 命题的每条实质语义路径必须由合法 Support Set 覆盖；相关 Evidence 不等于蕴含。
+3. Evidence Link 明确 relation 与 coverage；多 Evidence 只按声明的 composition 共同支持。
+4. Context 不得由 Evidence 或答案扩张；跨 Context 使用需要有效 Assessment。
+5. 互斥观察可以同时存在；是否构成 Conflict 由受控 Inference 单独证明。
+6. Root/State 分离，Fact 属于一个 Scope 并固定 exact upstream；历史 Snapshot 不因新观察改写。
+7. Candidate、Verifier Proposal 和未发布 State 都不是正式知识。
+8. 直接 Evidence 与 Fact 属于同一 owning Scope；跨 Scope 只能使用 exact upstream Entity / formal references，并登记对应 Snapshot dependency。
+9. Candidate 只能引用已发布 Entity，或同一原子 Closure 内等待最终替换的 Entity local reference；裸 ID、任意 Candidate 和动态 `CURRENT` 不构成合法引用。
+
+## Failure and implementation boundary
+
+Support 不完整、Evidence 越界、modality 缺失、Context 漂移或 Candidate 重复/冲突均保持非正式。Fact Type、Proposition Schema、canonical key、composition 与状态由代码和测试定义。

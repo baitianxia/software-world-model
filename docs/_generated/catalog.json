@@ -1,0 +1,1259 @@
+[
+  {
+    "id": "ITER-001-DECISIONS",
+    "kind": "project-decision-index",
+    "status": "historical",
+    "authority": "historical-project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/decisions/README.md"
+  },
+  {
+    "id": "ITER-001-DESIGN-INDEX",
+    "kind": "development-design-index",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/development-design/README.md"
+  },
+  {
+    "id": "ITER-001-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "not-reconstructed",
+    "authority": "historical-project",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/findings/README.md"
+  },
+  {
+    "id": "ITER-001-INDEX",
+    "kind": "iteration-index",
+    "status": "completed",
+    "authority": "historical-project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/README.md"
+  },
+  {
+    "id": "ITER-001-PDR-001",
+    "kind": "project-decision",
+    "status": "amended",
+    "authority": "historical-project",
+    "owners": [
+      "project",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/decisions/PDR-001-readiness-hold.md"
+  },
+  {
+    "id": "ITER-001-PDR-002",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "historical-project",
+    "owners": [
+      "project",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/decisions/PDR-002-offline-development-reentry.md"
+  },
+  {
+    "id": "ITER-001-PROGRESS",
+    "kind": "iteration-progress",
+    "status": "completed",
+    "authority": "historical-project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/progress.md"
+  },
+  {
+    "id": "ITER-001-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "completed",
+    "authority": "historical-project",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/proposal.md"
+  },
+  {
+    "id": "ITER-001-RESULT-ACCEPTANCE",
+    "kind": "iteration-acceptance",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/acceptance.md"
+  },
+  {
+    "id": "ITER-001-RESULT-ARCHITECTURE",
+    "kind": "iteration-result",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/architecture-validation.md"
+  },
+  {
+    "id": "ITER-001-RESULT-CAPABILITY",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/capability-evaluation.md"
+  },
+  {
+    "id": "ITER-001-RESULT-CONFORMANCE",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/contract-conformance.md"
+  },
+  {
+    "id": "ITER-001-RESULT-IMPLEMENTATION",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/implementation.md"
+  },
+  {
+    "id": "ITER-001-RESULT-PRODUCT",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/product-validation.md"
+  },
+  {
+    "id": "ITER-001-RESULTS-INDEX",
+    "kind": "iteration-result-index",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/results/README.md"
+  },
+  {
+    "id": "ITER-001-SLICE-001",
+    "kind": "development-slice",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "source",
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-001-source-configuration.md"
+  },
+  {
+    "id": "ITER-001-SLICE-002",
+    "kind": "development-slice",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "knowledge",
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-002-formal-knowledge-path.md"
+  },
+  {
+    "id": "ITER-001-SLICE-003",
+    "kind": "development-slice",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "application",
+      "interface"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-003-agentic-answer.md"
+  },
+  {
+    "id": "ITER-001-SLICE-004",
+    "kind": "development-slice",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-004-live-model-validation.md"
+  },
+  {
+    "id": "ITER-001-SLICE-005",
+    "kind": "development-slice",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "product",
+      "quality",
+      "interface"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-005-product-acceptance.md"
+  },
+  {
+    "id": "ITER-001-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/verification-matrix.md"
+  },
+  {
+    "id": "ITER-001-WORK-PLAN",
+    "kind": "iteration-work-plan",
+    "status": "completed",
+    "authority": "historical-project",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-001/work-plan.md"
+  },
+  {
+    "id": "ITERATION-INDEX",
+    "kind": "iteration-index",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/README.md"
+  },
+  {
+    "id": "PROJECT-CURRENT",
+    "kind": "project-current",
+    "status": "current",
+    "authority": "current-development",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/current.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-BOUNDARY",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "architecture",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/system-project-boundary.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "architecture",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/development-design-policy.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-DOCUMENTATION",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "documentation",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/documentation-policy.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-GLOSSARY",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "documentation"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/glossary.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/implementation-feedback-policy.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-INDEX",
+    "kind": "project-governance-index",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "project",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/README.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-ITERATION-LIFECYCLE",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "project",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/iteration-lifecycle.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-VERIFICATION",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/verification-policy.md"
+  },
+  {
+    "id": "PROJECT-INDEX",
+    "kind": "project-index",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/README.md"
+  },
+  {
+    "id": "ROADMAP-CANDIDATE-PRODUCTION-ACTIVATION",
+    "kind": "roadmap-candidate",
+    "status": "candidate",
+    "authority": "planning-only",
+    "owners": [
+      "product",
+      "operations",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/candidates/production-activation.md"
+  },
+  {
+    "id": "ROADMAP-CANDIDATE-SCHEMA-EVOLUTION",
+    "kind": "roadmap-candidate",
+    "status": "candidate",
+    "authority": "planning-only",
+    "owners": [
+      "knowledge",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/candidates/schema-evolution.md"
+  },
+  {
+    "id": "ROADMAP-CANDIDATE-SEMANTIC-VIEW",
+    "kind": "roadmap-candidate",
+    "status": "candidate",
+    "authority": "planning-only",
+    "owners": [
+      "application",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/candidates/semantic-view.md"
+  },
+  {
+    "id": "ROADMAP-INDEX",
+    "kind": "roadmap-index",
+    "status": "current",
+    "authority": "planning-only",
+    "owners": [
+      "product",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/README.md"
+  },
+  {
+    "id": "ROADMAP-M-001",
+    "kind": "roadmap-milestone",
+    "status": "achieved",
+    "authority": "planning-only",
+    "owners": [
+      "product",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/milestones/M-001-formal-knowledge-single-path.md"
+  },
+  {
+    "id": "SYS-ADR-001",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [
+      "AD-075",
+      "AD-083",
+      "AD-118"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-001-platform-and-world-model-separation.md"
+  },
+  {
+    "id": "SYS-ADR-002",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "ai"
+    ],
+    "derived_from": [
+      "AD-019",
+      "AD-086",
+      "AD-087",
+      "AD-095",
+      "AD-115",
+      "AD-131",
+      "AD-132"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-002-ai-native-trusted-control.md"
+  },
+  {
+    "id": "SYS-ADR-003",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "knowledge"
+    ],
+    "derived_from": [
+      "AD-002",
+      "AD-027",
+      "AD-041",
+      "AD-042",
+      "AD-123",
+      "AD-128"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-003-formal-knowledge-model.md"
+  },
+  {
+    "id": "SYS-ADR-004",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "knowledge"
+    ],
+    "derived_from": [
+      "AD-011",
+      "AD-012",
+      "AD-013",
+      "AD-029",
+      "AD-030",
+      "AD-079",
+      "AD-099",
+      "AD-111",
+      "AD-113",
+      "AD-121",
+      "AD-122",
+      "AD-129"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-004-scope-context-snapshot-schema.md"
+  },
+  {
+    "id": "SYS-ADR-005",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [
+      "AD-028",
+      "AD-035",
+      "AD-036",
+      "AD-062",
+      "AD-114"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-005-derived-views-are-non-authoritative.md"
+  },
+  {
+    "id": "SYS-ADR-006",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [
+      "AD-048",
+      "AD-049",
+      "AD-051",
+      "AD-054",
+      "AD-058",
+      "AD-059",
+      "AD-060",
+      "AD-061",
+      "AD-074",
+      "AD-077",
+      "AD-109",
+      "AD-110",
+      "AD-112",
+      "AD-127",
+      "AD-135"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-006-owner-boundaries.md"
+  },
+  {
+    "id": "SYS-ADR-007",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [
+      "AD-045",
+      "AD-046",
+      "AD-050",
+      "AD-130"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-007-modular-monolith.md"
+  },
+  {
+    "id": "SYS-ADR-008",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "ai"
+    ],
+    "derived_from": [
+      "AD-021",
+      "AD-052",
+      "AD-063",
+      "AD-088",
+      "AD-100",
+      "AD-117"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-008-model-gateway-and-evaluation.md"
+  },
+  {
+    "id": "SYS-ADR-009",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "application",
+      "knowledge"
+    ],
+    "derived_from": [
+      "AD-076",
+      "AD-081",
+      "AD-092",
+      "AD-101",
+      "AD-102",
+      "AD-103",
+      "AD-109",
+      "AD-110",
+      "AD-133"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-009-bounded-update-and-publication.md"
+  },
+  {
+    "id": "SYS-ADR-010",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [
+      "AD-053",
+      "AD-104",
+      "AD-112",
+      "AD-115",
+      "AD-127"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-010-independent-verification.md"
+  },
+  {
+    "id": "SYS-ADR-011",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "knowledge"
+    ],
+    "derived_from": [
+      "AD-116"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-011-inference-depth-as-strategy.md"
+  },
+  {
+    "id": "SYS-ADR-012",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "operations"
+    ],
+    "derived_from": [
+      "AD-124"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-012-telemetry-is-observational.md"
+  },
+  {
+    "id": "SYS-ADR-INDEX",
+    "kind": "system-decision-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/decisions/README.md"
+  },
+  {
+    "id": "SYS-ARCH-COMPONENTS",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/components.md"
+  },
+  {
+    "id": "SYS-ARCH-CONSISTENCY",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "knowledge"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/data-and-consistency.md"
+  },
+  {
+    "id": "SYS-ARCH-DEPLOYMENT",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/deployment.md"
+  },
+  {
+    "id": "SYS-ARCH-DOMAIN",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "knowledge"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/domain-model.md"
+  },
+  {
+    "id": "SYS-ARCH-FLOWS",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/runtime-flows.md"
+  },
+  {
+    "id": "SYS-ARCH-INDEX",
+    "kind": "system-architecture-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/README.md"
+  },
+  {
+    "id": "SYS-ARCH-INVARIANTS",
+    "kind": "system-invariants",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/invariants.md"
+  },
+  {
+    "id": "SYS-ARCH-OVERVIEW",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/overview.md"
+  },
+  {
+    "id": "SYS-CONTRACT-AI-CAPABILITY-EVALUATION",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-MGT-CAPABILITY-EVALUATION"
+    ],
+    "path": "docs/system/contracts/ai/capability-evaluation.md"
+  },
+  {
+    "id": "SYS-CONTRACT-AI-INDEX",
+    "kind": "system-contract-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "ai",
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/ai/README.md"
+  },
+  {
+    "id": "SYS-CONTRACT-AI-MODEL-GATEWAY",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "ai"
+    ],
+    "derived_from": [
+      "DD-AI-MODEL-GATEWAY"
+    ],
+    "path": "docs/system/contracts/ai/model-gateway.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-AGENTIC-TASK",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-APP-AGENTIC-TASK"
+    ],
+    "path": "docs/system/contracts/application/agentic-task.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-INDEX",
+    "kind": "system-contract-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/README.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-APP-KNOWLEDGE-UPDATE"
+    ],
+    "path": "docs/system/contracts/application/knowledge-update.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-APP-KNOWLEDGE-USE"
+    ],
+    "path": "docs/system/contracts/application/knowledge-use.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-MANAGEMENT",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-APP-MANAGEMENT"
+    ],
+    "path": "docs/system/contracts/application/management.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-APP-RESPONSE-CONTROL"
+    ],
+    "path": "docs/system/contracts/application/response-control.md"
+  },
+  {
+    "id": "SYS-CONTRACT-INDEX",
+    "kind": "system-contract-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/README.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-ADMISSION",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-ADMISSION"
+    ],
+    "path": "docs/system/contracts/knowledge/admission.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-CONTEXT-COMPARISON"
+    ],
+    "path": "docs/system/contracts/knowledge/context-comparison.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-ENTITY",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-ENTITY"
+    ],
+    "path": "docs/system/contracts/knowledge/entity.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-EVIDENCE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-EVIDENCE"
+    ],
+    "path": "docs/system/contracts/knowledge/evidence.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-FACT",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-FACT"
+    ],
+    "path": "docs/system/contracts/knowledge/fact.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-INDEX",
+    "kind": "system-contract-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/knowledge/README.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-INFERENCE-CONFLICT",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-INFERENCE-CONFLICT"
+    ],
+    "path": "docs/system/contracts/knowledge/inference-conflict.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-PERSISTENCE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-PERSISTENCE"
+    ],
+    "path": "docs/system/contracts/knowledge/persistence.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-REFERENCE-CONTEXT",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-REFERENCE-CONTEXT"
+    ],
+    "path": "docs/system/contracts/knowledge/reference-context.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-SCHEMA-CORE"
+    ],
+    "path": "docs/system/contracts/knowledge/schema-core.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-SCOPE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-KNOWLEDGE-SCOPE"
+    ],
+    "path": "docs/system/contracts/knowledge/knowledge-scope.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [
+      "DD-KNW-SNAPSHOT-PUBLICATION"
+    ],
+    "path": "docs/system/contracts/knowledge/snapshot-publication.md"
+  },
+  {
+    "id": "SYS-CONTRACT-SOURCE-ARTIFACT",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "source"
+    ],
+    "derived_from": [
+      "DD-SRC-SOURCE-ARTIFACT"
+    ],
+    "path": "docs/system/contracts/source/source-artifact.md"
+  },
+  {
+    "id": "SYS-CONTRACT-SOURCE-DATA-SOURCE",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "source"
+    ],
+    "derived_from": [
+      "DD-SRC-DATA-SOURCE"
+    ],
+    "path": "docs/system/contracts/source/data-source.md"
+  },
+  {
+    "id": "SYS-CONTRACT-SOURCE-INDEX",
+    "kind": "system-contract-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "source"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/source/README.md"
+  },
+  {
+    "id": "SYS-CONTRACT-X-CAPABILITY-EXECUTION",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [
+      "DD-X-CAPABILITY-EXECUTION"
+    ],
+    "path": "docs/system/contracts/cross-cutting/capability-execution.md"
+  },
+  {
+    "id": "SYS-CONTRACT-X-INDEX",
+    "kind": "system-contract-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/cross-cutting/README.md"
+  },
+  {
+    "id": "SYS-CONTRACT-X-TELEMETRY-COST",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "telemetry"
+    ],
+    "derived_from": [
+      "DD-X-TELEMETRY-COST"
+    ],
+    "path": "docs/system/contracts/cross-cutting/telemetry-cost.md"
+  },
+  {
+    "id": "SYS-INDEX",
+    "kind": "system-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/README.md"
+  },
+  {
+    "id": "SYS-OPS-CONFIGURATION",
+    "kind": "system-operations",
+    "status": "current",
+    "authority": "operational",
+    "owners": [
+      "operations",
+      "ai"
+    ],
+    "derived_from": [],
+    "path": "docs/system/operations/configuration.md"
+  },
+  {
+    "id": "SYS-OPS-INDEX",
+    "kind": "system-operations-index",
+    "status": "current",
+    "authority": "operational",
+    "owners": [
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/system/operations/README.md"
+  },
+  {
+    "id": "SYS-OPS-LOCAL-BROWSER",
+    "kind": "system-operations",
+    "status": "current",
+    "authority": "operational",
+    "owners": [
+      "operations",
+      "interface"
+    ],
+    "derived_from": [],
+    "path": "docs/system/operations/local-browser.md"
+  },
+  {
+    "id": "SYS-PRODUCT-CAPABILITIES",
+    "kind": "system-product",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/system/product/capability-map.md"
+  },
+  {
+    "id": "SYS-PRODUCT-SUCCESS",
+    "kind": "system-product",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/system/product/success-criteria.md"
+  },
+  {
+    "id": "SYS-PRODUCT-VISION",
+    "kind": "system-product",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/system/product/vision.md"
+  },
+  {
+    "id": "SYS-QUALITY-ACCEPTANCE",
+    "kind": "system-quality",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/quality/acceptance-principles.md"
+  },
+  {
+    "id": "SYS-QUALITY-ATTRIBUTES",
+    "kind": "system-quality",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "quality",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/quality/attributes.md"
+  },
+  {
+    "id": "SYS-QUALITY-INDEX",
+    "kind": "system-quality-index",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/quality/README.md"
+  },
+  {
+    "id": "SYS-QUALITY-SECURITY",
+    "kind": "system-quality",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "security",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/system/quality/security-boundaries.md"
+  }
+]

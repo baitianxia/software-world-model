@@ -1,0 +1,21 @@
+schema_version: 1
+iteration:
+  id: ITER-NNN
+  status: proposed
+  outcome_scope: <scope>
+
+baseline:
+  commit: <exact-git-commit>
+  dirty_worktree_allowed: false
+
+system_inputs:
+  ids: []
+
+external_inputs: []
+
+verification:
+  matrix_id: ITER-NNN-VERIFICATION
+  evidence_location: var/<iteration>
+
+authorization:
+  readiness_review_id: ITER-NNN-READINESS

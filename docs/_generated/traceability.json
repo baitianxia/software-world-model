@@ -1,0 +1,636 @@
+{
+  "ITER-001-DESIGN-INDEX": {
+    "path": "docs/project/iterations/iteration-001/development-design/README.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-001-INDEX": {
+    "path": "docs/project/iterations/iteration-001/README.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-001-PROPOSAL": {
+    "path": "docs/project/iterations/iteration-001/proposal.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-001-RESULT-ARCHITECTURE": {
+    "path": "docs/project/iterations/iteration-001/results/architecture-validation.md",
+    "code": [
+      "demo",
+      "src/software_world_model"
+    ],
+    "tests": [
+      "demo/tests",
+      "tests"
+    ]
+  },
+  "ITER-001-RESULT-CAPABILITY": {
+    "path": "docs/project/iterations/iteration-001/results/capability-evaluation.md",
+    "code": [
+      "validation/agentic_capability_iteration_001",
+      "validation/jwt_iteration_001"
+    ],
+    "tests": [
+      "tests/test_agentic_capability_evaluation.py",
+      "tests/test_agentic_capability_live_harness.py",
+      "tests/test_jwt_world_model.py"
+    ]
+  },
+  "ITER-001-RESULT-CONFORMANCE": {
+    "path": "docs/project/iterations/iteration-001/results/contract-conformance.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/interface/provider_cli.py"
+    ],
+    "tests": [
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_volcengine_ark_chat_adapter.py"
+    ]
+  },
+  "ITER-001-RESULT-IMPLEMENTATION": {
+    "path": "docs/project/iterations/iteration-001/results/implementation.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests",
+      "demo/tests"
+    ]
+  },
+  "ITER-001-RESULT-PRODUCT": {
+    "path": "docs/project/iterations/iteration-001/results/product-validation.md",
+    "code": [
+      "validation/product_holdout_iteration_002"
+    ],
+    "tests": [
+      "tests/test_product_holdout_execution.py",
+      "tests/test_product_holdout_independent_review.py",
+      "tests/test_product_validation.py"
+    ]
+  },
+  "ITER-001-SLICE-001": {
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-001-source-configuration.md",
+    "code": [
+      "src/software_world_model/source_integration",
+      "src/software_world_model/application_services/management.py"
+    ],
+    "tests": [
+      "tests/test_source_configuration.py",
+      "tests/test_source_operations.py",
+      "tests/test_local_git_configuration.py"
+    ]
+  },
+  "ITER-001-SLICE-002": {
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-002-formal-knowledge-path.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services/knowledge_update.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_update.py"
+    ]
+  },
+  "ITER-001-SLICE-003": {
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-003-agentic-answer.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface/agentic_runtime.py"
+    ],
+    "tests": [
+      "tests/test_knowledge_use.py",
+      "tests/test_natural_task.py",
+      "tests/test_agentic_runtime.py",
+      "tests/test_response_control.py"
+    ]
+  },
+  "ITER-001-SLICE-004": {
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-004-live-model-validation.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure",
+      "validation/agentic_capability_iteration_001",
+      "validation/jwt_iteration_001"
+    ],
+    "tests": [
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_agentic_capability_evaluation.py",
+      "tests/test_strategy_activation.py"
+    ]
+  },
+  "ITER-001-SLICE-005": {
+    "path": "docs/project/iterations/iteration-001/development-design/SLICE-005-product-acceptance.md",
+    "code": [
+      "validation/product_holdout_iteration_002",
+      "src/software_world_model/interface/http_api.py"
+    ],
+    "tests": [
+      "tests/test_product_holdout_execution.py",
+      "tests/test_product_validation.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "ITER-001-VERIFICATION": {
+    "path": "docs/project/iterations/iteration-001/verification-matrix.md",
+    "code": [
+      "validation"
+    ],
+    "tests": [
+      "tests",
+      "demo/tests"
+    ]
+  },
+  "ITER-001-WORK-PLAN": {
+    "path": "docs/project/iterations/iteration-001/work-plan.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "PROJECT-GOVERNANCE-DOCUMENTATION": {
+    "path": "docs/project/governance/documentation-policy.md",
+    "code": [
+      "scripts/docs.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py"
+    ]
+  },
+  "PROJECT-GOVERNANCE-VERIFICATION": {
+    "path": "docs/project/governance/verification-policy.md",
+    "code": [
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-ARCH-COMPONENTS": {
+    "path": "docs/system/architecture/components.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests/test_foundation.py",
+      "tests/test_interface_runtime.py"
+    ]
+  },
+  "SYS-ARCH-CONSISTENCY": {
+    "path": "docs/system/architecture/data-and-consistency.md",
+    "code": [
+      "src/software_world_model/infrastructure"
+    ],
+    "tests": [
+      "tests/test_foundation.py",
+      "tests/test_formal_knowledge.py",
+      "tests/test_management.py"
+    ]
+  },
+  "SYS-ARCH-DEPLOYMENT": {
+    "path": "docs/system/architecture/deployment.md",
+    "code": [
+      "src/software_world_model/interface/http_api.py",
+      "src/software_world_model/infrastructure"
+    ],
+    "tests": [
+      "tests/test_browser_chat_interface.py",
+      "tests/test_interface_runtime.py"
+    ]
+  },
+  "SYS-ARCH-DOMAIN": {
+    "path": "docs/system/architecture/domain-model.md",
+    "code": [
+      "src/software_world_model/knowledge_engine"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_scope.py"
+    ]
+  },
+  "SYS-ARCH-FLOWS": {
+    "path": "docs/system/architecture/runtime-flows.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_knowledge_update.py",
+      "tests/test_knowledge_use.py",
+      "tests/test_agentic_runtime.py"
+    ]
+  },
+  "SYS-ARCH-INDEX": {
+    "path": "docs/system/architecture/README.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-ARCH-INVARIANTS": {
+    "path": "docs/system/architecture/invariants.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-ARCH-OVERVIEW": {
+    "path": "docs/system/architecture/overview.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests/test_foundation.py"
+    ]
+  },
+  "SYS-CONTRACT-AI-CAPABILITY-EVALUATION": {
+    "path": "docs/system/contracts/ai/capability-evaluation.md",
+    "code": [
+      "src/software_world_model/application_services/evaluation.py",
+      "src/software_world_model/application_services/activation.py",
+      "src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py"
+    ],
+    "tests": [
+      "tests/test_capability_evaluation.py",
+      "tests/test_strategy_activation.py",
+      "tests/test_evaluation_runner.py"
+    ]
+  },
+  "SYS-CONTRACT-AI-INDEX": {
+    "path": "docs/system/contracts/ai/README.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_capability_evaluation.py"
+    ]
+  },
+  "SYS-CONTRACT-AI-MODEL-GATEWAY": {
+    "path": "docs/system/contracts/ai/model-gateway.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/openai_responses_adapter.py",
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_openai_responses_adapter.py",
+      "tests/test_volcengine_ark_chat_adapter.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-AGENTIC-TASK": {
+    "path": "docs/system/contracts/application/agentic-task.md",
+    "code": [
+      "src/software_world_model/application_services/natural_task.py",
+      "src/software_world_model/application_services/task_control.py",
+      "src/software_world_model/interface/agentic_runtime.py"
+    ],
+    "tests": [
+      "tests/test_agentic_runtime.py",
+      "tests/test_natural_task.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-INDEX": {
+    "path": "docs/system/contracts/application/README.md",
+    "code": [
+      "src/software_world_model/application_services"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE": {
+    "path": "docs/system/contracts/application/knowledge-update.md",
+    "code": [
+      "src/software_world_model/application_services/knowledge_update.py",
+      "src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py"
+    ],
+    "tests": [
+      "tests/test_knowledge_update.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE": {
+    "path": "docs/system/contracts/application/knowledge-use.md",
+    "code": [
+      "src/software_world_model/application_services/knowledge_use.py",
+      "src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py"
+    ],
+    "tests": [
+      "tests/test_knowledge_use.py",
+      "tests/test_natural_task.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-MANAGEMENT": {
+    "path": "docs/system/contracts/application/management.md",
+    "code": [
+      "src/software_world_model/application_services/management.py",
+      "src/software_world_model/infrastructure/sqlite_management_repository.py"
+    ],
+    "tests": [
+      "tests/test_management.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL": {
+    "path": "docs/system/contracts/application/response-control.md",
+    "code": [
+      "src/software_world_model/application_services/response_control.py",
+      "src/software_world_model/infrastructure/sqlite_response_control_repository.py"
+    ],
+    "tests": [
+      "tests/test_response_control.py",
+      "tests/test_agentic_runtime.py"
+    ]
+  },
+  "SYS-CONTRACT-INDEX": {
+    "path": "docs/system/contracts/README.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-ADMISSION": {
+    "path": "docs/system/contracts/knowledge/admission.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_update.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON": {
+    "path": "docs/system/contracts/knowledge/context-comparison.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/application_services/knowledge_use.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_use.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-ENTITY": {
+    "path": "docs/system/contracts/knowledge/entity.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-EVIDENCE": {
+    "path": "docs/system/contracts/knowledge/evidence.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_artifact_processing.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-FACT": {
+    "path": "docs/system/contracts/knowledge/fact.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-INDEX": {
+    "path": "docs/system/contracts/knowledge/README.md",
+    "code": [
+      "src/software_world_model/knowledge_engine"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_scope.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-INFERENCE-CONFLICT": {
+    "path": "docs/system/contracts/knowledge/inference-conflict.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-PERSISTENCE": {
+    "path": "docs/system/contracts/knowledge/persistence.md",
+    "code": [
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_database.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_foundation.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-REFERENCE-CONTEXT": {
+    "path": "docs/system/contracts/knowledge/reference-context.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_use.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE": {
+    "path": "docs/system/contracts/knowledge/schema-core.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-SCOPE": {
+    "path": "docs/system/contracts/knowledge/knowledge-scope.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/scope.py",
+      "src/software_world_model/infrastructure/sqlite_scope_repository.py"
+    ],
+    "tests": [
+      "tests/test_knowledge_scope.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION": {
+    "path": "docs/system/contracts/knowledge/snapshot-publication.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_update.py"
+    ]
+  },
+  "SYS-CONTRACT-SOURCE-ARTIFACT": {
+    "path": "docs/system/contracts/source/source-artifact.md",
+    "code": [
+      "src/software_world_model/source_integration/operations.py",
+      "src/software_world_model/source_integration/artifact_processing.py"
+    ],
+    "tests": [
+      "tests/test_source_operations.py",
+      "tests/test_artifact_processing.py"
+    ]
+  },
+  "SYS-CONTRACT-SOURCE-DATA-SOURCE": {
+    "path": "docs/system/contracts/source/data-source.md",
+    "code": [
+      "src/software_world_model/source_integration/configuration.py",
+      "src/software_world_model/infrastructure/sqlite_source_repository.py"
+    ],
+    "tests": [
+      "tests/test_source_configuration.py",
+      "tests/test_local_git_configuration.py"
+    ]
+  },
+  "SYS-CONTRACT-SOURCE-INDEX": {
+    "path": "docs/system/contracts/source/README.md",
+    "code": [
+      "src/software_world_model/source_integration"
+    ],
+    "tests": [
+      "tests/test_source_configuration.py",
+      "tests/test_source_operations.py"
+    ]
+  },
+  "SYS-CONTRACT-X-CAPABILITY-EXECUTION": {
+    "path": "docs/system/contracts/cross-cutting/capability-execution.md",
+    "code": [
+      "src/software_world_model/application_services/resources.py",
+      "src/software_world_model/application_services/evaluation.py"
+    ],
+    "tests": [
+      "tests/test_resource_allocation.py",
+      "tests/test_capability_evaluation.py"
+    ]
+  },
+  "SYS-CONTRACT-X-INDEX": {
+    "path": "docs/system/contracts/cross-cutting/README.md",
+    "code": [
+      "src/software_world_model/cross_cutting"
+    ],
+    "tests": [
+      "tests/test_resource_allocation.py",
+      "tests/test_telemetry.py"
+    ]
+  },
+  "SYS-CONTRACT-X-TELEMETRY-COST": {
+    "path": "docs/system/contracts/cross-cutting/telemetry-cost.md",
+    "code": [
+      "src/software_world_model/cross_cutting/telemetry.py",
+      "src/software_world_model/infrastructure/sqlite_telemetry_repository.py"
+    ],
+    "tests": [
+      "tests/test_telemetry.py"
+    ]
+  },
+  "SYS-INDEX": {
+    "path": "docs/system/README.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-OPS-CONFIGURATION": {
+    "path": "docs/system/operations/configuration.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/interface/provider_cli.py"
+    ],
+    "tests": [
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py"
+    ]
+  },
+  "SYS-OPS-INDEX": {
+    "path": "docs/system/operations/README.md",
+    "code": [
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_interface_runtime.py"
+    ]
+  },
+  "SYS-OPS-LOCAL-BROWSER": {
+    "path": "docs/system/operations/local-browser.md",
+    "code": [
+      "src/software_world_model/interface/http_api.py",
+      "src/software_world_model/interface/browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "SYS-PRODUCT-CAPABILITIES": {
+    "path": "docs/system/product/capability-map.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-QUALITY-ATTRIBUTES": {
+    "path": "docs/system/quality/attributes.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-QUALITY-INDEX": {
+    "path": "docs/system/quality/README.md",
+    "code": [],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-QUALITY-SECURITY": {
+    "path": "docs/system/quality/security-boundaries.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/source_integration",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_source_operations.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  }
+}
