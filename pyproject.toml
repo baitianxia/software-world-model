@@ -1,0 +1,16 @@
+[project]
+name = "software-world-model"
+version = "0.2.0"
+description = "Software World Model modular monolith"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+swm = "software_world_model.interface.cli:main"
+swm-http = "software_world_model.interface.http_api:main"
+swm-browser = "software_world_model.interface.http_api:main"
+swm-provider = "software_world_model.interface.provider_cli:main"
+swm-jwt-evaluation = "validation.jwt_iteration_001.cli:main"
+
+[tool.unittest]
+start-directory = "tests"

@@ -1,0 +1,15 @@
+[project]
+name = "software-world-model-validation-demo"
+version = "0.1.0"
+description = "Validation harness for the Software World Model architecture"
+requires-python = ">=3.11"
+dependencies = [
+  "tree-sitter>=0.25,<0.26",
+  "tree-sitter-java>=0.23,<0.24",
+]
+
+[project.scripts]
+swm-demo = "swm_demo.cli:main"
+
+[tool.unittest]
+start-directory = "tests"

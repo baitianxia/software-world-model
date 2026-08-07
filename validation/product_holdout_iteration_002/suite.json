@@ -1,0 +1,207 @@
+{
+  "schema": "swm.product-holdout-suite@2",
+  "suite_id": "product-unseen-repositories-2026-08-07",
+  "suite_version": "2.0.1",
+  "status": "SEALED_NOT_EXECUTED",
+  "sealed_at": "2026-08-07T00:00:00Z",
+  "suite_digest": "sha256:b4821e583a038bbeb2bb08006f1094c552427d53927ff762b780dcccbadb2fc7",
+  "repositories": [
+    {
+      "repository_id": "transmittable-thread-local",
+      "remote": "https://github.com/alibaba/transmittable-thread-local.git",
+      "local_path": "validation-projects/transmittable-thread-local",
+      "frozen_tag": "v2.14.5",
+      "frozen_commit": "9c6552bbd7eda52b7bfb03c24c4f9aee514e91f3",
+      "frozen_tree": "2f8c335e9027e0341042aedc99a52ba08a9ae1c8",
+      "license_path": "LICENSE",
+      "license_digest": "sha256:5aa53ab963be7fb19a270affe2814533f34903af8314f935c499d9a3ebadbc5e"
+    },
+    {
+      "repository_id": "poi-tl",
+      "remote": "https://github.com/Sayi/poi-tl.git",
+      "local_path": "validation-projects/poi-tl",
+      "frozen_tag": "v1.12.2",
+      "frozen_commit": "58fdb6c7d9db7da53cd420ff1ebde49813bd7af2",
+      "frozen_tree": "c04630a020cc6b1d2ca01014aea1e6c61a651083",
+      "license_path": "LICENSE",
+      "license_digest": "sha256:cb5e8e7e5f4a3988e1063c142c60dc2df75605f4c46515e776e3aca6df976e14"
+    }
+  ],
+  "source_policy": "LOCAL_GIT_READ_ONLY_ALLOWED_PATHS_ONLY",
+  "answer_paths": {
+    "direct": {
+      "maximum_model_calls": 34,
+      "maximum_source_actions": 12,
+      "maximum_source_bytes_per_action": 16000,
+      "maximum_total_input_tokens": 300000,
+      "maximum_total_output_tokens": 48000,
+      "maximum_output_tokens_per_call": 1200,
+      "timeout_per_call_milliseconds": 180000
+    },
+    "world_assisted": {
+      "maximum_model_calls": 34,
+      "maximum_source_actions": 12,
+      "maximum_source_bytes_per_action": 16000,
+      "maximum_total_input_tokens": 300000,
+      "maximum_total_output_tokens": 48000,
+      "maximum_output_tokens_per_call": 1200,
+      "timeout_per_call_milliseconds": 180000
+    }
+  },
+  "independent_evaluator": {
+    "policy_ref": "codex-source-grounded-independent-review@1",
+    "must_differ_from": [
+      "direct",
+      "world_assisted"
+    ],
+    "oracle_delivery": "EVALUATOR_ONLY_AFTER_ANSWERS_SEALED",
+    "case_rule": "WORLD_MUST_NOT_REGRESS_ON_ANY_CASE"
+  },
+  "tasks": [
+    {
+      "task_id": "thread-context-task-lifecycle",
+      "repository_id": "transmittable-thread-local",
+      "category": "runtime-behavior",
+      "question": "在冻结版本中，一个通过 TtlRunnable.get 创建的任务何时捕获线程上下文，执行时如何替换并恢复工作线程上下文？请分别说明底层任务正常返回和抛出异常时的恢复行为，以及 releaseTtlValueReferenceAfterRun 为 false 和 true 时第二次执行该包装任务会发生什么。只陈述所列源码能够证明的行为。",
+      "revision_scope": {
+        "kind": "FROZEN_SNAPSHOT",
+        "parent": null,
+        "target": "9c6552bbd7eda52b7bfb03c24c4f9aee514e91f3"
+      },
+      "allowed_paths": [
+        "src/main/java/com/alibaba/ttl/TtlRunnable.java",
+        "src/main/java/com/alibaba/ttl/TransmittableThreadLocal.java"
+      ],
+      "acceptance_dimensions": [
+        "capture occurs when the wrapper is constructed",
+        "replay happens before the wrapped task and restore happens in finally",
+        "normal and exceptional wrapped-task completion both restore the backup",
+        "release false retains the captured reference for another execution",
+        "release true atomically clears the captured reference and later execution fails"
+      ]
+    },
+    {
+      "task_id": "thread-executor-wrapping-selection",
+      "repository_id": "transmittable-thread-local",
+      "category": "integration-semantics",
+      "question": "应用可能同时使用运行时代理和手工调用 TtlExecutors.getTtlExecutorService，也可能提交已经包装过的任务。请说明该工厂面对代理已加载、空值、已经增强的执行器和普通执行器时分别返回什么，并解释新包装执行器为何允许已包装任务再次提交，以及检查和解除执行器包装的方法能保证什么。",
+      "revision_scope": {
+        "kind": "FROZEN_SNAPSHOT",
+        "parent": null,
+        "target": "9c6552bbd7eda52b7bfb03c24c4f9aee514e91f3"
+      },
+      "allowed_paths": [
+        "src/main/java/com/alibaba/ttl/threadpool/TtlExecutors.java",
+        "src/main/java/com/alibaba/ttl/threadpool/ExecutorTtlWrapper.java",
+        "src/main/java/com/alibaba/ttl/threadpool/ExecutorServiceTtlWrapper.java",
+        "src/main/java/com/alibaba/ttl/TtlRunnable.java",
+        "src/main/java/com/alibaba/ttl/TtlCallable.java"
+      ],
+      "acceptance_dimensions": [
+        "agent loaded, null, and already enhanced inputs are returned unchanged",
+        "a plain executor service is wrapped with idempotency enabled",
+        "idempotency enabled accepts an already enhanced runnable or callable rather than wrapping twice",
+        "wrapper detection distinguishes the library wrapper",
+        "unwrap returns the underlying executor for a wrapper and otherwise returns the input"
+      ]
+    },
+    {
+      "task_id": "thread-scheduled-remove-regression",
+      "repository_id": "transmittable-thread-local",
+      "category": "change-impact",
+      "question": "比较指定父提交与目标提交。目标提交对执行器公开方法的参数处理增加了哪些限制？请重点说明 remove(Runnable) 的专用处理、ScheduledThreadPoolExecutor 内部计划任务为何被原样保留、其他 Runnable 如何处理，以及这些变化相对于原有通用参数包装逻辑缩小了什么影响范围。不要把提交说明以外的动机当作已证实事实。",
+      "revision_scope": {
+        "kind": "PARENT_TO_TARGET",
+        "parent": "4b7771f5461d12d976f15121664d6802549feeb3",
+        "target": "8ca0f9a112fe3210051918eb472973356dcf9e90"
+      },
+      "allowed_paths": [
+        "src/main/java/com/alibaba/ttl/threadpool/agent/internal/transformlet/impl/TtlExecutorTransformlet.java"
+      ],
+      "acceptance_dimensions": [
+        "non-public, static, and zero-parameter methods are excluded",
+        "public remove with exactly one Runnable parameter receives a dedicated branch",
+        "ScheduledThreadPoolExecutor ScheduledFutureTask is returned unchanged",
+        "other Runnable values still use the general automatic wrapper",
+        "all other eligible methods continue through the existing parameter loop"
+      ]
+    },
+    {
+      "task_id": "document-render-two-stage-pipeline",
+      "repository_id": "poi-tl",
+      "category": "architecture-flow",
+      "question": "在冻结版本中，从 XWPFTemplate.compile 到 render，模板元素如何被解析、按类型分派、选择渲染策略并调用策略？为什么嵌入文档策略不在普通元素阶段执行，而要在检测、重新加载文档后单独处理？请按实际调用顺序说明，并指出异常在顶层如何包装。",
+      "revision_scope": {
+        "kind": "FROZEN_SNAPSHOT",
+        "parent": null,
+        "target": "58fdb6c7d9db7da53cd420ff1ebde49813bd7af2"
+      },
+      "allowed_paths": [
+        "poi-tl/src/main/java/com/deepoove/poi/XWPFTemplate.java",
+        "poi-tl/src/main/java/com/deepoove/poi/render/DefaultRender.java",
+        "poi-tl/src/main/java/com/deepoove/poi/render/processor/DocumentProcessor.java",
+        "poi-tl/src/main/java/com/deepoove/poi/render/processor/ElementProcessor.java",
+        "poi-tl/src/main/java/com/deepoove/poi/render/processor/DelegatePolicy.java",
+        "poi-tl/src/main/java/com/deepoove/poi/template/run/RunTemplate.java"
+      ],
+      "acceptance_dimensions": [
+        "compile creates the document, resolver, default renderer, and resolved element list",
+        "document processor dispatches elements by visitor type",
+        "element processor resolves data and policy then delegates ordinary rendering",
+        "embedded document policy is skipped in ordinary element processing",
+        "embedded documents trigger reload and a separate application loop",
+        "non-render exceptions are wrapped by the top-level render exception"
+      ]
+    },
+    {
+      "task_id": "document-custom-policy-extension",
+      "repository_id": "poi-tl",
+      "category": "extension-semantics",
+      "question": "要为某个命名模板标签定制渲染，同时保留其他标签的默认行为，应如何配置？请说明命名标签策略、语法字符策略和元素类型策略的选择优先级，预渲染数据转换器在何时按什么顺序运行，以及 AbstractRenderPolicy 对类型转换、校验失败、正常渲染和异常分别采取什么路径。",
+      "revision_scope": {
+        "kind": "FROZEN_SNAPSHOT",
+        "parent": null,
+        "target": "58fdb6c7d9db7da53cd420ff1ebde49813bd7af2"
+      },
+      "allowed_paths": [
+        "poi-tl/src/main/java/com/deepoove/poi/config/Configure.java",
+        "poi-tl/src/main/java/com/deepoove/poi/config/ConfigureBuilder.java",
+        "poi-tl/src/main/java/com/deepoove/poi/template/run/RunTemplate.java",
+        "poi-tl/src/main/java/com/deepoove/poi/render/processor/DelegatePolicy.java",
+        "poi-tl/src/main/java/com/deepoove/poi/policy/AbstractRenderPolicy.java"
+      ],
+      "acceptance_dimensions": [
+        "builder bind installs a policy for a named tag",
+        "named tag policy precedes sign policy which precedes element-type policy",
+        "pre-render data converters run in configured list order before policy invocation",
+        "type conversion failure becomes a render-data-format exception",
+        "validation failure invokes the configured valid-error handler and returns",
+        "successful rendering calls before, do, and after hooks while caught failures are rethrown through policy handling"
+      ]
+    },
+    {
+      "task_id": "document-remote-resource-timeout-change",
+      "repository_id": "poi-tl",
+      "category": "change-impact",
+      "question": "比较指定父提交与目标提交，并结合冻结版本调用方说明：远程图片或附件从地址读取时新增了什么超时边界，连接、读取、非成功状态、流关闭和读取异常分别由哪一层处理？这项修改解决了什么可由源码证明的无界等待风险，又有哪些重试、超时配置或错误传播能力并未由该修改提供？",
+      "revision_scope": {
+        "kind": "PARENT_TO_TARGET",
+        "parent": "ff605dfa47fed4a8c93c3deb37d5e601ff6132cb",
+        "target": "f549c22677704b9aaa0be3ace09d7df621c9eeb0"
+      },
+      "allowed_paths": [
+        "poi-tl/src/main/java/com/deepoove/poi/util/ByteUtils.java",
+        "poi-tl/src/main/java/com/deepoove/poi/data/UrlPictureRenderData.java",
+        "poi-tl/src/main/java/com/deepoove/poi/data/UrlAttachmentRenderData.java"
+      ],
+      "acceptance_dimensions": [
+        "the change adds 15000 millisecond connection and read timeouts",
+        "URL picture and attachment data both delegate to the same byte utility",
+        "the stream method throws on input or explicit non-success status failures",
+        "byte-array convenience handling catches input-output failures and returns null",
+        "stream-to-byte conversion closes the input stream in finally",
+        "the change adds neither retry nor caller-configurable timeout nor a new typed error"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "schema": "swm.agentic-capability-suite@1",
+  "suite_id": "general-software-task-six-role-2026-08-07",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:2d1eb05c461ad2efc6d5f5c7f31f9af33de469a79c032d056a1bc1b6468da03d",
+  "cases": [
+    {
+      "role": "REQUIREMENT_FIDELITY",
+      "case_id": "preserve-behavior-and-limit",
+      "fixture": {
+        "original_request": "Explain when RetryClient retries a request and state the maximum attempt limit. Do not infer behavior outside the supplied source boundary."
+      },
+      "oracle": {
+        "requirements": [
+          "the retry condition remains explicit",
+          "the maximum attempt limit remains explicit",
+          "the source-boundary limitation remains explicit",
+          "no source behavior is invented"
+        ]
+      }
+    },
+    {
+      "role": "SOURCE_INVESTIGATION",
+      "case_id": "bounded-exact-revision-read",
+      "fixture": {
+        "question": "What maximum attempt count is declared by RetryClient?",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "allowed_path": "src/RetryClient.java"
+      },
+      "oracle": {
+        "requirements": [
+          "propose a bounded source action or a justified stop",
+          "use only the exact supplied revision",
+          "do not invent a source result"
+        ]
+      }
+    },
+    {
+      "role": "FORMAL_FACT_GROUNDING",
+      "case_id": "reviewed-semantic-source-fact",
+      "fixture": {
+        "question": "What maximum attempt count is declared by RetryClient?",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "path": "src/RetryClient.java",
+        "content": "public final class RetryClient {\n    private static final int MAX_ATTEMPTS = 3;\n}\n"
+      },
+      "oracle": {
+        "requirements": [
+          "propose a self-contained fact directly entailed by the declaration",
+          "cite the exact line containing MAX_ATTEMPTS",
+          "the independent fact reviewer accepts only supported content",
+          "the platform output retains separate proposal and review call references"
+        ]
+      }
+    },
+    {
+      "role": "NEED_SUFFICIENCY",
+      "case_id": "exact-formal-support",
+      "fixture": {
+        "question": "What maximum attempt count is declared by RetryClient?",
+        "formal_fact": "RetryClient declares a maximum attempt count of 3.",
+        "limitation": "This is a source declaration, not proof of every runtime path."
+      },
+      "oracle": {
+        "requirements": [
+          "return satisfied only with the supplied formal reference",
+          "retain the source-only limitation",
+          "do not cite an unknown reference"
+        ]
+      }
+    },
+    {
+      "role": "ANSWER_SOURCE_CLOSURE",
+      "case_id": "select-only-authorized-fact",
+      "fixture": {
+        "question": "What maximum attempt count is declared by RetryClient?",
+        "formal_fact": "RetryClient declares a maximum attempt count of 3.",
+        "limitation": "This is a source declaration, not proof of every runtime path."
+      },
+      "oracle": {
+        "requirements": [
+          "select the exact supplied formal reference",
+          "do not generate answer prose or invent a reference",
+          "cover the supplied need exactly once"
+        ]
+      }
+    },
+    {
+      "role": "ANSWER_SEMANTIC_REVIEW",
+      "case_id": "approve-complete-source-closed-answer",
+      "fixture": {
+        "question": "What maximum attempt count is declared by RetryClient?",
+        "formal_fact": "RetryClient declares a maximum attempt count of 3.",
+        "limitation": "This is a source declaration, not proof of every runtime path."
+      },
+      "oracle": {
+        "requirements": [
+          "approve the complete source-closed answer",
+          "return no failed dimensions or findings on approval",
+          "preserve the source-only limitation"
+        ]
+      }
+    }
+  ]
+}
