@@ -17,7 +17,7 @@ tests: [tests/test_docs_gate.py]
 
 常用状态：
 
-- System：`current`、`accepted`；拟议 ADR 留在 Project 且为 planning-only，接受后迁入 System；被替代正文进入 Archive/Git 历史；
+- System：`current`、`accepted`；拟议 ADR 留在 Project 且为 planning-only，接受后迁入 System；被替代正文由 Git 历史保存，迁移原因进入 Archive；
 - Roadmap Candidate：`candidate`、`selected`、`rejected`；Milestone 可为 `planned`、`in-progress`、`achieved`；
 - Iteration：`proposed`、`authorized`、`in-progress`、`completed`、`rejected`；
 - Development Slice：`proposed`、`authorized`、`in-progress`、`completed`、`blocked`；
@@ -38,10 +38,10 @@ Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固�
 ## Change rules
 
 - System 只写当前语义；原因进入 ADR，实施发现进入 Finding，运行事实进入 Result。
-- 被替代内容移动到 Archive 或由 Git 历史保存；不得修改历史结果来符合当前结论。
+- 被替代正文由 Git 历史保存；Archive 只保留迁移记录，不复制可由提交精确恢复的旧正文。不得修改历史结果来符合当前结论。
 - Roadmap Candidate 必须标记 `authority: planning-only` 和 `coding_input: false`。
 - `_generated/` 由脚本生成，不人工编辑。
-- Archive 不进入默认 Agent Context；Legacy 链接只用于审计。
+- Archive 不进入默认 Agent Context；需要 Legacy 原文时按迁移记录从精确 Git 提交读取。
 
 ## Automated checks
 

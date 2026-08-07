@@ -34,6 +34,6 @@ post_hoc_repository_capture: 476517b5baf62abcc5a6ddda30b33335d262a8f3
 
 ## Evidence boundary
 
-早期离线结果只报告较小测试集且明确 Live/Product pending；它是正确历史，不是最终状态。原始记录见 [Offline Implementation Result](../../../../archive/legacy-documents/implementation/iteration-001/Offline_Implementation_Result_001.md)和[General Model Task Runtime](../../../../archive/legacy-documents/implementation/iteration-001/General_Model_Task_Runtime_001.md)。
+早期离线结果只报告较小测试集且明确 Live/Product pending；它是正确历史，不是最终状态。原始记录由基线 `476517b` 保存，可用 `git show 476517b:docs/implementation/iteration-001/Offline_Implementation_Result_001.md` 和 `git show 476517b:docs/implementation/iteration-001/General_Model_Task_Runtime_001.md` 查看。
 
 本结果是 pre-Git 历史摘要。`476517b` 是事后仓库快照，不是原运行输入；本次迁移对其执行的 `290 / 290` 新机械复验记录在 Migration Record，不能回写成历史 `288 / 288` 的原始日志或替代 CE/Product 证据。测试输出、浏览器数据库和运行材料位于本机 `var/` 或执行环境，没有进入 Git。

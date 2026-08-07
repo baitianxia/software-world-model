@@ -35,4 +35,4 @@ JWT 专项 Run 也形成 World/Comparison/CE PASS，历史失败迭代继续保�
 
 ## Evidence boundary
 
-资格 Proof 与原始 Run 位于本机 `var/`，不受 Git 管理。本文件保存摘要和有效期。原始实施说明见 [General Capability Harness](../../../../archive/legacy-documents/implementation/iteration-001/General_Capability_Evaluation_Harness_001.md)、[JWT Harness](../../../../archive/legacy-documents/implementation/iteration-001/JWT_Capability_Run_Harness_001.md)与[JWT Result](../../../../archive/legacy-documents/implementation/iteration-001/JWT_Capability_Run_Result_001.md)。
+资格 Proof 与原始 Run 位于本机 `var/`，不受 Git 管理。本文件保存摘要和有效期。版本化原始实施说明由基线 `476517b` 保存，可分别用 `git show 476517b:docs/implementation/iteration-001/General_Capability_Evaluation_Harness_001.md`、`git show 476517b:docs/implementation/iteration-001/JWT_Capability_Run_Harness_001.md` 和 `git show 476517b:docs/implementation/iteration-001/JWT_Capability_Run_Result_001.md` 查看。

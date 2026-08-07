@@ -25,4 +25,4 @@ amended_by: ITER-001-PDR-002
 
 团队先完成失败根因、契约修订和有界机制验证。该决定后来被 PDR-002 对“外部 Provider 关闭的离线开发”部分修订；它在发生时有效，不能从历史删除。
 
-原始记录：[Implementation Readiness Hold 001](../../../../archive/legacy-documents/implementation/iteration-001/Implementation_Readiness_Hold_001.md)。
+原始记录由基线 `476517b` 保存：`git show 476517b:docs/implementation/iteration-001/Implementation_Readiness_Hold_001.md`。

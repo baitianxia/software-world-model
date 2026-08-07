@@ -23,7 +23,7 @@ Iteration 001 的 pre-Git 历史记录在本机体验范围给出完成裁决；
 | `demo/` | 历史架构验证 Demo，不是生产实现 |
 | `docs/system/` | 当前接受的系统本质、架构、契约和质量边界 |
 | `docs/project/` | Roadmap、迭代设计、进度、发现和结果 |
-| `docs/archive/` | 被替代材料和迁移记录；不得作为当前编码依据 |
+| `docs/archive/` | 文档迁移记录；被替代正文由 Git 历史保存，不作为当前编码依据 |
 | `var/` | 本机运行证据和数据库；生成内容，不受 Git 管理 |
 
 `validation-projects/` 的子仓库不纳入本仓库 Git 历史；完整回归前需按其说明准备精确 Checkout。

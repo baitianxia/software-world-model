@@ -24,4 +24,4 @@ iteration: ITER-001
 
 工程实现可以与外部配置解耦推进；后续必须依次取得 Live CC、CE 和 Product Validation，并保持 Production Activation 为独立决定。最终这些门禁在本机体验范围完成，但本决定本身没有授权生产。
 
-原始记录：[Implementation Development Reentry 001](../../../../archive/legacy-documents/implementation/iteration-001/Implementation_Development_Reentry_001.md)。
+原始记录由基线 `476517b` 保存：`git show 476517b:docs/implementation/iteration-001/Implementation_Development_Reentry_001.md`。

@@ -15,7 +15,7 @@ iteration: ITER-001
 
 **裁决：`Completed — Local Experience Scope`。Production Activation：`NOT EXECUTED`。**
 
-本目录由 2026-08-05 至 2026-08-07 的既有实施、验证和产品记录迁移重建；它不是对历史过程的事后伪造。完整原件位于 `docs/archive/legacy-documents/`，Git 提交 `476517b` 固定迁移前状态。
+本目录由 2026-08-05 至 2026-08-07 的既有实施、验证和产品记录迁移重建；它不是对历史过程的事后伪造。完整原件由 Git 提交 `476517b5baf62abcc5a6ddda30b33335d262a8f3` 按迁移前路径固定，可用 `git show 476517b:<原路径>` 审计。
 
 ## 开发输入
 

@@ -19,7 +19,7 @@ valid_until: 2026-08-14T03:40:46.485258Z
 
 ## Historical failure retained
 
-首轮五题 Product Holdout `PV-HOLDOUT-001` 得分 `33.75 / 50`，为 P0 FAIL。它暴露正式知识覆盖不足、真实模型边界和答案能力低于直接调查基线；该失败促成后续设计和实现修正，不能被删除或改写为 PASS。原始记录见 [Product Value Holdout Run 001](../../../../archive/legacy-documents/validation/product-value/Product_Value_Holdout_Run_001.md)。
+首轮五题 Product Holdout `PV-HOLDOUT-001` 得分 `33.75 / 50`，为 P0 FAIL。它暴露正式知识覆盖不足、真实模型边界和答案能力低于直接调查基线；该失败促成后续设计和实现修正，不能被删除或改写为 PASS。原始记录由基线 `476517b` 保存，可用 `git show 476517b:docs/validation/product-value/Product_Value_Holdout_Run_001.md` 查看。
 
 ## Accepted baseline holdout result
 
@@ -41,4 +41,4 @@ Product Validation Record 为 `product_validation_158ce6cc0a4398e932c497a7fea341
 
 本记录只适用于 front matter 与 Manifest 固定的 Strategy `1.38.0` 和实现摘要。任何不同 subject 都使它对该实现 stale；不能仅因日期尚未到期而继续加载，后续工作区状态也不写入本历史结果。
 
-原始答案、Pair、Review 和 Authority DB 位于本机 `var/`，未进入 Git。版本化运行说明见 [Product Holdout Suite 002](../../../../archive/legacy-documents/implementation/iteration-001/Product_Holdout_Suite_002.md)。
+原始答案、Pair、Review 和 Authority DB 位于本机 `var/`，未进入 Git。版本化运行说明由基线 `476517b` 保存，可用 `git show 476517b:docs/implementation/iteration-001/Product_Holdout_Suite_002.md` 查看。

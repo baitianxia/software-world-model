@@ -35,4 +35,4 @@ Run `ccrun_66bbedf18020445c9df5fac11526fda1` 的两次真实调用与 12 项 Ora
 
 历史 @5/@7、旧 Endpoint 和 OpenAI Responses Profile 结果不匹配当前 subject，不能加载。Adapter、配置、Endpoint、实现摘要、请求/实际模型身份或 Fixture 变化后必须重跑。
 
-原始 sanitized Result 位于本机 `var/`，不在 Git。版本化原始说明见 [Live Provider Configuration](../../../../archive/legacy-documents/implementation/iteration-001/Live_Provider_Configuration_001.md)与 [CC Fixture](../../../../archive/legacy-documents/implementation/iteration-001/conformance/CC-ARK-CHAT-NO-TOOLS-001.md)。
+原始 sanitized Result 位于本机 `var/`，不在 Git。版本化原始说明由基线 `476517b` 保存，可用 `git show 476517b:docs/implementation/iteration-001/Live_Provider_Configuration_001.md` 与 `git show 476517b:docs/implementation/iteration-001/conformance/CC-ARK-CHAT-NO-TOOLS-001.md` 查看。

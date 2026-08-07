@@ -37,7 +37,7 @@ iteration: ITER-001
 - 单次 Candidate 发布改为正式前提和原子 Snapshot 路径；
 - CC、CE、Product Validation 与 Activation 被拆成独立门禁。
 
-这些结论已提炼进 current Invariants 和 Contracts。完整阶段性原件见 [Architecture Validation Log](../../../../archive/legacy-documents/validation/architecture/Architecture_Validation_Log.md)、[Audit 001](../../../../archive/legacy-documents/validation/architecture/Architecture_Capability_Formal_Mapping_Audit_001.md)、[Audit 002](../../../../archive/legacy-documents/validation/architecture/Architecture_Capability_Formal_Mapping_Audit_002.md)和[JWT Feasibility Review](../../../../archive/legacy-documents/validation/architecture/Architecture_Feasibility_Review_JWT_002.md)。
+这些结论已提炼进 current Invariants 和 Contracts。完整阶段性原件由基线 `476517b` 按原路径保存：`docs/validation/architecture/Architecture_Validation_Log.md`、`docs/validation/architecture/Architecture_Capability_Formal_Mapping_Audit_001.md`、`docs/validation/architecture/Architecture_Capability_Formal_Mapping_Audit_002.md` 和 `docs/validation/architecture/Architecture_Feasibility_Review_JWT_002.md`；使用 `git show 476517b:<原路径>` 读取。
 
 ## Limitations
 
