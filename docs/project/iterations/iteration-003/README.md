@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and authorization
 
-本轮 Readiness 已由用户明确接受，Iteration 与 Slice 为 `authorized`，`project/current.md` 已原子指向本轮。当前授权只允许执行 G0；绑定授权治理提交 Q 的 `ITER-003-RESULT-G0` 提交为 PASS 后，才能修改产品代码并开始 G1。
+本轮 Readiness 已由用户明确接受，Iteration 与 Slice 为 `authorized`，`project/current.md` 已原子指向本轮。`ITER-003-RESULT-G0` 已绑定授权治理提交 Q 并在 exact 输入 checkpoint 上 PASS；当前允许修改产品代码并开始 G1，后续仍按 Gate 顺序阻断。
 
 ## Required inputs
 

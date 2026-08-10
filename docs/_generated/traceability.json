@@ -550,6 +550,14 @@
       "tests"
     ]
   },
+  "ITER-003-RESULT-G0": {
+    "path": "docs/project/iterations/iteration-003/results/gate-g0.md",
+    "code": [],
+    "tests": [
+      "tests/test_iteration_003_fixture.py",
+      "tests/test_iteration_003_validation_assets.py"
+    ]
+  },
   "ITER-003-SLICE-001": {
     "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md",
     "code": [

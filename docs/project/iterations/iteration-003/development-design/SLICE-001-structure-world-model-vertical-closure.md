@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and dependencies
 
-当前已获用户授权，但在绑定治理提交 Q 的 G0 Result 提交为 PASS 前，只允许执行冻结资产检查，仍不允许修改产品代码。Manifest baseline 固定无产品代码变化的准备提交 P；治理提交 Q 和 G0 Result 分别绑定 P/Q，要求 `P..Q` 与 `Q..G0 Result` 均无产品代码差异，不要求执行 HEAD 等于 P。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
+当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，允许开始 G1 产品代码。Manifest baseline 固定无产品代码变化的准备提交 P；治理提交 Q、G0 输入 checkpoint 和 G0 Result 分别记录完整关系，`P..Q` 与 `Q..G0 Result` 没有产品代码差异。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
 
 ## Current vs expected behavior
 

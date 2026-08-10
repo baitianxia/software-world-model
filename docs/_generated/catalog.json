@@ -847,10 +847,22 @@
     "path": "docs/project/iterations/iteration-003/readiness-review.md"
   },
   {
+    "id": "ITER-003-RESULT-G0",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/results/gate-g0.md"
+  },
+  {
     "id": "ITER-003-RESULTS-INDEX",
     "kind": "iteration-result-index",
-    "status": "not-run",
-    "authority": "planned-evidence",
+    "status": "in-progress",
+    "authority": "evidence",
     "owners": [
       "project",
       "quality"
@@ -872,7 +884,7 @@
   {
     "id": "ITER-003-VERIFICATION",
     "kind": "iteration-verification",
-    "status": "not-run",
+    "status": "in-progress",
     "authority": "planned-verification",
     "owners": [
       "quality"
