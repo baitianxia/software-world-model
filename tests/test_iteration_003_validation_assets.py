@@ -45,7 +45,7 @@ DIRECT_PROTOCOL_PATH = (
     VALIDATION_ROOT / "questions" / "direct-baseline-protocol-1.0.1.json"
 )
 MATURE_PROTOCOL_PATH = (
-    VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.2.json"
+    VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.3.json"
 )
 MATURE_ANSWER_SCHEMA_PATH = (
     VALIDATION_ROOT / "questions" / "mature-agent-answer-schema-1.0.0.json"
@@ -585,8 +585,8 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
                 "implementation_file_digest": f"sha256:{_sha256(DIRECT_IMPLEMENTATION_PATH)}",
             },
             "mature_source_agent_baseline": {
-                "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.2.json",
-                "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.2",
+                "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json",
+                "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.3",
                 "protocol_digest": f"sha256:{_sha256(MATURE_PROTOCOL_PATH)}",
                 "answer_schema_path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
                 "answer_schema_ref": "ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0",
@@ -809,6 +809,31 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
         self.assertIn('":minimal"="read"', joined_flags)
         self.assertIn('":workspace_roots"={"."="read"}', joined_flags)
         self.assertIn("permissions.mature_source.network.enabled=false", joined_flags)
+        self.assertIn("allow_login_shell=false", joined_flags)
+        self.assertIn('shell_environment_policy.inherit="none"', joined_flags)
+        self.assertIn(
+            "shell_environment_policy.ignore_default_excludes=false",
+            joined_flags,
+        )
+        self.assertIn(
+            'shell_environment_policy.set={PATH="/usr/bin:/bin:/usr/sbin:/sbin",LANG="C",LC_ALL="C",TZ="UTC"}',
+            joined_flags,
+        )
+        self.assertEqual(
+            mature["isolation"]["shell_environment_policy"],
+            {
+                "inherit": "none",
+                "login_shell": "deny",
+                "set": {
+                    "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+                    "LANG": "C",
+                    "LC_ALL": "C",
+                    "TZ": "UTC",
+                },
+                "secret_named_variables": "excluded",
+                "operator_process_environment": "NOT_MODEL_VISIBLE",
+            },
+        )
 
         codex_path_text = shutil.which("codex")
         self.assertIsNotNone(codex_path_text, "The frozen mature Agent CLI is required by ITER-003 G0")

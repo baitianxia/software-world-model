@@ -25,9 +25,9 @@ from validation.product_holdout_iteration_002.direct_answer import (
 from .manifest import PINNED_SUITE_FILE_DIGEST, PINNED_SUITE_REF, REPOSITORY_ROOT
 
 
-DEFAULT_INPUT_FREEZE_PATH = Path(__file__).with_name("input-freeze-1.0.4.json")
+DEFAULT_INPUT_FREEZE_PATH = Path(__file__).with_name("input-freeze-1.0.5.json")
 PINNED_INPUT_FREEZE_FILE_DIGEST = (
-    "sha256:359e4e7ac529430fe1374bf09e69b140d01a0c619c450dcf4657278c935cc469"
+    "sha256:1949a62cc24563c8847c3b913db231cfcde7a90040d24921e42e529aea6b9f79"
 )
 EXPECTED_G3A_COMMIT = "f2269ecca5c1e85e69fafd93fe599c841227f3c7"
 EXPECTED_G3A_TREE = "936dc1fcab74f45c0342ad0e7055b9d4b314e2e1"
@@ -111,23 +111,23 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
         _invalid("V-009 exact input freeze fields are invalid")
     if (
         value.get("schema") != "swm.iter-003.v009-input-freeze@1"
-        or value.get("freeze_ref") != "ITER-003-V009-EXACT-INPUTS@1.0.4"
+        or value.get("freeze_ref") != "ITER-003-V009-EXACT-INPUTS@1.0.5"
         or value.get("checkpoint_binding") != "ENCLOSING_CLEAN_GIT_COMMIT_AND_TREE"
     ):
         _invalid("V-009 exact input freeze identity is invalid")
     predecessor = _mapping(value.get("predecessor"), "predecessor")
     if predecessor != {
-        "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.3",
-        "freeze_file_digest": "sha256:10620f4eb47b41b8ec4216d04d7a501e9766987163e2888585e412ece492ff17",
-        "checkpoint": "c2ab31b14a6d052eb42fc70941608b903b061347",
-        "conformance_binding_digest": "sha256:6aac75eee21f2a2e75fc0bad2acdac8af6e73123cff4d980693fe6f98003595c",
-        "capability_result_id": "evaluation_result_4c4453b448fd4e6b9cbb923ec0e2398f",
-        "capability_result_digest": "sha256:7df13becf23f2499089c49517fbe38fe55a5703c3ad44072457b05830c2a48b3",
-        "qualification_ref": "capability-evaluation:evaluation_result_4c4453b448fd4e6b9cbb923ec0e2398f",
-        "qualification_digest": "sha256:af4527a5f87daa5bba217d0166beef6d67a18dcf410d27a41ac90dbce8114782",
+        "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.4",
+        "freeze_file_digest": "sha256:359e4e7ac529430fe1374bf09e69b140d01a0c619c450dcf4657278c935cc469",
+        "checkpoint": "3d09ed1c8f9fe1a0199619e924189f0453822937",
+        "conformance_binding_digest": "sha256:8a009865fb3abbedc6f00a9e44b383488cca2470f7fd6f847e9ffd47d1c985d5",
+        "capability_result_id": "evaluation_result_8763cb0d957046d880856addc7395894",
+        "capability_result_digest": "sha256:9815e699187f696db083f24edf0029f8eea583033c9961d69738a2ac63b12c14",
+        "qualification_ref": "capability-evaluation:evaluation_result_8763cb0d957046d880856addc7395894",
+        "qualification_digest": "sha256:5b206e6d39752652039ea9765f58f4da7f92f685d67fa09bbbbbc205387f9d60",
         "outcome": "PASS_VALID_BASELINE_BLOCKED",
-        "blocked_by": "FINDING-003-018",
-        "disposition": "MATURE_BASELINE_PERMISSION_PROFILE_REQUIRES_FULL_NEW_RUN",
+        "blocked_by": "FINDING-003-019",
+        "disposition": "MATURE_BASELINE_SHELL_ENVIRONMENT_REQUIRES_FULL_NEW_RUN",
     }:
         _invalid("V-009 predecessor qualification binding is invalid")
     disclosure = _mapping(value.get("disclosure"), "disclosure")
@@ -234,9 +234,9 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
     }:
         _invalid("V-009 controlled Direct baseline inputs drifted")
     if mature != {
-        "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.2.json",
-        "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.2",
-        "protocol_digest": "sha256:6904a027761939aa8dd0a9ccb8bee6ca804fb0c0f264224018bdd7c7cb374b13",
+        "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json",
+        "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.3",
+        "protocol_digest": "sha256:1848b22ef43d04b946b20951a94e5ee0b082118dde030b76c9471d6dfc3bfe5a",
         "answer_schema_path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
         "answer_schema_digest": "sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d",
         "prepared_binary_path": "/Applications/ChatGPT.app/Contents/Resources/codex",
@@ -245,7 +245,8 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
         "prepared_model": "gpt-5.6-sol",
         "prepared_reasoning_effort": "low",
         "bundled_model_catalog_digest": "sha256:6d6c694360ad6adaf91b4d72b32014afce4c8c8322a304cd01ade377cc00d5f6",
-        "permission_profile_binding": "ROOT_DENY_MINIMAL_RUNTIME_READ_EXACT_WORKSPACE_READ_TEMP_AND_NETWORK_DENY",
+        "permission_profile_binding": "ROOT_DENY_MINIMAL_RUNTIME_READ_EXACT_WORKSPACE_READ_TEMP_NETWORK_AND_ENVIRONMENT_DENY",
+        "shell_environment_binding": "INHERIT_NONE_LOGIN_DENY_EXPLICIT_NON_SECRET_SET",
         "exact_runtime_model_config_binding": "EXPLICIT_AND_RECHECK_AT_RUN",
         "result_timing": "AFTER_CE_PASS_BEFORE_FIRST_G3B_PRODUCT_RUN",
     }:
@@ -404,6 +405,19 @@ def verify_input_freeze_runtime(
         != "FORBIDDEN_BECAUSE_IT_BYPASSES_PERMISSION_PROFILES"
         or mature_protocol.get("isolation", {}).get("file_access_policy")
         != "CODEX_PERMISSION_PROFILE_ROOT_DENY_MINIMAL_RUNTIME_READ_EXACT_WORKSPACE_READ_TEMP_DENY_NETWORK_DENY"
+        or mature_protocol.get("isolation", {}).get("shell_environment_policy")
+        != {
+            "inherit": "none",
+            "login_shell": "deny",
+            "set": {
+                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+                "LANG": "C",
+                "LC_ALL": "C",
+                "TZ": "UTC",
+            },
+            "secret_named_variables": "excluded",
+            "operator_process_environment": "NOT_MODEL_VISIBLE",
+        }
         or not isinstance(mature_schema, dict)
         or mature_schema.get("$id")
         != mature_protocol.get("answer_schema", {}).get("schema_ref")

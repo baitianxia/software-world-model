@@ -1,0 +1,100 @@
+{
+  "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.3",
+  "purpose": "prevent the in-repository direct loop from becoming a deliberately weak comparator",
+  "agent": {
+    "implementation": "Codex CLI",
+    "prepared_version": "codex-cli 0.147.0-alpha.1.2",
+    "prepared_binary_sha256": "9f6748b4ab10ffc92c28b9ccedae89e61a302bbc011df7d276ee38f55906e481",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "low",
+    "bundled_model_catalog_sha256": "6d6c694360ad6adaf91b4d72b32014afce4c8c8322a304cd01ade377cc00d5f6",
+    "resolver": "EXPLICIT_MODEL_AND_REASONING_WITH_EXACT_BINARY_AND_BUNDLED_CATALOG",
+    "drift": "ANY_BINARY_MODEL_CONFIG_PROMPT_PERMISSION_PROFILE_SHELL_ENVIRONMENT_OR_CATALOG_DRIFT_REQUIRES_RERUN_AND_NEW_BOUND_RESULT"
+  },
+  "command_contract": {
+    "argv_order": ["BINARY", "GLOBAL_FLAGS", "SUBCOMMAND", "EXEC_FLAGS", "PROMPT"],
+    "global_flags": ["--ask-for-approval", "never"],
+    "subcommand": "exec",
+    "exec_flags": [
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--strict-config",
+      "--model",
+      "gpt-5.6-sol",
+      "--config",
+      "model_reasoning_effort=\"low\"",
+      "--config",
+      "web_search=\"disabled\"",
+      "--config",
+      "features.apps=false",
+      "--config",
+      "features.multi_agent=false",
+      "--config",
+      "allow_login_shell=false",
+      "--config",
+      "shell_environment_policy.inherit=\"none\"",
+      "--config",
+      "shell_environment_policy.ignore_default_excludes=false",
+      "--config",
+      "shell_environment_policy.set={PATH=\"/usr/bin:/bin:/usr/sbin:/sbin\",LANG=\"C\",LC_ALL=\"C\",TZ=\"UTC\"}",
+      "--config",
+      "default_permissions=\"mature_source\"",
+      "--config",
+      "permissions.mature_source.filesystem={\":root\"=\"deny\",\":minimal\"=\"read\",\":tmpdir\"=\"deny\",\":slash_tmp\"=\"deny\",\":workspace_roots\"={\".\"=\"read\"}}",
+      "--config",
+      "permissions.mature_source.network.enabled=false",
+      "--output-schema",
+      "MATURE_AGENT_ANSWER_SCHEMA",
+      "--json"
+    ],
+    "legacy_sandbox_flag": "FORBIDDEN_BECAUSE_IT_BYPASSES_PERMISSION_PROFILES",
+    "web_search": "DISABLED",
+    "network_tools": "DISABLED",
+    "workspace": "ISOLATED_EXACT_SOURCE_CHECKOUT_ONLY",
+    "additional_directories": [],
+    "prompt_input": "QUESTION_LANGUAGE_EXACT_REVISION_SCOPE_AND_CITATION_REQUIREMENT_WITHOUT_EXPECTED_ORACLE_WORLD_MODEL_OR_DIRECT_RESULTS"
+  },
+  "answer_schema": {
+    "path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
+    "schema_ref": "ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0",
+    "schema_digest": "sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d"
+  },
+  "isolation": {
+    "repository_copy": "CONTAINS_ONLY_EXACT_AUTHORIZED_POM_SOURCE_TARGET_AND_CONTROL_SCHEMA",
+    "file_access_policy": "CODEX_PERMISSION_PROFILE_ROOT_DENY_MINIMAL_RUNTIME_READ_EXACT_WORKSPACE_READ_TEMP_DENY_NETWORK_DENY",
+    "permission_profile": {
+      "root": "deny",
+      "minimal_runtime": "read",
+      "workspace_roots": "read",
+      "tmpdir": "deny",
+      "slash_tmp": "deny",
+      "network": "deny"
+    },
+    "shell_environment_policy": {
+      "inherit": "none",
+      "login_shell": "deny",
+      "set": {
+        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "TZ": "UTC"
+      },
+      "secret_named_variables": "excluded",
+      "operator_process_environment": "NOT_MODEL_VISIBLE"
+    },
+    "forbidden_mounts": ["product_question_evaluator_oracle", "metamorphic_oracle", "world_model_results", "controlled_direct_results"],
+    "forbidden_reads": ["parent_of_isolated_checkout", "original_workspace", "network", "provider_memory", "operator_credentials", "operator_environment"],
+    "preflight": "SAVE_ALLOWED_WORKSPACE_READ_AND_DENIED_ORIGINAL_WORKSPACE_PARENT_HOME_TEMP_NETWORK_PROBES_BEFORE_FIRST_MODEL_RUN",
+    "audit": "SAVE_COMMAND_WITHOUT_SECRETS_PERMISSION_PROFILE_ENVIRONMENT_CONFIG_PROBE_EVENT_LOG_STDOUT_STDERR_EXIT_STATUS_AND_MODEL_PROPOSED_FILE_OPERATION_AUDIT"
+  },
+  "comparison": {
+    "cases": "EVERY_PRODUCT_CASE_WITH_DIRECT_PARITY_TRUE_PLUS_RUNTIME_METAMORPHIC_SUPPORTED_CASES",
+    "runs_per_case": 5,
+    "cold_process_required": true,
+    "timing": "COMPLETE_AND_SEAL_AFTER_G0_TOOL_RECHECK_AND_BEFORE_FIRST_G3B_PRODUCT_RUN",
+    "quality_rule": "WORLD_MODEL_MAJOR_ERROR_ZERO_AND_COMPLETENESS_NOT_LOWER_THAN_THE_STRONGER_OF_CONTROLLED_DIRECT_AND_MATURE_AGENT_PER_CASE",
+    "performance_rule": "NO_CROSS_MODEL_LATENCY_RATIO_MATURE_AGENT_IS_QUALITY_COMPARATOR_ONLY",
+    "failure_rule": "KEEP_ALL_FAILURES_DO_NOT_SELECT_SUCCESSES"
+  }
+}

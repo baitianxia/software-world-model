@@ -106,9 +106,9 @@ external_inputs:
     status: frozen
   live_provider:
     kind: exact-gate-input
-    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.4.json
-    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.4
-    input_freeze_digest: sha256:359e4e7ac529430fe1374bf09e69b140d01a0c619c450dcf4657278c935cc469
+    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.5.json
+    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.5
+    input_freeze_digest: sha256:1949a62cc24563c8847c3b913db231cfcde7a90040d24921e42e529aea6b9f79
     checkpoint_binding: enclosing-clean-git-commit-and-tree-recorded-by-runtime
     g3a_checkpoint: f2269ecca5c1e85e69fafd93fe599c841227f3c7
     provider_type: VOLCENGINE_ARK
@@ -156,16 +156,16 @@ external_inputs:
       evaluator_digest: sha256:f090c0ca54d3438a803e1cc5df6949e9d635082c5333f326cea288e1768ae12c
       required_case_count: 7
       result_requirement: closed-pass-valid-fail-zero-unknown-zero
-      prior_attempt_checkpoint: c2ab31b14a6d052eb42fc70941608b903b061347
-      prior_attempt_result: sha256:7df13becf23f2499089c49517fbe38fe55a5703c3ad44072457b05830c2a48b3
+      prior_attempt_checkpoint: 3d09ed1c8f9fe1a0199619e924189f0453822937
+      prior_attempt_result: sha256:9815e699187f696db083f24edf0029f8eea583033c9961d69738a2ac63b12c14
       prior_attempt_outcome: 7-pass-0-fail-0-unknown-pass-valid-baseline-preflight-blocked
-      status: mature-permission-profile-corrected-full-live-rerun-pending
+      status: mature-shell-environment-corrected-full-live-rerun-pending
     source_disclosure:
       confirmation_ref: codex-user-confirmation:2026-08-10T21:01:55+08:00
       message_digest: sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae
       v009_conformance_ce_and_required_baselines: confirmed
       g3b_product_dispatch: not-included-requires-separate-confirmation
-    status: exact-inputs-v1.0.4-frozen-after-attempt-4-pass-baseline-preflight-block-live-rerun-pending
+    status: exact-inputs-v1.0.5-frozen-after-attempt-5-pass-baseline-preflight-block-live-rerun-pending
   direct_investigation_baseline:
     kind: exact-product-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json
@@ -186,9 +186,9 @@ external_inputs:
     status: protocol-v1.0.1-frozen-results-pending
   mature_source_agent_baseline:
     kind: external-quality-comparison-input
-    protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.2.json
-    protocol_ref: ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.2
-    protocol_digest: sha256:6904a027761939aa8dd0a9ccb8bee6ca804fb0c0f264224018bdd7c7cb374b13
+    protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json
+    protocol_ref: ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.3
+    protocol_digest: sha256:1848b22ef43d04b946b20951a94e5ee0b082118dde030b76c9471d6dfc3bfe5a
     answer_schema_path: validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json
     answer_schema_ref: ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0
     answer_schema_digest: sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d
@@ -198,7 +198,8 @@ external_inputs:
     prepared_model: gpt-5.6-sol
     prepared_reasoning_effort: low
     bundled_model_catalog_digest: sha256:6d6c694360ad6adaf91b4d72b32014afce4c8c8322a304cd01ade377cc00d5f6
-    permission_profile: root-deny-minimal-runtime-read-exact-workspace-read-temp-and-network-deny
+    permission_profile: root-deny-minimal-runtime-read-exact-workspace-read-temp-network-and-environment-deny
+    shell_environment: inherit-none-login-deny-explicit-non-secret-set
     exact_tool_model_config: explicit-and-recheck-at-run
     result_timing: seal-before-first-g3b-product-run
     comparison_scope: quality-only-no-cross-model-latency-ratio

@@ -30,5 +30,6 @@ iteration: ITER-003
 - [FINDING-003-016：第二轮 V-009 暴露了 PARTIAL coverage 的 status 歧义](FINDING-003-016.md) — dispositioned / iteration-design
 - [FINDING-003-017：Direct baseline 无法表达移动 POM 的双 revision 完整覆盖](FINDING-003-017.md) — dispositioned / iteration-design
 - [FINDING-003-018：Mature baseline 的 legacy read-only 不能证明精确源码隔离](FINDING-003-018.md) — dispositioned / iteration-design
+- [FINDING-003-019：Mature baseline 还必须隔离 operator 环境变量](FINDING-003-019.md) — dispositioned / iteration-design
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

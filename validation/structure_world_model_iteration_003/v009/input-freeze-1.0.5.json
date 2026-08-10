@@ -1,0 +1,130 @@
+{
+  "schema": "swm.iter-003.v009-input-freeze@1",
+  "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.5",
+  "checkpoint_binding": "ENCLOSING_CLEAN_GIT_COMMIT_AND_TREE",
+  "predecessor": {
+    "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.4",
+    "freeze_file_digest": "sha256:359e4e7ac529430fe1374bf09e69b140d01a0c619c450dcf4657278c935cc469",
+    "checkpoint": "3d09ed1c8f9fe1a0199619e924189f0453822937",
+    "conformance_binding_digest": "sha256:8a009865fb3abbedc6f00a9e44b383488cca2470f7fd6f847e9ffd47d1c985d5",
+    "capability_result_id": "evaluation_result_8763cb0d957046d880856addc7395894",
+    "capability_result_digest": "sha256:9815e699187f696db083f24edf0029f8eea583033c9961d69738a2ac63b12c14",
+    "qualification_ref": "capability-evaluation:evaluation_result_8763cb0d957046d880856addc7395894",
+    "qualification_digest": "sha256:5b206e6d39752652039ea9765f58f4da7f92f685d67fa09bbbbbc205387f9d60",
+    "outcome": "PASS_VALID_BASELINE_BLOCKED",
+    "blocked_by": "FINDING-003-019",
+    "disposition": "MATURE_BASELINE_SHELL_ENVIRONMENT_REQUIRES_FULL_NEW_RUN"
+  },
+  "disclosure": {
+    "confirmed": true,
+    "confirmation_ref": "codex-user-confirmation:2026-08-10T21:01:55+08:00",
+    "message_digest": "sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae",
+    "scope": [
+      "V009_ADAPTER_CONFORMANCE_SYNTHETIC_CANARIES",
+      "V009_CLOSED_CAPABILITY_SYNTHETIC_CASE_INPUTS",
+      "V009_CONTROLLED_DIRECT_BASELINE_QUESTION_AND_SOURCE_CONTENT",
+      "V009_MATURE_SOURCE_AGENT_BASELINE_QUESTION_AND_SOURCE_CONTENT"
+    ],
+    "g3b_product_dispatch_included": false
+  },
+  "g3a": {
+    "commit": "f2269ecca5c1e85e69fafd93fe599c841227f3c7",
+    "tree": "936dc1fcab74f45c0342ad0e7055b9d4b314e2e1",
+    "result_commit": "8caac3efaf97e169dac91a94a7c8ea2f8baa1b30",
+    "result_status": "PASS"
+  },
+  "provider": {
+    "provider_type": "VOLCENGINE_ARK",
+    "protocol": "OPENAI_COMPATIBLE_CHAT_COMPLETIONS",
+    "adapter_version": "openai-chat-completions-no-tools@8",
+    "requested_model_ref": "glm-5-2-260617",
+    "actual_model_fingerprint": "glm-5.2",
+    "configuration_fingerprint": "sha256:420f553a3ce0075818550e08cb1351ce69eaf9871c5a0257aecf88b7b32b88fd",
+    "credential_reference": "env:ARK_API_KEY",
+    "endpoint": {
+      "scheme": "https",
+      "host": "ark.cn-beijing.volces.com",
+      "port": 443,
+      "path": "/api/coding/v3/chat/completions"
+    }
+  },
+  "egress_policy": {
+    "path": "validation/structure_world_model_iteration_003/v009/model-egress-policy-1.0.0.json",
+    "policy_ref": "ITER-003-MODEL-EGRESS-GATEWAY@1.0.0",
+    "file_digest": "sha256:3e0bfcbf6f1b85d350db167d1bc71ff55f35a76546f15d4d7f14a871aa0326e0",
+    "default_action": "DENY",
+    "qualification_transport": "DIRECT_ADAPTER_TRANSPORT_QUALIFICATION_ONLY",
+    "g3b_requires_distinct_gateway_and_os_audit": true
+  },
+  "conformance": {
+    "fixture_id": "CC-ARK-CHAT-NO-TOOLS-001",
+    "fixture_version": "1.6.0",
+    "operator": "iter-003-v009-operator",
+    "timeout_milliseconds": 30000,
+    "max_output_tokens": 96,
+    "required_request_count": 2,
+    "execution_protocol": "V009_PRECALL_SEALED_INVOCATION_AND_EXACT_RESULT_BINDING@1",
+    "implementation_manifest_digest": "sha256:b0eed0252ab7bfd723bf9cb06b0e48d3ccd2e1c6f6d51ee2c26cdc027509d774",
+    "result_binding": "EXACT_PASS_RESULT_FROM_THESE_INPUTS"
+  },
+  "strategy": {
+    "capability_id": "world-model-authority-proposal",
+    "capability_contract_version": "1.0.0",
+    "strategy_id": "model-snapshot-first-world-model-answer",
+    "strategy_version": "1.0.2",
+    "implementation_digest": "sha256:4a83df22f535dc8fa1712b3fc04f7a6ee3960263070ed5366ab18b3692446fa0",
+    "implementation_file_digest": "sha256:520580b24f46a94439602e987268b24575746383b5e9e0c8e6845189664f2ebc",
+    "prompt_program_digest": "sha256:f6d93c9b2fcb4b953a7ddf35a787a5de8e6555397f49ad517cbf4d15681a24fc",
+    "output_contract_digest": "sha256:2b7e9a5dbae0d9436ee9d7cc87ffa17be33997d4e1f59bbc75e385c8e51bbd9d",
+    "tool_policy_ref": "model-no-tools-no-source-no-evidence@1",
+    "configuration": {
+      "classification": "INTERNAL",
+      "max_output_tokens": 1000,
+      "timeout_milliseconds": 180000,
+      "model_calls_per_case": 1,
+      "hidden_retry_count": 0,
+      "qualification_ref_binding": "EXACT_CONFORMANCE_RESULT"
+    }
+  },
+  "capability_evaluation": {
+    "suite_path": "validation/structure_world_model_iteration_003/questions/capability-suite-1.0.0.json",
+    "suite_ref": "ITER-003-WORLD-MODEL-CAPABILITY-SUITE@1.0.0",
+    "suite_file_digest": "sha256:b9118d83aa40e58ade6e3c947ea86d1d6d73ebd50d3b1ae0797d5caa7e415ad6",
+    "evaluator_path": "validation/structure_world_model_iteration_003/v009/evaluator.py",
+    "evaluator_file_digest": "sha256:f090c0ca54d3438a803e1cc5df6949e9d635082c5333f326cea288e1768ae12c",
+    "required_case_count": 7,
+    "failure_count_required": 0,
+    "unknown_count_required": 0,
+    "valid_for_seconds": 604800,
+    "result_requirement": "CLOSED_PASS_AND_VALID"
+  },
+  "baselines": {
+    "controlled_direct": {
+      "protocol_path": "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json",
+      "protocol_ref": "ITER-003-DIRECT-SOURCE-BASELINE@1.0.1",
+      "protocol_digest": "sha256:b26a09eb1d7c35b3c7a2af0d26f7a10ffc44a8a0f328fee5252b3a35717905d7",
+      "implementation_path": "validation/product_holdout_iteration_002/direct_answer.py",
+      "implementation_file_digest": "sha256:f36dc034d86b6c947e41bd2873f89b093fcbf3fe880f0e2becec8e3421fc6f9b",
+      "implementation_semantic_digest": "sha256:26a0d3e55188daa974f0ffcb9147a4606765453bb8b9a26174adc6b911d2caa4",
+      "provider_adapter_model_binding": "SAME_AS_PROVIDER_BLOCK",
+      "result_timing": "AFTER_CE_PASS_BEFORE_FIRST_G3B_PRODUCT_RUN"
+    },
+    "mature_source_agent": {
+      "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json",
+      "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.3",
+      "protocol_digest": "sha256:1848b22ef43d04b946b20951a94e5ee0b082118dde030b76c9471d6dfc3bfe5a",
+      "answer_schema_path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
+      "answer_schema_digest": "sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d",
+      "prepared_binary_path": "/Applications/ChatGPT.app/Contents/Resources/codex",
+      "prepared_tool_version": "codex-cli 0.147.0-alpha.1.2",
+      "prepared_binary_digest": "sha256:9f6748b4ab10ffc92c28b9ccedae89e61a302bbc011df7d276ee38f55906e481",
+      "prepared_model": "gpt-5.6-sol",
+      "prepared_reasoning_effort": "low",
+      "bundled_model_catalog_digest": "sha256:6d6c694360ad6adaf91b4d72b32014afce4c8c8322a304cd01ade377cc00d5f6",
+      "permission_profile_binding": "ROOT_DENY_MINIMAL_RUNTIME_READ_EXACT_WORKSPACE_READ_TEMP_NETWORK_AND_ENVIRONMENT_DENY",
+      "shell_environment_binding": "INHERIT_NONE_LOGIN_DENY_EXPLICIT_NON_SECRET_SET",
+      "exact_runtime_model_config_binding": "EXPLICIT_AND_RECHECK_AT_RUN",
+      "result_timing": "AFTER_CE_PASS_BEFORE_FIRST_G3B_PRODUCT_RUN"
+    }
+  }
+}
