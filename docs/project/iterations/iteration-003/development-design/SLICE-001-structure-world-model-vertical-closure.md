@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and dependencies
 
-当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，允许开始 G1 产品代码。Manifest baseline 固定无产品代码变化的准备提交 P；治理提交 Q、G0 输入 checkpoint 和 G0 Result 分别记录完整关系，`P..Q` 与 `Q..G0 Result` 没有产品代码差异。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
+当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，G1 Result 又绑定 G0 PASS 并在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上通过 V-002～V-006/V-012；当前只允许开始 G2。Manifest baseline 固定无产品代码变化的准备提交 P；各 Gate Result 分别记录完整 lineage。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
 
 ## Current vs expected behavior
 
@@ -53,6 +53,8 @@ coding_input: true
 实现 typed Relation/Literal Fact、稳定 Entity/Fact Root、State、endpoint Admission 与 `REPLACE_COVERAGE`。`ENRICH` 对已有 Root 的不同 State 必须拒绝；Coverage ownership 本轮禁止重叠。运行 A→B→A 和歧义/悬空/重叠反例。人工可查看 CLI 报告必须逐行展示 Snapshot ID、revision、Entity Root/State、source/predicate/target、Fact Root/State、Evidence locator、Coverage Root/State、每条依赖声明的 resolved GAV/profile exclusion、删除项和旧 Snapshot 查询；exclusion 报告不得作为 Source-off 答案知识使用。
 
 G1 不通过，禁止实现 Structure View、浏览器和模型答案。
+
+G1 已由 `ITER-003-RESULT-G1` 在 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上裁决为 PASS；该结论只解除 G2，不替代 G2 的 Bundle 与 OS 隔离证明。
 
 ### G2 — Source-off Snapshot/View
 

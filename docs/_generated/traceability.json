@@ -649,6 +649,30 @@
       "tests/test_iteration_003_validation_assets.py"
     ]
   },
+  "ITER-003-RESULT-G1": {
+    "path": "docs/project/iterations/iteration-003/results/gate-g1.md",
+    "code": [
+      "src/software_world_model/source_integration",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services",
+      "src/software_world_model/infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_source_operations.py",
+      "tests/test_artifact_use_authority.py",
+      "tests/test_structure_knowledge.py",
+      "tests/test_structure_publication.py",
+      "tests/test_maven_structure.py",
+      "tests/test_maven_structure_update.py",
+      "tests/test_maven_structure_update_authority.py",
+      "tests/test_structure_read_session.py",
+      "tests/test_context_comparison.py",
+      "tests/test_legacy_formal_reader.py",
+      "tests/test_maven_structure_cli.py",
+      "tests/test_iteration_003_g1_integration.py"
+    ]
+  },
   "ITER-003-SLICE-001": {
     "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md",
     "code": [
