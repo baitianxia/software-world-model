@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [architecture, knowledge]
 depends_on: [SYS-ARCH-OVERVIEW]
-code: [src/software_world_model/knowledge_engine]
-tests: [tests/test_formal_knowledge.py, tests/test_knowledge_scope.py]
+code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services/evidence_answer.py]
+tests: [tests/test_formal_knowledge.py, tests/test_knowledge_scope.py, tests/test_evidence_answer.py]
 ---
 
 # 顶层领域模型
@@ -14,6 +14,13 @@ tests: [tests/test_formal_knowledge.py, tests/test_knowledge_scope.py]
 ```mermaid
 flowchart TD
     DS["Data Source + Binding"] --> AR["Artifact"]
+    Q["Original Question + Checklist"] --> EP["Sealed task Evidence Packet"]
+    AR --> EP
+    EP --> DA["Cited Answer Draft"]
+    Q --> RV["Independent Answer Review"]
+    DA --> RV
+    EP --> RV
+    RV --> AA["Authorized synchronous answer"]
     AR --> EV["Evidence"]
     EV --> CC["Entity / Fact / Inference Candidate Closure"]
     PS["Exact published premises / base Snapshot"] -.-> CC
@@ -28,15 +35,17 @@ flowchart TD
     SN --> RS["Read Session"]
     RQ["Requirement + Needs"] --> AS["Sufficiency Assessment"]
     RS --> AS
-    AS --> AN["Reviewed Answer"]
+    AS --> KA["Reviewed formal-knowledge query result"]
 ```
 
-该图同时表达正式知识生命周期与读取边界。Evidence 不直接产生正式 Entity / Fact / Inference；Candidate 必须经过独立 Admission 和整体 Publication 才能在 Snapshot 中可见。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
+该图表达两条不同边界。同步问答把 Artifact 的 exact 内容密封为只对当前问题有效的 Evidence Packet，经答案审核后交付；它不产生正式知识。正式知识生命周期仍要求 Evidence、Candidate、独立 Admission 和整体 Publication 后才能在 Snapshot 中可见。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
 
 ## 概念边界
 
 - **Artifact** 是来源的中立、可追溯观察载体，不是知识结论。
 - **Evidence** 是 Artifact 中有界且可定位的观察，不表达全局真假。
+- **Evidence Packet** 是绑定原问题、检查清单、exact Target、来源操作和 Artifact 内容的不可变任务输入；它没有跨任务正式知识资格。
+- **Answer Draft / Review Finding** 分别是可引用自然答案和独立审核意见；只有空 Finding 的 APPROVED Draft 可被授权。
 - **Entity** 提供稳定身份；属性和关系由 Fact 或 Inference 表达。
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。
 - **Inference** 从已发布前提形成受控结论；Conflict 证明语义不兼容但不擅自选赢家。

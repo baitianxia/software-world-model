@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS knw_inferences (
     rule_ref TEXT NOT NULL,
     context_json TEXT NOT NULL,
     context_digest TEXT NOT NULL,
+    reviewed_need_ids_json TEXT NOT NULL DEFAULT '[]',
     object_digest TEXT NOT NULL
 );
 
@@ -147,6 +148,15 @@ class SqliteFormalKnowledgeRepository:
             if "reviewed_grounding_json" not in columns:
                 connection.execute(
                     "ALTER TABLE knw_facts ADD COLUMN reviewed_grounding_json TEXT"
+                )
+            inference_columns = {
+                row["name"]
+                for row in connection.execute("PRAGMA table_info(knw_inferences)")
+            }
+            if "reviewed_need_ids_json" not in inference_columns:
+                connection.execute(
+                    "ALTER TABLE knw_inferences ADD COLUMN "
+                    "reviewed_need_ids_json TEXT NOT NULL DEFAULT '[]'"
                 )
 
     def current_snapshot(self, scope_id: StableId) -> KnowledgeSnapshot | None:
@@ -277,6 +287,9 @@ class SqliteFormalKnowledgeRepository:
                 text=row["object_value"],
                 context_digest=Digest(row["context_digest"]),
                 support_references=_parse_refs(row["evidence_refs_json"]),
+                reviewed_need_ids=_reviewed_need_ids(
+                    row["reviewed_grounding_json"]
+                ),
             )
         row = connection.execute(
             "SELECT * FROM knw_inferences WHERE inference_id = ?", (member.object_id.value,)
@@ -289,6 +302,9 @@ class SqliteFormalKnowledgeRepository:
             text=row["proposition"],
             context_digest=Digest(row["context_digest"]),
             support_references=_parse_refs(row["premise_refs_json"]),
+            reviewed_need_ids=tuple(
+                item for item in json.loads(row["reviewed_need_ids_json"])
+            ),
         )
 
     def record_rejection(
@@ -401,17 +417,37 @@ class SqliteFormalKnowledgeRepository:
                         ),
                     )
                 for inference in batch.inferences:
-                    self._insert_immutable(connection, "knw_inferences", "inference_id", inference.inference_id, inference.digest, (
-                        inference.inference_id.value,
-                        inference.schema_version,
-                        inference.inference_type,
-                        inference.proposition,
-                        _refs(inference.premise_references),
-                        inference.rule_ref,
-                        _json(dict(inference.context.terms)),
-                        inference.context.digest.value,
-                        inference.digest.value,
-                    ))
+                    self._insert_immutable(
+                        connection,
+                        "knw_inferences",
+                        "inference_id",
+                        inference.inference_id,
+                        inference.digest,
+                        (
+                            inference.inference_id.value,
+                            inference.schema_version,
+                            inference.inference_type,
+                            inference.proposition,
+                            _refs(inference.premise_references),
+                            inference.rule_ref,
+                            _json(dict(inference.context.terms)),
+                            inference.context.digest.value,
+                            _json(inference.reviewed_need_ids),
+                            inference.digest.value,
+                        ),
+                        columns=(
+                            "inference_id",
+                            "schema_version",
+                            "inference_type",
+                            "proposition",
+                            "premise_refs_json",
+                            "rule_ref",
+                            "context_json",
+                            "context_digest",
+                            "reviewed_need_ids_json",
+                            "object_digest",
+                        ),
+                    )
                 previous_members: tuple[SnapshotMember, ...] = ()
                 if actual_id is not None:
                     previous_members = self._load_snapshot(connection, actual_id).members
@@ -704,9 +740,28 @@ def _reviewed_grounding_json(fact: KnowledgeFact) -> str | None:
             "reviewer_model_call_id": grounding.reviewer_model_call_id.value,
             "reviewer_output_digest": grounding.reviewer_output_digest.value,
             "actual_model_fingerprint": grounding.actual_model_fingerprint,
+            "need_ids": grounding.need_ids,
             "digest": grounding.digest.value,
         }
     )
+
+
+def _reviewed_need_ids(value: str | None) -> tuple[str, ...]:
+    if not value:
+        return ()
+    try:
+        document = json.loads(value)
+    except json.JSONDecodeError:
+        return ()
+    items = document.get("need_ids") if isinstance(document, dict) else None
+    if (
+        not isinstance(items, list)
+        or not items
+        or not all(isinstance(item, str) and item.strip() for item in items)
+        or len(items) != len(set(items))
+    ):
+        return ()
+    return tuple(items)
 
 
 def _parse_refs(value: str) -> tuple[StableId, ...]:

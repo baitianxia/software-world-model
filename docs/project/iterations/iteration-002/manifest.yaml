@@ -1,0 +1,57 @@
+schema_version: 1
+iteration:
+  id: ITER-002
+  status: authorized
+  outcome_scope: local-generic-repository-chat
+
+baseline:
+  commit: cd8abad86b066e36bd280b19e458d8b5b20cd856
+  dirty_worktree_allowed: true
+  relation: pre-iteration-drift-captured-by-working-tree-diff
+
+system_inputs:
+  ids:
+    - SYS-ARCH-INVARIANTS
+    - SYS-CONTRACT-SOURCE-ARTIFACT
+    - SYS-CONTRACT-KNOWLEDGE-FACT
+    - SYS-CONTRACT-KNOWLEDGE-ADMISSION
+    - SYS-CONTRACT-KNOWLEDGE-PERSISTENCE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+    - SYS-CONTRACT-APPLICATION-AGENTIC-TASK
+    - SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING
+    - SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-CONTRACT-AI-CAPABILITY-EVALUATION
+    - SYS-QUALITY-ACCEPTANCE
+    - SYS-OPS-LOCAL-BROWSER
+
+external_inputs:
+  provider_conformance:
+    kind: provider-conformance
+    path: var/conformance-v8/CC-ARK-CHAT-NO-TOOLS-001-ccrun_66bbedf18020445c9df5fac11526fda1.json
+    run_id: ccrun_66bbedf18020445c9df5fac11526fda1
+    result_digest: sha256:dee384a90d89193952a83959ba9e9fed9e07faa2edbfabf13b094f47d740668f
+    endpoint: https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions
+    model_ref: glm-5-2-260617
+    actual_model_fingerprint: glm-5.2
+    secret_reference: env:ARK_API_KEY
+  capability_suite:
+    kind: capability-suite
+    path: validation/evidence_answer_capability_iteration_002/suite.json
+    suite_ref: general-evidence-answer-2026-08-10@1.3.0
+    suite_digest: sha256:0f06bd1572df8c7996b8a6c4eccd908e7193dcd12c06a0aa0b7296bedbdbb421
+  product_holdout_suite:
+    kind: product-holdout-suite
+    path: validation/product_holdout_iteration_002/suite.json
+    suite_ref: product-unseen-repositories-2026-08-07@2.0.5
+    suite_digest: sha256:19b955badc095cf4fb6d8b20f3b2d02aec228c1f32b1ad26f13198e048474f25
+
+verification:
+  matrix_id: ITER-002-VERIFICATION
+  evidence_location: var/iteration-002
+
+authorization:
+  readiness_review_id: ITER-002-READINESS
+  authorized_by: user
+  authorized_at: "2026-08-09T03:47:28+08:00"

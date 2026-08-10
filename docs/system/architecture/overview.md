@@ -23,12 +23,14 @@ flowchart LR
     TC -->|"authorized query / command"| A
     A --> S["Source Integration"]
     S -->|"Operation Result + Artifact reference"| A
+    A -->|"sealed Evidence Packet"| R
     A -->|"neutral Artifact contract"| K["Knowledge Engine"]
     K --> N["Formal Snapshot"]
     A --> M["Model Gateway"]
     N --> A
     A -->|"immutable application result"| TC
-    TC -->|"candidate proposal / review authorization"| R["Response Control"]
+    TC -->|"task assertion when required"| R["Response Control"]
+    R -->|"draft / independent review / targeted rewrite"| R
     R -->|"authorized exact response"| IF
     T["Telemetry"] -. "observe only" .-> A
     T -. "observe only" .-> S
@@ -40,8 +42,9 @@ flowchart LR
 - 软件来源、模型 Provider、交付 Adapter 和 Telemetry Backend 都是不可信外部边界。
 - 来源访问必须由 Source Integration 执行；模型不能直接执行来源或平台工具，只能提交由平台重新授权的结构化 Proposal。
 - Provider 响应只能形成 Proposal 或评测输入，必须由领域所有者校验。
+- 同步问答的 Evidence Packet 是任务级固定输入，不是正式知识；Knowledge Engine 的 Admission 与 Snapshot 仍是跨任务正式知识的唯一入口。
 - 当前系统规范不等于部署授权；任何环境启用都需要与 exact subject 匹配的独立证据和显式授权。
 
 ## 演进方式
 
-扩展优先沿现有 Owner、Port 和 Contract 增加 Strategy。只有出现新的权威状态、事务边界或安全边界时，才新增顶层组件。尚未被当前 Contract 接受的能力不属于系统现状，实现不得提前假设其存在。
+扩展优先沿现有 Owner、Port 和 Contract 增加 Strategy。同步问答在 Application 与 Response Control 内增加证据优先用例，不新增顶层组件；正式知识沉淀可异步调用既有 Knowledge Update。只有出现新的权威状态、事务边界或安全边界时，才新增顶层组件。尚未被当前 Contract 接受的能力不属于系统现状，实现不得提前假设其存在。

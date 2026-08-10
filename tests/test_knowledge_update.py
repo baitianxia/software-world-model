@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import subprocess
@@ -10,6 +11,8 @@ from software_world_model.application_services import (
     BuildObjective,
     CanonicalBuildTarget,
     InvestigationStopReason,
+    KnowledgeNeed,
+    KnowledgeRequirementPlan,
     KnowledgeUpdateRequest,
     KnowledgeUpdateService,
     SourceActionProposal,
@@ -30,7 +33,19 @@ from software_world_model.infrastructure import (
     SqliteSourceConfigurationRepository,
     SqliteSourceOperationRepository,
 )
-from software_world_model.knowledge_engine import FormalKnowledgeService, KnowledgeScopeService, ScopePurpose, ScopeType
+from software_world_model.knowledge_engine import (
+    EntityProposal,
+    EvidenceProposal,
+    FactProposal,
+    FormalKnowledgeService,
+    InferenceProposal,
+    KnowledgeCandidateBundle,
+    KnowledgeContext,
+    KnowledgeObjectKind,
+    KnowledgeScopeService,
+    ScopePurpose,
+    ScopeType,
+)
 from software_world_model.source_integration import (
     LocalGitConfigurationProvider,
     LocalGitConnector,
@@ -61,6 +76,68 @@ class ScriptedPlanner:
         del request, ordinal
         self.observed_operation_counts.append(len(completed_operations))
         return self.proposals.pop(0)
+
+
+class TwoStageInferenceBuilder:
+    def build(self, *, request, target, artifacts, source_operations=()):
+        del source_operations
+        artifact = artifacts[0]
+        context = KnowledgeContext.create(dict(target.canonical_identity))
+        evidence = EvidenceProposal(
+            evidence_key="evidence:source",
+            artifact=artifact,
+            byte_start=0,
+            byte_end=len(artifact.payload),
+            locator=artifact.source_native_identity,
+        )
+        entity = EntityProposal(
+            candidate_key="entity:source",
+            entity_type="SOURCE_FILE",
+            natural_key=f"{target.digest.value}:source",
+            label=artifact.source_native_identity,
+            context=context,
+            evidence_keys=(evidence.evidence_key,),
+        )
+        facts = (
+            FactProposal(
+                candidate_key="fact:package",
+                subject_candidate_key=entity.candidate_key,
+                subject_entity_id=None,
+                predicate="DECLARES",
+                object_value="package example;",
+                context=context,
+                evidence_keys=(evidence.evidence_key,),
+            ),
+            FactProposal(
+                candidate_key="fact:class",
+                subject_candidate_key=entity.candidate_key,
+                subject_entity_id=None,
+                predicate="DECLARES",
+                object_value="public class App {}",
+                context=context,
+                evidence_keys=(evidence.evidence_key,),
+            ),
+        )
+        return KnowledgeCandidateBundle("INITIAL@1", (evidence,), (entity,), facts, ())
+
+    def build_inferences(self, *, request, target, premises):
+        return KnowledgeCandidateBundle(
+            "INITIAL@1",
+            (),
+            (),
+            (),
+            (
+                InferenceProposal(
+                    candidate_key="inference:relationship",
+                    inference_type="STRUCTURE",
+                    proposition="App is declared in the example package.",
+                    premise_references=tuple(item.object_id for item in premises),
+                    rule_ref="reviewed-test-inference@1",
+                    context=KnowledgeContext.create(dict(target.canonical_identity)),
+                    reviewed_need_ids=(request.requirement_plan.needs[0].need_id,),
+                ),
+            ),
+        )
 
 
 class KnowledgeUpdateTests(unittest.TestCase):
@@ -243,6 +320,48 @@ class KnowledgeUpdateTests(unittest.TestCase):
         self.assertIsNotNone(first.published_snapshot_id)
         self.assertEqual(replay.result_id, first.result_id)
         self.assertEqual(len(first.source_operation_references), 1)
+
+    def test_requested_inference_is_published_after_formal_fact_snapshot(self) -> None:
+        need = KnowledgeNeed(
+            need_id="N1",
+            question="How is App related to the example package?",
+            required_kinds=(KnowledgeObjectKind.FACT, KnowledgeObjectKind.INFERENCE),
+            required_type_names=(),
+            required_terms=("App", "example"),
+            minimum_support_count=1,
+        )
+        request = replace(
+            self.request(key="two-stage-inference"),
+            requirement_plan=KnowledgeRequirementPlan(needs=(need,)),
+        )
+        service = KnowledgeUpdateService(
+            SqliteKnowledgeUpdateRepository(self.database),
+            self.scopes,
+            self.sources,
+            SourceOperationService(
+                SqliteSourceOperationRepository(self.database),
+                self.sources,
+                clock=self.clock,
+            ),
+            self.knowledge,
+            builder=TwoStageInferenceBuilder(),
+            clock=self.clock,
+        )
+
+        result = service.execute(request)
+
+        self.assertEqual(result.state, UpdateAttemptState.COMPLETED)
+        snapshot = self.knowledge.get_snapshot(result.published_snapshot_id)
+        self.assertEqual(snapshot.snapshot_revision, Revision(2))
+        self.assertIsNotNone(snapshot.previous_snapshot_id)
+        records, cursor = self.knowledge.query_snapshot(
+            snapshot_id=snapshot.snapshot_id,
+            kinds=(KnowledgeObjectKind.INFERENCE,),
+        )
+        self.assertIsNone(cursor)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].reviewed_need_ids, ("N1",))
+        self.assertEqual(len(records[0].support_references), 2)
 
     def test_truncated_exact_path_does_not_claim_coverage_or_publish(self) -> None:
         result = self.service.execute(

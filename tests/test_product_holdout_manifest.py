@@ -38,6 +38,21 @@ class ProductHoldoutManifestTests(unittest.TestCase):
 
         self.assertEqual(len(self.suite["repositories"]), 2)
         self.assertEqual(len(self.suite["tasks"]), 6)
+        self.assertEqual(self.suite["suite_version"], "2.0.5")
+        self.assertEqual(
+            self.suite["answer_paths"]["direct"]["maximum_model_calls"],
+            192,
+        )
+        self.assertEqual(
+            self.suite["answer_paths"]["direct"][
+                "maximum_total_input_tokens"
+            ],
+            2000000,
+        )
+        self.assertEqual(
+            self.suite["answer_paths"]["direct"]["maximum_total_output_tokens"],
+            192000,
+        )
         counts = {
             repository["repository_id"]: sum(
                 task["repository_id"] == repository["repository_id"]

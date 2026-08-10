@@ -22,9 +22,11 @@ from software_world_model.knowledge_engine import (
     EntityProposal,
     EvidenceProposal,
     FactProposal,
+    FormalKnowledgeRecord,
     FormalKnowledgeService,
     KnowledgeCandidateBundle,
     KnowledgeContext,
+    KnowledgeObjectKind,
     KnowledgeScopeService,
     ScopePurpose,
 )
@@ -352,6 +354,16 @@ class KnowledgeCandidateBuilder(Protocol):
         target: CanonicalBuildTarget,
         artifacts: tuple[SourceArtifact, ...],
         source_operations: tuple[SourceOperationResult, ...] = (),
+    ) -> KnowledgeCandidateBundle: ...
+
+
+class KnowledgeInferenceBuilder(Protocol):
+    def build_inferences(
+        self,
+        *,
+        request: KnowledgeUpdateRequest,
+        target: CanonicalBuildTarget,
+        premises: tuple[FormalKnowledgeRecord, ...],
     ) -> KnowledgeCandidateBundle: ...
 
 
@@ -715,7 +727,8 @@ class KnowledgeUpdateService:
                 admission_status=AdmissionStatus.REJECTED,
                 snapshot_id=None,
                 limitations=(
-                    f"knowledge candidate construction denied: {exc.code.value}",
+                    "knowledge candidate construction denied: "
+                    f"{exc.code.value}: {exc.message}",
                 ),
                 occurred_at=self._now(),
             )
@@ -762,6 +775,60 @@ class KnowledgeUpdateService:
                 occurred_at=self._now(),
             )
         success = admission.status is AdmissionStatus.ADMITTED and admission.snapshot is not None
+        final_admission = admission
+        inference_builder = getattr(self._builder, "build_inferences", None)
+        requires_inference = bool(
+            request.requirement_plan is not None
+            and any(
+                KnowledgeObjectKind.INFERENCE in need.required_kinds
+                for need in request.requirement_plan.needs
+            )
+        )
+        if success and requires_inference and callable(inference_builder):
+            assert admission.snapshot is not None
+            premises = tuple(
+                self._knowledge.get_record(admission.snapshot.snapshot_id, reference)
+                for reference in admission.fact_references
+            )
+            try:
+                inference_bundle = inference_builder(
+                    request=request,
+                    target=request.target,
+                    premises=premises,
+                )
+            except DomainError as exc:
+                success = False
+                limitations.append(
+                    "reviewed inference construction denied: "
+                    f"{exc.code.value}: {exc.message}"
+                )
+            else:
+                if not inference_bundle.inferences:
+                    success = False
+                    limitations.append(
+                        "the reviewed requirement requested an inference but no "
+                        "admissible relationship inference was produced"
+                    )
+                else:
+                    final_admission = self._knowledge.admit_and_publish(
+                        scope_id=request.scope_id,
+                        expected_scope_revision=request.scope_revision,
+                        expected_current_snapshot_id=admission.snapshot.snapshot_id,
+                        idempotency_key=IdempotencyKey(
+                            f"{request.idempotency_key.value}:inference-publication"
+                        ),
+                        bundle=inference_bundle,
+                        caller_ref="application-services/knowledge-update",
+                        classification=request.classification,
+                    )
+                    success = (
+                        final_admission.status is AdmissionStatus.ADMITTED
+                        and final_admission.snapshot is not None
+                    )
+                    if not success:
+                        limitations.extend(
+                            item.message for item in final_admission.findings
+                        )
         return self._repository.finish(
             attempt_id=attempt.attempt_id,
             state=UpdateAttemptState.COMPLETED if success else UpdateAttemptState.FAILED,
@@ -774,10 +841,15 @@ class KnowledgeUpdateService:
             operation_ids=tuple(operation_ids),
             artifact_ids=tuple(item.artifact_id for item in artifacts),
             coverage_complete=True,
-            admission_id=admission.admission_id,
-            admission_status=admission.status,
-            snapshot_id=admission.snapshot.snapshot_id if admission.snapshot else None,
-            limitations=tuple(item.message for item in admission.findings),
+            admission_id=final_admission.admission_id,
+            admission_status=final_admission.status,
+            snapshot_id=(
+                final_admission.snapshot.snapshot_id
+                if success and final_admission.snapshot
+                else None
+            ),
+            limitations=tuple(limitations)
+            + tuple(item.message for item in admission.findings),
             occurred_at=self._now(),
         )
 
@@ -792,7 +864,11 @@ def _next_action(
     target: CanonicalBuildTarget, cursor: str | None
 ) -> tuple[SourceTool, dict[str, str]]:
     identity = dict(target.canonical_identity)
-    if target.target_kind in {TargetKind.SOURCE_PATH, TargetKind.JAVA_SYMBOL}:
+    if target.target_kind in {
+        TargetKind.SOURCE_PATH,
+        TargetKind.SYMBOL,
+        TargetKind.JAVA_SYMBOL,
+    }:
         parameters = {"revision": identity["revision"], "path": identity["path"]}
         if cursor is not None:
             parameters["offset"] = cursor
@@ -875,7 +951,11 @@ def _validate_source_action(
             ErrorCode.CONTROL_STATE_DENIED,
             "non-comparison source action cannot carry a base revision",
         )
-    if target.target_kind in {TargetKind.SOURCE_PATH, TargetKind.JAVA_SYMBOL}:
+    if target.target_kind in {
+        TargetKind.SOURCE_PATH,
+        TargetKind.SYMBOL,
+        TargetKind.JAVA_SYMBOL,
+    }:
         if (
             proposal.tool is not SourceTool.READ
             or parameters.get("path") != identity.get("path")
@@ -894,6 +974,19 @@ def _validate_source_action(
         )
 
 
+def authorize_source_action(
+    target: CanonicalBuildTarget, proposal: SourceActionProposal
+) -> None:
+    """Apply the shared exact-target authorization fence to a proposed read.
+
+    Evidence-first answering and formal-knowledge construction deliberately
+    share this one source boundary.  Keeping the fence public prevents either
+    application flow from growing a subtly different tool policy.
+    """
+
+    _validate_source_action(target, proposal)
+
+
 def _operations_cover_target(
     target: CanonicalBuildTarget,
     operations: tuple[SourceOperationResult, ...],
@@ -907,7 +1000,11 @@ def _target_covered(target: CanonicalBuildTarget, operation: object) -> bool:
     identity = dict(target.canonical_identity)
     observation = operation.observation
     coverage = dict(observation.coverage)
-    if target.target_kind in {TargetKind.SOURCE_PATH, TargetKind.JAVA_SYMBOL}:
+    if target.target_kind in {
+        TargetKind.SOURCE_PATH,
+        TargetKind.SYMBOL,
+        TargetKind.JAVA_SYMBOL,
+    }:
         return (
             observation.source_context.repository_revision == identity["revision"]
             and observation.source_context.subject == identity["path"]

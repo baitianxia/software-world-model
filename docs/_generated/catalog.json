@@ -1,5 +1,365 @@
 [
   {
+    "id": "FINDING-002-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-001-browser-answer-projection.md"
+  },
+  {
+    "id": "FINDING-002-002",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-002-application-limitation.md"
+  },
+  {
+    "id": "FINDING-002-003",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-003-reviewed-need-binding.md"
+  },
+  {
+    "id": "FINDING-002-004",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-004-sequence-verification.md"
+  },
+  {
+    "id": "FINDING-002-005",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-005-source-disclosure-authorization.md"
+  },
+  {
+    "id": "FINDING-002-006",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-006-quality-before-call-budget.md"
+  },
+  {
+    "id": "FINDING-002-007",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-007-exhaustive-sequence-audit.md"
+  },
+  {
+    "id": "FINDING-002-008",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-008-global-budget-truncated-convergent-quality-chain.md"
+  },
+  {
+    "id": "FINDING-002-009",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-009-large-sequence-set-missed-boundary.md"
+  },
+  {
+    "id": "FINDING-002-010",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-010-language-repair-truncated-by-local-fuse.md"
+  },
+  {
+    "id": "FINDING-002-011",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-011-empty-negative-sequence-audit.md"
+  },
+  {
+    "id": "FINDING-002-012",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-012-return-dependent-branch-without-temporal-word.md"
+  },
+  {
+    "id": "FINDING-002-013",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-013-aggregate-sequence-audit-attention-dilution.md"
+  },
+  {
+    "id": "FINDING-002-014",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-014-fact-review-repair-missing-key-diagnostics.md"
+  },
+  {
+    "id": "FINDING-002-015",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-015-sufficiency-repair-reference-diagnostics.md"
+  },
+  {
+    "id": "FINDING-002-016",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-016-coverage-unknown-artifact-recovery.md"
+  },
+  {
+    "id": "FINDING-002-017",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-017-sequence-positive-evidence-dominated-by-negative-label.md"
+  },
+  {
+    "id": "FINDING-002-018",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-018-sequence-fragment-lexical-overlap.md"
+  },
+  {
+    "id": "FINDING-002-019",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-019-restricted-positive-span-extra-negative-labels.md"
+  },
+  {
+    "id": "FINDING-002-020",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-020-sequence-atomic-shape-repair.md"
+  },
+  {
+    "id": "FINDING-002-021",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-021-answer-sequence-repair-constraint-loss.md"
+  },
+  {
+    "id": "FINDING-002-022",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-022-downstream-support-deletion.md"
+  },
+  {
+    "id": "FINDING-002-023",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-023-proof-support-is-not-visible-answer.md"
+  },
+  {
+    "id": "FINDING-002-024",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-024-formal-knowledge-critical-path-coupling.md"
+  },
+  {
+    "id": "FINDING-002-025",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "source"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-025-partial-artifact-identity-collision.md"
+  },
+  {
+    "id": "FINDING-002-026",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-026-review-language-false-approval.md"
+  },
+  {
+    "id": "FINDING-002-027",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-027-review-order-and-intent-gaps.md"
+  },
+  {
+    "id": "FINDING-002-028",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-028-draft-semantic-contract-recovery.md"
+  },
+  {
+    "id": "FINDING-002-029",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-029-review-relevance-readability-gap.md"
+  },
+  {
+    "id": "FINDING-002-030",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-030-model-role-contract-repair.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -258,6 +618,135 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-001/work-plan.md"
+  },
+  {
+    "id": "ITER-002-DESIGN-INDEX",
+    "kind": "development-design-index",
+    "status": "authorized",
+    "authority": "current-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/development-design/README.md"
+  },
+  {
+    "id": "ITER-002-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "open",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/README.md"
+  },
+  {
+    "id": "ITER-002-INDEX",
+    "kind": "iteration-index",
+    "status": "authorized",
+    "authority": "project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/README.md"
+  },
+  {
+    "id": "ITER-002-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "accepted",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/proposal.md"
+  },
+  {
+    "id": "ITER-002-READINESS",
+    "kind": "iteration-readiness",
+    "status": "accepted",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/readiness-review.md"
+  },
+  {
+    "id": "ITER-002-RESULT-CAPABILITY",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/results/capability-evaluation.md"
+  },
+  {
+    "id": "ITER-002-RESULT-IMPLEMENTATION",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/results/implementation.md"
+  },
+  {
+    "id": "ITER-002-RESULT-PRODUCT",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/results/product-validation.md"
+  },
+  {
+    "id": "ITER-002-RESULTS-INDEX",
+    "kind": "iteration-result-index",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/results/README.md"
+  },
+  {
+    "id": "ITER-002-SLICE-001",
+    "kind": "development-slice",
+    "status": "authorized",
+    "authority": "current-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/development-design/SLICE-001-generic-repository-answer-quality.md"
+  },
+  {
+    "id": "ITER-002-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/verification-matrix.md"
   },
   {
     "id": "ITERATION-INDEX",
@@ -675,6 +1164,19 @@
     "path": "docs/system/architecture/decisions/ADR-012-telemetry-is-observational.md"
   },
   {
+    "id": "SYS-ADR-013",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/decisions/ADR-013-evidence-first-synchronous-answering.md"
+  },
+  {
     "id": "SYS-ADR-INDEX",
     "kind": "system-decision-index",
     "status": "current",
@@ -827,6 +1329,18 @@
       "DD-APP-AGENTIC-TASK"
     ],
     "path": "docs/system/contracts/application/agentic-task.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/evidence-answering.md"
   },
   {
     "id": "SYS-CONTRACT-APPLICATION-INDEX",

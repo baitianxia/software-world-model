@@ -13,11 +13,11 @@ from software_world_model.interface.http_api import (
     LoopbackWsgiRequestHandler,
     _browser_answer_projection,
     _browser_original_request,
-    _browser_required_source_paths,
 )
 from software_world_model.interface.runtime import ApplicationRuntime
 from software_world_model.infrastructure import SqliteDatabase
 from software_world_model.source_integration import TargetKind
+from software_world_model.application_services import AnswerSectionKind
 
 
 def _value(value):
@@ -84,6 +84,38 @@ class RecordingAnswerRuntime:
             digest=_value("sha256:answer"),
         )
 
+
+class RecordingEvidenceRuntime:
+    natural_task_planning_configured = False
+    reviewed_answer_preparation_configured = True
+    evidence_answer_preparation_configured = True
+
+    def __init__(self) -> None:
+        self.request_arguments = None
+        self.request = None
+
+    def prepare_evidence_answer_request(self, **arguments):
+        self.request_arguments = arguments
+        return SimpleNamespace(
+            original_request=arguments["original_request"],
+            idempotency_key=arguments["idempotency_key"],
+        )
+
+    def prepare_evidence_answer(self, request):
+        self.request = request
+        return SimpleNamespace(
+            draft=SimpleNamespace(
+                body="入口读取配置后启动服务。",
+                sections=(
+                    SimpleNamespace(kind=AnswerSectionKind.SUPPORTED),
+                ),
+            ),
+            unresolved_count=0,
+            sources=("src/Entry.py@" + "a" * 40 + " (bytes:0-120)",),
+            evidence_packet=SimpleNamespace(
+                packet_id=_value("evidence_packet_" + "1" * 32)
+            ),
+        )
 
 class BrowserChatInterfaceTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -201,8 +233,8 @@ class BrowserChatInterfaceTests(unittest.TestCase):
         self.assertEqual(project["display_name"], "sample-project")
         self.assertEqual(project["target_kind"], "REPOSITORY_REVISION")
         self.assertEqual(project["target_parameters"], {"revision": self.commit})
-        self.assertEqual(project["bootstrap_paths"], ["README.md"])
-        self.assertEqual(project["known_paths"], ["README.md"])
+        self.assertNotIn("bootstrap_paths", project)
+        self.assertNotIn("known_paths", project)
         self.assertTrue(project["scope_id"])
         self.assertTrue(project["source_id"])
         self.assertTrue(project["binding_id"])
@@ -284,6 +316,51 @@ class BrowserChatInterfaceTests(unittest.TestCase):
             "prepared-update",
         )
 
+    def test_browser_message_prefers_evidence_first_answering(self) -> None:
+        runtime = RecordingEvidenceRuntime()
+        application = JsonHttpApplication(runtime, live_provider_configured=True)
+
+        status, _, raw = self._http(
+            application,
+            "POST",
+            "/v1/browser/chat",
+            {
+                "request_id": "evidence-question-one",
+                "conversation_id": "conversation-one",
+                "turn_number": 1,
+                "message": "入口如何启动服务？",
+                "project": {
+                    "display_name": "sample-project",
+                    "scope_id": "scope_" + "1" * 32,
+                    "scope_revision": 1,
+                    "source_id": "source_" + "2" * 32,
+                    "source_revision": 1,
+                    "binding_id": "binding_" + "3" * 32,
+                    "binding_revision": 1,
+                    "selected_paths": ".",
+                    "target_kind": "REPOSITORY_REVISION",
+                    "target_parameters": {"revision": "a" * 40},
+                },
+            },
+        )
+        payload = json.loads(raw)
+
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(payload["message"], "入口读取配置后启动服务。")
+        self.assertEqual(payload["response_kind"], "EVIDENCE_COMPLETE")
+        self.assertTrue(payload["reviewed"])
+        self.assertEqual(payload["claim_count"], 1)
+        self.assertEqual(payload["unresolved_count"], 0)
+        self.assertEqual(len(payload["sources"]), 1)
+        self.assertIn(
+            "当前问题：入口如何启动服务？",
+            runtime.request_arguments["original_request"],
+        )
+        self.assertEqual(
+            runtime.request_arguments["target_kind"],
+            TargetKind.REPOSITORY_REVISION,
+        )
+
     def test_browser_request_limits_history_to_prior_user_questions(self) -> None:
         request = _browser_original_request(
             "主要组件如何协作？",
@@ -299,28 +376,51 @@ class BrowserChatInterfaceTests(unittest.TestCase):
         self.assertIn("用户先前问题：介绍下这个工程", request)
         self.assertIn("当前问题：主要组件如何协作？", request)
         self.assertNotIn("generated project summary", request)
-        self.assertIn("不要把用户未明确提出", request)
+        self.assertIn("忠实回答当前问题", request)
         self.assertIn("回答语言：简体中文", request)
 
-    def test_project_overview_follow_up_rereads_descriptive_bootstrap(self) -> None:
-        bootstrap = ("README.md", "pom.xml")
+    def test_browser_questions_share_one_pipeline_without_semantic_routing(self) -> None:
+        runtime = RecordingAnswerRuntime()
+        application = JsonHttpApplication(
+            runtime, live_provider_configured=True
+        )
+        project = {
+            "display_name": "unconventional-project",
+            "scope_id": "scope_" + "1" * 32,
+            "scope_revision": 1,
+            "source_id": "source_" + "2" * 32,
+            "source_revision": 1,
+            "binding_id": "binding_" + "3" * 32,
+            "binding_revision": 1,
+            "selected_paths": ".",
+            "target_kind": "REPOSITORY_REVISION",
+            "target_parameters": {"revision": "a" * 40},
+        }
 
-        self.assertEqual(
-            _browser_required_source_paths(
-                message="后端各个主要模块分别负责什么？",
-                turn_number=2,
-                bootstrap_paths=bootstrap,
-            ),
-            ("README.md",),
+        questions = (
+            "概括这个仓库解决的问题。",
+            "数据在三个文件之间怎样变化？",
+            "如果源码没有说明设计原因，请指出证据缺口。",
+            "Which configuration value controls startup?",
         )
-        self.assertEqual(
-            _browser_required_source_paths(
-                message="登录失败时返回什么？",
-                turn_number=3,
-                bootstrap_paths=bootstrap,
-            ),
-            (),
-        )
+        for index, question in enumerate(questions, 1):
+            status, _, _ = self._http(
+                application,
+                "POST",
+                "/v1/browser/chat",
+                {
+                    "request_id": f"generic-question-{index}",
+                    "conversation_id": "generic-conversation",
+                    "turn_number": index,
+                    "message": question,
+                    "project": project,
+                },
+            )
+
+            self.assertEqual(status, "200 OK")
+            self.assertEqual(runtime.update_arguments["allowed_source_paths"], ())
+            self.assertEqual(runtime.update_arguments["required_source_paths"], ())
+            self.assertIn(question, runtime.request.original_request)
 
     def test_browser_projection_hides_internal_gap_template(self) -> None:
         answer = {
@@ -356,6 +456,16 @@ class BrowserChatInterfaceTests(unittest.TestCase):
                         "kind": "FORMAL_KNOWLEDGE",
                         "text": "管理服务依赖 MySQL 和 Redis。",
                     },
+                    {
+                        "need_id": "usage",
+                        "kind": "APPLICATION_LIMITATION",
+                        "text": "现有源码只说明依赖条件，没有给出完整启动命令。",
+                    },
+                    {
+                        "need_id": "usage",
+                        "kind": "APPLICATION_LIMITATION",
+                        "text": "管理服务依赖 MySQL 和 Redis",
+                    },
                 ],
             },
         }
@@ -369,9 +479,16 @@ class BrowserChatInterfaceTests(unittest.TestCase):
         self.assertEqual(confirmed, 2)
         self.assertEqual(unresolved, 1)
         self.assertIn("已确认", message)
+        self.assertIn("1. 这个项目做什么？", message)
+        self.assertIn("2. 如何启动？", message)
         self.assertIn("尚未确认", message)
         self.assertIn("入口文件是什么？：尚未读取启动类。", message)
         self.assertIn("管理服务依赖 MySQL 和 Redis。", message)
+        self.assertIn(
+            "说明：现有源码只说明依赖条件，没有给出完整启动命令。",
+            message,
+        )
+        self.assertEqual(message.count("管理服务依赖 MySQL 和 Redis"), 1)
         self.assertIn("源码位置", message)
         self.assertIn("README.md:23-31", message)
         self.assertIn("pom.xml:17-23", message)

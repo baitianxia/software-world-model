@@ -137,6 +137,60 @@ class KnowledgeScopeTests(unittest.TestCase):
         self.assertEqual(replay, created)
         self.assertEqual(replay.definition_revision, Revision(1))
 
+    def test_assertion_read_replay_returns_the_original_exact_assertion(self) -> None:
+        created = self.create_scope()
+        arguments = {
+            "scope_id": created.scope_id,
+            "expected_revision": Revision(1),
+            "purpose": ScopePurpose.BIND_CONFIGURATION,
+            "caller_ref": "source-integration",
+            "request_ref": "binding-command-retry",
+            "classification": "INTERNAL",
+        }
+
+        first = self.service.read_scope_state_assertion(**arguments)
+        replay = self.service.read_scope_state_assertion(**arguments)
+
+        self.assertEqual(replay, first)
+        with self.database.read() as connection:
+            assertion_count = connection.execute(
+                "SELECT COUNT(*) FROM knw_scope_assertions"
+            ).fetchone()[0]
+            read_count = connection.execute(
+                "SELECT COUNT(*) FROM knw_scope_assertion_reads"
+            ).fetchone()[0]
+        self.assertEqual(assertion_count, 1)
+        self.assertEqual(read_count, 1)
+
+    def test_assertion_request_reference_cannot_move_to_a_new_revision(self) -> None:
+        created = self.create_scope()
+        arguments = {
+            "scope_id": created.scope_id,
+            "purpose": ScopePurpose.BIND_CONFIGURATION,
+            "caller_ref": "source-integration",
+            "request_ref": "binding-command-stable",
+            "classification": "INTERNAL",
+        }
+        self.service.read_scope_state_assertion(
+            expected_revision=Revision(1), **arguments
+        )
+        self.service.update_scope_metadata(
+            scope_id=created.scope_id,
+            expected_revision=Revision(1),
+            metadata={"display_name": "Changed"},
+            idempotency_key=IdempotencyKey("scope-update-after-assertion"),
+            actor="test-operator",
+            reason="change authority state",
+            correlation_ref=CorrelationRef("test-run-1"),
+        )
+
+        with self.assertRaises(DomainError) as raised:
+            self.service.read_scope_state_assertion(
+                expected_revision=Revision(2), **arguments
+            )
+
+        self.assertEqual(raised.exception.code, ErrorCode.IDEMPOTENCY_MISMATCH)
+
     def test_idempotency_key_cannot_change_meaning(self) -> None:
         self.create_scope()
 

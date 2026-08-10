@@ -14,7 +14,7 @@ tests: [tests/test_knowledge_update.py]
 
 ## Purpose and scope
 
-Knowledge Update 用同一契约处理首次构建和后续更新：从显式授权的 Build Objective 出发，可选绑定 Requirement Gap / Requirement，并把目标解析为 Canonical Build Target；随后经受控来源调查、Candidate、Admission、Application Acceptance 和 Publication 形成新 Snapshot。Knowledge Use 不得因缺少知识而隐式访问 Source。
+Knowledge Update 用同一契约处理首次构建和后续更新：从显式授权的 Build Objective 出发，可选绑定 Requirement Gap / Requirement，并把目标解析为 Canonical Build Target；随后经受控来源调查、Candidate、Admission、Application Acceptance 和 Publication 形成新 Snapshot。它是显式或后台知识沉淀能力，不是同步 Evidence Answer 的前置门禁。Knowledge Use 不得因缺少知识而隐式访问 Source。
 
 ## Ownership
 

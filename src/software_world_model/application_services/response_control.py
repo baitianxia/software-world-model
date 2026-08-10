@@ -406,10 +406,33 @@ class ResponseControlService:
                     or claim.gap != disclosure
                     or claim.text
                     != _explicit_gap_text(
-                        needs_by_id[claim.need_id].question, disclosure
+                        needs_by_id[claim.need_id].question,
+                        disclosure,
+                        joint_constraint_impact=_joint_constraint_impact(
+                            claim.need_id, assessment, requirement
+                        ),
                     )
                 ):
                     raise DomainError(ErrorCode.CONTROL_STATE_DENIED, "gap claim does not match assessment")
+            elif claim.kind is AnswerClaimKind.APPLICATION_LIMITATION:
+                if (
+                    item.status is not NeedStatus.SATISFIED
+                    or item.proof is None
+                    or claim.text not in item.limitations
+                    or claim.gap != claim.text
+                    or claim.formal_reference is not None
+                    or claim.formal_digest is not None
+                    or claim.support_proof_id != item.proof.proof_id
+                ):
+                    raise DomainError(
+                        ErrorCode.CONTROL_STATE_DENIED,
+                        "application limitation does not match assessment",
+                    )
+            else:
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "answer claim kind is unsupported",
+                )
             claims_by_need[claim.need_id].append(claim)
         coverage: list[RequirementCoverage] = []
         for need in requirement.needs:
@@ -594,10 +617,12 @@ class ResponseControlService:
                         ErrorCode.CONTROL_STATE_DENIED,
                         "satisfied Need draft must select formal support",
                     )
+                selected_record_texts: list[str] = []
                 for ordinal, reference in enumerate(
                     selection.formal_references, 1
                 ):
                     record = known[reference]
+                    selected_record_texts.append(record.text.casefold())
                     claims.append(
                         AnswerClaim(
                             claim_id=f"claim:{need.need_id}:{ordinal}",
@@ -608,6 +633,31 @@ class ResponseControlService:
                             formal_digest=record.object_digest,
                             support_proof_id=item.proof.proof_id,
                             gap=None,
+                        )
+                    )
+                for ordinal, limitation in enumerate(
+                    (
+                        limitation
+                        for limitation in dict.fromkeys(item.limitations)
+                        if not any(
+                            limitation.casefold() in record_text
+                            for record_text in selected_record_texts
+                        )
+                    ),
+                    1,
+                ):
+                    claims.append(
+                        AnswerClaim(
+                            claim_id=(
+                                f"claim:{need.need_id}:limitation:{ordinal}"
+                            ),
+                            need_id=need.need_id,
+                            kind=AnswerClaimKind.APPLICATION_LIMITATION,
+                            text=limitation,
+                            formal_reference=None,
+                            formal_digest=None,
+                            support_proof_id=item.proof.proof_id,
+                            gap=limitation,
                         )
                     )
             else:
@@ -622,7 +672,13 @@ class ResponseControlService:
                         claim_id=f"claim:{need.need_id}:gap",
                         need_id=need.need_id,
                         kind=AnswerClaimKind.KNOWLEDGE_GAP,
-                        text=_explicit_gap_text(need.question, disclosure),
+                        text=_explicit_gap_text(
+                            need.question,
+                            disclosure,
+                            joint_constraint_impact=_joint_constraint_impact(
+                                need.need_id, assessment, requirement
+                            ),
+                        ),
                         formal_reference=None,
                         formal_digest=None,
                         support_proof_id=None,
@@ -909,13 +965,34 @@ class ResponseControlService:
             passed = record.object_digest == claim.formal_digest and record.text == claim.text
             return passed, None if passed else "claim text exceeds its formal proposition", (record.object_id,)
         item = next(value for value in assessment.items if value.need_id == claim.need_id)
+        if claim.kind is AnswerClaimKind.APPLICATION_LIMITATION:
+            passed = (
+                item.status is NeedStatus.SATISFIED
+                and item.proof is not None
+                and claim.text in item.limitations
+                and claim.gap == claim.text
+                and claim.formal_reference is None
+                and claim.formal_digest is None
+                and claim.support_proof_id == item.proof.proof_id
+            )
+            return (
+                passed,
+                None if passed else "application limitation differs from assessment",
+                (),
+            )
         disclosure = _assessment_disclosure(item)
         expected_text = None
         if requirement is not None:
             need = next(
                 value for value in requirement.needs if value.need_id == claim.need_id
             )
-            expected_text = _explicit_gap_text(need.question, disclosure)
+            expected_text = _explicit_gap_text(
+                need.question,
+                disclosure,
+                joint_constraint_impact=_joint_constraint_impact(
+                    claim.need_id, assessment, requirement
+                ),
+            )
         passed = (
             claim.kind is AnswerClaimKind.KNOWLEDGE_GAP
             and claim.gap == disclosure
@@ -972,11 +1049,49 @@ def _assessment_disclosure(item: SufficiencyItem) -> str:
     )
 
 
-def _explicit_gap_text(question: str, disclosure: str) -> str:
-    return (
+def _explicit_gap_text(
+    question: str,
+    disclosure: str,
+    *,
+    joint_constraint_impact: tuple[str, ...] = (),
+) -> str:
+    if any(
+        "\u3400" <= character <= "\u9fff"
+        or "\uf900" <= character <= "\ufaff"
+        for character in question
+    ):
+        text = (
+            f"问题：{question}\n"
+            "基于当前授权证据，尚无法给出已验证的答案。\n"
+            f"证据缺口：{disclosure}"
+        )
+        if joint_constraint_impact:
+            text += "\n尚未确认的相关关系：" + "；".join(
+                joint_constraint_impact
+            )
+        return text
+    text = (
         f"Requested question: {question}\n"
         "Verified answer: unavailable from the authorized evidence.\n"
         f"Evidence gap: {disclosure}"
+    )
+    if joint_constraint_impact:
+        text += "\nRelated answer relationships not established: " + "; ".join(
+            joint_constraint_impact
+        )
+    return text
+
+
+def _joint_constraint_impact(
+    need_id: str,
+    assessment: SufficiencyAssessment,
+    requirement: KnowledgeRequirement,
+) -> tuple[str, ...]:
+    failed = frozenset(assessment.joint_constraint_failures)
+    return tuple(
+        constraint.description
+        for constraint in requirement.joint_constraints
+        if constraint.constraint_id in failed and need_id in constraint.need_ids
     )
 
 

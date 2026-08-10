@@ -11,7 +11,7 @@ tests: [tests/test_browser_chat_interface.py]
 
 # 本机浏览器体验
 
-浏览器入口提供本地 Git 项目连接、版本选择、聊天任务、上下文追问和结果展示。它复用正式知识、能力资格和响应审核路径，不是旁路 Demo。
+浏览器入口提供本地 Git 项目连接、版本选择、聊天任务、上下文追问和结果展示。聊天主路径执行问题检查清单、只读源码调查、密封 Evidence Packet、自然答案、独立审核和同包定向重写；正式知识更新保留为独立后台能力。该入口复用能力资格和 Response Control，不是旁路 Demo。
 
 当前服务没有认证，必须绑定 `127.0.0.1`。启动时需要显式加载仍有效且与当前实现匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation 记录；任一证明缺失、过期或漂移都停止服务或拒绝模型路径。
 

@@ -77,6 +77,13 @@ CREATE TABLE IF NOT EXISTS knw_scope_assertions (
         REFERENCES knw_scope_revisions(scope_id, revision)
 );
 
+CREATE TABLE IF NOT EXISTS knw_scope_assertion_reads (
+    read_key_digest TEXT PRIMARY KEY,
+    request_digest TEXT NOT NULL,
+    assertion_id TEXT NOT NULL UNIQUE,
+    FOREIGN KEY (assertion_id) REFERENCES knw_scope_assertions(assertion_id)
+);
+
 CREATE TABLE IF NOT EXISTS knw_scope_outbox (
     event_id TEXT PRIMARY KEY,
     aggregate_id TEXT NOT NULL,
@@ -98,6 +105,7 @@ class SqliteKnowledgeScopeRepository:
         self._database = database
         self._ids = id_generator or Uuid4IdGenerator()
         self._database.executescript(_SCHEMA)
+        self._migrate_scope_assertion_reads()
 
     def create(
         self,
@@ -273,6 +281,37 @@ class SqliteKnowledgeScopeRepository:
                     if scope.lifecycle is ScopeLifecycle.ACTIVE
                     else AssertionOutcome.INELIGIBLE
                 )
+                read_key_digest = _scope_assertion_read_key(
+                    scope_id=scope.scope_id,
+                    purpose=purpose,
+                    caller_ref=caller_ref,
+                    request_ref=request_ref,
+                    classification=classification,
+                )
+                request_digest = _scope_assertion_request_digest(
+                    scope=scope,
+                    purpose=purpose,
+                    outcome=outcome,
+                    caller_ref=caller_ref,
+                    request_ref=request_ref,
+                    classification=classification,
+                )
+                replay = connection.execute(
+                    """SELECT request_digest, assertion_id
+                       FROM knw_scope_assertion_reads
+                       WHERE read_key_digest = ?""",
+                    (read_key_digest.value,),
+                ).fetchone()
+                if replay is not None:
+                    if replay["request_digest"] != request_digest.value:
+                        raise DomainError(
+                            ErrorCode.IDEMPOTENCY_MISMATCH,
+                            "scope assertion request reference was reused for different authority state",
+                            {"request_ref": request_ref},
+                        )
+                    return self._load_assertion(
+                        connection, StableId(replay["assertion_id"])
+                    )
                 core = {
                     "scope_id": scope.scope_id.value,
                     "scope_type": scope.scope_type.value,
@@ -311,6 +350,14 @@ class SqliteKnowledgeScopeRepository:
                         scope.definition_revision.value,
                         purpose.value,
                         canonical_json_bytes(core).decode("utf-8"),
+                    ),
+                )
+                connection.execute(
+                    "INSERT INTO knw_scope_assertion_reads VALUES (?, ?, ?)",
+                    (
+                        read_key_digest.value,
+                        request_digest.value,
+                        assertion.assertion_id.value,
                     ),
                 )
                 return assertion
@@ -362,6 +409,86 @@ class SqliteKnowledgeScopeRepository:
             and row["purpose"] == assertion.purpose.value
             and row["core_json"] == canonical_json_bytes(assertion.core()).decode("utf-8")
         )
+
+    def _migrate_scope_assertion_reads(self) -> None:
+        """Backfill stable read identities for assertions written before this table existed."""
+
+        with self._database.transaction() as connection:
+            rows = connection.execute(
+                """SELECT assertion_id, core_json
+                   FROM knw_scope_assertions
+                   ORDER BY rowid"""
+            ).fetchall()
+            for row in rows:
+                core = json.loads(row["core_json"])
+                scope = self._load_scope(
+                    connection,
+                    StableId(core["scope_id"]),
+                    Revision(core["definition_revision"]),
+                )
+                purpose = ScopePurpose(core["purpose"])
+                outcome = AssertionOutcome(core["outcome"])
+                read_key_digest = _scope_assertion_read_key(
+                    scope_id=scope.scope_id,
+                    purpose=purpose,
+                    caller_ref=core["caller_ref"],
+                    request_ref=core["request_ref"],
+                    classification=core["classification"],
+                )
+                request_digest = _scope_assertion_request_digest(
+                    scope=scope,
+                    purpose=purpose,
+                    outcome=outcome,
+                    caller_ref=core["caller_ref"],
+                    request_ref=core["request_ref"],
+                    classification=core["classification"],
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO knw_scope_assertion_reads
+                       (read_key_digest, request_digest, assertion_id)
+                       VALUES (?, ?, ?)""",
+                    (
+                        read_key_digest.value,
+                        request_digest.value,
+                        row["assertion_id"],
+                    ),
+                )
+
+    @staticmethod
+    def _load_assertion(
+        connection: sqlite3.Connection, assertion_id: StableId
+    ) -> ScopeStateAssertion:
+        row = connection.execute(
+            """SELECT assertion_id, assertion_digest, core_json
+               FROM knw_scope_assertions WHERE assertion_id = ?""",
+            (assertion_id.value,),
+        ).fetchone()
+        if row is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "scope assertion read identity has no assertion result",
+            )
+        core = json.loads(row["core_json"])
+        assertion = ScopeStateAssertion(
+            assertion_id=StableId(row["assertion_id"]),
+            scope_id=StableId(core["scope_id"]),
+            scope_type=ScopeType(core["scope_type"]),
+            definition_revision=Revision(core["definition_revision"]),
+            lifecycle=ScopeLifecycle(core["lifecycle"]),
+            purpose=ScopePurpose(core["purpose"]),
+            outcome=AssertionOutcome(core["outcome"]),
+            caller_ref=core["caller_ref"],
+            request_ref=core["request_ref"],
+            classification=core["classification"],
+            read_at=_parse_time(core["read_at"]),
+            digest=Digest(row["assertion_digest"]),
+        )
+        if not assertion.verify_digest():
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "stored scope assertion does not match its authority digest",
+            )
+        return assertion
 
     def _idempotent_result(
         self,
@@ -591,6 +718,51 @@ def _time(value: datetime) -> str:
 
 def _parse_time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _scope_assertion_read_key(
+    *,
+    scope_id: StableId,
+    purpose: ScopePurpose,
+    caller_ref: str,
+    request_ref: str,
+    classification: str,
+) -> Digest:
+    return digest_of(
+        {
+            "command": "ReadScopeStateAssertion@1",
+            "scope_id": scope_id.value,
+            "purpose": purpose.value,
+            "caller_ref": caller_ref,
+            "request_ref": request_ref,
+            "classification": classification,
+        }
+    )
+
+
+def _scope_assertion_request_digest(
+    *,
+    scope: KnowledgeScope,
+    purpose: ScopePurpose,
+    outcome: AssertionOutcome,
+    caller_ref: str,
+    request_ref: str,
+    classification: str,
+) -> Digest:
+    return digest_of(
+        {
+            "command": "ReadScopeStateAssertion@1",
+            "scope_id": scope.scope_id.value,
+            "scope_type": scope.scope_type.value,
+            "definition_revision": scope.definition_revision.value,
+            "lifecycle": scope.lifecycle.value,
+            "purpose": purpose.value,
+            "outcome": outcome.value,
+            "caller_ref": caller_ref,
+            "request_ref": request_ref,
+            "classification": classification,
+        }
+    )
 
 
 def _integrity_error(exc: sqlite3.IntegrityError) -> DomainError:

@@ -496,6 +496,67 @@ class DirectSourceAnswerExecutorTests(unittest.TestCase):
         self.assertEqual(result.model_call_count, 3)
         self.assertEqual(result.source_action_count, 1)
 
+    def test_empty_rationale_is_repaired_as_model_contract_output(self) -> None:
+        run_id = "direct-rationale-repair"
+        read = {
+            "decision": "EXECUTE",
+            "tool": "READ",
+            "revision": self.commit,
+            "base": "",
+            "path": "src/App.java",
+            "query": "",
+            "cursor": "",
+            "offset": "",
+            "max_bytes": "16000",
+            "page_size": "",
+            "rationale": "",
+            "claims": [],
+        }
+        corrected_read = {
+            **read,
+            "rationale": "Read the exact declaration.",
+        }
+        finish = {
+            **corrected_read,
+            "decision": "FINISH",
+            "tool": "NONE",
+            "revision": self.commit,
+            "path": "",
+            "max_bytes": "",
+            "rationale": "The source directly answers the question.",
+            "claims": [
+                {
+                    "claim": "App.value 的源码初始值是 3。",
+                    "support_references": [
+                        f"direct-observation:{run_id}:1"
+                    ],
+                }
+            ],
+        }
+        gateway = SequencedGateway((read, corrected_read, finish))
+
+        result = DirectSourceAnswerExecutor(
+            gateway=gateway,
+            configuration=self.configuration(),
+            expected_model_fingerprint="model-fingerprint",
+        ).execute(
+            task_input=task_input(self.commit),
+            connector=LocalGitConnector(str(self.repository)),
+            run_id=run_id,
+        )
+
+        self.assertEqual(result.model_call_count, 3)
+        self.assertEqual(result.source_action_count, 1)
+        repair_state = next(
+            item.content
+            for item in gateway.contexts[1].manifest.items
+            if item.item_id == "contract-repair"
+        )
+        self.assertIn(
+            "direct answer rationale must be non-empty",
+            repair_state,
+        )
+
     def test_action_cannot_escape_the_sealed_revision(self) -> None:
         invalid = {
                     "decision": "EXECUTE",

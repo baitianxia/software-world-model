@@ -121,29 +121,25 @@ class ScriptedRoleAdapter:
             return {
                 "needs": [
                     {
-                        "need_id": "need:retry-condition",
-                        "question": "When does RetryClient retry?",
+                        "need_id": "need:request",
+                        "question": (
+                            "Explain when RetryClient retries a request, state the "
+                            "maximum attempt limit, and do not infer behavior outside "
+                            "the supplied source boundary."
+                        ),
                         "required_kinds": ["FACT"],
                         "required_type_names": [],
-                        "retrieval_terms": ["RetryClient", "retry"],
-                        "minimum_support_count": 1,
-                    },
-                    {
-                        "need_id": "need:attempt-limit",
-                        "question": "What is the maximum attempt limit?",
-                        "required_kinds": ["FACT"],
-                        "required_type_names": [],
-                        "retrieval_terms": ["MAX_ATTEMPTS"],
+                        "retrieval_terms": ["RetryClient", "retry", "MAX_ATTEMPTS"],
                         "minimum_support_count": 1,
                     },
                 ],
                 "joint_constraints": [],
-                "rationale": "Preserve both requested behavior and limit.",
+                "rationale": "Preserve the complete request as one deliverable.",
             }
         if schema == "agentic-requirement-reviewer@1":
             return {
                 "decision": "ACCEPT",
-                "accepted_need_ids": ["need:retry-condition", "need:attempt-limit"],
+                "accepted_need_ids": ["need:request"],
                 "original_request_preserved": True,
                 "all_material_questions_covered": True,
                 "findings": [],
@@ -163,12 +159,13 @@ class ScriptedRoleAdapter:
                 "page_size": "",
                 "rationale": "Read the exact bounded declaration.",
             }
-        if schema == "agentic-fact-proposer@1":
+        if schema == "agentic-fact-proposer@5":
             artifact = self.state(request)["artifacts"][0]
             return {
                 "candidates": [
                     {
                         "candidate_key": "maximum-attempts",
+                        "need_ids": ["OBJECTIVE"],
                         "artifact_id": artifact["artifact_id"],
                         "line_start": 2,
                         "line_end": 2,
@@ -176,17 +173,34 @@ class ScriptedRoleAdapter:
                         "predicate": "HAS_VALUE",
                         "statement": "RetryClient declares a maximum attempt count of 3.",
                         "condition": None,
-                        "limitation": "This is a source declaration only.",
+                        "limitation": None,
                     }
                 ],
                 "limitations": [],
             }
-        if schema == "agentic-fact-reviewer@3":
+        if schema == "agentic-fact-reviewer@4":
             return {
                 "decision": "ACCEPT",
                 "accepted_candidate_keys": ["maximum-attempts"],
                 "all_supported_objective_aspects_covered": True,
                 "findings": [],
+            }
+        if schema == "agentic-sequence-analyzer@10":
+            state = self.state(request)
+            return {
+                "edges": [],
+                "call_return_spans": [],
+                "atomic_references": [
+                    {
+                        "need_id": item["need_id"],
+                        "reference_ids": [
+                            reference["reference_id"]
+                            for reference in item["references"]
+                        ],
+                    }
+                    for item in state["reference_sets"]
+                ],
+                "rationale": "AUDITED",
             }
         if schema == "agentic-sufficiency-reviewer@1":
             record = self.state(request)["read_set"]["records"][0]
@@ -197,7 +211,9 @@ class ScriptedRoleAdapter:
                 "counterexample_reference_ids": [],
                 "conflict_reference_ids": [],
                 "unknowns": [],
-                "limitations": ["This is a source declaration only."],
+                "limitations": [
+                    "This is a source declaration, not proof of every runtime path."
+                ],
                 "rationale": "The exact formal fact answers the need.",
             }
         if schema == "agentic-answer-drafter@1":

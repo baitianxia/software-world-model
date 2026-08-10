@@ -28,6 +28,7 @@ Knowledge Engine 是 Scope 的唯一写者。Application 可以请求创建、�
 4. 每次 Scope Revision 通过 compare-and-set 形成，不允许丢失并发更新。
 5. 无跨 Scope 原子发布；跨 Scope 使用者固定一组 exact Snapshot 并独立处理兼容性。
 6. Scope Assertion 只证明 exact Revision 的生命周期资格，不授予来源权限，也不证明来源可达、Schema 适用或知识充分；operation dispatch 与 publication commit 必须各自重验当前 Scope 状态。
+7. Scope Assertion 读取以 Scope、用途、调用者、请求引用和安全分类组成稳定请求身份；相同请求在相同权威状态下返回原始 exact Assertion。请求引用不得在 Scope Revision、生命周期或读取语义变化后复用。
 
 ## Failure and implementation boundary
 

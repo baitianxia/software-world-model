@@ -14,7 +14,7 @@ tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py]
 
 ## Purpose and scope
 
-Agentic Task 把自然语言请求转成有界的 Capability 调用、知识更新/使用和响应准备。Orchestrator 负责提议和路由，不执行业务 Core、不拥有最终答案或授权。
+Agentic Task 把自然语言请求转成有界的 Capability 调用、Evidence Answering、知识更新/使用和响应准备。同步聊天可以直接进入受控 Evidence Answering 用例；需要多能力编排时由 Orchestrator 提议和路由。Orchestrator 不执行业务 Core、不拥有最终答案或授权。
 
 ## Ownership
 
@@ -28,6 +28,7 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
 4. Model Context、Task Revision 和 Knowledge Use Epoch 相互绑定并隔离，旧上下文不能影响新任务状态。
 5. Task Control 与 Response Control 不互写私有状态。Task-owned Outcome Assertion 只绑定 exact Task Revision、Invocation、Delegated Grant、Application Outcome 与自身 Digest；Response Control 以 exact Reference 消费该 Assertion，并在自己的 Review Attempt 中绑定 Reviewer output digest 与 model eligibility。
 6. 没有新权威或复杂依赖证据时，不引入通用 DAG、插件注册中心或全局 Workflow Store。
+7. Evidence Answering 的 Checklist、Packet、Draft 与 Review 使用稳定 Digest 和执行引用；同包重写不是新的来源动作，补证则形成新的 Packet Revision。Task Control 不得把模型提议当成审核或最终授权。
 
 ## Failure and implementation boundary
 

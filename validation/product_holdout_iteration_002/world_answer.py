@@ -85,6 +85,73 @@ class _Usage:
     usage_complete: bool
 
 
+class _BudgetedModelGateway:
+    """Enforce the sealed task budget before every model dispatch attempt."""
+
+    def __init__(self, delegate: ModelGateway, policy: Mapping[str, object]) -> None:
+        self._delegate = delegate
+        self._maximum_calls = _positive_limit(
+            policy, "maximum_model_calls"
+        )
+        self._maximum_input_tokens = _positive_limit(
+            policy, "maximum_total_input_tokens"
+        )
+        self._maximum_output_tokens = _positive_limit(
+            policy, "maximum_total_output_tokens"
+        )
+        self._calls = 0
+        self._input_tokens = 0
+        self._output_tokens = 0
+        self._exhaustion: DomainError | None = None
+
+    @property
+    def exhaustion(self) -> DomainError | None:
+        return self._exhaustion
+
+    def invoke(self, context: object) -> object:
+        if self._calls >= self._maximum_calls:
+            self._exhaustion = DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "system-assisted model call budget is exhausted",
+                {
+                    "maximum_model_calls": self._maximum_calls,
+                    "attempted_model_call": self._calls + 1,
+                },
+            )
+            raise self._exhaustion
+        self._calls += 1
+        result = self._delegate.invoke(context)
+        response = getattr(result, "response", None)
+        input_tokens = getattr(response, "input_tokens", None)
+        output_tokens = getattr(response, "output_tokens", None)
+        if isinstance(input_tokens, int) and not isinstance(input_tokens, bool):
+            self._input_tokens += input_tokens
+        if isinstance(output_tokens, int) and not isinstance(output_tokens, bool):
+            self._output_tokens += output_tokens
+        if (
+            self._input_tokens > self._maximum_input_tokens
+            or self._output_tokens > self._maximum_output_tokens
+        ):
+            self._exhaustion = DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "system-assisted model token budget is exhausted",
+                {
+                    "maximum_total_input_tokens": self._maximum_input_tokens,
+                    "actual_input_tokens": self._input_tokens,
+                    "maximum_total_output_tokens": self._maximum_output_tokens,
+                    "actual_output_tokens": self._output_tokens,
+                },
+            )
+            raise self._exhaustion
+        return result
+
+    def recover_call(self, model_call_id: object) -> object:
+        return self._delegate.recover_call(model_call_id)
+
+    def authorized_manifest(self, model_call_id: object) -> object:
+        return self._delegate.authorized_manifest(model_call_id)
+
+
 class WorldAssistedAnswerExecutor:
     """Run the exact production services under an isolated evaluation permit.
 
@@ -277,27 +344,33 @@ class WorldAssistedAnswerExecutor:
             actor="product-validation-runner",
             correlation_ref=CorrelationRef(f"holdout-evaluation:{run_id}"),
         )
+        budgeted_gateway = _BudgetedModelGateway(self._gateway, policy)
         assembly = assemble_activated_task_services(
             database=self._database,
-            gateway=self._gateway,
+            gateway=budgeted_gateway,
             model_configuration=self._configuration,
             activation=activation,
             activation_scope=activation_scope,
         )
-        answer = assembly.natural_tasks.execute(
-            NaturalLanguageTaskRequest.create(
-                conversation_ref=f"holdout-conversation:{run_id}",
-                turn_ref="turn:1",
-                request_ref=f"holdout-request:{run_id}",
-                idempotency_key=IdempotencyKey(task_key),
-                original_request=str(task_input["question"]),
-                caller_ref="product-validation-runner",
-                classification=self._configuration.classification,
-                scope_id=scope.scope_id,
-                snapshot_id=None,
-                knowledge_update_request=update_request,
+        try:
+            answer = assembly.natural_tasks.execute(
+                NaturalLanguageTaskRequest.create(
+                    conversation_ref=f"holdout-conversation:{run_id}",
+                    turn_ref="turn:1",
+                    request_ref=f"holdout-request:{run_id}",
+                    idempotency_key=IdempotencyKey(task_key),
+                    original_request=str(task_input["question"]),
+                    caller_ref="product-validation-runner",
+                    classification=self._configuration.classification,
+                    scope_id=scope.scope_id,
+                    snapshot_id=None,
+                    knowledge_update_request=update_request,
+                )
             )
-        )
+        except DomainError as exc:
+            if budgeted_gateway.exhaustion is not None:
+                raise budgeted_gateway.exhaustion from exc
+            raise
         usage = _collect_usage(self._database)
         if usage.actual_model_fingerprint != self._expected_model_fingerprint:
             raise DomainError(
@@ -418,6 +491,16 @@ def _verify_task_input_digest(task_input: Mapping[str, object]) -> None:
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "system-assisted task input digest is invalid",
         )
+
+
+def _positive_limit(policy: Mapping[str, object], field: str) -> int:
+    value = policy.get(field)
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"system-assisted resource policy {field} must be positive",
+        )
+    return value
 
 
 def _text(value: object, label: str) -> str:

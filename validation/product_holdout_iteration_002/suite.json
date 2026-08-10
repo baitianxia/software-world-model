@@ -1,10 +1,10 @@
 {
   "schema": "swm.product-holdout-suite@2",
   "suite_id": "product-unseen-repositories-2026-08-07",
-  "suite_version": "2.0.1",
+  "suite_version": "2.0.5",
   "status": "SEALED_NOT_EXECUTED",
   "sealed_at": "2026-08-07T00:00:00Z",
-  "suite_digest": "sha256:b4821e583a038bbeb2bb08006f1094c552427d53927ff762b780dcccbadb2fc7",
+  "suite_digest": "sha256:19b955badc095cf4fb6d8b20f3b2d02aec228c1f32b1ad26f13198e048474f25",
   "repositories": [
     {
       "repository_id": "transmittable-thread-local",
@@ -30,20 +30,20 @@
   "source_policy": "LOCAL_GIT_READ_ONLY_ALLOWED_PATHS_ONLY",
   "answer_paths": {
     "direct": {
-      "maximum_model_calls": 34,
+      "maximum_model_calls": 192,
       "maximum_source_actions": 12,
       "maximum_source_bytes_per_action": 16000,
-      "maximum_total_input_tokens": 300000,
-      "maximum_total_output_tokens": 48000,
+      "maximum_total_input_tokens": 2000000,
+      "maximum_total_output_tokens": 192000,
       "maximum_output_tokens_per_call": 1200,
       "timeout_per_call_milliseconds": 180000
     },
     "world_assisted": {
-      "maximum_model_calls": 34,
+      "maximum_model_calls": 192,
       "maximum_source_actions": 12,
       "maximum_source_bytes_per_action": 16000,
-      "maximum_total_input_tokens": 300000,
-      "maximum_total_output_tokens": 48000,
+      "maximum_total_input_tokens": 2000000,
+      "maximum_total_output_tokens": 192000,
       "maximum_output_tokens_per_call": 1200,
       "timeout_per_call_milliseconds": 180000
     }

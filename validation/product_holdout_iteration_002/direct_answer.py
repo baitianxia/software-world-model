@@ -529,7 +529,11 @@ def _parse_action(
     }
     if not isinstance(value, dict) or set(value) != fields:
         _invalid("direct answer action does not match the closed contract")
-    rationale = _text(value["rationale"], "direct answer rationale")
+    if any(not isinstance(value[key], str) for key in fields - {"claims"}):
+        _invalid("direct answer action text fields are invalid")
+    rationale = value["rationale"]
+    if not rationale or rationale != rationale.strip():
+        _invalid("direct answer rationale must be non-empty")
     parameters = {
         key: value[key]
         for key in (
@@ -544,8 +548,6 @@ def _parse_action(
         )
         if value[key]
     }
-    if any(not isinstance(value[key], str) for key in fields - {"claims"}):
-        _invalid("direct answer action text fields are invalid")
     if value["decision"] == "FINISH":
         revision_scope = task_input["revision_scope"]
         target_revision = revision_scope["target"]
@@ -590,6 +592,9 @@ def _parse_action(
                 not isinstance(item, dict)
                 or set(item) != {"claim", "support_references"}
                 or not isinstance(item["support_references"], list)
+                or not isinstance(item["claim"], str)
+                or not item["claim"]
+                or item["claim"] != item["claim"].strip()
             ):
                 _invalid("direct answer claim does not match the closed contract")
             references = tuple(item["support_references"])

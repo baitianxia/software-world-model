@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `none`
-- Active slice: `none`
-- Worktree status: `unqualified-drift`
+- Active iteration: `ITER-002-INDEX`
+- Active slice: `ITER-002-SLICE-001`
+- Worktree status: `authorized-verification-pass-dirty`
 - Strategy relation: `differs-from-accepted-1.38.0`
-- Live model path: `closed`
+- Live model path: `evidence-first-capability-pass-product-pass-local-browser-active`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

@@ -22,7 +22,7 @@ TASK_INPUT_SCHEMA = "swm.product-holdout-task-input@1"
 DEFAULT_SUITE_PATH = Path(__file__).with_name("suite.json")
 
 # This value is replaced only when a new suite version is intentionally sealed.
-PINNED_SUITE_DIGEST = "sha256:b4821e583a038bbeb2bb08006f1094c552427d53927ff762b780dcccbadb2fc7"
+PINNED_SUITE_DIGEST = "sha256:19b955badc095cf4fb6d8b20f3b2d02aec228c1f32b1ad26f13198e048474f25"
 
 _EXPECTED_REPOSITORY_IDS = {
     "transmittable-thread-local",

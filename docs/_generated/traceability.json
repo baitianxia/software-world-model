@@ -1,4 +1,293 @@
 {
+  "FINDING-002-001": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-001-browser-answer-projection.md",
+    "code": [
+      "src/software_world_model/interface/http_api.py",
+      "src/software_world_model/interface/browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "FINDING-002-002": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-002-application-limitation.md",
+    "code": [
+      "src/software_world_model/application_services/response_control.py",
+      "src/software_world_model/interface/http_api.py"
+    ],
+    "tests": [
+      "tests/test_response_control.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "FINDING-002-003": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-003-reviewed-need-binding.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-004": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-004-sequence-verification.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py",
+      "tests/test_product_holdout_world_answer.py"
+    ]
+  },
+  "FINDING-002-005": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-005-source-disclosure-authorization.md",
+    "code": [
+      "validation/product_holdout_iteration_002/world_answer.py"
+    ],
+    "tests": [
+      "tests/test_product_holdout_world_answer.py"
+    ]
+  },
+  "FINDING-002-006": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-006-quality-before-call-budget.md",
+    "code": [
+      "validation/product_holdout_iteration_002/suite.json",
+      "validation/product_holdout_iteration_002/world_answer.py"
+    ],
+    "tests": [
+      "tests/test_product_holdout_manifest.py",
+      "tests/test_product_holdout_world_answer.py"
+    ]
+  },
+  "FINDING-002-007": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-007-exhaustive-sequence-audit.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py",
+      "tests/test_product_holdout_world_answer.py"
+    ]
+  },
+  "FINDING-002-008": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-008-global-budget-truncated-convergent-quality-chain.md",
+    "code": [
+      "validation/product_holdout_iteration_002/suite.json",
+      "validation/product_holdout_iteration_002/world_answer.py"
+    ],
+    "tests": [
+      "tests/test_product_holdout_manifest.py",
+      "tests/test_product_holdout_world_answer.py"
+    ]
+  },
+  "FINDING-002-009": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-009-large-sequence-set-missed-boundary.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-010": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-010-language-repair-truncated-by-local-fuse.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-011": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-011-empty-negative-sequence-audit.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-012": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-012-return-dependent-branch-without-temporal-word.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-013": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-013-aggregate-sequence-audit-attention-dilution.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-014": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-014-fact-review-repair-missing-key-diagnostics.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-015": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-015-sufficiency-repair-reference-diagnostics.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-016": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-016-coverage-unknown-artifact-recovery.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-017": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-017-sequence-positive-evidence-dominated-by-negative-label.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-018": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-018-sequence-fragment-lexical-overlap.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-019": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-019-restricted-positive-span-extra-negative-labels.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-020": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-020-sequence-atomic-shape-repair.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-021": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-021-answer-sequence-repair-constraint-loss.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-022": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-022-downstream-support-deletion.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-023": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-023-proof-support-is-not-visible-answer.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/agentic_knowledge_strategy.py"
+    ],
+    "tests": [
+      "tests/test_agentic_knowledge_strategy.py"
+    ]
+  },
+  "FINDING-002-024": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-024-formal-knowledge-critical-path-coupling.md",
+    "code": [
+      "src/software_world_model/application_services/evidence_answer.py",
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_evidence_answer.py",
+      "tests/test_evidence_answer_strategy.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "FINDING-002-025": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-025-partial-artifact-identity-collision.md",
+    "code": [
+      "src/software_world_model/infrastructure/sqlite_source_operation_repository.py"
+    ],
+    "tests": [
+      "tests/test_source_operations.py"
+    ]
+  },
+  "FINDING-002-026": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-026-review-language-false-approval.md",
+    "code": [
+      "src/software_world_model/application_services/evidence_answer.py",
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_evidence_answer_strategy.py",
+      "validation/evidence_answer_capability_iteration_002/suite.json"
+    ]
+  },
+  "FINDING-002-027": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-027-review-order-and-intent-gaps.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py"
+    ],
+    "tests": [
+      "validation/evidence_answer_capability_iteration_002/suite.json"
+    ]
+  },
+  "FINDING-002-028": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-028-draft-semantic-contract-recovery.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_evidence_answer_strategy.py"
+    ]
+  },
+  "FINDING-002-029": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-029-review-relevance-readability-gap.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py",
+      "validation/evidence_answer_capability_iteration_002"
+    ],
+    "tests": [
+      "tests/test_evidence_answer_strategy.py"
+    ]
+  },
+  "FINDING-002-030": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-030-model-role-contract-repair.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_evidence_answer_strategy.py",
+      "tests/test_product_holdout_evidence_answer.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -163,6 +452,86 @@
       "tests"
     ]
   },
+  "ITER-002-DESIGN-INDEX": {
+    "path": "docs/project/iterations/iteration-002/development-design/README.md",
+    "code": [
+      "src/software_world_model",
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-002-INDEX": {
+    "path": "docs/project/iterations/iteration-002/README.md",
+    "code": [
+      "src/software_world_model",
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-002-PROPOSAL": {
+    "path": "docs/project/iterations/iteration-002/proposal.md",
+    "code": [
+      "src/software_world_model",
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-002-RESULT-CAPABILITY": {
+    "path": "docs/project/iterations/iteration-002/results/capability-evaluation.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/evidence_capability_evaluation.py",
+      "validation/evidence_answer_capability_iteration_002"
+    ],
+    "tests": [
+      "tests/test_evidence_answer_strategy.py"
+    ]
+  },
+  "ITER-002-RESULT-IMPLEMENTATION": {
+    "path": "docs/project/iterations/iteration-002/results/implementation.md",
+    "code": [
+      "src/software_world_model",
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-002-RESULT-PRODUCT": {
+    "path": "docs/project/iterations/iteration-002/results/product-validation.md",
+    "code": [
+      "validation/product_holdout_iteration_002"
+    ],
+    "tests": [
+      "tests/test_product_holdout_evidence_answer.py",
+      "tests/test_product_holdout_manifest.py"
+    ]
+  },
+  "ITER-002-SLICE-001": {
+    "path": "docs/project/iterations/iteration-002/development-design/SLICE-001-generic-repository-answer-quality.md",
+    "code": [
+      "src/software_world_model",
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-002-VERIFICATION": {
+    "path": "docs/project/iterations/iteration-002/verification-matrix.md",
+    "code": [
+      "validation"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [
@@ -179,6 +548,18 @@
     ],
     "tests": [
       "tests"
+    ]
+  },
+  "SYS-ADR-013": {
+    "path": "docs/system/architecture/decisions/ADR-013-evidence-first-synchronous-answering.md",
+    "code": [
+      "src/software_world_model/application_services/evidence_answer.py",
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_evidence_answer.py",
+      "tests/test_evidence_answer_strategy.py",
+      "tests/test_browser_chat_interface.py"
     ]
   },
   "SYS-ARCH-COMPONENTS": {
@@ -216,11 +597,13 @@
   "SYS-ARCH-DOMAIN": {
     "path": "docs/system/architecture/domain-model.md",
     "code": [
-      "src/software_world_model/knowledge_engine"
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services/evidence_answer.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
-      "tests/test_knowledge_scope.py"
+      "tests/test_knowledge_scope.py",
+      "tests/test_evidence_answer.py"
     ]
   },
   "SYS-ARCH-FLOWS": {
@@ -310,6 +693,19 @@
       "tests/test_natural_task.py"
     ]
   },
+  "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING": {
+    "path": "docs/system/contracts/application/evidence-answering.md",
+    "code": [
+      "src/software_world_model/application_services/evidence_answer.py",
+      "src/software_world_model/ai_infrastructure/evidence_answer_strategy.py",
+      "src/software_world_model/interface/runtime.py"
+    ],
+    "tests": [
+      "tests/test_evidence_answer.py",
+      "tests/test_evidence_answer_strategy.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
   "SYS-CONTRACT-APPLICATION-INDEX": {
     "path": "docs/system/contracts/application/README.md",
     "code": [
@@ -354,10 +750,12 @@
     "path": "docs/system/contracts/application/response-control.md",
     "code": [
       "src/software_world_model/application_services/response_control.py",
+      "src/software_world_model/application_services/evidence_answer.py",
       "src/software_world_model/infrastructure/sqlite_response_control_repository.py"
     ],
     "tests": [
       "tests/test_response_control.py",
+      "tests/test_evidence_answer.py",
       "tests/test_agentic_runtime.py"
     ]
   },

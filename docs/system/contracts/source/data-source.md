@@ -34,6 +34,7 @@ Source Integration 是 Data Source、Definition Revision 与 Binding 的唯一�
 3. ACTIVE Binding 只表示配置生命周期允许，不证明 Scope active、网络可达或知识存在。
 4. Scope retirement 不跨 Owner 级联写入、停用或删除 Source、Binding 和历史结果。
 5. Scope Reference / Assertion 由 Application 作为中立边界值传入，Source Integration 不查询或改写 Knowledge Engine；执行端必须消费 exact Binding Revision 和 exact Scope Assertion，不能长期依赖 `latest`。执行与发布分别在自己的权威边界重验当前资格。
+6. Binding Eligibility 的身份绑定 exact Source/Binding Revision、Scope Assertion、配置控制栅栏、Selector、Tool 与安全分类；解析时间只用于诊断，不改变相同权威闭包的身份。相同来源动作重试必须能够恢复原 Operation，任一权威字段变化仍须失败关闭。
 
 ## Failure and compatibility boundary
 

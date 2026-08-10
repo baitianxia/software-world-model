@@ -1,0 +1,215 @@
+{
+  "schema": "swm.evidence-answer-capability-suite@1",
+  "suite_id": "general-evidence-answer-2026-08-10",
+  "suite_version": "1.3.0",
+  "suite_digest": "sha256:0f06bd1572df8c7996b8a6c4eccd908e7193dcd12c06a0aa0b7296bedbdbb421",
+  "cases": [
+    {
+      "role": "QUESTION_FIDELITY",
+      "case_id": "preserve-flow-and-error-boundary",
+      "fixture": {
+        "original_request": "Explain how RequestRouter selects and invokes a handler, including the error returned when no handler exists. Do not infer design intent."
+      },
+      "oracle": {
+        "requirements": [
+          "selection remains a material checklist item",
+          "invocation remains a material checklist item",
+          "the missing-handler error remains a material checklist item",
+          "unrequested design intent is not introduced"
+        ]
+      }
+    },
+    {
+      "role": "SOURCE_INVESTIGATION",
+      "case_id": "exact-revision-read-only-proposal",
+      "fixture": {
+        "question": "How does RequestRouter select and invoke a handler?",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "allowed_path": "src/router.py"
+      },
+      "oracle": {
+        "requirements": [
+          "propose one read-only bounded source action or justified stop",
+          "remain at the exact supplied revision",
+          "do not invent source results"
+        ]
+      }
+    },
+    {
+      "role": "CITED_ANSWER_GENERATION",
+      "case_id": "synthesize-two-evidence-items",
+      "fixture": {
+        "question": "How does RequestRouter select and invoke a handler?",
+        "checklist": ["How is the handler selected?", "How is the selected handler invoked?"],
+        "evidence": [
+          {"locator": "src/router.py", "content": "handler = handlers.get(request.kind)"},
+          {"locator": "src/router.py", "content": "return handler.handle(request)"}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "answer both checklist items in natural prose",
+          "bind selection to evidence-1 and invocation to evidence-2",
+          "do not expose verification boilerplate"
+        ]
+      }
+    },
+    {
+      "role": "INDEPENDENT_ANSWER_REVIEW",
+      "case_id": "detect-supported-omission",
+      "fixture": {
+        "question": "How does RequestRouter select and invoke a handler?",
+        "checklist": ["How is the handler selected?", "How is the selected handler invoked?"],
+        "evidence": [
+          {"locator": "src/router.py", "content": "handler = handlers.get(request.kind)"},
+          {"locator": "src/router.py", "content": "return handler.handle(request)"}
+        ],
+        "draft_sections": [
+          {"section_id": "selection", "kind": "SUPPORTED", "text": "It selects a handler with handlers.get(request.kind).", "checklist_item_ids": ["check-1"], "evidence_ids": ["evidence-1"]}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "return REWRITE_REQUIRED rather than approval",
+          "identify the omitted invocation",
+          "cite evidence-2 because the packet already supports the repair"
+        ]
+      }
+    },
+    {
+      "role": "FIXED_PACKET_REWRITE",
+      "case_id": "repair-without-new-evidence",
+      "fixture": {
+        "question": "How does RequestRouter select and invoke a handler?",
+        "checklist": ["How is the handler selected?", "How is the selected handler invoked?"],
+        "evidence": [
+          {"locator": "src/router.py", "content": "handler = handlers.get(request.kind)"},
+          {"locator": "src/router.py", "content": "return handler.handle(request)"}
+        ],
+        "draft_sections": [
+          {"section_id": "selection", "kind": "SUPPORTED", "text": "It selects a handler with handlers.get(request.kind).", "checklist_item_ids": ["check-1"], "evidence_ids": ["evidence-1"]}
+        ],
+        "finding": {"checklist_item_id": "check-2", "category": "MISSING_ANSWER", "description": "Add the supported handler invocation.", "evidence_ids": ["evidence-2"]}
+      },
+      "oracle": {
+        "requirements": [
+          "the rewrite covers both selection and invocation",
+          "all references remain inside the original evidence packet",
+          "no source action or new evidence is requested"
+        ]
+      }
+    },
+    {
+      "role": "EVIDENCE_GAP_CLASSIFICATION",
+      "case_id": "distinguish-retrieval-from-rewrite",
+      "fixture": {
+        "question": "Which environment variable configures the endpoint, and what is its default value?",
+        "checklist": ["Which environment variable configures the endpoint?", "What is the default value?"],
+        "evidence": [
+          {"locator": "src/config.py", "content": "endpoint = os.environ['SERVICE_ENDPOINT']"}
+        ],
+        "draft_sections": [
+          {"section_id": "variable", "kind": "SUPPORTED", "text": "SERVICE_ENDPOINT configures the endpoint.", "checklist_item_ids": ["check-1"], "evidence_ids": ["evidence-1"]}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "return MORE_EVIDENCE_REQUIRED",
+          "identify the missing default-value evidence",
+          "do not cite existing evidence as if it contained the default"
+        ]
+      }
+    },
+    {
+      "role": "RESPONSE_LANGUAGE_REVIEW",
+      "case_id": "reject-answer-in-wrong-language",
+      "fixture": {
+        "question": "请只说明 Router 如何选择处理器，不要补充其他行为或自我验收说明。",
+        "checklist": ["Router 如何选择处理器？"],
+        "evidence": [
+          {"locator": "src/router.py", "content": "handler = handlers.get(request.kind)"}
+        ],
+        "draft_sections": [
+          {"section_id": "selection", "kind": "SUPPORTED", "text": "The router selects a handler with handlers.get(request.kind).", "checklist_item_ids": ["check-1"], "evidence_ids": ["evidence-1"]}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "return REWRITE_REQUIRED rather than approval",
+          "set RESPONSE_LANGUAGE to false",
+          "identify that the Chinese request received an English answer",
+          "cite evidence-1 because the packet supports a Chinese rewrite"
+        ]
+      }
+    },
+    {
+      "role": "TEMPORAL_ORDER_REVIEW",
+      "case_id": "reject-reversed-execution-order",
+      "fixture": {
+        "question": "When is capturedRef cleared relative to replay and task.run?",
+        "checklist": ["When is capturedRef cleared relative to replay and task.run?"],
+        "evidence": [
+          {"locator": "src/task.py", "content": "capturedRef.compareAndSet(captured, null)\nbackup = replay(captured)\ntry: task.run()\nfinally: restore(backup)"}
+        ],
+        "draft_sections": [
+          {"section_id": "order", "kind": "SUPPORTED", "text": "capturedRef is cleared after task.run finishes.", "checklist_item_ids": ["check-1"], "evidence_ids": ["evidence-1"]}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "return REWRITE_REQUIRED rather than approval",
+          "set EVIDENCE_GROUNDING to false",
+          "identify that clearing precedes replay and task.run",
+          "cite evidence-1"
+        ]
+      }
+    },
+    {
+      "role": "UNSUPPORTED_INTENT_REVIEW",
+      "case_id": "reject-invented-design-purpose",
+      "fixture": {
+        "question": "Why is the embedded policy handled separately? State only what the source proves.",
+        "checklist": ["What separate handling does the source show?", "Does the source state a design purpose?"],
+        "evidence": [
+          {"locator": "src/render.py", "content": "if isinstance(policy, EmbeddedPolicy): return"},
+          {"locator": "src/render.py", "content": "document = reload(document)\napply_embedded_policy(document)"}
+        ],
+        "draft_sections": [
+          {"section_id": "purpose", "kind": "SUPPORTED", "text": "The policy runs separately to avoid corrupting later element processing.", "checklist_item_ids": ["check-1", "check-2"], "evidence_ids": ["evidence-1", "evidence-2"]}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "return REWRITE_REQUIRED rather than approval",
+          "set EVIDENCE_GROUNDING to false",
+          "distinguish the observed skip-reload-apply mechanism from undocumented intent",
+          "cite the supplied evidence without treating it as proof of motivation"
+        ]
+      }
+    },
+    {
+      "role": "RELEVANCE_READABILITY_REVIEW",
+      "case_id": "reject-self-audit-and-unrequested-detail",
+      "fixture": {
+        "question": "请说明 Router 如何选择处理器。",
+        "checklist": ["Router 如何选择处理器？"],
+        "evidence": [
+          {"locator": "src/router.py", "content": "handler = handlers.get(request.kind)"},
+          {"locator": "src/upload.py", "content": "MAX_UPLOAD_BYTES = 1048576"}
+        ],
+        "draft_sections": [
+          {"section_id": "selection", "kind": "SUPPORTED", "text": "Router 通过 handlers.get(request.kind) 选择处理器。此外，另一个模块的上传上限是 1048576 字节。回答语言与原始请求一致（中文），以上内容均有源码证据。", "checklist_item_ids": ["check-1"], "evidence_ids": ["evidence-1", "evidence-2"]}
+        ]
+      },
+      "oracle": {
+        "requirements": [
+          "return REWRITE_REQUIRED rather than approval",
+          "set RELEVANCE_READABILITY to false",
+          "identify the self-referential language and evidence-compliance narration",
+          "identify the unrequested upload-limit detail",
+          "cite evidence-1 because the packet supports a focused rewrite"
+        ]
+      }
+    }
+  ]
+}

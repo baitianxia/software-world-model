@@ -10,6 +10,7 @@ from typing import Mapping, Sequence
 from wsgiref.simple_server import WSGIRequestHandler, make_server
 
 from software_world_model.application_services import (
+    AnswerSectionKind,
     KnowledgeNeed,
     NaturalLanguageTaskRequest,
 )
@@ -151,6 +152,10 @@ class JsonHttpApplication:
                 capabilities.append("natural-language-task-planning")
             if self._runtime.reviewed_answer_preparation_configured:
                 capabilities.append("reviewed-answer-preparation")
+            if getattr(
+                self._runtime, "evidence_answer_preparation_configured", False
+            ):
+                capabilities.append("evidence-first-answering")
             return "200 OK", {
                 "capabilities": capabilities,
                 "live_model_execution": (
@@ -276,16 +281,6 @@ class JsonHttpApplication:
                 failed.failure_message if failed else "project configuration did not complete",
             )
         steps = {step.name: dict(step.output) for step in execution.result.steps}
-        bootstrap_paths = _browser_bootstrap_paths(
-            connector=connector,
-            revision=exact_revision,
-            selected_paths=selected_paths,
-        )
-        known_paths = _browser_known_paths(
-            connector=connector,
-            revision=exact_revision,
-            selected_paths=selected_paths,
-        )
         target_kind = (
             TargetKind.REVISION_COMPARISON
             if exact_base is not None
@@ -312,8 +307,6 @@ class JsonHttpApplication:
                     steps["BIND_SOURCE"]["binding_revision"]
                 ),
                 "selected_paths": selected_paths,
-                "bootstrap_paths": list(bootstrap_paths),
-                "known_paths": list(known_paths),
                 "target_kind": target_kind.value,
                 "target_parameters": target_parameters,
             }
@@ -339,6 +332,57 @@ class JsonHttpApplication:
         )
         turn_number = _integer(body, "turn_number", default=1)
         scope_id = StableId(_text(project, "scope_id"))
+        if getattr(
+            self._runtime, "evidence_answer_preparation_configured", False
+        ):
+            request = self._runtime.prepare_evidence_answer_request(
+                idempotency_key=IdempotencyKey(
+                    f"browser-message:{request_id}"
+                ),
+                scope_id=scope_id,
+                scope_revision=Revision(
+                    _integer(project, "scope_revision", default=1)
+                ),
+                source_id=StableId(_text(project, "source_id")),
+                source_revision=Revision(
+                    _integer(project, "source_revision", default=1)
+                ),
+                binding_id=StableId(_text(project, "binding_id")),
+                binding_revision=Revision(
+                    _integer(project, "binding_revision", default=1)
+                ),
+                target_kind=target_kind,
+                target_parameters=_string_mapping(
+                    project, "target_parameters"
+                ),
+                original_request=original_request,
+                classification="INTERNAL",
+                caller_ref="browser-local-user",
+                correlation_ref=CorrelationRef(
+                    f"browser-request:{request_id}"
+                ),
+                max_steps=20,
+                max_items_per_step=200,
+                max_bytes_per_step=24_000,
+            )
+            answer = self._runtime.prepare_evidence_answer(request)
+            supported_count = sum(
+                section.kind is AnswerSectionKind.SUPPORTED
+                for section in answer.draft.sections
+            )
+            return {
+                "message": answer.draft.body,
+                "response_kind": (
+                    "EVIDENCE_COMPLETE"
+                    if answer.unresolved_count == 0
+                    else "EVIDENCE_PARTIAL"
+                ),
+                "claim_count": supported_count,
+                "unresolved_count": answer.unresolved_count,
+                "evidence_packet_id": answer.evidence_packet.packet_id.value,
+                "reviewed": True,
+                "sources": list(answer.sources),
+            }
         current = self._runtime.knowledge.current_snapshot(scope_id)
         technical = {
             "conversation_ref": f"browser-conversation:{conversation_id}",
@@ -369,18 +413,6 @@ class JsonHttpApplication:
                 "max_steps": 12,
                 "max_items_per_step": 200,
                 "max_bytes_per_step": 16_000,
-                "required_source_paths": (
-                    _browser_required_source_paths(
-                        message=message,
-                        turn_number=turn_number,
-                        bootstrap_paths=_string_sequence(
-                            project, "bootstrap_paths"
-                        ),
-                    )
-                ),
-                "allowed_source_paths": _string_sequence(
-                    project, "known_paths"
-                ),
             },
         }
         answer = self._prepare_answer(technical)
@@ -623,98 +655,8 @@ def _browser_original_request(message: str, history: object) -> str:
         context
         + response_language
         + f"当前问题：{message}\n"
-        + "回答约束：只回答当前问题，使用与当前问题相同的语言。"
-        + "不要把用户未明确提出的入口、部署、配置或其他主题扩展成独立必答问题；"
-        + "宽泛问题只需给出有直接依据的概要。"
+        + "回答约束：忠实回答当前问题，使用与当前问题相同的语言。"
     )
-
-
-def _browser_bootstrap_paths(
-    *,
-    connector: LocalGitConnector,
-    revision: str,
-    selected_paths: str,
-) -> tuple[str, ...]:
-    available = set(connector.list_paths(revision))
-    roots = tuple(
-        item.strip().replace("\\", "/").strip("/") or "."
-        for item in selected_paths.split(",")
-        if item.strip()
-    )
-    conventional = (
-        "README.md",
-        "README",
-        "pom.xml",
-        "pyproject.toml",
-        "package.json",
-        "settings.gradle",
-        "settings.gradle.kts",
-        "build.gradle",
-        "build.gradle.kts",
-        "Cargo.toml",
-        "go.mod",
-    )
-    selected: list[str] = []
-    for root in roots:
-        prefix = "" if root == "." else root + "/"
-        for name in conventional:
-            candidate = prefix + name
-            if candidate in available and candidate not in selected:
-                selected.append(candidate)
-            if len(selected) == 4:
-                return tuple(selected)
-    return tuple(selected)
-
-
-def _browser_known_paths(
-    *,
-    connector: LocalGitConnector,
-    revision: str,
-    selected_paths: str,
-    maximum: int = 1_200,
-) -> tuple[str, ...]:
-    available = connector.list_paths(revision)
-    roots = tuple(
-        item.strip().replace("\\", "/").strip("/") or "."
-        for item in selected_paths.split(",")
-        if item.strip()
-    )
-    selected = tuple(
-        path
-        for path in available
-        if any(root == "." or path == root or path.startswith(root + "/") for root in roots)
-    )
-    # An incomplete allowlist would silently hide source. Large projects keep
-    # the existing dynamic LIST/SEARCH path and are better handled by choosing
-    # a narrower project scope in the UI.
-    return selected if len(selected) <= maximum else ()
-
-
-def _browser_required_source_paths(
-    *, message: str, turn_number: int, bootstrap_paths: tuple[str, ...]
-) -> tuple[str, ...]:
-    if turn_number == 1:
-        return bootstrap_paths
-    normalized = message.casefold()
-    overview_terms = (
-        "项目",
-        "工程",
-        "模块",
-        "功能",
-        "架构",
-        "project",
-        "module",
-        "feature",
-        "architecture",
-    )
-    if not any(term in normalized for term in overview_terms):
-        return ()
-    readmes = tuple(
-        path
-        for path in bootstrap_paths
-        if path.rsplit("/", 1)[-1].casefold().startswith("readme")
-    )
-    return readmes or bootstrap_paths[:1]
 
 
 def _browser_answer_sources(
@@ -739,7 +681,7 @@ def _browser_answer_sources(
         ):
             if locator not in sources:
                 sources.append(locator)
-            if len(sources) == 8:
+            if len(sources) == 24:
                 return tuple(sources)
     return tuple(sources)
 
@@ -770,7 +712,8 @@ def _browser_answer_projection(
         for item in assessment_items
         if isinstance(item, dict) and isinstance(item.get("need_id"), str)
     }
-    confirmed: list[str] = []
+    confirmed_by_need: dict[str, list[str]] = {}
+    limitations_by_need: dict[str, list[str]] = {}
     unresolved: list[tuple[str, str]] = []
     for claim in claims:
         if not isinstance(claim, dict):
@@ -778,9 +721,22 @@ def _browser_answer_projection(
         kind = claim.get("kind")
         text = claim.get("text")
         need_id = claim.get("need_id")
-        if kind == "FORMAL_KNOWLEDGE" and isinstance(text, str):
-            if text not in confirmed:
-                confirmed.append(text)
+        if (
+            kind == "FORMAL_KNOWLEDGE"
+            and isinstance(text, str)
+            and isinstance(need_id, str)
+        ):
+            bucket = confirmed_by_need.setdefault(need_id, [])
+            if text not in bucket:
+                bucket.append(text)
+        elif (
+            kind == "APPLICATION_LIMITATION"
+            and isinstance(text, str)
+            and isinstance(need_id, str)
+        ):
+            bucket = limitations_by_need.setdefault(need_id, [])
+            if text not in bucket:
+                bucket.append(text)
         elif kind == "KNOWLEDGE_GAP" and isinstance(need_id, str):
             question = questions.get(need_id, "本问题")
             disclosure = disclosures.get(need_id)
@@ -790,17 +746,52 @@ def _browser_answer_projection(
             if item not in unresolved:
                 unresolved.append(item)
     chinese = _contains_cjk(user_message)
-    if not confirmed and not unresolved:
+    if not confirmed_by_need and not unresolved:
         return _text(candidate, "body"), 0, 0
     sections: list[str] = []
-    if confirmed:
-        heading = "已确认" if chinese else "Confirmed"
-        sections.append(
-            heading + "\n" + "\n".join(
-                f"{index}. {_localized_claim_text(text, chinese)}"
-                for index, text in enumerate(confirmed, 1)
+    shown_claims: set[str] = set()
+    confirmed_sections: list[str] = []
+    ordered_need_ids = list(questions)
+    ordered_need_ids.extend(
+        need_id
+        for need_id in (*confirmed_by_need, *limitations_by_need)
+        if need_id not in questions
+    )
+    for need_id in ordered_need_ids:
+        facts = [
+            item
+            for item in confirmed_by_need.get(need_id, ())
+            if item not in shown_claims
+        ]
+        all_need_facts = confirmed_by_need.get(need_id, ())
+        notes = [
+            item
+            for item in limitations_by_need.get(need_id, ())
+            if not any(
+                item.casefold() in fact.casefold()
+                for fact in all_need_facts
             )
+        ]
+        if not facts and not notes:
+            continue
+        shown_claims.update(facts)
+        question = questions.get(
+            need_id,
+            "相关问题" if chinese else "Related question",
         )
+        lines = [f"{len(confirmed_sections) + 1}. {question}"]
+        lines.extend(
+            f"   - {_localized_claim_text(item, chinese)}" for item in facts
+        )
+        note_label = "说明：" if chinese else "Note: "
+        lines.extend(
+            f"   - {note_label}{_localized_gap_text(item, chinese)}"
+            for item in notes
+        )
+        confirmed_sections.append("\n".join(lines))
+    if confirmed_sections:
+        heading = "已确认" if chinese else "Confirmed"
+        sections.append(heading + "\n" + "\n".join(confirmed_sections))
     if unresolved:
         heading = "尚未确认" if chinese else "Not yet verified"
         separator = "：" if chinese else ": "
@@ -813,7 +804,7 @@ def _browser_answer_projection(
     if sources:
         heading = "源码位置" if chinese else "Source locations"
         sections.append(heading + "\n" + "\n".join(f"- {item}" for item in sources))
-    return "\n\n".join(sections), len(confirmed), len(unresolved)
+    return "\n\n".join(sections), len(shown_claims), len(unresolved)
 
 
 def _contains_cjk(value: str) -> bool:

@@ -183,7 +183,7 @@ public class OrderService {
             correlation_ref=CorrelationRef("source-operation"),
         )
 
-    def test_exact_commit_path_and_java_symbol_resolution_fail_closed(self) -> None:
+    def test_exact_commit_path_and_language_neutral_symbol_resolution_fail_closed(self) -> None:
         resolver = LocalGitTargetResolver(LocalGitConnector(str(self.repo_path)))
 
         short = resolver.resolve_revision(self.commit[:8])
@@ -191,23 +191,30 @@ public class OrderService {
         outside = resolver.resolve_path(
             self.commit, "docs/secret.txt", allowed_paths=("src",)
         )
-        overloaded = resolver.resolve_java_symbol(
+        ambiguous = resolver.resolve_symbol(
             self.commit,
-            "com.example.OrderService#find",
+            "needle",
             allowed_paths=("src",),
         )
-        method = resolver.resolve_java_symbol(
+        symbol = resolver.resolve_symbol(
             self.commit,
-            "com.example.OrderService#find(String)",
+            "needle one",
             allowed_paths=("src",),
+        )
+        compatibility = resolver.resolve_java_symbol(
+            self.commit, "needle one", allowed_paths=("src",)
         )
 
         self.assertEqual(short.outcome, ResolutionOutcome.AMBIGUOUS)
         self.assertEqual(exact.outcome, ResolutionOutcome.EXACT)
         self.assertEqual(outside.outcome, ResolutionOutcome.OUT_OF_SCOPE)
-        self.assertEqual(overloaded.outcome, ResolutionOutcome.AMBIGUOUS)
-        self.assertEqual(method.outcome, ResolutionOutcome.EXACT)
-        self.assertEqual(dict(method.canonical_identity)["path"], "src/OrderService.java")
+        self.assertEqual(ambiguous.outcome, ResolutionOutcome.AMBIGUOUS)
+        self.assertEqual(symbol.outcome, ResolutionOutcome.EXACT)
+        self.assertEqual(dict(symbol.canonical_identity)["path"], "src/notes.txt")
+        self.assertEqual(compatibility.outcome, ResolutionOutcome.EXACT)
+        self.assertEqual(
+            dict(compatibility.canonical_identity)["path"], "src/notes.txt"
+        )
 
     def test_list_pagination_records_partial_coverage_and_cursor(self) -> None:
         first = self.operations.execute(
@@ -255,6 +262,45 @@ public class OrderService {
         self.assertEqual(replay.digest, first.digest)
         self.assertEqual(replay.observation.artifacts[0].artifact_id, artifact.artifact_id)
 
+    def test_continued_read_has_distinct_coverage_bound_artifact_identity(self) -> None:
+        first = self.operations.execute(
+            self.intent(
+                SourceTool.READ,
+                {
+                    "revision": self.commit,
+                    "path": "src/notes.txt",
+                    "offset": "0",
+                    "max_bytes": "12",
+                },
+                key="read-notes-first-range",
+                budget=OperationBudget(max_calls=1, max_items=1, max_bytes=12),
+            )
+        )
+        second = self.operations.execute(
+            self.intent(
+                SourceTool.READ,
+                {
+                    "revision": self.commit,
+                    "path": "src/notes.txt",
+                    "offset": first.observation.next_cursor,
+                    "max_bytes": "12",
+                },
+                key="read-notes-second-range",
+                budget=OperationBudget(max_calls=1, max_items=1, max_bytes=12),
+            )
+        )
+
+        first_artifact = first.observation.artifacts[0]
+        second_artifact = second.observation.artifacts[0]
+        self.assertNotEqual(first_artifact.artifact_id, second_artifact.artifact_id)
+        self.assertNotEqual(first_artifact.identity_digest, second_artifact.identity_digest)
+        self.assertEqual(
+            dict(first.observation.coverage)["range"], "bytes:0-12"
+        )
+        self.assertEqual(
+            dict(second.observation.coverage)["range"], "bytes:12-24"
+        )
+
     def test_search_and_compare_are_selector_bounded(self) -> None:
         search = self.operations.execute(
             self.intent(
@@ -281,6 +327,43 @@ public class OrderService {
         self.assertNotIn("docs/secret.txt", search_text)
         self.assertEqual(compare.status, SourceOperationStatus.COMPLETED)
         self.assertIn(b"src/notes.txt", compare.observation.artifacts[0].payload)
+
+    def test_text_discovery_and_symbol_resolution_are_extension_neutral(self) -> None:
+        (self.repo_path / "src" / "worker.py").write_text(
+            "def cross_language_python_marker():\n    return 1\n",
+            encoding="utf-8",
+        )
+        (self.repo_path / "src" / "panel.ts").write_text(
+            "export const cross_language_typescript_marker = 1;\n",
+            encoding="utf-8",
+        )
+        self._git("add", ".")
+        self._git("commit", "-q", "-m", "add cross-language fixtures")
+        revision = self._git("rev-parse", "HEAD").strip()
+        connector = LocalGitConnector(str(self.repo_path))
+        resolver = LocalGitTargetResolver(connector)
+
+        for marker, expected_path in (
+            ("cross_language_python_marker", "src/worker.py"),
+            ("cross_language_typescript_marker", "src/panel.ts"),
+        ):
+            outcome = connector.execute(
+                tool=SourceTool.SEARCH,
+                parameters={"revision": revision, "query": marker},
+                allowed_paths=("src",),
+                budget=OperationBudget(
+                    max_calls=1, max_items=20, max_bytes=4096
+                ),
+            )
+            symbol = resolver.resolve_symbol(
+                revision, marker, allowed_paths=("src",)
+            )
+
+            self.assertIn(expected_path.encode("utf-8"), outcome.payload)
+            self.assertEqual(symbol.outcome, ResolutionOutcome.EXACT)
+            self.assertEqual(
+                dict(symbol.canonical_identity)["path"], expected_path
+            )
 
     def test_out_of_scope_read_fails_without_artifact(self) -> None:
         result = self.operations.execute(
@@ -330,6 +413,32 @@ public class OrderService {
                 )
             )
         self.assertEqual(raised.exception.code, ErrorCode.IDEMPOTENCY_MISMATCH)
+
+    def test_source_operation_retry_reuses_equivalent_eligibility(self) -> None:
+        first_intent = self.intent(
+            SourceTool.READ,
+            {"revision": self.commit, "path": "src/notes.txt"},
+            key="recoverable-read",
+        )
+        first = self.operations.execute(first_intent)
+        replay_intent = self.intent(
+            SourceTool.READ,
+            {"revision": self.commit, "path": "src/notes.txt"},
+            key="recoverable-read",
+        )
+
+        replay = self.operations.execute(replay_intent)
+
+        self.assertEqual(replay, first)
+        self.assertEqual(replay_intent.digest, first_intent.digest)
+        self.assertEqual(
+            replay_intent.binding_eligibility.digest,
+            first_intent.binding_eligibility.digest,
+        )
+        self.assertNotEqual(
+            replay_intent.binding_eligibility.resolved_at,
+            first_intent.binding_eligibility.resolved_at,
+        )
 
 
 if __name__ == "__main__":

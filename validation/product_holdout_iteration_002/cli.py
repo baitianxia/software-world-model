@@ -15,8 +15,8 @@ from software_world_model.ai_infrastructure import (
     UrllibVolcengineArkChatTransport,
     VolcengineArkChatCompletionsNoToolsAdapter,
     VolcengineArkModelConfiguration,
-    agentic_knowledge_output_schemas,
-    agentic_knowledge_strategy_implementation_digest,
+    evidence_first_task_output_schemas,
+    evidence_first_task_strategy_implementation_digest,
     load_ark_chat_conformance_qualification,
 )
 from software_world_model.application_services import (
@@ -63,7 +63,7 @@ from .result_store import (
     verify_answer_pair_document,
     write_validation_document_once,
 )
-from .world_answer import WorldAssistedAnswerExecutor
+from .evidence_answer import EvidenceFirstAnswerExecutor
 
 
 QUALIFICATION_DOCUMENT_SCHEMA = "swm.capability-qualification-proof@1"
@@ -249,7 +249,7 @@ def _run_system(
     adapter = VolcengineArkChatCompletionsNoToolsAdapter(
         transport=adapter_transport,
         configuration=configuration,
-        output_schemas=agentic_knowledge_output_schemas(),
+        output_schemas=evidence_first_task_output_schemas(),
         live_qualification=conformance,
     )
     runtime_path = _runtime_database_path(
@@ -272,7 +272,7 @@ def _run_system(
             gateway = ModelGateway(
                 SqliteModelGatewayRepository(database), (adapter,)
             )
-            result = WorldAssistedAnswerExecutor(
+            result = EvidenceFirstAnswerExecutor(
                 database=database,
                 gateway=gateway,
                 configuration=_model_configuration(
@@ -481,7 +481,7 @@ def _qualification_dependencies(
     """
     return EvaluationQualificationDependencies(
         strategy_implementation_digest=(
-            agentic_knowledge_strategy_implementation_digest()
+            evidence_first_task_strategy_implementation_digest()
         ),
         conformance_result_ref=conformance.result_ref,
         provider_configuration_fingerprint=configuration.fingerprint,
@@ -539,7 +539,7 @@ def _record_acceptance(arguments: argparse.Namespace) -> dict[str, object]:
             ),
             qualification=proof,
             strategy_implementation_digest=(
-                agentic_knowledge_strategy_implementation_digest()
+                evidence_first_task_strategy_implementation_digest()
             ),
             holdout_suite_ref=(
                 f"{suite['suite_id']}@{suite['suite_version']}"

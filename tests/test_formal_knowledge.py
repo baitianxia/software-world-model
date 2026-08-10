@@ -303,6 +303,7 @@ class FormalKnowledgeTests(unittest.TestCase):
                 "SELECT reviewed_grounding_json FROM knw_facts"
             ).fetchone()
         self.assertIn(grounding.digest.value, row["reviewed_grounding_json"])
+        self.assertIn('"need_ids":["OBJECTIVE"]', row["reviewed_grounding_json"])
 
         tampered = replace(grounding, candidate_key="changed")
         tampered_bundle = replace(

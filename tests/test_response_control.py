@@ -86,6 +86,31 @@ class GapDisclosureTests(unittest.TestCase):
         self.assertIn("Verified answer: unavailable", text)
         self.assertIn("Evidence gap: The code shows retention", text)
 
+    def test_gap_text_discloses_failed_related_requirement_relationships(self):
+        text = _explicit_gap_text(
+            "How do the stages relate?",
+            "The middle stage is not established.",
+            joint_constraint_impact=(
+                "The ordering relationship across all three stages is unverified.",
+            ),
+        )
+
+        self.assertIn("Related answer relationships not established", text)
+        self.assertIn("ordering relationship across all three stages", text)
+
+    def test_gap_text_uses_the_question_language_for_a_chinese_request(self):
+        text = _explicit_gap_text(
+            "为什么任务被保留？",
+            "源码显示保留行为，但没有说明原因。",
+            joint_constraint_impact=("保留行为和触发条件之间的关系尚未确认。",),
+        )
+
+        self.assertIn("问题：为什么任务被保留？", text)
+        self.assertIn("尚无法给出已验证的答案", text)
+        self.assertIn("证据缺口：源码显示保留行为", text)
+        self.assertIn("尚未确认的相关关系", text)
+        self.assertNotIn("Requested question", text)
+
 
 class IdempotentAdapter:
     def __init__(self, *, lose_first_response: bool = False) -> None:
@@ -375,6 +400,71 @@ class ResponseControlTests(unittest.TestCase):
 
         self.assertEqual(candidate.body, "OrderService")
         self.assertEqual(candidate.claims[0].formal_reference, assessment.items[0].proof.supporting_references[0])
+        self.assertEqual(review.decision, ReviewDecision.APPROVED)
+
+    def test_satisfied_need_limitations_are_rendered_as_bound_claims(self) -> None:
+        task, _, assessment = self._task_and_assessment("draft-limitation")
+        limitation = "The source proves the declaration, not every runtime path."
+        limited_assessment = replace(
+            assessment,
+            items=(
+                replace(
+                    assessment.items[0],
+                    limitations=(limitation,),
+                ),
+            ),
+        )
+
+        candidate, task = self.response.draft_and_seal_candidate(
+            task=task,
+            requirement=self.requirement,
+            assessment=limited_assessment,
+        )
+        review = self.response.review(
+            task=task,
+            candidate=candidate,
+            assessment=limited_assessment,
+        )
+
+        self.assertEqual(candidate.body, f"OrderService\n{limitation}")
+        self.assertEqual(
+            candidate.claims[1].kind,
+            AnswerClaimKind.APPLICATION_LIMITATION,
+        )
+        self.assertEqual(candidate.claims[1].gap, limitation)
+        self.assertEqual(review.decision, ReviewDecision.APPROVED)
+
+    def test_limitation_already_visible_in_selected_fact_is_not_repeated(self) -> None:
+        task, _, assessment = self._task_and_assessment(
+            "draft-contained-limitation"
+        )
+        limited_assessment = replace(
+            assessment,
+            items=(
+                replace(
+                    assessment.items[0],
+                    limitations=("OrderService",),
+                ),
+            ),
+        )
+
+        candidate, task = self.response.draft_and_seal_candidate(
+            task=task,
+            requirement=self.requirement,
+            assessment=limited_assessment,
+        )
+        review = self.response.review(
+            task=task,
+            candidate=candidate,
+            assessment=limited_assessment,
+        )
+
+        self.assertEqual(candidate.body, "OrderService")
+        self.assertEqual(len(candidate.claims), 1)
+        self.assertEqual(
+            candidate.claims[0].kind,
+            AnswerClaimKind.FORMAL_KNOWLEDGE,
+        )
         self.assertEqual(review.decision, ReviewDecision.APPROVED)
 
     def test_duplicate_supported_claim_text_is_rendered_once(self) -> None:

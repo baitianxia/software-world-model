@@ -51,7 +51,7 @@ BROWSER_HTML = """<!doctype html>
               <input id="selected-paths" name="selected_paths" type="text" value="." required>
             </div>
           </div>
-          <p class="field-help">大型项目首次体验建议填写具体模块，例如 mall-security；多个范围用英文逗号分隔。</p>
+          <p class="field-help">可填写希望分析的仓库相对路径；使用英文逗号分隔多个范围，填写点号表示整个仓库。</p>
 
           <details class="advanced-fields">
             <summary>比较两个版本</summary>
@@ -642,6 +642,13 @@ BROWSER_JS = """(() => {
     updateComposer();
   }
 
+  function resetConversation() {
+    state.conversationId = makeId();
+    state.turn = 0;
+    state.history = [];
+    elements.messages.querySelectorAll('.message:not(.welcome-message)').forEach((item) => item.remove());
+  }
+
   function updateComposer() {
     const enabled = Boolean(state.project) && state.modelActive && !state.busy;
     elements.messageInput.disabled = !enabled;
@@ -673,6 +680,7 @@ BROWSER_JS = """(() => {
         selected_paths: elements.selectedPaths.value.trim(),
         comparison_base: elements.comparisonBase.value.trim() || null
       });
+      resetConversation();
       saveProject(payload.project);
       addMessage('assistant', `已连接“${payload.project.display_name}”。现在可以直接提问。`, '固定版本已确认');
     } catch (error) {
@@ -683,6 +691,8 @@ BROWSER_JS = """(() => {
   });
 
   elements.changeProject.addEventListener('click', () => {
+    if (state.busy) return;
+    resetConversation();
     state.project = null;
     localStorage.removeItem(storageKey);
     showProject();
@@ -805,10 +815,7 @@ BROWSER_JS = """(() => {
 
   elements.newConversation.addEventListener('click', () => {
     if (state.busy) return;
-    state.conversationId = makeId();
-    state.turn = 0;
-    state.history = [];
-    elements.messages.querySelectorAll('.message:not(.welcome-message)').forEach((item) => item.remove());
+    resetConversation();
     elements.messageInput.focus();
   });
 

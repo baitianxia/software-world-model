@@ -14,7 +14,7 @@ tests: [tests/test_knowledge_use.py, tests/test_natural_task.py]
 
 ## Purpose and scope
 
-Knowledge Use 在固定 Requirement 和 Snapshot 上读取已发布正式知识，逐 Need 判断支持是否充分并形成可重建 Proof 或 Gap。它不读取来源、Artifact、Evidence Quote 或模型记忆补齐答案。
+Knowledge Use 在固定 Requirement 和 Snapshot 上读取已发布正式知识，逐 Need 判断支持是否充分并形成可重建 Proof 或 Knowledge Gap。它不读取来源、Artifact、Evidence Quote 或模型记忆补齐正式知识查询。同步 Evidence Answer 使用独立契约，不把任务级 Evidence Packet 伪装为 Snapshot。
 
 ## Ownership
 

@@ -37,6 +37,8 @@ class TargetKind(str, Enum):
     REPOSITORY_REVISION = "REPOSITORY_REVISION"
     REVISION_COMPARISON = "REVISION_COMPARISON"
     SOURCE_PATH = "SOURCE_PATH"
+    SYMBOL = "SYMBOL"
+    # Kept as an input compatibility name. Resolution is language-neutral.
     JAVA_SYMBOL = "JAVA_SYMBOL"
 
 
@@ -539,6 +541,22 @@ class LocalGitTargetResolver:
             TargetKind.SOURCE_PATH, proposal_digest, ResolutionOutcome.EXACT, identity, path, ()
         )
 
+    def resolve_symbol(
+        self,
+        revision: str,
+        proposal: str,
+        *,
+        allowed_paths: tuple[str, ...],
+        max_files: int = 1000,
+    ) -> SourceTargetResolutionReceipt:
+        return self._resolve_symbol(
+            revision,
+            proposal,
+            allowed_paths=allowed_paths,
+            max_files=max_files,
+            target_kind=TargetKind.SYMBOL,
+        )
+
     def resolve_java_symbol(
         self,
         revision: str,
@@ -547,19 +565,57 @@ class LocalGitTargetResolver:
         allowed_paths: tuple[str, ...],
         max_files: int = 1000,
     ) -> SourceTargetResolutionReceipt:
+        """Compatibility entry point backed by the language-neutral resolver."""
+
+        return self._resolve_symbol(
+            revision,
+            proposal,
+            allowed_paths=allowed_paths,
+            max_files=max_files,
+            target_kind=TargetKind.JAVA_SYMBOL,
+        )
+
+    def _resolve_symbol(
+        self,
+        revision: str,
+        proposal: str,
+        *,
+        allowed_paths: tuple[str, ...],
+        max_files: int,
+        target_kind: TargetKind,
+    ) -> SourceTargetResolutionReceipt:
+        proposal = _text(proposal, "symbol proposal")
         proposal_digest = digest_of(
-            {"kind": TargetKind.JAVA_SYMBOL.value, "revision": revision, "proposal": proposal}
+            {"kind": target_kind.value, "revision": revision, "proposal": proposal}
         )
         exact = self._connector.resolve_revision(revision)
         candidates: list[tuple[tuple[str, str], ...]] = []
         for path in self._connector.list_paths(exact)[:max_files]:
-            if not path.endswith(".java") or not _allowed(path, allowed_paths):
+            if not _allowed(path, allowed_paths):
                 continue
             try:
                 source = self._connector.read_path(exact, path).decode("utf-8")
             except (DomainError, UnicodeDecodeError):
                 continue
-            candidates.extend(_java_candidates(exact, path, source, proposal))
+            for line_number, line in enumerate(source.splitlines(), 1):
+                start = 0
+                while (column := line.find(proposal, start)) >= 0:
+                    candidates.append(
+                        (
+                            ("column", str(column + 1)),
+                            ("line", str(line_number)),
+                            ("path", path),
+                            ("revision", exact),
+                            ("symbol", proposal),
+                        )
+                    )
+                    if len(candidates) > 20:
+                        break
+                    start = column + len(proposal)
+                if len(candidates) > 20:
+                    break
+            if len(candidates) > 20:
+                break
         if not candidates:
             outcome = ResolutionOutcome.NOT_FOUND
             identity: tuple[tuple[str, str], ...] = ()
@@ -570,7 +626,7 @@ class LocalGitTargetResolver:
             outcome = ResolutionOutcome.EXACT
             identity = candidates[0]
         return self._receipt(
-            TargetKind.JAVA_SYMBOL,
+            target_kind,
             proposal_digest,
             outcome,
             identity,
@@ -738,46 +794,6 @@ class SourceOperationService:
         if value.tzinfo is None or value.utcoffset() is None:
             raise DomainError(ErrorCode.INVALID_ARGUMENT, "clock must return an aware datetime")
         return value.astimezone(timezone.utc)
-
-
-def _java_candidates(
-    revision: str, path: str, source: str, proposal: str
-) -> tuple[tuple[tuple[str, str], ...], ...]:
-    package_match = re.search(r"(?m)^\s*package\s+([\w.]+)\s*;", source)
-    package = package_match.group(1) if package_match else ""
-    class_match = re.search(r"\b(?:class|interface|enum|record)\s+(\w+)", source)
-    if class_match is None:
-        return ()
-    fqcn = f"{package}.{class_match.group(1)}" if package else class_match.group(1)
-    requested_class, separator, requested_method = proposal.partition("#")
-    if not separator or requested_class != fqcn:
-        return ()
-    signature_requested = "(" in requested_method
-    method_name = requested_method.split("(", 1)[0]
-    pattern = re.compile(
-        rf"(?m)^\s*(?:public|protected|private|static|final|synchronized|abstract|native|default|\s)+"
-        rf"[\w<>\[\], ?.@]+\s+{re.escape(method_name)}\s*\(([^)]*)\)"
-    )
-    candidates: list[tuple[tuple[str, str], ...]] = []
-    for match in pattern.finditer(source):
-        parameter_types = []
-        for parameter in (item.strip() for item in match.group(1).split(",")):
-            if not parameter:
-                continue
-            tokens = [token for token in parameter.replace("final ", "").split() if not token.startswith("@")]
-            parameter_types.append(tokens[-2] if len(tokens) >= 2 else tokens[0])
-        signature = f"{method_name}({','.join(parameter_types)})"
-        if signature_requested and requested_method != signature:
-            continue
-        candidates.append(
-            (
-                ("fqcn", fqcn),
-                ("path", path),
-                ("revision", revision),
-                ("signature", signature),
-            )
-        )
-    return tuple(candidates)
 
 
 def content_digest(payload: bytes) -> Digest:

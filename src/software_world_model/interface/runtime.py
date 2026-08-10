@@ -5,10 +5,13 @@ from __future__ import annotations
 from typing import Mapping
 
 from software_world_model.application_services import (
+    AuthorizedEvidenceAnswer,
     BuildObjective,
     CanonicalBuildTarget,
     AuthorizedTaskAnswer,
     ConfigureSystemSourceCommand,
+    EvidenceAnswerRequest,
+    EvidenceAnswerService,
     KnowledgeNeed,
     KnowledgeRequirement,
     KnowledgeRequirementPlanner,
@@ -76,6 +79,7 @@ class ApplicationRuntime:
         requirement_planner: KnowledgeRequirementPlanner | None = None,
         sufficiency_evaluator: NeedSufficiencyEvaluator | None = None,
         natural_task_service: NaturalLanguageTaskService | None = None,
+        evidence_answer_service: EvidenceAnswerService | None = None,
     ) -> None:
         self.database = database
         self.telemetry = telemetry or SqliteTelemetryRepository(database)
@@ -105,6 +109,7 @@ class ApplicationRuntime:
         )
         self._requirement_planner = requirement_planner
         self._natural_task_service = natural_task_service
+        self._evidence_answer_service = evidence_answer_service
         self.knowledge_use = KnowledgeUseService(
             SqliteKnowledgeUseRepository(database),
             self.knowledge,
@@ -118,9 +123,62 @@ class ApplicationRuntime:
     @property
     def reviewed_answer_preparation_configured(self) -> bool:
         return (
-            self._natural_task_service is not None
-            and self._natural_task_service.is_currently_active()
+            (
+                self._evidence_answer_service is not None
+                and self._evidence_answer_service.is_currently_active()
+            )
+            or (
+                self._natural_task_service is not None
+                and self._natural_task_service.is_currently_active()
+            )
         )
+
+    @property
+    def evidence_answer_preparation_configured(self) -> bool:
+        return (
+            self._evidence_answer_service is not None
+            and self._evidence_answer_service.is_currently_active()
+        )
+
+    def prepare_evidence_answer(
+        self, request: EvidenceAnswerRequest
+    ) -> AuthorizedEvidenceAnswer:
+        if self._evidence_answer_service is None:
+            raise DomainError(
+                ErrorCode.LIVE_INTEGRATION_HELD,
+                "evidence-first answer preparation is not activated",
+            )
+        result = self._evidence_answer_service.execute(request)
+        self.telemetry.record(
+            owner="application-services",
+            operation="evidence-answer-preparation@1",
+            outcome=result.review.decision.value,
+            correlation_reference=request.correlation_ref.value,
+            causation_reference=request.idempotency_key.value,
+            authority_references=(
+                result.checklist.digest.value,
+                result.evidence_packet.digest.value,
+                result.draft.digest.value,
+                result.review.digest.value,
+                result.digest.value,
+            ),
+            metrics=(
+                TelemetryMetric(
+                    "checklist_items", len(result.checklist.items), "items"
+                ),
+                TelemetryMetric(
+                    "evidence_items", len(result.evidence_packet.items), "items"
+                ),
+                TelemetryMetric(
+                    "answer_sections", len(result.draft.sections), "sections"
+                ),
+                TelemetryMetric(
+                    "source_operations", result.source_operation_count, "operations"
+                ),
+            ),
+            classification=request.classification,
+        )
+        return result
 
     def prepare_task_answer(
         self, request: NaturalLanguageTaskRequest
@@ -218,8 +276,13 @@ class ApplicationRuntime:
                 _required(parameters, "path"),
                 allowed_paths=allowed_paths,
             )
-        if target_kind is TargetKind.JAVA_SYMBOL:
-            return resolver.resolve_java_symbol(
+        if target_kind in {TargetKind.SYMBOL, TargetKind.JAVA_SYMBOL}:
+            method = (
+                resolver.resolve_symbol
+                if target_kind is TargetKind.SYMBOL
+                else resolver.resolve_java_symbol
+            )
+            return method(
                 _required(parameters, "revision"),
                 _required(parameters, "symbol"),
                 allowed_paths=allowed_paths,
@@ -351,6 +414,73 @@ class ApplicationRuntime:
             correlation_ref=correlation_ref,
             allowed_source_paths=allowed_source_paths,
             required_source_paths=required_source_paths,
+        )
+
+    def prepare_evidence_answer_request(
+        self,
+        *,
+        idempotency_key: IdempotencyKey,
+        scope_id: StableId,
+        scope_revision: Revision,
+        source_id: StableId,
+        source_revision: Revision,
+        binding_id: StableId,
+        binding_revision: Revision,
+        target_kind: TargetKind,
+        target_parameters: Mapping[str, str],
+        original_request: str,
+        classification: str,
+        caller_ref: str,
+        correlation_ref: CorrelationRef,
+        max_steps: int = 16,
+        max_items_per_step: int = 200,
+        max_bytes_per_step: int = 24_000,
+    ) -> EvidenceAnswerRequest:
+        """Freeze one exact source boundary without depending on knowledge state."""
+
+        receipt = self.resolve_target(
+            source_id=source_id,
+            source_revision=source_revision,
+            binding_id=binding_id,
+            binding_revision=binding_revision,
+            target_kind=target_kind,
+            parameters=target_parameters,
+        )
+        target = CanonicalBuildTarget.from_receipt(receipt)
+        source_request = KnowledgeUpdateRequest(
+            idempotency_key=IdempotencyKey(
+                f"{idempotency_key.value}:source-authorization"
+            ),
+            objective=BuildObjective.create(
+                objective_id=f"evidence-objective:{idempotency_key.value}",
+                description=f"Collect evidence to answer: {original_request}",
+                unacceptable_outcomes=(
+                    "source boundary expansion",
+                    "unsupported answer",
+                ),
+            ),
+            target=target,
+            scope_id=scope_id,
+            scope_revision=scope_revision,
+            source_id=source_id,
+            source_revision=source_revision,
+            binding_id=binding_id,
+            binding_revision=binding_revision,
+            expected_current_snapshot_id=None,
+            max_steps=max_steps,
+            max_items_per_step=max_items_per_step,
+            max_bytes_per_step=max_bytes_per_step,
+            classification=classification,
+            actor=caller_ref,
+            correlation_ref=correlation_ref,
+        )
+        return EvidenceAnswerRequest(
+            idempotency_key=idempotency_key,
+            original_request=original_request,
+            source_request=source_request,
+            classification=classification,
+            caller_ref=caller_ref,
+            correlation_ref=correlation_ref,
         )
 
     def query_knowledge(
@@ -516,3 +646,5 @@ def _required(parameters: Mapping[str, str], key: str) -> str:
     if not value:
         raise DomainError(ErrorCode.INVALID_ARGUMENT, f"target parameter {key} is required")
     return value
+    EvidenceAnswerRequest,
+    EvidenceAnswerService,

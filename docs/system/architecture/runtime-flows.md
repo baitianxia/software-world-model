@@ -31,9 +31,25 @@ Build Objective
 
 首次、手动和计划更新使用自己的 Build Objective，不伪造 Requirement Binding；只有任务驱动更新才可以绑定某个 Requirement Revision / Gap。每一步产生自己的权威结果。Proposal、Admission ACCEPT、Application PASS 和 PUBLISHED 不能互相替代；发布失败保持旧 CURRENT。
 
-## 知识使用与回答
+## 同步问答
 
-任务冻结 Requirement Revision，打开固定 Snapshot 的有效 Read Session，对每个 Need 和 Joint Constraint 建立可重建证明。只有该有效 Session 内的语义不足才形成 Gap；访问、执行、Session 或 Schema 失败必须保留为失败或限制。只有全部 Need 满足才可声明 SUFFICIENT。答案候选随后接受独立 Claim Review、授权和唯一交付，答案文本不能补齐知识缺口。
+```text
+Original Question
+  → immutable Question Checklist
+  → authorized read-only source investigation
+  → sealed Evidence Packet
+  → cited natural Answer Draft
+  → independent checklist and grounding Review
+  → APPROVED, fixed-packet targeted rewrite, or targeted retrieval
+```
+
+生成角色和审核角色都不能访问来源工具。审核发现表达、遗漏或组织问题时，Response Control 把具体 Finding 和同一 Packet Digest 交给生成角色重写，不重新运行调查；审核证明现有包缺少物质性依据时，Application 才执行针对性来源调查并密封新 Packet。未通过、未知或达到安全熔断均不授权用户答案。调用次数限制只能触发失败关闭，不能取消检查项、引用或独立审核。
+
+## 正式知识使用
+
+显式知识查询冻结 Requirement Revision，打开固定 Snapshot 的有效 Read Session，对每个 Need 和 Joint Constraint 建立可重建证明。只有该有效 Session 内的语义不足才形成 Knowledge Gap；访问、执行、Session 或 Schema 失败必须保留为失败或限制。只有全部 Need 满足才可声明 SUFFICIENT。该路径继续适用于正式知识复用，但不再是同步聊天的前置门禁。
+
+高质量 Evidence Packet 与已审核答案可以在同步响应完成后触发独立 Knowledge Update；Candidate、Admission 和 Publication 仍执行完整正式知识契约，其成功或失败不改变已完成同步回答的审核事实。
 
 ## 模型资格
 

@@ -31,6 +31,7 @@ Knowledge Engine 拥有 Fact Root、Candidate、Support 与 Snapshot State。调
 7. Candidate、Verifier Proposal 和未发布 State 都不是正式知识。
 8. 直接 Evidence 与 Fact 属于同一 owning Scope；跨 Scope 只能使用 exact upstream Entity / formal references，并登记对应 Snapshot dependency。
 9. Candidate 只能引用已发布 Entity，或同一原子 Closure 内等待最终替换的 Entity local reference；裸 ID、任意 Candidate 和动态 `CURRENT` 不构成合法引用。
+10. 当独立审核确认一个 Fact Candidate 对特定 Requirement Need 的适用性时，该 Need 绑定是审核结果的一部分，必须随正式记录保存并可重建；后续读取方不得用词汇相似度猜测、扩大或跨 Need 借用该绑定。旧记录没有可证明绑定时保持空绑定。
 
 ## Failure and implementation boundary
 

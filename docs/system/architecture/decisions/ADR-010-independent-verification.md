@@ -18,7 +18,7 @@ tests: []
 
 ## Decision
 
-Knowledge Verifier 独立复核 Candidate 与支持闭包。Answer Review 角色从当前权威独立重读用户可见 Claim、Coverage、限制和绑定，只提交 Assessment / Finding Proposal；Response Control 机械重建完整审核矩阵，并独占 Review Decision、Final Authorization 和 Logical Delivery。生成者不能自审，两个审核阶段不互相替代。
+Knowledge Verifier 独立复核需要沉淀的 Candidate 与支持闭包。同步 Evidence Answer 的 Answer Review 角色从原问题、密封 Evidence Packet 和用户可见 Draft 独立重建检查清单并提交 Finding Proposal；正式知识回答的 Review 继续重读 Claim、Coverage、限制和绑定。Response Control 独占 Review Decision、Final Authorization 和 Logical Delivery。生成者不能自审，知识审核与答案审核也不能互相替代。
 
 ## Alternatives
 

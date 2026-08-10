@@ -354,7 +354,8 @@ class SqliteSourceOperationRepository:
             "payload_schema_version": "1",
             "provider_contract": "LOCAL_GIT@0.1.0",
             "tool": tool.value,
-            "identity_strategy": "local-git-artifact@1",
+            "coverage": outcome.coverage,
+            "identity_strategy": "local-git-artifact@2",
         }
         identity_digest = digest_of(identity_core)
         artifact_id = StableId(f"source_artifact_{identity_digest.value[-32:]}")

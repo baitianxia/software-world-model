@@ -22,6 +22,7 @@ from .direct_answer import (
     direct_answer_output_schemas,
 )
 from .world_answer import WorldAssistedAnswerExecutor
+from .evidence_answer import EvidenceFirstAnswerExecutor
 from .result_store import (
     ANSWER_PAIR_DOCUMENT_SCHEMA,
     PATH_RESULT_DOCUMENT_SCHEMA,
@@ -60,6 +61,7 @@ __all__ = [
     "direct_answer_implementation_digest",
     "direct_answer_output_schemas",
     "WorldAssistedAnswerExecutor",
+    "EvidenceFirstAnswerExecutor",
     "ANSWER_PAIR_DOCUMENT_SCHEMA",
     "PATH_RESULT_DOCUMENT_SCHEMA",
     "load_path_result",

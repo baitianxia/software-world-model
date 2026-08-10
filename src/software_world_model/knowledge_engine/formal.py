@@ -139,6 +139,7 @@ class ReviewedFactGrounding:
     reviewer_model_call_id: StableId
     reviewer_output_digest: Digest
     actual_model_fingerprint: str
+    need_ids: tuple[str, ...]
     digest: Digest
 
     @classmethod
@@ -151,14 +152,25 @@ class ReviewedFactGrounding:
         reviewer_model_call_id: StableId,
         reviewer_output_digest: Digest,
         actual_model_fingerprint: str,
+        need_ids: tuple[str, ...] = ("OBJECTIVE",),
     ) -> "ReviewedFactGrounding":
         if proposer_model_call_id == reviewer_model_call_id:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "fact proposal and review must use distinct model calls",
             )
+        normalized_need_ids = tuple(
+            _text(item, "reviewed fact Need ID") for item in need_ids
+        )
+        if not normalized_need_ids or len(normalized_need_ids) != len(
+            set(normalized_need_ids)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "reviewed fact Need IDs must be non-empty and unique",
+            )
         core = {
-            "schema_version": "REVIEWED_FACT_GROUNDING@1",
+            "schema_version": "REVIEWED_FACT_GROUNDING@2",
             "candidate_key": _text(candidate_key, "reviewed fact candidate key"),
             "proposer_model_call_id": proposer_model_call_id.value,
             "proposer_output_digest": proposer_output_digest.value,
@@ -167,15 +179,17 @@ class ReviewedFactGrounding:
             "actual_model_fingerprint": _text(
                 actual_model_fingerprint, "reviewed fact actual model fingerprint"
             ),
+            "need_ids": normalized_need_ids,
         }
         return cls(
-            schema_version="REVIEWED_FACT_GROUNDING@1",
+            schema_version="REVIEWED_FACT_GROUNDING@2",
             candidate_key=core["candidate_key"],
             proposer_model_call_id=proposer_model_call_id,
             proposer_output_digest=proposer_output_digest,
             reviewer_model_call_id=reviewer_model_call_id,
             reviewer_output_digest=reviewer_output_digest,
             actual_model_fingerprint=core["actual_model_fingerprint"],
+            need_ids=normalized_need_ids,
             digest=digest_of(core),
         )
 
@@ -188,10 +202,13 @@ class ReviewedFactGrounding:
             "reviewer_model_call_id": self.reviewer_model_call_id.value,
             "reviewer_output_digest": self.reviewer_output_digest.value,
             "actual_model_fingerprint": self.actual_model_fingerprint,
+            "need_ids": self.need_ids,
         }
         return (
-            self.schema_version == "REVIEWED_FACT_GROUNDING@1"
+            self.schema_version == "REVIEWED_FACT_GROUNDING@2"
             and self.proposer_model_call_id != self.reviewer_model_call_id
+            and bool(self.need_ids)
+            and len(self.need_ids) == len(set(self.need_ids))
             and digest_of(core) == self.digest
         )
 
@@ -204,6 +221,7 @@ class InferenceProposal:
     premise_references: tuple[StableId, ...]
     rule_ref: str
     context: KnowledgeContext
+    reviewed_need_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,6 +281,7 @@ class KnowledgeInference:
     premise_references: tuple[StableId, ...]
     rule_ref: str
     context: KnowledgeContext
+    reviewed_need_ids: tuple[str, ...]
     digest: Digest
 
 
@@ -294,6 +313,7 @@ class FormalKnowledgeRecord:
     text: str
     context_digest: Digest
     support_references: tuple[StableId, ...]
+    reviewed_need_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -770,6 +790,24 @@ class FormalKnowledgeService:
                     )
                 )
                 continue
+            if (
+                len(proposal.reviewed_need_ids)
+                != len(set(proposal.reviewed_need_ids))
+                or any(
+                    not isinstance(item, str)
+                    or not item
+                    or item != item.strip()
+                    for item in proposal.reviewed_need_ids
+                )
+            ):
+                findings.append(
+                    VerificationFinding(
+                        "INFERENCE_NEED_LINK_INVALID",
+                        proposal.candidate_key,
+                        "reviewed inference Need IDs must be unique non-empty values",
+                    )
+                )
+                continue
             identity = digest_of(
                 {
                     "schema_version": self._schema.version,
@@ -778,6 +816,7 @@ class FormalKnowledgeService:
                     "premises": tuple(item.value for item in proposal.premise_references),
                     "rule_ref": proposal.rule_ref,
                     "context_digest": proposal.context.digest.value,
+                    "reviewed_need_ids": proposal.reviewed_need_ids,
                 }
             )
             inference_id = _stable("knowledge_inference", identity)
@@ -789,6 +828,7 @@ class FormalKnowledgeService:
                 "premises": tuple(item.value for item in proposal.premise_references),
                 "rule_ref": _text(proposal.rule_ref, "inference rule"),
                 "context": proposal.context,
+                "reviewed_need_ids": proposal.reviewed_need_ids,
             }
             inferences.append(
                 KnowledgeInference(
@@ -799,6 +839,7 @@ class FormalKnowledgeService:
                     premise_references=proposal.premise_references,
                     rule_ref=proposal.rule_ref,
                     context=proposal.context,
+                    reviewed_need_ids=proposal.reviewed_need_ids,
                     digest=digest_of(core),
                 )
             )

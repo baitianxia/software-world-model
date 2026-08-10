@@ -14,9 +14,9 @@ tests: [tests/test_foundation.py, tests/test_interface_runtime.py]
 | 组件 | 拥有的权威 | 允许依赖 | 禁止事项 |
 |---|---|---|---|
 | Interface | 协议解析与展示 | Conversational Task Control、Application Use-case Services、Response Control 的交付端口 | 直接访问 Repository 或决定业务状态 |
-| Application Use-case Services | Management、Knowledge Update / Use、Evaluation 的 Attempt 与不可变 Result | 领域公共 Port、Model Gateway | 复制领域权威或建立跨 Owner 大事务 |
+| Application Use-case Services | Management、Evidence Answering、Knowledge Update / Use、Evaluation 的 Attempt 与不可变 Result；Question Checklist 与 Evidence Packet | 领域公共 Port、Model Gateway、Response Control | 复制领域权威、让 Evidence Packet 冒充正式知识或建立跨 Owner 大事务 |
 | Conversational Task Control | Task、Revision、Grant、Agent Invocation、Action Authorization 与 Application Dispatch | Agent Proposal、Application Services、Response Control 的不可变 Result / Assertion | 实现领域用例、修改 Response Control 私有状态或绕过授权分派 |
-| Response Control | Answer Candidate、Review Decision、Final Authorization、Dispatch 与 Logical Delivery | Reviewer Proposal、Task / Application 只读 Assertion、Delivery Adapter | 修改 Task 或领域 Result、让 Reviewer 自行放行或发送正文 |
+| Response Control | Answer Candidate、固定 Evidence Packet 上的 Revision、Review Decision、Final Authorization、Dispatch 与 Logical Delivery | Reviewer Proposal、Task / Application 只读 Assertion、Evidence Packet、Delivery Adapter | 修改 Task、来源证据或领域 Result，让 Reviewer 自行放行或发送正文 |
 | Agent Roles | 无权威业务状态；只产生 Proposal / Assessment | 经授权的 Application Services、Model Gateway | 直接访问 Core、Repository、Source Tool，或自行授权、准入、发布、放行 |
 | Source Integration | Data Source、Binding、Source Operation、Artifact | Provider/Tool Adapter | 形成正式知识或替模型扩权 |
 | Knowledge Engine | Scope、Schema、Context、正式知识、Admission、Snapshot | 自有 Repository Port | 访问外部来源、读取模型会话、交付答案 |

@@ -11,15 +11,21 @@ from typing import Mapping
 from software_world_model.ai_infrastructure import (
     AGENTIC_KNOWLEDGE_STRATEGY_ID,
     AGENTIC_KNOWLEDGE_STRATEGY_VERSION,
+    EVIDENCE_FIRST_STRATEGY_ID,
+    EVIDENCE_FIRST_STRATEGY_VERSION,
     AgenticKnowledgeStrategyBundle,
     AgenticModelStrategyConfiguration,
+    EvidenceAnswerStrategyBundle,
     ModelGateway,
     ModelReviewedFactGroundingVerifier,
+    ModelSourceInvestigationPlanner,
     UrllibVolcengineArkChatTransport,
     VolcengineArkChatCompletionsNoToolsAdapter,
     VolcengineArkModelConfiguration,
     agentic_knowledge_output_schemas,
     agentic_knowledge_strategy_implementation_digest,
+    evidence_first_task_output_schemas,
+    evidence_first_task_strategy_implementation_digest,
     load_ark_chat_conformance_qualification,
 )
 from software_world_model.application_services import (
@@ -27,6 +33,10 @@ from software_world_model.application_services import (
     CapabilityRegistry,
     ConversationalTaskControl,
     CurrentEvaluationQualificationVerifier,
+    EvidenceAnswerService,
+    EvidenceResponseControlService,
+    EVIDENCE_ANSWER_CAPABILITY_CONTRACT_VERSION,
+    EVIDENCE_ANSWER_CAPABILITY_ID,
     EvaluationQualificationDependencies,
     KnowledgeUpdateService,
     KnowledgeUseService,
@@ -91,9 +101,16 @@ class AgenticTaskServiceAssembly:
 
 
 @dataclass(frozen=True, slots=True)
+class EvidenceTaskServiceAssembly:
+    source_planner: ModelSourceInvestigationPlanner
+    evidence_strategy: EvidenceAnswerStrategyBundle
+    evidence_answering: EvidenceAnswerService
+
+
+@dataclass(frozen=True, slots=True)
 class ActivatedApplicationAssembly:
     runtime: ApplicationRuntime
-    task_services: AgenticTaskServiceAssembly
+    task_services: EvidenceTaskServiceAssembly
     provider_configuration: VolcengineArkModelConfiguration
     conformance_result_ref: str
     activation_digest: Digest
@@ -144,6 +161,50 @@ def agentic_task_strategy_definition() -> StrategyDefinition:
         capability_contract_version=NATURAL_TASK_CAPABILITY_CONTRACT_VERSION,
         kind=StrategyKind.MODEL_PRIMARY,
         implementation_digest=agentic_knowledge_strategy_implementation_digest(),
+        requires_model=True,
+    )
+
+
+def evidence_task_capability_registry() -> CapabilityRegistry:
+    """Registry for the evidence-first synchronous browser capability."""
+
+    registry = CapabilityRegistry()
+    registry.register_capability(
+        CapabilityDefinition(
+            capability_id=EVIDENCE_ANSWER_CAPABILITY_ID,
+            contract_version=EVIDENCE_ANSWER_CAPABILITY_CONTRACT_VERSION,
+            purpose=(
+                "Answer an exact-revision software question from a sealed source "
+                "evidence packet with independent review and targeted rewrite"
+            ),
+            input_contract_digest=digest_of(
+                {
+                    "request": "EvidenceAnswerRequest@1",
+                    "source_boundary": "EXACT_TARGET_READ_ONLY@1",
+                    "question": "IMMUTABLE_CHECKLIST@1",
+                }
+            ),
+            output_contract_digest=digest_of(
+                {
+                    "output": "AuthorizedEvidenceAnswer@1",
+                    "review": "INDEPENDENT_FAIL_CLOSED@1",
+                    "delivery": "NOT_PERFORMED",
+                }
+            ),
+        )
+    )
+    registry.register_strategy(evidence_task_strategy_definition())
+    return registry
+
+
+def evidence_task_strategy_definition() -> StrategyDefinition:
+    return StrategyDefinition(
+        strategy_id=EVIDENCE_FIRST_STRATEGY_ID,
+        strategy_version=EVIDENCE_FIRST_STRATEGY_VERSION,
+        capability_id=EVIDENCE_ANSWER_CAPABILITY_ID,
+        capability_contract_version=EVIDENCE_ANSWER_CAPABILITY_CONTRACT_VERSION,
+        kind=StrategyKind.MODEL_PRIMARY,
+        implementation_digest=evidence_first_task_strategy_implementation_digest(),
         requires_model=True,
     )
 
@@ -232,12 +293,12 @@ def activate_browser_experience(
         provider_configuration,
     )
     proof = load_capability_qualification_proof(qualification_proof_path)
-    strategy = agentic_task_strategy_definition()
+    strategy = evidence_task_strategy_definition()
     evaluation_verifier = CurrentEvaluationQualificationVerifier(
         SqliteCapabilityEvaluationRepository(database),
         EvaluationQualificationDependencies(
             strategy_implementation_digest=(
-                agentic_knowledge_strategy_implementation_digest()
+                evidence_first_task_strategy_implementation_digest()
             ),
             conformance_result_ref=conformance.result_ref,
             provider_configuration_fingerprint=(
@@ -250,19 +311,19 @@ def activate_browser_experience(
     verifier = ProductValidatedQualificationVerifier(
         evaluation_verifier,
         SqliteProductValidationRepository(database),
-        agentic_knowledge_strategy_implementation_digest(),
+        evidence_first_task_strategy_implementation_digest(),
     )
     activation = StrategyActivationService(
         SqliteStrategyActivationRepository(database),
-        agentic_task_capability_registry(),
+        evidence_task_capability_registry(),
         verifier,
         live_policy=LiveIntegrationPolicy(
             model_strategy_activation_enabled=True
         ),
     )
     return activation.activate_strategy(
-        capability_id=NATURAL_TASK_CAPABILITY_ID,
-        capability_contract_version=NATURAL_TASK_CAPABILITY_CONTRACT_VERSION,
+        capability_id=EVIDENCE_ANSWER_CAPABILITY_ID,
+        capability_contract_version=EVIDENCE_ANSWER_CAPABILITY_CONTRACT_VERSION,
         activation_scope={"environment": environment_name},
         expected_revision=None,
         strategy_id=strategy.strategy_id,
@@ -356,6 +417,78 @@ def assemble_activated_task_services(
     )
 
 
+def assemble_activated_evidence_services(
+    *,
+    database: SqliteDatabase,
+    gateway: ModelGateway,
+    model_configuration: AgenticModelStrategyConfiguration,
+    activation: StrategyActivationService,
+    activation_scope: Mapping[str, str],
+    telemetry: TelemetryRecorder | None = None,
+) -> EvidenceTaskServiceAssembly:
+    """Assemble only roles contained in the evidence-first qualification."""
+
+    expected_strategy = evidence_task_strategy_definition()
+
+    def active() -> bool:
+        try:
+            resolved = activation.resolve_strategy(
+                capability_id=EVIDENCE_ANSWER_CAPABILITY_ID,
+                capability_contract_version=(
+                    EVIDENCE_ANSWER_CAPABILITY_CONTRACT_VERSION
+                ),
+                activation_scope=activation_scope,
+            )
+        except DomainError:
+            return False
+        qualification = resolved.decision.qualification
+        return (
+            resolved.strategy == expected_strategy
+            and qualification is not None
+            and qualification.proof_ref == model_configuration.qualification_ref
+        )
+
+    if not active():
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "evidence answering components do not match the active qualification",
+        )
+    evidence_strategy = EvidenceAnswerStrategyBundle.create(
+        gateway, model_configuration
+    )
+    source_planner = ModelSourceInvestigationPlanner(
+        gateway, model_configuration
+    )
+    scopes = KnowledgeScopeService(SqliteKnowledgeScopeRepository(database))
+    sources = SourceConfigurationService(
+        SqliteSourceConfigurationRepository(database),
+        ProviderRegistry((LocalGitConfigurationProvider(),)),
+        scopes,
+    )
+    operations = SourceOperationService(
+        SqliteSourceOperationRepository(database),
+        sources,
+        telemetry=telemetry,
+    )
+    evidence_answering = EvidenceAnswerService(
+        scopes=scopes,
+        configurations=sources,
+        operations=operations,
+        source_planner=source_planner,
+        checklist_planner=evidence_strategy.checklist_planner,
+        responses=EvidenceResponseControlService(
+            answer_generator=evidence_strategy.answer_generator,
+            answer_reviewer=evidence_strategy.answer_reviewer,
+        ),
+        activation_guard=active,
+    )
+    return EvidenceTaskServiceAssembly(
+        source_planner=source_planner,
+        evidence_strategy=evidence_strategy,
+        evidence_answering=evidence_answering,
+    )
+
+
 def build_activated_application_runtime(
     *,
     database: SqliteDatabase,
@@ -373,14 +506,14 @@ def build_activated_application_runtime(
         conformance_result_path,
         provider_configuration,
     )
-    registry = agentic_task_capability_registry()
+    registry = evidence_task_capability_registry()
     evaluation_repository = SqliteCapabilityEvaluationRepository(database)
     product_validation_repository = SqliteProductValidationRepository(database)
     evaluation_verifier = CurrentEvaluationQualificationVerifier(
         evaluation_repository,
         EvaluationQualificationDependencies(
             strategy_implementation_digest=(
-                agentic_knowledge_strategy_implementation_digest()
+                evidence_first_task_strategy_implementation_digest()
             ),
             conformance_result_ref=conformance.result_ref,
             provider_configuration_fingerprint=provider_configuration.fingerprint,
@@ -391,7 +524,7 @@ def build_activated_application_runtime(
     qualification_verifier = ProductValidatedQualificationVerifier(
         evaluation_verifier,
         product_validation_repository,
-        agentic_knowledge_strategy_implementation_digest(),
+        evidence_first_task_strategy_implementation_digest(),
     )
     activation = StrategyActivationService(
         SqliteStrategyActivationRepository(database),
@@ -400,8 +533,8 @@ def build_activated_application_runtime(
         live_policy=LiveIntegrationPolicy(model_strategy_activation_enabled=True),
     )
     resolved = activation.resolve_strategy(
-        capability_id=NATURAL_TASK_CAPABILITY_ID,
-        capability_contract_version=NATURAL_TASK_CAPABILITY_CONTRACT_VERSION,
+        capability_id=EVIDENCE_ANSWER_CAPABILITY_ID,
+        capability_contract_version=EVIDENCE_ANSWER_CAPABILITY_CONTRACT_VERSION,
         activation_scope=activation_scope,
     )
     qualification = resolved.decision.qualification
@@ -415,7 +548,7 @@ def build_activated_application_runtime(
     adapter = VolcengineArkChatCompletionsNoToolsAdapter(
         transport=transport,
         configuration=provider_configuration,
-        output_schemas=agentic_knowledge_output_schemas(),
+        output_schemas=evidence_first_task_output_schemas(),
         live_qualification=conformance,
     )
     telemetry = SqliteTelemetryRepository(database)
@@ -434,7 +567,7 @@ def build_activated_application_runtime(
         timeout_milliseconds=timeout_milliseconds,
         classification=classification,
     )
-    task_services = assemble_activated_task_services(
+    task_services = assemble_activated_evidence_services(
         database=database,
         gateway=gateway,
         model_configuration=model_configuration,
@@ -445,7 +578,7 @@ def build_activated_application_runtime(
     runtime = ApplicationRuntime(
         database,
         telemetry=telemetry,
-        natural_task_service=task_services.natural_tasks,
+        evidence_answer_service=task_services.evidence_answering,
     )
     return ActivatedApplicationAssembly(
         runtime=runtime,

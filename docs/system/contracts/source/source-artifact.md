@@ -14,7 +14,7 @@ tests: [tests/test_source_operations.py, tests/test_artifact_processing.py]
 
 ## Purpose and scope
 
-本契约定义受授权、可回放的来源访问，以及把观察保存为中立 Artifact 的边界。Artifact 是来源载体，不是 Fact、Inference 或任务答案。
+本契约定义受授权、可回放的来源访问，以及把观察保存为中立 Artifact 的边界。Artifact 是来源载体，不是 Fact、Inference 或任务答案；同步问答只能由 Application 将 exact Artifact 内容和来源操作引用密封为任务级 Evidence Packet 后使用。
 
 ## Owner and public contract
 
@@ -26,6 +26,7 @@ Source Integration 独占 Source Operation、Read Session、Artifact、Payload �
 - 中立 Envelope 统一身份、上下文和追溯，不强行统一各 Provider Payload。
 - Source Context 由来源解析确定，调用方和模型不得改写。
 - Artifact 身份与字节内容去重分离；相同字节不自动表示相同观察。
+- 分段读取的 Artifact 身份必须包含实际 Coverage；同一路径不同字节范围不得碰撞成同一观察身份。
 
 ## Invariants
 

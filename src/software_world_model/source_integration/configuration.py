@@ -627,6 +627,10 @@ class SourceConfigurationService:
             )
         classification = _nonempty(classification, "classification")
         resolved_at = self._now()
+        # resolved_at is diagnostic observation metadata, not part of the
+        # authority closure. A retry over the same exact revisions, assertion,
+        # configuration, selector, tool, and classification must yield the same
+        # eligibility identity so the original source operation can be replayed.
         core = {
             "binding_id": binding.binding_id.value,
             "binding_revision": binding.definition_revision.value,
@@ -649,7 +653,6 @@ class SourceConfigurationService:
             "context_constraint": binding.context_constraint,
             "tool_id": tool_id,
             "classification": classification,
-            "resolved_at": resolved_at,
         }
         assertion_digest = digest_of(core)
         return BindingEligibilityAssertion(

@@ -20,7 +20,7 @@ from software_world_model.application_services import (
     NATURAL_TASK_CAPABILITY_ID,
     QualificationProof,
 )
-from software_world_model.cross_cutting import Digest, digest_of
+from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, digest_of
 from software_world_model.infrastructure import (
     SqliteDatabase,
     SqliteModelGatewayRepository,
@@ -132,7 +132,7 @@ class ScriptedLiveAdapter:
                 "page_size": "",
                 "rationale": "The source file and exact repository boundary are observed.",
             }
-        if schema == "agentic-fact-proposer@1":
+        if schema == "agentic-fact-proposer@5":
             state = self._state(request)
             artifact = next(
                 item for item in state["artifacts"] if item["identity"] == "src/App.java"
@@ -141,23 +141,63 @@ class ScriptedLiveAdapter:
                 "candidates": [
                     {
                         "candidate_key": "app-value",
+                        "need_ids": ["need:initializer"],
                         "artifact_id": artifact["artifact_id"],
                         "line_start": 1,
                         "line_end": 1,
                         "entity_type": "CODE_SYMBOL",
                         "predicate": "HAS_VALUE",
-                        "statement": "App.value is initialized to 3 in this source revision.",
+                        "statement": "当前源码版本中，App.value 的初始值为 3。",
                         "condition": None,
-                        "limitation": "This describes the source initializer, not every runtime value.",
+                        "limitation": None,
                     }
                 ],
                 "limitations": [],
             }
-        if schema == "agentic-fact-reviewer@3":
+        if schema == "agentic-fact-reviewer@4":
             return {
                 "decision": "ACCEPT",
                 "accepted_candidate_keys": ["app-value"],
                 "all_supported_objective_aspects_covered": True,
+                "findings": [],
+            }
+        if schema == "agentic-sequence-analyzer@10":
+            state = self._state(request)
+            return {
+                "edges": [],
+                "call_return_spans": [],
+                "atomic_references": [
+                    {
+                        "need_id": item["need_id"],
+                        "reference_ids": [
+                            reference["reference_id"]
+                            for reference in item["references"]
+                        ],
+                    }
+                    for item in state["reference_sets"]
+                ],
+                "rationale": "AUDITED",
+            }
+        if schema == "agentic-need-coverage-reviewer@8":
+            state = self._state(request)
+            artifact = next(
+                item
+                for item in state["artifacts"]
+                if item["identity"] == "src/App.java"
+            )
+            return {
+                "coverage_items": [
+                    {
+                        "need_id": "need:initializer",
+                        "artifact_id": artifact["artifact_id"],
+                        "line_start": 1,
+                        "line_end": 1,
+                        "source_detail": "App.value has initializer 3.",
+                        "required_terms": ["3"],
+                        "candidate_required_terms": ["初始值为 3"],
+                        "candidate_keys": ["app-value"],
+                    }
+                ],
                 "findings": [],
             }
         if schema == "agentic-sufficiency-reviewer@1":
@@ -170,8 +210,8 @@ class ScriptedLiveAdapter:
                 "counterexample_reference_ids": [],
                 "conflict_reference_ids": [],
                 "unknowns": [],
-                "limitations": ["Source declaration only."],
-                "rationale": "The exact formal fact answers the Need.",
+                "limitations": [],
+                "rationale": "该正式事实直接回答了这个问题。",
             }
         if schema == "agentic-answer-drafter@1":
             state = self._state(request)
@@ -305,10 +345,10 @@ class WorldAssistedAnswerExecutorTests(unittest.TestCase):
         )
 
         self.assertEqual(result.path, HoldoutAnswerPath.WORLD_ASSISTED)
-        self.assertIn("App.value is initialized to 3", result.answer)
-        self.assertIn("not every runtime value", result.answer)
-        self.assertEqual(result.model_call_count, 10)
-        self.assertEqual(result.source_action_count, 2)
+        self.assertIn("App.value 的初始值为 3", result.answer)
+        self.assertIn("当前源码版本", result.answer)
+        self.assertEqual(result.model_call_count, 17)
+        self.assertEqual(result.source_action_count, 1)
         self.assertTrue(result.verify_digest())
         with self.database.read() as connection:
             decision = connection.execute(
@@ -319,6 +359,49 @@ class WorldAssistedAnswerExecutorTests(unittest.TestCase):
             ).fetchone()
         self.assertIn("sealed-product-evaluation", decision["activation_scope_json"])
         self.assertIn("without granting production activation", decision["reason"])
+
+    def test_model_call_budget_is_enforced_before_the_next_dispatch(self) -> None:
+        configuration = AgenticModelStrategyConfiguration(
+            provider_type=self.adapter.provider_type,
+            adapter_version=self.adapter.adapter_version,
+            model_ref="model-alias",
+            provider_configuration_fingerprint=Digest("sha256:" + "0" * 64),
+            qualification_ref=self.proof.proof_ref,
+            max_output_tokens=1200,
+            timeout_milliseconds=180000,
+            classification="INTERNAL",
+        )
+        limited = task_input(self.commit)
+        limited_policy = dict(limited["resource_policy"])
+        limited_policy["maximum_model_calls"] = 2
+        limited = {**limited, "resource_policy": limited_policy}
+        limited = {
+            **limited,
+            "task_input_digest": digest_of(
+                {
+                    key: value
+                    for key, value in limited.items()
+                    if key != "task_input_digest"
+                }
+            ).value,
+        }
+
+        with self.assertRaises(DomainError) as raised:
+            WorldAssistedAnswerExecutor(
+                database=self.database,
+                gateway=self.gateway,
+                configuration=configuration,
+                qualification=self.proof,
+                qualification_verifier=CurrentQualification(),
+                expected_model_fingerprint="model-fingerprint",
+            ).execute(
+                task_input=limited,
+                checkout_path=self.repository,
+                run_id="world-budget-test-run",
+            )
+
+        self.assertEqual(raised.exception.code, ErrorCode.BUDGET_EXHAUSTED)
+        self.assertEqual(self.adapter.calls, 2)
 
     def test_repeated_formal_claim_merges_support_without_repeating_text(self) -> None:
         claims = (
