@@ -45,7 +45,7 @@ DIRECT_PROTOCOL_PATH = (
     VALIDATION_ROOT / "questions" / "direct-baseline-protocol-1.0.1.json"
 )
 MATURE_PROTOCOL_PATH = (
-    VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.1.json"
+    VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.2.json"
 )
 MATURE_ANSWER_SCHEMA_PATH = (
     VALIDATION_ROOT / "questions" / "mature-agent-answer-schema-1.0.0.json"
@@ -585,8 +585,8 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
                 "implementation_file_digest": f"sha256:{_sha256(DIRECT_IMPLEMENTATION_PATH)}",
             },
             "mature_source_agent_baseline": {
-                "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.1.json",
-                "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.1",
+                "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.2.json",
+                "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.2",
                 "protocol_digest": f"sha256:{_sha256(MATURE_PROTOCOL_PATH)}",
                 "answer_schema_path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
                 "answer_schema_ref": "ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0",
@@ -777,7 +777,38 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
         self.assertEqual(command_contract["subcommand"], "exec")
         self.assertIn("--ignore-user-config", command_contract["exec_flags"])
         self.assertIn("--ignore-rules", command_contract["exec_flags"])
+        self.assertIn("--strict-config", command_contract["exec_flags"])
+        self.assertNotIn("--sandbox", command_contract["exec_flags"])
         self.assertNotIn("--ask-for-approval", command_contract["exec_flags"])
+        self.assertEqual(mature["agent"]["model"], mature_input["prepared_model"])
+        self.assertEqual(
+            mature["agent"]["reasoning_effort"],
+            mature_input["prepared_reasoning_effort"],
+        )
+        self.assertEqual(
+            mature["agent"]["bundled_model_catalog_sha256"],
+            str(mature_input["bundled_model_catalog_digest"]).removeprefix("sha256:"),
+        )
+        self.assertEqual(
+            mature["isolation"]["permission_profile"],
+            {
+                "root": "deny",
+                "minimal_runtime": "read",
+                "workspace_roots": "read",
+                "tmpdir": "deny",
+                "slash_tmp": "deny",
+                "network": "deny",
+            },
+        )
+        joined_flags = "\n".join(command_contract["exec_flags"])
+        self.assertIn('web_search="disabled"', joined_flags)
+        self.assertIn("features.apps=false", joined_flags)
+        self.assertIn("features.multi_agent=false", joined_flags)
+        self.assertIn('default_permissions="mature_source"', joined_flags)
+        self.assertIn('":root"="deny"', joined_flags)
+        self.assertIn('":minimal"="read"', joined_flags)
+        self.assertIn('":workspace_roots"={"."="read"}', joined_flags)
+        self.assertIn("permissions.mature_source.network.enabled=false", joined_flags)
 
         codex_path_text = shutil.which("codex")
         self.assertIsNotNone(codex_path_text, "The frozen mature Agent CLI is required by ITER-003 G0")

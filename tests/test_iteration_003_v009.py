@@ -202,7 +202,7 @@ class Iteration003V009Tests(unittest.TestCase):
         source = EVALUATOR_SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn("software_world_model", source)
         self.assertEqual(
-            frozen["freeze_ref"], "ITER-003-V009-EXACT-INPUTS@1.0.3"
+            frozen["freeze_ref"], "ITER-003-V009-EXACT-INPUTS@1.0.4"
         )
         self.assertEqual(
             frozen["predecessor"]["outcome"],
@@ -210,9 +210,9 @@ class Iteration003V009Tests(unittest.TestCase):
         )
         self.assertEqual(
             frozen["predecessor"]["capability_result_id"],
-            "evaluation_result_0319e8c9c3254c92a59b89f9c32ac0c6",
+            "evaluation_result_4c4453b448fd4e6b9cbb923ec0e2398f",
         )
-        self.assertEqual(frozen["predecessor"]["blocked_by"], "FINDING-003-017")
+        self.assertEqual(frozen["predecessor"]["blocked_by"], "FINDING-003-018")
         self.assertFalse(frozen["disclosure"]["g3b_product_dispatch_included"])
 
     def test_conformance_unknown_seals_pre_dispatch_intent_and_stays_blocking(self):
