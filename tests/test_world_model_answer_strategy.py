@@ -105,8 +105,19 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             self.assertNotIn("WM-PRODUCT-", model_state)
             if case["capability"] == "VIEW_LIMITATION_AND_KNOWLEDGE_GAP":
                 instruction = context.manifest.items[0].content
-                self.assertIn("owner exactly STRUCTURE_VIEW", instruction)
-                self.assertIn("owner exactly KNOWLEDGE_USE", instruction)
+                self.assertIn("coverage is authoritative", instruction)
+                self.assertIn("view_result.status exactly LIMITED", instruction)
+                self.assertIn("view_result.owner exactly STRUCTURE_VIEW", instruction)
+                self.assertIn(
+                    "need_assessment.status exactly KNOWLEDGE_GAP", instruction
+                )
+                self.assertIn(
+                    "need_assessment.owner exactly KNOWLEDGE_USE", instruction
+                )
+                self.assertIn(
+                    "Never emit SATISFIED_SUPPORTED_NEGATIVE for PARTIAL coverage",
+                    instruction,
+                )
 
     def test_ineligible_or_duplicate_key_output_fails_closed_without_retry(self):
         ineligible = SimpleNamespace(

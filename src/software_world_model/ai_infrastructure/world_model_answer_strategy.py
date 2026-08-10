@@ -30,8 +30,8 @@ from .openai_responses_adapter import OutputSchemaDefinition
 WORLD_MODEL_PROPOSAL_CAPABILITY_ID = "world-model-authority-proposal"
 WORLD_MODEL_PROPOSAL_CAPABILITY_CONTRACT_VERSION = "1.0.0"
 WORLD_MODEL_ANSWER_STRATEGY_ID = "model-snapshot-first-world-model-answer"
-WORLD_MODEL_ANSWER_STRATEGY_VERSION = "1.0.1"
-WORLD_MODEL_ANSWER_PROMPT_REF = "snapshot-first-world-model-proposal-prompt@2"
+WORLD_MODEL_ANSWER_STRATEGY_VERSION = "1.0.2"
+WORLD_MODEL_ANSWER_PROMPT_REF = "snapshot-first-world-model-proposal-prompt@3"
 WORLD_MODEL_ANSWER_TOOL_POLICY_REF = "model-no-tools-no-source-no-evidence@1"
 
 REQUIREMENT_FIDELITY = "REQUIREMENT_FIDELITY"
@@ -279,7 +279,7 @@ GENERIC_QUERY_PLANNING: use only available_operations. Preserve the supplied nee
 
 COMPLETE_NEGATIVE_ANSWER: an empty, pagination-complete path result under COMPLETE coverage is a supported negative for the exact read set, not global absence. Return need_status SATISFIED_SUPPORTED_NEGATIVE. First remove a terminal @version suffix from modeled_relation, then uppercase the remaining relation identity and replace non-alphanumeric characters with underscores. Form claim_scope as NO_PATH_IN_<NORMALIZED_RELATION_IDENTITY>_FOR_EXACT_READ_SET.
 
-VIEW_LIMITATION_AND_KNOWLEDGE_GAP: an empty result under PARTIAL coverage cannot become a supported negative. Return a visible LIMITED view_result with code COVERAGE_PARTIAL and owner exactly STRUCTURE_VIEW. Return a separate KNOWLEDGE_GAP need_assessment with code INSUFFICIENT_COMPLETE_COVERAGE and owner exactly KNOWLEDGE_USE.
+VIEW_LIMITATION_AND_KNOWLEDGE_GAP: coverage is authoritative even when pagination_complete is true. For coverage exactly PARTIAL, an empty result cannot become a supported negative. Return view_result.status exactly LIMITED, view_result.code exactly COVERAGE_PARTIAL, and view_result.owner exactly STRUCTURE_VIEW. Return need_assessment.status exactly KNOWLEDGE_GAP, need_assessment.code exactly INSUFFICIENT_COMPLETE_COVERAGE, and need_assessment.owner exactly KNOWLEDGE_USE. Never emit SATISFIED_SUPPORTED_NEGATIVE for PARTIAL coverage.
 
 ORDERED_DIFF_EXPRESSION: preserve the explicit base and target exactly; never sort snapshot identifiers to choose direction. added_entities is the supplied target_added list in its supplied order.
 

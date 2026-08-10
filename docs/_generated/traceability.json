@@ -492,6 +492,17 @@
       "tests/test_iteration_003_v009.py"
     ]
   },
+  "FINDING-003-016": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-016.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/world_model_answer_strategy.py",
+      "validation/structure_world_model_iteration_003/v009"
+    ],
+    "tests": [
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_003_v009.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
