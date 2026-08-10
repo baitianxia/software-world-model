@@ -26,4 +26,4 @@ tests: []
 
 ## Consequences
 
-当前专门 Semantic View 契约尚未被接受，不属于系统现状；未来即使启用也必须遵守本决定。
+Structure View 已作为第一个专门 Semantic View Contract 被接受，并受本决定约束。Behavior、Business、History 等其他 View 仍未接受；任何后续 View 即使启用也必须保持可重建、只读和非权威。

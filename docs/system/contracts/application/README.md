@@ -16,5 +16,8 @@ Application Services 拥有用例编排和可恢复结果，但不复制 Source 
 - [Management](management.md)
 - [Knowledge Update](knowledge-update.md)
 - [Knowledge Use](knowledge-use.md)
+- [Structure View](structure-view.md)
+- [World Model Answering](world-model-answering.md)
+- [Direct Evidence Answering](evidence-answering.md)
 - [Agentic Task](agentic-task.md)
 - [Response Control](response-control.md)

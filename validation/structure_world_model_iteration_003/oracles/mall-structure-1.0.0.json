@@ -1,0 +1,134 @@
+{
+  "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+  "repository": {
+    "canonical_remote": "https://github.com/macrozheng/mall.git",
+    "revision_a": "a50870fba92d59021f07cacbe947442b1871e78f",
+    "tree_a": "be7748004ce90f9260936124476f1b385e1cc61f",
+    "revision_b": "cfaadb201bb7aa6425de069fab5e57bf8b5048f3",
+    "tree_b": "1d84b1d4dd9861f2678b21d92f6202cbce5786ac",
+    "a_is_ancestor_of_b": true,
+    "commit_distance": 3
+  },
+  "modalities": {
+    "CONTAINS_MODULE": "RECURSIVE_REACTOR_MEMBERSHIP@1",
+    "DEPENDS_ON": "POM_LOCAL_DECLARED_INTERNAL_DEPENDENCY@1"
+  },
+  "root_project": "com.macro.mall:mall:1.0-SNAPSHOT",
+  "revision_a_oracle": {
+    "reactor_child_modules": [
+      "mall-admin",
+      "mall-common",
+      "mall-demo",
+      "mall-mbg",
+      "mall-portal",
+      "mall-search"
+    ],
+    "reactor_child_module_gavs": [
+      "com.macro.mall:mall-admin:1.0-SNAPSHOT",
+      "com.macro.mall:mall-common:1.0-SNAPSHOT",
+      "com.macro.mall:mall-demo:1.0-SNAPSHOT",
+      "com.macro.mall:mall-mbg:1.0-SNAPSHOT",
+      "com.macro.mall:mall-portal:1.0-SNAPSHOT",
+      "com.macro.mall:mall-search:1.0-SNAPSHOT"
+    ],
+    "contains_module_count": 6,
+    "internal_depends_on": [
+      ["mall-admin", "mall-mbg"],
+      ["mall-demo", "mall-mbg"],
+      ["mall-mbg", "mall-common"],
+      ["mall-portal", "mall-mbg"],
+      ["mall-search", "mall-mbg"]
+    ],
+    "internal_depends_on_gav": [
+      ["com.macro.mall:mall-admin:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-demo:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-mbg:1.0-SNAPSHOT", "com.macro.mall:mall-common:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-portal:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-search:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"]
+    ],
+    "reactor_dependency_management_exact_versions": [
+      {
+        "ga": "com.macro.mall:mall-common",
+        "resolved_version": "1.0-SNAPSHOT"
+      },
+      {
+        "ga": "com.macro.mall:mall-mbg",
+        "resolved_version": "1.0-SNAPSHOT"
+      }
+    ],
+    "admin_to_common_all_simple_paths": [
+      ["mall-admin", "mall-mbg", "mall-common"]
+    ]
+  },
+  "revision_b_oracle": {
+    "reactor_child_modules": [
+      "mall-admin",
+      "mall-common",
+      "mall-demo",
+      "mall-mbg",
+      "mall-portal",
+      "mall-search",
+      "mall-security"
+    ],
+    "reactor_child_module_gavs": [
+      "com.macro.mall:mall-admin:1.0-SNAPSHOT",
+      "com.macro.mall:mall-common:1.0-SNAPSHOT",
+      "com.macro.mall:mall-demo:1.0-SNAPSHOT",
+      "com.macro.mall:mall-mbg:1.0-SNAPSHOT",
+      "com.macro.mall:mall-portal:1.0-SNAPSHOT",
+      "com.macro.mall:mall-search:1.0-SNAPSHOT",
+      "com.macro.mall:mall-security:1.0-SNAPSHOT"
+    ],
+    "contains_module_count": 7,
+    "internal_depends_on": [
+      ["mall-admin", "mall-mbg"],
+      ["mall-admin", "mall-security"],
+      ["mall-demo", "mall-mbg"],
+      ["mall-mbg", "mall-common"],
+      ["mall-portal", "mall-mbg"],
+      ["mall-search", "mall-mbg"],
+      ["mall-security", "mall-common"]
+    ],
+    "internal_depends_on_gav": [
+      ["com.macro.mall:mall-admin:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-admin:1.0-SNAPSHOT", "com.macro.mall:mall-security:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-demo:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-mbg:1.0-SNAPSHOT", "com.macro.mall:mall-common:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-portal:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-search:1.0-SNAPSHOT", "com.macro.mall:mall-mbg:1.0-SNAPSHOT"],
+      ["com.macro.mall:mall-security:1.0-SNAPSHOT", "com.macro.mall:mall-common:1.0-SNAPSHOT"]
+    ],
+    "reactor_dependency_management_exact_versions": [
+      {
+        "ga": "com.macro.mall:mall-common",
+        "resolved_version": "1.0-SNAPSHOT"
+      },
+      {
+        "ga": "com.macro.mall:mall-mbg",
+        "resolved_version": "1.0-SNAPSHOT"
+      },
+      {
+        "ga": "com.macro.mall:mall-security",
+        "resolved_version": "1.0-SNAPSHOT"
+      }
+    ],
+    "admin_to_common_all_simple_paths": [
+      ["mall-admin", "mall-mbg", "mall-common"],
+      ["mall-admin", "mall-security", "mall-common"]
+    ],
+    "admin_to_search_all_simple_paths": [],
+    "root_locally_declares_security_dependency": false
+  },
+  "a_to_b": {
+    "added_modules": ["mall-security"],
+    "removed_modules": [],
+    "added_internal_edges": [
+      ["mall-admin", "mall-security"],
+      ["mall-security", "mall-common"]
+    ],
+    "added_admin_to_common_paths": [
+      ["mall-admin", "mall-security", "mall-common"]
+    ],
+    "removed_internal_edges": []
+  }
+}

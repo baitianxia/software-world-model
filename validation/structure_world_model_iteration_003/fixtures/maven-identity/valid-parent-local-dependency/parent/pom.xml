@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.example.inheritance</groupId>
+  <artifactId>dependency-parent</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+  <modules>
+    <module>plain-child</module>
+    <module>override-child</module>
+  </modules>
+  <properties>
+    <lib.version>9.9.9</lib.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.example.inheritance</groupId>
+      <artifactId>inheritance-lib</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+  </dependencies>
+</project>

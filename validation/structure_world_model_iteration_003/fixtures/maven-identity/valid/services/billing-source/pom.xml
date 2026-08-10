@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.example.services</groupId>
+    <artifactId>services-aggregator</artifactId>
+    <version>1.0.0</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <artifactId>billing</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>org.example.shared</groupId>
+      <artifactId>common-lib</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.example.legacy</groupId>
+      <artifactId>common-lib</artifactId>
+      <version>2.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.11.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

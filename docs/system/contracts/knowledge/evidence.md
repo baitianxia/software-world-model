@@ -30,6 +30,7 @@ Knowledge Engine 独占 Evidence Record 与 Evidence Snapshot 写权，但不得
 6. Evidence 保留 Source Context；只能由直接可复核内容合法收窄，不能覆盖或扩大来源成立条件。
 7. Evidence 不可变，并保存足以在来源变化或 Payload 淘汰后独立复核 exact observed content、Context 与 Provenance 的最小快照。
 8. 正常 Knowledge Use 只读正式知识，不读取 Evidence Quote 补齐 Gap。
+9. Evidence observation/payload 的物理可读边界必须与 `WORLD_MODEL` Query/回答进程分离。Citation Projector 只能在 Query Result 密封后，以该 Result 固定的 Evidence ref allowlist 和 digest 读取自包含观察并输出展示投影；不能把内容送回 Requirement、Plan、Query、Draft、Review 或模型调用。
 
 ## Failure and implementation boundary
 

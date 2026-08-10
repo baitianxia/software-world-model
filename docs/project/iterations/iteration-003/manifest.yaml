@@ -1,0 +1,155 @@
+schema_version: 1
+iteration:
+  id: ITER-003
+  status: proposed
+  outcome_scope: local-maven-structure-world-model
+
+baseline:
+  commit: 40c65840eaf146360c58ca888b97fc5bd9a0f2e2
+  dirty_worktree_allowed: false
+  relation: clean-iteration-002-closure
+
+system_inputs:
+  ids:
+    - SYS-ADR-014
+    - SYS-ARCH-INVARIANTS
+    - SYS-CONTRACT-KNOWLEDGE-ENTITY
+    - SYS-CONTRACT-KNOWLEDGE-FACT
+    - SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL
+    - SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION
+    - SYS-CONTRACT-KNOWLEDGE-PERSISTENCE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+    - SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW
+    - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+    - SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-CONTRACT-AI-CAPABILITY-EVALUATION
+    - SYS-QUALITY-ACCEPTANCE
+    - SYS-OPS-LOCAL-BROWSER
+
+external_inputs:
+  mall_repository:
+    kind: local-git-fixture
+    path: validation-projects/mall
+    canonical_remote: https://github.com/macrozheng/mall.git
+    revision_a: a50870fba92d59021f07cacbe947442b1871e78f
+    tree_a: be7748004ce90f9260936124476f1b385e1cc61f
+    revision_b: cfaadb201bb7aa6425de069fab5e57bf8b5048f3
+    tree_b: 1d84b1d4dd9861f2678b21d92f6202cbce5786ac
+    relation: a-is-ancestor-of-b-three-commits-apart
+    oracle_path: validation/structure_world_model_iteration_003/oracles/mall-structure-1.0.0.json
+    oracle_ref: MALL-MAVEN-STRUCTURE@1.0.0
+    oracle_digest: sha256:412d2e0381ab46cfc84c95e9769f1227733ac2a523487119a15130bcca74b625
+  maven_identity_fixture:
+    kind: versioned-contract-fixture
+    path: validation/structure_world_model_iteration_003/fixtures/maven-identity
+    fixture_ref: maven-identity-anti-name-stitch@1
+    digest: sha256:418c223c43ee969b67370f664b8df04b10502553b5a138da09869284736f41d1
+    digest_input: sha256-of-sorted-per-file-sha256-lines
+    status: frozen
+  structure_schema:
+    kind: exact-schema-definition
+    path: validation/structure_world_model_iteration_003/schema/maven-reactor-structure-1.0.0.json
+    schema_ref: MAVEN-REACTOR-STRUCTURE@1.0.0
+    digest: sha256:947bea83028ff6658b01c18dccfd0c1ef028fa5e9a8701a4a0e90d16b8a58ce9
+    status: frozen
+  maven_evaluation_context:
+    kind: exact-evaluation-context
+    path: validation/structure_world_model_iteration_003/schema/maven-evaluation-context-1.0.0.json
+    context_ref: MAVEN-EVALUATION-CONTEXT@1.0.0
+    digest: sha256:4fce4ccbcc8ddbe254dc90e8419a178ce37c6fd9ea287e6fad8d15d571161ffd
+    status: frozen
+  maven_canonicalization:
+    kind: exact-canonicalization-definition
+    path: validation/structure_world_model_iteration_003/schema/maven-reactor-canonicalization-1.0.0.json
+    canonicalization_ref: MAVEN-REACTOR-CANONICALIZATION@1.0.0
+    digest: sha256:4fae328bd8c2959cfc1eaaae3b9b27f40d601bf2ffb488bf3abe2cc81c5da6cf
+    status: frozen
+  product_question_suite:
+    kind: exact-evaluator-only-product-suite-definition
+    path: validation/structure_world_model_iteration_003/questions/product-suite-1.0.0.json
+    suite_ref: ITER-003-WORLD-MODEL-PRODUCT-SUITE@1.0.0
+    digest: sha256:c165af6beb5ce66d45f035c3155ef4cb7d39b488fb6fe29af4b61e77217aaf2c
+    product_visibility: forbidden
+    status: frozen
+  product_input_suite:
+    kind: exact-product-visible-input-suite-definition
+    path: validation/structure_world_model_iteration_003/questions/product-input-suite-1.0.0.json
+    suite_ref: ITER-003-WORLD-MODEL-PRODUCT-INPUT-SUITE@1.0.0
+    digest: sha256:15bb9a72b68d69f8077ba95bd87b4c54861b0bc08e26ed38fb54221d71d1bfd4
+    evaluator_fields: forbidden
+    status: frozen
+  capability_suite:
+    kind: exact-capability-suite-definition
+    path: validation/structure_world_model_iteration_003/questions/capability-suite-1.0.0.json
+    suite_ref: ITER-003-WORLD-MODEL-CAPABILITY-SUITE@1.0.0
+    digest: sha256:b9118d83aa40e58ade6e3c947ea86d1d6d73ebd50d3b1ae0797d5caa7e415ad6
+    status: frozen
+  metamorphic_generator:
+    kind: independent-runtime-validation-generator
+    path: validation/structure_world_model_iteration_003/metamorphic/generate_reactor.py
+    generator_ref: MAVEN-STRUCTURE-METAMORPHIC-GENERATOR@1.0.0
+    digest: sha256:e3297436ff7ebcd0fb6fcb24b3e5104e95bb1b0d525dc72ad3c2bb9b2ae20ce6
+    seed_timing: after-product-process-and-strategy-load
+    product_imports_allowed: false
+    status: frozen
+  legacy_snapshot_fixture:
+    kind: baseline-generated-compatibility-input
+    generation_commit: 40c65840eaf146360c58ca888b97fc5bd9a0f2e2
+    database_path: validation/structure_world_model_iteration_003/legacy/iteration-002-legacy.sqlite3
+    database_digest: sha256:081cc8e392d61204e20f97b48b5dfa44e14aa046edd49ce4eeda4a016d3daaff
+    report_path: validation/structure_world_model_iteration_003/legacy/iteration-002-legacy-report.json
+    report_digest: sha256:28744a5f279461c13672079e04d984bbaf7a1e1a9cbefd136adadaa9bbf6dc71
+    generator_path: validation/structure_world_model_iteration_003/legacy/generate_legacy_snapshot.py
+    generator_digest: sha256:e9b3bd97fbb184f636ec1a5963f251149fa97fef4ed29a49161601b807670638
+    status: frozen
+  live_provider:
+    kind: exact-gate-input
+    provider_adapter_model: pending-before-first-g3-external-dispatch
+    provider_endpoint: pending-exact-scheme-host-port-path-before-first-g3-external-dispatch
+    model_egress_gateway_policy: pending-default-deny-exact-endpoint-policy-before-first-g3-external-dispatch
+    conformance: exact-result-required-before-first-g3-external-dispatch
+    capability_qualification: exact-world-model-strategy-result-required-after-g3a-before-g3b
+    source_disclosure: explicit-confirmation-required-before-any-ce-or-g3-external-content
+    credential_reference: pending-with-exact-provider-selection
+  direct_investigation_baseline:
+    kind: exact-product-comparison-input
+    protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.0.json
+    protocol_ref: ITER-003-DIRECT-SOURCE-BASELINE@1.0.0
+    protocol_digest: sha256:af074014318fab1b5e0fdc3dafab70c1fcd45fe1060da4141e8d8fc594094869
+    implementation_path: validation/product_holdout_iteration_002/direct_answer.py
+    implementation_file_digest: sha256:e04c6cca4eb484cd75512c9d748b3bd142027501c5ebe9c905fb5e1e96b06bbd
+    strategy_prompt_tool_resource_protocol: frozen-at-g0
+    provider_adapter_model: fill-from-v009-exact-selection
+    result_timing: seal-all-direct-runs-after-v009-and-before-first-g3b-product-run
+    questions: frozen-browser-questions-and-runtime-metamorphic-set
+    run_count: at-least-five-per-question-including-cold-process
+    request_latency_boundary: http-request-received-to-terminal-result-persisted
+    cold_latency_boundary: process-start-to-terminal-result-persisted
+    cache_and_failure_policy: record-all-do-not-select-successes
+    drift_policy: any-material-input-change-reruns-both-paths
+    status: protocol-frozen-results-pending
+  mature_source_agent_baseline:
+    kind: external-quality-comparison-input
+    protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.0.json
+    protocol_ref: ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.0
+    protocol_digest: sha256:62674a0d7ec5095bc36ee8d41b7fd8a8fdf43e4f01be92ceeb834356775e0f34
+    answer_schema_path: validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json
+    answer_schema_ref: ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0
+    answer_schema_digest: sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d
+    prepared_tool_version: "codex-cli 0.147.0-alpha.1.2"
+    prepared_binary_digest: sha256:9f6748b4ab10ffc92c28b9ccedae89e61a302bbc011df7d276ee38f55906e481
+    exact_tool_model_config: recheck-and-bind-before-run
+    result_timing: seal-before-first-g3b-product-run
+    comparison_scope: quality-only-no-cross-model-latency-ratio
+    status: protocol-frozen-results-pending
+
+verification:
+  matrix_id: ITER-003-VERIFICATION
+  evidence_location: var/iteration-003
+
+authorization:
+  readiness_review_id: ITER-003-READINESS
+  authorized_by: pending
+  authorized_at: pending

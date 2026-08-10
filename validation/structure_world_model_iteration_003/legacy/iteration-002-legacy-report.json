@@ -1,0 +1,42 @@
+{
+  "database_file": "iteration-002-legacy.sqlite3",
+  "database_sha256": "081cc8e392d61204e20f97b48b5dfa44e14aa046edd49ce4eeda4a016d3daaff",
+  "fixture_ref": "ITER-002-LEGACY-SNAPSHOT@1",
+  "generation_commit": "40c65840eaf146360c58ca888b97fc5bd9a0f2e2",
+  "manifest_digest": "sha256:6ce176e7aba4be9214608f7d66f1f86ff476e8555d7a0e672be6e0e708a71b2a",
+  "member_count": 2,
+  "records": [
+    {
+      "context_digest": "sha256:bc1a0cab57c44ca560b98c94564764ef3b13d4f6bc387dadb5ffbc9a962c12ae",
+      "kind": "ENTITY",
+      "object_digest": "sha256:17f7d64a603d77b93c2a06daaaa7a28356d23c99a04070fd97567586993c1469",
+      "object_id": "knowledge_entity_34c60ed9042a2a30717830899137f957",
+      "source_locators": [
+        "src/LegacyOrderService.java:1"
+      ],
+      "support_references": [
+        "evidence_f0cf3e5c591610d0481e242331e76700"
+      ],
+      "text": "LegacyOrderService LegacyOrderService",
+      "type_name": "CODE_SYMBOL"
+    },
+    {
+      "context_digest": "sha256:bc1a0cab57c44ca560b98c94564764ef3b13d4f6bc387dadb5ffbc9a962c12ae",
+      "kind": "FACT",
+      "object_digest": "sha256:2a7b1b0e8c9008b7b1df7b7fbc1e2dd0a77e9a612ecf94c499fbddf8086e635e",
+      "object_id": "knowledge_fact_6272760ef60c18ed974d7a4b92ced7c6",
+      "source_locators": [
+        "src/LegacyOrderService.java:1"
+      ],
+      "support_references": [
+        "evidence_f0cf3e5c591610d0481e242331e76700"
+      ],
+      "text": "LegacyOrderService",
+      "type_name": "DECLARES"
+    }
+  ],
+  "schema_version": "INITIAL@1",
+  "scope_id": "scope_00000000000000000000000000000001",
+  "snapshot_id": "knowledge_snapshot_00000000000000000000000000000001",
+  "snapshot_revision": 1
+}

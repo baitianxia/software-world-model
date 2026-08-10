@@ -14,7 +14,7 @@ tests: [tests/test_formal_knowledge.py, tests/test_knowledge_scope.py, tests/tes
 ```mermaid
 flowchart TD
     DS["Data Source + Binding"] --> AR["Artifact"]
-    Q["Original Question + Checklist"] --> EP["Sealed task Evidence Packet"]
+    Q["Direct Question + Checklist"] --> EP["Sealed task Evidence Packet"]
     AR --> EP
     EP --> DA["Cited Answer Draft"]
     Q --> RV["Independent Answer Review"]
@@ -32,13 +32,18 @@ flowchart TD
     SN --> EN["Entity State"]
     SN --> FA["ASSERTED Fact State"]
     SN --> IN["Inference / Conflict State"]
+    SN --> RB["Exact Snapshot Read Bundle<br/>no Evidence payload"]
+    RB --> SV["Read-only Structure View"]
+    WQ["World Model Question"] --> WR["Exact Snapshot Read Session"]
+    SV --> WR
+    WR --> WA["Reviewed World Model Answer / Gap"]
     SN --> RS["Read Session"]
     RQ["Requirement + Needs"] --> AS["Sufficiency Assessment"]
     RS --> AS
     AS --> KA["Reviewed formal-knowledge query result"]
 ```
 
-该图表达两条不同边界。同步问答把 Artifact 的 exact 内容密封为只对当前问题有效的 Evidence Packet，经答案审核后交付；它不产生正式知识。正式知识生命周期仍要求 Evidence、Candidate、独立 Admission 和整体 Publication 后才能在 Snapshot 中可见。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
+该图表达三条不同边界：Direct Investigation 把 Artifact 内容密封为只对当前问题有效的 Evidence Packet；Knowledge Update 把受审核 Candidate 原子发布为 Snapshot；World Model Query 只读 exact Snapshot/View 并返回受支持答案或 Knowledge Gap。三者不能静默互换。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
 
 ## 概念边界
 
@@ -50,6 +55,7 @@ flowchart TD
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。
 - **Inference** 从已发布前提形成受控结论；Conflict 证明语义不兼容但不擅自选赢家。
 - **Snapshot** 是单一 Scope 下完整、不可变、原子发布的正式知识状态。
+- **Structure View** 是 exact Snapshot 中 typed Entity Relation 的可重建只读组织，不创建知识。
 - **Requirement** 固定任务语义；Sufficiency 必须逐 Need 从同一 Read Session 重建。
 
 Knowledge Scope 保留三类稳定归属边界：
@@ -58,4 +64,4 @@ Knowledge Scope 保留三类稳定归属边界：
 - **Shared Component Scope** 拥有公共组件定义与静态知识；该组件在宿主系统中的运行观察仍归宿主 System Scope。
 - **Business Domain Scope** 拥有跨系统 Business Entity 与业务语义；它通过对 exact upstream Snapshot 的 Fact / Inference 引用关联多个 System Scope，不复制或改变技术对象的归属。
 
-Semantic View 是可能的只读组织方式，不拥有知识、不改变充分性。目前其专门契约未被接受，不属于当前系统能力；实现不得假设它已启用。
+Structure View 已接受为第一个最小 Semantic View Contract；它不拥有知识、不改变充分性。Behavior、Business、History 等其他专门 View 尚未接受，不能从 Structure View 推导其存在。

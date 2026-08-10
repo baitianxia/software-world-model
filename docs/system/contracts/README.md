@@ -18,12 +18,12 @@ Contract 只保留跨模块或跨迭代不能自由改变的语义。判断一�
 | 域 | 文档 |
 |---|---|
 | Source | [Data Source](source/data-source.md)、[Source Artifact](source/source-artifact.md) |
-| Knowledge | [Knowledge Scope](knowledge/knowledge-scope.md)、[Reference Context](knowledge/reference-context.md)、[Schema Core](knowledge/schema-core.md)、[Context Comparison](knowledge/context-comparison.md)、[Evidence](knowledge/evidence.md)、[Entity](knowledge/entity.md)、[Fact](knowledge/fact.md)、[Inference & Conflict](knowledge/inference-conflict.md)、[Admission](knowledge/admission.md)、[Snapshot Publication](knowledge/snapshot-publication.md)、[Persistence](knowledge/persistence.md) |
-| Application | [Management](application/management.md)、[Knowledge Update](application/knowledge-update.md)、[Knowledge Use](application/knowledge-use.md)、[Agentic Task](application/agentic-task.md)、[Response Control](application/response-control.md) |
+| Knowledge | [Knowledge Scope](knowledge/knowledge-scope.md)、[Reference Context](knowledge/reference-context.md)、[Schema Core](knowledge/schema-core.md)、[Context Comparison](knowledge/context-comparison.md)、[Evidence](knowledge/evidence.md)、[Entity](knowledge/entity.md)、[Fact](knowledge/fact.md)、[Inference & Conflict](knowledge/inference-conflict.md)、[Admission](knowledge/admission.md)、[Snapshot Publication](knowledge/snapshot-publication.md)、[Persistence](knowledge/persistence.md)、[Structure Model](knowledge/structure-model.md) |
+| Application | [Management](application/management.md)、[Knowledge Update](application/knowledge-update.md)、[Knowledge Use](application/knowledge-use.md)、[Structure View](application/structure-view.md)、[World Model Answering](application/world-model-answering.md)、[Agentic Task](application/agentic-task.md)、[Response Control](application/response-control.md) |
 | AI | [Model Gateway](ai/model-gateway.md)、[Capability Evaluation](ai/capability-evaluation.md) |
 | Cross-cutting | [Capability Execution](cross-cutting/capability-execution.md)、[Telemetry & Cost](cross-cutting/telemetry-cost.md) |
 
-当前系统不支持跨 Schema Adoption，也未启用 Semantic View 专门能力；在新的 System Contract 被接受前，任何实现都不得假设这些能力已经成立。
+当前系统不支持跨 Schema Adoption。专门 Semantic View 中只接受了本索引列出的最小 Structure View；Behavior、Business、History 等其他 View 在新的 System Contract 被接受前仍不得假设成立。
 
 ## 依赖主干
 
@@ -54,15 +54,22 @@ flowchart TD
     SP["Snapshot Publication"] --> AD
     SP --> SC
     PS["Persistence"] --> SP
+    SM["Structure Model"] --> F
+    SM --> SP
 
     KU["Knowledge Update"] --> SA
     KU --> SP
     USE["Knowledge Use"] --> PS
     USE --> CMP
+    SV["Structure View"] --> SM
+    SV --> USE
+    WMA["World Model Answering"] --> SV
+    WMA --> USE
     AT["Agentic Task"] --> KU
     AT --> USE
     RESP["Response Control"] --> AT
     RESP --> USE
+    WMA --> RESP
     TEL["Telemetry / Cost"] -.-> CE
     TEL -.-> MG
 ```

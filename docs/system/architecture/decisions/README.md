@@ -27,6 +27,7 @@ ADR 解释为什么选择当前架构；规范正文仍由 Architecture、Invari
 | [ADR-010](ADR-010-independent-verification.md) | 知识审核与答案审核独立 |
 | [ADR-011](ADR-011-inference-depth-as-strategy.md) | 推断深度属于可评测 Strategy |
 | [ADR-012](ADR-012-telemetry-is-observational.md) | Telemetry 与成本是非权威观察能力 |
-| [ADR-013](ADR-013-evidence-first-synchronous-answering.md) | 同步问答采用证据优先路径，正式知识沉淀移出关键路径 |
+| [ADR-013](ADR-013-evidence-first-synchronous-answering.md) | 直接源码调查采用证据优先路径 |
+| [ADR-014](ADR-014-snapshot-first-world-model-answering.md) | 软件世界模型回答只读 exact Snapshot，禁止静默源码回退 |
 
 交付范围、暂停、某次 Provider 选择和环境激活不改变长期架构选择，因此不进入当前 ADR 集合。

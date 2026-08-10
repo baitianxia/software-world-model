@@ -1,0 +1,249 @@
+{
+  "schema_ref": "MAVEN-REACTOR-STRUCTURE@1.0.0",
+  "schema_id": "MAVEN-REACTOR-STRUCTURE",
+  "version": "1.0.0",
+  "profile_ref": "MAVEN_REACTOR_STRUCTURE@1",
+  "canonicalization_ref": "MAVEN-REACTOR-CANONICALIZATION@1.0.0",
+  "entity_types": {
+    "SOFTWARE_SYSTEM": {
+      "identity_scheme": "SOFTWARE_SYSTEM@1",
+      "root_fields": [
+        "owning_scope_id",
+        "canonical_system_key"
+      ],
+      "state_payload_fields": [
+        "label",
+        "effective_group_id",
+        "artifact_id",
+        "effective_version",
+        "packaging",
+        "source_binding_id",
+        "source_revision",
+        "root_pom_locator",
+        "evidence_references"
+      ]
+    },
+    "MAVEN_MODULE": {
+      "identity_scheme": "MAVEN_MODULE@1",
+      "root_fields": [
+        "owning_scope_id",
+        "effective_group_id",
+        "artifact_id"
+      ],
+      "state_payload_fields": [
+        "effective_version",
+        "packaging",
+        "module_path",
+        "label",
+        "source_revision",
+        "evidence_references"
+      ]
+    }
+  },
+  "canonical_derivation": {
+    "codec_ref": "software_world_model.cross_cutting.canonical_json_bytes/digest_of@ITER-003-FROZEN",
+    "compatibility": "BYTE_FOR_BYTE_EQUIVALENT_TO_THE_EXISTING_CROSS_CUTTING_FUNCTIONS_FOR_THE_JSON_VALUE_SUBSET_BELOW",
+    "codec": {
+      "encoding": "UTF-8",
+      "string_normalization": "INPUT_PRECONDITION_NFC_CODEC_DOES_NOT_RENORMALIZE",
+      "mapping_keys": "STRING_ONLY_SORT_LEXICOGRAPHICALLY",
+      "array_order": "PRESERVE_DOMAIN_ORDER_SET_LIKE_ARRAYS_MUST_DEDUPLICATE_AND_SORT_BEFORE_ENCODING",
+      "json_separators": [
+        ",",
+        ":"
+      ],
+      "ascii_escaping": false,
+      "trailing_newline": false,
+      "allowed_scalars": [
+        "NULL",
+        "BOOLEAN",
+        "INTEGER",
+        "STRING"
+      ],
+      "rejected_values": [
+        "FLOAT",
+        "BYTES",
+        "NON_STRING_MAPPING_KEY"
+      ]
+    },
+    "test_vectors": [
+      {
+        "input": {
+          "b": "x",
+          "a": [
+            null,
+            true,
+            1,
+            "é"
+          ]
+        },
+        "canonical_utf8_hex": "7b2261223a5b6e756c6c2c747275652c312c22c3a9225d2c2262223a2278227d",
+        "digest": "sha256:899ea295a979d29180c4f75f77f2bd3167292651574ac6b7106a78f9fa1c9f58"
+      }
+    ],
+    "digest_algorithm": "SHA-256",
+    "digest_format": "sha256:<64-lowercase-hex>",
+    "state_digest_is_derived_not_payload": true,
+    "id_inputs": {
+      "entity_root": [
+        "ENTITY_ROOT",
+        "entity_type",
+        "identity_scheme",
+        "root_fields_object_with_exact_declared_fields"
+      ],
+      "entity_state": [
+        "ENTITY_STATE",
+        "entity_root_id",
+        "entity_state_digest"
+      ],
+      "relation_root": [
+        "RELATION_ROOT",
+        "relation_root_fields_object_with_exact_declared_fields"
+      ],
+      "relation_state": [
+        "RELATION_STATE",
+        "relation_root_id",
+        "relation_state_digest"
+      ],
+      "coverage_root": [
+        "COVERAGE_ROOT",
+        "coverage_root_ref",
+        "coverage_root_fields_object_with_exact_declared_fields"
+      ],
+      "coverage_state": [
+        "COVERAGE_STATE",
+        "coverage_root_id",
+        "coverage_state_digest"
+      ]
+    },
+    "state_digest_inputs": {
+      "entity_state": [
+        "ENTITY_STATE_PAYLOAD",
+        "entity_type",
+        "entity_root_id",
+        "state_payload_fields_object_with_exact_declared_fields"
+      ],
+      "relation_state": [
+        "RELATION_STATE_PAYLOAD",
+        "relation_root_id",
+        "relation_state_payload_fields_object_with_exact_declared_fields",
+        "predicate_state_payload_fields_object_with_exact_declared_fields"
+      ],
+      "coverage_state": [
+        "COVERAGE_STATE_PAYLOAD",
+        "coverage_root_id",
+        "coverage_state_payload_fields_object_with_exact_declared_fields"
+      ]
+    },
+    "derived_outputs": {
+      "entity_root": [
+        "entity_root_id"
+      ],
+      "entity_state": [
+        "entity_state_digest",
+        "entity_state_id"
+      ],
+      "relation_root": [
+        "relation_root_id"
+      ],
+      "relation_state": [
+        "relation_state_digest",
+        "relation_state_id"
+      ],
+      "coverage_root": [
+        "coverage_root_id"
+      ],
+      "coverage_state": [
+        "coverage_state_digest",
+        "coverage_state_id"
+      ]
+    },
+    "id_allocation_requirement": "THE_CANONICAL_ID_INPUT_DIGEST_IS_THE_DETERMINISTIC_ALLOCATION_KEY"
+  },
+  "fact_kinds": {
+    "literal": [],
+    "relation": {
+      "CONTAINS_MODULE": {
+        "subject_type": "SOFTWARE_SYSTEM",
+        "object_type": "MAVEN_MODULE",
+        "direction": "system_to_module",
+        "observation_modality": "RECURSIVE_REACTOR_MEMBERSHIP@1"
+      },
+      "DEPENDS_ON": {
+        "subject_types": [
+          "SOFTWARE_SYSTEM",
+          "MAVEN_MODULE"
+        ],
+        "object_type": "MAVEN_MODULE",
+        "direction": "consumer_to_dependency",
+        "observation_modality": "POM_LOCAL_DECLARED_INTERNAL_DEPENDENCY@1"
+      }
+    }
+  },
+  "reactor_semantics": {
+    "root_project_entity_type": "SOFTWARE_SYSTEM",
+    "reactor_child_module_definition": "recursive_modules_closure_excluding_root_project",
+    "contains_semantics": "software_system_to_every_recursive_child_module",
+    "dependency_subjects_scanned": "root_project_and_every_recursive_child_module",
+    "dependency_declaration_scope": "pom_local_dependencies_only_parent_dependencies_not_reattributed",
+    "negative_internal_dependency_requires_complete_coverage": true
+  },
+  "relation_root_fields": [
+    "owning_scope_id",
+    "schema_ref",
+    "subject_entity_root_id",
+    "predicate",
+    "object_entity_root_id",
+    "observation_modality"
+  ],
+  "relation_state_payload_fields": [
+    "subject_entity_state_id",
+    "object_entity_state_id",
+    "source_revision",
+    "knowledge_context_digest",
+    "evidence_references"
+  ],
+  "predicate_state_payload_fields": {
+    "CONTAINS_MODULE": [
+      "module_declaration_path"
+    ],
+    "DEPENDS_ON": [
+      "declared_dependency_gav_expression",
+      "resolved_dependency_gav",
+      "scope",
+      "type",
+      "classifier",
+      "optional"
+    ]
+  },
+  "coverage": {
+    "root_ref": "MAVEN_REACTOR_STRUCTURE_COVERAGE@1",
+    "root_fields": [
+      "owning_scope_id",
+      "profile_ref",
+      "schema_ref",
+      "schema_digest",
+      "source_binding_id",
+      "logical_reactor_root",
+      "maven_evaluation_context_ref",
+      "maven_evaluation_context_digest",
+      "covered_entity_types",
+      "covered_relation_predicates",
+      "canonicalization_ref",
+      "canonicalization_digest"
+    ],
+    "state_payload_fields": [
+      "source_revision",
+      "knowledge_context_digest",
+      "schema_ref",
+      "schema_digest",
+      "maven_evaluation_context_ref",
+      "maven_evaluation_context_digest",
+      "canonicalization_ref",
+      "canonicalization_digest",
+      "complete_member_manifest",
+      "evidence_references"
+    ],
+    "publication_mode": "REPLACE_COVERAGE"
+  }
+}

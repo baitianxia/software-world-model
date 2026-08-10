@@ -1,0 +1,48 @@
+{
+  "protocol_ref": "ITER-003-DIRECT-SOURCE-BASELINE@1.0.0",
+  "purpose": "freeze a capable direct source Agent comparison before world-model product results are visible",
+  "implementation": {
+    "path": "validation/product_holdout_iteration_002/direct_answer.py",
+    "file_digest": "sha256:e04c6cca4eb484cd75512c9d748b3bd142027501c5ebe9c905fb5e1e96b06bbd",
+    "strategy_ref": "direct-source-answer-baseline@4",
+    "prompt_ref": "product-holdout-direct-source-investigator@3",
+    "output_schema_ref": "product-holdout-direct-answer-action@1",
+    "runtime_binding": "EXACT_PRE_G3B_CHECKPOINT_COMMIT_AND_DIRECT_IMPLEMENTATION_DIGEST"
+  },
+  "source_contract": {
+    "provider": "LOCAL_GIT_READ_ONLY",
+    "tools": ["LIST", "SEARCH", "READ", "COMPARE"],
+    "scope": "EXACT_REVISION_AND_ALLOWED_POM_PATHS_ONLY",
+    "mall_allowed_paths": "ROOT_AND_ALL_RECURSIVELY_DECLARED_CHILD_POMS_AT_EXACT_A_AND_B",
+    "fixture_allowed_paths": "MANIFEST_FIXTURE_REF_DIGEST_AND_VALID_ROOT_AT_AUTHORIZATION_BASELINE",
+    "metamorphic_allowed_paths": "GENERATED_REPOSITORY_ROOT_AND_CHILD_POMS_ONLY",
+    "coverage": "FULL_READ_EVERY_ALLOWED_POM_AT_REQUIRED_REVISION_AND_EXACT_COMPARE_FOR_ORDERED_DIFF",
+    "oracle_visibility": "NONE"
+  },
+  "resource_policy": {
+    "maximum_model_calls": 192,
+    "maximum_source_actions": 64,
+    "maximum_source_bytes_per_action": 65536,
+    "maximum_total_input_tokens": 2000000,
+    "maximum_total_output_tokens": 192000,
+    "maximum_output_tokens_per_call": 1200,
+    "timeout_per_call_milliseconds": 180000,
+    "budget_failure_policy": "KEEP_FAILURE_AND_DO_NOT_SELECT_SUCCESSES"
+  },
+  "comparison_protocol": {
+    "question_input": "PRODUCT_QUESTION_TEXT_SELECTOR_LANGUAGE_AND_EXACT_SOURCE_TARGET_WITHOUT_EXPECTED_ORACLE",
+    "same_inputs": ["provider", "adapter", "model", "provider_configuration", "question", "language", "source_revision", "hardware", "time_window"],
+    "runs_per_question": 5,
+    "cold_process_required": true,
+    "cache_policy": "DISABLE_CROSS_PATH_RESULT_CACHE_RECORD_ALL_LOCAL_CACHE_STATE",
+    "run_order": "SEAL_ALL_DIRECT_RESULTS_AFTER_V009_EXACT_MODEL_SELECTION_AND_BEFORE_FIRST_G3B_PRODUCT_RUN",
+    "result_visibility": "WORLD_MODEL_STRATEGY_AND_MODEL_NEVER_RECEIVE_DIRECT_RESULTS",
+    "fairness": "RESOURCE_LIMITS_ARE_CAPS_NOT_TARGETS_COMPARE_ACTUAL_FAILURES_CALLS_TOKENS_AND_LATENCY",
+    "drift_rule": "ANY_IMPLEMENTATION_STRATEGY_PROMPT_TOOL_RESOURCE_PROVIDER_MODEL_CONFIG_QUESTION_REVISION_OR_HARDWARE_DRIFT_REQUIRES_RERUN_BOTH_PATHS"
+  },
+  "isolation": {
+    "product_input_allowlist": "QUESTION_SELECTOR_AND_SOURCE_TARGET_ONLY",
+    "evaluator_only": ["expected_oracle", "direct_results", "world_model_results", "scoring"],
+    "forbidden_product_reads": ["product_suite_expected_fields", "mall_or_fixture_or_metamorphic_oracle", "direct_result_directory"]
+  }
+}

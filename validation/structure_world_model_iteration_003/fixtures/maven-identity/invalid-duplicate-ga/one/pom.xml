@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.example.invalid</groupId>
+    <artifactId>duplicate-ga-reactor</artifactId>
+    <version>1.0.0</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <groupId>org.example.dupe</groupId>
+  <artifactId>same-module</artifactId>
+</project>

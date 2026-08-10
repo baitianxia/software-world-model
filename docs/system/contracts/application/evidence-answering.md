@@ -9,11 +9,11 @@ code: [src/software_world_model/application_services/evidence_answer.py, src/sof
 tests: [tests/test_evidence_answer.py, tests/test_evidence_answer_strategy.py, tests/test_browser_chat_interface.py]
 ---
 
-# Evidence-first Answering
+# Direct Evidence Answering
 
 ## Purpose and scope
 
-本契约定义同步软件问答：保持原问题、调查 exact 授权源码、密封任务级证据、生成自然答案并独立复核。它不负责把证据发布为跨任务正式知识。
+本契约定义显式 `DIRECT_INVESTIGATION`：保持原问题、调查 exact 授权源码、密封任务级证据、生成自然答案并独立复核。它不负责把证据发布为跨任务正式知识，也不得被标记为 `WORLD_MODEL` 回答。
 
 ## Ownership
 
@@ -30,6 +30,7 @@ Evidence Answering Application Service 拥有不可变 Question Checklist、Evid
 7. 只有五项审核检查全部通过且 Finding 为空的 `APPROVED` Draft 可以形成 Authorized Evidence Answer。任一失败检查必须绑定具体 Finding。Provider 已完整返回但生成或审核输出违反 JSON、Schema 或应用语义约束时，对应角色只能在固定职责输入下有界提交完整替换对象；因输出截断触发的修正必须压缩表达并保留全部物质内容，不能用删除检查项或证据换取合法形状，也不能规范化成平台猜测的答案。审核 Unknown、修正无进展或耗尽、重复来源动作及安全熔断均失败关闭，不降级为未经审核答案。
 8. 调用配额不构成质量裁剪策略；实现可以用高安全熔断阻止失控循环，但不得因剩余调用数减少检查清单、证据要求或独立审核。
 9. Evidence Packet 与 Answer Draft 默认只对当前问题有效。异步知识沉淀必须重新进入 Knowledge Update、Admission 与 Publication，不能继承回答审核作为正式知识资格。
+10. 请求、结果、Telemetry 与浏览器必须保留 `DIRECT_INVESTIGATION` 模式身份。世界模型查询失败不能静默调用本服务；任何切换都需要新的显式请求和独立结果。
 
 ## Recovery and implementation boundary
 

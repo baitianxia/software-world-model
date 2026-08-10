@@ -543,6 +543,18 @@
       "tests"
     ]
   },
+  "ITER-003-SLICE-001": {
+    "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services",
+      "src/software_world_model/infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [
@@ -571,6 +583,17 @@
       "tests/test_evidence_answer.py",
       "tests/test_evidence_answer_strategy.py",
       "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "SYS-ADR-014": {
+    "path": "docs/system/architecture/decisions/ADR-014-snapshot-first-world-model-answering.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
     ]
   },
   "SYS-ARCH-COMPONENTS": {
@@ -770,6 +793,28 @@
       "tests/test_agentic_runtime.py"
     ]
   },
+  "SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW": {
+    "path": "docs/system/contracts/application/structure-view.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_knowledge_use.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING": {
+    "path": "docs/system/contracts/application/world-model-answering.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_knowledge_use.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
   "SYS-CONTRACT-INDEX": {
     "path": "docs/system/contracts/README.md",
     "code": [
@@ -896,6 +941,17 @@
     "code": [
       "src/software_world_model/knowledge_engine/formal.py",
       "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_formal_knowledge.py",
+      "tests/test_knowledge_update.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL": {
+    "path": "docs/system/contracts/knowledge/structure-model.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services/knowledge_update.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",

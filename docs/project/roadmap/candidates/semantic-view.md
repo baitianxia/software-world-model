@@ -11,11 +11,11 @@ coding_input: false
 legacy_source: DD-SEM-SEMANTIC-VIEW
 ---
 
-# Candidate：Semantic View
+# Candidate：后续 Semantic Views
 
 ## Trigger
 
-只有真实用户任务需要结构、行为、业务或历史的专门组织方式，且普通正式知识查询无法在可接受成本内支持时，才引入 Semantic View。
+Structure View 已因真实 Maven 结构任务进入 current System Contract。本 Candidate 只保留 Behavior、Business、History 和其他后续 View；只有真实任务证明普通正式知识查询无法在可接受成本内支持时，才继续引入。
 
 ## Proposed boundary
 
@@ -26,8 +26,8 @@ legacy_source: DD-SEM-SEMANTIC-VIEW
 
 ## Unknowns
 
-当前缺少证明专门视图必要性的用户场景、查询成本基线、组织质量评测和失效/缓存数据。旧主题仍为 `In Review`，因此不能作为当前 Contract。
+Structure 范围已有冻结场景和契约；其实现与产品结果拟由 `ITER-003` 验证。其他 View 仍缺少用户场景、查询成本基线、组织质量评测和失效/缓存数据，不能从 Structure View 自动推导。
 
 ## Entry conditions
 
-用真实任务证明普通 Knowledge Use 的具体不足；冻结 View Purpose、Support 完整性 Oracle 和性能基线；在 Iteration 中验证最小只读 Strategy，并在确有跨模块语义后再接受 System Contract。
+每个后续 View 分别用真实任务证明具体不足，冻结 View Purpose、Support 完整性 Oracle 和性能基线，并在独立 Iteration 中验证最小只读 Strategy。不得把 Structure View 的接受当作其他 View 的授权。

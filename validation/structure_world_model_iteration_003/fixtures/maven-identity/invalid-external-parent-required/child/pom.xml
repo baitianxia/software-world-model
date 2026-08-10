@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.example.external</groupId>
+    <artifactId>unavailable-parent</artifactId>
+    <version>9.9.9</version>
+    <relativePath/>
+  </parent>
+  <groupId>org.example.consumer</groupId>
+  <artifactId>child-needing-external-parent</artifactId>
+  <version>1.0.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.example.internal</groupId>
+      <artifactId>external-parent-lib</artifactId>
+      <version>${external.lib.version}</version>
+    </dependency>
+  </dependencies>
+</project>

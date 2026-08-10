@@ -1,0 +1,55 @@
+{
+  "suite_ref": "ITER-003-WORLD-MODEL-PRODUCT-INPUT-SUITE@1.0.0",
+  "mode": "WORLD_MODEL",
+  "response_language": "zh-CN",
+  "cases": [
+    {
+      "case_id": "WM-PRODUCT-001",
+      "snapshot_selector": "ORDERED_A_B",
+      "question": "分别列出 A 和 B 的全部递归 Maven reactor child modules（不含根项目 mall）。",
+      "paraphrase": "对比两个版本：各自有哪些由根 POM 的 modules 递归纳入的子项目？不要把 mall 根项目算进去。"
+    },
+    {
+      "case_id": "WM-PRODUCT-002",
+      "snapshot_selector": "ORDERED_A_B",
+      "question": "分别列出 A 和 B 中 mall-admin 到 mall-common 的全部简单内部依赖路径，并指出新增路径。",
+      "paraphrase": "从 admin 模块沿本地 POM 直接内部依赖走到 common，两个版本各有哪几条不重复节点的路线？哪条是 B 才有的？"
+    },
+    {
+      "case_id": "WM-PRODUCT-003",
+      "snapshot_selector": "ORDERED_A_B",
+      "question": "只说明 A 到 B 的内部 reactor child module 图变化。",
+      "paraphrase": "忽略外部依赖和代码行为，仅汇总这两个版本之间子模块成员及本地声明内部边的增删。"
+    },
+    {
+      "case_id": "WM-PRODUCT-004",
+      "snapshot_selector": "EXACT_B",
+      "question": "B 的根 POM dependencies 是否直接声明了 reactor child module mall-security？",
+      "paraphrase": "不要把 dependencyManagement 当依赖：mall 根项目在 B 里有没有于 dependencies 中直接引用 security 子模块？"
+    },
+    {
+      "case_id": "WM-PRODUCT-005",
+      "snapshot_selector": "EXACT_B",
+      "question": "mall-admin 到 mall-search 是否存在本 Profile 内的内部依赖路径？",
+      "paraphrase": "只按已建模的 POM 本地声明内部边，B 中能不能从 admin 走到 search？不要扩大成任何关系都不存在。"
+    },
+    {
+      "case_id": "WM-PRODUCT-006",
+      "snapshot_selector": "EXACT_FIXTURE_VALID",
+      "question": "maven-identity fixture 中 billing 实际直接依赖哪个 reactor 内的 common-lib？请给完整 GA；是否存在到另一个同名 common-lib GA 的边？",
+      "paraphrase": "两个模块都叫 common-lib；只回答 billing 连到哪个完整 GA，以及到另一个完整 GA 的边是否存在。"
+    },
+    {
+      "case_id": "WM-PRODUCT-007",
+      "snapshot_selector": "EXACT_FIXTURE_VALID",
+      "question": "maven-identity fixture 的根 POM 是否本地直接依赖 shared common-lib？dependencyManagement 本身是否形成边？",
+      "paraphrase": "区分 dependencies 和 dependencyManagement：fixture 根项目到 shared common-lib 的直接边是什么，管理条目又算不算边？"
+    },
+    {
+      "case_id": "WM-PRODUCT-008-GAP",
+      "snapshot_selector": "ORDERED_A_B",
+      "question": "为什么 B 新增了 mall-security？",
+      "paraphrase": "引入 security 模块的设计动机是什么？"
+    }
+  ]
+}

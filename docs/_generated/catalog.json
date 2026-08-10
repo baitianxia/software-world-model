@@ -775,6 +775,100 @@
     "path": "docs/project/iterations/iteration-002/verification-matrix.md"
   },
   {
+    "id": "ITER-003-DESIGN-INDEX",
+    "kind": "development-design-index",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/development-design/README.md"
+  },
+  {
+    "id": "ITER-003-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "open",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/findings/README.md"
+  },
+  {
+    "id": "ITER-003-INDEX",
+    "kind": "iteration-index",
+    "status": "proposed",
+    "authority": "project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/README.md"
+  },
+  {
+    "id": "ITER-003-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "proposed",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/proposal.md"
+  },
+  {
+    "id": "ITER-003-READINESS",
+    "kind": "iteration-readiness",
+    "status": "proposed",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/readiness-review.md"
+  },
+  {
+    "id": "ITER-003-RESULTS-INDEX",
+    "kind": "iteration-result-index",
+    "status": "not-run",
+    "authority": "planned-evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/results/README.md"
+  },
+  {
+    "id": "ITER-003-SLICE-001",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md"
+  },
+  {
+    "id": "ITER-003-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "not-run",
+    "authority": "planned-verification",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/verification-matrix.md"
+  },
+  {
     "id": "ITERATION-INDEX",
     "kind": "iteration-index",
     "status": "current",
@@ -1203,6 +1297,20 @@
     "path": "docs/system/architecture/decisions/ADR-013-evidence-first-synchronous-answering.md"
   },
   {
+    "id": "SYS-ADR-014",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "application",
+      "knowledge",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/decisions/ADR-014-snapshot-first-world-model-answering.md"
+  },
+  {
     "id": "SYS-ADR-INDEX",
     "kind": "system-decision-index",
     "status": "current",
@@ -1432,6 +1540,29 @@
     "path": "docs/system/contracts/application/response-control.md"
   },
   {
+    "id": "SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/structure-view.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/world-model-answering.md"
+  },
+  {
     "id": "SYS-CONTRACT-INDEX",
     "kind": "system-contract-index",
     "status": "current",
@@ -1595,6 +1726,17 @@
       "DD-KNW-SNAPSHOT-PUBLICATION"
     ],
     "path": "docs/system/contracts/knowledge/snapshot-publication.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/knowledge/structure-model.md"
   },
   {
     "id": "SYS-CONTRACT-SOURCE-ARTIFACT",

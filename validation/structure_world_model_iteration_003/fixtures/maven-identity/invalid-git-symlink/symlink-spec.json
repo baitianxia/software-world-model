@@ -1,0 +1,6 @@
+{
+  "link_path": "linked-module",
+  "link_target": "target-module",
+  "required_git_mode": "120000",
+  "materialization": "CREATE_LINK_BEFORE_FREEZING_TEMPORARY_GIT_REVISION"
+}

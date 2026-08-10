@@ -1,0 +1,71 @@
+{
+  "canonicalization_ref": "MAVEN-REACTOR-CANONICALIZATION@1.0.0",
+  "text": {
+    "encoding": "UTF-8",
+    "unicode_normalization": "NFC",
+    "xml_value_whitespace": "TRIM_OUTER",
+    "case_policy": "PRESERVE_CASE",
+    "empty_or_control_character_policy": "REJECT"
+  },
+  "coordinates": {
+    "ga_key": [
+      "canonical_group_id",
+      "canonical_artifact_id"
+    ],
+    "gav_key": [
+      "canonical_group_id",
+      "canonical_artifact_id",
+      "canonical_exact_version"
+    ],
+    "version_range_policy": "REJECT",
+    "case_sensitive": true
+  },
+  "module_path": {
+    "input": "POM_LOCAL_RELATIVE_DIRECTORY",
+    "separator": "/",
+    "dot_segment_policy": "NORMALIZE",
+    "absolute_or_escape_root_policy": "REJECT",
+    "symlink_policy": "REJECT",
+    "target": "EXACT_REVISION_REGULAR_FILE_AT_DIRECTORY_POM_XML",
+    "duplicate_canonical_target_policy": "REJECT"
+  },
+  "reactor_parent": {
+    "omitted_relative_path": "../pom.xml",
+    "empty_relative_path": "EXTERNAL_PARENT_NO_CONTENT",
+    "local_parent_requirement": "CANONICAL_PATH_IN_REVISION_AND_DECLARED_GAV_MATCH",
+    "external_parent_content": "NEVER_READ"
+  },
+  "property_interpolation": {
+    "precedence": [
+      "CURRENT_POM_PROPERTIES",
+      "NEAREST_REACTOR_PARENT_PROPERTIES_TO_ROOT"
+    ],
+    "supported_project_aliases": [
+      "project.groupId",
+      "project.artifactId",
+      "project.version",
+      "pom.groupId",
+      "pom.artifactId",
+      "pom.version",
+      "project.parent.groupId",
+      "project.parent.artifactId",
+      "project.parent.version"
+    ],
+    "same_pom_duplicate_property_key_policy": "REJECT",
+    "reactor_parent_override_policy": "CURRENT_POM_WINS_THEN_NEAREST_REACTOR_PARENT_TO_ROOT",
+    "recursive_expansion_limit": 32,
+    "cycle_or_unresolved_policy": "REJECT_WHEN_REQUIRED_FOR_STRUCTURE"
+  },
+  "dependency_candidate_resolution": {
+    "first_key": "EXACT_CANONICAL_GA",
+    "ga_not_in_reactor_child_set": "EXCLUDE_WITH_REASON_VERSION_NOT_REQUIRED",
+    "ga_in_reactor_child_set": "REQUIRE_EXACT_RESOLVED_VERSION_AND_MATCH_TARGET_STATE_GAV",
+    "ga_equals_root_project": "EXCLUDE_ROOT_TARGET_OUTSIDE_PROFILE",
+    "duplicate_local_declaration_ga_policy": "REJECT",
+    "scope": "PRESERVE_DEFAULT_COMPILE",
+    "optional": "PRESERVE_DEFAULT_FALSE",
+    "supported_type": "JAR_OR_OMITTED",
+    "supported_classifier": "ABSENT",
+    "reactor_child_ga_with_unsupported_type_or_classifier": "REJECT_COMPLETE_COVERAGE"
+  }
+}

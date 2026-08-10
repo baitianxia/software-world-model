@@ -1,0 +1,189 @@
+{
+  "fixture_id": "maven-identity-anti-name-stitch@1",
+  "valid": {
+    "reactor_modules": [
+      "org.example.aggregate:libs-aggregator",
+      "org.example.shared:common-lib",
+      "org.example.legacy:common-lib",
+      "org.example.services:services-aggregator",
+      "org.example.services:billing"
+    ],
+    "contains_module_count": 5,
+    "root_project_internal_depends_on": [
+      {
+        "source": "org.example.root:structure-fixture",
+        "target": "org.example.shared:common-lib"
+      }
+    ],
+    "internal_depends_on": [
+      {
+        "source": "org.example.services:billing",
+        "target": "org.example.shared:common-lib"
+      }
+    ],
+    "forbidden_internal_edges": [
+      {
+        "source": "org.example.services:billing",
+        "target": "org.example.legacy:common-lib",
+        "reason": "direct dependency version 2.0.0 does not match reactor module version 1.0.0"
+      },
+      {
+        "source": "org.example.services:billing",
+        "target": "org.example.services:services-aggregator",
+        "reason": "Maven parent is not a direct dependency"
+      },
+      {
+        "source": "org.example.services:billing",
+        "target": "org.junit.jupiter:junit-jupiter-api",
+        "reason": "external dependency is outside the reactor"
+      }
+    ],
+    "billing_common_lib_answer": {
+      "source_ga": "org.example.services:billing",
+      "actual_target_ga": "org.example.shared:common-lib",
+      "other_same_artifact_ga": "org.example.legacy:common-lib",
+      "edge_to_other_exists": false
+    },
+    "root_dependency_management_answer": {
+      "direct_internal_edges": [
+        {
+          "source": "org.example.root:structure-fixture",
+          "target": "org.example.shared:common-lib"
+        }
+      ],
+      "dependency_management_forms_edge": false
+    }
+  },
+  "valid_parent_local_dependency": {
+    "reactor_modules": [
+      "org.example.inheritance:inheritance-lib",
+      "org.example.inheritance:dependency-parent",
+      "org.example.inheritance:plain-child",
+      "org.example.inheritance:override-child"
+    ],
+    "internal_depends_on": [
+      {
+        "source": "org.example.inheritance:dependency-parent",
+        "target": "org.example.inheritance:inheritance-lib"
+      },
+      {
+        "source": "org.example.inheritance:override-child",
+        "target": "org.example.inheritance:inheritance-lib"
+      }
+    ],
+    "forbidden_reattributed_edges": [
+      {
+        "source": "org.example.inheritance:plain-child",
+        "target": "org.example.inheritance:inheritance-lib",
+        "reason": "parent-local dependency is inherited by Maven but is not a child POM-local declaration"
+      }
+    ],
+    "property_override": {
+      "parent_value": "9.9.9",
+      "child_value": "1.0.0",
+      "resolved_dependency_gav": "org.example.inheritance:inheritance-lib:1.0.0"
+    }
+  },
+  "invalid_missing_module": {
+    "expected": "REJECT",
+    "expected_code": "MODULE_TARGET_MISSING",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_duplicate_ga": {
+    "duplicate": "org.example.dupe:same-module",
+    "expected": "REJECT",
+    "expected_code": "REACTOR_GA_AMBIGUOUS",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_same_ga_different_version": {
+    "duplicate_root": "org.example.dupe:same-root",
+    "versions": ["1.0.0", "2.0.0"],
+    "expected": "REJECT",
+    "expected_code": "REACTOR_GA_AMBIGUOUS",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_relevant_profile": {
+    "expected": "REJECT",
+    "expected_code": "RELEVANT_PROFILE_UNSUPPORTED",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_unresolved_property": {
+    "expected": "REJECT",
+    "expected_code": "REQUIRED_PROPERTY_UNRESOLVED",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_env_property": {
+    "expected": "REJECT",
+    "expected_code": "DISALLOWED_PROPERTY_SOURCE",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_version_range": {
+    "expected": "REJECT",
+    "expected_code": "VERSION_RANGE_UNSUPPORTED",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_external_parent_required": {
+    "reactor_target": "org.example.internal:external-parent-lib:1.0.0",
+    "required_expression": "${external.lib.version}",
+    "missing_source": "external parent content is disabled",
+    "expected": "REJECT",
+    "expected_code": "EXTERNAL_PARENT_REQUIRED",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_duplicate_dependency": {
+    "expected": "REJECT",
+    "expected_code": "DUPLICATE_LOCAL_DEPENDENCY_GA",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_property_cycle": {
+    "expected": "REJECT",
+    "expected_code": "PROPERTY_CYCLE",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_reactor_classifier": {
+    "expected": "REJECT",
+    "expected_code": "REACTOR_DEPENDENCY_SHAPE_UNSUPPORTED",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_module_path_escape": {
+    "declared_module_path": "../path-escape-target",
+    "expected": "REJECT",
+    "expected_code": "MODULE_PATH_ESCAPES_ROOT",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_duplicate_canonical_module": {
+    "declared_module_paths": [
+      "module-a",
+      "./module-a"
+    ],
+    "canonical_target": "module-a/pom.xml",
+    "expected": "REJECT",
+    "expected_code": "MODULE_CANONICAL_TARGET_DUPLICATE",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_git_symlink": {
+    "spec_path": "invalid-git-symlink/symlink-spec.json",
+    "declared_module_path": "linked-module",
+    "required_git_mode": "120000",
+    "expected": "REJECT",
+    "expected_code": "MODULE_PATH_SYMLINK_UNSUPPORTED",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_parent_relative_path_gav_mismatch": {
+    "declared_parent_gav": "org.example.parent:declared-parent:1.0.0",
+    "relative_path_target_gav": "org.example.parent:actual-parent:1.0.0",
+    "expected": "REJECT",
+    "expected_code": "LOCAL_PARENT_GAV_MISMATCH",
+    "current_must_remain_unchanged": true
+  },
+  "invalid_duplicate_property": {
+    "property_key": "lib.version",
+    "local_values": [
+      "1.0.0",
+      "2.0.0"
+    ],
+    "expected": "REJECT",
+    "expected_code": "DUPLICATE_POM_PROPERTY",
+    "current_must_remain_unchanged": true
+  }
+}

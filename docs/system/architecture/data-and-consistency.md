@@ -15,7 +15,7 @@ tests: [tests/test_foundation.py, tests/test_formal_knowledge.py, tests/test_man
 
 - 每个 Owner 只在自己的 Repository 和事务中写权威状态。
 - Knowledge Scope 是正式知识发布、并发控制和逻辑分片边界；不支持跨 Scope 原子发布。
-- Snapshot Publication 在一个事务中写入全部权威成员并移动 CURRENT；Snapshot 是完整状态，不是隐式 Delta。
+- Snapshot Publication 在一个事务中按显式 `ENRICH` 或 `REPLACE_COVERAGE` 写入完整权威成员并移动 CURRENT；Snapshot 是完整状态，不是隐式 Delta。Coverage 内替换不影响旧 Snapshot 或 Coverage 外成员。
 - 跨 Owner 用稳定命令、结果引用、幂等键和恢复协调，不使用分布式大事务。
 
 ## 不可变与恢复
@@ -24,6 +24,7 @@ tests: [tests/test_foundation.py, tests/test_formal_knowledge.py, tests/test_man
 - 可变关联通过 Revision 与 compare-and-set 更新；同一幂等键永久绑定同一输入摘要和已知结果。
 - Timeout 或连接中断只表示结果未知，不能写成失败或零消耗。
 - 当前正式知识存储为 append-only，物理清理和 Projection 均不属于当前权威路径。
+- Snapshot Read Bundle 是 committed Snapshot/ordered Read Set 的可验证精确读取副本，不是新权威或语义 Projection；可随时删除并从正式成员重建。隔离回答进程不挂载权威数据库或 Evidence Store。
 
 ## 跨边界引用
 

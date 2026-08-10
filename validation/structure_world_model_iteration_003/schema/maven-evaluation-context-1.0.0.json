@@ -1,0 +1,68 @@
+{
+  "context_ref": "MAVEN-EVALUATION-CONTEXT@1.0.0",
+  "model_subset": "REACTOR_BASE_MODEL_ONLY@1",
+  "active_profiles": [],
+  "profile_policy": "REJECT_RELEVANT_PROFILE_DECLARATIONS",
+  "relevant_profile_elements": [
+    "modules",
+    "groupId",
+    "artifactId",
+    "version",
+    "dependencies",
+    "dependencyManagement",
+    "properties_referenced_by_required_structure_fields"
+  ],
+  "user_properties": {},
+  "system_properties": {},
+  "environment_properties": {},
+  "settings_references": [],
+  "external_parent_resolution": "DISABLED",
+  "external_bom_resolution": "DISABLED",
+  "reactor_parent_resolution": "REACTOR_FILES_ONLY",
+  "property_resolution": "POM_AND_REACTOR_PARENT_PROPERTIES_ONLY",
+  "dependency_management_resolution": "CURRENT_POM_THEN_REACTOR_PARENT_CHAIN",
+  "dependency_declaration_inheritance": "POM_LOCAL_DECLARATIONS_ONLY",
+  "dependency_version_policy": "EXACT_RESOLVED_VERSION_ONLY",
+  "dependency_candidate_policy": {
+    "all_local_declarations_require_resolved_ga": true,
+    "ga_not_in_reactor_child_set": "EXCLUDE_WITH_REASON_WITHOUT_REQUIRING_VERSION",
+    "ga_in_reactor_child_set": "REQUIRE_EXACT_RESOLVED_VERSION_AND_MATCH_TARGET_GAV",
+    "ga_equals_root_project": "EXCLUDE_ROOT_TARGET_OUTSIDE_PROFILE",
+    "duplicate_local_declaration_ga": "REJECT",
+    "reactor_child_ga_nondefault_type_or_classifier": "FAIL_COMPLETE_COVERAGE",
+    "scope_and_optional": "PRESERVE_IN_FACT_STATE"
+  },
+  "version_range_policy": "REJECT",
+  "unresolved_required_value_policy": "FAIL_COMPLETE_COVERAGE",
+  "external_parent_declaration_policy": "ALLOW_ONLY_WHEN_REQUIRED_STRUCTURE_FIELDS_RESOLVE_WITHOUT_EXTERNAL_CONTENT",
+  "build_report_exclusions": {
+    "publication": "EVALUATOR_DIAGNOSTIC_ONLY_NOT_SNAPSHOT_KNOWLEDGE",
+    "record_fields": [
+      "consumer_pom_locator",
+      "declared_dependency_gav_expression",
+      "resolved_dependency_ga",
+      "resolved_dependency_version_or_null",
+      "matched_reactor_target_gav_or_null",
+      "decision",
+      "reason_code",
+      "evidence_references"
+    ],
+    "decision": "EXCLUDED",
+    "reason_codes": [
+      "GA_NOT_IN_REACTOR_CHILD_SET",
+      "ROOT_PROJECT_TARGET_OUTSIDE_PROFILE",
+      "REACTOR_TARGET_VERSION_MISMATCH"
+    ],
+    "answering_policy": "MUST_NOT_BE_QUERIED_AS_PUBLISHED_SNAPSHOT_KNOWLEDGE"
+  },
+  "required_structure_fields": [
+    "reactor_root_pom",
+    "recursive_module_paths",
+    "project_effective_group_id",
+    "project_artifact_id",
+    "project_effective_version",
+    "pom_local_dependency_declarations",
+    "local_dependency_resolved_ga",
+    "reactor_candidate_dependency_exact_resolved_gav"
+  ]
+}

@@ -1,0 +1,89 @@
+---
+id: ITER-003-SLICE-001
+kind: development-slice
+status: proposed
+authority: proposed-development
+owners: [engineering]
+depends_on: [ITER-003-PROPOSAL, SYS-ADR-014, SYS-ARCH-INVARIANTS, SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-OPS-LOCAL-BROWSER]
+code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services, src/software_world_model/infrastructure, src/software_world_model/interface]
+tests: [tests]
+iteration: ITER-003
+coding_input: false
+---
+
+# SLICE-001：Structure World Model 纵向闭环
+
+## Status and dependencies
+
+当前为 proposed，不授权产品编码。Manifest baseline 固定无产品代码变化的准备提交 P；用户授权后的治理提交 Q 和 G0 Result 分别绑定 P/Q，要求 `P..Q` 与 `Q..G0 Result` 均无产品代码差异，不要求执行 HEAD 等于 P。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
+
+## Current vs expected behavior
+
+当前 Formal Fact 把关系目标保存为字符串，查询不保留 subject；Entity ID 受 revision-bound Context/Evidence 影响；Publisher 无条件继承旧成员；浏览器 Evidence-first 主路径直接读源码。这些实现不能证明世界模型结构可稳定更新和复用。
+
+期望路径是：独立手动更新读取 exact Git → Maven Structure Candidate → Admission → `REPLACE_COVERAGE` Snapshot → Source-off Structure View → 浏览器 `WORLD_MODEL` 回答。提问只读固定 Snapshot，不触发前半段。
+
+## System contracts and invariants
+
+执行遵守 `INV-003`—`INV-015`，包括 `INV-011` 的逐问题完整性。关系必须使用 typed EntityRef；Root 与 State 分离；View 不创知识；世界模型与直接调查模式不混淆。
+
+## Interfaces and affected code
+
+- Knowledge Engine DTO/Admission/Query：Literal/Relation Fact、Root/State、endpoint closure。
+- SQLite Formal Repository/Publisher：无损 typed persistence、`ENRICH`/`REPLACE_COVERAGE`、exact Snapshot 与 diff。
+- Knowledge Update：`MAVEN_REACTOR_STRUCTURE@1` builder、完整 Coverage、独立手动命令。
+- Structure View/Application：受控 entity candidates、模块、边、路径、diff、关系 modality、Support Map、Entity Resolution/View Limitation；Knowledge Use 才能按 Requirement 形成 Knowledge Gap。
+- HTTP/Browser：显式模式、更新操作、Snapshot/View 元数据和可点击引用。
+- Validation：名称反例、mall A→B→A、Source-off、直接调查对照与重复真实模型运行。
+
+## Compatibility, data and security boundaries
+
+旧 Schema、Scope、Snapshot 和 Evidence-first 接口保持可读；本轮不迁移或改写历史。Structure Profile 建立新 Scope并执行 INITIAL adoption。Source 只在 Update 或显式 Direct Investigation 中可用；Snapshot query/answer 进程只挂载无 Evidence payload 的 exact Snapshot Read Bundle，并注入调用即失败的 Source Provider。含 Evidence payload 的权威/旧数据库和 Evidence Store 均不得挂载。源码片段、Evidence excerpt 或由其形成的结构结果只有在首次外部 CE/模型分派前获得本轮明确披露授权后才可发给外部 Provider。
+
+## Blocking development gates
+
+### G0 — 冻结输入
+
+在产品代码前运行并保存 `tests.test_iteration_003_fixture` 与 `tests.test_iteration_003_validation_assets`，核对已提交的防名称/GAV 拼接 Maven fixture、exact Schema/Evaluation Context/Canonicalization digest、mall Oracle、closed CE suite、相互隔离的 Product input/evaluator suites、同模型 Direct Source 与成熟 Codex Source Agent protocols、变形生成器的确定性/隔离、调用/时延边界和失败保存位置；Maven、冻结的成熟 Agent CLI 或任一必需工具缺失/漂移必须阻断，不能 skip-pass。含旧 Snapshot 的兼容性 fixture 已由 ITER-002 baseline 生成并冻结；首次持久化修改前必须再次核对其 generation commit、数据库/report digest 和人工查询结果。人工可查看物是 fixture POM、三个 Definition JSON、Oracle、问题输入/评测、两条 Agent 对照协议、旧 Snapshot 报告、测试原始输出与 Verification Matrix。
+
+授权治理提交 Q 完成后运行 V-001，并写 `ITER-003-RESULT-G0` 绑定 Q、全部输入 digest 和人工核对结论。G0 PASS 提交前禁止任何产品代码修改。
+
+### G1 — Knowledge Kernel
+
+实现 typed Relation/Literal Fact、稳定 Entity/Fact Root、State、endpoint Admission 与 `REPLACE_COVERAGE`。`ENRICH` 对已有 Root 的不同 State 必须拒绝；Coverage ownership 本轮禁止重叠。运行 A→B→A 和歧义/悬空/重叠反例。人工可查看 CLI 报告必须逐行展示 Snapshot ID、revision、Entity Root/State、source/predicate/target、Fact Root/State、Evidence locator、Coverage Root/State、每条依赖声明的 resolved GAV/profile exclusion、删除项和旧 Snapshot 查询；exclusion 报告不得作为 Source-off 答案知识使用。
+
+G1 不通过，禁止实现 Structure View、浏览器和模型答案。
+
+### G2 — Source-off Snapshot/View
+
+完成构建后关闭更新进程，为 A1/B/A2 生成并机械验证不含 Evidence payload 的 exact Snapshot Read Bundle。把产品 package 与这些 Bundle 复制到独立临时回答目录；目标 Git 仓库、原工作树、权威/旧数据库和 Evidence Store 均不挂载且路径不可见。重启读取进程，其文件 allowlist 只有 package 与 Bundle，且 G2 网络 namespace 无任何出站 route；Source Provider、Git、Evidence payload、网络和越界 `open()` 均调用即失败。按 exact A1/B/A2 Snapshot 查询 entity candidates、模块、全部简单路径、diff 和历史状态；同名 `common-lib` 必须返回两个 typed candidates，只有 full GA 或 exact Ref 才能唯一绑定。结构结果密封后，另一个只挂载 Evidence Store、没有出站网络、模型/Query/Update/回传端口的 Citation Projector 进程，只按 Result allowlist 读取自包含 observation 并输出浏览器展示。Source、Git、Evidence-payload-in-answer、权威 DB/Evidence Store、越界 file Operation 与网络 Operation 必须均为 0；显式探测 Source remote、任意公网、DNS、Answer→Projector 必须失败并审计。Bundle 必须证明 payload 字段/表为 0，查询不得新建 Snapshot。保存两个进程的 mount/allowlist、网络 policy/连接审计、Bundle manifest/digest、JSON 与文本报告；A2 表示 B 后再次对 source revision A 执行 replacement 得到的新 Snapshot，不是第三个 revision。
+
+G2 不通过，禁止实现浏览器模型回答。
+
+### G3a — Offline answer-chain implementation
+
+在不分派任何外部 Provider 且无任何出站网络 route 的条件下实现 World Model Answering 和评测页面投影，以确定性 test strategy 完整走通 `Requirement Revision → Needs/Joint Constraints → candidate resolution → Query Plan → Query Result → Need Assessments → Draft → Review → Authorization → Delivery`。补齐 Need 遗漏、直接伪造 EntityRef、0/N candidate、跨 Session candidate、tampered Query Result、wrong Snapshot/Read Set、生成与审核同一 invocation、Evidence payload/网络读取和无授权 Delivery 反例，全部失败关闭。形成 clean exact checkpoint 与 `ITER-003-RESULT-G3A` 人工 Result 后，才能选择 exact Provider/Adapter/Model、Provider scheme/host/port/path、默认拒绝的 Model Egress Gateway policy，取得披露确认和 Conformance，并对该 checkpoint 运行 closed Capability Evaluation。全部 Case PASS、FAIL/UNKNOWN 为零且 Result 为 PASS/VALID 后，必须先按 G0 冻结协议完成并密封同模型 Direct Source 与成熟 Codex Source Agent 两条 baseline，随后才可开始 G3b。
+
+### G3b — Evaluation-only browser model run
+
+只有 World Model Capability Result 对 G3a exact checkpoint 为 PASS/VALID，且同模型 Direct Source 与成熟 Codex Source Agent 的全部 baseline 已按冻结协议密封后，才在与 G2 同级的无仓库隔离环境分派真实模型。通信白名单固定为 `Browser→Answer`、`Browser→Projector`、`Answer→exact Model Egress Gateway`、`Gateway→Manifest exact Provider endpoint`；Answer 的其他出站与 `Answer→Projector`、Projector 的全部出站都由 OS/network namespace 拒绝并审计。页面必须显示永久 `EVALUATION_ONLY` 水印、`WORLD_MODEL`、commit、Snapshot/Read Set、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact/Evidence 引用、A/B diff 和完整权威链。问题请求不得调用 Update、Direct Investigation 或 Evidence payload；点击引用只走浏览器单独请求、不能回流答案进程的 Citation Projector。连格式修正总调用最多 5 次，未通过审核或超限即失败，不交付降级答案，不需要也不产生 Product Activation。
+
+### G4 — Human and product acceptance
+
+人工在 `EVALUATION_ONLY` 真实页面逐题核对五个问题、exact 措辞变体、fixture 不同标识、运行时随机身份与拓扑图和一个应返回 Knowledge Gap 的“为什么”问题，点击引用、切换 A/B、执行零问题/零 Session 的独立更新并确认旧页面 Session 不漂移。每题至少五次且包含冷启动，保存全部成功与失败。Structure Coverage 支持的问题与 G3b 前已密封的两条源码 Agent baseline 逐题比较：同 exact Provider/Adapter/Model 的 controlled Direct 用于质量与性能，成熟 Codex Agent 用于质量；世界模型重大错误为零，完整性不得低于两者中更强者。unsupported why 只验证诚实 Gap，不要求追平可回源的 Direct Investigation。请求时延统一从 HTTP request received 到 terminal result persisted，冷启动另从 process start 计量。世界模型首问请求 P95 不超过 controlled Direct 1.5 倍，重复已建模问题请求 P95 不超过 0.5 倍。本轮只形成 Product Validation 证据，Production/本机 Activation 仍为 NOT EXECUTED。
+
+## Anti-name-stitch fixture oracle
+
+fixture 必须包含 nested module、目录路径与 artifactId 不同、两个 `artifactId=common-lib` 但 groupId 分别为 `org.example.shared` 与 `org.example.legacy`，以及声明 shared exact version、legacy 错误 version 和外部依赖的 billing 模块。只允许 `billing → org.example.shared:common-lib`；不得按 GA 把 legacy v2 dependency 连到 reactor legacy v1。Maven parent、`dependencyManagement` 和外部依赖均不形成内部边；重复 effective GA 或 missing module target 必须拒绝发布且 CURRENT 不动。
+
+## Open questions and implementation risks
+
+没有允许实现自行选择的架构分支。自动更新触发、其他构建系统、传递依赖和跨 Schema continuity 明确延后。实现若发现 Maven effective model 无法在本轮边界内确定，必须登记 Finding 并停止相应 Coverage，不得用字符串启发式通过。
+
+## Acceptance scenarios
+
+Verification Matrix V-001 至 V-013 全部满足且人工内容核对完成，才能接受本 Slice。每个 G0/G1/G2/G3a/G3b/G4 都必须有独立 Result，绑定 exact checkpoint、原始证据路径和人工 PASS；上一 Gate Result 未提交为 PASS，禁止修改下一 Gate 的产品代码。单元测试通过但没有 Source-off 报告或浏览器可核对结果不算完成。
+
+## Findings
+
+实现发现登记在本轮 [Findings](../findings/README.md)，并按[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

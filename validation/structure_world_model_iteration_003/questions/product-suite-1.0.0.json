@@ -1,0 +1,213 @@
+{
+  "suite_ref": "ITER-003-WORLD-MODEL-PRODUCT-SUITE@1.0.0",
+  "mode": "WORLD_MODEL",
+  "response_language": "zh-CN",
+  "product_input": {
+    "suite_ref": "ITER-003-WORLD-MODEL-PRODUCT-INPUT-SUITE@1.0.0",
+    "path": "validation/structure_world_model_iteration_003/questions/product-input-suite-1.0.0.json",
+    "digest": "sha256:15bb9a72b68d69f8077ba95bd87b4c54861b0bc08e26ed38fb54221d71d1bfd4"
+  },
+  "oracle_registry": {
+    "MALL-MAVEN-STRUCTURE@1.0.0": {
+      "path": "validation/structure_world_model_iteration_003/oracles/mall-structure-1.0.0.json",
+      "digest": "sha256:412d2e0381ab46cfc84c95e9769f1227733ac2a523487119a15130bcca74b625"
+    },
+    "maven-identity-anti-name-stitch@1": {
+      "path": "validation/structure_world_model_iteration_003/fixtures/maven-identity/oracle.json",
+      "digest": "sha256:b02e4414f2c03fb38da433b343ddeebb8a381a23dad3e0ba3e89792bc468b268"
+    }
+  },
+  "snapshot_bindings": {
+    "ORDERED_A_B": {
+      "source_kind": "LOCAL_GIT",
+      "repository_path": "validation-projects/mall",
+      "reactor_root": "pom.xml",
+      "ordered_revisions": [
+        {
+          "label": "A",
+          "revision": "a50870fba92d59021f07cacbe947442b1871e78f",
+          "tree": "be7748004ce90f9260936124476f1b385e1cc61f"
+        },
+        {
+          "label": "B",
+          "revision": "cfaadb201bb7aa6425de069fab5e57bf8b5048f3",
+          "tree": "1d84b1d4dd9861f2678b21d92f6202cbce5786ac"
+        }
+      ]
+    },
+    "EXACT_B": {
+      "source_kind": "LOCAL_GIT",
+      "repository_path": "validation-projects/mall",
+      "reactor_root": "pom.xml",
+      "revision": "cfaadb201bb7aa6425de069fab5e57bf8b5048f3",
+      "tree": "1d84b1d4dd9861f2678b21d92f6202cbce5786ac"
+    },
+    "EXACT_FIXTURE_VALID": {
+      "source_kind": "FROZEN_DIRECTORY_TREE",
+      "fixture_ref": "maven-identity-anti-name-stitch@1",
+      "fixture_digest": "sha256:418c223c43ee969b67370f664b8df04b10502553b5a138da09869284736f41d1",
+      "repository_path": "validation/structure_world_model_iteration_003/fixtures/maven-identity/valid",
+      "source_tree_digest": "sha256:591d68589f7b897ebbf1539f651c0579000b246a67c290f89bf14f6f5ca746d8",
+      "reactor_root": "pom.xml"
+    }
+  },
+  "isolation_contract": {
+    "delivery": "EVALUATOR_LOADS_ONE_INPUT_CASE_AND_RESOLVES_SELECTOR_BEFORE_PRODUCT_INVOCATION",
+    "product_payload_fields": [
+      "case_id",
+      "question_variant",
+      "resolved_snapshot_ids"
+    ],
+    "product_read_allowlist": [
+      "PRODUCT_RUNTIME",
+      "RESOLVED_SNAPSHOT_READ_BUNDLES_ONLY"
+    ],
+    "evaluator_only_paths": [
+      "validation/structure_world_model_iteration_003/questions/product-suite-1.0.0.json",
+      "validation/structure_world_model_iteration_003/oracles",
+      "validation/structure_world_model_iteration_003/fixtures/maven-identity/oracle.json",
+      "validation/structure_world_model_iteration_003/metamorphic"
+    ],
+    "forbidden_product_payload_fields": [
+      "snapshot_selector",
+      "oracle_assertions",
+      "expected_result",
+      "oracle_ref",
+      "json_pointer",
+      "seed",
+      "seed_input_digest",
+      "oracle_sha256"
+    ],
+    "enforcement": "OS_LEVEL_READ_ALLOWLIST_AND_PAYLOAD_PROJECTION_REQUIRED",
+    "audit": "RECORD_PRODUCT_PAYLOAD_DIGEST_AND_ZERO_READS_OUTSIDE_ALLOWLIST"
+  },
+  "case_expectations": [
+    {
+      "case_id": "WM-PRODUCT-001",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/revision_a_oracle/reactor_child_modules",
+          "expected_type": "array"
+        },
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/revision_b_oracle/reactor_child_modules",
+          "expected_type": "array"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-002",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/revision_a_oracle/admin_to_common_all_simple_paths",
+          "expected_type": "array"
+        },
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/revision_b_oracle/admin_to_common_all_simple_paths",
+          "expected_type": "array"
+        },
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/a_to_b/added_admin_to_common_paths",
+          "expected_type": "array"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-003",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/a_to_b",
+          "expected_type": "object"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-004",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/revision_b_oracle/root_locally_declares_security_dependency",
+          "expected_type": "boolean"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-005",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "MALL-MAVEN-STRUCTURE@1.0.0",
+          "json_pointer": "/revision_b_oracle/admin_to_search_all_simple_paths",
+          "expected_type": "array"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-006",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "maven-identity-anti-name-stitch@1",
+          "json_pointer": "/valid/billing_common_lib_answer",
+          "expected_type": "object"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-007",
+      "direct_parity": true,
+      "oracle_assertions": [
+        {
+          "oracle_ref": "maven-identity-anti-name-stitch@1",
+          "json_pointer": "/valid/root_dependency_management_answer",
+          "expected_type": "object"
+        }
+      ]
+    },
+    {
+      "case_id": "WM-PRODUCT-008-GAP",
+      "direct_parity": false,
+      "expected_result": {
+        "status": "KNOWLEDGE_GAP",
+        "reason_code": "CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE"
+      }
+    }
+  ],
+  "runtime_metamorphic": {
+    "generator_ref": "MAVEN-STRUCTURE-METAMORPHIC-GENERATOR@1.0.0",
+    "seed_timing": "GENERATE_AFTER_PRODUCT_PROCESS_AND_STRATEGY_LOAD",
+    "cli": "--product-directory <product-only-empty-dir> --evaluator-directory <evaluator-only-empty-dir> --seed <evaluator-secret>",
+    "physical_isolation": "DIRECTORIES_MUST_BE_DISJOINT_PRODUCT_PROCESS_CAN_READ_ONLY_PRODUCT_DIRECTORY",
+    "seed_recording": [
+      "seed",
+      "seed_input_digest",
+      "revision_a",
+      "tree_a",
+      "revision_b",
+      "tree_b",
+      "generation_environment.python_implementation",
+      "generation_environment.python_version",
+      "generation_environment.git_version",
+      "generation_environment.git_object_format",
+      "generation_environment.generator_sha256",
+      "oracle_sha256"
+    ],
+    "independence": "GENERATOR_MUST_NOT_IMPORT_PRODUCT_PARSER_QUERY_OR_MODEL_CODE",
+    "question_templates": [
+      "列出 A/B 的全部 child module GA，并说明新增节点。",
+      "列出 oracle.question_selectors.path_source_ga 到 path_target_ga 在 A/B 的全部简单路径。",
+      "说明 A 到 B 的节点、边、path、label 和 version State 变化，且不把 State 变化误判为新 Root。",
+      "区分 oracle.question_selectors.same_artifact_distinct_ga 中的两个同名 artifact。"
+    ]
+  }
+}

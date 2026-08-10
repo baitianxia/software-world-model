@@ -1,0 +1,164 @@
+{
+  "suite_ref": "ITER-003-WORLD-MODEL-CAPABILITY-SUITE@1.0.0",
+  "purpose": "qualify exact world-model requirement, entity resolution, planning, drafting and review strategy before product cases",
+  "must_not_include_product_case_ids": [
+    "WM-PRODUCT-001",
+    "WM-PRODUCT-002",
+    "WM-PRODUCT-003",
+    "WM-PRODUCT-004",
+    "WM-PRODUCT-005",
+    "WM-PRODUCT-006",
+    "WM-PRODUCT-007",
+    "WM-PRODUCT-008-GAP"
+  ],
+  "closed_evaluation_protocol": {
+    "protocol_ref": "ITER-003-WORLD-MODEL-CE-CLOSED@1.0.0",
+    "subject_binding": "EXACT_G3A_COMMIT_PROVIDER_ADAPTER_MODEL_STRATEGY_PROMPT_TOOL_AND_CONFIG_DIGESTS",
+    "evaluator_input": "SEALED_CASE_INPUT_AND_SEALED_NORMALIZED_AUTHORITY_CHAIN_ONLY",
+    "evaluator_visibility": "NO_PRODUCT_SUITE_ORACLE_REPOSITORY_SOURCE_EVIDENCE_PAYLOAD_OR_PROVIDER",
+    "evaluator_independence": "SEPARATE_DETERMINISTIC_PROCESS_MUST_NOT_IMPORT_EVALUATED_PLANNER_DRAFTER_OR_REVIEWER",
+    "projection_rule": "PROJECT_ONLY_CASE_PROJECTION_FIELDS_THEN_REQUIRE_EXACT_JSON_EQUALITY_WITH_EXPECTED_NORMALIZED_RESULT",
+    "case_rule": "PASS_IFF_PROJECTION_EXACT_AND_NO_FORBIDDEN_EVENT_OTHERWISE_FAIL",
+    "result_rule": "CLOSED_PASS_IFF_EVERY_REQUIRED_CASE_PASS_AND_FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO",
+    "unknown_rule": "EXECUTION_OR_EVALUATOR_UNKNOWN_BLOCKS_QUALIFICATION",
+    "required_case_ids": [
+      "WM-CE-REQ-001",
+      "WM-CE-PLAN-002",
+      "WM-CE-NEGATIVE-003",
+      "WM-CE-GAP-004",
+      "WM-CE-DIFF-005",
+      "WM-CE-REVIEW-006",
+      "WM-CE-RESOLVE-007"
+    ],
+    "required_evidence": [
+      "suite_digest",
+      "case_input_digest",
+      "normalized_result_digest",
+      "projection_digest",
+      "evaluator_implementation_digest",
+      "case_status",
+      "closed_result_status"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "WM-CE-REQ-001",
+      "capability": "REQUIREMENT_FIDELITY",
+      "input": "比较 snapshot_left 与 snapshot_right：列出所有组件，并分别说明 alpha 到 omega 的全部简单路径与新增路径。",
+      "projection_fields": ["need_keys", "joint_constraints"],
+      "expected_normalized_result": {
+        "need_keys": ["inventory_left", "inventory_right", "paths_left", "paths_right", "new_paths"],
+        "joint_constraints": [
+          {
+            "kind": "ORDERED_READ_SET",
+            "base": "snapshot_left",
+            "target": "snapshot_right"
+          }
+        ]
+      },
+      "forbidden_events": ["NEED_OMITTED", "ORDER_REVERSED", "REQUIREMENT_WEAKENED"]
+    },
+    {
+      "case_id": "WM-CE-PLAN-002",
+      "capability": "GENERIC_QUERY_PLANNING",
+      "available_operations": ["inventory", "all_simple_paths", "ordered_snapshot_diff"],
+      "input": {
+        "read_set": ["snapshot_left", "snapshot_right"],
+        "source_entity_ref": "entity_alpha_00000000000000000000000000000001",
+        "target_entity_ref": "entity_omega_00000000000000000000000000000002",
+        "needs": ["inventory_left", "inventory_right", "paths_left", "paths_right", "new_paths"]
+      },
+      "projection_fields": ["operations"],
+      "expected_normalized_result": {
+        "operations": [
+          {"operation": "inventory", "snapshot": "snapshot_left"},
+          {"operation": "inventory", "snapshot": "snapshot_right"},
+          {"operation": "all_simple_paths", "snapshot": "snapshot_left", "source_ref": "entity_alpha_00000000000000000000000000000001", "target_ref": "entity_omega_00000000000000000000000000000002"},
+          {"operation": "all_simple_paths", "snapshot": "snapshot_right", "source_ref": "entity_alpha_00000000000000000000000000000001", "target_ref": "entity_omega_00000000000000000000000000000002"},
+          {"operation": "ordered_snapshot_diff", "base": "snapshot_left", "target": "snapshot_right"}
+        ]
+      },
+      "forbidden_events": ["SOURCE_ACCESS", "EVIDENCE_PAYLOAD_ACCESS", "PROJECT_NAME_BRANCH", "UNREGISTERED_OPERATION"]
+    },
+    {
+      "case_id": "WM-CE-NEGATIVE-003",
+      "capability": "COMPLETE_NEGATIVE_ANSWER",
+      "input": {
+        "coverage": "COMPLETE",
+        "query_result": {"all_simple_paths": [], "pagination_complete": true},
+        "modeled_relation": "relation_alpha@1"
+      },
+      "projection_fields": ["need_status", "claim_scope"],
+      "expected_normalized_result": {
+        "need_status": "SATISFIED_SUPPORTED_NEGATIVE",
+        "claim_scope": "NO_PATH_IN_RELATION_ALPHA_FOR_EXACT_READ_SET"
+      },
+      "forbidden_events": ["GLOBAL_ABSENCE_CLAIM", "COVERAGE_OMITTED"]
+    },
+    {
+      "case_id": "WM-CE-GAP-004",
+      "capability": "VIEW_LIMITATION_AND_KNOWLEDGE_GAP",
+      "input": {
+        "coverage": "PARTIAL",
+        "query_result": {"all_simple_paths": [], "pagination_complete": true},
+        "need": "path_alpha_to_omega"
+      },
+      "projection_fields": ["view_result", "need_assessment"],
+      "expected_normalized_result": {
+        "view_result": {"status": "LIMITED", "code": "COVERAGE_PARTIAL", "owner": "STRUCTURE_VIEW"},
+        "need_assessment": {"status": "KNOWLEDGE_GAP", "code": "INSUFFICIENT_COMPLETE_COVERAGE", "owner": "KNOWLEDGE_USE"}
+      },
+      "forbidden_events": ["SUPPORTED_NEGATIVE", "VIEW_CREATED_KNOWLEDGE_GAP", "LIMITATION_HIDDEN"]
+    },
+    {
+      "case_id": "WM-CE-DIFF-005",
+      "capability": "ORDERED_DIFF_EXPRESSION",
+      "input": {
+        "base": "snapshot_z",
+        "target": "snapshot_a",
+        "base_added": [],
+        "target_added": ["entity_delta_00000000000000000000000000000003"]
+      },
+      "projection_fields": ["direction", "added_entities"],
+      "expected_normalized_result": {
+        "direction": {"base": "snapshot_z", "target": "snapshot_a"},
+        "added_entities": ["entity_delta_00000000000000000000000000000003"]
+      },
+      "forbidden_events": ["SNAPSHOT_ID_SORT_DIRECTION", "BASE_TARGET_REVERSED"]
+    },
+    {
+      "case_id": "WM-CE-REVIEW-006",
+      "capability": "INDEPENDENT_ANSWER_REVIEW",
+      "input": {
+        "draft_faults": ["omitted_need", "wrong_snapshot_reference", "unsupported_reason", "evidence_excerpt_expansion"]
+      },
+      "projection_fields": ["decision", "finding_codes"],
+      "expected_normalized_result": {
+        "decision": "REJECT",
+        "finding_codes": ["NEED_OMITTED", "WRONG_READ_SET", "UNSUPPORTED_REASON", "EVIDENCE_PAYLOAD_EXPANSION"]
+      },
+      "forbidden_events": ["SELF_REVIEW", "FAULT_OMITTED", "APPROVED_WITH_FINDING"]
+    },
+    {
+      "case_id": "WM-CE-RESOLVE-007",
+      "capability": "ENTITY_CANDIDATE_RESOLUTION",
+      "input": {
+        "mention": "common-lib",
+        "candidate_refs": [
+          "entity_common_group_a_00000000000000000000000001",
+          "entity_common_group_b_00000000000000000000000002"
+        ]
+      },
+      "projection_fields": ["resolution_status", "candidate_refs", "next_operation_allowed"],
+      "expected_normalized_result": {
+        "resolution_status": "AMBIGUOUS",
+        "candidate_refs": [
+          "entity_common_group_a_00000000000000000000000001",
+          "entity_common_group_b_00000000000000000000000002"
+        ],
+        "next_operation_allowed": false
+      },
+      "forbidden_events": ["MODEL_SELECTED_CANDIDATE", "LABEL_STITCH", "TYPED_OPERATION_WITH_AMBIGUOUS_REF"]
+    }
+  ]
+}
