@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [application]
 depends_on: [SYS-ADR-005, SYS-ADR-014, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE]
-code: [src/software_world_model/application_services, src/software_world_model/interface]
-tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py]
+code: [src/software_world_model/application_services/structure_view.py, src/software_world_model/application_services/citation_projection.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface/structure_view_cli.py, src/software_world_model/interface/citation_projector_cli.py]
+tests: [tests/test_knowledge_use.py, tests/test_structure_view.py, tests/test_structure_view_cli.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_integration.py, tests/test_iteration_003_g2_isolation.py, tests/test_browser_chat_interface.py]
 ---
 
 # Structure View
@@ -36,9 +36,10 @@ Structure View 把 exact Snapshot 中已经发布的 Structure Model 组织为�
 3. View `READY` 只表示所请求投影可读；Coverage 不足时必须返回 View Limitation。只有 Knowledge Use 把该结果与 exact Requirement/Need 对照后，才能形成 Knowledge Gap；View 不能证明任意软件结构问题已充分。
 4. 同一输入产生可验证的稳定结果；缓存可以删除和重建，不能成为第二权威。
 5. 世界模型回答只能引用当前 View 输出及其 Support Map；需要源码调查时必须结束当前模式并由用户显式启动独立 `DIRECT_INVESTIGATION`。
-6. 结构查询、路径、diff、规划、生成和审核只能读取 Read Bundle 中的 Entity/Fact State、Coverage 及 Evidence ref/locator/digest，禁止读取或重解析 Evidence excerpt/POM bytes。引用展示由 Query Result 密封后的独立 Citation Projector 进程从未挂载给答案进程的 Evidence Store 读取 Knowledge Engine 已保存的自包含 observation；不得重新访问 Source/工作树，也不得把 excerpt 回流到 Query Result、模型或审核。Artifact Reference 只用于 provenance 身份。
-7. 输出必须显式携带关系的 Profile 与 modality。本版 `CONTAINS_MODULE` 是 software system 对递归 child module 的扁平成员关系，不表达 Maven aggregator/parent 层级；`DEPENDS_ON` 是 POM 本地声明的直接内部依赖，不是 effective、传递、compile 或 runtime 依赖图。
-8. 需要 EntityRef 的 operation 只接受用户输入中已有的 exact Ref，或同一 Read Session 中已密封的唯一 `entity_candidates` 结果。模型直接生成、名称哈希、跨 Session candidate 或歧义候选均拒绝。
+6. 结构查询、路径、diff、规划、生成和审核只能读取 Read Bundle 中的 Entity/Fact State、Coverage 及 Evidence ref/locator/digest，禁止读取或重解析 Evidence excerpt/POM bytes。View/Query Result 从 Support Map 机械派生并密封 typed Evidence allowlist；trusted broker 只能按该 allowlist 从 Knowledge owner 重读 exact 自包含 observation，生成 Result-scoped、manifest-bound、可删除的 Citation Store。独立 Citation Projector 只读 Result seal 与该 Store，不直接挂载权威数据库或完整 Evidence Store；不得重新访问 Source/工作树，也不得把 excerpt 回流到 Query Result、模型或审核。Artifact Reference 只用于 provenance 身份。
+7. Citation Store 与展示 Projection 都不拥有 Evidence、Fact、Snapshot 或 Result；缺失、额外、重复、换序、跨 Result、metadata/正文/file/manifest digest 篡改、symlink 或路径逃逸必须失败关闭。Projection 只能进入浏览器或隔离评测展示 Sink；Broker 与 Projector 都不能成为 answer worker 的正文输入 Port。
+8. 输出必须显式携带关系的 Profile 与 modality。本版 `CONTAINS_MODULE` 是 software system 对递归 child module 的扁平成员关系，不表达 Maven aggregator/parent 层级；`DEPENDS_ON` 是 POM 本地声明的直接内部依赖，不是 effective、传递、compile 或 runtime 依赖图。
+9. 需要 EntityRef 的 operation 只接受用户输入中已有的 exact Ref，或同一 Read Session 中已密封的唯一 `entity_candidates` 结果。模型直接生成、名称哈希、跨 Session candidate 或歧义候选均拒绝。
 
 ## Failure and implementation boundary
 

@@ -397,6 +397,39 @@
       "tests/test_maven_structure_update.py"
     ]
   },
+  "FINDING-003-009": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-009.md",
+    "code": [
+      "src/software_world_model/application_services/citation_projection.py",
+      "src/software_world_model/infrastructure/file_citation_observation_store.py",
+      "src/software_world_model/interface/structure_view_cli.py",
+      "src/software_world_model/interface/citation_projector_cli.py",
+      "validation/structure_world_model_iteration_003/isolation/answer_workload.py",
+      "validation/structure_world_model_iteration_003/isolation/projector_workload.py"
+    ],
+    "tests": [
+      "tests/test_structure_view.py",
+      "tests/test_structure_view_cli.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_integration.py",
+      "tests/test_iteration_003_g2_isolation.py"
+    ]
+  },
+  "FINDING-003-010": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-010.md",
+    "code": [
+      "validation/structure_world_model_iteration_003/isolation/run_isolation.py",
+      "validation/structure_world_model_iteration_003/isolation/probe_worker.py",
+      "validation/structure_world_model_iteration_003/isolation/workload_worker.py",
+      "validation/structure_world_model_iteration_003/isolation/answer_workload.py",
+      "validation/structure_world_model_iteration_003/isolation/projector_workload.py",
+      "validation/structure_world_model_iteration_003/isolation/answer.sb",
+      "validation/structure_world_model_iteration_003/isolation/projector.sb"
+    ],
+    "tests": [
+      "tests/test_iteration_003_g2_isolation.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -734,7 +767,11 @@
     ],
     "tests": [
       "tests/test_foundation.py",
-      "tests/test_interface_runtime.py"
+      "tests/test_interface_runtime.py",
+      "tests/test_structure_read_bundle.py",
+      "tests/test_structure_view.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_isolation.py"
     ]
   },
   "SYS-ARCH-CONSISTENCY": {
@@ -751,12 +788,25 @@
   "SYS-ARCH-DEPLOYMENT": {
     "path": "docs/system/architecture/deployment.md",
     "code": [
+      "src/software_world_model/application_services/structure_read_bundle.py",
+      "src/software_world_model/application_services/structure_view.py",
+      "src/software_world_model/application_services/citation_projection.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface/http_api.py",
-      "src/software_world_model/infrastructure"
+      "src/software_world_model/interface/structure_view_cli.py",
+      "src/software_world_model/interface/citation_projector_cli.py",
+      "validation/structure_world_model_iteration_003/isolation"
     ],
     "tests": [
       "tests/test_browser_chat_interface.py",
-      "tests/test_interface_runtime.py"
+      "tests/test_interface_runtime.py",
+      "tests/test_structure_read_bundle.py",
+      "tests/test_structure_view.py",
+      "tests/test_structure_view_cli.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_integration.py",
+      "tests/test_iteration_003_g2_isolation.py"
     ]
   },
   "SYS-ARCH-DOMAIN": {
@@ -886,8 +936,11 @@
       "src/software_world_model/application_services/knowledge_update.py",
       "src/software_world_model/application_services/maven_structure.py",
       "src/software_world_model/application_services/maven_structure_update.py",
+      "src/software_world_model/application_services/structure_read_bundle.py",
       "src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py",
       "src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/interface/cli.py",
       "src/software_world_model/interface/runtime.py",
       "src/software_world_model/interface/presenters.py"
@@ -898,7 +951,9 @@
       "tests/test_maven_structure_update.py",
       "tests/test_maven_structure_update_authority.py",
       "tests/test_maven_structure_cli.py",
-      "tests/test_iteration_003_g1_integration.py"
+      "tests/test_structure_read_bundle.py",
+      "tests/test_iteration_003_g1_integration.py",
+      "tests/test_iteration_003_g2_integration.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE": {
@@ -906,8 +961,11 @@
     "code": [
       "src/software_world_model/application_services/knowledge_use.py",
       "src/software_world_model/application_services/structure_read_session.py",
+      "src/software_world_model/application_services/structure_read_bundle.py",
       "src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/interface/runtime.py",
       "src/software_world_model/interface/cli.py",
       "src/software_world_model/interface/presenters.py"
@@ -916,7 +974,9 @@
       "tests/test_knowledge_use.py",
       "tests/test_natural_task.py",
       "tests/test_structure_read_session.py",
-      "tests/test_iteration_003_g1_integration.py"
+      "tests/test_structure_read_bundle.py",
+      "tests/test_iteration_003_g1_integration.py",
+      "tests/test_iteration_003_g2_integration.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-MANAGEMENT": {
@@ -945,11 +1005,20 @@
   "SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW": {
     "path": "docs/system/contracts/application/structure-view.md",
     "code": [
-      "src/software_world_model/application_services",
-      "src/software_world_model/interface"
+      "src/software_world_model/application_services/structure_view.py",
+      "src/software_world_model/application_services/citation_projection.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/infrastructure/file_citation_observation_store.py",
+      "src/software_world_model/interface/structure_view_cli.py",
+      "src/software_world_model/interface/citation_projector_cli.py"
     ],
     "tests": [
       "tests/test_knowledge_use.py",
+      "tests/test_structure_view.py",
+      "tests/test_structure_view_cli.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_integration.py",
+      "tests/test_iteration_003_g2_isolation.py",
       "tests/test_browser_chat_interface.py"
     ]
   },
@@ -1024,14 +1093,18 @@
     "code": [
       "src/software_world_model/knowledge_engine/formal.py",
       "src/software_world_model/knowledge_engine/structure.py",
+      "src/software_world_model/application_services/citation_projection.py",
       "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
-      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py"
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py",
+      "src/software_world_model/infrastructure/file_citation_observation_store.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
       "tests/test_artifact_processing.py",
       "tests/test_structure_knowledge.py",
-      "tests/test_structure_publication.py"
+      "tests/test_structure_publication.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_integration.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-FACT": {
@@ -1068,11 +1141,15 @@
   "SYS-CONTRACT-KNOWLEDGE-PERSISTENCE": {
     "path": "docs/system/contracts/knowledge/persistence.md",
     "code": [
+      "src/software_world_model/application_services/structure_read_bundle.py",
       "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py",
       "src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py",
       "src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/infrastructure/sqlite_database.py"
     ],
     "tests": [
@@ -1080,8 +1157,11 @@
       "tests/test_foundation.py",
       "tests/test_structure_publication.py",
       "tests/test_structure_read_session.py",
+      "tests/test_structure_read_bundle.py",
+      "tests/test_citation_projector.py",
       "tests/test_maven_structure_update_authority.py",
-      "tests/test_legacy_formal_reader.py"
+      "tests/test_legacy_formal_reader.py",
+      "tests/test_iteration_003_g2_integration.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-REFERENCE-CONTEXT": {
@@ -1294,12 +1374,20 @@
     "code": [
       "src/software_world_model/ai_infrastructure",
       "src/software_world_model/source_integration",
-      "src/software_world_model/interface"
+      "src/software_world_model/application_services/citation_projection.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/infrastructure/file_citation_observation_store.py",
+      "src/software_world_model/interface",
+      "validation/structure_world_model_iteration_003/isolation"
     ],
     "tests": [
       "tests/test_model_gateway.py",
       "tests/test_source_operations.py",
-      "tests/test_browser_chat_interface.py"
+      "tests/test_browser_chat_interface.py",
+      "tests/test_structure_read_bundle.py",
+      "tests/test_structure_view_cli.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_isolation.py"
     ]
   }
 }

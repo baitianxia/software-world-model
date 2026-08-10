@@ -20,5 +20,7 @@ iteration: ITER-003
 - [FINDING-003-006：Legacy 读取器未闭合对象与 Snapshot authority](FINDING-003-006.md) — dispositioned / local-implementation
 - [FINDING-003-007：通用旧 Read Session 不能证明 Structure ordered Read Set 不漂移](FINDING-003-007.md) — dispositioned / local-implementation
 - [FINDING-003-008：跨模块 Artifact 读取与持久使用初版没有闭合当前授权](FINDING-003-008.md) — dispositioned / local-implementation
+- [FINDING-003-009：Citation Projector 需要 Result-scoped 最小观察存储](FINDING-003-009.md) — dispositioned / system-contract
+- [FINDING-003-010：macOS G2 隔离证明是 capability sandbox，不是 mount namespace](FINDING-003-010.md) — dispositioned / iteration-design
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

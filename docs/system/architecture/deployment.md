@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [architecture, operations]
 depends_on: [SYS-ARCH-COMPONENTS, SYS-QUALITY-SECURITY]
-code: [src/software_world_model/interface/http_api.py, src/software_world_model/infrastructure]
-tests: [tests/test_browser_chat_interface.py, tests/test_interface_runtime.py]
+code: [src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/application_services/structure_view.py, src/software_world_model/application_services/citation_projection.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/structure_view_cli.py, src/software_world_model/interface/citation_projector_cli.py, validation/structure_world_model_iteration_003/isolation]
+tests: [tests/test_browser_chat_interface.py, tests/test_interface_runtime.py, tests/test_structure_read_bundle.py, tests/test_structure_view.py, tests/test_structure_view_cli.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_integration.py, tests/test_iteration_003_g2_isolation.py]
 ---
 
 # 部署视图
@@ -24,14 +24,20 @@ flowchart LR
     Q --> MG["Exact model egress gateway"]
     MG --> AI["Qualified model provider<br/>exact endpoint only"]
     Q --> SR["Sealed Query / Answer Result"]
+    P --> CB["Trusted citation observation broker"]
+    DB --> CB
+    SR --> CB
+    CB --> CS["Result-scoped disposable<br/>Citation Store"]
     B --> CP["Citation Projector worker"]
     SR --> CP
-    DB --> CP
+    CS --> CP
     CP --> B
 ```
 
 当前 HTTP 入口没有认证，因此只能绑定回环地址；开放网络、多人租户、外部数据库、高可用、备份恢复和生产身份治理都需要独立部署设计与授权。当前文档没有授予生产启用。
 
-同进程不是安全依据。`WORLD_MODEL` answer worker 的文件视图只能包含 package 与 exact Read Bundle；目标来源、原工作树、权威/旧数据库和 Evidence Store 必须不可见。网络默认拒绝，通信白名单固定为 `Browser → Answer`、`Browser → Citation Projector`、`Answer → exact model egress gateway`、`gateway → Manifest 固定的 Provider scheme/host/port/path`；G2/G3a 没有模型分派时不提供 gateway route。Answer 不能直连 DNS、公网、Source remote 或 Citation Projector；Citation Projector 不能出网，也不能连接模型、Query、Update 或 Answer。网关负责 endpoint 校验与 credential 注入，Answer 不能持有可绕过网关的网络凭据。文件和网络拒绝/允许操作都必须进入评测审计。
+同进程不是安全依据。`WORLD_MODEL` answer worker 的应用/产品输入只能包含 package 与 exact Read Bundle；目标来源、原工作树、权威/旧数据库、完整 Evidence Store 和 Citation Store 均不得落入其递归数据读取 capability。进程启动所必需的解释器、系统运行库、设备/时区文件、canonical ancestor directory traversal 和独立输出根必须与产品输入分开列举、固定并审计，不能借 runtime allow root 带入任何受限产品数据。若本机 capability sandbox 的 exact ancestor read 会允许直接条目名枚举，必须显式记录该名称披露与“不开放子文件内容”的边界，不能声称路径不可见。Projector 的应用输入只包含 package、sealed Result 与和该 Result 精确绑定的 disposable Citation Store；权威数据库和完整 Evidence Store 只由 trusted broker 在另一受控边界通过窄 Knowledge Port 读取，不直接开放给 Projector。
+
+网络默认拒绝，通信白名单固定为 `Browser → Answer`、`Browser → Citation Projector`、`Answer → exact model egress gateway`、`gateway → Manifest 固定的 Provider scheme/host/port/path`；G2/G3a 没有模型分派时不提供 gateway route。Answer 不能直连 DNS、公网、Source remote 或 Citation Projector；Citation Projector 不能出网，也不能连接模型、Query、Update 或 Answer。网关负责 endpoint 校验与 credential 注入，Answer 不能持有可绕过网关的网络凭据。文件和网络拒绝/允许操作都必须进入评测审计。平台可以用 mount namespace、VM/container 或等价的 OS capability sandbox 实现；Result 必须准确报告实际机制和可证明范围，不能把 capability denial 记成未执行的 namespace/unmount 事实。
 
 浏览器分别读取 Answer Result 与 Citation Projector 展示，不构成两个 worker 之间的回传通道。模型、来源、文件系统、网络、Provider 响应和用户输入仍按不可信边界处理。

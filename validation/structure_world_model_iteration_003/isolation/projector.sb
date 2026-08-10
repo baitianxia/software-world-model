@@ -1,0 +1,70 @@
+(version 1)
+
+;; ITER-003 G2 Citation Projector worker.  The staged Store must physically
+;; contain only the sealed Result allowlist; the outer harness verifies that
+;; inventory before this profile is entered.
+(deny default)
+
+(allow process-exec
+    (literal (param "PYTHON_EXECUTABLE")))
+
+(allow file-read*
+    (literal (param "ANCESTOR_00"))
+    (literal (param "ANCESTOR_01"))
+    (literal (param "ANCESTOR_02"))
+    (literal (param "ANCESTOR_03"))
+    (literal (param "ANCESTOR_04"))
+    (literal (param "ANCESTOR_05"))
+    (literal (param "ANCESTOR_06"))
+    (literal (param "ANCESTOR_07"))
+    (literal (param "ANCESTOR_08"))
+    (literal (param "ANCESTOR_09"))
+    (literal (param "ANCESTOR_10"))
+    (literal (param "ANCESTOR_11"))
+    (literal (param "ANCESTOR_12"))
+    (literal (param "ANCESTOR_13"))
+    (literal (param "ANCESTOR_14"))
+    (literal (param "ANCESTOR_15"))
+    (literal (param "ANCESTOR_16"))
+    (literal (param "ANCESTOR_17"))
+    (literal (param "ANCESTOR_18"))
+    (literal (param "ANCESTOR_19"))
+    (literal (param "ANCESTOR_20"))
+    (literal (param "ANCESTOR_21"))
+    (literal (param "ANCESTOR_22"))
+    (literal (param "ANCESTOR_23"))
+    (literal (param "ANCESTOR_24"))
+    (literal (param "ANCESTOR_25"))
+    (literal (param "ANCESTOR_26"))
+    (literal (param "ANCESTOR_27"))
+    (literal (param "ANCESTOR_28"))
+    (literal (param "ANCESTOR_29"))
+    (literal (param "ANCESTOR_30"))
+    (literal (param "ANCESTOR_31"))
+    (literal "/dev/null")
+    (literal "/dev/random")
+    (literal "/dev/urandom")
+    (literal "/private/etc/localtime")
+    (subpath "/System/Library")
+    (subpath "/usr/lib")
+    (subpath "/private/var/db/dyld")
+    (subpath (param "PYTHON_RUNTIME"))
+    (subpath (param "PACKAGE_ROOT"))
+    (literal (param "SEALED_RESULT"))
+    (subpath (param "STORE_ROOT"))
+    (subpath (param "OUTPUT_ROOT")))
+
+(allow file-map-executable
+    (subpath "/System/Library")
+    (subpath "/usr/lib")
+    (subpath (param "PYTHON_RUNTIME"))
+    (subpath (param "PACKAGE_ROOT")))
+
+(allow file-write*
+    (literal "/dev/null")
+    (subpath (param "OUTPUT_ROOT")))
+
+(allow sysctl-read)
+
+(deny network*)
+(deny process-fork)

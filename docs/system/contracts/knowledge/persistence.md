@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION]
 derived_from: [DD-KNW-PERSISTENCE]
-code: [src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py, src/software_world_model/infrastructure/sqlite_database.py]
-tests: [tests/test_formal_knowledge.py, tests/test_foundation.py, tests/test_structure_publication.py, tests/test_structure_read_session.py, tests/test_maven_structure_update_authority.py, tests/test_legacy_formal_reader.py]
+code: [src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/infrastructure/sqlite_database.py]
+tests: [tests/test_formal_knowledge.py, tests/test_foundation.py, tests/test_structure_publication.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_citation_projector.py, tests/test_maven_structure_update_authority.py, tests/test_legacy_formal_reader.py, tests/test_iteration_003_g2_integration.py]
 ---
 
 # Formal Knowledge Persistence
@@ -32,7 +32,7 @@ Knowledge Engine 是正式知识唯一写者；Infrastructure 实现其 Reposito
 8. exact Snapshot 查询、重启恢复和 Snapshot diff 都只能使用已提交的 Snapshot Manifest 与成员，不得借当前 Source 状态补齐或重新解释历史。
 9. `Snapshot Read Bundle` 是 committed exact Snapshot/ordered Read Set 的不可变、可删除、可重建读取副本，不是第二权威或语义 Projection。它必须绑定 Scope、Snapshot IDs 与顺序、Schema/Context/Profile、Coverage、完整成员 Manifest 及每条 Root/State/Support metadata digest；消费者先机械验证这些绑定，任一缺失或不匹配即拒绝读取。
 10. Read Bundle 只能包含查询所需的 typed Entity/Fact Root/State、Coverage、Support ref/locator/digest 与公开定义；禁止包含 Evidence observation/excerpt、Artifact/Source bytes、Provider 输入或其他可被答案链当作源码旁路的 payload。Bundle 只能在对应 Snapshot 已提交后生成，生成失败不改写 Snapshot，但该 Snapshot 不得标记为可隔离回答。
-11. `WORLD_MODEL` 隔离回答进程只挂载产品 package 与 exact Read Bundle，不能挂载包含 Evidence payload 的权威数据库或 Evidence Store。旧版合库可通过兼容性端口读取，但不得进入该进程。Query Result 密封后，独立 Citation Projector 才可在另一进程读取 Evidence Store 中 Result allowlist 指定的 observation；Projector 不得拥有模型、Query、Update 或回传答案链的端口。
+11. `WORLD_MODEL` 隔离回答进程的应用输入只有产品 package 与 exact Read Bundle，不能获得包含 Evidence payload 的权威数据库、Evidence Store 或 Citation Store。旧版合库可通过兼容性端口读取，但不得进入该进程。View/Query Result 密封后，trusted broker 才可通过窄 Knowledge Evidence Port 重读 Result allowlist 指定的 observation，并物化一个与 Result、allowlist 和完整文件 manifest digest 绑定的 disposable Citation Store。独立 Projector 只读 Result seal 与该 Store，不直接读取权威数据库或完整 Evidence Store，也不得拥有模型、Query、Update 或回传答案链的端口。Store 与 Bundle 一样可删除重建但不拥有权威；两者不能互相替代。
 
 ## Failure and evolution boundary
 

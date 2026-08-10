@@ -28,6 +28,8 @@ tests: [tests]
 
 Interface 必须展示实际模式、Scope、source revision、Snapshot、View、Coverage、View Limitation/Knowledge Gap 和引用。任何直接调查切换都需要新的显式用户动作和独立结果身份，不能替换原世界模型回答记录。
 
+引用正文不进入 Snapshot Read Bundle 或 answer worker。View/Query Result 密封后，受控应用边界中的 trusted Citation Observation Broker 才能按 Result 自身的 typed Evidence allowlist 从 Knowledge owner 重读 exact 自包含 observation，并物化一个与 Result、allowlist 和 manifest digest 绑定的 disposable Citation Store。独立 Citation Projector 只读取该 seal 和 Store，不直接挂载权威数据库或完整 Evidence Store；Store 不拥有 Evidence 或 Result，删除后只能从同一密封输入重新物化。Projector 输出只供浏览器或隔离评测展示 Sink 使用，不得回流 Requirement、Plan、Query、Draft、Review、模型或答案进程。
+
 ## Alternatives
 
 - 所有同步问题统一 Evidence-first：回答质量可以成立，但无法证明软件世界模型的构建、复用和更新价值。
@@ -36,7 +38,7 @@ Interface 必须展示实际模式、Scope、source revision、Snapshot、View�
 
 ## Consequences
 
-世界模型只能回答已发布 Coverage 支持的问题，对未知保持诚实；直接调查可以覆盖更开放的问题，但必须明确标记。Knowledge Update 必须成为与提问独立的产品能力。Product Validation 需要让回答进程只挂载无 Evidence payload 的 exact Snapshot Read Bundle，在默认拒绝网络中仅允许经 exact Model Egress Gateway 访问固定 Provider endpoint，关闭 Source/权威数据库/Evidence Store 后重启并证明仍可回答，同时与受控 Direct Investigation 及成熟源码 Agent 基线分别计量。
+世界模型只能回答已发布 Coverage 支持的问题，对未知保持诚实；直接调查可以覆盖更开放的问题，但必须明确标记。Knowledge Update 必须成为与提问独立的产品能力。Product Validation 需要让回答进程只挂载无 Evidence payload 的 exact Snapshot Read Bundle，在默认拒绝网络中仅允许经 exact Model Egress Gateway 访问固定 Provider endpoint，关闭 Source/权威数据库/Evidence Store 后重启并证明仍可回答；Citation Projector 只能获得 Result-scoped disposable Store，不能以展示需要扩大为权威 Store 读取。两条路径同时与受控 Direct Investigation 及成熟源码 Agent 基线分别计量。
 
 ## Supersedes / migration
 

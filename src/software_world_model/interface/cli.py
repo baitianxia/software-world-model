@@ -47,6 +47,8 @@ from .presenters import (
     management_execution_payload as _execution_payload,
     maven_structure_update_payload as _maven_structure_update_payload,
     structure_read_session_payload as _structure_read_session_payload,
+    structure_read_bundle_availability_payload as _structure_read_bundle_availability_payload,
+    structure_read_bundle_receipt_payload as _structure_read_bundle_receipt_payload,
     structure_snapshot_query_payload as _structure_snapshot_query_payload,
     sufficiency_assessment_payload as _assessment_payload,
     target_resolution_payload as _resolution_payload,
@@ -170,6 +172,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="re-read an immutable Structure Snapshot read Session by exact ID",
     )
     show_structure_session.add_argument("--session-id", required=True)
+
+    snapshot_bundle = commands.add_parser(
+        "build-structure-snapshot-read-bundle",
+        help="export one committed Snapshot as an exact no-payload read Bundle",
+    )
+    snapshot_bundle.add_argument("--snapshot-id", required=True)
+    snapshot_bundle.add_argument("--idempotency-key", required=True)
+    snapshot_bundle.add_argument("--destination", required=True)
+
+    ordered_bundle = commands.add_parser(
+        "build-structure-ordered-read-bundle",
+        help="export an exact ordered read Session envelope",
+    )
+    ordered_bundle.add_argument("--session-id", required=True)
+    ordered_bundle.add_argument("--idempotency-key", required=True)
+    ordered_bundle.add_argument("--destination", required=True)
+
+    show_bundle_receipt = commands.add_parser(
+        "show-structure-read-bundle-receipt",
+        help="re-read an immutable Structure Read Bundle Receipt",
+    )
+    show_bundle_receipt.add_argument("--receipt-id", required=True)
+
+    bundle_availability = commands.add_parser(
+        "show-structure-read-bundle-availability",
+        help="verify the receipted no-payload Bundle for one exact Snapshot",
+    )
+    bundle_availability.add_argument("--snapshot-id", required=True)
+
 
     query = commands.add_parser(
         "query-knowledge", help="assess one Need against an exact knowledge Snapshot"
@@ -362,6 +393,32 @@ def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> 
                         StableId(arguments.session_id)
                     )
                     payload = _structure_read_session_payload(session)
+                elif arguments.command == "build-structure-snapshot-read-bundle":
+                    receipt = runtime.build_structure_snapshot_read_bundle(
+                        snapshot_id=StableId(arguments.snapshot_id),
+                        idempotency_key=IdempotencyKey(arguments.idempotency_key),
+                        destination=arguments.destination,
+                    )
+                    payload = _structure_read_bundle_receipt_payload(receipt)
+                elif arguments.command == "build-structure-ordered-read-bundle":
+                    receipt = runtime.build_structure_ordered_read_bundle(
+                        session_id=StableId(arguments.session_id),
+                        idempotency_key=IdempotencyKey(arguments.idempotency_key),
+                        destination=arguments.destination,
+                    )
+                    payload = _structure_read_bundle_receipt_payload(receipt)
+                elif arguments.command == "show-structure-read-bundle-receipt":
+                    receipt = runtime.read_structure_read_bundle_receipt(
+                        StableId(arguments.receipt_id)
+                    )
+                    payload = _structure_read_bundle_receipt_payload(receipt)
+                elif arguments.command == "show-structure-read-bundle-availability":
+                    availability = runtime.structure_read_bundle_availability(
+                        StableId(arguments.snapshot_id)
+                    )
+                    payload = _structure_read_bundle_availability_payload(
+                        availability
+                    )
                 elif arguments.command == "query-knowledge":
                     need = KnowledgeNeed(
                         need_id=arguments.need_id,
@@ -390,7 +447,7 @@ def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> 
         json.dump(payload, output, ensure_ascii=False, sort_keys=True)
         output.write("\n")
         return 0
-    except (DomainError, ValueError) as exc:
+    except (DomainError, ValueError, OSError) as exc:
         payload = {
             "error": exc.code.value if isinstance(exc, DomainError) else "INVALID_ARGUMENT",
             "message": exc.message if isinstance(exc, DomainError) else str(exc),

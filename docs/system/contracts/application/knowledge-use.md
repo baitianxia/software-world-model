@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-USE]
-code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/presenters.py]
-tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_iteration_003_g1_integration.py]
+code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/presenters.py]
+tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
 ---
 
 # Knowledge Use 与 Sufficiency

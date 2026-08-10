@@ -41,6 +41,11 @@ from software_world_model.application_services.structure_read_session import (
     StructureReadSession,
     StructureReadSessionService,
 )
+from software_world_model.application_services.structure_read_bundle import (
+    StructureReadBundleAvailability,
+    StructureReadBundleReceipt,
+    StructureReadBundleService,
+)
 from software_world_model.cross_cutting import (
     CorrelationRef,
     DomainError,
@@ -72,6 +77,12 @@ from software_world_model.infrastructure.sqlite_maven_structure_update_repositor
 )
 from software_world_model.infrastructure.sqlite_structure_read_session_repository import (
     SqliteStructureReadSessionRepository,
+)
+from software_world_model.infrastructure.file_structure_read_bundle import (
+    FileStructureReadBundleStore,
+)
+from software_world_model.infrastructure.sqlite_structure_read_bundle_repository import (
+    SqliteStructureReadBundleRepository,
 )
 from software_world_model.knowledge_engine import (
     FormalKnowledgeService,
@@ -206,6 +217,13 @@ class ApplicationRuntime:
             self.structure_repository,
             self.scopes,
             self.structure_context_comparisons,
+        )
+        self.structure_read_bundle_files = FileStructureReadBundleStore()
+        self.structure_read_bundles = StructureReadBundleService(
+            SqliteStructureReadBundleRepository(database),
+            self.structure_read_bundle_files,
+            self.structure_repository,
+            self.structure_read_sessions,
         )
         self.maven_structure_update_repository = (
             SqliteMavenStructureUpdateRepository(
@@ -468,6 +486,50 @@ class ApplicationRuntime:
         """Re-read and revalidate one immutable Structure read Session."""
 
         return self.structure_read_sessions.get_session(session_id)
+
+    def build_structure_snapshot_read_bundle(
+        self,
+        *,
+        snapshot_id: StableId,
+        idempotency_key: IdempotencyKey,
+        destination: str,
+    ) -> StructureReadBundleReceipt:
+        """Export one committed Snapshot into an immutable no-payload Bundle."""
+
+        return self.structure_read_bundles.build_snapshot(
+            snapshot_id=snapshot_id,
+            idempotency_key=idempotency_key,
+            destination=destination,
+        )
+
+    def build_structure_ordered_read_bundle(
+        self,
+        *,
+        session_id: StableId,
+        idempotency_key: IdempotencyKey,
+        destination: str,
+    ) -> StructureReadBundleReceipt:
+        """Export the exact caller-ordered Bundle envelope for one read Session."""
+
+        return self.structure_read_bundles.build_ordered(
+            session_id=session_id,
+            idempotency_key=idempotency_key,
+            destination=destination,
+        )
+
+    def read_structure_read_bundle_receipt(
+        self, receipt_id: StableId
+    ) -> StructureReadBundleReceipt:
+        """Re-read one immutable post-publication Bundle Receipt."""
+
+        return self.structure_read_bundles.get_receipt(receipt_id)
+
+    def structure_read_bundle_availability(
+        self, snapshot_id: StableId
+    ) -> StructureReadBundleAvailability:
+        """Verify whether an exact Snapshot has a readable receipted Bundle."""
+
+        return self.structure_read_bundles.availability(snapshot_id)
 
     def prepare_task_answer(
         self, request: NaturalLanguageTaskRequest

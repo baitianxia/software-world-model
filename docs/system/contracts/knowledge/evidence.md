@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE]
 derived_from: [DD-KNW-EVIDENCE]
-code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/knowledge_engine/structure.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py]
-tests: [tests/test_formal_knowledge.py, tests/test_artifact_processing.py, tests/test_structure_knowledge.py, tests/test_structure_publication.py]
+code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/knowledge_engine/structure.py, src/software_world_model/application_services/citation_projection.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py, src/software_world_model/infrastructure/file_citation_observation_store.py]
+tests: [tests/test_formal_knowledge.py, tests/test_artifact_processing.py, tests/test_structure_knowledge.py, tests/test_structure_publication.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_integration.py]
 ---
 
 # Evidence
@@ -30,7 +30,7 @@ Knowledge Engine 独占 Evidence Record 与 Evidence Snapshot 写权，但不得
 6. Evidence 保留 Source Context；只能由直接可复核内容合法收窄，不能覆盖或扩大来源成立条件。
 7. Evidence 不可变，并保存足以在来源变化或 Payload 淘汰后独立复核 exact observed content、Context 与 Provenance 的最小快照。
 8. 正常 Knowledge Use 只读正式知识，不读取 Evidence Quote 补齐 Gap。
-9. Evidence observation/payload 的物理可读边界必须与 `WORLD_MODEL` Query/回答进程分离。Citation Projector 只能在 Query Result 密封后，以该 Result 固定的 Evidence ref allowlist 和 digest 读取自包含观察并输出展示投影；不能把内容送回 Requirement、Plan、Query、Draft、Review 或模型调用。
+9. Evidence observation/payload 的物理可读边界必须与 `WORLD_MODEL` Query/回答进程分离。View/Query Result 密封后，trusted broker 只能按该 Result 固定的 typed Evidence ref allowlist 和 digest 从 Knowledge owner 重读自包含观察，并物化 Result-scoped disposable Citation Store；它不能让调用方自报或扩大 allowlist。Citation Projector 只读取 Result seal 与该 exact Store 并输出展示投影，不直接访问权威 Evidence Store，也不能把内容送回 Requirement、Plan、Query、Draft、Review、模型调用或答案进程。
 
 ## Failure and implementation boundary
 

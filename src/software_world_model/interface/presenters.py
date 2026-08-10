@@ -106,6 +106,52 @@ def structure_snapshot_payload(snapshot: object) -> dict[str, object]:
     }
 
 
+def structure_read_bundle_receipt_payload(receipt: object) -> dict[str, object]:
+    """Project the exact post-publication Bundle authority without file payload."""
+
+    return {
+        "receipt_id": receipt.receipt_id.value,
+        "idempotency_key": receipt.idempotency_key.value,
+        "kind": receipt.kind.value,
+        "request_digest": receipt.request_digest.value,
+        "scope_id": receipt.scope_id.value,
+        "snapshot_ids": [item.value for item in receipt.snapshot_ids],
+        "session_id": (
+            receipt.session_id.value if receipt.session_id is not None else None
+        ),
+        "read_set_digest": (
+            receipt.read_set_digest.value
+            if receipt.read_set_digest is not None
+            else None
+        ),
+        "stored_bundle": {
+            "locator": receipt.stored_bundle.locator,
+            "format_ref": receipt.stored_bundle.format_ref,
+            "bundle_digest": receipt.stored_bundle.bundle_digest.value,
+            "file_digest": receipt.stored_bundle.file_digest.value,
+        },
+        "created_at": receipt.created_at.isoformat(),
+        "digest": receipt.digest.value,
+    }
+
+
+def structure_read_bundle_availability_payload(
+    availability: object,
+) -> dict[str, object]:
+    """Project a mechanically revalidated Bundle availability decision."""
+
+    return {
+        "snapshot_id": availability.snapshot_id.value,
+        "status": availability.status.value,
+        "reason_code": availability.reason_code,
+        "receipt": (
+            structure_read_bundle_receipt_payload(availability.receipt)
+            if availability.receipt is not None
+            else None
+        ),
+    }
+
+
 def structure_snapshot_query_payload(snapshot: object) -> dict[str, object]:
     """Return an independently executed exact historical Snapshot query."""
 
