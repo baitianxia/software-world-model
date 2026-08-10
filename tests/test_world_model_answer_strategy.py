@@ -103,6 +103,10 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             self.assertNotIn("projection_fields", model_state)
             self.assertNotIn("forbidden_events", model_state)
             self.assertNotIn("WM-PRODUCT-", model_state)
+            if case["capability"] == "VIEW_LIMITATION_AND_KNOWLEDGE_GAP":
+                instruction = context.manifest.items[0].content
+                self.assertIn("owner exactly STRUCTURE_VIEW", instruction)
+                self.assertIn("owner exactly KNOWLEDGE_USE", instruction)
 
     def test_ineligible_or_duplicate_key_output_fails_closed_without_retry(self):
         ineligible = SimpleNamespace(

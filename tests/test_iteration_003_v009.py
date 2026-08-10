@@ -201,6 +201,13 @@ class Iteration003V009Tests(unittest.TestCase):
         verify_evaluator_source(EVALUATOR_SCRIPT)
         source = EVALUATOR_SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn("software_world_model", source)
+        self.assertEqual(
+            frozen["freeze_ref"], "ITER-003-V009-EXACT-INPUTS@1.0.1"
+        )
+        self.assertEqual(frozen["predecessor"]["outcome"], "FAIL")
+        self.assertEqual(
+            frozen["predecessor"]["failed_case_ids"], ["WM-CE-GAP-004"]
+        )
         self.assertFalse(frozen["disclosure"]["g3b_product_dispatch_included"])
 
     def test_conformance_unknown_seals_pre_dispatch_intent_and_stays_blocking(self):

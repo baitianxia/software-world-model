@@ -106,9 +106,9 @@ external_inputs:
     status: frozen
   live_provider:
     kind: exact-gate-input
-    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.0.json
-    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.0
-    input_freeze_digest: sha256:822a20fc5df6439f0d0b95d5125a00e8d8240998a71154b27c0572c4b704cf74
+    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.1.json
+    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.1
+    input_freeze_digest: sha256:b4a90907704ffdd888d63718c7118182c8565d0df66d63f35b425d26e2ee1293
     checkpoint_binding: enclosing-clean-git-commit-and-tree-recorded-by-runtime
     g3a_checkpoint: f2269ecca5c1e85e69fafd93fe599c841227f3c7
     provider_type: VOLCENGINE_ARK
@@ -141,10 +141,10 @@ external_inputs:
       capability_id: world-model-authority-proposal
       capability_contract_version: 1.0.0
       strategy_id: model-snapshot-first-world-model-answer
-      strategy_version: 1.0.0
-      implementation_digest: sha256:d4f98df52e32d4e49161a2c01ee0b3af7a3e006056fc41af73ea40f024b5649e
-      implementation_file_digest: sha256:f5b888513384c8a962511d1c74091a34093992a83c55a27c3eb27b579f873d68
-      prompt_program_digest: sha256:ba2a2ccb43f3de9308d6bfc2d75d719a3ac7a918df87a594a81387dd034d292f
+      strategy_version: 1.0.1
+      implementation_digest: sha256:2d548ae4569dd2c526a2c28cbbb49adaa75e53d2538ad453c75c086d088268ff
+      implementation_file_digest: sha256:25a529f86e910d35e6011d30d0ec1ab44ecdc4428d8ce465842b79e605b09fec
+      prompt_program_digest: sha256:9a8df7f1791937b89408eb520ac018edf214e6e175b985d9c9e98cecd470f180
       output_contract_digest: sha256:2b7e9a5dbae0d9436ee9d7cc87ffa17be33997d4e1f59bbc75e385c8e51bbd9d
       tool_policy_ref: model-no-tools-no-source-no-evidence@1
       model_calls_per_case: 1
@@ -156,13 +156,16 @@ external_inputs:
       evaluator_digest: sha256:f090c0ca54d3438a803e1cc5df6949e9d635082c5333f326cea288e1768ae12c
       required_case_count: 7
       result_requirement: closed-pass-valid-fail-zero-unknown-zero
-      status: pending-live-execution
+      prior_attempt_checkpoint: cf376b3f90ef4ff6c83af5218d43e5dc3aa5c9da
+      prior_attempt_result: sha256:8392c313b2256668fe56cd2bef7c96ec19f33f840fd905cf501b712191c8c988
+      prior_attempt_outcome: 6-pass-1-fail-0-unknown-no-qualification
+      status: corrected-prompt-full-live-rerun-pending
     source_disclosure:
       confirmation_ref: codex-user-confirmation:2026-08-10T21:01:55+08:00
       message_digest: sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae
       v009_conformance_ce_and_required_baselines: confirmed
       g3b_product_dispatch: not-included-requires-separate-confirmation
-    status: exact-inputs-frozen-live-results-pending
+    status: exact-inputs-v1.0.1-frozen-after-attempt-1-fail-live-rerun-pending
   direct_investigation_baseline:
     kind: exact-product-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.0.json

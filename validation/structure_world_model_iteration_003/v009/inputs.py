@@ -22,9 +22,9 @@ from software_world_model.cross_cutting import DomainError, ErrorCode
 from .manifest import PINNED_SUITE_FILE_DIGEST, PINNED_SUITE_REF, REPOSITORY_ROOT
 
 
-DEFAULT_INPUT_FREEZE_PATH = Path(__file__).with_name("input-freeze-1.0.0.json")
+DEFAULT_INPUT_FREEZE_PATH = Path(__file__).with_name("input-freeze-1.0.1.json")
 PINNED_INPUT_FREEZE_FILE_DIGEST = (
-    "sha256:822a20fc5df6439f0d0b95d5125a00e8d8240998a71154b27c0572c4b704cf74"
+    "sha256:b4a90907704ffdd888d63718c7118182c8565d0df66d63f35b425d26e2ee1293"
 )
 EXPECTED_G3A_COMMIT = "f2269ecca5c1e85e69fafd93fe599c841227f3c7"
 EXPECTED_G3A_TREE = "936dc1fcab74f45c0342ad0e7055b9d4b314e2e1"
@@ -91,6 +91,7 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
         "schema",
         "freeze_ref",
         "checkpoint_binding",
+        "predecessor",
         "disclosure",
         "g3a",
         "provider",
@@ -107,10 +108,23 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
         _invalid("V-009 exact input freeze fields are invalid")
     if (
         value.get("schema") != "swm.iter-003.v009-input-freeze@1"
-        or value.get("freeze_ref") != "ITER-003-V009-EXACT-INPUTS@1.0.0"
+        or value.get("freeze_ref") != "ITER-003-V009-EXACT-INPUTS@1.0.1"
         or value.get("checkpoint_binding") != "ENCLOSING_CLEAN_GIT_COMMIT_AND_TREE"
     ):
         _invalid("V-009 exact input freeze identity is invalid")
+    predecessor = _mapping(value.get("predecessor"), "predecessor")
+    if predecessor != {
+        "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.0",
+        "freeze_file_digest": "sha256:822a20fc5df6439f0d0b95d5125a00e8d8240998a71154b27c0572c4b704cf74",
+        "checkpoint": "cf376b3f90ef4ff6c83af5218d43e5dc3aa5c9da",
+        "conformance_binding_digest": "sha256:16ae77e5a5418e6228eb9b1046c462c41f23785a944e9f7a8f74ad69c08183e0",
+        "capability_result_id": "evaluation_result_fcc6a70f04ea41faab9cb9fca837b19c",
+        "capability_result_digest": "sha256:8392c313b2256668fe56cd2bef7c96ec19f33f840fd905cf501b712191c8c988",
+        "outcome": "FAIL",
+        "failed_case_ids": ["WM-CE-GAP-004"],
+        "disposition": "PROMPT_CONTRACT_CLARIFICATION_REQUIRES_FULL_NEW_RUN",
+    }:
+        _invalid("V-009 predecessor failure binding is invalid")
     disclosure = _mapping(value.get("disclosure"), "disclosure")
     scope = disclosure.get("scope")
     if (
@@ -172,7 +186,7 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
         strategy.get("capability_id") != "world-model-authority-proposal"
         or strategy.get("capability_contract_version") != "1.0.0"
         or strategy.get("strategy_id") != "model-snapshot-first-world-model-answer"
-        or strategy.get("strategy_version") != "1.0.0"
+        or strategy.get("strategy_version") != "1.0.1"
         or strategy.get("tool_policy_ref") != "model-no-tools-no-source-no-evidence@1"
         or configuration
         != {
