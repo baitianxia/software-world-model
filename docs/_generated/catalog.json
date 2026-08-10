@@ -373,6 +373,18 @@
     "path": "docs/project/iterations/iteration-002/findings/FINDING-002-031-evidence-answer-is-not-world-model-acceptance.md"
   },
   {
+    "id": "FINDING-003-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-001.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

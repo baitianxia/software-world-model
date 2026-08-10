@@ -299,6 +299,13 @@
       "tests/test_browser_chat_interface.py"
     ]
   },
+  "FINDING-003-001": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-001.md",
+    "code": [],
+    "tests": [
+      "tests/test_iteration_003_validation_assets.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

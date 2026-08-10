@@ -132,9 +132,9 @@ external_inputs:
     status: protocol-frozen-results-pending
   mature_source_agent_baseline:
     kind: external-quality-comparison-input
-    protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.0.json
-    protocol_ref: ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.0
-    protocol_digest: sha256:62674a0d7ec5095bc36ee8d41b7fd8a8fdf43e4f01be92ceeb834356775e0f34
+    protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.1.json
+    protocol_ref: ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.1
+    protocol_digest: sha256:4ac3e880dfc6f359718584e4edc54cc93d8e4b80f89c80804d02776ce8030d53
     answer_schema_path: validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json
     answer_schema_ref: ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0
     answer_schema_digest: sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d

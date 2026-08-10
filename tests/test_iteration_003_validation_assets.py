@@ -45,7 +45,7 @@ DIRECT_PROTOCOL_PATH = (
     VALIDATION_ROOT / "questions" / "direct-baseline-protocol-1.0.0.json"
 )
 MATURE_PROTOCOL_PATH = (
-    VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.0.json"
+    VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.1.json"
 )
 MATURE_ANSWER_SCHEMA_PATH = (
     VALIDATION_ROOT / "questions" / "mature-agent-answer-schema-1.0.0.json"
@@ -585,8 +585,8 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
                 "implementation_file_digest": f"sha256:{_sha256(DIRECT_IMPLEMENTATION_PATH)}",
             },
             "mature_source_agent_baseline": {
-                "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.0.json",
-                "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.0",
+                "protocol_path": "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.1.json",
+                "protocol_ref": "ITER-003-MATURE-SOURCE-AGENT-BASELINE@1.0.1",
                 "protocol_digest": f"sha256:{_sha256(MATURE_PROTOCOL_PATH)}",
                 "answer_schema_path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
                 "answer_schema_ref": "ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0",
@@ -762,8 +762,18 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
         self.assertEqual(answer_schema["$id"], mature_input["answer_schema_ref"])
         self.assertEqual(mature["command_contract"]["web_search"], "DISABLED")
         self.assertEqual(mature["command_contract"]["network_tools"], "DISABLED")
-        self.assertIn("--ignore-user-config", mature["command_contract"]["flags"])
-        self.assertIn("--ignore-rules", mature["command_contract"]["flags"])
+        command_contract = mature["command_contract"]
+        self.assertEqual(
+            command_contract["argv_order"],
+            ["BINARY", "GLOBAL_FLAGS", "SUBCOMMAND", "EXEC_FLAGS", "PROMPT"],
+        )
+        self.assertEqual(
+            command_contract["global_flags"], ["--ask-for-approval", "never"]
+        )
+        self.assertEqual(command_contract["subcommand"], "exec")
+        self.assertIn("--ignore-user-config", command_contract["exec_flags"])
+        self.assertIn("--ignore-rules", command_contract["exec_flags"])
+        self.assertNotIn("--ask-for-approval", command_contract["exec_flags"])
 
         codex_path_text = shutil.which("codex")
         self.assertIsNotNone(codex_path_text, "The frozen mature Agent CLI is required by ITER-003 G0")
@@ -775,6 +785,22 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
         version = _run([str(codex_path), "--version"]).stdout.strip()
         self.assertEqual(version, mature_input["prepared_tool_version"])
         self.assertEqual(version, mature["agent"]["prepared_version"])
+        exec_flags = [
+            str(MATURE_ANSWER_SCHEMA_PATH)
+            if value == "MATURE_AGENT_ANSWER_SCHEMA"
+            else value
+            for value in command_contract["exec_flags"]
+        ]
+        parse_smoke = _run(
+            [
+                str(codex_path),
+                *command_contract["global_flags"],
+                command_contract["subcommand"],
+                *exec_flags,
+                "--help",
+            ]
+        )
+        self.assertIn("Usage: codex exec", parse_smoke.stdout)
 
 
 class Iteration003MetamorphicGeneratorTests(unittest.TestCase):
