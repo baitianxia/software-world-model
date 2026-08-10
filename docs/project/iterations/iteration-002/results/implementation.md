@@ -14,11 +14,11 @@ iteration: ITER-002
 
 ## Claim and scope
 
-该结果证明当前未提交工作区已实现同步 Evidence-first 问答及兼容边界，并通过文档一致性、核心契约测试和完整自动化回归；真实模型产品价值和本机启用由独立结果证明。
+该结果证明提交 `e5b030c6835a69c70153d90f62803d63b7a4ba75` 已实现同步 Evidence-first 问答及兼容边界，并通过文档一致性、核心契约测试和完整自动化回归；真实模型产品价值和本机启用由独立结果证明。
 
 ## Exact inputs / baseline
 
-Git 基线为 `cd8abad86b066e36bd280b19e458d8b5b20cd856`，叠加本轮 `git diff` 中的未提交实现和文档。Evidence-first Strategy 为 `evidence-first-software-answer@1.0.0`，实现摘要为 `sha256:319f9d89cc4b4c23531d9db6766d35bff37978e84d7f6a50a306602addfc92bd`。
+Git 起始基线为 `cd8abad86b066e36bd280b19e458d8b5b20cd856`；本轮完整实现已冻结为后继提交 `e5b030c6835a69c70153d90f62803d63b7a4ba75`。Evidence-first Strategy 为 `evidence-first-software-answer@1.0.0`，实现摘要为 `sha256:319f9d89cc4b4c23531d9db6766d35bff37978e84d7f6a50a306602addfc92bd`。
 
 ## Execution and evidence
 
@@ -31,7 +31,7 @@ Git 基线为 `cd8abad86b066e36bd280b19e458d8b5b20cd856`，叠加本轮 `git dif
 
 ## Result, failures and limitations
 
-机械结果为 PASS。工作区仍未提交，因此 exact subject 必须由基线提交与当前差异共同表示；该结果不可以移植到之后发生变化的工作区。
+机械结果为 PASS。exact implementation subject 为提交 `e5b030c6835a69c70153d90f62803d63b7a4ba75`；该结果不可以移植到其他代码、配置、模型或输入。
 
 ## Findings and system write-back
 

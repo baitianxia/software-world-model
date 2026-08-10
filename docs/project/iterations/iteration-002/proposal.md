@@ -1,8 +1,8 @@
 ---
 id: ITER-002-PROPOSAL
 kind: iteration-proposal
-status: accepted
-authority: project-proposal
+status: completed
+authority: historical-project
 owners: [product, engineering]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ARCH-INVARIANTS, SYS-QUALITY-ACCEPTANCE]
 code: [src/software_world_model, validation]
@@ -62,3 +62,7 @@ coding_input: false
 ## Authorization decision
 
 用户已明确要求继续开发、优化为适用于任何工程和任何问题，并在 2026-08-09 再次表示“同意，无需确认”。本 Proposal 因此接受，但生产启用和外网发布仍不在授权范围。
+
+## Completion boundary
+
+最终只接受了提交 `e5b030c6835a69c70153d90f62803d63b7a4ba75` 的本机 Evidence-first 同步问答实验。该结果没有证明正式知识会被构建、独立更新或用于回答，也没有证明软件世界模型相对直接源码调查产生增量价值；精确边界由本轮 Final Acceptance 拥有。

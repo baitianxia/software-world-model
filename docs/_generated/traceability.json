@@ -288,6 +288,17 @@
       "tests/test_product_holdout_evidence_answer.py"
     ]
   },
+  "FINDING-002-031": {
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-031-evidence-answer-is-not-world-model-acceptance.md",
+    "code": [
+      "src/software_world_model/application_services/evidence_answer.py",
+      "src/software_world_model/interface/http_api.py"
+    ],
+    "tests": [
+      "tests/test_product_holdout_evidence_answer.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

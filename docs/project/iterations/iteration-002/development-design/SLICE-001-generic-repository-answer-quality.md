@@ -1,21 +1,21 @@
 ---
 id: ITER-002-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: completed
+authority: historical-development
 owners: [engineering]
 depends_on: [ITER-002-PROPOSAL, SYS-ADR-013, SYS-ARCH-INVARIANTS, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-OPS-LOCAL-BROWSER]
 code: [src/software_world_model, validation]
 tests: [tests]
 iteration: ITER-002
-coding_input: true
+coding_input: false
 ---
 
 # SLICE-001：通用工程问答可验收
 
 ## Status and dependencies
 
-本 Slice 已授权并处于开发中。根据 `FINDING-002-024` 和 `SYS-ADR-013`，同步浏览器问答改用证据优先架构；旧正式知识链保留为显式或后台能力，不再是聊天前置门禁。没有与当前实现精确匹配的能力资格时仍可离线开发和测试，但不能宣称真实模型路径可验收。
+本 Slice 已按本机 Evidence-first 同步问答范围完成，不再是当前编码输入。根据 `FINDING-002-024` 和 `SYS-ADR-013`，本轮把浏览器问答改为证据优先路径；该历史结果不等于软件世界模型问答、后台知识沉淀或 Semantic View 已完成。
 
 ## Current vs expected behavior
 

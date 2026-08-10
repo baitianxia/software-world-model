@@ -360,6 +360,19 @@
     "path": "docs/project/iterations/iteration-002/findings/FINDING-002-030-model-role-contract-repair.md"
   },
   {
+    "id": "FINDING-002-031",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "architecture",
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/findings/FINDING-002-031-evidence-answer-is-not-world-model-acceptance.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -622,8 +635,8 @@
   {
     "id": "ITER-002-DESIGN-INDEX",
     "kind": "development-design-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering",
       "architecture"
@@ -634,7 +647,7 @@
   {
     "id": "ITER-002-FINDINGS",
     "kind": "iteration-findings-index",
-    "status": "open",
+    "status": "completed",
     "authority": "development-evidence",
     "owners": [
       "engineering",
@@ -646,8 +659,8 @@
   {
     "id": "ITER-002-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "project",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "project"
     ],
@@ -657,8 +670,8 @@
   {
     "id": "ITER-002-PROPOSAL",
     "kind": "iteration-proposal",
-    "status": "accepted",
-    "authority": "project-proposal",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "product",
       "engineering"
@@ -678,6 +691,19 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-002/readiness-review.md"
+  },
+  {
+    "id": "ITER-002-RESULT-ACCEPTANCE",
+    "kind": "iteration-acceptance",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-002/results/acceptance.md"
   },
   {
     "id": "ITER-002-RESULT-CAPABILITY",
@@ -717,7 +743,7 @@
   {
     "id": "ITER-002-RESULTS-INDEX",
     "kind": "iteration-result-index",
-    "status": "pass",
+    "status": "completed",
     "authority": "evidence",
     "owners": [
       "project",
@@ -729,8 +755,8 @@
   {
     "id": "ITER-002-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering"
     ],

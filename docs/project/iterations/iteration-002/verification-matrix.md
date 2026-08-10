@@ -23,5 +23,6 @@ iteration: ITER-002
 | V-007 | 浏览器实际进入新主路径并可供人工体验 | interface / experience | 任意本地 Git 工程、中文与英文通用问题 | 返回经独立审核的自然答案、Evidence Packet ID 和源码位置；工程切换不串会话 | `local-browser` 已绑定当前资格和产品证明；真实页面连接 `poi-tl@58fdb6c7d9db` 后正确回答超时/异常传播问题，显示“已基于固定版本复核”、2 条事实与 2 处源码位置 | PASS |
 | V-008 | 正式知识沉淀不阻塞同步回答 | architecture / contract | 模拟后台沉淀成功、失败和未运行 | 三种情况均不改变已审核同步答案；Evidence Packet 不获得 Snapshot 资格 | 契约已接受；后台调度实现不属于本切片同步验收 | non-blocking for chat / required before claiming async materialization |
 | V-009 | 生产启用 | activation | 不在本轮范围 | NOT EXECUTED | 无 | non-blocking / cannot be inferred from local acceptance |
+| V-010 | 本轮结果不能被解释为软件世界模型产品闭环已通过 | architecture / product boundary | Snapshot-first 问答、Structure View、独立更新、跨版本身份与删除语义均无本轮冻结运行 | NOT EVALUATED | `FINDING-002-031` 与最终 Acceptance | not-run / blocks any world-model completion claim; does not invalidate the narrow Evidence-first result |
 
-V-001 至 V-007 的证据彼此独立。模型调用次数或 Token 上限只能导致失败关闭，不能通过减少检查清单、检索、引用或独立审核换取 PASS。历史旧路径资格和产品失败保留为架构变更证据，没有用于替代新实现的重新评估。V-008 的异步调度仍是本轮明确非阻塞边界；V-009 生产启用未执行。
+V-001 至 V-007 的证据彼此独立。模型调用次数或 Token 上限只能导致失败关闭，不能通过减少检查清单、检索、引用或独立审核换取 PASS。历史旧路径资格和产品失败保留为架构变更证据，没有用于替代新实现的重新评估。V-008 的异步调度仍是本轮明确非阻塞边界；V-009 生产启用未执行；V-010 禁止把本轮局部 PASS 外推为软件世界模型完成。

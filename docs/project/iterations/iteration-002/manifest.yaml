@@ -1,13 +1,20 @@
 schema_version: 1
 iteration:
   id: ITER-002
-  status: authorized
+  status: completed
   outcome_scope: local-generic-repository-chat
 
 baseline:
   commit: cd8abad86b066e36bd280b19e458d8b5b20cd856
   dirty_worktree_allowed: true
   relation: pre-iteration-drift-captured-by-working-tree-diff
+
+accepted_subject:
+  commit: e5b030c6835a69c70153d90f62803d63b7a4ba75
+  relation_to_baseline: descendant-containing-complete-iteration-diff
+  strategy_id: evidence-first-software-answer
+  strategy_version: 1.0.0
+  production_activation: not-executed
 
 system_inputs:
   ids:
@@ -49,9 +56,13 @@ external_inputs:
 
 verification:
   matrix_id: ITER-002-VERIFICATION
-  evidence_location: var/iteration-002
+  evidence_location: var/evidence-capability-v8-live
+  additional_evidence_locations:
+    - var/evidence-product-v8
+    - var/conformance-v8
 
 authorization:
   readiness_review_id: ITER-002-READINESS
+  acceptance_id: ITER-002-RESULT-ACCEPTANCE
   authorized_by: user
   authorized_at: "2026-08-09T03:47:28+08:00"

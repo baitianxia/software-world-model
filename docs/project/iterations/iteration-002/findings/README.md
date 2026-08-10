@@ -1,7 +1,7 @@
 ---
 id: ITER-002-FINDINGS
 kind: iteration-findings-index
-status: open
+status: completed
 authority: development-evidence
 owners: [engineering, architecture]
 depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-002-PROPOSAL]
@@ -42,3 +42,4 @@ iteration: ITER-002
 - [FINDING-002-028：生成结果满足 JSON Schema 但违反答案段语义约束](FINDING-002-028-draft-semantic-contract-recovery.md) — dispositioned to Evidence Answering contract and bounded draft repair
 - [FINDING-002-029：来源正确不等于回答相关且可读](FINDING-002-029-review-relevance-readability-gap.md) — dispositioned to Evidence Answering contract and independent relevance/readability review
 - [FINDING-002-030：完整模型响应仍可能因截断或语义缺项违反角色契约](FINDING-002-030-model-role-contract-repair.md) — dispositioned to Evidence Answering contract and bounded role repair
+- [FINDING-002-031：Evidence-first 问答通过不等于软件世界模型通过](FINDING-002-031-evidence-answer-is-not-world-model-acceptance.md) — dispositioned to Verification Matrix and final Acceptance

@@ -1,8 +1,8 @@
 ---
 id: ITER-002-DESIGN-INDEX
 kind: development-design-index
-status: authorized
-authority: current-development
+status: completed
+authority: historical-development
 owners: [engineering, architecture]
 depends_on: [ITER-002-PROPOSAL]
 code: [src/software_world_model, validation]
