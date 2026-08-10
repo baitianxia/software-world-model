@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and dependencies
 
-当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，G1 Result 又绑定 G0 PASS 并在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上通过 V-002～V-006/V-012；当前只允许开始 G2。Manifest baseline 固定无产品代码变化的准备提交 P；各 Gate Result 分别记录完整 lineage。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
+当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，G1 Result 又绑定 G0 PASS 并在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上通过 V-002～V-006/V-012，G2 Result 再绑定 G1 PASS 并在 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上通过 V-007；当前只允许开始 G3a 无外部分派实现。Manifest baseline 固定无产品代码变化的准备提交 P；各 Gate Result 分别记录完整 lineage。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
 
 ## Current vs expected behavior
 
@@ -68,6 +68,8 @@ View Result 密封后，受控进程中的 trusted Citation Observation Broker �
 
 G2 不通过，禁止实现浏览器模型回答。
 
+G2 已由 `ITER-003-RESULT-G2` 在 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上裁决为 PASS；该结论只解除 G3a 无外部分派实现，不授权外部披露、Provider/Model、CC/CE、baseline 或 G3b。
+
 ### G3a — Offline answer-chain implementation
 
 在不分派任何外部 Provider 且无任何出站网络 route 的条件下实现 World Model Answering 和评测页面投影，以确定性 test strategy 完整走通 `Requirement Revision → Needs/Joint Constraints → candidate resolution → Query Plan → Query Result → Need Assessments → Draft → Review → Authorization → Delivery`。补齐 Need 遗漏、直接伪造 EntityRef、0/N candidate、跨 Session candidate、tampered Query Result、wrong Snapshot/Read Set、生成与审核同一 invocation、Evidence payload/网络读取和无授权 Delivery 反例，全部失败关闭。形成 clean exact checkpoint 与 `ITER-003-RESULT-G3A` 人工 Result 后，才能选择 exact Provider/Adapter/Model、Provider scheme/host/port/path、默认拒绝的 Model Egress Gateway policy，取得披露确认和 Conformance，并对该 checkpoint 运行 closed Capability Evaluation。全部 Case PASS、FAIL/UNKNOWN 为零且 Result 为 PASS/VALID 后，必须先按 G0 冻结协议完成并密封同模型 Direct Source 与成熟 Codex Source Agent 两条 baseline，随后才可开始 G3b。
@@ -96,4 +98,4 @@ Verification Matrix V-001 至 V-013 全部满足且人工内容核对完成，�
 
 实现发现登记在本轮 [Findings](../findings/README.md)，并按[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。
 
-G2 已处置 `FINDING-003-009`，把 Citation Projector 从直接读取完整 Evidence Store 收窄为 trusted broker 物化的 Result-scoped disposable Store；`FINDING-003-010` 则把本机验证机制明确为 macOS Seatbelt capability boundary，区分应用输入、runtime/ancestor traversal、输出与拒绝目标。两项处置只闭合设计输入，不代表 V-007 已执行或 G2 已 PASS。
+G2 已处置 `FINDING-003-009`，把 Citation Projector 从直接读取完整 Evidence Store 收窄为 trusted broker 物化的 Result-scoped disposable Store；`FINDING-003-010` 则把本机验证机制明确为 macOS Seatbelt capability boundary，区分应用输入、runtime/ancestor traversal、输出与拒绝目标。两项处置及 V-007 的实际执行已由 `ITER-003-RESULT-G2` 在 exact checkpoint 上联合裁决为 PASS；它们不授权任何 G3a 以后的外部执行。

@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and authorization
 
-本轮 Readiness 已由用户明确接受，Iteration 与 Slice 为 `authorized`，`project/current.md` 已原子指向本轮。`ITER-003-RESULT-G0` 已绑定授权治理提交 Q，`ITER-003-RESULT-G1` 已绑定 G0 PASS 并在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上 PASS；当前只允许开始 G2，后续仍按 Gate 顺序阻断。
+本轮 Readiness 已由用户明确接受，Iteration 与 Slice 为 `authorized`，`project/current.md` 已原子指向本轮。`ITER-003-RESULT-G0` 已绑定授权治理提交 Q，G1 与 G2 又分别在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469`、`82aef7563556c70527b3c92227d0711a28437587` 上 PASS；当前只允许开始 G3a 无外部分派实现，后续仍按 Gate 顺序阻断。首次外部 CE 或模型分派前仍须单独取得本轮披露确认。
 
 ## Required inputs
 

@@ -15,4 +15,4 @@ coding_input: true
 
 - [SLICE-001：Structure World Model 纵向闭环](SLICE-001-structure-world-model-vertical-closure.md)
 
-本轮已获用户授权，保持一个端到端切片，并用阻断 Gate 防止基础语义问题拖到 UI 和模型阶段才暴露。G0 与 G1 已 PASS，当前开放 G2；每个 Gate 都必须产生人工可查看内容，上一 Gate 的 PASS Result 提交后才能进入下一 Gate。
+本轮已获用户授权，保持一个端到端切片，并用阻断 Gate 防止基础语义问题拖到 UI 和模型阶段才暴露。G0、G1 与 G2 已 PASS，当前只开放 G3a 无外部分派实现；每个 Gate 都必须产生人工可查看内容，上一 Gate 的 PASS Result 提交后才能进入下一 Gate。G3a 的实现授权不包含任何外部 Provider、CE 或模型分派。

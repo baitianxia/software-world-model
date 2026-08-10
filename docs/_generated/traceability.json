@@ -706,6 +706,23 @@
       "tests/test_iteration_003_g1_integration.py"
     ]
   },
+  "ITER-003-RESULT-G2": {
+    "path": "docs/project/iterations/iteration-003/results/gate-g2.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/infrastructure",
+      "src/software_world_model/interface",
+      "validation/structure_world_model_iteration_003/isolation"
+    ],
+    "tests": [
+      "tests/test_structure_read_bundle.py",
+      "tests/test_structure_view.py",
+      "tests/test_structure_view_cli.py",
+      "tests/test_citation_projector.py",
+      "tests/test_iteration_003_g2_integration.py",
+      "tests/test_iteration_003_g2_isolation.py"
+    ]
+  },
   "ITER-003-SLICE-001": {
     "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md",
     "code": [

@@ -983,6 +983,18 @@
     "path": "docs/project/iterations/iteration-003/results/gate-g1.md"
   },
   {
+    "id": "ITER-003-RESULT-G2",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/results/gate-g2.md"
+  },
+  {
     "id": "ITER-003-RESULTS-INDEX",
     "kind": "iteration-result-index",
     "status": "in-progress",
