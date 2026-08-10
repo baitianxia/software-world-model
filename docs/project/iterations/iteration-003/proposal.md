@@ -1,7 +1,7 @@
 ---
 id: ITER-003-PROPOSAL
 kind: iteration-proposal
-status: proposed
+status: accepted
 authority: project-proposal
 owners: [product, engineering]
 depends_on: [ITER-002-RESULT-ACCEPTANCE, SYS-PRODUCT-VISION, SYS-ADR-014, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-QUALITY-ACCEPTANCE]
@@ -67,4 +67,4 @@ ITER-002 证明受控 Evidence-first 源码调查能在六个问题上与直接�
 
 ## Authorization decision
 
-用户已经授权复核并准备本轮；Proposal 本身不把该授权扩大为产品编码。准备提交 P 后仍需用户明确授权，治理提交 Q 才能接受 Readiness 并更新 `project/current.md`；Q 后只能执行 G0，绑定 Q 的 `ITER-003-RESULT-G0` 提交为 PASS 后才可修改产品代码并开始 G1。
+用户于 2026-08-10 明确要求“开发 ITER-003”，据此接受本 Proposal 并授权 `ITER-003-SLICE-001`。授权治理提交 Q 后仍只能执行 G0；绑定 Q 的 `ITER-003-RESULT-G0` 提交为 PASS 后才可修改产品代码并开始 G1。外部模型披露、Production Activation 和本轮非目标不因编码授权而自动获得授权。

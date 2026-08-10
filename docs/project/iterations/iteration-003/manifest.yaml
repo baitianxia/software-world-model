@@ -1,13 +1,13 @@
 schema_version: 1
 iteration:
   id: ITER-003
-  status: proposed
+  status: authorized
   outcome_scope: local-maven-structure-world-model
 
 baseline:
-  commit: 40c65840eaf146360c58ca888b97fc5bd9a0f2e2
+  commit: a4ae307c8ab04979e87e0460f19b6ec81fc915a3
   dirty_worktree_allowed: false
-  relation: clean-iteration-002-closure
+  relation: clean-iteration-003-preparation-commit
 
 system_inputs:
   ids:
@@ -151,5 +151,5 @@ verification:
 
 authorization:
   readiness_review_id: ITER-003-READINESS
-  authorized_by: pending
-  authorized_at: pending
+  authorized_by: user
+  authorized_at: "2026-08-10T11:58:22+08:00"

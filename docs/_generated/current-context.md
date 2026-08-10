@@ -2,10 +2,10 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `none`
-- Active slice: `none`
-- Worktree status: `clean-governance-closure`
-- Strategy relation: `evidence-first-experiment-accepted-world-model-revision-pending`
+- Active iteration: `ITER-003-INDEX`
+- Active slice: `ITER-003-SLICE-001`
+- Worktree status: `clean-iteration-003-authorization-g0-pending`
+- Strategy relation: `iteration-003-authorized-g0-pending`
 - Live model path: `local-evidence-first-accepted-world-model-path-not-active`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`

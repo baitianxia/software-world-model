@@ -777,8 +777,8 @@
   {
     "id": "ITER-003-DESIGN-INDEX",
     "kind": "development-design-index",
-    "status": "proposed",
-    "authority": "proposed-development",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "engineering",
       "architecture"
@@ -801,7 +801,7 @@
   {
     "id": "ITER-003-INDEX",
     "kind": "iteration-index",
-    "status": "proposed",
+    "status": "authorized",
     "authority": "project",
     "owners": [
       "project"
@@ -812,7 +812,7 @@
   {
     "id": "ITER-003-PROPOSAL",
     "kind": "iteration-proposal",
-    "status": "proposed",
+    "status": "accepted",
     "authority": "project-proposal",
     "owners": [
       "product",
@@ -824,7 +824,7 @@
   {
     "id": "ITER-003-READINESS",
     "kind": "iteration-readiness",
-    "status": "proposed",
+    "status": "accepted",
     "authority": "project-authorization",
     "owners": [
       "project",
@@ -849,8 +849,8 @@
   {
     "id": "ITER-003-SLICE-001",
     "kind": "development-slice",
-    "status": "proposed",
-    "authority": "proposed-development",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "engineering"
     ],

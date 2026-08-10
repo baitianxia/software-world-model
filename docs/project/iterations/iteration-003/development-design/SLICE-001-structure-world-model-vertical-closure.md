@@ -1,21 +1,21 @@
 ---
 id: ITER-003-SLICE-001
 kind: development-slice
-status: proposed
-authority: proposed-development
+status: authorized
+authority: current-development
 owners: [engineering]
 depends_on: [ITER-003-PROPOSAL, SYS-ADR-014, SYS-ARCH-INVARIANTS, SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-OPS-LOCAL-BROWSER]
 code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services, src/software_world_model/infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-003
-coding_input: false
+coding_input: true
 ---
 
 # SLICE-001：Structure World Model 纵向闭环
 
 ## Status and dependencies
 
-当前为 proposed，不授权产品编码。Manifest baseline 固定无产品代码变化的准备提交 P；用户授权后的治理提交 Q 和 G0 Result 分别绑定 P/Q，要求 `P..Q` 与 `Q..G0 Result` 均无产品代码差异，不要求执行 HEAD 等于 P。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
+当前已获用户授权，但在绑定治理提交 Q 的 G0 Result 提交为 PASS 前，只允许执行冻结资产检查，仍不允许修改产品代码。Manifest baseline 固定无产品代码变化的准备提交 P；治理提交 Q 和 G0 Result 分别绑定 P/Q，要求 `P..Q` 与 `Q..G0 Result` 均无产品代码差异，不要求执行 HEAD 等于 P。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
 
 ## Current vs expected behavior
 

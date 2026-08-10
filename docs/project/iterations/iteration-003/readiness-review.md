@@ -1,15 +1,15 @@
 ---
 id: ITER-003-READINESS
 kind: iteration-readiness
-status: proposed
+status: accepted
 authority: project-authorization
 owners: [project, architecture, quality]
 depends_on: [ITER-003-PROPOSAL, ITER-003-VERIFICATION]
 code: []
 tests: []
 iteration: ITER-003
-authorized_by: pending
-authorized_at: pending
+authorized_by: user
+authorized_at: 2026-08-10T11:58:22+08:00
 ---
 
 # Iteration 003 Readiness Review
@@ -45,4 +45,4 @@ Verification Matrix 已冻结 contract、root project 语义、反例、A→B→
 
 ## Authorization decision
 
-**HOLD / proposed。** 当前可以提交开发前准备，不能修改产品代码。准备包提交 P 完成并得到用户编码授权后，以单独治理提交 Q 原子更新 Iteration、Slice、Manifest baseline 和 `project/current.md`；Q 后只能执行 V-001/G0 的资产机械检查与人工核对。只有绑定 Q 的 `ITER-003-RESULT-G0` 已提交为 PASS，且 `P..Q`、`Q..G0 Result` 均确认没有产品代码差异，才可修改产品代码并开始 G1。live Provider 与两条 Agent baseline 结果继续按 G3 子门控制，不阻止先完成确定性世界模型内核。
+**ACCEPTED / G0 only。** 用户于 2026-08-10T11:58:22+08:00 明确要求“开发 ITER-003”，据此接受 Readiness 并授权 `ITER-003-SLICE-001`。准备包 P 为 `a4ae307c8ab04979e87e0460f19b6ec81fc915a3`；本次单独治理变更 Q 原子更新 Iteration、Slice、Manifest baseline 和 `project/current.md`。Q 后只能执行 V-001/G0 的资产机械检查与人工核对。只有绑定 Q 的 `ITER-003-RESULT-G0` 已提交为 PASS，且 `P..Q`、`Q..G0 Result` 均确认没有产品代码差异，才可修改产品代码并开始 G1。live Provider、源码/结构结果披露与两条 Agent baseline 结果继续按 G3 子门控制。

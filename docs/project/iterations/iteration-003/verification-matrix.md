@@ -14,7 +14,7 @@ iteration: ITER-003
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-001 | 文档、全部冻结资产、授权链和 exact clean baseline 闭合 | contract / preflight | 准备起点 `40c6584…`、准备包 commit、Manifest 全部 digest、fixture/schema/oracle/suites/generator/legacy/direct protocol | `scripts/docs.py check` 与两个 ITER-003 资产测试模块通过；Maven offline、JSON duplicate-key、manifest association、mall raw POM Oracle、generator 双重确定性/隔离均有原始输出；准备提交无产品代码差异；授权提交把 baseline、全部状态和 current 指针原子对齐；人工逐项打开核对 | pending | not-run / blocks coding |
+| V-001 | 文档、全部冻结资产、授权链和 exact clean baseline 闭合 | contract / preflight | 准备起点 `40c6584…`、准备包 commit、Manifest 全部 digest、fixture/schema/oracle/suites/generator/legacy/direct protocol | `scripts/docs.py check` 与两个 ITER-003 资产测试模块通过；Maven offline、JSON duplicate-key、manifest association、mall raw POM Oracle、generator 双重确定性/隔离均有原始输出；准备提交无产品代码差异；授权提交把 baseline、全部状态和 current 指针原子对齐；人工逐项打开核对 | not-collected | not-run / blocks coding |
 | V-002 | exact Schema/Evaluation Context/Canonicalization 与 Literal/Relation Fact 分型成立 | unit / contract | Manifest 三个 Definition digest、subject/object closure、悬空和混型反例 | digest 相等且 Coverage Root/State 固定 refs+digests；关系两端可验证；悬空、混型、字符串降级全部拒绝 | pending | not-run / blocks G1 completion |
 | V-003 | Entity/Fact/Coverage Root 与 State 真正分离 | contract / counterexample | mall A/B 共有对象；同 GA 只改 path、label、version、Context、Evidence 的构造 | A=7 Entity/11 Relation、B=8/14；A/B 共有 7 Entity Root、11 Relation Fact Root 与同一 Coverage Root 稳定；所有 revision-bound State 改变；任何 path/label/version-based Root 假实现失败 | pending | not-run / blocks G2 |
 | V-004 | `ENRICH` 与 `REPLACE_COVERAGE` 语义唯一且删除成立 | contract / fault | A→B→A、同 Root 不同 State、重叠 Coverage、coverage 外成员、CAS/恢复失败 | ENRICH 不同 State 拒绝；重叠拒绝；B 新增项在新 A CURRENT 消失；旧 B 可读；coverage 外不丢；失败保持 CURRENT | pending | not-run / blocks G2 |
@@ -31,7 +31,7 @@ iteration: ITER-003
 
 ## Frozen mall oracle
 
-- “reactor child modules”固定表示 root `<modules>` 的递归闭包，排除 root `mall` project；root 由 `SOFTWARE_SYSTEM` 表示。A/B 的 root 与所有 child `<dependencies>` 都属于完整扫描范围。
+- “reactor child modules”固定表示 root `modules` 元素的递归闭包，排除 root `mall` project；root 由 `SOFTWARE_SYSTEM` 表示。A/B 的 root 与所有 child `dependencies` 元素都属于完整扫描范围。
 - A `a50870fba92d59021f07cacbe947442b1871e78f`：6 个 reactor child modules、6 条 `CONTAINS_MODULE`、5 条内部 `DEPENDS_ON`；连同 system root 是 7 Entity、11 Relation Fact；`mall-admin → mall-common` 只有 `mall-admin → mall-mbg → mall-common`。
 - B `cfaadb201bb7aa6425de069fab5e57bf8b5048f3`：7 个 child modules、7 条 contains、7 条内部 depends；连同 system root 是 8 Entity、14 Relation Fact；路径有 `mall-admin → mall-mbg → mall-common` 与新增的 `mall-admin → mall-security → mall-common`。
 - A→B 仅新增 `mall-security`、`mall → mall-security`、`mall-admin → mall-security`、`mall-security → mall-common`，没有内部图删除。B→A 时这些成员从新 CURRENT 消失，历史 B Snapshot 仍可读。
@@ -43,7 +43,7 @@ iteration: ITER-003
 1. 分别列出 A 和 B 的全部递归 Maven reactor child modules（不含 root `mall` project）。
 2. 分别列出 A 和 B 中 `mall-admin` 到 `mall-common` 的全部简单内部依赖路径，并指出新增路径。
 3. 只说明 A→B 的内部 reactor 模块图变化。
-4. B 的 root POM `<dependencies>` 是否直接声明了 reactor 内部 `mall-security`？答案为否；root dependencies 已完整扫描，`dependencyManagement` 不算直接依赖。
+4. B 的 root POM `dependencies` 元素是否直接声明了 reactor 内部 `mall-security`？答案为否；root dependencies 已完整扫描，`dependencyManagement` 不算直接依赖。
 5. `mall-admin` 到 `mall-search` 是否存在内部依赖路径？答案为当前内部图中不存在，不能扩大成“任何关系都不存在”。
 
 ## Frozen anti-hardcode and comparison protocol
