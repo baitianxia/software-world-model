@@ -325,6 +325,166 @@ class DirectSourceAnswerExecutorTests(unittest.TestCase):
         )
         self.assertTrue(complete["finish_allowed"])
 
+    def test_parent_to_target_coverage_supports_revision_specific_moved_paths(
+        self,
+    ) -> None:
+        parent = self.commit
+        (self.repository / "src/App.java").rename(
+            self.repository / "src/Moved.java"
+        )
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "move app")
+        target = self.git("rev-parse", "HEAD")
+        task = task_input(target)
+        task["revision_scope"] = {
+            "kind": "PARENT_TO_TARGET",
+            "parent": parent,
+            "target": target,
+        }
+        task["allowed_paths"] = ["src/App.java", "src/Moved.java"]
+        task["source_policy"] = {
+            "policy_ref": "LOCAL_GIT_REVISION_PATH_CLOSURE@1",
+            "required_read_paths_by_revision": [
+                {"revision": parent, "paths": ["src/App.java"]},
+                {"revision": target, "paths": ["src/Moved.java"]},
+            ],
+        }
+        task["task_input_digest"] = digest_of(
+            {
+                key: value
+                for key, value in task.items()
+                if key != "task_input_digest"
+            }
+        ).value
+        run_id = "direct-revision-closure"
+        references = [
+            f"direct-observation:{run_id}:{ordinal}" for ordinal in range(1, 4)
+        ]
+        gateway = SequencedGateway(
+            (
+                {
+                    "decision": "EXECUTE",
+                    "tool": "READ",
+                    "revision": parent,
+                    "base": "",
+                    "path": "src/App.java",
+                    "query": "",
+                    "cursor": "",
+                    "offset": "",
+                    "max_bytes": "16000",
+                    "page_size": "",
+                    "rationale": "Read the exact parent path.",
+                    "claims": [],
+                },
+                {
+                    "decision": "EXECUTE",
+                    "tool": "READ",
+                    "revision": target,
+                    "base": "",
+                    "path": "src/Moved.java",
+                    "query": "",
+                    "cursor": "",
+                    "offset": "",
+                    "max_bytes": "16000",
+                    "page_size": "",
+                    "rationale": "Read the exact target path.",
+                    "claims": [],
+                },
+                {
+                    "decision": "EXECUTE",
+                    "tool": "COMPARE",
+                    "revision": target,
+                    "base": parent,
+                    "path": "",
+                    "query": "",
+                    "cursor": "",
+                    "offset": "",
+                    "max_bytes": "",
+                    "page_size": "",
+                    "rationale": "Compare the exact revisions.",
+                    "claims": [],
+                },
+                {
+                    "decision": "FINISH",
+                    "tool": "NONE",
+                    "revision": target,
+                    "base": parent,
+                    "path": "",
+                    "query": "",
+                    "cursor": "",
+                    "offset": "",
+                    "max_bytes": "",
+                    "page_size": "",
+                    "rationale": "Both revision-specific closures are complete.",
+                    "claims": [
+                        {
+                            "claim": "The source path moved between the revisions.",
+                            "support_references": references,
+                        }
+                    ],
+                },
+            )
+        )
+
+        result = DirectSourceAnswerExecutor(
+            gateway=gateway,
+            configuration=self.configuration(),
+            expected_model_fingerprint="model-fingerprint",
+        ).execute(
+            task_input=task,
+            connector=LocalGitConnector(str(self.repository)),
+            run_id=run_id,
+        )
+
+        self.assertEqual(result.source_action_count, 3)
+        coverage = json.loads(gateway.contexts[-1].manifest.items[3].content)
+        self.assertTrue(coverage["finish_allowed"])
+        self.assertEqual(
+            [
+                (item["revision"], item["path"])
+                for item in coverage["required"][:2]
+            ],
+            [(parent, "src/App.java"), (target, "src/Moved.java")],
+        )
+
+    def test_revision_path_coverage_gap_fails_before_model_dispatch(self) -> None:
+        task = task_input(self.commit)
+        task["revision_scope"] = {
+            "kind": "PARENT_TO_TARGET",
+            "parent": "a" * 40,
+            "target": self.commit,
+        }
+        task["allowed_paths"] = ["src/App.java", "src/Missing.java"]
+        task["source_policy"] = {
+            "policy_ref": "LOCAL_GIT_REVISION_PATH_CLOSURE@1",
+            "required_read_paths_by_revision": [
+                {"revision": "a" * 40, "paths": ["src/App.java"]},
+                {"revision": self.commit, "paths": ["src/App.java"]},
+            ],
+        }
+        task["task_input_digest"] = digest_of(
+            {
+                key: value
+                for key, value in task.items()
+                if key != "task_input_digest"
+            }
+        ).value
+        gateway = SequencedGateway(())
+
+        with self.assertRaises(DomainError) as raised:
+            DirectSourceAnswerExecutor(
+                gateway=gateway,
+                configuration=self.configuration(),
+                expected_model_fingerprint="model-fingerprint",
+            ).execute(
+                task_input=task,
+                connector=LocalGitConnector(str(self.repository)),
+                run_id="direct-invalid-revision-closure",
+            )
+
+        self.assertEqual(raised.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+        self.assertEqual(gateway.contexts, [])
+
     def test_complete_structured_rejection_is_counted_and_retried_within_budget(self) -> None:
         run_id = "direct-retry-run"
         gateway = SequencedGateway(

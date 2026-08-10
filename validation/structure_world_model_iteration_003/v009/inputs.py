@@ -18,13 +18,16 @@ from software_world_model.ai_infrastructure import (
     world_model_answer_strategy_implementation_digest,
 )
 from software_world_model.cross_cutting import DomainError, ErrorCode
+from validation.product_holdout_iteration_002.direct_answer import (
+    direct_answer_implementation_digest,
+)
 
 from .manifest import PINNED_SUITE_FILE_DIGEST, PINNED_SUITE_REF, REPOSITORY_ROOT
 
 
-DEFAULT_INPUT_FREEZE_PATH = Path(__file__).with_name("input-freeze-1.0.2.json")
+DEFAULT_INPUT_FREEZE_PATH = Path(__file__).with_name("input-freeze-1.0.3.json")
 PINNED_INPUT_FREEZE_FILE_DIGEST = (
-    "sha256:f2355e8f681ef5bcf4ada645f741b1acae47d63d56b45f5bcc30342058ec5e3c"
+    "sha256:10620f4eb47b41b8ec4216d04d7a501e9766987163e2888585e412ece492ff17"
 )
 EXPECTED_G3A_COMMIT = "f2269ecca5c1e85e69fafd93fe599c841227f3c7"
 EXPECTED_G3A_TREE = "936dc1fcab74f45c0342ad0e7055b9d4b314e2e1"
@@ -108,23 +111,25 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
         _invalid("V-009 exact input freeze fields are invalid")
     if (
         value.get("schema") != "swm.iter-003.v009-input-freeze@1"
-        or value.get("freeze_ref") != "ITER-003-V009-EXACT-INPUTS@1.0.2"
+        or value.get("freeze_ref") != "ITER-003-V009-EXACT-INPUTS@1.0.3"
         or value.get("checkpoint_binding") != "ENCLOSING_CLEAN_GIT_COMMIT_AND_TREE"
     ):
         _invalid("V-009 exact input freeze identity is invalid")
     predecessor = _mapping(value.get("predecessor"), "predecessor")
     if predecessor != {
-        "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.1",
-        "freeze_file_digest": "sha256:b4a90907704ffdd888d63718c7118182c8565d0df66d63f35b425d26e2ee1293",
-        "checkpoint": "4f884a28c954de8b7edf555092fe08b81bce47ef",
-        "conformance_binding_digest": "sha256:17b3ffa926041032e44714ef17c2126f9cb142fe80c954b8d7ee993d86b20868",
-        "capability_result_id": "evaluation_result_9f02ae0784aa4ab8879fe836b7ccff64",
-        "capability_result_digest": "sha256:58933ff893e1dd808009ef7de28968831285c19a1e9fcb9f9ad90caef1f8aa3e",
-        "outcome": "FAIL",
-        "failed_case_ids": ["WM-CE-GAP-004"],
-        "disposition": "PROMPT_STATUS_CONTRACT_CLARIFICATION_REQUIRES_FULL_NEW_RUN",
+        "freeze_ref": "ITER-003-V009-EXACT-INPUTS@1.0.2",
+        "freeze_file_digest": "sha256:f2355e8f681ef5bcf4ada645f741b1acae47d63d56b45f5bcc30342058ec5e3c",
+        "checkpoint": "ce543190950d0ba8001117cadc02b25ebd34bd33",
+        "conformance_binding_digest": "sha256:a8735d10cdaa5598478694bb8bc4b50d2f8a3a3bdb56d4a51e4949d384281de3",
+        "capability_result_id": "evaluation_result_0319e8c9c3254c92a59b89f9c32ac0c6",
+        "capability_result_digest": "sha256:6d224aa435f47f3f8a522ac6ee54a4ed76890d77b4ec5049f33633c400899238",
+        "qualification_ref": "capability-evaluation:evaluation_result_0319e8c9c3254c92a59b89f9c32ac0c6",
+        "qualification_digest": "sha256:b08a555c77345e812a110f64f0aca1c2d9a7d23660aa4cc7170004cc21a040a1",
+        "outcome": "PASS_VALID_BASELINE_BLOCKED",
+        "blocked_by": "FINDING-003-017",
+        "disposition": "DIRECT_BASELINE_REVISION_PATH_CLOSURE_REQUIRES_FULL_NEW_RUN",
     }:
-        _invalid("V-009 predecessor failure binding is invalid")
+        _invalid("V-009 predecessor qualification binding is invalid")
     disclosure = _mapping(value.get("disclosure"), "disclosure")
     scope = disclosure.get("scope")
     if (
@@ -218,11 +223,12 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
     if set(baselines) != {"controlled_direct", "mature_source_agent"}:
         _invalid("V-009 baseline set drifted")
     if direct != {
-        "protocol_path": "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.0.json",
-        "protocol_ref": "ITER-003-DIRECT-SOURCE-BASELINE@1.0.0",
-        "protocol_digest": "sha256:af074014318fab1b5e0fdc3dafab70c1fcd45fe1060da4141e8d8fc594094869",
+        "protocol_path": "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json",
+        "protocol_ref": "ITER-003-DIRECT-SOURCE-BASELINE@1.0.1",
+        "protocol_digest": "sha256:b26a09eb1d7c35b3c7a2af0d26f7a10ffc44a8a0f328fee5252b3a35717905d7",
         "implementation_path": "validation/product_holdout_iteration_002/direct_answer.py",
-        "implementation_file_digest": "sha256:e04c6cca4eb484cd75512c9d748b3bd142027501c5ebe9c905fb5e1e96b06bbd",
+        "implementation_file_digest": "sha256:f36dc034d86b6c947e41bd2873f89b093fcbf3fe880f0e2becec8e3421fc6f9b",
+        "implementation_semantic_digest": "sha256:26a0d3e55188daa974f0ffcb9147a4606765453bb8b9a26174adc6b911d2caa4",
         "provider_adapter_model_binding": "SAME_AS_PROVIDER_BLOCK",
         "result_timing": "AFTER_CE_PASS_BEFORE_FIRST_G3B_PRODUCT_RUN",
     }:
@@ -342,6 +348,8 @@ def verify_input_freeze_runtime(
         _file_digest(direct_protocol_path) != direct["protocol_digest"]
         or _file_digest(direct_implementation_path)
         != direct["implementation_file_digest"]
+        or direct_answer_implementation_digest().value
+        != direct["implementation_semantic_digest"]
         or _file_digest(mature_protocol_path) != mature["protocol_digest"]
         or _file_digest(mature_schema_path) != mature["answer_schema_digest"]
         or _file_digest(mature_binary_path) != mature["prepared_binary_digest"]

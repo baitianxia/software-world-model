@@ -4,8 +4,8 @@
 
 - Active iteration: `ITER-003-INDEX`
 - Active slice: `ITER-003-SLICE-001`
-- Worktree status: `iteration-003-v009-v1-0-2-requalification-checkpoint-preparation`
-- Strategy relation: `iteration-003-v009-attempt-2-fail-corrected-full-rerun-pending`
+- Worktree status: `iteration-003-v009-v1-0-3-requalification-checkpoint-preparation`
+- Strategy relation: `iteration-003-v009-attempt-3-pass-baseline-input-corrected-full-rerun-pending`
 - Live model path: `local-evidence-first-accepted-world-model-path-not-active`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`

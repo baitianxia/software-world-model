@@ -573,6 +573,18 @@
     "path": "docs/project/iterations/iteration-003/findings/FINDING-003-016.md"
   },
   {
+    "id": "FINDING-003-017",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-017.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

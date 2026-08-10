@@ -42,7 +42,7 @@ PRODUCT_INPUT_SUITE_PATH = (
     VALIDATION_ROOT / "questions" / "product-input-suite-1.0.0.json"
 )
 DIRECT_PROTOCOL_PATH = (
-    VALIDATION_ROOT / "questions" / "direct-baseline-protocol-1.0.0.json"
+    VALIDATION_ROOT / "questions" / "direct-baseline-protocol-1.0.1.json"
 )
 MATURE_PROTOCOL_PATH = (
     VALIDATION_ROOT / "questions" / "mature-agent-baseline-protocol-1.0.1.json"
@@ -578,8 +578,8 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
                 "generator_digest": f"sha256:{_sha256(VALIDATION_ROOT / 'legacy' / 'generate_legacy_snapshot.py')}",
             },
             "direct_investigation_baseline": {
-                "protocol_path": "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.0.json",
-                "protocol_ref": "ITER-003-DIRECT-SOURCE-BASELINE@1.0.0",
+                "protocol_path": "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json",
+                "protocol_ref": "ITER-003-DIRECT-SOURCE-BASELINE@1.0.1",
                 "protocol_digest": f"sha256:{_sha256(DIRECT_PROTOCOL_PATH)}",
                 "implementation_path": "validation/product_holdout_iteration_002/direct_answer.py",
                 "implementation_file_digest": f"sha256:{_sha256(DIRECT_IMPLEMENTATION_PATH)}",
@@ -750,6 +750,10 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
             "SEAL_ALL_DIRECT_RESULTS_AFTER_V009_EXACT_MODEL_SELECTION_AND_BEFORE_FIRST_G3B_PRODUCT_RUN",
         )
         self.assertEqual(direct["source_contract"]["oracle_visibility"], "NONE")
+        self.assertEqual(
+            direct["source_contract"]["revision_path_closure"],
+            "EXACT_REQUIRED_POM_PATHS_LISTED_SEPARATELY_FOR_EACH_REVISION_WITH_UNION_AS_SOURCE_ALLOWLIST",
+        )
 
         self.assertEqual(mature["protocol_ref"], mature_input["protocol_ref"])
         self.assertEqual(

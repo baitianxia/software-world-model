@@ -29,8 +29,8 @@ from .execution import HoldoutAnswerPath, HoldoutPathResult, SealedAnswerClaim
 
 
 DIRECT_ANSWER_SCHEMA_REF = "product-holdout-direct-answer-action@1"
-DIRECT_ANSWER_PROMPT_REF = "product-holdout-direct-source-investigator@3"
-DIRECT_ANSWER_STRATEGY_REF = "direct-source-answer-baseline@4"
+DIRECT_ANSWER_PROMPT_REF = "product-holdout-direct-source-investigator@4"
+DIRECT_ANSWER_STRATEGY_REF = "direct-source-answer-baseline@5"
 _MAX_CLAIMS = 6
 _MAX_CONTRACT_ATTEMPTS_PER_STATE = 3
 
@@ -95,7 +95,7 @@ You have no files, tools, web, workspace, memory, reference answer, scoring dime
 Choose exactly one action. EXECUTE proposes LIST, SEARCH, READ, or COMPARE and must return no claims. FINISH uses tool NONE and returns one to {_MAX_CLAIMS} concise claims in the same language as the question.
 Use only the exact revision scope and allowed paths in the task. LIST uses revision and optional cursor/page_size. SEARCH uses revision/query and optional cursor/page_size. READ uses revision/path and optional offset/max_bytes. COMPARE uses the exact parent as base and exact target as revision. Leave every unused parameter as an empty string.
 Each final claim must be fully supported by one or more exact supplied observation_ref values. Do not cite an identifier you were not given. Preserve conditions, exception paths, boundaries, source limitations, and unknowns. Do not turn comments or commit messages into stronger runtime facts. Do not claim repository-wide absence from a bounded read.
-The supplied source-coverage record is a mandatory completeness contract. Before FINISH, fully READ every allowed path at the exact target revision, following next_cursor until the file is complete. For a parent-to-target task, also COMPARE the exact parent and target. These requirements expose the same sealed source boundary to every direct run; they are not answer hints or scoring criteria.
+The supplied source-coverage record is a mandatory completeness contract. Before FINISH, fully READ every required path at every exact revision listed there, following next_cursor until the file is complete. For a parent-to-target task, also COMPARE the exact parent and target. The allowed path union is only the Source access boundary; it does not mean every path exists at every revision. These requirements expose the same sealed source boundary to every direct run; they are not answer hints or scoring criteria.
 For FINISH, combine related facts into three to six compact claims and keep the complete JSON below 900 output tokens. Preserve every material branch while avoiding repeated explanations and repeated references.
 FINISH only after enough authorized source has been observed to answer every material part of the question. Return exactly the JSON object required by the supplied schema and no additional prose."""
 
@@ -490,7 +490,7 @@ def direct_answer_implementation_digest() -> Digest:
             "schema": DIRECT_ANSWER_OUTPUT_SCHEMA.schema,
             "source_policy": "LOCAL_GIT_READ_ONLY_ALLOWED_PATHS_ONLY",
             "source_coverage_policy": (
-                "FULL_TARGET_READ_FOR_EVERY_ALLOWED_PATH_AND_EXACT_COMPARE@2"
+                "FULL_REQUIRED_REVISION_READS_AND_EXACT_COMPARE@3"
             ),
             "claim_policy": "EXACT_OBSERVATION_REFERENCES_ONLY",
             "structured_output_retry_policy": (
@@ -684,11 +684,12 @@ def _source_coverage_view(
     required = [
         {
             "tool": "READ",
-            "revision": target,
+            "revision": revision,
             "path": path,
             "completion": "bytes:0-EOF",
         }
-        for path in task_input["allowed_paths"]
+        for revision, paths in _required_read_paths(task_input)
+        for path in paths
     ]
     completed = []
     missing = []
@@ -739,7 +740,7 @@ def _source_coverage_view(
         else:
             missing.append({**comparison, "next_action": comparison})
     return {
-        "policy": "FULL_TARGET_READ_FOR_EVERY_ALLOWED_PATH_AND_EXACT_COMPARE@2",
+        "policy": "FULL_REQUIRED_REVISION_READS_AND_EXACT_COMPARE@3",
         "required": required
         + (
             [
@@ -756,6 +757,82 @@ def _source_coverage_view(
         "missing": missing,
         "finish_allowed": not missing,
     }
+
+
+def _required_read_paths(
+    task_input: Mapping[str, object],
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    scope = task_input["revision_scope"]
+    allowed_paths = task_input["allowed_paths"]
+    if (
+        not isinstance(allowed_paths, list)
+        or not allowed_paths
+        or any(
+            not isinstance(path, str) or not path or path != path.strip()
+            for path in allowed_paths
+        )
+        or len(set(allowed_paths)) != len(allowed_paths)
+    ):
+        _invalid("direct answer allowed path union is invalid")
+    if (
+        not isinstance(scope, Mapping)
+        or set(scope) != {"kind", "parent", "target"}
+        or scope.get("kind") not in {"FROZEN_SNAPSHOT", "PARENT_TO_TARGET"}
+        or not isinstance(scope.get("target"), str)
+        or not scope["target"]
+        or (
+            scope["kind"] == "FROZEN_SNAPSHOT"
+            and scope.get("parent") is not None
+        )
+        or (
+            scope["kind"] == "PARENT_TO_TARGET"
+            and (
+                not isinstance(scope.get("parent"), str)
+                or not scope["parent"]
+            )
+        )
+    ):
+        _invalid("direct answer revision scope is invalid")
+    policy = task_input["source_policy"]
+    if policy == "LOCAL_GIT_READ_ONLY_ALLOWED_PATHS_ONLY":
+        return ((scope["target"], tuple(allowed_paths)),)
+    if (
+        not isinstance(policy, Mapping)
+        or set(policy) != {"policy_ref", "required_read_paths_by_revision"}
+        or policy.get("policy_ref")
+        != "LOCAL_GIT_REVISION_PATH_CLOSURE@1"
+        or not isinstance(policy.get("required_read_paths_by_revision"), list)
+    ):
+        _invalid("direct answer revision path coverage policy is invalid")
+    expected_revisions = (
+        [scope["target"]]
+        if scope["kind"] == "FROZEN_SNAPSHOT"
+        else [scope["parent"], scope["target"]]
+    )
+    entries = policy["required_read_paths_by_revision"]
+    if len(entries) != len(expected_revisions):
+        _invalid("direct answer revision path coverage is incomplete")
+    normalized: list[tuple[str, tuple[str, ...]]] = []
+    covered_paths: set[str] = set()
+    for expected_revision, entry in zip(expected_revisions, entries):
+        paths = entry.get("paths") if isinstance(entry, Mapping) else None
+        if (
+            not isinstance(entry, Mapping)
+            or set(entry) != {"revision", "paths"}
+            or entry.get("revision") != expected_revision
+            or not isinstance(paths, list)
+            or not paths
+            or any(not isinstance(path, str) for path in paths)
+            or len(set(paths)) != len(paths)
+            or any(path not in allowed_paths for path in paths)
+        ):
+            _invalid("direct answer revision path coverage entry is invalid")
+        normalized_paths = tuple(paths)
+        normalized.append((expected_revision, normalized_paths))
+        covered_paths.update(normalized_paths)
+    if covered_paths != set(allowed_paths):
+        _invalid("direct answer allowed path union is not exactly covered")
+    return tuple(normalized)
 
 
 def _read_progress(

@@ -28,5 +28,6 @@ iteration: ITER-003
 - [FINDING-003-014：V-009 不能把 G3a offline strategy 原地改成 live strategy](FINDING-003-014.md) — dispositioned / iteration-design
 - [FINDING-003-015：首轮 V-009 暴露了 Prompt owner 枚举歧义](FINDING-003-015.md) — dispositioned / iteration-design
 - [FINDING-003-016：第二轮 V-009 暴露了 PARTIAL coverage 的 status 歧义](FINDING-003-016.md) — dispositioned / iteration-design
+- [FINDING-003-017：Direct baseline 无法表达移动 POM 的双 revision 完整覆盖](FINDING-003-017.md) — dispositioned / iteration-design
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

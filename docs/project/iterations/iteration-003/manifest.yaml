@@ -106,9 +106,9 @@ external_inputs:
     status: frozen
   live_provider:
     kind: exact-gate-input
-    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.2.json
-    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.2
-    input_freeze_digest: sha256:f2355e8f681ef5bcf4ada645f741b1acae47d63d56b45f5bcc30342058ec5e3c
+    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.3.json
+    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.3
+    input_freeze_digest: sha256:10620f4eb47b41b8ec4216d04d7a501e9766987163e2888585e412ece492ff17
     checkpoint_binding: enclosing-clean-git-commit-and-tree-recorded-by-runtime
     g3a_checkpoint: f2269ecca5c1e85e69fafd93fe599c841227f3c7
     provider_type: VOLCENGINE_ARK
@@ -156,24 +156,25 @@ external_inputs:
       evaluator_digest: sha256:f090c0ca54d3438a803e1cc5df6949e9d635082c5333f326cea288e1768ae12c
       required_case_count: 7
       result_requirement: closed-pass-valid-fail-zero-unknown-zero
-      prior_attempt_checkpoint: 4f884a28c954de8b7edf555092fe08b81bce47ef
-      prior_attempt_result: sha256:58933ff893e1dd808009ef7de28968831285c19a1e9fcb9f9ad90caef1f8aa3e
-      prior_attempt_outcome: 6-pass-1-fail-0-unknown-no-qualification
-      status: clarified-partial-status-full-live-rerun-pending
+      prior_attempt_checkpoint: ce543190950d0ba8001117cadc02b25ebd34bd33
+      prior_attempt_result: sha256:6d224aa435f47f3f8a522ac6ee54a4ed76890d77b4ec5049f33633c400899238
+      prior_attempt_outcome: 7-pass-0-fail-0-unknown-pass-valid-baseline-preflight-blocked
+      status: baseline-input-corrected-full-live-rerun-pending
     source_disclosure:
       confirmation_ref: codex-user-confirmation:2026-08-10T21:01:55+08:00
       message_digest: sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae
       v009_conformance_ce_and_required_baselines: confirmed
       g3b_product_dispatch: not-included-requires-separate-confirmation
-    status: exact-inputs-v1.0.2-frozen-after-attempt-2-fail-live-rerun-pending
+    status: exact-inputs-v1.0.3-frozen-after-attempt-3-pass-baseline-preflight-block-live-rerun-pending
   direct_investigation_baseline:
     kind: exact-product-comparison-input
-    protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.0.json
-    protocol_ref: ITER-003-DIRECT-SOURCE-BASELINE@1.0.0
-    protocol_digest: sha256:af074014318fab1b5e0fdc3dafab70c1fcd45fe1060da4141e8d8fc594094869
+    protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json
+    protocol_ref: ITER-003-DIRECT-SOURCE-BASELINE@1.0.1
+    protocol_digest: sha256:b26a09eb1d7c35b3c7a2af0d26f7a10ffc44a8a0f328fee5252b3a35717905d7
     implementation_path: validation/product_holdout_iteration_002/direct_answer.py
-    implementation_file_digest: sha256:e04c6cca4eb484cd75512c9d748b3bd142027501c5ebe9c905fb5e1e96b06bbd
-    strategy_prompt_tool_resource_protocol: frozen-at-g0
+    implementation_file_digest: sha256:f36dc034d86b6c947e41bd2873f89b093fcbf3fe880f0e2becec8e3421fc6f9b
+    implementation_semantic_digest: sha256:26a0d3e55188daa974f0ffcb9147a4606765453bb8b9a26174adc6b911d2caa4
+    strategy_prompt_tool_resource_protocol: versioned-before-first-run-by-finding-003-017
     provider_adapter_model: VOLCENGINE_ARK/openai-chat-completions-no-tools@8/glm-5-2-260617-observed-glm-5.2
     result_timing: seal-all-direct-runs-after-v009-and-before-first-g3b-product-run
     questions: frozen-browser-questions-and-runtime-metamorphic-set
@@ -182,7 +183,7 @@ external_inputs:
     cold_latency_boundary: process-start-to-terminal-result-persisted
     cache_and_failure_policy: record-all-do-not-select-successes
     drift_policy: any-material-input-change-reruns-both-paths
-    status: protocol-frozen-results-pending
+    status: protocol-v1.0.1-frozen-results-pending
   mature_source_agent_baseline:
     kind: external-quality-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.1.json
