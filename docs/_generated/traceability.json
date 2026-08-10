@@ -468,6 +468,19 @@
       "tests/test_iteration_003_g3a_integration.py"
     ]
   },
+  "FINDING-003-014": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-014.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/world_model_capability_evaluation.py",
+      "validation/structure_world_model_iteration_003/v009"
+    ],
+    "tests": [
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_world_model_capability_evaluation.py",
+      "tests/test_iteration_003_v009.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -938,7 +951,8 @@
     "code": [
       "src/software_world_model/application_services/evaluation.py",
       "src/software_world_model/application_services/activation.py",
-      "src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py"
+      "src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py",
+      "src/software_world_model/ai_infrastructure/world_model_capability_evaluation.py"
     ],
     "tests": [
       "tests/test_capability_evaluation.py",
@@ -1103,6 +1117,7 @@
     "path": "docs/system/contracts/application/world-model-answering.md",
     "code": [
       "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure/world_model_answer_strategy.py",
       "src/software_world_model/interface"
     ],
     "tests": [
@@ -1110,6 +1125,7 @@
       "tests/test_browser_chat_interface.py",
       "tests/test_world_model_answering.py",
       "tests/test_world_model_evaluation.py",
+      "tests/test_world_model_answer_strategy.py",
       "tests/test_iteration_003_g3a_integration.py"
     ]
   },

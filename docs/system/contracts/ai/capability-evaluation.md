@@ -6,7 +6,7 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-X-CAPABILITY-EXECUTION]
 derived_from: [DD-MGT-CAPABILITY-EVALUATION]
-code: [src/software_world_model/application_services/evaluation.py, src/software_world_model/application_services/activation.py, src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py]
+code: [src/software_world_model/application_services/evaluation.py, src/software_world_model/application_services/activation.py, src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py, src/software_world_model/ai_infrastructure/world_model_capability_evaluation.py]
 tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, tests/test_evaluation_runner.py]
 ---
 

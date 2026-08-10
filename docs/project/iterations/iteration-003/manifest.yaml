@@ -106,13 +106,63 @@ external_inputs:
     status: frozen
   live_provider:
     kind: exact-gate-input
-    provider_adapter_model: pending-before-first-g3-external-dispatch
-    provider_endpoint: pending-exact-scheme-host-port-path-before-first-g3-external-dispatch
-    model_egress_gateway_policy: pending-default-deny-exact-endpoint-policy-before-first-g3-external-dispatch
-    conformance: exact-result-required-before-first-g3-external-dispatch
-    capability_qualification: exact-world-model-strategy-result-required-after-g3a-before-g3b
-    source_disclosure: explicit-confirmation-required-before-any-ce-or-g3-external-content
-    credential_reference: pending-with-exact-provider-selection
+    input_freeze_path: validation/structure_world_model_iteration_003/v009/input-freeze-1.0.0.json
+    input_freeze_ref: ITER-003-V009-EXACT-INPUTS@1.0.0
+    input_freeze_digest: sha256:822a20fc5df6439f0d0b95d5125a00e8d8240998a71154b27c0572c4b704cf74
+    checkpoint_binding: enclosing-clean-git-commit-and-tree-recorded-by-runtime
+    g3a_checkpoint: f2269ecca5c1e85e69fafd93fe599c841227f3c7
+    provider_type: VOLCENGINE_ARK
+    protocol: OPENAI_COMPATIBLE_CHAT_COMPLETIONS
+    adapter_version: openai-chat-completions-no-tools@8
+    requested_model_ref: glm-5-2-260617
+    actual_model_fingerprint: glm-5.2
+    provider_configuration_fingerprint: sha256:420f553a3ce0075818550e08cb1351ce69eaf9871c5a0257aecf88b7b32b88fd
+    provider_endpoint:
+      scheme: https
+      host: ark.cn-beijing.volces.com
+      port: 443
+      path: /api/coding/v3/chat/completions
+    credential_reference: env:ARK_API_KEY
+    model_egress_gateway_policy_path: validation/structure_world_model_iteration_003/v009/model-egress-policy-1.0.0.json
+    model_egress_gateway_policy_ref: ITER-003-MODEL-EGRESS-GATEWAY@1.0.0
+    model_egress_gateway_policy_digest: sha256:3e0bfcbf6f1b85d350db167d1bc71ff55f35a76546f15d4d7f14a871aa0326e0
+    model_egress_gateway_default_action: DENY
+    conformance_inputs:
+      fixture_id: CC-ARK-CHAT-NO-TOOLS-001
+      fixture_version: 1.6.0
+      operator: iter-003-v009-operator
+      timeout_milliseconds: 30000
+      max_output_tokens: 96
+      required_request_count: 2
+      execution_protocol: V009_PRECALL_SEALED_INVOCATION_AND_EXACT_RESULT_BINDING@1
+      implementation_manifest_digest: sha256:b0eed0252ab7bfd723bf9cb06b0e48d3ccd2e1c6f6d51ee2c26cdc027509d774
+    conformance: exact-pass-result-pending
+    strategy:
+      capability_id: world-model-authority-proposal
+      capability_contract_version: 1.0.0
+      strategy_id: model-snapshot-first-world-model-answer
+      strategy_version: 1.0.0
+      implementation_digest: sha256:d4f98df52e32d4e49161a2c01ee0b3af7a3e006056fc41af73ea40f024b5649e
+      implementation_file_digest: sha256:f5b888513384c8a962511d1c74091a34093992a83c55a27c3eb27b579f873d68
+      prompt_program_digest: sha256:ba2a2ccb43f3de9308d6bfc2d75d719a3ac7a918df87a594a81387dd034d292f
+      output_contract_digest: sha256:2b7e9a5dbae0d9436ee9d7cc87ffa17be33997d4e1f59bbc75e385c8e51bbd9d
+      tool_policy_ref: model-no-tools-no-source-no-evidence@1
+      model_calls_per_case: 1
+      hidden_retry_count: 0
+    capability_evaluation:
+      suite_ref: ITER-003-WORLD-MODEL-CAPABILITY-SUITE@1.0.0
+      suite_digest: sha256:b9118d83aa40e58ade6e3c947ea86d1d6d73ebd50d3b1ae0797d5caa7e415ad6
+      evaluator_path: validation/structure_world_model_iteration_003/v009/evaluator.py
+      evaluator_digest: sha256:f090c0ca54d3438a803e1cc5df6949e9d635082c5333f326cea288e1768ae12c
+      required_case_count: 7
+      result_requirement: closed-pass-valid-fail-zero-unknown-zero
+      status: pending-live-execution
+    source_disclosure:
+      confirmation_ref: codex-user-confirmation:2026-08-10T21:01:55+08:00
+      message_digest: sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae
+      v009_conformance_ce_and_required_baselines: confirmed
+      g3b_product_dispatch: not-included-requires-separate-confirmation
+    status: exact-inputs-frozen-live-results-pending
   direct_investigation_baseline:
     kind: exact-product-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.0.json
@@ -121,7 +171,7 @@ external_inputs:
     implementation_path: validation/product_holdout_iteration_002/direct_answer.py
     implementation_file_digest: sha256:e04c6cca4eb484cd75512c9d748b3bd142027501c5ebe9c905fb5e1e96b06bbd
     strategy_prompt_tool_resource_protocol: frozen-at-g0
-    provider_adapter_model: fill-from-v009-exact-selection
+    provider_adapter_model: VOLCENGINE_ARK/openai-chat-completions-no-tools@8/glm-5-2-260617-observed-glm-5.2
     result_timing: seal-all-direct-runs-after-v009-and-before-first-g3b-product-run
     questions: frozen-browser-questions-and-runtime-metamorphic-set
     run_count: at-least-five-per-question-including-cold-process
@@ -138,6 +188,7 @@ external_inputs:
     answer_schema_path: validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json
     answer_schema_ref: ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0
     answer_schema_digest: sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d
+    prepared_binary_path: /Applications/ChatGPT.app/Contents/Resources/codex
     prepared_tool_version: "codex-cli 0.147.0-alpha.1.2"
     prepared_binary_digest: sha256:9f6748b4ab10ffc92c28b9ccedae89e61a302bbc011df7d276ee38f55906e481
     exact_tool_model_config: recheck-and-bind-before-run

@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and dependencies
 
-当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，G1 Result 又绑定 G0 PASS 并在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上通过 V-002～V-006/V-012，G2 Result 再绑定 G1 PASS 并在 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上通过 V-007，G3a Result 最后绑定 G2 PASS 并在 checkpoint `f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上通过 V-008。Manifest baseline 固定无产品代码变化的准备提交 P；各 Gate Result 分别记录完整 lineage。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。当前执行必须停止在 V-009 之前，等待用户后续独立外部披露确认与全部 V-009 exact inputs 冻结。
+当前已获用户授权，绑定治理提交 Q 的 G0 Result 已在 exact 输入 checkpoint 上提交为 PASS，G1 Result 又绑定 G0 PASS 并在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上通过 V-002～V-006/V-012，G2 Result 再绑定 G1 PASS 并在 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上通过 V-007，G3a Result 最后绑定 G2 PASS 并在 checkpoint `f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上通过 V-008。Manifest baseline 固定无产品代码变化的准备提交 P；各 Gate Result 分别记录完整 lineage。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。用户已随后独立确认 V-009 Conformance、closed CE 与两条 required baseline 的外部披露；`ITER-003-V009-EXACT-INPUTS@1.0.0` 已冻结全部输入，首次真实请求只允许从包含该冻结资产的 clean Git checkpoint 发起。G3b product dispatch 不在本次确认范围内。
 
 ## Current vs expected behavior
 
@@ -72,9 +72,19 @@ G2 已由 `ITER-003-RESULT-G2` 在 checkpoint `82aef7563556c70527b3c92227d0711a2
 
 ### G3a — Offline answer-chain implementation
 
-在不分派任何外部 Provider 且无任何出站网络 route 的条件下实现 World Model Answering 和评测页面投影，以确定性 test strategy 完整走通 `Requirement Revision → Needs/Joint Constraints → candidate resolution → Query Plan → Query Result → Need Assessments → Draft → Review → Authorization → Delivery`。补齐 Need 遗漏、直接伪造 EntityRef、0/N candidate、跨 Session candidate、tampered Query Result、wrong Snapshot/Read Set、生成与审核同一 invocation、Evidence payload/网络读取和无授权 Delivery 反例，全部失败关闭。该范围已由 `ITER-003-RESULT-G3A` 在 clean exact checkpoint `f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上裁决为 PASS，且只解除 V-008 阻断。现有开发授权不构成任何内容向外部 Provider 的披露确认；Result 后必须停止。只有用户在后续独立消息中确认本轮外部披露，并冻结 exact Provider/Adapter/Model、Provider scheme/host/port/path、credential reference、默认拒绝的 Model Egress Gateway policy 与 Conformance 输入后，才能开始 V-009。closed Capability Evaluation 全部 Case PASS、FAIL/UNKNOWN 为零且 Result 为 PASS/VALID 后，仍必须先按 G0 冻结协议完成并密封同模型 Direct Source 与成熟 Codex Source Agent 两条 baseline，随后才可开始 G3b。
+在不分派任何外部 Provider 且无任何出站网络 route 的条件下实现 World Model Answering 和评测页面投影，以确定性 test strategy 完整走通 `Requirement Revision → Needs/Joint Constraints → candidate resolution → Query Plan → Query Result → Need Assessments → Draft → Review → Authorization → Delivery`。补齐 Need 遗漏、直接伪造 EntityRef、0/N candidate、跨 Session candidate、tampered Query Result、wrong Snapshot/Read Set、生成与审核同一 invocation、Evidence payload/网络读取和无授权 Delivery 反例，全部失败关闭。该范围已由 `ITER-003-RESULT-G3A` 在 clean exact checkpoint `f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上裁决为 PASS，且只解除 V-008 阻断。用户后续独立披露确认和 `ITER-003-V009-EXACT-INPUTS@1.0.0` 已解除 V-009 input-preflight 阻断；closed Capability Evaluation 全部 Case PASS、FAIL/UNKNOWN 为零且 Result 为 PASS/VALID 后，仍必须先按 G0 冻结协议完成并密封同模型 Direct Source 与成熟 Codex Source Agent 两条 baseline。G3b 仍需单独披露确认。
 
 G3a 的 process-local authority store、deterministic strategies 与唯一 `EVALUATION_ONLY` sink 只服务本 Gate，不替代 live `ResponseControlService` 的 Task/Use/qualification/permission/persistent dispatch authority。应用层 Provider/network port count 为零只证明端口未被使用；全局无 Source/Evidence/network I/O 还必须复用 G2 deny-default Seatbelt 机制，以 package-owned strategy、exact Bundle 输入、正常 workload operation audit 和独立拒绝 probe 共同证明。评测页内部公开 digest 只能证明一致性：staging 必须把环境 commit 绑定 clean Git HEAD/tree，并从独立、递归验证通过且与 isolated workload 输入完全相同的 connected chain 预先冻结 expected PAGE digest；Projector 必须以带外 commit/PAGE 双锚点校验单向 seal。strategy 的语义资格仍由 V-009 CC/closed CE 裁决。
+
+### V-009 — External strategy qualification and baseline preflight
+
+V-009 不修改或替换 G3a offline authority。资格 subject 是独立的 `model-snapshot-first-world-model-answer@1.0.0` proposal strategy：每个 synthetic Case 恰好一次 no-tools Model Gateway 调用、零 hidden retry，Manifest 只有通用 instruction、sealed Case input 与 exact Conformance qualification reference。Evaluator-only 的 projection、expected result、forbidden events 和任何 Product suite/oracle 不得进入 Strategy、Manifest 或 Provider request。
+
+Adapter Conformance 必须由 V-009 runner 从 enclosing clean checkpoint 发起：在第一次网络分派前以 O_EXCL 密封包含 exact Provider、endpoint、operator、timeout、token cap、披露引用、HEAD/tree 和 input-freeze digest 的 invocation receipt；运行后再把 immutable Conformance Result 绑定到独立 binding receipt。closed CE 只接受该 binding，不接受裸 Conformance Result；Provider outcome unknown 只形成阻断性 UNKNOWN evidence，不能在同一 freeze run 内重试。
+
+closed CE 的七个 Case 由独立 `python -I -S -B` 标准库 evaluator 进程裁决；它只读取 sealed evaluator packet 与 normalized Result，记录独立 PID、implementation digest、exact projection digest 和 forbidden-event audit，不导入被评 planner/drafter/reviewer。generic Capability Evaluation authority 必须形成 closed Result；只有七 Case 全 PASS、FAIL/UNKNOWN=0 且 Validity=`VALID` 才产生 qualification。
+
+默认拒绝 egress policy 固定 G3b 产品路线为 `Answer→AF_UNIX Model Egress Gateway→https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions`，credential 只在 Gateway 最终 HTTPS dispatch 注入；Answer 不得解析 DNS 或直连 INET/INET6，Projector 全部出站拒绝。V-009 Conformance、CE 和两条 baseline 可使用 policy 明确标记的 direct Adapter qualification transport，但其 Result 不证明 G3b distinct Gateway process 或 OS network denial。任何 input、Strategy/Prompt/schema/tool/config、Provider identity、policy、suite/evaluator 或 checkpoint 漂移都使 qualification/baseline 失效。
 
 ### G3b — Evaluation-only browser model run
 
@@ -103,3 +113,5 @@ Verification Matrix V-001 至 V-013 全部满足且人工内容核对完成，�
 G2 已处置 `FINDING-003-009`，把 Citation Projector 从直接读取完整 Evidence Store 收窄为 trusted broker 物化的 Result-scoped disposable Store；`FINDING-003-010` 则把本机验证机制明确为 macOS Seatbelt capability boundary，区分应用输入、runtime/ancestor traversal、输出与拒绝目标。两项处置及 V-007 的实际执行已由 `ITER-003-RESULT-G2` 在 exact checkpoint 上联合裁决为 PASS；它们不授权任何 G3a 以后的外部执行。
 
 G3a 已处置 `FINDING-003-011`、`FINDING-003-012` 与 `FINDING-003-013`：前者把新 authority chain 固定为 process-local `EVALUATION_ONLY` 路径，禁止自动提升为 live Response Control；第二项要求 V-008 把应用端口零计数与真实 OS operation audit/deny probes 分列，并闭合 bundled Python 最小 sibling runtime capability；第三项要求用 clean HEAD/tree 与带外 commit/PAGE digest 证明评测页来源，并按 exact scalar type 失败关闭。三项处置及 V-008 的实际执行已由 `ITER-003-RESULT-G3A` 在 exact checkpoint 上联合裁决为 PASS；它们不授予外部 strategy/model 资格、外部披露、V-009 或 G3b。
+
+V-009 已处置 `FINDING-003-014`：保留 G3a offline authority 不变，以独立 model proposal strategy 作为 closed CE subject，并把 evaluator oracle 隔离到 standalone deterministic process；V-009 direct Adapter transport 只用于 qualification/comparison，不得冒充 G3b Model Egress Gateway 与 OS denial 证明。

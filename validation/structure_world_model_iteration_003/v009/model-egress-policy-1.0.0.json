@@ -1,0 +1,79 @@
+{
+  "policy_ref": "ITER-003-MODEL-EGRESS-GATEWAY@1.0.0",
+  "schema": "swm.model-egress-gateway-policy@1",
+  "default_action": "DENY",
+  "provider": {
+    "adapter_version": "openai-chat-completions-no-tools@8",
+    "credential_reference": "env:ARK_API_KEY",
+    "endpoint": {
+      "host": "ark.cn-beijing.volces.com",
+      "path": "/api/coding/v3/chat/completions",
+      "port": 443,
+      "scheme": "https"
+    },
+    "model_ref": "glm-5-2-260617",
+    "provider_type": "VOLCENGINE_ARK"
+  },
+  "roles": {
+    "answer": {
+      "allowed_outbound": [
+        {
+          "address_family": "AF_UNIX",
+          "endpoint_binding": "RUN_ROOT/model-egress.sock",
+          "peer_role": "model_egress_gateway",
+          "protocol": "SOCK_STREAM"
+        }
+      ],
+      "credential_visibility": "FORBIDDEN",
+      "dns": "DENY",
+      "inet": "DENY",
+      "inet6": "DENY",
+      "other_outbound": "DENY"
+    },
+    "citation_projector": {
+      "all_outbound": "DENY",
+      "credential_visibility": "FORBIDDEN",
+      "dns": "DENY"
+    },
+    "model_egress_gateway": {
+      "allowed_inbound": [
+        {
+          "address_family": "AF_UNIX",
+          "endpoint_binding": "RUN_ROOT/model-egress.sock",
+          "peer_role": "answer",
+          "protocol": "SOCK_STREAM"
+        }
+      ],
+      "allowed_outbound": [
+        {
+          "endpoint": "https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions",
+          "protocol": "TLS_HTTPS",
+          "request_path_policy": "EXACT"
+        }
+      ],
+      "credential_injection": "AT_FINAL_HTTPS_DISPATCH_ONLY",
+      "credential_visibility": "GATEWAY_ONLY",
+      "endpoint_validation": "EXACT_SCHEME_HOST_PORT_PATH_NO_USERINFO_QUERY_OR_FRAGMENT",
+      "other_outbound": "DENY",
+      "proxy_environment": "IGNORED",
+      "tls_hostname_verification": "REQUIRED"
+    }
+  },
+  "qualification_execution": {
+    "allowed_mode": "DIRECT_ADAPTER_TRANSPORT_QUALIFICATION_ONLY",
+    "g3b_product_claim": "FORBIDDEN",
+    "purpose": [
+      "ADAPTER_CONFORMANCE",
+      "CLOSED_WORLD_MODEL_CAPABILITY_EVALUATION",
+      "SEALED_BASELINES"
+    ],
+    "requires_explicit_disclosure_confirmation": true
+  },
+  "runtime_binding": {
+    "g3b_requires_distinct_gateway_process": true,
+    "g3b_requires_os_denial_audit": true,
+    "g3b_requires_run_root_canonicalization": true,
+    "policy_drift_invalidates_qualification": true,
+    "provider_dns_resolution_is_gateway_owned": true
+  }
+}
