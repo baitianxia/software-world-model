@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-RESPONSE-CONTROL]
-code: [src/software_world_model/application_services/response_control.py, src/software_world_model/application_services/evidence_answer.py, src/software_world_model/infrastructure/sqlite_response_control_repository.py]
-tests: [tests/test_response_control.py, tests/test_evidence_answer.py, tests/test_agentic_runtime.py]
+code: [src/software_world_model/application_services/response_control.py, src/software_world_model/application_services/evidence_answer.py, src/software_world_model/application_services/world_model_answering.py, src/software_world_model/infrastructure/sqlite_response_control_repository.py]
+tests: [tests/test_response_control.py, tests/test_evidence_answer.py, tests/test_agentic_runtime.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_iteration_003_g3a_integration.py]
 ---
 
 # Response Control

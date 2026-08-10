@@ -6,7 +6,7 @@ authority: normative
 owners: [application, quality]
 depends_on: [SYS-ADR-014, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
-tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py]
+tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_iteration_003_g3a_integration.py]
 ---
 
 # World Model Answering

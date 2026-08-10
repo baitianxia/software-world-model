@@ -465,6 +465,38 @@ class StructureViewTests(unittest.TestCase):
             )
         self.assertEqual(raised.exception.details["reason_code"], "VIEW_DIFF_ORDER_INVALID")
 
+    def test_resigned_view_result_requires_exact_boolean_truncation(self) -> None:
+        result = self.service.child_module_inventory(
+            system=self._exact(self.b[1], "mall"),
+        )
+        core = {
+            key: value
+            for key, value in result.canonical_value().items()
+            if key not in {"result_id", "digest"}
+        }
+        core["truncated"] = 0
+        identity = digest_of(["STRUCTURE_VIEW_RESULT_ID@1", core])
+        result_id = StableId(f"structure_view_result_{identity.value[-32:]}")
+        tampered = replace(
+            result,
+            result_id=result_id,
+            truncated=0,
+            digest=digest_of(
+                [
+                    "STRUCTURE_VIEW_RESULT@1",
+                    {"result_id": result_id.value, **core},
+                ]
+            ),
+        )
+
+        with self.assertRaises(DomainError) as raised:
+            tampered.require_valid()
+
+        self.assertEqual(
+            raised.exception.details["reason_code"],
+            "VIEW_RESULT_TRUNCATED_INVALID",
+        )
+
     def test_view_has_no_repository_source_or_payload_port(self) -> None:
         self.assertFalse(hasattr(self.service, "repository"))
         self.assertFalse(hasattr(self.service, "source"))

@@ -61,8 +61,14 @@ OUTER_PROCESS_PROBES = (
     "git_process_exec",
     "subprocess_exec",
 )
-ANCESTOR_PARAMETER_COUNT = 32
+ANCESTOR_PARAMETER_COUNT = 40
 SANDBOXED_PYTHON_FLAGS = ("-I", "-S", "-B")
+PYTHON_RUNTIME_DEPENDENCY_PARAMETER_COUNT = 3
+_XPKG_RUNTIME_DEPENDENCY_ALIASES = (
+    Path("openssl.org/v1"),
+    Path("sqlite.org/v3"),
+    Path("zlib.net/v1"),
+)
 
 
 class ConfigurationError(ValueError):
@@ -123,10 +129,17 @@ class ForbiddenTargets:
 
 
 @dataclass(frozen=True)
+class RuntimeDependencyCapability:
+    alias: Path
+    root: Path
+
+
+@dataclass(frozen=True)
 class IsolationConfig:
     stage_root: Path
     python_executable: Path
     python_runtime: Path
+    python_runtime_dependencies: tuple[RuntimeDependencyCapability, ...]
     source_remote: Endpoint
     public_endpoint: Endpoint
     dns_host: str
@@ -345,6 +358,71 @@ def _tree_manifest(root: Path) -> list[dict[str, object]]:
     return manifest
 
 
+def _runtime_dependency_manifest(root: Path) -> list[dict[str, object]]:
+    """Bind a read-only runtime tree, including its internal aliases."""
+
+    entries: list[dict[str, object]] = []
+    for current, directories, files in os.walk(root, followlinks=False):
+        current_path = Path(current)
+        for name in sorted(tuple(directories)):
+            child = current_path / name
+            metadata = child.lstat()
+            relative = child.relative_to(root).as_posix()
+            if stat.S_ISLNK(metadata.st_mode):
+                directories.remove(name)
+                resolved = child.resolve(strict=True)
+                if not _is_within(resolved, root):
+                    raise ConfigurationError(
+                        f"runtime dependency alias escapes its root: {child}"
+                    )
+                entries.append(
+                    {
+                        "path": relative,
+                        "kind": "symlink",
+                        "target": os.readlink(child),
+                    }
+                )
+            elif stat.S_ISDIR(metadata.st_mode):
+                entries.append({"path": relative, "kind": "directory"})
+            else:
+                raise ConfigurationError(
+                    f"runtime dependency has unsafe directory entry: {child}"
+                )
+        for name in sorted(files):
+            child = current_path / name
+            metadata = child.lstat()
+            relative = child.relative_to(root).as_posix()
+            if stat.S_ISLNK(metadata.st_mode):
+                resolved = child.resolve(strict=True)
+                if not _is_within(resolved, root) or not resolved.is_file():
+                    raise ConfigurationError(
+                        f"runtime dependency alias escapes its root: {child}"
+                    )
+                entries.append(
+                    {
+                        "path": relative,
+                        "kind": "symlink",
+                        "target": os.readlink(child),
+                    }
+                )
+            elif stat.S_ISREG(metadata.st_mode):
+                entries.append(
+                    {
+                        "path": relative,
+                        "kind": "file",
+                        "size": metadata.st_size,
+                        "link_count": metadata.st_nlink,
+                        "digest": _sha256_file(child),
+                    }
+                )
+            else:
+                raise ConfigurationError(
+                    f"runtime dependency has unsafe file entry: {child}"
+                )
+    entries.sort(key=lambda item: (str(item["path"]), str(item["kind"])))
+    return entries
+
+
 def _manifest_paths(manifest: Iterable[Mapping[str, object]]) -> tuple[str, ...]:
     return tuple(str(item["path"]) for item in manifest)
 
@@ -369,6 +447,58 @@ def _validate_initial_output(
         raise ConfigurationError(
             f"{role} output root contains undeclared directories before workload run"
         )
+
+
+def _python_runtime_read_root() -> Path:
+    """Return the exact base prefix of the active interpreter."""
+
+    return Path(sys.base_prefix).resolve(strict=True)
+
+
+def _python_runtime_dependency_capabilities(
+    python_runtime: Path,
+) -> tuple[RuntimeDependencyCapability, ...]:
+    """Resolve only the xpkg siblings loaded by the isolated workers.
+
+    The workers import ``base64``/``hashlib`` and the package's eager SQLite
+    adapter.  Their xpkg builds load zlib, OpenSSL and SQLite through stable
+    version aliases.  Granting the package-manager root would also expose
+    unrelated tools, so each alias is resolved to one canonical version root.
+    An xpkg layout change fails closed instead of widening the capability.
+    """
+
+    package_manager_root = python_runtime.parent.parent
+    executable = Path(sys.executable).resolve(strict=True)
+    if (
+        package_manager_root.name != "pkgs"
+        or python_runtime.parent.name != "python.org"
+        or not _is_within(executable, python_runtime)
+    ):
+        return ()
+    capabilities: list[RuntimeDependencyCapability] = []
+    for relative_alias in _XPKG_RUNTIME_DEPENDENCY_ALIASES:
+        alias = package_manager_root / relative_alias
+        try:
+            root = alias.resolve(strict=True)
+        except OSError as exc:
+            raise ConfigurationError(
+                f"required Python runtime dependency is missing: {alias}"
+            ) from exc
+        family_root = alias.parent.resolve(strict=True)
+        if (
+            not alias.is_symlink()
+            or not root.is_dir()
+            or root.is_symlink()
+            or not _is_within(root, family_root)
+            or root == family_root
+        ):
+            raise ConfigurationError(
+                f"Python runtime dependency alias is unsafe: {alias}"
+            )
+        capabilities.append(
+            RuntimeDependencyCapability(alias=alias, root=root)
+        )
+    return tuple(capabilities)
 
 
 def parse_config(value: object) -> IsolationConfig:
@@ -399,7 +529,10 @@ def parse_config(value: object) -> IsolationConfig:
         raise ConfigurationError(
             "python_executable must be the interpreter running this trusted harness"
         )
-    python_runtime = Path(sys.base_prefix).resolve(strict=True)
+    python_runtime = _python_runtime_read_root()
+    python_runtime_dependencies = _python_runtime_dependency_capabilities(
+        python_runtime
+    )
     timeout = top["timeout_seconds"]
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)):
         raise ConfigurationError("timeout_seconds must be numeric")
@@ -537,6 +670,26 @@ def parse_config(value: object) -> IsolationConfig:
         if forbidden_path == projector.sealed_result:
             raise ConfigurationError(f"{forbidden_label} aliases projector.sealed_result")
 
+    runtime_roots = (
+        python_runtime,
+        *(item.root for item in python_runtime_dependencies),
+    )
+    for runtime_root in runtime_roots:
+        if _paths_overlap(runtime_root, stage_root):
+            raise ConfigurationError(
+                "Python runtime capability overlaps the staged role boundary"
+            )
+        for forbidden_path in (
+            forbidden.file,
+            forbidden.sqlite,
+            forbidden.git_root,
+            forbidden.git_marker,
+        ):
+            if _is_within(forbidden_path, runtime_root):
+                raise ConfigurationError(
+                    "forbidden target is inside a Python runtime capability"
+                )
+
     package_manifest = _tree_manifest(answer.package_root)
     bundle_manifest = _tree_manifest(answer.bundle_root)
     projector_package_manifest = _tree_manifest(projector.package_root)
@@ -565,6 +718,7 @@ def parse_config(value: object) -> IsolationConfig:
         stage_root=stage_root,
         python_executable=python_executable,
         python_runtime=python_runtime,
+        python_runtime_dependencies=python_runtime_dependencies,
         source_remote=_endpoint(top["source_remote"], "source_remote"),
         public_endpoint=_endpoint(
             top["public_endpoint"], "public_endpoint", numeric_host=True
@@ -592,6 +746,7 @@ def _profile_recursive_read_roots(
     role_config = config.answer if role == "answer" else config.projector
     roots = {
         config.python_runtime,
+        *(item.root for item in config.python_runtime_dependencies),
         Path("/System/Library"),
         Path("/usr/lib"),
         Path("/private/var/db/dyld"),
@@ -608,6 +763,9 @@ def _profile_recursive_read_roots(
 def _profile_parameters(config: IsolationConfig, role: str) -> dict[str, str]:
     directory_roots = set(_profile_recursive_read_roots(config, role))
     directory_roots.add(config.python_executable.parent)
+    directory_roots.update(
+        item.alias for item in config.python_runtime_dependencies
+    )
     if role == "projector":
         directory_roots.add(config.projector.sealed_result.parent)
     ancestors = sorted(
@@ -623,6 +781,14 @@ def _profile_parameters(config: IsolationConfig, role: str) -> dict[str, str]:
     common = {
         "PYTHON_EXECUTABLE": str(config.python_executable),
         "PYTHON_RUNTIME": str(config.python_runtime),
+        **{
+            f"PYTHON_RUNTIME_DEPENDENCY_{index:02d}": str(
+                config.python_runtime_dependencies[index].root
+                if index < len(config.python_runtime_dependencies)
+                else config.python_runtime
+            )
+            for index in range(PYTHON_RUNTIME_DEPENDENCY_PARAMETER_COUNT)
+        },
         **{
             f"ANCESTOR_{index:02d}": str(
                 ancestors[index] if index < len(ancestors) else Path("/")
@@ -665,7 +831,15 @@ def _profile_capability_evidence(
             "/System/Library",
             "/usr/lib",
             str(config.python_runtime),
+            *(
+                str(item.root)
+                for item in config.python_runtime_dependencies
+            ),
             str(role_config.package_root),
+        ],
+        "python_runtime_dependencies": [
+            {"alias": str(item.alias), "root": str(item.root)}
+            for item in config.python_runtime_dependencies
         ],
         "recursive_write_roots": [str(role_config.output_root)],
         "literal_read_files": [
@@ -900,7 +1074,7 @@ sandbox_command = probe_sandbox_command
 
 
 def _input_manifests(config: IsolationConfig) -> dict[str, object]:
-    return {
+    manifests: dict[str, object] = {
         "answer_package": _tree_manifest(config.answer.package_root),
         "answer_bundles": _tree_manifest(config.answer.bundle_root),
         "answer_initial_output": _tree_manifest(config.answer.output_root),
@@ -908,15 +1082,31 @@ def _input_manifests(config: IsolationConfig) -> dict[str, object]:
         "projector_store": _tree_manifest(config.projector.store_root),
         "projector_initial_output": _tree_manifest(config.projector.output_root),
     }
+    manifests["python_runtime_dependencies"] = [
+        {
+            "alias": str(item.alias),
+            "root": str(item.root),
+            "manifest": _runtime_dependency_manifest(item.root),
+        }
+        for item in config.python_runtime_dependencies
+    ]
+    return manifests
 
 
-def _protected_manifests(config: IsolationConfig) -> dict[str, list[dict[str, object]]]:
-    return {
+def _protected_manifests(config: IsolationConfig) -> dict[str, object]:
+    manifests: dict[str, object] = {
         "answer_package": _tree_manifest(config.answer.package_root),
         "answer_bundles": _tree_manifest(config.answer.bundle_root),
         "projector_package": _tree_manifest(config.projector.package_root),
         "projector_store": _tree_manifest(config.projector.store_root),
     }
+    for index, item in enumerate(config.python_runtime_dependencies):
+        manifests[f"python_runtime_dependency_{index:02d}"] = {
+            "alias": str(item.alias),
+            "root": str(item.root),
+            "manifest": _runtime_dependency_manifest(item.root),
+        }
+    return manifests
 
 
 def _manifest_digest(manifest: object) -> str:
@@ -926,8 +1116,16 @@ def _manifest_digest(manifest: object) -> str:
     return _sha256_bytes(encoded)
 
 
+def _manifest_entry_count(manifest: object) -> int:
+    if isinstance(manifest, list):
+        return len(manifest)
+    if isinstance(manifest, dict) and isinstance(manifest.get("manifest"), list):
+        return len(manifest["manifest"])
+    raise TypeError("unsupported protected manifest")
+
+
 def _integrity_check(
-    expected: Mapping[str, list[dict[str, object]]], config: IsolationConfig
+    expected: Mapping[str, object], config: IsolationConfig
 ) -> tuple[dict[str, object], bool]:
     observed = _protected_manifests(config)
     roots: dict[str, object] = {}
@@ -1675,6 +1873,16 @@ def run_isolation(config: IsolationConfig) -> tuple[dict[str, object], bool]:
                 "digest": _sha256_file(config.python_executable),
             },
             "python_runtime": str(config.python_runtime),
+            "python_runtime_dependencies": [
+                {
+                    "alias": str(item.alias),
+                    "root": str(item.root),
+                    "manifest_digest": _manifest_digest(
+                        _runtime_dependency_manifest(item.root)
+                    ),
+                }
+                for item in config.python_runtime_dependencies
+            ],
             "sandboxed_python_flags": list(SANDBOXED_PYTHON_FLAGS),
             "answer_profile": {
                 "path": str(ANSWER_PROFILE),
@@ -1757,7 +1965,7 @@ def run_isolation(config: IsolationConfig) -> tuple[dict[str, object], bool]:
         evidence["protected_inputs_after_worker_staging"] = {
             name: {
                 "manifest_digest": _manifest_digest(manifest),
-                "file_count": len(manifest),
+                "file_count": _manifest_entry_count(manifest),
                 "manifest": manifest,
             }
             for name, manifest in sorted(protected_before.items())

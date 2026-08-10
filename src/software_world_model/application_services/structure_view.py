@@ -17,6 +17,9 @@ from software_world_model.application_services.structure_read_bundle import (
     StructureOrderedReadBundle,
     StructureSnapshotReadBundle,
 )
+from software_world_model.application_services.structure_read_session import (
+    StructureReadSession,
+)
 from software_world_model.cross_cutting import (
     Digest,
     DomainError,
@@ -267,6 +270,11 @@ class StructureViewResult:
         payload: Mapping[str, object],
         support_map: Sequence[StructureViewSupport],
     ) -> "StructureViewResult":
+        if type(truncated) is not bool:
+            raise _invalid(
+                "VIEW_RESULT_TRUNCATED_INVALID",
+                "Structure View Result truncated marker must be an exact boolean",
+            )
         bundles = tuple(selected_bundles)
         if not bundles:
             raise _invalid(
@@ -380,7 +388,7 @@ class StructureViewResult:
             "relation_modalities": modalities,
             "coverage": coverage_values,
             "completeness": completeness.value,
-            "truncated": bool(truncated),
+            "truncated": truncated,
             "limitations": normalized_limitations,
             "payload": payload_fields,
             "support_map": tuple(item.canonical_value() for item in normalized_support),
@@ -403,7 +411,7 @@ class StructureViewResult:
             relation_modalities=modalities,
             coverage=coverage_values,
             completeness=completeness,
-            truncated=bool(truncated),
+            truncated=truncated,
             limitations=normalized_limitations,
             payload=payload_fields,
             support_map=normalized_support,
@@ -465,6 +473,11 @@ class StructureViewResult:
         return values
 
     def require_valid(self) -> None:
+        if type(self.truncated) is not bool:
+            raise _invalid(
+                "VIEW_RESULT_TRUNCATED_INVALID",
+                "Structure View Result truncated marker must be an exact boolean",
+            )
         if self.result_id.kind != "structure_view_result":
             raise _invalid(
                 "VIEW_RESULT_ID_KIND_INVALID",
@@ -707,6 +720,72 @@ class StructureEntityArgument:
             digest=digest_of(["STRUCTURE_ENTITY_ARGUMENT@1", core]),
         )
 
+    def require_valid(self) -> None:
+        """Verify the complete typed-argument proof without a mounted Store."""
+
+        expected = type(self)._create(
+            origin=self.origin,
+            session_id=self.session_id,
+            read_set_digest=self.read_set_digest,
+            ordered_bundle_digest=self.ordered_bundle_digest,
+            snapshot_id=self.snapshot_id,
+            snapshot_bundle_digest=self.snapshot_bundle_digest,
+            entity_root_id=self.entity_root_id,
+            entity_state_id=self.entity_state_id,
+            candidate_result=self.candidate_result,
+            candidate_result_id=self.candidate_result_id,
+            candidate_result_digest=self.candidate_result_digest,
+        )
+        if expected.digest != self.digest:
+            raise _invalid(
+                "VIEW_ENTITY_ARGUMENT_DIGEST_MISMATCH",
+                "typed Entity argument is not canonical",
+            )
+        if self.origin is StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE:
+            if (
+                self.candidate_result is None
+                or self.candidate_result_id is None
+                or self.candidate_result_digest is None
+            ):
+                raise _invalid(
+                    "VIEW_CANDIDATE_PROOF_REQUIRED",
+                    "candidate-derived Entity argument lacks its sealed proof",
+                )
+            if (
+                self.candidate_result.result_id != self.candidate_result_id
+                or self.candidate_result.digest != self.candidate_result_digest
+            ):
+                raise _invalid(
+                    "VIEW_CANDIDATE_PROOF_MISMATCH",
+                    "candidate-derived Entity argument proof does not bind its exact unique candidate",
+                )
+            try:
+                self.candidate_result.require_valid()
+                rebuilt = type(self).from_unique_candidate(
+                    self.candidate_result
+                )
+            except DomainError as exc:
+                raise _invalid(
+                    "VIEW_CANDIDATE_PROOF_MISMATCH",
+                    "candidate-derived Entity argument proof is invalid",
+                ) from exc
+            if rebuilt != self:
+                raise _invalid(
+                    "VIEW_CANDIDATE_PROOF_MISMATCH",
+                    "candidate-derived Entity argument proof does not bind its exact unique candidate",
+                )
+            return
+        if (
+            self.origin is not StructureViewArgumentOrigin.CALLER_EXACT_REF
+            or self.candidate_result is not None
+            or self.candidate_result_id is not None
+            or self.candidate_result_digest is not None
+        ):
+            raise _invalid(
+                "VIEW_ENTITY_ARGUMENT_ORIGIN_INVALID",
+                "typed Entity argument origin is inconsistent",
+            )
+
 
 class StructureViewService:
     """Bundle-only, deterministic Structure query service."""
@@ -741,12 +820,22 @@ class StructureViewService:
         return self._ordered.session.session_id
 
     @property
+    def read_session(self) -> StructureReadSession:
+        """Expose the immutable Session authority, never its connected repository."""
+
+        return self._ordered.session
+
+    @property
     def read_set_digest(self) -> Digest:
         return self._ordered.session.read_set_digest
 
     @property
     def ordered_bundle_digest(self) -> Digest:
         return self._ordered.digest
+
+    @property
+    def snapshot_bundle_digests(self) -> tuple[Digest, ...]:
+        return tuple(bundle.digest for bundle in self._bundles)
 
     @property
     def snapshot_ids(self) -> tuple[StableId, ...]:
@@ -1277,6 +1366,7 @@ class StructureViewService:
                 "VIEW_ENTITY_ARGUMENT_NOT_IN_SNAPSHOT",
                 "typed Entity argument does not match the exact Snapshot State",
             )
+        argument.require_valid()
         if argument.origin is StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE:
             if (
                 argument.candidate_result_id is None

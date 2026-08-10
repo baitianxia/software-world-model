@@ -179,6 +179,70 @@ class Iteration003G2IsolationTests(unittest.TestCase):
             ],
             str(Path(sys.executable).resolve(strict=True)),
         )
+        self.assertEqual(
+            plan["capability_profiles"]["answer"]["profile_parameters"][
+                "PYTHON_RUNTIME"
+            ],
+            str(run_isolation._python_runtime_read_root()),
+        )
+        self.assertTrue(
+            Path(sys.base_prefix).resolve(strict=True).is_relative_to(
+                run_isolation._python_runtime_read_root()
+            )
+        )
+
+    def test_python_runtime_capability_excludes_unrelated_xpkg_siblings(self) -> None:
+        config = run_isolation.parse_config(self.fixture.configuration())
+        roots = set(run_isolation._profile_recursive_read_roots(config, "answer"))
+        self.assertIn(Path(sys.base_prefix).resolve(strict=True), roots)
+        if config.python_runtime_dependencies:
+            self.assertEqual(
+                len(config.python_runtime_dependencies),
+                run_isolation.PYTHON_RUNTIME_DEPENDENCY_PARAMETER_COUNT,
+            )
+            package_manager_root = config.python_runtime.parent.parent
+            self.assertNotIn(package_manager_root, roots)
+            self.assertFalse(
+                any(
+                    (package_manager_root / "git-scm.org").is_relative_to(root)
+                    for root in roots
+                )
+            )
+            operation_audit = workload_worker._OperationAudit(
+                run_isolation._workload_audit_policy(config, "answer")
+            )
+            operation_audit.hook(
+                "open",
+                (
+                    str(
+                        package_manager_root
+                        / "git-scm.org"
+                        / "v2.55.0"
+                        / "bin"
+                        / "git-receive-pack"
+                    ),
+                    "r",
+                    0,
+                ),
+            )
+            self.assertEqual(
+                operation_audit.counts["out_of_allowlist_file_operations"],
+                1,
+            )
+            self.assertEqual(
+                {item.alias.relative_to(package_manager_root).as_posix()
+                 for item in config.python_runtime_dependencies},
+                {"openssl.org/v1", "sqlite.org/v3", "zlib.net/v1"},
+            )
+            for item in config.python_runtime_dependencies:
+                self.assertTrue(item.alias.is_symlink())
+                self.assertEqual(item.alias.resolve(strict=True), item.root)
+                self.assertIn(item.root, roots)
+        manifests = run_isolation._input_manifests(config)
+        self.assertEqual(
+            len(manifests["python_runtime_dependencies"]),
+            len(config.python_runtime_dependencies),
+        )
 
     def test_probe_inventory_covers_every_required_denial(self) -> None:
         common = {

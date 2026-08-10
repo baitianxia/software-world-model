@@ -22,5 +22,8 @@ iteration: ITER-003
 - [FINDING-003-008：跨模块 Artifact 读取与持久使用初版没有闭合当前授权](FINDING-003-008.md) — dispositioned / local-implementation
 - [FINDING-003-009：Citation Projector 需要 Result-scoped 最小观察存储](FINDING-003-009.md) — dispositioned / system-contract
 - [FINDING-003-010：macOS G2 隔离证明是 capability sandbox，不是 mount namespace](FINDING-003-010.md) — dispositioned / iteration-design
+- [FINDING-003-011：G3a 需要显式隔离于既有生产 Response Control](FINDING-003-011.md) — dispositioned / iteration-design
+- [FINDING-003-012：应用计数不能单独证明 G3a 全局无 I/O](FINDING-003-012.md) — dispositioned / verification
+- [FINDING-003-013：公开摘要只能证明一致性，不能自行证明评测页来源](FINDING-003-013.md) — dispositioned / verification
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。
