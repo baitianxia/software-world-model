@@ -761,6 +761,24 @@
       "tests/test_iteration_003_g2_isolation.py"
     ]
   },
+  "ITER-003-RESULT-G3A": {
+    "path": "docs/project/iterations/iteration-003/results/gate-g3a.md",
+    "code": [
+      "src/software_world_model/application_services/world_model_answering.py",
+      "src/software_world_model/application_services/structure_view.py",
+      "src/software_world_model/interface/world_model_evaluation.py",
+      "validation/structure_world_model_iteration_003/g3a",
+      "validation/structure_world_model_iteration_003/isolation"
+    ],
+    "tests": [
+      "tests/test_world_model_answering.py",
+      "tests/test_world_model_evaluation.py",
+      "tests/test_iteration_003_g3a_integration.py",
+      "tests/test_iteration_003_g2_isolation.py",
+      "tests/test_structure_view.py",
+      "tests/test_structure_read_bundle.py"
+    ]
+  },
   "ITER-003-SLICE-001": {
     "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md",
     "code": [

@@ -4,8 +4,8 @@
 
 - Active iteration: `ITER-003-INDEX`
 - Active slice: `ITER-003-SLICE-001`
-- Worktree status: `clean-iteration-003-g2-pass-g3a-authorized`
-- Strategy relation: `iteration-003-g2-pass-offline-answer-chain-g3a-next`
+- Worktree status: `clean-iteration-003-g3a-pass-external-disclosure-confirmation-required`
+- Strategy relation: `iteration-003-g3a-pass-external-disclosure-confirmation-required-before-v009`
 - Live model path: `local-evidence-first-accepted-world-model-path-not-active`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`

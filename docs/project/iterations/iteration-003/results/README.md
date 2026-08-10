@@ -4,7 +4,7 @@ kind: iteration-result-index
 status: in-progress
 authority: evidence
 owners: [project, quality]
-depends_on: [ITER-003-VERIFICATION, ITER-003-RESULT-G0, ITER-003-RESULT-G1, ITER-003-RESULT-G2]
+depends_on: [ITER-003-VERIFICATION, ITER-003-RESULT-G0, ITER-003-RESULT-G1, ITER-003-RESULT-G2, ITER-003-RESULT-G3A]
 code: []
 tests: []
 iteration: ITER-003
@@ -12,14 +12,14 @@ iteration: ITER-003
 
 # Iteration 003 Results
 
-[G0 冻结输入](gate-g0.md) 已在 exact checkpoint `af849fb198179cfe1d1514f272a1a06236684f43` 上 PASS，绑定授权治理提交 `42a3f1ababed73cded8aafb046105309a79c170e`。[G1 Knowledge Kernel](gate-g1.md) 已在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上 PASS，绑定已提交的 G0 Result `7286c0108394baac4254a14fc3405029707dd10d`。[G2 Source-off Snapshot/View](gate-g2.md) 已在 exact 实现 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上 PASS，绑定已提交的 G1 Result `801717d6e75459afeddb7299234a2e32b65aad16`；当前只解除 G3a 无外部分派实现。外部披露、Provider/Model、CC/CE、baseline、G3b/G4 与 Activation 均不能由 G2 推导。
+[G0 冻结输入](gate-g0.md) 已在 exact checkpoint `af849fb198179cfe1d1514f272a1a06236684f43` 上 PASS，绑定授权治理提交 `42a3f1ababed73cded8aafb046105309a79c170e`。[G1 Knowledge Kernel](gate-g1.md) 已在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上 PASS，绑定已提交的 G0 Result `7286c0108394baac4254a14fc3405029707dd10d`。[G2 Source-off Snapshot/View](gate-g2.md) 已在 exact 实现 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上 PASS，绑定已提交的 G1 Result `801717d6e75459afeddb7299234a2e32b65aad16`。[G3a Offline answer-chain](gate-g3a.md) 已在 exact 实现 checkpoint `f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上 PASS，绑定已提交的 G2 Result `b54fb2ba04d93578af36f8a9ee7467b0e921909e`，且只裁决 V-008。当前必须停止在 V-009 之前；外部披露、Provider/Adapter/Model、CC/CE、baseline、G3b/G4 与 Activation 均不能由 G3a 推导。
 
 预留 ID/文件名固定为：
 
 - `ITER-003-RESULT-G0` / `gate-g0.md` — PASS
 - `ITER-003-RESULT-G1` / `gate-g1.md` — PASS
 - `ITER-003-RESULT-G2` / `gate-g2.md` — PASS
-- `ITER-003-RESULT-G3A` / `gate-g3a.md`
+- `ITER-003-RESULT-G3A` / `gate-g3a.md` — PASS
 - `ITER-003-RESULT-G3B` / `gate-g3b.md`
 - `ITER-003-RESULT-G4` / `gate-g4.md`
 
