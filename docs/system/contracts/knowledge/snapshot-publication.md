@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-ADMISSION, SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE]
 derived_from: [DD-KNW-SNAPSHOT-PUBLICATION]
-code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py]
-tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py]
+code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/knowledge_engine/structure_authority.py, src/software_world_model/knowledge_engine/structure_publication.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py]
+tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py, tests/test_structure_publication.py, tests/test_maven_structure_update.py, tests/test_iteration_003_g1_integration.py]
 ---
 
 # Snapshot Publication
@@ -34,6 +34,7 @@ Knowledge Engine 的 Publisher 独占 Snapshot、Manifest、Member State、Publi
 10. Publisher 在提交前重建目标 Snapshot Closure，并验证所有 Relation Fact 端点、Support、exact upstream 与 inherited member 在最终成员集合中仍合法。失败保持旧 CURRENT。
 11. 每个 Snapshot 对同一 Root 最多有一个 State。`ENRICH` 首次可创建非重叠 Coverage Root/State，后续 Coverage State Manifest 是先前成员与新增成员的并集；遇到已有知识 Root 时，只允许相同 State 的幂等重放。不同 State 必须拒绝，状态更新只能通过拥有该 Root 的 `REPLACE_COVERAGE` 完成。Publisher 不可自行选择保留或覆盖。
 12. 当前系统禁止同一 Scope 内权威 Coverage Root 重叠：一个 Entity/Fact/Inference Root 的 State 在一个 Snapshot 中只能由一个 Coverage State 管理。新 Manifest 若声明的 Root 已由另一 Coverage Root 管理，或两个 replacement 请求对同一 Root 竞争，必须拒绝；Relation 可以引用其他 Coverage 的 exact member，但不会因此取得其管理权。未来若需要共享所有权，必须先接受新的 Publication Contract。
+13. Publisher 必须重读 Admission 绑定的 exact Source persistent-use confirmation，并核对 candidate ref/digest；历史 Application Result、未持久化 proof 或另一 Candidate 的 confirmation 都不能推进 CURRENT。
 
 ## Failure and implementation boundary
 

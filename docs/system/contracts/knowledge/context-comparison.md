@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-REFERENCE-CONTEXT, SYS-CONTRACT-X-CAPABILITY-EXECUTION]
 derived_from: [DD-KNW-CONTEXT-COMPARISON]
-code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/application_services/knowledge_use.py]
-tests: [tests/test_formal_knowledge.py, tests/test_knowledge_use.py]
+code: [src/software_world_model/knowledge_engine/context_comparison.py, src/software_world_model/knowledge_engine/formal.py, src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py]
+tests: [tests/test_context_comparison.py, tests/test_formal_knowledge.py, tests/test_knowledge_use.py, tests/test_structure_read_session.py]
 ---
 
 # Context Comparison
@@ -19,6 +19,8 @@ Context Comparison 在明确 Purpose 下判断两个 exact Context 的关系，�
 ## Owner and public contract
 
 Knowledge Engine 拥有 Assessment 与 Validity。确定性规则或持有 exact delegated capability grant 的模型 Strategy 可以产生 Proposal，但 Knowledge Engine 必须从 exact 输入、Purpose、Strategy execution identity 与该 Grant 重建封存结果；它不读取 Application 的 Evaluation / Activation Store。
+
+Structure Snapshot 比较由 Knowledge Engine 的确定性 Assessment Service 消费 no-payload exact Snapshot binding、Knowledge Context digest 与 Coverage comparison basis。Application 只声明 Snapshot 顺序并调用该服务；Read Session Repository 可以把服务返回的不可变 Assessment 与 Session 一起保存，但只能反序列化并交回 Knowledge Engine 重建校验，不得自行产生 Outcome。
 
 ## Invariants
 

@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-SOURCE-ARTIFACT]
-code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services/knowledge_update.py]
-tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py]
+code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services/knowledge_update.py, src/software_world_model/application_services/maven_structure.py, src/software_world_model/application_services/maven_structure_update.py]
+tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py, tests/test_structure_knowledge.py, tests/test_maven_structure.py, tests/test_maven_structure_update.py, tests/test_maven_structure_cli.py, tests/test_iteration_003_g1_integration.py]
 ---
 
 # Structure Model

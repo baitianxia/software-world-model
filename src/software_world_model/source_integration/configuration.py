@@ -586,6 +586,78 @@ class SourceConfigurationService:
     ) -> DataSourceBinding:
         return self._repository.get_binding(binding_id, revision)
 
+    def require_current_active_binding(
+        self,
+        *,
+        source_id: StableId,
+        expected_source_revision: Revision,
+        binding_id: StableId,
+        expected_binding_revision: Revision,
+    ) -> tuple[DataSource, DataSourceBinding]:
+        """Return the current executable Source/Binding control closure.
+
+        Historical Definition revisions remain readable, but target resolution
+        and execution authority must never revive one after its root has moved
+        or its lifecycle has been disabled, suspended, or retired.
+        """
+
+        binding = self._repository.get_binding(binding_id)
+        if (
+            binding.definition_revision != expected_binding_revision
+            or binding.source_id != source_id
+        ):
+            raise DomainError(
+                ErrorCode.REVISION_CONFLICT,
+                "binding target-resolution revision is stale",
+            )
+        source = self._repository.get_data_source(source_id)
+        if source.definition_revision != expected_source_revision:
+            raise DomainError(
+                ErrorCode.REVISION_CONFLICT,
+                "source target-resolution revision is stale",
+            )
+        if (
+            binding.lifecycle is not BindingLifecycle.ACTIVE
+            or source.lifecycle is not DataSourceLifecycle.ACTIVE
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "source or binding is not active for target resolution",
+            )
+        return source, binding
+
+    def require_current_artifact_read_binding(
+        self,
+        *,
+        source_id: StableId,
+        expected_source_revision: Revision,
+        binding_id: StableId,
+        expected_binding_revision: Revision,
+        scope_assertion: ScopeStateAssertion,
+    ) -> tuple[DataSource, DataSourceBinding]:
+        """Fence a replay read with a fresh Application-supplied Scope grant."""
+
+        self._validate_scope_assertion(
+            scope_assertion,
+            ScopePurpose.SOURCE_EXECUTION,
+        )
+        source, binding = self.require_current_active_binding(
+            source_id=source_id,
+            expected_source_revision=expected_source_revision,
+            binding_id=binding_id,
+            expected_binding_revision=expected_binding_revision,
+        )
+        if (
+            binding.scope_id != scope_assertion.scope_id
+            or binding.observed_scope_revision
+            != scope_assertion.definition_revision
+        ):
+            raise DomainError(
+                ErrorCode.SCOPE_ASSERTION_INVALID,
+                "current Artifact read Scope assertion does not match its Binding",
+            )
+        return source, binding
+
     def list_bindings(self, *, source_id: StableId | None = None) -> tuple[DataSourceBinding, ...]:
         return self._repository.list_bindings(source_id=source_id)
 
@@ -693,21 +765,29 @@ class SourceConfigurationService:
             )
         except DomainError:
             return False
-        # resolved_at and assertion identity are observational; compare the full
-        # authority closure that controls dispatch.
+        # resolved_at is observational; every other assertion field belongs to
+        # the authority closure that controls dispatch.
         return (
-            current.binding_id == eligibility.binding_id
+            current.assertion_id == eligibility.assertion_id
+            and current.binding_id == eligibility.binding_id
             and current.binding_revision == eligibility.binding_revision
             and current.source_id == eligibility.source_id
             and current.source_revision == eligibility.source_revision
+            and current.scope_id == eligibility.scope_id
+            and current.scope_revision == eligibility.scope_revision
             and current.scope_assertion_id == eligibility.scope_assertion_id
             and current.scope_assertion_digest == eligibility.scope_assertion_digest
+            and current.provider_type == eligibility.provider_type
+            and current.provider_contract_version
+            == eligibility.provider_contract_version
             and current.provider_configuration_fingerprint
             == eligibility.provider_configuration_fingerprint
             and current.control_fence_revision == eligibility.control_fence_revision
             and current.selector == eligibility.selector
             and current.context_constraint == eligibility.context_constraint
             and current.tool_id == eligibility.tool_id
+            and current.classification == eligibility.classification
+            and current.digest == eligibility.digest
         )
 
     def _change_data_source_lifecycle(

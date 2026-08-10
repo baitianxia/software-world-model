@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Mapping
 
 from software_world_model.application_services import (
@@ -28,6 +29,18 @@ from software_world_model.application_services import (
     SufficiencyAssessment,
     TaskBoundary,
 )
+from software_world_model.application_services.maven_structure_update import (
+    MavenStructureIndependentVerifier,
+    MavenStructureTargetAuthority,
+    MavenStructureUpdateAttempt,
+    MavenStructureUpdateRequest,
+    MavenStructureUpdateResult,
+    MavenStructureUpdateService,
+)
+from software_world_model.application_services.structure_read_session import (
+    StructureReadSession,
+    StructureReadSessionService,
+)
 from software_world_model.cross_cutting import (
     CorrelationRef,
     DomainError,
@@ -41,6 +54,7 @@ from software_world_model.cross_cutting import (
 )
 from software_world_model.infrastructure import (
     SqliteDatabase,
+    SqliteArtifactUseAuthorityRepository,
     SqliteFormalKnowledgeRepository,
     SqliteKnowledgeScopeRepository,
     SqliteKnowledgeUpdateRepository,
@@ -50,22 +64,63 @@ from software_world_model.infrastructure import (
     SqliteSourceOperationRepository,
     SqliteTelemetryRepository,
 )
+from software_world_model.infrastructure.sqlite_structure_knowledge_repository import (
+    SqliteStructureKnowledgeRepository,
+)
+from software_world_model.infrastructure.sqlite_maven_structure_update_repository import (
+    SqliteMavenStructureUpdateRepository,
+)
+from software_world_model.infrastructure.sqlite_structure_read_session_repository import (
+    SqliteStructureReadSessionRepository,
+)
 from software_world_model.knowledge_engine import (
     FormalKnowledgeService,
     KnowledgeScopeService,
+    ScopeLifecycle,
     ScopeType,
+    StructureContextComparisonService,
+)
+from software_world_model.knowledge_engine.structure_publication import (
+    StructurePublicationService,
+    StructureSnapshot,
+)
+from software_world_model.knowledge_engine.structure_authority import (
+    StructureAdmissionDecision,
+    StructureAdmissionService,
+    StructureSchemaAdoption,
+    StructureSchemaAvailability,
+    StructureSchemaDefinition,
+    StructureSchemaRegistration,
+    StructureSchemaRegistryService,
+    StructureVerifierAssessmentService,
 )
 from software_world_model.source_integration import (
-    DataSourceBinding,
+    ArtifactUseAuthorityService,
     LocalGitConfigurationProvider,
     LocalGitConnector,
-    LocalGitTargetResolver,
     ProviderRegistry,
     SourceConfigurationService,
     SourceOperationService,
     SourceTargetResolutionReceipt,
     TargetKind,
+    resolve_local_git_binding_target,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class MavenStructureInterfaceResult:
+    """Application result plus the exact authorities needed for CLI audit."""
+
+    update: MavenStructureUpdateResult
+    objective: BuildObjective
+    target: CanonicalBuildTarget
+    requirement_binding: None
+    attempt: MavenStructureUpdateAttempt
+    target_authority: MavenStructureTargetAuthority
+    admission: StructureAdmissionDecision
+    schema_registration: StructureSchemaRegistration
+    schema_availability: StructureSchemaAvailability
+    schema_adoption: StructureSchemaAdoption
 
 
 class ApplicationRuntime:
@@ -96,6 +151,79 @@ class ApplicationRuntime:
         )
         self.source_operations = SourceOperationService(
             SqliteSourceOperationRepository(database), self.sources, telemetry=self.telemetry
+        )
+        self.artifact_use = ArtifactUseAuthorityService(
+            SqliteArtifactUseAuthorityRepository(database),
+            self.source_operations.current_authorized_replay_port(),
+        )
+        self.structure_repository = SqliteStructureKnowledgeRepository(database)
+        self.structure_schema_registry = StructureSchemaRegistryService(
+            self.structure_repository
+        )
+        (
+            self.maven_structure_schema_registration,
+            self.maven_structure_schema_availability,
+        ) = self.structure_schema_registry.register(
+            definition=StructureSchemaDefinition.maven_reactor_structure(),
+            idempotency_key=IdempotencyKey(
+                "iter-003:maven-reactor-structure-schema:register"
+            ),
+            proposal_ref="ITER-003-PROPOSAL",
+            review_ref="ITER-003-READINESS",
+            registered_by="application-runtime",
+            reason="register the frozen ITER-003 Maven Structure schema",
+        )
+        self.maven_structure_verifier = MavenStructureIndependentVerifier(
+            self.scopes,
+            self.sources,
+            self.artifact_use,
+        )
+        self.structure_verifier_authority = (
+            self.structure_repository.register_structure_verifier_authority(
+                verifier_ref=self.maven_structure_verifier.verifier_ref
+            )
+        )
+        self.structure_verifier_assessments = StructureVerifierAssessmentService(
+            self.structure_repository,
+            self.maven_structure_verifier,
+            verifier_authority=self.structure_verifier_authority,
+        )
+        self.structure_admission = StructureAdmissionService(
+            self.structure_repository,
+            self.scopes,
+            self.artifact_use,
+            verifier_authority=self.structure_verifier_authority,
+        )
+        self.structure_publication = StructurePublicationService(
+            self.structure_repository,
+            self.scopes,
+            self.artifact_use,
+            verifier_authority=self.structure_verifier_authority,
+        )
+        self.structure_context_comparisons = StructureContextComparisonService()
+        self.structure_read_sessions = StructureReadSessionService(
+            SqliteStructureReadSessionRepository(database),
+            self.structure_repository,
+            self.scopes,
+            self.structure_context_comparisons,
+        )
+        self.maven_structure_update_repository = (
+            SqliteMavenStructureUpdateRepository(
+                database,
+                self.structure_repository,
+                self.artifact_use,
+            )
+        )
+        self.maven_structure_updates = MavenStructureUpdateService(
+            self.maven_structure_update_repository,
+            self.scopes,
+            self.sources,
+            self.source_operations,
+            self.artifact_use,
+            self.structure_admission,
+            self.structure_verifier_assessments,
+            self.maven_structure_verifier,
+            self.structure_publication,
         )
         self.knowledge = FormalKnowledgeService(
             SqliteFormalKnowledgeRepository(database), self.scopes
@@ -180,6 +308,167 @@ class ApplicationRuntime:
         )
         return result
 
+    def build_maven_structure(
+        self,
+        *,
+        idempotency_key: IdempotencyKey,
+        scope_id: StableId,
+        scope_revision: Revision,
+        source_id: StableId,
+        source_revision: Revision,
+        binding_id: StableId,
+        binding_revision: Revision,
+        repository_revision: str,
+        logical_reactor_root: str,
+        objective_description: str,
+        expected_current_snapshot_id: StableId | None,
+        classification: str,
+        actor_ref: str,
+        correlation_ref: CorrelationRef,
+        max_poms: int,
+        max_calls: int,
+        tree_page_size: int,
+        max_bytes_per_call: int,
+    ) -> MavenStructureInterfaceResult:
+        """Build and atomically publish one exact Maven Structure Snapshot."""
+
+        scope = self.scopes.get_scope(scope_id, scope_revision)
+        canonical_system_key = dict(scope.metadata).get("canonical_system_key")
+        if canonical_system_key is None or not canonical_system_key.strip():
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Maven Structure Scope metadata must define canonical_system_key",
+                {"reason_code": "CANONICAL_SYSTEM_KEY_METADATA_REQUIRED"},
+            )
+        receipt = self.resolve_target(
+            source_id=source_id,
+            source_revision=source_revision,
+            binding_id=binding_id,
+            binding_revision=binding_revision,
+            target_kind=TargetKind.REPOSITORY_REVISION,
+            parameters={"revision": repository_revision},
+        )
+        objective = BuildObjective.create(
+            objective_id=f"maven-objective:{idempotency_key.value}",
+            description=objective_description,
+            unacceptable_outcomes=(
+                "source boundary expansion",
+                "incomplete Maven reactor Coverage reported as complete",
+                "name, path, or GA heuristic stitching",
+            ),
+        )
+        target = CanonicalBuildTarget.from_receipt(receipt)
+        request = MavenStructureUpdateRequest(
+            idempotency_key=idempotency_key,
+            objective=objective,
+            target=target,
+            requirement_binding=None,
+            scope_id=scope_id,
+            scope_revision=scope_revision,
+            source_id=source_id,
+            source_revision=source_revision,
+            binding_id=binding_id,
+            binding_revision=binding_revision,
+            repository_revision=repository_revision,
+            logical_reactor_root=logical_reactor_root,
+            canonical_system_key=canonical_system_key,
+            expected_current_snapshot_id=expected_current_snapshot_id,
+            max_poms=max_poms,
+            max_calls=max_calls,
+            tree_page_size=tree_page_size,
+            max_bytes_per_call=max_bytes_per_call,
+            classification=classification,
+            actor_ref=actor_ref,
+            correlation_ref=correlation_ref,
+        )
+        update = self.maven_structure_updates.execute(request)
+        attempt = self.maven_structure_update_repository.get_attempt(
+            update.authority_result.attempt_id
+        )
+        target_authority = self.maven_structure_update_repository.get_target_authority(
+            scope_id=scope_id,
+            binding_id=binding_id,
+            logical_reactor_root=logical_reactor_root,
+        )
+        if target_authority is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "published Maven Structure update has no target authority",
+            )
+        admission = self.structure_admission.get(
+            update.publication_receipt.admission_id
+        )
+        schema_adoption = self.structure_schema_registry.get_adoption(scope_id)
+        if schema_adoption is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "published Maven Structure Snapshot has no Schema adoption",
+            )
+        return MavenStructureInterfaceResult(
+            update=update,
+            objective=objective,
+            target=target,
+            requirement_binding=None,
+            attempt=attempt,
+            target_authority=target_authority,
+            admission=admission,
+            schema_registration=self.maven_structure_schema_registration,
+            schema_availability=self.maven_structure_schema_availability,
+            schema_adoption=schema_adoption,
+        )
+
+    def read_structure_snapshot(self, snapshot_id: StableId) -> StructureSnapshot:
+        """Read one immutable Structure Snapshot by its exact identity."""
+
+        return self.structure_publication.get_snapshot(snapshot_id)
+
+    def open_current_structure_read_session(
+        self,
+        *,
+        scope_id: StableId,
+        scope_revision: Revision,
+        task_boundary: TaskBoundary,
+        caller_ref: str,
+        idempotency_key: IdempotencyKey,
+    ) -> StructureReadSession:
+        """Resolve CURRENT once and persist its exact Structure Snapshot binding."""
+
+        return self.structure_read_sessions.open_current(
+            scope_id=scope_id,
+            scope_revision=scope_revision,
+            task_boundary=task_boundary,
+            caller_ref=caller_ref,
+            idempotency_key=idempotency_key,
+        )
+
+    def open_ordered_structure_read_session(
+        self,
+        *,
+        scope_id: StableId,
+        scope_revision: Revision,
+        task_boundary: TaskBoundary,
+        caller_ref: str,
+        snapshot_ids: tuple[StableId, ...],
+        idempotency_key: IdempotencyKey,
+    ) -> StructureReadSession:
+        """Persist a caller-ordered exact comparable Structure Snapshot set."""
+
+        return self.structure_read_sessions.open_ordered(
+            scope_id=scope_id,
+            scope_revision=scope_revision,
+            task_boundary=task_boundary,
+            caller_ref=caller_ref,
+            snapshot_ids=snapshot_ids,
+            idempotency_key=idempotency_key,
+        )
+
+    def read_structure_read_session(
+        self, session_id: StableId
+    ) -> StructureReadSession:
+        """Re-read and revalidate one immutable Structure read Session."""
+
+        return self.structure_read_sessions.get_session(session_id)
+
     def prepare_task_answer(
         self, request: NaturalLanguageTaskRequest
     ) -> AuthorizedTaskAnswer:
@@ -218,11 +507,15 @@ class ApplicationRuntime:
         source_target: str,
         selected_paths: str,
         display_name: str,
+        canonical_system_key: str | None = None,
         actor: str,
         correlation_ref: CorrelationRef,
     ) -> ManagementExecution:
         """Configure one browser-visible project through the management owner path."""
 
+        scope_metadata = {"display_name": display_name}
+        if canonical_system_key is not None:
+            scope_metadata["canonical_system_key"] = canonical_system_key
         command = ConfigureSystemSourceCommand.create(
             idempotency_key=idempotency_key,
             caller="browser-chat",
@@ -230,7 +523,7 @@ class ApplicationRuntime:
             classification="INTERNAL",
             request_context={"interface": "browser-chat"},
             scope_type=ScopeType.SYSTEM,
-            scope_metadata={"display_name": display_name},
+            scope_metadata=scope_metadata,
             provider_type=LocalGitConfigurationProvider.provider_type,
             provider_contract_version=(
                 LocalGitConfigurationProvider.contract_version
@@ -258,36 +551,46 @@ class ApplicationRuntime:
         target_kind: TargetKind,
         parameters: Mapping[str, str],
     ) -> SourceTargetResolutionReceipt:
-        source = self.sources.get_data_source(source_id, source_revision)
-        binding = self.sources.get_binding(binding_id, binding_revision)
-        if binding.source_id != source.source_id:
-            raise DomainError(ErrorCode.INVALID_ARGUMENT, "binding belongs to another source")
-        allowed_paths = _allowed_paths(binding)
-        resolver = LocalGitTargetResolver(LocalGitConnector(source.canonical_source_target))
-        if target_kind is TargetKind.REPOSITORY_REVISION:
-            return resolver.resolve_revision(_required(parameters, "revision"))
-        if target_kind is TargetKind.REVISION_COMPARISON:
-            return resolver.resolve_comparison(
-                _required(parameters, "base"), _required(parameters, "target")
+        source, binding = self.sources.require_current_active_binding(
+            source_id=source_id,
+            expected_source_revision=source_revision,
+            binding_id=binding_id,
+            expected_binding_revision=binding_revision,
+        )
+        scope = self.scopes.get_scope(binding.scope_id)
+        if (
+            scope.lifecycle is not ScopeLifecycle.ACTIVE
+            or scope.definition_revision != binding.observed_scope_revision
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "binding Scope is not current and active for target resolution",
             )
-        if target_kind is TargetKind.SOURCE_PATH:
-            return resolver.resolve_path(
-                _required(parameters, "revision"),
-                _required(parameters, "path"),
-                allowed_paths=allowed_paths,
+        try:
+            return resolve_local_git_binding_target(
+                connector=LocalGitConnector(source.canonical_source_target),
+                selector=binding.selector,
+                target_kind=target_kind,
+                parameters=parameters,
             )
-        if target_kind in {TargetKind.SYMBOL, TargetKind.JAVA_SYMBOL}:
-            method = (
-                resolver.resolve_symbol
-                if target_kind is TargetKind.SYMBOL
-                else resolver.resolve_java_symbol
-            )
-            return method(
-                _required(parameters, "revision"),
-                _required(parameters, "symbol"),
-                allowed_paths=allowed_paths,
-            )
-        raise DomainError(ErrorCode.INVALID_ARGUMENT, "unsupported target kind")
+        except DomainError as exc:
+            if exc.code not in {
+                ErrorCode.SOURCE_TARGET_AMBIGUOUS,
+                ErrorCode.SOURCE_TARGET_NOT_FOUND,
+                ErrorCode.SOURCE_TARGET_OUT_OF_SCOPE,
+            }:
+                raise
+            # Interface callers historically consume non-exact target
+            # proposals as invalid build input.  Preserve that boundary while
+            # Source Integration retains its more precise diagnostic code.
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "source target did not resolve to one authorized exact identity",
+                {
+                    "reason_code": "SOURCE_TARGET_NOT_EXACT",
+                    "cause_code": exc.code.value,
+                },
+            ) from exc
 
     def update_knowledge(
         self,
@@ -634,17 +937,5 @@ class ApplicationRuntime:
         return assessment
 
 
-def _allowed_paths(binding: DataSourceBinding) -> tuple[str, ...]:
-    value = dict(binding.selector).get("paths")
-    if not value:
-        raise DomainError(ErrorCode.SELECTOR_INVALID, "binding has no path selector")
-    return tuple(item for item in value.split(",") if item)
-
-
-def _required(parameters: Mapping[str, str], key: str) -> str:
-    value = parameters.get(key)
-    if not value:
-        raise DomainError(ErrorCode.INVALID_ARGUMENT, f"target parameter {key} is required")
-    return value
     EvidenceAnswerRequest,
     EvidenceAnswerService,

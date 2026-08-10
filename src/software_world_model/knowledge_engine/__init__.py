@@ -37,6 +37,14 @@ from .formal import (
     SnapshotMember,
     VerificationFinding,
 )
+from .context_comparison import (
+    StructureContextComparisonAssessment,
+    StructureContextComparisonCoverageInput,
+    StructureContextComparisonInput,
+    StructureContextComparisonOutcome,
+    StructureContextComparisonPurpose,
+    StructureContextComparisonService,
+)
 
 __all__ = [
     "AssertionOutcome",
@@ -72,4 +80,10 @@ __all__ = [
     "ReviewedFactGroundingVerifier",
     "SnapshotMember",
     "VerificationFinding",
+    "StructureContextComparisonAssessment",
+    "StructureContextComparisonCoverageInput",
+    "StructureContextComparisonInput",
+    "StructureContextComparisonOutcome",
+    "StructureContextComparisonPurpose",
+    "StructureContextComparisonService",
 ]

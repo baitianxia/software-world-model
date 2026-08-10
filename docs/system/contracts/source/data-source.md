@@ -6,8 +6,8 @@ authority: normative
 owners: [source]
 depends_on: [SYS-ARCH-INVARIANTS]
 derived_from: [DD-SRC-DATA-SOURCE]
-code: [src/software_world_model/source_integration/configuration.py, src/software_world_model/infrastructure/sqlite_source_repository.py]
-tests: [tests/test_source_configuration.py, tests/test_local_git_configuration.py]
+code: [src/software_world_model/source_integration/configuration.py, src/software_world_model/source_integration/local_git.py, src/software_world_model/infrastructure/sqlite_source_repository.py]
+tests: [tests/test_source_configuration.py, tests/test_local_git_configuration.py, tests/test_source_operations.py]
 ---
 
 # Data Source 与 Binding

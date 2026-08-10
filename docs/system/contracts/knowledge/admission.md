@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-EVIDENCE, SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-INFERENCE-CONFLICT, SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE]
 derived_from: [DD-KNW-ADMISSION]
-code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py]
-tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py]
+code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/knowledge_engine/structure.py, src/software_world_model/knowledge_engine/structure_authority.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py]
+tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py, tests/test_structure_knowledge.py, tests/test_structure_publication.py, tests/test_maven_structure_update.py, tests/test_iteration_003_g1_integration.py]
 ---
 
 # Knowledge Admission
@@ -31,6 +31,7 @@ Knowledge Engine 拥有 Candidate Identity、Read Set、Verifier Assessment 与 
 7. Candidate 不得被 Knowledge Use、Response Control 或生产缓存读取。
 8. 只有共同定义关系形成 Hard Atomic Closure；普通 Entity→Fact 等依赖使用有向 Publication Prerequisite，最终 Manifest 必须 predecessor-closed。
 9. 独立 Closure 可以并行审核；Admission Batch Result 绑定唯一 Final Bundle Seal，并完整覆盖每个 Closure、未解析项和对应终态，不能静默丢项或把局部 ACCEPT 聚合成整体 ACCEPT。
+10. Candidate、Verifier Assessment 与 Admission 必须绑定 Source owner 签发的 exact persistent-use confirmation ID/digest；Knowledge owner 在 ACCEPT 前按 candidate ref/digest 重读该 proof，Application 自报或只写入自身 Result 的 confirmation 不构成 Admission authority。
 
 ## Failure, concurrency and recovery
 

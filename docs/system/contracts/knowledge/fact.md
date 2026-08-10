@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-EVIDENCE, SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON]
 derived_from: [DD-KNW-FACT]
-code: [src/software_world_model/knowledge_engine/formal.py]
-tests: [tests/test_formal_knowledge.py]
+code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/knowledge_engine/structure.py]
+tests: [tests/test_formal_knowledge.py, tests/test_structure_knowledge.py, tests/test_structure_publication.py]
 ---
 
 # Fact

@@ -11,6 +11,7 @@ from .sqlite_model_gateway_repository import SqliteModelGatewayRepository
 from .sqlite_source_operation_repository import SqliteSourceOperationRepository
 from .sqlite_formal_knowledge_repository import SqliteFormalKnowledgeRepository
 from .sqlite_artifact_processing_repository import SqliteArtifactProcessingRepository
+from .sqlite_artifact_use_authority_repository import SqliteArtifactUseAuthorityRepository
 from .sqlite_knowledge_update_repository import SqliteKnowledgeUpdateRepository
 from .sqlite_knowledge_use_repository import SqliteKnowledgeUseRepository
 from .sqlite_task_control_repository import SqliteTaskControlRepository
@@ -30,6 +31,7 @@ __all__ = [
     "SqliteSourceOperationRepository",
     "SqliteFormalKnowledgeRepository",
     "SqliteArtifactProcessingRepository",
+    "SqliteArtifactUseAuthorityRepository",
     "SqliteKnowledgeUpdateRepository",
     "SqliteKnowledgeUseRepository",
     "SqliteTaskControlRepository",

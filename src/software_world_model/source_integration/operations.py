@@ -22,6 +22,7 @@ from software_world_model.cross_cutting import (
     NullTelemetryRecorder,
     TelemetryMetric,
     TelemetryRecorder,
+    canonical_json_bytes,
     digest_of,
 )
 from software_world_model.knowledge_engine import ScopeStateAssertion
@@ -64,6 +65,7 @@ class SourceOperationStatus(str, Enum):
 
 class SourceTool(str, Enum):
     LIST = "local-git.list@1"
+    TREE = "local-git.tree@1"
     SEARCH = "local-git.search@1"
     READ = "local-git.read@1"
     COMPARE = "local-git.compare@1"
@@ -80,6 +82,29 @@ class SourceTargetResolutionReceipt:
     candidates: tuple[tuple[tuple[str, str], ...], ...]
     resolver_contract_version: str
     digest: Digest
+
+
+@dataclass(frozen=True, slots=True)
+class LocalGitTreeEntry:
+    path: str
+    mode: str
+    object_type: str
+    object_id: str
+
+    @property
+    def is_symlink(self) -> bool:
+        return self.mode == "120000"
+
+    def payload_line(self) -> str:
+        return canonical_json_bytes(
+            {
+                "is_symlink": self.is_symlink,
+                "mode": self.mode,
+                "object_id": self.object_id,
+                "path": self.path,
+                "type": self.object_type,
+            }
+        ).decode("utf-8")
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,6 +250,20 @@ class SourceOperationResult:
 
 
 @dataclass(frozen=True, slots=True)
+class SourceOperationAuthority:
+    """Payload-free persisted coordinates needed for current read authority."""
+
+    operation_id: StableId
+    intent_digest: Digest
+    source_id: StableId
+    source_revision: Revision
+    binding_id: StableId
+    binding_revision: Revision
+    tool: SourceTool
+    digest: Digest
+
+
+@dataclass(frozen=True, slots=True)
 class ConnectorOutcome:
     repository_revision: str
     subject: str
@@ -261,6 +300,194 @@ class SourceOperationRepository(Protocol):
 
     def get(self, operation_id: StableId) -> SourceOperationResult: ...
 
+    def get_authority(
+        self, operation_id: StableId
+    ) -> SourceOperationAuthority: ...
+
+
+class SourceOperationReplayPort(Protocol):
+    """Read-only capability for exact, already-terminal Source Operations."""
+
+    def replay(
+        self,
+        *,
+        operation_id: StableId,
+        expected_intent_digest: Digest,
+    ) -> SourceOperationResult: ...
+
+
+class SourceOperationCurrentAuthorizedReplayPort(Protocol):
+    """Payload replay requiring a fresh exact Scope authorization."""
+
+    def replay(
+        self,
+        *,
+        operation_id: StableId,
+        expected_intent_digest: Digest,
+        scope_assertion: ScopeStateAssertion,
+    ) -> SourceOperationResult: ...
+
+
+class SourceOperationReplayService:
+    """Strict persisted replay with no prepare, dispatch, or Connector access."""
+
+    def __init__(self, repository: SourceOperationRepository) -> None:
+        self._repository = repository
+
+    def replay(
+        self,
+        *,
+        operation_id: StableId,
+        expected_intent_digest: Digest,
+    ) -> SourceOperationResult:
+        if not isinstance(operation_id, StableId):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "persisted Source Operation replay requires a typed Operation ID",
+                {"reason_code": "SOURCE_OPERATION_REPLAY_ID_INVALID"},
+            )
+        if not isinstance(expected_intent_digest, Digest):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "persisted Source Operation replay requires a typed intent digest",
+                {"reason_code": "SOURCE_OPERATION_REPLAY_INTENT_INVALID"},
+            )
+        try:
+            result = self._repository.get(operation_id)
+        except DomainError as exc:
+            raise DomainError(
+                ErrorCode.SOURCE_OPERATION_FAILED,
+                "expected persisted Source Operation is unavailable",
+                {
+                    "reason_code": "SOURCE_OPERATION_REPLAY_MISSING",
+                    "operation_id": operation_id.value,
+                    "cause_code": exc.code.value,
+                },
+            ) from exc
+        if result.operation_id != operation_id:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "persisted Source Operation replay returned another Operation",
+                {
+                    "reason_code": "SOURCE_OPERATION_REPLAY_ID_MISMATCH",
+                    "operation_id": operation_id.value,
+                },
+            )
+        if result.intent_digest != expected_intent_digest:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "persisted Source Operation replay intent digest changed",
+                {
+                    "reason_code": "SOURCE_OPERATION_REPLAY_INTENT_MISMATCH",
+                    "operation_id": operation_id.value,
+                },
+            )
+        if result.status not in {
+            SourceOperationStatus.COMPLETED,
+            SourceOperationStatus.PARTIAL,
+        }:
+            raise DomainError(
+                ErrorCode.SOURCE_OPERATION_FAILED,
+                "persisted Source Operation is not a usable terminal Result",
+                {
+                    "reason_code": "SOURCE_OPERATION_REPLAY_NOT_TERMINAL",
+                    "operation_id": operation_id.value,
+                    "status": result.status.value,
+                },
+            )
+        if result.observation is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "successful persisted Source Operation has no Observation",
+                {
+                    "reason_code": "SOURCE_OPERATION_REPLAY_OBSERVATION_MISSING",
+                    "operation_id": operation_id.value,
+                },
+            )
+        return result
+
+
+class SourceOperationCurrentAuthorizedReplayService:
+    """Replay only after the current Scope/Source/Binding fence succeeds."""
+
+    def __init__(
+        self,
+        repository: SourceOperationRepository,
+        configurations: SourceConfigurationService,
+    ) -> None:
+        self._repository = repository
+        self._configurations = configurations
+        self._replay = SourceOperationReplayService(repository)
+
+    def replay(
+        self,
+        *,
+        operation_id: StableId,
+        expected_intent_digest: Digest,
+        scope_assertion: ScopeStateAssertion,
+    ) -> SourceOperationResult:
+        authority = self._repository.get_authority(operation_id)
+        if (
+            authority.operation_id != operation_id
+            or authority.intent_digest != expected_intent_digest
+            or authority.digest != source_operation_authority_digest(authority)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source Operation authority coordinates are inconsistent",
+                {
+                    "reason_code": "SOURCE_OPERATION_AUTHORITY_MISMATCH",
+                    "operation_id": operation_id.value,
+                },
+            )
+        self._configurations.require_current_artifact_read_binding(
+            source_id=authority.source_id,
+            expected_source_revision=authority.source_revision,
+            binding_id=authority.binding_id,
+            expected_binding_revision=authority.binding_revision,
+            scope_assertion=scope_assertion,
+        )
+        result = self._replay.replay(
+            operation_id=operation_id,
+            expected_intent_digest=expected_intent_digest,
+        )
+        observation = result.observation
+        if (
+            observation is None
+            or observation.tool is not authority.tool
+            or observation.source_context.source_id != authority.source_id
+            or observation.source_context.source_revision
+            != authority.source_revision
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source Result differs from its persisted authority coordinates",
+                {
+                    "reason_code": "SOURCE_OPERATION_AUTHORITY_RESULT_MISMATCH",
+                    "operation_id": operation_id.value,
+                },
+            )
+        return result
+
+
+def source_operation_authority_digest(
+    authority: SourceOperationAuthority,
+) -> Digest:
+    return digest_of(
+        [
+            "SOURCE_OPERATION_AUTHORITY@1",
+            {
+                "operation_id": authority.operation_id.value,
+                "intent_digest": authority.intent_digest.value,
+                "source_id": authority.source_id.value,
+                "source_revision": authority.source_revision.value,
+                "binding_id": authority.binding_id.value,
+                "binding_revision": authority.binding_revision.value,
+                "tool": authority.tool.value,
+            },
+        ]
+    )
+
 
 class LocalGitConnector:
     """Runs a fixed argv allowlist against immutable Git objects only."""
@@ -269,7 +496,6 @@ class LocalGitConnector:
 
     def __init__(self, repository: str) -> None:
         self.repository = repository
-        self._git("rev-parse", "--git-dir")
 
     def resolve_revision(self, proposal: str) -> str:
         proposal = _text(proposal, "revision proposal")
@@ -289,6 +515,42 @@ class LocalGitConnector:
         exact = self.resolve_revision(revision)
         payload = self._git_bytes("ls-tree", "-r", "--name-only", "-z", exact)
         return tuple(sorted(item.decode("utf-8") for item in payload.split(b"\0") if item))
+
+    def list_tree_entries(self, revision: str) -> tuple[LocalGitTreeEntry, ...]:
+        """Return the leaf entries of an exact Git tree in stable path order."""
+
+        exact = self.resolve_revision(revision)
+        payload = self._git_bytes("ls-tree", "-r", "-z", exact)
+        entries: list[LocalGitTreeEntry] = []
+        for raw_entry in payload.split(b"\0"):
+            if not raw_entry:
+                continue
+            try:
+                metadata, raw_path = raw_entry.split(b"\t", 1)
+                raw_mode, raw_type, raw_object_id = metadata.split(b" ", 2)
+                mode = raw_mode.decode("ascii")
+                object_type = raw_type.decode("ascii")
+                object_id = raw_object_id.decode("ascii")
+                path = raw_path.decode("utf-8")
+            except (UnicodeDecodeError, ValueError) as exc:
+                raise DomainError(
+                    ErrorCode.SOURCE_OPERATION_FAILED,
+                    "Local Git tree entry has an invalid encoding",
+                ) from exc
+            if not re.fullmatch(r"[0-7]{6}", mode) or not _FULL_OID.fullmatch(object_id):
+                raise DomainError(
+                    ErrorCode.SOURCE_OPERATION_FAILED,
+                    "Local Git tree entry has invalid metadata",
+                )
+            entries.append(
+                LocalGitTreeEntry(
+                    path=path,
+                    mode=mode,
+                    object_type=object_type,
+                    object_id=object_id,
+                )
+            )
+        return tuple(sorted(entries, key=lambda item: item.path))
 
     def read_path(self, revision: str, path: str) -> bytes:
         exact = self.resolve_revision(revision)
@@ -313,6 +575,20 @@ class LocalGitConnector:
             paths = tuple(path for path in self.list_paths(revision) if _allowed(path, allowed_paths))
             return self._paged_text_outcome(
                 revision, "repository-tree", "LOCAL_GIT_PATH_LIST@1", paths, parameters, budget
+            )
+        if tool is SourceTool.TREE:
+            entries = tuple(
+                entry.payload_line()
+                for entry in self.list_tree_entries(revision)
+                if _allowed(entry.path, allowed_paths)
+            )
+            return self._paged_text_outcome(
+                revision,
+                "repository-tree-entries",
+                "LOCAL_GIT_TREE_ENTRY_LIST@1",
+                entries,
+                parameters,
+                budget,
             )
         if tool is SourceTool.SEARCH:
             query = _text(parameters.get("query", ""), "search query")
@@ -665,6 +941,91 @@ class LocalGitTargetResolver:
         )
 
 
+def resolve_local_git_binding_target(
+    *,
+    connector: LocalGitConnector,
+    selector: tuple[tuple[str, str], ...],
+    target_kind: TargetKind,
+    parameters: Mapping[str, str],
+) -> SourceTargetResolutionReceipt:
+    """Resolve a target only after applying the exact Binding selector.
+
+    Target resolution precedes Source Operation dispatch, but it must not
+    inspect content or create an exact receipt for a revision that the selected
+    Binding cannot execute.  Revision-only proposals are fixed to immutable
+    object IDs before the selector check.  Content-resolving target kinds run
+    only after that fence and receive the already-frozen exact revision.
+    """
+
+    resolver = LocalGitTargetResolver(connector)
+    if target_kind is TargetKind.REPOSITORY_REVISION:
+        receipt = resolver.resolve_revision(_required_parameter(parameters, "revision"))
+        if receipt.outcome is not ResolutionOutcome.EXACT:
+            return receipt
+        identity = dict(receipt.canonical_identity)
+        enforce_local_git_selector_revision_bounds(
+            selector=selector,
+            tool=SourceTool.READ,
+            parameters={"revision": identity["revision"]},
+            connector=connector,
+        )
+        return receipt
+    if target_kind is TargetKind.REVISION_COMPARISON:
+        receipt = resolver.resolve_comparison(
+            _required_parameter(parameters, "base"),
+            _required_parameter(parameters, "target"),
+        )
+        if receipt.outcome is not ResolutionOutcome.EXACT:
+            return receipt
+        identity = dict(receipt.canonical_identity)
+        enforce_local_git_selector_revision_bounds(
+            selector=selector,
+            tool=SourceTool.COMPARE,
+            parameters={
+                "base": identity["base"],
+                "revision": identity["target"],
+            },
+            connector=connector,
+        )
+        return receipt
+    if target_kind is TargetKind.SOURCE_PATH:
+        frozen = enforce_local_git_selector_revision_bounds(
+            selector=selector,
+            tool=SourceTool.READ,
+            parameters={
+                "revision": _required_parameter(parameters, "revision")
+            },
+            connector=connector,
+        )
+        receipt = resolver.resolve_path(
+            frozen["revision"],
+            _required_parameter(parameters, "path"),
+            allowed_paths=_selector_paths(selector),
+        )
+        return receipt
+    if target_kind in {TargetKind.SYMBOL, TargetKind.JAVA_SYMBOL}:
+        frozen = enforce_local_git_selector_revision_bounds(
+            selector=selector,
+            tool=SourceTool.READ,
+            parameters={
+                "revision": _required_parameter(parameters, "revision")
+            },
+            connector=connector,
+        )
+        method = (
+            resolver.resolve_symbol
+            if target_kind is TargetKind.SYMBOL
+            else resolver.resolve_java_symbol
+        )
+        receipt = method(
+            frozen["revision"],
+            _required_parameter(parameters, "symbol"),
+            allowed_paths=_selector_paths(selector),
+        )
+        return receipt
+    raise DomainError(ErrorCode.INVALID_ARGUMENT, "unsupported Local Git target kind")
+
+
 class SourceOperationService:
     def __init__(
         self,
@@ -679,6 +1040,16 @@ class SourceOperationService:
         self._clock = clock or (lambda: datetime.now(timezone.utc))
         self._telemetry = telemetry or NullTelemetryRecorder()
 
+    def current_authorized_replay_port(
+        self,
+    ) -> SourceOperationCurrentAuthorizedReplayPort:
+        """Return replay fenced by the current Scope/Source/Binding authority."""
+
+        return SourceOperationCurrentAuthorizedReplayService(
+            self._repository,
+            self._configurations,
+        )
+
     def execute(self, intent: SourceOperationIntent) -> SourceOperationResult:
         prepared = self._repository.prepare(intent=intent, occurred_at=self._now())
         if prepared.status not in {SourceOperationStatus.PREPARED}:
@@ -689,6 +1060,7 @@ class SourceOperationService:
             or intent.binding_eligibility.binding_id != intent.binding_id
             or intent.binding_eligibility.binding_revision != intent.binding_revision
             or intent.binding_eligibility.tool_id != intent.tool.value
+            or intent.binding_eligibility.classification != intent.classification
         ):
             return self._record_telemetry(
                 intent,
@@ -718,9 +1090,15 @@ class SourceOperationService:
                 self._fail(dispatched, "ELIGIBILITY_STALE", "dispatch fence revalidation failed"),
             )
         try:
-            outcome = connector.execute(
+            frozen_parameters = enforce_local_git_selector_revision_bounds(
+                selector=intent.binding_eligibility.selector,
                 tool=intent.tool,
                 parameters=dict(intent.parameters),
+                connector=connector,
+            )
+            outcome = connector.execute(
+                tool=intent.tool,
+                parameters=frozen_parameters,
                 allowed_paths=_selector_paths(intent.binding_eligibility.selector),
                 budget=intent.budget,
             )
@@ -805,6 +1183,74 @@ def _selector_paths(selector: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
     if value is None:
         raise DomainError(ErrorCode.SELECTOR_INVALID, "binding has no path selector")
     return tuple(_path(item) for item in value.split(","))
+
+
+def enforce_local_git_selector_revision_bounds(
+    *,
+    selector: tuple[tuple[str, str], ...],
+    tool: SourceTool,
+    parameters: Mapping[str, str],
+    connector: LocalGitConnector,
+) -> dict[str, str]:
+    selected = dict(selector)
+    pinned_commit = selected.get("commit")
+    comparison_base = selected.get("comparison_base")
+    comparison_head = selected.get("comparison_head")
+    if pinned_commit is not None and (
+        comparison_base is not None or comparison_head is not None
+    ):
+        raise DomainError(
+            ErrorCode.SELECTOR_INVALID,
+            "binding commit and comparison selectors are mutually exclusive",
+        )
+    if pinned_commit is not None:
+        if tool is SourceTool.COMPARE:
+            raise DomainError(
+                ErrorCode.SOURCE_TARGET_OUT_OF_SCOPE,
+                "comparison is outside a commit-pinned binding selector",
+            )
+    elif (comparison_base is None) != (comparison_head is None):
+        raise DomainError(
+            ErrorCode.SELECTOR_INVALID,
+            "binding comparison selector is incomplete",
+        )
+    elif comparison_base is not None and tool is not SourceTool.COMPARE:
+        raise DomainError(
+            ErrorCode.SOURCE_TARGET_OUT_OF_SCOPE,
+            "operation is outside a comparison-pinned binding selector",
+        )
+
+    frozen = dict(parameters)
+    requested_head = connector.resolve_revision(frozen.get("revision", ""))
+    frozen["revision"] = requested_head
+    requested_base: str | None = None
+    if tool is SourceTool.COMPARE:
+        requested_base = connector.resolve_revision(frozen.get("base", ""))
+        frozen["base"] = requested_base
+
+    if pinned_commit is not None and requested_head != pinned_commit:
+        raise DomainError(
+            ErrorCode.SOURCE_TARGET_OUT_OF_SCOPE,
+            "requested revision is outside the binding selector",
+        )
+    if comparison_base is not None and (
+        requested_base != comparison_base or requested_head != comparison_head
+    ):
+        raise DomainError(
+            ErrorCode.SOURCE_TARGET_OUT_OF_SCOPE,
+            "requested comparison is outside the binding selector",
+        )
+    return frozen
+
+
+def _required_parameter(parameters: Mapping[str, str], key: str) -> str:
+    value = parameters.get(key)
+    if not value:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"target parameter {key} is required",
+        )
+    return value
 
 
 def _allowed(path: str, allowed_paths: tuple[str, ...]) -> bool:

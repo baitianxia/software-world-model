@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
+import re
 from typing import Mapping
 
 from software_world_model.cross_cutting import DomainError, ErrorCode
@@ -14,11 +15,15 @@ from .configuration import (
 )
 
 
+_FULL_OID = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
+
+
 class LocalGitConfigurationProvider:
     provider_type = "LOCAL_GIT"
     contract_version = "0.1.0"
     connector_tools = (
         "local-git.list@1",
+        "local-git.tree@1",
         "local-git.search@1",
         "local-git.read@1",
         "local-git.compare@1",
@@ -76,6 +81,28 @@ class LocalGitConfigurationProvider:
             if not paths:
                 raise DomainError(ErrorCode.SELECTOR_INVALID, "paths selector cannot be empty")
             normalized["paths"] = ",".join(paths)
+        pinned_commit = normalized.get("commit")
+        comparison_base = normalized.get("comparison_base")
+        comparison_head = normalized.get("comparison_head")
+        if pinned_commit is not None:
+            normalized["commit"] = _normalize_oid(pinned_commit, "commit")
+        if (comparison_base is None) != (comparison_head is None):
+            raise DomainError(
+                ErrorCode.SELECTOR_INVALID,
+                "comparison_base and comparison_head must be supplied together",
+            )
+        if comparison_base is not None and comparison_head is not None:
+            normalized["comparison_base"] = _normalize_oid(
+                comparison_base, "comparison_base"
+            )
+            normalized["comparison_head"] = _normalize_oid(
+                comparison_head, "comparison_head"
+            )
+        if pinned_commit is not None and comparison_base is not None:
+            raise DomainError(
+                ErrorCode.SELECTOR_INVALID,
+                "commit and comparison selectors are mutually exclusive",
+            )
         if not normalized:
             raise DomainError(ErrorCode.SELECTOR_INVALID, "Local Git selector cannot be empty")
         return NormalizedSelection(
@@ -84,6 +111,21 @@ class LocalGitConfigurationProvider:
                 context_constraint, label="Local Git context constraint"
             ),
         )
+
+
+def _normalize_oid(value: str, field: str) -> str:
+    if not isinstance(value, str):
+        raise DomainError(
+            ErrorCode.SELECTOR_INVALID,
+            f"Local Git {field} selector must be a full object ID",
+        )
+    normalized = value.casefold()
+    if not _FULL_OID.fullmatch(normalized):
+        raise DomainError(
+            ErrorCode.SELECTOR_INVALID,
+            f"Local Git {field} selector must be a full object ID",
+        )
+    return normalized
 
 
 def _normalize_relative_path(value: str) -> str:

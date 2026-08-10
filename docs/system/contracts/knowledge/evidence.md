@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE]
 derived_from: [DD-KNW-EVIDENCE]
-code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py]
-tests: [tests/test_formal_knowledge.py, tests/test_artifact_processing.py]
+code: [src/software_world_model/knowledge_engine/formal.py, src/software_world_model/knowledge_engine/structure.py, src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py]
+tests: [tests/test_formal_knowledge.py, tests/test_artifact_processing.py, tests/test_structure_knowledge.py, tests/test_structure_publication.py]
 ---
 
 # Evidence

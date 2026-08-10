@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-USE]
-code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py]
-tests: [tests/test_knowledge_use.py, tests/test_natural_task.py]
+code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/presenters.py]
+tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_iteration_003_g1_integration.py]
 ---
 
 # Knowledge Use 与 Sufficiency
@@ -18,7 +18,7 @@ Knowledge Use 在固定 Requirement 和 Snapshot 上读取已发布正式知识�
 
 ## Ownership
 
-Application 拥有 Requirement Revision、Read Session、Query Result、Need Assessment、Gap、Sufficiency 与 Use Epoch；Knowledge Engine 提供 exact Snapshot 的只读正式知识。
+Application 拥有 Requirement Revision、Read Session、Query Result、Need Assessment、Gap、Sufficiency 与 Use Epoch；Knowledge Engine 提供 exact Snapshot 的只读正式知识，并拥有 Session 所引用的 Context Comparison Assessment 与其 Validity。Application 可以声明比较顺序和保存 Assessment，但不能决定兼容 Outcome。
 
 ## Invariants
 

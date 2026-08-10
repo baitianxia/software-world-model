@@ -6,8 +6,8 @@ authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION]
 derived_from: [DD-KNW-PERSISTENCE]
-code: [src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_database.py]
-tests: [tests/test_formal_knowledge.py, tests/test_foundation.py]
+code: [src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py, src/software_world_model/infrastructure/sqlite_database.py]
+tests: [tests/test_formal_knowledge.py, tests/test_foundation.py, tests/test_structure_publication.py, tests/test_structure_read_session.py, tests/test_maven_structure_update_authority.py, tests/test_legacy_formal_reader.py]
 ---
 
 # Formal Knowledge Persistence

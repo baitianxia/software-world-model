@@ -306,6 +306,97 @@
       "tests/test_iteration_003_validation_assets.py"
     ]
   },
+  "FINDING-003-002": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-002.md",
+    "code": [
+      "src/software_world_model/source_integration/operations.py",
+      "src/software_world_model/source_integration/local_git.py"
+    ],
+    "tests": [
+      "tests/test_source_operations.py",
+      "tests/test_local_git_configuration.py"
+    ]
+  },
+  "FINDING-003-003": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-003.md",
+    "code": [
+      "src/software_world_model/application_services/maven_structure_update.py",
+      "src/software_world_model/knowledge_engine/structure_authority.py",
+      "src/software_world_model/knowledge_engine/structure_publication.py",
+      "src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py"
+    ],
+    "tests": [
+      "tests/test_maven_structure_update_authority.py",
+      "tests/test_structure_publication.py",
+      "tests/test_maven_structure_update.py"
+    ]
+  },
+  "FINDING-003-004": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-004.md",
+    "code": [
+      "src/software_world_model/application_services/maven_structure.py"
+    ],
+    "tests": [
+      "tests/test_maven_structure.py"
+    ]
+  },
+  "FINDING-003-005": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-005.md",
+    "code": [
+      "src/software_world_model/source_integration/local_git.py",
+      "src/software_world_model/source_integration/operations.py",
+      "src/software_world_model/application_services/maven_structure_update.py",
+      "src/software_world_model/interface/runtime.py"
+    ],
+    "tests": [
+      "tests/test_source_operations.py",
+      "tests/test_maven_structure_update_authority.py"
+    ]
+  },
+  "FINDING-003-006": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-006.md",
+    "code": [
+      "src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py"
+    ],
+    "tests": [
+      "tests/test_legacy_formal_reader.py"
+    ]
+  },
+  "FINDING-003-007": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-007.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/context_comparison.py",
+      "src/software_world_model/application_services/structure_read_session.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
+      "src/software_world_model/interface/runtime.py",
+      "src/software_world_model/interface/cli.py",
+      "src/software_world_model/interface/presenters.py"
+    ],
+    "tests": [
+      "tests/test_context_comparison.py",
+      "tests/test_structure_read_session.py",
+      "tests/test_iteration_003_g1_integration.py"
+    ]
+  },
+  "FINDING-003-008": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-008.md",
+    "code": [
+      "src/software_world_model/source_integration/operations.py",
+      "src/software_world_model/source_integration/artifact_use.py",
+      "src/software_world_model/infrastructure/sqlite_source_operation_repository.py",
+      "src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py",
+      "src/software_world_model/knowledge_engine/structure_authority.py",
+      "src/software_world_model/knowledge_engine/structure_publication.py",
+      "src/software_world_model/application_services/maven_structure_update.py"
+    ],
+    "tests": [
+      "tests/test_source_operations.py",
+      "tests/test_artifact_use_authority.py",
+      "tests/test_structure_publication.py",
+      "tests/test_maven_structure_update.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -561,6 +652,7 @@
   "ITER-003-SLICE-001": {
     "path": "docs/project/iterations/iteration-003/development-design/SLICE-001-structure-world-model-vertical-closure.md",
     "code": [
+      "src/software_world_model/source_integration",
       "src/software_world_model/knowledge_engine",
       "src/software_world_model/application_services",
       "src/software_world_model/infrastructure",
@@ -768,21 +860,39 @@
     "path": "docs/system/contracts/application/knowledge-update.md",
     "code": [
       "src/software_world_model/application_services/knowledge_update.py",
-      "src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py"
+      "src/software_world_model/application_services/maven_structure.py",
+      "src/software_world_model/application_services/maven_structure_update.py",
+      "src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py",
+      "src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py",
+      "src/software_world_model/interface/cli.py",
+      "src/software_world_model/interface/runtime.py",
+      "src/software_world_model/interface/presenters.py"
     ],
     "tests": [
-      "tests/test_knowledge_update.py"
+      "tests/test_knowledge_update.py",
+      "tests/test_maven_structure.py",
+      "tests/test_maven_structure_update.py",
+      "tests/test_maven_structure_update_authority.py",
+      "tests/test_maven_structure_cli.py",
+      "tests/test_iteration_003_g1_integration.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE": {
     "path": "docs/system/contracts/application/knowledge-use.md",
     "code": [
       "src/software_world_model/application_services/knowledge_use.py",
-      "src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py"
+      "src/software_world_model/application_services/structure_read_session.py",
+      "src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
+      "src/software_world_model/interface/runtime.py",
+      "src/software_world_model/interface/cli.py",
+      "src/software_world_model/interface/presenters.py"
     ],
     "tests": [
       "tests/test_knowledge_use.py",
-      "tests/test_natural_task.py"
+      "tests/test_natural_task.py",
+      "tests/test_structure_read_session.py",
+      "tests/test_iteration_003_g1_integration.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-MANAGEMENT": {
@@ -843,51 +953,73 @@
     "path": "docs/system/contracts/knowledge/admission.md",
     "code": [
       "src/software_world_model/knowledge_engine/formal.py",
-      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+      "src/software_world_model/knowledge_engine/structure.py",
+      "src/software_world_model/knowledge_engine/structure_authority.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
-      "tests/test_knowledge_update.py"
+      "tests/test_knowledge_update.py",
+      "tests/test_structure_knowledge.py",
+      "tests/test_structure_publication.py",
+      "tests/test_maven_structure_update.py",
+      "tests/test_iteration_003_g1_integration.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON": {
     "path": "docs/system/contracts/knowledge/context-comparison.md",
     "code": [
+      "src/software_world_model/knowledge_engine/context_comparison.py",
       "src/software_world_model/knowledge_engine/formal.py",
-      "src/software_world_model/application_services/knowledge_use.py"
+      "src/software_world_model/application_services/knowledge_use.py",
+      "src/software_world_model/application_services/structure_read_session.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py"
     ],
     "tests": [
+      "tests/test_context_comparison.py",
       "tests/test_formal_knowledge.py",
-      "tests/test_knowledge_use.py"
+      "tests/test_knowledge_use.py",
+      "tests/test_structure_read_session.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-ENTITY": {
     "path": "docs/system/contracts/knowledge/entity.md",
     "code": [
-      "src/software_world_model/knowledge_engine/formal.py"
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/knowledge_engine/structure.py"
     ],
     "tests": [
-      "tests/test_formal_knowledge.py"
+      "tests/test_formal_knowledge.py",
+      "tests/test_structure_knowledge.py",
+      "tests/test_structure_publication.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-EVIDENCE": {
     "path": "docs/system/contracts/knowledge/evidence.md",
     "code": [
       "src/software_world_model/knowledge_engine/formal.py",
-      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+      "src/software_world_model/knowledge_engine/structure.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
-      "tests/test_artifact_processing.py"
+      "tests/test_artifact_processing.py",
+      "tests/test_structure_knowledge.py",
+      "tests/test_structure_publication.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-FACT": {
     "path": "docs/system/contracts/knowledge/fact.md",
     "code": [
-      "src/software_world_model/knowledge_engine/formal.py"
+      "src/software_world_model/knowledge_engine/formal.py",
+      "src/software_world_model/knowledge_engine/structure.py"
     ],
     "tests": [
-      "tests/test_formal_knowledge.py"
+      "tests/test_formal_knowledge.py",
+      "tests/test_structure_knowledge.py",
+      "tests/test_structure_publication.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-INDEX": {
@@ -913,11 +1045,19 @@
     "path": "docs/system/contracts/knowledge/persistence.md",
     "code": [
       "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
+      "src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py",
+      "src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py",
       "src/software_world_model/infrastructure/sqlite_database.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
-      "tests/test_foundation.py"
+      "tests/test_foundation.py",
+      "tests/test_structure_publication.py",
+      "tests/test_structure_read_session.py",
+      "tests/test_maven_structure_update_authority.py",
+      "tests/test_legacy_formal_reader.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-REFERENCE-CONTEXT": {
@@ -935,10 +1075,13 @@
     "path": "docs/system/contracts/knowledge/schema-core.md",
     "code": [
       "src/software_world_model/knowledge_engine/formal.py",
-      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+      "src/software_world_model/knowledge_engine/structure_authority.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py"
     ],
     "tests": [
-      "tests/test_formal_knowledge.py"
+      "tests/test_formal_knowledge.py",
+      "tests/test_structure_publication.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-SCOPE": {
@@ -955,44 +1098,66 @@
     "path": "docs/system/contracts/knowledge/snapshot-publication.md",
     "code": [
       "src/software_world_model/knowledge_engine/formal.py",
-      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py"
+      "src/software_world_model/knowledge_engine/structure_authority.py",
+      "src/software_world_model/knowledge_engine/structure_publication.py",
+      "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
+      "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
-      "tests/test_knowledge_update.py"
+      "tests/test_knowledge_update.py",
+      "tests/test_structure_publication.py",
+      "tests/test_maven_structure_update.py",
+      "tests/test_iteration_003_g1_integration.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL": {
     "path": "docs/system/contracts/knowledge/structure-model.md",
     "code": [
       "src/software_world_model/knowledge_engine",
-      "src/software_world_model/application_services/knowledge_update.py"
+      "src/software_world_model/application_services/knowledge_update.py",
+      "src/software_world_model/application_services/maven_structure.py",
+      "src/software_world_model/application_services/maven_structure_update.py"
     ],
     "tests": [
       "tests/test_formal_knowledge.py",
-      "tests/test_knowledge_update.py"
+      "tests/test_knowledge_update.py",
+      "tests/test_structure_knowledge.py",
+      "tests/test_maven_structure.py",
+      "tests/test_maven_structure_update.py",
+      "tests/test_maven_structure_cli.py",
+      "tests/test_iteration_003_g1_integration.py"
     ]
   },
   "SYS-CONTRACT-SOURCE-ARTIFACT": {
     "path": "docs/system/contracts/source/source-artifact.md",
     "code": [
       "src/software_world_model/source_integration/operations.py",
-      "src/software_world_model/source_integration/artifact_processing.py"
+      "src/software_world_model/source_integration/local_git.py",
+      "src/software_world_model/source_integration/artifact_processing.py",
+      "src/software_world_model/source_integration/artifact_use.py",
+      "src/software_world_model/infrastructure/sqlite_source_operation_repository.py",
+      "src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py"
     ],
     "tests": [
       "tests/test_source_operations.py",
-      "tests/test_artifact_processing.py"
+      "tests/test_artifact_processing.py",
+      "tests/test_artifact_use_authority.py",
+      "tests/test_structure_publication.py",
+      "tests/test_maven_structure_update.py"
     ]
   },
   "SYS-CONTRACT-SOURCE-DATA-SOURCE": {
     "path": "docs/system/contracts/source/data-source.md",
     "code": [
       "src/software_world_model/source_integration/configuration.py",
+      "src/software_world_model/source_integration/local_git.py",
       "src/software_world_model/infrastructure/sqlite_source_repository.py"
     ],
     "tests": [
       "tests/test_source_configuration.py",
-      "tests/test_local_git_configuration.py"
+      "tests/test_local_git_configuration.py",
+      "tests/test_source_operations.py"
     ]
   },
   "SYS-CONTRACT-SOURCE-INDEX": {

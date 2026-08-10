@@ -6,8 +6,8 @@ authority: normative
 owners: [source]
 depends_on: [SYS-CONTRACT-SOURCE-DATA-SOURCE, SYS-CONTRACT-X-CAPABILITY-EXECUTION]
 derived_from: [DD-SRC-SOURCE-ARTIFACT]
-code: [src/software_world_model/source_integration/operations.py, src/software_world_model/source_integration/artifact_processing.py]
-tests: [tests/test_source_operations.py, tests/test_artifact_processing.py]
+code: [src/software_world_model/source_integration/operations.py, src/software_world_model/source_integration/local_git.py, src/software_world_model/source_integration/artifact_processing.py, src/software_world_model/source_integration/artifact_use.py, src/software_world_model/infrastructure/sqlite_source_operation_repository.py, src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py]
+tests: [tests/test_source_operations.py, tests/test_artifact_processing.py, tests/test_artifact_use_authority.py, tests/test_structure_publication.py, tests/test_maven_structure_update.py]
 ---
 
 # Source Operation 与 Artifact

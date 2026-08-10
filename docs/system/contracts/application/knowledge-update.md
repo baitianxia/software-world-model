@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-ADMISSION, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-UPDATE]
-code: [src/software_world_model/application_services/knowledge_update.py, src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py]
-tests: [tests/test_knowledge_update.py]
+code: [src/software_world_model/application_services/knowledge_update.py, src/software_world_model/application_services/maven_structure.py, src/software_world_model/application_services/maven_structure_update.py, src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/presenters.py]
+tests: [tests/test_knowledge_update.py, tests/test_maven_structure.py, tests/test_maven_structure_update.py, tests/test_maven_structure_update_authority.py, tests/test_maven_structure_cli.py, tests/test_iteration_003_g1_integration.py]
 ---
 
 # Knowledge Update

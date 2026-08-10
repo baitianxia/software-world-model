@@ -22,11 +22,13 @@ from software_world_model.source_integration.operations import (
     SourceArtifact,
     SourceContext,
     SourceObservation,
+    SourceOperationAuthority,
     SourceOperationIntent,
     SourceOperationResult,
     SourceOperationStatus,
     SourceTool,
     content_digest,
+    source_operation_authority_digest,
 )
 
 from .sqlite_database import SqliteDatabase
@@ -58,6 +60,12 @@ CREATE TABLE IF NOT EXISTS src_operation_revisions (
     result_digest TEXT NOT NULL,
     occurred_at TEXT NOT NULL,
     PRIMARY KEY (operation_id, revision),
+    FOREIGN KEY (operation_id) REFERENCES src_operation_roots(operation_id)
+);
+
+CREATE TABLE IF NOT EXISTS src_operation_authorities (
+    operation_id TEXT PRIMARY KEY,
+    authority_digest TEXT NOT NULL,
     FOREIGN KEY (operation_id) REFERENCES src_operation_roots(operation_id)
 );
 
@@ -156,6 +164,30 @@ class SqliteSourceOperationRepository:
                     timestamp,
                 ),
             )
+            authority = SourceOperationAuthority(
+                operation_id=operation_id,
+                intent_digest=intent.digest,
+                source_id=intent.source_id,
+                source_revision=intent.source_revision,
+                binding_id=intent.binding_id,
+                binding_revision=intent.binding_revision,
+                tool=intent.tool,
+                digest=Digest("sha256:" + "0" * 64),
+            )
+            authority = SourceOperationAuthority(
+                operation_id=authority.operation_id,
+                intent_digest=authority.intent_digest,
+                source_id=authority.source_id,
+                source_revision=authority.source_revision,
+                binding_id=authority.binding_id,
+                binding_revision=authority.binding_revision,
+                tool=authority.tool,
+                digest=source_operation_authority_digest(authority),
+            )
+            connection.execute(
+                "INSERT INTO src_operation_authorities VALUES (?, ?)",
+                (operation_id.value, authority.digest.value),
+            )
             connection.execute(
                 """INSERT INTO src_operation_revisions
                    VALUES (?, 1, ?, NULL, NULL, NULL, ?, ?)""",
@@ -208,6 +240,51 @@ class SqliteSourceOperationRepository:
     def get(self, operation_id: StableId) -> SourceOperationResult:
         with self._database.read() as connection:
             return self._load(connection, operation_id)
+
+    def get_authority(
+        self, operation_id: StableId
+    ) -> SourceOperationAuthority:
+        with self._database.read() as connection:
+            row = connection.execute(
+                """SELECT root.operation_id, root.intent_digest,
+                          root.source_id, root.source_revision,
+                          root.binding_id, root.binding_revision, root.tool_id,
+                          authority.authority_digest
+                   FROM src_operation_roots AS root
+                   JOIN src_operation_authorities AS authority
+                     ON authority.operation_id = root.operation_id
+                   WHERE root.operation_id = ?""",
+                (operation_id.value,),
+            ).fetchone()
+        if row is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source Operation current-read authority is unavailable",
+                {
+                    "reason_code": "SOURCE_OPERATION_AUTHORITY_MISSING",
+                    "operation_id": operation_id.value,
+                },
+            )
+        authority = SourceOperationAuthority(
+            operation_id=StableId(row["operation_id"]),
+            intent_digest=Digest(row["intent_digest"]),
+            source_id=StableId(row["source_id"]),
+            source_revision=Revision(row["source_revision"]),
+            binding_id=StableId(row["binding_id"]),
+            binding_revision=Revision(row["binding_revision"]),
+            tool=SourceTool(row["tool_id"]),
+            digest=Digest(row["authority_digest"]),
+        )
+        if authority.digest != source_operation_authority_digest(authority):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source Operation current-read authority digest is invalid",
+                {
+                    "reason_code": "SOURCE_OPERATION_AUTHORITY_DIGEST_INVALID",
+                    "operation_id": operation_id.value,
+                },
+            )
+        return authority
 
     def _transition(
         self,
