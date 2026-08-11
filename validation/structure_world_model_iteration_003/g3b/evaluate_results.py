@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 from hashlib import sha256
 import json
 import math
 import os
 from pathlib import Path
 import stat
+import subprocess
 from typing import Iterable, Mapping, Sequence
 
 from software_world_model.cross_cutting import canonical_json_bytes, digest_of
@@ -24,6 +26,13 @@ V009_ROOT = (
     / "019f9fced69110c6a7e357a4ea2394ec6742fd2e"
 )
 BASELINES = V009_ROOT / "baselines"
+PRODUCT_SUITE = (
+    PROJECT_ROOT
+    / "validation"
+    / "structure_world_model_iteration_003"
+    / "questions"
+    / "product-suite-1.0.0.json"
+)
 MALL_ORACLE = (
     PROJECT_ROOT
     / "validation"
@@ -42,12 +51,44 @@ IDENTITY_ORACLE = (
 BASELINE_SEAL_DIGEST = (
     "sha256:7be049fe746a71cb3b9c3941d81e8e51076256d0f8dac61ba5a5c88c873ecbdd"
 )
+PRODUCT_SUITE_DIGEST = (
+    "sha256:c165af6beb5ce66d45f035c3155ef4cb7d39b488fb6fe29af4b61e77217aaf2c"
+)
+MALL_ORACLE_DIGEST = (
+    "sha256:412d2e0381ab46cfc84c95e9769f1227733ac2a523487119a15130bcca74b625"
+)
+IDENTITY_ORACLE_DIGEST = (
+    "sha256:b02e4414f2c03fb38da433b343ddeebb8a381a23dad3e0ba3e89792bc468b268"
+)
+_ALLOWED_POST_PRODUCT_EVALUATOR_DELTA = frozenset(
+    {
+        "docs/_generated/catalog.json",
+        "docs/_generated/dependency-graph.json",
+        "docs/_generated/traceability.json",
+        (
+            "docs/project/iterations/iteration-003/development-design/"
+            "SLICE-001-structure-world-model-vertical-closure.md"
+        ),
+        (
+            "docs/project/iterations/iteration-003/findings/"
+            "FINDING-003-027.md"
+        ),
+        "docs/project/iterations/iteration-003/findings/README.md",
+        "docs/project/iterations/iteration-003/verification-matrix.md",
+        "tests/test_iteration_003_g3b.py",
+        (
+            "validation/structure_world_model_iteration_003/g3b/"
+            "evaluate_results.py"
+        ),
+    }
+)
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepared-root", required=True)
     parser.add_argument("--evidence-root", required=True)
+    parser.add_argument("--evaluator-implementation-commit", required=True)
     parser.add_argument("--output", required=True)
     return parser
 
@@ -57,8 +98,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     prepared_root = _directory(arguments.prepared_root)
     evidence_root = _directory(arguments.evidence_root)
     output = _future_file(arguments.output)
+    evaluator_commit = _commit(arguments.evaluator_implementation_commit)
+    evaluator_tree = _require_clean_checkpoint(evaluator_commit)
     registry = _load(prepared_root / "prepared-inputs.json")
     batch = _load(evidence_root / "batch-result.json")
+    product_commit = _commit(batch.get("implementation_commit"))
+    evaluator_delta = _evaluator_delta_paths(product_commit, evaluator_commit)
     invocation = _load(evidence_root / "invocation.json")
     bootstrap = _load(evidence_root / "provider-bootstrap.json")
     preflight = _load(evidence_root / "preflight.json")
@@ -74,8 +119,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         / "gateway"
         / "gateway-listener-provisioning.json"
     )
-    mall = _load(MALL_ORACLE)
-    identity = _load(IDENTITY_ORACLE)
+    product_suite = _load_relaxed(PRODUCT_SUITE)
+    oracle_digests = _verify_frozen_product_oracles(product_suite)
+    mall = _load_relaxed(MALL_ORACLE)
+    identity = _load_relaxed(IDENTITY_ORACLE)
     generation = _load(prepared_root / "evaluator" / "generation-report.json")
     comparison_preflight = _load(
         prepared_root / "evaluator" / "baseline-comparison-preflight.json"
@@ -86,6 +133,40 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if baseline_seal.get("document_digest") != BASELINE_SEAL_DIGEST:
         raise RuntimeError("V-009 baseline seal is not exact")
+
+    evaluation_invocation_path = _future_file(
+        str(output.with_name(f"{output.stem}-invocation.json"))
+    )
+    evaluation_invocation_core = {
+        "schema": "swm.iter-003.g3b-evaluation-invocation@1",
+        "sealed_at": _utc_now(),
+        "evaluator_process_pid": os.getpid(),
+        "evaluator_implementation_commit": evaluator_commit,
+        "evaluator_implementation_tree": evaluator_tree,
+        "evaluator_script_digest": _sha256(Path(__file__).resolve(strict=True)),
+        "product_implementation_commit": product_commit,
+        "product_implementation_tree": batch.get("implementation_tree"),
+        "post_product_evaluator_delta_paths": list(evaluator_delta),
+        "batch_result_digest": batch.get("document_digest"),
+        "prepared_registry_digest": registry.get("document_digest"),
+        "product_suite_and_oracle_file_digests": oracle_digests,
+        "baseline_seal_digest": baseline_seal.get("document_digest"),
+        "baseline_comparison_preflight_digest": comparison_preflight.get(
+            "document_digest"
+        ),
+        "batch_terminal_index_read_before_seal": True,
+        "individual_terminal_files_read_before_seal": False,
+        "external_model_called": False,
+        "production_activation": "NOT_EXECUTED",
+    }
+    evaluation_invocation = {
+        **evaluation_invocation_core,
+        "document_digest": digest_of(evaluation_invocation_core).value,
+    }
+    _write_new(
+        evaluation_invocation_path,
+        canonical_json_bytes(evaluation_invocation),
+    )
 
     planned = {item["run_key"]: item for item in registry["runs"]}
     terminals = {
@@ -226,10 +307,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         else "FAIL"
     )
     core = {
-        "schema": "swm.iter-003.g3b-product-evaluation@1",
+        "schema": "swm.iter-003.g3b-product-evaluation@2",
         "status": status,
         "environment": "EVALUATION_ONLY",
         "implementation_commit": batch.get("implementation_commit"),
+        "product_implementation_commit": product_commit,
+        "evaluator_implementation_commit": evaluator_commit,
+        "evaluator_implementation_tree": evaluator_tree,
+        "evaluator_script_digest": evaluation_invocation[
+            "evaluator_script_digest"
+        ],
+        "evaluation_invocation_digest": evaluation_invocation[
+            "document_digest"
+        ],
+        "post_product_evaluator_delta_paths": list(evaluator_delta),
         "batch_result_digest": batch.get("document_digest"),
         "prepared_registry_digest": registry.get("document_digest"),
         "baseline_seal_digest": baseline_seal["document_digest"],
@@ -509,6 +600,7 @@ def _batch_boundary_pass(
         and batch.get("selective_retry_count") == 0
         and batch.get("prepared_registry_digest")
         == registry.get("document_digest")
+        and registry.get("product_suite_sha256") == PRODUCT_SUITE_DIGEST
         and batch.get("implementation_commit")
         == registry.get("implementation_commit")
         and batch.get("stage_unchanged_after_batch") is True
@@ -1245,6 +1337,8 @@ def _load_json_lines(path: Path) -> list[Mapping[str, object]]:
 
 
 def _load_relaxed(path: Path) -> Mapping[str, object]:
+    if not path.is_file() or path.is_symlink():
+        raise ValueError(f"document is not a regular file: {path}")
     value = json.loads(
         path.read_text(encoding="utf-8"),
         object_pairs_hook=_unique_object,
@@ -1252,6 +1346,120 @@ def _load_relaxed(path: Path) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise ValueError(f"document is not a JSON object: {path}")
     return value
+
+
+def _verify_frozen_product_oracles(
+    product_suite: Mapping[str, object],
+) -> dict[str, str]:
+    expected_registry = {
+        "MALL-MAVEN-STRUCTURE@1.0.0": {
+            "path": (
+                "validation/structure_world_model_iteration_003/oracles/"
+                "mall-structure-1.0.0.json"
+            ),
+            "digest": MALL_ORACLE_DIGEST,
+        },
+        "maven-identity-anti-name-stitch@1": {
+            "path": (
+                "validation/structure_world_model_iteration_003/fixtures/"
+                "maven-identity/oracle.json"
+            ),
+            "digest": IDENTITY_ORACLE_DIGEST,
+        },
+    }
+    actual = {
+        "product_suite": _sha256(PRODUCT_SUITE),
+        "mall_oracle": _sha256(MALL_ORACLE),
+        "identity_oracle": _sha256(IDENTITY_ORACLE),
+    }
+    if (
+        actual["product_suite"] != PRODUCT_SUITE_DIGEST
+        or product_suite.get("oracle_registry") != expected_registry
+        or actual["mall_oracle"] != MALL_ORACLE_DIGEST
+        or actual["identity_oracle"] != IDENTITY_ORACLE_DIGEST
+    ):
+        raise RuntimeError("frozen Product suite/oracle file digest drifted")
+    return actual
+
+
+def _validate_evaluator_delta_paths(paths: Sequence[str]) -> tuple[str, ...]:
+    value = tuple(sorted(paths))
+    if (
+        not value
+        or len(value) != len(set(value))
+        or not set(value).issubset(_ALLOWED_POST_PRODUCT_EVALUATOR_DELTA)
+        or (
+            "validation/structure_world_model_iteration_003/g3b/"
+            "evaluate_results.py"
+        )
+        not in value
+    ):
+        raise RuntimeError("post-product evaluator delta is not closed")
+    return value
+
+
+def _evaluator_delta_paths(
+    product_commit: str,
+    evaluator_commit: str,
+) -> tuple[str, ...]:
+    ancestor = subprocess.run(
+        ("git", "merge-base", "--is-ancestor", product_commit, evaluator_commit),
+        cwd=PROJECT_ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if ancestor.returncode != 0:
+        raise RuntimeError("evaluator checkpoint does not descend from product")
+    completed = subprocess.run(
+        ("git", "diff", "--name-only", product_commit, evaluator_commit),
+        cwd=PROJECT_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return _validate_evaluator_delta_paths(completed.stdout.splitlines())
+
+
+def _commit(value: object) -> str:
+    if (
+        not isinstance(value, str)
+        or len(value) != 40
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise ValueError("commit must be a full lowercase Git SHA")
+    return value
+
+
+def _require_clean_checkpoint(expected: str) -> str:
+    head = subprocess.run(
+        ("git", "rev-parse", "HEAD"),
+        cwd=PROJECT_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    tree = subprocess.run(
+        ("git", "rev-parse", "HEAD^{tree}"),
+        cwd=PROJECT_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ("git", "status", "--porcelain=v1"),
+        cwd=PROJECT_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    if head != expected or status:
+        raise RuntimeError("evaluation requires its exact clean checkpoint")
+    return tree
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:

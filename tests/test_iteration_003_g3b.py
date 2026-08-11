@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from software_world_model.cross_cutting import digest_of
 from validation.structure_world_model_iteration_003.g3b import evaluate_results
@@ -225,6 +226,45 @@ class Iteration003G3bTests(unittest.TestCase):
         self.assertEqual(comparison["direct_failure_count"], 40)
         self.assertEqual(comparison["mature_success_count"], 55)
         self.assertFalse(comparison["product_result_visible_at_seal"])
+
+    def test_digest_bound_pretty_printed_product_oracles_are_accepted(self):
+        suite = evaluate_results._load_relaxed(evaluate_results.PRODUCT_SUITE)
+        digests = evaluate_results._verify_frozen_product_oracles(suite)
+        self.assertEqual(
+            digests,
+            {
+                "product_suite": evaluate_results.PRODUCT_SUITE_DIGEST,
+                "mall_oracle": evaluate_results.MALL_ORACLE_DIGEST,
+                "identity_oracle": evaluate_results.IDENTITY_ORACLE_DIGEST,
+            },
+        )
+        self.assertIn(
+            "revision_a_oracle",
+            evaluate_results._load_relaxed(evaluate_results.MALL_ORACLE),
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            tampered = Path(directory).resolve() / "mall-oracle.json"
+            tampered.write_bytes(
+                evaluate_results.MALL_ORACLE.read_bytes() + b"\n"
+            )
+            with mock.patch.object(evaluate_results, "MALL_ORACLE", tampered):
+                with self.assertRaises(RuntimeError):
+                    evaluate_results._verify_frozen_product_oracles(suite)
+
+    def test_post_product_evaluator_delta_excludes_product_runtime(self):
+        evaluator_path = (
+            "validation/structure_world_model_iteration_003/g3b/"
+            "evaluate_results.py"
+        )
+        self.assertEqual(
+            evaluate_results._validate_evaluator_delta_paths((evaluator_path,)),
+            (evaluator_path,),
+        )
+        with self.assertRaises(RuntimeError):
+            evaluate_results._validate_evaluator_delta_paths(
+                (evaluator_path, "src/software_world_model/interface/runtime.py")
+            )
 
     def test_provider_socket_supervisor_environment_has_no_credential(self):
         environment = run_g3b._provisioner_environment()
