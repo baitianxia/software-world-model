@@ -1309,7 +1309,7 @@ class ProductModelDraftGenerator(WorldModelDraftGenerator):
         inventory: Mapping[str, object],
         analysis: ProductQuestionAnalysis,
     ) -> str:
-        source = neighborhood["entity"]["canonical_ga"] or neighborhood["entity"]["state_fields"]["artifact_id"]
+        source = _direct_source_ref(neighborhood["entity"])
         targets = [
             self._catalog.display_ref(StableId(item["object_entity_root_id"]))
             for item in neighborhood["relations"]
@@ -1563,6 +1563,26 @@ def _same_artifact_groups(modules: object) -> dict[str, list[str]]:
         for key, values in sorted(groups.items())
         if len(values) > 1
     }
+
+
+def _direct_source_ref(entity: object) -> str:
+    if not isinstance(entity, Mapping):
+        raise _invalid(
+            "PRODUCT_DIRECT_SOURCE_INVALID",
+            "direct-dependency source Entity is invalid",
+        )
+    canonical_ga = entity.get("canonical_ga")
+    if canonical_ga is not None:
+        return _text(canonical_ga, "direct-dependency source canonical GA")
+    state_fields = entity.get("state_fields")
+    if not isinstance(state_fields, Mapping):
+        raise _invalid(
+            "PRODUCT_DIRECT_SOURCE_STATE_INVALID",
+            "direct-dependency source Entity State is invalid",
+        )
+    group = _field_text(state_fields, "effective_group_id")
+    artifact = _field_text(state_fields, "artifact_id")
+    return f"{group}:{artifact}"
 
 
 def _field_text(value: Mapping[str, object], key: str) -> str:

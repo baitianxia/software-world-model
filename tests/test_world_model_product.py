@@ -296,6 +296,7 @@ class WorldModelProductTests(unittest.TestCase):
             "B 的根 POM dependencies 是否直接声明了 reactor child module mall-security？"
         )
         self.assertEqual(root_model.capabilities, [ENTITY_CANDIDATE_RESOLUTION])
+        self.assertIn('"source":"com.macro.mall:mall"', root.chain.draft.body)
         self.assertIn('"com.macro.mall:mall-security":false', root.chain.draft.body)
 
         negative, negative_model = self._execute(
@@ -323,6 +324,14 @@ class WorldModelProductTests(unittest.TestCase):
         root_identity, _ = self._execute(
             "maven-identity fixture 的根 POM 是否本地直接依赖 shared common-lib？dependencyManagement 本身是否形成边？",
             identity=True,
+        )
+        self.assertIn(
+            '"source":"org.example.root:structure-fixture"',
+            root_identity.chain.draft.body,
+        )
+        self.assertIn(
+            '"org.example.shared:common-lib":true',
+            root_identity.chain.draft.body,
         )
         self.assertIn('"dependency_management_forms_edge":false', root_identity.chain.draft.body)
 

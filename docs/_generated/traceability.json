@@ -640,6 +640,15 @@
       "tests/test_iteration_003_g3b.py"
     ]
   },
+  "FINDING-003-029": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-029.md",
+    "code": [
+      "src/software_world_model/interface/world_model_product.py"
+    ],
+    "tests": [
+      "tests/test_world_model_product.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
