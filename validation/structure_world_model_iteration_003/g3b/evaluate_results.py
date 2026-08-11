@@ -303,6 +303,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     performance = _performance(timings, planned, direct)
     direct_statuses = [item.get("status") for item in direct.values()]
     mature_statuses = [item.get("status") for item in mature.values()]
+    direct_failure_count = _non_success_count(direct_statuses)
+    mature_failure_count = _non_success_count(mature_statuses)
     all_runs_pass = all(item["status"] == "PASS" for item in run_evaluations)
     boundary_pass = _batch_boundary_pass(
         batch=batch,
@@ -315,8 +317,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     baseline_population_pass = (
         direct_statuses.count("SUCCESS") == 15
-        and sum(item != "SUCCESS" for item in direct_statuses) == 40
+        and direct_failure_count == 40
         and mature_statuses.count("SUCCESS") == 55
+        and mature_failure_count == 0
     )
     status = (
         "PASS"
@@ -355,14 +358,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "direct_population": {
             "terminal_count": len(direct),
             "success_count": direct_statuses.count("SUCCESS"),
-            "failure_count": direct_statuses.count("FAILURE"),
+            "failure_count": direct_failure_count,
             "failures_preserved": True,
             "missing_outputs_interpolated": False,
         },
         "mature_population": {
             "terminal_count": len(mature),
             "success_count": mature_statuses.count("SUCCESS"),
-            "failure_count": mature_statuses.count("FAILURE"),
+            "failure_count": mature_failure_count,
             "latency_comparator": False,
         },
         "performance": performance,
@@ -1245,6 +1248,10 @@ def _token_score(text: str, tokens: Sequence[str]) -> int:
         candidates = alternatives.get(token, (token.casefold(),))
         matched += any(candidate in folded for candidate in candidates)
     return round(matched * 1_000_000 / len(tokens))
+
+
+def _non_success_count(statuses: Iterable[object]) -> int:
+    return sum(status != "SUCCESS" for status in statuses)
 
 
 def _numeric_values(

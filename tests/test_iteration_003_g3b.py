@@ -279,6 +279,12 @@ class Iteration003G3bTests(unittest.TestCase):
             sum(item["status"] == "SUCCESS" for item in terminals.values()),
             15,
         )
+        self.assertEqual(
+            evaluate_results._non_success_count(
+                item["status"] for item in terminals.values()
+            ),
+            40,
+        )
 
     def test_quality_comparators_are_sealed_before_product_results(self):
         plan = json.loads(
