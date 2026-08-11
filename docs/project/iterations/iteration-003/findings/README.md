@@ -1,7 +1,7 @@
 ---
 id: ITER-003-FINDINGS
 kind: iteration-findings-index
-status: open
+status: completed
 authority: development-evidence
 owners: [engineering, architecture]
 depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-003-PROPOSAL]

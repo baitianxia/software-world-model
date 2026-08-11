@@ -902,6 +902,26 @@
       "tests"
     ]
   },
+  "ITER-003-PROPOSAL": {
+    "path": "docs/project/iterations/iteration-003/proposal.md",
+    "code": [
+      "src/software_world_model",
+      "validation/structure_world_model_iteration_003"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-003-RESULT-ACCEPTANCE": {
+    "path": "docs/project/iterations/iteration-003/results/acceptance.md",
+    "code": [
+      "src/software_world_model",
+      "validation/structure_world_model_iteration_003"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-003-RESULT-G0": {
     "path": "docs/project/iterations/iteration-003/results/gate-g0.md",
     "code": [],
@@ -984,6 +1004,18 @@
       "tests/test_world_model_live_execution.py",
       "tests/test_world_model_product.py",
       "tests/test_iteration_003_v009.py"
+    ]
+  },
+  "ITER-003-RESULT-G4": {
+    "path": "docs/project/iterations/iteration-003/results/gate-g4.md",
+    "code": [
+      "validation/structure_world_model_iteration_003/g3b/build_browser.py",
+      "src/software_world_model/interface/world_model_product.py"
+    ],
+    "tests": [
+      "tests/test_iteration_003_g1_integration.py",
+      "tests/test_iteration_003_g3b.py",
+      "tests/test_world_model_product.py"
     ]
   },
   "ITER-003-RESULT-V009": {

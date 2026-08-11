@@ -2,10 +2,10 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `ITER-003-INDEX`
-- Active slice: `ITER-003-SLICE-001`
-- Worktree status: `iteration-003-g3b-failed-local-product-fix-awaits-new-full-batch`
-- Strategy relation: `iteration-003-v009-pass-g3b-product-evaluation-58-of-60-fail`
+- Active iteration: `none`
+- Active slice: `none`
+- Worktree status: `clean-governance-closure`
+- Strategy relation: `local-maven-structure-world-model-evaluation-only-accepted-not-active`
 - Live model path: `local-evidence-first-accepted-world-model-path-not-active`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`

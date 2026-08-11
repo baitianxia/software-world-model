@@ -1,7 +1,7 @@
 ---
 id: ITER-003-RESULT-G3B
 kind: iteration-result
-status: fail
+status: pass
 authority: evidence
 owners: [project, quality, security]
 depends_on: [ITER-003-RESULT-V009, ITER-003-VERIFICATION, ITER-003-SLICE-001, FINDING-003-022, FINDING-003-023, FINDING-003-024, FINDING-003-025, FINDING-003-026, FINDING-003-027, FINDING-003-028, FINDING-003-029, FINDING-003-030]
@@ -14,13 +14,15 @@ iteration: ITER-003
 
 ## Verdict and scope
 
-G3b 最终裁决为 **FAIL**。product checkpoint
-`7933712d7d00d113abe0ec147729fa41562bea76` 的正式 batch 完成 60/60 execution SUCCESS、零选择性重试，
-OS/Gateway/Answer/Projector 边界与性能裁决均为 PASS；但最终独立 Product Evaluation 只有 58/60
-PASS，两个 `WM-PRODUCT-007` run 的答案完整性低于事前密封的更强 baseline。
+G3b 最终裁决为 **PASS**。初始 product checkpoint
+`7933712d7d00d113abe0ec147729fa41562bea76` 虽完成 60/60 execution SUCCESS，却因两个
+`WM-PRODUCT-007` run 丢失完整 root GA 而在独立评估中只有 58/60，曾被正确裁决为 FAIL。修复后没有
+重写或重放旧 terminal；用户明确同意新批次后，product checkpoint
+`b9b329a9b341b01fc41486ef9b0c809ac8665332` 重新准备并完整执行全新 60-run batch，最终独立评估为
+60/60 PASS、重大错误 0，OS/Gateway/Answer/Projector 边界与性能均 PASS。
 
-因冻结协议要求重大错误为零且不低于更强对照，58/60 不得降级为 PASS。V-011 失败并阻断
-G4；浏览器人工验收、Product Validation 和 Production Activation 均未执行。
+本 Result 同时保留初始 FAIL 与最终 revalidation PASS 的 exact lineage。G3b 只解除 G4/Product Validation
+阻断；Production Activation 不在授权范围，始终为 `NOT_EXECUTED`。
 
 ## Authorization and frozen inputs
 
@@ -35,12 +37,12 @@ G4；浏览器人工验收、Product Validation 和 Production Activation 均未
   `https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions`，credential reference 为
   `env:ARK_API_KEY`；
 - Product Suite raw digest 为 `sha256:c165af6b…`，mall/identity Oracle raw digest 分别为
-  `sha256:412d2e03…` / `sha256:b02e4414…`；prepared registry document digest 为
+  `sha256:412d2e03…` / `sha256:b02e4414…`；初始 batch 的 prepared registry document digest 为
   `sha256:1aef44d3f9d4a3eb6327e15e9b81104a600532b5f31e0cef3a7a25b7249472f0`。
 
 权限明确排除 Production Activation，所有 invocation/batch/result 都记录 `NOT_EXECUTED`。
 
-## Product checkpoint and preserved attempts
+## Initial product checkpoint and preserved attempts
 
 正式 product checkpoint/tree 为
 `7933712d7d00d113abe0ec147729fa41562bea76` /
@@ -59,7 +61,7 @@ G4；浏览器人工验收、Product Validation 和 Production Activation 均未
 因此正式 batch 包含 60 次产品 Provider 调用；连同已保留的 `19a7462…` 失败尝试，G3b 实际观测到
 61 次 product Provider 调用。本 Result 后的 evaluator 修正、本地产品修复和文档回写均未追加调用。
 
-## Formal batch and isolation evidence
+## Initial formal batch and isolation evidence
 
 - invocation document digest 为
   `sha256:a5e91675df05bede12b7792dc05a562daf6fe00e92a367895a3734b31168a26c`；batch document digest 为
@@ -131,16 +133,47 @@ V3 Result 的精确裁决为：
 
 日志位于 `var/iteration-003/g3b/5a44c51/postfix/logs/`；merge 只改变 Git DAG，不改上述 tree。
 
-## Blocking condition and validity
+## Revalidation batch and final verdict
 
-产品 runtime 在 `7933712…` 后已变更，因此旧 60-run batch 永久只能证明旧 checkpoint 的 58/60 FAIL，
-不能使用新 renderer 对旧 terminal 做事后重写或选择性重放。要解除 V-011/G3b 阻断，必须在未来的新
-clean product checkpoint 上：
+用户在得知“修复后代码必须重新冻结并完整执行新 60-run batch”后以独立消息明确回复“同意”；该消息 raw
+SHA-256 为 `905819e2e3a059a02087855e9f326d05c877c1767ec31dc012c5c44652840230`。新运行严格绑定
+product checkpoint/tree `b9b329a9b341b01fc41486ef9b0c809ac8665332` /
+`43accc44508a1cce9066aead258ec11a5b6a4ef0`，没有复用旧 prepared input 或模型输出：
 
-1. 重新准备并密封全新 60-run registry/invocation；
-2. 按外部披露与调用权限边界重新判断是否可以调用 Provider；
-3. 一次性执行全部 60 run，不重用旧模型输出；
-4. 在新 batch 的独立 evaluator PASS 后，才能开始浏览器视觉/人工验收。
+- prepared registry digest：
+  `sha256:ace18c7c0b6c43a1a17a76be810a9d378d8069b34fa679c263de5d74729f4407`；
+- invocation / preflight / batch digest：
+  `sha256:c4c2276fd9131b7300f23a03f37168c279b391793ca132ff74ec704fe67267ee` /
+  `sha256:058e507b3dfcf2d47f34a7c0b1600b48892423a9bc25484bb28ef4a3e018f53f` /
+  `sha256:bf8ca1fe4c4e8861b3edb7a9853eb33f1536f5ee2a2bcfb90b38f1ac0bffc632`；
+- 40 static + 20 runtime metamorphic terminal 全部 `SUCCESS`，0 failure、0 selective retry，protected stage
+  前后 digest 相同；
+- OS boundary 沿用已裁决的 inherited exact connected Provider fd、prebound `0600` AF_UNIX listener、
+  child new-socket syscall denial 和 peer/TLS/HTTP exact binding；selected address 仍如实标记
+  `EXECUTOR_SYNTHETIC_EXTERNAL`。
 
-本轮没有执行新外部 batch，没有构建或打开 G4 验收浏览器，没有 Product Validation，
-Production Activation 始终为 **NOT EXECUTED**。
+新 batch 后才创建 evaluator-only descendant checkpoint/tree
+`9977269b246114810b431adb00207f286ec951ac` /
+`daa2d987a8deaa1e16cff3adfa4ddbc213adaa64`；相对 product checkpoint 的 closed Git delta 只有
+`evaluate_results.py` 与其测试。evaluator protocol 为
+`ITER-003-G3B-INDEPENDENT-EVALUATOR@1.0.1`，script digest 为
+`sha256:771e9271ed1c319c7ad46abd97273e08e832afdd83544373b8b4af3710ddf4e1`。它在读取 individual
+terminal 前密封 invocation digest
+`sha256:e569c009e1d71ebd894644c838befb7ba32b2d21a9b4e060bf5cef5c9ea98a8b`。
+
+最终 `product-evaluation.json` document digest 为
+`sha256:7952bd9b6a68e50beb7a6370942ea163ac1e1359c2922cd77500903f149f2b1c`，raw SHA-256 为
+`7488a2800f226e2660692cc9a58494a03cff9abc4724ec501f68c16a2c5b0203`。裁决为：
+
+- 60/60 PASS，major error count=0，boundary PASS；
+- Direct 55 terminal = 15 SUCCESS + 40 preserved failure，Mature 55/55 SUCCESS；
+- World Model 首问 P95=13,041 ms，Direct=73,084 ms，ratio=178,437 ppm（限制 1,500,000）；
+- World Model 重复问 P95=13,323 ms，Direct=113,850 ms，ratio=117,022 ppm（限制 500,000）；
+- 五个 `WM-PRODUCT-007` run 均显示 exact root GA `org.example.root:structure-fixture`，完整性
+  1,000,000 ppm，不低于任一 eligible stronger comparator。
+
+新批次增加 60 次 product Provider 调用；连同初始 checkpoint 及其失败尝试，G3b 全部保留证据共观测 121 次
+product Provider 调用。没有 hidden/选择性 retry。最终 evaluator、浏览器构建、人工验收和回归均未调用外部模型。
+
+因此旧 58/60 结果继续只证明旧 checkpoint FAIL，新 60/60 结果独立证明修复后的 exact product checkpoint
+PASS。G3b/V-010/V-011 阻断已解除；Production Activation 始终为 **NOT EXECUTED**。

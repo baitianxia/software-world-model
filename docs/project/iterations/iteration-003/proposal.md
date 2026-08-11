@@ -1,12 +1,12 @@
 ---
 id: ITER-003-PROPOSAL
 kind: iteration-proposal
-status: accepted
-authority: project-proposal
+status: completed
+authority: historical-project
 owners: [product, engineering]
 depends_on: [ITER-002-RESULT-ACCEPTANCE, SYS-PRODUCT-VISION, SYS-ADR-014, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-QUALITY-ACCEPTANCE]
-code: []
-tests: []
+code: [src/software_world_model, validation/structure_world_model_iteration_003]
+tests: [tests]
 iteration: ITER-003
 coding_input: false
 ---

@@ -1,21 +1,21 @@
 ---
 id: ITER-003-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: completed
+authority: historical-development
 owners: [engineering]
 depends_on: [ITER-003-PROPOSAL, SYS-ADR-014, SYS-ARCH-INVARIANTS, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-ADMISSION, SYS-CONTRACT-KNOWLEDGE-SCHEMA-CORE, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-OPS-LOCAL-BROWSER]
 code: [src/software_world_model/source_integration, src/software_world_model/knowledge_engine, src/software_world_model/application_services, src/software_world_model/infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-003
-coding_input: true
+coding_input: false
 ---
 
 # SLICE-001：Structure World Model 纵向闭环
 
 ## Status and dependencies
 
-当前已获用户授权；G0、G1、G2、G3a 与 V-009 均已有独立 PASS Result。最终 V-009 在 checkpoint `019f9fced69110c6a7e357a4ea2394ec6742fd2e` 上以 freeze `1.0.5` 取得 Conformance PASS、closed CE 7/0/0 PASS/VALID，并在任何 G3b 产品结果可见前密封 controlled Direct 与 Mature Source Agent 各 55 个 run。Direct 为 15 SUCCESS/40 preserved FAILURE，Mature 为 55 SUCCESS/0 FAILURE；`FINDING-003-020` 与 `021` 已分别处置最终物理 staging isolation 和失败样本解释。用户又于 2026-08-11 明确授权 `ITER-003-G3B-EXACT-INPUTS@1.0.0` 所列两批外部披露/调用与 OS audit，且无需重复确认；该授权不包含 Production Activation。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
+本 Slice 已按 `ITER-003-RESULT-ACCEPTANCE` 完成并转为历史开发材料，不再是当前编码输入。G0、G1、G2、G3a、V-009、修复后的全新 G3b batch/evaluator 与 G4 均 PASS。最终 V-009 在 checkpoint `019f9fced69110c6a7e357a4ea2394ec6742fd2e` 上以 freeze `1.0.5` 取得 Conformance PASS、closed CE 7/0/0 PASS/VALID，并在任何 G3b 产品结果可见前密封 controlled Direct 与 Mature Source Agent 各 55 个 run。Direct 为 15 SUCCESS/40 preserved FAILURE，Mature 为 55 SUCCESS/0 FAILURE；初始 G3b 58/60 FAIL 与后续修复后 60/60 PASS 的 lineage 均永久保留。接受不包含 Production Activation，也不把新 Profile 扩成旧数据 Schema Migration。
 
 ## Current vs expected behavior
 
@@ -88,7 +88,7 @@ Mature Source Agent 必须使用 protocol `1.0.3` 的 exact Codex binary、`gpt-
 
 默认拒绝 egress policy 固定 G3b 产品路线为 `Answer→AF_UNIX Model Egress Gateway→https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions`，credential 只在 Gateway 最终 HTTPS dispatch 注入；Answer 不得解析 DNS 或直连 INET/INET6，Projector 全部出站拒绝。V-009 Conformance、CE 和两条 baseline 可使用 policy 明确标记的 direct Adapter qualification transport，但其 Result 不证明 G3b distinct Gateway process 或 OS network denial。任何 input、Strategy/Prompt/schema/tool/config、Provider identity、policy、suite/evaluator 或 checkpoint 漂移都使 qualification/baseline 失效。
 
-最终 `ITER-003-RESULT-V009` 绑定 checkpoint `019f9fc…`、Conformance binding、closed CE qualification、55-run plan、Direct 15/55 success 与全部 40 preserved failures、Mature 55/55 success、7/7 permission preflight 和联合 baseline seal `sha256:7be049fe746a71cb3b9c3941d81e8e51076256d0f8dac61ba5a5c88c873ecbdd`。V-009 至此 PASS；V-010/V-011 仍未运行。
+最终 `ITER-003-RESULT-V009` 绑定 checkpoint `019f9fc…`、Conformance binding、closed CE qualification、55-run plan、Direct 15/55 success 与全部 40 preserved failures、Mature 55/55 success、7/7 permission preflight 和联合 baseline seal `sha256:7be049fe746a71cb3b9c3941d81e8e51076256d0f8dac61ba5a5c88c873ecbdd`。V-009 至此 PASS；后续修复后 G3b/V-010/V-011 与 G4 的最终 PASS 分别见 `ITER-003-RESULT-G3B` 与 `ITER-003-RESULT-G4`。
 
 ### G3b — Evaluation-only browser model run
 

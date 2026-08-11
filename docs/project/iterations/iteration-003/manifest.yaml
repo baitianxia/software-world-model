@@ -1,13 +1,25 @@
 schema_version: 1
 iteration:
   id: ITER-003
-  status: authorized
+  status: completed
   outcome_scope: local-maven-structure-world-model
 
 baseline:
   commit: a4ae307c8ab04979e87e0460f19b6ec81fc915a3
   dirty_worktree_allowed: false
   relation: clean-iteration-003-preparation-commit
+
+accepted_subject:
+  product_commit: b9b329a9b341b01fc41486ef9b0c809ac8665332
+  product_tree: 43accc44508a1cce9066aead258ec11a5b6a4ef0
+  evaluator_commit: 9977269b246114810b431adb00207f286ec951ac
+  evaluator_tree: daa2d987a8deaa1e16cff3adfa4ddbc213adaa64
+  evaluator_relation: descendant-evaluator-and-tests-only
+  product_batch_digest: sha256:bf8ca1fe4c4e8861b3edb7a9853eb33f1536f5ee2a2bcfb90b38f1ac0bffc632
+  product_evaluation_digest: sha256:7952bd9b6a68e50beb7a6370942ea163ac1e1359c2922cd77500903f149f2b1c
+  browser_index_digest: sha256:2989c45ec45e0d262ae7362b347e92586653eae96774303cfe3aed960f3aa819
+  acceptance_id: ITER-003-RESULT-ACCEPTANCE
+  production_activation: not-executed
 
 system_inputs:
   ids:
@@ -174,8 +186,9 @@ external_inputs:
       message_digest: sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae
       v009_conformance_ce_and_required_baselines: confirmed
       additional_batch_confirmation_message_digest: sha256:1598ff3231362a390c02037a08ffad7ce296655592010a3e0ac9bedb9620f8a0
-      g3b_product_dispatch: not-included-requires-separate-confirmation
-    status: exact-inputs-v1.0.5-pass-valid-baselines-sealed-g3b-not-authorized
+      g3b_product_dispatch: confirmed-by-separate-user-messages
+      g3b_revalidation_confirmation_message_digest: sha256:905819e2e3a059a02087855e9f326d05c877c1767ec31dc012c5c44652840230
+    status: exact-inputs-v1.0.5-pass-valid-baselines-sealed
   direct_investigation_baseline:
     kind: exact-product-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json
@@ -238,5 +251,6 @@ verification:
 
 authorization:
   readiness_review_id: ITER-003-READINESS
+  acceptance_id: ITER-003-RESULT-ACCEPTANCE
   authorized_by: user
   authorized_at: "2026-08-10T11:58:22+08:00"

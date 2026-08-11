@@ -1153,8 +1153,8 @@
   {
     "id": "ITER-003-DESIGN-INDEX",
     "kind": "development-design-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering",
       "architecture"
@@ -1165,7 +1165,7 @@
   {
     "id": "ITER-003-FINDINGS",
     "kind": "iteration-findings-index",
-    "status": "open",
+    "status": "completed",
     "authority": "development-evidence",
     "owners": [
       "engineering",
@@ -1177,8 +1177,8 @@
   {
     "id": "ITER-003-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "project",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "project"
     ],
@@ -1188,8 +1188,8 @@
   {
     "id": "ITER-003-PROPOSAL",
     "kind": "iteration-proposal",
-    "status": "accepted",
-    "authority": "project-proposal",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "product",
       "engineering"
@@ -1209,6 +1209,19 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-003/readiness-review.md"
+  },
+  {
+    "id": "ITER-003-RESULT-ACCEPTANCE",
+    "kind": "iteration-acceptance",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/results/acceptance.md"
   },
   {
     "id": "ITER-003-RESULT-G0",
@@ -1261,7 +1274,7 @@
   {
     "id": "ITER-003-RESULT-G3B",
     "kind": "iteration-result",
-    "status": "fail",
+    "status": "pass",
     "authority": "evidence",
     "owners": [
       "project",
@@ -1270,6 +1283,19 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-003/results/gate-g3b.md"
+  },
+  {
+    "id": "ITER-003-RESULT-G4",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/results/gate-g4.md"
   },
   {
     "id": "ITER-003-RESULT-V009",
@@ -1287,7 +1313,7 @@
   {
     "id": "ITER-003-RESULTS-INDEX",
     "kind": "iteration-result-index",
-    "status": "in-progress",
+    "status": "completed",
     "authority": "evidence",
     "owners": [
       "project",
@@ -1299,8 +1325,8 @@
   {
     "id": "ITER-003-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering"
     ],
@@ -1310,8 +1336,8 @@
   {
     "id": "ITER-003-VERIFICATION",
     "kind": "iteration-verification",
-    "status": "in-progress",
-    "authority": "planned-verification",
+    "status": "pass",
+    "authority": "evidence",
     "owners": [
       "quality"
     ],
