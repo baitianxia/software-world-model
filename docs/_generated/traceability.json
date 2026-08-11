@@ -631,6 +631,15 @@
       "tests/test_iteration_003_g3b.py"
     ]
   },
+  "FINDING-003-028": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-028.md",
+    "code": [
+      "validation/structure_world_model_iteration_003/g3b/evaluate_results.py"
+    ],
+    "tests": [
+      "tests/test_iteration_003_g3b.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

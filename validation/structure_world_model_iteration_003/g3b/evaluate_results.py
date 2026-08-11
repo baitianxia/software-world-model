@@ -55,6 +55,18 @@ BASELINE_SEAL_DIGEST = (
 BASELINE_SEAL_FILE_DIGEST = (
     "sha256:b29c3c228a7f9a55aa6d042e1ca99a4a0a12f6293ab333dda224996cd9f6828a"
 )
+PROVIDER_HOST = "ark.cn-beijing.volces.com"
+PROVIDER_PORT = 443
+PROVIDER_POLICY_ENDPOINT = (
+    "https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions"
+)
+PROVIDER_TRANSPORT_ENDPOINT = (
+    "https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions"
+)
+GATEWAY_POLICY_REF = "ITER-003-MODEL-EGRESS-GATEWAY@1.0.0"
+GATEWAY_POLICY_DIGEST = (
+    "sha256:3e0bfcbf6f1b85d350db167d1bc71ff55f35a76546f15d4d7f14a871aa0326e0"
+)
 PRODUCT_SUITE_DIGEST = (
     "sha256:c165af6beb5ce66d45f035c3155ef4cb7d39b488fb6fe29af4b61e77217aaf2c"
 )
@@ -76,6 +88,10 @@ _ALLOWED_POST_PRODUCT_EVALUATOR_DELTA = frozenset(
         (
             "docs/project/iterations/iteration-003/findings/"
             "FINDING-003-027.md"
+        ),
+        (
+            "docs/project/iterations/iteration-003/findings/"
+            "FINDING-003-028.md"
         ),
         "docs/project/iterations/iteration-003/findings/README.md",
         "docs/project/iterations/iteration-003/verification-matrix.md",
@@ -460,20 +476,12 @@ def _evaluate_world_run(
         not in {"PUBLIC_UNICAST", "EXECUTOR_SYNTHETIC_EXTERNAL"}
         or len(server_audits) != 1
         or server_audits[0].get("status") != "RESULT"
+        or server_audits[0].get("policy_ref") != GATEWAY_POLICY_REF
+        or server_audits[0].get("policy_digest") != GATEWAY_POLICY_DIGEST
         or len(transport_audits) != 1
-        or transport_audits[0].get("outcome") != "HTTP_RESPONSE"
-        or transport_audits[0].get("failure_code") is not None
-        or transport_audits[0].get("endpoint")
-        != (
-            "https://ark.cn-beijing.volces.com:443/"
-            "api/coding/v3/chat/completions"
-        )
-        or transport_audits[0].get("numeric_address")
-        != gateway_summary.get("numeric_provider_address")
-        or transport_audits[0].get("address_scope")
-        != gateway_summary.get("numeric_provider_address_scope")
-        or not isinstance(
-            transport_audits[0].get("peer_certificate_sha256"), str
+        or not _transport_audit_pass(
+            transport_audits[0],
+            gateway_summary=gateway_summary,
         )
     ):
         findings.append("AUTHORITY_OR_EXECUTION_BOUNDARY_INVALID")
@@ -634,6 +642,8 @@ def _batch_boundary_pass(
         and invocation.get("production_activation") == "NOT_EXECUTED"
         and invocation.get("provider", {}).get("connection_handoff")
         == "INHERITED_EXACT_CONNECTED_SOCKET"
+        and invocation.get("provider", {}).get("endpoint")
+        == PROVIDER_POLICY_ENDPOINT
         and invocation.get("provider", {}).get("gateway_listener_handoff")
         == "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
         and invocation.get("provider", {}).get("gateway_child_socket_creation")
@@ -687,8 +697,10 @@ def _provider_provisioning_pass(value: Mapping[str, object]) -> bool:
         value.get("schema") == "swm.iter-003.g3b-provider-socket-handoff@1"
         and value.get("document_digest") == digest_of(core).value
         and isinstance(selected, str)
+        and value.get("provider_hostname") == PROVIDER_HOST
+        and value.get("provider_port") == PROVIDER_PORT
         and value.get("connected_peer_address") == selected
-        and value.get("connected_peer_port") == 443
+        and value.get("connected_peer_port") == PROVIDER_PORT
         and scope in {"PUBLIC_UNICAST", "EXECUTOR_SYNTHETIC_EXTERNAL"}
         and isinstance(scopes, list)
         and {item.get("address") for item in scopes if isinstance(item, dict)}
@@ -710,6 +722,25 @@ def _provider_provisioning_pass(value: Mapping[str, object]) -> bool:
         and isinstance(environment_keys, list)
         and "ARK_API_KEY" not in environment_keys
         and value.get("production_activation") == "NOT_EXECUTED"
+    )
+
+
+def _transport_audit_pass(
+    value: Mapping[str, object],
+    *,
+    gateway_summary: Mapping[str, object],
+) -> bool:
+    return (
+        value.get("outcome") == "HTTP_RESPONSE"
+        and value.get("failure_code") is None
+        and value.get("endpoint") == PROVIDER_TRANSPORT_ENDPOINT
+        and value.get("numeric_address")
+        == gateway_summary.get("numeric_provider_address")
+        and value.get("address_scope")
+        == gateway_summary.get("numeric_provider_address_scope")
+        and isinstance(value.get("peer_certificate_sha256"), str)
+        and gateway_summary.get("policy_ref") == GATEWAY_POLICY_REF
+        and gateway_summary.get("policy_digest") == GATEWAY_POLICY_DIGEST
     )
 
 
@@ -897,8 +928,10 @@ def _oracle_findings(
         diff = next((item for item in payloads if "entities" in item and "relations" in item), None)
         if (
             not isinstance(diff, dict)
-            or diff["entities"]["counts"] != {"added": 1, "removed": 0, "state_changed": 7}
-            or diff["relations"]["counts"] != {"added": 3, "removed": 0, "state_changed": 11}
+            or diff["entities"]["counts"]
+            != {"added": 1, "removed": 0, "state_changed": 7, "unchanged": 0}
+            or diff["relations"]["counts"]
+            != {"added": 3, "removed": 0, "state_changed": 11, "unchanged": 0}
         ):
             findings.append("MALL_ORDERED_DIFF_ORACLE_MISMATCH")
     elif case_id == "WM-PRODUCT-004":

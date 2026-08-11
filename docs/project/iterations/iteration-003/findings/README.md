@@ -39,5 +39,6 @@ iteration: ITER-003
 - [FINDING-003-025：Seatbelt 对继承 TCP 数据面仍要求 network-outbound capability](FINDING-003-025.md) — dispositioned / system-contract
 - [FINDING-003-026：Citation broker 的 staged cold start 依赖了未公开的聚合导出](FINDING-003-026.md) — dispositioned / local-implementation
 - [FINDING-003-027：冻结评估输入不能一律按 canonical JSON 运行收据加载](FINDING-003-027.md) — dispositioned / iteration-design
+- [FINDING-003-028：evaluator 混同了 policy endpoint 与 transport 规范化表示](FINDING-003-028.md) — dispositioned / iteration-design
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

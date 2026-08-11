@@ -83,6 +83,93 @@ class Iteration003G3bTests(unittest.TestCase):
                 listener.close()
                 path.unlink(missing_ok=True)
 
+    def test_transport_endpoint_binds_normalized_url_to_exact_policy_and_peer(self):
+        gateway_summary = {
+            "numeric_provider_address": "198.18.0.26",
+            "numeric_provider_address_scope": "EXECUTOR_SYNTHETIC_EXTERNAL",
+            "policy_ref": evaluate_results.GATEWAY_POLICY_REF,
+            "policy_digest": evaluate_results.GATEWAY_POLICY_DIGEST,
+        }
+        audit = {
+            "outcome": "HTTP_RESPONSE",
+            "failure_code": None,
+            "endpoint": evaluate_results.PROVIDER_TRANSPORT_ENDPOINT,
+            "numeric_address": "198.18.0.26",
+            "address_scope": "EXECUTOR_SYNTHETIC_EXTERNAL",
+            "peer_certificate_sha256": "sha256:" + "a" * 64,
+        }
+        self.assertTrue(
+            evaluate_results._transport_audit_pass(
+                audit,
+                gateway_summary=gateway_summary,
+            )
+        )
+        self.assertFalse(
+            evaluate_results._transport_audit_pass(
+                {
+                    **audit,
+                    "endpoint": evaluate_results.PROVIDER_POLICY_ENDPOINT,
+                },
+                gateway_summary=gateway_summary,
+            )
+        )
+
+    def test_mall_diff_oracle_includes_unchanged_zero_counts(self):
+        page = {
+            "views": {
+                "query_result_views": [
+                    {
+                        "view": {
+                            "completeness": "COMPLETE",
+                            "truncated": False,
+                            "result_payload": {
+                                "entities": {
+                                    "counts": {
+                                        "added": 1,
+                                        "removed": 0,
+                                        "state_changed": 7,
+                                        "unchanged": 0,
+                                    }
+                                },
+                                "relations": {
+                                    "counts": {
+                                        "added": 3,
+                                        "removed": 0,
+                                        "state_changed": 11,
+                                        "unchanged": 0,
+                                    }
+                                },
+                            },
+                        }
+                    }
+                ]
+            },
+            "answer": {"body": ""},
+        }
+        self.assertEqual(
+            evaluate_results._oracle_findings(
+                case_id="WM-PRODUCT-003",
+                page=page,
+                mall={},
+                identity={},
+                generation={},
+            ),
+            [],
+        )
+        page["views"]["query_result_views"][0]["view"]["result_payload"][
+            "entities"
+        ]["counts"]["unchanged"] = 1
+        self.assertEqual(
+            evaluate_results._oracle_findings(
+                case_id="WM-PRODUCT-003",
+                page=page,
+                mall={},
+                identity={},
+                generation={},
+            ),
+            ["MALL_ORDERED_DIFF_ORACLE_MISMATCH"],
+        )
+
     def test_staged_citation_broker_cold_imports(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
