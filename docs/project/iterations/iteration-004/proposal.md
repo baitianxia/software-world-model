@@ -1,12 +1,12 @@
 ---
 id: ITER-004-PROPOSAL
 kind: iteration-proposal
-status: accepted
-authority: project-proposal
+status: completed
+authority: historical-project
 owners: [product, engineering]
 depends_on: [ITER-003-RESULT-ACCEPTANCE, SYS-ARCH-DEPLOYMENT, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-OPS-LOCAL-BROWSER, SYS-QUALITY-ACCEPTANCE, SYS-QUALITY-SECURITY]
-code: []
-tests: []
+code: [src/software_world_model/interface, validation/structure_world_model_iteration_004]
+tests: [tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py]
 iteration: ITER-004
 coding_input: false
 ---

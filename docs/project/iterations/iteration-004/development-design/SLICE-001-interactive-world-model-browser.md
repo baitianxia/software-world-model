@@ -1,22 +1,23 @@
 ---
 id: ITER-004-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: completed
+authority: historical-development
 owners: [engineering]
 depends_on: [ITER-004-PROPOSAL, SYS-ARCH-DEPLOYMENT, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-OPS-LOCAL-BROWSER, SYS-QUALITY-SECURITY]
-code: [src/software_world_model/interface, validation/structure_world_model_iteration_003/g3b]
-tests: [tests]
+code: [src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, validation/structure_world_model_iteration_004/interactive_browser.py, validation/structure_world_model_iteration_003/g3b]
+tests: [tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py]
 iteration: ITER-004
-coding_input: true
+coding_input: false
 ---
 
 # SLICE-001：自由提问接入隔离 World Model
 
 ## Status and dependencies
 
-本 Slice 已由用户明确授权。它依赖 ITER-003 accepted G3b product package、prepared Read Bundles、Gateway inputs
-和本机 macOS capability runner；这些工件任一缺失或漂移都阻断启动。
+本 Slice 已按 implementation commit `6bacfdfa1ba4ae40f41acfde34bdfeefac5b19a4` 完成。它依赖 ITER-003 accepted
+G3b product package、prepared Read Bundles、Gateway inputs 和本机 macOS capability runner；这些工件任一缺失或
+漂移都阻断启动。本文件转为历史设计，不再授权继续修改产品代码。
 
 ## Current vs expected behavior
 

@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `ITER-004-INDEX`
-- Active slice: `ITER-004-SLICE-001`
-- Worktree status: `iteration-004-interactive-world-model-browser-authorized`
-- Strategy relation: `accepted-iteration-003-world-model-awaits-interactive-loopback-entry`
-- Live model path: `local-evidence-first-accepted-world-model-path-not-active`
+- Active iteration: `none`
+- Active slice: `none`
+- Worktree status: `iteration-004-interactive-world-model-browser-completed`
+- Strategy relation: `accepted-iteration-003-world-model-has-evaluation-only-interactive-loopback-entry`
+- Live model path: `local-world-model-evaluation-only-interactive-available-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

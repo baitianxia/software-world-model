@@ -1065,14 +1065,41 @@
       "tests"
     ]
   },
+  "ITER-004-PROPOSAL": {
+    "path": "docs/project/iterations/iteration-004/proposal.md",
+    "code": [
+      "src/software_world_model/interface",
+      "validation/structure_world_model_iteration_004"
+    ],
+    "tests": [
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_004_interactive_browser.py"
+    ]
+  },
+  "ITER-004-RESULT-ACCEPTANCE": {
+    "path": "docs/project/iterations/iteration-004/results/acceptance.md",
+    "code": [
+      "src/software_world_model/interface/world_model_browser.py",
+      "src/software_world_model/interface/world_model_browser_ui.py",
+      "validation/structure_world_model_iteration_004/interactive_browser.py"
+    ],
+    "tests": [
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_004_interactive_browser.py",
+      "tests"
+    ]
+  },
   "ITER-004-SLICE-001": {
     "path": "docs/project/iterations/iteration-004/development-design/SLICE-001-interactive-world-model-browser.md",
     "code": [
-      "src/software_world_model/interface",
+      "src/software_world_model/interface/world_model_browser.py",
+      "src/software_world_model/interface/world_model_browser_ui.py",
+      "validation/structure_world_model_iteration_004/interactive_browser.py",
       "validation/structure_world_model_iteration_003/g3b"
     ],
     "tests": [
-      "tests"
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_004_interactive_browser.py"
     ]
   },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {

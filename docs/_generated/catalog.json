@@ -1372,8 +1372,8 @@
   {
     "id": "ITER-004-DESIGN-INDEX",
     "kind": "development-design-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering",
       "architecture"
@@ -1384,7 +1384,7 @@
   {
     "id": "ITER-004-FINDINGS",
     "kind": "iteration-findings-index",
-    "status": "in-progress",
+    "status": "completed",
     "authority": "development-evidence",
     "owners": [
       "engineering",
@@ -1396,8 +1396,8 @@
   {
     "id": "ITER-004-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "project",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "project"
     ],
@@ -1407,8 +1407,8 @@
   {
     "id": "ITER-004-PROPOSAL",
     "kind": "iteration-proposal",
-    "status": "accepted",
-    "authority": "project-proposal",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "product",
       "engineering"
@@ -1430,9 +1430,22 @@
     "path": "docs/project/iterations/iteration-004/readiness-review.md"
   },
   {
+    "id": "ITER-004-RESULT-ACCEPTANCE",
+    "kind": "iteration-acceptance",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/results/acceptance.md"
+  },
+  {
     "id": "ITER-004-RESULTS-INDEX",
     "kind": "iteration-result-index",
-    "status": "draft",
+    "status": "completed",
     "authority": "evidence",
     "owners": [
       "project",
@@ -1444,8 +1457,8 @@
   {
     "id": "ITER-004-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering"
     ],
@@ -1455,8 +1468,8 @@
   {
     "id": "ITER-004-VERIFICATION",
     "kind": "iteration-verification",
-    "status": "not-run",
-    "authority": "planned-verification",
+    "status": "pass",
+    "authority": "evidence",
     "owners": [
       "quality"
     ],

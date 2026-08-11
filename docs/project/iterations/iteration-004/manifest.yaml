@@ -1,13 +1,27 @@
 schema_version: 1
 iteration:
   id: ITER-004
-  status: authorized
+  status: completed
   outcome_scope: local-evaluation-only-interactive-world-model-browser
 
 baseline:
   commit: 0d046767f42a0a64fb0f965a3095beac58eb835a
   dirty_worktree_allowed: false
   relation: clean-post-iteration-003-acceptance
+
+accepted_subject:
+  implementation_commit: 6bacfdfa1ba4ae40f41acfde34bdfeefac5b19a4
+  implementation_tree: 4d0a08642f251a7fab32ec6f6e522cd4bed6e422
+  authorization_commit: 98b9b94b34271f291603699ea9db433403208fef
+  accepted_iteration_003_product_commit: b9b329a9b341b01fc41486ef9b0c809ac8665332
+  live_session_root: var/iteration-004/interactive/20260811T082338Z-6d81d16b6104
+  startup_preflight_digest: sha256:00814adb2db76bc8d279b65d846482f5b2116b6274979520d3aad89cdefa93fb
+  supported_terminal_digest: sha256:2fe0c5bd1fc3739e3f997631a0bfe65384493707787fde4a29f3e997d49dcca9
+  gap_terminal_digest: sha256:a423ce3607b115dce92c2273720f61364a3ecf191f27ef477601c2bedc26ef88
+  browser_terminal_digest: sha256:e2267719f6bd9ab1cb2666c3f3b5d2ecd226fa40821ce4afa914d98f8ab492a5
+  exploratory_failure_terminal_digest: sha256:5995e4b1a0b316b0c60a2b33700cb0694e6a6a232974fcd1ddd1a996e897b57b
+  acceptance_id: ITER-004-RESULT-ACCEPTANCE
+  production_activation: not-executed
 
 system_inputs:
   ids:
