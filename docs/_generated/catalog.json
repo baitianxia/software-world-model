@@ -1345,6 +1345,100 @@
     "path": "docs/project/iterations/iteration-003/verification-matrix.md"
   },
   {
+    "id": "ITER-004-DESIGN-INDEX",
+    "kind": "development-design-index",
+    "status": "authorized",
+    "authority": "current-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/development-design/README.md"
+  },
+  {
+    "id": "ITER-004-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "open",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/findings/README.md"
+  },
+  {
+    "id": "ITER-004-INDEX",
+    "kind": "iteration-index",
+    "status": "authorized",
+    "authority": "project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/README.md"
+  },
+  {
+    "id": "ITER-004-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "accepted",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/proposal.md"
+  },
+  {
+    "id": "ITER-004-READINESS",
+    "kind": "iteration-readiness",
+    "status": "accepted",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/readiness-review.md"
+  },
+  {
+    "id": "ITER-004-RESULTS-INDEX",
+    "kind": "iteration-result-index",
+    "status": "draft",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/results/README.md"
+  },
+  {
+    "id": "ITER-004-SLICE-001",
+    "kind": "development-slice",
+    "status": "authorized",
+    "authority": "current-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/development-design/SLICE-001-interactive-world-model-browser.md"
+  },
+  {
+    "id": "ITER-004-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "not-run",
+    "authority": "planned-verification",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/verification-matrix.md"
+  },
+  {
     "id": "ITERATION-INDEX",
     "kind": "iteration-index",
     "status": "current",

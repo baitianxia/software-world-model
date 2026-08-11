@@ -1045,6 +1045,16 @@
       "tests"
     ]
   },
+  "ITER-004-SLICE-001": {
+    "path": "docs/project/iterations/iteration-004/development-design/SLICE-001-interactive-world-model-browser.md",
+    "code": [
+      "src/software_world_model/interface",
+      "validation/structure_world_model_iteration_003/g3b"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [

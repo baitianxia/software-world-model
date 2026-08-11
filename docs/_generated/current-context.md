@@ -2,10 +2,10 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `none`
-- Active slice: `none`
-- Worktree status: `clean-governance-closure`
-- Strategy relation: `local-maven-structure-world-model-evaluation-only-accepted-not-active`
+- Active iteration: `ITER-004-INDEX`
+- Active slice: `ITER-004-SLICE-001`
+- Worktree status: `iteration-004-interactive-world-model-browser-authorized`
+- Strategy relation: `accepted-iteration-003-world-model-awaits-interactive-loopback-entry`
 - Live model path: `local-evidence-first-accepted-world-model-path-not-active`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`

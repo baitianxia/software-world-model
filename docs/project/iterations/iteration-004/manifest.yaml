@@ -1,0 +1,59 @@
+schema_version: 1
+iteration:
+  id: ITER-004
+  status: authorized
+  outcome_scope: local-evaluation-only-interactive-world-model-browser
+
+baseline:
+  commit: 0d046767f42a0a64fb0f965a3095beac58eb835a
+  dirty_worktree_allowed: false
+  relation: clean-post-iteration-003-acceptance
+
+system_inputs:
+  ids:
+    - SYS-ADR-014
+    - SYS-ARCH-DEPLOYMENT
+    - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+    - SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-OPS-LOCAL-BROWSER
+    - SYS-QUALITY-ACCEPTANCE
+    - SYS-QUALITY-SECURITY
+
+external_inputs:
+  accepted_iteration_003_product:
+    kind: exact-evaluation-product-input
+    product_commit: b9b329a9b341b01fc41486ef9b0c809ac8665332
+    product_tree: 43accc44508a1cce9066aead258ec11a5b6a4ef0
+    prepared_registry_digest: sha256:ace18c7c0b6c43a1a17a76be810a9d378d8069b34fa679c263de5d74729f4407
+    accepted_batch_digest: sha256:bf8ca1fe4c4e8861b3edb7a9853eb33f1536f5ee2a2bcfb90b38f1ac0bffc632
+    accepted_evaluation_digest: sha256:7952bd9b6a68e50beb7a6370942ea163ac1e1359c2922cd77500903f149f2b1c
+    selectors:
+      - ORDERED_A_B
+      - EXACT_B
+      - EXACT_FIXTURE_VALID
+    product_oracle_mounted: false
+    baseline_results_mounted: false
+  live_provider:
+    kind: user-driven-evaluation-only-model-input
+    provider_type: VOLCENGINE_ARK
+    adapter_version: openai-chat-completions-no-tools@8
+    requested_model_ref: glm-5-2-260617
+    observed_model_fingerprint: glm-5.2
+    endpoint: https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions
+    credential_reference: env:ARK_API_KEY
+    dispatch_policy: one-call-per-user-question-no-hidden-retry
+    disclosure_scope: original-question-and-no-payload-published-structure-only
+    source_or_evidence_payload_disclosure: forbidden
+    authorization_message_digest: sha256:b998dcd53a91834b0fa07d32919108c1d72fac33d337b57fa76fd3bf38b2443b
+    preceding_consent_message_digest: sha256:905819e2e3a059a02087855e9f326d05c877c1767ec31dc012c5c44652840230
+
+verification:
+  matrix_id: ITER-004-VERIFICATION
+  evidence_location: var/iteration-004
+
+authorization:
+  readiness_review_id: ITER-004-READINESS
+  authorized_by: user
+  authorized_at: "2026-08-11T15:55:42+08:00"
+  production_activation: not-authorized
