@@ -22,3 +22,9 @@ iteration: ITER-004
 | V-006 | 用户能在真实本机浏览器输入、发送并查看最新流程 | human / product | loopback service、两条 live Result | 输入框可用；loading/失败可见；答案、A/B View、Coverage、Citation、authority 可检查；console 无 error | browser manual review | not-run / blocking |
 | V-007 | 变更不破坏已有功能和文档 | regression | focused tests、完整 suite、docs gate | 全部 PASS；现有 DIRECT_INVESTIGATION 明确独立且未被静默替换 | logs | not-run / blocking |
 | V-008 | Production Activation 未被推导或执行 | boundary | launcher config、Result | 永久 `EVALUATION_ONLY`；只绑定 loopback；Production Activation=`NOT_EXECUTED` | tests + Result | not-run / cannot be inferred |
+
+## Exploratory failure interpretation
+
+`EXACT_FIXTURE_VALID` 的一个新自由问题在 accepted Answer workload 内于 Provider dispatch 前失败，原始 failure terminal
+必须保留。V-006 的交互结论只在页面明确失败关闭、无 Direct fallback、无隐藏重试且随后独立新 request 可成功时成立；
+不得把“可以自由输入”解释为“任意问题必然回答”。见 `FINDING-004-002`。

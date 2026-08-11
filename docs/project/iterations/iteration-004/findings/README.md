@@ -1,7 +1,7 @@
 ---
 id: ITER-004-FINDINGS
 kind: iteration-findings-index
-status: open
+status: in-progress
 authority: development-evidence
 owners: [engineering, architecture]
 depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-004-PROPOSAL]
@@ -12,4 +12,9 @@ iteration: ITER-004
 
 # Iteration 004 Findings
 
-尚无 Finding。实现中发现新的系统边界、资格漂移或验收变化时立即登记；空索引不证明迭代可以接受。
+本轮登记并处置两条实现发现：
+
+- `FINDING-004-001`：Citation Projection 的环境枚举校验错误由代码与回归测试闭合；
+- `FINDING-004-002`：一个新 fixture 自由问题在 Provider dispatch 前失败，作为交互可靠性限制和失败关闭验收证据写入 Verification Matrix。
+
+两条 Finding 均已 dispositioned；最终 Acceptance 仍需绑定 exact implementation commit 与完整验证结果。

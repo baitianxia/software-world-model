@@ -658,6 +658,26 @@
       "tests/test_iteration_003_g3b.py"
     ]
   },
+  "FINDING-004-001": {
+    "path": "docs/project/iterations/iteration-004/findings/FINDING-004-001.md",
+    "code": [
+      "validation/structure_world_model_iteration_004/interactive_browser.py"
+    ],
+    "tests": [
+      "tests/test_iteration_004_interactive_browser.py"
+    ]
+  },
+  "FINDING-004-002": {
+    "path": "docs/project/iterations/iteration-004/findings/FINDING-004-002.md",
+    "code": [
+      "validation/structure_world_model_iteration_004/interactive_browser.py",
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_004_interactive_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -1130,13 +1150,17 @@
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface/http_api.py",
+      "src/software_world_model/interface/world_model_browser.py",
       "src/software_world_model/interface/structure_view_cli.py",
       "src/software_world_model/interface/citation_projector_cli.py",
       "validation/structure_world_model_iteration_003/isolation",
-      "validation/structure_world_model_iteration_003/g3b"
+      "validation/structure_world_model_iteration_003/g3b",
+      "validation/structure_world_model_iteration_004/interactive_browser.py"
     ],
     "tests": [
       "tests/test_browser_chat_interface.py",
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_004_interactive_browser.py",
       "tests/test_interface_runtime.py",
       "tests/test_structure_read_bundle.py",
       "tests/test_structure_view.py",
@@ -1686,10 +1710,15 @@
     "path": "docs/system/operations/local-browser.md",
     "code": [
       "src/software_world_model/interface/http_api.py",
-      "src/software_world_model/interface/browser_ui.py"
+      "src/software_world_model/interface/browser_ui.py",
+      "src/software_world_model/interface/world_model_browser.py",
+      "src/software_world_model/interface/world_model_browser_ui.py",
+      "validation/structure_world_model_iteration_004/interactive_browser.py"
     ],
     "tests": [
-      "tests/test_browser_chat_interface.py"
+      "tests/test_browser_chat_interface.py",
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_004_interactive_browser.py"
     ]
   },
   "SYS-PRODUCT-CAPABILITIES": {

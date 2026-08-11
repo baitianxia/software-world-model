@@ -749,6 +749,31 @@
     "path": "docs/project/iterations/iteration-003/findings/FINDING-003-030.md"
   },
   {
+    "id": "FINDING-004-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/findings/FINDING-004-001.md"
+  },
+  {
+    "id": "FINDING-004-002",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-004/findings/FINDING-004-002.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -1359,7 +1384,7 @@
   {
     "id": "ITER-004-FINDINGS",
     "kind": "iteration-findings-index",
-    "status": "open",
+    "status": "in-progress",
     "authority": "development-evidence",
     "owners": [
       "engineering",
