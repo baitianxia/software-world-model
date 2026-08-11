@@ -346,6 +346,10 @@ class Iteration003G3bTests(unittest.TestCase):
                     evaluate_results._verify_frozen_product_oracles(suite)
 
     def test_post_product_evaluator_delta_excludes_product_runtime(self):
+        self.assertEqual(
+            evaluate_results.EVALUATOR_PROTOCOL,
+            "ITER-003-G3B-INDEPENDENT-EVALUATOR@1.0.1",
+        )
         evaluator_path = (
             "validation/structure_world_model_iteration_003/g3b/"
             "evaluate_results.py"

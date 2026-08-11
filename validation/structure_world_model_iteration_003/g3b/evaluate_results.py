@@ -70,6 +70,7 @@ GATEWAY_POLICY_DIGEST = (
 PRODUCT_SUITE_DIGEST = (
     "sha256:c165af6beb5ce66d45f035c3155ef4cb7d39b488fb6fe29af4b61e77217aaf2c"
 )
+EVALUATOR_PROTOCOL = "ITER-003-G3B-INDEPENDENT-EVALUATOR@1.0.1"
 MALL_ORACLE_DIGEST = (
     "sha256:412d2e0381ab46cfc84c95e9769f1227733ac2a523487119a15130bcca74b625"
 )
@@ -158,6 +159,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     evaluation_invocation_core = {
         "schema": "swm.iter-003.g3b-evaluation-invocation@1",
+        "evaluator_protocol": EVALUATOR_PROTOCOL,
         "sealed_at": _utc_now(),
         "evaluator_process_pid": os.getpid(),
         "evaluator_implementation_commit": evaluator_commit,
@@ -331,6 +333,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     core = {
         "schema": "swm.iter-003.g3b-product-evaluation@2",
+        "evaluator_protocol": evaluation_invocation["evaluator_protocol"],
         "status": status,
         "environment": "EVALUATION_ONLY",
         "implementation_commit": batch.get("implementation_commit"),
