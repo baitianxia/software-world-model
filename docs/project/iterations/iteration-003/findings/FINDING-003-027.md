@@ -13,7 +13,7 @@ disposition: seal-descendant-evaluator-checkpoint-with-closed-non-product-delta
 target: ITER-003-SLICE-001
 ---
 
-# FINDING-003-027：人工维护的冻结 Oracle 不是 canonical JSON 运行收据
+# FINDING-003-027：冻结评估输入不能一律按 canonical JSON 运行收据加载
 
 ## Observation
 
@@ -22,6 +22,10 @@ product checkpoint `7933712d7d00d113abe0ec147729fa41562bea76` 的新正式 batch
 `mall-structure-1.0.0.json` 时失败。该文件是按原始文件 SHA-256 冻结的 pretty-printed 人工 Oracle；evaluator
 却复用了只适用于机器运行收据的 canonical-JSON loader，因缩进和末尾换行拒绝了内容。两个 Oracle 的原始摘要
 仍与冻结 Product Suite 的 registry 完全一致，未发生语义或字节漂移。
+
+首个 evaluator-only checkpoint `7bd3114…` 修正 Oracle loader 后，在同样位于 individual terminal
+扫描之前的 `baseline-seal.json` 触发同类错误。该 seal 的 JSON 内容已按 key 排序，但历史生成器
+保留了一个末尾换行；它的原始文件摘要与内部 document digest 均可独立复算。
 
 ## Evidence
 
@@ -33,6 +37,9 @@ product checkpoint `7933712d7d00d113abe0ec147729fa41562bea76` 的新正式 batch
   `sha256:412d2e03…` 与 identity `sha256:b02e4414…`；宿主重算结果逐字节相同；
 - evaluator 在 `_load(MALL_ORACLE)` 抛出 `document is not canonical JSON`，没有创建 Product Evaluation
   Result，也没有发起网络、Provider 或模型调用；
+- `7bd3114…` 上的第二次本地尝试在 `_load(BASELINE_SEAL)` 拒绝末尾换行，同样未创建
+  invocation/Result、未扫描 individual terminal；其原始 SHA-256 为 `sha256:b29c3c22…`，
+  去除 `document_digest` 后的语义复算为 exact `sha256:7be049fe…`；
 - evaluator 的既有 `_load_relaxed` 已对同类冻结 baseline plan 使用 duplicate-key-safe 的格式无关解析，说明错误是
   loader 分类而非 Oracle 内容。
 
@@ -45,8 +52,10 @@ terminal；但它要求把“产品执行 checkpoint”和“事后独立 evalua
 
 ## Decision and disposition
 
-Product Suite 和两份人工 Oracle 先按冻结的原始文件 SHA-256 与 exact registry 校验，再以拒绝 duplicate key 的
-格式无关 JSON loader 解析；机器生成的 batch、terminal、timing、preflight 和 Result 仍强制 canonical JSON。
+Product Suite、两份人工 Oracle 和 baseline seal 先按冻结的原始文件 SHA-256 校验；Suite 还必须符合
+exact Oracle registry，baseline seal 还必须复算 exact 内部 document digest。完成这些字节/语义双重校验后，
+才以拒绝 duplicate key 的格式无关 JSON loader 解析；机器生成的 G3b batch、terminal、timing、preflight
+和 Result 仍强制 canonical JSON。
 
 独立 evaluator 允许在 product checkpoint 的 descendant clean commit 运行，但 Git delta 必须严格闭合为
 evaluator 自身、对应测试以及 Finding/Slice/Matrix/派生索引，禁止任何 `src/` 产品 runtime、G3b runner/profile、
@@ -60,6 +69,7 @@ performance 裁决 PASS 后才可继续浏览器验收。
 
 ## Verification after disposition
 
-新增 pretty-printed + exact raw digest 正例、字节篡改反例和 product-runtime delta 拒绝测试；运行聚焦、完整回归与
+新增 pretty-printed Oracle 和 newline-terminated baseline seal 的 exact raw digest 正例、字节篡改反例与
+product-runtime delta 拒绝测试；运行聚焦、完整回归与
 文档检查。在 descendant clean evaluator checkpoint 上密封 invocation并评估 immutable `7933712…` batch，确认
 整个过程 `external_model_called=false`、Production Activation=`NOT_EXECUTED`。

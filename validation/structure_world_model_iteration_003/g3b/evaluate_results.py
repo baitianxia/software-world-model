@@ -26,6 +26,7 @@ V009_ROOT = (
     / "019f9fced69110c6a7e357a4ea2394ec6742fd2e"
 )
 BASELINES = V009_ROOT / "baselines"
+BASELINE_SEAL = BASELINES / "baseline-seal.json"
 PRODUCT_SUITE = (
     PROJECT_ROOT
     / "validation"
@@ -50,6 +51,9 @@ IDENTITY_ORACLE = (
 )
 BASELINE_SEAL_DIGEST = (
     "sha256:7be049fe746a71cb3b9c3941d81e8e51076256d0f8dac61ba5a5c88c873ecbdd"
+)
+BASELINE_SEAL_FILE_DIGEST = (
+    "sha256:b29c3c228a7f9a55aa6d042e1ca99a4a0a12f6293ab333dda224996cd9f6828a"
 )
 PRODUCT_SUITE_DIGEST = (
     "sha256:c165af6beb5ce66d45f035c3155ef4cb7d39b488fb6fe29af4b61e77217aaf2c"
@@ -127,12 +131,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     comparison_preflight = _load(
         prepared_root / "evaluator" / "baseline-comparison-preflight.json"
     )
-    baseline_seal = _load(BASELINES / "baseline-seal.json")
+    baseline_seal = _load_relaxed(BASELINE_SEAL)
     baseline_product_plan = _load_relaxed(
         BASELINES / "operator" / "product-plan.json"
     )
-    if baseline_seal.get("document_digest") != BASELINE_SEAL_DIGEST:
-        raise RuntimeError("V-009 baseline seal is not exact")
+    baseline_seal_file_digest = _verify_frozen_baseline_seal(baseline_seal)
 
     evaluation_invocation_path = _future_file(
         str(output.with_name(f"{output.stem}-invocation.json"))
@@ -151,6 +154,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "prepared_registry_digest": registry.get("document_digest"),
         "product_suite_and_oracle_file_digests": oracle_digests,
         "baseline_seal_digest": baseline_seal.get("document_digest"),
+        "baseline_seal_file_digest": baseline_seal_file_digest,
         "baseline_comparison_preflight_digest": comparison_preflight.get(
             "document_digest"
         ),
@@ -324,6 +328,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "batch_result_digest": batch.get("document_digest"),
         "prepared_registry_digest": registry.get("document_digest"),
         "baseline_seal_digest": baseline_seal["document_digest"],
+        "baseline_seal_file_digest": baseline_seal_file_digest,
         "baseline_comparison_preflight_digest": comparison_preflight[
             "document_digest"
         ],
@@ -1380,6 +1385,24 @@ def _verify_frozen_product_oracles(
     ):
         raise RuntimeError("frozen Product suite/oracle file digest drifted")
     return actual
+
+
+def _verify_frozen_baseline_seal(
+    baseline_seal: Mapping[str, object],
+) -> str:
+    core = {
+        key: value
+        for key, value in baseline_seal.items()
+        if key != "document_digest"
+    }
+    file_digest = _sha256(BASELINE_SEAL)
+    if (
+        file_digest != BASELINE_SEAL_FILE_DIGEST
+        or baseline_seal.get("document_digest") != BASELINE_SEAL_DIGEST
+        or digest_of(core).value != BASELINE_SEAL_DIGEST
+    ):
+        raise RuntimeError("V-009 baseline seal is not exact")
+    return file_digest
 
 
 def _validate_evaluator_delta_paths(paths: Sequence[str]) -> tuple[str, ...]:

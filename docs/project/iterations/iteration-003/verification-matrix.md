@@ -29,6 +29,10 @@ iteration: ITER-003
 | V-013 | 新契约不破坏显式 Direct Investigation、旧模式和完整系统 | regression | 相关测试与完整 suite | 相关测试、完整回归通过；模式身份不混淆 | pending | not-run / blocks acceptance |
 | V-014 | Scheduler、多源、旧 Scope Schema Migration 与 Production Activation | boundary | 明确非目标 | NOT EXECUTED | pending | non-blocking / cannot be inferred |
 
+V-011 中 descendant evaluator 的 `comparator digest` 包含 V-009 baseline seal 原始文件
+SHA-256、其内部 document digest 和 baseline comparison preflight digest；三者必须在 individual
+terminal scan 前密封。
+
 ### V-007 macOS capability evidence interpretation
 
 本轮本机 executor 使用固定 `/usr/bin/sandbox-exec`，其可证明事实是 deny-default Seatbelt

@@ -266,6 +266,26 @@ class Iteration003G3bTests(unittest.TestCase):
                 (evaluator_path, "src/software_world_model/interface/runtime.py")
             )
 
+    def test_digest_bound_newline_terminated_baseline_seal_is_accepted(self):
+        seal = evaluate_results._load_relaxed(evaluate_results.BASELINE_SEAL)
+        self.assertEqual(
+            evaluate_results._verify_frozen_baseline_seal(seal),
+            evaluate_results.BASELINE_SEAL_FILE_DIGEST,
+        )
+        self.assertEqual(
+            seal["document_digest"],
+            evaluate_results.BASELINE_SEAL_DIGEST,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            tampered = Path(directory).resolve() / "baseline-seal.json"
+            tampered.write_bytes(
+                evaluate_results.BASELINE_SEAL.read_bytes() + b"\n"
+            )
+            with mock.patch.object(evaluate_results, "BASELINE_SEAL", tampered):
+                with self.assertRaises(RuntimeError):
+                    evaluate_results._verify_frozen_baseline_seal(seal)
+
     def test_provider_socket_supervisor_environment_has_no_credential(self):
         environment = run_g3b._provisioner_environment()
         self.assertNotIn("ARK_API_KEY", environment)
