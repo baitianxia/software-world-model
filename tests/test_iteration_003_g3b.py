@@ -43,7 +43,17 @@ class Iteration003G3bTests(unittest.TestCase):
 
     def test_profile_parameters_are_closed_and_do_not_expose_provider_host(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory).resolve()
+            root = Path(directory).resolve().joinpath(
+                "var",
+                "iteration-003",
+                "g3b",
+                "implementation-checkpoint",
+                "dispatch",
+                "runs",
+                "001-case",
+                "answer",
+            )
+            root.mkdir(parents=True)
             paths = {}
             for name in ("package", "input", "output", "socket"):
                 path = root / name
@@ -63,8 +73,12 @@ class Iteration003G3bTests(unittest.TestCase):
         self.assertNotIn("PROVIDER_HOST_PORT", parameters)
         self.assertEqual(
             len([key for key in parameters if key.startswith("ANCESTOR_")]),
-            40,
+            run_g3b.ANCESTOR_PARAMETER_COUNT,
         )
+        self.assertEqual(run_g3b.ANCESTOR_PARAMETER_COUNT, 64)
+        for profile_name in ("answer.sb", "gateway.sb", "projector.sb"):
+            profile = (G3B_ROOT / profile_name).read_text(encoding="utf-8")
+            self.assertIn('(literal (param "ANCESTOR_63"))', profile)
 
     def test_normal_operation_audit_distinguishes_exact_unix_route(self):
         policy = {
