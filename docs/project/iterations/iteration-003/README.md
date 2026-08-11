@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: project
 owners: [project]
-depends_on: [ITER-003-PROPOSAL, ITER-003-READINESS]
+depends_on: [ITER-003-PROPOSAL, ITER-003-READINESS, ITER-003-RESULT-V009]
 code: []
 tests: []
 iteration: ITER-003
@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and authorization
 
-本轮 Readiness 已由用户明确接受，Iteration 与 Slice 保持 `authorized` / in progress，`project/current.md` 已原子指向本轮。`ITER-003-RESULT-G0` 已绑定授权治理提交 Q，G1、G2 与 G3a 又分别在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469`、`82aef7563556c70527b3c92227d0711a28437587`、`f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上 PASS。G3a Result 只裁决 V-008；当前必须停止在 V-009 之前。现有开发授权不是外部披露确认，只有用户在后续独立消息中明确确认本轮披露并冻结 V-009 的全部 exact 输入后才可继续。
+本轮 Readiness 已由用户明确接受，Iteration 与 Slice 保持 `authorized` / in progress。G0、G1、G2、G3a 与 V-009 均已有独立 PASS Result；V-009 在 checkpoint `019f9fced69110c6a7e357a4ea2394ec6742fd2e` 上取得 closed CE 7/0/0 PASS/VALID，并在任何 G3b 产品结果可见前密封两条各 55-run baseline。当前停止在 G3b 之前：现有披露确认不包含 G3b product dispatch，V-010/V-011/G4、Product Validation 与 Activation 均未执行。
 
 ## Required inputs
 

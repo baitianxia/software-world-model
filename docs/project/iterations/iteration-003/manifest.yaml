@@ -136,7 +136,11 @@ external_inputs:
       required_request_count: 2
       execution_protocol: V009_PRECALL_SEALED_INVOCATION_AND_EXACT_RESULT_BINDING@1
       implementation_manifest_digest: sha256:b0eed0252ab7bfd723bf9cb06b0e48d3ccd2e1c6f6d51ee2c26cdc027509d774
-    conformance: exact-pass-result-pending
+    conformance: exact-pass
+    final_checkpoint: 019f9fced69110c6a7e357a4ea2394ec6742fd2e
+    final_tree: 2580a424593914800240e016dfb14997699d09c0
+    conformance_binding_digest: sha256:d387450b24c3e8f01de39476dc3fdc719fd2fe83a9f926f789c155f32e989328
+    conformance_result_digest: sha256:c86aad995802b8dcf687fafcbaf36bccb02768ba55b40151ec9aa4704518cade
     strategy:
       capability_id: world-model-authority-proposal
       capability_contract_version: 1.0.0
@@ -159,13 +163,19 @@ external_inputs:
       prior_attempt_checkpoint: 3d09ed1c8f9fe1a0199619e924189f0453822937
       prior_attempt_result: sha256:9815e699187f696db083f24edf0029f8eea583033c9961d69738a2ac63b12c14
       prior_attempt_outcome: 7-pass-0-fail-0-unknown-pass-valid-baseline-preflight-blocked
-      status: mature-shell-environment-corrected-full-live-rerun-pending
+      final_result_id: evaluation_result_916b9000db544e92921ec1bdc02a3bc2
+      final_result_digest: sha256:6ed1177e1222e11c03f7cd61ef28c9d00ccc21e9a129559c5842f3678933e6ce
+      final_qualification_ref: capability-evaluation:evaluation_result_916b9000db544e92921ec1bdc02a3bc2
+      final_qualification_digest: sha256:005b1bf43c76a64d123b0184cdac1a9e844331896e7ede6279875881d9bcc62c
+      final_outcome: 7-pass-0-fail-0-unknown-pass-valid
+      status: closed-pass-valid
     source_disclosure:
       confirmation_ref: codex-user-confirmation:2026-08-10T21:01:55+08:00
       message_digest: sha256:36f33adaf0942634a8ece1eec4a6f30d44dec73e1ef8704b29d983a57f2e09ae
       v009_conformance_ce_and_required_baselines: confirmed
+      additional_batch_confirmation_message_digest: sha256:1598ff3231362a390c02037a08ffad7ce296655592010a3e0ac9bedb9620f8a0
       g3b_product_dispatch: not-included-requires-separate-confirmation
-    status: exact-inputs-v1.0.5-frozen-after-attempt-5-pass-baseline-preflight-block-live-rerun-pending
+    status: exact-inputs-v1.0.5-pass-valid-baselines-sealed-g3b-not-authorized
   direct_investigation_baseline:
     kind: exact-product-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json
@@ -183,7 +193,11 @@ external_inputs:
     cold_latency_boundary: process-start-to-terminal-result-persisted
     cache_and_failure_policy: record-all-do-not-select-successes
     drift_policy: any-material-input-change-reruns-both-paths
-    status: protocol-v1.0.1-frozen-results-pending
+    sealed_run_count: 55
+    success_count: 15
+    preserved_failure_count: 40
+    batch_result_digest: sha256:64a7a9c2357427f0b4f0c77b47a895c454de1cfce5830d759941764963ac871d
+    status: protocol-v1.0.1-results-sealed-all-failures-preserved
   mature_source_agent_baseline:
     kind: external-quality-comparison-input
     protocol_path: validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json
@@ -203,7 +217,20 @@ external_inputs:
     exact_tool_model_config: explicit-and-recheck-at-run
     result_timing: seal-before-first-g3b-product-run
     comparison_scope: quality-only-no-cross-model-latency-ratio
-    status: protocol-frozen-results-pending
+    physical_staging: system-tmpdir-with-final-root-sibling-denial-preflight
+    preflight_digest: sha256:04ac7b4b6bcbf6d96420a60e795fd031cafddb52f48eeb86677313f922100b80
+    sealed_run_count: 55
+    success_count: 55
+    preserved_failure_count: 0
+    batch_result_digest: sha256:1b10854b1dc17a022c35542a68b1bafd0ee238710c60dbdb461c5323688a2f6f
+    joint_baseline_seal_digest: sha256:7be049fe746a71cb3b9c3941d81e8e51076256d0f8dac61ba5a5c88c873ecbdd
+    status: protocol-v1.0.3-results-sealed-preflight-pass
+  baseline_independent_audit:
+    scope: runner-plan-seal-all-terminals-failures-transport-events-citations-workspaces-preflights
+    document_digest: sha256:7e360693cdf99b3189cbb5380a5a3a597131d1933f6bd1aa64f47b0ba3240bc3
+    script_sha256: 7e60c89e00593568e585915318ee92bdddcb35d8e6c601604f045fd9a04c0dc4
+    external_model_called: false
+    status: pass
 
 verification:
   matrix_id: ITER-003-VERIFICATION

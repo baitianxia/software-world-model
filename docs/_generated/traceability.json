@@ -538,6 +538,26 @@
       "tests/test_iteration_003_v009.py"
     ]
   },
+  "FINDING-003-020": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-020.md",
+    "code": [
+      "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json"
+    ],
+    "tests": [
+      "tests/test_iteration_003_validation_assets.py"
+    ]
+  },
+  "FINDING-003-021": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-021.md",
+    "code": [
+      "validation/product_holdout_iteration_002/direct_answer.py",
+      "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json"
+    ],
+    "tests": [
+      "tests/test_product_holdout_direct_answer.py",
+      "tests/test_iteration_003_validation_assets.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -847,6 +867,20 @@
       "tests/test_iteration_003_g2_isolation.py",
       "tests/test_structure_view.py",
       "tests/test_structure_read_bundle.py"
+    ]
+  },
+  "ITER-003-RESULT-V009": {
+    "path": "docs/project/iterations/iteration-003/results/v009-qualification.md",
+    "code": [
+      "validation/structure_world_model_iteration_003/v009",
+      "validation/structure_world_model_iteration_003/questions/direct-baseline-protocol-1.0.1.json",
+      "validation/structure_world_model_iteration_003/questions/mature-agent-baseline-protocol-1.0.3.json",
+      "validation/product_holdout_iteration_002/direct_answer.py"
+    ],
+    "tests": [
+      "tests/test_iteration_003_v009.py",
+      "tests/test_iteration_003_validation_assets.py",
+      "tests/test_product_holdout_direct_answer.py"
     ]
   },
   "ITER-003-SLICE-001": {

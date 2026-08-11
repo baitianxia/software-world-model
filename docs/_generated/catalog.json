@@ -610,6 +610,31 @@
     "path": "docs/project/iterations/iteration-003/findings/FINDING-003-019.md"
   },
   {
+    "id": "FINDING-003-020",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-020.md"
+  },
+  {
+    "id": "FINDING-003-021",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-021.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -1118,6 +1143,19 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-003/results/gate-g3a.md"
+  },
+  {
+    "id": "ITER-003-RESULT-V009",
+    "kind": "iteration-result",
+    "status": "pass",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-003/results/v009-qualification.md"
   },
   {
     "id": "ITER-003-RESULTS-INDEX",

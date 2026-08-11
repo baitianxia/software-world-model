@@ -31,5 +31,7 @@ iteration: ITER-003
 - [FINDING-003-017：Direct baseline 无法表达移动 POM 的双 revision 完整覆盖](FINDING-003-017.md) — dispositioned / iteration-design
 - [FINDING-003-018：Mature baseline 的 legacy read-only 不能证明精确源码隔离](FINDING-003-018.md) — dispositioned / iteration-design
 - [FINDING-003-019：Mature baseline 还必须隔离 operator 环境变量](FINDING-003-019.md) — dispositioned / iteration-design
+- [FINDING-003-020：`/private/tmp` 不能由 `:slash_tmp` 特殊项推定为已隔离](FINDING-003-020.md) — dispositioned / iteration-design
+- [FINDING-003-021：Direct baseline 的完整样本包含 Provider 限流和输出合同失败](FINDING-003-021.md) — dispositioned / verification
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。
