@@ -21,13 +21,14 @@ from software_world_model.application_services.structure_view import (
 from software_world_model.application_services.world_model_answering import (
     EVALUATION_ONLY_SINK,
     OFFLINE_STRATEGY_MODE,
+    QUALIFIED_MODEL_STRATEGY_MODE,
     WORLD_MODEL_MODE,
     OfflineStage,
-    OfflineStrategyInvocation,
     WorldModelAuthorityChain,
     WorldModelDeliveryState,
     WorldModelReviewDecision,
     WorldModelReviewDimension,
+    WorldModelStrategyInvocation,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -93,7 +94,7 @@ def world_model_evaluation_page_payload(
     chain: WorldModelAuthorityChain,
     implementation_commit: str,
 ) -> dict[str, object]:
-    """Project one valid offline authority chain into a no-payload UI value."""
+    """Project one valid evaluation-only authority chain into a no-payload UI value."""
 
     chain.require_valid()
     commit = _implementation_commit(implementation_commit)
@@ -125,8 +126,10 @@ def world_model_evaluation_page_payload(
         "execution_boundary": {
             "provider_call_count": chain.provider_call_count,
             "network_operation_count": chain.network_operation_count,
-            "external_dispatch_allowed": False,
-            "provider_route": None,
+            "external_dispatch_allowed": (
+                chain.question.external_dispatch_allowed
+            ),
+            "provider_route": chain.question.model_route,
             "source_access_allowed": False,
             "evidence_payload_access_allowed": False,
         },
@@ -601,7 +604,7 @@ def _review_payload(chain: WorldModelAuthorityChain) -> dict[str, object]:
 
 
 def _invocation_payload(
-    invocation: OfflineStrategyInvocation,
+    invocation: WorldModelStrategyInvocation,
 ) -> dict[str, object]:
     invocation.require_valid()
     return _json_value(invocation.canonical_value())
@@ -676,8 +679,6 @@ def _require_evaluation_boundary(chain: WorldModelAuthorityChain) -> None:
     reviewer = chain.review.review_invocation
     if (
         question.mode != WORLD_MODEL_MODE
-        or question.external_dispatch_allowed
-        or question.model_route is not None
         or authorization.sink_id != EVALUATION_ONLY_SINK
         or delivery.sink_id != EVALUATION_ONLY_SINK
         or delivery.state is not WorldModelDeliveryState.DELIVERED
@@ -704,7 +705,7 @@ def _require_evaluation_boundary(chain: WorldModelAuthorityChain) -> None:
     ):
         raise _invalid(
             "WORLD_MODEL_REVIEW_INVOCATION_NOT_SEPARATE",
-            "answer generation and review require separate offline invocations",
+            "answer generation and review require separate invocations",
         )
 
 
@@ -756,14 +757,13 @@ def _validate_page(page: Mapping[str, object]) -> None:
     request = _mapping(page["request"], "evaluation request")
     if (
         request.get("mode") != WORLD_MODEL_MODE
-        or request.get("external_dispatch_allowed") is not False
-        or request.get("model_route") is not None
+        or not _request_execution_boundary_is_valid(request)
         or request.get("question_id") != stages[0]["authority_id"]
         or request.get("question_digest") != stages[0]["authority_digest"]
     ):
         raise _invalid(
             "WORLD_MODEL_EVALUATION_REQUEST_INVALID",
-            "evaluation request is not the exact offline WORLD_MODEL authority",
+            "evaluation request is not the exact WORLD_MODEL authority",
         )
 
     read_binding = _mapping(page["read_binding"], "read binding")
@@ -827,20 +827,52 @@ def _validate_page(page: Mapping[str, object]) -> None:
         },
         "execution boundary",
     )
-    if (
-        type(boundary.get("provider_call_count")) is not int
-        or boundary.get("provider_call_count") != 0
-        or type(boundary.get("network_operation_count")) is not int
-        or boundary.get("network_operation_count") != 0
-        or boundary.get("external_dispatch_allowed") is not False
-        or boundary.get("provider_route") is not None
-        or boundary.get("source_access_allowed") is not False
-        or boundary.get("evidence_payload_access_allowed") is not False
-    ):
+    if not _page_execution_boundary_is_valid(boundary, request):
         raise _invalid(
             "WORLD_MODEL_EVALUATION_EXECUTION_BOUNDARY_INVALID",
-            "evaluation page does not prove its offline no-payload boundary",
+            "evaluation page does not prove its exact no-payload boundary",
         )
+
+
+def _request_execution_boundary_is_valid(
+    request: Mapping[str, object],
+) -> bool:
+    external = request.get("external_dispatch_allowed")
+    route = request.get("model_route")
+    return (external is False and route is None) or (
+        external is True
+        and isinstance(route, str)
+        and bool(route)
+        and route == route.strip()
+    )
+
+
+def _page_execution_boundary_is_valid(
+    boundary: Mapping[str, object],
+    request: Mapping[str, object],
+) -> bool:
+    provider_calls = boundary.get("provider_call_count")
+    network_operations = boundary.get("network_operation_count")
+    external = boundary.get("external_dispatch_allowed")
+    route = boundary.get("provider_route")
+    if (
+        type(provider_calls) is not int
+        or type(network_operations) is not int
+        or boundary.get("source_access_allowed") is not False
+        or boundary.get("evidence_payload_access_allowed") is not False
+        or external is not request.get("external_dispatch_allowed")
+        or route != request.get("model_route")
+    ):
+        return False
+    if external is False:
+        return route is None and provider_calls == 0 and network_operations == 0
+    return (
+        external is True
+        and isinstance(route, str)
+        and bool(route)
+        and 1 <= provider_calls <= 5
+        and network_operations == provider_calls
+    )
 
 
 def _validate_reconstructed_authority_chain(
@@ -2155,20 +2187,38 @@ def _reconstruct_invocation(value: object, label: str) -> dict[str, object]:
         },
         label,
     )
+    execution_mode = invocation["execution_mode"]
+    if execution_mode == OFFLINE_STRATEGY_MODE:
+        stable_kind = "offline_invocation"
+        id_domain = "OFFLINE_STRATEGY_INVOCATION_ID@1"
+        digest_domain = "OFFLINE_STRATEGY_INVOCATION@1"
+        boundary_valid = (
+            invocation["provider_route"] is None
+            and invocation["external_dispatch_allowed"] is False
+        )
+    elif execution_mode == QUALIFIED_MODEL_STRATEGY_MODE:
+        stable_kind = "model_invocation"
+        id_domain = "QUALIFIED_MODEL_STRATEGY_INVOCATION_ID@1"
+        digest_domain = "QUALIFIED_MODEL_STRATEGY_INVOCATION@1"
+        route = invocation["provider_route"]
+        boundary_valid = (
+            isinstance(route, str)
+            and bool(route)
+            and route == route.strip()
+            and invocation["external_dispatch_allowed"] is True
+        )
+    else:
+        raise _authority_mismatch(f"{label} execution mode")
     _require_stable_mapping(
         invocation,
         id_field="invocation_id",
-        stable_kind="offline_invocation",
-        id_domain="OFFLINE_STRATEGY_INVOCATION_ID@1",
-        digest_domain="OFFLINE_STRATEGY_INVOCATION@1",
+        stable_kind=stable_kind,
+        id_domain=id_domain,
+        digest_domain=digest_domain,
         label=label,
     )
-    if (
-        invocation["execution_mode"] != OFFLINE_STRATEGY_MODE
-        or invocation["provider_route"] is not None
-        or invocation["external_dispatch_allowed"] is not False
-    ):
-        raise _authority_mismatch(f"{label} offline boundary")
+    if not boundary_valid:
+        raise _authority_mismatch(f"{label} execution boundary")
     return dict(invocation)
 
 
@@ -2224,10 +2274,9 @@ def _require_authority_cross_links(
         or type(question["use_epoch"]) is not int
         or question["use_epoch"] != 1
         or question["mode"] != WORLD_MODEL_MODE
-        or question["external_dispatch_allowed"] is not False
-        or question["model_route"] is not None
+        or not _request_execution_boundary_is_valid(question)
     ):
-        raise _authority_mismatch("Question offline boundary")
+        raise _authority_mismatch("Question execution boundary")
 
     invocations = (
         requirement["planning_invocation"],
@@ -2242,7 +2291,23 @@ def _require_authority_cross_links(
         or invocation["question_digest"] != question_digest
         for invocation in invocations
     ):
-        raise _authority_mismatch("offline invocation Question binding")
+        raise _authority_mismatch("strategy invocation Question binding")
+    model_invocations = [
+        invocation
+        for invocation in invocations
+        if invocation["execution_mode"] == QUALIFIED_MODEL_STRATEGY_MODE
+    ]
+    if question["external_dispatch_allowed"] is False:
+        if model_invocations:
+            raise _authority_mismatch("offline Question model invocation")
+    elif (
+        not model_invocations
+        or any(
+            invocation["provider_route"] != question["model_route"]
+            for invocation in model_invocations
+        )
+    ):
+        raise _authority_mismatch("qualified model invocation route")
 
     need_ids = [item["need_id"] for item in requirement["needs"]]
     constraint_ids = [

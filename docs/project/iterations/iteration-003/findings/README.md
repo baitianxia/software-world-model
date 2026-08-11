@@ -33,5 +33,7 @@ iteration: ITER-003
 - [FINDING-003-019：Mature baseline 还必须隔离 operator 环境变量](FINDING-003-019.md) — dispositioned / iteration-design
 - [FINDING-003-020：`/private/tmp` 不能由 `:slash_tmp` 特殊项推定为已隔离](FINDING-003-020.md) — dispositioned / iteration-design
 - [FINDING-003-021：Direct baseline 的完整样本包含 Provider 限流和输出合同失败](FINDING-003-021.md) — dispositioned / verification
+- [FINDING-003-022：macOS Seatbelt 不能把公网 TCP capability 限定到单一 remote IP](FINDING-003-022.md) — dispositioned / system-contract
+- [FINDING-003-023：executor 合成外联地址不能被误报为公网 IP](FINDING-003-023.md) — dispositioned / system-contract
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

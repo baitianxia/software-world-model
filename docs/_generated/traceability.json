@@ -558,6 +558,31 @@
       "tests/test_iteration_003_validation_assets.py"
     ]
   },
+  "FINDING-003-022": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-022.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
+      "validation/structure_world_model_iteration_003/g3b/gateway.sb",
+      "validation/structure_world_model_iteration_003/g3b/provider_socket_worker.py",
+      "validation/structure_world_model_iteration_003/g3b/run_g3b.py"
+    ],
+    "tests": [
+      "tests/test_pinned_ark_https.py",
+      "tests/test_iteration_003_g3b.py"
+    ]
+  },
+  "FINDING-003-023": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-023.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
+      "validation/structure_world_model_iteration_003/g3b/provider_socket_worker.py",
+      "validation/structure_world_model_iteration_003/g3b/run_g3b.py"
+    ],
+    "tests": [
+      "tests/test_pinned_ark_https.py",
+      "tests/test_iteration_003_g3b.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -973,7 +998,8 @@
       "src/software_world_model/interface/http_api.py",
       "src/software_world_model/interface/structure_view_cli.py",
       "src/software_world_model/interface/citation_projector_cli.py",
-      "validation/structure_world_model_iteration_003/isolation"
+      "validation/structure_world_model_iteration_003/isolation",
+      "validation/structure_world_model_iteration_003/g3b"
     ],
     "tests": [
       "tests/test_browser_chat_interface.py",
@@ -983,7 +1009,8 @@
       "tests/test_structure_view_cli.py",
       "tests/test_citation_projector.py",
       "tests/test_iteration_003_g2_integration.py",
-      "tests/test_iteration_003_g2_isolation.py"
+      "tests/test_iteration_003_g2_isolation.py",
+      "tests/test_iteration_003_g3b.py"
     ]
   },
   "SYS-ARCH-DOMAIN": {
@@ -1565,7 +1592,8 @@
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface",
-      "validation/structure_world_model_iteration_003/isolation"
+      "validation/structure_world_model_iteration_003/isolation",
+      "validation/structure_world_model_iteration_003/g3b"
     ],
     "tests": [
       "tests/test_model_gateway.py",
@@ -1574,7 +1602,10 @@
       "tests/test_structure_read_bundle.py",
       "tests/test_structure_view_cli.py",
       "tests/test_citation_projector.py",
-      "tests/test_iteration_003_g2_isolation.py"
+      "tests/test_iteration_003_g2_isolation.py",
+      "tests/test_iteration_003_g3b.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_pinned_ark_https.py"
     ]
   }
 }

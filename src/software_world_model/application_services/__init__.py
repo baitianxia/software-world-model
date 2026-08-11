@@ -180,6 +180,7 @@ from .natural_task import (
 from .world_model_answering import (
     EVALUATION_ONLY_SINK,
     OFFLINE_STRATEGY_MODE,
+    QUALIFIED_MODEL_STRATEGY_MODE,
     WORLD_MODEL_MODE,
     EntitySelectorOrigin,
     InMemoryWorldModelAuthorityStore,
@@ -187,6 +188,7 @@ from .world_model_answering import (
     OfflineStage,
     OfflineStrategyInvocation,
     OfflineWorldModelAnswerService,
+    QualifiedModelStrategyInvocation,
     QueryStepState,
     WorldModelAnswerClaim,
     WorldModelAnswerClaimProposal,
@@ -235,6 +237,7 @@ from .world_model_answering import (
     WorldModelReviewDimension,
     WorldModelReviewDimensionAssessment,
     WorldModelReviewProposal,
+    WorldModelStrategyInvocation,
 )
 from .product_validation import (
     ProductHoldoutCaseComparison,
@@ -402,6 +405,7 @@ __all__ = [
     "NaturalLanguageTaskService",
     "EVALUATION_ONLY_SINK",
     "OFFLINE_STRATEGY_MODE",
+    "QUALIFIED_MODEL_STRATEGY_MODE",
     "WORLD_MODEL_MODE",
     "EntitySelectorOrigin",
     "InMemoryWorldModelAuthorityStore",
@@ -409,6 +413,7 @@ __all__ = [
     "OfflineStage",
     "OfflineStrategyInvocation",
     "OfflineWorldModelAnswerService",
+    "QualifiedModelStrategyInvocation",
     "QueryStepState",
     "WorldModelAnswerClaim",
     "WorldModelAnswerClaimProposal",
@@ -457,6 +462,7 @@ __all__ = [
     "WorldModelReviewDimension",
     "WorldModelReviewDimensionAssessment",
     "WorldModelReviewProposal",
+    "WorldModelStrategyInvocation",
     "ProductValidatedQualificationVerifier",
     "ProductHoldoutCaseComparison",
     "ProductValidationAttestation",

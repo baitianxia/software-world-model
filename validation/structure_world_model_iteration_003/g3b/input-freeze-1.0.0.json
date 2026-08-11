@@ -1,0 +1,57 @@
+{
+  "schema": "swm.iter-003.g3b-input-freeze@1",
+  "freeze_ref": "ITER-003-G3B-EXACT-INPUTS@1.0.0",
+  "checkpoint_binding": "ENCLOSING_CLEAN_GIT_COMMIT_AND_TREE",
+  "v009": {
+    "checkpoint": "019f9fced69110c6a7e357a4ea2394ec6742fd2e",
+    "capability_qualification_ref": "capability-evaluation:evaluation_result_916b9000db544e92921ec1bdc02a3bc2",
+    "capability_qualification_digest": "sha256:005b1bf43c76a64d123b0184cdac1a9e844331896e7ede6279875881d9bcc62c",
+    "conformance_result_ref": "CC-ARK-CHAT-NO-TOOLS-001:sha256:c86aad995802b8dcf687fafcbaf36bccb02768ba55b40151ec9aa4704518cade",
+    "baseline_seal_digest": "sha256:7be049fe746a71cb3b9c3941d81e8e51076256d0f8dac61ba5a5c88c873ecbdd"
+  },
+  "provider": {
+    "provider_type": "VOLCENGINE_ARK",
+    "adapter_version": "openai-chat-completions-no-tools@8",
+    "requested_model_ref": "glm-5-2-260617",
+    "actual_model_fingerprint": "glm-5.2",
+    "configuration_fingerprint": "sha256:420f553a3ce0075818550e08cb1351ce69eaf9871c5a0257aecf88b7b32b88fd",
+    "credential_reference": "env:ARK_API_KEY",
+    "endpoint": "https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions"
+  },
+  "strategy": {
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.0.2",
+    "prompt_ref": "snapshot-first-world-model-proposal-prompt@3",
+    "maximum_provider_calls_per_answer": 5,
+    "product_model_calls_per_answer": 1
+  },
+  "disclosure": {
+    "confirmed": true,
+    "confirmation_ref": "codex-user-confirmation:2026-08-11:同意授权-无需确认",
+    "message_digest": "sha256:116308e156e6b7736a5e3bfc787f259767951c96d100e2b76dc246ab53c41e4d",
+    "scope": [
+      "G3B_PRODUCT_QUESTION_AND_SEALED_VIEW_MODEL_DISPATCH",
+      "G3B_DISTINCT_MODEL_EGRESS_GATEWAY_PROVIDER_CALLS",
+      "G3B_OS_DENIAL_AUDIT"
+    ],
+    "repeat_confirmation_required": false,
+    "production_activation_included": false,
+    "permission_digest": "sha256:d0a572d621a1163e8e9e41add704f682dcac2aabb3a3e99c0408ed188813a8a9"
+  },
+  "product_input": {
+    "suite_ref": "ITER-003-WORLD-MODEL-PRODUCT-INPUT-SUITE@1.0.0",
+    "suite_digest": "sha256:15bb9a72b68d69f8077ba95bd87b4c54861b0bc08e26ed38fb54221d71d1bfd4",
+    "payload_fields": [
+      "case_id",
+      "question_variant",
+      "resolved_snapshot_ids"
+    ],
+    "oracle_visibility": "EVALUATOR_ONLY",
+    "baseline_visibility": "EVALUATOR_ONLY"
+  },
+  "activation": {
+    "environment": "EVALUATION_ONLY",
+    "production_activation": "NOT_EXECUTED",
+    "automatic_activation_forbidden": true
+  },
+  "document_digest": "sha256:1577f5fe7c7949e5a06a1497572e42487afa74c3224efe2f59a60f9129a57ea2"
+}

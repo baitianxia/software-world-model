@@ -1,0 +1,1627 @@
+"""Evaluation-only product composition for qualified WORLD_MODEL answers.
+
+The product interpreter is deliberately generic: it recognizes registered
+Structure semantics and public entity identifiers from the mounted no-payload
+Bundles.  It contains no product case IDs, project-name branches, Source port,
+Evidence payload port, oracle, or baseline reader.  A qualified model proposal
+must validate one material decision before the deterministic authority chain can
+be delivered.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+import json
+import re
+from typing import Mapping, Protocol, Sequence
+
+from software_world_model.ai_infrastructure.model_egress_gateway import (
+    MODEL_EGRESS_GATEWAY_ROUTE,
+)
+from software_world_model.ai_infrastructure.world_model_answer_strategy import (
+    COMPLETE_NEGATIVE_ANSWER,
+    ENTITY_CANDIDATE_RESOLUTION,
+    GENERIC_QUERY_PLANNING,
+    ORDERED_DIFF_EXPRESSION,
+    VIEW_LIMITATION_AND_KNOWLEDGE_GAP,
+    WorldModelCapabilityProposal,
+)
+from software_world_model.application_services.structure_read_bundle import (
+    StructureSnapshotReadBundle,
+)
+from software_world_model.application_services.structure_view import (
+    NeighborhoodDirection,
+    StructureViewOperation,
+)
+from software_world_model.application_services.world_model_answering import (
+    QUALIFIED_MODEL_STRATEGY_MODE,
+    EntitySelectorOrigin,
+    InMemoryWorldModelAuthorityStore,
+    InMemoryWorldModelEvaluationSink,
+    WorldModelAnswerClaimProposal,
+    WorldModelAnswerReviewer,
+    WorldModelAnsweringService,
+    WorldModelAssessment,
+    WorldModelAuthorityChain,
+    WorldModelClaimKind,
+    WorldModelDraftGenerator,
+    WorldModelDraftProposal,
+    WorldModelEntitySelectorProposal,
+    WorldModelGapProposal,
+    WorldModelGapReason,
+    WorldModelJointConstraint,
+    WorldModelJointConstraintKind,
+    WorldModelNeed,
+    WorldModelNeedOutcome,
+    WorldModelQueryPlan,
+    WorldModelQueryPlanProposal,
+    WorldModelQueryPlanner,
+    WorldModelQueryResultSet,
+    WorldModelQueryStepProposal,
+    WorldModelRequirementFidelityProposal,
+    WorldModelRequirementFidelityReviewer,
+    WorldModelRequirementPlanner,
+    WorldModelRequirementProposal,
+    WorldModelRequirementRevision,
+    WorldModelResponseControlService,
+    WorldModelReviewDecision,
+    WorldModelReviewDimension,
+    WorldModelReviewDimensionAssessment,
+    WorldModelReviewProposal,
+    WorldModelStrategyInvocation,
+)
+from software_world_model.cross_cutting import (
+    Digest,
+    DomainError,
+    ErrorCode,
+    StableId,
+    digest_of,
+)
+from software_world_model.knowledge_engine.structure import (
+    EntityType,
+    RelationPredicate,
+)
+
+
+PRODUCT_STRATEGY_REF = "model-snapshot-first-world-model-answer@1.0.2"
+PRODUCT_GAP_REASON = "CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE"
+
+
+class ProductNeedKind(str, Enum):
+    INVENTORY = "INVENTORY"
+    PATHS = "PATHS"
+    NEW_PATHS = "NEW_PATHS"
+    ORDERED_DIFF = "ORDERED_DIFF"
+    DIRECT_DEPENDENCY = "DIRECT_DEPENDENCY"
+    SAME_NAME_IDENTITY = "SAME_NAME_IDENTITY"
+    KNOWLEDGE_GAP = "KNOWLEDGE_GAP"
+
+
+@dataclass(frozen=True, slots=True)
+class ProductCatalogEntity:
+    snapshot_id: StableId
+    entity_root_id: StableId
+    entity_state_id: StableId
+    entity_type: EntityType
+    mention: str
+    artifact_id: str
+    canonical_ga: str | None
+    canonical_gav: str | None
+    public_aliases: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProductMentionGroup:
+    token: str
+    first_offset: int
+    entity_root_ids: tuple[StableId, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProductNeedSpec:
+    need_id: str
+    kind: ProductNeedKind
+    snapshot_ordinals: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProductQuestionAnalysis:
+    needs: tuple[ProductNeedSpec, ...]
+    module_mentions: tuple[ProductMentionGroup, ...]
+    path_endpoints: tuple[StableId, StableId] | None
+    direct_source_root_id: StableId | None
+    direct_target_root_ids: tuple[StableId, ...]
+    include_state_changes: bool
+    uses_ordered_diff: bool
+
+
+class ProductCapabilityProposalPort(Protocol):
+    def propose(
+        self,
+        *,
+        case_id: str,
+        capability: str,
+        sealed_input: object,
+        available_operations: tuple[str, ...] = (),
+    ) -> WorldModelCapabilityProposal: ...
+
+
+class ProductGatewayCounters(Protocol):
+    @property
+    def provider_call_count(self) -> int: ...
+
+    @property
+    def network_operation_count(self) -> int: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ProductWorldModelExecution:
+    chain: WorldModelAuthorityChain
+    model_proposals: tuple[WorldModelCapabilityProposal, ...]
+
+
+class ProductBundleCatalog:
+    """Public, no-payload entity catalog derived from exact Snapshot Bundles."""
+
+    def __init__(
+        self, snapshot_bundles: Sequence[StructureSnapshotReadBundle]
+    ) -> None:
+        bundles = tuple(snapshot_bundles)
+        if not bundles:
+            raise _invalid("PRODUCT_BUNDLE_SET_EMPTY", "product Bundle set is empty")
+        for bundle in bundles:
+            bundle.require_valid()
+        if len({item.snapshot_id for item in bundles}) != len(bundles):
+            raise _invalid(
+                "PRODUCT_BUNDLE_SET_DUPLICATE",
+                "product Bundle set repeats a Snapshot",
+            )
+        self._snapshot_ids = tuple(item.snapshot_id for item in bundles)
+        entries: list[ProductCatalogEntity] = []
+        for bundle in bundles:
+            for record in bundle.entities:
+                root = record.root.root_fields
+                state = record.state.state_payload_fields
+                entity_type = record.root.entity_type
+                if entity_type is EntityType.SOFTWARE_SYSTEM:
+                    artifact = _field_text(state, "artifact_id")
+                    label = _field_text(state, "label")
+                    system_key = _field_text(root, "canonical_system_key")
+                    aliases = _aliases(
+                        (artifact, label, system_key, "root", "root pom", "根 pom", "根项目")
+                    )
+                    ga = None
+                    gav = None
+                    mention = label
+                elif entity_type is EntityType.MAVEN_MODULE:
+                    group = _field_text(root, "effective_group_id")
+                    artifact = _field_text(root, "artifact_id")
+                    version = _field_text(state, "effective_version")
+                    label = _field_text(state, "label")
+                    module_path = _field_text(state, "module_path")
+                    ga = f"{group}:{artifact}"
+                    gav = f"{ga}:{version}"
+                    aliases = _aliases(
+                        (
+                            gav,
+                            ga,
+                            artifact,
+                            label,
+                            module_path,
+                            f"{group.rsplit('.', 1)[-1]} {artifact}",
+                            *_identifier_parts(artifact),
+                        )
+                    )
+                    mention = artifact
+                else:
+                    continue
+                entries.append(
+                    ProductCatalogEntity(
+                        snapshot_id=bundle.snapshot_id,
+                        entity_root_id=record.root_id,
+                        entity_state_id=record.state_id,
+                        entity_type=entity_type,
+                        mention=mention,
+                        artifact_id=artifact,
+                        canonical_ga=ga,
+                        canonical_gav=gav,
+                        public_aliases=aliases,
+                    )
+                )
+        self._entries = tuple(entries)
+        self._by_snapshot_root = {
+            (item.snapshot_id, item.entity_root_id): item for item in self._entries
+        }
+        for snapshot_id in self._snapshot_ids:
+            systems = self.entities(snapshot_id, EntityType.SOFTWARE_SYSTEM)
+            if len(systems) != 1:
+                raise _invalid(
+                    "PRODUCT_SYSTEM_ROOT_NOT_UNIQUE",
+                    "every product Snapshot must contain one SOFTWARE_SYSTEM",
+                )
+
+    @property
+    def snapshot_ids(self) -> tuple[StableId, ...]:
+        return self._snapshot_ids
+
+    def entities(
+        self, snapshot_id: StableId, entity_type: EntityType
+    ) -> tuple[ProductCatalogEntity, ...]:
+        return tuple(
+            item
+            for item in self._entries
+            if item.snapshot_id == snapshot_id and item.entity_type is entity_type
+        )
+
+    def system(self, snapshot_id: StableId) -> ProductCatalogEntity:
+        return self.entities(snapshot_id, EntityType.SOFTWARE_SYSTEM)[0]
+
+    def entry(
+        self, snapshot_id: StableId, root_id: StableId
+    ) -> ProductCatalogEntity:
+        try:
+            return self._by_snapshot_root[(snapshot_id, root_id)]
+        except KeyError as exc:
+            raise _invalid(
+                "PRODUCT_ENTITY_OUTSIDE_READ_SET",
+                "product Entity is outside the mounted Read Set",
+            ) from exc
+
+    def display_ref(self, root_id: StableId) -> str:
+        candidates = tuple(
+            item for item in self._entries if item.entity_root_id == root_id
+        )
+        if not candidates:
+            raise _invalid(
+                "PRODUCT_ENTITY_OUTSIDE_READ_SET",
+                "product Entity is outside the mounted Read Set",
+            )
+        value = candidates[-1]
+        return value.canonical_ga or value.mention
+
+    def mentioned_modules(
+        self, question: str
+    ) -> tuple[ProductMentionGroup, ...]:
+        normalized = question.casefold()
+        candidates: dict[str, set[StableId]] = {}
+        offsets: dict[str, int] = {}
+        for item in self._entries:
+            if item.entity_type is not EntityType.MAVEN_MODULE:
+                continue
+            for alias in item.public_aliases:
+                offset = _alias_offset(normalized, alias.casefold())
+                if offset is None:
+                    continue
+                candidates.setdefault(alias, set()).add(item.entity_root_id)
+                offsets[alias] = min(offsets.get(alias, offset), offset)
+        groups = [
+            ProductMentionGroup(
+                token=token,
+                first_offset=offsets[token],
+                entity_root_ids=tuple(sorted(roots, key=lambda item: item.value)),
+            )
+            for token, roots in candidates.items()
+            if len(roots) <= 2
+        ]
+        groups.sort(key=lambda item: (-len(item.token), item.first_offset, item.token))
+        selected: list[ProductMentionGroup] = []
+        covered_spans: list[tuple[int, int]] = []
+        for group in groups:
+            span = (group.first_offset, group.first_offset + len(group.token))
+            if any(
+                start <= span[0] and span[1] <= end
+                for start, end in covered_spans
+            ):
+                continue
+            selected.append(group)
+            covered_spans.append(span)
+        return tuple(
+            sorted(
+                selected,
+                key=lambda item: (item.first_offset, -len(item.token), item.token),
+            )
+        )
+
+    def roots_for_artifact(self, artifact_id: str) -> tuple[StableId, ...]:
+        return tuple(
+            sorted(
+                {
+                    item.entity_root_id
+                    for item in self._entries
+                    if item.entity_type is EntityType.MAVEN_MODULE
+                    and item.artifact_id == artifact_id
+                },
+                key=lambda item: item.value,
+            )
+        )
+
+
+class ProductQuestionInterpreter:
+    """Map natural questions to the closed Structure operation vocabulary."""
+
+    def __init__(self, catalog: ProductBundleCatalog) -> None:
+        self._catalog = catalog
+
+    def analyze(self, question: str) -> ProductQuestionAnalysis:
+        text = _text(question, "product question")
+        folded = text.casefold()
+        snapshots = self._catalog.snapshot_ids
+        mentions = self._catalog.mentioned_modules(text)
+        unique_mentions = tuple(
+            item for item in mentions if len(item.entity_root_ids) == 1
+        )
+        why = _contains_any(folded, ("为什么", "设计动机", "why ", "reason for"))
+        inventory_subject = _contains_any(
+            folded,
+            (
+                "child module",
+                "child modules",
+                "子模块",
+                "子项目",
+                "modules 递归",
+                "reactor 内的模块",
+            ),
+        )
+        inventory = inventory_subject and _contains_any(
+            folded,
+            ("列出", "哪些", "有哪些", "各自", "inventory", "return all"),
+        )
+        path_word = _contains_any(
+            folded,
+            ("路径", "路线", "path", "走到", "能不能从", "可达", "reachable"),
+        )
+        direct = _contains_any(
+            folded,
+            (
+                "直接依赖",
+                "直接声明",
+                "是否直接",
+                "directly depend",
+                "direct dependency",
+                "dependencies 中直接",
+                "dependency management",
+                "dependencymanagement",
+                "形成边",
+                "的边是否存在",
+            ),
+        )
+        same_name = _contains_any(
+            folded, ("同名", "same artifact", "same-name", "same name")
+        )
+        change_requested = len(snapshots) >= 2 and _contains_any(
+            folded,
+            (
+                "变化",
+                "新增",
+                "增删",
+                "才有的",
+                "new path",
+                "new node",
+                "added node",
+                "state 变化",
+            ),
+        )
+        ordered_diff = len(snapshots) >= 2 and _contains_any(
+            folded,
+            (
+                "图变化",
+                "图差异",
+                "节点、边",
+                "节点和边",
+                "节点与边",
+                "成员及",
+                "边的增删",
+                "state 变化",
+                "state changes",
+                "graph change",
+                "graph diff",
+                "added node",
+                "新增节点",
+            ),
+        )
+        include_state = _contains_any(
+            folded,
+            ("state", "label", "version", "版本 state", "标签", "版本变化"),
+        )
+        if why:
+            return ProductQuestionAnalysis(
+                needs=(
+                    ProductNeedSpec(
+                        "knowledge-gap",
+                        ProductNeedKind.KNOWLEDGE_GAP,
+                        (),
+                    ),
+                ),
+                module_mentions=mentions,
+                path_endpoints=None,
+                direct_source_root_id=None,
+                direct_target_root_ids=(),
+                include_state_changes=False,
+                uses_ordered_diff=False,
+            )
+
+        path_endpoints: tuple[StableId, StableId] | None = None
+        if path_word and len(unique_mentions) >= 2:
+            path_endpoints = (
+                unique_mentions[0].entity_root_ids[0],
+                unique_mentions[1].entity_root_ids[0],
+            )
+        elif path_word and not change_requested:
+            raise _invalid(
+                "PRODUCT_PATH_ENDPOINTS_UNRESOLVED",
+                "path question does not identify two unique module Entities",
+            )
+
+        root_subject = _contains_any(
+            folded, ("根 pom", "root pom", "根项目", "root project")
+        )
+        direct_source: StableId | None = None
+        direct_targets: tuple[StableId, ...] = ()
+        if direct:
+            if root_subject:
+                direct_source = self._catalog.system(snapshots[-1]).entity_root_id
+            elif unique_mentions:
+                direct_source = unique_mentions[0].entity_root_ids[0]
+            else:
+                raise _invalid(
+                    "PRODUCT_DIRECT_SOURCE_UNRESOLVED",
+                    "direct-dependency question has no unique source Entity",
+                )
+            target_roots = {
+                root
+                for group in mentions
+                for root in group.entity_root_ids
+                if root != direct_source
+            }
+            direct_targets = tuple(sorted(target_roots, key=lambda item: item.value))
+
+        needs: list[ProductNeedSpec] = []
+        if inventory:
+            for ordinal in range(len(snapshots)):
+                needs.append(
+                    ProductNeedSpec(
+                        f"inventory-{ordinal}",
+                        ProductNeedKind.INVENTORY,
+                        (ordinal,),
+                    )
+                )
+        if path_endpoints is not None:
+            for ordinal in range(len(snapshots)):
+                needs.append(
+                    ProductNeedSpec(
+                        f"paths-{ordinal}",
+                        ProductNeedKind.PATHS,
+                        (ordinal,),
+                    )
+                )
+            if change_requested:
+                needs.append(
+                    ProductNeedSpec(
+                        "new-paths",
+                        ProductNeedKind.NEW_PATHS,
+                        tuple(range(len(snapshots))),
+                    )
+                )
+        if ordered_diff:
+            needs.append(
+                ProductNeedSpec(
+                    "ordered-diff",
+                    ProductNeedKind.ORDERED_DIFF,
+                    (0, 1),
+                )
+            )
+        if direct:
+            needs.append(
+                ProductNeedSpec(
+                    "direct-dependency",
+                    ProductNeedKind.DIRECT_DEPENDENCY,
+                    (len(snapshots) - 1,),
+                )
+            )
+        elif same_name:
+            needs.append(
+                ProductNeedSpec(
+                    "same-name-identity",
+                    ProductNeedKind.SAME_NAME_IDENTITY,
+                    (len(snapshots) - 1,),
+                )
+            )
+        if not needs:
+            needs.append(
+                ProductNeedSpec(
+                    "knowledge-gap",
+                    ProductNeedKind.KNOWLEDGE_GAP,
+                    (),
+                )
+            )
+        return ProductQuestionAnalysis(
+            needs=tuple(needs),
+            module_mentions=mentions,
+            path_endpoints=path_endpoints,
+            direct_source_root_id=direct_source,
+            direct_target_root_ids=direct_targets,
+            include_state_changes=include_state,
+            uses_ordered_diff=ordered_diff,
+        )
+
+
+class ProductRequirementPlanner(WorldModelRequirementPlanner):
+    strategy_ref = "iter-003-g3b-generic-requirement-planner@1"
+
+    def __init__(self, interpreter: ProductQuestionInterpreter) -> None:
+        self._interpreter = interpreter
+
+    def plan(
+        self,
+        *,
+        question,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelRequirementProposal:
+        analysis = self._interpreter.analyze(question.original_question)
+        needs = tuple(
+            WorldModelNeed(
+                need_id=item.need_id,
+                question=_need_question(item),
+            )
+            for item in analysis.needs
+        )
+        constraints: tuple[WorldModelJointConstraint, ...] = ()
+        ordered_comparison = any(
+            item.kind
+            in {ProductNeedKind.NEW_PATHS, ProductNeedKind.ORDERED_DIFF}
+            for item in analysis.needs
+        )
+        if len(needs) > 1 or ordered_comparison:
+            if ordered_comparison:
+                if len(question.read_authority.snapshot_ids) < 2:
+                    raise _invalid(
+                        "PRODUCT_ORDERED_READ_SET_MISSING",
+                        "ordered comparison requires two Snapshots",
+                    )
+                constraints = (
+                    WorldModelJointConstraint(
+                        constraint_id="ordered-read-set",
+                        need_ids=tuple(item.need_id for item in needs),
+                        kind=WorldModelJointConstraintKind.ORDERED_READ_SET,
+                        description="Preserve the caller-declared base-to-target Snapshot order.",
+                        base_snapshot_id=question.read_authority.snapshot_ids[0],
+                        target_snapshot_id=question.read_authority.snapshot_ids[1],
+                    ),
+                )
+            else:
+                constraints = (
+                    WorldModelJointConstraint(
+                        constraint_id="all-needs",
+                        need_ids=tuple(item.need_id for item in needs),
+                        kind=WorldModelJointConstraintKind.ALL_NEEDS,
+                        description="Every material sub-question must be answered together.",
+                    ),
+                )
+        return WorldModelRequirementProposal(
+            original_question=question.original_question,
+            response_language=question.response_language,
+            needs=needs,
+            joint_constraints=constraints,
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class ProductRequirementReviewer(WorldModelRequirementFidelityReviewer):
+    strategy_ref = "iter-003-g3b-independent-requirement-reviewer@1"
+
+    def __init__(self, interpreter: ProductQuestionInterpreter) -> None:
+        self._interpreter = interpreter
+
+    def review(
+        self,
+        *,
+        question,
+        proposal: WorldModelRequirementProposal,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelRequirementFidelityProposal:
+        expected = self._interpreter.analyze(question.original_question)
+        expected_ids = tuple(item.need_id for item in expected.needs)
+        actual_ids = tuple(item.need_id for item in proposal.needs)
+        expected_constraints = tuple(
+            item.constraint_id for item in proposal.joint_constraints
+        )
+        approved = (
+            proposal.original_question == question.original_question
+            and proposal.response_language == question.response_language
+            and actual_ids == expected_ids
+        )
+        return WorldModelRequirementFidelityProposal(
+            decision=(
+                WorldModelReviewDecision.APPROVE
+                if approved
+                else WorldModelReviewDecision.REJECT
+            ),
+            accepted_need_ids=actual_ids if approved else (),
+            accepted_constraint_ids=expected_constraints if approved else (),
+            original_question_preserved=approved,
+            all_material_questions_covered=approved,
+            findings=() if approved else ("PRODUCT_REQUIREMENT_MISMATCH",),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class ProductQueryPlanner(WorldModelQueryPlanner):
+    strategy_ref = "iter-003-g3b-generic-structure-query-planner@1"
+
+    def __init__(
+        self,
+        catalog: ProductBundleCatalog,
+        interpreter: ProductQuestionInterpreter,
+    ) -> None:
+        self._catalog = catalog
+        self._interpreter = interpreter
+
+    def plan(
+        self,
+        *,
+        question,
+        requirement: WorldModelRequirementRevision,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelQueryPlanProposal:
+        analysis = self._interpreter.analyze(question.original_question)
+        snapshots = question.read_authority.snapshot_ids
+        constraint_ids = tuple(
+            item.constraint_id for item in requirement.joint_constraints
+        )
+        selectors: list[WorldModelEntitySelectorProposal] = []
+        steps: list[WorldModelQueryStepProposal] = []
+        gaps: list[WorldModelGapProposal] = []
+        by_kind: dict[ProductNeedKind, list[ProductNeedSpec]] = {}
+        for need in analysis.needs:
+            by_kind.setdefault(need.kind, []).append(need)
+
+        for need in by_kind.get(ProductNeedKind.INVENTORY, []):
+            ordinal = need.snapshot_ordinals[0]
+            selector_id = f"system-{ordinal}-{need.need_id}"
+            selectors.append(
+                self._selector(
+                    selector_id=selector_id,
+                    need_ids=(need.need_id,),
+                    snapshot_id=snapshots[ordinal],
+                    entity=self._catalog.system(snapshots[ordinal]),
+                    original_question=question.original_question,
+                )
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id=need.need_id,
+                    need_ids=(need.need_id,),
+                    operation=StructureViewOperation.CHILD_MODULE_INVENTORY,
+                    arguments={"system": selector_id},
+                    constraint_ids=constraint_ids,
+                )
+            )
+
+        path_needs = by_kind.get(ProductNeedKind.PATHS, [])
+        new_path_needs = by_kind.get(ProductNeedKind.NEW_PATHS, [])
+        if path_needs:
+            assert analysis.path_endpoints is not None
+            source_root, target_root = analysis.path_endpoints
+            new_ids = tuple(item.need_id for item in new_path_needs)
+            for need in path_needs:
+                ordinal = need.snapshot_ordinals[0]
+                snapshot_id = snapshots[ordinal]
+                source = self._catalog.entry(snapshot_id, source_root)
+                target = self._catalog.entry(snapshot_id, target_root)
+                mapped_needs = (need.need_id, *new_ids)
+                source_id = f"path-source-{ordinal}"
+                target_id = f"path-target-{ordinal}"
+                selectors.extend(
+                    (
+                        self._selector(
+                            selector_id=source_id,
+                            need_ids=mapped_needs,
+                            snapshot_id=snapshot_id,
+                            entity=source,
+                            original_question=question.original_question,
+                        ),
+                        self._selector(
+                            selector_id=target_id,
+                            need_ids=mapped_needs,
+                            snapshot_id=snapshot_id,
+                            entity=target,
+                            original_question=question.original_question,
+                        ),
+                    )
+                )
+                steps.append(
+                    WorldModelQueryStepProposal.create(
+                        step_id=need.need_id,
+                        need_ids=mapped_needs,
+                        operation=StructureViewOperation.ALL_SIMPLE_PATHS,
+                        arguments={"source": source_id, "target": target_id},
+                        parameters={"predicate": RelationPredicate.DEPENDS_ON.value},
+                        constraint_ids=constraint_ids,
+                    )
+                )
+
+        diff_needs = by_kind.get(ProductNeedKind.ORDERED_DIFF, [])
+        if new_path_needs or diff_needs:
+            mapped_needs = tuple(
+                item.need_id for item in (*new_path_needs, *diff_needs)
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id="ordered-diff-query",
+                    need_ids=mapped_needs,
+                    operation=StructureViewOperation.ORDERED_SNAPSHOT_DIFF,
+                    parameters={
+                        "base_snapshot_id": snapshots[0].value,
+                        "target_snapshot_id": snapshots[1].value,
+                    },
+                    constraint_ids=constraint_ids,
+                )
+            )
+
+        direct_needs = by_kind.get(ProductNeedKind.DIRECT_DEPENDENCY, [])
+        if direct_needs:
+            need = direct_needs[0]
+            ordinal = need.snapshot_ordinals[0]
+            snapshot_id = snapshots[ordinal]
+            assert analysis.direct_source_root_id is not None
+            source = self._catalog.entry(
+                snapshot_id, analysis.direct_source_root_id
+            )
+            source_id = "direct-source"
+            selectors.append(
+                self._selector(
+                    selector_id=source_id,
+                    need_ids=(need.need_id,),
+                    snapshot_id=snapshot_id,
+                    entity=source,
+                    original_question=question.original_question,
+                )
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id="direct-neighborhood",
+                    need_ids=(need.need_id,),
+                    operation=StructureViewOperation.DIRECT_NEIGHBORHOOD,
+                    arguments={"entity": source_id},
+                    parameters={
+                        "direction": NeighborhoodDirection.OUTGOING.value,
+                        "predicate": RelationPredicate.DEPENDS_ON.value,
+                    },
+                    constraint_ids=constraint_ids,
+                )
+            )
+            inventory_id = "direct-system"
+            selectors.append(
+                self._selector(
+                    selector_id=inventory_id,
+                    need_ids=(need.need_id,),
+                    snapshot_id=snapshot_id,
+                    entity=self._catalog.system(snapshot_id),
+                    original_question=question.original_question,
+                )
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id="direct-target-catalog",
+                    need_ids=(need.need_id,),
+                    operation=StructureViewOperation.CHILD_MODULE_INVENTORY,
+                    arguments={"system": inventory_id},
+                    constraint_ids=constraint_ids,
+                )
+            )
+
+        same_name_needs = by_kind.get(ProductNeedKind.SAME_NAME_IDENTITY, [])
+        if same_name_needs:
+            need = same_name_needs[0]
+            ordinal = need.snapshot_ordinals[0]
+            snapshot_id = snapshots[ordinal]
+            selector_id = "same-name-system"
+            selectors.append(
+                self._selector(
+                    selector_id=selector_id,
+                    need_ids=(need.need_id,),
+                    snapshot_id=snapshot_id,
+                    entity=self._catalog.system(snapshot_id),
+                    original_question=question.original_question,
+                )
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id="same-name-catalog",
+                    need_ids=(need.need_id,),
+                    operation=StructureViewOperation.CHILD_MODULE_INVENTORY,
+                    arguments={"system": selector_id},
+                    constraint_ids=constraint_ids,
+                )
+            )
+
+        for need in by_kind.get(ProductNeedKind.KNOWLEDGE_GAP, []):
+            gaps.append(
+                WorldModelGapProposal(
+                    need_id=need.need_id,
+                    reason_code=(
+                        WorldModelGapReason.CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE
+                    ),
+                    detail=(
+                        "The mounted Structure View can prove graph change but not "
+                        "the design intent that caused it."
+                    ),
+                )
+            )
+        return WorldModelQueryPlanProposal(
+            requirement_id=requirement.requirement_id,
+            requirement_digest=requirement.digest,
+            read_set_digest=requirement.read_authority.read_set_digest,
+            ordered_bundle_digest=requirement.read_authority.ordered_bundle_digest,
+            selectors=tuple(selectors),
+            steps=tuple(steps),
+            explicit_gaps=tuple(gaps),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+    @staticmethod
+    def _selector(
+        *,
+        selector_id: str,
+        need_ids: tuple[str, ...],
+        snapshot_id: StableId,
+        entity: ProductCatalogEntity,
+        original_question: str,
+    ) -> WorldModelEntitySelectorProposal:
+        canonical_gav = (
+            entity.canonical_gav
+            if entity.canonical_gav is not None
+            and entity.canonical_gav in original_question
+            else None
+        )
+        canonical_ga = (
+            entity.canonical_ga
+            if canonical_gav is None
+            and entity.canonical_ga is not None
+            and entity.canonical_ga in original_question
+            else None
+        )
+        return WorldModelEntitySelectorProposal(
+            selector_id=selector_id,
+            need_ids=need_ids,
+            snapshot_id=snapshot_id,
+            origin=EntitySelectorOrigin.MENTION,
+            mention=entity.mention,
+            entity_type=entity.entity_type,
+            canonical_ga=canonical_ga,
+            canonical_gav=canonical_gav,
+        )
+
+
+class ProductModelDraftGenerator(WorldModelDraftGenerator):
+    strategy_ref = PRODUCT_STRATEGY_REF
+    execution_mode = QUALIFIED_MODEL_STRATEGY_MODE
+    provider_route = MODEL_EGRESS_GATEWAY_ROUTE
+
+    def __init__(
+        self,
+        *,
+        catalog: ProductBundleCatalog,
+        interpreter: ProductQuestionInterpreter,
+        model_strategy: ProductCapabilityProposalPort,
+    ) -> None:
+        self._catalog = catalog
+        self._interpreter = interpreter
+        self._model = model_strategy
+        self._proposals: list[WorldModelCapabilityProposal] = []
+
+    @property
+    def proposals(self) -> tuple[WorldModelCapabilityProposal, ...]:
+        return tuple(self._proposals)
+
+    def draft(
+        self,
+        *,
+        question,
+        requirement: WorldModelRequirementRevision,
+        plan: WorldModelQueryPlan,
+        result_set: WorldModelQueryResultSet,
+        assessment: WorldModelAssessment,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelDraftProposal:
+        analysis = self._interpreter.analyze(question.original_question)
+        proposal = self._qualified_material_proposal(
+            question=question,
+            analysis=analysis,
+            result_set=result_set,
+        )
+        self._proposals.append(proposal)
+        by_need = {item.need_id: item for item in assessment.needs}
+        by_step = {item.step_id: item for item in result_set.step_results}
+        claims: list[WorldModelAnswerClaimProposal] = []
+        for need in requirement.needs:
+            assessed = by_need[need.need_id]
+            if assessed.outcome is WorldModelNeedOutcome.KNOWLEDGE_GAP:
+                kind = WorldModelClaimKind.KNOWLEDGE_GAP
+                text = (
+                    "Knowledge Gap：当前 Structure View 能证明结构变化，但不能证明变更动机；"
+                    f"reason_code={PRODUCT_GAP_REASON}。"
+                )
+                result_ids: tuple[StableId, ...] = ()
+            elif assessed.outcome is WorldModelNeedOutcome.LIMITATION:
+                kind = WorldModelClaimKind.APPLICATION_LIMITATION
+                text = "View Limitation：" + ", ".join(assessed.limitations)
+                result_ids = ()
+            else:
+                kind = WorldModelClaimKind.QUERY_RESULT
+                text = self._render_need(
+                    need.need_id,
+                    analysis=analysis,
+                    result_set=result_set,
+                    by_step=by_step,
+                )
+                result_ids = assessed.step_result_ids
+            claims.append(
+                WorldModelAnswerClaimProposal(
+                    claim_id=f"claim:{need.need_id}",
+                    need_id=need.need_id,
+                    kind=kind,
+                    text=text,
+                    step_result_ids=result_ids,
+                )
+            )
+        return WorldModelDraftProposal(
+            assessment_id=assessment.assessment_id,
+            assessment_digest=assessment.digest,
+            claims=tuple(claims),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+    def _qualified_material_proposal(
+        self,
+        *,
+        question,
+        analysis: ProductQuestionAnalysis,
+        result_set: WorldModelQueryResultSet,
+    ) -> WorldModelCapabilityProposal:
+        results = tuple(item.view_result for item in result_set.step_results)
+        diff = next(
+            (
+                item
+                for item in results
+                if item.operation is StructureViewOperation.ORDERED_SNAPSHOT_DIFF
+            ),
+            None,
+        )
+        empty_path = next(
+            (
+                item
+                for item in results
+                if item.operation is StructureViewOperation.ALL_SIMPLE_PATHS
+                and item.payload["path_count"] == 0
+            ),
+            None,
+        )
+        case_ref = f"product:{question.request_ref}"
+        if any(
+            item.kind is ProductNeedKind.KNOWLEDGE_GAP
+            for item in analysis.needs
+        ):
+            proposal = self._model.propose(
+                case_id=case_ref,
+                capability=VIEW_LIMITATION_AND_KNOWLEDGE_GAP,
+                sealed_input={
+                    "coverage": "PARTIAL",
+                    "need": "change_intent",
+                    "query_result": {
+                        "all_simple_paths": [],
+                        "pagination_complete": True,
+                    },
+                },
+            )
+            expected = {
+                "view_result": {
+                    "status": "LIMITED",
+                    "code": "COVERAGE_PARTIAL",
+                    "owner": "STRUCTURE_VIEW",
+                },
+                "need_assessment": {
+                    "status": "KNOWLEDGE_GAP",
+                    "code": "INSUFFICIENT_COMPLETE_COVERAGE",
+                    "owner": "KNOWLEDGE_USE",
+                },
+            }
+        elif diff is not None and any(
+            item.kind is ProductNeedKind.ORDERED_DIFF for item in analysis.needs
+        ):
+            added = [
+                item["canonical_ga"] or item["root_id"]
+                for item in diff.payload["entities"]["added"]
+            ]
+            sealed_input = {
+                "base": diff.payload["base_snapshot_id"],
+                "base_added": [],
+                "target": diff.payload["target_snapshot_id"],
+                "target_added": added,
+            }
+            proposal = self._model.propose(
+                case_id=case_ref,
+                capability=ORDERED_DIFF_EXPRESSION,
+                sealed_input=sealed_input,
+            )
+            expected = {
+                "direction": {
+                    "base": sealed_input["base"],
+                    "target": sealed_input["target"],
+                },
+                "added_entities": added,
+            }
+        elif empty_path is not None:
+            proposal = self._model.propose(
+                case_id=case_ref,
+                capability=COMPLETE_NEGATIVE_ANSWER,
+                sealed_input={
+                    "coverage": empty_path.completeness.value,
+                    "modeled_relation": f"{RelationPredicate.DEPENDS_ON.value}@1",
+                    "query_result": {
+                        "all_simple_paths": [],
+                        "pagination_complete": not empty_path.truncated,
+                    },
+                },
+            )
+            expected = {
+                "need_status": "SATISFIED_SUPPORTED_NEGATIVE",
+                "claim_scope": "NO_PATH_IN_DEPENDS_ON_FOR_EXACT_READ_SET",
+            }
+        elif any(
+            item.kind
+            in {
+                ProductNeedKind.DIRECT_DEPENDENCY,
+                ProductNeedKind.SAME_NAME_IDENTITY,
+            }
+            for item in analysis.needs
+        ):
+            candidate_refs = tuple(
+                item.value for item in analysis.direct_target_root_ids
+            )
+            if not candidate_refs:
+                candidate_refs = tuple(
+                    root.value
+                    for group in analysis.module_mentions
+                    for root in group.entity_root_ids
+                )
+            candidate_refs = tuple(dict.fromkeys(candidate_refs))
+            if not candidate_refs:
+                raise _invalid(
+                    "PRODUCT_MODEL_RESOLUTION_INPUT_EMPTY",
+                    "identity question has no sealed candidate refs",
+                )
+            mention = (
+                analysis.module_mentions[-1].token
+                if analysis.module_mentions
+                else "module"
+            )
+            proposal = self._model.propose(
+                case_id=case_ref,
+                capability=ENTITY_CANDIDATE_RESOLUTION,
+                sealed_input={
+                    "mention": mention,
+                    "candidate_refs": list(candidate_refs),
+                },
+            )
+            status = "RESOLVED" if len(candidate_refs) == 1 else "AMBIGUOUS"
+            expected = {
+                "resolution_status": status,
+                "candidate_refs": list(candidate_refs),
+                "next_operation_allowed": len(candidate_refs) == 1,
+            }
+        else:
+            sealed_input, expected = self._generic_plan_check(
+                analysis, result_set
+            )
+            proposal = self._model.propose(
+                case_id=case_ref,
+                capability=GENERIC_QUERY_PLANNING,
+                sealed_input=sealed_input,
+                available_operations=(
+                    "inventory",
+                    "all_simple_paths",
+                    "ordered_snapshot_diff",
+                ),
+            )
+        if proposal.normalized_result != expected:
+            raise _invalid(
+                "PRODUCT_MODEL_PROPOSAL_MISMATCH",
+                "qualified model proposal does not match the formal View authority",
+            )
+        return proposal
+
+    def _generic_plan_check(
+        self,
+        analysis: ProductQuestionAnalysis,
+        result_set: WorldModelQueryResultSet,
+    ) -> tuple[dict[str, object], dict[str, object]]:
+        inventory_results = tuple(
+            item.view_result
+            for item in result_set.step_results
+            if item.view_result.operation
+            is StructureViewOperation.CHILD_MODULE_INVENTORY
+        )
+        path_results = tuple(
+            item.view_result
+            for item in result_set.step_results
+            if item.view_result.operation
+            is StructureViewOperation.ALL_SIMPLE_PATHS
+        )
+        needs: list[str] = []
+        operations: list[dict[str, object]] = []
+        for index, result in enumerate(inventory_results):
+            key = "inventory_left" if index == 0 else "inventory_right"
+            needs.append(key)
+            operations.append(
+                {"operation": "inventory", "snapshot": result.snapshot_ids[0].value}
+            )
+        source_ref: str | None = None
+        target_ref: str | None = None
+        for index, result in enumerate(path_results):
+            key = "paths_left" if index == 0 else "paths_right"
+            needs.append(key)
+            source_ref = result.payload["source"]["root_id"]
+            target_ref = result.payload["target"]["root_id"]
+            operations.append(
+                {
+                    "operation": "all_simple_paths",
+                    "snapshot": result.snapshot_ids[0].value,
+                    "source_ref": source_ref,
+                    "target_ref": target_ref,
+                }
+            )
+        if any(
+            item.kind is ProductNeedKind.NEW_PATHS for item in analysis.needs
+        ):
+            needs.append("new_paths")
+            operations.append(
+                {
+                    "operation": "ordered_snapshot_diff",
+                    "base": self._catalog.snapshot_ids[0].value,
+                    "target": self._catalog.snapshot_ids[1].value,
+                }
+            )
+        if not needs:
+            raise _invalid(
+                "PRODUCT_MODEL_PLAN_CHECK_EMPTY",
+                "qualified model plan check has no supported formal operation",
+            )
+        sealed: dict[str, object] = {
+            "needs": needs,
+            "read_set": [item.value for item in self._catalog.snapshot_ids],
+        }
+        if source_ref is not None and target_ref is not None:
+            sealed["source_entity_ref"] = source_ref
+            sealed["target_entity_ref"] = target_ref
+        return sealed, {"operations": operations}
+
+    def _render_need(
+        self,
+        need_id: str,
+        *,
+        analysis: ProductQuestionAnalysis,
+        result_set: WorldModelQueryResultSet,
+        by_step: Mapping[str, object],
+    ) -> str:
+        if need_id.startswith("inventory-"):
+            result = by_step[need_id].view_result
+            modules = [item["canonical_ga"] for item in result.payload["modules"]]
+            return f"{_snapshot_label(result_set, result.snapshot_ids[0])} 的全部递归 reactor child modules（不含根）: {_json(modules)}"
+        if need_id.startswith("paths-"):
+            result = by_step[need_id].view_result
+            paths = self._path_refs(result.payload["paths"])
+            if not paths and result.payload["negative_conclusion_supported"]:
+                source = result.payload["source"]["canonical_ga"]
+                target = result.payload["target"]["canonical_ga"]
+                return (
+                    f"{_snapshot_label(result_set, result.snapshot_ids[0])} 的当前 "
+                    "POM 本地声明内部 DEPENDS_ON 图中，不存在从 "
+                    f"{source} 到 {target} 的路径；此结论不扩大为其他关系不存在。"
+                )
+            return f"{_snapshot_label(result_set, result.snapshot_ids[0])} 的全部简单内部依赖路径: {_json(paths)}"
+        if need_id == "new-paths":
+            path_results = tuple(
+                item.view_result
+                for item in result_set.step_results
+                if item.view_result.operation
+                is StructureViewOperation.ALL_SIMPLE_PATHS
+            )
+            if len(path_results) != 2:
+                raise _invalid(
+                    "PRODUCT_NEW_PATH_READ_SET_INVALID",
+                    "new-path answer requires two exact path Results",
+                )
+            left = {tuple(item) for item in self._path_refs(path_results[0].payload["paths"])}
+            right = {tuple(item) for item in self._path_refs(path_results[1].payload["paths"])}
+            return "目标 Snapshot 新增的简单内部依赖路径: " + _json(
+                [list(item) for item in sorted(right - left)]
+            )
+        if need_id == "ordered-diff":
+            result = by_step["ordered-diff-query"].view_result
+            return self._render_diff(result.payload, analysis.include_state_changes)
+        if need_id == "direct-dependency":
+            neighborhood = by_step["direct-neighborhood"].view_result
+            inventory = by_step["direct-target-catalog"].view_result
+            return self._render_direct(
+                neighborhood.payload,
+                inventory.payload,
+                analysis,
+            )
+        if need_id == "same-name-identity":
+            inventory = by_step["same-name-catalog"].view_result
+            return self._render_same_name(inventory.payload, analysis)
+        raise _invalid(
+            "PRODUCT_DRAFT_NEED_UNREGISTERED",
+            "product Draft encountered an unregistered Need",
+        )
+
+    def _path_refs(self, paths: object) -> list[list[str]]:
+        if not isinstance(paths, tuple):
+            raise _invalid("PRODUCT_PATH_RESULT_INVALID", "path Result is invalid")
+        return [
+            [self._catalog.display_ref(StableId(root_id)) for root_id in item["entity_root_ids"]]
+            for item in paths
+        ]
+
+    def _render_diff(self, payload: Mapping[str, object], include_state: bool) -> str:
+        entities = payload["entities"]
+        relations = payload["relations"]
+        result: dict[str, object] = {
+            "direction": {
+                "base": payload["base_snapshot_id"],
+                "target": payload["target_snapshot_id"],
+            },
+            "entities_added": [item["canonical_ga"] or item["root_id"] for item in entities["added"]],
+            "entities_removed": [item["canonical_ga"] or item["root_id"] for item in entities["removed"]],
+            "relations_added": [self._relation_ref(item) for item in relations["added"]],
+            "relations_removed": [self._relation_ref(item) for item in relations["removed"]],
+        }
+        if include_state:
+            result["entity_state_changes"] = [
+                _public_state_change(item) for item in entities["state_changed"]
+            ]
+            result["relation_state_changes"] = [
+                _relation_state_change(item) for item in relations["state_changed"]
+            ]
+        return "有序 Snapshot 结构变化: " + _json(result)
+
+    def _relation_ref(self, value: Mapping[str, object]) -> dict[str, str]:
+        return {
+            "source": self._catalog.display_ref(
+                StableId(value["subject_entity_root_id"])
+            ),
+            "predicate": value["predicate"],
+            "target": self._catalog.display_ref(
+                StableId(value["object_entity_root_id"])
+            ),
+            "modality": value["observation_modality"],
+        }
+
+    def _render_direct(
+        self,
+        neighborhood: Mapping[str, object],
+        inventory: Mapping[str, object],
+        analysis: ProductQuestionAnalysis,
+    ) -> str:
+        source = neighborhood["entity"]["canonical_ga"] or neighborhood["entity"]["state_fields"]["artifact_id"]
+        targets = [
+            self._catalog.display_ref(StableId(item["object_entity_root_id"]))
+            for item in neighborhood["relations"]
+            if item["subject_entity_root_id"] == neighborhood["entity"]["root_id"]
+        ]
+        target_status = {
+            self._catalog.display_ref(root): self._catalog.display_ref(root) in targets
+            for root in analysis.direct_target_root_ids
+        }
+        same_artifact = _same_artifact_groups(inventory["modules"])
+        result = {
+            "source": source,
+            "direct_internal_dependencies": targets,
+            "requested_target_edge_exists": target_status,
+            "same_artifact_candidates": same_artifact,
+            "relation_modality": "POM_LOCAL_DECLARED_INTERNAL_DEPENDENCY@1",
+            "dependency_management_forms_edge": False,
+        }
+        return "本 Profile 的本地声明直接内部依赖: " + _json(result)
+
+    def _render_same_name(
+        self,
+        inventory: Mapping[str, object],
+        analysis: ProductQuestionAnalysis,
+    ) -> str:
+        mentioned = {root.value for group in analysis.module_mentions for root in group.entity_root_ids}
+        values = [
+            {
+                "root_id": item["root_id"],
+                "ga": item["canonical_ga"],
+                "gav": item["canonical_gav"],
+            }
+            for item in inventory["modules"]
+            if not mentioned or item["root_id"] in mentioned
+        ]
+        return "同名 artifact 必须按稳定 Root 与完整 GA 区分: " + _json(values)
+
+
+class ProductAnswerReviewer(WorldModelAnswerReviewer):
+    strategy_ref = "iter-003-g3b-independent-answer-reviewer@1"
+
+    def review(
+        self,
+        *,
+        question,
+        requirement: WorldModelRequirementRevision,
+        plan: WorldModelQueryPlan,
+        result_set: WorldModelQueryResultSet,
+        assessment: WorldModelAssessment,
+        draft,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelReviewProposal:
+        del plan
+        expected_needs = tuple(item.need_id for item in requirement.needs)
+        expected_results = tuple(
+            item.step_result_id for item in result_set.step_results
+        )
+        actual_needs = tuple(item.need_id for item in draft.claims)
+        forbidden = ("evidence excerpt", "source payload", "源码摘录")
+        approved = (
+            actual_needs == expected_needs
+            and all(
+                item.outcome is not WorldModelNeedOutcome.LIMITATION
+                for item in assessment.needs
+            )
+            and all(item.satisfied for item in assessment.joint_constraints)
+            and not any(token in draft.body.casefold() for token in forbidden)
+        )
+        decision = (
+            WorldModelReviewDecision.APPROVE
+            if approved
+            else WorldModelReviewDecision.REJECT
+        )
+        finding_codes = () if approved else ("PRODUCT_DRAFT_REVIEW_FAILED",)
+        return WorldModelReviewProposal(
+            decision=decision,
+            dimensions=tuple(
+                WorldModelReviewDimensionAssessment(
+                    dimension=dimension,
+                    decision=decision,
+                    finding_codes=finding_codes,
+                )
+                for dimension in WorldModelReviewDimension
+            ),
+            checked_need_ids=expected_needs,
+            checked_constraint_ids=tuple(
+                item.constraint_id for item in requirement.joint_constraints
+            ),
+            checked_step_result_ids=expected_results,
+            original_question_digest=digest_of(question.original_question),
+            draft_digest=draft.digest,
+            read_set_digest=question.read_authority.read_set_digest,
+            finding_codes=finding_codes,
+            findings=() if approved else ("independent product Draft review failed",),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class WorldModelProductAnswerService:
+    """Execute one qualified, evaluation-only product authority chain."""
+
+    def __init__(
+        self,
+        *,
+        view,
+        snapshot_bundles: Sequence[StructureSnapshotReadBundle],
+        model_strategy: ProductCapabilityProposalPort,
+        gateway_counters: ProductGatewayCounters,
+    ) -> None:
+        self._view = view
+        self._catalog = ProductBundleCatalog(snapshot_bundles)
+        if tuple(self._catalog.snapshot_ids) != tuple(view.snapshot_ids):
+            raise _invalid(
+                "PRODUCT_CATALOG_READ_SET_MISMATCH",
+                "product catalog and Structure View bind different Snapshots",
+            )
+        self._model_strategy = model_strategy
+        self._gateway_counters = gateway_counters
+
+    def execute(
+        self,
+        *,
+        request_ref: str,
+        original_question: str,
+        response_language: str,
+        classification: str,
+        permission_digest: Digest,
+    ) -> ProductWorldModelExecution:
+        initial_provider_calls = self._gateway_counters.provider_call_count
+        initial_network_operations = self._gateway_counters.network_operation_count
+        store = InMemoryWorldModelAuthorityStore()
+        answering = WorldModelAnsweringService(
+            store,
+            self._view,
+            model_route=MODEL_EGRESS_GATEWAY_ROUTE,
+        )
+        responses = WorldModelResponseControlService(store, answering)
+        interpreter = ProductQuestionInterpreter(self._catalog)
+        draft_generator = ProductModelDraftGenerator(
+            catalog=self._catalog,
+            interpreter=interpreter,
+            model_strategy=self._model_strategy,
+        )
+        question = answering.open_question(
+            request_ref=request_ref,
+            original_question=original_question,
+            response_language=response_language,
+            classification=classification,
+            permission_digest=permission_digest,
+        )
+        requirement = answering.seal_requirement(
+            question_id=question.question_id,
+            planner=ProductRequirementPlanner(interpreter),
+            fidelity_reviewer=ProductRequirementReviewer(interpreter),
+        )
+        plan = answering.seal_query_plan(
+            requirement_id=requirement.requirement_id,
+            planner=ProductQueryPlanner(self._catalog, interpreter),
+        )
+        result_set = answering.execute_query_plan(plan_id=plan.plan_id)
+        assessment = answering.assess(result_set_id=result_set.result_set_id)
+        draft = responses.seal_draft(
+            assessment_id=assessment.assessment_id,
+            generator=draft_generator,
+        )
+        review = responses.review(
+            draft_id=draft.draft_id,
+            reviewer=ProductAnswerReviewer(),
+        )
+        authorization = responses.authorize(review_id=review.review_id)
+        delivery = responses.deliver(
+            authorization_id=authorization.authorization_id,
+            sink=InMemoryWorldModelEvaluationSink(),
+        )
+        chain = responses.authority_chain(
+            delivery_id=delivery.delivery_id,
+            provider_call_count=(
+                self._gateway_counters.provider_call_count - initial_provider_calls
+            ),
+            network_operation_count=(
+                self._gateway_counters.network_operation_count
+                - initial_network_operations
+            ),
+        )
+        return ProductWorldModelExecution(
+            chain=chain,
+            model_proposals=draft_generator.proposals,
+        )
+
+
+def _need_question(value: ProductNeedSpec) -> str:
+    labels = {
+        ProductNeedKind.INVENTORY: "Return the complete recursive reactor child-module inventory.",
+        ProductNeedKind.PATHS: "Return all simple internal dependency paths for the exact Snapshot.",
+        ProductNeedKind.NEW_PATHS: "Return paths present only in the target Snapshot.",
+        ProductNeedKind.ORDERED_DIFF: "Return the ordered base-to-target Structure graph change.",
+        ProductNeedKind.DIRECT_DEPENDENCY: "Return exact locally declared direct internal dependencies.",
+        ProductNeedKind.SAME_NAME_IDENTITY: "Distinguish same-artifact modules by stable Root and full GA.",
+        ProductNeedKind.KNOWLEDGE_GAP: "Disclose that change intent is outside Structure coverage.",
+    }
+    return labels[value.kind]
+
+
+def _snapshot_label(
+    result_set: WorldModelQueryResultSet, snapshot_id: StableId
+) -> str:
+    index = result_set.read_authority.snapshot_ids.index(snapshot_id)
+    if len(result_set.read_authority.snapshot_ids) == 2:
+        return "A" if index == 0 else "B"
+    return "当前 Snapshot"
+
+
+def _public_state_change(value: Mapping[str, object]) -> dict[str, object]:
+    base = value["base"]
+    target = value["target"]
+    fields = ("label", "module_path", "effective_version", "packaging")
+    changed = {
+        field: {
+            "base": base["state_fields"].get(field),
+            "target": target["state_fields"].get(field),
+        }
+        for field in fields
+        if base["state_fields"].get(field) != target["state_fields"].get(field)
+    }
+    return {
+        "root_id": value["root_id"],
+        "ga": target.get("canonical_ga") or base.get("canonical_ga"),
+        "changed_fields": changed,
+    }
+
+
+def _relation_state_change(value: Mapping[str, object]) -> dict[str, object]:
+    base = value["base"]
+    target = value["target"]
+    return {
+        "root_id": value["root_id"],
+        "predicate": target["predicate"],
+        "base": dict(base["predicate_state_fields"]),
+        "target": dict(target["predicate_state_fields"]),
+    }
+
+
+def _same_artifact_groups(modules: object) -> dict[str, list[str]]:
+    groups: dict[str, list[str]] = {}
+    for item in modules:
+        artifact = item["root_fields"]["artifact_id"]
+        groups.setdefault(artifact, []).append(item["canonical_ga"])
+    return {
+        key: sorted(values)
+        for key, values in sorted(groups.items())
+        if len(values) > 1
+    }
+
+
+def _field_text(value: Mapping[str, object], key: str) -> str:
+    item = value.get(key)
+    if not isinstance(item, str) or not item:
+        raise _invalid(
+            "PRODUCT_CATALOG_FIELD_INVALID",
+            f"product catalog field {key!r} is invalid",
+        )
+    return item
+
+
+def _aliases(values: Sequence[str]) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {item.casefold() for item in values if isinstance(item, str) and len(item) >= 3},
+            key=lambda item: (-len(item), item),
+        )
+    )
+
+
+def _identifier_parts(value: str) -> tuple[str, ...]:
+    return tuple(
+        item
+        for item in re.split(r"[^A-Za-z0-9]+", value)
+        if len(item) >= 3
+    )
+
+
+def _alias_offset(text: str, alias: str) -> int | None:
+    match = re.search(
+        rf"(?<![A-Za-z0-9]){re.escape(alias)}(?![A-Za-z0-9])",
+        text,
+    )
+    return match.start() if match else None
+
+
+def _contains_any(value: str, needles: Sequence[str]) -> bool:
+    return any(item in value for item in needles)
+
+
+def _json(value: object) -> str:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value or value != value.strip():
+        raise _invalid("PRODUCT_TEXT_INVALID", f"{label} must be non-empty")
+    return value
+
+
+def _invalid(reason_code: str, message: str) -> DomainError:
+    return DomainError(
+        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+        message,
+        {"reason_code": reason_code},
+    )

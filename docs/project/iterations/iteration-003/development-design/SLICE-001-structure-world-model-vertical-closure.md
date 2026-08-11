@@ -15,7 +15,7 @@ coding_input: true
 
 ## Status and dependencies
 
-当前已获用户授权；G0、G1、G2、G3a 与 V-009 均已有独立 PASS Result。最终 V-009 在 checkpoint `019f9fced69110c6a7e357a4ea2394ec6742fd2e` 上以 freeze `1.0.5` 取得 Conformance PASS、closed CE 7/0/0 PASS/VALID，并在任何 G3b 产品结果可见前密封 controlled Direct 与 Mature Source Agent 各 55 个 run。Direct 为 15 SUCCESS/40 preserved FAILURE，Mature 为 55 SUCCESS/0 FAILURE；`FINDING-003-020` 与 `021` 已分别处置最终物理 staging isolation 和失败样本解释。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。G3b product dispatch 仍不在本次确认范围内。
+当前已获用户授权；G0、G1、G2、G3a 与 V-009 均已有独立 PASS Result。最终 V-009 在 checkpoint `019f9fced69110c6a7e357a4ea2394ec6742fd2e` 上以 freeze `1.0.5` 取得 Conformance PASS、closed CE 7/0/0 PASS/VALID，并在任何 G3b 产品结果可见前密封 controlled Direct 与 Mature Source Agent 各 55 个 run。Direct 为 15 SUCCESS/40 preserved FAILURE，Mature 为 55 SUCCESS/0 FAILURE；`FINDING-003-020` 与 `021` 已分别处置最终物理 staging isolation 和失败样本解释。用户又于 2026-08-11 明确授权 `ITER-003-G3B-EXACT-INPUTS@1.0.0` 所列两批外部披露/调用与 OS audit，且无需重复确认；该授权不包含 Production Activation。新 Profile 使用没有 CURRENT 的新 Scope，禁止把本 Slice 扩成旧数据 Schema Migration。
 
 ## Current vs expected behavior
 
@@ -92,7 +92,7 @@ Mature Source Agent 必须使用 protocol `1.0.3` 的 exact Codex binary、`gpt-
 
 ### G3b — Evaluation-only browser model run
 
-只有 World Model Capability Result 对 G3a exact checkpoint 为 PASS/VALID，且同模型 Direct Source 与成熟 Codex Source Agent 的全部 baseline 已按冻结协议密封后，才在与 G2 同级的无仓库隔离环境分派真实模型。通信白名单固定为 `Browser→Answer`、`Browser→Projector`、`Answer→exact Model Egress Gateway`、`Gateway→Manifest exact Provider endpoint`；Answer 的其他出站与 `Answer→Projector`、Projector 的全部出站都由 OS/network namespace 拒绝并审计。页面必须显示永久 `EVALUATION_ONLY` 水印、`WORLD_MODEL`、commit、Snapshot/Read Set、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact/Evidence 引用、A/B diff 和完整权威链。问题请求不得调用 Update、Direct Investigation 或 Evidence payload；点击引用只走浏览器单独请求、不能回流答案进程的 Citation Projector。连格式修正总调用最多 5 次，未通过审核或超限即失败，不交付降级答案，不需要也不产生 Product Activation。
+只有 World Model Capability Result 对 G3a exact checkpoint 为 PASS/VALID，且同模型 Direct Source 与成熟 Codex Source Agent 的全部 baseline 已按冻结协议密封后，才在与 G2 同级的无仓库隔离环境分派真实模型。通信白名单固定为 `Browser→Answer`、`Browser→Projector`、`Answer→exact Model Egress Gateway`、`Gateway→Manifest exact Provider endpoint`；Answer 的其他出站与 `Answer→Projector`、Projector 的全部出站都由 OS/network namespace 拒绝并审计。当前 macOS Seatbelt 不能把公网 TCP capability 原生限定到单一 remote IP，因此本 Slice 不扩大为 `*:443`：Gateway supervisor 在 invocation 已密封后解析并匿名连接一个 exact external peer，把唯一 connected socket descriptor 继承给 distinct sandboxed Gateway child；supervisor 不持有 credential、不发送模型请求或读取响应，收据如实区分 public unicast 与 executor synthetic external address，后者不得误报为公网 IP。child 在解析 credential 前复核 peer、TLS certificate/SNI 和 exact HTTP endpoint，且其所有新 DNS/INET/INET6 connect 由 Seatbelt 拒绝。证据必须把这两个操作分列，不能伪称 Seatbelt 具备 remote-IP filter。页面必须显示永久 `EVALUATION_ONLY` 水印、`WORLD_MODEL`、commit、Snapshot/Read Set、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact/Evidence 引用、A/B diff 和完整权威链。问题请求不得调用 Update、Direct Investigation 或 Evidence payload；点击引用只走浏览器单独请求、不能回流答案进程的 Citation Projector。连格式修正总调用最多 5 次，未通过审核或超限即失败，不交付降级答案，不需要也不产生 Product Activation。
 
 ### G4 — Human and product acceptance
 

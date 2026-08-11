@@ -42,6 +42,7 @@ from .structure_view import (
 
 WORLD_MODEL_MODE = "WORLD_MODEL"
 OFFLINE_STRATEGY_MODE = "DETERMINISTIC_OFFLINE"
+QUALIFIED_MODEL_STRATEGY_MODE = "QUALIFIED_MODEL_EVALUATION"
 EVALUATION_ONLY_SINK = "EVALUATION_ONLY"
 
 _MAX_REQUIREMENT_NEEDS = 64
@@ -59,6 +60,7 @@ _MAX_PATH_EXPANSIONS = 100_000
 _MAX_TOTAL_ENTITY_CANDIDATES = 1_000
 _MAX_TOTAL_PATHS = 2_000
 _MAX_TOTAL_PATH_EXPANSIONS = 200_000
+_MAX_PROVIDER_CALLS = 5
 
 
 class OfflineStage(str, Enum):
@@ -100,6 +102,9 @@ class WorldModelClaimKind(str, Enum):
 class WorldModelGapReason(str, Enum):
     UNSUPPORTED_STRUCTURE_SEMANTICS = "UNSUPPORTED_STRUCTURE_SEMANTICS"
     KNOWLEDGE_NOT_MODELED = "KNOWLEDGE_NOT_MODELED"
+    CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE = (
+        "CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE"
+    )
 
 
 class WorldModelReviewDecision(str, Enum):
@@ -374,7 +379,7 @@ class WorldModelQuestion:
     read_authority: WorldModelReadAuthority
     explicit_entity_refs: tuple[WorldModelExplicitEntityRef, ...]
     external_dispatch_allowed: bool
-    model_route: None
+    model_route: str | None
     digest: Digest
 
     @classmethod
@@ -389,6 +394,7 @@ class WorldModelQuestion:
         view: StructureViewService,
         resource_limits: WorldModelResourceLimits | None = None,
         explicit_entity_refs: Sequence[WorldModelExplicitEntityRef] = (),
+        model_route: str | None = None,
     ) -> "WorldModelQuestion":
         read_authority = WorldModelReadAuthority.from_view(view)
         limits = resource_limits or WorldModelResourceLimits()
@@ -420,6 +426,9 @@ class WorldModelQuestion:
                     "WORLD_MODEL_EXPLICIT_ENTITY_REF_INVALID",
                     "caller exact Entity ref is not canonical or outside the Read Set",
                 )
+        if model_route is not None:
+            _text(model_route, "model route")
+        external_dispatch_allowed = model_route is not None
         core = {
             "revision": 1,
             "request_ref": _text(request_ref, "request ref"),
@@ -433,8 +442,8 @@ class WorldModelQuestion:
             "resource_limits_digest": limits.digest.value,
             "read_authority": read_authority.canonical_value(),
             "explicit_entity_refs": tuple(item.canonical_value() for item in refs),
-            "external_dispatch_allowed": False,
-            "model_route": None,
+            "external_dispatch_allowed": external_dispatch_allowed,
+            "model_route": model_route,
         }
         if len(core["original_question"]) > limits.max_question_chars:
             raise _invalid(
@@ -456,8 +465,8 @@ class WorldModelQuestion:
             resource_limits=limits,
             read_authority=read_authority,
             explicit_entity_refs=refs,
-            external_dispatch_allowed=False,
-            model_route=None,
+            external_dispatch_allowed=external_dispatch_allowed,
+            model_route=model_route,
             digest=digest_of(
                 ["WORLD_MODEL_QUESTION@1", {"question_id": question_id.value, **core}]
             ),
@@ -517,6 +526,15 @@ class WorldModelQuestion:
                     "WORLD_MODEL_EXPLICIT_ENTITY_REF_INVALID",
                     "caller exact Entity ref is outside the Read Set",
                 )
+        offline_boundary = (
+            self.external_dispatch_allowed is False and self.model_route is None
+        )
+        qualified_model_boundary = (
+            self.external_dispatch_allowed is True
+            and isinstance(self.model_route, str)
+            and bool(self.model_route)
+            and self.model_route == self.model_route.strip()
+        )
         if (
             self.question_id.kind != "world_model_question"
             or type(self.revision) is not int
@@ -524,14 +542,13 @@ class WorldModelQuestion:
             or type(self.use_epoch) is not int
             or self.use_epoch != 1
             or self.mode != WORLD_MODEL_MODE
-            or self.external_dispatch_allowed is not False
-            or self.model_route is not None
+            or not (offline_boundary or qualified_model_boundary)
             or len(self.original_question)
             > self.resource_limits.max_question_chars
         ):
             raise _invalid(
                 "WORLD_MODEL_QUESTION_BOUNDARY_INVALID",
-                "G3a question must be immutable WORLD_MODEL with external dispatch denied",
+                "world-model Question has an invalid execution boundary",
             )
         for value, label in (
             (self.request_ref, "request ref"),
@@ -655,6 +672,128 @@ class OfflineStrategyInvocation:
 
 
 @dataclass(frozen=True, slots=True)
+class QualifiedModelStrategyInvocation:
+    """Authority-issued invocation that permits only the exact model route.
+
+    The invocation is issued before a model-backed proposal role runs.  It
+    authorizes no Source, Evidence, repository, browser, or arbitrary network
+    access; the concrete route is an evaluator-owned AF_UNIX gateway binding.
+    """
+
+    invocation_id: StableId
+    stage: OfflineStage
+    question_id: StableId
+    question_digest: Digest
+    input_digest: Digest
+    strategy_ref: str
+    execution_mode: str
+    provider_route: str
+    external_dispatch_allowed: bool
+    digest: Digest
+
+    @classmethod
+    def issue(
+        cls,
+        *,
+        stage: OfflineStage,
+        question: WorldModelQuestion,
+        input_digest: Digest,
+        strategy_ref: str,
+        provider_route: str,
+    ) -> "QualifiedModelStrategyInvocation":
+        question.require_valid()
+        route = _text(provider_route, "provider route")
+        if (
+            question.external_dispatch_allowed is not True
+            or question.model_route != route
+        ):
+            raise _invalid(
+                "MODEL_INVOCATION_ROUTE_DENIED",
+                "qualified model invocation is outside the Question route",
+            )
+        core = {
+            "stage": stage.value,
+            "question_id": question.question_id.value,
+            "question_digest": question.digest.value,
+            "input_digest": input_digest.value,
+            "strategy_ref": _text(strategy_ref, "strategy ref"),
+            "execution_mode": QUALIFIED_MODEL_STRATEGY_MODE,
+            "provider_route": route,
+            "external_dispatch_allowed": True,
+        }
+        identity = digest_of(["QUALIFIED_MODEL_STRATEGY_INVOCATION_ID@1", core])
+        invocation_id = _stable("model_invocation", identity)
+        return cls(
+            invocation_id=invocation_id,
+            stage=stage,
+            question_id=question.question_id,
+            question_digest=question.digest,
+            input_digest=input_digest,
+            strategy_ref=core["strategy_ref"],
+            execution_mode=QUALIFIED_MODEL_STRATEGY_MODE,
+            provider_route=route,
+            external_dispatch_allowed=True,
+            digest=digest_of(
+                [
+                    "QUALIFIED_MODEL_STRATEGY_INVOCATION@1",
+                    {"invocation_id": invocation_id.value, **core},
+                ]
+            ),
+        )
+
+    def canonical_value(self) -> dict[str, object]:
+        return {
+            "invocation_id": self.invocation_id.value,
+            "stage": self.stage.value,
+            "question_id": self.question_id.value,
+            "question_digest": self.question_digest.value,
+            "input_digest": self.input_digest.value,
+            "strategy_ref": self.strategy_ref,
+            "execution_mode": self.execution_mode,
+            "provider_route": self.provider_route,
+            "external_dispatch_allowed": self.external_dispatch_allowed,
+            "digest": self.digest.value,
+        }
+
+    def require_valid(self) -> None:
+        if (
+            self.invocation_id.kind != "model_invocation"
+            or self.execution_mode != QUALIFIED_MODEL_STRATEGY_MODE
+            or not isinstance(self.provider_route, str)
+            or not self.provider_route
+            or self.provider_route != self.provider_route.strip()
+            or self.external_dispatch_allowed is not True
+        ):
+            raise _invalid(
+                "MODEL_INVOCATION_BOUNDARY_INVALID",
+                "qualified model invocation has an invalid exact route",
+            )
+        core = {
+            key: value
+            for key, value in self.canonical_value().items()
+            if key not in {"invocation_id", "digest"}
+        }
+        identity = digest_of(["QUALIFIED_MODEL_STRATEGY_INVOCATION_ID@1", core])
+        expected_id = _stable("model_invocation", identity)
+        expected_digest = digest_of(
+            [
+                "QUALIFIED_MODEL_STRATEGY_INVOCATION@1",
+                {"invocation_id": expected_id.value, **core},
+            ]
+        )
+        if self.invocation_id != expected_id or self.digest != expected_digest:
+            raise _invalid(
+                "MODEL_INVOCATION_DIGEST_MISMATCH",
+                "qualified model invocation is not canonical",
+            )
+
+
+WorldModelStrategyInvocation = (
+    OfflineStrategyInvocation | QualifiedModelStrategyInvocation
+)
+
+
+@dataclass(frozen=True, slots=True)
 class WorldModelNeed:
     need_id: str
     question: str
@@ -720,7 +859,7 @@ class WorldModelRequirementPlanner(Protocol):
         self,
         *,
         question: WorldModelQuestion,
-        invocation: OfflineStrategyInvocation,
+        invocation: WorldModelStrategyInvocation,
     ) -> WorldModelRequirementProposal: ...
 
 
@@ -732,7 +871,7 @@ class WorldModelRequirementFidelityReviewer(Protocol):
         *,
         question: WorldModelQuestion,
         proposal: WorldModelRequirementProposal,
-        invocation: OfflineStrategyInvocation,
+        invocation: WorldModelStrategyInvocation,
     ) -> WorldModelRequirementFidelityProposal: ...
 
 
@@ -746,8 +885,8 @@ class WorldModelRequirementRevision:
     response_language: str
     needs: tuple[WorldModelNeed, ...]
     joint_constraints: tuple[WorldModelJointConstraint, ...]
-    planning_invocation: OfflineStrategyInvocation
-    fidelity_review_invocation: OfflineStrategyInvocation
+    planning_invocation: WorldModelStrategyInvocation
+    fidelity_review_invocation: WorldModelStrategyInvocation
     fidelity_decision: WorldModelReviewDecision
     fidelity_accepted_need_ids: tuple[str, ...]
     fidelity_accepted_constraint_ids: tuple[str, ...]
@@ -899,7 +1038,7 @@ class WorldModelQueryPlanner(Protocol):
         *,
         question: WorldModelQuestion,
         requirement: WorldModelRequirementRevision,
-        invocation: OfflineStrategyInvocation,
+        invocation: WorldModelStrategyInvocation,
     ) -> WorldModelQueryPlanProposal: ...
 
 
@@ -938,7 +1077,7 @@ class WorldModelCandidateResolutionSet:
     requirement_id: StableId
     requirement_digest: Digest
     proposal_digest: Digest
-    planning_invocation: OfflineStrategyInvocation
+    planning_invocation: WorldModelStrategyInvocation
     resolutions: tuple[WorldModelEntityResolution, ...]
     read_authority: WorldModelReadAuthority
     digest: Digest
@@ -993,7 +1132,7 @@ class WorldModelQueryPlan:
     requirement_digest: Digest
     resolution_set_id: StableId
     resolution_set_digest: Digest
-    planning_invocation: OfflineStrategyInvocation
+    planning_invocation: WorldModelStrategyInvocation
     capability_registry_digest: Digest
     steps: tuple[WorldModelQueryStep, ...]
     explicit_gaps: tuple[WorldModelGapProposal, ...]
@@ -1188,7 +1327,7 @@ class WorldModelDraftGenerator(Protocol):
         plan: WorldModelQueryPlan,
         result_set: WorldModelQueryResultSet,
         assessment: WorldModelAssessment,
-        invocation: OfflineStrategyInvocation,
+        invocation: WorldModelStrategyInvocation,
     ) -> WorldModelDraftProposal: ...
 
 
@@ -1235,7 +1374,7 @@ class WorldModelAnswerDraft:
     claims: tuple[WorldModelAnswerClaim, ...]
     body: str
     body_digest: Digest
-    generation_invocation: OfflineStrategyInvocation
+    generation_invocation: WorldModelStrategyInvocation
     read_authority: WorldModelReadAuthority
     digest: Digest
 
@@ -1298,7 +1437,7 @@ class WorldModelAnswerReviewer(Protocol):
         result_set: WorldModelQueryResultSet,
         assessment: WorldModelAssessment,
         draft: WorldModelAnswerDraft,
-        invocation: OfflineStrategyInvocation,
+        invocation: WorldModelStrategyInvocation,
     ) -> WorldModelReviewProposal: ...
 
 
@@ -1315,7 +1454,7 @@ class WorldModelAnswerReview:
     checked_step_result_ids: tuple[StableId, ...]
     finding_codes: tuple[str, ...]
     findings: tuple[str, ...]
-    review_invocation: OfflineStrategyInvocation
+    review_invocation: WorldModelStrategyInvocation
     generation_invocation_id: StableId
     read_authority: WorldModelReadAuthority
     digest: Digest
@@ -1590,19 +1729,29 @@ class WorldModelAuthorityChain:
                 "WORLD_MODEL_CHAIN_READ_SET_MISMATCH",
                 "authority chain records bind different Read Sets",
             )
+        invocations = (
+            self.requirement.planning_invocation,
+            self.requirement.fidelity_review_invocation,
+            self.resolutions.planning_invocation,
+            self.plan.planning_invocation,
+            self.draft.generation_invocation,
+            self.review.review_invocation,
+        )
         if (
             self.delivery.question_id != question_id
             or self.delivery.authorization_id
             != self.authorization.authorization_id
             or self.delivery.authorization_digest != self.authorization.digest
-            or type(self.provider_call_count) is not int
-            or self.provider_call_count != 0
-            or type(self.network_operation_count) is not int
-            or self.network_operation_count != 0
+            or not _execution_boundary_is_valid(
+                question=self.question,
+                invocations=invocations,
+                provider_call_count=self.provider_call_count,
+                network_operation_count=self.network_operation_count,
+            )
         ):
             raise _invalid(
                 "WORLD_MODEL_CHAIN_EXECUTION_BOUNDARY_INVALID",
-                "authority chain violates its offline delivery boundary",
+                "authority chain violates its exact execution boundary",
             )
         _validate_exported_authority_chain(self)
         core = {
@@ -1958,10 +2107,17 @@ class WorldModelAnsweringService:
         self,
         store: InMemoryWorldModelAuthorityStore,
         view: StructureViewService,
+        *,
+        model_route: str | None = None,
     ) -> None:
         self._store = store
         self._view = view
         self._read_authority = WorldModelReadAuthority.from_view(view)
+        self._model_route = (
+            _text(model_route, "model route")
+            if model_route is not None
+            else None
+        )
 
     def open_question(
         self,
@@ -1984,6 +2140,7 @@ class WorldModelAnsweringService:
                 view=self._view,
                 resource_limits=resource_limits,
                 explicit_entity_refs=explicit_entity_refs,
+                model_route=self._model_route,
             )
         )
 
@@ -1995,11 +2152,11 @@ class WorldModelAnsweringService:
         fidelity_reviewer: WorldModelRequirementFidelityReviewer,
     ) -> WorldModelRequirementRevision:
         question = self._question(question_id)
-        planning = OfflineStrategyInvocation.issue(
+        planning = _issue_strategy_invocation(
             stage=OfflineStage.REQUIREMENT_PLANNING,
             question=question,
             input_digest=question.digest,
-            strategy_ref=planner.strategy_ref,
+            strategy=planner,
         )
         proposal = planner.plan(question=question, invocation=planning)
         if not isinstance(proposal, WorldModelRequirementProposal):
@@ -2026,11 +2183,11 @@ class WorldModelAnsweringService:
                 },
             ]
         )
-        review_invocation = OfflineStrategyInvocation.issue(
+        review_invocation = _issue_strategy_invocation(
             stage=OfflineStage.REQUIREMENT_FIDELITY_REVIEW,
             question=question,
             input_digest=proposal_digest,
-            strategy_ref=fidelity_reviewer.strategy_ref,
+            strategy=fidelity_reviewer,
         )
         fidelity = fidelity_reviewer.review(
             question=question,
@@ -2132,11 +2289,11 @@ class WorldModelAnsweringService:
         )
         question = self._question(requirement.question_id)
         self._verify_requirement(requirement, question)
-        invocation = OfflineStrategyInvocation.issue(
+        invocation = _issue_strategy_invocation(
             stage=OfflineStage.QUERY_PLANNING,
             question=question,
             input_digest=requirement.digest,
-            strategy_ref=planner.strategy_ref,
+            strategy=planner,
         )
         proposal = planner.plan(
             question=question,
@@ -2510,10 +2667,16 @@ class WorldModelAnsweringService:
     def _question(self, question_id: StableId) -> WorldModelQuestion:
         question = self._store.get(WorldModelQuestion, question_id)
         question.require_valid()
-        if question.read_authority != self._read_authority:
+        if (
+            question.read_authority != self._read_authority
+            or question.model_route != self._model_route
+            or question.external_dispatch_allowed is not (
+                self._model_route is not None
+            )
+        ):
             raise _invalid(
                 "WORLD_MODEL_QUESTION_READ_SET_MISMATCH",
-                "Question belongs to another mounted Read Set",
+                "Question belongs to another mounted Read Set or execution route",
             )
         return question
 
@@ -3652,11 +3815,11 @@ class WorldModelResponseControlService:
                 assessment.digest.value,
             ]
         )
-        invocation = OfflineStrategyInvocation.issue(
+        invocation = _issue_strategy_invocation(
             stage=OfflineStage.ANSWER_DRAFTING,
             question=question,
             input_digest=input_digest,
-            strategy_ref=generator.strategy_ref,
+            strategy=generator,
         )
         proposal = generator.draft(
             question=question,
@@ -3759,11 +3922,11 @@ class WorldModelResponseControlService:
                 draft.digest.value,
             ]
         )
-        invocation = OfflineStrategyInvocation.issue(
+        invocation = _issue_strategy_invocation(
             stage=OfflineStage.ANSWER_REVIEW,
             question=question,
             input_digest=input_digest,
-            strategy_ref=reviewer.strategy_ref,
+            strategy=reviewer,
         )
         if invocation.invocation_id == draft.generation_invocation.invocation_id:
             raise _invalid(
@@ -4060,8 +4223,20 @@ class WorldModelResponseControlService:
         )
 
     def authority_chain(
-        self, *, delivery_id: StableId
+        self,
+        *,
+        delivery_id: StableId,
+        provider_call_count: int = 0,
+        network_operation_count: int = 0,
     ) -> WorldModelAuthorityChain:
+        if (
+            type(provider_call_count) is not int
+            or type(network_operation_count) is not int
+        ):
+            raise _invalid(
+                "WORLD_MODEL_CHAIN_EXECUTION_BOUNDARY_INVALID",
+                "world-model execution counters must be exact integers",
+            )
         delivery = self._store.get(WorldModelDelivery, delivery_id)
         if delivery.state is not WorldModelDeliveryState.DELIVERED:
             raise _invalid(
@@ -4115,8 +4290,8 @@ class WorldModelResponseControlService:
             "review": review.canonical_value(),
             "authorization": authorization.canonical_value(),
             "delivery": delivery.canonical_value(),
-            "provider_call_count": 0,
-            "network_operation_count": 0,
+            "provider_call_count": provider_call_count,
+            "network_operation_count": network_operation_count,
         }
         chain = WorldModelAuthorityChain(
             question=question,
@@ -4129,8 +4304,8 @@ class WorldModelResponseControlService:
             review=review,
             authorization=authorization,
             delivery=delivery,
-            provider_call_count=0,
-            network_operation_count=0,
+            provider_call_count=provider_call_count,
+            network_operation_count=network_operation_count,
             digest=digest_of(["WORLD_MODEL_AUTHORITY_CHAIN@1", core]),
         )
         chain.require_valid()
@@ -5728,7 +5903,7 @@ def _validate_review_dimensions(
 
 def _require_invocation(
     proposal: object,
-    expected: OfflineStrategyInvocation,
+    expected: WorldModelStrategyInvocation,
     label: str,
 ) -> None:
     expected.require_valid()
@@ -5740,6 +5915,96 @@ def _require_invocation(
             "WORLD_MODEL_STRATEGY_INVOCATION_MISMATCH",
             f"{label} proposal does not bind its authority-issued invocation",
         )
+
+
+def _issue_strategy_invocation(
+    *,
+    stage: OfflineStage,
+    question: WorldModelQuestion,
+    input_digest: Digest,
+    strategy: object,
+) -> WorldModelStrategyInvocation:
+    strategy_ref = getattr(strategy, "strategy_ref", None)
+    if not isinstance(strategy_ref, str):
+        raise _invalid(
+            "WORLD_MODEL_STRATEGY_IDENTITY_INVALID",
+            "world-model proposal role has no exact strategy reference",
+        )
+    execution_mode = getattr(strategy, "execution_mode", OFFLINE_STRATEGY_MODE)
+    if execution_mode == OFFLINE_STRATEGY_MODE:
+        return OfflineStrategyInvocation.issue(
+            stage=stage,
+            question=question,
+            input_digest=input_digest,
+            strategy_ref=strategy_ref,
+        )
+    if execution_mode != QUALIFIED_MODEL_STRATEGY_MODE:
+        raise _invalid(
+            "WORLD_MODEL_STRATEGY_EXECUTION_MODE_INVALID",
+            "world-model proposal role requested an unknown execution mode",
+        )
+    provider_route = getattr(strategy, "provider_route", None)
+    if not isinstance(provider_route, str):
+        raise _invalid(
+            "MODEL_INVOCATION_ROUTE_DENIED",
+            "model-backed proposal role has no exact provider route",
+        )
+    return QualifiedModelStrategyInvocation.issue(
+        stage=stage,
+        question=question,
+        input_digest=input_digest,
+        strategy_ref=strategy_ref,
+        provider_route=provider_route,
+    )
+
+
+def _execution_boundary_is_valid(
+    *,
+    question: WorldModelQuestion,
+    invocations: Sequence[WorldModelStrategyInvocation],
+    provider_call_count: object,
+    network_operation_count: object,
+) -> bool:
+    if (
+        type(provider_call_count) is not int
+        or type(network_operation_count) is not int
+        or any(
+            not isinstance(
+                invocation,
+                (OfflineStrategyInvocation, QualifiedModelStrategyInvocation),
+            )
+            for invocation in invocations
+        )
+    ):
+        return False
+    model_invocations = tuple(
+        {
+            invocation.invocation_id: invocation
+            for invocation in invocations
+            if isinstance(invocation, QualifiedModelStrategyInvocation)
+        }.values()
+    )
+    if question.external_dispatch_allowed is False:
+        return (
+            question.model_route is None
+            and not model_invocations
+            and provider_call_count == 0
+            and network_operation_count == 0
+        )
+    if (
+        question.external_dispatch_allowed is not True
+        or not isinstance(question.model_route, str)
+        or not model_invocations
+        or any(
+            invocation.provider_route != question.model_route
+            for invocation in model_invocations
+        )
+    ):
+        return False
+    return (
+        len(model_invocations) <= provider_call_count <= _MAX_PROVIDER_CALLS
+        and network_operation_count == provider_call_count
+    )
 
 
 def _query_plan_proposal_digest(
