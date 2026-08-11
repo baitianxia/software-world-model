@@ -41,5 +41,6 @@ iteration: ITER-003
 - [FINDING-003-027：冻结评估输入不能一律按 canonical JSON 运行收据加载](FINDING-003-027.md) — dispositioned / iteration-design
 - [FINDING-003-028：evaluator 混同了 policy endpoint 与 transport 规范化表示](FINDING-003-028.md) — dispositioned / iteration-design
 - [FINDING-003-029：根项目直接依赖答案丢失了完整 GA](FINDING-003-029.md) — dispositioned / local-implementation
+- [FINDING-003-030：Direct population 报告没有计入保留的非成功终态](FINDING-003-030.md) — dispositioned / local-implementation
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

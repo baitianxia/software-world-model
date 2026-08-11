@@ -649,6 +649,15 @@
       "tests/test_world_model_product.py"
     ]
   },
+  "FINDING-003-030": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-030.md",
+    "code": [
+      "validation/structure_world_model_iteration_003/g3b/evaluate_results.py"
+    ],
+    "tests": [
+      "tests/test_iteration_003_g3b.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -958,6 +967,23 @@
       "tests/test_iteration_003_g2_isolation.py",
       "tests/test_structure_view.py",
       "tests/test_structure_read_bundle.py"
+    ]
+  },
+  "ITER-003-RESULT-G3B": {
+    "path": "docs/project/iterations/iteration-003/results/gate-g3b.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "validation/structure_world_model_iteration_003/g3b"
+    ],
+    "tests": [
+      "tests/test_iteration_003_g3b.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_pinned_ark_https.py",
+      "tests/test_world_model_live_execution.py",
+      "tests/test_world_model_product.py",
+      "tests/test_iteration_003_v009.py"
     ]
   },
   "ITER-003-RESULT-V009": {

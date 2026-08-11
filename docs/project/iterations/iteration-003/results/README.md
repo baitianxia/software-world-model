@@ -4,7 +4,7 @@ kind: iteration-result-index
 status: in-progress
 authority: evidence
 owners: [project, quality]
-depends_on: [ITER-003-VERIFICATION, ITER-003-RESULT-G0, ITER-003-RESULT-G1, ITER-003-RESULT-G2, ITER-003-RESULT-G3A, ITER-003-RESULT-V009]
+depends_on: [ITER-003-VERIFICATION, ITER-003-RESULT-G0, ITER-003-RESULT-G1, ITER-003-RESULT-G2, ITER-003-RESULT-G3A, ITER-003-RESULT-V009, ITER-003-RESULT-G3B]
 code: []
 tests: []
 iteration: ITER-003
@@ -12,7 +12,7 @@ iteration: ITER-003
 
 # Iteration 003 Results
 
-[G0 冻结输入](gate-g0.md) 已在 exact checkpoint `af849fb198179cfe1d1514f272a1a06236684f43` 上 PASS，绑定授权治理提交 `42a3f1ababed73cded8aafb046105309a79c170e`。[G1 Knowledge Kernel](gate-g1.md) 已在 exact 实现 checkpoint `ddb8f5feba1e0c52d2f788c2bb66c93810f2b469` 上 PASS，绑定已提交的 G0 Result `7286c0108394baac4254a14fc3405029707dd10d`。[G2 Source-off Snapshot/View](gate-g2.md) 已在 exact 实现 checkpoint `82aef7563556c70527b3c92227d0711a28437587` 上 PASS，绑定已提交的 G1 Result `801717d6e75459afeddb7299234a2e32b65aad16`。[G3a Offline answer-chain](gate-g3a.md) 已在 exact 实现 checkpoint `f2269ecca5c1e85e69fafd93fe599c841227f3c7` 上 PASS，且只裁决 V-008。[V-009 External qualification and sealed baselines](v009-qualification.md) 已在 checkpoint `019f9fced69110c6a7e357a4ea2394ec6742fd2e` 上 PASS：closed CE 7/0/0 PASS/VALID，两条各 55-run baseline 已联合密封。当前必须停止在 G3b 之前；V-009 披露确认不包含 product dispatch。
+[G0 冻结输入](gate-g0.md) 至 [V-009 External qualification and sealed baselines](v009-qualification.md) 已按各自 exact checkpoint PASS。[G3b Evaluation-only browser model run](gate-g3b.md) 的正式 product batch 执行为 60/60 SUCCESS，但独立产品裁决为 58/60，因而 **G3b FAIL**。根 GA 渲染缺口已在后续本地 checkpoint 修正并通过 750 项回归，但新代码尚无全新 60-run 外部 batch；V-011/G4 仍被阻断。
 
 预留 ID/文件名固定为：
 
@@ -21,7 +21,7 @@ iteration: ITER-003
 - `ITER-003-RESULT-G2` / `gate-g2.md` — PASS
 - `ITER-003-RESULT-G3A` / `gate-g3a.md` — PASS
 - `ITER-003-RESULT-V009` / `v009-qualification.md` — PASS
-- `ITER-003-RESULT-G3B` / `gate-g3b.md`
+- `ITER-003-RESULT-G3B` / `gate-g3b.md` — FAIL
 - `ITER-003-RESULT-G4` / `gate-g4.md`
 
 G0 Result 必须绑定授权治理提交 Q；G1 及以后每个 Result 必须绑定上一 Gate PASS。所有 Result 还必须固定 exact checkpoint commit、Manifest/fixture/suite digest、执行命令、原始证据目录、自动检查和人工核对；上一 Result 未提交为 PASS 时，不得开始下一 Gate 的产品代码。
