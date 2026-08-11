@@ -4,9 +4,9 @@
 Every Answer, Model Egress Gateway, and Citation Projector is a distinct cold
 process under its role-specific deny-default macOS Seatbelt profile.  The
 evaluator resolves and connects the exact numeric Provider peer before spawn;
-the Gateway inherits that single connected descriptor, verifies the peer and
-TLS hostname, injects the credential, and has no capability to create another
-DNS/INET/INET6 connection.
+the Gateway inherits that connected descriptor plus one exact prebound AF_UNIX
+listener, verifies the peer and TLS hostname, injects the credential, and runs
+behind a Seatbelt syscall firewall that denies every new socket creation.
 """
 
 from __future__ import annotations
@@ -127,6 +127,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             ),
             "address_resolution": "NOT_YET_EXECUTED",
             "connection_handoff": "INHERITED_EXACT_CONNECTED_SOCKET",
+            "gateway_listener_handoff": (
+                "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+            ),
+            "gateway_child_socket_creation": "DENIED_BY_SEATBELT",
             "credential_reference": "env:ARK_API_KEY",
             "credential_value_recorded": False,
         },
@@ -137,6 +141,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "workload_worker_digest": _sha256_file(HERE / "role_worker.py"),
         "probe_worker_digest": _sha256_file(HERE / "os_probe_worker.py"),
         "provider_socket_worker_digest": _sha256_file(PROVIDER_SOCKET_WORKER),
+        "socket_stage_root": str(socket_stage_root),
         "run_count": 60,
         "retry_policy": "NO_SELECTIVE_RETRY_ONE_ATTEMPT_PER_FROZEN_RUN",
         "environment": "EVALUATION_ONLY",
@@ -310,18 +315,35 @@ def _run_one(
     socket_root.mkdir(mode=0o700)
     gateway_socket = socket_root / "gateway.sock"
     connected, provisioning = _provision_provider_socket(provider_address)
-    _write_new(
-        evaluator_root / "connection-provisioning.json",
-        canonical_json_bytes(provisioning),
-    )
-    connection_fd = connected.fileno()
     try:
+        gateway_listener, listener_provisioning = _provision_gateway_listener(
+            gateway_socket
+        )
+    except BaseException:
+        connected.close()
+        raise
+    connection_fd = connected.fileno()
+    listener_fd = gateway_listener.fileno()
+    try:
+        _write_new(
+            evaluator_root / "connection-provisioning.json",
+            canonical_json_bytes(provisioning),
+        )
+        _write_new(
+            evaluator_root / "gateway-listener-provisioning.json",
+            canonical_json_bytes(listener_provisioning),
+        )
         gateway_environment = _role_environment(
             gateway_output,
             credential=_required_credential(),
         )
     except BaseException:
         connected.close()
+        gateway_listener.close()
+        try:
+            gateway_socket.unlink()
+        except FileNotFoundError:
+            pass
         raise
     payload = {
         "case_id": _text(run.get("case_id"), "case ID"),
@@ -337,6 +359,7 @@ def _run_one(
 
     gateway_argv = [
         "--socket-path", str(gateway_socket),
+        "--gateway-listener-socket-fd", str(listener_fd),
         "--numeric-provider-address", provider_address,
         "--connected-provider-socket-fd", str(connection_fd),
         "--database", str(gateway_output / "model-gateway.sqlite3"),
@@ -384,15 +407,26 @@ def _run_one(
         nonce=secrets.token_hex(16),
     )
     cold_process_started_ns = time.monotonic_ns()
-    gateway_process = subprocess.Popen(
-        gateway_command,
-        cwd=str(packages["gateway"]),
-        env=gateway_environment,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        pass_fds=(connection_fd,),
-    )
-    connected.close()
+    try:
+        gateway_process = subprocess.Popen(
+            gateway_command,
+            cwd=str(packages["gateway"]),
+            env=gateway_environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            pass_fds=(connection_fd, listener_fd),
+        )
+    except BaseException:
+        connected.close()
+        gateway_listener.close()
+        try:
+            gateway_socket.unlink()
+        except FileNotFoundError:
+            pass
+        raise
+    else:
+        connected.close()
+        gateway_listener.close()
     failure_stage: str | None = None
     answer_process_elapsed_milliseconds: int | None = None
     answer_value: Mapping[str, object] | None = None
@@ -521,6 +555,10 @@ def _run_one(
         "attempt_count": 1,
         "selective_retry_count": 0,
         "provider_connection_handoff_count": 1,
+        "gateway_listener_handoff_count": 1,
+        "gateway_listener_provisioning": _file_reference(
+            evaluator_root / "gateway-listener-provisioning.json"
+        ),
         "performance_timing_receipt": "timing.json",
         "answer_summary": _file_reference(answer_summary),
         "gateway_summary": _file_reference(gateway_summary),
@@ -603,6 +641,8 @@ def _preserve_unhandled_run_failure(
         "attempt_count": 1,
         "selective_retry_count": 0,
         "provider_connection_handoff_count": 0,
+        "gateway_listener_handoff_count": 0,
+        "gateway_listener_provisioning": None,
         "performance_timing_receipt": None,
         "answer_summary": None,
         "gateway_summary": None,
@@ -784,6 +824,9 @@ def _run_preflight(
         if role in {"answer", "projector"}:
             exact_listener = _UnixListener(gateway_socket)
         inherited_connection: socket.socket | None = None
+        gateway_listener: socket.socket | None = None
+        gateway_probe_client: socket.socket | None = None
+        gateway_listener_provisioning: Mapping[str, object] | None = None
         try:
             if role == "gateway":
                 inherited_connection, provisioning = _provision_provider_socket(
@@ -793,10 +836,26 @@ def _run_preflight(
                     role_root / "connection-provisioning.json",
                     canonical_json_bytes(provisioning),
                 )
+                gateway_listener, gateway_listener_provisioning = (
+                    _provision_gateway_listener(gateway_socket)
+                )
+                _write_new(
+                    role_root / "gateway-listener-provisioning.json",
+                    canonical_json_bytes(gateway_listener_provisioning),
+                )
+                gateway_probe_client = socket.socket(
+                    socket.AF_UNIX, socket.SOCK_STREAM
+                )
+                gateway_probe_client.settimeout(10.0)
+                gateway_probe_client.connect(str(gateway_socket))
+                gateway_probe_client.sendall(b"P")
             inherited_fd = (
                 inherited_connection.fileno()
                 if inherited_connection is not None
                 else -1
+            )
+            gateway_listener_fd = (
+                gateway_listener.fileno() if gateway_listener is not None else -1
             )
             argv = [
                 "--role", role,
@@ -807,6 +866,7 @@ def _run_preflight(
                 "--other-unix-socket", str(other_socket),
                 "--provider-address", provider_address,
                 "--connected-provider-socket-fd", str(inherited_fd),
+                "--gateway-listener-socket-fd", str(gateway_listener_fd),
                 "--local-tcp-port", str(local_listener.port),
                 "--output", str(output_root / "probe.json"),
             ]
@@ -828,6 +888,14 @@ def _run_preflight(
                 str(packages[role] / ".g3b" / "os_probe_worker.py"),
                 *argv,
             ]
+            inherited_fds = tuple(
+                descriptor
+                for descriptor in (
+                    inherited_fd,
+                    gateway_listener_fd,
+                )
+                if descriptor >= 0
+            )
             completed = subprocess.run(
                 command,
                 cwd=str(packages[role]),
@@ -839,7 +907,7 @@ def _run_preflight(
                 stderr=subprocess.PIPE,
                 timeout=60,
                 check=False,
-                pass_fds=(inherited_fd,) if inherited_fd >= 0 else (),
+                pass_fds=inherited_fds,
             )
             if inherited_connection is not None:
                 inherited_connection.close()
@@ -847,23 +915,47 @@ def _run_preflight(
             _preserve_process_streams(role_root, "probe", completed)
             probe_path = output_root / "probe.json"
             value = _load_json(probe_path) if probe_path.is_file() else None
+            gateway_listener_round_trip = None
+            if gateway_probe_client is not None:
+                try:
+                    gateway_listener_round_trip = (
+                        gateway_probe_client.recv(1) == b"Q"
+                    )
+                except OSError:
+                    gateway_listener_round_trip = False
             records[role] = {
                 "returncode": completed.returncode,
                 "profile": str(HERE / f"{role}.sb"),
                 "profile_digest": _sha256_file(HERE / f"{role}.sb"),
                 "parameters": parameters,
                 "probe": value,
+                "gateway_listener_provisioning": (
+                    gateway_listener_provisioning
+                ),
+                "gateway_listener_round_trip": gateway_listener_round_trip,
                 "status": (
                     "PASS"
                     if completed.returncode == 0
                     and isinstance(value, dict)
                     and value.get("status") == "PASS"
+                    and (
+                        role != "gateway"
+                        or gateway_listener_round_trip is True
+                    )
                     else "FAIL"
                 ),
             }
         finally:
             if inherited_connection is not None:
                 inherited_connection.close()
+            if gateway_probe_client is not None:
+                gateway_probe_client.close()
+            if gateway_listener is not None:
+                gateway_listener.close()
+                try:
+                    gateway_socket.unlink()
+                except FileNotFoundError:
+                    pass
             if exact_listener is not None:
                 exact_listener.close()
             other_listener.close()
@@ -888,7 +980,8 @@ def _run_preflight(
         "protected_stage_unchanged": protected_stage_unchanged,
         "os_enforcement": "MACOS_SEATBELT_DENY_DEFAULT",
         "gateway_external_capability": (
-            "ONE_EVALUATOR_CONNECTED_EXACT_PEER_FD; NEW_DNS_INET_INET6_DENIED"
+            "INHERITED_EXACT_PROVIDER_AND_AF_UNIX_LISTENER_FDS; "
+            "NEW_SOCKET_SYSCALL_DENIED"
         ),
         "ancestor_limitation": (
             "literal ancestor reads may expose direct entry names, not child contents"
@@ -1118,11 +1211,7 @@ def _audit_policy(
                 if role == "answer" and gateway_socket is not None
                 else []
             ),
-            "unix_bind": (
-                [str(gateway_socket)]
-                if role == "gateway" and gateway_socket is not None
-                else []
-            ),
+            "unix_bind": [],
             "provider_connect": [],
         },
         "forbidden_categories": categories,
@@ -1220,7 +1309,7 @@ def _verify_role_success(path: Path, role: str) -> Mapping[str, object]:
     audit = value.get("operation_audit")
     expected_network = {
         "answer": {"unix_connect": 1, "unix_bind": 0, "provider_connect": 0},
-        "gateway": {"unix_connect": 0, "unix_bind": 1, "provider_connect": 0},
+        "gateway": {"unix_connect": 0, "unix_bind": 0, "provider_connect": 0},
         "projector": {"unix_connect": 0, "unix_bind": 0, "provider_connect": 0},
     }
     if (
@@ -1276,6 +1365,10 @@ def _verify_answer_gateway(
         or gateway.get("credential_value_recorded") is not False
         or gateway.get("provider_connection_capability")
         != "INHERITED_EXACT_CONNECTED_SOCKET"
+        or gateway.get("gateway_listener_capability")
+        != "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+        or gateway.get("new_socket_syscall_capability")
+        != "DENIED_BY_SEATBELT"
         or gateway.get("numeric_provider_address_scope")
         != _provider_address_scope(
             gateway.get("numeric_provider_address")
@@ -1320,6 +1413,10 @@ def _batch_result(
             _provider_address_scope(provider_address) == "PUBLIC_UNICAST"
         ),
         "provider_connection_capability": "INHERITED_EXACT_CONNECTED_SOCKET",
+        "gateway_listener_capability": (
+            "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+        ),
+        "gateway_new_socket_syscall_capability": "DENIED_BY_SEATBELT",
         "gateway_new_dns_inet_inet6_capability": "DENIED",
         "preflight_digest": preflight["document_digest"],
         "run_count": len(terminals),
@@ -1792,6 +1889,58 @@ def _is_within(path: Path, root: Path) -> bool:
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _provision_gateway_listener(
+    path: Path,
+) -> tuple[socket.socket, dict[str, object]]:
+    if (
+        not path.is_absolute()
+        or path.resolve(strict=False) != path
+        or path.parent.resolve(strict=True) != path.parent
+        or path.exists()
+        or path.is_symlink()
+    ):
+        raise ValueError("Gateway listener path must be new and canonical")
+    listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        listener.bind(str(path))
+        path.chmod(0o600)
+        listener.listen(1)
+        status = path.lstat()
+        bound_path = listener.getsockname()
+        if isinstance(bound_path, bytes):
+            bound_path = bound_path.decode("utf-8")
+        if (
+            path.is_symlink()
+            or not stat.S_ISSOCK(status.st_mode)
+            or stat.S_IMODE(status.st_mode) != 0o600
+            or bound_path != str(path)
+        ):
+            raise RuntimeError("trusted evaluator Gateway listener is not exact")
+        core = {
+            "schema": "swm.iter-003.g3b-gateway-listener-handoff@1",
+            "listener_path": str(path),
+            "socket_family": "AF_UNIX",
+            "socket_type": "SOCK_STREAM",
+            "mode": "0600",
+            "bound": True,
+            "listening": True,
+            "socket_creation_owner": "TRUSTED_EVALUATOR",
+            "gateway_child_socket_creation": "DENIED_BY_SEATBELT",
+            "descriptor_inheritance_count": 1,
+            "credential_visible": False,
+            "product_request_payload_visible": False,
+            "production_activation": "NOT_EXECUTED",
+        }
+        return listener, {**core, "document_digest": digest_of(core).value}
+    except BaseException:
+        listener.close()
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 
 class _UnixListener:

@@ -32,6 +32,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--other-unix-socket", required=True)
     parser.add_argument("--provider-address", required=True)
     parser.add_argument("--connected-provider-socket-fd", type=int, default=-1)
+    parser.add_argument("--gateway-listener-socket-fd", type=int, default=-1)
     parser.add_argument("--local-tcp-port", type=int, required=True)
     parser.add_argument("--output", required=True)
     return parser
@@ -78,9 +79,33 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     elif role == "gateway":
         results.append(
+            _expect_connected_state(
+                "inherited_provider_descriptor_is_already_connected",
+                lambda: _reconnect_connected_provider(
+                    arguments.connected_provider_socket_fd,
+                    arguments.provider_address,
+                ),
+            )
+        )
+        results.append(
             _expect_allowed(
-                "allowed_exact_gateway_bind",
-                lambda: _unix_bind(arguments.gateway_socket),
+                "allowed_inherited_exact_gateway_listener_round_trip",
+                lambda: _inherited_unix_round_trip(
+                    arguments.gateway_listener_socket_fd,
+                    arguments.gateway_socket,
+                ),
+            )
+        )
+        results.append(
+            _expect_denied(
+                "denied_new_inet_socket_creation",
+                lambda: _new_socket(socket.AF_INET),
+            )
+        )
+        results.append(
+            _expect_denied(
+                "denied_new_unix_socket_creation",
+                lambda: _new_socket(socket.AF_UNIX),
             )
         )
         results.append(
@@ -218,6 +243,33 @@ def _expect_denied(
     }
 
 
+def _expect_connected_state(
+    name: str,
+    action: Callable[[], object],
+) -> dict[str, object]:
+    try:
+        action()
+    except BaseException as exc:
+        error_number = getattr(exc, "errno", None)
+        already_connected = error_number == errno.EISCONN
+        return {
+            "name": name,
+            "expected": "ALREADY_CONNECTED",
+            "observed": (
+                "ALREADY_CONNECTED" if already_connected else "FAILED_OTHER"
+            ),
+            "status": "PASS" if already_connected else "FAIL",
+            "exception_type": type(exc).__name__,
+            "errno": error_number,
+        }
+    return {
+        "name": name,
+        "expected": "ALREADY_CONNECTED",
+        "observed": "CONNECT_SUCCEEDED",
+        "status": "FAIL",
+    }
+
+
 def _read_one(value: str) -> bytes:
     with Path(value).open("rb") as stream:
         return stream.read(1)
@@ -230,12 +282,59 @@ def _unix_connect(value: str) -> None:
         connection.sendall(b"P")
 
 
-def _unix_bind(value: str) -> None:
-    path = Path(value)
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
-        server.bind(value)
-        server.listen(1)
-    path.unlink()
+def _inherited_unix_round_trip(descriptor: int, expected_path: str) -> None:
+    if descriptor < 0:
+        raise ValueError("inherited Gateway listener descriptor is missing")
+    path = Path(expected_path)
+    status = path.lstat()
+    listener = socket.socket(
+        socket.AF_UNIX,
+        socket.SOCK_STREAM,
+        fileno=descriptor,
+    )
+    listener.settimeout(10.0)
+    bound_path = listener.getsockname()
+    if isinstance(bound_path, bytes):
+        bound_path = bound_path.decode("utf-8")
+    if (
+        path.is_symlink()
+        or not stat.S_ISSOCK(status.st_mode)
+        or stat.S_IMODE(status.st_mode) != 0o600
+        or bound_path != expected_path
+    ):
+        raise RuntimeError("inherited Gateway listener is not exact")
+    with listener:
+        connection, _ = listener.accept()
+        with connection:
+            if connection.recv(1) != b"P":
+                raise RuntimeError("inherited Gateway listener probe is invalid")
+            connection.sendall(b"Q")
+
+
+def _reconnect_connected_provider(descriptor: int, target_address: str) -> None:
+    if descriptor < 0:
+        raise ValueError("inherited connected Provider descriptor is missing")
+    family = socket.AF_INET6 if ":" in target_address else socket.AF_INET
+    duplicate = os.dup(descriptor)
+    with socket.socket(
+        family,
+        socket.SOCK_STREAM,
+        fileno=duplicate,
+    ) as inherited:
+        peer = inherited.getpeername()
+        if peer[0] != target_address or peer[1] != 443:
+            raise RuntimeError("inherited Provider peer differs from its exact pin")
+        address: tuple[object, ...]
+        if family == socket.AF_INET6:
+            address = (target_address, 443, 0, 0)
+        else:
+            address = (target_address, 443)
+        inherited.connect(address)
+
+
+def _new_socket(family: int) -> None:
+    with socket.socket(family, socket.SOCK_STREAM):
+        pass
 
 
 def _tcp_connect(host: str, port: int) -> None:
@@ -262,7 +361,7 @@ def _inherited_tls(descriptor: int, expected_address: str) -> None:
     context = ssl.create_default_context()
     defaults = ssl.get_default_verify_paths()
     if defaults.cafile is None and defaults.capath is None:
-        context.load_verify_locations(cafile="/etc/ssl/cert.pem")
+        context.load_verify_locations(cafile="/private/etc/ssl/cert.pem")
     with context.wrap_socket(
         raw,
         server_hostname="ark.cn-beijing.volces.com",

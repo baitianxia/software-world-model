@@ -237,6 +237,55 @@ class ModelEgressGatewayTests(unittest.TestCase):
             )
             self.assertFalse(socket_path.exists())
 
+    def test_round_trip_uses_an_exact_prebound_listener(self) -> None:
+        fixture_gateway = _FixtureGateway()
+        with tempfile.TemporaryDirectory() as directory:
+            socket_path = Path(directory).resolve() / "model-egress.sock"
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            listener.bind(str(socket_path))
+            socket_path.chmod(0o600)
+            listener.listen(1)
+            server = ModelEgressGatewayServer(
+                socket_path,
+                gateway=fixture_gateway,
+                policy=self.policy(),
+                prebound_listener=listener,
+            )
+            thread, failures = self._start_server(server, socket_path)
+            result = UnixSocketModelGatewayClient(
+                socket_path, timeout_seconds=2
+            ).invoke(self.context())
+            thread.join(2)
+
+            self.assertEqual(result.call.state, ModelCallState.COMPLETED)
+            self.assertFalse(thread.is_alive())
+            self.assertEqual(failures, [])
+            self.assertFalse(socket_path.exists())
+
+    def test_prebound_listener_must_match_the_exact_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            actual_path = root / "actual.sock"
+            expected_path = root / "expected.sock"
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            listener.bind(str(actual_path))
+            actual_path.chmod(0o600)
+            listener.listen(1)
+            server = ModelEgressGatewayServer(
+                expected_path,
+                gateway=_FixtureGateway(),
+                policy=self.policy(),
+                prebound_listener=listener,
+            )
+
+            with self.assertRaises(DomainError) as raised:
+                server.serve(startup_timeout_seconds=0.01)
+
+            self.assertEqual(raised.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+            self.assertEqual(listener.fileno(), -1)
+            self.assertTrue(actual_path.exists())
+            actual_path.unlink()
+
     def test_policy_drift_is_rejected_and_consumes_one_audited_call(self) -> None:
         fixture_gateway = _FixtureGateway()
         with tempfile.TemporaryDirectory() as directory:

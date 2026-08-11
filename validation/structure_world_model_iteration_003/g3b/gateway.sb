@@ -1,8 +1,10 @@
 (version 1)
 
 ;; ITER-003 G3b Model Egress Gateway.  It owns the credential and the only
-;; external route.  It receives one already-connected, peer-pinned TCP socket;
-;; every new DNS/INET/INET6 connection remains denied by this profile.
+;; external route.  It receives one already-connected, peer-pinned TCP socket
+;; and one already-bound exact AF_UNIX listener.  Network I/O on those inherited
+;; descriptors is allowed, while a syscall firewall denies creation of every
+;; new socket or socketpair.
 (deny default)
 
 (allow process-exec
@@ -105,9 +107,23 @@
     (subpath (param "SOCKET_ROOT"))
     (subpath (param "OUTPUT_ROOT")))
 
-(allow network-bind
-    (literal (param "GATEWAY_SOCKET")))
 (allow network-inbound
     (literal (param "GATEWAY_SOCKET")))
+(allow network-outbound
+    (literal (param "GATEWAY_SOCKET"))
+    (remote tcp "*:443"))
+
+;; Seatbelt's remote TCP predicate cannot express one numeric external IP.
+;; The trusted evaluator therefore creates and peer-pins the only INET socket;
+;; the child can use inherited descriptors but cannot create another socket.
+;; This is a socket-creation boundary for the digest-sealed Python workload,
+;; not an arbitrary-native-code destination firewall for reconnectx/connectx.
+(deny syscall-unix)
+(allow syscall-unix
+    (require-all
+        (require-not (syscall-number SYS_socket))
+        (require-not (syscall-number SYS_socketpair))
+        (require-not (syscall-number SYS_socket_delegate))))
+
 (allow sysctl-read)
 (deny process-fork)

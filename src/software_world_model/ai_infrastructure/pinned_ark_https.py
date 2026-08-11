@@ -39,6 +39,7 @@ ARK_PROVIDER_PATH = "/api/coding/v3/chat/completions"
 _MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 _MAX_PROVIDER_CALLS = 5
 _SYSTEM_CA_FILE_CANDIDATES = (
+    "/private/etc/ssl/cert.pem",
     "/etc/ssl/cert.pem",
     "/etc/ssl/certs/ca-certificates.crt",
     "/etc/pki/tls/certs/ca-bundle.crt",

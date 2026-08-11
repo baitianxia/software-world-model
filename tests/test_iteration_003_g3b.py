@@ -32,14 +32,55 @@ class Iteration003G3bTests(unittest.TestCase):
         self.assertFalse(freeze["disclosure"]["production_activation_included"])
         self.assertEqual(freeze["activation"]["production_activation"], "NOT_EXECUTED")
 
-    def test_gateway_profile_denies_every_new_public_connection(self):
+    def test_gateway_profile_denies_new_socket_creation(self):
         gateway = (G3B_ROOT / "gateway.sb").read_text(encoding="utf-8")
         answer = (G3B_ROOT / "answer.sb").read_text(encoding="utf-8")
         projector = (G3B_ROOT / "projector.sb").read_text(encoding="utf-8")
-        self.assertNotIn("(allow network-outbound\n    (remote", gateway)
+        self.assertIn('(remote tcp "*:443")', gateway)
+        self.assertIn("(deny syscall-unix)", gateway)
+        self.assertIn("(require-not (syscall-number SYS_socket))", gateway)
+        self.assertIn("(require-not (syscall-number SYS_socketpair))", gateway)
+        self.assertIn("(require-not (syscall-number SYS_socket_delegate))", gateway)
+        self.assertNotIn("(allow network-bind", gateway)
         self.assertIn("already-connected, peer-pinned TCP socket", gateway)
+        self.assertNotIn("SYS_connect", gateway)
+        self.assertNotIn("SYS_connectx", gateway)
         self.assertIn('(literal (param "GATEWAY_SOCKET"))', answer)
         self.assertIn("(deny network*)", projector)
+
+    def test_gateway_listener_handoff_receipt_is_exact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).resolve() / "gateway.sock"
+            listener, receipt = run_g3b._provision_gateway_listener(path)
+            try:
+                self.assertTrue(path.exists())
+                self.assertTrue(
+                    evaluate_results._gateway_listener_provisioning_pass(
+                        receipt,
+                        expected_path=str(path),
+                    )
+                )
+                tampered_core = {
+                    **{
+                        key: value
+                        for key, value in receipt.items()
+                        if key != "document_digest"
+                    },
+                    "listener_path": str(path.parent / "other.sock"),
+                }
+                tampered = {
+                    **tampered_core,
+                    "document_digest": digest_of(tampered_core).value,
+                }
+                self.assertFalse(
+                    evaluate_results._gateway_listener_provisioning_pass(
+                        tampered,
+                        expected_path=str(path),
+                    )
+                )
+            finally:
+                listener.close()
+                path.unlink(missing_ok=True)
 
     def test_profile_parameters_are_closed_and_do_not_expose_provider_host(self):
         with tempfile.TemporaryDirectory() as directory:

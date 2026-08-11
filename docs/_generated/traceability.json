@@ -595,6 +595,23 @@
       "tests/test_iteration_003_g3b.py"
     ]
   },
+  "FINDING-003-025": {
+    "path": "docs/project/iterations/iteration-003/findings/FINDING-003-025.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
+      "validation/structure_world_model_iteration_003/g3b/gateway.sb",
+      "validation/structure_world_model_iteration_003/g3b/gateway_workload.py",
+      "validation/structure_world_model_iteration_003/g3b/os_probe_worker.py",
+      "validation/structure_world_model_iteration_003/g3b/run_g3b.py",
+      "validation/structure_world_model_iteration_003/g3b/evaluate_results.py"
+    ],
+    "tests": [
+      "tests/test_model_egress_gateway.py",
+      "tests/test_pinned_ark_https.py",
+      "tests/test_iteration_003_g3b.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

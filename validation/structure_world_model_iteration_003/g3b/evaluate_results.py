@@ -68,6 +68,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         / "gateway"
         / "connection-provisioning.json"
     )
+    preflight_listener_provisioning = _load(
+        evidence_root
+        / "preflight"
+        / "gateway"
+        / "gateway-listener-provisioning.json"
+    )
     mall = _load(MALL_ORACLE)
     identity = _load(IDENTITY_ORACLE)
     generation = _load(prepared_root / "evaluator" / "generation-report.json")
@@ -118,6 +124,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     comparison_by_key = {
         item["run_key"]: item for item in comparison_preflight["runs"]
     }
+    socket_stage_root = _validated_socket_stage_root(invocation, batch)
 
     run_evaluations: list[dict[str, object]] = []
     for run_key in sorted(planned):
@@ -155,6 +162,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             terminal=terminal,
             timing=timing,
             run_root=run_root,
+            expected_gateway_listener_path=(
+                str(socket_stage_root / index / "gateway.sock")
+                if socket_stage_root is not None
+                else None
+            ),
             mall=mall,
             identity=identity,
             generation=generation,
@@ -198,6 +210,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         bootstrap=bootstrap,
         preflight=preflight,
         preflight_provisioning=preflight_provisioning,
+        preflight_listener_provisioning=preflight_listener_provisioning,
     )
     baseline_population_pass = (
         direct_statuses.count("SUCCESS") == 15
@@ -260,6 +273,7 @@ def _evaluate_world_run(
     terminal: Mapping[str, object],
     timing: Mapping[str, object],
     run_root: Path,
+    expected_gateway_listener_path: str | None,
     mall: Mapping[str, object],
     identity: Mapping[str, object],
     generation: Mapping[str, object],
@@ -282,6 +296,13 @@ def _evaluate_world_run(
     gateway_summary = _load(
         _verified_reference(
             terminal.get("gateway_summary"), run_root, "Gateway summary"
+        )
+    )
+    gateway_listener_provisioning = _load(
+        _verified_reference(
+            terminal.get("gateway_listener_provisioning"),
+            run_root,
+            "Gateway listener provisioning",
         )
     )
     server_audits = _load_json_lines(
@@ -329,6 +350,16 @@ def _evaluate_world_run(
         or gateway_summary.get("credential_value_recorded") is not False
         or gateway_summary.get("provider_connection_capability")
         != "INHERITED_EXACT_CONNECTED_SOCKET"
+        or gateway_summary.get("gateway_listener_capability")
+        != "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+        or gateway_summary.get("new_socket_syscall_capability")
+        != "DENIED_BY_SEATBELT"
+        or terminal.get("provider_connection_handoff_count") != 1
+        or terminal.get("gateway_listener_handoff_count") != 1
+        or not _gateway_listener_provisioning_pass(
+            gateway_listener_provisioning,
+            expected_path=expected_gateway_listener_path,
+        )
         or gateway_summary.get("numeric_provider_address_scope")
         not in {"PUBLIC_UNICAST", "EXECUTOR_SYNTHETIC_EXTERNAL"}
         or len(server_audits) != 1
@@ -450,6 +481,7 @@ def _batch_boundary_pass(
     bootstrap: Mapping[str, object],
     preflight: Mapping[str, object],
     preflight_provisioning: Mapping[str, object],
+    preflight_listener_provisioning: Mapping[str, object],
 ) -> bool:
     batch_core = {
         key: item for key, item in batch.items() if key != "document_digest"
@@ -465,6 +497,7 @@ def _batch_boundary_pass(
     }
     scope = batch.get("selected_provider_address_scope")
     terminals = batch.get("terminals")
+    socket_stage_root = _validated_socket_stage_root(invocation, batch)
     return (
         batch.get("document_digest") == digest_of(batch_core).value
         and registry.get("document_digest") == digest_of(registry_core).value
@@ -482,6 +515,10 @@ def _batch_boundary_pass(
         and batch.get("gateway_new_dns_inet_inet6_capability") == "DENIED"
         and batch.get("provider_connection_capability")
         == "INHERITED_EXACT_CONNECTED_SOCKET"
+        and batch.get("gateway_listener_capability")
+        == "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+        and batch.get("gateway_new_socket_syscall_capability")
+        == "DENIED_BY_SEATBELT"
         and scope in {"PUBLIC_UNICAST", "EXECUTOR_SYNTHETIC_EXTERNAL"}
         and batch.get("provider_address_is_public")
         is (scope == "PUBLIC_UNICAST")
@@ -498,6 +535,13 @@ def _batch_boundary_pass(
         and invocation.get("run_count") == 60
         and invocation.get("environment") == "EVALUATION_ONLY"
         and invocation.get("production_activation") == "NOT_EXECUTED"
+        and invocation.get("provider", {}).get("connection_handoff")
+        == "INHERITED_EXACT_CONNECTED_SOCKET"
+        and invocation.get("provider", {}).get("gateway_listener_handoff")
+        == "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+        and invocation.get("provider", {}).get("gateway_child_socket_creation")
+        == "DENIED_BY_SEATBELT"
+        and socket_stage_root is not None
         and _provider_provisioning_pass(bootstrap)
         and bootstrap.get("worker_script_digest")
         == invocation.get("provider_socket_worker_digest")
@@ -509,9 +553,24 @@ def _batch_boundary_pass(
         == invocation.get("provider_socket_worker_digest")
         and preflight_provisioning.get("selected_address")
         == batch.get("selected_provider_address")
+        and _gateway_listener_provisioning_pass(
+            preflight_listener_provisioning,
+            expected_path=str(
+                socket_stage_root / "probe-2" / "gateway.sock"
+            ),
+        )
+        and preflight.get("roles", {}).get("gateway", {}).get(
+            "gateway_listener_provisioning"
+        )
+        == preflight_listener_provisioning
         and preflight.get("document_digest") == digest_of(preflight_core).value
         and batch.get("preflight_digest") == preflight.get("document_digest")
-        and _preflight_pass(preflight)
+        and _preflight_pass(
+            preflight,
+            expected_gateway_listener_path=str(
+                socket_stage_root / "probe-2" / "gateway.sock"
+            ),
+        )
         and all(
             preflight.get("roles", {}).get(role, {}).get("profile_digest")
             == invocation.get("profiles", {}).get(role)
@@ -557,7 +616,41 @@ def _provider_provisioning_pass(value: Mapping[str, object]) -> bool:
     )
 
 
-def _preflight_pass(value: Mapping[str, object]) -> bool:
+def _gateway_listener_provisioning_pass(
+    value: Mapping[str, object],
+    *,
+    expected_path: str | None = None,
+) -> bool:
+    core = {key: item for key, item in value.items() if key != "document_digest"}
+    listener_path = value.get("listener_path")
+    return (
+        value.get("schema")
+        == "swm.iter-003.g3b-gateway-listener-handoff@1"
+        and value.get("document_digest") == digest_of(core).value
+        and isinstance(listener_path, str)
+        and listener_path.startswith("/private/")
+        and listener_path.endswith("/gateway.sock")
+        and (expected_path is None or listener_path == expected_path)
+        and value.get("socket_family") == "AF_UNIX"
+        and value.get("socket_type") == "SOCK_STREAM"
+        and value.get("mode") == "0600"
+        and value.get("bound") is True
+        and value.get("listening") is True
+        and value.get("socket_creation_owner") == "TRUSTED_EVALUATOR"
+        and value.get("gateway_child_socket_creation")
+        == "DENIED_BY_SEATBELT"
+        and value.get("descriptor_inheritance_count") == 1
+        and value.get("credential_visible") is False
+        and value.get("product_request_payload_visible") is False
+        and value.get("production_activation") == "NOT_EXECUTED"
+    )
+
+
+def _preflight_pass(
+    value: Mapping[str, object],
+    *,
+    expected_gateway_listener_path: str,
+) -> bool:
     roles = value.get("roles")
     if (
         value.get("status") != "PASS"
@@ -566,7 +659,10 @@ def _preflight_pass(value: Mapping[str, object]) -> bool:
         or value.get("protected_stage_manifest_before")
         != value.get("protected_stage_manifest_after")
         or value.get("gateway_external_capability")
-        != "ONE_EVALUATOR_CONNECTED_EXACT_PEER_FD; NEW_DNS_INET_INET6_DENIED"
+        != (
+            "INHERITED_EXACT_PROVIDER_AND_AF_UNIX_LISTENER_FDS; "
+            "NEW_SOCKET_SYSCALL_DENIED"
+        )
         or not isinstance(roles, dict)
         or set(roles) != {"answer", "gateway", "projector"}
     ):
@@ -582,8 +678,11 @@ def _preflight_pass(value: Mapping[str, object]) -> bool:
             "credential_role_boundary",
         },
         "gateway": {
-            "allowed_exact_gateway_bind",
+            "inherited_provider_descriptor_is_already_connected",
+            "allowed_inherited_exact_gateway_listener_round_trip",
             "allowed_inherited_exact_provider_tls",
+            "denied_new_inet_socket_creation",
+            "denied_new_unix_socket_creation",
             "denied_new_provider_connect",
             "denied_other_unix_connect",
             "denied_local_inet_connect",
@@ -604,6 +703,15 @@ def _preflight_pass(value: Mapping[str, object]) -> bool:
     for role, expected in required.items():
         record = roles.get(role)
         if not isinstance(record, dict) or record.get("status") != "PASS":
+            return False
+        if role == "gateway" and (
+            record.get("gateway_listener_round_trip") is not True
+            or not isinstance(record.get("gateway_listener_provisioning"), dict)
+            or not _gateway_listener_provisioning_pass(
+                record["gateway_listener_provisioning"],
+                expected_path=expected_gateway_listener_path,
+            )
+        ):
             return False
         probe = record.get("probe")
         probes = probe.get("probes") if isinstance(probe, dict) else None
@@ -632,6 +740,22 @@ def _preflight_pass(value: Mapping[str, object]) -> bool:
         ):
             return False
     return True
+
+
+def _validated_socket_stage_root(
+    invocation: Mapping[str, object],
+    batch: Mapping[str, object],
+) -> Path | None:
+    value = invocation.get("socket_stage_root")
+    if (
+        not isinstance(value, str)
+        or not value.startswith("/private/")
+        or os.path.normpath(value) != value
+        or batch.get("socket_stage_root") != value
+        or batch.get("socket_stage_retained") is not True
+    ):
+        return None
+    return Path(value)
 
 
 def _oracle_findings(

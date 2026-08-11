@@ -36,5 +36,6 @@ iteration: ITER-003
 - [FINDING-003-022：macOS Seatbelt 不能把公网 TCP capability 限定到单一 remote IP](FINDING-003-022.md) — dispositioned / system-contract
 - [FINDING-003-023：executor 合成外联地址不能被误报为公网 IP](FINDING-003-023.md) — dispositioned / system-contract
 - [FINDING-003-024：正式证据路径超过了 Seatbelt profile 的固定祖先参数容量](FINDING-003-024.md) — dispositioned / local-implementation
+- [FINDING-003-025：Seatbelt 对继承 TCP 数据面仍要求 network-outbound capability](FINDING-003-025.md) — dispositioned / system-contract
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

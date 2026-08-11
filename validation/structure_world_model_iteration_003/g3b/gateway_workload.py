@@ -9,6 +9,7 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
+import socket
 import stat
 from typing import Mapping
 
@@ -60,6 +61,7 @@ _G3B_FREEZE_REF = "ITER-003-G3B-EXACT-INPUTS@1.0.0"
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--socket-path", required=True)
+    parser.add_argument("--gateway-listener-socket-fd", type=int, required=True)
     parser.add_argument("--numeric-provider-address", required=True)
     parser.add_argument("--connected-provider-socket-fd", type=int, required=True)
     parser.add_argument("--database", required=True)
@@ -171,6 +173,11 @@ def main(argv: list[str] | None = None) -> int:
         capability_qualification_digest=proof.digest,
     )
     database_path = _future_file(arguments.database)
+    prebound_listener = socket.socket(
+        socket.AF_UNIX,
+        socket.SOCK_STREAM,
+        fileno=arguments.gateway_listener_socket_fd,
+    )
     with SqliteDatabase(database_path) as database:
         gateway = ModelGateway(
             SqliteModelGatewayRepository(database),
@@ -181,6 +188,7 @@ def main(argv: list[str] | None = None) -> int:
             gateway=gateway,
             policy=policy,
             audit_writer=record_server,
+            prebound_listener=prebound_listener,
         ).serve(
             startup_timeout_seconds=arguments.startup_timeout_seconds,
             idle_timeout_seconds=arguments.idle_timeout_seconds,
@@ -213,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
             else None
         ),
         "provider_connection_capability": "INHERITED_EXACT_CONNECTED_SOCKET",
+        "gateway_listener_capability": "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER",
+        "new_socket_syscall_capability": "DENIED_BY_SEATBELT",
         "provider_call_count": request_count,
         "https_dispatch_count": len(transport_audits),
         "server_audit_count": len(server_audits),

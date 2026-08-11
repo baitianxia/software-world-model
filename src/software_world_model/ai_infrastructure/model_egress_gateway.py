@@ -14,6 +14,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 import socket
+import stat
 import struct
 from typing import Callable, Mapping, Protocol
 
@@ -409,11 +410,13 @@ class ModelEgressGatewayServer:
         gateway: ModelGatewayPort,
         policy: ModelEgressGatewayPolicy,
         audit_writer: Callable[[Mapping[str, object]], None] | None = None,
+        prebound_listener: socket.socket | None = None,
     ) -> None:
         self._socket_path = _canonical_socket_path(socket_path)
         self._gateway = gateway
         self._policy = policy
         self._audit_writer = audit_writer or (lambda _: None)
+        self._prebound_listener = prebound_listener
 
     def serve(
         self,
@@ -421,17 +424,10 @@ class ModelEgressGatewayServer:
         startup_timeout_seconds: float = 60.0,
         idle_timeout_seconds: float = 5.0,
     ) -> int:
-        if self._socket_path.exists() or self._socket_path.is_symlink():
-            raise DomainError(
-                ErrorCode.CONTROL_STATE_DENIED,
-                "Model Egress Gateway socket path already exists",
-            )
         self._socket_path.parent.resolve(strict=True)
         request_count = 0
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as listener:
-            listener.bind(str(self._socket_path))
-            self._socket_path.chmod(0o600)
-            listener.listen(1)
+        listener = self._take_or_create_listener()
+        with listener:
             listener.settimeout(startup_timeout_seconds)
             try:
                 while request_count < self._policy.max_provider_calls:
@@ -450,6 +446,57 @@ class ModelEgressGatewayServer:
                 except FileNotFoundError:
                     pass
         return request_count
+
+    def _take_or_create_listener(self) -> socket.socket:
+        if self._prebound_listener is None:
+            if self._socket_path.exists() or self._socket_path.is_symlink():
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "Model Egress Gateway socket path already exists",
+                )
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                listener.bind(str(self._socket_path))
+                self._socket_path.chmod(0o600)
+                listener.listen(1)
+            except BaseException:
+                listener.close()
+                try:
+                    self._socket_path.unlink()
+                except FileNotFoundError:
+                    pass
+                raise
+            return listener
+
+        listener = self._prebound_listener
+        self._prebound_listener = None
+        try:
+            path_status = self._socket_path.lstat()
+            bound_path = listener.getsockname()
+            if isinstance(bound_path, bytes):
+                bound_path = bound_path.decode("utf-8")
+            if (
+                self._socket_path.is_symlink()
+                or not stat.S_ISSOCK(path_status.st_mode)
+                or stat.S_IMODE(path_status.st_mode) != 0o600
+                or listener.family != socket.AF_UNIX
+                or (listener.type & socket.SOCK_STREAM) != socket.SOCK_STREAM
+                or bound_path != str(self._socket_path)
+            ):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "prebound Model Egress Gateway listener is not exact",
+                )
+        except DomainError:
+            listener.close()
+            raise
+        except (OSError, UnicodeError) as exc:
+            listener.close()
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "prebound Model Egress Gateway listener is not exact",
+            ) from exc
+        return listener
 
     def _handle(
         self, connection: socket.socket, ordinal: int
