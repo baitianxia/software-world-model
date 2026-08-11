@@ -37,5 +37,6 @@ iteration: ITER-003
 - [FINDING-003-023：executor 合成外联地址不能被误报为公网 IP](FINDING-003-023.md) — dispositioned / system-contract
 - [FINDING-003-024：正式证据路径超过了 Seatbelt profile 的固定祖先参数容量](FINDING-003-024.md) — dispositioned / local-implementation
 - [FINDING-003-025：Seatbelt 对继承 TCP 数据面仍要求 network-outbound capability](FINDING-003-025.md) — dispositioned / system-contract
+- [FINDING-003-026：Citation broker 的 staged cold start 依赖了未公开的聚合导出](FINDING-003-026.md) — dispositioned / local-implementation
 
 开发期间任何影响关系语义、身份、Coverage、Snapshot、View、问答模式或验收边界的后续发现仍必须在此登记并处置。

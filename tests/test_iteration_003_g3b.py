@@ -82,6 +82,27 @@ class Iteration003G3bTests(unittest.TestCase):
                 listener.close()
                 path.unlink(missing_ok=True)
 
+    def test_staged_citation_broker_cold_imports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            stage = root / "stage"
+            output = root / "output"
+            stage.mkdir()
+            output.mkdir()
+            packages = run_g3b._stage_packages(stage)
+            completed = run_g3b._run_evaluator_entrypoint(
+                package_root=packages["broker"],
+                entrypoint=(
+                    packages["broker"] / ".g3b" / "materialize_citations.py"
+                ),
+                argv=("--help",),
+                output_root=output,
+                label="broker-import",
+                timeout_seconds=10,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+
     def test_profile_parameters_are_closed_and_do_not_expose_provider_host(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve().joinpath(

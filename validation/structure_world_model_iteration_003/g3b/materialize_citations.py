@@ -12,8 +12,8 @@ from software_world_model.application_services.citation_projection import (
     CitationObservation,
 )
 from software_world_model.cross_cutting import canonical_json_bytes
-from software_world_model.infrastructure import (
-    SqliteDatabase,
+from software_world_model.infrastructure.sqlite_database import SqliteDatabase
+from software_world_model.infrastructure.sqlite_structure_knowledge_repository import (
     SqliteStructureKnowledgeRepository,
 )
 from software_world_model.infrastructure.file_citation_observation_store import (

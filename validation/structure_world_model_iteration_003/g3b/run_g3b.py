@@ -521,10 +521,12 @@ def _run_one(
     if failure_stage is None and answer_summary.is_file() and gateway_summary.is_file():
         answer_value = _load_json(answer_summary)
         gateway_value = _load_json(gateway_summary)
+        postcondition_phase = "ROLE_POSTCONDITION"
         try:
             _verify_role_success(answer_report, "answer")
             _verify_role_success(gateway_report, "gateway")
             _verify_answer_gateway(answer_value, gateway_value, payload, run_key)
+            postcondition_phase = "CITATION_PROJECTION"
             projections = _project_all_citations(
                 run_root=run_root,
                 answer_summary=answer_value,
@@ -537,11 +539,15 @@ def _run_one(
                 timeout_seconds=timeout_seconds,
             )
         except Exception as exc:
-            failure_stage = "POSTCONDITION"
+            failure_stage = postcondition_phase
             _write_new(
                 evaluator_root / "postcondition-failure.json",
                 canonical_json_bytes(
-                    {"type": type(exc).__name__, "errno": getattr(exc, "errno", None)}
+                    {
+                        "phase": postcondition_phase,
+                        "type": type(exc).__name__,
+                        "errno": getattr(exc, "errno", None),
+                    }
                 ),
             )
     status = "SUCCESS" if failure_stage is None else "FAILURE"
