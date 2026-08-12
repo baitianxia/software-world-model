@@ -678,6 +678,97 @@
       "tests/test_iteration_004_interactive_browser.py"
     ]
   },
+  "FINDING-005-001": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-001.md",
+    "code": [
+      "src/software_world_model/application_services/read_set_catalog.py"
+    ],
+    "tests": [
+      "tests/test_maven_workspace.py"
+    ]
+  },
+  "FINDING-005-003": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-003.md",
+    "code": [
+      "src/software_world_model/interface/world_model_product.py"
+    ],
+    "tests": [
+      "tests/test_world_model_product.py"
+    ]
+  },
+  "FINDING-005-004": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-004.md",
+    "code": [
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
+    ],
+    "tests": [
+      "tests/test_world_model_gateway_authorization.py"
+    ]
+  },
+  "FINDING-005-005": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-005.md",
+    "code": [
+      "src/software_world_model/interface/world_model_runtime.py"
+    ],
+    "tests": [
+      "tests/test_world_model_http.py"
+    ]
+  },
+  "FINDING-005-006": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-006.md",
+    "code": [
+      "src/software_world_model/interface/world_model_runtime.py",
+      "validation/structure_world_model_iteration_005/slice2_freeze.py"
+    ],
+    "tests": [
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_product.py"
+    ]
+  },
+  "FINDING-005-007": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-007.md",
+    "code": [
+      "validation/structure_world_model_iteration_005/slice2_freeze.py",
+      "validation/structure_world_model_iteration_005/slice2_product_probe.py"
+    ],
+    "tests": [
+      "tests/test_world_model_product.py"
+    ]
+  },
+  "FINDING-005-008": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-008.md",
+    "code": [
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py",
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_freeze.py"
+    ],
+    "tests": [
+      "tests/test_iteration_005_slice2_evaluator.py",
+      "tests/test_iteration_005_slice2_comparison.py"
+    ]
+  },
+  "FINDING-005-009": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-009.md",
+    "code": [
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_world_model_browser.py"
+    ]
+  },
+  "FINDING-005-010": {
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-010.md",
+    "code": [
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_freeze.py",
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_iteration_005_slice2_comparison.py",
+      "tests/test_iteration_005_slice2_evaluator.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -1102,6 +1193,160 @@
       "tests/test_iteration_004_interactive_browser.py"
     ]
   },
+  "ITER-005-INDEX": {
+    "path": "docs/project/iterations/iteration-005/README.md",
+    "code": [
+      "src/software_world_model/application_services/maven_workspace.py",
+      "src/software_world_model/application_services/read_set_catalog.py",
+      "src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py",
+      "src/software_world_model/infrastructure/file_read_set_catalog.py",
+      "src/software_world_model/interface/read_set_catalog_cli.py",
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_maven_workspace.py",
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_product.py",
+      "tests/test_iteration_005_slice2_comparison.py",
+      "tests/test_iteration_005_slice2_evaluator.py"
+    ]
+  },
+  "ITER-005-RESULT-G0": {
+    "path": "docs/project/iterations/iteration-005/results/g0-generalization.md",
+    "code": [
+      "validation/structure_world_model_iteration_005/g0.py",
+      "validation/structure_world_model_iteration_005/g0_inputs.json"
+    ],
+    "tests": [
+      "tests/test_iteration_005_g0.py"
+    ]
+  },
+  "ITER-005-RESULT-SLICE-001": {
+    "path": "docs/project/iterations/iteration-005/results/slice-001-workspace-catalog.md",
+    "code": [
+      "src/software_world_model/application_services/maven_workspace.py",
+      "src/software_world_model/application_services/read_set_catalog.py",
+      "src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py",
+      "src/software_world_model/infrastructure/file_read_set_catalog.py",
+      "src/software_world_model/interface/runtime.py",
+      "src/software_world_model/interface/cli.py",
+      "src/software_world_model/interface/read_set_catalog_cli.py",
+      "src/software_world_model/interface/presenters.py",
+      "validation/structure_world_model_iteration_005/slice1.py",
+      "validation/structure_world_model_iteration_005/coverage_copy.py"
+    ],
+    "tests": [
+      "tests/test_maven_workspace.py",
+      "tests/test_iteration_005_g0.py",
+      "tests"
+    ]
+  },
+  "ITER-005-RESULT-SLICE-002-CANDIDATE-FREEZE": {
+    "path": "docs/project/iterations/iteration-005/results/slice-002-candidate-freeze.md",
+    "code": [
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_browser.py",
+      "src/software_world_model/interface/world_model_browser_ui.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py",
+      "validation/structure_world_model_iteration_005/slice2_freeze.py",
+      "validation/structure_world_model_iteration_005/slice2_product_probe.py",
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_browser.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py",
+      "tests/test_world_model_product.py",
+      "tests/test_iteration_005_slice2_comparison.py",
+      "tests/test_iteration_005_slice2_evaluator.py",
+      "tests"
+    ]
+  },
+  "ITER-005-RESULT-SLICE-002-RUN-006": {
+    "path": "docs/project/iterations/iteration-005/results/slice-002-run-006-live.md",
+    "code": [
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_browser_ui.py",
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_world_model_browser.py",
+      "tests/test_iteration_005_slice2_comparison.py",
+      "tests/test_iteration_005_slice2_evaluator.py"
+    ]
+  },
+  "ITER-005-RESULT-SLICE-002-RUN-007": {
+    "path": "docs/project/iterations/iteration-005/results/slice-002-run-007-live.md",
+    "code": [
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_browser_ui.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_browser.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py",
+      "tests/test_world_model_product.py",
+      "tests/test_iteration_005_slice2_comparison.py",
+      "tests/test_iteration_005_slice2_evaluator.py",
+      "tests"
+    ]
+  },
+  "ITER-005-SLICE-001": {
+    "path": "docs/project/iterations/iteration-005/development-design/SLICE-001-local-maven-workspace.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-005-SLICE-002": {
+    "path": "docs/project/iterations/iteration-005/development-design/SLICE-002-dynamic-world-model-browser.md",
+    "code": [
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-005-VERIFICATION": {
+    "path": "docs/project/iterations/iteration-005/verification-matrix.md",
+    "code": [
+      "validation/structure_world_model_iteration_005/g0.py",
+      "validation/structure_world_model_iteration_005/slice1.py",
+      "validation/structure_world_model_iteration_005/coverage_copy.py",
+      "validation/structure_world_model_iteration_005/slice2_freeze.py",
+      "validation/structure_world_model_iteration_005/slice2_product_probe.py",
+      "validation/structure_world_model_iteration_005/slice2_comparison.py",
+      "validation/structure_world_model_iteration_005/slice2_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_iteration_005_g0.py",
+      "tests/test_maven_workspace.py",
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py",
+      "tests/test_world_model_product.py",
+      "tests/test_iteration_005_slice2_comparison.py",
+      "tests/test_iteration_005_slice2_evaluator.py",
+      "tests"
+    ]
+  },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [
@@ -1178,6 +1423,8 @@
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface/http_api.py",
       "src/software_world_model/interface/world_model_browser.py",
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_runtime.py",
       "src/software_world_model/interface/structure_view_cli.py",
       "src/software_world_model/interface/citation_projector_cli.py",
       "validation/structure_world_model_iteration_003/isolation",
@@ -1187,6 +1434,9 @@
     "tests": [
       "tests/test_browser_chat_interface.py",
       "tests/test_world_model_browser.py",
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py",
       "tests/test_iteration_004_interactive_browser.py",
       "tests/test_interface_runtime.py",
       "tests/test_structure_read_bundle.py",
@@ -1278,12 +1528,16 @@
     "code": [
       "src/software_world_model/ai_infrastructure/model_gateway.py",
       "src/software_world_model/ai_infrastructure/openai_responses_adapter.py",
-      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py"
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
     ],
     "tests": [
       "tests/test_model_gateway.py",
       "tests/test_openai_responses_adapter.py",
-      "tests/test_volcengine_ark_chat_adapter.py"
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_world_model_gateway_authorization.py",
+      "tests/test_world_model_evaluation_grant.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-AGENTIC-TASK": {
@@ -1352,12 +1606,16 @@
       "src/software_world_model/application_services/knowledge_use.py",
       "src/software_world_model/application_services/structure_read_session.py",
       "src/software_world_model/application_services/structure_read_bundle.py",
+      "src/software_world_model/application_services/read_set_catalog.py",
       "src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py",
+      "src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py",
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/infrastructure/file_read_set_catalog.py",
       "src/software_world_model/interface/runtime.py",
       "src/software_world_model/interface/cli.py",
+      "src/software_world_model/interface/read_set_catalog_cli.py",
       "src/software_world_model/interface/presenters.py"
     ],
     "tests": [
@@ -1365,6 +1623,7 @@
       "tests/test_natural_task.py",
       "tests/test_structure_read_session.py",
       "tests/test_structure_read_bundle.py",
+      "tests/test_maven_workspace.py",
       "tests/test_iteration_003_g1_integration.py",
       "tests/test_iteration_003_g2_integration.py"
     ]
@@ -1373,10 +1632,16 @@
     "path": "docs/system/contracts/application/management.md",
     "code": [
       "src/software_world_model/application_services/management.py",
-      "src/software_world_model/infrastructure/sqlite_management_repository.py"
+      "src/software_world_model/application_services/maven_workspace.py",
+      "src/software_world_model/infrastructure/sqlite_management_repository.py",
+      "src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py",
+      "src/software_world_model/interface/runtime.py",
+      "src/software_world_model/interface/cli.py",
+      "src/software_world_model/interface/presenters.py"
     ],
     "tests": [
-      "tests/test_management.py"
+      "tests/test_management.py",
+      "tests/test_maven_workspace.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL": {
@@ -1404,12 +1669,14 @@
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface/structure_view_cli.py",
+      "src/software_world_model/interface/read_set_catalog_cli.py",
       "src/software_world_model/interface/citation_projector_cli.py"
     ],
     "tests": [
       "tests/test_knowledge_use.py",
       "tests/test_structure_view.py",
       "tests/test_structure_view_cli.py",
+      "tests/test_maven_workspace.py",
       "tests/test_citation_projector.py",
       "tests/test_iteration_003_g2_integration.py",
       "tests/test_iteration_003_g2_isolation.py",
@@ -1541,13 +1808,16 @@
     "path": "docs/system/contracts/knowledge/persistence.md",
     "code": [
       "src/software_world_model/application_services/structure_read_bundle.py",
+      "src/software_world_model/application_services/read_set_catalog.py",
       "src/software_world_model/infrastructure/sqlite_formal_knowledge_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_knowledge_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py",
       "src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py",
+      "src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py",
       "src/software_world_model/infrastructure/sqlite_legacy_formal_reader.py",
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/infrastructure/file_read_set_catalog.py",
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/infrastructure/sqlite_database.py"
     ],
@@ -1557,6 +1827,7 @@
       "tests/test_structure_publication.py",
       "tests/test_structure_read_session.py",
       "tests/test_structure_read_bundle.py",
+      "tests/test_maven_workspace.py",
       "tests/test_citation_projector.py",
       "tests/test_maven_structure_update_authority.py",
       "tests/test_legacy_formal_reader.py",
@@ -1740,12 +2011,18 @@
       "src/software_world_model/interface/browser_ui.py",
       "src/software_world_model/interface/world_model_browser.py",
       "src/software_world_model/interface/world_model_browser_ui.py",
-      "validation/structure_world_model_iteration_004/interactive_browser.py"
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_product.py"
     ],
     "tests": [
       "tests/test_browser_chat_interface.py",
       "tests/test_world_model_browser.py",
-      "tests/test_iteration_004_interactive_browser.py"
+      "tests/test_iteration_004_interactive_browser.py",
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py",
+      "tests/test_world_model_product.py"
     ]
   },
   "SYS-PRODUCT-CAPABILITIES": {
@@ -1795,7 +2072,10 @@
       "tests/test_iteration_003_g2_isolation.py",
       "tests/test_iteration_003_g3b.py",
       "tests/test_model_egress_gateway.py",
-      "tests/test_pinned_ark_https.py"
+      "tests/test_pinned_ark_https.py",
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py"
     ]
   }
 }

@@ -55,17 +55,17 @@ _DATASET_PRESENTATION = {
     "ORDERED_A_B": {
         "label": "Mall A → B",
         "description": "对比两个已密封的 mall Maven reactor 快照",
-        "coverage": "模块、依赖、插件、属性、父子结构与 A/B 差异",
+        "coverage": "reactor 子模块成员关系、POM-local 直接内部依赖与 exact A/B diff",
     },
     "EXACT_B": {
         "label": "Mall Snapshot B",
         "description": "只读取 accepted B 快照的精确结构",
-        "coverage": "B 的模块、依赖、插件、属性与父子结构",
+        "coverage": "B 的 reactor 子模块成员关系与 POM-local 直接内部依赖",
     },
     "EXACT_FIXTURE_VALID": {
         "label": "Valid Maven Fixture",
         "description": "小型有效 Maven fixture 的精确结构",
-        "coverage": "fixture 的 reactor 模块和 Maven 声明结构",
+        "coverage": "fixture 的 reactor 子模块成员关系与 POM-local 直接内部依赖",
     },
 }
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")

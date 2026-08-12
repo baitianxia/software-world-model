@@ -10,6 +10,8 @@ swm = "software_world_model.interface.cli:main"
 swm-http = "software_world_model.interface.http_api:main"
 swm-browser = "software_world_model.interface.http_api:main"
 swm-provider = "software_world_model.interface.provider_cli:main"
+swm-read-set-catalog = "software_world_model.interface.read_set_catalog_cli:main"
+swm-world-model = "software_world_model.interface.world_model_http:main"
 swm-jwt-evaluation = "validation.jwt_iteration_001.cli:main"
 
 [tool.unittest]

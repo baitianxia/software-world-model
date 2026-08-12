@@ -137,6 +137,25 @@ class WorldModelBrowserTests(unittest.TestCase):
         self.assertNotIn("/v1/browser/chat", javascript)
         self.assertNotIn("repository_path", javascript)
 
+    def test_long_dynamic_read_set_identities_cannot_expand_grid_tracks(
+        self,
+    ) -> None:
+        status, _, raw = self._http(
+            self.application, "GET", "/assets/world-model.css"
+        )
+        stylesheet = raw.decode("utf-8")
+
+        self.assertEqual(status, "200 OK")
+        self.assertIn(
+            ".dataset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}",
+            stylesheet,
+        )
+        self.assertIn(".dataset{min-width:0}", stylesheet)
+        self.assertIn(
+            ".dataset strong,.dataset small,.dataset span{overflow-wrap:anywhere}",
+            stylesheet,
+        )
+
     def test_health_and_datasets_keep_mode_and_allowlist_visible(self) -> None:
         health_status, _, health_raw = self._http(
             self.application, "GET", "/health"

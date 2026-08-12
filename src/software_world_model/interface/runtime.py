@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
+from pathlib import Path
 from typing import Mapping
 
 from software_world_model.application_services import (
@@ -21,6 +23,7 @@ from software_world_model.application_services import (
     KnowledgeUpdateService,
     KnowledgeUseService,
     ManagementApplicationService,
+    ManagementAttemptState,
     ManagementExecution,
     NaturalLanguageTaskRequest,
     NaturalLanguageTaskService,
@@ -28,6 +31,20 @@ from software_world_model.application_services import (
     RequirementFidelity,
     SufficiencyAssessment,
     TaskBoundary,
+)
+from software_world_model.application_services.maven_workspace import (
+    MavenWorkspace,
+    MavenWorkspaceOperations,
+    MavenWorkspaceService,
+    MavenWorkspaceUpdateResult,
+    MavenWorkspaceVersion,
+    WorkspaceConfigurationAuthority,
+    WorkspaceSnapshotMetrics,
+    WorkspaceSnapshotPublication,
+)
+from software_world_model.application_services.read_set_catalog import (
+    ReadSetCatalogService,
+    ReadSetRegistration,
 )
 from software_world_model.application_services.maven_structure_update import (
     MavenStructureIndependentVerifier,
@@ -80,6 +97,13 @@ from software_world_model.infrastructure.sqlite_structure_read_session_repositor
 )
 from software_world_model.infrastructure.file_structure_read_bundle import (
     FileStructureReadBundleStore,
+)
+from software_world_model.infrastructure.file_read_set_catalog import (
+    FileReadSetCatalogStore,
+    RootedStructureReadBundleStore,
+)
+from software_world_model.infrastructure.sqlite_maven_workspace_repository import (
+    SqliteMavenWorkspaceRepository,
 )
 from software_world_model.infrastructure.sqlite_structure_read_bundle_repository import (
     SqliteStructureReadBundleRepository,
@@ -146,6 +170,10 @@ class ApplicationRuntime:
         sufficiency_evaluator: NeedSufficiencyEvaluator | None = None,
         natural_task_service: NaturalLanguageTaskService | None = None,
         evidence_answer_service: EvidenceAnswerService | None = None,
+        bundle_root: str | Path | None = None,
+        catalog_root: str | Path | None = None,
+        producer_commit: str | None = None,
+        producer_tree: str | None = None,
     ) -> None:
         self.database = database
         self.telemetry = telemetry or SqliteTelemetryRepository(database)
@@ -160,8 +188,9 @@ class ApplicationRuntime:
             self.scopes,
             self.sources,
         )
+        self.source_operation_repository = SqliteSourceOperationRepository(database)
         self.source_operations = SourceOperationService(
-            SqliteSourceOperationRepository(database), self.sources, telemetry=self.telemetry
+            self.source_operation_repository, self.sources, telemetry=self.telemetry
         )
         self.artifact_use = ArtifactUseAuthorityService(
             SqliteArtifactUseAuthorityRepository(database),
@@ -218,7 +247,11 @@ class ApplicationRuntime:
             self.scopes,
             self.structure_context_comparisons,
         )
-        self.structure_read_bundle_files = FileStructureReadBundleStore()
+        self.structure_read_bundle_files = (
+            RootedStructureReadBundleStore(bundle_root)
+            if bundle_root is not None
+            else FileStructureReadBundleStore()
+        )
         self.structure_read_bundles = StructureReadBundleService(
             SqliteStructureReadBundleRepository(database),
             self.structure_read_bundle_files,
@@ -261,6 +294,50 @@ class ApplicationRuntime:
             self.knowledge,
             evaluator=sufficiency_evaluator,
         )
+        self.maven_workspace_repository: SqliteMavenWorkspaceRepository | None = None
+        self.read_set_catalog: ReadSetCatalogService | None = None
+        self.maven_workspaces: MavenWorkspaceService | None = None
+        workspace_options = (
+            bundle_root,
+            catalog_root,
+            producer_commit,
+            producer_tree,
+        )
+        if any(item is not None for item in workspace_options):
+            if any(item is None for item in workspace_options):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Workspace runtime requires bundle root, Catalog root, producer commit, and producer tree together",
+                    {"reason_code": "MAVEN_WORKSPACE_RUNTIME_CONFIGURATION_INCOMPLETE"},
+                )
+            assert bundle_root is not None
+            assert catalog_root is not None
+            assert producer_commit is not None
+            assert producer_tree is not None
+            if Path(bundle_root).resolve() == Path(catalog_root).resolve():
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Bundle root and Catalog root must be distinct",
+                    {"reason_code": "MAVEN_WORKSPACE_ROOTS_NOT_DISTINCT"},
+                )
+            repository = SqliteMavenWorkspaceRepository(database)
+            catalog_store = FileReadSetCatalogStore(
+                catalog_root,
+                self.structure_read_bundle_files,
+            )
+            catalog = ReadSetCatalogService(
+                repository,
+                catalog_store,
+                producer_commit=producer_commit,
+                producer_tree=producer_tree,
+            )
+            self.maven_workspace_repository = repository
+            self.read_set_catalog = catalog
+            self.maven_workspaces = MavenWorkspaceService(
+                repository,
+                _RuntimeMavenWorkspaceOperations(self),
+                catalog,
+            )
 
     @property
     def natural_task_planning_configured(self) -> bool:
@@ -285,6 +362,171 @@ class ApplicationRuntime:
             self._evidence_answer_service is not None
             and self._evidence_answer_service.is_currently_active()
         )
+
+    @property
+    def maven_workspace_management_configured(self) -> bool:
+        return self.maven_workspaces is not None and self.read_set_catalog is not None
+
+    def register_maven_workspace(
+        self,
+        *,
+        idempotency_key: IdempotencyKey,
+        source_target: str,
+        display_name: str,
+        canonical_system_key: str,
+        root_pom: str,
+        actor: str,
+        correlation_ref: CorrelationRef,
+    ) -> MavenWorkspace:
+        """Configure owner authorities, then register one durable Workspace."""
+
+        service = self._require_maven_workspaces()
+        for value, label in (
+            (source_target, "Workspace source target"),
+            (display_name, "Workspace display name"),
+            (canonical_system_key, "Workspace canonical system key"),
+            (root_pom, "Workspace root POM"),
+        ):
+            if (
+                not isinstance(value, str)
+                or not value
+                or value != value.strip()
+                or len(value.encode("utf-8")) > 512
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    f"{label} is invalid",
+                    {"reason_code": "MAVEN_WORKSPACE_REGISTRATION_INPUT_INVALID"},
+                )
+        repository_path = Path(source_target)
+        if (
+            not repository_path.is_absolute()
+            or str(repository_path) != source_target
+            or os.path.normpath(source_target) != source_target
+            or repository_path == Path(repository_path.anchor)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Workspace source target must be an absolute normalized path",
+                {"reason_code": "MAVEN_WORKSPACE_REPOSITORY_INVALID"},
+            )
+        if (
+            not root_pom
+            or root_pom.startswith("/")
+            or root_pom.endswith("/")
+            or "\\" in root_pom
+            or any(part in {"", ".", ".."} for part in root_pom.split("/"))
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Workspace root POM must be a normalized relative POSIX path",
+                {"reason_code": "MAVEN_WORKSPACE_PATH_INVALID"},
+            )
+        execution = self.configure_local_git_project(
+            idempotency_key=IdempotencyKey(
+                f"{idempotency_key.value}:configure-system-source"
+            ),
+            source_target=source_target,
+            selected_paths=".",
+            display_name=display_name,
+            canonical_system_key=canonical_system_key,
+            actor=actor,
+            correlation_ref=correlation_ref,
+        )
+        if execution.attempt.state is not ManagementAttemptState.SUCCEEDED:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Workspace Source configuration did not complete successfully",
+                {
+                    "management_attempt_id": execution.attempt.attempt_id.value,
+                    "management_state": execution.attempt.state.value,
+                },
+            )
+        outputs = {step.name: dict(step.output) for step in execution.result.steps}
+        try:
+            scope = outputs["CREATE_SCOPE"]
+            source = outputs["REGISTER_SOURCE"]
+            binding = outputs["BIND_SOURCE"]
+            authority = WorkspaceConfigurationAuthority(
+                scope_id=StableId(scope["scope_id"]),
+                scope_revision=Revision(int(scope["scope_revision"])),
+                source_id=StableId(source["source_id"]),
+                source_revision=Revision(int(source["source_revision"])),
+                binding_id=StableId(binding["binding_id"]),
+                binding_revision=Revision(int(binding["binding_revision"])),
+                management_attempt_id=execution.attempt.attempt_id,
+                management_result_digest=execution.result.result_digest,
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Workspace Source configuration omitted an owner reference",
+            ) from error
+        return service.register(
+            idempotency_key=idempotency_key,
+            canonical_system_key=canonical_system_key,
+            display_name=display_name,
+            repository_locator=source_target,
+            root_pom=root_pom,
+            authority=authority,
+        )
+
+    def update_maven_workspace(
+        self,
+        *,
+        workspace_id: StableId,
+        repository_revision: str,
+        idempotency_key: IdempotencyKey,
+        correlation_ref: CorrelationRef,
+    ) -> MavenWorkspaceUpdateResult:
+        return self._require_maven_workspaces().update(
+            workspace_id=workspace_id,
+            repository_revision=repository_revision,
+            idempotency_key=idempotency_key,
+            correlation_ref=correlation_ref,
+        )
+
+    def resume_maven_workspace(
+        self,
+        *,
+        attempt_id: StableId,
+        correlation_ref: CorrelationRef,
+    ) -> MavenWorkspaceUpdateResult:
+        return self._require_maven_workspaces().resume(
+            attempt_id=attempt_id,
+            correlation_ref=correlation_ref,
+        )
+
+    def list_maven_workspaces(self) -> tuple[MavenWorkspace, ...]:
+        return self._require_maven_workspaces().list_workspaces()
+
+    def list_maven_workspace_versions(
+        self, workspace_id: StableId
+    ) -> tuple[MavenWorkspaceVersion, ...]:
+        return self._require_maven_workspaces().list_versions(workspace_id)
+
+    def get_maven_workspace_attempt(self, attempt_id: StableId) -> object:
+        return self._require_maven_workspaces().get_attempt(attempt_id)
+
+    def list_read_sets(
+        self, workspace_id: StableId | None = None
+    ) -> tuple[ReadSetRegistration, ...]:
+        if self.read_set_catalog is None:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Read Set Catalog runtime is not configured",
+                {"reason_code": "MAVEN_WORKSPACE_RUNTIME_NOT_CONFIGURED"},
+            )
+        return self.read_set_catalog.list(workspace_id)
+
+    def _require_maven_workspaces(self) -> MavenWorkspaceService:
+        if self.maven_workspaces is None:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Maven Workspace management runtime is not configured",
+                {"reason_code": "MAVEN_WORKSPACE_RUNTIME_NOT_CONFIGURED"},
+            )
+        return self.maven_workspaces
 
     def prepare_evidence_answer(
         self, request: EvidenceAnswerRequest
@@ -914,6 +1156,7 @@ class ApplicationRuntime:
         )
         return assessment
 
+
     def query_task(
         self,
         *,
@@ -997,6 +1240,112 @@ class ApplicationRuntime:
             classification=classification,
         )
         return assessment
+
+
+class _RuntimeMavenWorkspaceOperations(MavenWorkspaceOperations):
+    """Narrow adapter from Workspace orchestration to existing owner services."""
+
+    def __init__(self, runtime: ApplicationRuntime) -> None:
+        self._runtime = runtime
+
+    def publish_snapshot(
+        self,
+        *,
+        workspace: MavenWorkspace,
+        repository_revision: str,
+        expected_current_snapshot_id: StableId | None,
+        idempotency_key: IdempotencyKey,
+        correlation_ref: CorrelationRef,
+    ) -> WorkspaceSnapshotPublication:
+        result = self._runtime.build_maven_structure(
+            idempotency_key=idempotency_key,
+            scope_id=workspace.scope_id,
+            scope_revision=workspace.scope_revision,
+            source_id=workspace.source_id,
+            source_revision=workspace.source_revision,
+            binding_id=workspace.binding_id,
+            binding_revision=workspace.binding_revision,
+            repository_revision=repository_revision,
+            logical_reactor_root=workspace.root_pom,
+            objective_description=(
+                "FULL_REBUILD exact Maven reactor Structure for Workspace "
+                f"{workspace.workspace_id.value} at {repository_revision}"
+            ),
+            expected_current_snapshot_id=expected_current_snapshot_id,
+            classification="INTERNAL",
+            actor_ref="application-services/maven-workspace",
+            correlation_ref=correlation_ref,
+            max_poms=256,
+            max_calls=512,
+            tree_page_size=500,
+            max_bytes_per_call=1_000_000,
+        )
+        snapshot = result.update.publication_receipt.snapshot
+        source_results = tuple(
+            self._runtime.source_operation_repository.get(operation_id)
+            for operation_id in result.update.source_operation_ids
+        )
+        source_bytes = sum(
+            item.observation.byte_count
+            for item in source_results
+            if item.observation is not None
+        )
+        elapsed = result.attempt.revised_at - result.attempt.created_at
+        metrics = WorkspaceSnapshotMetrics(
+            source_call_count=len(source_results),
+            source_byte_count=source_bytes,
+            elapsed_milliseconds=max(0, int(elapsed.total_seconds() * 1000)),
+        )
+        metrics.require_valid()
+        return WorkspaceSnapshotPublication(
+            snapshot_id=snapshot.snapshot_id,
+            snapshot_manifest_digest=snapshot.manifest_digest,
+            owner_result=result,
+            metrics=metrics,
+        )
+
+    def open_read_session(
+        self,
+        *,
+        workspace: MavenWorkspace,
+        snapshot_ids: tuple[StableId, ...],
+        task_boundary: TaskBoundary,
+        idempotency_key: IdempotencyKey,
+    ) -> StructureReadSession:
+        return self._runtime.open_ordered_structure_read_session(
+            scope_id=workspace.scope_id,
+            scope_revision=workspace.scope_revision,
+            task_boundary=task_boundary,
+            caller_ref="application-services/maven-workspace",
+            snapshot_ids=snapshot_ids,
+            idempotency_key=idempotency_key,
+        )
+
+    def build_snapshot_bundle(
+        self,
+        *,
+        snapshot_id: StableId,
+        idempotency_key: IdempotencyKey,
+        destination: str,
+    ) -> StructureReadBundleReceipt:
+        return self._runtime.build_structure_snapshot_read_bundle(
+            snapshot_id=snapshot_id,
+            idempotency_key=idempotency_key,
+            destination=destination,
+        )
+
+    def build_ordered_bundle(
+        self,
+        *,
+        session_id: StableId,
+        idempotency_key: IdempotencyKey,
+        destination: str,
+    ) -> StructureReadBundleReceipt:
+        return self._runtime.build_structure_ordered_read_bundle(
+            session_id=session_id,
+            idempotency_key=idempotency_key,
+            destination=destination,
+        )
 
 
     EvidenceAnswerRequest,

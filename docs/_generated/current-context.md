@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `none`
-- Active slice: `none`
-- Worktree status: `iteration-004-interactive-world-model-browser-completed`
-- Strategy relation: `accepted-iteration-003-world-model-has-evaluation-only-interactive-loopback-entry`
-- Live model path: `local-world-model-evaluation-only-interactive-available-not-activated`
+- Active iteration: `ITER-005-INDEX`
+- Active slice: `ITER-005-SLICE-002`
+- Worktree status: `iteration-005-slice-002-run-007-live-pass-awaiting-user-acceptance`
+- Strategy relation: `accepted-iteration-004-fixed-read-sets-to-user-selected-maven-workspace`
+- Live model path: `run-006-fail-preserved-run-007-evaluation-pass-production-activation-not-executed`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

@@ -45,7 +45,12 @@ from .agentic_runtime import activate_browser_experience
 from .presenters import (
     knowledge_update_payload as _update_payload,
     management_execution_payload as _execution_payload,
+    maven_workspace_attempt_payload as _maven_workspace_attempt_payload,
+    maven_workspace_payload as _maven_workspace_payload,
     maven_structure_update_payload as _maven_structure_update_payload,
+    maven_workspace_update_payload as _maven_workspace_update_payload,
+    maven_workspace_version_payload as _maven_workspace_version_payload,
+    read_set_registration_payload as _read_set_registration_payload,
     structure_read_session_payload as _structure_read_session_payload,
     structure_read_bundle_availability_payload as _structure_read_bundle_availability_payload,
     structure_read_bundle_receipt_payload as _structure_read_bundle_receipt_payload,
@@ -59,6 +64,22 @@ from .presenters import (
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="swm", description="Software World Model management CLI")
     parser.add_argument("--database", required=True, help="SQLite database file")
+    parser.add_argument(
+        "--bundle-root",
+        help="root for Workspace no-payload Bundle files (Workspace commands)",
+    )
+    parser.add_argument(
+        "--catalog-root",
+        help="root for sealed Read Set Catalog files (Workspace commands)",
+    )
+    parser.add_argument(
+        "--producer-commit",
+        help="exact full Git commit of the Catalog-producing product code",
+    )
+    parser.add_argument(
+        "--producer-tree",
+        help="exact full Git tree of the Catalog-producing product code",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
 
     configure = commands.add_parser(
@@ -201,6 +222,57 @@ def build_parser() -> argparse.ArgumentParser:
     )
     bundle_availability.add_argument("--snapshot-id", required=True)
 
+    register_workspace = commands.add_parser(
+        "register-maven-workspace",
+        help="configure owner authorities and register one local Maven Workspace",
+    )
+    register_workspace.add_argument("--idempotency-key", required=True)
+    register_workspace.add_argument("--source-target", required=True)
+    register_workspace.add_argument("--display-name", required=True)
+    register_workspace.add_argument("--canonical-system-key", required=True)
+    register_workspace.add_argument("--root-pom", default="pom.xml")
+    register_workspace.add_argument("--actor", required=True)
+    register_workspace.add_argument("--correlation-ref", required=True)
+
+    update_workspace = commands.add_parser(
+        "update-maven-workspace",
+        help="FULL_REBUILD one Workspace at an exact full Git commit and publish Read Sets",
+    )
+    update_workspace.add_argument("--workspace-id", required=True)
+    update_workspace.add_argument(
+        "--repository-revision", "--commit", dest="repository_revision", required=True
+    )
+    update_workspace.add_argument("--idempotency-key", required=True)
+    update_workspace.add_argument("--correlation-ref", required=True)
+
+    resume_workspace = commands.add_parser(
+        "resume-maven-workspace",
+        help="resume one exact recoverable Workspace Update Attempt",
+    )
+    resume_workspace.add_argument("--attempt-id", required=True)
+    resume_workspace.add_argument("--correlation-ref", required=True)
+
+    commands.add_parser(
+        "list-maven-workspaces", help="list registered Maven Workspaces"
+    )
+
+    list_versions = commands.add_parser(
+        "list-maven-workspace-versions",
+        help="list immutable versions of one Maven Workspace",
+    )
+    list_versions.add_argument("--workspace-id", required=True)
+
+    list_read_sets = commands.add_parser(
+        "list-read-sets", help="list registered exact queryable Read Sets"
+    )
+    list_read_sets.add_argument("--workspace-id")
+
+    show_workspace_attempt = commands.add_parser(
+        "show-maven-workspace-attempt",
+        help="show append-only Step history for one Workspace Update Attempt",
+    )
+    show_workspace_attempt.add_argument("--attempt-id", required=True)
+
 
     query = commands.add_parser(
         "query-knowledge", help="assess one Need against an exact knowledge Snapshot"
@@ -288,8 +360,70 @@ def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> 
                 execution = service.get(StableId(arguments.attempt_id))
                 payload = _execution_payload(execution)
             else:
-                runtime = ApplicationRuntime(database)
-                if arguments.command == "resolve-target":
+                runtime = ApplicationRuntime(
+                    database, **_workspace_runtime_options(arguments)
+                )
+                if arguments.command == "register-maven-workspace":
+                    workspace = runtime.register_maven_workspace(
+                        idempotency_key=IdempotencyKey(arguments.idempotency_key),
+                        source_target=arguments.source_target,
+                        display_name=arguments.display_name,
+                        canonical_system_key=arguments.canonical_system_key,
+                        root_pom=arguments.root_pom,
+                        actor=arguments.actor,
+                        correlation_ref=CorrelationRef(arguments.correlation_ref),
+                    )
+                    payload = {"workspace": _maven_workspace_payload(workspace)}
+                elif arguments.command == "update-maven-workspace":
+                    result = runtime.update_maven_workspace(
+                        workspace_id=StableId(arguments.workspace_id),
+                        repository_revision=arguments.repository_revision,
+                        idempotency_key=IdempotencyKey(arguments.idempotency_key),
+                        correlation_ref=CorrelationRef(arguments.correlation_ref),
+                    )
+                    payload = _maven_workspace_update_payload(result)
+                elif arguments.command == "resume-maven-workspace":
+                    result = runtime.resume_maven_workspace(
+                        attempt_id=StableId(arguments.attempt_id),
+                        correlation_ref=CorrelationRef(arguments.correlation_ref),
+                    )
+                    payload = _maven_workspace_update_payload(result)
+                elif arguments.command == "list-maven-workspaces":
+                    payload = {
+                        "workspaces": [
+                            _maven_workspace_payload(item)
+                            for item in runtime.list_maven_workspaces()
+                        ]
+                    }
+                elif arguments.command == "list-maven-workspace-versions":
+                    payload = {
+                        "workspace_id": arguments.workspace_id,
+                        "versions": [
+                            _maven_workspace_version_payload(item)
+                            for item in runtime.list_maven_workspace_versions(
+                                StableId(arguments.workspace_id)
+                            )
+                        ],
+                    }
+                elif arguments.command == "list-read-sets":
+                    workspace_id = (
+                        StableId(arguments.workspace_id)
+                        if arguments.workspace_id
+                        else None
+                    )
+                    payload = {
+                        "read_sets": [
+                            _read_set_registration_payload(item)
+                            for item in runtime.list_read_sets(workspace_id)
+                        ]
+                    }
+                elif arguments.command == "show-maven-workspace-attempt":
+                    payload = _maven_workspace_attempt_payload(
+                        runtime.get_maven_workspace_attempt(
+                            StableId(arguments.attempt_id)
+                        )
+                    )
+                elif arguments.command == "resolve-target":
                     receipt = runtime.resolve_target(
                         source_id=StableId(arguments.source_id),
                         source_revision=Revision(arguments.source_revision),
@@ -452,6 +586,8 @@ def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> 
             "error": exc.code.value if isinstance(exc, DomainError) else "INVALID_ARGUMENT",
             "message": exc.message if isinstance(exc, DomainError) else str(exc),
         }
+        if isinstance(exc, DomainError) and exc.details:
+            payload["details"] = dict(exc.details)
         json.dump(payload, output, ensure_ascii=False, sort_keys=True)
         output.write("\n")
         return 2
@@ -465,6 +601,34 @@ def _management_service(database: SqliteDatabase) -> ManagementApplicationServic
         scopes,
     )
     return ManagementApplicationService(SqliteManagementRepository(database), scopes, sources)
+
+
+_WORKSPACE_COMMANDS = {
+    "register-maven-workspace",
+    "update-maven-workspace",
+    "resume-maven-workspace",
+    "list-maven-workspaces",
+    "list-maven-workspace-versions",
+    "list-read-sets",
+    "show-maven-workspace-attempt",
+}
+
+
+def _workspace_runtime_options(arguments: argparse.Namespace) -> dict[str, object]:
+    values = {
+        "bundle_root": arguments.bundle_root,
+        "catalog_root": arguments.catalog_root,
+        "producer_commit": arguments.producer_commit,
+        "producer_tree": arguments.producer_tree,
+    }
+    if arguments.command in _WORKSPACE_COMMANDS and any(
+        value is None for value in values.values()
+    ):
+        raise ValueError(
+            "Workspace commands require --bundle-root, --catalog-root, "
+            "--producer-commit, and --producer-tree"
+        )
+    return values if any(value is not None for value in values.values()) else {}
 
 
 def _add_source_identity(parser: argparse.ArgumentParser) -> None:

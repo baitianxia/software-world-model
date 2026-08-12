@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+from software_world_model.cross_cutting import canonical_json_bytes
+
 
 def management_execution_payload(execution: object) -> dict[str, object]:
     result = execution.result
@@ -53,6 +55,169 @@ def knowledge_update_payload(result: object) -> dict[str, object]:
         "limitations": result.limitations,
         "digest": result.digest.value,
     }
+
+
+def maven_workspace_payload(workspace: object) -> dict[str, object]:
+    """Project one management-owned Maven Workspace and its owner references."""
+
+    return {
+        "workspace_id": workspace.workspace_id.value,
+        "canonical_system_key": workspace.canonical_system_key,
+        "display_name": workspace.display_name,
+        "repository_locator": workspace.repository_locator,
+        "root_pom": workspace.root_pom,
+        "scope": {
+            "id": workspace.scope_id.value,
+            "revision": workspace.scope_revision.value,
+        },
+        "source": {
+            "id": workspace.source_id.value,
+            "revision": workspace.source_revision.value,
+        },
+        "binding": {
+            "id": workspace.binding_id.value,
+            "revision": workspace.binding_revision.value,
+        },
+        "management_attempt_id": workspace.management_attempt_id.value,
+        "management_result_digest": workspace.management_result_digest.value,
+        "request_digest": workspace.request_digest.value,
+        "created_at": workspace.created_at.isoformat(),
+        "digest": workspace.digest.value,
+    }
+
+
+def maven_workspace_version_payload(version: object) -> dict[str, object]:
+    return {
+        "version_id": version.version_id.value,
+        "workspace_id": version.workspace_id.value,
+        "ordinal": version.ordinal,
+        "repository_revision": version.repository_revision,
+        "update_mode": "FULL_REBUILD",
+        "snapshot_id": version.snapshot_id.value,
+        "snapshot_manifest_digest": version.snapshot_manifest_digest.value,
+        "availability": version.availability.value,
+        "single_read_set_id": (
+            version.single_read_set_id.value
+            if version.single_read_set_id is not None
+            else None
+        ),
+        "comparison_read_set_id": (
+            version.comparison_read_set_id.value
+            if version.comparison_read_set_id is not None
+            else None
+        ),
+        "created_at": version.created_at.isoformat(),
+        "revision": version.revision.value,
+        "digest": version.digest.value,
+    }
+
+
+def maven_workspace_attempt_payload(attempt: object) -> dict[str, object]:
+    return {
+        "attempt_id": attempt.attempt_id.value,
+        "workspace_id": attempt.workspace_id.value,
+        "repository_revision": attempt.repository_revision,
+        "expected_current_snapshot_id": (
+            attempt.expected_current_snapshot_id.value
+            if attempt.expected_current_snapshot_id is not None
+            else None
+        ),
+        "state": attempt.state.value,
+        "revision": attempt.revision.value,
+        "created_at": attempt.created_at.isoformat(),
+        "revised_at": attempt.revised_at.isoformat(),
+        "request_digest": attempt.request_digest.value,
+        "digest": attempt.digest.value,
+        "steps": [
+            {
+                "event_id": item.event_id.value,
+                "sequence": item.sequence,
+                "name": item.name.value,
+                "outcome": item.outcome.value,
+                "reference_id": item.reference_id,
+                "reference_digest": (
+                    item.reference_digest.value
+                    if item.reference_digest is not None
+                    else None
+                ),
+                "error_code": item.error_code,
+                "error_message": item.error_message,
+                "occurred_at": item.occurred_at.isoformat(),
+                "digest": item.digest.value,
+            }
+            for item in attempt.steps
+        ],
+    }
+
+
+def read_set_registration_payload(registration: object) -> dict[str, object]:
+    """Return the canonical registration without dereferenced knowledge payload."""
+
+    return _canonical_payload(registration.document())
+
+
+def read_set_catalog_payload(catalog: object) -> dict[str, object]:
+    """Return the exact sealed Source-off Catalog document."""
+
+    return _canonical_payload(catalog.document())
+
+
+def maven_workspace_update_payload(result: object) -> dict[str, object]:
+    owner = (
+        maven_structure_update_payload(result.snapshot_owner_result)
+        if result.snapshot_owner_result is not None
+        else None
+    )
+    return {
+        "workflow": "MAVEN_WORKSPACE_FULL_REBUILD@1",
+        "manual_zero_question_update": True,
+        "workspace": maven_workspace_payload(result.workspace),
+        "attempt": maven_workspace_attempt_payload(result.attempt),
+        "version": (
+            maven_workspace_version_payload(result.version)
+            if result.version is not None
+            else None
+        ),
+        "single_read_set": (
+            read_set_registration_payload(result.single_read_set)
+            if result.single_read_set is not None
+            else None
+        ),
+        "comparison_read_set": (
+            read_set_registration_payload(result.comparison_read_set)
+            if result.comparison_read_set is not None
+            else None
+        ),
+        "catalog": (
+            read_set_catalog_payload(result.catalog)
+            if result.catalog is not None
+            else None
+        ),
+        "catalog_pointer": (
+            result.catalog_pointer.document()
+            if result.catalog_pointer is not None
+            else None
+        ),
+        "snapshot_owner_result": owner,
+        "execution_metrics": (
+            {
+                "source_calls": result.snapshot_metrics.source_call_count,
+                "source_bytes": result.snapshot_metrics.source_byte_count,
+                "snapshot_elapsed_milliseconds": (
+                    result.snapshot_metrics.elapsed_milliseconds
+                ),
+            }
+            if result.snapshot_metrics is not None
+            else None
+        ),
+    }
+
+
+def _canonical_payload(value: object) -> dict[str, object]:
+    loaded = json.loads(canonical_json_bytes(value).decode("utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError("canonical presenter input must be an object")
+    return loaded
 
 
 def _member_payload(member: object) -> dict[str, str]:

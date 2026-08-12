@@ -42,6 +42,7 @@ class _QualifiedFixtureModel:
         self.provider_call_count = 0
         self.network_operation_count = 0
         self.capabilities: list[str] = []
+        self.sealed_inputs: list[object] = []
 
     def propose(
         self,
@@ -55,6 +56,7 @@ class _QualifiedFixtureModel:
         self.provider_call_count += 1
         self.network_operation_count += 1
         self.capabilities.append(capability)
+        self.sealed_inputs.append(sealed_input)
         if capability == GENERIC_QUERY_PLANNING:
             operations = []
             for need in sealed_input["needs"]:
@@ -115,7 +117,11 @@ class _QualifiedFixtureModel:
             candidates = sealed_input["candidate_refs"]
             normalized = {
                 "resolution_status": (
-                    "RESOLVED" if len(candidates) == 1 else "AMBIGUOUS"
+                    "NOT_FOUND"
+                    if not candidates
+                    else "RESOLVED"
+                    if len(candidates) == 1
+                    else "AMBIGUOUS"
                 ),
                 "candidate_refs": candidates,
                 "next_operation_allowed": len(candidates) == 1,
@@ -333,7 +339,54 @@ class WorldModelProductTests(unittest.TestCase):
             '"org.example.shared:common-lib":true',
             root_identity.chain.draft.body,
         )
-        self.assertIn('"dependency_management_forms_edge":false', root_identity.chain.draft.body)
+        self.assertIn(
+            '"dependency_management_forms_edge":false',
+            root_identity.chain.draft.body,
+        )
+
+    def test_explicit_unknown_artifact_returns_zero_candidate_limitation(self):
+        result, model = self._execute(
+            "同名 artifact `definitely-missing-module` 有哪些候选？",
+            identity=True,
+        )
+
+        self.assertEqual(model.capabilities, [ENTITY_CANDIDATE_RESOLUTION])
+        self.assertEqual(model.provider_call_count, 1)
+        self.assertEqual(
+            result.chain.assessment.needs[0].outcome,
+            WorldModelNeedOutcome.LIMITATION,
+        )
+        self.assertIn('"resolution_status":"ZERO"', result.chain.draft.body)
+        self.assertIn('"candidate_count":0', result.chain.draft.body)
+
+    def test_explicit_same_artifact_returns_ambiguous_candidate_limitation(self):
+        result, model = self._execute(
+            "同名 artifact `common-lib` 有哪些候选？",
+            identity=True,
+        )
+
+        self.assertEqual(model.capabilities, [ENTITY_CANDIDATE_RESOLUTION])
+        self.assertEqual(
+            result.chain.assessment.needs[0].outcome,
+            WorldModelNeedOutcome.LIMITATION,
+        )
+        self.assertIn('"resolution_status":"AMBIGUOUS"', result.chain.draft.body)
+        self.assertIn('"candidate_count":2', result.chain.draft.body)
+        self.assertIn("org.example.shared:common-lib", result.chain.draft.body)
+        self.assertIn("org.example.legacy:common-lib", result.chain.draft.body)
+
+    def test_ambiguous_group_excludes_unrelated_unique_mentions(self):
+        result, model = self._execute(
+            "同名 artifact `common-lib` 与 billing 有哪些候选？",
+            identity=True,
+        )
+
+        self.assertEqual(
+            result.chain.assessment.needs[0].outcome,
+            WorldModelNeedOutcome.LIMITATION,
+        )
+        self.assertEqual(len(model.sealed_inputs[0]["candidate_refs"]), 2)
+        self.assertIn('"candidate_count":2', result.chain.draft.body)
 
     def test_model_proposal_drift_fails_before_draft_delivery(self):
         model = _QualifiedFixtureModel()

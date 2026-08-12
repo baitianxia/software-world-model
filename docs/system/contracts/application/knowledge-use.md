@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-USE]
-code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/presenters.py]
-tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
+code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/application_services/read_set_catalog.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_read_set_catalog.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/read_set_catalog_cli.py, src/software_world_model/interface/presenters.py]
+tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_maven_workspace.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
 ---
 
 # Knowledge Use 与 Sufficiency
@@ -18,7 +18,10 @@ Knowledge Use 在固定 Requirement 和 Snapshot 上读取已发布正式知识�
 
 ## Ownership
 
-Application 拥有 Requirement Revision、Read Session、Query Result、Need Assessment、Gap、Sufficiency 与 Use Epoch；Knowledge Engine 提供 exact Snapshot 的只读正式知识，并拥有 Session 所引用的 Context Comparison Assessment 与其 Validity。Application 可以声明比较顺序和保存 Assessment，但不能决定兼容 Outcome。
+Application 拥有 Requirement Revision、Read Session、Queryable Read Set Registration、Query Result、Need Assessment、Gap、
+Sufficiency 与 Use Epoch；Knowledge Engine 提供 exact Snapshot 的只读正式知识，并拥有 Session 所引用的 Context Comparison
+Assessment 与其 Validity。Application 可以声明比较顺序和保存 Assessment，但不能决定兼容 Outcome。Source-off Catalog 是
+这些 Registration 的密封传输 manifest，不拥有或重解释正式知识。
 
 ## Invariants
 
@@ -33,6 +36,20 @@ Application 拥有 Requirement Revision、Read Session、Query Result、Need Ass
 9. Sufficiency 与 Requirement formation、investigation / update、answer drafting 和 answer review 使用隔离输入与 Decision Chain；生成或调查方不能自证完整，即使复用同一基础模型也不能复用权威上下文。
 10. Formal query 对 Relation Fact 必须返回 typed endpoints、Fact Root/State、Support 与完整性状态；调用方不得通过名称匹配重建图。
 11. 世界模型模式遇到 Knowledge Gap 时只返回 Gap 或受支持的部分结果，不触发 Update 或 Direct Investigation。用户随后显式更新或直接调查会形成新的 Attempt/Result，不能改写原查询事实。
+12. 只有已提交 exact Snapshot/ordered Session、全部 Coverage `COMPLETE`、Bundle Availability `AVAILABLE`，且 Bundle
+    Receipt 与文件 manifest 已机械验证时，Application Knowledge Use 才能建立 immutable queryable Read Set
+    Registration。单 Snapshot 与 ordered base→target 的 ID 和顺序均固定；后续 CURRENT 或 Catalog current pointer 移动
+    不改变已登记或已选择的 Read Set。
+13. Source-off Catalog canonical schema 固定为 `SWM-READ-SET-CATALOG@1`。文档顶层只包含 schema、catalog ID/revision、
+    producer commit/tree、generated-at、entries、previous catalog digest 与 document digest；Entry 只包含 read-set、
+    workspace、Scope、ordered Snapshot/source revision、Schema/Context/Profile/Coverage ref+digest、完整 Bundle Receipt、
+    Bundle-root-relative normalized locator、完整 file manifest/digest 与 availability。自由扩展字段、repository/source/authority
+    DB locator、Entity/Fact、Evidence/Artifact payload 均拒绝。
+14. Trusted Knowledge Use 先以 canonical encoding 写 immutable Catalog manifest，再以 compare-and-set 更新只含 exact
+    catalog ID/revision/digest 的 current pointer。读取方必须重算 document digest、验证 pointer、Entry、embedded Receipt 和
+    Bundle file manifest 后才枚举；Catalog 缺失可由 Owner Registration/Receipt 重建，不能成为第二权威。
+15. `READ_BUNDLE_UNAVAILABLE`、非 COMPLETE Coverage、Receipt/file digest 漂移、非规范 locator、Catalog tamper 或 stale
+    pointer CAS 均不得进入 queryable Catalog；失败不删除旧 Catalog 或旧 queryable Read Set。
 
 ## Failure and implementation boundary
 

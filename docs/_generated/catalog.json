@@ -774,6 +774,125 @@
     "path": "docs/project/iterations/iteration-004/findings/FINDING-004-002.md"
   },
   {
+    "id": "FINDING-005-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-001.md"
+  },
+  {
+    "id": "FINDING-005-002",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-002.md"
+  },
+  {
+    "id": "FINDING-005-003",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-003.md"
+  },
+  {
+    "id": "FINDING-005-004",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-004.md"
+  },
+  {
+    "id": "FINDING-005-005",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-005.md"
+  },
+  {
+    "id": "FINDING-005-006",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-006.md"
+  },
+  {
+    "id": "FINDING-005-007",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-007.md"
+  },
+  {
+    "id": "FINDING-005-008",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-008.md"
+  },
+  {
+    "id": "FINDING-005-009",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-009.md"
+  },
+  {
+    "id": "FINDING-005-010",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/FINDING-005-010.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -1475,6 +1594,171 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-004/verification-matrix.md"
+  },
+  {
+    "id": "ITER-005-DESIGN-INDEX",
+    "kind": "development-design-index",
+    "status": "slice-002-verified-awaiting-user-acceptance",
+    "authority": "current-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/development-design/README.md"
+  },
+  {
+    "id": "ITER-005-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/findings/README.md"
+  },
+  {
+    "id": "ITER-005-INDEX",
+    "kind": "iteration-index",
+    "status": "in-progress",
+    "authority": "current-development",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/README.md"
+  },
+  {
+    "id": "ITER-005-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "accepted",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/proposal.md"
+  },
+  {
+    "id": "ITER-005-READINESS",
+    "kind": "iteration-readiness",
+    "status": "accepted",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/readiness-review.md"
+  },
+  {
+    "id": "ITER-005-RESULT-G0",
+    "kind": "iteration-result",
+    "status": "passed",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/g0-generalization.md"
+  },
+  {
+    "id": "ITER-005-RESULT-SLICE-001",
+    "kind": "iteration-result",
+    "status": "accepted",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/slice-001-workspace-catalog.md"
+  },
+  {
+    "id": "ITER-005-RESULT-SLICE-002-CANDIDATE-FREEZE",
+    "kind": "iteration-result",
+    "status": "candidate-requalified-live-gate-subsequently-passed",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/slice-002-candidate-freeze.md"
+  },
+  {
+    "id": "ITER-005-RESULT-SLICE-002-RUN-006",
+    "kind": "iteration-result",
+    "status": "live-quality-gate-failed-preserved",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/slice-002-run-006-live.md"
+  },
+  {
+    "id": "ITER-005-RESULT-SLICE-002-RUN-007",
+    "kind": "iteration-result",
+    "status": "ready-for-user-acceptance",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/slice-002-run-007-live.md"
+  },
+  {
+    "id": "ITER-005-RESULTS-INDEX",
+    "kind": "iteration-result-index",
+    "status": "slice-002-run-007-live-pass-awaiting-user-acceptance",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/README.md"
+  },
+  {
+    "id": "ITER-005-SLICE-001",
+    "kind": "development-slice",
+    "status": "implemented-awaiting-user-acceptance",
+    "authority": "review-required",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/development-design/SLICE-001-local-maven-workspace.md"
+  },
+  {
+    "id": "ITER-005-SLICE-002",
+    "kind": "development-slice",
+    "status": "in-progress",
+    "authority": "current-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/development-design/SLICE-002-dynamic-world-model-browser.md"
+  },
+  {
+    "id": "ITER-005-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "slice-002-run-007-live-pass-awaiting-user-acceptance",
+    "authority": "planned-verification",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/verification-matrix.md"
   },
   {
     "id": "ITERATION-INDEX",

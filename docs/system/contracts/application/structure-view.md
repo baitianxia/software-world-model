@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [application]
 depends_on: [SYS-ADR-005, SYS-ADR-014, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE]
-code: [src/software_world_model/application_services/structure_view.py, src/software_world_model/application_services/citation_projection.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface/structure_view_cli.py, src/software_world_model/interface/citation_projector_cli.py]
-tests: [tests/test_knowledge_use.py, tests/test_structure_view.py, tests/test_structure_view_cli.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_integration.py, tests/test_iteration_003_g2_isolation.py, tests/test_browser_chat_interface.py]
+code: [src/software_world_model/application_services/structure_view.py, src/software_world_model/application_services/citation_projection.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface/structure_view_cli.py, src/software_world_model/interface/read_set_catalog_cli.py, src/software_world_model/interface/citation_projector_cli.py]
+tests: [tests/test_knowledge_use.py, tests/test_structure_view.py, tests/test_structure_view_cli.py, tests/test_maven_workspace.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_integration.py, tests/test_iteration_003_g2_isolation.py, tests/test_browser_chat_interface.py]
 ---
 
 # Structure View

@@ -60,3 +60,8 @@ roadmap candidate
 ## Completion gate
 
 代码完成不是迭代完成。必须有实际 Result、失败/限制、所有 Finding disposition、必要的 System 回写，以及明确的接受、拒绝或后续决策。生产启用若不属于 Proposal，就不能被“剩余工作”自动推入下一轮。
+
+从 ITER-005 起，任何声称扩展 Software World Model 建模、查询或问答能力的 Iteration，在标记 completed 前必须把本轮新增
+能力接入同一个产品代码拥有的本机 Web 问答入口，并由人工提交至少一条支持问题和一条边界/Gap 问题。一次性
+`validation.*` launcher、静态回放页、测试计数或 API-only smoke 不能替代该体验。中间 Slice 可以先用 CLI/View 暴露风险，
+但整个 Iteration 不得在正式 Web 问答入口尚不可用时完成；这不自动授予公网部署或 Production Activation。

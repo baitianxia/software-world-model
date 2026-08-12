@@ -1,0 +1,115 @@
+{
+  "schema": "ITER-005-G0-INPUTS@1",
+  "product_baseline": {
+    "commit": "a91dc7c8446f3815bf7b4f9a1123b6242620a97e",
+    "tree": "73b8cf52e0ab5202137dd833445ced237ef698cd"
+  },
+  "supported_cases": [
+    {
+      "case_id": "TTL3_MASTER",
+      "repository_path": "validation-projects/transmittable-thread-local",
+      "remote": "https://github.com/alibaba/transmittable-thread-local.git",
+      "commit": "01639f2b93c91c79be10655edecd5c64dfc31cd2",
+      "tree": "68a6f3c61256ce410da9ebaa7c4b3ccd048ff6d6",
+      "root_pom": "pom.xml",
+      "canonical_system_key": "iter-005-g0:ttl3",
+      "root": {
+        "group_id": "com.alibaba.ttl3",
+        "artifact_id": "ttl3-parent",
+        "version": "3.x-SNAPSHOT",
+        "packaging": "pom"
+      },
+      "modules": [
+        {"group_id": "com.alibaba", "artifact_id": "transmittable-thread-local", "version": "3.x-SNAPSHOT", "path": "ttl2-compatible", "packaging": "jar"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "sample-ttl-agent-extension-transformlet", "version": "1.0.0-SNAPSHOT", "path": "ttl-integrations/sample-ttl-agent-extension-transformlet", "packaging": "jar"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "ttl-agent", "version": "3.x-SNAPSHOT", "path": "ttl-agent", "packaging": "jar"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "ttl-bom", "version": "3.x-SNAPSHOT", "path": "ttl-bom", "packaging": "pom"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "ttl-core", "version": "3.x-SNAPSHOT", "path": "ttl-core", "packaging": "jar"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "ttl-kotlin", "version": "3.x-SNAPSHOT", "path": "ttl-kotlin", "packaging": "jar"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "vertx3-ttl-integration", "version": "0.1.0-SNAPSHOT", "path": "ttl-integrations/vertx3-ttl-integration", "packaging": "jar"},
+        {"group_id": "com.alibaba.ttl3", "artifact_id": "vertx4-ttl-integration", "version": "0.1.0-SNAPSHOT", "path": "ttl-integrations/vertx4-ttl-integration", "packaging": "jar"}
+      ],
+      "internal_dependencies": [
+        {"consumer": "com.alibaba.ttl3:ttl-agent", "target": "com.alibaba.ttl3:ttl-core"},
+        {"consumer": "com.alibaba.ttl3:sample-ttl-agent-extension-transformlet", "target": "com.alibaba:transmittable-thread-local"},
+        {"consumer": "com.alibaba.ttl3:vertx3-ttl-integration", "target": "com.alibaba:transmittable-thread-local"},
+        {"consumer": "com.alibaba.ttl3:vertx4-ttl-integration", "target": "com.alibaba:transmittable-thread-local"},
+        {"consumer": "com.alibaba.ttl3:ttl-kotlin", "target": "com.alibaba.ttl3:ttl-core"}
+      ],
+      "absent_dependencies": [
+        {"consumer": "com.alibaba.ttl3:ttl-core", "target": "com.alibaba.ttl3:ttl-agent"},
+        {"consumer": "com.alibaba.ttl3:ttl-bom", "target": "com.alibaba.ttl3:ttl-core"}
+      ]
+    },
+    {
+      "case_id": "GSON_MASTER",
+      "repository_path": "validation-projects/gson",
+      "remote": "https://github.com/google/gson.git",
+      "commit": "310ac341f2f92a454b229bf21f70d2d18b2b6db7",
+      "tree": "ff83ee01ad4b98fc88b94d8e48f476936e036d13",
+      "root_pom": "pom.xml",
+      "canonical_system_key": "iter-005-g0:gson",
+      "root": {
+        "group_id": "com.google.code.gson",
+        "artifact_id": "gson-parent",
+        "version": "2.14.1-SNAPSHOT",
+        "packaging": "pom"
+      },
+      "modules": [
+        {"group_id": "com.google.code.gson", "artifact_id": "gson", "version": "2.14.1-SNAPSHOT", "path": "gson", "packaging": "jar"},
+        {"group_id": "com.google.code.gson", "artifact_id": "gson-extras", "version": "2.14.1-SNAPSHOT", "path": "extras", "packaging": "jar"},
+        {"group_id": "com.google.code.gson", "artifact_id": "gson-metrics", "version": "2.14.1-SNAPSHOT", "path": "metrics", "packaging": "jar"},
+        {"group_id": "com.google.code.gson", "artifact_id": "proto", "version": "2.14.1-SNAPSHOT", "path": "proto", "packaging": "jar"},
+        {"group_id": "com.google.code.gson", "artifact_id": "test-graal-native-image", "version": "2.14.1-SNAPSHOT", "path": "test-graal-native-image", "packaging": "jar"},
+        {"group_id": "com.google.code.gson", "artifact_id": "test-jpms", "version": "2.14.1-SNAPSHOT", "path": "test-jpms", "packaging": "jar"},
+        {"group_id": "com.google.code.gson", "artifact_id": "test-shrinker", "version": "2.14.1-SNAPSHOT", "path": "test-shrinker", "packaging": "jar"}
+      ],
+      "internal_dependencies": [
+        {"consumer": "com.google.code.gson:gson-extras", "target": "com.google.code.gson:gson"},
+        {"consumer": "com.google.code.gson:gson-metrics", "target": "com.google.code.gson:gson"},
+        {"consumer": "com.google.code.gson:proto", "target": "com.google.code.gson:gson"},
+        {"consumer": "com.google.code.gson:test-graal-native-image", "target": "com.google.code.gson:gson"},
+        {"consumer": "com.google.code.gson:test-jpms", "target": "com.google.code.gson:gson"},
+        {"consumer": "com.google.code.gson:test-shrinker", "target": "com.google.code.gson:gson"}
+      ],
+      "absent_dependencies": [
+        {"consumer": "com.google.code.gson:gson", "target": "com.google.code.gson:gson-extras"},
+        {"consumer": "com.google.code.gson:gson", "target": "com.google.code.gson:test-jpms"}
+      ]
+    }
+  ],
+  "unsupported_sequence": {
+    "case_id": "MAVEN_WRAPPER_TYPE_POM",
+    "repository_path": "validation-projects/maven-wrapper",
+    "remote": "https://github.com/apache/maven-wrapper.git",
+    "root_pom": "pom.xml",
+    "canonical_system_key": "iter-005-g0:maven-wrapper",
+    "valid": {
+      "commit": "e10ec821fc0e45105ec2e64d2087497bbc8fd145",
+      "tree": "bd208434f7c99bd8c39ccdec27bb7907221c41fe",
+      "root": {
+        "group_id": "org.apache.maven.wrapper",
+        "artifact_id": "maven-wrapper-parent",
+        "version": "3.1.0-SNAPSHOT",
+        "packaging": "pom"
+      },
+      "modules": [
+        {"group_id": "org.apache.maven.plugins", "artifact_id": "maven-wrapper-plugin", "version": "3.1.0-SNAPSHOT", "path": "maven-wrapper-plugin", "packaging": "maven-plugin"},
+        {"group_id": "org.apache.maven.wrapper", "artifact_id": "maven-wrapper", "version": "3.1.0-SNAPSHOT", "path": "maven-wrapper", "packaging": "jar"},
+        {"group_id": "org.apache.maven.wrapper", "artifact_id": "maven-wrapper-distribution", "version": "3.1.0-SNAPSHOT", "path": "maven-wrapper-distribution", "packaging": "pom"}
+      ],
+      "internal_dependencies": [
+        {"consumer": "org.apache.maven.wrapper:maven-wrapper-distribution", "target": "org.apache.maven.wrapper:maven-wrapper"}
+      ],
+      "absent_dependencies": [
+        {"consumer": "org.apache.maven.plugins:maven-wrapper-plugin", "target": "org.apache.maven.wrapper:maven-wrapper-distribution"}
+      ]
+    },
+    "unsupported": {
+      "commit": "62c6a95364ea44243b6c30a17ee793fce067a4c2",
+      "tree": "6fa9cfb1f249a525299119cf350fbba1aa9d8ddf",
+      "error": "INVALID_ARGUMENT",
+      "message_contains": "REACTOR_DEPENDENCY_SHAPE_UNSUPPORTED at maven-wrapper-plugin/pom.xml#/project/dependencies/dependency[7]"
+    }
+  }
+}

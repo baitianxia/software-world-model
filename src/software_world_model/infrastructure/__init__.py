@@ -18,6 +18,11 @@ from .sqlite_task_control_repository import SqliteTaskControlRepository
 from .sqlite_response_control_repository import SqliteResponseControlRepository
 from .sqlite_telemetry_repository import SqliteTelemetryRepository
 from .sqlite_product_validation_repository import SqliteProductValidationRepository
+from .sqlite_maven_workspace_repository import SqliteMavenWorkspaceRepository
+from .file_read_set_catalog import (
+    FileReadSetCatalogStore,
+    RootedStructureReadBundleStore,
+)
 
 __all__ = [
     "SqliteDatabase",
@@ -38,4 +43,7 @@ __all__ = [
     "SqliteResponseControlRepository",
     "SqliteTelemetryRepository",
     "SqliteProductValidationRepository",
+    "SqliteMavenWorkspaceRepository",
+    "FileReadSetCatalogStore",
+    "RootedStructureReadBundleStore",
 ]

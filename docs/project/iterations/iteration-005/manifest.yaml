@@ -1,0 +1,248 @@
+schema_version: 1
+iteration:
+  id: ITER-005
+  status: in-progress
+  outcome_scope: user-selected-local-maven-world-model-workspace
+
+baseline:
+  commit: a91dc7c8446f3815bf7b4f9a1123b6242620a97e
+  tree: 73b8cf52e0ab5202137dd833445ced237ef698cd
+  dirty_worktree_allowed: false
+  relation: clean-post-iteration-004-acceptance
+
+system_inputs:
+  ids:
+    - SYS-CONTRACT-APPLICATION-MANAGEMENT
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+    - SYS-CONTRACT-SOURCE-ARTIFACT
+    - SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL
+    - SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION
+    - SYS-CONTRACT-KNOWLEDGE-PERSISTENCE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+    - SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW
+    - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+    - SYS-ARCH-DEPLOYMENT
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-OPS-LOCAL-BROWSER
+    - SYS-QUALITY-SECURITY
+    - SYS-QUALITY-ACCEPTANCE
+
+development:
+  slices:
+    ITER-005-SLICE-001:
+      status: accepted
+      coding_input: false
+      result: ITER-005-RESULT-SLICE-001
+      accepted_by: user
+      accepted_at: "2026-08-11T19:32:39+08:00"
+    ITER-005-SLICE-002:
+      status: verification-complete-awaiting-user-acceptance
+      coding_input: true
+      requires_accepted_result_from: ITER-005-SLICE-001
+      required_for_iteration_acceptance: true
+      authorized_by: user
+      authorized_at: "2026-08-11T19:32:39+08:00"
+
+external_inputs:
+  g0_generalization_set:
+    status: frozen-and-pass
+    required_supported_repositories: 2
+    required_unsupported_revision_sequences: 1
+    oracle:
+      path: validation/structure_world_model_iteration_005/g0_inputs.json
+      digest: sha256:3989a536165f466346e1fa58654684dae755c4294b0ac21e298007be0fb771ed
+      imports_product_code: false
+    supported_repositories:
+      TTL3_MASTER:
+        remote: https://github.com/alibaba/transmittable-thread-local.git
+        commit: 01639f2b93c91c79be10655edecd5c64dfc31cd2
+        tree: 68a6f3c61256ce410da9ebaa7c4b3ccd048ff6d6
+        expected_modules: 8
+        expected_direct_internal_dependencies: 5
+      GSON_MASTER:
+        remote: https://github.com/google/gson.git
+        commit: 310ac341f2f92a454b229bf21f70d2d18b2b6db7
+        tree: ff83ee01ad4b98fc88b94d8e48f476936e036d13
+        expected_modules: 7
+        expected_direct_internal_dependencies: 6
+    unsupported_revision_sequence:
+      id: MAVEN_WRAPPER_TYPE_POM
+      remote: https://github.com/apache/maven-wrapper.git
+      valid_commit: e10ec821fc0e45105ec2e64d2087497bbc8fd145
+      valid_tree: bd208434f7c99bd8c39ccdec27bb7907221c41fe
+      unsupported_commit: 62c6a95364ea44243b6c30a17ee793fce067a4c2
+      unsupported_tree: 6fa9cfb1f249a525299119cf350fbba1aa9d8ddf
+      expected_rejection: REACTOR_DEPENDENCY_SHAPE_UNSUPPORTED
+      current_must_remain_valid: true
+    result:
+      path: var/iteration-005/g0/a91dc7c-r2/report.json
+      digest: sha256:bcd7a269aacc4db54e22a2a2ebae805394024837ee60c13072bbf2483c6f7ab9
+      decision: PROCEED_TO_SLICE_001_AUTHORIZATION
+    requirements:
+      - exact-local-git-commit
+      - multi-module-maven-reactor-for-supported-cases
+      - independent-structure-oracle
+      - no-product-code-import-in-oracle
+      - same-scope-valid-baseline-commit-before-unsupported-commit
+      - expected-rejection-reason-and-unchanged-current-oracle
+  slice_002_product_inputs:
+    status: run-006-live-fail-preserved-run-007-live-pass-awaiting-user-acceptance
+    inherited_product_subject:
+      role: changed-answer-package-baseline-only
+      commit: b9b329a9b341b01fc41486ef9b0c809ac8665332
+      tree: 43accc44508a1cce9066aead258ec11a5b6a4ef0
+      stage_manifest_digest: sha256:b5556501227befe1b342a94c6f1ddce00217d9dd7a7c3c95da9e62356ca91707
+      prepared_registry_digest: sha256:ace18c7c0b6c43a1a17a76be810a9d378d8069b34fa679c263de5d74729f4407
+      product_evaluation_digest: sha256:7952bd9b6a68e50beb7a6370942ea163ac1e1359c2922cd77500903f149f2b1c
+      answer_workload_sha256: accc4d72016c06584212328647c3af6579bf4d40fa1c420f0dcce4b8d52d6256
+      gateway_workload_sha256: ec6c04e64be4d6fed8c1ef9992e2fa2a2e47025c85d7ca4f0e783493c6dfa67c
+      broker_workload_sha256: 7025fa85329bc5c8b78c2119969184fe6266c6894294814804fabb87ebf6b4fc
+      projector_workload_sha256: c4b835cd253d4b05f2d54179d52db4453b55c1c312ed26b6698106d05ce7964b
+      product_answer_sha256: 59f311406c1e7fa1320eeaced7edb3efe1fac32e54b9fb3a91fa60acbe51bebf
+      strategy_sha256: 520580b24f46a94439602e987268b24575746383b5e9e0c8e6845189664f2ebc
+    qualification_effect:
+      status: inherited-answer-invalidated-candidate-requalified
+      findings:
+        - FINDING-005-003
+        - FINDING-005-004
+        - FINDING-005-006
+        - FINDING-005-007
+        - FINDING-005-008
+        - FINDING-005-009
+        - FINDING-005-010
+      unchanged_subjects:
+        - prompt
+        - strategy
+        - provider
+      candidate_answer_package: exact-sealed-and-13-tests-pass
+      candidate_gateway_authorization_wrapper: exact-sealed
+      required_before_listen:
+        - exact-package-seal
+        - isolation-preflight
+        - product-validation
+    provider_subject:
+      provider: VOLCENGINE_ARK
+      adapter: openai-chat-completions-no-tools@8
+      requested_model: glm-5-2-260617
+      observed_model: glm-5.2
+      endpoint: https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions
+      credential_reference: env:ARK_API_KEY
+      conformance_digest: sha256:c86aad995802b8dcf687fafcbaf36bccb02768ba55b40151ec9aa4704518cade
+      qualification_digest: sha256:005b1bf43c76a64d123b0184cdac1a9e844331896e7ede6279875881d9bcc62c
+    dynamic_launcher_subject:
+      module: software_world_model.interface.world_model_http
+      status: run-007-live-pass-service-stopped-awaiting-user-acceptance
+      grant_schema: SWM-WORLD-MODEL-EVALUATION-GRANT@2
+      rationale: FINDING-005-002-and-FINDING-005-005
+    candidate_freeze:
+      status: deterministic-pass-external-dispatch-not-authorized
+      path: var/iteration-005/slice-002/run-007
+      report_digest: sha256:ba65d6d01b2b6bc78fc6ba80a7d0c8896f61099d9b7471e4c446c3fecec71bf3
+      producer_commit: 0c2b155d42a272d1b2172f5a82c41179855cd44d
+      producer_tree: f505499ef4a1891c43eeddb689812a2a660693e7
+      source_manifest_digest: sha256:252e868e4295b7a99eaee042e22f7edf64cc29604f222839437f22cffd1540cd
+      stage_manifest_digest: sha256:7cf5e8322af4ecd6a0f97be316229937f9cd8e09813b741e9cef332bea2476e8
+      launcher_manifest_digest: sha256:30205910e8676c10766fd68870affb2cc6eb17e68292ae4c09093a083a08ad8d
+      deterministic_qualification_digest: sha256:ce1ab384ab5445b1ebd9cedf43d4ed6367c26e42e5ec44f9ad08a950e1ee2dd4
+      held_out_suite_schema: SWM-WORLD-MODEL-HELD-OUT-SUITE@2
+      held_out_suite_digest: sha256:04f50cae8392296d8173921e56063abded7d66c33c17d97019d50ac965b9f884
+      independent_evaluator_digest: sha256:020287ba519bc3ff665d805d6360a645cd1e3b7b78c08f6297fbbf75d2d63529
+      comparison_runner_digest: sha256:e3da9685a12903de71fffd950648f20a4b1d23fedfb90204488cf136b817364a
+      controlled_direct_max_output_tokens: 4096
+      controlled_direct_response_contract: STRICT_JSON_OBJECT_ANSWER_STRING_NO_TRAILING_TEXT
+      deterministic_product_probe_digest: sha256:bb75e610255c762d7522a6b1a95ee5658b073e5e3436e8ac4a8458059cb9be31
+      comparison_authorization_digest: sha256:3bbf4c01b79fa6130a9be1f9138b617e205714d11660db064fb46cb8ea6f2117
+      comparison_authorization_status: NOT_AUTHORIZED
+      evaluation_grant_digest: sha256:2eacfec68ca42cd47018a6972a3f8bb1dc8a5d93fd785e14220c7af460ef5d5d
+      evaluation_grant_status: NOT_AUTHORIZED
+      focused_tests: 51/51-pass
+      candidate_answer_tests: 13/13-pass
+      full_regression: 801/801-pass
+      docs_check: pass
+      external_model_calls: 0
+      production_activation: NOT_EXECUTED
+    prior_live_evaluation:
+      run: run-006
+      status: comparison-fail-browser-pass-preserved
+      suite_digest: sha256:ece08225c5902d33e805330a51443e0abd1ddb198a8c90aba4cc418201623e31
+      authorization_digest: sha256:44df77341be1fe5106db0d72fafd7f8721718213da7212f8423fb75c7a659e15
+      controlled_direct: 5/9-success
+      mature_source_agent: 9/9-success
+      world_model: 9/9-success
+      comparison_report_digest: sha256:278c7c3c52141314318071b9e275864bb5907bada3d8c5fe12f34f837b040ea1
+      browser_acceptance: pass
+      production_activation: NOT_EXECUTED
+    current_live_evaluation:
+      run: run-007
+      status: comparison-pass-browser-pass-awaiting-user-acceptance
+      suite_digest: sha256:04f50cae8392296d8173921e56063abded7d66c33c17d97019d50ac965b9f884
+      authorization_ref: codex-user-message:sha256:14fb67f7fa2aee866b0f1603923fad996908f44873f37cb6ed8a9594650c7c4f
+      authorization_digest: sha256:a33d65377f9aec8c249a3351f484c226a0cf501b1694ad1dbbf0c73a6f3411de
+      evaluation_grant_digest: sha256:bfeecc85a626113acf6d1ac594d368ceba32737e02b1d44392040eac84d18158
+      disclosure_authorization_digest: sha256:6a74fa211da15797c7db88f2087f0a0c427e2e48aef7e5a818b3596e39768ee3
+      baseline_seal_digest: sha256:cd193c00db86e069eb72c9f1dec17cedbc987424921cd5682d576f0653640d23
+      controlled_direct:
+        success: 9/9
+        population_digest: sha256:a9c3e586c86202b1f29b1d489229ba6ce38ef3c79512c10a9d42969c1934e429
+      mature_source_agent:
+        success: 9/9
+        population_digest: sha256:1b8783e0e969855126363d97854ec48cc9b0ffffa7089f7b1951cf8e46254261
+      world_model:
+        success: 9/9
+        population_digest: sha256:f5b5b19e4065eb02b4db2fa647fc32a0824b3299e4363fc875c7a205adbde11d
+      comparison_report_digest: sha256:e7d16fa4f56cf35243f100ffb5cd4b56d950b3bb620a08c273f281ef7e6c0116
+      startup_receipt_digest: sha256:4ab55e41053c3fbc583b7f4ce397aa8dcd032efeff2e0fc02dca21a313faa8f8
+      startup_preflight_digest: sha256:3f2527b6197fd63b028229692bab59e7894508847b1e6baeda0ad2b466a376e3
+      browser_supported_request: wm-02208ddb-a0c1-4b5f-b926-40acfff1cee1
+      browser_supported_page_digest: sha256:7bd6d5d83c7c14f0a98cbdc2490d7efae52e29a1d6be9e55f9d200afea40dfd8
+      browser_gap_request: wm-344a7ffe-85ef-4123-8e33-b41c599ef165
+      browser_gap_page_digest: sha256:1b591fa7322e54da1bb7d8ddb87514572e784c3d16290f40e2eb3879bd5b4662
+      browser_acceptance: pass
+      browser_console_logs: empty
+      listener_after_acceptance: stopped
+      production_activation: NOT_EXECUTED
+    requirements:
+      - exact-answer-package-and-tree
+      - exact-provider-adapter-model-endpoint
+      - valid-conformance-and-capability-qualification
+      - held-out-product-suite-and-independent-evaluator
+      - controlled-direct-and-mature-source-agent-protocols
+      - user-disclosure-authorization-before-live-dispatch
+      - exact-product-launcher-answer-gateway-projector-worker-profile-digests
+    disclosure_authorizations:
+      world_model:
+        status: run-006-and-run-007-authorized-and-executed-evaluation-only
+        payload_boundary: original-question-and-no-payload-published-structure
+      controlled_direct:
+        status: run-006-and-run-007-authorized-and-executed-evaluation-only
+        payload_boundary: original-question-and-exact-sealed-pom-source-closure
+      mature_source_agent:
+        status: run-006-and-run-007-authorized-and-executed-evaluation-only
+        payload_boundary: original-question-and-isolated-exact-sealed-pom-source-closure
+
+verification:
+  matrix_id: ITER-005-VERIFICATION
+  evidence_location: var/iteration-005
+  slice_001:
+    status: accepted
+    result_id: ITER-005-RESULT-SLICE-001
+    report_path: var/iteration-005/slice-001/run-005/report.json
+    report_digest: sha256:7047522d5f2f7fe936c0db3c3a28ff3f75e4141e5c50fbe3f9af7c02df41498f
+    full_regression: 771/771-pass
+  slice_002:
+    status: run-006-fail-preserved-run-007-live-pass-awaiting-user-acceptance
+    result_id: ITER-005-RESULT-SLICE-002-RUN-007
+    deterministic_report_path: var/iteration-005/slice-002/run-007/report.json
+    deterministic_report_digest: sha256:ba65d6d01b2b6bc78fc6ba80a7d0c8896f61099d9b7471e4c446c3fecec71bf3
+    live_comparison_report_path: var/iteration-005/slice-002/run-007-live/comparison-report.json
+    live_comparison_report_digest: sha256:e7d16fa4f56cf35243f100ffb5cd4b56d950b3bb620a08c273f281ef7e6c0116
+    full_regression: 801/801-pass
+
+authorization:
+  readiness_review_id: ITER-005-READINESS
+  authorized_by: user
+  authorized_at: "2026-08-11T18:10:12+08:00"
+  active_slice: ITER-005-SLICE-002
+  slice_002_authorized_at: "2026-08-11T19:32:39+08:00"
+  live_external_dispatch: run-006-and-run-007-authorized-and-executed-evaluation-only
+  production_activation: not-authorized

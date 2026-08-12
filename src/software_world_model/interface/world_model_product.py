@@ -86,6 +86,9 @@ from software_world_model.knowledge_engine.structure import (
 
 PRODUCT_STRATEGY_REF = "model-snapshot-first-world-model-answer@1.0.2"
 PRODUCT_GAP_REASON = "CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE"
+_EXPLICIT_ARTIFACT_MENTION = re.compile(
+    r"`([A-Za-z0-9][A-Za-z0-9._-]{0,127})`"
+)
 
 
 class ProductNeedKind(str, Enum):
@@ -347,7 +350,38 @@ class ProductQuestionInterpreter:
         text = _text(question, "product question")
         folded = text.casefold()
         snapshots = self._catalog.snapshot_ids
-        mentions = self._catalog.mentioned_modules(text)
+        mentions = list(self._catalog.mentioned_modules(text))
+        for match in _EXPLICIT_ARTIFACT_MENTION.finditer(text):
+            token = match.group(1)
+            mentions = [
+                item
+                for item in mentions
+                if item.token.casefold() != token.casefold()
+            ]
+            roots = tuple(
+                sorted(
+                    {
+                        item.entity_root_id
+                        for item in self._catalog.entities(
+                            snapshots[-1], EntityType.MAVEN_MODULE
+                        )
+                        if item.artifact_id == token
+                    },
+                    key=lambda item: item.value,
+                )
+            )
+            mentions.append(
+                ProductMentionGroup(
+                    token=token,
+                    first_offset=match.start(1),
+                    entity_root_ids=roots,
+                )
+            )
+        mentions = sorted(
+            mentions,
+            key=lambda item: (item.first_offset, -len(item.token), item.token),
+        )
+        mentions = tuple(mentions)
         unique_mentions = tuple(
             item for item in mentions if len(item.entity_root_ids) == 1
         )
@@ -818,25 +852,59 @@ class ProductQueryPlanner(WorldModelQueryPlanner):
             need = same_name_needs[0]
             ordinal = need.snapshot_ordinals[0]
             snapshot_id = snapshots[ordinal]
-            selector_id = "same-name-system"
-            selectors.append(
-                self._selector(
-                    selector_id=selector_id,
-                    need_ids=(need.need_id,),
-                    snapshot_id=snapshot_id,
-                    entity=self._catalog.system(snapshot_id),
-                    original_question=question.original_question,
-                )
+            unresolved = next(
+                (
+                    item
+                    for item in analysis.module_mentions
+                    if len(item.entity_root_ids) != 1
+                ),
+                None,
             )
-            steps.append(
-                WorldModelQueryStepProposal.create(
-                    step_id="same-name-catalog",
-                    need_ids=(need.need_id,),
-                    operation=StructureViewOperation.CHILD_MODULE_INVENTORY,
-                    arguments={"system": selector_id},
-                    constraint_ids=constraint_ids,
+            if unresolved is not None:
+                selector_id = "same-name-candidate"
+                selectors.append(
+                    WorldModelEntitySelectorProposal(
+                        selector_id=selector_id,
+                        need_ids=(need.need_id,),
+                        snapshot_id=snapshot_id,
+                        origin=EntitySelectorOrigin.MENTION,
+                        mention=unresolved.token,
+                        entity_type=EntityType.MAVEN_MODULE,
+                    )
                 )
-            )
+                steps.append(
+                    WorldModelQueryStepProposal.create(
+                        step_id="same-name-candidate-check",
+                        need_ids=(need.need_id,),
+                        operation=StructureViewOperation.DIRECT_NEIGHBORHOOD,
+                        arguments={"entity": selector_id},
+                        parameters={
+                            "direction": NeighborhoodDirection.BOTH.value,
+                            "predicate": RelationPredicate.DEPENDS_ON.value,
+                        },
+                        constraint_ids=constraint_ids,
+                    )
+                )
+            else:
+                selector_id = "same-name-system"
+                selectors.append(
+                    self._selector(
+                        selector_id=selector_id,
+                        need_ids=(need.need_id,),
+                        snapshot_id=snapshot_id,
+                        entity=self._catalog.system(snapshot_id),
+                        original_question=question.original_question,
+                    )
+                )
+                steps.append(
+                    WorldModelQueryStepProposal.create(
+                        step_id="same-name-catalog",
+                        need_ids=(need.need_id,),
+                        operation=StructureViewOperation.CHILD_MODULE_INVENTORY,
+                        arguments={"system": selector_id},
+                        constraint_ids=constraint_ids,
+                    )
+                )
 
         for need in by_kind.get(ProductNeedKind.KNOWLEDGE_GAP, []):
             gaps.append(
@@ -949,7 +1017,10 @@ class ProductModelDraftGenerator(WorldModelDraftGenerator):
                 result_ids: tuple[StableId, ...] = ()
             elif assessed.outcome is WorldModelNeedOutcome.LIMITATION:
                 kind = WorldModelClaimKind.APPLICATION_LIMITATION
-                text = "View Limitation：" + ", ".join(assessed.limitations)
+                if need.need_id == "same-name-identity":
+                    text = self._render_resolution_limitation(analysis)
+                else:
+                    text = "View Limitation：" + ", ".join(assessed.limitations)
                 result_ids = ()
             else:
                 kind = WorldModelClaimKind.QUERY_RESULT
@@ -1081,26 +1152,39 @@ class ProductModelDraftGenerator(WorldModelDraftGenerator):
             }
             for item in analysis.needs
         ):
-            candidate_refs = tuple(
-                item.value for item in analysis.direct_target_root_ids
+            same_name_resolution = any(
+                item.kind is ProductNeedKind.SAME_NAME_IDENTITY
+                for item in analysis.needs
             )
-            if not candidate_refs:
-                candidate_refs = tuple(
-                    root.value
+            unresolved = next(
+                (
+                    group
                     for group in analysis.module_mentions
-                    for root in group.entity_root_ids
+                    if len(group.entity_root_ids) != 1
+                ),
+                None,
+            )
+            if same_name_resolution and unresolved is not None:
+                candidate_refs = tuple(
+                    root.value for root in unresolved.entity_root_ids
+                )
+                mention = unresolved.token
+            else:
+                candidate_refs = tuple(
+                    item.value for item in analysis.direct_target_root_ids
+                )
+                if not candidate_refs:
+                    candidate_refs = tuple(
+                        root.value
+                        for group in analysis.module_mentions
+                        for root in group.entity_root_ids
+                    )
+                mention = (
+                    analysis.module_mentions[-1].token
+                    if analysis.module_mentions
+                    else "module"
                 )
             candidate_refs = tuple(dict.fromkeys(candidate_refs))
-            if not candidate_refs:
-                raise _invalid(
-                    "PRODUCT_MODEL_RESOLUTION_INPUT_EMPTY",
-                    "identity question has no sealed candidate refs",
-                )
-            mention = (
-                analysis.module_mentions[-1].token
-                if analysis.module_mentions
-                else "module"
-            )
             proposal = self._model.propose(
                 case_id=case_ref,
                 capability=ENTITY_CANDIDATE_RESOLUTION,
@@ -1109,7 +1193,13 @@ class ProductModelDraftGenerator(WorldModelDraftGenerator):
                     "candidate_refs": list(candidate_refs),
                 },
             )
-            status = "RESOLVED" if len(candidate_refs) == 1 else "AMBIGUOUS"
+            status = (
+                "NOT_FOUND"
+                if not candidate_refs
+                else "RESOLVED"
+                if len(candidate_refs) == 1
+                else "AMBIGUOUS"
+            )
             expected = {
                 "resolution_status": status,
                 "candidate_refs": list(candidate_refs),
@@ -1347,6 +1437,37 @@ class ProductModelDraftGenerator(WorldModelDraftGenerator):
         ]
         return "同名 artifact 必须按稳定 Root 与完整 GA 区分: " + _json(values)
 
+    def _render_resolution_limitation(
+        self,
+        analysis: ProductQuestionAnalysis,
+    ) -> str:
+        group = next(
+            (
+                item
+                for item in analysis.module_mentions
+                if len(item.entity_root_ids) != 1
+            ),
+            None,
+        )
+        if group is None:
+            raise _invalid(
+                "PRODUCT_RESOLUTION_LIMITATION_MISSING",
+                "Entity Resolution Limitation has no bounded candidate group",
+            )
+        candidates = [
+            self._catalog.display_ref(item) for item in group.entity_root_ids
+        ]
+        status = "ZERO" if not candidates else "AMBIGUOUS"
+        return "Entity Resolution Limitation：" + _json(
+            {
+                "mention": group.token,
+                "resolution_status": status,
+                "candidate_count": len(candidates),
+                "candidates": candidates,
+                "next_operation_allowed": False,
+            }
+        )
+
 
 class ProductAnswerReviewer(WorldModelAnswerReviewer):
     strategy_ref = "iter-003-g3b-independent-answer-reviewer@1"
@@ -1368,13 +1489,37 @@ class ProductAnswerReviewer(WorldModelAnswerReviewer):
             item.step_result_id for item in result_set.step_results
         )
         actual_needs = tuple(item.need_id for item in draft.claims)
+        claims_by_need = {item.need_id: item for item in draft.claims}
+        assessments_by_need = {item.need_id: item for item in assessment.needs}
+        claim_outcomes_match = all(
+            (
+                item.kind is WorldModelClaimKind.APPLICATION_LIMITATION
+                and item.step_result_ids == ()
+                and item.limitation_codes
+                == assessments_by_need[item.need_id].limitations
+            )
+            if assessments_by_need[item.need_id].outcome
+            is WorldModelNeedOutcome.LIMITATION
+            else (
+                item.kind is WorldModelClaimKind.KNOWLEDGE_GAP
+                and item.step_result_ids == ()
+                and item.gap_code
+                == assessments_by_need[item.need_id].gap_code
+            )
+            if assessments_by_need[item.need_id].outcome
+            is WorldModelNeedOutcome.KNOWLEDGE_GAP
+            else (
+                item.kind is WorldModelClaimKind.QUERY_RESULT
+                and item.step_result_ids
+                == assessments_by_need[item.need_id].step_result_ids
+            )
+            for item in draft.claims
+        )
         forbidden = ("evidence excerpt", "source payload", "源码摘录")
         approved = (
             actual_needs == expected_needs
-            and all(
-                item.outcome is not WorldModelNeedOutcome.LIMITATION
-                for item in assessment.needs
-            )
+            and set(claims_by_need) == set(assessments_by_need)
+            and claim_outcomes_match
             and all(item.satisfied for item in assessment.joint_constraints)
             and not any(token in draft.body.casefold() for token in forbidden)
         )

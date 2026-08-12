@@ -7,6 +7,8 @@
 | `mall/` | 完整回归与历史 Demo；JWT 架构/能力验证 | Checkout HEAD `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`；JWT 单独绑定 target `dacce5f28dfc1734f2db09668d928d7fac2a3a7a` 与 parent `00bd03591cfd91f82ebe48787315eed613754277`，不要求 target 是 HEAD 的祖先 |
 | `transmittable-thread-local/` | 未见项目产品验收 | tag `v2.14.5` / `9c6552bbd7eda52b7bfb03c24c4f9aee514e91f3` |
 | `poi-tl/` | 未见项目产品验收 | tag `v1.12.2` / `58fdb6c7d9db7da53cd420ff1ebde49813bd7af2` |
+| `gson/` | ITER-005 G0 supported 多模块仓库 | commit `310ac341f2f92a454b229bf21f70d2d18b2b6db7` / tree `ff83ee01ad4b98fc88b94d8e48f476936e036d13` |
+| `maven-wrapper/` | ITER-005 G0 valid→unsupported 边界 | valid `e10ec821fc0e45105ec2e64d2087497bbc8fd145`；unsupported `62c6a95364ea44243b6c30a17ee793fce067a4c2` |
 
 ## 本地准备
 
@@ -23,6 +25,12 @@ git clone --branch v2.14.5 --single-branch \
 git clone --branch v1.12.2 --single-branch \
   https://github.com/Sayi/poi-tl.git \
   validation-projects/poi-tl
+
+git clone https://github.com/google/gson.git validation-projects/gson
+git -C validation-projects/gson checkout --detach 310ac341f2f92a454b229bf21f70d2d18b2b6db7
+
+git clone https://github.com/apache/maven-wrapper.git validation-projects/maven-wrapper
+git -C validation-projects/maven-wrapper checkout --detach 62c6a95364ea44243b6c30a17ee793fce067a4c2
 ```
 
 产品验证的精确 Commit、Tree、远程身份、许可证摘要、六个问题和资源限制由 [`validation/product_holdout_iteration_002/suite.json`](../validation/product_holdout_iteration_002/suite.json) 固定。执行前离线校验：

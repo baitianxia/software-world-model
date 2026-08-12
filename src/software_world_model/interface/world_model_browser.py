@@ -69,11 +69,15 @@ class WorldModelBrowserApplication:
         runner: WorldModelBrowserRunner,
         *,
         max_request_bytes: int = 16_384,
+        selector_field: str = "dataset_id",
     ) -> None:
         if max_request_bytes < 1:
             raise ValueError("max_request_bytes must be positive")
+        if selector_field not in {"dataset_id", "read_set_id"}:
+            raise ValueError("selector_field must be dataset_id or read_set_id")
         self._runner = runner
         self._max_request_bytes = max_request_bytes
+        self._selector_field = selector_field
 
     def __call__(self, environ, start_response):
         try:
@@ -135,7 +139,10 @@ class WorldModelBrowserApplication:
             )
         if method == "GET" and path == "/assets/world-model.js":
             return "200 OK", _raw(
-                WORLD_MODEL_BROWSER_JS, "text/javascript; charset=utf-8"
+                WORLD_MODEL_BROWSER_JS.replace(
+                    "__SWM_SELECTOR_FIELD__", self._selector_field
+                ),
+                "text/javascript; charset=utf-8",
             )
         if method == "GET" and path == "/health":
             return "200 OK", dict(self._runner.health())
@@ -143,6 +150,7 @@ class WorldModelBrowserApplication:
             return "200 OK", {
                 "mode": "WORLD_MODEL",
                 "environment": "EVALUATION_ONLY",
+                "selector_field": self._selector_field,
                 "datasets": [dict(item) for item in self._runner.datasets()],
             }
         citation_match = _CITATION_PATH.fullmatch(path)
@@ -157,9 +165,11 @@ class WorldModelBrowserApplication:
             )
         if method == "POST" and path == "/v1/world-model/questions":
             body = self._read_json(environ)
-            _exact_keys(body, {"request_id", "dataset_id", "question"})
+            _exact_keys(body, {"request_id", self._selector_field, "question"})
             request_id = _request_id(_text(body, "request_id"))
-            dataset_id = _bounded_text(body, "dataset_id", maximum=64)
+            dataset_id = _bounded_text(
+                body, self._selector_field, maximum=160
+            )
             question = _bounded_text(
                 body, "question", maximum=_QUESTION_MAXIMUM
             )

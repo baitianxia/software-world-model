@@ -6,8 +6,8 @@ authority: normative
 owners: [ai]
 depends_on: [SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
 derived_from: [DD-AI-MODEL-GATEWAY]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py]
-tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
+tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
 
 # Model Gateway
@@ -28,6 +28,10 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 4. 生成、语义审核和答案审核使用隔离上下文；不得依赖 Provider 会话记忆。
 5. 响应、Usage、结束原因和 Provider 元数据均不可信，必须经过 closed Schema 和领域语义校验。
 6. 迟到或结果未知的调用不能覆盖更新的 Attempt，也不能被写成明确 FAIL、PASS 或零 Usage。
+7. 每个新的外部披露评测必须绑定当前用户授权；历史 Conformance、Capability Qualification、Product Result 或 package
+   freeze 只能证明能力与实现身份，不能授权新问题。trusted launcher 从 exact evaluation grant 派生当前 session receipt；
+   active Gateway entrypoint 必须在读取 credential 或进入已资格 baseline 前验证 grant digest、disclosure digest、用户、授权时间、
+   authorization ref、payload boundary 与 `Production Activation=NOT_EXECUTED`。历史 permission 字段只能标为 baseline-only。
 
 ## Security and compatibility
 
