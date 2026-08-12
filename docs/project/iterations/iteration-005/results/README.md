@@ -1,10 +1,10 @@
 ---
 id: ITER-005-RESULTS-INDEX
 kind: iteration-result-index
-status: slice-002-run-007-live-pass-awaiting-user-acceptance
+status: completed
 authority: evidence
 owners: [project, quality]
-depends_on: [ITER-005-VERIFICATION]
+depends_on: [ITER-005-VERIFICATION, ITER-005-RESULT-ACCEPTANCE]
 code: []
 tests: []
 iteration: ITER-005
@@ -24,7 +24,9 @@ iteration: ITER-005
   已由独立 Result 记录。
 - [SLICE-002 Run-007 Live Evaluation](slice-002-run-007-live.md) — exact 用户授权下 Direct、Mature、World 各 9/9；baseline-first
   seal、independent comparison、正式 Web supported/Gap/Citation/动态 Read Set 布局与 console 全部 PASS；Production Activation
-  未执行，当前等待用户接受 SLICE-002 / ITER-005 Result。
+  未执行。
+- [Final Acceptance](acceptance.md) — 用户接受 implementation commit `956f31d6…` 的用户指定 Maven Workspace、独立更新、
+  动态 Read Set 与统一 Web 问答闭环；范围仍只到 Maven Structure `EVALUATION_ONLY`。
 
-后续 Result 只记录 exact subject 上实际发生的运行、人工核对、失败和限制，不拥有 System 规范，也不能自行授权下一
-Slice 或 Production Activation。
+本目录只记录 exact subject 上实际发生的运行、人工核对、失败和限制，不拥有 System 规范，也不授权后续 Iteration 或
+Production Activation。

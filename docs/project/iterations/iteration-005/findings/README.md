@@ -36,7 +36,6 @@ iteration: ITER-005
 - [FINDING-005-010](FINDING-005-010.md)：两个独立 live run 证明 controlled Direct 的 1000-token/隐含 JSON 响应
   信封不足；新协议密封 4096-token 与严格 JSON-only contract，同时保留单次无重试和全部历史失败。
 
-全部 Finding disposition 不自动接受 SLICE-002 或 ITER-005。`run-006` 的正式浏览器 PASS、V-009 FAIL 保留；新候选已在
-绑定 exact suite 的当前用户授权下完成三条真实披露，`run-007` comparison 与浏览器均 PASS。Proposal 的进入前证据——动态
-浏览器固定数据以及 Coverage copy 过度宣称——分别由本轮 Slice 边界与 V-002 处理。当前只等待用户 Acceptance 裁决，
-Production Activation 未执行。
+全部 Finding 已在最终 Acceptance 前处置。`run-006` 的正式浏览器 PASS、V-009 FAIL 保留；新候选在绑定 exact suite 的
+用户授权下完成三条真实披露，`run-007` comparison 与浏览器均 PASS。Proposal 的进入前证据——动态浏览器固定数据以及
+Coverage copy 过度宣称——分别由本轮 Slice 边界与 V-002 处理。Production Activation 未执行。

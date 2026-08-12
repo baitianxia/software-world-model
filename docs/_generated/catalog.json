@@ -1598,8 +1598,8 @@
   {
     "id": "ITER-005-DESIGN-INDEX",
     "kind": "development-design-index",
-    "status": "slice-002-verified-awaiting-user-acceptance",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering",
       "architecture"
@@ -1622,8 +1622,8 @@
   {
     "id": "ITER-005-INDEX",
     "kind": "iteration-index",
-    "status": "in-progress",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-project",
     "owners": [
       "project"
     ],
@@ -1654,6 +1654,19 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-005/readiness-review.md"
+  },
+  {
+    "id": "ITER-005-RESULT-ACCEPTANCE",
+    "kind": "iteration-acceptance",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-005/results/acceptance.md"
   },
   {
     "id": "ITER-005-RESULT-G0",
@@ -1706,7 +1719,7 @@
   {
     "id": "ITER-005-RESULT-SLICE-002-RUN-007",
     "kind": "iteration-result",
-    "status": "ready-for-user-acceptance",
+    "status": "accepted",
     "authority": "execution-evidence",
     "owners": [
       "engineering",
@@ -1718,7 +1731,7 @@
   {
     "id": "ITER-005-RESULTS-INDEX",
     "kind": "iteration-result-index",
-    "status": "slice-002-run-007-live-pass-awaiting-user-acceptance",
+    "status": "completed",
     "authority": "evidence",
     "owners": [
       "project",
@@ -1730,8 +1743,8 @@
   {
     "id": "ITER-005-SLICE-001",
     "kind": "development-slice",
-    "status": "implemented-awaiting-user-acceptance",
-    "authority": "review-required",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering"
     ],
@@ -1741,8 +1754,8 @@
   {
     "id": "ITER-005-SLICE-002",
     "kind": "development-slice",
-    "status": "in-progress",
-    "authority": "current-development",
+    "status": "completed",
+    "authority": "historical-development",
     "owners": [
       "engineering"
     ],
@@ -1752,7 +1765,7 @@
   {
     "id": "ITER-005-VERIFICATION",
     "kind": "iteration-verification",
-    "status": "slice-002-run-007-live-pass-awaiting-user-acceptance",
+    "status": "completed",
     "authority": "planned-verification",
     "owners": [
       "quality"

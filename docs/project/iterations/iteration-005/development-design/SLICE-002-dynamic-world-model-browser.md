@@ -1,14 +1,14 @@
 ---
 id: ITER-005-SLICE-002
 kind: development-slice
-status: in-progress
-authority: current-development
+status: completed
+authority: historical-development
 owners: [engineering]
 depends_on: [ITER-005-PROPOSAL, ITER-005-SLICE-001, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-ARCH-DEPLOYMENT, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-OPS-LOCAL-BROWSER, SYS-QUALITY-SECURITY, SYS-QUALITY-ACCEPTANCE]
 code: [src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-005
-coding_input: true
+coding_input: false
 ---
 
 # SLICE-002：正式本机 World Model Web 问答入口
@@ -18,8 +18,8 @@ coding_input: true
 SLICE-001 Result 已由用户接受；用户于 `2026-08-11T19:32:39+08:00` 授权本 Slice 编码。已冻结的新仓库 Catalog、
 Answer/Prompt/Strategy/Provider subject 与有效资格见 Manifest。`run-006` 的浏览器验收 PASS、comparison FAIL 原样保留；
 修复后的 `run-007` 已取得绑定新 suite 的三条 exact disclosure 授权，并完成三路 population、independent comparison 与
-真实浏览器验收，结果全部 PASS。本 Slice 已实现并验证，当前保持 in-progress 只为等待用户接受 Result；Production
-Activation 未执行。
+真实浏览器验收，结果全部 PASS。用户于 `2026-08-12T08:44:55+08:00` 接受本 Slice 与 ITER-005；本文件转为历史设计，
+Production Activation 未执行。
 
 ## Current vs expected behavior
 
@@ -113,7 +113,8 @@ independent comparison `sha256:e7d16fa4…` 为 PASS；真实产品入口完成 
 空 console 核对；51/51 focused、13/13 protected staged Answer、801/801 full regression 与 docs check PASS。所有请求均为
 `EVALUATION_ONLY`，每个浏览器问题 Provider/Network/Retry=`1/1/0`，服务已停止，Production Activation `NOT_EXECUTED`。
 
-这些证据使本 Slice 达到等待用户验收状态，但不由 Development Design 自动产生 Acceptance。
+这些证据当时使本 Slice 达到等待用户验收状态；用户随后通过独立消息接受本 Slice 与 ITER-005，最终裁决不由
+Development Design 自动产生。
 
 ## Implemented finding and qualification impact
 
@@ -149,6 +150,5 @@ held-out suite 的显式字段由 runner/evaluator 双向验证；仍然是每�
 ## Findings
 
 链接本轮的 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)。
-SLICE-001 已接受，本 Slice Readiness 已按 `FINDING-005-002` 闭合，状态为 in-progress 并被 `project/current.md` 指向；
-`run-006` 与 `run-007` 的 exact 外部分派授权均已消费且不能复用于其他 suite。当前编码权限仅用于在用户裁决前维护同一
-Slice，不表示 Result 已接受；Production Activation 始终不在授权范围。
+SLICE-001 与本 Slice 均已接受；`run-006` 与 `run-007` 的 exact 外部分派授权均已消费且不能复用于其他 suite。本设计已
+转为历史输入，不再提供编码权限；Production Activation 始终不在授权范围。

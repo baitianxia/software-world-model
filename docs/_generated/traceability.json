@@ -1214,6 +1214,16 @@
       "tests/test_iteration_005_slice2_evaluator.py"
     ]
   },
+  "ITER-005-RESULT-ACCEPTANCE": {
+    "path": "docs/project/iterations/iteration-005/results/acceptance.md",
+    "code": [
+      "src/software_world_model",
+      "validation/structure_world_model_iteration_005"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-005-RESULT-G0": {
     "path": "docs/project/iterations/iteration-005/results/g0-generalization.md",
     "code": [

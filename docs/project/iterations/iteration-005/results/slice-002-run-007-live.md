@@ -1,7 +1,7 @@
 ---
 id: ITER-005-RESULT-SLICE-002-RUN-007
 kind: iteration-result
-status: ready-for-user-acceptance
+status: accepted
 authority: execution-evidence
 owners: [engineering, quality]
 depends_on: [ITER-005-VERIFICATION, ITER-005-SLICE-002, ITER-005-RESULT-SLICE-002-CANDIDATE-FREEZE, FINDING-005-010]
@@ -19,8 +19,8 @@ population 均为 9/9 成功；独立 evaluator 对九题均判定 World Model e
 逐题不低于两条可评 baseline 中较强者。正式产品 Web 入口的 supported、Citation、动态 Read Set 选择、Coverage Gap 与
 console 人工核对也全部通过。
 
-该 Result 闭合 SLICE-002 的 V-006—V-010，因而 SLICE-002 与 ITER-005 已达到**等待用户验收**状态；它们尚未被用户接受，
-本文件也不自行产生 Acceptance。Production Activation 始终为 `NOT_EXECUTED`。
+该 Result 闭合 SLICE-002 的 V-006—V-010。用户随后于 `2026-08-12T08:44:55+08:00` 明确接受 SLICE-002 与 ITER-005；
+最终裁决见 [Iteration 005 Acceptance](acceptance.md)。Production Activation 始终为 `NOT_EXECUTED`。
 
 ## Exact authorization and sealed order
 
@@ -90,6 +90,5 @@ live subject 继承 [Candidate Freeze](slice-002-candidate-freeze.md) 的 51/51 
 801/801 full regression 与 docs check PASS。所有十条 Finding 均已处置，旧 `run-006` 的 comparison `FAIL` 和浏览器
 `PASS` 仍由独立 Result 保存，没有被覆盖。
 
-当前剩余动作只有用户对 SLICE-002 / ITER-005 Result 作接受、拒绝或后续决策。接受范围仍仅为本机 Maven Structure
-World Model `EVALUATION_ONLY`：Scheduler、真 Delta、多源、非 Maven Profile、认证、网络部署、Schema Evolution 和
-Production Activation 均不在本 Result 中，Production Activation `NOT_EXECUTED`。
+接受范围仍仅为本机 Maven Structure World Model `EVALUATION_ONLY`：Scheduler、真 Delta、多源、非 Maven Profile、
+认证、网络部署、Schema Evolution 和 Production Activation 均不在本 Result 中，Production Activation `NOT_EXECUTED`。

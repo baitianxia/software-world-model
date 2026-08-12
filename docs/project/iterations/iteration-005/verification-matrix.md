@@ -1,7 +1,7 @@
 ---
 id: ITER-005-VERIFICATION
 kind: iteration-verification
-status: slice-002-run-007-live-pass-awaiting-user-acceptance
+status: completed
 authority: planned-verification
 owners: [quality]
 depends_on: [ITER-005-PROPOSAL, ITER-004-RESULT-ACCEPTANCE]
@@ -31,5 +31,5 @@ iteration: ITER-005
 [Run-006 Live Result](results/slice-002-run-006-live.md) 保留 V-009 `FAIL` 与 V-007 浏览器 PASS；
 [Candidate Freeze](results/slice-002-candidate-freeze.md) 闭合新 `run-007` 的确定性输入、资格、未授权短路和回归；
 [Run-007 Live Result](results/slice-002-run-007-live.md) 在 exact 用户授权下闭合三条 population、V-009 independent
-comparison 与正式 Web 人工验收。V-006—V-010 现为 PASS，但用户尚未接受 SLICE-002 / ITER-005，因此不能标记
-accepted/completed。
+comparison 与正式 Web 人工验收。V-006—V-010 为 PASS，用户随后接受 SLICE-002 / ITER-005，最终裁决见
+[Iteration 005 Acceptance](results/acceptance.md)。

@@ -1,8 +1,8 @@
 ---
 id: ITER-005-SLICE-001
 kind: development-slice
-status: implemented-awaiting-user-acceptance
-authority: review-required
+status: completed
+authority: historical-development
 owners: [engineering]
 depends_on: [ITER-005-PROPOSAL, SYS-CONTRACT-APPLICATION-MANAGEMENT, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-QUALITY-ACCEPTANCE]
 code: [src/software_world_model/application_services, src/software_world_model/infrastructure, src/software_world_model/interface]
@@ -20,9 +20,8 @@ coding_input: false
 case 均为 COMPLETE，Maven Wrapper valid→unsupported 序列准确拒绝并保持旧 CURRENT；报告 digest 为
 `sha256:bcd7a269…`。
 
-实现与 V-002—V-005 证据现已完成；[SLICE-001 Result](../results/slice-001-workspace-catalog.md) 的主报告 digest 为
-`sha256:7047522d…`，全量回归 771/771 PASS。当前停在用户人工接受点，本文件不再授权继续修改产品代码；SLICE-002 仍未
-授权。
+实现与 V-002—V-005 证据已完成；[SLICE-001 Result](../results/slice-001-workspace-catalog.md) 的主报告 digest 为
+`sha256:7047522d…`，全量回归 771/771 PASS。用户已接受本 Slice，并随后接受整个 ITER-005；本文件不再授权产品代码修改。
 
 ## Current vs expected behavior
 

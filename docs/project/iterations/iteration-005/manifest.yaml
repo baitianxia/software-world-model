@@ -1,7 +1,7 @@
 schema_version: 1
 iteration:
   id: ITER-005
-  status: in-progress
+  status: completed
   outcome_scope: user-selected-local-maven-world-model-workspace
 
 baseline:
@@ -9,6 +9,18 @@ baseline:
   tree: 73b8cf52e0ab5202137dd833445ced237ef698cd
   dirty_worktree_allowed: false
   relation: clean-post-iteration-004-acceptance
+
+accepted_subject:
+  implementation_commit: 956f31d6c6a3082a68100b1ec678148b1450f022
+  implementation_tree: fa2a975bd96b4e73bcaaa25a58eb5bc00a3e0ff9
+  run_007_producer_commit: 0c2b155d42a272d1b2172f5a82c41179855cd44d
+  run_007_producer_tree: f505499ef4a1891c43eeddb689812a2a660693e7
+  run_007_source_manifest_digest: sha256:252e868e4295b7a99eaee042e22f7edf64cc29604f222839437f22cffd1540cd
+  live_comparison_report_digest: sha256:e7d16fa4f56cf35243f100ffb5cd4b56d950b3bb620a08c273f281ef7e6c0116
+  acceptance_id: ITER-005-RESULT-ACCEPTANCE
+  accepted_by: user
+  accepted_at: "2026-08-12T08:44:55+08:00"
+  production_activation: not-executed
 
 system_inputs:
   ids:
@@ -36,12 +48,15 @@ development:
       accepted_by: user
       accepted_at: "2026-08-11T19:32:39+08:00"
     ITER-005-SLICE-002:
-      status: verification-complete-awaiting-user-acceptance
-      coding_input: true
+      status: accepted
+      coding_input: false
       requires_accepted_result_from: ITER-005-SLICE-001
       required_for_iteration_acceptance: true
       authorized_by: user
       authorized_at: "2026-08-11T19:32:39+08:00"
+      result: ITER-005-RESULT-SLICE-002-RUN-007
+      accepted_by: user
+      accepted_at: "2026-08-12T08:44:55+08:00"
 
 external_inputs:
   g0_generalization_set:
@@ -86,7 +101,7 @@ external_inputs:
       - same-scope-valid-baseline-commit-before-unsupported-commit
       - expected-rejection-reason-and-unchanged-current-oracle
   slice_002_product_inputs:
-    status: run-006-live-fail-preserved-run-007-live-pass-awaiting-user-acceptance
+    status: run-006-live-fail-preserved-run-007-live-pass-accepted
     inherited_product_subject:
       role: changed-answer-package-baseline-only
       commit: b9b329a9b341b01fc41486ef9b0c809ac8665332
@@ -131,7 +146,7 @@ external_inputs:
       qualification_digest: sha256:005b1bf43c76a64d123b0184cdac1a9e844331896e7ede6279875881d9bcc62c
     dynamic_launcher_subject:
       module: software_world_model.interface.world_model_http
-      status: run-007-live-pass-service-stopped-awaiting-user-acceptance
+      status: run-007-live-pass-service-stopped-accepted
       grant_schema: SWM-WORLD-MODEL-EVALUATION-GRANT@2
       rationale: FINDING-005-002-and-FINDING-005-005
     candidate_freeze:
@@ -174,7 +189,7 @@ external_inputs:
       production_activation: NOT_EXECUTED
     current_live_evaluation:
       run: run-007
-      status: comparison-pass-browser-pass-awaiting-user-acceptance
+      status: comparison-pass-browser-pass-accepted
       suite_digest: sha256:04f50cae8392296d8173921e56063abded7d66c33c17d97019d50ac965b9f884
       authorization_ref: codex-user-message:sha256:14fb67f7fa2aee866b0f1603923fad996908f44873f37cb6ed8a9594650c7c4f
       authorization_digest: sha256:a33d65377f9aec8c249a3351f484c226a0cf501b1694ad1dbbf0c73a6f3411de
@@ -230,7 +245,7 @@ verification:
     report_digest: sha256:7047522d5f2f7fe936c0db3c3a28ff3f75e4141e5c50fbe3f9af7c02df41498f
     full_regression: 771/771-pass
   slice_002:
-    status: run-006-fail-preserved-run-007-live-pass-awaiting-user-acceptance
+    status: accepted
     result_id: ITER-005-RESULT-SLICE-002-RUN-007
     deterministic_report_path: var/iteration-005/slice-002/run-007/report.json
     deterministic_report_digest: sha256:ba65d6d01b2b6bc78fc6ba80a7d0c8896f61099d9b7471e4c446c3fecec71bf3
@@ -242,7 +257,9 @@ authorization:
   readiness_review_id: ITER-005-READINESS
   authorized_by: user
   authorized_at: "2026-08-11T18:10:12+08:00"
-  active_slice: ITER-005-SLICE-002
+  active_slice: none
   slice_002_authorized_at: "2026-08-11T19:32:39+08:00"
   live_external_dispatch: run-006-and-run-007-authorized-and-executed-evaluation-only
+  iteration_accepted_by: user
+  iteration_accepted_at: "2026-08-12T08:44:55+08:00"
   production_activation: not-authorized

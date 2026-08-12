@@ -140,5 +140,5 @@ baseline `a91dc7c…` 上通过；Workspace/Catalog Owner 与持久化边界已�
 SLICE-002 时本 Iteration 必须保持未完成，Production Activation 仍不授权。
 
 后续授权与结果由 Readiness addendum 和 Result 拥有：用户已接受 SLICE-001、授权 SLICE-002 编码，并分别对 exact live
-suite 作披露授权；`run-007` engineering gate 已 PASS，当前等待用户接受 SLICE-002 / ITER-005 Result。该后续状态不改变
-本 Proposal 当时只授权 SLICE-001 的历史决定，也不授权 Production Activation。
+suite 作披露授权；`run-007` engineering gate 已 PASS，用户随后于 `2026-08-12T08:44:55+08:00` 接受 SLICE-002 与
+ITER-005。该后续状态不改变本 Proposal 当时只授权 SLICE-001 的历史决定，也不授权 Production Activation。

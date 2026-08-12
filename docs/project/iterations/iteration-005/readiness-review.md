@@ -24,8 +24,8 @@ commit/tree、qualification、Provider 与 launcher。
 `run-007` 随后按 baseline-first 密封顺序完成：controlled Direct、Mature Source Agent、World Model 均 9/9；independent
 comparison `sha256:e7d16fa4…` 为 PASS；正式产品 Web 入口的 supported、Gap、Citation、动态 Read Set 选择、长 identity
 布局与空 console 也全部通过，listener 已停止。详见 [Run-007 Live Result](results/slice-002-run-007-live.md)。这使
-SLICE-002 达到等待用户验收状态，但不由 Readiness 文档自动接受 SLICE-002 或 ITER-005；Production Activation
-`NOT_EXECUTED`。
+SLICE-002 当时达到等待用户验收状态；用户随后于 `2026-08-12T08:44:55+08:00` 通过独立消息接受 SLICE-002 与 ITER-005。
+该 Acceptance 不是由 Readiness 文档自动产生，Production Activation `NOT_EXECUTED`。
 
 ## SLICE-002 post-implementation freeze update
 
@@ -93,11 +93,10 @@ SLICE-001 先做无模型的 G0、工作区更新、Bundle 与动态 Catalog；�
 
 Verification Matrix 已区分代码现状审计、确定性契约/故障、Source-off 产品、真实模型产品对照与 Production Activation。
 V-001 与 SLICE-001 已 PASS 并被用户接受。`run-006` 的 V-007 真实浏览器部分 PASS、V-009 FAIL 原样保留；`run-007` 已使
-V-006—V-010 全部 PASS。当前只等待用户对 SLICE-002 / ITER-005 Result 作接受、拒绝或后续决策。
+V-006—V-010 全部 PASS；用户随后接受 SLICE-002 / ITER-005 Result。
 
 ## Authorization decision
 
 用户明确要求开发 ITER-005；G0、System write-back 与 SLICE-001 输入均已闭合。Readiness 为 **ACCEPTED**，用户随后
 通过独立消息接受 SLICE-001、授权 `ITER-005-SLICE-002` 编码，并分别对 `run-006` 与 `run-007` 作 exact live disclosure
-授权。`run-007` live gate 已 PASS；这些授权不等于用户对 SLICE-002 / ITER-005 Result 的最终 Acceptance。Production
-Activation 保持 `NOT EXECUTED`。
+授权。`run-007` live gate 已 PASS；用户后来另行确认最终 Acceptance。Production Activation 保持 `NOT EXECUTED`。
