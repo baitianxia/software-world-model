@@ -38,16 +38,38 @@ MAVEN_CANONICALIZATION_REF = "MAVEN-REACTOR-CANONICALIZATION@1.0.0"
 MAVEN_CANONICALIZATION_DIGEST = Digest(
     "sha256:4fae328bd8c2959cfc1eaaae3b9b27f40d601bf2ffb488bf3abe2cc81c5da6cf"
 )
+JAVA_STATIC_CALL_SCHEMA_REF = "JAVA-STATIC-CALL-GRAPH@1.0.0"
+JAVA_STATIC_CALL_SCHEMA_DIGEST = Digest(
+    "sha256:32ab1a12e5cb87a9751b25238d5ef6cace620ab0da47f0fc31f9d10e081e47c8"
+)
+JAVA_STATIC_CALL_PROFILE_REF = "JAVA_STATIC_CALL_GRAPH@1"
+JAVA_STATIC_CALL_COVERAGE_ROOT_REF = "JAVA_STATIC_CALL_GRAPH_COVERAGE@1"
+JAVA_STATIC_CALL_EVALUATION_CONTEXT_REF = (
+    "JAVA-STATIC-CALL-EVALUATION-CONTEXT@1.0.0"
+)
+JAVA_STATIC_CALL_EVALUATION_CONTEXT_DIGEST = Digest(
+    "sha256:0b08eab7334a06e267da6270b9074d0f121a235b086b61a898eb66cb83507f5c"
+)
+JAVA_STATIC_CALL_CANONICALIZATION_REF = (
+    "JAVA-STATIC-CALL-CANONICALIZATION@1.0.0"
+)
+JAVA_STATIC_CALL_CANONICALIZATION_DIGEST = Digest(
+    "sha256:598c0ab07e3411ecc46b80743332290305c4325f5a098a258a78cdd3d338582f"
+)
 
 
 class EntityType(str, Enum):
     SOFTWARE_SYSTEM = "SOFTWARE_SYSTEM"
     MAVEN_MODULE = "MAVEN_MODULE"
+    JAVA_TYPE = "JAVA_TYPE"
+    JAVA_METHOD = "JAVA_METHOD"
 
 
 class RelationPredicate(str, Enum):
     CONTAINS_MODULE = "CONTAINS_MODULE"
     DEPENDS_ON = "DEPENDS_ON"
+    DECLARES_METHOD = "DECLARES_METHOD"
+    CALLS = "CALLS"
 
 
 class ObservationModality(str, Enum):
@@ -55,6 +77,8 @@ class ObservationModality(str, Enum):
     POM_LOCAL_DECLARED_INTERNAL_DEPENDENCY = (
         "POM_LOCAL_DECLARED_INTERNAL_DEPENDENCY@1"
     )
+    JAVA_SOURCE_DECLARATION = "JAVA_SOURCE_DECLARATION@1"
+    JAVA_SOURCE_STATIC_CALL = "JAVA_SOURCE_STATIC_CALL@1"
 
 
 class FactKind(str, Enum):
@@ -244,6 +268,13 @@ _ENTITY_ROOT_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "effective_group_id",
         "artifact_id",
     ),
+    EntityType.JAVA_TYPE: ("owning_scope_id", "qualified_name"),
+    EntityType.JAVA_METHOD: (
+        "owning_scope_id",
+        "declaring_type_qualified_name",
+        "method_name",
+        "parameter_types",
+    ),
 }
 _ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
     EntityType.SOFTWARE_SYSTEM: (
@@ -265,10 +296,28 @@ _ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "source_revision",
         "evidence_references",
     ),
+    EntityType.JAVA_TYPE: (
+        "simple_name",
+        "package_name",
+        "declaration_kind",
+        "source_path",
+        "source_revision",
+        "evidence_references",
+    ),
+    EntityType.JAVA_METHOD: (
+        "return_type",
+        "visibility",
+        "modifiers",
+        "source_path",
+        "source_revision",
+        "evidence_references",
+    ),
 }
 _ENTITY_IDENTITY_SCHEMES: dict[EntityType, str] = {
     EntityType.SOFTWARE_SYSTEM: "SOFTWARE_SYSTEM@1",
     EntityType.MAVEN_MODULE: "MAVEN_MODULE@1",
+    EntityType.JAVA_TYPE: "JAVA_TYPE@1",
+    EntityType.JAVA_METHOD: "JAVA_METHOD@1",
 }
 _RELATION_STATE_FIELDS = (
     "subject_entity_state_id",
@@ -287,6 +336,8 @@ _PREDICATE_STATE_FIELDS: dict[RelationPredicate, tuple[str, ...]] = {
         "classifier",
         "optional",
     ),
+    RelationPredicate.DECLARES_METHOD: ("declaration_ordinal",),
+    RelationPredicate.CALLS: ("call_site_count",),
 }
 _COVERAGE_ROOT_FIELDS = (
     "owning_scope_id",
@@ -414,6 +465,38 @@ class EntityRoot:
             identity_fields={
                 "effective_group_id": effective_group_id,
                 "artifact_id": artifact_id,
+            },
+        )
+
+    @classmethod
+    def java_type(
+        cls,
+        *,
+        owning_scope_id: StableId,
+        qualified_name: str,
+    ) -> "EntityRoot":
+        return cls.create(
+            entity_type=EntityType.JAVA_TYPE,
+            owning_scope_id=owning_scope_id,
+            identity_fields={"qualified_name": qualified_name},
+        )
+
+    @classmethod
+    def java_method(
+        cls,
+        *,
+        owning_scope_id: StableId,
+        declaring_type_qualified_name: str,
+        method_name: str,
+        parameter_types: Sequence[str],
+    ) -> "EntityRoot":
+        return cls.create(
+            entity_type=EntityType.JAVA_METHOD,
+            owning_scope_id=owning_scope_id,
+            identity_fields={
+                "declaring_type_qualified_name": declaring_type_qualified_name,
+                "method_name": method_name,
+                "parameter_types": tuple(parameter_types),
             },
         )
 
@@ -1125,8 +1208,14 @@ class CoverageRoot:
         schema_digest: Digest = MAVEN_STRUCTURE_SCHEMA_DIGEST,
         maven_evaluation_context_ref: str = MAVEN_EVALUATION_CONTEXT_REF,
         maven_evaluation_context_digest: Digest = MAVEN_EVALUATION_CONTEXT_DIGEST,
-        covered_entity_types: Sequence[EntityType | str] = tuple(EntityType),
-        covered_relation_predicates: Sequence[RelationPredicate | str] = tuple(RelationPredicate),
+        covered_entity_types: Sequence[EntityType | str] = (
+            EntityType.SOFTWARE_SYSTEM,
+            EntityType.MAVEN_MODULE,
+        ),
+        covered_relation_predicates: Sequence[RelationPredicate | str] = (
+            RelationPredicate.CONTAINS_MODULE,
+            RelationPredicate.DEPENDS_ON,
+        ),
         canonicalization_ref: str = MAVEN_CANONICALIZATION_REF,
         canonicalization_digest: Digest = MAVEN_CANONICALIZATION_DIGEST,
         coverage_root_ref: str = MAVEN_STRUCTURE_COVERAGE_ROOT_REF,
@@ -1523,14 +1612,97 @@ class StructureKnowledgeBatch:
                     "FROZEN_DEFINITION_MISMATCH",
                     "Maven Structure Coverage must bind all frozen Definition refs and digests",
                 )
-            expected_types = tuple(sorted(EntityType, key=lambda item: item.value))
-            expected_predicates = tuple(sorted(RelationPredicate, key=lambda item: item.value))
+            expected_types = tuple(
+                sorted(
+                    (EntityType.SOFTWARE_SYSTEM, EntityType.MAVEN_MODULE),
+                    key=lambda item: item.value,
+                )
+            )
+            expected_predicates = tuple(
+                sorted(
+                    (RelationPredicate.CONTAINS_MODULE, RelationPredicate.DEPENDS_ON),
+                    key=lambda item: item.value,
+                )
+            )
             if self.coverage.root.covered_entity_types != expected_types or self.coverage.root.covered_relation_predicates != expected_predicates:
                 _fail("INCOMPLETE_PROFILE_COVERAGE", "Maven Structure Coverage must declare all frozen types and predicates")
         elif self.coverage.root.profile_ref == MAVEN_STRUCTURE_PROFILE_REF:
             _fail(
                 "PROFILE_SCHEMA_MISMATCH",
                 "Maven Structure Profile requires its exact frozen Schema ref",
+            )
+        elif self.coverage.root.schema_ref == JAVA_STATIC_CALL_SCHEMA_REF:
+            if self.coverage.root.profile_ref != JAVA_STATIC_CALL_PROFILE_REF:
+                _fail(
+                    "PROFILE_SCHEMA_MISMATCH",
+                    "Java Static Call Schema requires its exact Profile ref",
+                )
+            if self.publication_mode is not PublicationMode.REPLACE_COVERAGE:
+                _fail(
+                    "PUBLICATION_MODE_MISMATCH",
+                    "Java Static Call complete Coverage requires REPLACE_COVERAGE",
+                )
+            if self.literal_facts:
+                _fail(
+                    "LITERAL_FACT_NOT_ALLOWED",
+                    "Java Static Call Schema declares no Literal Fact kinds",
+                )
+            exact_definitions = (
+                (
+                    self.coverage.root.schema_digest,
+                    JAVA_STATIC_CALL_SCHEMA_DIGEST,
+                ),
+                (
+                    self.coverage.root.maven_evaluation_context_ref,
+                    JAVA_STATIC_CALL_EVALUATION_CONTEXT_REF,
+                ),
+                (
+                    self.coverage.root.maven_evaluation_context_digest,
+                    JAVA_STATIC_CALL_EVALUATION_CONTEXT_DIGEST,
+                ),
+                (
+                    self.coverage.root.canonicalization_ref,
+                    JAVA_STATIC_CALL_CANONICALIZATION_REF,
+                ),
+                (
+                    self.coverage.root.canonicalization_digest,
+                    JAVA_STATIC_CALL_CANONICALIZATION_DIGEST,
+                ),
+                (
+                    self.coverage.root.coverage_root_ref,
+                    JAVA_STATIC_CALL_COVERAGE_ROOT_REF,
+                ),
+            )
+            if any(actual != expected for actual, expected in exact_definitions):
+                _fail(
+                    "FROZEN_DEFINITION_MISMATCH",
+                    "Java Static Call Coverage must bind all frozen Definition refs and digests",
+                )
+            expected_types = tuple(
+                sorted(
+                    (EntityType.JAVA_TYPE, EntityType.JAVA_METHOD),
+                    key=lambda item: item.value,
+                )
+            )
+            expected_predicates = tuple(
+                sorted(
+                    (RelationPredicate.DECLARES_METHOD, RelationPredicate.CALLS),
+                    key=lambda item: item.value,
+                )
+            )
+            if (
+                self.coverage.root.covered_entity_types != expected_types
+                or self.coverage.root.covered_relation_predicates
+                != expected_predicates
+            ):
+                _fail(
+                    "INCOMPLETE_PROFILE_COVERAGE",
+                    "Java Static Call Coverage must declare all frozen types and predicates",
+                )
+        elif self.coverage.root.profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            _fail(
+                "PROFILE_SCHEMA_MISMATCH",
+                "Java Static Call Profile requires its exact frozen Schema ref",
             )
 
         _require_unique_records(self.entities, "Entity")
@@ -1680,12 +1852,25 @@ def _validate_relation_shape(
             and object.entity_type is EntityType.MAVEN_MODULE
             and observation_modality is ObservationModality.RECURSIVE_REACTOR_MEMBERSHIP
         )
-    else:
+    elif predicate is RelationPredicate.DEPENDS_ON:
         valid = (
             subject.entity_type in (EntityType.SOFTWARE_SYSTEM, EntityType.MAVEN_MODULE)
             and object.entity_type is EntityType.MAVEN_MODULE
             and observation_modality
             is ObservationModality.POM_LOCAL_DECLARED_INTERNAL_DEPENDENCY
+        )
+    elif predicate is RelationPredicate.DECLARES_METHOD:
+        valid = (
+            subject.entity_type is EntityType.JAVA_TYPE
+            and object.entity_type is EntityType.JAVA_METHOD
+            and observation_modality
+            is ObservationModality.JAVA_SOURCE_DECLARATION
+        )
+    else:
+        valid = (
+            subject.entity_type is EntityType.JAVA_METHOD
+            and object.entity_type is EntityType.JAVA_METHOD
+            and observation_modality is ObservationModality.JAVA_SOURCE_STATIC_CALL
         )
     if not valid:
         _fail("RELATION_SCHEMA_MISMATCH", "Relation Fact endpoint types, predicate, and modality do not match")
@@ -1705,8 +1890,15 @@ def _normalize_entity_state_payload(
         binding = supplied["source_binding_id"]
         _require_stable_id(binding, "source binding ID")
         supplied["source_binding_id"] = binding.value
+    if entity_type is EntityType.JAVA_METHOD:
+        modifiers = _require_sequence(supplied["modifiers"], "Java method modifiers")
+        supplied["modifiers"] = tuple(
+            sorted({_text(item, "Java method modifier") for item in modifiers})
+        )
     for key in _ENTITY_STATE_FIELDS[entity_type]:
         if key != "evidence_references" and key != "source_binding_id":
+            if entity_type is EntityType.JAVA_METHOD and key == "modifiers":
+                continue
             supplied[key] = _text(supplied[key], key)
     return CanonicalFields(supplied)
 
@@ -1720,7 +1912,7 @@ def _normalize_predicate_payload(
         supplied["module_declaration_path"] = _text(
             supplied["module_declaration_path"], "module declaration path"
         )
-    else:
+    elif predicate is RelationPredicate.DEPENDS_ON:
         for key in (
             "declared_dependency_gav_expression",
             "resolved_dependency_gav",
@@ -1733,6 +1925,20 @@ def _normalize_predicate_payload(
             supplied["classifier"] = _text(classifier, "classifier")
         if type(supplied["optional"]) is not bool:
             _fail("OPTIONAL_NOT_BOOLEAN", "dependency optional state must be a boolean")
+    elif predicate is RelationPredicate.DECLARES_METHOD:
+        ordinal = supplied["declaration_ordinal"]
+        if type(ordinal) is not int or ordinal < 0:
+            _fail(
+                "DECLARATION_ORDINAL_INVALID",
+                "Java declaration ordinal must be a non-negative integer",
+            )
+    else:
+        count = supplied["call_site_count"]
+        if type(count) is not int or count < 1:
+            _fail(
+                "CALL_SITE_COUNT_INVALID",
+                "Java call relation must contain at least one exact call site",
+            )
     return CanonicalFields(supplied)
 
 
@@ -1826,6 +2032,15 @@ def _exact_fields(values: Mapping[str, object], expected: Sequence[str], label: 
             normalized[key] = value.value
         elif isinstance(value, Digest):
             normalized[key] = value.value
+        elif key == "parameter_types":
+            if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+                _fail(
+                    "PARAMETER_TYPES_INVALID",
+                    "parameter_types must be an ordered sequence of canonical type names",
+                )
+            normalized[key] = tuple(
+                _text(item, "parameter type") for item in value
+            )
         else:
             normalized[key] = _text(value, key)
     return CanonicalFields(normalized)

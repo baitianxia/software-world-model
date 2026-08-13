@@ -21,6 +21,9 @@ _SUMMARY_SCHEMA = "SWM-WORLD-MODEL-AUTHORIZED-GATEWAY@1"
 _LEGACY_GATEWAY_SHA256 = (
     "ec6c04e64be4d6fed8c1ef9992e2fa2a2e47025c85d7ca4f0e783493c6dfa67c"
 )
+_JAVA_GATEWAY_SHA256 = (
+    "72035f4499ea5273f79ad87a234f7dcdac4f39c6fdf7eaeab4a7b717e5fd7d31"
+)
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
@@ -83,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline_output = output_path.with_name("qualified-baseline-summary.json")
     if baseline_output.exists() or baseline_output.is_symlink():
         raise RuntimeError("qualified Gateway baseline summary already exists")
-    baseline = _load_qualified_baseline()
+    baseline = _load_qualified_baseline(baseline_arguments)
     code = baseline.main(
         [
             *baseline_arguments,
@@ -101,6 +104,17 @@ def main(argv: list[str] | None = None) -> int:
         or baseline_summary.get("https_dispatch_count") != 1
     ):
         raise RuntimeError("qualified Gateway baseline did not pass exactly once")
+    baseline_schema = baseline_summary.get("schema")
+    if baseline_schema == "swm.iter-003.g3b-gateway-workload@1":
+        baseline_sha256 = _LEGACY_GATEWAY_SHA256
+        baseline_freeze_digest = baseline_summary["g3b_freeze_digest"]
+        baseline_freeze_key = "legacy_freeze_digest"
+    elif baseline_schema == "swm.iter-006.java-gateway-workload@1":
+        baseline_sha256 = _JAVA_GATEWAY_SHA256
+        baseline_freeze_digest = baseline_summary["java_gateway_freeze_digest"]
+        baseline_freeze_key = "capability_freeze_digest"
+    else:
+        raise RuntimeError("qualified Gateway baseline schema is invalid")
     summary_core = {
         key: value
         for key, value in baseline_summary.items()
@@ -109,7 +123,10 @@ def main(argv: list[str] | None = None) -> int:
             "schema",
             "g3b_freeze_ref",
             "g3b_freeze_digest",
+            "java_gateway_freeze_ref",
+            "java_gateway_freeze_digest",
             "permission_digest",
+            "document_digest",
         }
     }
     summary_core.update(
@@ -120,8 +137,8 @@ def main(argv: list[str] | None = None) -> int:
             "authorization_receipt_digest": receipt["document_digest"],
             "authorization_ref": receipt["authorization_ref"],
             "qualified_gateway_baseline": {
-                "entrypoint_sha256": _LEGACY_GATEWAY_SHA256,
-                "legacy_freeze_digest": baseline_summary["g3b_freeze_digest"],
+                "entrypoint_sha256": baseline_sha256,
+                baseline_freeze_key: baseline_freeze_digest,
                 "role": "QUALIFIED_CAPABILITY_BASELINE_ONLY",
             },
         }
@@ -135,15 +152,34 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _load_qualified_baseline() -> ModuleType:
+def _load_qualified_baseline(baseline_arguments: list[str]) -> ModuleType:
+    try:
+        freeze_index = baseline_arguments.index("--g3b-freeze")
+        freeze_path = _exact_file(
+            Path(baseline_arguments[freeze_index + 1]),
+            "qualified Gateway freeze",
+        )
+        freeze = _load_exact_document(freeze_path)
+    except (ValueError, IndexError) as exc:
+        raise RuntimeError("qualified Gateway freeze argument is missing") from exc
+    if freeze.get("schema") == "swm.iter-003.g3b-input-freeze@1":
+        filename = "gateway_workload.py"
+        expected_sha256 = _LEGACY_GATEWAY_SHA256
+        module_name = "_swm_qualified_legacy_gateway_baseline"
+    elif freeze.get("schema") == "SWM-ITER-006-JAVA-GATEWAY-FREEZE@1":
+        filename = "java_gateway_workload.py"
+        expected_sha256 = _JAVA_GATEWAY_SHA256
+        module_name = "_swm_qualified_java_gateway_baseline"
+    else:
+        raise RuntimeError("qualified Gateway freeze schema is unsupported")
     path = _exact_file(
-        Path(__file__).with_name("gateway_workload.py"),
+        Path(__file__).with_name(filename),
         "qualified Gateway baseline",
     )
-    if sha256(path.read_bytes()).hexdigest() != _LEGACY_GATEWAY_SHA256:
+    if sha256(path.read_bytes()).hexdigest() != expected_sha256:
         raise RuntimeError("qualified Gateway baseline bytes drifted")
     specification = importlib.util.spec_from_file_location(
-        "_swm_qualified_gateway_baseline",
+        module_name,
         path,
     )
     if specification is None or specification.loader is None:

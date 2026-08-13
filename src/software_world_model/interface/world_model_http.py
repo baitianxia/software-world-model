@@ -40,7 +40,10 @@ from software_world_model.interface.world_model_browser import (
     PublicRunnerError,
     WorldModelBrowserApplication,
 )
-from software_world_model.knowledge_engine.structure import MAVEN_STRUCTURE_PROFILE_REF
+from software_world_model.knowledge_engine.structure import (
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 
 
 _REQUEST_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$")
@@ -429,7 +432,12 @@ class DynamicCatalogWorldModelRunner:
                     for snapshot in entry.snapshot_bindings
                     for coverage in snapshot.coverages
                 }
-                if profiles != {MAVEN_STRUCTURE_PROFILE_REF}:
+                if len(profiles) != 1 or not profiles.issubset(
+                    {
+                        MAVEN_STRUCTURE_PROFILE_REF,
+                        JAVA_STATIC_CALL_PROFILE_REF,
+                    }
+                ):
                     raise ValueError("Catalog contains an unsupported Structure Profile")
             return pointer, catalog
         except PublicRunnerError:
@@ -636,6 +644,7 @@ class DynamicCatalogWorldModelRunner:
         )
         schemas = sorted({item.schema_ref for item in snapshots})
         modality = "ORDERED_COMPARISON" if len(snapshots) == 2 else "EXACT_SNAPSHOT"
+        java_profile = profiles == [JAVA_STATIC_CALL_PROFILE_REF]
         label = (
             f"{entry.workspace_id.value} · {revisions[0][:9]} → {revisions[-1][:9]}"
             if len(revisions) == 2
@@ -646,9 +655,17 @@ class DynamicCatalogWorldModelRunner:
             "read_set_id": entry.read_set_id.value,
             "label": label,
             "description": (
-                "exact ordered Maven Structure Snapshot comparison"
-                if len(snapshots) == 2
-                else "exact Maven Structure Snapshot"
+                (
+                    "exact ordered Java static-call Snapshot comparison"
+                    if len(snapshots) == 2
+                    else "exact Java static-call Snapshot"
+                )
+                if java_profile
+                else (
+                    "exact ordered Maven Structure Snapshot comparison"
+                    if len(snapshots) == 2
+                    else "exact Maven Structure Snapshot"
+                )
             ),
             "workspace_id": entry.workspace_id.value,
             "workspace_version_ids": [
@@ -661,9 +678,17 @@ class DynamicCatalogWorldModelRunner:
             "profile_refs": profiles,
             "schema_refs": schemas,
             "coverage": (
-                "Maven reactor child membership, POM-local direct internal "
-                "dependencies, and exact ordered diff; plugins, properties, "
-                "Maven parent/effective/transitive/runtime relations are outside Coverage"
+                (
+                    "Java type and declared-method membership, frozen-subset static "
+                    "CALLS, and exact ordered diff; runtime dispatch, reflection, "
+                    "dependency injection, and design intent are outside Coverage"
+                )
+                if java_profile
+                else (
+                    "Maven reactor child membership, POM-local direct internal "
+                    "dependencies, and exact ordered diff; plugins, properties, "
+                    "Maven parent/effective/transitive/runtime relations are outside Coverage"
+                )
             ),
             "modality": modality,
             "read_set_digest": entry.read_set_digest.value,

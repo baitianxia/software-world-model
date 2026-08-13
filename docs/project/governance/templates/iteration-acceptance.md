@@ -21,6 +21,17 @@ production_activation: pending
 
 ## Gate results and limitations
 
+## Product-goal delta and cumulative evidence
+
+记录相对 baseline 的独立/用户持有 held-out 自由问题支持率、重大错误与完整性变化，至少一个新旧知识跨域结果，同一正式
+Web 的现场临时自由提问，提问时 Source/Update/Direct fallback 计数，以及成熟源码 Agent 逐题对照。没有可测增量时不能把
+本轮称为产品进展。
+
+- Baseline versus current: <exact-measures-and-evidence>
+- New plus existing cross-domain result: <exact-cases-and-evidence>
+- Product Web ad-hoc questions and fallback counters: <exact-evidence>
+- Mature source Agent comparison: <exact-evidence>
+
 ## Finding dispositions and System write-back
 
 ## Verdict

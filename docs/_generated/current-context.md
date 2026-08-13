@@ -4,9 +4,9 @@
 
 - Active iteration: `none`
 - Active slice: `none`
-- Worktree status: `iteration-005-accepted-no-active-development`
-- Strategy relation: `accepted-user-selected-maven-workspace-with-product-web-qa`
-- Live model path: `local-maven-structure-world-model-evaluation-only-not-production-activated`
+- Worktree status: `iteration-006-accepted-no-active-development`
+- Strategy relation: `accepted-java-static-call-world-model-narrow-evaluation-only`
+- Live model path: `run-003-and-run-007-failures-preserved-run-008-accepted-not-production-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

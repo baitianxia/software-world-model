@@ -40,7 +40,7 @@ Explicit WORLD_MODEL request
   → verify no-payload exact Snapshot Read Bundle
   → open exact Read Session / Set
   → validate generic Query Plan
-  → seal Structure View / Query Result + Coverage + Support refs
+  → seal profile-matched Structure/Behavior View / Query Result + Coverage + Support refs
   → assess every Need / Joint Constraint
   → independent Review + Authorization + Delivery, or explicit Knowledge Gap
 ```

@@ -492,6 +492,24 @@ class StructureKnowledgeTests(unittest.TestCase):
         self.assertNotIn("source_revision", coverage_a.root.root_fields)
         self.assertNotIn("evidence_references", coverage_a.root.root_fields)
 
+    def test_default_maven_coverage_is_not_derived_from_generic_enum_members(self) -> None:
+        root = CoverageRoot.create(
+            owning_scope_id=self.scope,
+            source_binding_id=self.binding,
+            logical_reactor_root="pom.xml",
+        )
+
+        self.assertEqual(
+            root.covered_entity_types,
+            (EntityType.MAVEN_MODULE, EntityType.SOFTWARE_SYSTEM),
+        )
+        self.assertEqual(
+            root.covered_relation_predicates,
+            (RelationPredicate.CONTAINS_MODULE, RelationPredicate.DEPENDS_ON),
+        )
+        self.assertNotIn(EntityType.JAVA_TYPE, root.covered_entity_types)
+        self.assertNotIn(RelationPredicate.CALLS, root.covered_relation_predicates)
+
     def test_evidence_is_canonical_and_all_state_refs_must_resolve(self) -> None:
         replay = StructureEvidence.create(
             artifact_id=self.artifact,

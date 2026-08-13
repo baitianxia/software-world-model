@@ -4,7 +4,7 @@ kind: iteration-proposal
 status: proposed
 authority: project-proposal
 owners: [product, engineering]
-depends_on: []
+depends_on: [SYS-PRODUCT-SUCCESS]
 code: []
 tests: []
 iteration: ITER-NNN
@@ -14,6 +14,17 @@ coding_input: false
 # ITER-NNN Proposal：<Outcome>
 
 ## Trigger and evidence
+
+## Product-goal alignment and cumulative delta
+
+- MVP target reference: `SYS-PRODUCT-SUCCESS`
+- Current product gap and real-question evidence: <gap-and-evidence>
+- Accepted capabilities reused: <accepted-capability-refs>
+- New capabilities integrated into the same answer chain: <new-capability-refs>
+- Evaluator/user-owned hidden held-out before/target counts: <measurable-delta-and-isolation>
+- Cross-domain questions combining old and new knowledge: <cross-domain-cases>
+- Earliest product-owned Web checkpoint and live ad-hoc questions: <slice-and-gate>
+- Stop / redirect conditions: <falsifiable-conditions>
 
 ## Outcome and users
 

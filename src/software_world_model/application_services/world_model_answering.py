@@ -2019,6 +2019,7 @@ class InMemoryWorldModelAuthorityStore:
 
 _ALLOWED_QUERY_OPERATIONS = (
     StructureViewOperation.CHILD_MODULE_INVENTORY,
+    StructureViewOperation.DECLARED_METHOD_INVENTORY,
     StructureViewOperation.DIRECT_NEIGHBORHOOD,
     StructureViewOperation.PATH_EXISTS,
     StructureViewOperation.ALL_SIMPLE_PATHS,
@@ -2030,6 +2031,11 @@ _QUERY_STEP_SCHEMAS: dict[
 ] = {
     StructureViewOperation.CHILD_MODULE_INVENTORY: (
         frozenset({"system"}),
+        frozenset(),
+        frozenset(),
+    ),
+    StructureViewOperation.DECLARED_METHOD_INVENTORY: (
+        frozenset({"java_type"}),
         frozenset(),
         frozenset(),
     ),
@@ -2058,6 +2064,7 @@ _QUERY_STEP_SCHEMAS: dict[
 }
 _QUERY_STEP_DEFAULTS: dict[StructureViewOperation, CanonicalFields] = {
     StructureViewOperation.CHILD_MODULE_INVENTORY: CanonicalFields({}),
+    StructureViewOperation.DECLARED_METHOD_INVENTORY: CanonicalFields({}),
     StructureViewOperation.DIRECT_NEIGHBORHOOD: CanonicalFields(
         {
             "direction": NeighborhoodDirection.BOTH.value,
@@ -3493,6 +3500,10 @@ class WorldModelAnsweringService:
         parameters = dict(step.parameters)
         if step.operation is StructureViewOperation.CHILD_MODULE_INVENTORY:
             result = self._view.child_module_inventory(system=arguments["system"])
+        elif step.operation is StructureViewOperation.DECLARED_METHOD_INVENTORY:
+            result = self._view.declared_method_inventory(
+                java_type=arguments["java_type"]
+            )
         elif step.operation is StructureViewOperation.DIRECT_NEIGHBORHOOD:
             result = self._view.direct_neighborhood(
                 entity=arguments["entity"],

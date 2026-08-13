@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 import tempfile
 import unittest
+from unittest import mock
 
-from software_world_model.cross_cutting import canonical_json_bytes, digest_of
+from software_world_model.ai_infrastructure.java_model_egress_qualification import (
+    JAVA_MODEL_EGRESS_POLICY_FILE_DIGEST,
+)
+from software_world_model.cross_cutting import Digest, canonical_json_bytes, digest_of
 from software_world_model.interface import world_model_runtime
 
 
@@ -60,7 +65,14 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
         gateway_hashes: dict[str, str] = {}
         for name in sorted(world_model_runtime._GATEWAY_INPUT_FILES):
             path = gateway_input / name
-            path.write_text(f"exact {name}\n", encoding="utf-8")
+            if name == "g3b-freeze.json":
+                path.write_bytes(
+                    canonical_json_bytes(
+                        {"schema": world_model_runtime._LEGACY_GATEWAY_FREEZE_SCHEMA}
+                    )
+                )
+            else:
+                path.write_text(f"exact {name}\n", encoding="utf-8")
             gateway_hashes[name] = world_model_runtime._raw_sha256_file(path)
 
         stage_digest = digest_of(world_model_runtime._tree_manifest(stage)).value
@@ -218,6 +230,74 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "digest drifted"):
             world_model_runtime._load_evaluation_grant(grant_path)
+
+    def test_java_provider_qualification_is_derived_from_gateway_freeze(self) -> None:
+        gateway_input = self.root / "java-gateway-input"
+        gateway_input.mkdir()
+        qualification_digest = Digest("sha256:" + "1" * 64)
+        qualification_document_digest = Digest("sha256:" + "2" * 64)
+        closed_result_digest = Digest("sha256:" + "3" * 64)
+        for name in ("qualification.json", "closed-result.json", "egress-policy.json"):
+            (gateway_input / name).write_bytes(b"sealed by mocked loader")
+        binding = SimpleNamespace(
+            capability_qualification_ref=(
+                "capability-evaluation:evaluation_result_" + "4" * 32
+            ),
+            capability_qualification_digest=qualification_digest,
+            qualification_document_digest=qualification_document_digest,
+            closed_capability_result_digest=closed_result_digest,
+        )
+        permission_digest = "sha256:" + "5" * 64
+        core = {
+            "schema": world_model_runtime._JAVA_GATEWAY_FREEZE_SCHEMA,
+            "freeze_ref": "ITER-006-JAVA-PRODUCT-GATEWAY-CANDIDATE@1",
+            "environment": "EVALUATION_ONLY",
+            "strategy_ref": "model-snapshot-first-world-model-answer@1.1.0",
+            "prompt_ref": "snapshot-first-world-model-proposal-prompt@4",
+            "proposal_vocabulary_ref": (
+                "world-model-authority-proposal-vocabulary@2"
+            ),
+            "capability_qualification_document_digest": (
+                qualification_document_digest.value
+            ),
+            "closed_capability_result_digest": closed_result_digest.value,
+            "egress_policy_digest": JAVA_MODEL_EGRESS_POLICY_FILE_DIGEST,
+            "conformance_result_ref": "CC-ARK-CHAT-NO-TOOLS-001:sealed",
+            "conformance_result_digest": world_model_runtime._EXPECTED_PROVIDER[
+                "conformance_digest"
+            ],
+            "permission_digest": permission_digest,
+            "production_activation": "NOT_EXECUTED",
+        }
+        freeze = {
+            **core,
+            "document_digest": digest_of(
+                [world_model_runtime._JAVA_GATEWAY_FREEZE_SCHEMA, core]
+            ).value,
+        }
+        (gateway_input / "g3b-freeze.json").write_bytes(
+            canonical_json_bytes(freeze)
+        )
+
+        with mock.patch(
+            "software_world_model.ai_infrastructure.java_model_egress_qualification."
+            "load_java_gateway_qualification_binding",
+            return_value=binding,
+        ):
+            provider, qualification = (
+                world_model_runtime._provider_binding_for_gateway_input(
+                    gateway_input
+                )
+            )
+
+        self.assertEqual(
+            provider["qualification_digest"], qualification_digest.value
+        )
+        assert qualification is not None
+        self.assertEqual(
+            qualification["java_gateway_freeze_digest"],
+            freeze["document_digest"],
+        )
 
 
 if __name__ == "__main__":

@@ -30,6 +30,8 @@ from .scope import (
     ScopeType,
 )
 from .structure import (
+    JAVA_STATIC_CALL_SCHEMA_DIGEST,
+    JAVA_STATIC_CALL_SCHEMA_REF,
     MAVEN_STRUCTURE_SCHEMA_DIGEST,
     MAVEN_STRUCTURE_SCHEMA_REF,
     StructureKnowledgeBatch,
@@ -148,6 +150,16 @@ class StructureSchemaDefinition:
         return cls.create(
             schema_ref=MAVEN_STRUCTURE_SCHEMA_REF,
             schema_digest=MAVEN_STRUCTURE_SCHEMA_DIGEST,
+            eligible_scope_types=(ScopeType.SYSTEM,),
+        )
+
+    @classmethod
+    def java_static_call_graph(cls) -> "StructureSchemaDefinition":
+        """Frozen ITER-006 schema; it is not authoritative until registered."""
+
+        return cls.create(
+            schema_ref=JAVA_STATIC_CALL_SCHEMA_REF,
+            schema_digest=JAVA_STATIC_CALL_SCHEMA_DIGEST,
             eligible_scope_types=(ScopeType.SYSTEM,),
         )
 

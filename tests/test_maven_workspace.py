@@ -824,11 +824,16 @@ class MavenCoverageCopyTests(unittest.TestCase):
             project
             / "validation/structure_world_model_iteration_004/interactive_browser.py"
         ).read_text(encoding="utf-8")
-        for value in (product_copy, dataset_copy):
-            self.assertIn("reactor 子模块成员关系", value)
-            self.assertIn("POM-local 直接内部依赖", value)
-        self.assertIn("exact A/B diff", product_copy)
-        self.assertIn("插件、属性和 Maven parent 关系超出覆盖", product_copy)
+        dynamic_copy = (
+            project / "src/software_world_model/interface/world_model_http.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("reactor 子模块成员关系", dataset_copy)
+        self.assertIn("POM-local 直接内部依赖", dataset_copy)
+        self.assertIn("Coverage 由所选 Read Set 的 Profile 决定", product_copy)
+        self.assertIn("Maven reactor child membership", dynamic_copy)
+        self.assertIn("plugins, properties", dynamic_copy)
+        self.assertIn("Java type and declared-method membership", dynamic_copy)
+        self.assertIn("runtime dispatch, reflection", dynamic_copy)
         self.assertNotIn("模块、依赖、插件、属性、父子结构", dataset_copy)
         self.assertNotIn("模块、依赖、插件、属性及 A/B", product_copy)
 

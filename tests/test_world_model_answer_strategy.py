@@ -5,6 +5,10 @@ from types import SimpleNamespace
 import unittest
 
 from software_world_model.ai_infrastructure import (
+    GENERIC_QUERY_PLANNING,
+    JAVA_WORLD_MODEL_ANSWER_PROMPT_REF,
+    JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
+    MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT,
     WORLD_MODEL_CAPABILITIES,
     WorldModelCapabilityStrategy,
     WorldModelStrategyConfiguration,
@@ -62,6 +66,76 @@ def configuration():
 
 
 class WorldModelAnswerStrategyTests(unittest.TestCase):
+    def test_profile_binding_returns_a_new_exact_strategy(self):
+        original = WorldModelCapabilityStrategy(SequencedGateway([]), configuration())
+
+        java = original.for_proposal_contract(JAVA_WORLD_MODEL_PROPOSAL_CONTRACT)
+
+        self.assertEqual(original.strategy_ref, MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_ref)
+        self.assertEqual(java.strategy_ref, JAVA_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_ref)
+        self.assertIsNot(original, java)
+
+    def test_java_contract_is_versioned_and_binds_method_inventory_vocabulary(self):
+        expected = {
+            "operations": [
+                {
+                    "operation": "declared_method_inventory",
+                    "snapshot": "snapshot_java",
+                }
+            ]
+        }
+        gateway = SequencedGateway([expected])
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        proposal = strategy.propose(
+            case_id="WM-JAVA-CE-PLAN-METHOD-001",
+            capability=GENERIC_QUERY_PLANNING,
+            sealed_input={
+                "read_set": ["snapshot_java"],
+                "needs": ["method_inventory_left"],
+            },
+            available_operations=(
+                JAVA_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            ),
+        )
+
+        self.assertEqual(dict(proposal.normalized_result), expected)
+        context = gateway.contexts[0]
+        self.assertEqual(context.manifest.strategy_ref, strategy.strategy_ref)
+        self.assertEqual(context.prompt_program_ref, JAVA_WORLD_MODEL_ANSWER_PROMPT_REF)
+        self.assertEqual(
+            context.manifest.proposal_vocabulary_ref,
+            "world-model-authority-proposal-vocabulary@2",
+        )
+        self.assertIn(
+            "method_inventory_left/right maps to declared_method_inventory",
+            context.manifest.items[0].content,
+        )
+
+    def test_contract_vocabulary_drift_is_rejected_before_gateway(self):
+        gateway = SequencedGateway([])
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        with self.assertRaises(DomainError):
+            strategy.propose(
+                case_id="WM-JAVA-CE-PLAN-DRIFT",
+                capability=GENERIC_QUERY_PLANNING,
+                sealed_input={"read_set": ["snapshot_java"], "needs": []},
+                available_operations=(
+                    MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+                ),
+            )
+
+        self.assertEqual(gateway.contexts, [])
+
     def test_all_closed_roles_use_one_oracle_free_no_tools_manifest(self):
         suite = load_capability_suite()
         cases = suite["cases"]
@@ -186,6 +260,20 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         self.assertNotEqual(
             world_model_answer_prompt_program_digest(),
             world_model_answer_output_contract_digest(),
+        )
+        self.assertEqual(
+            world_model_answer_prompt_program_digest().value,
+            "sha256:f6d93c9b2fcb4b953a7ddf35a787a5de8e6555397f49ad517cbf4d15681a24fc",
+        )
+        self.assertEqual(
+            world_model_answer_strategy_implementation_digest().value,
+            "sha256:4a83df22f535dc8fa1712b3fc04f7a6ee3960263070ed5366ab18b3692446fa0",
+        )
+        self.assertNotEqual(
+            world_model_answer_strategy_implementation_digest(),
+            world_model_answer_strategy_implementation_digest(
+                JAVA_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
         )
 
 

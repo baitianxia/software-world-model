@@ -36,6 +36,10 @@ from software_world_model.cross_cutting import (
     Uuid4IdGenerator,
     digest_of,
 )
+from software_world_model.knowledge_engine.structure import (
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 
 
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -111,6 +115,7 @@ class MavenWorkspace:
     binding_revision: Revision
     management_attempt_id: StableId
     management_result_digest: Digest
+    knowledge_profile_ref: str
     created_at: datetime
     digest: Digest
 
@@ -126,15 +131,23 @@ class MavenWorkspace:
         root_pom: str,
         authority: WorkspaceConfigurationAuthority,
         created_at: datetime,
+        knowledge_profile_ref: str = MAVEN_STRUCTURE_PROFILE_REF,
     ) -> "MavenWorkspace":
         authority.require_valid()
+        profile_ref = _knowledge_profile(knowledge_profile_ref)
         request_core = {
             "canonical_system_key": _text(canonical_system_key, "canonical system key"),
             "display_name": _text(display_name, "display name"),
             "repository_locator": _absolute_repository(repository_locator),
             "root_pom": _relative_path(root_pom, "root POM"),
         }
-        request_digest = digest_of(["REGISTER_MAVEN_WORKSPACE@1", request_core])
+        request_format = "REGISTER_MAVEN_WORKSPACE@1"
+        workspace_format = "MAVEN_WORKSPACE@1"
+        if profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            request_core["knowledge_profile_ref"] = profile_ref
+            request_format = "REGISTER_STRUCTURE_WORKSPACE@1"
+            workspace_format = "STRUCTURE_WORKSPACE@1"
+        request_digest = digest_of([request_format, request_core])
         core = {
             "workspace_id": workspace_id.value,
             "idempotency_key": idempotency_key.value,
@@ -166,8 +179,9 @@ class MavenWorkspace:
             binding_revision=authority.binding_revision,
             management_attempt_id=authority.management_attempt_id,
             management_result_digest=authority.management_result_digest,
+            knowledge_profile_ref=profile_ref,
             created_at=created_at,
-            digest=digest_of(["MAVEN_WORKSPACE@1", core]),
+            digest=digest_of([workspace_format, core]),
         )
         value.require_valid()
         return value
@@ -186,13 +200,20 @@ class MavenWorkspace:
             self.management_result_digest,
         )
         authority.require_valid()
+        profile_ref = _knowledge_profile(self.knowledge_profile_ref)
         request_core = {
             "canonical_system_key": _text(self.canonical_system_key, "canonical system key"),
             "display_name": _text(self.display_name, "display name"),
             "repository_locator": _absolute_repository(self.repository_locator),
             "root_pom": _relative_path(self.root_pom, "root POM"),
         }
-        if self.request_digest != digest_of(["REGISTER_MAVEN_WORKSPACE@1", request_core]):
+        request_format = "REGISTER_MAVEN_WORKSPACE@1"
+        workspace_format = "MAVEN_WORKSPACE@1"
+        if profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            request_core["knowledge_profile_ref"] = profile_ref
+            request_format = "REGISTER_STRUCTURE_WORKSPACE@1"
+            workspace_format = "STRUCTURE_WORKSPACE@1"
+        if self.request_digest != digest_of([request_format, request_core]):
             raise _invalid("MAVEN_WORKSPACE_REQUEST_DIGEST_MISMATCH", "Workspace request digest is not canonical")
         core = {
             "workspace_id": self.workspace_id.value,
@@ -210,8 +231,12 @@ class MavenWorkspace:
             "created_at": self.created_at,
         }
         _aware_time(self.created_at, "Workspace creation time")
-        if self.digest != digest_of(["MAVEN_WORKSPACE@1", core]):
+        if self.digest != digest_of([workspace_format, core]):
             raise _invalid("MAVEN_WORKSPACE_DIGEST_MISMATCH", "Workspace digest is not canonical")
+
+    @property
+    def source_root(self) -> str:
+        return self.root_pom
 
 
 @dataclass(frozen=True, slots=True)
@@ -667,6 +692,7 @@ class MavenWorkspaceService:
         repository_locator: str,
         root_pom: str,
         authority: WorkspaceConfigurationAuthority,
+        knowledge_profile_ref: str = MAVEN_STRUCTURE_PROFILE_REF,
     ) -> MavenWorkspace:
         workspace = MavenWorkspace.create(
             workspace_id=self._ids.new("maven_workspace"),
@@ -677,6 +703,7 @@ class MavenWorkspaceService:
             root_pom=root_pom,
             authority=authority,
             created_at=self._now(),
+            knowledge_profile_ref=knowledge_profile_ref,
         )
         return self._repository.save_workspace(workspace)
 
@@ -695,17 +722,19 @@ class MavenWorkspaceService:
             expected_current = versions[-1].snapshot_id if versions else None
         else:
             expected_current = replay.expected_current_snapshot_id
-        request_digest = digest_of(
-            [
-                "UPDATE_MAVEN_WORKSPACE@1",
-                {
-                    "workspace_id": workspace_id.value,
-                    "workspace_digest": workspace.digest.value,
-                    "repository_revision": _exact_commit(repository_revision),
-                    "expected_current_snapshot_id": expected_current.value if expected_current else None,
-                },
-            ]
-        )
+        request_core = {
+            "workspace_id": workspace_id.value,
+            "workspace_digest": workspace.digest.value,
+            "repository_revision": _exact_commit(repository_revision),
+            "expected_current_snapshot_id": (
+                expected_current.value if expected_current else None
+            ),
+        }
+        request_format = "UPDATE_MAVEN_WORKSPACE@1"
+        if workspace.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            request_core["knowledge_profile_ref"] = workspace.knowledge_profile_ref
+            request_format = "UPDATE_STRUCTURE_WORKSPACE@1"
+        request_digest = digest_of([request_format, request_core])
         attempt = self._repository.prepare_attempt(
             attempt_id=self._ids.new("workspace_attempt"),
             idempotency_key=idempotency_key,
@@ -1204,6 +1233,19 @@ def _relative_path(value: str, label: str) -> str:
     if "\\" in text or text.startswith("/") or text.endswith("/") or any(part in {"", ".", ".."} for part in text.split("/")):
         raise _invalid("MAVEN_WORKSPACE_PATH_INVALID", f"{label} must be a normalized relative POSIX path")
     return text
+
+
+def _knowledge_profile(value: str) -> str:
+    profile_ref = _text(value, "knowledge profile ref")
+    if profile_ref not in {
+        MAVEN_STRUCTURE_PROFILE_REF,
+        JAVA_STATIC_CALL_PROFILE_REF,
+    }:
+        raise _invalid(
+            "MAVEN_WORKSPACE_PROFILE_UNSUPPORTED",
+            "Workspace knowledge profile is not supported",
+        )
+    return profile_ref
 
 
 def _aware_time(value: datetime, label: str) -> datetime:

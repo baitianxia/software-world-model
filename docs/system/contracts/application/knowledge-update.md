@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-ADMISSION, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-UPDATE]
-code: [src/software_world_model/application_services/knowledge_update.py, src/software_world_model/application_services/maven_structure.py, src/software_world_model/application_services/maven_structure_update.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/presenters.py]
-tests: [tests/test_knowledge_update.py, tests/test_maven_structure.py, tests/test_maven_structure_update.py, tests/test_maven_structure_update_authority.py, tests/test_maven_structure_cli.py, tests/test_structure_read_bundle.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
+code: [src/software_world_model/application_services/knowledge_update.py, src/software_world_model/application_services/maven_structure.py, src/software_world_model/application_services/java_static_call.py, src/software_world_model/application_services/maven_structure_update.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/presenters.py]
+tests: [tests/test_knowledge_update.py, tests/test_maven_structure.py, tests/test_java_static_call.py, tests/test_maven_structure_update.py, tests/test_maven_structure_update_authority.py, tests/test_maven_structure_cli.py, tests/test_structure_read_bundle.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
 ---
 
 # Knowledge Update
@@ -31,7 +31,8 @@ Application 拥有 Update Attempt、Publication Policy、编排和 Result；具�
 7. Schema 变化形成新 Candidate/Snapshot；在 Evolution Contract 接受前，不执行跨 Schema Adoption。
 8. 每次 Publication 只在单个 Scope 内原子完成，不建立跨 Scope 事务；跨 Scope 依赖始终固定 exact upstream Snapshot。
 9. 对任务驱动的更新，Knowledge Use / 调用方在收到 Publication Receipt 后使用其 exact Snapshot 新建 Read Session、推进 Use Epoch，并对全部 Need 重新评估；Knowledge Update 不拥有 Sufficiency Decision。
-10. Attempt 必须显式固定 Publication Mode 与 Coverage。声明完整 Structure Profile 的更新使用 `REPLACE_COVERAGE`；只增加不删除的受控补充才能使用 `ENRICH`。Application 不得根据当前数据库内容猜测模式。
+10. Attempt 必须显式固定 Publication Mode 与 Coverage。声明完整 Structure 或 Java Static Call Profile 的更新使用
+    `REPLACE_COVERAGE`；只增加不删除的受控补充才能使用 `ENRICH`。Application 不得根据当前数据库内容猜测模式。
 11. 问答请求不能隐式创建 Update Attempt。更新成功只移动相应 Scope 的 CURRENT，不改写已打开的 Read Session 或已经交付的回答。
 12. 需要隔离回答时，独立的幂等 post-publication 步骤从 committed exact Snapshot/ordered Read Set 生成并验证 no-payload Snapshot Read Bundle，返回 Bundle Receipt。它不是 Publication 事务或新知识；失败不回滚/改写 Snapshot，但该 Snapshot 保持 `READ_BUNDLE_UNAVAILABLE`，不能由问题请求临时生成。人工、计划或来源事件 Update 可以在零问题状态完成该步骤。
 

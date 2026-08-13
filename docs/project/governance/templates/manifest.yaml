@@ -8,6 +8,106 @@ baseline:
   commit: <exact-git-commit>
   dirty_worktree_allowed: false
 
+product_goal_alignment:
+  target_ref: SYS-PRODUCT-SUCCESS
+  baseline_gap: <current-general-source-qa-gap>
+  accepted_capability_refs: []
+  new_capability_slice_refs: []
+  held_out_free_question_delta: <measurable-before-and-after>
+  held_out_evaluation_owner: <independent-evaluator-or-user>
+  implementation_question_visibility: hidden
+  implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
+  evaluation_project_manifest_digest: <sha256-exact-project-and-version-manifest>
+  held_out_suite_digest: <sha256-evaluator-owned-suite>
+  baseline_result_digest: <sha256-exact-baseline-result>
+  mature_source_agent_protocol_digest: <sha256-exact-comparison-protocol>
+  authorized_software_sources_digest: <sha256-source-scope-including-code-doc-config>
+  held_out_question_count: <positive-integer>
+  held_out_answerable_question_count: <positive-integer>
+  held_out_boundary_question_count: <positive-integer>
+  held_out_answerable_without_symbol_count_minimum: <positive-integer>
+  held_out_answerable_without_symbol_per_project_minimum: <positive-integer>
+  held_out_baseline_supported_count: <non-negative-integer>
+  held_out_target_supported_count: <higher-integer>
+  supported_count_denominator: answerable-only
+  boundary_gap_counted_as_supported: false
+  # verification case IDs, for example V-XD-001
+  # new_capability_slice_refs 的顺序也是 Slice 授权顺序；后续 Slice 保持 proposed，直到前序完成并再次获得明确授权。
+  cross_domain_cases: []
+  # 完成前必须全部 PASS 且绑定 Result Evidence 的 Verification Case。
+  blocking_case_ids: []
+  # 首个 Slice 获得授权前就必须 PASS 的独立阻断 Case；不放入由 Slice Result 持有的 blocking_case_ids。
+  readiness_blocking_case_ids: []
+  cross_domain_case_count: <positive-integer>
+  cross_domain_bindings:
+    binding_001:
+      case_id: <V-XD-NNN>
+      accepted_capability_ref: <prior-acceptance-id>
+      new_slice_ref: <current-slice-id>
+  first_product_web_checkpoint: <verification-case-id>
+  web_checkpoint_binding:
+    case_id: <V-WEB-NNN>
+    new_slice_ref: <current-slice-id>
+    executes_cross_domain_case_id: <V-XD-NNN>
+  # 可选：后续 Slice 的正式 Web checkpoint；每项必须绑定同一 Slice 的跨域 Case。
+  additional_web_checkpoint_bindings: {}
+  # 多 Slice 时，最终验证前的每个 Slice 都应有一个独立持有的隐藏 canary。
+  early_hidden_canary_bindings: {}
+  live_ad_hoc_question_checkpoint: <verification-case-id>
+  live_ad_hoc_checkpoint_binding:
+    case_id: <V-ADHOC-NNN>
+    new_slice_ref: <current-slice-id>
+    executes_cross_domain_case_id: <V-XD-NNN>
+  live_ad_hoc_question_count: <positive-integer>
+  live_ad_hoc_without_symbol_count_minimum: <positive-integer>
+  stop_or_redirect_conditions: []
+
+source_scope:
+  provider: <provider-id>
+  content_kind: <content-kind>
+  contract_ref: <current-system-contract-id>
+  authorized_software_sources_digest: <same-as-product-goal-alignment>
+  question_or_suite_driven_update_allowed: false
+  verification_case_ids: []
+
+answer_protocol:
+  contract_ref: <current-system-contract-id>
+  planner_model_calls: 1
+  draft_model_calls: 1
+  independent_reviewer_model_calls: 1
+  deterministic_schema_grounding_and_authorization_checks: true
+  retries_allowed: false
+  exact_total_model_calls_per_question: 3
+  status: pending
+
+readiness_inputs:
+  required_system_contract_refs: []
+  source_semantics_contract_ref: pending
+  implementation_query_contract_ref: pending
+  no_payload_contract_ref: pending
+  answer_protocol_contract_ref: pending
+  system_contract_set_digest: pending
+  java_frontend:
+    artifact_ref: pending
+    version: pending
+    license_ref: pending
+    offline_artifact_digest: pending
+    canonicalization_oracle_digest: pending
+    information_preservation_oracle_digest: pending
+    information_boundary_oracle_digest: pending
+  hidden_freeze_protocol_digest: pending
+
+development:
+  slices:
+    ITER-NNN-SLICE-001:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+
 system_inputs:
   ids: []
 
@@ -19,3 +119,7 @@ verification:
 
 authorization:
   readiness_review_id: ITER-NNN-READINESS
+  authorized_by: pending
+  authorized_at: pending
+  authorization_ref: pending
+  active_slice: none

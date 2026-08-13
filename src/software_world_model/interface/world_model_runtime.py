@@ -40,6 +40,10 @@ from software_world_model.interface.world_model_evaluation import (
     read_world_model_evaluation_page,
 )
 from software_world_model.interface.world_model_http import ResolvedReadSetInput
+from software_world_model.knowledge_engine.structure import (
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 
 
 GRANT_SCHEMA = "SWM-WORLD-MODEL-EVALUATION-GRANT@2"
@@ -76,6 +80,8 @@ _EXPECTED_PROVIDER = {
         "sha256:005b1bf43c76a64d123b0184cdac1a9e844331896e7ede6279875881d9bcc62c"
     ),
 }
+_JAVA_GATEWAY_FREEZE_SCHEMA = "SWM-ITER-006-JAVA-GATEWAY-FREEZE@1"
+_LEGACY_GATEWAY_FREEZE_SCHEMA = "swm.iter-003.g3b-input-freeze@1"
 _ROLE_ENTRYPOINTS = {
     "answer": ".g3b/answer_workload.py",
     "gateway": ".g3b/gateway_authorized_workload.py",
@@ -715,10 +721,13 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
     for name, expected in gateway_hashes.items():
         _verify_raw_sha256(gateway_input / name, expected, f"gateway input {name}")
 
+    expected_provider, java_qualification = _provider_binding_for_gateway_input(
+        gateway_input
+    )
     provider = _object(
         document.get("provider"), set(_EXPECTED_PROVIDER), "Provider subject"
     )
-    if dict(provider) != _EXPECTED_PROVIDER:
+    if dict(provider) != expected_provider:
         raise ValueError("Provider subject differs from the qualified exact endpoint")
 
     launcher_hashes = _string_map(
@@ -764,6 +773,15 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
         or qualification.get("docs_check_pass") is not True
         or qualification.get("external_model_called") is not False
         or qualification.get("production_activation") != "NOT_EXECUTED"
+        or (
+            java_qualification is None
+            and "java_capability_qualification" in qualification
+        )
+        or (
+            java_qualification is not None
+            and qualification.get("java_capability_qualification")
+            != java_qualification
+        )
         or suite.get("schema") != "SWM-WORLD-MODEL-HELD-OUT-SUITE@2"
         or suite.get("environment") != "EVALUATION_ONLY"
         or suite.get("evaluation_subject_commit") != commit
@@ -825,6 +843,111 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
     )
 
 
+def _provider_binding_for_gateway_input(
+    gateway_input: Path,
+) -> tuple[dict[str, object], dict[str, object] | None]:
+    """Derive the provider qualification from the sealed Gateway authority.
+
+    The legacy package remains pinned to its inherited ITER-003 qualification.
+    A Java package must carry a newly closed qualification, and the grant cannot
+    substitute its digest because this function derives it from the protected
+    Gateway input files.
+    """
+
+    freeze = _load_json(gateway_input / "g3b-freeze.json")
+    schema = freeze.get("schema")
+    if schema == _LEGACY_GATEWAY_FREEZE_SCHEMA:
+        return dict(_EXPECTED_PROVIDER), None
+    if schema != _JAVA_GATEWAY_FREEZE_SCHEMA:
+        raise ValueError("qualified Gateway freeze schema is unsupported")
+
+    from software_world_model.ai_infrastructure.java_model_egress_qualification import (
+        JAVA_MODEL_EGRESS_POLICY_FILE_DIGEST,
+        load_java_gateway_qualification_binding,
+    )
+
+    binding = load_java_gateway_qualification_binding(
+        qualification_path=gateway_input / "qualification.json",
+        closed_result_path=gateway_input / "closed-result.json",
+        policy_path=gateway_input / "egress-policy.json",
+    )
+    expected_freeze_keys = {
+        "schema",
+        "freeze_ref",
+        "environment",
+        "strategy_ref",
+        "prompt_ref",
+        "proposal_vocabulary_ref",
+        "capability_qualification_document_digest",
+        "closed_capability_result_digest",
+        "egress_policy_digest",
+        "conformance_result_ref",
+        "conformance_result_digest",
+        "permission_digest",
+        "production_activation",
+        "document_digest",
+    }
+    _exact_keys(freeze, expected_freeze_keys, "Java Gateway freeze")
+    freeze_core = {
+        key: value for key, value in freeze.items() if key != "document_digest"
+    }
+    if (
+        freeze.get("freeze_ref")
+        != "ITER-006-JAVA-PRODUCT-GATEWAY-CANDIDATE@1"
+        or freeze.get("environment") != "EVALUATION_ONLY"
+        or freeze.get("strategy_ref")
+        != "model-snapshot-first-world-model-answer@1.1.0"
+        or freeze.get("prompt_ref")
+        != "snapshot-first-world-model-proposal-prompt@4"
+        or freeze.get("proposal_vocabulary_ref")
+        != "world-model-authority-proposal-vocabulary@2"
+        or freeze.get("capability_qualification_document_digest")
+        != binding.qualification_document_digest.value
+        or freeze.get("closed_capability_result_digest")
+        != binding.closed_capability_result_digest.value
+        or freeze.get("egress_policy_digest")
+        != JAVA_MODEL_EGRESS_POLICY_FILE_DIGEST
+        or freeze.get("conformance_result_digest")
+        != _EXPECTED_PROVIDER["conformance_digest"]
+        or freeze.get("production_activation") != "NOT_EXECUTED"
+        or freeze.get("document_digest")
+        != digest_of([_JAVA_GATEWAY_FREEZE_SCHEMA, freeze_core]).value
+    ):
+        raise ValueError("Java Gateway freeze is not an exact qualified authority")
+    permission_digest = _digest_text(
+        freeze.get("permission_digest"), "Java Gateway permission digest"
+    )
+    expected_provider = dict(_EXPECTED_PROVIDER)
+    expected_provider["qualification_digest"] = (
+        binding.capability_qualification_digest.value
+    )
+    qualification = {
+        "capability_qualification_ref": binding.capability_qualification_ref,
+        "capability_qualification_digest": (
+            binding.capability_qualification_digest.value
+        ),
+        "capability_qualification_document_digest": (
+            binding.qualification_document_digest.value
+        ),
+        "closed_capability_result_digest": (
+            binding.closed_capability_result_digest.value
+        ),
+        "conformance_result_ref": _text(
+            freeze.get("conformance_result_ref"),
+            "Java Gateway conformance result reference",
+        ),
+        "conformance_result_digest": _digest_text(
+            freeze.get("conformance_result_digest"),
+            "Java Gateway conformance result digest",
+        ),
+        "java_gateway_freeze_digest": _digest_text(
+            freeze.get("document_digest"), "Java Gateway freeze digest"
+        ),
+        "permission_digest": permission_digest,
+    }
+    return expected_provider, qualification
+
+
 def _launcher_files() -> Mapping[str, Path]:
     interface = Path(__file__).resolve(strict=True).parent
     return {
@@ -836,6 +959,9 @@ def _launcher_files() -> Mapping[str, Path]:
         "runtime_assets/gateway.sb": ASSET_ROOT / "gateway.sb",
         "runtime_assets/gateway_authorized_workload.py": (
             ASSET_ROOT / "gateway_authorized_workload.py"
+        ),
+        "runtime_assets/java_gateway_workload.py": (
+            ASSET_ROOT / "java_gateway_workload.py"
         ),
         "runtime_assets/projector.sb": ASSET_ROOT / "projector.sb",
         "runtime_assets/role_worker.py": ASSET_ROOT / "role_worker.py",
@@ -897,11 +1023,25 @@ def _outer_reachability(
         with closing(sqlite3.connect(uri, uri=True, timeout=5.0)) as connection:
             connection.row_factory = sqlite3.Row
             connection.execute("PRAGMA query_only = ON")
-            rows = connection.execute(
-                """SELECT workspace_id, repository_locator, root_pom
-                   FROM app_maven_workspaces
-                   ORDER BY workspace_id"""
-            ).fetchall()
+            columns = {
+                str(row["name"])
+                for row in connection.execute(
+                    "PRAGMA table_info(app_maven_workspaces)"
+                ).fetchall()
+            }
+            if "knowledge_profile_ref" in columns:
+                rows = connection.execute(
+                    """SELECT workspace_id, repository_locator, root_pom,
+                              knowledge_profile_ref
+                       FROM app_maven_workspaces
+                       ORDER BY workspace_id"""
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """SELECT workspace_id, repository_locator, root_pom
+                       FROM app_maven_workspaces
+                       ORDER BY workspace_id"""
+                ).fetchall()
             connection.execute(
                 "SELECT name FROM sqlite_master WHERE type = 'table' LIMIT 1"
             ).fetchone()
@@ -917,28 +1057,64 @@ def _outer_reachability(
             Path(_text(row["repository_locator"], "repository locator")),
             "Workspace repository",
         )
-        root_pom_relative = _text(row["root_pom"], "root POM")
-        root_pom = _canonical_descendant_file(
-            repository / root_pom_relative,
-            repository,
-            "Workspace root POM",
+        profile_ref = (
+            _text(row["knowledge_profile_ref"], "knowledge profile")
+            if "knowledge_profile_ref" in row.keys()
+            else MAVEN_STRUCTURE_PROFILE_REF
         )
+        logical_root = _text(row["root_pom"], "logical source root")
+        if profile_ref == MAVEN_STRUCTURE_PROFILE_REF:
+            source_probe = _canonical_descendant_file(
+                repository / logical_root,
+                repository,
+                "Workspace root POM",
+            )
+            source_document = {
+                "root_pom": str(source_probe),
+                "root_pom_digest": _sha256_file(source_probe),
+            }
+            profile_document: dict[str, object] = {}
+        elif profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            source_root = _canonical_directory(
+                repository / logical_root,
+                "Workspace Java source root",
+            )
+            java_candidates = sorted(
+                path for path in source_root.rglob("*.java") if path.is_file()
+            )
+            if not java_candidates:
+                raise RuntimeError(
+                    "outer preflight found no Java source probe file"
+                )
+            source_probe = _canonical_descendant_file(
+                java_candidates[0],
+                source_root,
+                "Workspace Java source probe",
+            )
+            source_document = {
+                "source_root": str(source_root),
+                "source_probe": str(source_probe),
+                "source_probe_digest": _sha256_file(source_probe),
+            }
+            profile_document = {"knowledge_profile_ref": profile_ref}
+        else:
+            raise RuntimeError("outer preflight found unsupported Workspace profile")
         git_marker = _canonical_descendant_file(
             repository / ".git" / "HEAD",
             repository,
             "Workspace Git marker",
         )
-        root_byte = root_pom.read_bytes()[:1]
+        source_byte = source_probe.read_bytes()[:1]
         git_byte = git_marker.read_bytes()[:1]
-        if not root_byte or not git_byte:
+        if not source_byte or not git_byte:
             raise RuntimeError("outer Workspace reachability probe read no bytes")
-        forbidden[f"source_{ordinal:04d}"] = root_pom
+        forbidden[f"source_{ordinal:04d}"] = source_probe
         forbidden[f"git_{ordinal:04d}"] = git_marker
         workspaces.append(
             {
                 "workspace_id": workspace_id,
-                "root_pom": str(root_pom),
-                "root_pom_digest": _sha256_file(root_pom),
+                **profile_document,
+                **source_document,
                 "git_marker": str(git_marker),
                 "git_marker_digest": _sha256_file(git_marker),
                 "outside_sandbox_reachable": True,

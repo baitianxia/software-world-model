@@ -769,6 +769,134 @@
       "tests/test_iteration_005_slice2_evaluator.py"
     ]
   },
+  "FINDING-006-001": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-001.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/structure.py"
+    ],
+    "tests": [
+      "tests/test_structure_knowledge.py",
+      "tests/test_java_static_call.py"
+    ]
+  },
+  "FINDING-006-002": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-002.md",
+    "code": [
+      "src/software_world_model/application_services/java_static_call.py"
+    ],
+    "tests": [
+      "tests/test_java_static_call.py"
+    ]
+  },
+  "FINDING-006-003": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-003.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/oracle.json"
+    ],
+    "tests": [
+      "tests/test_java_static_call_update.py"
+    ]
+  },
+  "FINDING-006-004": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-004.md",
+    "code": [
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_maven_workspace.py"
+    ]
+  },
+  "FINDING-006-005": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-005.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_freeze.py",
+      "validation/structure_world_model_iteration_006/live_product_probe.py"
+    ],
+    "tests": []
+  },
+  "FINDING-006-006": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-006.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_freeze.py"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "FINDING-006-007": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-007.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_authorize.py",
+      "validation/structure_world_model_iteration_006/live_comparison.py"
+    ],
+    "tests": []
+  },
+  "FINDING-006-008": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-008.md",
+    "code": [
+      "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/java_model_egress_qualification.py"
+    ],
+    "tests": [
+      "tests/test_behavior_view.py",
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_006_capability_qualification.py",
+      "tests/test_model_egress_gateway.py"
+    ]
+  },
+  "FINDING-006-009": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-009.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_iteration_006_live_evaluator.py"
+    ]
+  },
+  "FINDING-006-010": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-010.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_iteration_003_v009.py",
+      "tests/test_world_model_answer_strategy.py",
+      "tests"
+    ]
+  },
+  "FINDING-006-011": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-011.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_product_probe.py"
+    ],
+    "tests": [
+      "tests/test_behavior_view.py",
+      "tests/test_world_model_product.py",
+      "tests"
+    ]
+  },
+  "FINDING-006-012": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-012.md",
+    "code": [
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
+    ],
+    "tests": [
+      "tests/test_world_model_gateway_authorization.py"
+    ]
+  },
+  "FINDING-006-013": {
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-013.md",
+    "code": [
+      "src/software_world_model/interface/world_model_product.py",
+      "scripts/docs.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -1357,6 +1485,214 @@
       "tests"
     ]
   },
+  "ITER-006-INDEX": {
+    "path": "docs/project/iterations/iteration-006/README.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-ACCEPTANCE": {
+    "path": "docs/project/iterations/iteration-006/results/acceptance.md",
+    "code": [
+      "src/software_world_model",
+      "validation/structure_world_model_iteration_006"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-IMPLEMENTATION-VERIFICATION": {
+    "path": "docs/project/iterations/iteration-006/results/implementation-verification.md",
+    "code": [
+      "src/software_world_model/application_services/java_static_call.py",
+      "src/software_world_model/application_services/maven_structure_update.py",
+      "src/software_world_model/application_services/maven_workspace.py",
+      "src/software_world_model/application_services/structure_view.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_structure_knowledge.py",
+      "tests/test_java_static_call.py",
+      "tests/test_java_static_call_update.py",
+      "tests/test_behavior_view.py",
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-JAVA-CAPABILITY-CANDIDATE-FREEZE": {
+    "path": "docs/project/iterations/iteration-006/results/java-capability-candidate-freeze.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/world_model_capability_evaluation.py",
+      "src/software_world_model/ai_infrastructure/java_model_egress_qualification.py",
+      "src/software_world_model/ai_infrastructure/java_model_egress_policy.json",
+      "validation/structure_world_model_iteration_006/capability"
+    ],
+    "tests": [
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_006_capability_qualification.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-JAVA-CAPABILITY-RUN-002": {
+    "path": "docs/project/iterations/iteration-006/results/java-capability-run-002.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/capability",
+      "src/software_world_model/ai_infrastructure/java_model_egress_qualification.py",
+      "src/software_world_model/ai_infrastructure/java_model_egress_policy.json"
+    ],
+    "tests": [
+      "tests/test_iteration_006_capability_qualification.py",
+      "tests/test_model_egress_gateway.py"
+    ]
+  },
+  "ITER-006-RESULT-LIVE-CANDIDATE-FREEZE": {
+    "path": "docs/project/iterations/iteration-006/results/live-candidate-freeze.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_freeze.py",
+      "validation/structure_world_model_iteration_006/live_comparison.py",
+      "validation/structure_world_model_iteration_006/live_evaluator.py",
+      "validation/structure_world_model_iteration_006/live_product_probe.py",
+      "validation/structure_world_model_iteration_006/live_authorize.py"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-LIVE-RUN-003": {
+    "path": "docs/project/iterations/iteration-006/results/live-run-003.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_comparison.py",
+      "validation/structure_world_model_iteration_006/live_evaluator.py"
+    ],
+    "tests": [
+      "tests/test_iteration_006_live_evaluator.py"
+    ]
+  },
+  "ITER-006-RESULT-LIVE-RUN-007": {
+    "path": "docs/project/iterations/iteration-006/results/live-run-007.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_comparison.py",
+      "validation/structure_world_model_iteration_006/live_evaluator.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
+    ],
+    "tests": [
+      "tests/test_iteration_006_live_evaluator.py",
+      "tests/test_world_model_gateway_authorization.py"
+    ]
+  },
+  "ITER-006-RESULT-LIVE-RUN-008": {
+    "path": "docs/project/iterations/iteration-006/results/live-run-008.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_authorize.py",
+      "validation/structure_world_model_iteration_006/live_comparison.py",
+      "validation/structure_world_model_iteration_006/live_evaluator.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
+    ],
+    "tests": [
+      "tests/test_world_model_gateway_authorization.py",
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-PRODUCT-CANDIDATE-FREEZE-RUN-007": {
+    "path": "docs/project/iterations/iteration-006/results/product-candidate-freeze-run-007.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_freeze.py",
+      "validation/structure_world_model_iteration_006/live_comparison.py",
+      "validation/structure_world_model_iteration_006/live_evaluator.py",
+      "validation/structure_world_model_iteration_006/live_product_probe.py",
+      "validation/structure_world_model_iteration_006/live_authorize.py"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-006-RESULT-PRODUCT-CANDIDATE-FREEZE-RUN-008": {
+    "path": "docs/project/iterations/iteration-006/results/product-candidate-freeze-run-008.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/live_freeze.py",
+      "validation/structure_world_model_iteration_006/live_comparison.py",
+      "validation/structure_world_model_iteration_006/live_evaluator.py",
+      "validation/structure_world_model_iteration_006/live_product_probe.py",
+      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
+    ],
+    "tests": [
+      "tests/test_world_model_gateway_authorization.py",
+      "tests"
+    ]
+  },
+  "ITER-006-SLICE-001": {
+    "path": "docs/project/iterations/iteration-006/development-design/SLICE-001-java-static-call-world-model.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-006-VERIFICATION": {
+    "path": "docs/project/iterations/iteration-006/verification-matrix.md",
+    "code": [
+      "validation/structure_world_model_iteration_006/oracle.json",
+      "validation/structure_world_model_iteration_006/capability",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py"
+    ],
+    "tests": [
+      "tests/test_structure_knowledge.py",
+      "tests/test_java_static_call.py",
+      "tests/test_java_static_call_update.py",
+      "tests/test_behavior_view.py",
+      "tests/test_iteration_006_capability_qualification.py",
+      "tests/test_iteration_006_live_evaluator.py",
+      "tests"
+    ]
+  },
+  "ITER-007-SLICE-001": {
+    "path": "docs/project/iterations/iteration-007/development-design/SLICE-001-java-source-semantics-walking-skeleton.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/infrastructure",
+      "src/software_world_model/interface",
+      "src/software_world_model/ai_infrastructure",
+      "pyproject.toml"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-007-SLICE-002": {
+    "path": "docs/project/iterations/iteration-007/development-design/SLICE-002-java-semantic-hardening.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/infrastructure",
+      "src/software_world_model/interface",
+      "src/software_world_model/ai_infrastructure"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-007-SLICE-003": {
+    "path": "docs/project/iterations/iteration-007/development-design/SLICE-003-held-out-product-validation.md",
+    "code": [
+      "validation"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [
@@ -1562,6 +1898,20 @@
       "tests/test_natural_task.py"
     ]
   },
+  "SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW": {
+    "path": "docs/system/contracts/application/behavior-view.md",
+    "code": [
+      "src/software_world_model/application_services/structure_view.py",
+      "src/software_world_model/application_services/citation_projection.py",
+      "src/software_world_model/interface/structure_view_cli.py",
+      "src/software_world_model/interface/world_model_product.py"
+    ],
+    "tests": [
+      "tests/test_behavior_view.py",
+      "tests/test_world_model_product.py",
+      "tests/test_citation_projector.py"
+    ]
+  },
   "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING": {
     "path": "docs/system/contracts/application/evidence-answering.md",
     "code": [
@@ -1589,6 +1939,7 @@
     "code": [
       "src/software_world_model/application_services/knowledge_update.py",
       "src/software_world_model/application_services/maven_structure.py",
+      "src/software_world_model/application_services/java_static_call.py",
       "src/software_world_model/application_services/maven_structure_update.py",
       "src/software_world_model/application_services/structure_read_bundle.py",
       "src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py",
@@ -1602,6 +1953,7 @@
     "tests": [
       "tests/test_knowledge_update.py",
       "tests/test_maven_structure.py",
+      "tests/test_java_static_call.py",
       "tests/test_maven_structure_update.py",
       "tests/test_maven_structure_update_authority.py",
       "tests/test_maven_structure_cli.py",
@@ -1698,6 +2050,7 @@
     "code": [
       "src/software_world_model/application_services",
       "src/software_world_model/ai_infrastructure/world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
       "src/software_world_model/interface"
     ],
     "tests": [
@@ -1706,7 +2059,8 @@
       "tests/test_world_model_answering.py",
       "tests/test_world_model_evaluation.py",
       "tests/test_world_model_answer_strategy.py",
-      "tests/test_iteration_003_g3a_integration.py"
+      "tests/test_iteration_003_g3a_integration.py",
+      "tests/test_iteration_006_capability_qualification.py"
     ]
   },
   "SYS-CONTRACT-INDEX": {
@@ -1812,6 +2166,18 @@
     ],
     "tests": [
       "tests/test_formal_knowledge.py"
+    ]
+  },
+  "SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL": {
+    "path": "docs/system/contracts/knowledge/java-static-call-model.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/structure.py",
+      "src/software_world_model/application_services/java_static_call.py",
+      "src/software_world_model/application_services/maven_structure_update.py"
+    ],
+    "tests": [
+      "tests/test_java_static_call.py",
+      "tests/test_java_static_call_update.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-PERSISTENCE": {

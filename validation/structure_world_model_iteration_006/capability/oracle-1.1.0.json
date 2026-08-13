@@ -1,0 +1,113 @@
+{
+  "schema": "swm.iter-006.java-world-model-capability-oracle@1",
+  "oracle_ref": "ITER-006-JAVA-WORLD-MODEL-CAPABILITY-ORACLE@1.1.0",
+  "suite_ref": "ITER-006-JAVA-WORLD-MODEL-CAPABILITY-SUITE@1.1.0",
+  "cases": [
+    {
+      "case_id": "WM-JAVA-CE-REQ-001",
+      "expected_normalized_result": {
+        "need_keys": [
+          "inventory_left",
+          "inventory_right",
+          "paths_left",
+          "paths_right",
+          "new_paths"
+        ],
+        "joint_constraints": [
+          {"kind": "ORDERED_READ_SET", "base": "snapshot_left", "target": "snapshot_right"}
+        ]
+      },
+      "forbidden_events": ["NEED_OMITTED", "ORDER_REVERSED", "REQUIREMENT_WEAKENED"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-PLAN-METHOD-002",
+      "expected_normalized_result": {
+        "operations": [
+          {"operation": "declared_method_inventory", "snapshot": "snapshot_java_left"},
+          {"operation": "declared_method_inventory", "snapshot": "snapshot_java_right"}
+        ]
+      },
+      "forbidden_events": [
+        "SOURCE_ACCESS",
+        "INVENTORY_OPERATION_SUBSTITUTED",
+        "UNREGISTERED_OPERATION",
+        "OPERATION_ORDER_CHANGED"
+      ]
+    },
+    {
+      "case_id": "WM-JAVA-CE-PLAN-PATH-003",
+      "expected_normalized_result": {
+        "operations": [
+          {
+            "operation": "all_simple_paths",
+            "snapshot": "snapshot_java_z",
+            "source_ref": "entity_java_method_source_000000000001",
+            "target_ref": "entity_java_method_target_000000000002"
+          },
+          {
+            "operation": "all_simple_paths",
+            "snapshot": "snapshot_java_a",
+            "source_ref": "entity_java_method_source_000000000001",
+            "target_ref": "entity_java_method_target_000000000002"
+          },
+          {"operation": "ordered_snapshot_diff", "base": "snapshot_java_z", "target": "snapshot_java_a"}
+        ]
+      },
+      "forbidden_events": [
+        "SOURCE_ACCESS",
+        "ENTITY_REF_CHANGED",
+        "SNAPSHOT_ID_SORT_DIRECTION",
+        "UNREGISTERED_OPERATION"
+      ]
+    },
+    {
+      "case_id": "WM-JAVA-CE-NEGATIVE-004",
+      "expected_normalized_result": {
+        "need_status": "SATISFIED_SUPPORTED_NEGATIVE",
+        "claim_scope": "NO_PATH_IN_CALLS_FOR_EXACT_READ_SET"
+      },
+      "forbidden_events": ["GLOBAL_ABSENCE_CLAIM", "COVERAGE_OMITTED"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-GAP-005",
+      "expected_normalized_result": {
+        "view_result": {"status": "LIMITED", "code": "COVERAGE_PARTIAL", "owner": "STRUCTURE_VIEW"},
+        "need_assessment": {"status": "KNOWLEDGE_GAP", "code": "INSUFFICIENT_COMPLETE_COVERAGE", "owner": "KNOWLEDGE_USE"}
+      },
+      "forbidden_events": ["SUPPORTED_NEGATIVE", "VIEW_CREATED_KNOWLEDGE_GAP", "LIMITATION_HIDDEN"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-DIFF-006",
+      "expected_normalized_result": {
+        "direction": {"base": "snapshot_java_z", "target": "snapshot_java_a"},
+        "added_entities": ["entity_java_method_added_000000000003"]
+      },
+      "forbidden_events": ["SNAPSHOT_ID_SORT_DIRECTION", "BASE_TARGET_REVERSED"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-REVIEW-007",
+      "expected_normalized_result": {
+        "decision": "REJECT",
+        "finding_codes": [
+          "NEED_OMITTED",
+          "WRONG_READ_SET",
+          "UNSUPPORTED_REASON",
+          "EVIDENCE_PAYLOAD_EXPANSION"
+        ]
+      },
+      "forbidden_events": ["SELF_REVIEW", "FAULT_OMITTED", "APPROVED_WITH_FINDING"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-RESOLVE-008",
+      "expected_normalized_result": {
+        "resolution_status": "AMBIGUOUS",
+        "candidate_refs": [
+          "entity_java_method_process_string_00000001",
+          "entity_java_method_process_int_0000000002"
+        ],
+        "next_operation_allowed": false
+      },
+      "forbidden_events": ["MODEL_SELECTED_CANDIDATE", "LABEL_STITCH", "TYPED_OPERATION_WITH_AMBIGUOUS_REF"]
+    }
+  ]
+}

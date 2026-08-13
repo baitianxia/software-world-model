@@ -38,6 +38,8 @@ from software_world_model.knowledge_engine import (
 from software_world_model.knowledge_engine.structure import (
     CoverageMember,
     CoverageMemberKind,
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
     StructureEvidence,
 )
 from software_world_model.knowledge_engine.structure_publication import (
@@ -93,6 +95,19 @@ from .maven_structure import (
     MavenStructureEvaluator,
     PomEvidenceMetadata,
 )
+from .java_static_call import (
+    CANONICALIZATION_DIGEST as JAVA_CANONICALIZATION_DIGEST,
+    CANONICALIZATION_REF as JAVA_CANONICALIZATION_REF,
+    EVALUATION_CONTEXT_DIGEST as JAVA_EVALUATION_CONTEXT_DIGEST,
+    EVALUATION_CONTEXT_REF as JAVA_EVALUATION_CONTEXT_REF,
+    SCHEMA_DIGEST as JAVA_SCHEMA_DIGEST,
+    SCHEMA_REF as JAVA_SCHEMA_REF,
+    JavaSourceEvidenceMetadata,
+    JavaStaticCallError,
+    JavaStaticCallEvaluation,
+    JavaStaticCallEvaluator,
+    JavaStaticCallInput,
+)
 from .knowledge_update import (
     BuildObjective,
     CanonicalBuildTarget,
@@ -110,6 +125,7 @@ _LOCAL_GIT_TARGET_RESOLVER_CONTRACT = "local-git-target-resolver@1"
 _CANONICAL_SYSTEM_KEY_METADATA = "canonical_system_key"
 _MAVEN_CANDIDATE_GENERATOR_REF = "MAVEN_STRUCTURE_CANDIDATE_GENERATOR@1"
 _MAVEN_INDEPENDENT_VERIFIER_REF = "MAVEN_STRUCTURE_INDEPENDENT_VERIFIER@1"
+_JAVA_CANDIDATE_GENERATOR_REF = "JAVA_STATIC_CALL_CANDIDATE_GENERATOR@1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,6 +153,7 @@ class MavenStructureUpdateRequest:
     classification: str
     actor_ref: str
     correlation_ref: CorrelationRef
+    knowledge_profile_ref: str = MAVEN_STRUCTURE_PROFILE_REF
 
     def __post_init__(self) -> None:
         if not isinstance(self.idempotency_key, IdempotencyKey):
@@ -170,6 +187,19 @@ class MavenStructureUpdateRequest:
                 _invalid("REVISION_REQUIRED", f"{label} must be a typed Revision")
         if not isinstance(self.correlation_ref, CorrelationRef):
             _invalid("CORRELATION_REF_REQUIRED", "correlation ref must be typed")
+        object.__setattr__(
+            self,
+            "knowledge_profile_ref",
+            _text(self.knowledge_profile_ref, "knowledge profile ref"),
+        )
+        if self.knowledge_profile_ref not in {
+            MAVEN_STRUCTURE_PROFILE_REF,
+            JAVA_STATIC_CALL_PROFILE_REF,
+        }:
+            _invalid(
+                "KNOWLEDGE_PROFILE_UNSUPPORTED",
+                "update knowledge profile is not supported",
+            )
         if not isinstance(self.repository_revision, str) or not _FULL_GIT_COMMIT.fullmatch(
             self.repository_revision
         ):
@@ -183,7 +213,10 @@ class MavenStructureUpdateRequest:
             "logical_reactor_root",
             _path(self.logical_reactor_root, "logical reactor root POM"),
         )
-        if PurePosixPath(self.logical_reactor_root).name != "pom.xml":
+        if (
+            self.knowledge_profile_ref == MAVEN_STRUCTURE_PROFILE_REF
+            and PurePosixPath(self.logical_reactor_root).name != "pom.xml"
+        ):
             _invalid(
                 "ROOT_POM_INVALID",
                 "logical reactor root must identify a repository-relative pom.xml",
@@ -212,46 +245,45 @@ class MavenStructureUpdateRequest:
 
     @property
     def digest(self) -> Digest:
-        return digest_of(
-            [
-                "MAVEN_STRUCTURE_UPDATE_REQUEST@1",
-                {
-                    "idempotency_key": self.idempotency_key.value,
-                    "objective_id": self.objective.objective_id,
-                    "objective_digest": self.objective.digest.value,
-                    "target_id": self.target.target_id.value,
-                    "target_digest": self.target.digest.value,
-                    "target_resolution_receipt_id": (
-                        self.target.resolution_receipt_id.value
-                    ),
-                    "target_resolution_receipt_digest": (
-                        self.target.resolution_receipt_digest.value
-                    ),
-                    "requirement_binding": None,
-                    "scope_id": self.scope_id.value,
-                    "scope_revision": self.scope_revision.value,
-                    "source_id": self.source_id.value,
-                    "source_revision": self.source_revision.value,
-                    "binding_id": self.binding_id.value,
-                    "binding_revision": self.binding_revision.value,
-                    "repository_revision": self.repository_revision,
-                    "logical_reactor_root": self.logical_reactor_root,
-                    "canonical_system_key": self.canonical_system_key,
-                    "expected_current_snapshot_id": (
-                        self.expected_current_snapshot_id.value
-                        if self.expected_current_snapshot_id is not None
-                        else None
-                    ),
-                    "max_poms": self.max_poms,
-                    "max_calls": self.max_calls,
-                    "tree_page_size": self.tree_page_size,
-                    "max_bytes_per_call": self.max_bytes_per_call,
-                    "classification": self.classification,
-                    "actor_ref": self.actor_ref,
-                    "correlation_ref": self.correlation_ref.value,
-                },
-            ]
-        )
+        core = {
+            "idempotency_key": self.idempotency_key.value,
+            "objective_id": self.objective.objective_id,
+            "objective_digest": self.objective.digest.value,
+            "target_id": self.target.target_id.value,
+            "target_digest": self.target.digest.value,
+            "target_resolution_receipt_id": self.target.resolution_receipt_id.value,
+            "target_resolution_receipt_digest": (
+                self.target.resolution_receipt_digest.value
+            ),
+            "requirement_binding": None,
+            "scope_id": self.scope_id.value,
+            "scope_revision": self.scope_revision.value,
+            "source_id": self.source_id.value,
+            "source_revision": self.source_revision.value,
+            "binding_id": self.binding_id.value,
+            "binding_revision": self.binding_revision.value,
+            "repository_revision": self.repository_revision,
+            "logical_reactor_root": self.logical_reactor_root,
+            "canonical_system_key": self.canonical_system_key,
+            "expected_current_snapshot_id": (
+                self.expected_current_snapshot_id.value
+                if self.expected_current_snapshot_id is not None
+                else None
+            ),
+            "max_poms": self.max_poms,
+            "max_calls": self.max_calls,
+            "tree_page_size": self.tree_page_size,
+            "max_bytes_per_call": self.max_bytes_per_call,
+            "classification": self.classification,
+            "actor_ref": self.actor_ref,
+            "correlation_ref": self.correlation_ref.value,
+        }
+        if self.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            core["knowledge_profile_ref"] = self.knowledge_profile_ref
+            format_ref = "STRUCTURE_PROFILE_UPDATE_REQUEST@1"
+        else:
+            format_ref = "MAVEN_STRUCTURE_UPDATE_REQUEST@1"
+        return digest_of([format_ref, core])
 
 
 class MavenStructureUpdateState(str, Enum):
@@ -661,6 +693,26 @@ class MavenStructureSourceCollection:
     def pom_paths(self) -> tuple[str, ...]:
         return tuple(path for path, _ in self.pom_artifacts)
 
+    @property
+    def source_bytes(self) -> dict[str, bytes]:
+        return self.pom_bytes
+
+    @property
+    def java_source_evidence(self) -> dict[str, JavaSourceEvidenceMetadata]:
+        return {
+            path: JavaSourceEvidenceMetadata(
+                artifact_id=artifact.artifact_id,
+                source_context_id=artifact.source_context_id,
+                artifact_content_digest=artifact.content_digest,
+                locator=artifact.source_native_identity,
+            )
+            for path, artifact in self.pom_artifacts
+        }
+
+    @property
+    def source_paths(self) -> tuple[str, ...]:
+        return self.pom_paths
+
 
 @dataclass(frozen=True, slots=True)
 class MavenStructureUpdateResult:
@@ -675,7 +727,7 @@ class MavenStructureUpdateResult:
     publication_receipt: StructurePublicationReceipt
     previous_snapshot: StructureSnapshot | None
     deletions: "StructureReplacementDeletions"
-    evaluation: MavenStructureEvaluation
+    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation
     digest: Digest
 
 
@@ -854,32 +906,53 @@ class MavenStructureSourceCollector:
                 "TREE_COVERAGE_INCOMPLETE",
                 "Git tree pagination did not produce the declared complete entry count",
             )
-        pom_paths = tuple(
-            sorted(
-                path
-                for path in entries
-                if path == "pom.xml" or path.endswith("/pom.xml")
+        if request.knowledge_profile_ref == MAVEN_STRUCTURE_PROFILE_REF:
+            source_paths = tuple(
+                sorted(
+                    path
+                    for path in entries
+                    if path == "pom.xml" or path.endswith("/pom.xml")
+                )
             )
-        )
-        if request.logical_reactor_root not in pom_paths:
-            _source_invalid(
-                "ROOT_POM_MISSING",
-                "exact Git tree does not contain the requested logical reactor root",
-                path=request.logical_reactor_root,
+            if request.logical_reactor_root not in source_paths:
+                _source_invalid(
+                    "ROOT_POM_MISSING",
+                    "exact Git tree does not contain the requested logical reactor root",
+                    path=request.logical_reactor_root,
+                )
+        else:
+            prefix = request.logical_reactor_root + "/"
+            source_paths = tuple(
+                sorted(
+                    path
+                    for path in entries
+                    if path.startswith(prefix) and path.endswith(".java")
+                )
             )
-        if len(pom_paths) > request.max_poms:
+            if not source_paths:
+                _source_invalid(
+                    "JAVA_SOURCE_SET_EMPTY",
+                    "exact Git tree contains no Java source under the configured root",
+                    path=request.logical_reactor_root,
+                )
+        if len(source_paths) > request.max_poms:
             raise DomainError(
                 ErrorCode.BUDGET_EXHAUSTED,
-                "exact Git tree contains more POMs than the update budget permits",
+                "exact Git tree contains more profile source files than the update budget permits",
                 {
-                    "reason_code": "MAX_POMS_EXCEEDED",
+                    "reason_code": (
+                        "MAX_POMS_EXCEEDED"
+                        if request.knowledge_profile_ref
+                        == MAVEN_STRUCTURE_PROFILE_REF
+                        else "MAX_JAVA_SOURCE_FILES_EXCEEDED"
+                    ),
                     "max_poms": request.max_poms,
-                    "observed_poms": len(pom_paths),
+                    "observed_poms": len(source_paths),
                 },
             )
 
-        pom_artifacts: list[tuple[str, SourceArtifact]] = []
-        for path in pom_paths:
+        source_artifacts: list[tuple[str, SourceArtifact]] = []
+        for path in source_paths:
             calls = self._require_call_budget(request, calls)
             parameters = {
                 "revision": request.repository_revision,
@@ -903,12 +976,12 @@ class MavenStructureSourceCollector:
             operation_references.append(
                 ArtifactReadOperationReference.from_result(operation)
             )
-            pom_artifacts.append(
+            source_artifacts.append(
                 (path, self._complete_pom_artifact(request, operation, path))
             )
 
         tree_entries = tuple(sorted(entries.items(), key=lambda item: item[0]))
-        poms = tuple(pom_artifacts)
+        artifacts = tuple(source_artifacts)
         evidence = tuple(tree_evidence)
         if self._replay is not None:
             try:
@@ -920,36 +993,39 @@ class MavenStructureSourceCollector:
                     "SOURCE_REPLAY_OPERATION_COUNT_MISMATCH",
                     "persisted replay has unused expected Source Operation IDs",
                 )
-        collection_digest = digest_of(
-            [
-                "MAVEN_STRUCTURE_SOURCE_COLLECTION@1",
-                {
-                    "repository_revision": request.repository_revision,
-                    "tree_entries": tree_entries,
-                    "pom_artifacts": tuple(
-                        (
-                            path,
-                            artifact.artifact_id.value,
-                            artifact.content_digest.value,
-                            artifact.source_context_id.value,
-                        )
-                        for path, artifact in poms
-                    ),
-                    "tree_evidence": tuple(
-                        (item.evidence_id.value, item.digest.value) for item in evidence
-                    ),
-                    "operation_ids": tuple(item.value for item in operation_ids),
-                    "operation_digests": tuple(
-                        item.value for item in operation_digests
-                    ),
-                    "operation_references": tuple(operation_references),
-                },
-            ]
+        artifact_values = tuple(
+            (
+                path,
+                artifact.artifact_id.value,
+                artifact.content_digest.value,
+                artifact.source_context_id.value,
+            )
+            for path, artifact in artifacts
         )
+        collection_core: dict[str, object] = {
+            "repository_revision": request.repository_revision,
+            "tree_entries": tree_entries,
+            "pom_artifacts": artifact_values,
+            "tree_evidence": tuple(
+                (item.evidence_id.value, item.digest.value) for item in evidence
+            ),
+            "operation_ids": tuple(item.value for item in operation_ids),
+            "operation_digests": tuple(item.value for item in operation_digests),
+            "operation_references": tuple(operation_references),
+        }
+        collection_format = "MAVEN_STRUCTURE_SOURCE_COLLECTION@1"
+        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            collection_core["knowledge_profile_ref"] = request.knowledge_profile_ref
+            collection_core["logical_source_root"] = request.logical_reactor_root
+            collection_core["source_artifacts"] = collection_core.pop(
+                "pom_artifacts"
+            )
+            collection_format = "STRUCTURE_PROFILE_SOURCE_COLLECTION@1"
+        collection_digest = digest_of([collection_format, collection_core])
         return MavenStructureSourceCollection(
             repository_revision=request.repository_revision,
             tree_entries=tree_entries,
-            pom_artifacts=poms,
+            pom_artifacts=artifacts,
             tree_evidence=evidence,
             operation_references=tuple(operation_references),
             operation_ids=tuple(operation_ids),
@@ -989,26 +1065,28 @@ class MavenStructureSourceCollector:
         budget: OperationBudget,
         expected_operation_id: StableId | None,
     ) -> SourceOperationResult:
-        action_digest = digest_of(
-            [
-                "MAVEN_STRUCTURE_SOURCE_ACTION@1",
-                {
-                    "scope_id": request.scope_id.value,
-                    "scope_revision": request.scope_revision.value,
-                    "source_id": request.source_id.value,
-                    "source_revision": request.source_revision.value,
-                    "binding_id": request.binding_id.value,
-                    "binding_revision": request.binding_revision.value,
-                    "repository_revision": request.repository_revision,
-                    "tool": tool.value,
-                    "parameters": tuple(sorted(parameters.items())),
-                    "budget": budget,
-                    "classification": request.classification,
-                    "actor_ref": request.actor_ref,
-                },
-            ]
-        )
-        action_ref = f"maven-structure-source:{action_digest.value}"
+        action_core: dict[str, object] = {
+            "scope_id": request.scope_id.value,
+            "scope_revision": request.scope_revision.value,
+            "source_id": request.source_id.value,
+            "source_revision": request.source_revision.value,
+            "binding_id": request.binding_id.value,
+            "binding_revision": request.binding_revision.value,
+            "repository_revision": request.repository_revision,
+            "tool": tool.value,
+            "parameters": tuple(sorted(parameters.items())),
+            "budget": budget,
+            "classification": request.classification,
+            "actor_ref": request.actor_ref,
+        }
+        action_format = "MAVEN_STRUCTURE_SOURCE_ACTION@1"
+        action_prefix = "maven-structure-source"
+        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            action_core["knowledge_profile_ref"] = request.knowledge_profile_ref
+            action_format = "STRUCTURE_PROFILE_SOURCE_ACTION@1"
+            action_prefix = "java-static-call-source"
+        action_digest = digest_of([action_format, action_core])
+        action_ref = f"{action_prefix}:{action_digest.value}"
         scope_assertion = self._scopes.read_scope_state_assertion(
             scope_id=request.scope_id,
             expected_revision=request.scope_revision,
@@ -1032,7 +1110,7 @@ class MavenStructureSourceCollector:
             )
         intent = SourceOperationIntent.create(
             idempotency_key=IdempotencyKey(
-                f"maven-structure-source-{action_digest.value.removeprefix('sha256:')}"
+                f"{action_prefix}-{action_digest.value.removeprefix('sha256:')}"
             ),
             causation_reference=action_ref,
             source_id=request.source_id,
@@ -1151,41 +1229,53 @@ class MavenStructureSourceCollector:
         operation: SourceOperationResult,
         path: str,
     ) -> SourceArtifact:
+        is_maven = request.knowledge_profile_ref == MAVEN_STRUCTURE_PROFILE_REF
+        label = "POM" if is_maven else "Java source"
+        truncated_reason = "POM_READ_TRUNCATED" if is_maven else "JAVA_READ_TRUNCATED"
+        incomplete_reason = "POM_READ_INCOMPLETE" if is_maven else "JAVA_READ_INCOMPLETE"
         observation = operation.observation
         if observation is not None and any(
             artifact.truncated or artifact.truncation_offset is not None
             for artifact in observation.artifacts
         ):
             _source_invalid(
-                "POM_READ_TRUNCATED",
-                "POM READ Artifact must be complete and non-truncated",
+                truncated_reason,
+                f"{label} READ Artifact must be complete and non-truncated",
                 path=path,
             )
         if operation.status is not SourceOperationStatus.COMPLETED or observation is None:
-            _operation_failed(operation, "POM_READ_NOT_COMPLETED")
+            _operation_failed(
+                operation,
+                "POM_READ_NOT_COMPLETED" if is_maven else "JAVA_READ_NOT_COMPLETED",
+            )
         if observation.tool is not SourceTool.READ:
             _source_invalid("READ_TOOL_MISMATCH", "Source result is not a READ observation")
         if observation.source_context.repository_revision != request.repository_revision:
-            _source_invalid("READ_REVISION_MISMATCH", "POM READ is not bound to the exact Git commit", path=path)
+            _source_invalid("READ_REVISION_MISMATCH", f"{label} READ is not bound to the exact Git commit", path=path)
         if observation.has_more or observation.next_cursor is not None:
-            _source_invalid("POM_READ_INCOMPLETE", "POM READ cannot require pagination", path=path)
+            _source_invalid(incomplete_reason, f"{label} READ cannot require pagination", path=path)
         if len(observation.artifacts) != 1:
-            _source_invalid("READ_ARTIFACT_COUNT_INVALID", "POM READ must contain exactly one Artifact", path=path)
+            _source_invalid("READ_ARTIFACT_COUNT_INVALID", f"{label} READ must contain exactly one Artifact", path=path)
         artifact = observation.artifacts[0]
         _require_artifact_authority(request, artifact, _FILE_ARTIFACT_KIND)
         if artifact.source_native_identity != path:
-            _source_invalid("READ_PATH_MISMATCH", "POM Artifact path differs from the requested path", path=path)
+            _source_invalid("READ_PATH_MISMATCH", f"{label} Artifact path differs from the requested path", path=path)
         if artifact.truncated or artifact.truncation_offset is not None:
-            _source_invalid("POM_READ_TRUNCATED", "POM READ Artifact must be complete and non-truncated", path=path)
+            _source_invalid(truncated_reason, f"{label} READ Artifact must be complete and non-truncated", path=path)
         if artifact.content_digest != content_digest(artifact.payload):
-            _source_invalid("ARTIFACT_DIGEST_MISMATCH", "POM Artifact bytes do not match its content digest", path=path)
+            _source_invalid("ARTIFACT_DIGEST_MISMATCH", f"{label} Artifact bytes do not match its content digest", path=path)
         try:
             artifact.payload.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise DomainError(
                 ErrorCode.SOURCE_OPERATION_FAILED,
-                "POM Artifact must be exact UTF-8",
-                {"reason_code": "POM_UTF8_INVALID", "path": path},
+                f"{label} Artifact must be exact UTF-8",
+                {
+                    "reason_code": (
+                        "POM_UTF8_INVALID" if is_maven else "JAVA_UTF8_INVALID"
+                    ),
+                    "path": path,
+                },
             ) from exc
         return artifact
 
@@ -1338,19 +1428,17 @@ class MavenStructureIndependentVerifier:
         knowledge_context_digest = _maven_knowledge_context_digest(
             context.request
         )
-        evaluation = MavenStructureEvaluator().evaluate(
-            _maven_evaluation_input(
-                context.request,
-                collection,
-                knowledge_context_digest,
-            )
+        evaluation = _evaluate_structure_profile(
+            context.request,
+            collection,
+            knowledge_context_digest,
         )
         MavenStructureUpdateService._require_complete_evaluation(
             context.request,
             evaluation,
         )
-        report_digest = digest_of(
-            ["MAVEN_STRUCTURE_BUILD_REPORT@1", evaluation.report]
+        report_digest = _structure_build_report_digest(
+            context.request, evaluation
         )
         evaluation_digest = maven_structure_evaluation_digest(evaluation)
         candidate_digest = maven_structure_candidate_digest(
@@ -1451,7 +1539,7 @@ class MavenStructureUpdateService:
                     collected.digest,
                 ),
                 operation_references=collected.operation_references,
-                purpose=ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
+                purpose=_artifact_use_purpose(request),
                 downstream_request_ref=preparation.attempt.attempt_id.value,
                 downstream_request_digest=request.digest,
                 protection_mode=ArtifactReadProtectionMode.NO_EVICTION,
@@ -1477,15 +1565,14 @@ class MavenStructureUpdateService:
                     {"reason_code": "ARTIFACT_READ_COLLECTION_DRIFT"},
                 )
             knowledge_context_digest = _maven_knowledge_context_digest(request)
-            evaluation = self._evaluator.evaluate(
-                _maven_evaluation_input(
-                    request, collection, knowledge_context_digest
-                )
+            evaluation = _evaluate_structure_profile(
+                request,
+                collection,
+                knowledge_context_digest,
+                maven_evaluator=self._evaluator,
             )
             self._require_complete_evaluation(request, evaluation)
-            report_digest = digest_of(
-                ["MAVEN_STRUCTURE_BUILD_REPORT@1", evaluation.report]
-            )
+            report_digest = _structure_build_report_digest(request, evaluation)
             evaluation_digest = maven_structure_evaluation_digest(evaluation)
             application_acceptance = _maven_application_acceptance(
                 request=request,
@@ -1509,7 +1596,7 @@ class MavenStructureUpdateService:
                 evaluation_digest=evaluation_digest,
                 report_digest=report_digest,
             )
-            candidate_ref = f"MAVEN_STRUCTURE_CANDIDATE@1:{candidate_digest.value}"
+            candidate_ref = _structure_candidate_ref(request, candidate_digest)
             target_authority_digest = (
                 preparation.target_authority.digest
                 if preparation.target_authority is not None
@@ -1536,7 +1623,7 @@ class MavenStructureUpdateService:
                 expected_closure_digest=authorized_read.closure.digest,
                 protection_id=authorized_read.protection.protection_id,
                 expected_protection_digest=authorized_read.protection.digest,
-                purpose=ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
+                purpose=_artifact_use_purpose(request),
                 downstream_request_ref=preparation.attempt.attempt_id.value,
                 downstream_request_digest=request.digest,
                 downstream_candidate_ref=candidate_ref,
@@ -1672,6 +1759,25 @@ class MavenStructureUpdateService:
                 admission=admission,
                 receipt=receipt,
             )
+        except JavaStaticCallError as exc:
+            converted = DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                str(exc),
+                {
+                    "reason_code": exc.reason_code,
+                    "locator": exc.locator,
+                },
+            )
+            if terminal is None:
+                self._repository.finish_failed(
+                    attempt_id=preparation.attempt.attempt_id,
+                    error_code=converted.code.value,
+                    error_message=converted.message,
+                    error_details=converted.details,
+                    outcome_pending=False,
+                    occurred_at=self._now(),
+                )
+            raise converted from exc
         except MavenStructureError as exc:
             details: dict[str, str | int] = {"reason_code": exc.code.value}
             if exc.locator is not None:
@@ -1773,7 +1879,7 @@ class MavenStructureUpdateService:
         request: MavenStructureUpdateRequest,
         attempt_id: StableId,
         collection: MavenStructureSourceCollection,
-        evaluation: MavenStructureEvaluation,
+        evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
         report_digest: Digest,
         assessment: StructureVerifierAssessment,
         application_acceptance: StructureApplicationAcceptance,
@@ -1787,7 +1893,7 @@ class MavenStructureUpdateService:
         if (
             persisted_artifact_use != artifact_use_confirmation
             or persisted_artifact_use.purpose
-            is not ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
+            is not _artifact_use_purpose(request)
             or persisted_artifact_use.downstream_request_ref != attempt_id.value
             or persisted_artifact_use.downstream_request_digest != request.digest
             or persisted_artifact_use.downstream_candidate_ref
@@ -1933,7 +2039,7 @@ class MavenStructureUpdateService:
             or recorded_artifact_use.package_digest
             != terminal.artifact_read_package_digest
             or recorded_artifact_use.purpose
-            is not ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
+            is not _artifact_use_purpose(request)
             or recorded_artifact_use.downstream_request_ref
             != preparation.attempt.attempt_id.value
             or recorded_artifact_use.downstream_request_digest != request.digest
@@ -1977,17 +2083,13 @@ class MavenStructureUpdateService:
                 {"reason_code": "PENDING_SOURCE_COLLECTION_DRIFT"},
             )
         knowledge_context_digest = _maven_knowledge_context_digest(request)
-        evaluation = MavenStructureEvaluator().evaluate(
-            _maven_evaluation_input(
-                request,
-                collection,
-                knowledge_context_digest,
-            )
+        evaluation = _evaluate_structure_profile(
+            request,
+            collection,
+            knowledge_context_digest,
         )
         self._require_complete_evaluation(request, evaluation)
-        report_digest = digest_of(
-            ["MAVEN_STRUCTURE_BUILD_REPORT@1", evaluation.report]
-        )
+        report_digest = _structure_build_report_digest(request, evaluation)
         if report_digest != terminal.build_report_digest:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -2002,7 +2104,7 @@ class MavenStructureUpdateService:
             evaluation_digest=evaluation_digest,
             report_digest=report_digest,
         )
-        candidate_ref = f"MAVEN_STRUCTURE_CANDIDATE@1:{candidate_digest.value}"
+        candidate_ref = _structure_candidate_ref(request, candidate_digest)
         provenance_digest = _maven_provenance_digest(
             request=request,
             target_authority_digest=preparation.target_authority.digest,
@@ -2078,7 +2180,7 @@ class MavenStructureUpdateService:
             expected_closure_digest=recorded_artifact_use.closure_digest,
             protection_id=recorded_artifact_use.protection_id,
             expected_protection_digest=recorded_artifact_use.protection_digest,
-            purpose=ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
+            purpose=_artifact_use_purpose(request),
             downstream_request_ref=preparation.attempt.attempt_id.value,
             downstream_request_digest=request.digest,
             downstream_candidate_ref=candidate_ref,
@@ -2181,19 +2283,27 @@ class MavenStructureUpdateService:
     @staticmethod
     def _require_complete_evaluation(
         request: MavenStructureUpdateRequest,
-        evaluation: MavenStructureEvaluation,
+        evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
     ) -> None:
         report = evaluation.report
+        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+            schema_ref = JAVA_SCHEMA_REF
+            evaluation_context_ref = JAVA_EVALUATION_CONTEXT_REF
+            canonicalization_ref = JAVA_CANONICALIZATION_REF
+        else:
+            schema_ref = SCHEMA_REF
+            evaluation_context_ref = EVALUATION_CONTEXT_REF
+            canonicalization_ref = CANONICALIZATION_REF
         if (
             not report.complete
             or report.source_revision != request.repository_revision
-            or report.schema_ref != SCHEMA_REF
-            or report.evaluation_context_ref != EVALUATION_CONTEXT_REF
-            or report.canonicalization_ref != CANONICALIZATION_REF
+            or report.schema_ref != schema_ref
+            or report.evaluation_context_ref != evaluation_context_ref
+            or report.canonicalization_ref != canonicalization_ref
         ):
             _invalid(
                 "APPLICATION_ACCEPTANCE_FAILED",
-                "Maven evaluator report is incomplete or does not bind the exact frozen context",
+                "Structure evaluator report is incomplete or does not bind the exact frozen context",
             )
         expected_tree_evidence = {item.evidence_id for item in evaluation.batch.evidence}
         required_tree_evidence = {
@@ -2213,11 +2323,65 @@ class MavenStructureUpdateService:
             )
 
 
+def _evaluate_structure_profile(
+    request: MavenStructureUpdateRequest,
+    collection: MavenStructureSourceCollection,
+    knowledge_context_digest: Digest,
+    *,
+    maven_evaluator: MavenEvaluator | None = None,
+) -> MavenStructureEvaluation | JavaStaticCallEvaluation:
+    evaluation_input = _maven_evaluation_input(
+        request, collection, knowledge_context_digest
+    )
+    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if not isinstance(evaluation_input, JavaStaticCallInput):
+            raise AssertionError("Java profile produced the wrong evaluation input")
+        return JavaStaticCallEvaluator().evaluate(evaluation_input)
+    if not isinstance(evaluation_input, MavenEvaluationInput):
+        raise AssertionError("Maven profile produced the wrong evaluation input")
+    return (maven_evaluator or MavenStructureEvaluator()).evaluate(evaluation_input)
+
+
+def _structure_build_report_digest(
+    request: MavenStructureUpdateRequest,
+    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
+) -> Digest:
+    format_ref = (
+        "JAVA_STATIC_CALL_BUILD_REPORT@1"
+        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+        else "MAVEN_STRUCTURE_BUILD_REPORT@1"
+    )
+    return digest_of([format_ref, evaluation.report])
+
+
+def _structure_candidate_ref(
+    request: MavenStructureUpdateRequest, candidate_digest: Digest
+) -> str:
+    prefix = (
+        "JAVA_STATIC_CALL_CANDIDATE@1"
+        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+        else "MAVEN_STRUCTURE_CANDIDATE@1"
+    )
+    return f"{prefix}:{candidate_digest.value}"
+
+
 def _maven_evaluation_input(
     request: MavenStructureUpdateRequest,
     collection: MavenStructureSourceCollection,
     knowledge_context_digest: Digest,
-) -> MavenEvaluationInput:
+) -> MavenEvaluationInput | JavaStaticCallInput:
+    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        return JavaStaticCallInput(
+            owning_scope_id=request.scope_id,
+            source_binding_id=request.binding_id,
+            source_revision=request.repository_revision,
+            knowledge_context_digest=knowledge_context_digest,
+            source_bytes=collection.source_bytes,
+            git_entries=collection.git_entries,
+            source_evidence=collection.java_source_evidence,
+            tree_evidence=collection.tree_evidence,
+            logical_source_root=request.logical_reactor_root,
+        )
     return MavenEvaluationInput(
         owning_scope_id=request.scope_id,
         canonical_system_key=request.canonical_system_key,
@@ -2235,6 +2399,28 @@ def _maven_evaluation_input(
 def _maven_knowledge_context_digest(
     request: MavenStructureUpdateRequest,
 ) -> Digest:
+    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        return digest_of(
+            [
+                "JAVA_STATIC_CALL_KNOWLEDGE_CONTEXT@1",
+                {
+                    "scope_id": request.scope_id.value,
+                    "scope_revision": request.scope_revision.value,
+                    "source_id": request.source_id.value,
+                    "source_revision": request.source_revision.value,
+                    "binding_id": request.binding_id.value,
+                    "binding_revision": request.binding_revision.value,
+                    "repository_revision": request.repository_revision,
+                    "logical_source_root": request.logical_reactor_root,
+                    "schema_ref": JAVA_SCHEMA_REF,
+                    "schema_digest": JAVA_SCHEMA_DIGEST,
+                    "evaluation_context_ref": JAVA_EVALUATION_CONTEXT_REF,
+                    "evaluation_context_digest": JAVA_EVALUATION_CONTEXT_DIGEST,
+                    "canonicalization_ref": JAVA_CANONICALIZATION_REF,
+                    "canonicalization_digest": JAVA_CANONICALIZATION_DIGEST,
+                },
+            ]
+        )
     return digest_of(
         [
             "MAVEN_STRUCTURE_KNOWLEDGE_CONTEXT@1",
@@ -2263,12 +2449,30 @@ def _maven_verification_context_digest(
     collection: MavenStructureSourceCollection,
     authorized_read: AuthorizedArtifactRead,
 ) -> Digest:
+    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        context_format = "JAVA_STATIC_CALL_INDEPENDENT_VERIFICATION_CONTEXT@1"
+        generator_ref = _JAVA_CANDIDATE_GENERATOR_REF
+        schema_ref = JAVA_SCHEMA_REF
+        schema_digest = JAVA_SCHEMA_DIGEST
+        evaluation_context_ref = JAVA_EVALUATION_CONTEXT_REF
+        evaluation_context_digest = JAVA_EVALUATION_CONTEXT_DIGEST
+        canonicalization_ref = JAVA_CANONICALIZATION_REF
+        canonicalization_digest = JAVA_CANONICALIZATION_DIGEST
+    else:
+        context_format = "MAVEN_STRUCTURE_INDEPENDENT_VERIFICATION_CONTEXT@1"
+        generator_ref = _MAVEN_CANDIDATE_GENERATOR_REF
+        schema_ref = SCHEMA_REF
+        schema_digest = SCHEMA_DIGEST
+        evaluation_context_ref = EVALUATION_CONTEXT_REF
+        evaluation_context_digest = EVALUATION_CONTEXT_DIGEST
+        canonicalization_ref = CANONICALIZATION_REF
+        canonicalization_digest = CANONICALIZATION_DIGEST
     return digest_of(
         [
-            "MAVEN_STRUCTURE_INDEPENDENT_VERIFICATION_CONTEXT@1",
+            context_format,
             {
                 "verifier_ref": _MAVEN_INDEPENDENT_VERIFIER_REF,
-                "candidate_generator_ref": _MAVEN_CANDIDATE_GENERATOR_REF,
+                "candidate_generator_ref": generator_ref,
                 "request_digest": request.digest.value,
                 "source_collection_digest": collection.digest.value,
                 "source_operation_ids": tuple(
@@ -2296,12 +2500,12 @@ def _maven_verification_context_digest(
                     authorized_read.protection.digest.value
                 ),
                 "artifact_read_purpose": authorized_read.package.purpose.value,
-                "schema_ref": SCHEMA_REF,
-                "schema_digest": SCHEMA_DIGEST,
-                "evaluation_context_ref": EVALUATION_CONTEXT_REF,
-                "evaluation_context_digest": EVALUATION_CONTEXT_DIGEST,
-                "canonicalization_ref": CANONICALIZATION_REF,
-                "canonicalization_digest": CANONICALIZATION_DIGEST,
+                "schema_ref": schema_ref,
+                "schema_digest": schema_digest,
+                "evaluation_context_ref": evaluation_context_ref,
+                "evaluation_context_digest": evaluation_context_digest,
+                "canonicalization_ref": canonicalization_ref,
+                "canonicalization_digest": canonicalization_digest,
             },
         ]
     )
@@ -2323,8 +2527,12 @@ def _maven_application_acceptance(
     return StructureApplicationAcceptance.pass_for(
         batch,
         acceptance_ref=(
-            "MAVEN_STRUCTURE_APPLICATION_PASS@1:"
-            f"{acceptance_identity.value}"
+            (
+                "JAVA_STATIC_CALL_APPLICATION_PASS@1:"
+                if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                else "MAVEN_STRUCTURE_APPLICATION_PASS@1:"
+            )
+            + acceptance_identity.value
         ),
         report_digest=report_digest,
     )
@@ -2338,9 +2546,14 @@ def _maven_provenance_digest(
     report_digest: Digest,
     evaluation_digest: Digest,
 ) -> Digest:
+    is_java = request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
     return digest_of(
         [
-            "MAVEN_STRUCTURE_PROVENANCE@1",
+            (
+                "JAVA_STATIC_CALL_PROVENANCE@1"
+                if is_java
+                else "MAVEN_STRUCTURE_PROVENANCE@1"
+            ),
             {
                 "objective_digest": request.objective.digest.value,
                 "target_digest": request.target.digest.value,
@@ -2354,16 +2567,37 @@ def _maven_provenance_digest(
                 ),
                 "build_report_digest": report_digest.value,
                 "evaluation_digest": evaluation_digest.value,
-                "generator_ref": _MAVEN_CANDIDATE_GENERATOR_REF,
+                "generator_ref": (
+                    _JAVA_CANDIDATE_GENERATOR_REF
+                    if is_java
+                    else _MAVEN_CANDIDATE_GENERATOR_REF
+                ),
             },
         ]
     )
 
 
 def maven_structure_evaluation_digest(
-    evaluation: MavenStructureEvaluation,
+    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
 ) -> Digest:
     """Digest every canonical evaluator output, including report-only facts."""
+
+    if isinstance(evaluation, JavaStaticCallEvaluation):
+        return digest_of(
+            [
+                "JAVA_STATIC_CALL_CANONICAL_EVALUATION@1",
+                {
+                    "types": evaluation.types,
+                    "methods": evaluation.methods,
+                    "relations": evaluation.relations,
+                    "coverage": evaluation.coverage,
+                    "complete_member_manifest": evaluation.complete_member_manifest,
+                    "evidence": evaluation.evidence,
+                    "report": evaluation.report,
+                    "batch": evaluation.batch,
+                },
+            ]
+        )
 
     return digest_of(
         [
@@ -2387,15 +2621,24 @@ def maven_structure_candidate_digest(
     *,
     request: MavenStructureUpdateRequest,
     collection: MavenStructureSourceCollection,
-    evaluation: MavenStructureEvaluation,
+    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
     evaluation_digest: Digest,
     report_digest: Digest,
 ) -> Digest:
+    is_java = request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
     return digest_of(
         [
-            "MAVEN_STRUCTURE_CANDIDATE@1",
+            (
+                "JAVA_STATIC_CALL_CANDIDATE@1"
+                if is_java
+                else "MAVEN_STRUCTURE_CANDIDATE@1"
+            ),
             {
-                "generator_ref": _MAVEN_CANDIDATE_GENERATOR_REF,
+                "generator_ref": (
+                    _JAVA_CANDIDATE_GENERATOR_REF
+                    if is_java
+                    else _MAVEN_CANDIDATE_GENERATOR_REF
+                ),
                 "batch_digest": structure_batch_digest(evaluation.batch).value,
                 "evaluation_digest": evaluation_digest.value,
                 "source_collection_digest": collection.digest.value,
@@ -2566,9 +2809,14 @@ def _child_idempotency_key(
     stage: str,
     closure_digest: Digest,
 ) -> IdempotencyKey:
+    key_format = "MAVEN_STRUCTURE_UPDATE_CHILD_KEY@1"
+    key_prefix = "maven-structure"
+    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        key_format = "STRUCTURE_PROFILE_UPDATE_CHILD_KEY@1"
+        key_prefix = "java-static-call"
     digest = digest_of(
         [
-            "MAVEN_STRUCTURE_UPDATE_CHILD_KEY@1",
+            key_format,
             {
                 "request_digest": request.digest.value,
                 "stage": stage,
@@ -2577,8 +2825,16 @@ def _child_idempotency_key(
         ]
     )
     return IdempotencyKey(
-        f"maven-structure-{stage}-{digest.value.removeprefix('sha256:')}"
+        f"{key_prefix}-{stage}-{digest.value.removeprefix('sha256:')}"
     )
+
+
+def _artifact_use_purpose(
+    request: MavenStructureUpdateRequest,
+) -> ArtifactUsePurpose:
+    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        return ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE
+    return ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
 
 
 def _error_code(value: str | None) -> ErrorCode:

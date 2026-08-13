@@ -1,0 +1,223 @@
+schema_version: 1
+iteration:
+  id: ITER-007
+  status: proposed
+  outcome_scope: java-source-semantics-general-source-qa-first-cumulative-slice
+
+baseline:
+  commit: bc0ecefb806c946f9c2b5938470be18ec780115b
+  dirty_worktree_allowed: true
+  relation: planning-anchor-only-replace-after-iteration-006-acceptance
+
+product_goal_alignment:
+  target_ref: SYS-PRODUCT-SUCCESS
+  baseline_gap: java-world-model-has-declarations-and-calls-but-no-method-implementation-feature-discovery-or-general-query
+  accepted_capability_refs:
+    - ITER-005-RESULT-ACCEPTANCE
+  anticipated_accepted_capability_refs:
+    - ITER-006-RESULT-ACCEPTANCE
+  new_capability_slice_refs:
+    - ITER-007-SLICE-001
+    - ITER-007-SLICE-002
+    - ITER-007-SLICE-003
+  held_out_free_question_delta: pending-independent-baseline-and-target-freeze
+  held_out_evaluation_owner: independent-evaluator
+  implementation_question_visibility: hidden
+  implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
+  visible_development_corpus_digest: pending
+  evaluation_project_manifest_digest: pending
+  held_out_suite_digest: pending
+  baseline_result_digest: pending
+  mature_source_agent_protocol_digest: pending
+  authorized_software_sources_digest: pending
+  held_out_question_count: 16
+  held_out_answerable_question_count: 12
+  held_out_boundary_question_count: 4
+  held_out_answerable_without_symbol_count_minimum: 6
+  held_out_answerable_without_symbol_per_project_minimum: 2
+  held_out_baseline_supported_count: pending
+  held_out_target_supported_count: pending-min-12-max-baseline-plus-4-or-8
+  supported_count_denominator: answerable-only
+  boundary_gap_counted_as_supported: false
+  cross_domain_cases:
+    - V-XD-001
+    - V-XD-002
+    - V-XD-003
+  blocking_case_ids:
+    - V-001
+    - V-002
+    - V-002A
+    - V-003
+    - V-004
+    - V-004A
+    - V-XD-001
+    - V-WEB-001
+    - V-CANARY-001
+    - V-005
+    - V-XD-002
+    - V-WEB-002
+    - V-CANARY-002
+    - V-006
+    - V-XD-003
+    - V-WEB-003
+    - V-007
+    - V-007A
+    - V-008
+    - V-ADHOC-001
+    - V-009
+  readiness_blocking_case_ids:
+    - V-PRE-006
+  cross_domain_case_count: 3
+  cross_domain_bindings:
+    binding_001:
+      case_id: V-XD-001
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-007-SLICE-001
+    binding_002:
+      case_id: V-XD-002
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-007-SLICE-002
+    binding_003:
+      case_id: V-XD-003
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-007-SLICE-003
+  first_product_web_checkpoint: V-WEB-001
+  web_checkpoint_binding:
+    case_id: V-WEB-001
+    new_slice_ref: ITER-007-SLICE-001
+    executes_cross_domain_case_id: V-XD-001
+  additional_web_checkpoint_bindings:
+    hardening:
+      case_id: V-WEB-002
+      new_slice_ref: ITER-007-SLICE-002
+      executes_cross_domain_case_id: V-XD-002
+    held_out_validation:
+      case_id: V-WEB-003
+      new_slice_ref: ITER-007-SLICE-003
+      executes_cross_domain_case_id: V-XD-003
+  early_hidden_canary_bindings:
+    slice_001:
+      case_id: V-CANARY-001
+      new_slice_ref: ITER-007-SLICE-001
+      project_manifest_digest: pending
+      suite_digest: pending
+      evaluation_owner: independent-evaluator
+      implementation_visibility: hidden-until-slice-code-freeze
+      burn_rule: product-change-after-exposure-burns-canary-and-preserves-failure
+    slice_002:
+      case_id: V-CANARY-002
+      new_slice_ref: ITER-007-SLICE-002
+      project_manifest_digest: pending
+      suite_digest: pending
+      evaluation_owner: independent-evaluator
+      implementation_visibility: hidden-until-slice-code-freeze
+      burn_rule: product-change-after-exposure-burns-canary-and-preserves-failure
+  live_ad_hoc_question_checkpoint: V-ADHOC-001
+  live_ad_hoc_checkpoint_binding:
+    case_id: V-ADHOC-001
+    new_slice_ref: ITER-007-SLICE-003
+    executes_cross_domain_case_id: V-XD-003
+  live_ad_hoc_question_count: 3
+  live_ad_hoc_without_symbol_count_minimum: 2
+  stop_or_redirect_conditions:
+    - earliest-formal-web-cannot-compose-static-call-and-implementation-semantics
+    - feature-question-without-symbol-cannot-discover-relevant-formal-knowledge
+    - implementation-requires-project-question-keyword-or-need-kind-patches
+    - no-payload-boundary-loses-required-information-or-becomes-reversible-source
+    - visible-corpus-java-frontend-or-method-disposition-cannot-close
+    - early-hidden-canary-fails-before-next-slice
+    - frozen-held-out-target-not-reached
+    - mature-source-agent-answerable-but-prebuilt-model-remains-gap
+
+source_scope:
+  provider: LOCAL_GIT
+  content_kind: java-source
+  contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+  authorized_software_sources_digest: pending
+  question_or_suite_driven_update_allowed: false
+  verification_case_ids:
+    - V-002
+    - V-006
+  deferred_content_kinds:
+    - repository-documentation
+    - configuration
+    - deployment
+    - runtime-observation
+
+answer_protocol:
+  contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+  planner_model_calls: 1
+  draft_model_calls: 1
+  independent_reviewer_model_calls: 1
+  deterministic_schema_grounding_and_authorization_checks: true
+  retries_allowed: false
+  exact_total_model_calls_per_question: 3
+  status: pending
+
+readiness_inputs:
+  required_system_contract_refs:
+    - SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+    - SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
+    - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+  source_semantics_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+  implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
+  no_payload_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+  answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+  system_contract_set_digest: pending
+  java_frontend:
+    artifact_ref: pending
+    version: pending
+    license_ref: pending
+    offline_artifact_digest: pending
+    canonicalization_oracle_digest: pending
+    information_preservation_oracle_digest: pending
+    information_boundary_oracle_digest: pending
+  hidden_freeze_protocol_digest: pending
+
+development:
+  slices:
+    ITER-007-SLICE-001:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+    ITER-007-SLICE-002:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+    ITER-007-SLICE-003:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+
+external_inputs:
+  hidden_evaluation:
+    status: pending
+    implementation_visibility: project-identity-source-and-questions-hidden-until-code-freeze
+    burn_rule: any-product-change-after-exposure-requires-new-projects-and-new-questions
+  live_model_disclosure:
+    status: not-authorized
+    production_activation: NOT_EXECUTED
+
+verification:
+  matrix_id: ITER-007-VERIFICATION
+  evidence_location: var/iteration-007
+
+authorization:
+  readiness_review_id: ITER-007-READINESS
+  authorized_by: pending
+  authorized_at: pending
+  authorization_ref: pending
+  active_slice: none

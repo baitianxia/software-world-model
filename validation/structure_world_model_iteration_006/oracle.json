@@ -1,0 +1,70 @@
+{
+  "schema": "ITER-006-JAVA-STATIC-CALL-ORACLE@1",
+  "source_root": "src/main/java",
+  "revisions": {
+    "r1": {
+      "git_commit": "db44ddb8b8683f0157dfd7bafa6be46b7d478bfb",
+      "git_tree": "4ee62aea3eb6c905836c119a1f0b351228a321dd",
+      "types": ["com.acme.flow.Audit", "com.acme.flow.FlowService"],
+      "methods": [
+        "com.acme.flow.Audit#record(String)",
+        "com.acme.flow.FlowService#finish(String)",
+        "com.acme.flow.FlowService#start(String)",
+        "com.acme.flow.FlowService#validate(String)"
+      ],
+      "calls": [
+        ["com.acme.flow.FlowService#start(String)", "com.acme.flow.Audit#record(String)"],
+        ["com.acme.flow.FlowService#start(String)", "com.acme.flow.FlowService#validate(String)"],
+        ["com.acme.flow.FlowService#validate(String)", "com.acme.flow.FlowService#finish(String)"]
+      ],
+      "evidence": [
+        {"locator": "src/main/java/com/acme/flow/Audit.java#bytes=24-43;kind=java-type-declaration", "excerpt": "public class Audit "},
+        {"locator": "src/main/java/com/acme/flow/Audit.java#bytes=49-91;kind=java-method-declaration", "excerpt": "public static String record(String value) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=210-229;kind=java-static-call-site", "excerpt": "Audit.record(input)"},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=24-49;kind=java-type-declaration", "excerpt": "public class FlowService "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=246-261;kind=java-static-call-site", "excerpt": "validate(input)"},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=274-312;kind=java-method-declaration", "excerpt": "private String validate(String input) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=329-342;kind=java-static-call-site", "excerpt": "finish(input)"},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=355-391;kind=java-method-declaration", "excerpt": "private String finish(String input) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=55-89;kind=java-method-declaration", "excerpt": "public String start(String input) "}
+      ]
+    },
+    "r2": {
+      "git_commit": "575ef5a1375bc38581b0c6301643b36be653157e",
+      "git_tree": "2bdd0dbfdec4c44593f00a178941f24726b203f2",
+      "types": ["com.acme.flow.Audit", "com.acme.flow.FlowService"],
+      "methods": [
+        "com.acme.flow.Audit#record(String)",
+        "com.acme.flow.FlowService#finish(String)",
+        "com.acme.flow.FlowService#normalize(String)",
+        "com.acme.flow.FlowService#start(String)",
+        "com.acme.flow.FlowService#validate(String)"
+      ],
+      "calls": [
+        ["com.acme.flow.FlowService#normalize(String)", "com.acme.flow.FlowService#validate(String)"],
+        ["com.acme.flow.FlowService#start(String)", "com.acme.flow.Audit#record(String)"],
+        ["com.acme.flow.FlowService#start(String)", "com.acme.flow.FlowService#normalize(String)"],
+        ["com.acme.flow.FlowService#validate(String)", "com.acme.flow.FlowService#finish(String)"]
+      ],
+      "evidence": [
+        {"locator": "src/main/java/com/acme/flow/Audit.java#bytes=24-43;kind=java-type-declaration", "excerpt": "public class Audit "},
+        {"locator": "src/main/java/com/acme/flow/Audit.java#bytes=49-91;kind=java-method-declaration", "excerpt": "public static String record(String value) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=135-151;kind=java-static-call-site", "excerpt": "normalize(input)"},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=164-203;kind=java-method-declaration", "excerpt": "private String normalize(String input) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=220-235;kind=java-static-call-site", "excerpt": "validate(input)"},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=24-49;kind=java-type-declaration", "excerpt": "public class FlowService "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=248-286;kind=java-method-declaration", "excerpt": "private String validate(String input) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=303-316;kind=java-static-call-site", "excerpt": "finish(input)"},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=329-365;kind=java-method-declaration", "excerpt": "private String finish(String input) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=55-89;kind=java-method-declaration", "excerpt": "public String start(String input) "},
+        {"locator": "src/main/java/com/acme/flow/FlowService.java#bytes=99-118;kind=java-static-call-site", "excerpt": "Audit.record(input)"}
+      ]
+    },
+    "r3-unsupported": {
+      "git_commit": "3ba3459dff08f83bee6d4cf69a3a18892ab1be7a",
+      "git_tree": "502b1c8465801a52059a702f48743a4692586672",
+      "reason_code": "JAVA_CALL_TARGET_AMBIGUOUS",
+      "current_must_remain": "r2"
+    }
+  }
+}

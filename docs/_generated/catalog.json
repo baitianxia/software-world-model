@@ -893,6 +893,166 @@
     "path": "docs/project/iterations/iteration-005/findings/FINDING-005-010.md"
   },
   {
+    "id": "FINDING-006-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-001.md"
+  },
+  {
+    "id": "FINDING-006-002",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-002.md"
+  },
+  {
+    "id": "FINDING-006-003",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-003.md"
+  },
+  {
+    "id": "FINDING-006-004",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-004.md"
+  },
+  {
+    "id": "FINDING-006-005",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-005.md"
+  },
+  {
+    "id": "FINDING-006-006",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-006.md"
+  },
+  {
+    "id": "FINDING-006-007",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-007.md"
+  },
+  {
+    "id": "FINDING-006-008",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-008.md"
+  },
+  {
+    "id": "FINDING-006-009",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-009.md"
+  },
+  {
+    "id": "FINDING-006-010",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-010.md"
+  },
+  {
+    "id": "FINDING-006-011",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-011.md"
+  },
+  {
+    "id": "FINDING-006-012",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-012.md"
+  },
+  {
+    "id": "FINDING-006-013",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/FINDING-006-013.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -1774,6 +1934,348 @@
     "path": "docs/project/iterations/iteration-005/verification-matrix.md"
   },
   {
+    "id": "ITER-006-DESIGN-INDEX",
+    "kind": "development-design-index",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/development-design/README.md"
+  },
+  {
+    "id": "ITER-006-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/findings/README.md"
+  },
+  {
+    "id": "ITER-006-INDEX",
+    "kind": "iteration-index",
+    "status": "completed",
+    "authority": "historical-project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/README.md"
+  },
+  {
+    "id": "ITER-006-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "accepted",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/proposal.md"
+  },
+  {
+    "id": "ITER-006-READINESS",
+    "kind": "iteration-readiness",
+    "status": "accepted",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/readiness-review.md"
+  },
+  {
+    "id": "ITER-006-RESULT-ACCEPTANCE",
+    "kind": "iteration-acceptance",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/acceptance.md"
+  },
+  {
+    "id": "ITER-006-RESULT-IMPLEMENTATION-VERIFICATION",
+    "kind": "iteration-result",
+    "status": "implementation-verified-live-pending",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/implementation-verification.md"
+  },
+  {
+    "id": "ITER-006-RESULT-JAVA-CAPABILITY-CANDIDATE-FREEZE",
+    "kind": "iteration-result",
+    "status": "candidate-frozen-awaiting-authorization",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/java-capability-candidate-freeze.md"
+  },
+  {
+    "id": "ITER-006-RESULT-JAVA-CAPABILITY-RUN-002",
+    "kind": "iteration-result",
+    "status": "pass-valid",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/java-capability-run-002.md"
+  },
+  {
+    "id": "ITER-006-RESULT-LIVE-CANDIDATE-FREEZE",
+    "kind": "iteration-result",
+    "status": "executed-with-failed-live-result",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/live-candidate-freeze.md"
+  },
+  {
+    "id": "ITER-006-RESULT-LIVE-RUN-003",
+    "kind": "iteration-result",
+    "status": "failed",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/live-run-003.md"
+  },
+  {
+    "id": "ITER-006-RESULT-LIVE-RUN-007",
+    "kind": "iteration-result",
+    "status": "failed",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/live-run-007.md"
+  },
+  {
+    "id": "ITER-006-RESULT-LIVE-RUN-008",
+    "kind": "iteration-result",
+    "status": "accepted",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/live-run-008.md"
+  },
+  {
+    "id": "ITER-006-RESULT-PRODUCT-CANDIDATE-FREEZE-RUN-007",
+    "kind": "iteration-result",
+    "status": "executed-with-failed-live-result",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/product-candidate-freeze-run-007.md"
+  },
+  {
+    "id": "ITER-006-RESULT-PRODUCT-CANDIDATE-FREEZE-RUN-008",
+    "kind": "iteration-result",
+    "status": "candidate-frozen-historical-subsequent-live-pass",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/product-candidate-freeze-run-008.md"
+  },
+  {
+    "id": "ITER-006-RESULTS-INDEX",
+    "kind": "iteration-result-index",
+    "status": "completed",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/results/README.md"
+  },
+  {
+    "id": "ITER-006-SLICE-001",
+    "kind": "development-slice",
+    "status": "completed",
+    "authority": "historical-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/development-design/SLICE-001-java-static-call-world-model.md"
+  },
+  {
+    "id": "ITER-006-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "completed",
+    "authority": "planned-verification",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-006/verification-matrix.md"
+  },
+  {
+    "id": "ITER-007-DEVELOPMENT-DESIGN",
+    "kind": "development-design-index",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/development-design/README.md"
+  },
+  {
+    "id": "ITER-007-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "proposed",
+    "authority": "project-governance",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/findings/README.md"
+  },
+  {
+    "id": "ITER-007-INDEX",
+    "kind": "iteration-index",
+    "status": "proposed",
+    "authority": "project-governance",
+    "owners": [
+      "product",
+      "project",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/README.md"
+  },
+  {
+    "id": "ITER-007-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "proposed",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/proposal.md"
+  },
+  {
+    "id": "ITER-007-READINESS",
+    "kind": "iteration-readiness",
+    "status": "proposed",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/readiness-review.md"
+  },
+  {
+    "id": "ITER-007-RESULTS",
+    "kind": "results-index",
+    "status": "proposed",
+    "authority": "project-evidence",
+    "owners": [
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/results/README.md"
+  },
+  {
+    "id": "ITER-007-SLICE-001",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/development-design/SLICE-001-java-source-semantics-walking-skeleton.md"
+  },
+  {
+    "id": "ITER-007-SLICE-002",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/development-design/SLICE-002-java-semantic-hardening.md"
+  },
+  {
+    "id": "ITER-007-SLICE-003",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/development-design/SLICE-003-held-out-product-validation.md"
+  },
+  {
+    "id": "ITER-007-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "not-run",
+    "authority": "planned-verification",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-007/verification-matrix.md"
+  },
+  {
     "id": "ITERATION-INDEX",
     "kind": "iteration-index",
     "status": "current",
@@ -2370,6 +2872,17 @@
     "path": "docs/system/contracts/application/agentic-task.md"
   },
   {
+    "id": "SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/behavior-view.md"
+  },
+  {
     "id": "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING",
     "kind": "system-contract",
     "status": "current",
@@ -2566,6 +3079,17 @@
       "DD-KNW-INFERENCE-CONFLICT"
     ],
     "path": "docs/system/contracts/knowledge/inference-conflict.md"
+  },
+  {
+    "id": "SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "knowledge"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/knowledge/java-static-call-model.md"
   },
   {
     "id": "SYS-CONTRACT-KNOWLEDGE-PERSISTENCE",

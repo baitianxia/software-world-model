@@ -12,7 +12,8 @@ tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py,
 # 本机浏览器体验
 
 本机有两个不可混淆的浏览器入口：Evidence-first `DIRECT_INVESTIGATION` 用于源码调查；独立的
-`WORLD_MODEL / EVALUATION_ONLY` 入口用于体验已验收的 Snapshot-first Maven Structure World Model。两者不能
+`WORLD_MODEL / EVALUATION_ONLY` 入口用于体验 Snapshot-first Maven Structure 或已授权候选 Java Static Call Behavior
+World Model。两者不能
 静默互相兜底。
 
 - `WORLD_MODEL` 显示 source revision、exact Snapshot、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact 与 Evidence 引用；问题请求只读不含 Evidence payload 的 exact Snapshot Read Bundle，不得触发更新或访问 Source、权威数据库或 Evidence Store。点击引用由浏览器另行访问密封结果后的 Citation Projector，不把正文发送回问答进程。
@@ -31,7 +32,7 @@ baseline；Citation 由浏览器按 request/result 另行 GET，并由无网络 
 
 Capability Evaluation、Product Validation 和本机交互体验只允许在显式 `EVALUATION_ONLY` browser sink 中运行。
 页面必须持续显示不可关闭的评测标识，禁止生产 Delivery、用户会话复用和正式 Activation；输出只进入隔离验证目录。
-自由文本只在用户选择的 exact Maven Structure Read Set 与 Coverage 内求解：覆盖外问题应返回 Knowledge Gap；无法形成
+自由文本只在用户选择的 exact、单一 Profile Read Set 与 Coverage 内求解：覆盖外问题应返回 Knowledge Gap；无法形成
 已验证 Result 时必须显示失败关闭，不能切换 Direct 或回源。
 
 启动本机 World Model 候选评测入口：

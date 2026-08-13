@@ -1,0 +1,136 @@
+{
+  "schema": "swm.iter-006.java-world-model-capability-suite@1",
+  "suite_ref": "ITER-006-JAVA-WORLD-MODEL-CAPABILITY-SUITE@1.1.0",
+  "purpose": "qualify the complete Java proposal strategy and its declared_method_inventory vocabulary before another product run",
+  "proposal_contract": {
+    "capability_contract_version": "1.1.0",
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.1.0",
+    "prompt_ref": "snapshot-first-world-model-proposal-prompt@4",
+    "proposal_vocabulary_ref": "world-model-authority-proposal-vocabulary@2",
+    "available_operations": [
+      "inventory",
+      "declared_method_inventory",
+      "all_simple_paths",
+      "ordered_snapshot_diff"
+    ]
+  },
+  "closed_evaluation_protocol": {
+    "protocol_ref": "ITER-006-JAVA-WORLD-MODEL-CE-CLOSED@1.0.0",
+    "model_visibility": "SEALED_CASE_INPUT_ONLY_NO_ORACLE_PRODUCT_SUITE_SOURCE_OR_EVIDENCE_PAYLOAD",
+    "evaluator_independence": "SEPARATE_STDLIB_PROCESS_NO_PRODUCT_OR_STRATEGY_IMPORT",
+    "case_rule": "PASS_IFF_PROJECTION_EXACT_AND_NO_FORBIDDEN_EVENT_OTHERWISE_FAIL",
+    "result_rule": "CLOSED_PASS_IFF_ALL_EIGHT_REQUIRED_CASES_PASS_AND_FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO",
+    "provider_calls_per_case": 1,
+    "hidden_retry_count": 0,
+    "required_case_ids": [
+      "WM-JAVA-CE-REQ-001",
+      "WM-JAVA-CE-PLAN-METHOD-002",
+      "WM-JAVA-CE-PLAN-PATH-003",
+      "WM-JAVA-CE-NEGATIVE-004",
+      "WM-JAVA-CE-GAP-005",
+      "WM-JAVA-CE-DIFF-006",
+      "WM-JAVA-CE-REVIEW-007",
+      "WM-JAVA-CE-RESOLVE-008"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "WM-JAVA-CE-REQ-001",
+      "capability": "REQUIREMENT_FIDELITY",
+      "input": "比较 snapshot_left 与 snapshot_right：列出所有组件，并分别说明 alpha 到 omega 的全部简单路径与新增路径。",
+      "projection_fields": ["need_keys", "joint_constraints"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-PLAN-METHOD-002",
+      "capability": "GENERIC_QUERY_PLANNING",
+      "available_operations": [
+        "inventory",
+        "declared_method_inventory",
+        "all_simple_paths",
+        "ordered_snapshot_diff"
+      ],
+      "input": {
+        "read_set": ["snapshot_java_left", "snapshot_java_right"],
+        "needs": ["method_inventory_left", "method_inventory_right"]
+      },
+      "projection_fields": ["operations"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-PLAN-PATH-003",
+      "capability": "GENERIC_QUERY_PLANNING",
+      "available_operations": [
+        "inventory",
+        "declared_method_inventory",
+        "all_simple_paths",
+        "ordered_snapshot_diff"
+      ],
+      "input": {
+        "read_set": ["snapshot_java_z", "snapshot_java_a"],
+        "source_entity_ref": "entity_java_method_source_000000000001",
+        "target_entity_ref": "entity_java_method_target_000000000002",
+        "needs": ["paths_left", "paths_right", "new_paths"]
+      },
+      "projection_fields": ["operations"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-NEGATIVE-004",
+      "capability": "COMPLETE_NEGATIVE_ANSWER",
+      "input": {
+        "coverage": "COMPLETE",
+        "query_result": {"all_simple_paths": [], "pagination_complete": true},
+        "modeled_relation": "calls@1"
+      },
+      "projection_fields": ["need_status", "claim_scope"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-GAP-005",
+      "capability": "VIEW_LIMITATION_AND_KNOWLEDGE_GAP",
+      "input": {
+        "coverage": "PARTIAL",
+        "query_result": {"all_simple_paths": [], "pagination_complete": true},
+        "need": "runtime_dispatch_target"
+      },
+      "projection_fields": ["view_result", "need_assessment"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-DIFF-006",
+      "capability": "ORDERED_DIFF_EXPRESSION",
+      "input": {
+        "base": "snapshot_java_z",
+        "target": "snapshot_java_a",
+        "base_added": [],
+        "target_added": ["entity_java_method_added_000000000003"]
+      },
+      "projection_fields": ["direction", "added_entities"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-REVIEW-007",
+      "capability": "INDEPENDENT_ANSWER_REVIEW",
+      "input": {
+        "draft_faults": [
+          "omitted_need",
+          "wrong_snapshot_reference",
+          "unsupported_reason",
+          "evidence_excerpt_expansion"
+        ]
+      },
+      "projection_fields": ["decision", "finding_codes"]
+    },
+    {
+      "case_id": "WM-JAVA-CE-RESOLVE-008",
+      "capability": "ENTITY_CANDIDATE_RESOLUTION",
+      "input": {
+        "mention": "process",
+        "candidate_refs": [
+          "entity_java_method_process_string_00000001",
+          "entity_java_method_process_int_0000000002"
+        ]
+      },
+      "projection_fields": [
+        "resolution_status",
+        "candidate_refs",
+        "next_operation_allowed"
+      ]
+    }
+  ]
+}

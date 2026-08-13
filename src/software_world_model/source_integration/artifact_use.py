@@ -44,6 +44,9 @@ class ArtifactUsePurpose(str, Enum):
     MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE = (
         "MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE@1"
     )
+    JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE = (
+        "JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE@1"
+    )
 
 
 @dataclass(frozen=True, slots=True)

@@ -24,6 +24,7 @@ from software_world_model.infrastructure.file_structure_read_bundle import (
     FileStructureReadBundleStore,
 )
 from software_world_model.interface.world_model_product import (
+    PRODUCT_STRATEGY_REF,
     WorldModelProductAnswerService,
 )
 from tests.test_iteration_003_g3a_integration import (
@@ -38,6 +39,8 @@ from validation.structure_world_model_iteration_003.metamorphic.generate_reactor
 
 
 class _QualifiedFixtureModel:
+    strategy_ref = PRODUCT_STRATEGY_REF
+
     def __init__(self) -> None:
         self.provider_call_count = 0
         self.network_operation_count = 0
@@ -416,6 +419,23 @@ class WorldModelProductTests(unittest.TestCase):
         self.assertEqual(
             raised.exception.details.get("reason_code"),
             "PRODUCT_MODEL_PROPOSAL_MISMATCH",
+        )
+
+    def test_model_strategy_must_declare_the_mounted_profile_version(self):
+        model = _QualifiedFixtureModel()
+        model.strategy_ref = "model-snapshot-first-world-model-answer@0.0.0"
+
+        with self.assertRaises(DomainError) as raised:
+            WorldModelProductAnswerService(
+                view=self.mall_view,
+                snapshot_bundles=self.mall_bundles,
+                model_strategy=model,
+                gateway_counters=model,
+            )
+
+        self.assertEqual(
+            raised.exception.details.get("reason_code"),
+            "PRODUCT_MODEL_STRATEGY_PROFILE_MISMATCH",
         )
 
     def test_runtime_random_identity_and_topology_are_not_name_bound(self):

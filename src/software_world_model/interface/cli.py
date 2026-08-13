@@ -33,6 +33,10 @@ from software_world_model.knowledge_engine import (
     KnowledgeScopeService,
     ScopeType,
 )
+from software_world_model.knowledge_engine.structure import (
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 from software_world_model.source_integration import (
     LocalGitConfigurationProvider,
     ProviderRegistry,
@@ -230,7 +234,14 @@ def build_parser() -> argparse.ArgumentParser:
     register_workspace.add_argument("--source-target", required=True)
     register_workspace.add_argument("--display-name", required=True)
     register_workspace.add_argument("--canonical-system-key", required=True)
-    register_workspace.add_argument("--root-pom", default="pom.xml")
+    register_workspace.add_argument(
+        "--root-pom", "--source-root", dest="root_pom", default="pom.xml"
+    )
+    register_workspace.add_argument(
+        "--knowledge-profile",
+        choices=(MAVEN_STRUCTURE_PROFILE_REF, JAVA_STATIC_CALL_PROFILE_REF),
+        default=MAVEN_STRUCTURE_PROFILE_REF,
+    )
     register_workspace.add_argument("--actor", required=True)
     register_workspace.add_argument("--correlation-ref", required=True)
 
@@ -372,6 +383,7 @@ def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> 
                         root_pom=arguments.root_pom,
                         actor=arguments.actor,
                         correlation_ref=CorrelationRef(arguments.correlation_ref),
+                        knowledge_profile_ref=arguments.knowledge_profile,
                     )
                     payload = {"workspace": _maven_workspace_payload(workspace)}
                 elif arguments.command == "update-maven-workspace":

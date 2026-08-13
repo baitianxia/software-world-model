@@ -119,6 +119,10 @@ from software_world_model.knowledge_engine.structure_publication import (
     StructurePublicationService,
     StructureSnapshot,
 )
+from software_world_model.knowledge_engine.structure import (
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 from software_world_model.knowledge_engine.structure_authority import (
     StructureAdmissionDecision,
     StructureAdmissionService,
@@ -212,6 +216,19 @@ class ApplicationRuntime:
             review_ref="ITER-003-READINESS",
             registered_by="application-runtime",
             reason="register the frozen ITER-003 Maven Structure schema",
+        )
+        (
+            self.java_static_call_schema_registration,
+            self.java_static_call_schema_availability,
+        ) = self.structure_schema_registry.register(
+            definition=StructureSchemaDefinition.java_static_call_graph(),
+            idempotency_key=IdempotencyKey(
+                "iter-006:java-static-call-schema:register"
+            ),
+            proposal_ref="ITER-006-PROPOSAL",
+            review_ref="ITER-006-READINESS",
+            registered_by="application-runtime",
+            reason="register the frozen ITER-006 Java static-call schema",
         )
         self.maven_structure_verifier = MavenStructureIndependentVerifier(
             self.scopes,
@@ -377,6 +394,7 @@ class ApplicationRuntime:
         root_pom: str,
         actor: str,
         correlation_ref: CorrelationRef,
+        knowledge_profile_ref: str = MAVEN_STRUCTURE_PROFILE_REF,
     ) -> MavenWorkspace:
         """Configure owner authorities, then register one durable Workspace."""
 
@@ -386,6 +404,7 @@ class ApplicationRuntime:
             (display_name, "Workspace display name"),
             (canonical_system_key, "Workspace canonical system key"),
             (root_pom, "Workspace root POM"),
+            (knowledge_profile_ref, "Workspace knowledge profile"),
         ):
             if (
                 not isinstance(value, str)
@@ -420,6 +439,24 @@ class ApplicationRuntime:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "Workspace root POM must be a normalized relative POSIX path",
+                {"reason_code": "MAVEN_WORKSPACE_PATH_INVALID"},
+            )
+        if knowledge_profile_ref not in {
+            MAVEN_STRUCTURE_PROFILE_REF,
+            JAVA_STATIC_CALL_PROFILE_REF,
+        }:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Workspace knowledge profile is unsupported",
+                {"reason_code": "MAVEN_WORKSPACE_PROFILE_UNSUPPORTED"},
+            )
+        if (
+            knowledge_profile_ref == MAVEN_STRUCTURE_PROFILE_REF
+            and Path(root_pom).name != "pom.xml"
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Maven Workspace root must identify pom.xml",
                 {"reason_code": "MAVEN_WORKSPACE_PATH_INVALID"},
             )
         execution = self.configure_local_git_project(
@@ -469,6 +506,7 @@ class ApplicationRuntime:
             repository_locator=source_target,
             root_pom=root_pom,
             authority=authority,
+            knowledge_profile_ref=knowledge_profile_ref,
         )
 
     def update_maven_workspace(
@@ -589,8 +627,9 @@ class ApplicationRuntime:
         max_calls: int,
         tree_page_size: int,
         max_bytes_per_call: int,
+        knowledge_profile_ref: str = MAVEN_STRUCTURE_PROFILE_REF,
     ) -> MavenStructureInterfaceResult:
-        """Build and atomically publish one exact Maven Structure Snapshot."""
+        """Build and atomically publish one exact profiled Structure Snapshot."""
 
         scope = self.scopes.get_scope(scope_id, scope_revision)
         canonical_system_key = dict(scope.metadata).get("canonical_system_key")
@@ -609,12 +648,24 @@ class ApplicationRuntime:
             parameters={"revision": repository_revision},
         )
         objective = BuildObjective.create(
-            objective_id=f"maven-objective:{idempotency_key.value}",
+            objective_id=(
+                f"java-static-call-objective:{idempotency_key.value}"
+                if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                else f"maven-objective:{idempotency_key.value}"
+            ),
             description=objective_description,
             unacceptable_outcomes=(
                 "source boundary expansion",
-                "incomplete Maven reactor Coverage reported as complete",
-                "name, path, or GA heuristic stitching",
+                (
+                    "incomplete Java source Coverage reported as complete"
+                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    else "incomplete Maven reactor Coverage reported as complete"
+                ),
+                (
+                    "ambiguous static call target accepted"
+                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    else "name, path, or GA heuristic stitching"
+                ),
             ),
         )
         target = CanonicalBuildTarget.from_receipt(receipt)
@@ -640,6 +691,7 @@ class ApplicationRuntime:
             classification=classification,
             actor_ref=actor_ref,
             correlation_ref=correlation_ref,
+            knowledge_profile_ref=knowledge_profile_ref,
         )
         update = self.maven_structure_updates.execute(request)
         attempt = self.maven_structure_update_repository.get_attempt(
@@ -672,8 +724,16 @@ class ApplicationRuntime:
             attempt=attempt,
             target_authority=target_authority,
             admission=admission,
-            schema_registration=self.maven_structure_schema_registration,
-            schema_availability=self.maven_structure_schema_availability,
+            schema_registration=(
+                self.java_static_call_schema_registration
+                if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                else self.maven_structure_schema_registration
+            ),
+            schema_availability=(
+                self.java_static_call_schema_availability
+                if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                else self.maven_structure_schema_availability
+            ),
             schema_adoption=schema_adoption,
         )
 
@@ -1268,7 +1328,7 @@ class _RuntimeMavenWorkspaceOperations(MavenWorkspaceOperations):
             repository_revision=repository_revision,
             logical_reactor_root=workspace.root_pom,
             objective_description=(
-                "FULL_REBUILD exact Maven reactor Structure for Workspace "
+                "FULL_REBUILD exact profiled Structure for Workspace "
                 f"{workspace.workspace_id.value} at {repository_revision}"
             ),
             expected_current_snapshot_id=expected_current_snapshot_id,
@@ -1279,6 +1339,7 @@ class _RuntimeMavenWorkspaceOperations(MavenWorkspaceOperations):
             max_calls=512,
             tree_page_size=500,
             max_bytes_per_call=1_000_000,
+            knowledge_profile_ref=workspace.knowledge_profile_ref,
         )
         snapshot = result.update.publication_receipt.snapshot
         source_results = tuple(

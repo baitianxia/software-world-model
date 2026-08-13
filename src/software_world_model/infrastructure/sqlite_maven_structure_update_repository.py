@@ -540,7 +540,10 @@ class SqliteMavenStructureUpdateRepository:
                 )
             if (
                 confirmation.purpose
-                is not ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
+                not in {
+                    ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
+                    ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE,
+                }
                 or confirmation.downstream_request_ref != attempt_id.value
                 or confirmation.downstream_request_digest
                 != Digest(attempt["request_digest"])
@@ -669,7 +672,10 @@ class SqliteMavenStructureUpdateRepository:
             or persisted_artifact_use.package_digest.value
             != authority_progress["artifact_read_package_digest"]
             or persisted_artifact_use.purpose
-            is not ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
+            not in {
+                ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
+                ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE,
+            }
             or persisted_artifact_use.downstream_request_ref != attempt_id.value
             or persisted_artifact_use.downstream_request_digest
             != Digest(authority_attempt["request_digest"])

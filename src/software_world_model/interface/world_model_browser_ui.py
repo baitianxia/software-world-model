@@ -29,7 +29,7 @@ WORLD_MODEL_BROWSER_HTML = r'''<!doctype html>
       <div>
         <p class="eyebrow">LOCAL · DYNAMIC READ SET CATALOG</p>
         <h1>对已发布的软件世界模型<br><em>自由提问</em></h1>
-        <p class="lede">从动态 Catalog 选择 exact Maven Structure Read Set，输入你真正想问的问题。每次发送都运行已密封的 Answer、Gateway 与 Citation 链，不会更新仓库或转入旧 Direct 流程。</p>
+        <p class="lede">从动态 Catalog 选择 exact Structure Read Set，输入你真正想问的问题。每次发送都运行已密封的 Answer、Gateway 与 Citation 链，不会更新仓库或转入旧 Direct 流程。</p>
       </div>
       <aside class="boundary-card">
         <span class="boundary-title">执行边界</span>
@@ -52,15 +52,16 @@ WORLD_MODEL_BROWSER_HTML = r'''<!doctype html>
 
         <div class="section-heading question-heading">
           <span class="step">02</span>
-          <div><h2>输入问题</h2><p>正式 Coverage 仅包含 Maven reactor 子模块成员关系、POM-local 直接内部依赖及 exact A/B diff；插件、属性和 Maven parent 关系超出覆盖并会明确返回 Knowledge Gap。</p></div>
+          <div><h2>输入问题</h2><p id="coverage-help" aria-live="polite">Coverage 由所选 Read Set 的 Profile 决定；超出正式覆盖的内容会明确返回 Knowledge Gap。</p></div>
         </div>
         <form id="question-form">
           <label class="sr-only" for="question">问题</label>
-          <textarea id="question" maxlength="8000" rows="6" placeholder="例如：快照 B 相比 A 新增了哪个 reactor 模块？它在 B 中声明了哪些直接依赖？" required></textarea>
+          <textarea id="question" maxlength="8000" rows="6" placeholder="例如：FlowService.start(String) 到 finish(String) 有哪些静态调用路径？" required></textarea>
           <div class="examples" aria-label="示例问题">
-            <button type="button" class="example" data-question="快照 B 相比 A 新增了哪个 reactor 模块？">A/B 新增模块</button>
-            <button type="button" class="example" data-question="列出 B 中所有 reactor 子模块，并说明总数。">模块清单</button>
-            <button type="button" class="example" data-question="为什么这个项目采用当前架构，而不是微服务？">设计动机（应返回 Gap）</button>
+            <button type="button" class="example" data-profile="JAVA_STATIC_CALL_GRAPH@1" data-question="FlowService 有哪些方法？">方法清单</button>
+            <button type="button" class="example" data-profile="JAVA_STATIC_CALL_GRAPH@1" data-question="FlowService.start(String) 直接调用哪些方法？">直接静态调用</button>
+            <button type="button" class="example" data-profile="JAVA_STATIC_CALL_GRAPH@1" data-question="FlowService.start(String) 实际运行时会调用哪个实现？">运行时语义（应返回 Gap）</button>
+            <button type="button" class="example" data-profile="MAVEN_REACTOR_STRUCTURE@1" data-question="列出 B 中所有 reactor 子模块，并说明总数。">模块清单</button>
           </div>
           <div class="submit-row">
             <p id="disclosure">发送即会把本问题和已发布的无 payload Structure 发给已授权模型服务。</p>
@@ -142,12 +143,12 @@ WORLD_MODEL_BROWSER_JS = r'''
 const selectorField="__SWM_SELECTOR_FIELD__";
 const state={datasets:[],selected:null,busy:false,last:null};
 const $=id=>document.getElementById(id);
-const els={service:$("service-state"),datasets:$("datasets"),form:$("question-form"),question:$("question"),submit:$("submit"),empty:$("empty-state"),loading:$("loading-state"),error:$("error-state"),answer:$("answer-state"),errorTitle:$("error-title"),errorMessage:$("error-message"),retry:$("retry"),answerBadges:$("answer-badges"),originalQuestion:$("original-question"),answerBody:$("answer-body"),metrics:$("metrics"),claims:$("claims"),claimCount:$("claim-count"),readBinding:$("read-binding"),authority:$("authority"),footer:$("result-footer"),dialog:$("citation-dialog"),citationContent:$("citation-content")};
+const els={service:$("service-state"),datasets:$("datasets"),form:$("question-form"),question:$("question"),coverageHelp:$("coverage-help"),submit:$("submit"),empty:$("empty-state"),loading:$("loading-state"),error:$("error-state"),answer:$("answer-state"),errorTitle:$("error-title"),errorMessage:$("error-message"),retry:$("retry"),answerBadges:$("answer-badges"),originalQuestion:$("original-question"),answerBody:$("answer-body"),metrics:$("metrics"),claims:$("claims"),claimCount:$("claim-count"),readBinding:$("read-binding"),authority:$("authority"),footer:$("result-footer"),dialog:$("citation-dialog"),citationContent:$("citation-content")};
 function node(tag,attrs={},text=""){const n=document.createElement(tag);Object.entries(attrs).forEach(([k,v])=>{if(k==="class")n.className=v;else if(k.startsWith("data-"))n.setAttribute(k,v);else n[k]=v});if(text!=="")n.textContent=String(text);return n}
 function clear(n){while(n.firstChild)n.removeChild(n.firstChild)}
 function show(which){[els.empty,els.loading,els.error,els.answer].forEach(n=>n.classList.add("hidden"));which.classList.remove("hidden")}
 async function request(url,options={}){const response=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let value;try{value=await response.json()}catch{throw new Error(`HTTP ${response.status}: invalid JSON response`)}if(!response.ok)throw new Error(value.message||value.error||`HTTP ${response.status}`);return value}
-function renderDatasets(){clear(els.datasets);state.datasets.forEach((dataset,index)=>{const b=node("button",{type:"button",class:`dataset${dataset.id===state.selected?" selected":""}`,role:"radio"});b.setAttribute("aria-checked",String(dataset.id===state.selected));b.append(node("strong",{},dataset.id));b.append(node("span",{},dataset.label));b.append(node("small",{},`${dataset.snapshot_count} snapshot${dataset.snapshot_count===1?"":"s"}`));b.addEventListener("click",()=>{if(state.busy)return;state.selected=dataset.id;renderDatasets()});els.datasets.append(b);if(index===0&&!state.selected)state.selected=dataset.id});if(state.selected&&!els.datasets.querySelector(".selected"))renderDatasets()}
+function renderDatasets(){clear(els.datasets);state.datasets.forEach((dataset,index)=>{const b=node("button",{type:"button",class:`dataset${dataset.id===state.selected?" selected":""}`,role:"radio"});b.setAttribute("aria-checked",String(dataset.id===state.selected));b.append(node("strong",{},dataset.id));b.append(node("span",{},dataset.label));b.append(node("small",{},`${dataset.snapshot_count} snapshot${dataset.snapshot_count===1?"":"s"}`));b.addEventListener("click",()=>{if(state.busy||state.selected===dataset.id)return;state.selected=dataset.id;state.last=null;show(els.empty);renderDatasets()});els.datasets.append(b);if(index===0&&!state.selected)state.selected=dataset.id});if(state.selected&&!els.datasets.querySelector(".selected"))renderDatasets();const selected=state.datasets.find(item=>item.id===state.selected);if(selected){els.coverageHelp.textContent=selected.coverage;const profile=selected.profile_refs?.[0];document.querySelectorAll(".example").forEach(button=>button.classList.toggle("hidden",Boolean(button.dataset.profile&&button.dataset.profile!==profile)))}}
 function badge(text){return node("span",{},text)}
 function metric(label,value){const box=node("div",{class:"metric"});box.append(node("span",{},label),node("strong",{},value));return box}
 function card(label,value){const box=node("div",{class:"json-card"});box.append(node("span",{},label),node("span",{},typeof value==="string"?value:JSON.stringify(value)));return box}

@@ -33,7 +33,7 @@ flowchart TD
     SN --> FA["ASSERTED Fact State"]
     SN --> IN["Inference / Conflict State"]
     SN --> RB["Exact Snapshot Read Bundle<br/>no Evidence payload"]
-    RB --> SV["Read-only Structure View"]
+    RB --> SV["Read-only Structure / Behavior View"]
     WQ["World Model Question"] --> WR["Exact Snapshot Read Session"]
     SV --> WR
     WR --> WA["Reviewed World Model Answer / Gap"]
@@ -55,7 +55,7 @@ flowchart TD
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。
 - **Inference** 从已发布前提形成受控结论；Conflict 证明语义不兼容但不擅自选赢家。
 - **Snapshot** 是单一 Scope 下完整、不可变、原子发布的正式知识状态。
-- **Structure View** 是 exact Snapshot 中 typed Entity Relation 的可重建只读组织，不创建知识。
+- **Structure / Behavior View** 是 exact Snapshot 中 typed Entity Relation 的可重建只读组织，不创建知识；当前 Behavior 只覆盖 Java 静态调用子集。
 - **Requirement** 固定任务语义；Sufficiency 必须逐 Need 从同一 Read Session 重建。
 
 Knowledge Scope 保留三类稳定归属边界：
@@ -64,4 +64,5 @@ Knowledge Scope 保留三类稳定归属边界：
 - **Shared Component Scope** 拥有公共组件定义与静态知识；该组件在宿主系统中的运行观察仍归宿主 System Scope。
 - **Business Domain Scope** 拥有跨系统 Business Entity 与业务语义；它通过对 exact upstream Snapshot 的 Fact / Inference 引用关联多个 System Scope，不复制或改变技术对象的归属。
 
-Structure View 已接受为第一个最小 Semantic View Contract；它不拥有知识、不改变充分性。Behavior、Business、History 等其他专门 View 尚未接受，不能从 Structure View 推导其存在。
+Structure View 与 `JAVA_STATIC_CALL_GRAPH@1` 的最小 Behavior View 已接受；二者都不拥有知识、不改变充分性。完整 Behavior、
+Business、History 和其他语言尚未接受，不能从当前子集推导其存在。

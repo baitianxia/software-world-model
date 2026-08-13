@@ -48,6 +48,7 @@ from software_world_model.knowledge_engine.structure_publication import (
 class StructureViewOperation(str, Enum):
     ENTITY_CANDIDATES = "ENTITY_CANDIDATES"
     CHILD_MODULE_INVENTORY = "CHILD_MODULE_INVENTORY"
+    DECLARED_METHOD_INVENTORY = "DECLARED_METHOD_INVENTORY"
     DIRECT_NEIGHBORHOOD = "DIRECT_NEIGHBORHOOD"
     PATH_EXISTS = "PATH_EXISTS"
     ALL_SIMPLE_PATHS = "ALL_SIMPLE_PATHS"
@@ -81,6 +82,12 @@ class NeighborhoodDirection(str, Enum):
 _PUBLIC_ENTITY_ROOT_FIELDS: dict[EntityType, tuple[str, ...]] = {
     EntityType.SOFTWARE_SYSTEM: ("canonical_system_key",),
     EntityType.MAVEN_MODULE: ("effective_group_id", "artifact_id"),
+    EntityType.JAVA_TYPE: ("qualified_name",),
+    EntityType.JAVA_METHOD: (
+        "declaring_type_qualified_name",
+        "method_name",
+        "parameter_types",
+    ),
 }
 _PUBLIC_ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
     EntityType.SOFTWARE_SYSTEM: (
@@ -96,6 +103,17 @@ _PUBLIC_ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "effective_version",
         "packaging",
         "module_path",
+    ),
+    EntityType.JAVA_TYPE: (
+        "simple_name",
+        "package_name",
+        "declaration_kind",
+        "source_path",
+    ),
+    EntityType.JAVA_METHOD: (
+        "return_type",
+        "visibility",
+        "source_path",
     ),
 }
 
@@ -875,7 +893,7 @@ class StructureViewService:
             entity_types=(
                 (normalized_type,)
                 if normalized_type is not None
-                else tuple(EntityType)
+                else _covered_entity_types(bundle)
             ),
         )
 
@@ -1020,6 +1038,79 @@ class StructureViewService:
             support=support,
         )
 
+    def declared_method_inventory(
+        self,
+        *,
+        java_type: StructureEntityArgument,
+    ) -> StructureViewResult:
+        bundle, type_record = self._require_argument(java_type)
+        if type_record.root.entity_type is not EntityType.JAVA_TYPE:
+            raise _invalid(
+                "VIEW_JAVA_TYPE_ARGUMENT_REQUIRED",
+                "declared method inventory requires a JAVA_TYPE Entity",
+            )
+        coverage_limitations = self._coverage_limitations(
+            (bundle,),
+            entity_types=(EntityType.JAVA_TYPE, EntityType.JAVA_METHOD),
+            relation_predicates=(RelationPredicate.DECLARES_METHOD,),
+        )
+        relations = tuple(
+            sorted(
+                (
+                    item
+                    for item in bundle.relation_facts
+                    if item.root.predicate is RelationPredicate.DECLARES_METHOD
+                    and item.root.subject.entity_root_id == java_type.entity_root_id
+                ),
+                key=lambda item: (
+                    _mapping_int(
+                        item.state.predicate_state_payload_fields,
+                        "declaration_ordinal",
+                    ),
+                    item.root.object.entity_root_id.value,
+                ),
+            )
+        )
+        entities = _entities_by_root(bundle)
+        methods: list[dict[str, object]] = []
+        support: list[StructureViewSupport] = [
+            self._entity_support(bundle, type_record.root_id)
+        ]
+        for relation in relations:
+            target = entities.get(relation.root.object.entity_root_id)
+            if target is None or target.root.entity_type is not EntityType.JAVA_METHOD:
+                raise _inconsistent(
+                    "DECLARES_METHOD endpoint is absent or not a JAVA_METHOD"
+                )
+            methods.append(_entity_value(target))
+            support.extend(
+                (
+                    self._relation_support(bundle, relation),
+                    self._entity_support(bundle, target.root_id),
+                )
+            )
+        return self._result(
+            operation=StructureViewOperation.DECLARED_METHOD_INVENTORY,
+            bundles=(bundle,),
+            completeness=(
+                StructureViewCompleteness.PARTIAL
+                if coverage_limitations
+                else StructureViewCompleteness.COMPLETE
+            ),
+            truncated=False,
+            limitations=coverage_limitations,
+            payload={
+                "java_type": _entity_value(type_record),
+                "method_count": len(methods),
+                "methods": tuple(methods),
+                "relation_predicate": RelationPredicate.DECLARES_METHOD.value,
+                "relation_modality": (
+                    ObservationModality.JAVA_SOURCE_DECLARATION.value
+                ),
+            },
+            support=support,
+        )
+
     def direct_neighborhood(
         self,
         *,
@@ -1040,7 +1131,7 @@ class StructureViewService:
             relation_predicates=(
                 (normalized_predicate,)
                 if normalized_predicate is not None
-                else tuple(RelationPredicate)
+                else _covered_relation_predicates(bundle)
             ),
         )
         relations: list[RelationFactRecord] = []
@@ -1786,6 +1877,36 @@ def _entities_by_root(
     return dict(sorted(values.items(), key=lambda item: item[0].value))
 
 
+def _covered_entity_types(
+    bundle: StructureSnapshotReadBundle,
+) -> tuple[EntityType, ...]:
+    return tuple(
+        sorted(
+            {
+                entity_type
+                for coverage in bundle.coverages
+                for entity_type in coverage.root.covered_entity_types
+            },
+            key=lambda item: item.value,
+        )
+    )
+
+
+def _covered_relation_predicates(
+    bundle: StructureSnapshotReadBundle,
+) -> tuple[RelationPredicate, ...]:
+    return tuple(
+        sorted(
+            {
+                predicate
+                for coverage in bundle.coverages
+                for predicate in coverage.root.covered_relation_predicates
+            },
+            key=lambda item: item.value,
+        )
+    )
+
+
 def _entity_coordinates(record: EntityRecord) -> tuple[str | None, str | None]:
     if record.root.entity_type is not EntityType.MAVEN_MODULE:
         return None, None
@@ -1852,11 +1973,28 @@ def _mention_hits(record: EntityRecord, mention: str) -> tuple[str, ...]:
             "View candidate public-field policy is missing an Entity type"
         ) from exc
     for key in root_fields:
-        public[f"root.{key}"] = _field_text(record.root.root_fields, key)
+        if key == "parameter_types":
+            public[f"root.{key}"] = ",".join(
+                _field_text_sequence(record.root.root_fields, key)
+            )
+        else:
+            public[f"root.{key}"] = _field_text(record.root.root_fields, key)
     for key in state_fields:
         public[f"state.{key}"] = _field_text(
             record.state.state_payload_fields, key
         )
+    if record.root.entity_type is EntityType.JAVA_METHOD:
+        declaring_type = _field_text(
+            record.root.root_fields, "declaring_type_qualified_name"
+        )
+        method_name = _field_text(record.root.root_fields, "method_name")
+        parameters = ",".join(
+            _field_text_sequence(record.root.root_fields, "parameter_types")
+        )
+        public["java_method_signature"] = (
+            f"{declaring_type}#{method_name}({parameters})"
+        )
+        public["java_method_simple_signature"] = f"{method_name}({parameters})"
     return tuple(
         sorted(
             key
@@ -1924,6 +2062,21 @@ def _field_text(values: CanonicalFields, key: str) -> str:
     if not isinstance(value, str):
         raise _inconsistent(f"typed Structure field {key} is not text")
     return value
+
+
+def _field_text_sequence(
+    values: CanonicalFields, key: str
+) -> tuple[str, ...]:
+    try:
+        value = values[key]
+    except KeyError as exc:
+        raise _inconsistent(f"typed Structure record lacks {key}") from exc
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        raise _inconsistent(f"typed Structure field {key} is not a sequence")
+    result = tuple(value)
+    if not all(isinstance(item, str) for item in result):
+        raise _inconsistent(f"typed Structure field {key} contains non-text")
+    return result
 
 
 def _mapping_text(values: Mapping[str, object], key: str) -> str:

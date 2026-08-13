@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import socket
 import tempfile
@@ -25,6 +25,8 @@ from software_world_model.ai_infrastructure import (
     ReplayClassification,
     RuntimeAccessMode,
     UnixSocketModelGatewayClient,
+    QualifiedJavaModelEgressGatewayPolicy,
+    JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
     WorldModelCapabilityStrategy,
     WorldModelStrategyConfiguration,
 )
@@ -148,6 +150,33 @@ class _FixtureGateway:
 
 
 class ModelEgressGatewayTests(unittest.TestCase):
+    def java_policy(self, *, valid_until=None) -> QualifiedJavaModelEgressGatewayPolicy:
+        return QualifiedJavaModelEgressGatewayPolicy(
+            policy_ref="ITER-006-JAVA-MODEL-EGRESS-GATEWAY@1.0.0",
+            policy_digest=Digest(
+                "sha256:63729ded35116ea47ee7fbe1c653b6a48e023e6307ffbace5e58c3fa778a7455"
+            ),
+            provider_type="VOLCENGINE_ARK",
+            adapter_version="openai-chat-completions-no-tools@8",
+            model_ref="glm-5-2-260617",
+            provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+            endpoint=(
+                "https://ark.cn-beijing.volces.com:443/"
+                "api/coding/v3/chat/completions"
+            ),
+            credential_reference="env:ARK_API_KEY",
+            conformance_result_ref=_CONFORMANCE_REF,
+            capability_qualification_ref=(
+                "capability-evaluation:evaluation_result_"
+                "11111111111111111111111111111111"
+            ),
+            capability_qualification_digest=Digest("sha256:" + "2" * 64),
+            closed_capability_result_digest=Digest("sha256:" + "3" * 64),
+            qualification_valid_until=(
+                valid_until or datetime.now(timezone.utc) + timedelta(days=1)
+            ),
+        )
+
     def policy(self) -> ModelEgressGatewayPolicy:
         return ModelEgressGatewayPolicy(
             policy_ref="ITER-003-MODEL-EGRESS-GATEWAY@1.0.0",
@@ -205,6 +234,63 @@ class ModelEgressGatewayTests(unittest.TestCase):
             )
         assert capture.context is not None
         return capture.context
+
+    def java_context(self) -> ModelExecutionContext:
+        class Capture:
+            context: ModelExecutionContext | None = None
+
+            def invoke(self, context):
+                self.context = context
+                raise RuntimeError("captured")
+
+        capture = Capture()
+        strategy = WorldModelCapabilityStrategy(
+            capture,
+            WorldModelStrategyConfiguration(
+                provider_type="VOLCENGINE_ARK",
+                adapter_version="openai-chat-completions-no-tools@8",
+                model_ref="glm-5-2-260617",
+                provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+                qualification_ref=_QUALIFICATION_REF,
+            ),
+            proposal_contract=JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+        with self.assertRaisesRegex(RuntimeError, "captured"):
+            strategy.propose(
+                case_id="product:java-fixture",
+                capability="GENERIC_QUERY_PLANNING",
+                sealed_input={
+                    "needs": ["method_inventory_left"],
+                    "read_set": ["snapshot_java"],
+                },
+                available_operations=(
+                    JAVA_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+                ),
+            )
+        assert capture.context is not None
+        return capture.context
+
+    def test_java_policy_accepts_only_newly_qualified_contract(self) -> None:
+        java_context = self.java_context()
+
+        self.java_policy().validate_context(java_context)
+        with self.assertRaises(DomainError) as legacy_rejection:
+            self.policy().validate_context(java_context)
+        with self.assertRaises(DomainError) as java_rejection:
+            self.java_policy().validate_context(self.context())
+
+        self.assertEqual(legacy_rejection.exception.code, ErrorCode.QUALIFICATION_INVALID)
+        self.assertEqual(java_rejection.exception.code, ErrorCode.QUALIFICATION_INVALID)
+
+    def test_expired_java_qualification_fails_before_dispatch(self) -> None:
+        policy = self.java_policy(
+            valid_until=datetime.now(timezone.utc) - timedelta(seconds=1)
+        )
+
+        with self.assertRaises(DomainError) as raised:
+            policy.validate_context(self.java_context())
+
+        self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
 
     def test_round_trip_binds_request_result_and_audits(self) -> None:
         fixture_gateway = _FixtureGateway()

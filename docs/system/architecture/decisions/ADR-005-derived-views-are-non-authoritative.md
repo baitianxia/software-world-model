@@ -26,4 +26,6 @@ tests: []
 
 ## Consequences
 
-Structure View 已作为第一个专门 Semantic View Contract 被接受，并受本决定约束。Behavior、Business、History 等其他 View 仍未接受；任何后续 View 即使启用也必须保持可重建、只读和非权威。
+Structure View 已作为第一个专门 Semantic View Contract 被接受；ITER-006 进一步接受了只覆盖
+`JAVA_STATIC_CALL_GRAPH@1` 的最小 Behavior View。完整 Behavior、Business、History 和其他语言仍未接受；任何后续 View
+即使启用也必须保持可重建、只读和非权威。

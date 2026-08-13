@@ -66,6 +66,8 @@ def maven_workspace_payload(workspace: object) -> dict[str, object]:
         "display_name": workspace.display_name,
         "repository_locator": workspace.repository_locator,
         "root_pom": workspace.root_pom,
+        "source_root": workspace.source_root,
+        "knowledge_profile_ref": workspace.knowledge_profile_ref,
         "scope": {
             "id": workspace.scope_id.value,
             "revision": workspace.scope_revision.value,
@@ -168,8 +170,15 @@ def maven_workspace_update_payload(result: object) -> dict[str, object]:
         if result.snapshot_owner_result is not None
         else None
     )
+    java_profile = (
+        result.workspace.knowledge_profile_ref == "JAVA_STATIC_CALL_GRAPH@1"
+    )
     return {
-        "workflow": "MAVEN_WORKSPACE_FULL_REBUILD@1",
+        "workflow": (
+            "STRUCTURE_WORKSPACE_FULL_REBUILD@1"
+            if java_profile
+            else "MAVEN_WORKSPACE_FULL_REBUILD@1"
+        ),
         "manual_zero_question_update": True,
         "workspace": maven_workspace_payload(result.workspace),
         "attempt": maven_workspace_attempt_payload(result.attempt),
@@ -578,7 +587,7 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
         )
 
     dependencies = []
-    for item in evaluation.report.dependency_declarations:
+    for item in getattr(evaluation.report, "dependency_declarations", ()):
         resolved_gav = None
         if item.resolved_dependency_version_or_null is not None:
             resolved_gav = (
@@ -622,7 +631,7 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
             "reason_code": item.reason_code,
             "evidence_locators": locators(item.evidence_references),
         }
-        for item in evaluation.exclusions
+        for item in getattr(evaluation, "exclusions", ())
     ]
     coverage = evaluation.coverage
     authority = result.authority_result
@@ -635,6 +644,41 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
     registration = interface_result.schema_registration
     availability = interface_result.schema_availability
     adoption = interface_result.schema_adoption
+    java_profile = coverage.root.profile_ref == "JAVA_STATIC_CALL_GRAPH@1"
+    if java_profile:
+        build_report = {
+            "complete": evaluation.report.complete,
+            "schema_ref": evaluation.report.schema_ref,
+            "schema_digest": evaluation.report.schema_digest.value,
+            "evaluation_context_ref": evaluation.report.evaluation_context_ref,
+            "evaluation_context_digest": (
+                evaluation.report.evaluation_context_digest.value
+            ),
+            "canonicalization_ref": evaluation.report.canonicalization_ref,
+            "canonicalization_digest": (
+                evaluation.report.canonicalization_digest.value
+            ),
+            "source_revision": evaluation.report.source_revision,
+            "source_root": evaluation.report.source_root,
+            "source_file_count": evaluation.report.source_file_count,
+            "type_count": evaluation.report.type_count,
+            "method_count": evaluation.report.method_count,
+            "declaration_count": evaluation.report.declaration_count,
+            "call_relation_count": evaluation.report.call_relation_count,
+            "call_site_count": evaluation.report.call_site_count,
+            "digest": result.build_report_digest.value,
+        }
+    else:
+        build_report = {
+            "complete": evaluation.report.complete,
+            "schema_ref": evaluation.report.schema_ref,
+            "evaluation_context_ref": evaluation.report.evaluation_context_ref,
+            "canonicalization_ref": evaluation.report.canonicalization_ref,
+            "source_revision": evaluation.report.source_revision,
+            "scanned_pom_locators": evaluation.report.scanned_pom_locators,
+            "lines": evaluation.report.lines,
+            "digest": result.build_report_digest.value,
+        }
     payload = {
         "objective": {
             "objective_id": objective.objective_id,
@@ -996,16 +1040,6 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
             "count": len(result.source_operation_ids),
             "operation_ids": [item.value for item in result.source_operation_ids],
         },
-        "maven_report": {
-            "complete": evaluation.report.complete,
-            "schema_ref": evaluation.report.schema_ref,
-            "evaluation_context_ref": evaluation.report.evaluation_context_ref,
-            "canonicalization_ref": evaluation.report.canonicalization_ref,
-            "source_revision": evaluation.report.source_revision,
-            "scanned_pom_locators": evaluation.report.scanned_pom_locators,
-            "lines": evaluation.report.lines,
-            "digest": result.build_report_digest.value,
-        },
         "publication": {
             "publication_id": receipt.publication_id.value,
             "admission_id": receipt.admission_id.value,
@@ -1020,6 +1054,7 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
         "source_collection_digest": result.source_collection_digest.value,
         "digest": result.digest.value,
     }
+    payload["java_report" if java_profile else "maven_report"] = build_report
     payload["audit_lines"] = _maven_structure_audit_lines(payload)
     return payload
 
@@ -1035,10 +1070,11 @@ def _maven_structure_audit_lines(payload: dict[str, object]) -> list[str]:
     verifier_assessment = payload["verifier_assessment"]
     artifact_use = payload["artifact_use"]
     coverage = payload["coverage"]
+    build_report = payload.get("java_report") or payload["maven_report"]
     lines = [
         (
             f"SNAPSHOT id={snapshot['snapshot_id']} revision={snapshot['revision']} "
-            f"source_revision={payload['maven_report']['source_revision']} "
+            f"source_revision={build_report['source_revision']} "
             f"manifest_digest={snapshot['manifest_digest']}"
         ),
         (

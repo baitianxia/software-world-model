@@ -36,6 +36,9 @@ from software_world_model.cross_cutting import (
     canonical_json_bytes,
     digest_of,
 )
+from software_world_model.knowledge_engine.structure import (
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 
 from .sqlite_database import SqliteDatabase
 
@@ -49,6 +52,7 @@ CREATE TABLE IF NOT EXISTS app_maven_workspaces (
     display_name TEXT NOT NULL,
     repository_locator TEXT NOT NULL,
     root_pom TEXT NOT NULL,
+    knowledge_profile_ref TEXT NOT NULL DEFAULT 'MAVEN_REACTOR_STRUCTURE@1',
     scope_id TEXT NOT NULL,
     scope_revision INTEGER NOT NULL,
     source_id TEXT NOT NULL,
@@ -163,6 +167,19 @@ class SqliteMavenWorkspaceRepository(MavenWorkspaceRepository, ReadSetCatalogRep
         self._database = database
         self._ids = id_generator or Uuid4IdGenerator()
         self._database.executescript(_SCHEMA)
+        with self._database.transaction() as connection:
+            columns = {
+                row["name"]
+                for row in connection.execute(
+                    "PRAGMA table_info(app_maven_workspaces)"
+                ).fetchall()
+            }
+            if "knowledge_profile_ref" not in columns:
+                connection.execute(
+                    "ALTER TABLE app_maven_workspaces "
+                    "ADD COLUMN knowledge_profile_ref TEXT NOT NULL "
+                    "DEFAULT 'MAVEN_REACTOR_STRUCTURE@1'"
+                )
 
     def save_workspace(self, workspace: MavenWorkspace) -> MavenWorkspace:
         workspace.require_valid()
@@ -189,11 +206,11 @@ class SqliteMavenWorkspaceRepository(MavenWorkspaceRepository, ReadSetCatalogRep
                     """INSERT INTO app_maven_workspaces (
                            workspace_id, idempotency_key, request_digest,
                            canonical_system_key, display_name, repository_locator,
-                           root_pom, scope_id, scope_revision, source_id,
+                           root_pom, knowledge_profile_ref, scope_id, scope_revision, source_id,
                            source_revision, binding_id, binding_revision,
                            management_attempt_id, management_result_digest,
                            created_at, workspace_digest
-                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         workspace.workspace_id.value,
                         workspace.idempotency_key.value,
@@ -202,6 +219,7 @@ class SqliteMavenWorkspaceRepository(MavenWorkspaceRepository, ReadSetCatalogRep
                         workspace.display_name,
                         workspace.repository_locator,
                         workspace.root_pom,
+                        workspace.knowledge_profile_ref,
                         workspace.scope_id.value,
                         workspace.scope_revision.value,
                         workspace.source_id.value,
@@ -728,6 +746,11 @@ class SqliteMavenWorkspaceRepository(MavenWorkspaceRepository, ReadSetCatalogRep
                 binding_revision=Revision(row["binding_revision"]),
                 management_attempt_id=StableId(row["management_attempt_id"]),
                 management_result_digest=Digest(row["management_result_digest"]),
+                knowledge_profile_ref=(
+                    row["knowledge_profile_ref"]
+                    if "knowledge_profile_ref" in row.keys()
+                    else MAVEN_STRUCTURE_PROFILE_REF
+                ),
                 created_at=_parse_time(row["created_at"]),
                 digest=Digest(row["workspace_digest"]),
             )

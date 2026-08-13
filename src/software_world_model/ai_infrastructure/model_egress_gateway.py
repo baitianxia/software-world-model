@@ -10,7 +10,7 @@ returned to the answer worker.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import socket
@@ -47,6 +47,12 @@ from .model_gateway import (
 
 MODEL_EGRESS_GATEWAY_POLICY_REF = "ITER-003-MODEL-EGRESS-GATEWAY@1.0.0"
 MODEL_EGRESS_GATEWAY_ROUTE = f"AF_UNIX:{MODEL_EGRESS_GATEWAY_POLICY_REF}"
+JAVA_MODEL_EGRESS_GATEWAY_POLICY_REF = (
+    "ITER-006-JAVA-MODEL-EGRESS-GATEWAY@1.0.0"
+)
+JAVA_MODEL_EGRESS_GATEWAY_ROUTE = (
+    f"AF_UNIX:{JAVA_MODEL_EGRESS_GATEWAY_POLICY_REF}"
+)
 MODEL_EGRESS_REQUEST_SCHEMA = "swm.model-egress-request@1"
 MODEL_EGRESS_RESPONSE_SCHEMA = "swm.model-egress-response@1"
 
@@ -92,6 +98,9 @@ _EXACT_SCHEMA_BY_STAGE = {
     "INDEPENDENT_ANSWER_REVIEW": "world-model-independent-review@1",
     "ENTITY_CANDIDATE_RESOLUTION": "world-model-entity-resolution@1",
 }
+_JAVA_EXACT_POLICY_DIGEST = Digest(
+    "sha256:63729ded35116ea47ee7fbe1c653b6a48e023e6307ffbace5e58c3fa778a7455"
+)
 _FORBIDDEN_MODEL_INPUT_KEYS = {
     "expected",
     "expected_result",
@@ -282,6 +291,200 @@ class ModelEgressGatewayPolicy:
             raise DomainError(
                 ErrorCode.QUALIFICATION_INVALID,
                 "model result is outside the exact qualified gateway policy",
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class QualifiedJavaModelEgressGatewayPolicy:
+    """Exact Java request policy backed by a newly verified qualification."""
+
+    policy_ref: str
+    policy_digest: Digest
+    provider_type: str
+    adapter_version: str
+    model_ref: str
+    provider_configuration_fingerprint: Digest
+    endpoint: str
+    credential_reference: str
+    conformance_result_ref: str
+    capability_qualification_ref: str
+    capability_qualification_digest: Digest
+    closed_capability_result_digest: Digest
+    qualification_valid_until: datetime
+    max_provider_calls: int = _MAX_PROVIDER_CALLS
+
+    def __post_init__(self) -> None:
+        for value, label in (
+            (self.policy_ref, "policy reference"),
+            (self.provider_type, "provider type"),
+            (self.adapter_version, "adapter version"),
+            (self.model_ref, "model reference"),
+            (self.endpoint, "provider endpoint"),
+            (self.credential_reference, "credential reference"),
+            (self.conformance_result_ref, "conformance result reference"),
+            (self.capability_qualification_ref, "capability qualification reference"),
+        ):
+            _text(value, label)
+        if (
+            self.policy_ref != JAVA_MODEL_EGRESS_GATEWAY_POLICY_REF
+            or self.policy_digest != _JAVA_EXACT_POLICY_DIGEST
+            or self.provider_type != _EXACT_PROVIDER_TYPE
+            or self.adapter_version != _EXACT_ADAPTER_VERSION
+            or self.model_ref != _EXACT_MODEL_REF
+            or self.provider_configuration_fingerprint
+            != _EXACT_PROVIDER_FINGERPRINT
+            or self.endpoint != _EXACT_ENDPOINT
+            or self.credential_reference != _EXACT_CREDENTIAL_REFERENCE
+            or self.conformance_result_ref != _EXACT_CONFORMANCE_RESULT_REF
+            or not self.capability_qualification_ref.startswith(
+                "capability-evaluation:evaluation_result_"
+            )
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "Java Model Egress Gateway policy binding is not exact",
+            )
+        if (
+            self.qualification_valid_until.tzinfo is None
+            or self.qualification_valid_until.utcoffset() is None
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "Java capability qualification expiration is invalid",
+            )
+        if (
+            type(self.max_provider_calls) is not int
+            or self.max_provider_calls != _MAX_PROVIDER_CALLS
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Java Model Egress Gateway call cap must be exactly five",
+            )
+
+    def validate_context(self, context: ModelExecutionContext) -> None:
+        from .versioned_world_model_answer_strategy import (
+            JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        if datetime.now(timezone.utc) >= self.qualification_valid_until.astimezone(
+            timezone.utc
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "Java capability qualification expired before dispatch",
+            )
+        contract = JAVA_WORLD_MODEL_PROPOSAL_CONTRACT
+        items = context.manifest.items
+        sealed_authority = items[1].authority_reference if len(items) == 3 else None
+        qualification_ref = f"evaluation-only:{self.conformance_result_ref}"
+        if (
+            context.provider_type != self.provider_type
+            or context.adapter_version != self.adapter_version
+            or context.requested_model_ref != self.model_ref
+            or context.provider_configuration_fingerprint
+            != self.provider_configuration_fingerprint
+            or context.runtime_access_mode is not RuntimeAccessMode.NO_EXTERNAL_ACCESS
+            or context.platform_proposal_mode is not PlatformProposalMode.NONE
+            or context.required_exact_fingerprint is not True
+            or context.max_output_tokens != 1000
+            or context.timeout_milliseconds != 180_000
+            or context.classification != "INTERNAL"
+            or context.execution_envelope_ref
+            != f"world-model-capability:{sealed_authority}"
+            or context.prompt_program_ref != contract.prompt_ref
+            or context.rendering_contract_version != "manifest-messages@1"
+            or context.output_schema_ref
+            != _EXACT_SCHEMA_BY_STAGE.get(context.manifest.execution_stage)
+            or context.manifest.version != Revision(1)
+            or context.manifest.capability_id
+            != "world-model-authority-proposal"
+            or context.manifest.strategy_ref != contract.strategy_ref
+            or context.manifest.calling_module != _EXACT_CALLING_MODULE
+            or context.manifest.proposal_vocabulary_ref
+            != contract.proposal_vocabulary_ref
+            or tuple(item.item_id for item in items)
+            != ("instruction", "sealed-case-input", "qualification")
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "model request is outside the exact Java qualified policy",
+            )
+        instruction, sealed, qualification = items
+        if (
+            instruction.schema_ref != "text@1"
+            or instruction.classification != "INTERNAL"
+            or instruction.purpose != "world-model authority proposal rules"
+            or instruction.authority_reference != contract.prompt_ref
+            or instruction.disposition is not InputDisposition.PROVIDED
+            or instruction.transformation_ref != "identity@1"
+            or instruction.content_digest != digest_of(contract.prompt)
+            or sealed.schema_ref != "world-model-capability-case-input@1"
+            or sealed.classification != "INTERNAL"
+            or sealed.purpose
+            != "closed capability case input without evaluator oracle"
+            or sealed.disposition is not InputDisposition.PROVIDED
+            or sealed.transformation_ref != "identity@1"
+            or not sealed.authority_reference.startswith("product:")
+            or qualification.schema_ref != "qualification-ref@1"
+            or qualification.classification != "INTERNAL"
+            or qualification.purpose
+            != "bind adapter conformance during capability evaluation"
+            or qualification.authority_reference != qualification_ref
+            or qualification.content != qualification_ref
+            or qualification.disposition is not InputDisposition.PROVIDED
+            or qualification.transformation_ref != "identity@1"
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "model input manifest is outside the qualified Java product shape",
+            )
+        sealed_value = _unique_json_object(
+            sealed.content.encode("utf-8"), "sealed Java product model input"
+        )
+        expected_keys = {"case_id", "capability", "input"}
+        if context.manifest.execution_stage == "GENERIC_QUERY_PLANNING":
+            expected_keys.add("available_operations")
+        if (
+            set(sealed_value) != expected_keys
+            or sealed_value.get("case_id") != sealed.authority_reference
+            or sealed_value.get("capability")
+            != context.manifest.execution_stage
+            or _contains_forbidden_model_key(sealed_value)
+            or (
+                context.manifest.execution_stage == "GENERIC_QUERY_PLANNING"
+                and sealed_value.get("available_operations")
+                != list(contract.available_operations)
+            )
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "sealed Java product model input violates its closed contract",
+            )
+
+    def validate_result(self, result: ModelGatewayResult) -> None:
+        if (
+            result.call.provider_type != self.provider_type
+            or result.call.adapter_version != self.adapter_version
+            or result.call.requested_model_ref != self.model_ref
+            or result.isolation_receipt.provider_type != self.provider_type
+            or result.isolation_receipt.adapter_version != self.adapter_version
+            or result.isolation_receipt.provider_configuration_fingerprint
+            != self.provider_configuration_fingerprint
+            or result.isolation_receipt.conformance_result_ref
+            != self.conformance_result_ref
+            or result.call.state is not ModelCallState.COMPLETED
+            or result.call.actual_model_fingerprint != "glm-5.2"
+            or result.call.failure_code is not None
+            or result.response is None
+            or result.response.actual_model_fingerprint != "glm-5.2"
+            or result.response.usage_complete is not True
+            or result.eligibility.eligible_for_production_domain_output is not True
+            or result.eligibility.reason != "ELIGIBLE"
+            or result.eligibility.actual_model_fingerprint != "glm-5.2"
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "model result is outside the exact Java qualified gateway policy",
             )
 
 

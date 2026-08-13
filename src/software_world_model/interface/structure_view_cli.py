@@ -76,6 +76,9 @@ def build_parser() -> argparse.ArgumentParser:
     inventory = commands.add_parser("inventory")
     _add_entity_selector(inventory, "system")
 
+    methods = commands.add_parser("methods")
+    _add_entity_selector(methods, "java_type")
+
     neighborhood = commands.add_parser("neighborhood")
     _add_entity_selector(neighborhood, "entity")
     neighborhood.add_argument(
@@ -173,6 +176,12 @@ def _execute(
             return limitation, True
         assert system is not None
         return service.child_module_inventory(system=system), False
+    if arguments.command == "methods":
+        java_type, limitation = _entity_argument(service, arguments, "java_type")
+        if limitation is not None:
+            return limitation, True
+        assert java_type is not None
+        return service.declared_method_inventory(java_type=java_type), False
     if arguments.command == "neighborhood":
         entity, limitation = _entity_argument(service, arguments, "entity")
         if limitation is not None:
@@ -290,17 +299,18 @@ def _entity_argument(
 
 
 def _add_entity_selector(parser: argparse.ArgumentParser, prefix: str) -> None:
-    parser.add_argument(f"--{prefix}-snapshot-id", required=True)
-    parser.add_argument(f"--{prefix}-root-id")
-    parser.add_argument(f"--{prefix}-state-id")
-    parser.add_argument(f"--{prefix}-mention")
+    option_prefix = prefix.replace("_", "-")
+    parser.add_argument(f"--{option_prefix}-snapshot-id", required=True)
+    parser.add_argument(f"--{option_prefix}-root-id")
+    parser.add_argument(f"--{option_prefix}-state-id")
+    parser.add_argument(f"--{option_prefix}-mention")
     parser.add_argument(
-        f"--{prefix}-entity-type",
+        f"--{option_prefix}-entity-type",
         choices=tuple(item.value for item in EntityType),
     )
-    parser.add_argument(f"--{prefix}-canonical-ga")
-    parser.add_argument(f"--{prefix}-canonical-gav")
-    parser.add_argument(f"--{prefix}-max-candidates", type=int, default=100)
+    parser.add_argument(f"--{option_prefix}-canonical-ga")
+    parser.add_argument(f"--{option_prefix}-canonical-gav")
+    parser.add_argument(f"--{option_prefix}-max-candidates", type=int, default=100)
 
 
 def _add_path_arguments(parser: argparse.ArgumentParser) -> None:

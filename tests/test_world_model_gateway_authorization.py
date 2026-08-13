@@ -129,6 +129,60 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
             ).value,
         )
 
+    def test_java_baseline_digest_does_not_shadow_authorized_summary(self) -> None:
+        output = self.root / "summary.json"
+
+        def baseline_main(arguments):
+            index = arguments.index("--summary-output")
+            baseline_output = Path(arguments[index + 1])
+            baseline_core = {
+                "schema": "swm.iter-006.java-gateway-workload@1",
+                "status": "PASS",
+                "provider_call_count": 1,
+                "https_dispatch_count": 1,
+                "java_gateway_freeze_ref": "java",
+                "java_gateway_freeze_digest": _DIGEST_A,
+                "permission_digest": _DIGEST_B,
+                "production_activation": "NOT_EXECUTED",
+            }
+            baseline_output.write_bytes(
+                canonical_json_bytes(
+                    {
+                        **baseline_core,
+                        "document_digest": digest_of(baseline_core).value,
+                    }
+                )
+            )
+            return 0
+
+        with patch.object(
+            gateway_authorized_workload,
+            "_load_qualified_baseline",
+            return_value=SimpleNamespace(main=baseline_main),
+        ):
+            with redirect_stdout(StringIO()):
+                code = gateway_authorized_workload.main(
+                    self._arguments(self._receipt(), output)
+                )
+
+        self.assertEqual(code, 0)
+        value = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(
+            value["qualified_gateway_baseline"],
+            {
+                "entrypoint_sha256": gateway_authorized_workload._JAVA_GATEWAY_SHA256,
+                "capability_freeze_digest": _DIGEST_A,
+                "role": "QUALIFIED_CAPABILITY_BASELINE_ONLY",
+            },
+        )
+        core = {key: item for key, item in value.items() if key != "document_digest"}
+        self.assertEqual(
+            value["document_digest"],
+            digest_of(
+                ["SWM-WORLD-MODEL-AUTHORIZED-GATEWAY@1", core]
+            ).value,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
