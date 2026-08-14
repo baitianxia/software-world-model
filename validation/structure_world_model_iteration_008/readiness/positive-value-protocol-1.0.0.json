@@ -1,0 +1,51 @@
+{
+  "schema": "ITER-008-POSITIVE-VALUE-PROTOCOL@1",
+  "protocol_ref": "ITER-008-SOURCE-EXPOSURE-AMORTIZATION@1.0.0",
+  "metric": "source_exposure_bytes_per_correct_outcome_ratio_at_frozen_reuse_horizon",
+  "unit": "ratio_ppm",
+  "direction": "LOWER_IS_BETTER",
+  "threshold_ppm": 250000,
+  "reuse_horizon_questions": 12,
+  "world_model_formula": "ceil(prequestion_build_authorized_source_bytes/12)+sum(question_phase_authorized_source_bytes)/correct_outcome_count",
+  "mature_agent_formula": "sum(per_question_authorized_source_bytes)/correct_outcome_count",
+  "ratio_formula": "round_half_up(world_model_bytes_per_correct_outcome*1000000/mature_agent_bytes_per_correct_outcome)",
+  "quality_preconditions": [
+    "ZERO_MAJOR_ERRORS",
+    "NO_NEED_OR_CLAIM_REGRESSION",
+    "ALL_BOUNDARY_OUTCOMES_CORRECT",
+    "WORLD_MODEL_QUESTION_PHASE_SOURCE_BYTES_ZERO"
+  ],
+  "source_byte_measurement": {
+    "definition": "sum exact byte length of every authorized source file on its first successful read in one isolated run",
+    "repeated_reads_within_run": "COUNT_ONCE_PER_PATH_AND_CONTENT_DIGEST",
+    "failed_or_denied_reads": "AUDIT_SEPARATELY_AND_DO_NOT_ADD_BYTES",
+    "world_model_build": "COUNT_ONE_ZERO_QUESTION_BUILD",
+    "world_model_question_phase": "MUST_EQUAL_ZERO",
+    "mature_agent": "COUNT_EACH_FRESH_PER_QUESTION_WORKSPACE",
+    "cache_policy_ref": "ITER-008-MATURE-SOURCE-AGENT-BASELINE@1.0.0"
+  },
+  "early_measurement": {
+    "questions": 3,
+    "projection": "use measured build bytes divided by 12 plus measured question-phase bytes; use measured mature-agent bytes for the 1+2 questions normalized per correct outcome",
+    "minimum_correct_outcomes": 3
+  },
+  "final_measurement": {
+    "questions": 6,
+    "projection": "same frozen horizon and formula without changing threshold",
+    "minimum_correct_outcomes": 6
+  },
+  "report": {
+    "canonical_schema": "ITER-008-POSITIVE-VALUE-REPORT@1",
+    "required_inputs": [
+      "measurement_input_digest",
+      "world_model_source_read_events_digest",
+      "mature_agent_source_read_events_digest",
+      "quality_verdict_digest",
+      "actual_ratio_ppm",
+      "threshold_ppm",
+      "verdict",
+      "independent_adjudication_receipt"
+    ],
+    "digest": "SHA256_OF_CANONICAL_JSON_WITHOUT_DOCUMENT_DIGEST"
+  }
+}

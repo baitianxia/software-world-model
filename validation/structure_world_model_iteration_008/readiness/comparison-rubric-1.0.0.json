@@ -1,0 +1,56 @@
+{
+  "schema": "ITER-008-NEED-CLAIM-COMPARISON-RUBRIC@1",
+  "rubric_ref": "ITER-008-MATURE-SOURCE-COMPARISON@1.0.0",
+  "unit": "QUESTION_NEED_CLAIM",
+  "need_scoring": {
+    "SUPPORTED_COMPLETE": 2,
+    "SUPPORTED_PARTIAL_WITH_EXACT_LIMITATION": 1,
+    "CORRECT_BOUNDARY_GAP_OR_LIMITATION": 2,
+    "UNSUPPORTED_OR_MISSING": 0
+  },
+  "claim_checks": [
+    "FACTUAL_CORRECTNESS",
+    "MATERIAL_COMPLETENESS",
+    "ORDER_AND_DIRECTION",
+    "CONDITION_RETURN_THROW_COVERAGE",
+    "SUPPORT_OR_SOURCE_LOCATOR_GROUNDING",
+    "NO_UNRELATED_EVIDENCE",
+    "BOUNDARY_HONESTY"
+  ],
+  "major_error_codes": [
+    "CONTRADICTS_AUTHORIZED_SOURCE",
+    "INVENTS_IMPLEMENTATION_OR_RUNTIME_BEHAVIOR",
+    "REVERSES_CALL_OR_CONTROL_DIRECTION",
+    "OMITS_A_MATERIAL_REQUESTED_FLOW_BRANCH",
+    "CLAIMS_ABSENCE_WITHOUT_COMPLETE_THREE_LAYER_PROOF",
+    "USES_UNRELATED_SUPPORT_AS_ANSWER_EVIDENCE",
+    "READS_SOURCE_UPDATES_KNOWLEDGE_OR_USES_DIRECT_FALLBACK_IN_WORLD_MODEL_PHASE"
+  ],
+  "pass_rules": {
+    "major_error_count": 0,
+    "world_model_need_score_not_lower_per_need": true,
+    "world_model_material_claim_set_not_lower_per_question": true,
+    "answerable_world_model_gap_when_agent_supported": "FAIL",
+    "boundary_unrelated_support": "FAIL",
+    "ties": "PASS_ONLY_WHEN_POSITIVE_VALUE_THRESHOLD_ALSO_PASSES"
+  },
+  "adjudication": {
+    "owner": "user",
+    "blind_inputs": "SEALED_AGENT_AND_WORLD_MODEL_OUTPUTS_WITH_PATH_LABELS_RANDOMIZED",
+    "disagreement": "USER_VERDICT_REQUIRED_NO_AUTOMATIC_AVERAGING",
+    "missing_or_unknown": "FAIL_OR_UNRESOLVED_NEVER_PASS",
+    "receipt_timing": "NEW_MESSAGE_AFTER_MEASUREMENT"
+  },
+  "cost_fields": [
+    "world_model_build_elapsed_milliseconds",
+    "world_model_build_source_bytes",
+    "world_model_answer_elapsed_milliseconds",
+    "world_model_answer_model_calls",
+    "world_model_answer_input_tokens",
+    "world_model_answer_output_tokens",
+    "world_model_amortized_elapsed_milliseconds",
+    "mature_agent_elapsed_milliseconds",
+    "mature_agent_source_bytes",
+    "mature_agent_model_turns"
+  ]
+}

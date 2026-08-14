@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `none`
-- Active slice: `none`
-- Worktree status: `iteration-007-rejected-iteration-008-proposed-not-authorized`
-- Strategy relation: `accepted-java-static-call-baseline-plus-rejected-fixed-single-method-answering`
-- Live model path: `iteration-006-narrow-acceptance-iteration-007-product-failure-preserved-production-not-activated`
+- Active iteration: `ITER-008-INDEX`
+- Active slice: `ITER-008-SLICE-001`
+- Worktree status: `iteration-008-slice-001-authorized-in-progress`
+- Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
+- Live model path: `iteration-008-deterministic-development-only-no-new-live-dispatch-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

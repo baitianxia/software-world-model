@@ -1,0 +1,70 @@
+{
+  "protocol_ref": "ITER-008-MATURE-SOURCE-AGENT-BASELINE@1.0.0",
+  "purpose": "compare every held-out Java question with a strong direct-source Agent before any World Model result is visible",
+  "agent": {
+    "implementation": "Codex CLI",
+    "prepared_binary_path": "/Applications/ChatGPT.app/Contents/Resources/codex",
+    "prepared_version": "codex-cli 0.147.0-alpha.1.2",
+    "prepared_binary_sha256": "9f6748b4ab10ffc92c28b9ccedae89e61a302bbc011df7d276ee38f55906e481",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "low",
+    "bundled_model_catalog_sha256": "6d6c694360ad6adaf91b4d72b32014afce4c8c8322a304cd01ade377cc00d5f6",
+    "drift": "ANY_BINARY_MODEL_REASONING_PROMPT_PERMISSION_SCHEMA_OR_CATALOG_DRIFT_REQUIRES_A_NEW_PROTOCOL_AND_BASELINE"
+  },
+  "command_contract": {
+    "global_flags": ["--ask-for-approval", "never"],
+    "subcommand": "exec",
+    "required_exec_flags": [
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--strict-config",
+      "--model=gpt-5.6-sol",
+      "model_reasoning_effort=low",
+      "web_search=disabled",
+      "features.apps=false",
+      "features.multi_agent=false",
+      "allow_login_shell=false",
+      "default_permissions=mature_source",
+      "permissions.mature_source.network.enabled=false",
+      "--json"
+    ],
+    "workspace": "FRESH_ISOLATED_EXACT_AUTHORIZED_SOURCE_CHECKOUT_PER_QUESTION",
+    "prompt": "EXACT_QUESTION_LANGUAGE_REVISION_SCOPE_CITATION_AND_BOUNDARY_RULES_WITHOUT_ORACLE_WORLD_MODEL_OR_OTHER_BASELINE_OUTPUT",
+    "maximum_wall_time_milliseconds_per_question": 900000,
+    "maximum_agent_turns_per_question": 64,
+    "web_search": "DISABLED",
+    "network": "DISABLED"
+  },
+  "permissions": {
+    "root": "DENY",
+    "minimal_runtime": "READ",
+    "exact_workspace": "READ",
+    "workspace_write": "DENY",
+    "tmpdir": "DENY",
+    "slash_tmp": "DENY",
+    "network": "DENY",
+    "original_software_world_model_workspace": "DENY",
+    "world_model_results": "DENY",
+    "evaluation_oracle": "DENY",
+    "other_baseline_results": "DENY",
+    "secrets": "DENY"
+  },
+  "answer_schema": {
+    "path": "validation/structure_world_model_iteration_003/questions/mature-agent-answer-schema-1.0.0.json",
+    "schema_ref": "ITER-003-MATURE-SOURCE-AGENT-ANSWER@1.0.0",
+    "schema_digest": "sha256:cfe6ea01dedfbbd795676d00a90f7bf74d8227694ccb35a6f9a356a720e8e17d"
+  },
+  "run_order": {
+    "position": "BEFORE_WORLD_MODEL_OUTPUT_FOR_THE_SAME_REVISION_AND_QUESTION",
+    "seal": "CANONICAL_TERMINAL_PLUS_STDOUT_STDERR_OPERATION_AUDIT_TIMING_AND_DIGEST",
+    "failure_rule": "PRESERVE_ALL_FAILURES_WITHOUT_SUCCESS_SELECTION"
+  },
+  "cache_policy": {
+    "cross_question_model_session": "FORBIDDEN",
+    "cross_question_semantic_cache": "FORBIDDEN",
+    "filesystem_checkout_reuse": "READ_ONLY_BYTES_MAY_BE_REFLINKED_BUT_EACH_QUESTION_HAS_A_NEW_WORKSPACE_AND_OPERATION_AUDIT",
+    "source_read_episode": "COUNT_ONE_EPISODE_PER_QUESTION_WITH_ANY_AUTHORIZED_SOURCE_READ",
+    "reason": "make source exposure and World Model prebuild reuse independently measurable without weakening source access"
+  }
+}

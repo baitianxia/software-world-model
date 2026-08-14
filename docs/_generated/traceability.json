@@ -1994,6 +1994,17 @@
       "tests"
     ]
   },
+  "SYS-ADR-015": {
+    "path": "docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "SYS-ARCH-COMPONENTS": {
     "path": "docs/system/architecture/components.md",
     "code": [

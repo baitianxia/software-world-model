@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [application, quality]
-depends_on: [SYS-ADR-014, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
+depends_on: [SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/interface]
 tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_world_model_answer_strategy.py, tests/test_iteration_003_g3a_integration.py, tests/test_iteration_006_capability_qualification.py, tests/test_iteration_007_capability_qualification.py, tests/test_java_source_semantics.py, tests/test_world_model_gateway_authorization.py]
 ---
@@ -31,24 +31,30 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
 6. 独立 Reviewer 从原问题重建检查项，核对 Requirement fidelity、query completeness、grounding、比较方向、语言和可读性。重写只能使用同一 Read Set/Query Result；缺知识只能返回 Gap，不能补检索源码。
 7. Requirement、Query Plan、Query Result、Need Assessment、Draft、Review、Authorization 和 Delivery 都保存稳定引用与 digest，可供人工重建完整权威链。
 8. Product Validation 必须包含措辞变化、不同 Entity 标识、同名歧义、负向/无路径和不受支持问题；同一核心实现不得按工程、commit 或冻结题目硬编码答案。
-9. `JAVA_SOURCE_SEMANTICS@1` 的 accepted Strategy 每个成功 Delivery 固定三个隔离模型角色且不重试：
-   1. Plan Call 只读取原问题、语言、exact Read Authority、Profile/capability schema 与通用 operation vocabulary，提出不可变
-      Requirement、功能 search terms 和 Query Plan；search terms 必须逐项保留问题中明确要求的动作、对象、顺序/审计、分支结果及
-      return/throw 等物质概念，不能因其他词更像标识符而漏项。Profile vocabulary 必须把这些静态语义的常见语言/词形归一到
-      稳定 canonical term（例如 return、throw、order、audit、validate），但不得加入工程、题目或符号专用词典；它不读取
-      Entity/Fact/implementation Query Result；
-   2. Draft Call 只读取原问题、平台已验证 Requirement/Plan 和密封 Query Result，生成逐 Claim 绑定 typed Support/Gap 的 Draft；
-      它不读取 Source、planner 私有输出、Citation observation 或 Reviewer；
-   3. Review Call 在全新上下文中读取原问题、已验证 Requirement/Plan、同一密封 Query Result 和 Draft，从原问题独立重建检查项，
-      核对 fidelity、candidate/query completeness、grounding、方向、method completeness、语言与可读性。
-   Review 的 finding code 必须来自版本化 proposal vocabulary；遗漏、静态事实不支持的运行时断言、Source/Evidence payload 展开等
-   类别使用各自稳定 code，Schema 和 Application 同时拒绝未注册、重复或不按 vocabulary 顺序的 code，不能依靠自由文本近义词。
-   平台在每次 Call 前后重验 role package、input/output schema、Snapshot/Bundle/Result digest、operation/Support allowlist 和 grant。
-   固定 Ark transport 每次请求关闭连接；supervisor 因此必须在 Answer 启动前建立三个不同的 exact Provider connection，Gateway
-   按角色顺序各消费一个且不能新建、复用或交换 descriptor。成功 Answer 必须恰好有三张唯一 Gateway receipt；任一 Call/validation 未完成即失败关闭且不调用后续角色，不 retry、不降级为
-   deterministic answer、旧单调用 Strategy 或 Direct Investigation。Capability/Product Verification 中所有 intended supported
-   Case 都必须完成三次；少于或多于三次均为 Case FAIL。
+9. `JAVA_SOURCE_SEMANTICS@1` 的 bounded-investigation Strategy 每个成功 Delivery 使用隔离角色且不重试：
+   1. Investigation 执行 2—4 个模型回合。第一个回合只读取原问题、语言、exact Read Authority、Profile/capability schema 与
+      operation vocabulary；之后每回合只增加前一轮 sealed typed result、progress/budget receipt 与完整 trace digest。每次只能
+      提出一个 `implementation_candidates`、有界 `method_implementations`、declared inventory、direct neighborhood、path 查询或
+      `FINISH`。search terms 必须覆盖问题中的动作、对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以
+      归一语言/词形，但不得加入工程、题目或符号专用词典。Ref 只能来自同一 trace 的 exact result；
+   2. Application 在每轮前后校验 operation shape、Snapshot/Bundle、Ref provenance、query/result bytes、Support、progress/cycle、
+      trace bytes、wall time 和调用预算。Result 未密封不得进入下一回合；`FINISH` 至少发生在两个已执行调查回合之后；
+   3. Draft Call 只读取原问题、不可变 Requirement、完整 sealed trace、Need Assessment 和允许的 Support/Gap，生成逐 Claim 绑定的
+      Draft；它不读取 Source、调查角色私有输出、Citation observation 或 Reviewer；
+   4. Review Call 在全新上下文中读取原问题、同一 Requirement/trace/assessment 和 Draft，独立核对 fidelity、候选与查询完整性、
+      grounding、方向、三层负向证明、语言与可读性。
+   Review finding code 必须来自版本化 vocabulary；遗漏候选/方法、查询未穷尽、无依据负向结论、静态事实不支持的运行时断言与
+   Source/Evidence payload 展开使用不同稳定 code。Schema 和 Application 同时拒绝未注册、重复或乱序 code。平台在每次 Call 前后
+   重验 role package、input/output schema、Snapshot/Bundle/result/trace digest、operation/Support allowlist 和 grant。实际 Provider
+   调用数为 4—6（Investigation 2—4、Draft 1、Review 1），每次有唯一 receipt；supervisor 预建的上限 6 个 connected descriptor
+   只能按角色顺序消费，未用 descriptor 必须销毁并审计。任一 Call/validation 未完成即停止后续角色，不 retry、不降级为
+   deterministic answer、旧三调用 Strategy 或 Direct Investigation。
+10. `BOUNDED_ABSENCE` 必须同时绑定 Query result completeness、Knowledge representation Coverage 与 Business discovery recall 三个
+    独立 COMPLETE verdict。零候选、空页、`truncated=false` 或全局 Coverage COMPLETE 中任一项单独都不充分；未知层必须形成具体
+    Limitation，执行/权限失败不能伪装成 Gap。
 
 ## Failure and implementation boundary
 
-模式漂移、Read Set 不兼容、未知操作、EntityRef 歧义、查询不完整、Support 越界、Need 遗漏、审核未知或调用熔断均失败关闭。DTO、planner 算法和通用 operation catalog 由代码与测试定义，但不能改变以上固定输入、完整性和无 Source 边界。
+模式漂移、Read Set 不兼容、未知操作、EntityRef provenance 不成立、查询/trace 不完整、无进展或 cycle、Support/byte/time/call 预算
+越界、Need 遗漏、审核未知或调用熔断均失败关闭。DTO、planner 算法和通用 operation catalog 由代码与测试定义，但不能改变以上
+固定输入、三层完整性、预算和无 Source 边界。

@@ -1,27 +1,28 @@
 ---
 id: ITER-008-INDEX
 kind: iteration-index
-status: proposed
-authority: project-governance
+status: authorized
+authority: current-development
 owners: [product, project, architecture, engineering, quality]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-PROPOSAL, ITER-008-READINESS, ITER-008-VERIFICATION, ITER-008-SLICE-001, ITER-008-SLICE-002]
 code: []
 tests: []
 iteration: ITER-008
-coding_input: false
+coding_input: true
 ---
 
 # ITER-008：受限 Agent 驱动的 World Model 调查问答
 
 ## Status and authorization
 
-`PROPOSED / NOT READY / NOT AUTHORIZED`。
+`AUTHORIZED / SLICE-001 IN PROGRESS / SLICE-002 NOT AUTHORIZED`。
 
 本轮不改变“软件世界模型”目标。回答所依据的事实仍必须在提问前进入版本固定、可复用的 World Model；Agent 只负责根据查询结果
 决定下一步查什么，不能读取源码、触发更新或转入 Direct 回答。
 
-本目录确定迭代内容，不授权产品代码开发。只有新的架构决策与 System Contract、exact baseline、调查预算、安全边界、隐藏评测协议
-全部冻结，并由用户通过 Readiness 后，`SLICE-001` 才能单独进入开发。
+`SYS-ADR-015`、System Contract fileset、baseline `38ebed2…`、调查预算、Agent/rubric、正向价值阈值与用户持有的隐藏披露协议已
+冻结。用户以 `codex-user-message:sha256:eb381cfd…7221` 接受 Readiness 并单独授权 `SLICE-001`。本授权不包含 `SLICE-002`、
+任何 live Provider 问题披露、Production Activation、提交后的隐藏题修补或 Direct fallback。
 
 ## Required inputs
 

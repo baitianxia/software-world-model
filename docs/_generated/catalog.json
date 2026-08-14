@@ -2517,8 +2517,8 @@
   {
     "id": "ITER-008-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "proposed",
-    "authority": "proposed-development",
+    "status": "current",
+    "authority": "current-development",
     "owners": [
       "engineering",
       "architecture"
@@ -2542,8 +2542,8 @@
   {
     "id": "ITER-008-INDEX",
     "kind": "iteration-index",
-    "status": "proposed",
-    "authority": "project-governance",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "product",
       "project",
@@ -2557,7 +2557,7 @@
   {
     "id": "ITER-008-PROPOSAL",
     "kind": "iteration-proposal",
-    "status": "proposed",
+    "status": "accepted",
     "authority": "project-proposal",
     "owners": [
       "product",
@@ -2571,8 +2571,8 @@
   {
     "id": "ITER-008-READINESS",
     "kind": "iteration-readiness",
-    "status": "proposed",
-    "authority": "project-review",
+    "status": "accepted",
+    "authority": "project-authorization",
     "owners": [
       "project",
       "architecture",
@@ -2596,8 +2596,8 @@
   {
     "id": "ITER-008-SLICE-001",
     "kind": "development-slice",
-    "status": "proposed",
-    "authority": "proposed-development",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "engineering",
       "architecture",
@@ -3100,6 +3100,21 @@
     ],
     "derived_from": [],
     "path": "docs/system/architecture/decisions/ADR-014-snapshot-first-world-model-answering.md"
+  },
+  {
+    "id": "SYS-ADR-015",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "application",
+      "knowledge",
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md"
   },
   {
     "id": "SYS-ADR-INDEX",

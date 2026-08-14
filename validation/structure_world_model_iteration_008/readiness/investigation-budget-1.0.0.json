@@ -1,0 +1,51 @@
+{
+  "schema": "ITER-008-INVESTIGATION-BUDGET@1",
+  "protocol_ref": "ITER-008-BOUNDED-INVESTIGATION@1.0.0",
+  "investigation": {
+    "minimum_model_calls": 2,
+    "maximum_model_calls": 4,
+    "maximum_steps": 4,
+    "maximum_method_refs_per_batch": 3,
+    "maximum_query_bytes_per_step": 8192,
+    "maximum_result_bytes_per_step": 262144,
+    "maximum_total_query_bytes_per_question": 32768,
+    "maximum_total_result_bytes_per_question": 786432,
+    "maximum_support_items_per_question": 512,
+    "maximum_trace_bytes_per_question": 1048576,
+    "maximum_wall_time_milliseconds_per_question": 900000,
+    "minimum_progress_tokens_per_executed_step": 1,
+    "retries_allowed": false
+  },
+  "response": {
+    "draft_model_calls": 1,
+    "independent_review_model_calls": 1,
+    "minimum_total_model_calls_per_question": 4,
+    "maximum_total_model_calls_per_question": 6
+  },
+  "operations": [
+    "implementation_candidates",
+    "method_implementations",
+    "declared_method_inventory",
+    "direct_neighborhood",
+    "path_exists",
+    "all_simple_paths",
+    "FINISH"
+  ],
+  "failure_semantics": {
+    "budget_exhaustion": "LIMITATION:INVESTIGATION_BUDGET_EXHAUSTED",
+    "cycle": "LIMITATION:INVESTIGATION_CYCLE_DETECTED",
+    "no_progress": "LIMITATION:INVESTIGATION_NO_PROGRESS",
+    "query_result_too_large": "LIMITATION:INVESTIGATION_RESULT_BUDGET_EXHAUSTED",
+    "trace_too_large": "LIMITATION:INVESTIGATION_TRACE_BUDGET_EXHAUSTED",
+    "unknown_outcome": "FAIL_CLOSED:INVESTIGATION_OUTCOME_UNKNOWN",
+    "fallback": "FORBIDDEN"
+  },
+  "provider_connection_policy": {
+    "provisioned_upper_bound": 6,
+    "actual_consumed_minimum": 4,
+    "actual_consumed_maximum": 6,
+    "unused_action": "CLOSE_AND_AUDIT_UNUSED_CLOSED",
+    "equation": "provisioned=consumed+unused_closed",
+    "cross_role_or_session_reuse": "FORBIDDEN"
+  }
+}

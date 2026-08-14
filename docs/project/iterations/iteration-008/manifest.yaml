@@ -1,12 +1,12 @@
 schema_version: 1
 iteration:
   id: ITER-008
-  status: proposed
+  status: authorized
   outcome_scope: bounded-agentic-world-model-investigation-for-general-java-source-qa
 
 baseline:
-  commit: not-frozen-proposal-only
-  tree: not-frozen-proposal-only
+  commit: 38ebed20c5fa7bb603b8bc91981ad25da57f5877
+  tree: 28ad80919d1d9edb7ac24e53caa9b9b2247644ac
   dirty_worktree_allowed: false
   relation: iteration-006-accepted-capabilities-plus-unaccepted-iteration-007-technical-assets-awaiting-exact-freeze
 
@@ -15,7 +15,7 @@ product_goal_alignment:
   capability_path_ref: ROADMAP-M-002
   capability_path_step: step-1-java-result-driven-world-model-investigation
   critical_assumption_ids: A1,A2,A3,A4,A5,A6,A7,A8
-  critical_assumption_catalog_digest: not-frozen-proposal-only
+  critical_assumption_catalog_digest: sha256:1248eae891fcb2198b373db294213d7c3515369507682a6b1b1631a6e977171c
   predecessor_result_refs:
     - ITER-005-RESULT-ACCEPTANCE
     - ITER-006-RESULT-ACCEPTANCE
@@ -34,20 +34,20 @@ product_goal_alignment:
   held_out_evaluation_owner: user
   implementation_question_visibility: hidden
   implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
-  visible_development_corpus_digest: not-frozen-proposal-only
+  visible_development_corpus_digest: sha256:601849dae8d3e48479f0d9127e23dd2cad27d283e09562550f22443b7868b0aa
   evaluation_project_manifest_digest: user-held-not-disclosed
   held_out_suite_digest: user-held-not-disclosed
   baseline_result_digest: user-held-not-disclosed
-  mature_source_agent_protocol_digest: user-held-not-disclosed
-  mature_source_agent_rubric_digest: not-frozen-proposal-only
-  positive_value_metric: not-frozen-proposal-only
-  positive_value_unit: not-frozen-proposal-only
-  positive_value_comparison: not-frozen-proposal-only
-  positive_value_threshold: not-frozen-proposal-only
-  positive_value_reuse_horizon_questions: not-frozen-proposal-only
-  mature_source_agent_cache_policy_digest: not-frozen-proposal-only
-  positive_value_protocol_digest: not-frozen-proposal-only
-  positive_value_freeze_receipt_ref: not-authorized
+  mature_source_agent_protocol_digest: sha256:66078a61f7c5f25fc72c0c36c004819c99ae01c8465d01229149efc1e5809e1d
+  mature_source_agent_rubric_digest: sha256:6fe156f6f68cdaf572102f9e76feb8953e7e0838ee10ae57b0f11900bc9d2c1b
+  positive_value_metric: source-exposure-bytes-per-correct-outcome-ratio-at-frozen-reuse-horizon
+  positive_value_unit: ratio-ppm
+  positive_value_comparison: at-most
+  positive_value_threshold: 250000
+  positive_value_reuse_horizon_questions: 12
+  mature_source_agent_cache_policy_digest: sha256:d3b10942f2b9a98f2b9da22bf04dbf2a1a150299a07f33f292da69c875698ff8
+  positive_value_protocol_digest: sha256:5f79ff127574f2bce75cd31b0e217444ac3c15318bb4c9e435f615dad150a6d4
+  positive_value_freeze_receipt_ref: codex-user-message:sha256:eb381cfd1532dec61ec5dba26456c52ffa3c7b92e5a9588f40e98a971c797221
   positive_value_adjudication_owner: user
   authorized_software_sources_digest: user-held-not-disclosed
   held_out_question_count: 6
@@ -208,51 +208,95 @@ source_scope:
 answer_protocol:
   contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
   mode: bounded-result-driven-world-model-investigation
-  max_investigation_steps: not-frozen-proposal-only
-  max_investigation_model_calls: not-frozen-proposal-only
-  planner_model_call_upper_bound: not-frozen-proposal-only
-  max_query_bytes_per_step: not-frozen-proposal-only
-  max_result_bytes_per_step: not-frozen-proposal-only
-  max_total_query_bytes_per_question: not-frozen-proposal-only
-  max_total_result_bytes_per_question: not-frozen-proposal-only
-  max_wall_time_milliseconds_per_question: not-frozen-proposal-only
-  max_support_items_per_question: not-frozen-proposal-only
-  max_trace_bytes_per_question: not-frozen-proposal-only
-  budget_exhaustion_behavior: not-frozen-proposal-only
+  max_investigation_steps: 4
+  max_investigation_model_calls: 4
+  planner_model_call_upper_bound: 4
+  max_query_bytes_per_step: 8192
+  max_result_bytes_per_step: 262144
+  max_total_query_bytes_per_question: 32768
+  max_total_result_bytes_per_question: 786432
+  max_wall_time_milliseconds_per_question: 900000
+  max_support_items_per_question: 512
+  max_trace_bytes_per_question: 1048576
+  budget_exhaustion_behavior: fail-closed-with-explicit-limitation
   draft_model_calls: 1
   independent_reviewer_model_calls: 1
   deterministic_schema_grounding_and_authorization_checks: true
   retries_allowed: false
-  total_model_call_upper_bound_per_question: not-frozen-proposal-only
-  status: requires-system-contract-revision-before-readiness
+  total_model_call_upper_bound_per_question: 6
+  status: frozen
 
 readiness_inputs:
-  required_architecture_decision: bounded-agentic-world-model-investigation-adr-not-yet-accepted
+  required_architecture_decision: SYS-ADR-015
   required_system_contract_refs:
+    - SYS-CONTRACT-AI-CAPABILITY-EVALUATION
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
     - SYS-CONTRACT-APPLICATION-AGENTIC-TASK
     - SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
     - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
     - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
     - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
-  system_contract_set_schema: ITER-008-SYSTEM-CONTRACT-SET@1-not-frozen
-  system_contract_set_digest: not-frozen-proposal-only
-  exact_baseline_status: not-frozen-proposal-only
-  investigation_budget_status: not-frozen-proposal-only
-  mature_source_agent_protocol_status: not-frozen-proposal-only
-  hidden_evaluation_protocol_status: user-held-until-product-code-freeze
+    - SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+  source_semantics_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+  implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
+  no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+  answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+  system_contract_set_schema: ITER-008-SYSTEM-CONTRACT-SET@1
+  system_contract_set_paths:
+    - docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md
+    - docs/system/architecture/runtime-flows.md
+    - docs/system/contracts/ai/capability-evaluation.md
+    - docs/system/contracts/ai/model-gateway.md
+    - docs/system/contracts/application/agentic-task.md
+    - docs/system/contracts/application/implementation-query.md
+    - docs/system/contracts/application/knowledge-update.md
+    - docs/system/contracts/application/knowledge-use.md
+    - docs/system/contracts/application/world-model-answering.md
+    - docs/system/contracts/knowledge/java-source-semantics.md
+    - docs/system/operations/local-browser.md
+    - docs/system/quality/security-boundaries.md
+  system_contract_set_digest: sha256:a01bca5d6d0b5d79a1a143a3905b204109bc1cf3e8c53e30dd14ad91bfd5a305
+  exact_baseline_status: clean-exact-git-baseline-verified
+  investigation_budget_status: frozen-iter-008-bounded-investigation-1.0.0
+  mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
+  hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
+  hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
+  investigation_budget_digest: sha256:edb492b7613d9acf30b65344b29be4975a0716462a9ef88d9409833f9b511012
+  mature_source_agent_protocol_path: validation/structure_world_model_iteration_008/readiness/mature-source-agent-protocol-1.0.0.json
+  mature_source_agent_rubric_path: validation/structure_world_model_iteration_008/readiness/comparison-rubric-1.0.0.json
+  positive_value_protocol_path: validation/structure_world_model_iteration_008/readiness/positive-value-protocol-1.0.0.json
+  hidden_evaluation_protocol_path: validation/structure_world_model_iteration_008/readiness/hidden-evaluation-protocol-1.0.0.json
+  java_frontend:
+    artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
+    version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
+    runtime_version: tree-sitter==0.25.2
+    grammar_version: tree-sitter-java==0.23.5
+    language_abi: 14
+    license_ref: MIT
+    runtime_license_digest: sha256:1af0790543fffac99dd3bd290bf83ca963f4f8029065eb6f35638f4df863ae8e
+    grammar_license_digest: sha256:52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7
+    runtime_fileset_digest: sha256:86952fb273226021793f76c972d782b66c308d3ef8d20a4df4dd5ad6d31ec45c
+    grammar_fileset_digest: sha256:33106942ffed3b3df935320ac8ac9499e453ce66730a2130ba81b2dffef7c9dc
+    offline_artifact_digest: sha256:45b49edd3dbaaec472533c13a4a6d1e3e0eab6a3be2d1529685bdca5560e65b3
+    canonicalization_oracle_digest: sha256:edfb7ead08c137a9f47e37571de0d9b8f3ee7417278c84ed186a043c271122ff
+    information_preservation_oracle_digest: sha256:1751646fcdebd64798495a2b29811acc8bf058c37cf41e549201e876e498f67c
+    information_boundary_oracle_digest: sha256:5699efa859e716e208279675bb452a133c8ae87d6742cfc19b66f1626762b6a4
+    legacy_calls_consistency_oracle_digest: sha256:f1242a198afdf4d3cec425f1c715c094578cfaa9a70ed7798094afaf26b240f3
+    readiness_oracle_result_digest: sha256:0c946655de2b6daadf670d7c0a9f5f57b11f7a0ba04fde53a1f8940338f09f2f
+    readiness_oracle_result_path: var/iteration-007/readiness/oracle-result.json
 
 development:
   slices:
     ITER-008-SLICE-001:
-      status: proposed
-      coding_input: false
+      status: authorized
+      coding_input: true
       result: not-executed
       reflection_decision: not-executed
       reflection_prerequisite_result: none-first-slice
       product_code_freeze_digest: not-executed
-      authorized_by: not-authorized
-      authorized_at: not-authorized
-      authorization_ref: not-authorized
+      authorized_by: user
+      authorized_at: 2026-08-14T14:50:51+08:00
+      authorization_ref: codex-user-message:sha256:eb381cfd1532dec61ec5dba26456c52ffa3c7b92e5a9588f40e98a971c797221
     ITER-008-SLICE-002:
       status: proposed
       coding_input: false
@@ -270,7 +314,7 @@ verification:
 
 authorization:
   readiness_review_id: ITER-008-READINESS
-  authorized_by: not-authorized
-  authorized_at: not-authorized
-  authorization_ref: not-authorized
-  active_slice: none
+  authorized_by: user
+  authorized_at: 2026-08-14T14:50:51+08:00
+  authorization_ref: codex-user-message:sha256:eb381cfd1532dec61ec5dba26456c52ffa3c7b92e5a9588f40e98a971c797221
+  active_slice: ITER-008-SLICE-001

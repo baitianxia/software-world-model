@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [application]
-depends_on: [SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-ADR-005]
+depends_on: [SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-ADR-005]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -13,7 +13,8 @@ tests: [tests]
 
 ## Purpose and scope
 
-本 Contract 为 `JAVA_SOURCE_SEMANTICS@1` 注册两个通用只读操作，使自由功能描述可以先发现正式方法知识，再读取方法实现语义。
+本 Contract 为 `JAVA_SOURCE_SEMANTICS@1` 注册通用只读调查操作，使自由功能描述可以先发现正式方法知识，再根据 typed result
+读取一个或多个方法实现与必要的声明/图邻接。
 操作只读取 exact Snapshot Read Bundle；它们不访问 Source、Artifact/Evidence payload、权威数据库、模型记忆或 Direct
 Investigation，也不创建新的 Fact。
 
@@ -53,9 +54,36 @@ Query 不得根据已知题目替换答案。问题措辞改变只允许改变 v
 - 非 `SEMANTICS_COMPLETE` 方法可以返回已支持的正向事实，但必须返回 method Limitation；只有 COMPLETE facet 可形成负向或穷尽
   claim。`FAILED` 不得被展示为空实现。
 
+### `method_implementations(candidate_result_ref, method_refs)`
+
+- 这是对 `method_implementation` 的有界批量封装，不是新的知识语义。`candidate_result_ref` 必须绑定本题同一 Session 已密封且未
+  截断的 `implementation_candidates` result；`method_refs` 为其中 1—3 个唯一 exact Root/State Ref，保持 candidate canonical
+  order。模型提供的名称、签名或 Bundle 外 Ref 均拒绝。
+- 平台逐项执行同一个 `method_implementation` Contract，返回 ordered item result、逐项 Support、batch total 与 digest；任一项
+  权限/身份/执行失败使整个 batch 失败关闭，不静默丢项。某方法 facet 不完整可保留其正向事实和精确 Limitation，但不能因此把
+  其他方法标为不存在。
+- 同一个 candidate result 对同一 method Ref 的重复 batch 是 cycle；扩大、缩小或换序必须由上一轮 typed result 支持且仍计入
+  progress/budget，不能靠重复调用等待不同模型答案。
+
+### 声明与图操作
+
+`declared_method_inventory`、`direct_neighborhood`、`path_exists/all_simple_paths` 继续使用 Structure View 的现有 typed Contract。
+Agent 只能使用同一调查 trace 已授权的 exact Entity Ref；`CALLS` direction 必须显式给出，path 的 predicate、depth、count 和 expansion
+均受本题预算约束。它们不能读取 Source，也不能把名称匹配重建成图。
+
+### Result envelope 与完整性
+
+每个调查 result 固定 `result_id/digest`、operation、canonical input、Snapshot/Bundle、`items/total/returned/truncated/next_cursor`、
+Coverage/facet disposition、Support、serialized byte count 和 progress token。SLICE-001 的 candidate 与 method batch 是单页 bounded
+闭包；SLICE-002 才能扩大为多页，但任何版本都不得把未读页当作空结果。
+
+查询结果完整性只由 total/page/truncated/cursor Oracle 证明；Representation Coverage 由授权 unit/facet disposition Oracle 证明；
+业务发现召回由独立命名/同义词/不同入口反例 Oracle 证明。三个 verdict 全为 COMPLETE 才能产生 `BOUNDED_ABSENCE`。零候选只证明
+当前 search 没有命中；缺少第三层 Oracle 时必须返回 `BUSINESS_DISCOVERY_RECALL_UNPROVEN` Limitation。
+
 ## Composition and sufficiency
 
-一个功能问题可以先执行一次或多次 candidate search，再对选中的 typed candidates 执行实现查询，并与 method inventory、direct
+一个功能问题可以先执行一次或多次 candidate search，再对选中的 typed candidates 执行单项或有界批量实现查询，并与 method inventory、direct
 neighborhood、path 或 ordered diff 组合。每个 Requirement Need 必须保存其 operation inputs/result digest；跨域答案必须在同一
 Need/Support chain 中同时引用旧 `CALLS` 与实现事实，不能仅在正文拼接两段互不约束的结果。
 
@@ -64,6 +92,6 @@ Query Result 必须区分 `SUPPORTED`、`KNOWLEDGE_GAP`、`ENTITY_RESOLUTION_LIM
 
 ## Failure and implementation boundary
 
-未知 operation、term/limit 越界、index/Bundle digest 漂移、unsupported profile、Ref 不属于 Session、分页不完整、Support 越界或
-排序不确定均失败关闭。数据结构、缓存和检索实现由代码与测试定义；不得新增题型 enum、工程特判、模型直查 Bundle 或 Source
-fallback 来改变以上行为。
+未知 operation、term/limit 越界、index/Bundle digest 漂移、unsupported profile、Ref 不属于 candidate result/Session、分页不完整、
+Support/byte budget 越界、重复无进展或排序不确定均失败关闭。数据结构、缓存和检索实现由代码与测试定义；不得新增题型 enum、
+工程特判、模型直查 Bundle 或 Source fallback 来改变以上行为。

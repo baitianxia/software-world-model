@@ -1,7 +1,7 @@
 ---
 id: ITER-008-PROPOSAL
 kind: iteration-proposal
-status: proposed
+status: accepted
 authority: project-proposal
 owners: [product, architecture, engineering, quality]
 depends_on: [SYS-PRODUCT-SUCCESS, ROADMAP-M-002, ROADMAP-CANDIDATE-BOUNDED-WORLD-MODEL-INVESTIGATION, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE, ITER-007-RESULT-SLICE-001-STOP-DECISION, FINDING-007-008, FINDING-007-009, SYS-ADR-014, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-QUALITY-SECURITY, SYS-QUALITY-ACCEPTANCE, SYS-OPS-LOCAL-BROWSER]
@@ -176,5 +176,6 @@ Need/Claim 评分表、重大错误定义、独立裁决人、争议/同分/失�
 
 ## Authorization decision
 
-**PROPOSED / NOT READY / NOT AUTHORIZED。** 本 Proposal 只确定 ITER-008 内容。不得在新的架构决策、Contract、exact baseline、
-调查预算、隐藏评测协议、机械门禁和用户 Readiness Acceptance 闭合前修改产品代码。
+**ACCEPTED。** `SYS-ADR-015`、相关 System Contract、exact baseline、调查预算、隐藏评测协议、成熟源码 Agent/rubric 与正向价值
+阈值已经冻结。用户消息 `codex-user-message:sha256:eb381cfd…7221` 接受 Readiness 并只授权 `ITER-008-SLICE-001`；
+`SLICE-002` 仍需前段 PASS、`V-REFLECT-001: CONTINUE` 与新的用户消息，不能由本次授权推导。

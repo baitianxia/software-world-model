@@ -4,7 +4,7 @@ kind: system-operations
 status: current
 authority: operational
 owners: [operations, interface]
-depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py]
 tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_world_model_product.py]
 ---
@@ -26,10 +26,12 @@ World Model。两者不能
 `SWM-READ-SET-CATALOG@1`，并以 `CANDIDATE` evaluation grant 绑定 exact source commit/tree、role package、launcher、
 held-out suite、independent evaluator、Provider subject 和确定性资格。每个问题创建新的 `0700` run directory，只能按 Profile
 已取得资格的 role protocol 通过 exact Model Egress Gateway 调用 Provider 且不重试：既有 Maven/Java Static Call Profile 保持
-已接受的单调用协议；`JAVA_SOURCE_SEMANTICS@1` 必须使用隔离的 Plan、Draft、Review 三调用协议，不能继承旧资格。Answer 进程无 Source、Repository、Evidence payload、Oracle 或
-baseline；Citation 由浏览器按 request/result 另行 GET，并由无网络 Projector 的密封 Projection 重新验签。三调用 Profile 的启动收据必须声明
-`THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY`；每个问题由 supervisor 在启动 Answer 前预建三个独立 Provider connection，Gateway
-依次消费且不能复用，terminal audit 的 connection handoff、Provider call 与 network operation 都必须精确等于 3。
+已接受的单调用协议；`JAVA_SOURCE_SEMANTICS@1` 使用隔离的 2—4 次 Investigation、一次 Draft 与一次 Review，旧固定三调用资格不能
+继承。Answer 进程无 Source、Repository、Evidence payload、Oracle 或 baseline；Citation 由浏览器按 request/result 另行 GET，并由
+无网络 Projector 的密封 Projection 重新验签。该 Profile 的启动收据声明
+`TWO_TO_FOUR_INVESTIGATION_THEN_DRAFT_REVIEW_NO_RETRY`；每题由 supervisor 预建上限 6 个独立 Provider connection，Gateway 按实际
+4—6 次调用顺序消费且不能复用，未消费 connection 在 terminal 后关闭并审计。页面必须展示 investigation step count、budget、
+Coverage/完整性 verdict、trace digest、实际 Provider 调用数和具体 Gap/Limitation，不能只显示最终正文。
 
 当前服务没有认证，必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一证明缺失、过期或漂移都拒绝该路径。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
 

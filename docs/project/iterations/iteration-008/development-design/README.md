@@ -1,8 +1,8 @@
 ---
 id: ITER-008-DEVELOPMENT-DESIGN
 kind: development-design-index
-status: proposed
-authority: proposed-development
+status: current
+authority: current-development
 owners: [engineering, architecture]
 depends_on: [ITER-008-PROPOSAL, ITER-008-READINESS, ITER-008-SLICE-001, ITER-008-SLICE-002]
 code: []
@@ -20,4 +20,5 @@ coding_input: false
 
 每个 Slice 都把 Contract/typed 查询、调查循环、Draft/Review 与正式 Web 组合成交付，不允许按内部组件分别宣称完成。每段产品
 Gate 后还必须形成方案复盘 Result，明确 `CONTINUE / ACCEPT / REDIRECT / REJECT`。SLICE-001 的早期隐藏 Gate、成熟源码 Agent
-同题对照、`V-REFLECT-001`、exact 用户决策收据或 `CONTINUE` 任一缺失时，SLICE-002 永远保持 proposed。当前两段都不是编码输入。
+同题对照、`V-REFLECT-001`、exact 用户决策收据或 `CONTINUE` 任一缺失时，SLICE-002 永远保持 proposed。当前只有 SLICE-001 是
+编码输入；本 Index 说明顺序但不扩大该 Slice 的授权。

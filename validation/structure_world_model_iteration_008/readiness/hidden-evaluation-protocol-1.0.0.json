@@ -1,0 +1,32 @@
+{
+  "schema": "ITER-008-HIDDEN-EVALUATION-PROTOCOL@1",
+  "owner": "user",
+  "slice_001": {
+    "project_count": 1,
+    "answerable_question_count": 1,
+    "boundary_question_count": 2,
+    "answerable_without_symbol_count": 1,
+    "multi_method_answerable_count": 1,
+    "bounded_absence_count": 1,
+    "incomplete_coverage_limitation_count": 1,
+    "visibility": "HIDDEN_UNTIL_SLICE_001_PRODUCT_CODE_FREEZE",
+    "mature_agent_runs_first": true
+  },
+  "slice_002": {
+    "project_count": 2,
+    "answerable_question_count": 4,
+    "boundary_question_count": 2,
+    "answerable_without_symbol_count_minimum": 3,
+    "answerable_without_symbol_per_project_minimum": 1,
+    "multi_method_answerable_count_minimum": 2,
+    "visibility": "HIDDEN_UNTIL_SLICE_002_PRODUCT_CODE_FREEZE",
+    "mature_agent_runs_first": true
+  },
+  "semantic_scope": "ITER-007-FROZEN-JAVA-SOURCE-SEMANTICS-CLOSURE_ONLY",
+  "sets_are_disjoint": true,
+  "disclosure_rule": "DISCLOSE_EXACT_PROJECT_SUITE_AND_BASELINE_DIGESTS_ONCE_AFTER_RELEVANT_PRODUCT_CODE_FREEZE",
+  "burn_rule": "ANY_PRODUCT_CHANGE_AFTER_DISCLOSURE_BURNS_ALL_PROJECTS_QUESTIONS_BASELINES_AND_TARGETS_FOR_THAT_SLICE_AND_PRESERVES_THE_FAILED_RESULT",
+  "world_model_execution": "SAME_PRODUCT_OWNED_FORMAL_WEB_CHAIN",
+  "source_update_direct_counts_during_questions": 0,
+  "production_activation": "NOT_EXECUTED"
+}

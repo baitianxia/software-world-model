@@ -1,0 +1,40 @@
+{
+  "schema": "ITER-008-BASELINE-VERIFICATION@1",
+  "baseline_commit": "38ebed20c5fa7bb603b8bc91981ad25da57f5877",
+  "baseline_tree": "28ad80919d1d9edb7ac24e53caa9b9b2247644ac",
+  "dirty_worktree_allowed": false,
+  "verified_at": "2026-08-14T14:50:51+08:00",
+  "checks": [
+    {
+      "command": "python3 scripts/docs.py check",
+      "exit_code": 0,
+      "result": "documentation check passed: 303 current documents"
+    },
+    {
+      "command": "PYTHONPATH=src:. python3 -m unittest discover -s tests",
+      "exit_code": 1,
+      "result": "923 tests; 916 pass; 7 AF_UNIX-dependent cases blocked by workspace sandbox (1 failure, 6 errors)"
+    },
+    {
+      "command": "PYTHONPATH=src:tests:. python3 -m unittest <exact seven AF_UNIX-dependent cases>",
+      "execution_surface": "approved local AF_UNIX",
+      "exit_code": 0,
+      "result": "7 tests passed"
+    },
+    {
+      "command": "PYTHONPATH=demo python3 -m unittest discover -s demo/tests -q",
+      "exit_code": 0,
+      "result": "121 tests passed"
+    }
+  ],
+  "affected_af_unix_tests": [
+    "test_iteration_003_g3b.Iteration003G3bTests.test_gateway_listener_handoff_receipt_is_exact",
+    "test_model_egress_gateway.ModelEgressGatewayTests.test_client_fuse_denies_a_sixth_call",
+    "test_model_egress_gateway.ModelEgressGatewayTests.test_prebound_listener_must_match_the_exact_path",
+    "test_model_egress_gateway.ModelEgressGatewayTests.test_result_with_another_conformance_record_is_rejected",
+    "test_model_egress_gateway.ModelEgressGatewayTests.test_round_trip_binds_request_result_and_audits",
+    "test_model_egress_gateway.ModelEgressGatewayTests.test_round_trip_uses_an_exact_prebound_listener",
+    "test_model_egress_gateway.ModelEgressGatewayTests.test_policy_drift_is_rejected_and_consumes_one_audited_call"
+  ],
+  "production_activation": "NOT_EXECUTED"
+}

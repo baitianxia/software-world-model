@@ -53,6 +53,10 @@ Assessment 与其 Validity。Application 可以声明比较顺序和保存 Asses
 16. 对带 unit disposition/facet completeness 的 Profile，全局 `COMPLETE` 只证明授权单元分类 manifest 完整。Application 必须按
     exact method/facet completeness 判断穷尽或负向结论；`UNSUPPORTED_EXCLUDED`/`FAILED` 的缺失事实只能形成 Limitation/Gap，
     不能被空查询结果解释为“没有”。
+17. Result-driven investigation 的每个 typed result 必须绑定前一 trace digest、canonical operation/input、稳定 total/returned/
+    truncated/cursor、Coverage/facet disposition、Support、serialized byte count 与 progress token。Query result completeness、
+    Representation Coverage、Business discovery recall 是三个不同 Verdict；只有三者都由独立 Oracle 判为 COMPLETE，Application 才能
+    把零结果解释为 `BOUNDED_ABSENCE`。Agent、自报 trace、排名或分页结束不能拥有这些 Verdict。
 
 ## Failure and implementation boundary
 

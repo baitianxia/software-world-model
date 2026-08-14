@@ -4,24 +4,25 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-SLICE-001]
 code: []
 tests: []
 as_of: 2026-08-14
-active_iteration: none
-active_slice: none
-worktree_status: iteration-007-rejected-iteration-008-proposed-not-authorized
-strategy_relation: accepted-java-static-call-baseline-plus-rejected-fixed-single-method-answering
-live_model_path: iteration-006-narrow-acceptance-iteration-007-product-failure-preserved-production-not-activated
+active_iteration: ITER-008-INDEX
+active_slice: ITER-008-SLICE-001
+worktree_status: iteration-008-slice-001-authorized-in-progress
+strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
+live_model_path: iteration-008-deterministic-development-only-no-new-live-dispatch-production-not-activated
 ---
 
 # 当前工作上下文
 
 ## 开发授权
 
-当前没有活动 Iteration 或活动 Slice。ITER-007 已按其早期 stop/redirect 规则终止为 `rejected`：技术 Web 链成立，
-但产品问答 Gate 失败；SLICE-002/003 从未授权。ITER-008 只完成 proposal 级内容确定，仍是 `PROPOSED / NOT READY /
-NOT AUTHORIZED`，不得据此修改产品代码。
+当前活动 Iteration 为 `ITER-008`，唯一活动 Slice 为 `ITER-008-SLICE-001`。ITER-007 已按其早期 stop/redirect 规则终止为
+`rejected`；SLICE-002/003 从未授权。用户消息 `codex-user-message:sha256:eb381cfd…7221` 接受 ITER-008 Readiness，并只授权最小
+bounded investigation 闭环、正式 Web 早期 Gate 和代码冻结前的确定性验证。`SLICE-002`、live Provider 披露与 Production
+Activation 不在本次授权内。
 
 用户此前于 `2026-08-13T11:45:33+08:00` 接受 ITER-006 的 exact run-008 窄范围 Result：
 在新的 SYSTEM Scope 上以 `JAVA_STATIC_CALL_GRAPH@1` 构建 Java 声明与可静态唯一解析的直接调用，发布 no-payload Snapshot/
@@ -84,5 +85,6 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-当前无产品代码开发授权。Agent 可以读取 ITER-007 的失败证据和 ITER-008 的 proposed 文档进行评审，但不得执行 ITER-007
-SLICE-002/003，不得把 ITER-008 Proposal 当作编码输入，不得复用已消费的外部分派 grant，也不得执行 Production Activation。
+Agent 只能按 `ITER-008-SLICE-001` 修改其列明的 bounded investigation、Query、Strategy、Gateway/runtime、正式 Web 与验证资产，
+并以 baseline `38ebed20c5fa7bb603b8bc91981ad25da57f5877` 为起点。不得执行 ITER-007 SLICE-002/003、ITER-008 SLICE-002、
+不得披露/收集早期 canary 或最终隐藏题，不得复用已消费的外部分派 grant，也不得执行 Production Activation。

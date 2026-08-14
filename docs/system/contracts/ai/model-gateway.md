@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [ai]
-depends_on: [SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
+depends_on: [SYS-ADR-015, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
 derived_from: [DD-AI-MODEL-GATEWAY]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
 tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
@@ -32,6 +32,11 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    freeze 只能证明能力与实现身份，不能授权新问题。trusted launcher 从 exact evaluation grant 派生当前 session receipt；
    active Gateway entrypoint 必须在读取 credential 或进入已资格 baseline 前验证 grant digest、disclosure digest、用户、授权时间、
    authorization ref、payload boundary 与 `Production Activation=NOT_EXECUTED`。历史 permission 字段只能标为 baseline-only。
+8. 有界可变调用协议必须同时冻结最小/最大调用数、合法角色序列和 terminal 条件。每个实际调用拥有唯一 Authorized Input
+   Manifest、workload/role/step identity、model call ID、receipt 和 transport audit；不能用一个 Plan receipt 代表多个调查回合。
+   supervisor 可以提供上限数量的 exact connected descriptor，但 Gateway 只能顺序消费，不能创建、交换或复用连接。Answer terminal
+   后未消费 descriptor 必须关闭并记录 `UNUSED_CLOSED`，且 `provisioned = consumed + unused_closed`；少于最小、超过最大、缺 receipt、
+   跨题/跨 session 使用或计数未知均失败关闭。
 
 ## Security and compatibility
 

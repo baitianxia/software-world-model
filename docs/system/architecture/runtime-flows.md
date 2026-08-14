@@ -4,7 +4,7 @@ kind: system-architecture
 status: current
 authority: normative
 owners: [architecture, application]
-depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS]
+depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -47,7 +47,29 @@ Explicit WORLD_MODEL request
   → deterministic Authorization + Delivery, or fail-closed/explicit Knowledge Gap
 ```
 
-整个请求关闭 Source Provider 与 Knowledge Update Port。答案进程只挂载产品 package 与无 Evidence payload 的 exact Snapshot Read Bundle，不挂载权威数据库、Evidence Store 或来源工作树。答案生成和审核只能读取固定 Snapshot 的查询/View 结果；知识不足不回源、不更新、不伪装满足。`JAVA_SOURCE_SEMANTICS@1` 使用 Plan、Draft、Review 三个隔离模型调用，其他已接受 Profile 在取得新资格前保持各自原调用协议，不能交叉复用资格。该 Profile 的固定 Ark transport 每次请求都发送 `Connection: close`，因此 evaluator supervisor 必须在 Answer 启动前为三个授权调用分别建立一个 exact connected socket；Gateway child 按 Plan → Draft → Review 顺序各消费一个 descriptor，不能复用连接或临时创建第四个 socket。新 Snapshot 只影响之后打开的 Session。引用正文由密封结果后的独立 Citation Projector 进程从另一存储投影到浏览器，不能回传答案链。
+整个请求关闭 Source Provider 与 Knowledge Update Port。答案进程只挂载产品 package 与无 Evidence payload 的 exact Snapshot Read Bundle，不挂载权威数据库、Evidence Store 或来源工作树。答案生成和审核只能读取固定 Snapshot 的查询/View 结果；知识不足不回源、不更新、不伪装满足。新 Snapshot 只影响之后打开的 Session。引用正文由密封结果后的独立 Citation Projector 进程从另一存储投影到浏览器，不能回传答案链。
+
+### Java Source Semantics 有界调查
+
+`JAVA_SOURCE_SEMANTICS@1` 不再要求先唯一选择一个方法。取得新资格的 Strategy 执行：
+
+```text
+immutable Requirement
+  → 2—4 次 result-driven investigation proposal / typed result
+  → sealed trace + progress/budget receipts
+  → one Draft
+  → independent Review
+  → Authorization / Delivery
+```
+
+每轮 Agent 只提出一个 allowlisted typed operation，Application 校验 exact Snapshot、前序 result provenance、Ref、bytes、Support、
+progress 和剩余预算后才执行。候选搜索可以返回 0/N；方法实现查询可在同一 candidate result 内选择最多 3 个 exact method Ref，
+不取排名第一也不无界展开。达到 FINISH 前至少有两个调查回合；重复 query、无进展、越界或预算耗尽返回具体 Limitation，并保持
+Source/Update/Direct fallback 为 0。查询、表示与业务发现三层完整性没有同时证明时，不得给 bounded absence。
+
+该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway supervisor 可以预建上限 6 个独立 Provider
+connection；Gateway 按实际角色顺序消费，未使用 descriptor 在 terminal 后销毁并审计。旧固定三调用资格和 connection receipt 不得
+复用。其他已接受 Profile 保持原调用协议。
 
 ## 直接源码调查
 
