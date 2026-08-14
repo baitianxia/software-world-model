@@ -41,6 +41,7 @@ from software_world_model.interface.world_model_browser import (
     WorldModelBrowserApplication,
 )
 from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
 )
@@ -50,6 +51,12 @@ _REQUEST_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$")
 _RESULT_ID = re.compile(r"^structure_view_result_[0-9a-f]{32}$")
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 _COMMIT = re.compile(r"^[0-9a-f]{40}$")
+_DISPATCH_POLICIES = frozenset(
+    {
+        "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY",
+        "THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY",
+    }
+)
 _REQUIRED_AUTHORITY_TABLES = {
     "app_maven_workspace_attempts": (
         "attempt_id",
@@ -436,6 +443,7 @@ class DynamicCatalogWorldModelRunner:
                     {
                         MAVEN_STRUCTURE_PROFILE_REF,
                         JAVA_STATIC_CALL_PROFILE_REF,
+                        JAVA_SOURCE_SEMANTICS_PROFILE_REF,
                     }
                 ):
                     raise ValueError("Catalog contains an unsupported Structure Profile")
@@ -517,8 +525,7 @@ class DynamicCatalogWorldModelRunner:
             or result.get("environment") != "EVALUATION_ONLY"
             or result.get("evaluation_subject_status") != "CANDIDATE"
             or result.get("production_activation") != "NOT_EXECUTED"
-            or result.get("dispatch_policy")
-            != "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY"
+            or result.get("dispatch_policy") not in _DISPATCH_POLICIES
             or not isinstance(commit, str)
             or not _COMMIT.fullmatch(commit)
             or not isinstance(tree, str)
@@ -561,6 +568,20 @@ class DynamicCatalogWorldModelRunner:
         ]
         stages = page.get("authority_chain", {}).get("stages", [])
         selected = result.get("read_set_id", result.get("dataset_id"))
+        profile_refs = tuple(
+            sorted(
+                {
+                    coverage.profile_ref
+                    for snapshot in entry.snapshot_bindings
+                    for coverage in snapshot.coverages
+                }
+            )
+        )
+        expected_provider_calls = (
+            3
+            if profile_refs == (JAVA_SOURCE_SEMANTICS_PROFILE_REF,)
+            else 1
+        )
         if (
             result.get("request_id") != request_id
             or selected != entry.read_set_id.value
@@ -582,7 +603,7 @@ class DynamicCatalogWorldModelRunner:
             or not isinstance(stages, list)
             or len(stages) != 10
             or execution.get("attempt_count") != 1
-            or execution.get("provider_call_count") != 1
+            or execution.get("provider_call_count") != expected_provider_calls
             or execution.get("network_operation_count")
             != execution.get("provider_call_count")
             or execution.get("selective_retry_count") != 0
@@ -645,6 +666,7 @@ class DynamicCatalogWorldModelRunner:
         schemas = sorted({item.schema_ref for item in snapshots})
         modality = "ORDERED_COMPARISON" if len(snapshots) == 2 else "EXACT_SNAPSHOT"
         java_profile = profiles == [JAVA_STATIC_CALL_PROFILE_REF]
+        java_semantics_profile = profiles == [JAVA_SOURCE_SEMANTICS_PROFILE_REF]
         label = (
             f"{entry.workspace_id.value} · {revisions[0][:9]} → {revisions[-1][:9]}"
             if len(revisions) == 2
@@ -655,6 +677,13 @@ class DynamicCatalogWorldModelRunner:
             "read_set_id": entry.read_set_id.value,
             "label": label,
             "description": (
+                (
+                    "exact ordered Java source-semantics Snapshot comparison"
+                    if len(snapshots) == 2
+                    else "exact Java source-semantics Snapshot"
+                )
+                if java_semantics_profile
+                else
                 (
                     "exact ordered Java static-call Snapshot comparison"
                     if len(snapshots) == 2
@@ -678,6 +707,14 @@ class DynamicCatalogWorldModelRunner:
             "profile_refs": profiles,
             "schema_refs": schemas,
             "coverage": (
+                (
+                    "Java declarations, frozen exact static CALLS, typed branch/"
+                    "return/throw implementation atoms, and formal feature discovery; "
+                    "unsupported Java constructs, runtime dispatch, reflection, "
+                    "dependency injection, and design intent are outside Coverage"
+                )
+                if java_semantics_profile
+                else
                 (
                     "Java type and declared-method membership, frozen-subset static "
                     "CALLS, and exact ordered diff; runtime dispatch, reflection, "

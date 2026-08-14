@@ -34,6 +34,7 @@ from software_world_model.knowledge_engine import (
     ScopeType,
 )
 from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
 )
@@ -239,7 +240,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     register_workspace.add_argument(
         "--knowledge-profile",
-        choices=(MAVEN_STRUCTURE_PROFILE_REF, JAVA_STATIC_CALL_PROFILE_REF),
+        choices=(
+            MAVEN_STRUCTURE_PROFILE_REF,
+            JAVA_STATIC_CALL_PROFILE_REF,
+            JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+        ),
         default=MAVEN_STRUCTURE_PROFILE_REF,
     )
     register_workspace.add_argument("--actor", required=True)

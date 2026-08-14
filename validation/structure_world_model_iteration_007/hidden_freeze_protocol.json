@@ -1,0 +1,124 @@
+{
+  "schema": "SWM-ITER-007-HIDDEN-FREEZE-PROTOCOL@1",
+  "status": "current",
+  "purpose": "Bind independently held ITER-007 canary and held-out inputs before product implementation without disclosing their identity, source, filenames, questions, answers, or commitment secret.",
+  "artifact_binding": {
+    "digest": "SHA-256(canonical-json([protocol-json-raw-sha256,commitment-validator-raw-sha256,lifecycle-validator-raw-sha256]))",
+    "components": [
+      "hidden_freeze_protocol.json",
+      "hidden_freeze.py",
+      "hidden_freeze_lifecycle.py"
+    ]
+  },
+  "isolation_boundary": {
+    "required_mode": "EXTERNAL_EVALUATOR_OWNED_ACL",
+    "cross_turn_recovery_required": true,
+    "implementation_principal_access": "DENIED",
+    "shared_workspace_is_a_secrecy_boundary": false,
+    "shared_var_is_a_secrecy_boundary": false,
+    "shared_tmp_is_a_secrecy_boundary": false,
+    "agent_memory_is_a_persistent_secrecy_boundary": false,
+    "repository_validator_assurance": "SCHEMA_AND_BINDING_ONLY_NOT_EXTERNAL_ACL_PROOF",
+    "required_external_review": "V-PRE-005 verifies the holder identity and ACL attestation outside every shared surface.",
+    "failure_without_boundary": "V_PRE_004_BLOCKED_NO_HIDDEN_MATERIALIZATION"
+  },
+  "commitment_scheme": {
+    "algorithm": "HMAC-SHA-256",
+    "secret_entropy_bits_minimum": 256,
+    "secret_generation": "CSPRNG_UNIQUE_PER_FREEZE",
+    "secret_storage": "EVALUATOR_OWNED_EXTERNAL_ONLY",
+    "payload_encoding": "UTF8_CANONICAL_JSON_SORTED_KEYS_NO_WHITESPACE_INTEGER_NUMBERS_ONLY",
+    "input": "HMAC(secret, canonical-json([commitment-schema,iteration,label,domain,generation,protocol-digest,payload-sha256]))",
+    "public_binding": "SHA-256(canonical-json([commitment-schema,domain,generation,protocol-digest,algorithm,hmac]))",
+    "secret_or_payload_in_public_receipt": false,
+    "verification": "Evaluator recomputes after authorized disclosure; mismatch invalidates the freeze."
+  },
+  "commitment_domains": {
+    "canary_001_project_manifest": "ITER-007/V-CANARY-001/PROJECT-MANIFEST@1",
+    "canary_001_suite": "ITER-007/V-CANARY-001/SUITE@1",
+    "canary_002_project_manifest": "ITER-007/V-CANARY-002/PROJECT-MANIFEST@1",
+    "canary_002_suite": "ITER-007/V-CANARY-002/SUITE@1",
+    "held_out_project_manifest": "ITER-007/HELD-OUT/PROJECT-MANIFEST@1",
+    "held_out_suite": "ITER-007/HELD-OUT/SUITE@1",
+    "baseline_result": "ITER-007/HELD-OUT/BASELINE-RESULT@1",
+    "mature_source_agent_protocol": "ITER-007/HELD-OUT/MATURE-SOURCE-AGENT-PROTOCOL@1",
+    "authorized_software_sources": "ITER-007/HELD-OUT/AUTHORIZED-SOFTWARE-SOURCES@1"
+  },
+  "public_receipt": {
+    "schema": "SWM-ITER-007-HIDDEN-FREEZE-PUBLIC-RECEIPT@1",
+    "document_digest": "SHA-256(canonical-json([receipt-schema,receipt-without-document-digest]))",
+    "statuses": [
+      "FROZEN",
+      "BLOCKED"
+    ],
+    "frozen_visibility": "Only fixed enums, booleans, counts, accepted public baseline identity, keyed commitments, derived public digests, and PASS/FAIL metadata.",
+    "forbidden_content": [
+      "project identity",
+      "repository identity",
+      "path or filename",
+      "source or source fragment",
+      "question or paraphrase",
+      "answer or oracle explanation",
+      "commitment secret, nonce, salt, or key reference",
+      "storage location or credential",
+      "free-form evaluator text"
+    ],
+    "unknown_fields": "REJECT",
+    "blocked_receipt_rule": "A blocked receipt contains no commitment and attests that hidden payload was never materialized."
+  },
+  "lifecycle_receipts": {
+    "product_code_freeze": {
+      "schema": "SWM-ITER-007-PRODUCT-CODE-FREEZE-RECEIPT@1",
+      "required_before_disclosure": true,
+      "coverage": [
+        "src",
+        "prompt and role package",
+        "launcher and policy",
+        "dependency and frontend binding",
+        "evaluation harness"
+      ],
+      "pre_and_post_execution_recheck": true
+    },
+    "disclosure": {
+      "schema": "SWM-ITER-007-HIDDEN-DISCLOSURE-RECEIPT@1",
+      "requires_commitment_opening_pass": true,
+      "requires_pre_exposure_shared_surface_count_zero": true,
+      "maximum_attempt_count": 1,
+      "requires_post_exposure_product_change_count_zero_until_slice_result_seal": true
+    },
+    "burn": {
+      "schema": "SWM-ITER-007-HIDDEN-BURN-RECEIPT@1",
+      "preserve_original_result": true,
+      "canary_replacement": "PROJECT_AND_SUITE",
+      "held_out_replacement": "TWO_PROJECTS_COMPLETE_12_PLUS_4_SUITE_BASELINE_AND_TARGET"
+    }
+  },
+  "frozen_counts": {
+    "canary_001_project_count": 1,
+    "canary_001_answerable_count_minimum": 1,
+    "canary_001_without_symbol_count_minimum": 1,
+    "canary_001_cross_domain_count_minimum": 1,
+    "canary_002_project_count": 1,
+    "canary_002_answerable_count_minimum": 1,
+    "canary_002_without_symbol_count_minimum": 1,
+    "held_out_project_count": 2,
+    "held_out_answerable_count": 12,
+    "held_out_boundary_count": 4,
+    "held_out_without_symbol_count_minimum": 6,
+    "held_out_without_symbol_per_project_minimum": 2
+  },
+  "baseline_target": {
+    "accepted_commit": "8f305ed396899c8f8e5d175fe7fcecb6ceb48f3f",
+    "accepted_tree": "89d645c17f739f40dcbfcc0c03a2d41a503b9611",
+    "baseline_must_be_executed": true,
+    "supported_denominator": "ANSWERABLE_ONLY",
+    "formula": "min(12,max(baseline_supported+4,8))"
+  },
+  "burn_rules": {
+    "canary_001": "Any product change between disclosure and the SLICE-001 Result seal preserves the result and burns both project and suite; after a sealed Result the capsule is consumed and later authorized slices do not rewrite it.",
+    "canary_002": "Any product change between disclosure and the SLICE-002 Result seal preserves the result and burns both project and suite; after a sealed Result the capsule is consumed and later authorized slices do not rewrite it.",
+    "held_out": "Any product change between disclosure and the final Result seal preserves the result and burns all projects and the complete 12+4 suite; after the Result seal the capsule is consumed.",
+    "canary_reuse_as_held_out": false
+  },
+  "production_activation": "NOT_EXECUTED"
+}

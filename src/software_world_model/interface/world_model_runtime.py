@@ -41,6 +41,7 @@ from software_world_model.interface.world_model_evaluation import (
 )
 from software_world_model.interface.world_model_http import ResolvedReadSetInput
 from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
 )
@@ -81,7 +82,14 @@ _EXPECTED_PROVIDER = {
     ),
 }
 _JAVA_GATEWAY_FREEZE_SCHEMA = "SWM-ITER-006-JAVA-GATEWAY-FREEZE@1"
+_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA = (
+    "SWM-ITER-007-JAVA-SOURCE-SEMANTICS-GATEWAY-FREEZE@1"
+)
 _LEGACY_GATEWAY_FREEZE_SCHEMA = "swm.iter-003.g3b-input-freeze@1"
+_ONE_CALL_DISPATCH_POLICY = "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY"
+_SOURCE_SEMANTICS_DISPATCH_POLICY = (
+    "THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
+)
 _ROLE_ENTRYPOINTS = {
     "answer": ".g3b/answer_workload.py",
     "gateway": ".g3b/gateway_authorized_workload.py",
@@ -193,6 +201,7 @@ class SealedWorldModelExecutor:
             self._gateway_input,
             self._authorization_receipt_digest,
         ) = _prepare_gateway_input(grant, startup_root / "gateway-input")
+        self._provider_call_count = _gateway_call_count(self._gateway_input)
         bootstrap_connection, bootstrap = _provision_provider_socket()
         bootstrap_connection.close()
         self._provider_address = _text(
@@ -240,7 +249,7 @@ class SealedWorldModelExecutor:
             "outer_reachability": outer,
             "provider_bootstrap_digest": bootstrap["document_digest"],
             "startup_preflight_digest": self._startup_preflight_digest,
-            "dispatch_policy": "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY",
+            "dispatch_policy": _dispatch_policy(self._provider_call_count),
             "production_activation": "NOT_EXECUTED",
         }
         startup = {
@@ -296,7 +305,7 @@ class SealedWorldModelExecutor:
             "gateway_authorization_receipt_digest": (
                 self._authorization_receipt_digest
             ),
-            "dispatch_policy": "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY",
+            "dispatch_policy": _dispatch_policy(self._provider_call_count),
             "production_activation": "NOT_EXECUTED",
         }
 
@@ -427,12 +436,14 @@ class SealedWorldModelExecutor:
     ) -> tuple[dict[str, object], _ExecutorRequestRecord]:
         terminal_path = run_root / "terminal.json"
         persisted_terminal = _load_json(terminal_path)
+        expected_calls = self._provider_call_count
         if (
             terminal.get("status") != "SUCCESS"
             or persisted_terminal.get("status") != "SUCCESS"
             or persisted_terminal.get("attempt_count") != 1
             or persisted_terminal.get("selective_retry_count") != 0
-            or persisted_terminal.get("provider_connection_handoff_count") != 1
+            or persisted_terminal.get("provider_connection_handoff_count")
+            != expected_calls
             or persisted_terminal.get("gateway_listener_handoff_count") != 1
             or persisted_terminal.get("production_activation") != "NOT_EXECUTED"
             or _document_digest(persisted_terminal)
@@ -484,8 +495,10 @@ class SealedWorldModelExecutor:
             or observed_snapshot_ids != expected_snapshot_ids
             or not isinstance(stages, list)
             or len(stages) != 10
-            or page.get("execution_boundary", {}).get("provider_call_count") != 1
-            or page.get("execution_boundary", {}).get("network_operation_count") != 1
+            or page.get("execution_boundary", {}).get("provider_call_count")
+            != expected_calls
+            or page.get("execution_boundary", {}).get("network_operation_count")
+            != expected_calls
             or page.get("execution_boundary", {}).get("source_access_allowed") is not False
             or page.get("execution_boundary", {}).get("evidence_payload_access_allowed") is not False
             or summary.get("source_access_count") != 0
@@ -493,8 +506,8 @@ class SealedWorldModelExecutor:
             or summary.get("authority_database_access_count") != 0
             or summary.get("product_oracle_read_count") != 0
             or summary.get("baseline_result_read_count") != 0
-            or summary.get("provider_call_count") != 1
-            or summary.get("network_operation_count") != 1
+            or summary.get("provider_call_count") != expected_calls
+            or summary.get("network_operation_count") != expected_calls
             or summary.get("production_activation") != "NOT_EXECUTED"
         ):
             raise RuntimeError("verified page violates the dynamic browser boundary")
@@ -554,13 +567,25 @@ class SealedWorldModelExecutor:
             "citations": public_citations,
             "execution": {
                 "attempt_count": 1,
-                "provider_call_count": 1,
-                "network_operation_count": 1,
+                "provider_call_count": expected_calls,
+                "network_operation_count": expected_calls,
                 "selective_retry_count": 0,
                 "source_access_count": 0,
                 "evidence_payload_access_count": 0,
                 "model_call_id": summary.get("model_call_id"),
                 "model_fingerprint": summary.get("model_actual_fingerprint"),
+                "model_call_ids": summary.get(
+                    "model_call_ids",
+                    [summary["model_call_id"]]
+                    if isinstance(summary.get("model_call_id"), str)
+                    else [],
+                ),
+                "model_fingerprints": summary.get(
+                    "model_actual_fingerprints",
+                    [summary["model_actual_fingerprint"]]
+                    if isinstance(summary.get("model_actual_fingerprint"), str)
+                    else [],
+                ),
                 "elapsed_milliseconds": timing.get("request_elapsed_milliseconds"),
                 "terminal_digest": persisted_terminal.get("document_digest"),
             },
@@ -724,6 +749,9 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
     expected_provider, java_qualification = _provider_binding_for_gateway_input(
         gateway_input
     )
+    qualification_binding_field = _gateway_qualification_binding_field(
+        gateway_input
+    )
     provider = _object(
         document.get("provider"), set(_EXPECTED_PROVIDER), "Provider subject"
     )
@@ -773,13 +801,17 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
         or qualification.get("docs_check_pass") is not True
         or qualification.get("external_model_called") is not False
         or qualification.get("production_activation") != "NOT_EXECUTED"
-        or (
-            java_qualification is None
-            and "java_capability_qualification" in qualification
+        or any(
+            field in qualification
+            for field in {
+                "java_capability_qualification",
+                "java_source_semantics_capability_qualification",
+            }
+            if field != qualification_binding_field
         )
         or (
-            java_qualification is not None
-            and qualification.get("java_capability_qualification")
+            qualification_binding_field is not None
+            and qualification.get(qualification_binding_field)
             != java_qualification
         )
         or suite.get("schema") != "SWM-WORLD-MODEL-HELD-OUT-SUITE@2"
@@ -858,6 +890,8 @@ def _provider_binding_for_gateway_input(
     schema = freeze.get("schema")
     if schema == _LEGACY_GATEWAY_FREEZE_SCHEMA:
         return dict(_EXPECTED_PROVIDER), None
+    if schema == _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return _java_source_semantics_provider_binding(gateway_input, freeze)
     if schema != _JAVA_GATEWAY_FREEZE_SCHEMA:
         raise ValueError("qualified Gateway freeze schema is unsupported")
 
@@ -948,6 +982,135 @@ def _provider_binding_for_gateway_input(
     return expected_provider, qualification
 
 
+def _java_source_semantics_provider_binding(
+    gateway_input: Path,
+    freeze: Mapping[str, object],
+) -> tuple[dict[str, object], dict[str, object]]:
+    from software_world_model.ai_infrastructure.java_source_semantics_model_egress_qualification import (
+        JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST,
+        load_java_source_semantics_gateway_qualification_binding,
+    )
+
+    binding = load_java_source_semantics_gateway_qualification_binding(
+        qualification_path=gateway_input / "qualification.json",
+        closed_result_path=gateway_input / "closed-result.json",
+        policy_path=gateway_input / "egress-policy.json",
+    )
+    expected_freeze_keys = {
+        "schema",
+        "freeze_ref",
+        "environment",
+        "strategy_ref",
+        "prompt_ref",
+        "proposal_vocabulary_ref",
+        "capability_qualification_document_digest",
+        "closed_capability_result_digest",
+        "egress_policy_digest",
+        "conformance_result_ref",
+        "conformance_result_digest",
+        "permission_digest",
+        "production_activation",
+        "document_digest",
+    }
+    _exact_keys(freeze, expected_freeze_keys, "source-semantics Gateway freeze")
+    freeze_core = {
+        key: value for key, value in freeze.items() if key != "document_digest"
+    }
+    if (
+        freeze.get("freeze_ref")
+        != "ITER-007-JAVA-SOURCE-SEMANTICS-PRODUCT-GATEWAY-CANDIDATE@1"
+        or freeze.get("environment") != "EVALUATION_ONLY"
+        or freeze.get("strategy_ref")
+        != "model-snapshot-first-world-model-answer@1.2.2"
+        or freeze.get("prompt_ref")
+        != "java-source-semantics-world-model-prompt@3"
+        or freeze.get("proposal_vocabulary_ref")
+        != "java-source-semantics-world-model-vocabulary@3"
+        or freeze.get("capability_qualification_document_digest")
+        != binding.qualification_document_digest.value
+        or freeze.get("closed_capability_result_digest")
+        != binding.closed_capability_result_digest.value
+        or freeze.get("egress_policy_digest")
+        != JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
+        or freeze.get("conformance_result_digest")
+        != _EXPECTED_PROVIDER["conformance_digest"]
+        or freeze.get("production_activation") != "NOT_EXECUTED"
+        or freeze.get("document_digest")
+        != digest_of(
+            [_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA, freeze_core]
+        ).value
+    ):
+        raise ValueError(
+            "source-semantics Gateway freeze is not an exact qualified authority"
+        )
+    permission_digest = _digest_text(
+        freeze.get("permission_digest"),
+        "source-semantics Gateway permission digest",
+    )
+    expected_provider = dict(_EXPECTED_PROVIDER)
+    expected_provider["qualification_digest"] = (
+        binding.capability_qualification_digest.value
+    )
+    qualification = {
+        "capability_qualification_ref": binding.capability_qualification_ref,
+        "capability_qualification_digest": (
+            binding.capability_qualification_digest.value
+        ),
+        "capability_qualification_document_digest": (
+            binding.qualification_document_digest.value
+        ),
+        "closed_capability_result_digest": (
+            binding.closed_capability_result_digest.value
+        ),
+        "conformance_result_ref": _text(
+            freeze.get("conformance_result_ref"),
+            "source-semantics Gateway conformance result reference",
+        ),
+        "conformance_result_digest": _digest_text(
+            freeze.get("conformance_result_digest"),
+            "source-semantics Gateway conformance result digest",
+        ),
+        "java_source_semantics_gateway_freeze_digest": _digest_text(
+            freeze.get("document_digest"),
+            "source-semantics Gateway freeze digest",
+        ),
+        "permission_digest": permission_digest,
+    }
+    return expected_provider, qualification
+
+
+def _gateway_call_count(gateway_input: Path) -> int:
+    freeze = _load_json(gateway_input / "g3b-freeze.json")
+    if freeze.get("schema") == _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return 3
+    if freeze.get("schema") in {
+        _LEGACY_GATEWAY_FREEZE_SCHEMA,
+        _JAVA_GATEWAY_FREEZE_SCHEMA,
+    }:
+        return 1
+    raise ValueError("qualified Gateway freeze schema is unsupported")
+
+
+def _gateway_qualification_binding_field(gateway_input: Path) -> str | None:
+    freeze = _load_json(gateway_input / "g3b-freeze.json")
+    schema = freeze.get("schema")
+    if schema == _LEGACY_GATEWAY_FREEZE_SCHEMA:
+        return None
+    if schema == _JAVA_GATEWAY_FREEZE_SCHEMA:
+        return "java_capability_qualification"
+    if schema == _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return "java_source_semantics_capability_qualification"
+    raise ValueError("qualified Gateway freeze schema is unsupported")
+
+
+def _dispatch_policy(provider_call_count: int) -> str:
+    if provider_call_count == 1:
+        return _ONE_CALL_DISPATCH_POLICY
+    if provider_call_count == 3:
+        return _SOURCE_SEMANTICS_DISPATCH_POLICY
+    raise ValueError("qualified Gateway provider call count is unsupported")
+
+
 def _launcher_files() -> Mapping[str, Path]:
     interface = Path(__file__).resolve(strict=True).parent
     return {
@@ -962,6 +1125,12 @@ def _launcher_files() -> Mapping[str, Path]:
         ),
         "runtime_assets/java_gateway_workload.py": (
             ASSET_ROOT / "java_gateway_workload.py"
+        ),
+        "runtime_assets/java_source_semantics_gateway_workload.py": (
+            ASSET_ROOT / "java_source_semantics_gateway_workload.py"
+        ),
+        "runtime_assets/java_source_semantics_answer_workload.py": (
+            ASSET_ROOT / "java_source_semantics_answer_workload.py"
         ),
         "runtime_assets/projector.sb": ASSET_ROOT / "projector.sb",
         "runtime_assets/role_worker.py": ASSET_ROOT / "role_worker.py",
@@ -1074,7 +1243,10 @@ def _outer_reachability(
                 "root_pom_digest": _sha256_file(source_probe),
             }
             profile_document: dict[str, object] = {}
-        elif profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        elif profile_ref in {
+            JAVA_STATIC_CALL_PROFILE_REF,
+            JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+        }:
             source_root = _canonical_directory(
                 repository / logical_root,
                 "Workspace Java source root",
@@ -1231,20 +1403,37 @@ def _run_one(
     socket_root = socket_stage_root / f"{index:02d}"
     socket_root.mkdir(mode=0o700)
     gateway_socket = socket_root / "gateway.sock"
-    connected, provisioning = _provision_provider_socket(provider_address)
+    gateway_call_count = _gateway_call_count(gateway_input)
+    connected_with_receipts = tuple(
+        _provision_provider_socket(provider_address)
+        for _ in range(gateway_call_count)
+    )
+    connections = tuple(item[0] for item in connected_with_receipts)
+    provisionings = tuple(item[1] for item in connected_with_receipts)
     try:
         gateway_listener, listener_provisioning = _provision_gateway_listener(
             gateway_socket
         )
     except BaseException:
-        connected.close()
+        for connection in connections:
+            connection.close()
         raise
-    connection_fd = connected.fileno()
+    connection_fds = tuple(connection.fileno() for connection in connections)
     listener_fd = gateway_listener.fileno()
     try:
+        provisioning_document = (
+            provisionings[0]
+            if gateway_call_count == 1
+            else {
+                "schema": "SWM-PROVIDER-CONNECTION-SET@1",
+                "connection_count": gateway_call_count,
+                "connections": provisionings,
+                "production_activation": "NOT_EXECUTED",
+            }
+        )
         _write_new(
             evaluator_root / "connection-provisioning.json",
-            canonical_json_bytes(provisioning),
+            canonical_json_bytes(provisioning_document),
         )
         _write_new(
             evaluator_root / "gateway-listener-provisioning.json",
@@ -1254,7 +1443,8 @@ def _run_one(
             gateway_output, credential=_required_credential()
         )
     except BaseException:
-        connected.close()
+        for connection in connections:
+            connection.close()
         gateway_listener.close()
         gateway_socket.unlink(missing_ok=True)
         raise
@@ -1278,7 +1468,12 @@ def _run_one(
         "--socket-path", str(gateway_socket),
         "--gateway-listener-socket-fd", str(listener_fd),
         "--numeric-provider-address", provider_address,
-        "--connected-provider-socket-fd", str(connection_fd),
+    ]
+    for connection_fd in connection_fds:
+        gateway_argv.extend(
+            ("--connected-provider-socket-fd", str(connection_fd))
+        )
+    gateway_argv.extend([
         "--database", str(gateway_output / "model-gateway.sqlite3"),
         "--conformance-result", str(gateway_input / "conformance.json"),
         "--capability-qualification", str(gateway_input / "qualification.json"),
@@ -1295,8 +1490,8 @@ def _run_one(
         "--transport-audit-output", str(gateway_output / "transport-audit.jsonl"),
         "--summary-output", str(gateway_summary),
         "--startup-timeout-seconds", "30",
-        "--idle-timeout-seconds", "0.25",
-    ]
+        "--idle-timeout-seconds", "5.0" if gateway_call_count == 3 else "0.25",
+    ])
     gateway_policy = _audit_policy(
         role="gateway",
         package_root=packages["gateway"],
@@ -1334,15 +1529,17 @@ def _run_one(
             env=gateway_environment,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            pass_fds=(connection_fd, listener_fd),
+            pass_fds=(*connection_fds, listener_fd),
         )
     except BaseException:
-        connected.close()
+        for connection in connections:
+            connection.close()
         gateway_listener.close()
         gateway_socket.unlink(missing_ok=True)
         raise
     else:
-        connected.close()
+        for connection in connections:
+            connection.close()
         gateway_listener.close()
 
     failure_stage: str | None = None
@@ -1444,8 +1641,16 @@ def _run_one(
         gateway_value = _load_json(gateway_summary)
         postcondition_phase = "ROLE_POSTCONDITION"
         try:
-            _verify_role_success(answer_report, "answer")
-            _verify_role_success(gateway_report, "gateway")
+            _verify_role_success(
+                answer_report,
+                "answer",
+                expected_unix_connect_count=gateway_call_count,
+            )
+            _verify_role_success(
+                gateway_report,
+                "gateway",
+                expected_unix_connect_count=0,
+            )
             _verify_answer_gateway(
                 answer_value,
                 gateway_value,
@@ -1492,7 +1697,7 @@ def _run_one(
         "failure_stage": failure_stage,
         "attempt_count": 1,
         "selective_retry_count": 0,
-        "provider_connection_handoff_count": 1,
+        "provider_connection_handoff_count": gateway_call_count,
         "gateway_listener_handoff_count": 1,
         "gateway_listener_provisioning": _file_reference(
             evaluator_root / "gateway-listener-provisioning.json"
@@ -1659,7 +1864,11 @@ def _project_all_citations(
         _preserve_process_streams(evaluator_root, "projector", completed)
         if completed.returncode != 0:
             raise RuntimeError("sandboxed Citation Projector failed")
-        _verify_role_success(report, "projector")
+        _verify_role_success(
+            report,
+            "projector",
+            expected_unix_connect_count=0,
+        )
         projection_value = _load_json(projection)
         materialization_value = _load_json(materialization)
         if (
@@ -2174,20 +2383,32 @@ def _role_environment(
     return value
 
 
-def _verify_role_success(path: Path, role: str) -> Mapping[str, object]:
+def _verify_role_success(
+    path: Path,
+    role: str,
+    *,
+    expected_unix_connect_count: int,
+) -> Mapping[str, object]:
     value = _load_json(path)
     audit = value.get("operation_audit")
+    if (
+        role not in {"answer", "gateway", "projector"}
+        or type(expected_unix_connect_count) is not int
+        or expected_unix_connect_count < 0
+        or (role != "answer" and expected_unix_connect_count != 0)
+    ):
+        raise ValueError("role network expectation is invalid")
     expected_network = {
-        "answer": {"unix_connect": 1, "unix_bind": 0, "provider_connect": 0},
-        "gateway": {"unix_connect": 0, "unix_bind": 0, "provider_connect": 0},
-        "projector": {"unix_connect": 0, "unix_bind": 0, "provider_connect": 0},
+        "unix_connect": expected_unix_connect_count,
+        "unix_bind": 0,
+        "provider_connect": 0,
     }
     if (
         value.get("status") != "PASS"
         or value.get("role") != role
         or not isinstance(audit, dict)
         or audit.get("status") != "PASS"
-        or audit.get("allowed_network_operations") != expected_network[role]
+        or audit.get("allowed_network_operations") != expected_network
         or any(audit.get("prohibited_counts", {}).values())
     ):
         raise RuntimeError(f"{role} normal workload audit failed")
@@ -2222,11 +2443,17 @@ def _verify_answer_gateway(
     gateway_core = {
         key: value for key, value in gateway.items() if key != "document_digest"
     }
+    baseline = gateway.get("qualified_gateway_baseline")
+    if not isinstance(baseline, Mapping):
+        raise RuntimeError("qualified Gateway baseline is invalid")
+    semantic = "source_semantics_capability_freeze_digest" in baseline
+    expected_calls = 3 if semantic else 1
+    expected_statuses = ["RESULT"] * expected_calls
     if (
         answer.get("status") != "PASS"
         or answer.get("run_ref") != run_key
-        or answer.get("provider_call_count") != 1
-        or answer.get("network_operation_count") != 1
+        or answer.get("provider_call_count") != expected_calls
+        or answer.get("network_operation_count") != expected_calls
         or answer.get("source_access_count") != 0
         or answer.get("evidence_payload_access_count") != 0
         or answer.get("authority_database_access_count") != 0
@@ -2246,12 +2473,11 @@ def _verify_answer_gateway(
         != disclosure_authorization_digest
         or gateway.get("authorization_receipt_digest")
         != authorization_receipt_digest
-        or gateway.get("qualified_gateway_baseline", {}).get("role")
-        != "QUALIFIED_CAPABILITY_BASELINE_ONLY"
+        or baseline.get("role") != "QUALIFIED_CAPABILITY_BASELINE_ONLY"
         or gateway.get("status") != "PASS"
-        or gateway.get("provider_call_count") != 1
-        or gateway.get("https_dispatch_count") != 1
-        or gateway.get("server_statuses") != ["RESULT"]
+        or gateway.get("provider_call_count") != expected_calls
+        or gateway.get("https_dispatch_count") != expected_calls
+        or gateway.get("server_statuses") != expected_statuses
         or gateway.get("dns_operation_count_in_dispatch_process") != 0
         or gateway.get("credential_value_recorded") is not False
         or gateway.get("provider_connection_capability")

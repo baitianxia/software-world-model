@@ -543,6 +543,7 @@ class SqliteMavenStructureUpdateRepository:
                 not in {
                     ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
                     ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE,
+                    ArtifactUsePurpose.JAVA_SOURCE_SEMANTICS_EVIDENCE_PERSISTENCE,
                 }
                 or confirmation.downstream_request_ref != attempt_id.value
                 or confirmation.downstream_request_digest
@@ -675,6 +676,7 @@ class SqliteMavenStructureUpdateRepository:
             not in {
                 ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE,
                 ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE,
+                ArtifactUsePurpose.JAVA_SOURCE_SEMANTICS_EVIDENCE_PERSISTENCE,
             }
             or persisted_artifact_use.downstream_request_ref != attempt_id.value
             or persisted_artifact_use.downstream_request_digest

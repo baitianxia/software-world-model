@@ -192,6 +192,40 @@ class PinnedArkHTTPSTests(unittest.TestCase):
         self.assertIsNone(inherited.target)
         self.assertEqual(credential_reads, 1)
 
+    def test_three_inherited_sockets_support_three_isolated_dispatches(self) -> None:
+        contexts = _TLSContext()
+        inherited = [_RawSocket(), _RawSocket(), _RawSocket()]
+        transport = PinnedIPVolcengineArkChatTransport(
+            numeric_address="8.8.8.8",
+            api_key_resolver=lambda: "secret",
+            connected_socket_fds=(17, 18, 19),
+            tls_context=contexts,
+        )
+        with (
+            patch(
+                "software_world_model.ai_infrastructure.pinned_ark_https.socket.socket",
+                side_effect=inherited,
+            ) as constructor,
+            patch(
+                "software_world_model.ai_infrastructure.pinned_ark_https.http.client.HTTPResponse",
+                _HTTPResponse,
+            ),
+        ):
+            for ordinal in range(3):
+                transport.post_json(
+                    endpoint=DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
+                    body=b"{}",
+                    client_request_id=f"swm-inherited-{ordinal}",
+                    timeout_milliseconds=1000,
+                )
+
+        self.assertEqual(
+            [item.kwargs["fileno"] for item in constructor.call_args_list],
+            [17, 18, 19],
+        )
+        self.assertTrue(all(item.target is None for item in inherited))
+        self.assertEqual(transport.provider_call_count, 3)
+
     def test_wrong_inherited_peer_is_rejected_before_credential_resolution(self) -> None:
         credential_reads = 0
 

@@ -132,6 +132,8 @@ class WorldModelBrowserTests(unittest.TestCase):
         self.assertIn("WORLD_MODEL", html)
         self.assertIn("EVALUATION_ONLY", html)
         self.assertIn("自由提问", html)
+        self.assertIn("Plan → Draft → Review · 3 次模型调用", html)
+        self.assertNotIn("1 次模型调用", html)
         self.assertNotIn("repository_path", html)
         self.assertIn("/v1/world-model/questions", javascript)
         self.assertNotIn("/v1/browser/chat", javascript)

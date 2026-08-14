@@ -26,6 +26,8 @@ from software_world_model.ai_infrastructure import (
     RuntimeAccessMode,
     UnixSocketModelGatewayClient,
     QualifiedJavaModelEgressGatewayPolicy,
+    QualifiedJavaSourceSemanticsModelEgressGatewayPolicy,
+    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
     WorldModelCapabilityStrategy,
     WorldModelStrategyConfiguration,
@@ -150,6 +152,37 @@ class _FixtureGateway:
 
 
 class ModelEgressGatewayTests(unittest.TestCase):
+    def semantic_policy(
+        self, *, valid_until=None
+    ) -> QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
+        return QualifiedJavaSourceSemanticsModelEgressGatewayPolicy(
+            policy_ref=(
+                "ITER-007-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.0.2"
+            ),
+            policy_digest=Digest(
+                "sha256:9e4e3dcbb0584b2574bfa71c5e31275e5496255e0ce41cdc5fc8f05e18e243b5"
+            ),
+            provider_type="VOLCENGINE_ARK",
+            adapter_version="openai-chat-completions-no-tools@8",
+            model_ref="glm-5-2-260617",
+            provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+            endpoint=(
+                "https://ark.cn-beijing.volces.com:443/"
+                "api/coding/v3/chat/completions"
+            ),
+            credential_reference="env:ARK_API_KEY",
+            conformance_result_ref=_CONFORMANCE_REF,
+            capability_qualification_ref=(
+                "capability-evaluation:evaluation_result_"
+                "77777777777777777777777777777777"
+            ),
+            capability_qualification_digest=Digest("sha256:" + "7" * 64),
+            closed_capability_result_digest=Digest("sha256:" + "8" * 64),
+            qualification_valid_until=(
+                valid_until or datetime.now(timezone.utc) + timedelta(days=1)
+            ),
+        )
+
     def java_policy(self, *, valid_until=None) -> QualifiedJavaModelEgressGatewayPolicy:
         return QualifiedJavaModelEgressGatewayPolicy(
             policy_ref="ITER-006-JAVA-MODEL-EGRESS-GATEWAY@1.0.0",
@@ -270,6 +303,43 @@ class ModelEgressGatewayTests(unittest.TestCase):
         assert capture.context is not None
         return capture.context
 
+    def semantic_context(self, capability: str) -> ModelExecutionContext:
+        class Capture:
+            context: ModelExecutionContext | None = None
+
+            def invoke(self, context):
+                self.context = context
+                raise RuntimeError("captured")
+
+        capture = Capture()
+        strategy = WorldModelCapabilityStrategy(
+            capture,
+            WorldModelStrategyConfiguration(
+                provider_type="VOLCENGINE_ARK",
+                adapter_version="openai-chat-completions-no-tools@8",
+                model_ref="glm-5-2-260617",
+                provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+                qualification_ref=_QUALIFICATION_REF,
+            ),
+            proposal_contract=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
+        )
+        available_operations = (
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            if capability == "IMPLEMENTATION_QUERY_PLANNING"
+            else ()
+        )
+        with self.assertRaisesRegex(RuntimeError, "captured"):
+            strategy.propose(
+                case_id=f"product:semantic-{capability.casefold()}",
+                capability=capability,
+                sealed_input={"role": capability},
+                available_operations=available_operations,
+            )
+        assert capture.context is not None
+        return capture.context
+
     def test_java_policy_accepts_only_newly_qualified_contract(self) -> None:
         java_context = self.java_context()
 
@@ -291,6 +361,29 @@ class ModelEgressGatewayTests(unittest.TestCase):
             policy.validate_context(self.java_context())
 
         self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
+
+    def test_java_source_semantics_policy_enforces_exact_three_call_order(self) -> None:
+        policy = self.semantic_policy()
+        for capability in (
+            "IMPLEMENTATION_QUERY_PLANNING",
+            "IMPLEMENTATION_ANSWER_DRAFTING",
+            "IMPLEMENTATION_ANSWER_REVIEW",
+        ):
+            policy.validate_context(self.semantic_context(capability))
+
+        with self.assertRaises(DomainError) as fourth:
+            policy.validate_context(
+                self.semantic_context("IMPLEMENTATION_ANSWER_REVIEW")
+            )
+        with self.assertRaises(DomainError) as out_of_order:
+            self.semantic_policy().validate_context(
+                self.semantic_context("IMPLEMENTATION_ANSWER_DRAFTING")
+            )
+
+        self.assertEqual(fourth.exception.code, ErrorCode.QUALIFICATION_INVALID)
+        self.assertEqual(
+            out_of_order.exception.code, ErrorCode.QUALIFICATION_INVALID
+        )
 
     def test_round_trip_binds_request_result_and_audits(self) -> None:
         fixture_gateway = _FixtureGateway()

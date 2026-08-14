@@ -1,0 +1,57 @@
+{
+  "schema": "swm.iter-007.java-source-semantics-model-egress-gateway-policy@1",
+  "policy_ref": "ITER-007-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.0.2",
+  "default_action": "DENY",
+  "environment": "EVALUATION_ONLY",
+  "provider": {
+    "provider_type": "VOLCENGINE_ARK",
+    "adapter_version": "openai-chat-completions-no-tools@8",
+    "requested_model_ref": "glm-5-2-260617",
+    "actual_model_fingerprint": "glm-5.2",
+    "configuration_fingerprint": "sha256:420f553a3ce0075818550e08cb1351ce69eaf9871c5a0257aecf88b7b32b88fd",
+    "endpoint": "https://ark.cn-beijing.volces.com:443/api/coding/v3/chat/completions",
+    "credential_reference": "env:ARK_API_KEY"
+  },
+  "proposal_contract": {
+    "capability_id": "world-model-authority-proposal",
+    "capability_contract_version": "1.2.2",
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.2.2",
+    "prompt_ref": "java-source-semantics-world-model-prompt@3",
+    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@3",
+    "available_operations": [
+      "implementation_candidates",
+      "method_implementation"
+    ],
+    "call_protocol": [
+      "IMPLEMENTATION_QUERY_PLANNING",
+      "IMPLEMENTATION_ANSWER_DRAFTING",
+      "IMPLEMENTATION_ANSWER_REVIEW"
+    ]
+  },
+  "qualification_requirements": {
+    "closed_result_status": "PASS_VALID",
+    "required_case_count": 12,
+    "failure_count": 0,
+    "unknown_count": 0,
+    "qualification_kind": "CAPABILITY_EVALUATION",
+    "validity_status": "VALID",
+    "policy_drift_invalidates_qualification": true
+  },
+  "roles": {
+    "answer": {
+      "credential_visibility": "FORBIDDEN",
+      "dns": "DENY",
+      "inet": "DENY",
+      "inet6": "DENY",
+      "allowed_outbound": "EXACT_PREBOUND_AF_UNIX_GATEWAY_ONLY"
+    },
+    "model_egress_gateway": {
+      "credential_visibility": "GATEWAY_ONLY_AT_FINAL_HTTPS_DISPATCH",
+      "allowed_inbound": "EXACT_PREBOUND_AF_UNIX_ANSWER_ONLY",
+      "allowed_outbound": "EXACT_INHERITED_CONNECTED_TLS_SOCKET_ONLY",
+      "endpoint_validation": "EXACT_SCHEME_HOST_PORT_PATH_NO_USERINFO_QUERY_OR_FRAGMENT",
+      "other_outbound": "DENY"
+    }
+  },
+  "production_activation": "NOT_EXECUTED"
+}

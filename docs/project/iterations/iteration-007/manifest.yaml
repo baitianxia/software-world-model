@@ -1,42 +1,50 @@
 schema_version: 1
 iteration:
   id: ITER-007
-  status: proposed
+  status: rejected
   outcome_scope: java-source-semantics-general-source-qa-first-cumulative-slice
 
 baseline:
-  commit: bc0ecefb806c946f9c2b5938470be18ec780115b
-  dirty_worktree_allowed: true
-  relation: planning-anchor-only-replace-after-iteration-006-acceptance
+  commit: 8f305ed396899c8f8e5d175fe7fcecb6ceb48f3f
+  tree: 89d645c17f739f40dcbfcc0c03a2d41a503b9611
+  dirty_worktree_allowed: false
+  relation: accepted-iteration-006-implementation-and-documentation-baseline
 
 product_goal_alignment:
   target_ref: SYS-PRODUCT-SUCCESS
+  capability_path_ref: ROADMAP-M-002
+  capability_path_step: step-1-java-result-driven-world-model-investigation
+  predecessor_result_refs:
+    - ITER-005-RESULT-ACCEPTANCE
+    - ITER-006-RESULT-ACCEPTANCE
+  end_of_iteration_web_capability: free-java-implementation-questions-answered-from-prebuilt-world-model
+  next_blocking_gap: common-java-real-project-breadth-after-result-driven-investigation
   baseline_gap: java-world-model-has-declarations-and-calls-but-no-method-implementation-feature-discovery-or-general-query
   accepted_capability_refs:
     - ITER-005-RESULT-ACCEPTANCE
-  anticipated_accepted_capability_refs:
     - ITER-006-RESULT-ACCEPTANCE
   new_capability_slice_refs:
     - ITER-007-SLICE-001
     - ITER-007-SLICE-002
     - ITER-007-SLICE-003
-  held_out_free_question_delta: pending-independent-baseline-and-target-freeze
-  held_out_evaluation_owner: independent-evaluator
+  evaluation_input_mode: user-held-live-after-product-code-freeze
+  held_out_free_question_delta: measured-from-user-live-questions-after-product-code-freeze
+  held_out_evaluation_owner: user
   implementation_question_visibility: hidden
   implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
-  visible_development_corpus_digest: pending
-  evaluation_project_manifest_digest: pending
-  held_out_suite_digest: pending
-  baseline_result_digest: pending
-  mature_source_agent_protocol_digest: pending
-  authorized_software_sources_digest: pending
+  visible_development_corpus_digest: sha256:601849dae8d3e48479f0d9127e23dd2cad27d283e09562550f22443b7868b0aa
+  evaluation_project_manifest_digest: user-held-not-disclosed
+  held_out_suite_digest: user-held-not-disclosed
+  baseline_result_digest: user-held-not-disclosed
+  mature_source_agent_protocol_digest: user-held-not-disclosed
+  authorized_software_sources_digest: user-held-not-disclosed
   held_out_question_count: 16
   held_out_answerable_question_count: 12
   held_out_boundary_question_count: 4
   held_out_answerable_without_symbol_count_minimum: 6
   held_out_answerable_without_symbol_per_project_minimum: 2
-  held_out_baseline_supported_count: pending
-  held_out_target_supported_count: pending-min-12-max-baseline-plus-4-or-8
+  held_out_baseline_supported_count: measured-after-product-code-freeze
+  held_out_target_supported_count: measured-after-product-code-freeze
   supported_count_denominator: answerable-only
   boundary_gap_counted_as_supported: false
   cross_domain_cases:
@@ -66,6 +74,11 @@ product_goal_alignment:
     - V-ADHOC-001
     - V-009
   readiness_blocking_case_ids:
+    - V-PRE-001
+    - V-PRE-002
+    - V-PRE-003
+    - V-PRE-004
+    - V-PRE-005
     - V-PRE-006
   cross_domain_case_count: 3
   cross_domain_bindings:
@@ -99,19 +112,19 @@ product_goal_alignment:
     slice_001:
       case_id: V-CANARY-001
       new_slice_ref: ITER-007-SLICE-001
-      project_manifest_digest: pending
-      suite_digest: pending
-      evaluation_owner: independent-evaluator
+      project_manifest_digest: user-held-not-disclosed
+      suite_digest: user-held-not-disclosed
+      evaluation_owner: user
       implementation_visibility: hidden-until-slice-code-freeze
-      burn_rule: product-change-after-exposure-burns-canary-and-preserves-failure
+      burn_rule: product-change-between-disclosure-and-slice-result-seal-burns-canary-and-preserves-result
     slice_002:
       case_id: V-CANARY-002
       new_slice_ref: ITER-007-SLICE-002
-      project_manifest_digest: pending
-      suite_digest: pending
-      evaluation_owner: independent-evaluator
+      project_manifest_digest: user-held-not-disclosed
+      suite_digest: user-held-not-disclosed
+      evaluation_owner: user
       implementation_visibility: hidden-until-slice-code-freeze
-      burn_rule: product-change-after-exposure-burns-canary-and-preserves-failure
+      burn_rule: product-change-between-disclosure-and-slice-result-seal-burns-canary-and-preserves-result
   live_ad_hoc_question_checkpoint: V-ADHOC-001
   live_ad_hoc_checkpoint_binding:
     case_id: V-ADHOC-001
@@ -133,7 +146,7 @@ source_scope:
   provider: LOCAL_GIT
   content_kind: java-source
   contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
-  authorized_software_sources_digest: pending
+  authorized_software_sources_digest: user-held-not-disclosed
   question_or_suite_driven_update_allowed: false
   verification_case_ids:
     - V-002
@@ -152,7 +165,9 @@ answer_protocol:
   deterministic_schema_grounding_and_authorization_checks: true
   retries_allowed: false
   exact_total_model_calls_per_question: 3
-  status: pending
+  status: frozen
+  implementation_status: run-004-live-technical-pass-product-fail-iteration-rejected
+  capability_qualification_status: pass-valid-run-003-before-v-web-001
 
 readiness_inputs:
   required_system_contract_refs:
@@ -164,27 +179,60 @@ readiness_inputs:
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
   no_payload_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
   answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
-  system_contract_set_digest: pending
+  system_contract_set_schema: ITER-007-SYSTEM-CONTRACT-SET@1
+  system_contract_set_paths:
+    - docs/system/architecture/decisions/ADR-005-derived-views-are-non-authoritative.md
+    - docs/system/architecture/domain-model.md
+    - docs/system/architecture/runtime-flows.md
+    - docs/system/contracts/application/implementation-query.md
+    - docs/system/contracts/application/knowledge-update.md
+    - docs/system/contracts/application/knowledge-use.md
+    - docs/system/contracts/application/world-model-answering.md
+    - docs/system/contracts/knowledge/java-source-semantics.md
+    - docs/system/operations/local-browser.md
+    - docs/system/quality/security-boundaries.md
+  system_contract_set_digest: sha256:e8b4dfbcb10397a59f10dc3f2a6ab6b7f5155843516540a3fc06b4c09209fb84
   java_frontend:
-    artifact_ref: pending
-    version: pending
-    license_ref: pending
-    offline_artifact_digest: pending
-    canonicalization_oracle_digest: pending
-    information_preservation_oracle_digest: pending
-    information_boundary_oracle_digest: pending
-  hidden_freeze_protocol_digest: pending
+    artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
+    version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
+    runtime_version: tree-sitter==0.25.2
+    grammar_version: tree-sitter-java==0.23.5
+    language_abi: 14
+    license_ref: MIT
+    runtime_license_digest: sha256:1af0790543fffac99dd3bd290bf83ca963f4f8029065eb6f35638f4df863ae8e
+    grammar_license_digest: sha256:52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7
+    runtime_fileset_digest: sha256:86952fb273226021793f76c972d782b66c308d3ef8d20a4df4dd5ad6d31ec45c
+    grammar_fileset_digest: sha256:33106942ffed3b3df935320ac8ac9499e453ce66730a2130ba81b2dffef7c9dc
+    offline_artifact_digest: sha256:45b49edd3dbaaec472533c13a4a6d1e3e0eab6a3be2d1529685bdca5560e65b3
+    canonicalization_oracle_digest: sha256:edfb7ead08c137a9f47e37571de0d9b8f3ee7417278c84ed186a043c271122ff
+    information_preservation_oracle_digest: sha256:1751646fcdebd64798495a2b29811acc8bf058c37cf41e549201e876e498f67c
+    information_boundary_oracle_digest: sha256:5699efa859e716e208279675bb452a133c8ae87d6742cfc19b66f1626762b6a4
+    legacy_calls_consistency_oracle_digest: sha256:f1242a198afdf4d3cec425f1c715c094578cfaa9a70ed7798094afaf26b240f3
+    readiness_oracle_result_digest: sha256:0c946655de2b6daadf670d7c0a9f5f57b11f7a0ba04fde53a1f8940338f09f2f
+    readiness_oracle_result_path: var/iteration-007/readiness/oracle-result.json
+  hidden_freeze_protocol_digest: sha256:9aeb6a54309d669d197d777bbcaa33d2d9a78d2c645789dfc82ec74fb7845a79
 
 development:
   slices:
     ITER-007-SLICE-001:
-      status: proposed
+      status: blocked
       coding_input: false
-      result: not-executed
-      product_code_freeze_digest: not-executed
-      authorized_by: not-authorized
-      authorized_at: not-authorized
-      authorization_ref: not-authorized
+      result: ITER-007-RESULT-SLICE-001-STOP-DECISION
+      product_code_freeze_digest: sha256:07f3431e919706f3c9a6fbe601906d7dd2c5532b53032b3fbefb5702cef725fe
+      product_code_freeze_status: preserved-product-fail-run-004
+      replacement_product_code_freeze_digest: sha256:07f3431e919706f3c9a6fbe601906d7dd2c5532b53032b3fbefb5702cef725fe
+      prior_failed_product_code_freeze_digest: sha256:1f3f79084ccc2feeaf6fb03c7d807c153e11d62f8316ff8945e477d0c7027bfc
+      prior_live_failed_product_code_freeze_digest: sha256:f47fe21bdd0b56be39434dd973ef9adb5364bedf0b54f73511235b931f418cbb
+      candidate_stage_manifest_digest: sha256:1b83463f83255767415ec94be78cb972d6c2820431157e61ca5668515a6635eb
+      frozen_producer_commit: 93a45888b9028bd793752839d54078ceae6eb219
+      frozen_producer_tree: 260bc4b334ded3cd7bc24fcf0ae84842b6f6e33e
+      live_question_status: run-004-technical-pass-product-fail-stop-redirect
+      live_evaluation_grant_digest: sha256:b59997736d703c960a88e74e6eae5493c88e928fc9cb902473a1b89db91ea57f
+      live_startup_receipt_digest: sha256:2623f83ea77ccc20251f557fad6aee9b12392dbeb639b5c6edab522f65fc19bd
+      live_authorization_ref: codex-user-message:sha256:739db790b45938601e16258a47a5c1f616751e6e827935b163986a76202aee6e
+      authorized_by: user
+      authorized_at: 2026-08-13T16:01:15+08:00
+      authorization_ref: codex-user-message:sha256:68df2434a0e31c7996d57ce124d1e3b309f08705cd7e508537c82dbac4de8147
     ITER-007-SLICE-002:
       status: proposed
       coding_input: false
@@ -204,9 +252,16 @@ development:
 
 external_inputs:
   hidden_evaluation:
-    status: pending
-    implementation_visibility: project-identity-source-and-questions-hidden-until-code-freeze
-    burn_rule: any-product-change-after-exposure-requires-new-projects-and-new-questions
+    status: user-held-live-not-disclosed
+    custody_mode: user-holds-questions-until-product-code-freeze
+    external_runner_required_before-coding: false
+    required_before-slice-result: true
+    public_receipt_schema: SWM-ITER-007-HIDDEN-FREEZE-PUBLIC-RECEIPT@1
+    public_blocked_receipt_digest: sha256:19f83d96631897d2f8be98192bab604e5e925e9f61e264ee839b155ecb934c7e
+    hidden_payload_materialized: false
+    baseline_execution_status: NOT_EXECUTED
+    implementation_visibility: user-questions-hidden-until-product-code-freeze
+    burn_rule: product-change-between-disclosure-and-result-seal-requires-new-capsule
   live_model_disclosure:
     status: not-authorized
     production_activation: NOT_EXECUTED
@@ -217,7 +272,7 @@ verification:
 
 authorization:
   readiness_review_id: ITER-007-READINESS
-  authorized_by: pending
-  authorized_at: pending
-  authorization_ref: pending
+  authorized_by: user
+  authorized_at: 2026-08-13T16:01:15+08:00
+  authorization_ref: codex-user-message:sha256:68df2434a0e31c7996d57ce124d1e3b309f08705cd7e508537c82dbac4de8147
   active_slice: none

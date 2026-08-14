@@ -5,6 +5,11 @@ from __future__ import annotations
 import json
 
 from software_world_model.cross_cutting import canonical_json_bytes
+from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+    JAVA_STATIC_CALL_PROFILE_REF,
+    MAVEN_STRUCTURE_PROFILE_REF,
+)
 
 
 def management_execution_payload(execution: object) -> dict[str, object]:
@@ -170,9 +175,7 @@ def maven_workspace_update_payload(result: object) -> dict[str, object]:
         if result.snapshot_owner_result is not None
         else None
     )
-    java_profile = (
-        result.workspace.knowledge_profile_ref == "JAVA_STATIC_CALL_GRAPH@1"
-    )
+    java_profile = result.workspace.knowledge_profile_ref != MAVEN_STRUCTURE_PROFILE_REF
     return {
         "workflow": (
             "STRUCTURE_WORKSPACE_FULL_REBUILD@1"
@@ -644,8 +647,12 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
     registration = interface_result.schema_registration
     availability = interface_result.schema_availability
     adoption = interface_result.schema_adoption
-    java_profile = coverage.root.profile_ref == "JAVA_STATIC_CALL_GRAPH@1"
-    if java_profile:
+    java_static_profile = coverage.root.profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+    java_semantics_profile = (
+        coverage.root.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+    )
+    java_profile = java_static_profile or java_semantics_profile
+    if java_static_profile:
         build_report = {
             "complete": evaluation.report.complete,
             "schema_ref": evaluation.report.schema_ref,
@@ -666,6 +673,38 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
             "declaration_count": evaluation.report.declaration_count,
             "call_relation_count": evaluation.report.call_relation_count,
             "call_site_count": evaluation.report.call_site_count,
+            "digest": result.build_report_digest.value,
+        }
+    elif java_semantics_profile:
+        build_report = {
+            "complete": evaluation.report.complete,
+            "schema_ref": evaluation.report.schema_ref,
+            "schema_digest": evaluation.report.schema_digest.value,
+            "frontend_ref": evaluation.report.frontend_ref,
+            "frontend_digest": evaluation.report.frontend_digest.value,
+            "language_abi": evaluation.report.language_abi,
+            "evaluation_context_ref": evaluation.report.evaluation_context_ref,
+            "evaluation_context_digest": (
+                evaluation.report.evaluation_context_digest.value
+            ),
+            "canonicalization_ref": evaluation.report.canonicalization_ref,
+            "canonicalization_digest": (
+                evaluation.report.canonicalization_digest.value
+            ),
+            "source_revision": evaluation.report.source_revision,
+            "source_root": evaluation.report.source_root,
+            "source_file_count": evaluation.report.source_file_count,
+            "type_count": evaluation.report.type_count,
+            "method_count": evaluation.report.method_count,
+            "state_slot_count": evaluation.report.state_slot_count,
+            "implementation_atom_count": (
+                evaluation.report.implementation_atom_count
+            ),
+            "declaration_count": evaluation.report.declaration_count,
+            "legacy_call_relation_count": (
+                evaluation.report.legacy_call_relation_count
+            ),
+            "legacy_call_site_count": evaluation.report.legacy_call_site_count,
             "digest": result.build_report_digest.value,
         }
     else:
@@ -1054,7 +1093,11 @@ def maven_structure_update_payload(interface_result: object) -> dict[str, object
         "source_collection_digest": result.source_collection_digest.value,
         "digest": result.digest.value,
     }
-    payload["java_report" if java_profile else "maven_report"] = build_report
+    payload[
+        "java_semantics_report"
+        if java_semantics_profile
+        else ("java_report" if java_profile else "maven_report")
+    ] = build_report
     payload["audit_lines"] = _maven_structure_audit_lines(payload)
     return payload
 
@@ -1070,7 +1113,11 @@ def _maven_structure_audit_lines(payload: dict[str, object]) -> list[str]:
     verifier_assessment = payload["verifier_assessment"]
     artifact_use = payload["artifact_use"]
     coverage = payload["coverage"]
-    build_report = payload.get("java_report") or payload["maven_report"]
+    build_report = (
+        payload.get("java_semantics_report")
+        or payload.get("java_report")
+        or payload["maven_report"]
+    )
     lines = [
         (
             f"SNAPSHOT id={snapshot['snapshot_id']} revision={snapshot['revision']} "

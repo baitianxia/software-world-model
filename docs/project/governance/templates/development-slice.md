@@ -14,6 +14,7 @@ product_goal_accepted_capability_refs: []
 product_goal_cross_domain_case_ids: []
 product_goal_web_checkpoint_id: pending
 product_goal_live_ad_hoc_checkpoint_id: pending
+product_goal_reflection_gate_case_id: V-REFLECT-NNN
 product_goal_slice_gate_case_ids: []
 ---
 
@@ -22,7 +23,8 @@ product_goal_slice_gate_case_ids: []
 ## Status and dependencies
 
 同一 Iteration 有多个累积 Slice 时，本 Slice 必须依赖 accepted Readiness，并直接依赖前一个 Slice。Readiness 只授权第一个 Slice；
-后续 Slice 保持 proposed，直到前序人工 Web、独立隐藏 canary 和停止 Gate 完成并形成 Slice Result，再次获得明确授权。
+后续 Slice 保持 proposed，直到前序人工 Web、独立隐藏 canary、停止 Gate 和方案复盘完成并形成 exact Slice Result。后续授权时再把
+该 Result 加入 `depends_on`，并与 Manifest `reflection_prerequisite_result` 一致；不能先授权再补证据。
 
 ## Product-goal contribution and cumulative integration
 
@@ -30,9 +32,12 @@ product_goal_slice_gate_case_ids: []
 Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能靠孤立 CLI/View 演示宣称产品增量。
 
 - Product gap shortened: <exact-gap>
+- Product capability-path step advanced: <roadmap-step-and-user-visible-delta>
 - Existing capabilities combined: <exact-capabilities>
 - User-visible Web questions at slice end: <held-out-and-cross-domain-cases>
 - Slice stop / redirect signal: <falsifiable-signal>
+- Critical assumptions tested: <assumption-ids-and-evidence>
+- Reflection gate and success decision: <V-REFLECT-NNN-and-CONTINUE-or-ACCEPT>
 
 ## Current vs expected behavior
 
@@ -45,6 +50,14 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 ## Open questions and implementation risks
 
 ## Acceptance scenarios
+
+## Architecture reflection checkpoint
+
+本 Slice 的产品 Gate 后必须形成 exact Result，逐项比较假设与证据、分类问题、复核知识表示/查询编排/Web 产品链/验证设计、
+对照成熟方案并处置相关 Finding。`V-REFLECT-NNN PASS` 只表示复盘完成；中间 Slice 只有明确决定 `CONTINUE` 才可申请下一段授权，
+最终 Slice 只有明确决定 `ACCEPT` 才可申请 Iteration Acceptance。方案被证伪时使用 `REDIRECT` 或 `REJECT`，不得继续堆叠实现。
+Manifest 只绑定本 Slice 已到期的假设；成功决定要求这些假设全部为 `SUPPORTED`。尚未到期的假设只能记录 early signal 与下一风险，
+不能伪装成已经证明；最终 Slice 必须覆盖全部关键假设。
 
 ## Findings
 

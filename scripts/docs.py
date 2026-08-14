@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
 from dataclasses import dataclass
-from pathlib import Path
+from datetime import datetime
+from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 
@@ -59,6 +61,7 @@ MANIFEST_PENDING_RE = re.compile(
     (?:pending|"pending"|'pending')\s*$'''
 )
 PRODUCT_GOAL_ALIGNMENT_START_ITERATION = 7
+REFLECTION_GATE_START_ITERATION = 8
 ACTIVE_REQUIRED_SECTIONS = {
     "iteration-index": ("Status and authorization", "Required inputs"),
     "iteration-proposal": (
@@ -97,7 +100,33 @@ PRODUCT_GOAL_ALIGNMENT_SECTIONS = {
         "Product-goal contribution and cumulative integration",
     ),
 }
+REFLECTION_GATE_REQUIRED_SECTIONS = {
+    "iteration-proposal": ("Critical assumptions and falsification plan",),
+    "iteration-readiness": ("Architecture reflection gate readiness",),
+    "development-slice": ("Architecture reflection checkpoint",),
+}
+REFLECTION_RESULT_REQUIRED_SUBSECTIONS = (
+    "Assumption verdicts",
+    "Deviation and issue classification",
+    "Layer diagnosis and mature-source-Agent comparison",
+    "Findings, alternatives and next risk",
+    "Decision and rationale",
+)
+REFLECTION_ISSUE_CLASSES = {
+    "architecture",
+    "implementation",
+    "configuration-environment",
+    "requirement-usage",
+    "verification-design",
+    "none",
+}
+REFLECTION_ISSUE_SCOPES = {"individual", "systemic", "none"}
+REFLECTION_ASSUMPTION_VERDICTS = {"SUPPORTED", "FALSIFIED", "UNRESOLVED"}
 PRODUCT_GOAL_ALIGNMENT_MANIFEST_SCALARS = (
+    "capability_path_ref",
+    "capability_path_step",
+    "end_of_iteration_web_capability",
+    "next_blocking_gap",
     "baseline_gap",
     "held_out_free_question_delta",
     "held_out_evaluation_owner",
@@ -106,6 +135,7 @@ PRODUCT_GOAL_ALIGNMENT_MANIFEST_SCALARS = (
     "live_ad_hoc_question_checkpoint",
 )
 PRODUCT_GOAL_ALIGNMENT_MANIFEST_SEQUENCES = (
+    "predecessor_result_refs",
     "accepted_capability_refs",
     "new_capability_slice_refs",
     "cross_domain_cases",
@@ -131,6 +161,9 @@ PRODUCT_GOAL_ALIGNMENT_MANIFEST_DIGESTS = (
     "mature_source_agent_protocol_digest",
     "authorized_software_sources_digest",
 )
+USER_HELD_LIVE_EVALUATION_MODE = "user-held-live-after-product-code-freeze"
+USER_HELD_LIVE_UNDISCLOSED = "user-held-not-disclosed"
+USER_HELD_LIVE_UNMEASURED = "measured-after-product-code-freeze"
 COMPLETED_ACCEPTANCE_FIELDS = (
     "accepted_scope",
     "subject_identity",
@@ -159,11 +192,13 @@ GOAL_ALIGNED_ITERATION_STATUSES = {
     "in-progress",
     "accepted",
     "completed",
+    "rejected",
 }
 GOAL_ALIGNED_SLICE_STATUSES = {
     "authorized",
     "in-progress",
     "completed",
+    "blocked",
 }
 PRODUCT_GOAL_V000_CLAIM = (
     "本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合"
@@ -426,6 +461,37 @@ def markdown_section_body(document: Document, name: str) -> str | None:
     return "\n".join(lines) if active else None
 
 
+def markdown_subsection_body(text: str, name: str) -> str | None:
+    lines: list[str] = []
+    active = False
+    for line in text.splitlines():
+        heading = re.match(r"^#{1,3}\s+(.+?)\s*$", line)
+        if heading:
+            level = len(line) - len(line.lstrip("#"))
+            heading_name = heading.group(1).rstrip("#").strip()
+            if active and level <= 3:
+                break
+            if level == 3:
+                active = heading_name == name
+            continue
+        if active:
+            lines.append(line)
+    return "\n".join(lines) if active else None
+
+
+def has_substantive_markdown_content(text: str | None) -> bool:
+    if text is None:
+        return False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if re.fullmatch(r"\|?(?:\s*:?-+:?\s*\|)+", stripped):
+            continue
+        return True
+    return False
+
+
 def iteration_number(identifier: object) -> int | None:
     match = re.fullmatch(r"ITER-([0-9]{3,})", str(identifier).strip())
     return int(match.group(1)) if match else None
@@ -482,11 +548,18 @@ def requires_product_goal_alignment(identifier: object) -> bool:
     return number is not None and number >= PRODUCT_GOAL_ALIGNMENT_START_ITERATION
 
 
+def requires_reflection_gate(identifier: object) -> bool:
+    number = iteration_number(identifier)
+    return number is not None and number >= REFLECTION_GATE_START_ITERATION
+
+
 def active_required_sections(document: Document) -> tuple[str, ...]:
     kind = str(document.metadata.get("kind", ""))
     required = ACTIVE_REQUIRED_SECTIONS.get(kind, ())
     if requires_product_goal_alignment(document.metadata.get("iteration", "")):
         required += PRODUCT_GOAL_ALIGNMENT_SECTIONS.get(kind, ())
+    if requires_reflection_gate(document.metadata.get("iteration", "")):
+        required += REFLECTION_GATE_REQUIRED_SECTIONS.get(kind, ())
     return required
 
 
@@ -823,6 +896,538 @@ def validate_product_goal_structured_bindings(
     return errors
 
 
+def reflection_gate_bindings_by_slice(
+    alignment: dict[str, object],
+) -> dict[str, dict[str, object]]:
+    bindings = alignment.get("reflection_gate_bindings")
+    if not isinstance(bindings, dict):
+        return {}
+    by_slice: dict[str, dict[str, object]] = {}
+    for binding in bindings.values():
+        if not isinstance(binding, dict):
+            continue
+        new_slice_ref = binding.get("new_slice_ref")
+        if isinstance(new_slice_ref, str) and new_slice_ref not in by_slice:
+            by_slice[new_slice_ref] = binding
+    return by_slice
+
+
+def critical_assumption_catalog(
+    proposal: Document | None,
+) -> tuple[str | None, dict[str, str], list[str]]:
+    """Bind exact assumption statements to the proposal section that owns them."""
+
+    if proposal is None:
+        return None, {}, ["missing Proposal for critical assumption catalog"]
+    heading_count = len(
+        re.findall(
+            r"(?m)^[ ]{0,3}##[ \t]+Critical assumptions and falsification plan[ \t]*#*[ \t]*$",
+            proposal.body,
+        )
+    )
+    if heading_count != 1:
+        return None, {}, [
+            f"{proposal.relative_path}: must contain exactly one Critical assumptions and falsification plan section"
+        ]
+    section = markdown_section_body(
+        proposal, "Critical assumptions and falsification plan"
+    )
+    if not has_substantive_markdown_content(section):
+        return None, {}, [
+            f"{proposal.relative_path}: critical assumption catalog section is missing or empty"
+        ]
+    expectations: dict[str, str] = {}
+    errors: list[str] = []
+    for line in section.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or not stripped.endswith("|"):
+            continue
+        cells = [cell.strip() for cell in re.split(r"(?<!\\)\|", stripped[1:-1])]
+        if not cells:
+            continue
+        match = re.fullmatch(r"(A[1-9][0-9]*)[：:]\s*(.+)", cells[0])
+        if match is None:
+            if re.match(r"A[0-9]+(?=[\s：:]|$)", cells[0]):
+                errors.append(
+                    f"{proposal.relative_path}: malformed critical assumption row: {cells[0]}"
+                )
+            continue
+        assumption_id, statement = match.groups()
+        if assumption_id in expectations:
+            errors.append(
+                f"{proposal.relative_path}: duplicate critical assumption {assumption_id}"
+            )
+        elif len(cells) != 3 or any(
+            not value.strip()
+            or is_pending(value)
+            or is_absent_evidence(value)
+            or has_unresolved_placeholder(value)
+            for value in (statement, *cells[1:])
+        ):
+            errors.append(
+                f"{proposal.relative_path}: {assumption_id} must use the exact resolved three-column assumption schema"
+            )
+        else:
+            expectations[assumption_id] = statement.strip()
+    if not expectations:
+        errors.append(
+            f"{proposal.relative_path}: critical assumption catalog must contain A-number rows"
+        )
+    digest = "sha256:" + hashlib.sha256(section.encode("utf-8")).hexdigest()
+    return digest, expectations, errors
+
+
+def validate_planned_assumption_catalog(
+    proposal: Document | None,
+    manifest: dict[str, object],
+    label: str,
+) -> list[str]:
+    """Reject malformed or drifting assumptions while an iteration is still proposed."""
+
+    digest, expectations, errors = critical_assumption_catalog(proposal)
+    alignment = manifest.get("product_goal_alignment")
+    if not isinstance(alignment, dict):
+        return errors
+    critical_assumption_ids = resolved_assumption_ids(
+        alignment.get("critical_assumption_ids")
+    )
+    if critical_assumption_ids != list(expectations):
+        errors.append(
+            f"{label}: critical_assumption_ids must exactly match the Proposal assumption catalog order"
+        )
+    supplied_digest = alignment.get("critical_assumption_catalog_digest")
+    if supplied_digest != "not-frozen-proposal-only" and supplied_digest != digest:
+        errors.append(
+            f"{label}: proposed critical_assumption_catalog_digest must match the exact Proposal catalog or remain the proposal-only marker"
+        )
+    return errors
+
+
+def validate_early_evaluation_bindings(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+) -> list[str]:
+    """Freeze the first real falsification checkpoint before coding starts."""
+
+    errors: list[str] = []
+    expected_refs = set(new_refs[:-1])
+    if not expected_refs:
+        return errors
+    user_held_live = (
+        alignment.get("evaluation_input_mode") == USER_HELD_LIVE_EVALUATION_MODE
+    )
+    bindings = alignment.get("early_hidden_canary_bindings")
+    if not isinstance(bindings, dict) or not bindings:
+        return [
+            f"{label}: early_hidden_canary_bindings must cover every pre-final Slice"
+        ]
+
+    canary_by_case: dict[str, tuple[str, dict[str, object]]] = {}
+    seen_refs: list[str] = []
+    for binding_name, binding in bindings.items():
+        if not isinstance(binding, dict):
+            errors.append(
+                f"{label}: early_hidden_canary_bindings.{binding_name} must be a mapping"
+            )
+            continue
+        new_ref = binding.get("new_slice_ref")
+        case_id = binding.get("case_id")
+        if not isinstance(new_ref, str) or new_ref not in expected_refs:
+            errors.append(
+                f"{label}: early hidden canary must bind a pre-final Slice"
+            )
+        else:
+            seen_refs.append(new_ref)
+        if (
+            not isinstance(case_id, str)
+            or re.fullmatch(r"V-CANARY-[0-9]{3,}", case_id) is None
+        ):
+            errors.append(
+                f"{label}: early hidden canary case_id must match V-CANARY-NNN"
+            )
+        elif case_id in canary_by_case:
+            errors.append(f"{label}: early hidden canary Case IDs must be unique")
+        else:
+            if case_id not in blocking_case_ids:
+                errors.append(f"{label}: early hidden canary Case must be blocking")
+            if isinstance(new_ref, str):
+                canary_by_case[case_id] = (new_ref, binding)
+        if binding.get("evaluation_owner") not in {"independent-evaluator", "user"}:
+            errors.append(
+                f"{label}: early hidden canary must have an independent evaluation owner"
+            )
+        if binding.get("implementation_visibility") != "hidden-until-slice-code-freeze":
+            errors.append(
+                f"{label}: early hidden canary must remain hidden until Slice code freeze"
+            )
+        if binding.get("burn_rule") != (
+            "product-change-between-disclosure-and-slice-result-seal-"
+            "burns-canary-and-preserves-result"
+        ):
+            errors.append(
+                f"{label}: early hidden canary must freeze the disclosure-to-Result-seal burn rule"
+            )
+        for field in ("project_manifest_digest", "suite_digest"):
+            value = binding.get(field)
+            if not (
+                user_held_live and value == USER_HELD_LIVE_UNDISCLOSED
+            ) and (
+                not isinstance(value, str)
+                or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+            ):
+                errors.append(
+                    f"{label}: early hidden canary {field} must be an exact sha256 digest or the closed user-held undisclosed marker"
+                )
+
+        count_fields = {
+            "question_count": 3,
+            "answerable_question_count": 1,
+            "boundary_question_count": 2,
+            "bounded_absence_question_count": 1,
+            "coverage_limitation_question_count": 1,
+        }
+        for field, minimum in count_fields.items():
+            value = binding.get(field)
+            if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+                errors.append(
+                    f"{label}: early hidden canary {field} must be at least {minimum}"
+                )
+        question_count = binding.get("question_count")
+        answerable_count = binding.get("answerable_question_count")
+        boundary_count = binding.get("boundary_question_count")
+        if (
+            isinstance(question_count, int)
+            and not isinstance(question_count, bool)
+            and isinstance(answerable_count, int)
+            and not isinstance(answerable_count, bool)
+            and isinstance(boundary_count, int)
+            and not isinstance(boundary_count, bool)
+            and question_count != answerable_count + boundary_count
+        ):
+            errors.append(
+                f"{label}: early hidden canary question_count must equal answerable plus boundary counts"
+            )
+        negative_case_id = binding.get("negative_case_id")
+        if (
+            not isinstance(negative_case_id, str)
+            or re.fullmatch(r"V-NEG-EARLY-[0-9]{3,}", negative_case_id) is None
+            or negative_case_id not in blocking_case_ids
+        ):
+            errors.append(
+                f"{label}: early hidden canary negative_case_id must be a blocking V-NEG-EARLY-NNN Case"
+            )
+
+    if set(seen_refs) != expected_refs or len(seen_refs) != len(set(seen_refs)):
+        errors.append(
+            f"{label}: early hidden canaries must bind each pre-final Slice exactly once"
+        )
+
+    comparison = alignment.get("early_comparison_binding")
+    comparison_ref: str | None = None
+    comparison_canary: str | None = None
+    if not isinstance(comparison, dict):
+        errors.append(f"{label}: early_comparison_binding must be a mapping")
+    else:
+        comparison_case = comparison.get("case_id")
+        comparison_canary_value = comparison.get("canary_case_id")
+        comparison_ref_value = comparison.get("new_slice_ref")
+        if (
+            not isinstance(comparison_case, str)
+            or re.fullmatch(r"V-COMP-EARLY-[0-9]{3,}", comparison_case) is None
+            or comparison_case not in blocking_case_ids
+        ):
+            errors.append(
+                f"{label}: early comparison case_id must be a blocking V-COMP-EARLY-NNN Case"
+            )
+        if (
+            not isinstance(comparison_canary_value, str)
+            or comparison_canary_value not in canary_by_case
+        ):
+            errors.append(
+                f"{label}: early comparison must reference a frozen early canary"
+            )
+        else:
+            comparison_canary = comparison_canary_value
+        if not isinstance(comparison_ref_value, str) or comparison_ref_value not in expected_refs:
+            errors.append(
+                f"{label}: early comparison must bind a pre-final Slice"
+            )
+        else:
+            comparison_ref = comparison_ref_value
+        if (
+            comparison_canary is not None
+            and comparison_ref is not None
+            and canary_by_case[comparison_canary][0] != comparison_ref
+        ):
+            errors.append(
+                f"{label}: early comparison and canary must bind the same Slice"
+            )
+        if comparison.get("protocol_digest_ref") != "mature_source_agent_protocol_digest":
+            errors.append(
+                f"{label}: early comparison protocol_digest_ref must equal mature_source_agent_protocol_digest"
+            )
+        if comparison.get("quality_rule") != "zero-major-error-and-no-need-claim-regression":
+            errors.append(f"{label}: early comparison quality_rule is invalid")
+        if comparison.get("positive_value_rule") != "precommitted-measurable-world-model-advantage-must-pass":
+            errors.append(f"{label}: early comparison positive_value_rule is invalid")
+        for reference_field, target_field in (
+            ("positive_value_metric_ref", "positive_value_metric"),
+            ("positive_value_unit_ref", "positive_value_unit"),
+            ("positive_value_comparison_ref", "positive_value_comparison"),
+            ("positive_value_threshold_ref", "positive_value_threshold"),
+            (
+                "positive_value_reuse_horizon_ref",
+                "positive_value_reuse_horizon_questions",
+            ),
+            (
+                "baseline_cache_policy_digest_ref",
+                "mature_source_agent_cache_policy_digest",
+            ),
+            (
+                "positive_value_protocol_digest_ref",
+                "positive_value_protocol_digest",
+            ),
+            (
+                "positive_value_adjudication_owner_ref",
+                "positive_value_adjudication_owner",
+            ),
+        ):
+            if comparison.get(reference_field) != target_field:
+                errors.append(
+                    f"{label}: early comparison {reference_field} must equal {target_field}"
+                )
+            if target_field not in alignment:
+                errors.append(
+                    f"{label}: early comparison referenced field is missing: {target_field}"
+                )
+
+    diagnostic = alignment.get("early_diagnostic_binding")
+    if not isinstance(diagnostic, dict):
+        errors.append(f"{label}: early_diagnostic_binding must be a mapping")
+    else:
+        diagnostic_case = diagnostic.get("case_id")
+        diagnostic_ref = diagnostic.get("new_slice_ref")
+        diagnostic_canary = diagnostic.get("canary_case_id")
+        if (
+            not isinstance(diagnostic_case, str)
+            or re.fullmatch(r"V-DIAG-[0-9]{3,}", diagnostic_case) is None
+            or diagnostic_case not in blocking_case_ids
+        ):
+            errors.append(
+                f"{label}: early diagnostic case_id must be a blocking V-DIAG-NNN Case"
+            )
+        if diagnostic_canary != comparison_canary:
+            errors.append(
+                f"{label}: early diagnostic must reference the same canary as the comparison"
+            )
+        if diagnostic_ref != comparison_ref:
+            errors.append(
+                f"{label}: early diagnostic, comparison and canary must bind the same Slice"
+            )
+        if diagnostic.get("layer_chain") != "source-snapshot-query-trace-draft-review-web":
+            errors.append(f"{label}: early diagnostic layer_chain is invalid")
+    return errors
+
+
+def resolved_assumption_ids(value: object) -> list[str]:
+    if isinstance(value, str):
+        values = [item.strip() for item in value.split(",")]
+    elif isinstance(value, list):
+        values = [str(item).strip() for item in value]
+    else:
+        return []
+    if (
+        not values
+        or any(re.fullmatch(r"A[1-9][0-9]*", item) is None for item in values)
+        or len(values) != len(set(values))
+    ):
+        return []
+    return values
+
+
+def validate_reflection_gate_bindings(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+) -> list[str]:
+    """Require one auditable reflection gate for every ITER-008+ Slice."""
+
+    errors: list[str] = []
+    bindings = alignment.get("reflection_gate_bindings")
+    if not isinstance(bindings, dict) or not bindings:
+        return [f"{label}: reflection_gate_bindings must be a non-empty mapping"]
+
+    critical_assumption_ids = resolved_assumption_ids(
+        alignment.get("critical_assumption_ids")
+    )
+    if not critical_assumption_ids:
+        errors.append(
+            f"{label}: critical_assumption_ids must be a non-empty unique list of A-number IDs"
+        )
+        critical_assumption_ids = []
+
+    seen_cases: set[str] = set()
+    seen_slices: set[str] = set()
+    assumptions_by_slice: dict[str, list[str]] = {}
+    expected_success_decisions = {
+        reference: "ACCEPT" if index == len(new_refs) - 1 else "CONTINUE"
+        for index, reference in enumerate(new_refs)
+    }
+    for binding_name, binding in bindings.items():
+        if not isinstance(binding, dict):
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name} must be a mapping"
+            )
+            continue
+        case_id = binding.get("case_id")
+        new_slice_ref = binding.get("new_slice_ref")
+        success_decision = binding.get("success_decision")
+        assumption_ids = resolved_assumption_ids(binding.get("assumption_ids"))
+        if (
+            not isinstance(case_id, str)
+            or re.fullmatch(r"V-REFLECT-[0-9]{3,}", case_id) is None
+        ):
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name}.case_id must match V-REFLECT-NNN"
+            )
+        elif case_id in seen_cases:
+            errors.append(f"{label}: reflection Gate Case IDs must be unique: {case_id}")
+        else:
+            seen_cases.add(case_id)
+            if case_id not in blocking_case_ids:
+                errors.append(
+                    f"{label}: reflection Gate Case must be included in blocking_case_ids: {case_id}"
+                )
+
+        if not isinstance(new_slice_ref, str) or new_slice_ref not in new_refs:
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name}.new_slice_ref must reference new_capability_slice_refs"
+            )
+        elif new_slice_ref in seen_slices:
+            errors.append(
+                f"{label}: each Slice must have exactly one reflection Gate: {new_slice_ref}"
+            )
+        else:
+            seen_slices.add(new_slice_ref)
+            expected_decision = expected_success_decisions[new_slice_ref]
+            if success_decision != expected_decision:
+                errors.append(
+                    f"{label}: {new_slice_ref} reflection success_decision must equal {expected_decision}"
+                )
+
+        if binding.get("required_before_next_authorization_or_acceptance") is not True:
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name} must be required before next authorization or acceptance"
+            )
+        expected_order = [
+            assumption_id
+            for assumption_id in critical_assumption_ids
+            if assumption_id in set(assumption_ids)
+        ]
+        if not assumption_ids:
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name}.assumption_ids must be non-empty"
+            )
+        elif (
+            any(
+                assumption_id not in critical_assumption_ids
+                for assumption_id in assumption_ids
+            )
+            or assumption_ids != expected_order
+        ):
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name}.assumption_ids must be an ordered subset of critical_assumption_ids"
+            )
+        elif isinstance(new_slice_ref, str) and new_slice_ref in new_refs:
+            assumptions_by_slice[new_slice_ref] = assumption_ids
+        deferred_assumptions = [
+            assumption_id
+            for assumption_id in critical_assumption_ids
+            if assumption_id not in set(assumption_ids)
+        ]
+        conditional_falsifiers = binding.get("conditional_falsifier_bindings")
+        if deferred_assumptions:
+            if not isinstance(conditional_falsifiers, dict):
+                errors.append(
+                    f"{label}: reflection_gate_bindings.{binding_name} must map every deferred assumption to an early conditional falsifier"
+                )
+            else:
+                mapped_deferred: list[str] = []
+                seen_falsifier_cases: set[str] = set()
+                for falsifier_name, falsifier in conditional_falsifiers.items():
+                    if not isinstance(falsifier, dict):
+                        errors.append(
+                            f"{label}: conditional_falsifier_bindings.{falsifier_name} must be a mapping"
+                        )
+                        continue
+                    assumption_id = falsifier.get("assumption_id")
+                    falsifier_case_id = falsifier.get("case_id")
+                    if assumption_id not in deferred_assumptions:
+                        errors.append(
+                            f"{label}: conditional falsifier assumption_id must reference a deferred critical assumption"
+                        )
+                    else:
+                        mapped_deferred.append(str(assumption_id))
+                    if (
+                        not isinstance(falsifier_case_id, str)
+                        or falsifier_case_id not in blocking_case_ids
+                        or falsifier_case_id in seen_falsifier_cases
+                    ):
+                        errors.append(
+                            f"{label}: conditional falsifier case_id must be a unique blocking Case"
+                        )
+                    else:
+                        seen_falsifier_cases.add(falsifier_case_id)
+                if (
+                    set(mapped_deferred) != set(deferred_assumptions)
+                    or len(mapped_deferred) != len(set(mapped_deferred))
+                ):
+                    errors.append(
+                        f"{label}: conditional falsifiers must cover every deferred critical assumption exactly once"
+                    )
+        elif conditional_falsifiers is not None and conditional_falsifiers != {}:
+            errors.append(
+                f"{label}: final Slice must not define deferred conditional falsifiers"
+            )
+        decision_owner = binding.get("decision_owner")
+        if (
+            not isinstance(decision_owner, str)
+            or is_pending(decision_owner)
+            or is_absent_evidence(decision_owner)
+            or has_unresolved_placeholder(decision_owner)
+        ):
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name}.decision_owner must be resolved"
+            )
+
+    missing_slices = [reference for reference in new_refs if reference not in seen_slices]
+    if missing_slices:
+        errors.append(
+            f"{label}: every Slice must have exactly one reflection Gate: "
+            + ", ".join(missing_slices)
+        )
+    if len(bindings) != len(new_refs):
+        errors.append(
+            f"{label}: reflection_gate_bindings count must equal new_capability_slice_refs count"
+        )
+    previous_assumptions: set[str] = set()
+    for index, reference in enumerate(new_refs):
+        current_assumptions = assumptions_by_slice.get(reference, [])
+        if not previous_assumptions.issubset(set(current_assumptions)):
+            errors.append(
+                f"{label}: {reference} reflection assumptions must retain every earlier Slice assumption"
+            )
+        if index == len(new_refs) - 1 and current_assumptions != critical_assumption_ids:
+            errors.append(
+                f"{label}: final Slice reflection assumptions must cover all critical_assumption_ids in frozen order"
+            )
+        previous_assumptions = set(current_assumptions)
+    return errors
+
+
 def validate_product_goal_alignment_manifest(
     manifest: dict[str, object], text: str, label: str, iteration: str
 ) -> list[str]:
@@ -834,6 +1439,30 @@ def validate_product_goal_alignment_manifest(
         return [f"{label}: product_goal_alignment must be a mapping from ITER-007 onward"]
 
     errors: list[str] = []
+    if requires_reflection_gate(iteration):
+        catalog_digest = alignment.get("critical_assumption_catalog_digest")
+        if catalog_digest != "not-frozen-proposal-only" and (
+            not isinstance(catalog_digest, str)
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", catalog_digest) is None
+        ):
+            errors.append(
+                f"{label}: critical_assumption_catalog_digest must be the proposal-only marker or an exact sha256 digest"
+            )
+    evaluation_input_mode = alignment.get(
+        "evaluation_input_mode", "precommitted-hidden-suite"
+    )
+    if evaluation_input_mode not in {
+        "precommitted-hidden-suite",
+        USER_HELD_LIVE_EVALUATION_MODE,
+    }:
+        errors.append(
+            f"{label}: product_goal_alignment.evaluation_input_mode is invalid"
+        )
+    user_held_live = evaluation_input_mode == USER_HELD_LIVE_EVALUATION_MODE
+    if user_held_live and alignment.get("held_out_evaluation_owner") != "user":
+        errors.append(
+            f"{label}: user-held live evaluation must use held_out_evaluation_owner user"
+        )
     if alignment.get("target_ref") != "SYS-PRODUCT-SUCCESS":
         errors.append(
             f"{label}: product_goal_alignment.target_ref must equal SYS-PRODUCT-SUCCESS"
@@ -877,16 +1506,26 @@ def validate_product_goal_alignment_manifest(
         )
     for field in PRODUCT_GOAL_ALIGNMENT_MANIFEST_DIGESTS:
         value = alignment.get(field)
-        if not isinstance(value, str) or re.fullmatch(
-            r"sha256:[0-9a-f]{64}", value
-        ) is None:
+        valid_user_held_value = user_held_live and value == USER_HELD_LIVE_UNDISCLOSED
+        if not valid_user_held_value and (
+            not isinstance(value, str)
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+        ):
             errors.append(
                 f"{label}: product_goal_alignment.{field} must be an exact sha256 digest"
+                " or the closed user-held undisclosed marker"
             )
 
     counts: dict[str, int] = {}
     for field in PRODUCT_GOAL_ALIGNMENT_MANIFEST_COUNTS:
         value = alignment.get(field)
+        if (
+            user_held_live
+            and field
+            in {"held_out_baseline_supported_count", "held_out_target_supported_count"}
+            and value == USER_HELD_LIVE_UNMEASURED
+        ):
+            continue
         if isinstance(value, bool) or not isinstance(value, int) or value < 0:
             errors.append(
                 f"{label}: product_goal_alignment.{field} must be a non-negative integer"
@@ -989,6 +1628,10 @@ def validate_product_goal_alignment_manifest(
             )
         else:
             sequences[field] = items
+            if len(items) != len(set(items)):
+                errors.append(
+                    f"{label}: product_goal_alignment.{field} must not contain duplicate items"
+                )
     cross_domain_count = counts.get("cross_domain_case_count")
     if (
         cross_domain_count is not None
@@ -1035,6 +1678,23 @@ def validate_product_goal_alignment_manifest(
             errors.append(
                 f"{label}: product_goal_alignment.{field} must be a verification case ID"
             )
+    if requires_reflection_gate(iteration):
+        errors.extend(
+            validate_reflection_gate_bindings(
+                alignment,
+                sequences.get("new_capability_slice_refs", []),
+                blocking_case_ids,
+                label,
+            )
+        )
+        errors.extend(
+            validate_early_evaluation_bindings(
+                alignment,
+                sequences.get("new_capability_slice_refs", []),
+                blocking_case_ids,
+                label,
+            )
+        )
     errors.extend(validate_product_goal_structured_bindings(alignment, sequences, label))
     return errors
 
@@ -1081,6 +1741,7 @@ def validate_blocking_verification_case(
     *,
     required_references: tuple[str, ...] = (),
     require_pass: bool = False,
+    require_executed: bool = False,
     expected_evidence: str | None = None,
 ) -> list[str]:
     if verification is None:
@@ -1105,10 +1766,30 @@ def validate_blocking_verification_case(
             or has_unresolved_placeholder(value)
         ):
             errors.append(f"{label}: {case_id} {field} must be resolved")
-    status_tokens = set(re.findall(r"[A-Z]+(?:-[A-Z]+)*", row[6].upper()))
-    if "BLOCKING" not in status_tokens or "NON-BLOCKING" in status_tokens:
-        errors.append(f"{label}: {case_id} must remain blocking")
-    if require_pass:
+    strict_status = requires_reflection_gate(
+        str(verification.metadata.get("iteration", ""))
+    ) or require_executed
+    status_verdict = blocking_case_status_verdict(row[6])
+    legacy_status_tokens: set[str] = set()
+    if strict_status:
+        if status_verdict is None:
+            errors.append(
+                f"{label}: {case_id} must remain blocking and use exact PASS, FAIL or NOT-RUN / blocking grammar"
+            )
+    else:
+        legacy_status_tokens = set(
+            re.findall(r"[A-Z]+(?:-[A-Z]+)*", row[6].upper())
+        )
+        if (
+            "BLOCKING" not in legacy_status_tokens
+            or "NON-BLOCKING" in legacy_status_tokens
+        ):
+            errors.append(f"{label}: {case_id} must remain blocking")
+    if require_executed and status_verdict not in {"PASS", "FAIL"}:
+        errors.append(
+            f"{label}: {case_id} used as reflection evidence must be executed with exactly one PASS or FAIL verdict"
+        )
+    if require_pass or expected_evidence is not None:
         evidence = row[5]
         if (
             not evidence
@@ -1121,11 +1802,15 @@ def validate_blocking_verification_case(
             errors.append(
                 f"{label}: completed {case_id} Evidence must equal {expected_evidence}"
             )
-        if (
-            "PASS" not in status_tokens
-            or "FAIL" in status_tokens
-            or "NOT-RUN" in status_tokens
-        ):
+    if require_pass:
+        passed = (
+            status_verdict == "PASS"
+            if strict_status
+            else "PASS" in legacy_status_tokens
+            and "FAIL" not in legacy_status_tokens
+            and "NOT-RUN" not in legacy_status_tokens
+        )
+        if not passed:
             errors.append(f"{label}: completed {case_id} must be PASS")
     joined = " ".join(row[1:5])
     for reference in required_references:
@@ -1136,6 +1821,28 @@ def validate_blocking_verification_case(
     return errors
 
 
+def blocking_case_status_verdict(value: str) -> str | None:
+    """Parse only the frozen blocking status grammar, not loose word tokens."""
+
+    normalized = value.strip().strip("*_`").strip().upper()
+    match = re.fullmatch(
+        r"(PASS|FAIL|NOT-RUN)\s*/\s*(?:READINESS\s+)?BLOCKING",
+        normalized,
+    )
+    return match.group(1) if match is not None else None
+
+
+def unique_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Build a JSON object while rejecting duplicate keys at every depth."""
+
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def non_negative_metadata_integer(value: object) -> int | None:
     if isinstance(value, bool):
         return None
@@ -1144,6 +1851,226 @@ def non_negative_metadata_integer(value: object) -> int | None:
     if isinstance(value, str) and re.fullmatch(r"0|[1-9][0-9]*", value):
         return int(value)
     return None
+
+
+def validate_positive_value_result(
+    result: Document,
+    alignment: dict[str, object],
+    label: str,
+    *,
+    require_pass: bool = True,
+    expected_case_id: str | None = None,
+) -> list[str]:
+    """Validate the measured value verdict against its precommitted threshold."""
+
+    errors: list[str] = []
+    value_verdict = result.metadata.get("positive_value_verdict")
+    if require_pass and value_verdict != "PASS":
+        errors.append(f"{label}: positive_value_verdict must equal PASS")
+    elif not require_pass and value_verdict not in {"PASS", "FAIL"}:
+        errors.append(
+            f"{label}: positive_value_verdict must equal PASS or FAIL for an executed early comparison"
+        )
+    for result_field, manifest_field in (
+        ("positive_value_metric", "positive_value_metric"),
+        ("positive_value_unit", "positive_value_unit"),
+        ("positive_value_comparison", "positive_value_comparison"),
+        ("positive_value_threshold", "positive_value_threshold"),
+        (
+            "positive_value_reuse_horizon_questions",
+            "positive_value_reuse_horizon_questions",
+        ),
+        (
+            "mature_source_agent_cache_policy_digest",
+            "mature_source_agent_cache_policy_digest",
+        ),
+        (
+            "mature_source_agent_protocol_digest",
+            "mature_source_agent_protocol_digest",
+        ),
+        (
+            "mature_source_agent_rubric_digest",
+            "mature_source_agent_rubric_digest",
+        ),
+        ("positive_value_protocol_digest", "positive_value_protocol_digest"),
+        (
+            "positive_value_freeze_receipt_ref",
+            "positive_value_freeze_receipt_ref",
+        ),
+    ):
+        if result.metadata.get(result_field) != alignment.get(manifest_field):
+            errors.append(f"{label}: {result_field} must match the frozen Manifest")
+    raw_positive_value_actual = result.metadata.get("positive_value_actual")
+    positive_value_actual = (
+        raw_positive_value_actual
+        if type(raw_positive_value_actual) is int
+        and raw_positive_value_actual >= 0
+        else None
+    )
+    if positive_value_actual is None:
+        errors.append(f"{label}: positive_value_actual must be a non-negative integer")
+    else:
+        threshold = alignment.get("positive_value_threshold")
+        comparison = alignment.get("positive_value_comparison")
+        threshold_met: bool | None = None
+        if isinstance(threshold, int) and not isinstance(threshold, bool):
+            threshold_met = (
+                positive_value_actual <= threshold
+                if comparison == "at-most"
+                else positive_value_actual >= threshold
+                if comparison == "at-least"
+                else None
+            )
+        if require_pass and threshold_met is False:
+            errors.append(
+                f"{label}: positive_value_actual does not satisfy the frozen threshold"
+            )
+        elif not require_pass and threshold_met is not None:
+            expected_verdict = "PASS" if threshold_met else "FAIL"
+            if value_verdict != expected_verdict:
+                errors.append(
+                    f"{label}: positive_value_verdict must match the measured frozen threshold"
+                )
+    positive_value_report_digest = result.metadata.get(
+        "positive_value_report_digest"
+    )
+    if not isinstance(positive_value_report_digest, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", positive_value_report_digest
+    ) is None:
+        errors.append(
+            f"{label}: positive_value_report_digest must be an exact sha256 digest"
+        )
+    positive_value_case_id = result.metadata.get("positive_value_case_id")
+    if (
+        not isinstance(positive_value_case_id, str)
+        or expected_case_id is not None
+        and positive_value_case_id != expected_case_id
+    ):
+        errors.append(
+            f"{label}: positive_value_case_id must match the executed value Case"
+        )
+    adjudication_owner = result.metadata.get(
+        "positive_value_adjudication_owner"
+    )
+    if adjudication_owner != alignment.get("positive_value_adjudication_owner"):
+        errors.append(
+            f"{label}: positive_value_adjudication_owner must match the frozen Manifest"
+        )
+    adjudication_receipt = result.metadata.get(
+        "positive_value_adjudication_receipt_ref"
+    )
+    if not isinstance(adjudication_receipt, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", adjudication_receipt
+    ) is None:
+        errors.append(
+            f"{label}: positive_value_adjudication_receipt_ref must bind an exact independent adjudication message"
+        )
+    elif adjudication_receipt == result.metadata.get(
+        "positive_value_freeze_receipt_ref"
+    ):
+        errors.append(
+            f"{label}: positive value adjudication must use a new receipt after the frozen protocol"
+        )
+
+    expected_report_ref = f"{result.identifier}#positive-value-report"
+    if result.metadata.get("positive_value_report_ref") != expected_report_ref:
+        errors.append(
+            f"{label}: positive_value_report_ref must equal {expected_report_ref}"
+        )
+    report_heading_count = len(
+        re.findall(
+            r"(?m)^[ ]{0,3}##[ \t]+Positive value report[ \t]*#*[ \t]*$",
+            result.body,
+        )
+    )
+    if report_heading_count != 1:
+        errors.append(
+            f"{label}: Result must contain exactly one Positive value report section"
+        )
+    report_section = markdown_section_body(result, "Positive value report")
+    report_data: dict[str, object] | None = None
+    if not has_substantive_markdown_content(report_section):
+        errors.append(
+            f"{label}: Result must contain a substantive Positive value report section"
+        )
+    else:
+        try:
+            loaded_report = json.loads(
+                report_section,
+                object_pairs_hook=unique_json_object,
+            )
+        except (json.JSONDecodeError, ValueError) as error:
+            errors.append(f"{label}: Positive value report must be exact JSON: {error}")
+        else:
+            if not isinstance(loaded_report, dict):
+                errors.append(f"{label}: positive value report must be a JSON object")
+            else:
+                report_data = loaded_report
+                computed_digest = "sha256:" + hashlib.sha256(
+                    report_section.encode("utf-8")
+                ).hexdigest()
+                if positive_value_report_digest != computed_digest:
+                    errors.append(
+                        f"{label}: positive_value_report_digest must bind the exact Positive value report section"
+                    )
+
+    if report_data is not None:
+        expected_report_fields: dict[str, object] = {
+            "schema": "software-world-model-positive-value-report/v1",
+            "result_id": result.identifier,
+            "verification_case_id": positive_value_case_id,
+            "metric": result.metadata.get("positive_value_metric"),
+            "unit": result.metadata.get("positive_value_unit"),
+            "comparison": result.metadata.get("positive_value_comparison"),
+            "threshold": result.metadata.get("positive_value_threshold"),
+            "actual": result.metadata.get("positive_value_actual"),
+            "reuse_horizon_questions": result.metadata.get(
+                "positive_value_reuse_horizon_questions"
+            ),
+            "mature_source_agent_protocol_digest": result.metadata.get(
+                "mature_source_agent_protocol_digest"
+            ),
+            "mature_source_agent_rubric_digest": result.metadata.get(
+                "mature_source_agent_rubric_digest"
+            ),
+            "mature_source_agent_cache_policy_digest": result.metadata.get(
+                "mature_source_agent_cache_policy_digest"
+            ),
+            "positive_value_protocol_digest": result.metadata.get(
+                "positive_value_protocol_digest"
+            ),
+            "freeze_receipt_ref": result.metadata.get(
+                "positive_value_freeze_receipt_ref"
+            ),
+            "adjudication_owner": adjudication_owner,
+            "adjudication_receipt_ref": adjudication_receipt,
+        }
+        expected_report_field_names = {
+            *expected_report_fields,
+            "measurement_input_digest",
+        }
+        if set(report_data) != expected_report_field_names:
+            errors.append(
+                f"{label}: positive value report must use only the exact v1 schema fields"
+            )
+        for integer_field in ("actual", "threshold", "reuse_horizon_questions"):
+            if type(report_data.get(integer_field)) is not int:
+                errors.append(
+                    f"{label}: positive value report {integer_field} must be an exact JSON integer"
+                )
+        for field, expected in expected_report_fields.items():
+            if report_data.get(field) != expected:
+                errors.append(
+                    f"{label}: positive value report {field} must match its frozen input or Result"
+                )
+        measurement_input_digest = report_data.get("measurement_input_digest")
+        if not isinstance(measurement_input_digest, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", measurement_input_digest
+        ) is None:
+            errors.append(
+                f"{label}: positive value report must bind an exact measurement_input_digest"
+            )
+    return errors
 
 
 def validate_product_goal_result(
@@ -1331,11 +2258,56 @@ def validate_product_goal_result(
         if (
             result_field in counts
             and isinstance(minimum, int)
-            and counts[result_field] < minimum
+            and counts[result_field] != minimum
         ):
-            errors.append(f"{label}: {result_field} must reach the frozen Manifest count")
+            errors.append(f"{label}: {result_field} must equal the frozen Manifest count")
     if result.metadata.get("mature_source_agent_comparison") != "non-regression":
         errors.append(f"{label}: mature_source_agent_comparison must equal non-regression")
+    if requires_reflection_gate(iteration):
+        errors.extend(
+            validate_positive_value_result(
+                result,
+                alignment,
+                label,
+                expected_case_id="V-000",
+            )
+        )
+        adjudication_forbidden_refs: set[str] = set()
+        top_authorization = manifest.get("authorization")
+        if isinstance(top_authorization, dict):
+            top_authorization_ref = top_authorization.get("authorization_ref")
+            if isinstance(top_authorization_ref, str):
+                adjudication_forbidden_refs.add(top_authorization_ref)
+        for manifest_slice in development_slices.values():
+            if isinstance(manifest_slice, dict):
+                authorization_ref = manifest_slice.get("authorization_ref")
+                if isinstance(authorization_ref, str):
+                    adjudication_forbidden_refs.add(authorization_ref)
+        if by_id is not None:
+            for prior_slice_result_ref in slice_result_refs:
+                prior_slice_result = by_id.get(prior_slice_result_ref)
+                prior_decision_ref = (
+                    prior_slice_result.metadata.get("reflection_decision_ref")
+                    if prior_slice_result is not None
+                    else None
+                )
+                if isinstance(prior_decision_ref, str):
+                    adjudication_forbidden_refs.add(prior_decision_ref)
+                prior_adjudication_ref = (
+                    prior_slice_result.metadata.get(
+                        "positive_value_adjudication_receipt_ref"
+                    )
+                    if prior_slice_result is not None
+                    else None
+                )
+                if isinstance(prior_adjudication_ref, str):
+                    adjudication_forbidden_refs.add(prior_adjudication_ref)
+        if result.metadata.get(
+            "positive_value_adjudication_receipt_ref"
+        ) in adjudication_forbidden_refs:
+            errors.append(
+                f"{label}: final positive value adjudication must use a new message after all authorizations and prior Slice decisions"
+            )
     if result.metadata.get("product_web_manual_verification") != "passed":
         errors.append(f"{label}: product_web_manual_verification must equal passed")
 
@@ -1384,11 +2356,19 @@ def validate_product_goal_v000(
         return [f"{label}: V-000 must use the exact seven-column verification schema"]
 
     errors: list[str] = []
+    frozen_input = PRODUCT_GOAL_V000_FROZEN_INPUT
+    expected_outcome = PRODUCT_GOAL_V000_EXPECTED
+    if requires_reflection_gate(iteration):
+        frozen_input += "；预提交差异化价值阈值"
+        expected_outcome = (
+            "支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；"
+            "提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证"
+        )
     expected_contract = (
         PRODUCT_GOAL_V000_CLAIM,
         PRODUCT_GOAL_V000_LEVEL,
-        PRODUCT_GOAL_V000_FROZEN_INPUT,
-        PRODUCT_GOAL_V000_EXPECTED,
+        frozen_input,
+        expected_outcome,
     )
     for index, (field, expected) in enumerate(
         zip(
@@ -1402,10 +2382,23 @@ def validate_product_goal_v000(
                 f"{label}: V-000 {field} must match the product-goal contract"
             )
 
-    status = row[6]
-    status_tokens = set(re.findall(r"[A-Z]+(?:-[A-Z]+)*", status.upper()))
-    if "BLOCKING" not in status_tokens or "NON-BLOCKING" in status_tokens:
-        errors.append(f"{label}: V-000 status must remain blocking")
+    strict_status = requires_reflection_gate(iteration)
+    status_verdict = blocking_case_status_verdict(row[6])
+    legacy_status_tokens: set[str] = set()
+    if strict_status:
+        if status_verdict is None:
+            errors.append(
+                f"{label}: V-000 status must remain blocking and use exact PASS, FAIL or NOT-RUN / blocking grammar"
+            )
+    else:
+        legacy_status_tokens = set(
+            re.findall(r"[A-Z]+(?:-[A-Z]+)*", row[6].upper())
+        )
+        if (
+            "BLOCKING" not in legacy_status_tokens
+            or "NON-BLOCKING" in legacy_status_tokens
+        ):
+            errors.append(f"{label}: V-000 status must remain blocking")
 
     if require_pass:
         evidence = row[5]
@@ -1416,11 +2409,14 @@ def validate_product_goal_v000(
             or has_unresolved_placeholder(evidence)
         ):
             errors.append(f"{label}: completed V-000 must bind resolved evidence")
-        if (
-            "PASS" not in status_tokens
-            or "FAIL" in status_tokens
-            or "NOT-RUN" in status_tokens
-        ):
+        passed = (
+            status_verdict == "PASS"
+            if strict_status
+            else "PASS" in legacy_status_tokens
+            and "FAIL" not in legacy_status_tokens
+            and "NOT-RUN" not in legacy_status_tokens
+        )
+        if not passed:
             errors.append(f"{label}: completed iteration requires V-000 PASS")
         result_id = verification.metadata.get("product_goal_result_id")
         if (
@@ -1505,6 +2501,13 @@ def validate_product_goal_readiness_authorization(
         errors.append(
             f"{readiness.relative_path}: authorized_at must be an ISO-8601 timestamp with timezone"
         )
+    elif isinstance(authorized_at, str):
+        try:
+            datetime.fromisoformat(authorized_at.replace("Z", "+00:00"))
+        except ValueError:
+            errors.append(
+                f"{readiness.relative_path}: authorized_at must be a real ISO-8601 timestamp"
+            )
     for field, expected in (
         ("product_goal_alignment_verdict", "accepted"),
         ("product_goal_alignment_reviewed_by", "user"),
@@ -1526,6 +2529,7 @@ def validate_active_manifest(
     iteration: str,
     *,
     allowed_statuses: set[str] | None = None,
+    expected_status: str | None = None,
 ) -> list[str]:
     label = _path_label(path)
     try:
@@ -1548,6 +2552,10 @@ def validate_active_manifest(
             errors.append(
                 f"{label}: iteration.status must be one of "
                 + ", ".join(sorted(valid_statuses))
+            )
+        elif expected_status is not None and manifest_status != expected_status:
+            errors.append(
+                f"{label}: iteration.status must match the iteration index status {expected_status}"
             )
 
     baseline = manifest.get("baseline")
@@ -1575,6 +2583,267 @@ def validate_active_manifest(
     return errors
 
 
+def _execution_manifest_sequence(
+    *,
+    manifest: dict[str, object],
+    manifest_text: str | None,
+    section: str,
+    field: str,
+) -> list[str]:
+    """Resolve a scalar sequence for the execution-readiness gate.
+
+    ``safe_load_manifest`` deliberately validates block sequences without
+    materializing their values.  File-backed validation therefore resolves
+    those values from the already validated inert text, while unit callers may
+    continue to provide an ordinary in-memory list.
+    """
+
+    section_value = manifest.get(section)
+    if isinstance(section_value, dict):
+        direct = section_value.get(field)
+        if isinstance(direct, list):
+            return [str(item) for item in direct]
+    if manifest_text is None:
+        return []
+    return manifest_resolved_sequence_items(manifest_text, section, field) or []
+
+
+def canonical_fileset_digest(
+    schema: str,
+    paths: list[str],
+    *,
+    repository: Path | None = None,
+) -> str:
+    """Digest a canonical, repository-relative ordered fileset."""
+
+    root = REPOSITORY if repository is None else repository
+    entries: list[dict[str, object]] = []
+    for relative in paths:
+        payload = (root / relative).read_bytes()
+        entries.append(
+            {
+                "path": relative,
+                "size": len(payload),
+                "sha256": "sha256:" + hashlib.sha256(payload).hexdigest(),
+            }
+        )
+    encoded = json.dumps(
+        {"schema": schema, "entries": entries},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def canonical_raw_component_set_digest(
+    paths: tuple[Path, ...],
+) -> str:
+    """Match a protocol that binds an ordered list of raw component digests."""
+
+    raw_digests = [
+        "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in paths
+    ]
+    encoded = json.dumps(
+        raw_digests,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def validate_answer_protocol_execution_readiness(
+    answer_protocol: dict[str, object], label: str, iteration: str
+) -> list[str]:
+    """Validate the frozen answer protocol without reviving an earlier pipeline."""
+
+    errors: list[str] = []
+    if requires_reflection_gate(iteration):
+        if (
+            answer_protocol.get("mode")
+            != "bounded-result-driven-world-model-investigation"
+        ):
+            errors.append(
+                f"{label}: answer_protocol.mode must equal bounded-result-driven-world-model-investigation"
+            )
+        numeric_fields: dict[str, int] = {}
+        for field in (
+            "max_investigation_steps",
+            "max_investigation_model_calls",
+            "planner_model_call_upper_bound",
+            "total_model_call_upper_bound_per_question",
+            "max_query_bytes_per_step",
+            "max_result_bytes_per_step",
+            "max_total_query_bytes_per_question",
+            "max_total_result_bytes_per_question",
+            "max_wall_time_milliseconds_per_question",
+            "max_support_items_per_question",
+            "max_trace_bytes_per_question",
+        ):
+            value = answer_protocol.get(field)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                errors.append(
+                    f"{label}: answer_protocol.{field} must be a positive frozen integer"
+                )
+            else:
+                numeric_fields[field] = value
+        for field in (
+            "max_investigation_steps",
+            "max_investigation_model_calls",
+            "planner_model_call_upper_bound",
+        ):
+            value = numeric_fields.get(field)
+            if value is not None and value < 2:
+                errors.append(
+                    f"{label}: answer_protocol.{field} must be at least 2 so a result can drive a later investigation decision"
+                )
+        planner_upper_bound = numeric_fields.get("planner_model_call_upper_bound")
+        investigation_call_bound = numeric_fields.get(
+            "max_investigation_model_calls"
+        )
+        if (
+            planner_upper_bound is not None
+            and investigation_call_bound is not None
+            and planner_upper_bound != investigation_call_bound
+        ):
+            errors.append(
+                f"{label}: planner_model_call_upper_bound must equal max_investigation_model_calls"
+            )
+        total_upper_bound = numeric_fields.get(
+            "total_model_call_upper_bound_per_question"
+        )
+        if (
+            total_upper_bound is not None
+            and planner_upper_bound is not None
+            and total_upper_bound != planner_upper_bound + 2
+        ):
+            errors.append(
+                f"{label}: total_model_call_upper_bound_per_question must equal planner upper bound plus one Draft and one Review call"
+            )
+        for per_step_field, total_field in (
+            ("max_query_bytes_per_step", "max_total_query_bytes_per_question"),
+            ("max_result_bytes_per_step", "max_total_result_bytes_per_question"),
+        ):
+            per_step = numeric_fields.get(per_step_field)
+            total = numeric_fields.get(total_field)
+            if per_step is not None and total is not None and total < per_step:
+                errors.append(
+                    f"{label}: answer_protocol.{total_field} must be at least {per_step_field}"
+                )
+        if (
+            answer_protocol.get("budget_exhaustion_behavior")
+            != "fail-closed-with-explicit-limitation"
+        ):
+            errors.append(
+                f"{label}: answer_protocol.budget_exhaustion_behavior must equal fail-closed-with-explicit-limitation"
+            )
+        for field in (
+            "planner_model_calls",
+            "exact_total_model_calls_per_question",
+        ):
+            if field in answer_protocol:
+                errors.append(
+                    f"{label}: ITER-008+ answer_protocol must not use legacy fixed-call field {field}"
+                )
+    else:
+        for field, expected in {
+            "planner_model_calls": 1,
+            "draft_model_calls": 1,
+            "independent_reviewer_model_calls": 1,
+            "exact_total_model_calls_per_question": 3,
+        }.items():
+            if answer_protocol.get(field) != expected:
+                errors.append(
+                    f"{label}: answer_protocol.{field} must equal {expected}"
+                )
+    for field in ("draft_model_calls", "independent_reviewer_model_calls"):
+        if answer_protocol.get(field) != 1:
+            errors.append(f"{label}: answer_protocol.{field} must equal 1")
+    if (
+        answer_protocol.get(
+            "deterministic_schema_grounding_and_authorization_checks"
+        )
+        is not True
+    ):
+        errors.append(f"{label}: answer_protocol deterministic checks must be true")
+    if answer_protocol.get("retries_allowed") is not False:
+        errors.append(f"{label}: answer_protocol.retries_allowed must be false")
+    if answer_protocol.get("status") != "frozen":
+        errors.append(f"{label}: answer_protocol.status must equal frozen")
+    return errors
+
+
+def validate_positive_value_execution_readiness(
+    alignment: dict[str, object], label: str
+) -> list[str]:
+    """Require a precommitted, replayable value comparison before coding."""
+
+    errors: list[str] = []
+    for field in ("positive_value_metric", "positive_value_unit"):
+        value = alignment.get(field)
+        if (
+            not isinstance(value, str)
+            or is_pending(value)
+            or is_absent_evidence(value)
+            or has_unresolved_placeholder(value)
+        ):
+            errors.append(
+                f"{label}: product_goal_alignment.{field} must be frozen before Slice execution"
+            )
+    if alignment.get("positive_value_comparison") not in {"at-most", "at-least"}:
+        errors.append(
+            f"{label}: positive_value_comparison must equal at-most or at-least before Slice execution"
+        )
+    positive_value_threshold = alignment.get("positive_value_threshold")
+    if (
+        isinstance(positive_value_threshold, bool)
+        or not isinstance(positive_value_threshold, int)
+        or positive_value_threshold < 0
+    ):
+        errors.append(
+            f"{label}: positive_value_threshold must be a non-negative integer before Slice execution"
+        )
+    reuse_horizon = alignment.get("positive_value_reuse_horizon_questions")
+    if (
+        isinstance(reuse_horizon, bool)
+        or not isinstance(reuse_horizon, int)
+        or reuse_horizon < 1
+    ):
+        errors.append(
+            f"{label}: positive_value_reuse_horizon_questions must be a positive integer before Slice execution"
+        )
+    for field in (
+        "mature_source_agent_protocol_digest",
+        "mature_source_agent_rubric_digest",
+        "mature_source_agent_cache_policy_digest",
+        "positive_value_protocol_digest",
+    ):
+        digest = alignment.get(field)
+        if not isinstance(digest, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", digest
+        ) is None:
+            errors.append(
+                f"{label}: {field} must be an exact sha256 digest before Slice execution"
+            )
+    freeze_receipt = alignment.get("positive_value_freeze_receipt_ref")
+    if not isinstance(freeze_receipt, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", freeze_receipt
+    ) is None:
+        errors.append(
+            f"{label}: positive_value_freeze_receipt_ref must bind an exact user message before Slice execution"
+        )
+    if alignment.get("positive_value_adjudication_owner") not in {
+        "user",
+        "independent-evaluator",
+    }:
+        errors.append(
+            f"{label}: positive_value_adjudication_owner must be frozen as user or independent-evaluator before Slice execution"
+        )
+    return errors
+
+
 def validate_product_goal_execution_readiness(
     manifest: dict[str, object],
     label: str,
@@ -1582,6 +2851,8 @@ def validate_product_goal_execution_readiness(
     by_id: dict[str, Document],
     new_refs: list[str],
     verification: Document | None,
+    *,
+    manifest_text: str | None = None,
 ) -> list[str]:
     """Validate inputs that must be frozen before the first product Slice runs."""
 
@@ -1589,21 +2860,55 @@ def validate_product_goal_execution_readiness(
     alignment = manifest.get("product_goal_alignment")
     if not isinstance(alignment, dict):
         return errors
-
-    blocking_cases = alignment.get("blocking_case_ids")
-    blocking_case_ids = (
-        [str(item) for item in blocking_cases]
-        if isinstance(blocking_cases, list)
-        else []
+    user_held_live = (
+        alignment.get("evaluation_input_mode") == USER_HELD_LIVE_EVALUATION_MODE
     )
-    readiness_cases = alignment.get("readiness_blocking_case_ids")
-    if not isinstance(readiness_cases, list) or not readiness_cases:
+
+    if requires_reflection_gate(iteration):
+        proposal = by_id.get(f"{iteration}-PROPOSAL")
+        catalog_digest, assumption_expectations, catalog_errors = (
+            critical_assumption_catalog(proposal)
+        )
+        errors.extend(catalog_errors)
+        supplied_catalog_digest = alignment.get(
+            "critical_assumption_catalog_digest"
+        )
+        if supplied_catalog_digest != catalog_digest:
+            errors.append(
+                f"{label}: critical_assumption_catalog_digest must match the exact Proposal assumption catalog"
+            )
+        critical_assumption_ids = resolved_assumption_ids(
+            alignment.get("critical_assumption_ids")
+        )
+        if critical_assumption_ids != list(assumption_expectations):
+            errors.append(
+                f"{label}: critical_assumption_ids must exactly match the Proposal assumption catalog order"
+            )
+        readiness = by_id.get(f"{iteration}-READINESS")
+        if readiness is None or readiness.metadata.get(
+            "critical_assumption_catalog_digest"
+        ) != catalog_digest:
+            errors.append(
+                f"{label}: accepted Readiness must bind the exact critical_assumption_catalog_digest"
+            )
+
+    blocking_case_ids = _execution_manifest_sequence(
+        manifest=manifest,
+        manifest_text=manifest_text,
+        section="product_goal_alignment",
+        field="blocking_case_ids",
+    )
+    readiness_case_ids = _execution_manifest_sequence(
+        manifest=manifest,
+        manifest_text=manifest_text,
+        section="product_goal_alignment",
+        field="readiness_blocking_case_ids",
+    )
+    if not readiness_case_ids:
         errors.append(
             f"{label}: readiness_blocking_case_ids must be a non-empty sequence before Slice execution"
         )
-        readiness_case_ids: list[str] = []
     else:
-        readiness_case_ids = [str(item) for item in readiness_cases]
         if set(readiness_case_ids).intersection(blocking_case_ids):
             errors.append(
                 f"{label}: readiness_blocking_case_ids must remain separate from Slice-owned blocking_case_ids"
@@ -1614,6 +2919,9 @@ def validate_product_goal_execution_readiness(
                     verification, case_id, require_pass=True
                 )
             )
+
+    if requires_reflection_gate(iteration) and len(new_refs) > 1:
+        errors.extend(validate_positive_value_execution_readiness(alignment, label))
 
     source_scope = manifest.get("source_scope")
     if not isinstance(source_scope, dict):
@@ -1637,13 +2945,17 @@ def validate_product_goal_execution_readiness(
         errors.append(
             f"{label}: source_scope.authorized_software_sources_digest must match product_goal_alignment"
         )
-    source_cases = source_scope.get("verification_case_ids")
-    if not isinstance(source_cases, list) or not source_cases:
+    source_case_ids = _execution_manifest_sequence(
+        manifest=manifest,
+        manifest_text=manifest_text,
+        section="source_scope",
+        field="verification_case_ids",
+    )
+    if not source_case_ids:
         errors.append(
             f"{label}: source_scope.verification_case_ids must bind update-without-question Cases"
         )
     else:
-        source_case_ids = [str(item) for item in source_cases]
         if not set(source_case_ids).issubset(set(blocking_case_ids)):
             errors.append(
                 f"{label}: source_scope verification Cases must be blocking Cases"
@@ -1655,36 +2967,27 @@ def validate_product_goal_execution_readiness(
     if not isinstance(answer_protocol, dict):
         errors.append(f"{label}: answer_protocol must be a mapping before Slice execution")
         answer_protocol = {}
-    expected_calls = {
-        "planner_model_calls": 1,
-        "draft_model_calls": 1,
-        "independent_reviewer_model_calls": 1,
-        "exact_total_model_calls_per_question": 3,
-    }
-    for field, expected in expected_calls.items():
-        if answer_protocol.get(field) != expected:
-            errors.append(f"{label}: answer_protocol.{field} must equal {expected}")
-    if answer_protocol.get("deterministic_schema_grounding_and_authorization_checks") is not True:
-        errors.append(
-            f"{label}: answer_protocol deterministic checks must be true"
+    errors.extend(
+        validate_answer_protocol_execution_readiness(
+            answer_protocol, label, iteration
         )
-    if answer_protocol.get("retries_allowed") is not False:
-        errors.append(f"{label}: answer_protocol.retries_allowed must be false")
-    if answer_protocol.get("status") != "frozen":
-        errors.append(f"{label}: answer_protocol.status must equal frozen")
+    )
 
     readiness_inputs = manifest.get("readiness_inputs")
     if not isinstance(readiness_inputs, dict):
         errors.append(f"{label}: readiness_inputs must be a mapping before Slice execution")
         readiness_inputs = {}
-    contract_refs = readiness_inputs.get("required_system_contract_refs")
-    if not isinstance(contract_refs, list) or not contract_refs:
+    contract_ids = _execution_manifest_sequence(
+        manifest=manifest,
+        manifest_text=manifest_text,
+        section="readiness_inputs",
+        field="required_system_contract_refs",
+    )
+    if not contract_ids:
         errors.append(
             f"{label}: readiness_inputs.required_system_contract_refs must be non-empty"
         )
-        contract_ids: list[str] = []
     else:
-        contract_ids = [str(item) for item in contract_refs]
         if len(contract_ids) != len(set(contract_ids)):
             errors.append(f"{label}: required_system_contract_refs must be unique")
 
@@ -1706,7 +3009,68 @@ def validate_product_goal_execution_readiness(
                 f"{label}: source and answer protocol Contracts must be listed in required_system_contract_refs"
             )
 
+    contract_set_schema = readiness_inputs.get("system_contract_set_schema")
+    expected_contract_set_schema = f"{iteration}-SYSTEM-CONTRACT-SET@1"
+    if contract_set_schema != expected_contract_set_schema:
+        errors.append(
+            f"{label}: system_contract_set_schema must equal {expected_contract_set_schema}"
+        )
+    contract_set_paths = _execution_manifest_sequence(
+        manifest=manifest,
+        manifest_text=manifest_text,
+        section="readiness_inputs",
+        field="system_contract_set_paths",
+    )
+    contract_set_paths_valid = True
+    if not contract_set_paths:
+        errors.append(f"{label}: system_contract_set_paths must be non-empty")
+        contract_set_paths_valid = False
+    elif len(contract_set_paths) != len(set(contract_set_paths)):
+        errors.append(f"{label}: system_contract_set_paths must be unique")
+        contract_set_paths_valid = False
+    elif contract_set_paths != sorted(contract_set_paths):
+        errors.append(
+            f"{label}: system_contract_set_paths must use canonical lexical order"
+        )
+        contract_set_paths_valid = False
+
     system_root = (REPOSITORY / "docs/system").resolve()
+    if contract_set_paths_valid:
+        for relative in contract_set_paths:
+            parsed = PurePosixPath(relative)
+            target = REPOSITORY / relative
+            canonical = (
+                relative == parsed.as_posix()
+                and not parsed.is_absolute()
+                and all(part not in {"", ".", ".."} for part in parsed.parts)
+            )
+            try:
+                target.resolve().relative_to(system_root)
+            except (OSError, ValueError):
+                canonical = False
+            if (
+                not canonical
+                or target.is_symlink()
+                or not target.is_file()
+            ):
+                errors.append(
+                    f"{label}: system Contract set path is invalid: {relative}"
+                )
+                contract_set_paths_valid = False
+
+    supplied_contract_set_digest = readiness_inputs.get(
+        "system_contract_set_digest"
+    )
+    if contract_set_paths_valid and contract_set_schema == expected_contract_set_schema:
+        actual_contract_set_digest = canonical_fileset_digest(
+            expected_contract_set_schema,
+            contract_set_paths,
+        )
+        if supplied_contract_set_digest != actual_contract_set_digest:
+            errors.append(
+                f"{label}: system_contract_set_digest does not match the exact fileset"
+            )
+
     for reference in contract_ids:
         target = by_id.get(reference)
         in_system_root = False
@@ -1726,12 +3090,50 @@ def validate_product_goal_execution_readiness(
             errors.append(
                 f"{label}: readiness Contract must resolve to a current normative system-contract: {reference}"
             )
+        elif contract_set_paths_valid:
+            try:
+                contract_path = target.path.resolve().relative_to(
+                    REPOSITORY.resolve()
+                ).as_posix()
+            except ValueError:
+                contract_path = ""
+            if contract_path not in contract_set_paths:
+                errors.append(
+                    f"{label}: required Contract is absent from system_contract_set_paths: {reference}"
+                )
 
     frontend = readiness_inputs.get("java_frontend")
     if not isinstance(frontend, dict):
         errors.append(f"{label}: readiness_inputs.java_frontend must be a mapping")
         frontend = {}
-    for field in ("artifact_ref", "version", "license_ref"):
+    expected_frontend_fields = {
+        "artifact_ref",
+        "version",
+        "runtime_version",
+        "grammar_version",
+        "language_abi",
+        "license_ref",
+        "runtime_license_digest",
+        "grammar_license_digest",
+        "runtime_fileset_digest",
+        "grammar_fileset_digest",
+        "offline_artifact_digest",
+        "canonicalization_oracle_digest",
+        "information_preservation_oracle_digest",
+        "information_boundary_oracle_digest",
+        "legacy_calls_consistency_oracle_digest",
+        "readiness_oracle_result_digest",
+        "readiness_oracle_result_path",
+    }
+    if set(frontend) != expected_frontend_fields:
+        errors.append(f"{label}: java_frontend fields must match the frozen schema")
+    for field in (
+        "artifact_ref",
+        "version",
+        "runtime_version",
+        "grammar_version",
+        "license_ref",
+    ):
         value = frontend.get(field)
         if (
             not isinstance(value, str)
@@ -1740,11 +3142,24 @@ def validate_product_goal_execution_readiness(
             or has_unresolved_placeholder(value)
         ):
             errors.append(f"{label}: java_frontend.{field} must be resolved")
+    language_abi = frontend.get("language_abi")
+    if (
+        isinstance(language_abi, bool)
+        or not isinstance(language_abi, int)
+        or language_abi < 1
+    ):
+        errors.append(f"{label}: java_frontend.language_abi must be positive")
     for field in (
+        "runtime_license_digest",
+        "grammar_license_digest",
+        "runtime_fileset_digest",
+        "grammar_fileset_digest",
         "offline_artifact_digest",
         "canonicalization_oracle_digest",
         "information_preservation_oracle_digest",
         "information_boundary_oracle_digest",
+        "legacy_calls_consistency_oracle_digest",
+        "readiness_oracle_result_digest",
         "hidden_freeze_protocol_digest",
         "system_contract_set_digest",
     ):
@@ -1758,6 +3173,44 @@ def validate_product_goal_execution_readiness(
             r"sha256:[0-9a-f]{64}", value
         ) is None:
             errors.append(f"{label}: {field} must be an exact sha256 digest")
+    result_path = frontend.get("readiness_oracle_result_path")
+    if (
+        not isinstance(result_path, str)
+        or PurePosixPath(result_path).is_absolute()
+        or result_path != PurePosixPath(result_path).as_posix()
+        or any(
+            part in {"", ".", ".."}
+            for part in PurePosixPath(result_path).parts
+        )
+    ):
+        errors.append(
+            f"{label}: readiness_oracle_result_path must be repository-relative"
+        )
+
+    if iteration == "ITER-007":
+        hidden_components = tuple(
+            REPOSITORY
+            / "validation/structure_world_model_iteration_007"
+            / name
+            for name in (
+                "hidden_freeze_protocol.json",
+                "hidden_freeze.py",
+                "hidden_freeze_lifecycle.py",
+            )
+        )
+        if all(path.is_file() and not path.is_symlink() for path in hidden_components):
+            actual_hidden_digest = canonical_raw_component_set_digest(
+                hidden_components
+            )
+            if (
+                readiness_inputs.get("hidden_freeze_protocol_digest")
+                != actual_hidden_digest
+            ):
+                errors.append(
+                    f"{label}: hidden_freeze_protocol_digest does not match its public components"
+                )
+        else:
+            errors.append(f"{label}: hidden-freeze protocol components are unavailable")
     visible_corpus_digest = alignment.get("visible_development_corpus_digest")
     if not isinstance(visible_corpus_digest, str) or re.fullmatch(
         r"sha256:[0-9a-f]{64}", visible_corpus_digest
@@ -1842,17 +3295,25 @@ def validate_product_goal_execution_readiness(
                 errors.append(
                     f"{label}: early hidden canary must remain hidden until Slice code freeze"
                 )
-            if binding.get("burn_rule") != "product-change-after-exposure-burns-canary-and-preserves-failure":
+            if binding.get("burn_rule") != (
+                "product-change-between-disclosure-and-slice-result-seal-"
+                "burns-canary-and-preserves-result"
+            ):
                 errors.append(
-                    f"{label}: early hidden canary must freeze the burn-and-preserve-failure rule"
+                    f"{label}: early hidden canary must freeze the disclosure-to-Result-seal burn rule"
                 )
             for field in ("project_manifest_digest", "suite_digest"):
                 value = binding.get(field)
-                if not isinstance(value, str) or re.fullmatch(
-                    r"sha256:[0-9a-f]{64}", value
-                ) is None:
+                valid_user_held_value = (
+                    user_held_live and value == USER_HELD_LIVE_UNDISCLOSED
+                )
+                if not valid_user_held_value and (
+                    not isinstance(value, str)
+                    or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+                ):
                     errors.append(
                         f"{label}: early hidden canary {field} must be an exact sha256 digest"
+                        " or the closed user-held undisclosed marker"
                     )
         if set(canary_refs) != expected_canary_refs or len(canary_refs) != len(set(canary_refs)):
             errors.append(
@@ -1871,6 +3332,7 @@ def validate_product_goal_reference_targets(
     *,
     require_execution_slice_sequence: bool = False,
     require_completed_slice_sequence: bool = False,
+    require_rejected_slice_sequence: bool = False,
     verification: Document | None = None,
 ) -> list[str]:
     if not requires_product_goal_alignment(iteration):
@@ -1889,9 +3351,77 @@ def validate_product_goal_reference_targets(
         return []
 
     errors: list[str] = []
+    if requires_reflection_gate(iteration):
+        errors.extend(
+            validate_planned_assumption_catalog(
+                by_id.get(f"{iteration}-PROPOSAL"),
+                manifest,
+                label,
+            )
+        )
+    capability_path_ref = alignment.get("capability_path_ref")
+    if isinstance(capability_path_ref, str):
+        capability_path = by_id.get(capability_path_ref)
+        if (
+            capability_path is None
+            or capability_path.metadata.get("kind") != "roadmap-milestone"
+            or capability_path.metadata.get("authority") != "planning-only"
+        ):
+            errors.append(
+                f"{label}: capability_path_ref must reference a planning-only roadmap milestone"
+            )
+        else:
+            capability_step = alignment.get("capability_path_step")
+            registered_steps = set(
+                re.findall(
+                    r"(?m)^\|\s*`(step-[a-z0-9-]+)`\s*\|",
+                    capability_path.body,
+                )
+            )
+            if (
+                not isinstance(capability_step, str)
+                or capability_step not in registered_steps
+            ):
+                errors.append(
+                    f"{label}: capability_path_step must reference a registered Step ID in {capability_path_ref}"
+                )
+
+    predecessor_refs = manifest_resolved_sequence_items(
+        text, "product_goal_alignment", "predecessor_result_refs"
+    ) or []
+    current_number = iteration_number(iteration)
+    for reference in predecessor_refs:
+        target = by_id.get(reference)
+        target_number = iteration_number(
+            "" if target is None else target.metadata.get("iteration", "")
+        )
+        valid_acceptance = (
+            target is not None
+            and target.metadata.get("kind") == "iteration-acceptance"
+            and str(target.metadata.get("status", "")) in FINAL_ITERATION_STATUSES
+        )
+        valid_failed_redirect = (
+            target is not None
+            and target.metadata.get("kind") == "iteration-result"
+            and target.metadata.get("status") == "failed-preserved"
+        )
+        if not (
+            (valid_acceptance or valid_failed_redirect)
+            and current_number is not None
+            and target_number is not None
+            and target_number < current_number
+        ):
+            errors.append(
+                f"{label}: predecessor_result_refs item must reference an earlier Acceptance or failed-preserved Result: {reference}"
+            )
+
     accepted_refs = manifest_resolved_sequence_items(
         text, "product_goal_alignment", "accepted_capability_refs"
     ) or []
+    if not set(accepted_refs).issubset(set(predecessor_refs)):
+        errors.append(
+            f"{label}: accepted_capability_refs must be included in predecessor_result_refs"
+        )
     for reference in accepted_refs:
         target = by_id.get(reference)
         current_number = iteration_number(iteration)
@@ -1906,6 +3436,15 @@ def validate_product_goal_reference_targets(
             and target_number is not None
             and target_number < current_number
         )
+        if valid_prior_acceptance:
+            target_iteration = str(target.metadata.get("iteration", ""))
+            target_index = by_id.get(f"{target_iteration}-INDEX")
+            if (
+                target_index is not None
+                and target_index.metadata.get("kind") == "iteration-index"
+                and str(target_index.metadata.get("status", "")) == "rejected"
+            ):
+                valid_prior_acceptance = False
         if not valid_prior_acceptance:
             errors.append(
                 f"{label}: accepted_capability_refs item must reference an earlier accepted iteration: {reference}"
@@ -1923,6 +3462,7 @@ def validate_product_goal_reference_targets(
                 by_id,
                 new_refs,
                 verification,
+                manifest_text=text,
             )
         )
     cross_cases = manifest_resolved_sequence_items(
@@ -1994,6 +3534,14 @@ def validate_product_goal_reference_targets(
     blocking_case_ids = manifest_resolved_sequence_items(
         text, "product_goal_alignment", "blocking_case_ids"
     ) or []
+    reflection_by_slice: dict[str, dict[str, object]] = {}
+    if requires_reflection_gate(iteration):
+        errors.extend(
+            validate_reflection_gate_bindings(
+                alignment, new_refs, blocking_case_ids, label
+            )
+        )
+        reflection_by_slice = reflection_gate_bindings_by_slice(alignment)
     assigned_gate_cases = [
         case_id
         for reference in new_refs
@@ -2012,6 +3560,59 @@ def validate_product_goal_reference_targets(
             continue
         owned = set(slice_gate_cases_by_ref.get(reference, []))
         required_owned = set(cases_by_new_ref.get(reference, []))
+        if requires_reflection_gate(iteration):
+            reflection_binding = reflection_by_slice.get(reference)
+            reflection_case = (
+                reflection_binding.get("case_id")
+                if isinstance(reflection_binding, dict)
+                else None
+            )
+            if not isinstance(reflection_case, str):
+                errors.append(
+                    f"{target.relative_path}: Slice is missing its Manifest reflection Gate binding"
+                )
+            else:
+                required_owned.add(reflection_case)
+                if (
+                    target.metadata.get("product_goal_reflection_gate_case_id")
+                    != reflection_case
+                ):
+                    errors.append(
+                        f"{target.relative_path}: product_goal_reflection_gate_case_id must match the owned Manifest binding"
+                    )
+            if isinstance(reflection_binding, dict):
+                conditional_falsifiers = reflection_binding.get(
+                    "conditional_falsifier_bindings"
+                )
+                if isinstance(conditional_falsifiers, dict):
+                    for conditional_falsifier in conditional_falsifiers.values():
+                        if not isinstance(conditional_falsifier, dict):
+                            continue
+                        conditional_case = conditional_falsifier.get("case_id")
+                        if isinstance(conditional_case, str):
+                            required_owned.add(conditional_case)
+            early_canary_bindings = alignment.get("early_hidden_canary_bindings")
+            if isinstance(early_canary_bindings, dict):
+                for early_binding in early_canary_bindings.values():
+                    if (
+                        isinstance(early_binding, dict)
+                        and early_binding.get("new_slice_ref") == reference
+                    ):
+                        for field in ("case_id", "negative_case_id"):
+                            early_case = early_binding.get(field)
+                            if isinstance(early_case, str):
+                                required_owned.add(early_case)
+            for early_field in (
+                "early_comparison_binding",
+                "early_diagnostic_binding",
+            ):
+                early_binding = alignment.get(early_field)
+                if (
+                    isinstance(early_binding, dict)
+                    and early_binding.get("new_slice_ref") == reference
+                    and isinstance(early_binding.get("case_id"), str)
+                ):
+                    required_owned.add(str(early_binding["case_id"]))
         web_case = target.metadata.get("product_goal_web_checkpoint_id")
         if isinstance(web_case, str):
             required_owned.add(web_case)
@@ -2025,7 +3626,7 @@ def validate_product_goal_reference_targets(
                 required_owned.add(ad_hoc_case)
         if not required_owned.issubset(owned):
             errors.append(
-                f"{target.relative_path}: Slice gate Cases must include its owned cross-domain, Web and ad-hoc Cases"
+                f"{target.relative_path}: Slice gate Cases must include its owned cross-domain, Web, ad-hoc, early-evaluation, conditional-falsifier and reflection Cases"
             )
 
     checkpoint_bindings: list[tuple[str, dict[str, object]]] = []
@@ -2062,11 +3663,381 @@ def validate_product_goal_reference_targets(
                 manifest=manifest,
                 verification=verification,
                 require_completed=require_completed_slice_sequence,
+                require_rejected=require_rejected_slice_sequence,
             )
         )
 
     for case_id in blocking_case_ids:
         errors.extend(validate_blocking_verification_case(verification, case_id))
+    return errors
+
+
+def validate_slice_reflection_result(
+    target: Document,
+    result: Document,
+    binding: dict[str, object] | None,
+    manifest_slice: dict[str, object],
+    verification: Document | None,
+    label: str,
+    *,
+    blocked: bool,
+    assumption_expectations: dict[str, str] | None = None,
+    assumption_catalog_digest: str | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    reflection_catalog_required = requires_reflection_gate(
+        str(target.metadata.get("iteration", ""))
+    )
+    if reflection_catalog_required and (
+        not isinstance(assumption_expectations, dict)
+        or not assumption_expectations
+    ):
+        errors.append(
+            f"{label}: {target.identifier} reflection validation requires the frozen assumption catalog"
+        )
+    if reflection_catalog_required and (
+        not isinstance(assumption_catalog_digest, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", assumption_catalog_digest) is None
+    ):
+        errors.append(
+            f"{label}: {target.identifier} reflection validation requires an exact critical_assumption_catalog_digest"
+        )
+    if not isinstance(binding, dict):
+        return [f"{label}: {target.identifier} is missing its reflection Gate binding"]
+    case_id = binding.get("case_id")
+    if not isinstance(case_id, str):
+        return [f"{label}: {target.identifier} reflection Gate has no valid case_id"]
+    if result.metadata.get("reflection_gate_case_id") != case_id:
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_gate_case_id must equal {case_id}"
+        )
+    if result.metadata.get("reflection_gate_status") != "PASS":
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_gate_status must equal PASS"
+        )
+    if (
+        assumption_catalog_digest is not None
+        and result.metadata.get("critical_assumption_catalog_digest")
+        != assumption_catalog_digest
+    ):
+        errors.append(
+            f"{label}: {target.identifier} Result must bind the frozen critical_assumption_catalog_digest"
+        )
+    if result.metadata.get("reflection_decision_owner") != binding.get(
+        "decision_owner"
+    ):
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_decision_owner must match the Manifest binding"
+        )
+    decision_ref = result.metadata.get("reflection_decision_ref")
+    if not isinstance(decision_ref, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", decision_ref
+    ) is None:
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_decision_ref must bind an exact user message digest"
+        )
+    if result.metadata.get("reflection_issue_class") not in REFLECTION_ISSUE_CLASSES:
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_issue_class is invalid"
+        )
+    if result.metadata.get("reflection_issue_scope") not in REFLECTION_ISSUE_SCOPES:
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_issue_scope is invalid"
+        )
+    if blocked and result.metadata.get("reflection_issue_class") == "none":
+        errors.append(
+            f"{label}: blocked {target.identifier} reflection_issue_class must identify the failure class"
+        )
+    if blocked and result.metadata.get("reflection_issue_scope") == "none":
+        errors.append(
+            f"{label}: blocked {target.identifier} reflection_issue_scope must identify individual or systemic impact"
+        )
+    report_digest = result.metadata.get("reflection_report_digest")
+    valid_report_digest = isinstance(report_digest, str) and re.fullmatch(
+        r"sha256:[0-9a-f]{64}", report_digest
+    ) is not None
+    if not valid_report_digest:
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_report_digest must be an exact sha256 digest"
+        )
+    decision = result.metadata.get("reflection_decision")
+    if blocked:
+        if decision not in {"REDIRECT", "REJECT"}:
+            errors.append(
+                f"{label}: blocked {target.identifier} reflection_decision must equal REDIRECT or REJECT"
+            )
+    elif decision != binding.get("success_decision"):
+        errors.append(
+            f"{label}: completed {target.identifier} reflection_decision must equal its Manifest success_decision"
+        )
+    if manifest_slice.get("reflection_decision") != decision:
+        errors.append(
+            f"{label}: development.slices.{target.identifier}.reflection_decision must match its Result"
+        )
+    reflection_heading_count = len(
+        re.findall(
+            r"(?m)^[ ]{0,3}##[ \t]+Architecture reflection and continuation decision[ \t]*#*[ \t]*$",
+            result.body,
+        )
+    )
+    if reflection_heading_count != 1:
+        errors.append(
+            f"{label}: {target.identifier} Result must contain exactly one Architecture reflection and continuation decision section"
+        )
+    section = markdown_section_body(
+        result, "Architecture reflection and continuation decision"
+    )
+    if (
+        section is not None
+        and valid_report_digest
+        and report_digest
+        != "sha256:" + hashlib.sha256(section.encode("utf-8")).hexdigest()
+    ):
+        errors.append(
+            f"{label}: {target.identifier} Result reflection_report_digest must bind the exact reflection section"
+        )
+    if not has_substantive_markdown_content(section):
+        errors.append(
+            f"{label}: {target.identifier} Result must contain a substantive Architecture reflection and continuation decision section"
+        )
+    else:
+        assumption_verdicts: dict[str, str] = {}
+        owned_case_ids = {
+            str(item)
+            for item in target.metadata.get("product_goal_slice_gate_case_ids", [])
+        }
+        for subsection_name in REFLECTION_RESULT_REQUIRED_SUBSECTIONS:
+            subsection = markdown_subsection_body(section, subsection_name)
+            if not has_substantive_markdown_content(subsection):
+                errors.append(
+                    f"{label}: {target.identifier} reflection subsection is missing or empty: {subsection_name}"
+                )
+        due_assumption_ids = resolved_assumption_ids(binding.get("assumption_ids"))
+        assumption_ids = list(due_assumption_ids)
+        triggered_falsifier_cases: dict[str, str] = {}
+        conditional_falsifiers = binding.get("conditional_falsifier_bindings")
+        if blocked and isinstance(conditional_falsifiers, dict):
+            for conditional_falsifier in conditional_falsifiers.values():
+                if not isinstance(conditional_falsifier, dict):
+                    continue
+                conditional_assumption = conditional_falsifier.get("assumption_id")
+                conditional_case = conditional_falsifier.get("case_id")
+                if not isinstance(conditional_assumption, str) or not isinstance(
+                    conditional_case, str
+                ):
+                    continue
+                conditional_rows = (
+                    markdown_table_case_rows(verification.body, conditional_case)
+                    if verification is not None
+                    else []
+                )
+                conditional_verdict = (
+                    blocking_case_status_verdict(conditional_rows[0][6])
+                    if len(conditional_rows) == 1
+                    and len(conditional_rows[0]) == 7
+                    else None
+                )
+                if conditional_verdict == "FAIL":
+                    assumption_ids.append(conditional_assumption)
+                    triggered_falsifier_cases[
+                        conditional_assumption
+                    ] = conditional_case
+        if assumption_ids:
+            for assumption_id in assumption_ids:
+                rows = markdown_table_case_rows(section, str(assumption_id))
+                if len(rows) != 1 or len(rows[0]) != 5:
+                    errors.append(
+                        f"{label}: {target.identifier} must record exactly one five-column verdict row for {assumption_id}"
+                    )
+                    continue
+                row = rows[0]
+                if assumption_expectations is not None:
+                    expected_statement = assumption_expectations.get(assumption_id)
+                    if expected_statement is None or row[1] != expected_statement:
+                        errors.append(
+                            f"{label}: {target.identifier} {assumption_id} Expected must exactly match the frozen Proposal assumption statement"
+                        )
+                for column_name, value in zip(
+                    ("expected", "evidence", "impact"),
+                    (row[1], row[2], row[4]),
+                    strict=True,
+                ):
+                    if (
+                        not value
+                        or is_pending(value)
+                        or is_absent_evidence(value)
+                        or has_unresolved_placeholder(value)
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} {assumption_id} {column_name} must be resolved"
+                        )
+                normalized_verdict = row[3].upper()
+                if normalized_verdict not in REFLECTION_ASSUMPTION_VERDICTS:
+                    errors.append(
+                        f"{label}: {target.identifier} {assumption_id} verdict must be SUPPORTED, FALSIFIED or UNRESOLVED"
+                    )
+                else:
+                    assumption_verdicts[assumption_id] = normalized_verdict
+                evidence_case_ids = [
+                    item.strip().strip("`") for item in row[2].split(",")
+                ]
+                triggered_case = triggered_falsifier_cases.get(assumption_id)
+                if triggered_case is not None and (
+                    normalized_verdict not in {"FALSIFIED", "UNRESOLVED"}
+                    or triggered_case not in evidence_case_ids
+                ):
+                    errors.append(
+                        f"{label}: {target.identifier} triggered early falsifier {triggered_case} requires a FALSIFIED or UNRESOLVED {assumption_id} row citing that Case"
+                    )
+                if (
+                    not evidence_case_ids
+                    or len(evidence_case_ids) != len(set(evidence_case_ids))
+                    or any(
+                        re.fullmatch(
+                            r"V-(?:PRE-)?[A-Z0-9]+(?:-[A-Z0-9]+)*", item
+                        )
+                        is None
+                        for item in evidence_case_ids
+                    )
+                ):
+                    errors.append(
+                        f"{label}: {target.identifier} {assumption_id} exact evidence must be unique Verification Case IDs"
+                    )
+                else:
+                    evidence_has_fail = False
+                    for evidence_case_id in evidence_case_ids:
+                        if (
+                            evidence_case_id == case_id
+                            or evidence_case_id.startswith("V-REFLECT-")
+                        ):
+                            errors.append(
+                                f"{label}: {target.identifier} {assumption_id} must not use a reflection Case as self-evidence"
+                            )
+                            continue
+                        if evidence_case_id not in owned_case_ids:
+                            errors.append(
+                                f"{label}: {target.identifier} {assumption_id} evidence Case must be owned by the Slice: {evidence_case_id}"
+                            )
+                            continue
+                        if verification is not None:
+                            evidence_rows = markdown_table_case_rows(
+                                verification.body, evidence_case_id
+                            )
+                            if len(evidence_rows) == 1 and len(evidence_rows[0]) == 7:
+                                evidence_status_verdict = (
+                                    blocking_case_status_verdict(
+                                        evidence_rows[0][6]
+                                    )
+                                )
+                                if evidence_status_verdict == "FAIL":
+                                    evidence_has_fail = True
+                        errors.extend(
+                            validate_blocking_verification_case(
+                                verification,
+                                evidence_case_id,
+                                require_pass=not blocked,
+                                require_executed=True,
+                                expected_evidence=(
+                                    f"{result.identifier}#{evidence_case_id}"
+                                ),
+                            )
+                        )
+                    if (
+                        blocked
+                        and normalized_verdict in {"FALSIFIED", "UNRESOLVED"}
+                        and not evidence_has_fail
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} {assumption_id} {normalized_verdict} must bind at least one executed FAIL Case"
+                        )
+        decision_subsection = markdown_subsection_body(
+            section, "Decision and rationale"
+        )
+        body_decisions = (
+            re.findall(
+                r"(?m)^[ ]{0,3}Decision:\s*(CONTINUE|ACCEPT|REDIRECT|REJECT)\s*$",
+                decision_subsection,
+            )
+            if decision_subsection is not None
+            else []
+        )
+        if len(body_decisions) != 1:
+            errors.append(
+                f"{label}: {target.identifier} reflection Decision and rationale must contain exactly one Decision line"
+            )
+        elif body_decisions[0] != decision:
+            errors.append(
+                f"{label}: {target.identifier} reflection body Decision must match Result metadata and Manifest"
+            )
+        all_body_decisions = re.findall(
+            r"(?m)^[ ]{0,3}Decision:\s*(CONTINUE|ACCEPT|REDIRECT|REJECT)\s*$",
+            section,
+        )
+        if len(all_body_decisions) != 1:
+            errors.append(
+                f"{label}: {target.identifier} exact reflection section must contain exactly one Decision line in total"
+            )
+        decision_owner_subsection = decision_subsection or ""
+        body_decision_owners = re.findall(
+            r"(?m)^[ ]{0,3}Decision owner:\s*(\S(?:.*\S)?)\s*$",
+            decision_owner_subsection,
+        )
+        if len(body_decision_owners) != 1:
+            errors.append(
+                f"{label}: {target.identifier} reflection Decision and rationale must contain exactly one Decision owner line"
+            )
+        elif body_decision_owners[0] != result.metadata.get(
+            "reflection_decision_owner"
+        ):
+            errors.append(
+                f"{label}: {target.identifier} reflection body Decision owner must match Result metadata and Manifest"
+            )
+        all_body_decision_owners = re.findall(
+            r"(?m)^[ ]{0,3}Decision owner:\s*(\S(?:.*\S)?)\s*$",
+            section,
+        )
+        if len(all_body_decision_owners) != 1:
+            errors.append(
+                f"{label}: {target.identifier} exact reflection section must contain exactly one Decision owner line in total"
+            )
+        body_decision_refs = re.findall(
+            r"(?m)^[ ]{0,3}Decision ref:\s*(codex-user-message:sha256:[0-9a-f]{64})\s*$",
+            decision_subsection or "",
+        )
+        all_body_decision_refs = re.findall(
+            r"(?m)^[ ]{0,3}Decision ref:\s*(codex-user-message:sha256:[0-9a-f]{64})\s*$",
+            section,
+        )
+        if len(body_decision_refs) != 1 or len(all_body_decision_refs) != 1:
+            errors.append(
+                f"{label}: {target.identifier} exact reflection section must contain exactly one Decision ref line in the decision subsection"
+            )
+        elif body_decision_refs[0] != decision_ref:
+            errors.append(
+                f"{label}: {target.identifier} reflection body Decision ref must match Result metadata"
+            )
+        if decision in {"CONTINUE", "ACCEPT"} and due_assumption_ids and any(
+            assumption_verdicts.get(assumption_id) != "SUPPORTED"
+            for assumption_id in due_assumption_ids
+        ):
+            errors.append(
+                f"{label}: {target.identifier} {decision} requires every bound critical assumption verdict to be SUPPORTED"
+            )
+        if blocked and not any(
+            assumption_verdicts.get(assumption_id) in {"FALSIFIED", "UNRESOLVED"}
+            for assumption_id in assumption_ids
+        ):
+            errors.append(
+                f"{label}: blocked {target.identifier} requires at least one FALSIFIED or UNRESOLVED assumption backed by an executed FAIL Case"
+            )
+    errors.extend(
+        validate_blocking_verification_case(
+            verification,
+            case_id,
+            require_pass=True,
+            expected_evidence=f"{result.identifier}#{case_id}",
+        )
+    )
     return errors
 
 
@@ -2078,8 +4049,9 @@ def validate_product_goal_slice_sequence(
     manifest: dict[str, object] | None = None,
     verification: Document | None = None,
     require_completed: bool = False,
+    require_rejected: bool = False,
 ) -> list[str]:
-    """Require a sequential execution state, or all completed at finalization."""
+    """Require an active sequence or one of the two closed terminal sequences."""
 
     errors: list[str] = []
     slices: list[Document] = []
@@ -2101,7 +4073,10 @@ def validate_product_goal_slice_sequence(
                 development_slices = raw_slices
     alignment = manifest.get("product_goal_alignment") if manifest is not None else None
     early_canary_by_slice: dict[str, dict[str, object]] = {}
+    early_comparison_by_slice: dict[str, dict[str, object]] = {}
+    reflection_by_slice: dict[str, dict[str, object]] = {}
     if isinstance(alignment, dict):
+        reflection_by_slice = reflection_gate_bindings_by_slice(alignment)
         canary_bindings = alignment.get("early_hidden_canary_bindings")
         if isinstance(canary_bindings, dict):
             for binding in canary_bindings.values():
@@ -2110,6 +4085,39 @@ def validate_product_goal_slice_sequence(
                 new_slice_ref = binding.get("new_slice_ref")
                 if isinstance(new_slice_ref, str):
                     early_canary_by_slice[new_slice_ref] = binding
+        comparison_binding = alignment.get("early_comparison_binding")
+        if isinstance(comparison_binding, dict):
+            new_slice_ref = comparison_binding.get("new_slice_ref")
+            if isinstance(new_slice_ref, str):
+                early_comparison_by_slice[new_slice_ref] = comparison_binding
+    assumption_catalog_digest: str | None = None
+    assumption_expectations: dict[str, str] | None = None
+    if slices and requires_reflection_gate(
+        str(slices[0].metadata.get("iteration", ""))
+    ):
+        proposal_id = f"{slices[0].metadata.get('iteration')}-PROPOSAL"
+        (
+            assumption_catalog_digest,
+            parsed_assumption_expectations,
+            catalog_errors,
+        ) = critical_assumption_catalog(by_id.get(proposal_id))
+        errors.extend(catalog_errors)
+        assumption_expectations = parsed_assumption_expectations
+        if not isinstance(alignment, dict) or alignment.get(
+            "critical_assumption_catalog_digest"
+        ) != assumption_catalog_digest:
+            errors.append(
+                f"{label}: critical_assumption_catalog_digest must match the exact Proposal assumption catalog"
+            )
+        critical_assumption_ids = (
+            resolved_assumption_ids(alignment.get("critical_assumption_ids"))
+            if isinstance(alignment, dict)
+            else []
+        )
+        if critical_assumption_ids != list(parsed_assumption_expectations):
+            errors.append(
+                f"{label}: critical_assumption_ids must exactly match the Proposal assumption catalog order"
+            )
     completed_result_refs = [
         manifest_slice.get("result")
         for target, status in zip(slices, statuses, strict=True)
@@ -2126,11 +4134,33 @@ def validate_product_goal_slice_sequence(
     active_indexes = [
         index for index, status in enumerate(statuses) if status in ACTIVE_SLICE_STATUSES
     ]
-    if require_completed:
+    blocked_indexes = [
+        index for index, status in enumerate(statuses) if status == "blocked"
+    ]
+    if require_completed and require_rejected:
+        errors.append(f"{label}: iteration cannot be both completed and rejected")
+    elif require_completed:
         if any(status != "completed" for status in statuses):
             errors.append(
                 f"{label}: completed iteration requires every new capability slice to be completed"
             )
+    elif require_rejected:
+        if len(blocked_indexes) != 1:
+            errors.append(
+                f"{label}: rejected iteration requires exactly one blocked new capability slice"
+            )
+        else:
+            blocked_index = blocked_indexes[0]
+            if any(status != "completed" for status in statuses[:blocked_index]):
+                errors.append(
+                    f"{label}: slices before the blocked slice must be completed in Manifest order"
+                )
+            if any(status != "proposed" for status in statuses[blocked_index + 1 :]):
+                errors.append(
+                    f"{label}: slices after the blocked slice must remain proposed"
+                )
+        if active_indexes:
+            errors.append(f"{label}: rejected iteration must not have an active slice")
     elif len(active_indexes) != 1:
         errors.append(
             f"{label}: execution requires exactly one authorized/in-progress new capability slice"
@@ -2153,7 +4183,7 @@ def validate_product_goal_slice_sequence(
         else:
             expected_active_slice = (
                 "none"
-                if require_completed or len(active_indexes) != 1
+                if require_completed or require_rejected or len(active_indexes) != 1
                 else slices[active_indexes[0]].identifier
             )
             if authorization.get("active_slice") != expected_active_slice:
@@ -2176,10 +4206,56 @@ def validate_product_goal_slice_sequence(
                             f"{label}: authorization.{manifest_field} must match the accepted Readiness"
                         )
 
+    seen_authorization_refs: set[str] = set()
+    decision_forbidden_refs: set[str] = set()
+    seen_reflection_decision_refs: set[str] = set()
+    top_authorized_at_value: datetime | None = None
+    previous_slice_authorized_at: datetime | None = None
+    if isinstance(alignment, dict):
+        positive_value_freeze_receipt = alignment.get(
+            "positive_value_freeze_receipt_ref"
+        )
+        if isinstance(positive_value_freeze_receipt, str) and re.fullmatch(
+            r"codex-user-message:sha256:[0-9a-f]{64}",
+            positive_value_freeze_receipt,
+        ) is not None:
+            decision_forbidden_refs.add(positive_value_freeze_receipt)
+    if manifest is not None:
+        top_authorization = manifest.get("authorization")
+        top_authorization_ref = (
+            top_authorization.get("authorization_ref")
+            if isinstance(top_authorization, dict)
+            else None
+        )
+        if isinstance(top_authorization_ref, str) and re.fullmatch(
+            r"codex-user-message:sha256:[0-9a-f]{64}", top_authorization_ref
+        ) is not None:
+            decision_forbidden_refs.add(top_authorization_ref)
+        top_authorized_at = (
+            top_authorization.get("authorized_at")
+            if isinstance(top_authorization, dict)
+            else None
+        )
+        if isinstance(top_authorized_at, str):
+            try:
+                top_authorized_at_value = datetime.fromisoformat(
+                    top_authorized_at.replace("Z", "+00:00")
+                )
+            except ValueError:
+                top_authorized_at_value = None
     for index, target in enumerate(slices):
+        reflection_result: Document | None = None
         status = statuses[index]
         authority = target.metadata.get("authority")
-        coding_input = is_true(target.metadata.get("coding_input", ""))
+        coding_input_value = target.metadata.get("coding_input", "")
+        coding_input = is_true(coding_input_value)
+        if (
+            require_rejected
+            and str(coding_input_value).strip().lower() != "false"
+        ):
+            errors.append(
+                f"{target.relative_path}: rejected iteration slices must use coding_input false"
+            )
         if status == "proposed" and (
             authority != "proposed-development" or coding_input
         ):
@@ -2198,7 +4274,19 @@ def validate_product_goal_slice_sequence(
             errors.append(
                 f"{target.relative_path}: completed slice must use historical-development with coding_input false"
             )
-        elif status not in {"proposed", "authorized", "in-progress", "completed"}:
+        elif status == "blocked" and (
+            authority != "development-evidence" or coding_input
+        ):
+            errors.append(
+                f"{target.relative_path}: blocked slice must use development-evidence with coding_input false"
+            )
+        elif status not in {
+            "proposed",
+            "authorized",
+            "in-progress",
+            "completed",
+            "blocked",
+        }:
             errors.append(
                 f"{target.relative_path}: slice status is invalid for sequential development"
             )
@@ -2208,6 +4296,7 @@ def validate_product_goal_slice_sequence(
             "authorized",
             "in-progress",
             "completed",
+            "blocked",
         }:
             if manifest_slice.get("authorized_by") != "user":
                 errors.append(
@@ -2221,6 +4310,31 @@ def validate_product_goal_slice_sequence(
                 errors.append(
                     f"{label}: {status} {target.identifier} authorized_at must be an ISO-8601 timestamp with timezone"
                 )
+            else:
+                try:
+                    authorized_at_value = datetime.fromisoformat(
+                        authorized_at.replace("Z", "+00:00")
+                    )
+                except ValueError:
+                    errors.append(
+                        f"{label}: {status} {target.identifier} authorized_at must be a real ISO-8601 timestamp"
+                    )
+                else:
+                    if (
+                        top_authorized_at_value is not None
+                        and authorized_at_value < top_authorized_at_value
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} authorization cannot precede Readiness authorization"
+                        )
+                    if (
+                        previous_slice_authorized_at is not None
+                        and authorized_at_value <= previous_slice_authorized_at
+                    ):
+                        errors.append(
+                            f"{label}: Slice authorization timestamps must be strictly increasing"
+                        )
+                    previous_slice_authorized_at = authorized_at_value
             authorization_ref = manifest_slice.get("authorization_ref")
             if not isinstance(authorization_ref, str) or re.fullmatch(
                 r"codex-user-message:sha256:[0-9a-f]{64}", authorization_ref
@@ -2228,6 +4342,13 @@ def validate_product_goal_slice_sequence(
                 errors.append(
                     f"{label}: {status} {target.identifier} authorization_ref must bind an exact user message digest"
                 )
+            elif authorization_ref in seen_authorization_refs:
+                errors.append(
+                    f"{label}: {target.identifier} must use a new user authorization message after the prior Slice reflection"
+                )
+            else:
+                seen_authorization_refs.add(authorization_ref)
+                decision_forbidden_refs.add(authorization_ref)
 
         if manifest is not None and not isinstance(manifest_slice, dict):
             errors.append(
@@ -2247,6 +4368,13 @@ def validate_product_goal_slice_sequence(
                 errors.append(
                     f"{label}: development.slices.{target.identifier}.coding_input must match the Slice document"
                 )
+            if (
+                require_rejected
+                and str(manifest_coding_input).strip().lower() != "false"
+            ):
+                errors.append(
+                    f"{label}: rejected development.slices.{target.identifier}.coding_input must be false"
+                )
 
             if status == "proposed":
                 for field in ("result", "authorized_by", "authorized_at", "authorization_ref"):
@@ -2260,6 +4388,24 @@ def validate_product_goal_slice_sequence(
                     errors.append(
                         f"{label}: proposed {target.identifier} product_code_freeze_digest must be not-executed"
                     )
+                if (
+                    requires_reflection_gate(target.metadata.get("iteration", ""))
+                    and manifest_slice.get("reflection_decision") != "not-executed"
+                ):
+                    errors.append(
+                        f"{label}: proposed {target.identifier} reflection_decision must be not-executed"
+                    )
+                if requires_reflection_gate(target.metadata.get("iteration", "")):
+                    expected_prerequisite = (
+                        "none-first-slice" if index == 0 else "not-executed"
+                    )
+                    if (
+                        manifest_slice.get("reflection_prerequisite_result")
+                        != expected_prerequisite
+                    ):
+                        errors.append(
+                            f"{label}: proposed {target.identifier} reflection_prerequisite_result must equal {expected_prerequisite}"
+                        )
             elif status in ACTIVE_SLICE_STATUSES:
                 result_ref = manifest_slice.get("result")
                 if result_ref not in {"not-executed", "in-progress"}:
@@ -2274,9 +4420,111 @@ def validate_product_goal_slice_sequence(
                     errors.append(
                         f"{label}: active {target.identifier} product_code_freeze_digest must be not-executed or an exact sha256 digest"
                     )
+                if (
+                    requires_reflection_gate(target.metadata.get("iteration", ""))
+                    and manifest_slice.get("reflection_decision")
+                    not in {"not-executed", "in-progress"}
+                ):
+                    errors.append(
+                        f"{label}: active {target.identifier} reflection_decision must be not-executed or in-progress"
+                    )
+                if (
+                    requires_reflection_gate(target.metadata.get("iteration", ""))
+                    and index == 0
+                    and manifest_slice.get("reflection_prerequisite_result")
+                    != "none-first-slice"
+                ):
+                    errors.append(
+                        f"{label}: first active Slice reflection_prerequisite_result must equal none-first-slice"
+                    )
+            elif status == "blocked":
+                result_ref = manifest_slice.get("result")
+                result = by_id.get(result_ref) if isinstance(result_ref, str) else None
+                reflection_result = result
+                dependencies: list[object] = []
+                if result is not None and isinstance(
+                    result.metadata.get("depends_on", []), list
+                ):
+                    dependencies = result.metadata.get("depends_on", [])  # type: ignore[assignment]
+                if (
+                    result is None
+                    or result.metadata.get("kind") != "iteration-result"
+                    or str(result.metadata.get("iteration", ""))
+                    != str(target.metadata.get("iteration", ""))
+                    or result.metadata.get("status") != "failed-preserved"
+                    or result.metadata.get("authority") != "execution-evidence"
+                    or target.identifier not in dependencies
+                    or f"{target.metadata.get('iteration')}-VERIFICATION"
+                    not in dependencies
+                ):
+                    errors.append(
+                        f"{label}: blocked {target.identifier} must bind same-iteration failed-preserved execution evidence that depends on the Slice and Verification"
+                    )
+                else:
+                    freeze_digest = manifest_slice.get("product_code_freeze_digest")
+                    if not isinstance(freeze_digest, str) or re.fullmatch(
+                        r"sha256:[0-9a-f]{64}", freeze_digest
+                    ) is None:
+                        errors.append(
+                            f"{label}: blocked {target.identifier} must bind an exact product_code_freeze_digest"
+                        )
+                    elif result.metadata.get("product_code_freeze_digest") != freeze_digest:
+                        errors.append(
+                            f"{label}: blocked {target.identifier} Result must bind its exact product code freeze"
+                        )
+                    comparison_binding = early_comparison_by_slice.get(
+                        target.identifier
+                    )
+                    comparison_case = (
+                        comparison_binding.get("case_id")
+                        if isinstance(comparison_binding, dict)
+                        else None
+                    )
+                    comparison_rows = (
+                        markdown_table_case_rows(verification.body, comparison_case)
+                        if verification is not None
+                        and isinstance(comparison_case, str)
+                        else []
+                    )
+                    comparison_verdict = (
+                        blocking_case_status_verdict(comparison_rows[0][6])
+                        if len(comparison_rows) == 1
+                        and len(comparison_rows[0]) == 7
+                        else None
+                    )
+                    if (
+                        isinstance(alignment, dict)
+                        and comparison_verdict in {"PASS", "FAIL"}
+                    ):
+                        errors.extend(
+                            validate_positive_value_result(
+                                result,
+                                alignment,
+                                label,
+                                require_pass=False,
+                                expected_case_id=str(comparison_case),
+                            )
+                        )
+                    if requires_reflection_gate(
+                        target.metadata.get("iteration", "")
+                    ):
+                        errors.extend(
+                            validate_slice_reflection_result(
+                                target,
+                                result,
+                                reflection_by_slice.get(target.identifier),
+                                manifest_slice,
+                                verification,
+                                label,
+                                blocked=True,
+                                assumption_expectations=assumption_expectations,
+                                assumption_catalog_digest=assumption_catalog_digest,
+                            )
+                        )
             elif status == "completed":
                 result_ref = manifest_slice.get("result")
                 result = by_id.get(result_ref) if isinstance(result_ref, str) else None
+                reflection_result = result
                 dependencies: list[object] = []
                 if result is not None and isinstance(
                     result.metadata.get("depends_on", []), list
@@ -2320,21 +4568,64 @@ def validate_product_goal_slice_sequence(
                                 errors.append(
                                     f"{label}: completed {target.identifier} Result {result_field} must match its frozen canary"
                                 )
-                        exposure_receipt = result.metadata.get(
-                            "canary_exposure_receipt_digest"
+                        disclosure_receipt = result.metadata.get(
+                            "canary_disclosure_receipt_digest"
                         )
-                        if not isinstance(exposure_receipt, str) or re.fullmatch(
-                            r"sha256:[0-9a-f]{64}", exposure_receipt
+                        if not isinstance(disclosure_receipt, str) or re.fullmatch(
+                            r"sha256:[0-9a-f]{64}", disclosure_receipt
                         ) is None:
                             errors.append(
-                                f"{label}: completed {target.identifier} Result must bind an exact canary exposure receipt"
+                                f"{label}: completed {target.identifier} Result must bind an exact canary disclosure receipt"
                             )
                         if result.metadata.get(
-                            "canary_product_change_after_exposure_count"
+                            "canary_product_change_before_result_seal_count"
                         ) != 0:
                             errors.append(
-                                f"{label}: completed {target.identifier} canary product change count must equal zero"
+                                f"{label}: completed {target.identifier} disclosure-to-Result-seal product change count must equal zero"
                             )
+                        if result.metadata.get(
+                            "canary_capsule_consumption_status"
+                        ) != "CONSUMED_AFTER_RESULT_SEAL":
+                            errors.append(
+                                f"{label}: completed {target.identifier} must consume its canary after the Result seal"
+                            )
+
+                    if (
+                        target.identifier in early_comparison_by_slice
+                        and isinstance(alignment, dict)
+                    ):
+                        comparison_case = early_comparison_by_slice[
+                            target.identifier
+                        ].get("case_id")
+                        errors.extend(
+                            validate_positive_value_result(
+                                result,
+                                alignment,
+                                label,
+                                expected_case_id=(
+                                    str(comparison_case)
+                                    if isinstance(comparison_case, str)
+                                    else None
+                                ),
+                            )
+                        )
+
+                    if requires_reflection_gate(
+                        target.metadata.get("iteration", "")
+                    ):
+                        errors.extend(
+                            validate_slice_reflection_result(
+                                target,
+                                result,
+                                reflection_by_slice.get(target.identifier),
+                                manifest_slice,
+                                verification,
+                                label,
+                                blocked=False,
+                                assumption_expectations=assumption_expectations,
+                                assumption_catalog_digest=assumption_catalog_digest,
+                            )
+                        )
 
                 if result is not None and verification is not None:
                     case_ids = target.metadata.get("product_goal_slice_gate_case_ids", [])
@@ -2350,12 +4641,106 @@ def validate_product_goal_slice_sequence(
                             )
                         )
 
+            if (
+                requires_reflection_gate(target.metadata.get("iteration", ""))
+                and status in {"completed", "blocked"}
+                and reflection_result is not None
+            ):
+                if target.identifier in early_comparison_by_slice:
+                    adjudication_receipt = reflection_result.metadata.get(
+                        "positive_value_adjudication_receipt_ref"
+                    )
+                    if adjudication_receipt in decision_forbidden_refs or (
+                        adjudication_receipt in seen_reflection_decision_refs
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} positive value adjudication must use a new message after prior authorizations and decisions"
+                        )
+                reflection_decision_ref = reflection_result.metadata.get(
+                    "reflection_decision_ref"
+                )
+                if isinstance(reflection_decision_ref, str) and re.fullmatch(
+                    r"codex-user-message:sha256:[0-9a-f]{64}",
+                    reflection_decision_ref,
+                ) is not None:
+                    if reflection_decision_ref in decision_forbidden_refs:
+                        errors.append(
+                            f"{label}: {target.identifier} reflection_decision_ref must use a new user message after all prior authorizations"
+                        )
+                    if reflection_decision_ref in seen_reflection_decision_refs:
+                        errors.append(
+                            f"{label}: each Slice reflection_decision_ref must be unique"
+                        )
+                    seen_reflection_decision_refs.add(reflection_decision_ref)
+                    decision_forbidden_refs.add(reflection_decision_ref)
+                adjudication_receipt = reflection_result.metadata.get(
+                    "positive_value_adjudication_receipt_ref"
+                )
+                if isinstance(adjudication_receipt, str) and re.fullmatch(
+                    r"codex-user-message:sha256:[0-9a-f]{64}",
+                    adjudication_receipt,
+                ) is not None:
+                    decision_forbidden_refs.add(adjudication_receipt)
+
         if index > 0:
             dependencies = target.metadata.get("depends_on", [])
             if not isinstance(dependencies, list) or new_refs[index - 1] not in dependencies:
                 errors.append(
                     f"{target.relative_path}: sequential slice must depend on {new_refs[index - 1]}"
                 )
+            if (
+                requires_reflection_gate(target.metadata.get("iteration", ""))
+                and status != "proposed"
+                and isinstance(manifest_slice, dict)
+            ):
+                previous_slice_ref = new_refs[index - 1]
+                previous_manifest_slice = development_slices.get(previous_slice_ref)
+                previous_result_ref = (
+                    previous_manifest_slice.get("result")
+                    if isinstance(previous_manifest_slice, dict)
+                    else None
+                )
+                if (
+                    not isinstance(previous_result_ref, str)
+                    or is_pending(previous_result_ref)
+                    or is_absent_evidence(previous_result_ref)
+                    or previous_result_ref in {"not-executed", "in-progress"}
+                ):
+                    errors.append(
+                        f"{label}: {target.identifier} requires the prior Slice exact reflection Result before authorization"
+                    )
+                else:
+                    if (
+                        manifest_slice.get("reflection_prerequisite_result")
+                        != previous_result_ref
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} reflection_prerequisite_result must equal {previous_result_ref}"
+                        )
+                    if (
+                        not isinstance(dependencies, list)
+                        or previous_result_ref not in dependencies
+                    ):
+                        errors.append(
+                            f"{target.relative_path}: authorized follow-up Slice must depend on prior reflection Result {previous_result_ref}"
+                        )
+                    previous_result = by_id.get(previous_result_ref)
+                    if (
+                        previous_result is None
+                        or previous_result.metadata.get("reflection_gate_status")
+                        != "PASS"
+                        or previous_result.metadata.get("reflection_decision")
+                        != "CONTINUE"
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} prior reflection Result must be PASS with decision CONTINUE"
+                        )
+                    elif manifest_slice.get("authorization_ref") != (
+                        previous_result.metadata.get("reflection_decision_ref")
+                    ):
+                        errors.append(
+                            f"{label}: {target.identifier} authorization_ref must equal the prior reflection decision_ref"
+                        )
     return errors
 
 
@@ -2406,6 +4791,10 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
         iteration_selected = index is not None and str(
             index.metadata.get("status", "")
         ) in GOAL_ALIGNED_ITERATION_STATUSES
+        iteration_rejected = (
+            index is not None
+            and str(index.metadata.get("status", "")) == "rejected"
+        )
         selected_slices = [
             document
             for document in slice_candidates
@@ -2420,7 +4809,69 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
             or acceptances
         )
         if not selected:
+            if requires_reflection_gate(iteration):
+                for planned_document in (
+                    *(item for item in (proposal, readiness) if item is not None),
+                    *slice_candidates,
+                ):
+                    kind = str(planned_document.metadata.get("kind", ""))
+                    for section in empty_required_sections(
+                        planned_document,
+                        REFLECTION_GATE_REQUIRED_SECTIONS.get(kind, ()),
+                    ):
+                        errors.append(
+                            f"{planned_document.relative_path}: planned reflection section is missing or empty: {section}"
+                        )
+                errors.extend(
+                    validate_product_goal_alignment_documents(
+                        proposal, verification, iteration
+                    )
+                )
+                manifest = directory / "manifest.yaml"
+                if not manifest.exists():
+                    errors.append(
+                        f"{iteration}: proposed reflection-gated iteration is missing manifest.yaml"
+                    )
+                else:
+                    label = _path_label(manifest)
+                    try:
+                        manifest_text = manifest.read_text(encoding="utf-8")
+                        manifest_data = safe_load_manifest(manifest_text)
+                    except (OSError, UnicodeError, SafeYamlError) as error:
+                        errors.append(
+                            f"{label}: proposed reflection-gated Manifest cannot be loaded: {error}"
+                        )
+                    else:
+                        errors.extend(
+                            validate_product_goal_alignment_manifest(
+                                manifest_data,
+                                manifest_text,
+                                label,
+                                iteration,
+                            )
+                        )
+                        errors.extend(
+                            validate_product_goal_reference_targets(
+                                manifest,
+                                iteration,
+                                documents_by_id,
+                                verification=verification,
+                            )
+                        )
             continue
+
+        if iteration_rejected:
+            if (
+                str(index.metadata.get("coding_input", "")).strip().lower()
+                != "false"
+            ):
+                errors.append(
+                    f"{index.relative_path}: rejected iteration must use coding_input false"
+                )
+            if acceptances:
+                errors.append(
+                    f"{index.relative_path}: rejected iteration must not have an accepted/completed Acceptance"
+                )
 
         for required_document, expected_kind in (
             (proposal, "iteration-proposal"),
@@ -2487,7 +4938,10 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
             )
             errors.extend(
                 validate_active_manifest(
-                    manifest, iteration, allowed_statuses=allowed_statuses
+                    manifest,
+                    iteration,
+                    allowed_statuses=allowed_statuses,
+                    expected_status="rejected" if iteration_rejected else None,
                 )
             )
             errors.extend(
@@ -2496,14 +4950,18 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
                     iteration,
                     documents_by_id,
                     require_execution_slice_sequence=requires_readiness,
-                    require_completed_slice_sequence=bool(
-                        acceptances
-                        or (
-                            index is not None
-                            and str(index.metadata.get("status", ""))
-                            in FINAL_ITERATION_STATUSES
+                    require_completed_slice_sequence=(
+                        not iteration_rejected
+                        and bool(
+                            acceptances
+                            or (
+                                index is not None
+                                and str(index.metadata.get("status", ""))
+                                in FINAL_ITERATION_STATUSES
+                            )
                         )
                     ),
+                    require_rejected_slice_sequence=iteration_rejected,
                     verification=verification,
                 )
             )

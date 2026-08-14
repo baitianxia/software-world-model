@@ -38,6 +38,7 @@ from software_world_model.knowledge_engine import (
 from software_world_model.knowledge_engine.structure import (
     CoverageMember,
     CoverageMemberKind,
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
     StructureEvidence,
@@ -108,6 +109,17 @@ from .java_static_call import (
     JavaStaticCallEvaluator,
     JavaStaticCallInput,
 )
+from .java_source_semantics import (
+    CANONICALIZATION_DIGEST as JAVA_SEMANTICS_CANONICALIZATION_DIGEST,
+    CANONICALIZATION_REF as JAVA_SEMANTICS_CANONICALIZATION_REF,
+    EVALUATION_CONTEXT_DIGEST as JAVA_SEMANTICS_EVALUATION_CONTEXT_DIGEST,
+    EVALUATION_CONTEXT_REF as JAVA_SEMANTICS_EVALUATION_CONTEXT_REF,
+    SCHEMA_DIGEST as JAVA_SEMANTICS_SCHEMA_DIGEST,
+    SCHEMA_REF as JAVA_SEMANTICS_SCHEMA_REF,
+    JavaSourceSemanticsEvaluation,
+    JavaSourceSemanticsEvaluator,
+    JavaSourceSemanticsInput,
+)
 from .knowledge_update import (
     BuildObjective,
     CanonicalBuildTarget,
@@ -126,6 +138,92 @@ _CANONICAL_SYSTEM_KEY_METADATA = "canonical_system_key"
 _MAVEN_CANDIDATE_GENERATOR_REF = "MAVEN_STRUCTURE_CANDIDATE_GENERATOR@1"
 _MAVEN_INDEPENDENT_VERIFIER_REF = "MAVEN_STRUCTURE_INDEPENDENT_VERIFIER@1"
 _JAVA_CANDIDATE_GENERATOR_REF = "JAVA_STATIC_CALL_CANDIDATE_GENERATOR@1"
+_JAVA_SEMANTICS_CANDIDATE_GENERATOR_REF = (
+    "JAVA_SOURCE_SEMANTICS_CANDIDATE_GENERATOR@1"
+)
+
+StructureProfileEvaluation = (
+    MavenStructureEvaluation
+    | JavaStaticCallEvaluation
+    | JavaSourceSemanticsEvaluation
+)
+StructureProfileEvaluationInput = (
+    MavenEvaluationInput | JavaStaticCallInput | JavaSourceSemanticsInput
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _StructureProfileDefinition:
+    profile_ref: str
+    format_prefix: str
+    key_prefix: str
+    schema_ref: str
+    schema_digest: Digest
+    evaluation_context_ref: str
+    evaluation_context_digest: Digest
+    canonicalization_ref: str
+    canonicalization_digest: Digest
+    candidate_generator_ref: str
+    artifact_use_purpose: ArtifactUsePurpose
+
+
+def _profile_definition(profile_ref: str) -> _StructureProfileDefinition:
+    if profile_ref == MAVEN_STRUCTURE_PROFILE_REF:
+        return _StructureProfileDefinition(
+            profile_ref=profile_ref,
+            format_prefix="MAVEN_STRUCTURE",
+            key_prefix="maven-structure",
+            schema_ref=SCHEMA_REF,
+            schema_digest=SCHEMA_DIGEST,
+            evaluation_context_ref=EVALUATION_CONTEXT_REF,
+            evaluation_context_digest=EVALUATION_CONTEXT_DIGEST,
+            canonicalization_ref=CANONICALIZATION_REF,
+            canonicalization_digest=CANONICALIZATION_DIGEST,
+            candidate_generator_ref=_MAVEN_CANDIDATE_GENERATOR_REF,
+            artifact_use_purpose=(
+                ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
+            ),
+        )
+    if profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        return _StructureProfileDefinition(
+            profile_ref=profile_ref,
+            format_prefix="JAVA_STATIC_CALL",
+            key_prefix="java-static-call",
+            schema_ref=JAVA_SCHEMA_REF,
+            schema_digest=JAVA_SCHEMA_DIGEST,
+            evaluation_context_ref=JAVA_EVALUATION_CONTEXT_REF,
+            evaluation_context_digest=JAVA_EVALUATION_CONTEXT_DIGEST,
+            canonicalization_ref=JAVA_CANONICALIZATION_REF,
+            canonicalization_digest=JAVA_CANONICALIZATION_DIGEST,
+            candidate_generator_ref=_JAVA_CANDIDATE_GENERATOR_REF,
+            artifact_use_purpose=(
+                ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE
+            ),
+        )
+    if profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+        return _StructureProfileDefinition(
+            profile_ref=profile_ref,
+            format_prefix="JAVA_SOURCE_SEMANTICS",
+            key_prefix="java-source-semantics",
+            schema_ref=JAVA_SEMANTICS_SCHEMA_REF,
+            schema_digest=JAVA_SEMANTICS_SCHEMA_DIGEST,
+            evaluation_context_ref=JAVA_SEMANTICS_EVALUATION_CONTEXT_REF,
+            evaluation_context_digest=JAVA_SEMANTICS_EVALUATION_CONTEXT_DIGEST,
+            canonicalization_ref=JAVA_SEMANTICS_CANONICALIZATION_REF,
+            canonicalization_digest=JAVA_SEMANTICS_CANONICALIZATION_DIGEST,
+            candidate_generator_ref=_JAVA_SEMANTICS_CANDIDATE_GENERATOR_REF,
+            artifact_use_purpose=(
+                ArtifactUsePurpose.JAVA_SOURCE_SEMANTICS_EVIDENCE_PERSISTENCE
+            ),
+        )
+    _invalid(
+        "KNOWLEDGE_PROFILE_UNSUPPORTED",
+        "update knowledge profile is not supported",
+    )
+
+
+def _is_non_maven_profile(profile_ref: str) -> bool:
+    return profile_ref != MAVEN_STRUCTURE_PROFILE_REF
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,6 +293,7 @@ class MavenStructureUpdateRequest:
         if self.knowledge_profile_ref not in {
             MAVEN_STRUCTURE_PROFILE_REF,
             JAVA_STATIC_CALL_PROFILE_REF,
+            JAVA_SOURCE_SEMANTICS_PROFILE_REF,
         }:
             _invalid(
                 "KNOWLEDGE_PROFILE_UNSUPPORTED",
@@ -278,7 +377,7 @@ class MavenStructureUpdateRequest:
             "actor_ref": self.actor_ref,
             "correlation_ref": self.correlation_ref.value,
         }
-        if self.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if _is_non_maven_profile(self.knowledge_profile_ref):
             core["knowledge_profile_ref"] = self.knowledge_profile_ref
             format_ref = "STRUCTURE_PROFILE_UPDATE_REQUEST@1"
         else:
@@ -727,7 +826,7 @@ class MavenStructureUpdateResult:
     publication_receipt: StructurePublicationReceipt
     previous_snapshot: StructureSnapshot | None
     deletions: "StructureReplacementDeletions"
-    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation
+    evaluation: StructureProfileEvaluation
     digest: Digest
 
 
@@ -1014,7 +1113,7 @@ class MavenStructureSourceCollector:
             "operation_references": tuple(operation_references),
         }
         collection_format = "MAVEN_STRUCTURE_SOURCE_COLLECTION@1"
-        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if _is_non_maven_profile(request.knowledge_profile_ref):
             collection_core["knowledge_profile_ref"] = request.knowledge_profile_ref
             collection_core["logical_source_root"] = request.logical_reactor_root
             collection_core["source_artifacts"] = collection_core.pop(
@@ -1081,10 +1180,10 @@ class MavenStructureSourceCollector:
         }
         action_format = "MAVEN_STRUCTURE_SOURCE_ACTION@1"
         action_prefix = "maven-structure-source"
-        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if _is_non_maven_profile(request.knowledge_profile_ref):
             action_core["knowledge_profile_ref"] = request.knowledge_profile_ref
             action_format = "STRUCTURE_PROFILE_SOURCE_ACTION@1"
-            action_prefix = "java-static-call-source"
+            action_prefix = f"{_profile_definition(request.knowledge_profile_ref).key_prefix}-source"
         action_digest = digest_of([action_format, action_core])
         action_ref = f"{action_prefix}:{action_digest.value}"
         scope_assertion = self._scopes.read_scope_state_assertion(
@@ -1879,7 +1978,7 @@ class MavenStructureUpdateService:
         request: MavenStructureUpdateRequest,
         attempt_id: StableId,
         collection: MavenStructureSourceCollection,
-        evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
+        evaluation: StructureProfileEvaluation,
         report_digest: Digest,
         assessment: StructureVerifierAssessment,
         application_acceptance: StructureApplicationAcceptance,
@@ -2283,23 +2382,16 @@ class MavenStructureUpdateService:
     @staticmethod
     def _require_complete_evaluation(
         request: MavenStructureUpdateRequest,
-        evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
+        evaluation: StructureProfileEvaluation,
     ) -> None:
         report = evaluation.report
-        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
-            schema_ref = JAVA_SCHEMA_REF
-            evaluation_context_ref = JAVA_EVALUATION_CONTEXT_REF
-            canonicalization_ref = JAVA_CANONICALIZATION_REF
-        else:
-            schema_ref = SCHEMA_REF
-            evaluation_context_ref = EVALUATION_CONTEXT_REF
-            canonicalization_ref = CANONICALIZATION_REF
+        definition = _profile_definition(request.knowledge_profile_ref)
         if (
             not report.complete
             or report.source_revision != request.repository_revision
-            or report.schema_ref != schema_ref
-            or report.evaluation_context_ref != evaluation_context_ref
-            or report.canonicalization_ref != canonicalization_ref
+            or report.schema_ref != definition.schema_ref
+            or report.evaluation_context_ref != definition.evaluation_context_ref
+            or report.canonicalization_ref != definition.canonicalization_ref
         ):
             _invalid(
                 "APPLICATION_ACCEPTANCE_FAILED",
@@ -2329,7 +2421,7 @@ def _evaluate_structure_profile(
     knowledge_context_digest: Digest,
     *,
     maven_evaluator: MavenEvaluator | None = None,
-) -> MavenStructureEvaluation | JavaStaticCallEvaluation:
+) -> StructureProfileEvaluation:
     evaluation_input = _maven_evaluation_input(
         request, collection, knowledge_context_digest
     )
@@ -2337,6 +2429,10 @@ def _evaluate_structure_profile(
         if not isinstance(evaluation_input, JavaStaticCallInput):
             raise AssertionError("Java profile produced the wrong evaluation input")
         return JavaStaticCallEvaluator().evaluate(evaluation_input)
+    if request.knowledge_profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+        if not isinstance(evaluation_input, JavaSourceSemanticsInput):
+            raise AssertionError("Java semantics profile produced the wrong evaluation input")
+        return JavaSourceSemanticsEvaluator().evaluate(evaluation_input)
     if not isinstance(evaluation_input, MavenEvaluationInput):
         raise AssertionError("Maven profile produced the wrong evaluation input")
     return (maven_evaluator or MavenStructureEvaluator()).evaluate(evaluation_input)
@@ -2344,24 +2440,18 @@ def _evaluate_structure_profile(
 
 def _structure_build_report_digest(
     request: MavenStructureUpdateRequest,
-    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
+    evaluation: StructureProfileEvaluation,
 ) -> Digest:
-    format_ref = (
-        "JAVA_STATIC_CALL_BUILD_REPORT@1"
-        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
-        else "MAVEN_STRUCTURE_BUILD_REPORT@1"
-    )
+    definition = _profile_definition(request.knowledge_profile_ref)
+    format_ref = f"{definition.format_prefix}_BUILD_REPORT@1"
     return digest_of([format_ref, evaluation.report])
 
 
 def _structure_candidate_ref(
     request: MavenStructureUpdateRequest, candidate_digest: Digest
 ) -> str:
-    prefix = (
-        "JAVA_STATIC_CALL_CANDIDATE@1"
-        if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
-        else "MAVEN_STRUCTURE_CANDIDATE@1"
-    )
+    definition = _profile_definition(request.knowledge_profile_ref)
+    prefix = f"{definition.format_prefix}_CANDIDATE@1"
     return f"{prefix}:{candidate_digest.value}"
 
 
@@ -2369,9 +2459,21 @@ def _maven_evaluation_input(
     request: MavenStructureUpdateRequest,
     collection: MavenStructureSourceCollection,
     knowledge_context_digest: Digest,
-) -> MavenEvaluationInput | JavaStaticCallInput:
+) -> StructureProfileEvaluationInput:
     if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
         return JavaStaticCallInput(
+            owning_scope_id=request.scope_id,
+            source_binding_id=request.binding_id,
+            source_revision=request.repository_revision,
+            knowledge_context_digest=knowledge_context_digest,
+            source_bytes=collection.source_bytes,
+            git_entries=collection.git_entries,
+            source_evidence=collection.java_source_evidence,
+            tree_evidence=collection.tree_evidence,
+            logical_source_root=request.logical_reactor_root,
+        )
+    if request.knowledge_profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+        return JavaSourceSemanticsInput(
             owning_scope_id=request.scope_id,
             source_binding_id=request.binding_id,
             source_revision=request.repository_revision,
@@ -2399,46 +2501,28 @@ def _maven_evaluation_input(
 def _maven_knowledge_context_digest(
     request: MavenStructureUpdateRequest,
 ) -> Digest:
-    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
-        return digest_of(
-            [
-                "JAVA_STATIC_CALL_KNOWLEDGE_CONTEXT@1",
-                {
-                    "scope_id": request.scope_id.value,
-                    "scope_revision": request.scope_revision.value,
-                    "source_id": request.source_id.value,
-                    "source_revision": request.source_revision.value,
-                    "binding_id": request.binding_id.value,
-                    "binding_revision": request.binding_revision.value,
-                    "repository_revision": request.repository_revision,
-                    "logical_source_root": request.logical_reactor_root,
-                    "schema_ref": JAVA_SCHEMA_REF,
-                    "schema_digest": JAVA_SCHEMA_DIGEST,
-                    "evaluation_context_ref": JAVA_EVALUATION_CONTEXT_REF,
-                    "evaluation_context_digest": JAVA_EVALUATION_CONTEXT_DIGEST,
-                    "canonicalization_ref": JAVA_CANONICALIZATION_REF,
-                    "canonicalization_digest": JAVA_CANONICALIZATION_DIGEST,
-                },
-            ]
-        )
+    definition = _profile_definition(request.knowledge_profile_ref)
+    core: dict[str, object] = {
+        "scope_id": request.scope_id.value,
+        "scope_revision": request.scope_revision.value,
+        "source_id": request.source_id.value,
+        "source_revision": request.source_revision.value,
+        "binding_id": request.binding_id.value,
+        "binding_revision": request.binding_revision.value,
+        "repository_revision": request.repository_revision,
+        "schema_ref": definition.schema_ref,
+        "schema_digest": definition.schema_digest,
+        "evaluation_context_ref": definition.evaluation_context_ref,
+        "evaluation_context_digest": definition.evaluation_context_digest,
+        "canonicalization_ref": definition.canonicalization_ref,
+        "canonicalization_digest": definition.canonicalization_digest,
+    }
+    if _is_non_maven_profile(request.knowledge_profile_ref):
+        core["logical_source_root"] = request.logical_reactor_root
     return digest_of(
         [
-            "MAVEN_STRUCTURE_KNOWLEDGE_CONTEXT@1",
-            {
-                "scope_id": request.scope_id.value,
-                "scope_revision": request.scope_revision.value,
-                "source_id": request.source_id.value,
-                "source_revision": request.source_revision.value,
-                "binding_id": request.binding_id.value,
-                "binding_revision": request.binding_revision.value,
-                "repository_revision": request.repository_revision,
-                "schema_ref": SCHEMA_REF,
-                "schema_digest": SCHEMA_DIGEST,
-                "evaluation_context_ref": EVALUATION_CONTEXT_REF,
-                "evaluation_context_digest": EVALUATION_CONTEXT_DIGEST,
-                "canonicalization_ref": CANONICALIZATION_REF,
-                "canonicalization_digest": CANONICALIZATION_DIGEST,
-            },
+            f"{definition.format_prefix}_KNOWLEDGE_CONTEXT@1",
+            core,
         ]
     )
 
@@ -2449,30 +2533,16 @@ def _maven_verification_context_digest(
     collection: MavenStructureSourceCollection,
     authorized_read: AuthorizedArtifactRead,
 ) -> Digest:
-    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
-        context_format = "JAVA_STATIC_CALL_INDEPENDENT_VERIFICATION_CONTEXT@1"
-        generator_ref = _JAVA_CANDIDATE_GENERATOR_REF
-        schema_ref = JAVA_SCHEMA_REF
-        schema_digest = JAVA_SCHEMA_DIGEST
-        evaluation_context_ref = JAVA_EVALUATION_CONTEXT_REF
-        evaluation_context_digest = JAVA_EVALUATION_CONTEXT_DIGEST
-        canonicalization_ref = JAVA_CANONICALIZATION_REF
-        canonicalization_digest = JAVA_CANONICALIZATION_DIGEST
-    else:
-        context_format = "MAVEN_STRUCTURE_INDEPENDENT_VERIFICATION_CONTEXT@1"
-        generator_ref = _MAVEN_CANDIDATE_GENERATOR_REF
-        schema_ref = SCHEMA_REF
-        schema_digest = SCHEMA_DIGEST
-        evaluation_context_ref = EVALUATION_CONTEXT_REF
-        evaluation_context_digest = EVALUATION_CONTEXT_DIGEST
-        canonicalization_ref = CANONICALIZATION_REF
-        canonicalization_digest = CANONICALIZATION_DIGEST
+    definition = _profile_definition(request.knowledge_profile_ref)
+    context_format = (
+        f"{definition.format_prefix}_INDEPENDENT_VERIFICATION_CONTEXT@1"
+    )
     return digest_of(
         [
             context_format,
             {
                 "verifier_ref": _MAVEN_INDEPENDENT_VERIFIER_REF,
-                "candidate_generator_ref": generator_ref,
+                "candidate_generator_ref": definition.candidate_generator_ref,
                 "request_digest": request.digest.value,
                 "source_collection_digest": collection.digest.value,
                 "source_operation_ids": tuple(
@@ -2500,12 +2570,12 @@ def _maven_verification_context_digest(
                     authorized_read.protection.digest.value
                 ),
                 "artifact_read_purpose": authorized_read.package.purpose.value,
-                "schema_ref": schema_ref,
-                "schema_digest": schema_digest,
-                "evaluation_context_ref": evaluation_context_ref,
-                "evaluation_context_digest": evaluation_context_digest,
-                "canonicalization_ref": canonicalization_ref,
-                "canonicalization_digest": canonicalization_digest,
+                "schema_ref": definition.schema_ref,
+                "schema_digest": definition.schema_digest,
+                "evaluation_context_ref": definition.evaluation_context_ref,
+                "evaluation_context_digest": definition.evaluation_context_digest,
+                "canonicalization_ref": definition.canonicalization_ref,
+                "canonicalization_digest": definition.canonicalization_digest,
             },
         ]
     )
@@ -2517,6 +2587,7 @@ def _maven_application_acceptance(
     batch: StructureKnowledgeBatch,
     report_digest: Digest,
 ) -> StructureApplicationAcceptance:
+    definition = _profile_definition(request.knowledge_profile_ref)
     acceptance_identity = digest_of(
         {
             "actor_ref": request.actor_ref,
@@ -2527,11 +2598,7 @@ def _maven_application_acceptance(
     return StructureApplicationAcceptance.pass_for(
         batch,
         acceptance_ref=(
-            (
-                "JAVA_STATIC_CALL_APPLICATION_PASS@1:"
-                if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
-                else "MAVEN_STRUCTURE_APPLICATION_PASS@1:"
-            )
+            f"{definition.format_prefix}_APPLICATION_PASS@1:"
             + acceptance_identity.value
         ),
         report_digest=report_digest,
@@ -2546,14 +2613,10 @@ def _maven_provenance_digest(
     report_digest: Digest,
     evaluation_digest: Digest,
 ) -> Digest:
-    is_java = request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+    definition = _profile_definition(request.knowledge_profile_ref)
     return digest_of(
         [
-            (
-                "JAVA_STATIC_CALL_PROVENANCE@1"
-                if is_java
-                else "MAVEN_STRUCTURE_PROVENANCE@1"
-            ),
+            f"{definition.format_prefix}_PROVENANCE@1",
             {
                 "objective_digest": request.objective.digest.value,
                 "target_digest": request.target.digest.value,
@@ -2567,18 +2630,14 @@ def _maven_provenance_digest(
                 ),
                 "build_report_digest": report_digest.value,
                 "evaluation_digest": evaluation_digest.value,
-                "generator_ref": (
-                    _JAVA_CANDIDATE_GENERATOR_REF
-                    if is_java
-                    else _MAVEN_CANDIDATE_GENERATOR_REF
-                ),
+                "generator_ref": definition.candidate_generator_ref,
             },
         ]
     )
 
 
 def maven_structure_evaluation_digest(
-    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
+    evaluation: StructureProfileEvaluation,
 ) -> Digest:
     """Digest every canonical evaluator output, including report-only facts."""
 
@@ -2589,6 +2648,26 @@ def maven_structure_evaluation_digest(
                 {
                     "types": evaluation.types,
                     "methods": evaluation.methods,
+                    "relations": evaluation.relations,
+                    "coverage": evaluation.coverage,
+                    "complete_member_manifest": evaluation.complete_member_manifest,
+                    "evidence": evaluation.evidence,
+                    "report": evaluation.report,
+                    "batch": evaluation.batch,
+                },
+            ]
+        )
+
+    if isinstance(evaluation, JavaSourceSemanticsEvaluation):
+        return digest_of(
+            [
+                "JAVA_SOURCE_SEMANTICS_CANONICAL_EVALUATION@1",
+                {
+                    "source_files": evaluation.source_files,
+                    "types": evaluation.types,
+                    "methods": evaluation.methods,
+                    "state_slots": evaluation.state_slots,
+                    "implementation_atoms": evaluation.implementation_atoms,
                     "relations": evaluation.relations,
                     "coverage": evaluation.coverage,
                     "complete_member_manifest": evaluation.complete_member_manifest,
@@ -2621,24 +2700,16 @@ def maven_structure_candidate_digest(
     *,
     request: MavenStructureUpdateRequest,
     collection: MavenStructureSourceCollection,
-    evaluation: MavenStructureEvaluation | JavaStaticCallEvaluation,
+    evaluation: StructureProfileEvaluation,
     evaluation_digest: Digest,
     report_digest: Digest,
 ) -> Digest:
-    is_java = request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+    definition = _profile_definition(request.knowledge_profile_ref)
     return digest_of(
         [
-            (
-                "JAVA_STATIC_CALL_CANDIDATE@1"
-                if is_java
-                else "MAVEN_STRUCTURE_CANDIDATE@1"
-            ),
+            f"{definition.format_prefix}_CANDIDATE@1",
             {
-                "generator_ref": (
-                    _JAVA_CANDIDATE_GENERATOR_REF
-                    if is_java
-                    else _MAVEN_CANDIDATE_GENERATOR_REF
-                ),
+                "generator_ref": definition.candidate_generator_ref,
                 "batch_digest": structure_batch_digest(evaluation.batch).value,
                 "evaluation_digest": evaluation_digest.value,
                 "source_collection_digest": collection.digest.value,
@@ -2811,9 +2882,9 @@ def _child_idempotency_key(
 ) -> IdempotencyKey:
     key_format = "MAVEN_STRUCTURE_UPDATE_CHILD_KEY@1"
     key_prefix = "maven-structure"
-    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+    if _is_non_maven_profile(request.knowledge_profile_ref):
         key_format = "STRUCTURE_PROFILE_UPDATE_CHILD_KEY@1"
-        key_prefix = "java-static-call"
+        key_prefix = _profile_definition(request.knowledge_profile_ref).key_prefix
     digest = digest_of(
         [
             key_format,
@@ -2832,9 +2903,7 @@ def _child_idempotency_key(
 def _artifact_use_purpose(
     request: MavenStructureUpdateRequest,
 ) -> ArtifactUsePurpose:
-    if request.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
-        return ArtifactUsePurpose.JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE
-    return ArtifactUsePurpose.MAVEN_STRUCTURE_EVIDENCE_PERSISTENCE
+    return _profile_definition(request.knowledge_profile_ref).artifact_use_purpose
 
 
 def _error_code(value: str | None) -> ErrorCode:

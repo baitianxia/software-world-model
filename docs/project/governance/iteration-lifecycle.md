@@ -11,6 +11,27 @@ tests: []
 
 # 迭代选择与生命周期
 
+## 从最终目标反推的能力路径
+
+迭代不得从组件列表、局部方案或“下一个可以开发的点”出发。项目必须先在 planning-only Roadmap 中维护一条从
+`SYS-PRODUCT-SUCCESS` 反推的能力路径：
+
+```text
+最终产品目标
+  → 达成目标必需的用户能力
+  → 已有 Acceptance 实际证明的基线
+  → 当前最早未证明的阻断能力
+  → 能在正式 Web 人工验证的最小纵向增量
+```
+
+每个产品 Iteration 必须绑定该路径的一个明确步骤，并同时说明：前置能力的接受证据、本轮结束时用户在
+正式 Web 上新增的能力、以及成功后仍然阻断最终目标的下一个差距。选择顺序以“最早未证明的阻断能力”
+为准，不得跳过它去开发新 Profile、View、知识域或入口。
+
+若早期纵向 Slice 证伪了当前方案，必须保留失败 Result，把 Iteration 终止为 `rejected` 并在同一能力步骤上
+重新选路；这是有效的早停，不是允许静默更换产品目标。新方案仍必须证明同一用户能力，不得把“修好一个内部
+组件”当作 redirect 后的新终点。
+
 ## 产品目标对齐门禁
 
 本门禁从 `ITER-007` 的选择开始强制执行。所有新 Iteration 必须以 `SYS-PRODUCT-SUCCESS` 的“基于预构建世界模型进行通用源码问答”作为共同产品目标。迭代可以缩小
@@ -23,11 +44,17 @@ tests: []
    不得作为产品迭代 Outcome；
 3. **可测增量：** 本轮完成后，哪组未参与实现的真实工程与 held-out 自由问题会从 Gap/失败变成有证据的正确答案，并冻结
    问题总数、baseline 支持数和目标支持数；覆盖率、重大错误、完整性、Source-off 和源码 Agent 对照如何判定；问题由独立
-   评测方或用户持有并在实现阶段保持不可见，正式 Web 验收还必须加入至少一条现场临时自由提问；
+   评测方或用户持有并在实现阶段保持不可见，正式 Web 验收还必须加入至少一条现场临时自由提问。用户选择现场持有模式时，
+   编码前只冻结计数下限、判定规则和“代码冻结前不披露”；exact 问题、输入、baseline 与 target 在产品代码冻结后首次披露时
+   一次性密封，随后任何产品修改都烧毁该组证据；
 4. **跨域证明：** 除新能力自身的问题，还必须包含至少一类需要组合既有能力与本轮能力的问题，证明产品能力是累积的；
 5. **最早体验点：** 在大量实现前，哪个最小 Slice 会接入同一个正式 Web 入口供人工自由提问；
 6. **停止或转向条件：** 若上游知识不足、只能依赖题型/关键词补丁、不能跨域组合或效果低于成熟源码 Agent，何时停止扩张
    并重新审视建模或查询架构。
+7. **差异化价值：** 若当前方案比成熟替代方案更复杂，编码前冻结哪项可测的正向价值、PASS 阈值、测量周期和基线复用政策；
+   “答案不退步”或只披露成本不足以证明值得继续。
+8. **能力路径位置：** 本轮属于哪一个 Roadmap 能力步骤，哪些前置已被 Acceptance 证明，本轮正式 Web 验证会前进什么，
+   以及成功后下一个阻断差距是什么。
 
 不满足上述任一项的 Candidate 可以保留为技术实验或证据收集，但不得被选择为下一轮产品开发 Iteration。风险消除可以是
 产品 Iteration 的第一个 Slice，但整个 Iteration 仍须计划同一正式 Web 上可人工验证的通用问答增量；若风险结果触发停止，
@@ -36,6 +63,60 @@ tests: []
 跨域 Gate 不能用“一条旧能力回归 + 一条新能力孤立测试”拼成。至少一个冻结 Case 必须在同一个问题中同时引用此前已验收
 能力和本轮 Slice，正式 Web 与现场临时问题 Gate 还必须执行或探测该跨域 Case。这些关系必须写入 Manifest 的结构化
 binding；正文中仅仅出现相关 ID 不算绑定证据。
+
+## 方案假设与逐 Slice 复盘门禁
+
+迭代不是只有“开发—测试”，而是反复执行下面的最小闭环：
+
+```text
+冻结关键方案假设与反证
+  → 实现最小纵向 Slice
+  → 正式 Web / hidden canary 人工体验
+  → 对照预期进行方案与架构复盘
+  → CONTINUE / ACCEPT / REDIRECT / REJECT
+```
+
+本门禁从 `ITER-008` 开始强制执行。Proposal 必须在编码前写明少量决定方案能否成立的关键假设、每项假设的最早反证方式、
+反证后停止或换路的动作，以及被认真比较过的替代方案。第一个 Slice 必须优先验证风险最高、最可能导致整条路线无效的假设，
+不能只实现“基础组件”并把真实产品效果或与成熟方案的差距留到最后一段。
+
+每个 Slice 必须恰好拥有一个 `V-REFLECT-NNN` 阻断 Case。正式 Web、hidden canary、对照和机械 Gate 形成 exact Result 后，
+Result 必须新增“Architecture reflection and continuation decision”，至少回答：
+
+1. 原方案假设是什么，实际证据与预期哪里一致、哪里不一致；
+2. 问题属于架构、实现、配置/环境、需求/使用还是验证设计，影响是个案还是系统性；
+3. 知识表示、查询/编排、产品 Web 链和验证方案各自是否仍成立；
+4. 与成熟直接源码 Agent 相比，正确性、完整性、无关证据、时延、成本和复杂度是否仍值得继续；
+5. 本 Slice Finding 如何处置，当前最早未证明的风险是什么；
+6. 明确作出 `CONTINUE`、`ACCEPT`、`REDIRECT` 或 `REJECT` 决策并说明理由。
+
+Manifest 和已接受 Readiness 必须同时冻结 Proposal 关键假设表的 exact SHA-256；每个 Slice Result 必须引用同一摘要，且
+`Expected` 必须逐字等于 Proposal 中对应假设原文，避免看到结果后改写假设。Manifest 还必须冻结关键假设 ID、每个 Slice 当期到期的有序假设子集和独立的 product/architecture/quality 决策 Owner；后续 Slice
+只能保留并增加已到期假设，最终 Slice 必须覆盖全部关键假设。尚未到期的假设必须分别绑定本 Slice 的 early blocking falsifier；
+该 falsifier 必须归属当前 Slice，不能借用后续 Slice 的 Case 推迟反证。
+若该 Case FAIL，阻断 Result 必须把对应假设追加为结构化 `FALSIFIED/UNRESOLVED` 行，不能只在散文里提及。Result 必须逐项给出 Expected、exact Evidence、
+Verdict 和 Impact，并填写问题分类/范围、分层诊断、替代方案与决策理由；`reflection_report_digest` 是上述 exact Reflection 章节 UTF-8
+正文的 SHA-256；Result 只能有一个同名 Reflection 章节，不能用一句“已复盘”或只有标题的空壳通过。Verification 状态只接受 exact
+`PASS / blocking`、`FAIL / blocking` 或 `NOT-RUN / blocking`（Readiness 可加 `readiness`），不得用词袋或“not blocking”伪装。
+
+`CONTINUE` 或 `ACCEPT` 要求该 Slice 绑定的每项假设都由本 Slice 的证据判为 `SUPPORTED`。任一项为 `FALSIFIED` 或
+`UNRESOLVED` 时，只能进入阻断的 `REDIRECT` 或 `REJECT` 路径；逐假设证据必须引用本 Slice 已执行的 Verification Case，不能用
+`V-REFLECT` 自证。正文决定、Owner、exact 用户决策消息收据、Result metadata 与 Manifest 必须完全一致；下一 Slice 的用户授权
+必须引用同一条前序 Reflection 决策消息。每个 Reflection 决策必须使用一条发生在本 Slice 授权之后的新用户消息；不同 Slice
+不得复用决策收据，也不得复用 Readiness 或更早授权收据。阻断 Result 必须至少有一项 `FALSIFIED/UNRESOLVED` 假设及其 executed
+FAIL Case，不能用全部假设 SUPPORTED、全部 Case PASS 的材料宣告失败。
+
+若某个 Slice 绑定成熟源码 Agent 的正向价值比较，completed Result 必须在唯一 `## Positive value report` 中记录冻结指标、数值
+actual、输入 digest、比较 Case 和独立裁决收据；docs gate 从该 exact JSON 章节重算 digest 并核对 metadata/Manifest。比较 Case
+已经执行但 Slice 被阻断时也必须保留同样的可重放报告，不能只写 `V-COMP FAIL`。裁决收据必须来自测量后的新消息，不得复用
+Readiness、当前/更早 Slice 授权或此前 Reflection 决策；允许用户用同一条事后消息同时裁决本次测量并作出本 Slice Reflection 决定。
+未达到预提交阈值不能 `CONTINUE/ACCEPT`。
+
+`V-REFLECT-NNN PASS` 只表示复盘完整、证据可审计，不表示产品方案本身 PASS。中间 Slice 只有产品 Gate 全部 PASS、复盘决定为
+`CONTINUE` 且用户再次明确授权时，下一 Slice 才能进入开发；最终 Slice 只有产品 Gate 全部 PASS 且复盘决定为 `ACCEPT` 时，
+才可形成 Iteration Acceptance。`REDIRECT` 表示最终目标不变但当前方案被证伪，当前 Iteration 必须按 `rejected` 封存并用新
+Proposal 重新选路；
+`REJECT` 表示当前增量不成立且尚无已验证替代。测试 PASS、Web 能打开、代码完成或“没有新 Finding”都不能绕过复盘。
 
 ## 每轮内容如何确定
 
@@ -62,10 +143,16 @@ Roadmap 只提供候选。只有 Proposal 被明确接受、Manifest 闭合并�
 
 同一 Iteration 的累积 Slice 以 Manifest `new_capability_slice_refs` 的顺序推进：执行态必须为“零个或多个 `completed` + 恰好一个
 `authorized/in-progress` + 零个或多个 `proposed`”。每个后续 Slice 必须直接依赖前一个；前一个 Slice 的人工 Web/停止 Gate 完成
-并形成 Result 后，用户再明确授权下一个 Slice，随后才移动 `project/current.md.active_slice`。在最终 held-out 验证前，每个 Slice
+并形成 Result，且方案复盘 Gate 为 PASS、决定为 `CONTINUE` 后，用户再明确授权下一个 Slice，随后才移动
+`project/current.md.active_slice`。后续 Slice 获得授权时，其 `depends_on` 与 Manifest `reflection_prerequisite_result` 还必须绑定
+前一 Slice 的 exact Reflection Result，不能先授权再补复盘证据。在最终 held-out 验证前，每个 Slice
 还必须在本 Slice 产品代码冻结后通过独立持有的隐藏 canary；曝光后修改产品会烧毁 canary 并保留原失败。不得为了通过 Readiness 一次性授权
 全部 Slice，也不得跳过失败 Slice。完成的 Slice 使用 `historical-development / coding_input: false`，当前 Slice 使用
 `current-development / coding_input: true`，后续 Slice继续保持 proposed。
+
+若某个 Slice 的停止 Gate 触发，Iteration 必须进入 `rejected`：失败 Slice 为 `blocked`，后续仍显示为 `proposed` 的 Slice 只用于
+保留“原计划但未执行”的历史，不得在该 rejected Iteration 内重新激活。任何 redirect 都必须建立新 Iteration，重新经过 Proposal、
+Readiness 和用户逐 Slice 授权。
 
 每个 completed Slice 的 Result 必须绑定该 Slice 的 exact 产品代码冻结 digest。拥有 early hidden canary 的 Result 还必须绑定
 Manifest 冻结的 canary project/suite digest、披露收据和“曝光后产品变更数为 0”；否则不得授权下一 Slice。
@@ -80,18 +167,23 @@ roadmap candidate
   → development slices + findings
   → verification + result
   → findings disposition
-  → acceptance
-  → completed / rejected / superseded
+  ├→ acceptance → completed
+  ├→ stop / evidence-driven redirect → rejected
+  └→ pre-execution administrative replacement → superseded
 ```
 
 ## Readiness gate
 
 - Proposal 已通过产品目标对齐门禁，目标差距、累积路径、独立持有且对实现隐藏的可测增量、跨域问题、最早 Web 体验点、
   现场临时问题和停止条件均已冻结；
+- Proposal 已绑定 planning-only Roadmap 中的精确能力步骤，前置接受证据、本轮结束时的 Web 用户能力和成功后的下一阻断差距均已明确；
+- Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；第一段会尽早对照正式 Web、隐藏输入和成熟基线，
+  而不是把架构与价值判断推迟到最终验收；
 - 一个明确 Outcome 和非目标；
 - 所引用 System 文档均 current，或先完成所需 System 设计；
 - 每个 Slice 有可验证退出条件和风险边界；
-- 外部输入、权限、Secret Reference 和原始证据保存方式已说明；
+- 外部输入、权限、Secret Reference 和原始证据保存方式已说明；若评测问题由用户现场持有，则必须明确在产品代码冻结前不收集
+  问题，并把未披露 marker 与完成前必须替换的 exact Result 绑定写入 Manifest；
 - Verification Matrix 能区分机械测试、真实能力和产品价值；
 - `current.md` 同一时刻最多指向一个活动迭代和一个主要 Slice。
 
@@ -101,7 +193,8 @@ roadmap candidate
 
 ## Completion gate
 
-代码完成不是迭代完成。必须有实际 Result、失败/限制、所有 Finding disposition、必要的 System 回写，以及明确的接受、拒绝或后续决策。生产启用若不属于 Proposal，就不能被“剩余工作”自动推入下一轮。
+代码完成不是迭代完成。每个 Slice 都必须有实际 Result、失败/限制、方案复盘、相关 Finding disposition，以及明确的继续、接受、
+转向或拒绝决策；最终还必须完成必要的 System 与能力路径回写。生产启用若不属于 Proposal，就不能被“剩余工作”自动推入下一轮。
 
 声称产品能力前进的 Iteration 还必须报告相对 baseline 的目标差距变化：同一正式 Web 入口上的 held-out 自由问题支持率、
 重大错误、完整性、至少一个新旧知识跨域问题、提问时 Source/Update/Direct fallback 计数，以及与成熟源码 Agent 的逐题对照。
@@ -109,10 +202,13 @@ Manifest 绑定的每个跨域、正式 Web、隐藏 canary 和现场临时问�
 `<拥有该 Case 的 Slice Result ID>#<case-id>` 绑定不可变执行证据；最终 Product Result 必须依赖并聚合全部 Slice Result，不能改写
 逐 Case Evidence，也不能用 V-000 的 PASS 或汇总计数代替逐项执行。
 只证明本轮新增 Profile/View 的封闭题集通过，或只有旧能力回归而没有跨域组合证据，不得标记为完成的产品进展。结果未显示
-可测增量时，应保留为失败/学习证据并把 Iteration 判为 rejected/superseded 或重新选路，而不能标记为已完成的产品进展，
-更不能继续堆叠下一个孤立知识域。
+可测增量时，应保留为失败/学习证据并把 Iteration 判为 `rejected`；若需换路，应在该 rejected 证据后建立新 Iteration，
+而不能把执行后的失败标为仅用于执行前行政替换的 `superseded`，更不能继续堆叠下一个孤立知识域。
 
 从 ITER-005 起，任何声称扩展 Software World Model 建模、查询或问答能力的 Iteration，在标记 completed 前必须把本轮新增
 能力接入同一个产品代码拥有的本机 Web 问答入口，并由人工提交至少一条支持问题和一条边界/Gap 问题。一次性
 `validation.*` launcher、静态回放页、测试计数或 API-only smoke 不能替代该体验。中间 Slice 可以先用 CLI/View 暴露风险，
 但整个 Iteration 不得在正式 Web 问答入口尚不可用时完成；这不自动授予公网部署或 Production Activation。
+
+产品 Iteration 被接受时还必须回写能力路径：当前步骤的用户能力已由哪个 Product Result 证明，以及下一个最早阻断差距。
+若本轮被拒绝，Roadmap 只能记录同一步骤的方案转向和失败证据，不得把未证明的步骤标成已完成。

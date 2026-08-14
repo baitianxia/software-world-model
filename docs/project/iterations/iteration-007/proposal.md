@@ -1,10 +1,10 @@
 ---
 id: ITER-007-PROPOSAL
 kind: iteration-proposal
-status: proposed
+status: accepted
 authority: project-proposal
 owners: [product, engineering]
-depends_on: [ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-LIVE-RUN-008, SYS-PRODUCT-SUCCESS, SYS-ADR-014, SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING]
+depends_on: [ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE, SYS-PRODUCT-SUCCESS, SYS-ADR-014, SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING]
 code: []
 tests: []
 iteration: ITER-007
@@ -15,8 +15,8 @@ coding_input: false
 
 ## Trigger and evidence
 
-ITER-006 run-008 已证明 Java 类型、方法声明和有限静态调用可以在提问前形成 Snapshot，并从正式 Web Source-off 回答封闭问题，
-但它仍等待用户最终 Acceptance。现有代码同时存在四个直接限制：
+ITER-006 Acceptance 已证明 Java 类型、方法声明和有限静态调用可以在提问前形成 Snapshot，并从正式 Web Source-off 回答封闭问题。
+现有代码同时存在四个直接限制：
 
 1. `JAVA_STATIC_CALL_GRAPH@1` 没有条件、状态、return、throw/catch 和调用点上下文；
 2. `ProductQuestionInterpreter` 把问题压成固定的 `ProductNeedKind`，不具备通用语义路由；
@@ -49,8 +49,8 @@ Java 声明和 exact `CALLS` 语义，并为语义完整的方法增加最小实
 ## Product-goal alignment and cumulative delta
 
 - 目标引用：`SYS-PRODUCT-SUCCESS`。
-- 复用能力：ITER-005 的 Workspace、独立更新、Bundle/Catalog、正式 Web、Citation；ITER-006 只有最终被用户接受后，才能作为
-  本轮 declaration/static-call 的正式累积依赖。
+- 复用能力：ITER-005 的 Workspace、独立更新、Bundle/Catalog、正式 Web、Citation，以及已接受 ITER-006 的 declaration/
+  static-call 窄范围；本轮不得把该窄范围扩张为未经验证的通用行为语义。
 - 新旧同题：三个 Slice 各有一条跨域 Case，并都必须在一条问题的同一 Need/Support chain 中同时使用接受后的 `CALLS` 与本轮
   实现事实；最终 held-out Case 为 `V-XD-003`。
 - 无符号自由题：最终 12 条隐藏可回答题中至少 6 条不得出现类名、方法名或签名，每个工程至少 2 条。
@@ -77,7 +77,8 @@ Java 声明和 exact `CALLS` 语义，并为语义完整的方法增加最小实
 
 本 Slice 另绑定 `V-CANARY-001`：独立评测方在本 Slice 产品代码冻结前持有并隐藏一个符合最小语法闭包的小型真实 Java 工程，
 工程身份、源码和问题均不向实现方披露，其中至少有一条可回答、无符号名且组合旧 `CALLS` 与新实现语义的问题。冻结后才通过
-同一正式产品链执行；曝光后任何产品改动都会烧毁该 canary，原失败必须保留，并由独立方提供全新的工程和问题后才能重试。
+同一正式产品链执行；从披露到 SLICE-001 Result seal 之间的任何产品改动都会烧毁该 canary，原结果必须保留，并由独立方提供
+全新的工程和问题后才能重试。Result seal 后 capsule 永久 consumed；后续已授权 Slice 的正常开发不追溯改写已封存结果。
 canary 未 PASS 时不得进入 SLICE-002。
 
 这一步只证明端到端产品假设，不要求先覆盖所有 Java 语法。
@@ -87,14 +88,16 @@ canary 未 PASS 时不得进入 SLICE-002。
 只在明确标记为 development/qualification 的可见语料上扩展 annotation、interface、inheritance、generic、constructor、overload、
 variable receiver、lambda、try/catch，以及状态读写和异常语义；完成 R1→R2、重启持久化、Citation 和正式 Web 多题复验。
 本段不得接触最终 held-out 工程或问题。独立评测方另持有一个覆盖 common-Java 边界的小型真实 canary，并在本 Slice 产品代码冻结
-前隐藏其身份、源码和问题。它只用于 `V-CANARY-002`，不计入最终 12+4 suite；曝光后任何产品改动都烧毁该 canary 并保留原失败，
-且至少有一条 common-Java 可回答无符号问题必须给出有证据答案，不能用 Gap 通过。必须换全新工程和问题重试；canary 未 PASS 时
+前隐藏其身份、源码和问题。它只用于 `V-CANARY-002`，不计入最终 12+4 suite；从披露到 SLICE-002 Result seal 之间的任何产品
+改动都烧毁该 canary 并保留原结果，且至少有一条 common-Java 可回答无符号问题必须给出有证据答案，不能用 Gap 通过。必须换
+全新工程和问题重试；seal 后 capsule consumed，后续 Slice 不追溯改写；canary 未 PASS 时
 不得进入 SLICE-003。
 
 ### SLICE-003：冻结后的独立产品验证
 
 产品实现冻结后，独立评测方才向执行环境提供两份未参与实现、且此前对实现方隐藏身份与源码的真实工程，以及 12 条 answerable
-和 4 条 boundary 问题。任何产品实现变化都会烧毁已曝光的工程和问题集：保留原失败，并同时更换工程与问题集后重新冻结，
+和 4 条 boundary 问题。从披露到最终 Result seal 的任何产品实现变化都会烧毁已曝光的工程和问题集：保留原结果，并同时更换
+工程与完整 suite、baseline 和 target 后重新冻结，
 不能只换题。最后在正式 Web 现场再问 3 条临时问题。
 
 ## Scope / non-goals
@@ -138,7 +141,8 @@ exact 三调用、失败策略、Gateway workload 和 Prompt/operation vocabular
 - 形式语义可能丢失成熟源码 Agent 需要的上下文，也可能因过度保真越过 no-payload 边界；双 Oracle 是首要架构 Gate。
 - 功能描述到实现候选的召回与歧义处理尚未被真实工程证明；只会按符号名查询等同于没有关闭产品缺口。
 - Coverage 的“disposition manifest COMPLETE + method completeness”会改变 Knowledge Use 对 COMPLETE 的解释，必须全链修订并验证。
-- 成熟 parser 的版本、license、离线可用性和 canonicalization 尚未冻结。
+- 当前本机 parser/runtime/license/canonicalization Oracle 已冻结；跨 Python/OS offline artifact/lock 与 `pyproject.toml` exact
+  dependency 仍须在 SLICE-001 内、首次产品 Gate/capability qualification 前闭合。
 - 当前问答只取得单模型调用资格，三调用协议需要新的 capability qualification 和隔离 workload。
 
 ## Verification and acceptance
@@ -153,16 +157,16 @@ exact 三调用、失败策略、Gateway workload 和 Prompt/operation vocabular
 - 构建和提问调用数、Token、时延及同 Snapshot 多问题摊销全部披露；
 - Production Activation 无条件 `NOT_EXECUTED`。
 
-### 已知 ITER-006 基线限制
+### 已接受的 ITER-006 基线限制
 
-不得在修复代码后继续沿用旧 run-008 结果。推荐做法是：ITER-006 Acceptance 只接受 run-008 exact 已证明的窄范围，并把下列三项
-登记为明确限制；修复归入 ITER-007 SLICE-001，并由新 Strategy/Prompt/operation qualification 与正式 Web 重新验证：方法清单按
-canonical method signature 排序；“谁调用 X”使用 `INCOMING + CALLS`、“X 调用谁”使用 `OUTGOING + CALLS`；“异常路径”不得误入
-`ALL_SIMPLE_PATHS` 或抛实体端点错误。若用户选择先在 ITER-006 修复，则 ITER-006 必须重新 freeze、资格和 Product Validation，
-ITER-007 的 baseline 随新 Acceptance 更新。
+ITER-006 Acceptance 只接受 run-008 exact 已证明的窄范围，并保留下列现场限制：全局 Java 类型/方法清单问题因要求具体
+`JAVA_TYPE` mention 而误路由为 Gap；页面示例硬编码 `FlowService`，未随动态 Read Set 更新；底层 Ark TLS 失败只显示通用 terminal
+错误。ITER-007 不修改或追溯复用旧 run-008 结果；与新源码语义一起关闭的解释器/方向/异常路由变化必须取得新 Strategy、Prompt、
+operation qualification 和正式 Web 证据。体验错误呈现只在不扩大本轮语义范围的情况下作最小修复。
 
 ## Authorization decision
 
-当前为 **PROPOSED / NOT READY**。本 Proposal 不授权编码、外部模型调用、hidden 工程/问题披露、Production Activation、提交或
-推送。ITER-006 最终 Acceptance、accepted implementation baseline、上述三项限制的明确 disposition、frontend/semantic/no-payload/query/
-model-call Contract、独立 baseline/target 和用户 exact Product-goal review 未闭合前，不得更新 `project/current.md`。
+当前 Proposal 已由用户接受。用户明确选择“开发者开发、用户在产品代码冻结后现场提问”：问题在实现阶段由用户持有且不向
+实现方披露，因而不要求用户在编码前制作题库、外部 runner 或 commitment receipt。`SLICE-001` 获得产品编码和本地确定性
+验证授权；完成前必须先冻结产品代码，再由用户现场提问并把 exact 问题/结果绑定 Slice Result。未取得该现场证据不得授权
+`SLICE-002`。外部模型披露、Production Activation、提交和推送仍需各自授权。

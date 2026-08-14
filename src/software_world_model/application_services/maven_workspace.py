@@ -37,6 +37,7 @@ from software_world_model.cross_cutting import (
     digest_of,
 )
 from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
 )
@@ -143,7 +144,7 @@ class MavenWorkspace:
         }
         request_format = "REGISTER_MAVEN_WORKSPACE@1"
         workspace_format = "MAVEN_WORKSPACE@1"
-        if profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if profile_ref != MAVEN_STRUCTURE_PROFILE_REF:
             request_core["knowledge_profile_ref"] = profile_ref
             request_format = "REGISTER_STRUCTURE_WORKSPACE@1"
             workspace_format = "STRUCTURE_WORKSPACE@1"
@@ -209,7 +210,7 @@ class MavenWorkspace:
         }
         request_format = "REGISTER_MAVEN_WORKSPACE@1"
         workspace_format = "MAVEN_WORKSPACE@1"
-        if profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if profile_ref != MAVEN_STRUCTURE_PROFILE_REF:
             request_core["knowledge_profile_ref"] = profile_ref
             request_format = "REGISTER_STRUCTURE_WORKSPACE@1"
             workspace_format = "STRUCTURE_WORKSPACE@1"
@@ -731,7 +732,7 @@ class MavenWorkspaceService:
             ),
         }
         request_format = "UPDATE_MAVEN_WORKSPACE@1"
-        if workspace.knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
+        if workspace.knowledge_profile_ref != MAVEN_STRUCTURE_PROFILE_REF:
             request_core["knowledge_profile_ref"] = workspace.knowledge_profile_ref
             request_format = "UPDATE_STRUCTURE_WORKSPACE@1"
         request_digest = digest_of([request_format, request_core])
@@ -1240,6 +1241,7 @@ def _knowledge_profile(value: str) -> str:
     if profile_ref not in {
         MAVEN_STRUCTURE_PROFILE_REF,
         JAVA_STATIC_CALL_PROFILE_REF,
+        JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     }:
         raise _invalid(
             "MAVEN_WORKSPACE_PROFILE_UNSUPPORTED",

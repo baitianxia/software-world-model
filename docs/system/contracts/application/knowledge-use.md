@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [application]
-depends_on: [SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
+depends_on: [SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-USE]
 code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/application_services/read_set_catalog.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_read_set_catalog.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/read_set_catalog_cli.py, src/software_world_model/interface/presenters.py]
 tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_maven_workspace.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
@@ -50,6 +50,9 @@ Assessment 与其 Validity。Application 可以声明比较顺序和保存 Asses
     Bundle file manifest 后才枚举；Catalog 缺失可由 Owner Registration/Receipt 重建，不能成为第二权威。
 15. `READ_BUNDLE_UNAVAILABLE`、非 COMPLETE Coverage、Receipt/file digest 漂移、非规范 locator、Catalog tamper 或 stale
     pointer CAS 均不得进入 queryable Catalog；失败不删除旧 Catalog 或旧 queryable Read Set。
+16. 对带 unit disposition/facet completeness 的 Profile，全局 `COMPLETE` 只证明授权单元分类 manifest 完整。Application 必须按
+    exact method/facet completeness 判断穷尽或负向结论；`UNSUPPORTED_EXCLUDED`/`FAILED` 的缺失事实只能形成 Limitation/Gap，
+    不能被空查询结果解释为“没有”。
 
 ## Failure and implementation boundary
 

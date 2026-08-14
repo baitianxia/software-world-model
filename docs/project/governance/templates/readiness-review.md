@@ -13,6 +13,7 @@ authorized_at: pending
 product_goal_alignment_verdict: pending
 product_goal_alignment_reviewed_by: pending
 product_goal_alignment_review_ref: pending
+critical_assumption_catalog_digest: pending
 ---
 
 # Iteration NNN Readiness Review
@@ -26,9 +27,19 @@ product_goal_alignment_review_ref: pending
 Profile/View/组件，Readiness 必须保持 `proposed`。
 
 - Reviewed evidence and baseline gap: <exact-reference-and-verdict>
+- Capability-path step, predecessor evidence, end capability and next gap: <exact-reference-and-verdict>
 - Accepted/new capability integration and cross-domain path: <exact-reference-and-verdict>
 - Hidden held-out ownership, before/target counts and live Web questions: <exact-reference-and-verdict>
 - Stop / redirect decision: <exact-reference-and-verdict>
+
+## Architecture reflection gate readiness
+
+核对 Proposal 已冻结关键假设、最早反证、成熟替代方案对照和反证后的动作；Manifest 为每个 Slice 恰好绑定一个
+`V-REFLECT-NNN`。第一段必须优先验证最高风险架构假设，每个 Slice Result 必须形成独立复盘结论；没有 `CONTINUE` 决定和用户
+再次授权时，后续 Slice 不得进入开发。
+每段 Reflection 必须绑定 exact 用户决策消息收据；后续 Slice 的授权必须引用同一条前序 Reflection 决策消息，且不能复用更早
+授权。成熟替代方案 protocol/rubric/cache policy 和正向价值 metric/unit/direction/threshold/replay protocol、独立裁决 Owner
+也必须在编码前冻结；调查步数与模型调用上限至少为 2，并结构化冻结 query/result 单步与总字节、总时长、Support、trace 和超限语义。
 
 ## Outcome, scope and non-goals
 

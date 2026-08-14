@@ -3,7 +3,10 @@ name = "software-world-model"
 version = "0.2.0"
 description = "Software World Model modular monolith"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "tree-sitter==0.25.2",
+    "tree-sitter-java==0.23.5",
+]
 
 [project.scripts]
 swm = "software_world_model.interface.cli:main"

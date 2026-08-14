@@ -18,6 +18,7 @@ Application Services 拥有用例编排和可恢复结果，但不复制 Source 
 - [Knowledge Use](knowledge-use.md)
 - [Structure View](structure-view.md)
 - [Java Static Call Behavior View](behavior-view.md)
+- [Java Implementation Query](implementation-query.md)
 - [World Model Answering](world-model-answering.md)
 - [Direct Evidence Answering](evidence-answering.md)
 - [Agentic Task](agentic-task.md)

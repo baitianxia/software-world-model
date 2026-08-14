@@ -43,6 +43,14 @@
 最早正式 Web 体验点、验收现场临时问题和停止条件。任何一项仍为占位符时不得通过 Readiness；孤立 Profile/View/组件的
 完成不能替代该门禁。
 
+每轮还必须绑定 Roadmap 中从最终目标反推的能力步骤，列出前置接受/失败证据、本轮通过后用户在正式 Web 上能新做什么，
+以及下一个最早阻断差距。不得用“新组件已完成”、“为后续打基础”或没有 Web 用户能力变化的风险下降替代这四个字段。
+
+从 ITER-008 起，每轮还必须冻结关键方案假设、最早反证和备选路线；Manifest、Readiness 与 Result 用同一个 Proposal 假设表摘要
+锁定原文，不能在看到结果后改写。每个 Slice 恰好绑定一个 `V-REFLECT-NNN`。Slice 的固定结束
+顺序是正式 Web/隐藏输入验证、形成 Result、完成方案复盘、作出 `CONTINUE / ACCEPT / REDIRECT / REJECT`。缺少复盘，或中间段
+决定不是 `CONTINUE` 时，不得授权下一 Slice；机械测试 PASS 不能替代方案判断。
+
 Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、成熟源码 Agent protocol 和授权软件来源范围的 exact
 digest，以及前后支持题数。完成时 `V-000` Evidence 必须引用本轮一个带完整 `product_goal_*` 元数据的 PASS Result，不能填写
 普通文字、机械测试 Result 或风险实验 Result 代替。

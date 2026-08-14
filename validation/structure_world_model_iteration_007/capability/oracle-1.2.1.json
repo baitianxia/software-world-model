@@ -1,0 +1,68 @@
+{
+  "schema": "swm.iter-007.java-source-semantics-capability-oracle@1",
+  "oracle_ref": "ITER-007-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.2.1",
+  "suite_ref": "ITER-007-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.2.1",
+  "cases": [
+    {
+      "case_id": "WM-JSS-CE-PLAN-ZH-001",
+      "expected_normalized_result": {"need_key": "implementation-answer", "snapshot": "structure_snapshot_11111111111111111111111111111111", "operations": ["implementation_candidates", "method_implementation"], "limit": 5},
+      "forbidden_events": ["SOURCE_ACCESS", "ORACLE_ACCESS", "PROJECT_DICTIONARY_ACCESS", "UNREGISTERED_OPERATION", "OPERATION_ORDER_CHANGED", "SNAPSHOT_CHANGED", "SYMBOL_OR_ENTITY_INVENTED", "FEATURE_CONCEPT_OMITTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-PLAN-EN-002",
+      "expected_normalized_result": {"need_key": "implementation-answer", "snapshot": "structure_snapshot_22222222222222222222222222222222", "operations": ["implementation_candidates", "method_implementation"], "limit": 5},
+      "forbidden_events": ["SOURCE_ACCESS", "ORACLE_ACCESS", "PROJECT_DICTIONARY_ACCESS", "UNREGISTERED_OPERATION", "OPERATION_ORDER_CHANGED", "SNAPSHOT_CHANGED", "SYMBOL_OR_ENTITY_INVENTED", "FEATURE_CONCEPT_OMITTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-PLAN-ORDER-003",
+      "expected_normalized_result": {"need_key": "implementation-answer", "snapshot": "structure_snapshot_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", "operations": ["implementation_candidates", "method_implementation"], "limit": 5},
+      "forbidden_events": ["SOURCE_ACCESS", "ORACLE_ACCESS", "PROJECT_DICTIONARY_ACCESS", "UNREGISTERED_OPERATION", "OPERATION_ORDER_CHANGED", "SNAPSHOT_CHANGED", "SYMBOL_OR_ENTITY_INVENTED", "FEATURE_CONCEPT_OMITTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-PLAN-BOUNDARY-004",
+      "expected_normalized_result": {"need_key": "implementation-answer", "snapshot": "structure_snapshot_44444444444444444444444444444444", "operations": ["implementation_candidates", "method_implementation"], "limit": 5},
+      "forbidden_events": ["SOURCE_ACCESS", "ORACLE_ACCESS", "PROJECT_DICTIONARY_ACCESS", "UNREGISTERED_OPERATION", "OPERATION_ORDER_CHANGED", "SNAPSHOT_CHANGED", "SYMBOL_OR_ENTITY_INVENTED", "FEATURE_CONCEPT_OMITTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-SUPPORTED-005",
+      "expected_normalized_result": {"disposition": "SUPPORTED", "step_result_ids": ["world_model_step_result_11111111111111111111111111111111", "world_model_step_result_22222222222222222222222222222222"], "support_digests": ["sha256:1111111111111111111111111111111111111111111111111111111111111111", "sha256:2222222222222222222222222222222222222222222222222222222222222222"], "gap_code": null, "limitation_codes": []},
+      "forbidden_events": ["SOURCE_ACCESS", "EVIDENCE_PAYLOAD_EXPANSION", "REFERENCE_SET_CHANGED", "DISPOSITION_CHANGED", "ANSWER_CONCEPT_OMITTED", "IMPLEMENTATION_INVENTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-GAP-006",
+      "expected_normalized_result": {"disposition": "KNOWLEDGE_GAP", "step_result_ids": [], "support_digests": [], "gap_code": "IMPLEMENTATION_CANDIDATES_ZERO", "limitation_codes": []},
+      "forbidden_events": ["SOURCE_ACCESS", "EVIDENCE_PAYLOAD_EXPANSION", "REFERENCE_SET_CHANGED", "DISPOSITION_CHANGED", "ANSWER_CONCEPT_OMITTED", "IMPLEMENTATION_INVENTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-LIMITATION-007",
+      "expected_normalized_result": {"disposition": "LIMITATION", "step_result_ids": [], "support_digests": [], "gap_code": null, "limitation_codes": ["ENTITY_SELECTOR_AMBIGUOUS"]},
+      "forbidden_events": ["SOURCE_ACCESS", "EVIDENCE_PAYLOAD_EXPANSION", "REFERENCE_SET_CHANGED", "DISPOSITION_CHANGED", "ANSWER_CONCEPT_OMITTED", "MODEL_SELECTED_CANDIDATE", "IMPLEMENTATION_INVENTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-DIRECTION-008",
+      "expected_normalized_result": {"disposition": "SUPPORTED", "step_result_ids": ["world_model_step_result_33333333333333333333333333333333", "world_model_step_result_44444444444444444444444444444444"], "support_digests": ["sha256:3333333333333333333333333333333333333333333333333333333333333333"], "gap_code": null, "limitation_codes": []},
+      "forbidden_events": ["SOURCE_ACCESS", "EVIDENCE_PAYLOAD_EXPANSION", "REFERENCE_SET_CHANGED", "DISPOSITION_CHANGED", "ANSWER_CONCEPT_OMITTED", "CALL_DIRECTION_REVERSED", "SOURCE_ORDER_CHANGED", "IMPLEMENTATION_INVENTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-APPROVE-009",
+      "expected_normalized_result": {"decision": "APPROVE", "finding_codes": [], "checked_need_ids": ["implementation-answer"], "checked_step_result_ids": ["world_model_step_result_55555555555555555555555555555555"], "checked_support_digests": ["sha256:5555555555555555555555555555555555555555555555555555555555555555"]},
+      "forbidden_events": ["SELF_REVIEW", "CHECK_SET_CHANGED", "REJECTED_CORRECT_DRAFT", "APPROVED_WITH_FINDING"]
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-OMISSION-010",
+      "expected_normalized_result": {"decision": "REJECT", "checked_need_ids": ["implementation-answer"], "checked_step_result_ids": ["world_model_step_result_66666666666666666666666666666666"], "checked_support_digests": ["sha256:6666666666666666666666666666666666666666666666666666666666666666"]},
+      "forbidden_events": ["SELF_REVIEW", "CHECK_SET_CHANGED", "APPROVED_FAULTY_DRAFT", "FAULT_OMITTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-UNSUPPORTED-011",
+      "expected_normalized_result": {"decision": "REJECT", "checked_need_ids": ["implementation-answer"], "checked_step_result_ids": ["world_model_step_result_77777777777777777777777777777777"], "checked_support_digests": ["sha256:7777777777777777777777777777777777777777777777777777777777777777"]},
+      "forbidden_events": ["SELF_REVIEW", "CHECK_SET_CHANGED", "APPROVED_FAULTY_DRAFT", "FAULT_OMITTED"]
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-PAYLOAD-012",
+      "expected_normalized_result": {"decision": "REJECT", "checked_need_ids": ["implementation-answer"], "checked_step_result_ids": ["world_model_step_result_88888888888888888888888888888888"], "checked_support_digests": ["sha256:8888888888888888888888888888888888888888888888888888888888888888"]},
+      "forbidden_events": ["SELF_REVIEW", "CHECK_SET_CHANGED", "APPROVED_FAULTY_DRAFT", "FAULT_OMITTED"]
+    }
+  ]
+}
+

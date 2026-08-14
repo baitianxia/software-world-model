@@ -120,6 +120,7 @@ from software_world_model.knowledge_engine.structure_publication import (
     StructureSnapshot,
 )
 from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
 )
@@ -229,6 +230,19 @@ class ApplicationRuntime:
             review_ref="ITER-006-READINESS",
             registered_by="application-runtime",
             reason="register the frozen ITER-006 Java static-call schema",
+        )
+        (
+            self.java_source_semantics_schema_registration,
+            self.java_source_semantics_schema_availability,
+        ) = self.structure_schema_registry.register(
+            definition=StructureSchemaDefinition.java_source_semantics(),
+            idempotency_key=IdempotencyKey(
+                "iter-007:java-source-semantics-schema:register"
+            ),
+            proposal_ref="ITER-007-PROPOSAL",
+            review_ref="ITER-007-READINESS",
+            registered_by="application-runtime",
+            reason="register the frozen ITER-007 Java source-semantics schema",
         )
         self.maven_structure_verifier = MavenStructureIndependentVerifier(
             self.scopes,
@@ -444,6 +458,7 @@ class ApplicationRuntime:
         if knowledge_profile_ref not in {
             MAVEN_STRUCTURE_PROFILE_REF,
             JAVA_STATIC_CALL_PROFILE_REF,
+            JAVA_SOURCE_SEMANTICS_PROFILE_REF,
         }:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
@@ -649,21 +664,25 @@ class ApplicationRuntime:
         )
         objective = BuildObjective.create(
             objective_id=(
-                f"java-static-call-objective:{idempotency_key.value}"
-                if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
-                else f"maven-objective:{idempotency_key.value}"
+                f"java-source-semantics-objective:{idempotency_key.value}"
+                if knowledge_profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+                else (
+                    f"java-static-call-objective:{idempotency_key.value}"
+                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    else f"maven-objective:{idempotency_key.value}"
+                )
             ),
             description=objective_description,
             unacceptable_outcomes=(
                 "source boundary expansion",
                 (
                     "incomplete Java source Coverage reported as complete"
-                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    if knowledge_profile_ref != MAVEN_STRUCTURE_PROFILE_REF
                     else "incomplete Maven reactor Coverage reported as complete"
                 ),
                 (
                     "ambiguous static call target accepted"
-                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    if knowledge_profile_ref != MAVEN_STRUCTURE_PROFILE_REF
                     else "name, path, or GA heuristic stitching"
                 ),
             ),
@@ -725,14 +744,22 @@ class ApplicationRuntime:
             target_authority=target_authority,
             admission=admission,
             schema_registration=(
-                self.java_static_call_schema_registration
-                if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
-                else self.maven_structure_schema_registration
+                self.java_source_semantics_schema_registration
+                if knowledge_profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+                else (
+                    self.java_static_call_schema_registration
+                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    else self.maven_structure_schema_registration
+                )
             ),
             schema_availability=(
-                self.java_static_call_schema_availability
-                if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
-                else self.maven_structure_schema_availability
+                self.java_source_semantics_schema_availability
+                if knowledge_profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+                else (
+                    self.java_static_call_schema_availability
+                    if knowledge_profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+                    else self.maven_structure_schema_availability
+                )
             ),
             schema_adoption=schema_adoption,
         )

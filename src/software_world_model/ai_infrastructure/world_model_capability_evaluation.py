@@ -37,9 +37,14 @@ from .world_model_answer_strategy import (
     world_model_answer_output_contract_digest,
 )
 from .versioned_world_model_answer_strategy import (
+    IMPLEMENTATION_ANSWER_DRAFTING,
+    IMPLEMENTATION_ANSWER_REVIEW,
+    IMPLEMENTATION_QUERY_PLANNING,
+    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
     MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT,
     WorldModelProposalContract,
+    java_source_semantics_world_model_output_contract_digest,
     world_model_answer_prompt_program_digest,
     world_model_answer_strategy_implementation_digest,
 )
@@ -65,6 +70,18 @@ JAVA_WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF = (
 JAVA_WORLD_MODEL_EVALUATION_THRESHOLD_REF = (
     "all-eight-java-required-cases-exact-pass@1"
 )
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_ID = (
+    "java-source-semantics-world-model-authority-proposals"
+)
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_PROMPT_PROGRAM_REF = (
+    "java-source-semantics-world-model-proposal-program@1"
+)
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF = (
+    "java-source-semantics-world-model-closed-proposal-outputs@1"
+)
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_THRESHOLD_REF = (
+    "all-twelve-java-source-semantics-required-cases-exact-pass@1"
+)
 
 
 class WorldModelEvaluationRole(str, Enum):
@@ -75,6 +92,12 @@ class WorldModelEvaluationRole(str, Enum):
     ORDERED_DIFF_EXPRESSION = ORDERED_DIFF_EXPRESSION
     INDEPENDENT_ANSWER_REVIEW = INDEPENDENT_ANSWER_REVIEW
     ENTITY_CANDIDATE_RESOLUTION = ENTITY_CANDIDATE_RESOLUTION
+
+
+class JavaSourceSemanticsWorldModelEvaluationRole(str, Enum):
+    IMPLEMENTATION_QUERY_PLANNING = IMPLEMENTATION_QUERY_PLANNING
+    IMPLEMENTATION_ANSWER_DRAFTING = IMPLEMENTATION_ANSWER_DRAFTING
+    IMPLEMENTATION_ANSWER_REVIEW = IMPLEMENTATION_ANSWER_REVIEW
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +116,49 @@ class WorldModelEvaluationCase:
             raise DomainError(
                 ErrorCode.EVALUATION_DEFINITION_INVALID,
                 "world-model evaluation role is invalid",
+            )
+        for value, label in (
+            (self.case_id, "evaluation case ID"),
+            (self.case_version, "evaluation case version"),
+            (self.fixture_ref, "evaluation fixture reference"),
+            (self.oracle_ref, "evaluation oracle reference"),
+        ):
+            if not isinstance(value, str) or not value or value != value.strip():
+                raise DomainError(
+                    ErrorCode.EVALUATION_DEFINITION_INVALID,
+                    f"{label} must be non-empty",
+                )
+
+    def freeze(self) -> EvaluationCaseDefinition:
+        return EvaluationCaseDefinition(
+            case_id=self.case_id,
+            case_version=self.case_version,
+            fixture_ref=self.fixture_ref,
+            fixture_digest=self.fixture_digest,
+            oracle_ref=self.oracle_ref,
+            oracle_digest=self.oracle_digest,
+            required=self.required,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class JavaSourceSemanticsWorldModelEvaluationCase:
+    role: JavaSourceSemanticsWorldModelEvaluationRole
+    case_id: str
+    case_version: str
+    fixture_ref: str
+    fixture_digest: Digest
+    oracle_ref: str
+    oracle_digest: Digest
+    required: bool = True
+
+    def __post_init__(self) -> None:
+        if not isinstance(
+            self.role, JavaSourceSemanticsWorldModelEvaluationRole
+        ):
+            raise DomainError(
+                ErrorCode.EVALUATION_DEFINITION_INVALID,
+                "Java source-semantics evaluation role is invalid",
             )
         for value, label in (
             (self.case_id, "evaluation case ID"),
@@ -145,6 +211,31 @@ JAVA_WORLD_MODEL_EVALUATION_METRIC_CONTRACT = {
 }
 
 
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT = {
+    "required_role_categories": tuple(
+        role.value for role in JavaSourceSemanticsWorldModelEvaluationRole
+    ),
+    "required_case_count": 12,
+    "projection_exact_json_equality": "PASS",
+    "forbidden_event_count": 0,
+    "evaluator_origin": "SEPARATE_DETERMINISTIC_PROCESS",
+    "evaluator_product_import_count": 0,
+    "provider_calls_per_case": 1,
+    "hidden_retry_count": 0,
+    "required_case_policy": "ALL_PASS",
+    "failure_count": 0,
+    "unknown_count": 0,
+    "required_operation_vocabulary": (
+        JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+    ),
+    "runtime_call_protocol": (
+        "IMPLEMENTATION_QUERY_PLANNING",
+        "IMPLEMENTATION_ANSWER_DRAFTING",
+        "IMPLEMENTATION_ANSWER_REVIEW",
+    ),
+}
+
+
 def create_world_model_evaluation_definition(
     *,
     evaluation_version: str,
@@ -177,6 +268,8 @@ def create_world_model_evaluation_definition(
         output_contract_ref=WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF,
         metric_contract=WORLD_MODEL_EVALUATION_METRIC_CONTRACT,
         threshold_ref=WORLD_MODEL_EVALUATION_THRESHOLD_REF,
+        required_role_values={item.value for item in WorldModelEvaluationRole},
+        output_schema_digest=world_model_answer_output_contract_digest(),
     )
 
 
@@ -217,6 +310,64 @@ def create_java_world_model_evaluation_definition(
         output_contract_ref=JAVA_WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF,
         metric_contract=JAVA_WORLD_MODEL_EVALUATION_METRIC_CONTRACT,
         threshold_ref=JAVA_WORLD_MODEL_EVALUATION_THRESHOLD_REF,
+        required_role_values={item.value for item in WorldModelEvaluationRole},
+        output_schema_digest=world_model_answer_output_contract_digest(),
+    )
+
+
+def create_java_source_semantics_world_model_evaluation_definition(
+    *,
+    evaluation_version: str,
+    conformance_result_ref: str,
+    provider_configuration_fingerprint: Digest,
+    model_ref: str,
+    adapter_version: str,
+    exact_candidate_checkpoint_ref: str,
+    environment_ref: str,
+    reference_strategy_ref: str,
+    resource_policy_ref: str,
+    cases: tuple[JavaSourceSemanticsWorldModelEvaluationCase, ...],
+    valid_for_seconds: int,
+) -> EvaluationDefinition:
+    if len(cases) != 12:
+        raise DomainError(
+            ErrorCode.EVALUATION_DEFINITION_INVALID,
+            "Java source-semantics evaluation must contain exactly twelve cases",
+        )
+    return _create_world_model_evaluation_definition(
+        evaluation_id=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_ID,
+        evaluation_version=evaluation_version,
+        conformance_result_ref=conformance_result_ref,
+        provider_configuration_fingerprint=provider_configuration_fingerprint,
+        model_ref=model_ref,
+        adapter_version=adapter_version,
+        exact_g3a_checkpoint_ref=exact_candidate_checkpoint_ref,
+        environment_ref=environment_ref,
+        reference_strategy_ref=reference_strategy_ref,
+        resource_policy_ref=resource_policy_ref,
+        cases=cases,
+        valid_for_seconds=valid_for_seconds,
+        proposal_contract=(
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+        ),
+        prompt_program_ref=(
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_PROMPT_PROGRAM_REF
+        ),
+        output_contract_ref=(
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF
+        ),
+        metric_contract=(
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT
+        ),
+        threshold_ref=(
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_THRESHOLD_REF
+        ),
+        required_role_values={
+            item.value for item in JavaSourceSemanticsWorldModelEvaluationRole
+        },
+        output_schema_digest=(
+            java_source_semantics_world_model_output_contract_digest()
+        ),
     )
 
 
@@ -232,16 +383,21 @@ def _create_world_model_evaluation_definition(
     environment_ref: str,
     reference_strategy_ref: str,
     resource_policy_ref: str,
-    cases: tuple[WorldModelEvaluationCase, ...],
+    cases: tuple[
+        WorldModelEvaluationCase | JavaSourceSemanticsWorldModelEvaluationCase,
+        ...,
+    ],
     valid_for_seconds: int,
     proposal_contract: WorldModelProposalContract,
     prompt_program_ref: str,
     output_contract_ref: str,
     metric_contract: dict[str, object],
     threshold_ref: str,
+    required_role_values: set[str],
+    output_schema_digest: Digest,
 ) -> EvaluationDefinition:
-    required_roles = {case.role for case in cases if case.required}
-    missing = set(WorldModelEvaluationRole) - required_roles
+    required_roles = {case.role.value for case in cases if case.required}
+    missing = required_role_values - required_roles
     if missing:
         raise DomainError(
             ErrorCode.EVALUATION_DEFINITION_INVALID,
@@ -274,7 +430,7 @@ def _create_world_model_evaluation_definition(
             proposal_contract
         ),
         output_schema_ref=output_contract_ref,
-        output_schema_digest=world_model_answer_output_contract_digest(),
+        output_schema_digest=output_schema_digest,
         tool_policy_ref=WORLD_MODEL_ANSWER_TOOL_POLICY_REF,
         data_source_revision_ref=exact_g3a_checkpoint_ref,
         environment_ref=environment_ref,
@@ -295,6 +451,12 @@ def java_world_model_capability_registry() -> CapabilityRegistry:
     return _world_model_capability_registry(JAVA_WORLD_MODEL_PROPOSAL_CONTRACT)
 
 
+def java_source_semantics_world_model_capability_registry() -> CapabilityRegistry:
+    return _world_model_capability_registry(
+        JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    )
+
+
 def _world_model_capability_registry(
     proposal_contract: WorldModelProposalContract,
 ) -> CapabilityRegistry:
@@ -308,7 +470,7 @@ def _world_model_capability_registry(
                 "values from an exact source-closed WORLD_MODEL read authority"
             ),
             input_contract_digest=_input_contract_digest(proposal_contract),
-            output_contract_digest=world_model_answer_output_contract_digest(),
+            output_contract_digest=_output_contract_digest(proposal_contract),
         )
     )
     registry.register_strategy(world_model_strategy_definition(proposal_contract))
@@ -335,6 +497,23 @@ def java_world_model_strategy_definition() -> StrategyDefinition:
     return world_model_strategy_definition(JAVA_WORLD_MODEL_PROPOSAL_CONTRACT)
 
 
+def java_source_semantics_world_model_strategy_definition() -> StrategyDefinition:
+    return world_model_strategy_definition(
+        JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    )
+
+
+def _output_contract_digest(
+    proposal_contract: WorldModelProposalContract,
+) -> Digest:
+    return (
+        java_source_semantics_world_model_output_contract_digest()
+        if proposal_contract
+        == JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+        else world_model_answer_output_contract_digest()
+    )
+
+
 def _input_contract_digest(
     proposal_contract: WorldModelProposalContract,
 ) -> Digest:
@@ -344,7 +523,7 @@ def _input_contract_digest(
         "evidence_payload": "FORBIDDEN",
         "proposal_only": True,
     }
-    if proposal_contract is JAVA_WORLD_MODEL_PROPOSAL_CONTRACT:
+    if proposal_contract != MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT:
         core.update(
             {
                 "proposal_vocabulary_ref": (
@@ -357,6 +536,11 @@ def _input_contract_digest(
 
 
 __all__ = [
+    "JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_ID",
+    "JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT",
+    "JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF",
+    "JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_PROMPT_PROGRAM_REF",
+    "JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_THRESHOLD_REF",
     "WORLD_MODEL_EVALUATION_ID",
     "WORLD_MODEL_EVALUATION_METRIC_CONTRACT",
     "WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF",
@@ -368,14 +552,19 @@ __all__ = [
     "JAVA_WORLD_MODEL_EVALUATION_PROMPT_PROGRAM_REF",
     "JAVA_WORLD_MODEL_EVALUATION_THRESHOLD_REF",
     "WorldModelEvaluationCase",
+    "JavaSourceSemanticsWorldModelEvaluationCase",
+    "JavaSourceSemanticsWorldModelEvaluationRole",
     "WorldModelEvaluationOutput",
     "WorldModelEvaluationReview",
     "WorldModelEvaluationRole",
     "ReviewedWorldModelEvaluationCaseExecutor",
     "create_world_model_evaluation_definition",
     "create_java_world_model_evaluation_definition",
+    "create_java_source_semantics_world_model_evaluation_definition",
     "java_world_model_capability_registry",
+    "java_source_semantics_world_model_capability_registry",
     "java_world_model_strategy_definition",
+    "java_source_semantics_world_model_strategy_definition",
     "reviewed_world_model_case_evidence",
     "world_model_capability_registry",
     "world_model_strategy_definition",

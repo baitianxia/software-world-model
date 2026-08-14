@@ -1,10 +1,11 @@
 """Pinned-address Ark HTTPS transport for the isolated Model Egress Gateway.
 
 DNS resolution and TCP connection are performed by a credential- and
-payload-free evaluator supervisor.  The dispatch process inherits exactly one
-connected socket, revalidates its numeric peer on port 443, and still verifies
-the TLS certificate against the qualified Ark hostname.  The credential is
-resolved only after every public endpoint, peer, and TLS check has passed.
+payload-free evaluator supervisor.  The dispatch process inherits one exact
+connected socket per authorized HTTPS call, revalidates every numeric peer on
+port 443, and still verifies the TLS certificate against the qualified Ark
+hostname.  The credential is resolved only after every public endpoint, peer,
+and TLS check has passed.
 """
 
 from __future__ import annotations
@@ -92,20 +93,32 @@ class PinnedIPVolcengineArkChatTransport:
         numeric_address: str,
         api_key_resolver: Callable[[], str],
         connected_socket_fd: int | None = None,
+        connected_socket_fds: tuple[int, ...] = (),
         tls_context: ssl.SSLContext | None = None,
         audit_writer: Callable[[Mapping[str, object]], None] | None = None,
         maximum_calls: int = _MAX_PROVIDER_CALLS,
     ) -> None:
         self._address = _numeric_address(numeric_address)
         self._api_key_resolver = api_key_resolver
-        if connected_socket_fd is not None and (
-            type(connected_socket_fd) is not int or connected_socket_fd < 0
+        if (
+            not isinstance(connected_socket_fds, tuple)
+            or any(type(item) is not int or item < 0 for item in connected_socket_fds)
+            or len(set(connected_socket_fds)) != len(connected_socket_fds)
+            or (connected_socket_fd is not None and connected_socket_fds)
+            or (
+                connected_socket_fd is not None
+                and (type(connected_socket_fd) is not int or connected_socket_fd < 0)
+            )
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "connected Provider socket descriptor is invalid",
+                "connected Provider socket descriptors are invalid",
             )
-        self._connected_socket_fd = connected_socket_fd
+        self._connected_socket_fds = list(
+            connected_socket_fds
+            if connected_socket_fds
+            else (() if connected_socket_fd is None else (connected_socket_fd,))
+        )
         self._tls_context = tls_context or _verified_tls_context()
         self._audit_writer = audit_writer or (lambda _: None)
         if type(maximum_calls) is not int or maximum_calls != _MAX_PROVIDER_CALLS:
@@ -172,16 +185,15 @@ class PinnedIPVolcengineArkChatTransport:
                 if self._address.version == 6
                 else socket.AF_INET
             )
-            inherited_connection = self._connected_socket_fd is not None
+            inherited_connection = bool(self._connected_socket_fds)
             if not inherited_connection:
                 raw_socket = socket.socket(family, socket.SOCK_STREAM)
             else:
                 raw_socket = socket.socket(
                     family,
                     socket.SOCK_STREAM,
-                    fileno=self._connected_socket_fd,
+                    fileno=self._connected_socket_fds.pop(0),
                 )
-                self._connected_socket_fd = None
             raw_socket.settimeout(timeout_milliseconds / 1000)
             if not inherited_connection:
                 target = (

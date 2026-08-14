@@ -1,0 +1,30 @@
+---
+id: ITER-008-RESULTS
+kind: results-index
+status: draft
+authority: project-evidence
+owners: [quality, project]
+depends_on: [ITER-008-VERIFICATION]
+code: []
+tests: []
+iteration: ITER-008
+---
+
+# ITER-008 Results
+
+尚无执行结果。Proposal、Readiness 说明、开发者自拟问题或测试数量都不是 Product Result。
+
+未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
+`reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
+前一段的证据或失败。
+
+每个 Result 必须绑定 exact product code freeze、Snapshot/Bundle、对应隐藏 project/suite、成熟源码 Agent baseline（若适用）、
+正式 Web 现场题、逐 Case verdict、模型/工具预算和 Source/Update/Direct audit；若产品失败，按 `failed-preserved` 保留，不得创建
+Acceptance。
+
+每个 Slice Result 还必须包含 `Architecture reflection and continuation decision`，记录假设/实际、问题分类、四层架构复核、成熟
+方案对照、Finding 去向和下一风险。每个当前 Slice 已到期的假设都必须有 Expected、exact Evidence、Verdict 与 Impact；最终
+Result 覆盖 A1—A8，并分别填写偏差分类、
+Source→Snapshot→Query→Trace→Draft/Review→Web 诊断、替代方案/下一风险和决策理由。`reflection_gate_status: PASS` 只说明复盘完成；
+是否继续由独立的 `reflection_decision` 决定，并必须绑定 `reflection_decision_ref` 的 exact 用户消息。最终 Product Result 还必须
+报告正向价值 actual/unit/direction/threshold 与 exact replay report digest；只写 `PASS` 无效。

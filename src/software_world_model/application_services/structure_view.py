@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+import re
 import unicodedata
 
 from software_world_model.application_services.structure_read_bundle import (
@@ -35,6 +36,8 @@ from software_world_model.knowledge_engine.structure import (
     CoverageRecord,
     EntityRecord,
     EntityType,
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+    JavaSemanticDisposition,
     LiteralFactRecord,
     ObservationModality,
     RelationFactRecord,
@@ -49,6 +52,8 @@ class StructureViewOperation(str, Enum):
     ENTITY_CANDIDATES = "ENTITY_CANDIDATES"
     CHILD_MODULE_INVENTORY = "CHILD_MODULE_INVENTORY"
     DECLARED_METHOD_INVENTORY = "DECLARED_METHOD_INVENTORY"
+    IMPLEMENTATION_CANDIDATES = "IMPLEMENTATION_CANDIDATES"
+    METHOD_IMPLEMENTATION = "METHOD_IMPLEMENTATION"
     DIRECT_NEIGHBORHOOD = "DIRECT_NEIGHBORHOOD"
     PATH_EXISTS = "PATH_EXISTS"
     ALL_SIMPLE_PATHS = "ALL_SIMPLE_PATHS"
@@ -82,12 +87,15 @@ class NeighborhoodDirection(str, Enum):
 _PUBLIC_ENTITY_ROOT_FIELDS: dict[EntityType, tuple[str, ...]] = {
     EntityType.SOFTWARE_SYSTEM: ("canonical_system_key",),
     EntityType.MAVEN_MODULE: ("effective_group_id", "artifact_id"),
+    EntityType.JAVA_SOURCE_FILE: ("source_path",),
     EntityType.JAVA_TYPE: ("qualified_name",),
     EntityType.JAVA_METHOD: (
         "declaring_type_qualified_name",
         "method_name",
         "parameter_types",
     ),
+    EntityType.JAVA_IMPLEMENTATION_ATOM: ("atom_kind",),
+    EntityType.JAVA_STATE_SLOT: ("slot_kind", "canonical_identifier"),
 }
 _PUBLIC_ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
     EntityType.SOFTWARE_SYSTEM: (
@@ -104,6 +112,7 @@ _PUBLIC_ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "packaging",
         "module_path",
     ),
+    EntityType.JAVA_SOURCE_FILE: ("disposition",),
     EntityType.JAVA_TYPE: (
         "simple_name",
         "package_name",
@@ -115,7 +124,18 @@ _PUBLIC_ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "visibility",
         "source_path",
     ),
+    EntityType.JAVA_IMPLEMENTATION_ATOM: (
+        "semantic_form",
+        "operator",
+        "value_category",
+        "method_disposition",
+    ),
+    EntityType.JAVA_STATE_SLOT: ("declared_type",),
 }
+
+_FEATURE_TOKEN_PART = re.compile(
+    r"[A-Z]+(?=[A-Z][a-z]|\d|$)|[A-Z]?[a-z]+|[A-Z]+|\d+"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -629,12 +649,28 @@ class StructureEntityArgument:
         cls,
         result: StructureViewResult,
     ) -> "StructureEntityArgument":
-        if result.operation is not StructureViewOperation.ENTITY_CANDIDATES:
+        if result.operation not in {
+            StructureViewOperation.ENTITY_CANDIDATES,
+            StructureViewOperation.IMPLEMENTATION_CANDIDATES,
+        }:
             raise _invalid(
                 "VIEW_CANDIDATE_RESULT_REQUIRED",
-                "typed argument requires an entity_candidates Result",
+                "typed argument requires a supported candidate Result",
             )
-        if result.payload["resolution_status"] != EntityResolutionStatus.UNIQUE.value:
+        resolution_status = (
+            result.payload["resolution_status"]
+            if result.operation is StructureViewOperation.ENTITY_CANDIDATES
+            else (
+                EntityResolutionStatus.UNIQUE.value
+                if (
+                    result.payload["candidate_count"] == 1
+                    and result.payload["query_status"] == "SUPPORTED"
+                    and not result.truncated
+                )
+                else EntityResolutionStatus.AMBIGUOUS.value
+            )
+        )
+        if resolution_status != EntityResolutionStatus.UNIQUE.value:
             raise _invalid(
                 "VIEW_CANDIDATE_NOT_UNIQUE",
                 "only a sealed unique candidate can bind a typed argument",
@@ -651,6 +687,16 @@ class StructureEntityArgument:
                 "VIEW_CANDIDATE_RESULT_INVALID",
                 "candidate Result payload is malformed",
             )
+        entity_value = (
+            candidate
+            if result.operation is StructureViewOperation.ENTITY_CANDIDATES
+            else candidate.get("method")
+        )
+        if not isinstance(entity_value, Mapping):
+            raise _invalid(
+                "VIEW_CANDIDATE_RESULT_INVALID",
+                "candidate Result method payload is malformed",
+            )
         return cls._create(
             origin=StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE,
             session_id=result.session_id,
@@ -658,8 +704,26 @@ class StructureEntityArgument:
             ordered_bundle_digest=result.ordered_bundle_digest,
             snapshot_id=result.snapshot_ids[0],
             snapshot_bundle_digest=result.snapshot_bundle_digests[0],
-            entity_root_id=StableId(_mapping_text(candidate, "entity_root_id")),
-            entity_state_id=StableId(_mapping_text(candidate, "entity_state_id")),
+            entity_root_id=StableId(
+                _mapping_text(
+                    entity_value,
+                    (
+                        "entity_root_id"
+                        if result.operation is StructureViewOperation.ENTITY_CANDIDATES
+                        else "root_id"
+                    ),
+                )
+            ),
+            entity_state_id=StableId(
+                _mapping_text(
+                    entity_value,
+                    (
+                        "entity_state_id"
+                        if result.operation is StructureViewOperation.ENTITY_CANDIDATES
+                        else "state_id"
+                    ),
+                )
+            ),
             candidate_result=result,
             candidate_result_id=result.result_id,
             candidate_result_digest=result.digest,
@@ -805,6 +869,27 @@ class StructureEntityArgument:
             )
 
 
+@dataclass(frozen=True, slots=True)
+class _JavaFeatureTokenSource:
+    token: str
+    field_class: str
+    member_kind: str
+    root_id: StableId
+
+
+@dataclass(frozen=True, slots=True)
+class _JavaFeatureIndexEntry:
+    method: EntityRecord
+    signature: str
+    disposition: str
+    implementation_completeness: str
+    sources: tuple[_JavaFeatureTokenSource, ...]
+
+    @property
+    def tokens(self) -> tuple[str, ...]:
+        return tuple(sorted({item.token for item in self.sources}))
+
+
 class StructureViewService:
     """Bundle-only, deterministic Structure query service."""
 
@@ -832,6 +917,19 @@ class StructureViewService:
                 "VIEW_DUPLICATE_SNAPSHOT_BUNDLE",
                 "Structure View cannot mount a Snapshot bundle twice",
             )
+        # Build the derived feature index when the exact no-payload Bundle is
+        # mounted, before any question or search terms are available.  The
+        # index is deliberately not authoritative: it can always be rebuilt
+        # from the same verified Bundle.
+        self._java_feature_indexes = {
+            bundle.snapshot_id: _java_feature_index(bundle)
+            for bundle in self._bundles
+            if any(
+                coverage.root.profile_ref
+                == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+                for coverage in bundle.coverages
+            )
+        }
 
     @property
     def session_id(self) -> StableId:
@@ -968,6 +1066,393 @@ class StructureViewService:
                 "candidates": tuple(item.canonical_value() for item in visible),
             },
             support=support,
+        )
+
+    def implementation_candidates(
+        self,
+        *,
+        snapshot_id: StableId,
+        search_terms: Sequence[str],
+        limit: int = 10,
+    ) -> StructureViewResult:
+        """Discover Java methods from a question-independent formal index."""
+
+        bundle = self._bundle(snapshot_id)
+        _require_java_semantics_profile(bundle)
+        original_terms, normalized_terms = _feature_query_terms(search_terms)
+        if type(limit) is not int or not 1 <= limit <= 20:
+            raise _invalid(
+                "IMPLEMENTATION_CANDIDATE_LIMIT_INVALID",
+                "implementation candidate limit must be from 1 through 20",
+            )
+        coverage_limitations = self._coverage_limitations(
+            (bundle,),
+            entity_types=(
+                EntityType.JAVA_METHOD,
+                EntityType.JAVA_IMPLEMENTATION_ATOM,
+                EntityType.JAVA_STATE_SLOT,
+            ),
+            relation_predicates=(RelationPredicate.CALL_SITE_TARGETS,),
+        )
+        query_tokens = set(normalized_terms)
+        ranked: list[
+            tuple[
+                tuple[int, int, int, str, str],
+                _JavaFeatureIndexEntry,
+                tuple[_JavaFeatureTokenSource, ...],
+            ]
+        ] = []
+        feature_index = self._java_feature_indexes.get(bundle.snapshot_id)
+        if feature_index is None:
+            raise _inconsistent(
+                "Java implementation feature index is absent for the exact Bundle"
+            )
+        feature_index_digest = digest_of(
+            [
+                "JAVA_IMPLEMENTATION_FEATURE_INDEX@1",
+                bundle.snapshot_id.value,
+                bundle.digest.value,
+                tuple(
+                    (
+                        entry.method.root_id.value,
+                        entry.method.state_id.value,
+                        entry.signature,
+                        entry.disposition,
+                        entry.implementation_completeness,
+                        tuple(
+                            (
+                                item.token,
+                                item.field_class,
+                                item.member_kind,
+                                item.root_id.value,
+                            )
+                            for item in entry.sources
+                        ),
+                    )
+                    for entry in feature_index
+                ),
+            ]
+        )
+        for entry in feature_index:
+            matches = tuple(
+                item for item in entry.sources if item.token in query_tokens
+            )
+            if not matches:
+                continue
+            matched_tokens = {item.token for item in matches}
+            matched_classes = {item.field_class for item in matches}
+            complete = (
+                entry.disposition == JavaSemanticDisposition.SEMANTICS_COMPLETE.value
+                and entry.implementation_completeness == "COMPLETE"
+            )
+            ranked.append(
+                (
+                    (
+                        -len(matched_tokens),
+                        -len(matched_classes),
+                        -int(complete),
+                        entry.signature,
+                        entry.method.root_id.value,
+                    ),
+                    entry,
+                    matches,
+                )
+            )
+        ranked.sort(key=lambda item: item[0])
+        truncated = len(ranked) > limit
+        visible = tuple(ranked[:limit])
+        support: list[StructureViewSupport] = []
+        candidates: list[dict[str, object]] = []
+        for _, entry, matches in visible:
+            matched_tokens = tuple(sorted({item.token for item in matches}))
+            matched_classes = tuple(
+                sorted({item.field_class for item in matches})
+            )
+            source_refs = tuple(
+                {
+                    "token": item.token,
+                    "field_class": item.field_class,
+                    "member_kind": item.member_kind,
+                    "root_id": item.root_id.value,
+                }
+                for item in sorted(
+                    set(matches),
+                    key=lambda value: (
+                        value.token,
+                        value.field_class,
+                        value.member_kind,
+                        value.root_id.value,
+                    ),
+                )
+            )
+            candidates.append(
+                {
+                    "method": _entity_value(entry.method),
+                    "canonical_signature": entry.signature,
+                    "matched_terms": matched_tokens,
+                    "matched_field_classes": matched_classes,
+                    "matched_unique_term_count": len(matched_tokens),
+                    "matched_field_class_count": len(matched_classes),
+                    "method_disposition": entry.disposition,
+                    "implementation_semantics_completeness": (
+                        entry.implementation_completeness
+                    ),
+                    "matched_sources": source_refs,
+                    "snapshot_id": bundle.snapshot_id.value,
+                    "bundle_digest": bundle.digest.value,
+                }
+            )
+            support.append(self._entity_support(bundle, entry.method.root_id))
+            support.extend(
+                self._member_support(bundle, item.member_kind, item.root_id)
+                for item in matches
+            )
+        if coverage_limitations:
+            query_status = "EXECUTION_FAILURE"
+            limitations = coverage_limitations
+        elif not candidates:
+            query_status = "KNOWLEDGE_GAP"
+            limitations = ("IMPLEMENTATION_CANDIDATES_ZERO",)
+        else:
+            query_status = "SUPPORTED"
+            limitations = (
+                ("IMPLEMENTATION_CANDIDATE_LIMIT_REACHED",)
+                if truncated
+                else ()
+            )
+        return self._result(
+            operation=StructureViewOperation.IMPLEMENTATION_CANDIDATES,
+            bundles=(bundle,),
+            completeness=(
+                StructureViewCompleteness.PARTIAL
+                if limitations
+                else StructureViewCompleteness.COMPLETE
+            ),
+            truncated=truncated,
+            limitations=limitations,
+            payload={
+                "query_status": query_status,
+                "search_terms_original": original_terms,
+                "normalized_terms": normalized_terms,
+                "limit": limit,
+                "candidate_count": len(candidates),
+                "candidates": tuple(candidates),
+                "ranking": (
+                    "MATCHED_TERMS_DESC_FIELD_CLASSES_DESC_"
+                    "SEMANTICS_COMPLETE_DESC_SIGNATURE_ROOT_ASC"
+                ),
+                "snapshot_id": bundle.snapshot_id.value,
+                "bundle_digest": bundle.digest.value,
+                "feature_index_digest": feature_index_digest.value,
+            },
+            support=_unique_support(support),
+        )
+
+    def method_implementation(
+        self,
+        *,
+        method: StructureEntityArgument,
+    ) -> StructureViewResult:
+        """Return bounded typed implementation semantics for one exact method."""
+
+        bundle, method_record = self._require_argument(method)
+        _require_java_semantics_profile(bundle)
+        if method_record.root.entity_type is not EntityType.JAVA_METHOD:
+            raise _invalid(
+                "VIEW_JAVA_METHOD_ARGUMENT_REQUIRED",
+                "method implementation requires a JAVA_METHOD Entity",
+            )
+        coverage_limitations = self._coverage_limitations(
+            (bundle,),
+            entity_types=(
+                EntityType.JAVA_METHOD,
+                EntityType.JAVA_IMPLEMENTATION_ATOM,
+                EntityType.JAVA_STATE_SLOT,
+            ),
+            relation_predicates=(
+                RelationPredicate.HAS_IMPLEMENTATION_ATOM,
+                RelationPredicate.CONTROLS,
+                RelationPredicate.NEXT_IN_SOURCE,
+                RelationPredicate.CALL_SITE_TARGETS,
+                RelationPredicate.READS_STATE,
+                RelationPredicate.WRITES_STATE,
+                RelationPredicate.HANDLES_THROW,
+                RelationPredicate.CALLS,
+            ),
+        )
+        entities = _entities_by_root(bundle)
+        memberships = tuple(
+            sorted(
+                (
+                    item
+                    for item in bundle.relation_facts
+                    if item.root.predicate
+                    is RelationPredicate.HAS_IMPLEMENTATION_ATOM
+                    and item.root.subject.entity_root_id == method_record.root_id
+                ),
+                key=lambda item: (
+                    _mapping_int(
+                        item.state.predicate_state_payload_fields,
+                        "source_order_ordinal",
+                    ),
+                    item.root.object.entity_root_id.value,
+                ),
+            )
+        )
+        atoms: list[EntityRecord] = []
+        for membership in memberships:
+            atom = entities.get(membership.root.object.entity_root_id)
+            if (
+                atom is None
+                or atom.root.entity_type
+                is not EntityType.JAVA_IMPLEMENTATION_ATOM
+            ):
+                raise _inconsistent(
+                    "implementation membership endpoint is absent or not an Atom"
+                )
+            atoms.append(atom)
+        atom_ids = {item.root_id for item in atoms}
+        slots = tuple(
+            sorted(
+                (
+                    item
+                    for item in entities.values()
+                    if item.root.entity_type is EntityType.JAVA_STATE_SLOT
+                    and item.root.root_fields["declaring_entity_root_id"]
+                    == method_record.root_id.value
+                ),
+                key=lambda item: (
+                    item.root.root_fields["declaration_ordinal"],
+                    item.root_id.value,
+                ),
+            )
+        )
+        implementation_predicates = {
+            RelationPredicate.CONTROLS,
+            RelationPredicate.NEXT_IN_SOURCE,
+            RelationPredicate.CALL_SITE_TARGETS,
+            RelationPredicate.READS_STATE,
+            RelationPredicate.WRITES_STATE,
+            RelationPredicate.HANDLES_THROW,
+        }
+        implementation_relations = tuple(
+            sorted(
+                (
+                    item
+                    for item in bundle.relation_facts
+                    if item.root.predicate in implementation_predicates
+                    and item.root.subject.entity_root_id in atom_ids
+                ),
+                key=lambda item: (
+                    item.root.predicate.value,
+                    item.root.subject.entity_root_id.value,
+                    item.root.object.entity_root_id.value,
+                    item.root.observation_modality.value,
+                ),
+            )
+        )
+        legacy_calls = tuple(
+            sorted(
+                (
+                    item
+                    for item in bundle.relation_facts
+                    if item.root.predicate is RelationPredicate.CALLS
+                    and item.root.subject.entity_root_id == method_record.root_id
+                ),
+                key=lambda item: (
+                    item.root.object.entity_root_id.value,
+                    item.root_id.value,
+                ),
+            )
+        )
+        method_fields = method_record.state.state_payload_fields
+        disposition = _field_text(method_fields, "method_disposition")
+        implementation_completeness = _field_text(
+            method_fields,
+            "implementation_semantics_completeness",
+        )
+        method_complete = (
+            disposition == JavaSemanticDisposition.SEMANTICS_COMPLETE.value
+            and implementation_completeness == "COMPLETE"
+        )
+        limitations = (
+            *coverage_limitations,
+            *(("METHOD_SEMANTICS_INCOMPLETE",) if not method_complete else ()),
+        )
+        support: list[StructureViewSupport] = [
+            self._entity_support(bundle, method_record.root_id)
+        ]
+        support.extend(
+            self._relation_support(bundle, item) for item in memberships
+        )
+        support.extend(self._entity_support(bundle, item.root_id) for item in atoms)
+        support.extend(self._entity_support(bundle, item.root_id) for item in slots)
+        support.extend(
+            self._relation_support(bundle, item)
+            for item in (*implementation_relations, *legacy_calls)
+        )
+        referenced_entity_ids = {
+            endpoint
+            for relation in (*implementation_relations, *legacy_calls)
+            for endpoint in (
+                relation.root.subject.entity_root_id,
+                relation.root.object.entity_root_id,
+            )
+            if endpoint not in atom_ids and endpoint != method_record.root_id
+        }
+        support.extend(
+            self._entity_support(bundle, root_id)
+            for root_id in sorted(
+                referenced_entity_ids & set(entities),
+                key=lambda item: item.value,
+            )
+        )
+        return self._result(
+            operation=StructureViewOperation.METHOD_IMPLEMENTATION,
+            bundles=(bundle,),
+            completeness=(
+                StructureViewCompleteness.PARTIAL
+                if limitations
+                else StructureViewCompleteness.COMPLETE
+            ),
+            truncated=False,
+            limitations=limitations,
+            payload={
+                "query_status": (
+                    "SUPPORTED"
+                    if not limitations
+                    else "METHOD_SEMANTICS_LIMITATION"
+                ),
+                "method": _entity_value(method_record),
+                "canonical_signature": _java_method_signature(method_record),
+                "method_disposition": disposition,
+                "declaration_completeness": _field_text(
+                    method_fields,
+                    "declaration_completeness",
+                ),
+                "legacy_static_call_completeness": _field_text(
+                    method_fields,
+                    "legacy_static_call_completeness",
+                ),
+                "implementation_semantics_completeness": (
+                    implementation_completeness
+                ),
+                "negative_conclusion_supported": (
+                    method_complete and not coverage_limitations
+                ),
+                "state_slots": tuple(_entity_value(item) for item in slots),
+                "ordered_atoms": tuple(_entity_value(item) for item in atoms),
+                "implementation_relations": tuple(
+                    _relation_value(item) for item in implementation_relations
+                ),
+                "legacy_calls_direction": "OUTGOING",
+                "legacy_calls": tuple(
+                    _relation_value(item) for item in legacy_calls
+                ),
+                "snapshot_id": bundle.snapshot_id.value,
+                "bundle_digest": bundle.digest.value,
+            },
+            support=_unique_support(support),
         )
 
     def child_module_inventory(
@@ -1478,27 +1963,42 @@ class StructureViewService:
                     "candidate-derived Entity argument proof identity does not match",
                 )
             proof_payload = proof.payload
-            replay = self.entity_candidates(
-                snapshot_id=argument.snapshot_id,
-                mention=_mapping_text(proof_payload, "mention_original"),
-                entity_type=proof_payload["entity_type"],
-                exact_root_id=(
-                    StableId(proof_payload["exact_root_id"])
-                    if isinstance(proof_payload["exact_root_id"], str)
-                    else None
-                ),
-                canonical_ga=(
-                    proof_payload["canonical_ga"]
-                    if isinstance(proof_payload["canonical_ga"], str)
-                    else None
-                ),
-                canonical_gav=(
-                    proof_payload["canonical_gav"]
-                    if isinstance(proof_payload["canonical_gav"], str)
-                    else None
-                ),
-                max_candidates=_mapping_int(proof_payload, "max_candidates"),
-            )
+            if proof.operation is StructureViewOperation.ENTITY_CANDIDATES:
+                replay = self.entity_candidates(
+                    snapshot_id=argument.snapshot_id,
+                    mention=_mapping_text(proof_payload, "mention_original"),
+                    entity_type=proof_payload["entity_type"],
+                    exact_root_id=(
+                        StableId(proof_payload["exact_root_id"])
+                        if isinstance(proof_payload["exact_root_id"], str)
+                        else None
+                    ),
+                    canonical_ga=(
+                        proof_payload["canonical_ga"]
+                        if isinstance(proof_payload["canonical_ga"], str)
+                        else None
+                    ),
+                    canonical_gav=(
+                        proof_payload["canonical_gav"]
+                        if isinstance(proof_payload["canonical_gav"], str)
+                        else None
+                    ),
+                    max_candidates=_mapping_int(proof_payload, "max_candidates"),
+                )
+            elif proof.operation is StructureViewOperation.IMPLEMENTATION_CANDIDATES:
+                replay = self.implementation_candidates(
+                    snapshot_id=argument.snapshot_id,
+                    search_terms=_mapping_string_sequence(
+                        proof_payload,
+                        "search_terms_original",
+                    ),
+                    limit=_mapping_int(proof_payload, "limit"),
+                )
+            else:
+                raise _invalid(
+                    "VIEW_CANDIDATE_PROOF_INVALID",
+                    "candidate-derived Entity argument uses an unsupported operation",
+                )
             if replay != proof:
                 raise _invalid(
                     "VIEW_CANDIDATE_PROOF_INVALID",
@@ -1652,6 +2152,25 @@ class StructureViewService:
             state_digest=record.state_digest,
             evidence=_evidence_for(bundle, record.state.evidence_references),
         )
+
+    def _member_support(
+        self,
+        bundle: StructureSnapshotReadBundle,
+        member_kind: str,
+        root_id: StableId,
+    ) -> StructureViewSupport:
+        if member_kind == "ENTITY":
+            return self._entity_support(bundle, root_id)
+        if member_kind == "RELATION_FACT":
+            relation = {item.root_id: item for item in bundle.relation_facts}.get(
+                root_id
+            )
+            if relation is None:
+                raise _inconsistent(
+                    "feature-index Support references an absent Relation"
+                )
+            return self._relation_support(bundle, relation)
+        raise _inconsistent("feature-index Support has an unknown member kind")
 
     def _literal_support(
         self,
@@ -1875,6 +2394,261 @@ def _entities_by_root(
             )
         values[upstream.entity.root_id] = upstream.entity
     return dict(sorted(values.items(), key=lambda item: item[0].value))
+
+
+def _require_java_semantics_profile(
+    bundle: StructureSnapshotReadBundle,
+) -> None:
+    profiles = {item.root.profile_ref for item in bundle.coverages}
+    if profiles != {JAVA_SOURCE_SEMANTICS_PROFILE_REF}:
+        raise _invalid(
+            "IMPLEMENTATION_QUERY_PROFILE_UNSUPPORTED",
+            "implementation query requires one exact Java Source Semantics Coverage",
+        )
+
+
+def _feature_query_terms(
+    values: Sequence[str],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise _invalid(
+            "IMPLEMENTATION_SEARCH_TERMS_INVALID",
+            "implementation search terms must be an ordered sequence",
+        )
+    if not 1 <= len(values) <= 12:
+        raise _invalid(
+            "IMPLEMENTATION_SEARCH_TERMS_INVALID",
+            "implementation search requires from 1 through 12 terms",
+        )
+    original: list[str] = []
+    normalized: set[str] = set()
+    for raw in values:
+        term = _text(raw, "implementation search term")
+        if len(term.encode("utf-8")) > 128:
+            raise _invalid(
+                "IMPLEMENTATION_SEARCH_TERM_BUDGET_EXCEEDED",
+                "implementation search term exceeds 128 UTF-8 bytes",
+            )
+        tokens = _feature_tokens(term)
+        if not tokens:
+            raise _invalid(
+                "IMPLEMENTATION_SEARCH_TERM_EMPTY",
+                "implementation search term has no canonical identifier token",
+            )
+        original.append(term)
+        normalized.update(tokens)
+    if len(normalized) > 64:
+        raise _invalid(
+            "IMPLEMENTATION_SEARCH_TOKEN_BUDGET_EXCEEDED",
+            "implementation search exceeds 64 normalized tokens",
+        )
+    return tuple(original), tuple(sorted(normalized))
+
+
+def _feature_tokens(value: str) -> tuple[str, ...]:
+    normalized = unicodedata.normalize("NFC", value)
+    tokens: set[str] = set()
+    for segment in re.split(r"[^0-9A-Za-z]+", normalized):
+        if not segment:
+            continue
+        parts = _FEATURE_TOKEN_PART.findall(segment)
+        if not parts:
+            parts = [segment]
+        tokens.update(part.casefold() for part in parts if part)
+    return tuple(sorted(token for token in tokens if token))
+
+
+def _java_method_signature(record: EntityRecord) -> str:
+    if record.root.entity_type is not EntityType.JAVA_METHOD:
+        raise _inconsistent("Java method signature requires a JAVA_METHOD Entity")
+    fields = record.root.root_fields
+    return (
+        f"{_field_text(fields, 'declaring_type_qualified_name')}#"
+        f"{_field_text(fields, 'method_name')}"
+        f"({','.join(_field_text_sequence(fields, 'parameter_types'))})"
+    )
+
+
+def _java_feature_index(
+    bundle: StructureSnapshotReadBundle,
+) -> tuple[_JavaFeatureIndexEntry, ...]:
+    """Rebuild the question-independent feature index from exact Bundle fields."""
+
+    entities = _entities_by_root(bundle)
+    methods = tuple(
+        sorted(
+            (
+                item
+                for item in entities.values()
+                if item.root.entity_type is EntityType.JAVA_METHOD
+            ),
+            key=lambda item: (_java_method_signature(item), item.root_id.value),
+        )
+    )
+    slots_by_method: dict[StableId, list[EntityRecord]] = {}
+    atoms_by_method: dict[StableId, list[EntityRecord]] = {}
+    atom_method: dict[StableId, StableId] = {}
+    for entity in entities.values():
+        if entity.root.entity_type is EntityType.JAVA_STATE_SLOT:
+            declaring = StableId(
+                _field_text(entity.root.root_fields, "declaring_entity_root_id")
+            )
+            if declaring in {item.root_id for item in methods}:
+                slots_by_method.setdefault(declaring, []).append(entity)
+        elif entity.root.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM:
+            declaring = StableId(
+                _field_text(entity.root.root_fields, "method_entity_root_id")
+            )
+            atoms_by_method.setdefault(declaring, []).append(entity)
+            atom_method[entity.root_id] = declaring
+    call_targets_by_method: dict[
+        StableId, list[tuple[RelationFactRecord, EntityRecord]]
+    ] = {}
+    for relation in bundle.relation_facts:
+        if relation.root.predicate is not RelationPredicate.CALL_SITE_TARGETS:
+            continue
+        owner = atom_method.get(relation.root.subject.entity_root_id)
+        target = entities.get(relation.root.object.entity_root_id)
+        if owner is None or target is None or target.root.entity_type is not EntityType.JAVA_METHOD:
+            raise _inconsistent(
+                "feature index CALL_SITE_TARGETS closure is incomplete"
+            )
+        call_targets_by_method.setdefault(owner, []).append((relation, target))
+
+    result: list[_JavaFeatureIndexEntry] = []
+    for method in methods:
+        sources: set[_JavaFeatureTokenSource] = set()
+
+        def add(
+            raw: str,
+            field_class: str,
+            member_kind: str,
+            root_id: StableId,
+        ) -> None:
+            for token in _feature_tokens(raw):
+                sources.add(
+                    _JavaFeatureTokenSource(
+                        token=token,
+                        field_class=field_class,
+                        member_kind=member_kind,
+                        root_id=root_id,
+                    )
+                )
+
+        root_fields = method.root.root_fields
+        state_fields = method.state.state_payload_fields
+        declaring_type = _field_text(
+            root_fields,
+            "declaring_type_qualified_name",
+        )
+        add(declaring_type, "DECLARING_TYPE", "ENTITY", method.root_id)
+        package = declaring_type.rsplit(".", 1)[0] if "." in declaring_type else declaring_type
+        add(package, "PACKAGE", "ENTITY", method.root_id)
+        add(
+            _field_text(root_fields, "method_name"),
+            "METHOD_NAME",
+            "ENTITY",
+            method.root_id,
+        )
+        for parameter_type in _field_text_sequence(root_fields, "parameter_types"):
+            add(parameter_type, "PARAMETER_TYPE", "ENTITY", method.root_id)
+        add(
+            _field_text(state_fields, "return_type"),
+            "RETURN_TYPE",
+            "ENTITY",
+            method.root_id,
+        )
+        for slot in slots_by_method.get(method.root_id, ()):
+            add(
+                _field_text(slot.root.root_fields, "canonical_identifier"),
+                "STATE_SLOT_IDENTIFIER",
+                "ENTITY",
+                slot.root_id,
+            )
+            add(
+                _field_text(slot.state.state_payload_fields, "declared_type"),
+                "STATE_SLOT_TYPE",
+                "ENTITY",
+                slot.root_id,
+            )
+        for atom in atoms_by_method.get(method.root_id, ()):
+            atom_state = atom.state.state_payload_fields
+            add(
+                _field_text(atom.root.root_fields, "atom_kind"),
+                "ATOM_KIND",
+                "ENTITY",
+                atom.root_id,
+            )
+            add(
+                _field_text(atom_state, "semantic_form"),
+                "SEMANTIC_FORM",
+                "ENTITY",
+                atom.root_id,
+            )
+            add(
+                _field_text(atom_state, "operator"),
+                "OPERATOR",
+                "ENTITY",
+                atom.root_id,
+            )
+            add(
+                _field_text(atom_state, "value_category"),
+                "VALUE_CATEGORY",
+                "ENTITY",
+                atom.root_id,
+            )
+            raw_operands = atom_state["semantic_operands"]
+            if not isinstance(raw_operands, tuple):
+                raise _inconsistent("Java Atom semantic operands are malformed")
+            for operand in raw_operands:
+                if not isinstance(operand, Mapping):
+                    raise _inconsistent("Java Atom semantic operand is malformed")
+                if operand.get("kind") == "TYPE_REF" and isinstance(
+                    operand.get("value"), str
+                ):
+                    add(
+                        operand["value"],
+                        "EXCEPTION_TYPE",
+                        "ENTITY",
+                        atom.root_id,
+                    )
+        for relation, target in call_targets_by_method.get(method.root_id, ()):
+            target_fields = target.root.root_fields
+            add(
+                _field_text(target_fields, "declaring_type_qualified_name"),
+                "CALLEE_TYPE",
+                "RELATION_FACT",
+                relation.root_id,
+            )
+            add(
+                _field_text(target_fields, "method_name"),
+                "CALLEE_METHOD",
+                "RELATION_FACT",
+                relation.root_id,
+            )
+        result.append(
+            _JavaFeatureIndexEntry(
+                method=method,
+                signature=_java_method_signature(method),
+                disposition=_field_text(state_fields, "method_disposition"),
+                implementation_completeness=_field_text(
+                    state_fields,
+                    "implementation_semantics_completeness",
+                ),
+                sources=tuple(
+                    sorted(
+                        sources,
+                        key=lambda item: (
+                            item.token,
+                            item.field_class,
+                            item.member_kind,
+                            item.root_id.value,
+                        ),
+                    )
+                ),
+            )
+        )
+    return tuple(result)
 
 
 def _covered_entity_types(

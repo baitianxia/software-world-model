@@ -47,6 +47,9 @@ class ArtifactUsePurpose(str, Enum):
     JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE = (
         "JAVA_STATIC_CALL_EVIDENCE_PERSISTENCE@1"
     )
+    JAVA_SOURCE_SEMANTICS_EVIDENCE_PERSISTENCE = (
+        "JAVA_SOURCE_SEMANTICS_EVIDENCE_PERSISTENCE@1"
+    )
 
 
 @dataclass(frozen=True, slots=True)

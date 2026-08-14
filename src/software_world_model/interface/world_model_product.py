@@ -18,6 +18,7 @@ from typing import Mapping, Protocol, Sequence
 
 from software_world_model.ai_infrastructure.model_egress_gateway import (
     JAVA_MODEL_EGRESS_GATEWAY_ROUTE,
+    JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
     MODEL_EGRESS_GATEWAY_ROUTE,
 )
 from software_world_model.ai_infrastructure.world_model_answer_strategy import (
@@ -29,6 +30,11 @@ from software_world_model.ai_infrastructure.world_model_answer_strategy import (
     WorldModelCapabilityProposal,
 )
 from software_world_model.ai_infrastructure.versioned_world_model_answer_strategy import (
+    IMPLEMENTATION_ANSWER_DRAFTING,
+    IMPLEMENTATION_ANSWER_REVIEW,
+    IMPLEMENTATION_QUERY_PLANNING,
+    JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES,
+    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
     MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT,
 )
@@ -85,6 +91,7 @@ from software_world_model.cross_cutting import (
 )
 from software_world_model.knowledge_engine.structure import (
     EntityType,
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     JAVA_STATIC_CALL_PROFILE_REF,
     MAVEN_STRUCTURE_PROFILE_REF,
     RelationPredicate,
@@ -93,6 +100,9 @@ from software_world_model.knowledge_engine.structure import (
 
 PRODUCT_STRATEGY_REF = MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_ref
 JAVA_PRODUCT_STRATEGY_REF = JAVA_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_ref
+JAVA_SOURCE_SEMANTICS_PRODUCT_STRATEGY_REF = (
+    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_ref
+)
 PRODUCT_GAP_REASON = "CHANGE_INTENT_OUTSIDE_STRUCTURE_COVERAGE"
 _EXPLICIT_ARTIFACT_MENTION = re.compile(
     r"`([A-Za-z0-9][A-Za-z0-9._-]{0,127})`"
@@ -205,6 +215,7 @@ class ProductBundleCatalog:
         if self._profile_ref not in {
             MAVEN_STRUCTURE_PROFILE_REF,
             JAVA_STATIC_CALL_PROFILE_REF,
+            JAVA_SOURCE_SEMANTICS_PROFILE_REF,
         }:
             raise _invalid(
                 "PRODUCT_PROFILE_UNSUPPORTED",
@@ -309,9 +320,10 @@ class ProductBundleCatalog:
                     "PRODUCT_SYSTEM_ROOT_NOT_UNIQUE",
                     "every product Snapshot must contain one SOFTWARE_SYSTEM",
                 )
-            if self._profile_ref == JAVA_STATIC_CALL_PROFILE_REF and not self.entities(
-                snapshot_id, EntityType.JAVA_TYPE
-            ):
+            if self._profile_ref in {
+                JAVA_STATIC_CALL_PROFILE_REF,
+                JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+            } and not self.entities(snapshot_id, EntityType.JAVA_TYPE):
                 raise _invalid(
                     "PRODUCT_JAVA_TYPE_SET_EMPTY",
                     "every Java product Snapshot must contain at least one JAVA_TYPE",
@@ -329,7 +341,11 @@ class ProductBundleCatalog:
     def graph_predicate(self) -> RelationPredicate:
         return (
             RelationPredicate.CALLS
-            if self._profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+            if self._profile_ref
+            in {
+                JAVA_STATIC_CALL_PROFILE_REF,
+                JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+            }
             else RelationPredicate.DEPENDS_ON
         )
 
@@ -389,7 +405,11 @@ class ProductBundleCatalog:
         offsets: dict[str, int] = {}
         mention_types = (
             {EntityType.JAVA_TYPE, EntityType.JAVA_METHOD}
-            if self._profile_ref == JAVA_STATIC_CALL_PROFILE_REF
+            if self._profile_ref
+            in {
+                JAVA_STATIC_CALL_PROFILE_REF,
+                JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+            }
             else {EntityType.MAVEN_MODULE}
         )
         for item in self._entries:
@@ -451,6 +471,11 @@ class ProductQuestionInterpreter:
 
     def analyze(self, question: str) -> ProductQuestionAnalysis:
         text = _text(question, "product question")
+        if self._catalog.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+            raise _invalid(
+                "PRODUCT_SEMANTICS_FIXED_INTERPRETER_FORBIDDEN",
+                "Java implementation questions require the generic model Plan chain",
+            )
         if self._catalog.profile_ref == JAVA_STATIC_CALL_PROFILE_REF:
             return self._analyze_java(text)
         folded = text.casefold()
@@ -968,6 +993,475 @@ class ProductRequirementReviewer(WorldModelRequirementFidelityReviewer):
             original_question_preserved=approved,
             all_material_questions_covered=approved,
             findings=() if approved else ("PRODUCT_REQUIREMENT_MISMATCH",),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class _ProductModelProposalRecorder:
+    """Collect the three isolated provider proposals in execution order."""
+
+    def __init__(self) -> None:
+        self._items: list[WorldModelCapabilityProposal] = []
+
+    def append(self, proposal: WorldModelCapabilityProposal) -> None:
+        self._items.append(proposal)
+
+    @property
+    def proposals(self) -> tuple[WorldModelCapabilityProposal, ...]:
+        return tuple(self._items)
+
+
+class JavaSourceSemanticsRequirementPlanner(WorldModelRequirementPlanner):
+    """Preserve a free-form implementation question without classifying it."""
+
+    strategy_ref = "iter-007-generic-implementation-requirement@1"
+
+    def plan(
+        self,
+        *,
+        question,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelRequirementProposal:
+        return WorldModelRequirementProposal(
+            original_question=question.original_question,
+            response_language=question.response_language,
+            needs=(
+                WorldModelNeed(
+                    need_id="implementation-answer",
+                    question=(
+                        "Answer the caller's implementation question from the exact "
+                        "typed Java semantics Read Set, or disclose a bounded Gap."
+                    ),
+                ),
+            ),
+            joint_constraints=(),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class JavaSourceSemanticsRequirementReviewer(
+    WorldModelRequirementFidelityReviewer
+):
+    strategy_ref = "iter-007-generic-implementation-requirement-review@1"
+
+    def review(
+        self,
+        *,
+        question,
+        proposal: WorldModelRequirementProposal,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelRequirementFidelityProposal:
+        expected_need_ids = ("implementation-answer",)
+        actual_need_ids = tuple(item.need_id for item in proposal.needs)
+        approved = (
+            proposal.original_question == question.original_question
+            and proposal.response_language == question.response_language
+            and actual_need_ids == expected_need_ids
+            and proposal.joint_constraints == ()
+        )
+        return WorldModelRequirementFidelityProposal(
+            decision=(
+                WorldModelReviewDecision.APPROVE
+                if approved
+                else WorldModelReviewDecision.REJECT
+            ),
+            accepted_need_ids=actual_need_ids if approved else (),
+            accepted_constraint_ids=(),
+            original_question_preserved=approved,
+            all_material_questions_covered=approved,
+            findings=() if approved else ("IMPLEMENTATION_REQUIREMENT_MISMATCH",),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
+    """Call 1: propose feature terms, then seal the generic two-operation Plan."""
+
+    execution_mode = QUALIFIED_MODEL_STRATEGY_MODE
+
+    def __init__(
+        self,
+        *,
+        model_strategy: ProductCapabilityProposalPort,
+        recorder: _ProductModelProposalRecorder,
+        strategy_ref: str,
+        provider_route: str,
+    ) -> None:
+        self._model = model_strategy
+        self._recorder = recorder
+        self.strategy_ref = strategy_ref
+        self.provider_route = provider_route
+
+    def plan(
+        self,
+        *,
+        question,
+        requirement: WorldModelRequirementRevision,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelQueryPlanProposal:
+        need_ids = tuple(item.need_id for item in requirement.needs)
+        if need_ids != ("implementation-answer",):
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_REQUIREMENT_INVALID",
+                "implementation Plan requires the one preserved free-form Need",
+            )
+        proposal = self._model.propose(
+            case_id=f"product:{question.request_ref}:plan",
+            capability=IMPLEMENTATION_QUERY_PLANNING,
+            sealed_input={
+                "original_question": question.original_question,
+                "response_language": question.response_language,
+                "need_key": need_ids[0],
+                "read_authority": question.read_authority.canonical_value(),
+                "profile_ref": JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+            },
+            available_operations=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            ),
+        )
+        self._recorder.append(proposal)
+        normalized = proposal.normalized_result
+        search_terms = _closed_text_list(
+            normalized.get("search_terms"),
+            "implementation search terms",
+            minimum=1,
+            maximum=12,
+        )
+        if len({item.casefold() for item in search_terms}) != len(search_terms):
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_SEARCH_DUPLICATE",
+                "model Plan repeated a normalized implementation search term",
+            )
+        operations = _closed_text_list(
+            normalized.get("operations"),
+            "implementation operations",
+            minimum=2,
+            maximum=2,
+        )
+        snapshot_value = normalized.get("snapshot")
+        limit = normalized.get("limit")
+        if (
+            normalized.get("need_key") != need_ids[0]
+            or operations
+            != JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            or not isinstance(snapshot_value, str)
+            or snapshot_value
+            not in {
+                item.value for item in question.read_authority.snapshot_ids
+            }
+            or type(limit) is not int
+            or not 1 <= limit <= 20
+        ):
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_MODEL_PLAN_INVALID",
+                "model Plan is outside the exact implementation operation contract",
+            )
+        snapshot_id = StableId(snapshot_value)
+        selector_id = "implementation-method-candidate"
+        selector = WorldModelEntitySelectorProposal(
+            selector_id=selector_id,
+            need_ids=need_ids,
+            snapshot_id=snapshot_id,
+            origin=EntitySelectorOrigin.IMPLEMENTATION_FEATURES,
+            max_candidates=limit,
+            search_terms=search_terms,
+        )
+        candidate_step = WorldModelQueryStepProposal.create(
+            step_id="implementation-candidates",
+            need_ids=need_ids,
+            operation=StructureViewOperation.IMPLEMENTATION_CANDIDATES,
+            parameters={
+                "snapshot_id": snapshot_id.value,
+                "search_terms": search_terms,
+                "limit": limit,
+            },
+        )
+        method_step = WorldModelQueryStepProposal.create(
+            step_id="method-implementation",
+            need_ids=need_ids,
+            operation=StructureViewOperation.METHOD_IMPLEMENTATION,
+            arguments={"method": selector_id},
+        )
+        return WorldModelQueryPlanProposal(
+            requirement_id=requirement.requirement_id,
+            requirement_digest=requirement.digest,
+            read_set_digest=requirement.read_authority.read_set_digest,
+            ordered_bundle_digest=(
+                requirement.read_authority.ordered_bundle_digest
+            ),
+            selectors=(selector,),
+            steps=(candidate_step, method_step),
+            explicit_gaps=(),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class JavaSourceSemanticsDraftGenerator(WorldModelDraftGenerator):
+    """Call 2: generate one answer Claim from sealed formal query Results."""
+
+    execution_mode = QUALIFIED_MODEL_STRATEGY_MODE
+
+    def __init__(
+        self,
+        *,
+        model_strategy: ProductCapabilityProposalPort,
+        recorder: _ProductModelProposalRecorder,
+        strategy_ref: str,
+        provider_route: str,
+    ) -> None:
+        self._model = model_strategy
+        self._recorder = recorder
+        self.strategy_ref = strategy_ref
+        self.provider_route = provider_route
+
+    def draft(
+        self,
+        *,
+        question,
+        requirement: WorldModelRequirementRevision,
+        plan: WorldModelQueryPlan,
+        result_set: WorldModelQueryResultSet,
+        assessment: WorldModelAssessment,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelDraftProposal:
+        if len(assessment.needs) != 1:
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_ASSESSMENT_INVALID",
+                "implementation Draft requires exactly one assessed Need",
+            )
+        assessed = assessment.needs[0]
+        disposition, kind = _implementation_draft_disposition(assessed.outcome)
+        expected_result_ids = (
+            tuple(item.value for item in assessed.step_result_ids)
+            if disposition == "SUPPORTED"
+            else ()
+        )
+        expected_support_digests = (
+            tuple(item.value for item in assessed.support_digests)
+            if disposition == "SUPPORTED"
+            else ()
+        )
+        expected_gap_code = (
+            assessed.gap_code if disposition == "KNOWLEDGE_GAP" else None
+        )
+        expected_limitations = (
+            assessed.limitations if disposition == "LIMITATION" else ()
+        )
+        proposal = self._model.propose(
+            case_id=f"product:{question.request_ref}:draft",
+            capability=IMPLEMENTATION_ANSWER_DRAFTING,
+            sealed_input={
+                "original_question": question.original_question,
+                "response_language": question.response_language,
+                "requirement": {
+                    "needs": tuple(
+                        item.canonical_value() for item in requirement.needs
+                    ),
+                    "digest": requirement.digest.value,
+                },
+                "query_plan": {
+                    "steps": tuple(
+                        _plain_canonical(item.canonical_value())
+                        for item in plan.steps
+                    ),
+                    "digest": plan.digest.value,
+                },
+                "query_results": _implementation_query_results(result_set),
+                "need_assessment": assessed.canonical_value(),
+                "assessment_disposition": disposition,
+                "authorized_step_result_ids": expected_result_ids,
+                "authorized_support_digests": expected_support_digests,
+                "assessment_gap_code": expected_gap_code,
+                "assessment_limitation_codes": expected_limitations,
+            },
+        )
+        self._recorder.append(proposal)
+        normalized = proposal.normalized_result
+        answer = normalized.get("answer")
+        if (
+            normalized.get("disposition") != disposition
+            or not isinstance(answer, str)
+            or not answer.strip()
+            or answer != answer.strip()
+            or len(answer) > 65_536
+            or tuple(normalized.get("step_result_ids", ()))
+            != expected_result_ids
+            or tuple(normalized.get("support_digests", ()))
+            != expected_support_digests
+            or normalized.get("gap_code") != expected_gap_code
+            or tuple(normalized.get("limitation_codes", ()))
+            != expected_limitations
+            or any(
+                token in answer.casefold()
+                for token in (
+                    "source payload",
+                    "evidence payload",
+                    "evidence excerpt",
+                    "源码摘录",
+                    "```",
+                )
+            )
+        ):
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_MODEL_DRAFT_INVALID",
+                "model Draft is not exactly bound to the sealed formal assessment",
+            )
+        return WorldModelDraftProposal(
+            assessment_id=assessment.assessment_id,
+            assessment_digest=assessment.digest,
+            claims=(
+                WorldModelAnswerClaimProposal(
+                    claim_id="claim:implementation-answer",
+                    need_id=assessed.need_id,
+                    kind=kind,
+                    text=answer,
+                    step_result_ids=(
+                        assessed.step_result_ids
+                        if disposition == "SUPPORTED"
+                        else ()
+                    ),
+                ),
+            ),
+            invocation_id=invocation.invocation_id,
+            invocation_digest=invocation.digest,
+        )
+
+
+class JavaSourceSemanticsAnswerReviewer(WorldModelAnswerReviewer):
+    """Call 3: independently review the exact Question/Result/Draft closure."""
+
+    execution_mode = QUALIFIED_MODEL_STRATEGY_MODE
+
+    def __init__(
+        self,
+        *,
+        model_strategy: ProductCapabilityProposalPort,
+        recorder: _ProductModelProposalRecorder,
+        strategy_ref: str,
+        provider_route: str,
+    ) -> None:
+        self._model = model_strategy
+        self._recorder = recorder
+        self.strategy_ref = strategy_ref
+        self.provider_route = provider_route
+
+    def review(
+        self,
+        *,
+        question,
+        requirement: WorldModelRequirementRevision,
+        plan: WorldModelQueryPlan,
+        result_set: WorldModelQueryResultSet,
+        assessment: WorldModelAssessment,
+        draft,
+        invocation: WorldModelStrategyInvocation,
+    ) -> WorldModelReviewProposal:
+        need_ids = tuple(item.need_id for item in requirement.needs)
+        step_result_ids = tuple(
+            item.step_result_id.value for item in result_set.step_results
+        )
+        support_digests = tuple(
+            sorted(
+                {
+                    support.digest.value
+                    for result in result_set.step_results
+                    for support in result.view_result.support_map
+                }
+            )
+        )
+        proposal = self._model.propose(
+            case_id=f"product:{question.request_ref}:review",
+            capability=IMPLEMENTATION_ANSWER_REVIEW,
+            sealed_input={
+                "original_question": question.original_question,
+                "response_language": question.response_language,
+                "requirement": _plain_canonical(requirement.canonical_value()),
+                "query_plan": _plain_canonical(plan.canonical_value()),
+                "query_results": _implementation_query_results(result_set),
+                "assessment": _plain_canonical(assessment.canonical_value()),
+                "draft": _plain_canonical(draft.canonical_value()),
+                "required_checked_need_ids": need_ids,
+                "required_checked_step_result_ids": step_result_ids,
+                "required_checked_support_digests": support_digests,
+            },
+        )
+        self._recorder.append(proposal)
+        normalized = proposal.normalized_result
+        finding_codes = _closed_text_list(
+            normalized.get("finding_codes"),
+            "implementation review finding codes",
+            minimum=0,
+            maximum=64,
+        )
+        finding_code_order = {
+            code: position
+            for position, code in enumerate(
+                JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES
+            )
+        }
+        try:
+            decision = WorldModelReviewDecision(normalized.get("decision"))
+        except (TypeError, ValueError) as exc:
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_MODEL_REVIEW_INVALID",
+                "model Review returned an invalid decision",
+            ) from exc
+        if (
+            tuple(normalized.get("checked_need_ids", ())) != need_ids
+            or tuple(normalized.get("checked_step_result_ids", ()))
+            != step_result_ids
+            or tuple(normalized.get("checked_support_digests", ()))
+            != support_digests
+            or len(set(finding_codes)) != len(finding_codes)
+            or any(code not in finding_code_order for code in finding_codes)
+            or [finding_code_order[code] for code in finding_codes]
+            != sorted(finding_code_order[code] for code in finding_codes)
+            or (
+                decision is WorldModelReviewDecision.APPROVE
+                and finding_codes
+            )
+            or (
+                decision is WorldModelReviewDecision.REJECT
+                and not finding_codes
+            )
+        ):
+            raise _invalid(
+                "PRODUCT_IMPLEMENTATION_MODEL_REVIEW_INVALID",
+                "model Review did not close the exact independent checklist",
+            )
+        return WorldModelReviewProposal(
+            decision=decision,
+            dimensions=tuple(
+                WorldModelReviewDimensionAssessment(
+                    dimension=dimension,
+                    decision=decision,
+                    finding_codes=finding_codes,
+                )
+                for dimension in WorldModelReviewDimension
+            ),
+            checked_need_ids=need_ids,
+            checked_constraint_ids=tuple(
+                item.constraint_id for item in requirement.joint_constraints
+            ),
+            checked_step_result_ids=tuple(
+                item.step_result_id for item in result_set.step_results
+            ),
+            original_question_digest=digest_of(question.original_question),
+            draft_digest=draft.digest,
+            read_set_digest=question.read_authority.read_set_digest,
+            finding_codes=finding_codes,
+            findings=(
+                ()
+                if decision is WorldModelReviewDecision.APPROVE
+                else tuple(
+                    f"independent semantic review: {item}"
+                    for item in finding_codes
+                )
+            ),
             invocation_id=invocation.invocation_id,
             invocation_digest=invocation.digest,
         )
@@ -2034,7 +2528,9 @@ class WorldModelProductAnswerService:
             )
         self._gateway_counters = gateway_counters
         expected_contract = (
-            JAVA_WORLD_MODEL_PROPOSAL_CONTRACT
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+            if self._catalog.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+            else JAVA_WORLD_MODEL_PROPOSAL_CONTRACT
             if self._catalog.profile_ref == JAVA_STATIC_CALL_PROFILE_REF
             else MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT
         )
@@ -2051,7 +2547,9 @@ class WorldModelProductAnswerService:
             )
         self._model_strategy_ref = expected_strategy_ref
         self._model_route = (
-            JAVA_MODEL_EGRESS_GATEWAY_ROUTE
+            JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE
+            if self._catalog.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
+            else JAVA_MODEL_EGRESS_GATEWAY_ROUTE
             if self._catalog.profile_ref == JAVA_STATIC_CALL_PROFILE_REF
             else MODEL_EGRESS_GATEWAY_ROUTE
         )
@@ -2074,14 +2572,44 @@ class WorldModelProductAnswerService:
             model_route=self._model_route,
         )
         responses = WorldModelResponseControlService(store, answering)
-        interpreter = ProductQuestionInterpreter(self._catalog)
-        draft_generator = ProductModelDraftGenerator(
-            catalog=self._catalog,
-            interpreter=interpreter,
-            model_strategy=self._model_strategy,
-            strategy_ref=self._model_strategy_ref,
-            provider_route=self._model_route,
+        semantic_profile = (
+            self._catalog.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
         )
+        recorder = _ProductModelProposalRecorder()
+        if semantic_profile:
+            requirement_planner = JavaSourceSemanticsRequirementPlanner()
+            requirement_reviewer = JavaSourceSemanticsRequirementReviewer()
+            query_planner = JavaSourceSemanticsQueryPlanner(
+                model_strategy=self._model_strategy,
+                recorder=recorder,
+                strategy_ref=self._model_strategy_ref,
+                provider_route=self._model_route,
+            )
+            draft_generator = JavaSourceSemanticsDraftGenerator(
+                model_strategy=self._model_strategy,
+                recorder=recorder,
+                strategy_ref=self._model_strategy_ref,
+                provider_route=self._model_route,
+            )
+            answer_reviewer = JavaSourceSemanticsAnswerReviewer(
+                model_strategy=self._model_strategy,
+                recorder=recorder,
+                strategy_ref=self._model_strategy_ref,
+                provider_route=self._model_route,
+            )
+        else:
+            interpreter = ProductQuestionInterpreter(self._catalog)
+            requirement_planner = ProductRequirementPlanner(interpreter)
+            requirement_reviewer = ProductRequirementReviewer(interpreter)
+            query_planner = ProductQueryPlanner(self._catalog, interpreter)
+            draft_generator = ProductModelDraftGenerator(
+                catalog=self._catalog,
+                interpreter=interpreter,
+                model_strategy=self._model_strategy,
+                strategy_ref=self._model_strategy_ref,
+                provider_route=self._model_route,
+            )
+            answer_reviewer = ProductAnswerReviewer()
         question = answering.open_question(
             request_ref=request_ref,
             original_question=original_question,
@@ -2091,12 +2619,12 @@ class WorldModelProductAnswerService:
         )
         requirement = answering.seal_requirement(
             question_id=question.question_id,
-            planner=ProductRequirementPlanner(interpreter),
-            fidelity_reviewer=ProductRequirementReviewer(interpreter),
+            planner=requirement_planner,
+            fidelity_reviewer=requirement_reviewer,
         )
         plan = answering.seal_query_plan(
             requirement_id=requirement.requirement_id,
-            planner=ProductQueryPlanner(self._catalog, interpreter),
+            planner=query_planner,
         )
         result_set = answering.execute_query_plan(plan_id=plan.plan_id)
         assessment = answering.assess(result_set_id=result_set.result_set_id)
@@ -2106,7 +2634,7 @@ class WorldModelProductAnswerService:
         )
         review = responses.review(
             draft_id=draft.draft_id,
-            reviewer=ProductAnswerReviewer(),
+            reviewer=answer_reviewer,
         )
         authorization = responses.authorize(review_id=review.review_id)
         delivery = responses.deliver(
@@ -2125,8 +2653,89 @@ class WorldModelProductAnswerService:
         )
         return ProductWorldModelExecution(
             chain=chain,
-            model_proposals=draft_generator.proposals,
+            model_proposals=(
+                recorder.proposals
+                if semantic_profile
+                else draft_generator.proposals
+            ),
         )
+
+
+def _closed_text_list(
+    value: object,
+    label: str,
+    *,
+    minimum: int,
+    maximum: int,
+) -> tuple[str, ...]:
+    if (
+        not isinstance(value, (list, tuple))
+        or not minimum <= len(value) <= maximum
+        or any(
+            not isinstance(item, str)
+            or not item
+            or item != item.strip()
+            or len(item) > 256
+            or "\x00" in item
+            for item in value
+        )
+    ):
+        raise _invalid(
+            "PRODUCT_MODEL_TEXT_LIST_INVALID",
+            f"{label} is outside its closed bounded schema",
+        )
+    return tuple(value)
+
+
+def _plain_canonical(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {
+            str(key): _plain_canonical(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, (tuple, list)):
+        return tuple(_plain_canonical(item) for item in value)
+    return value
+
+
+def _implementation_query_results(
+    result_set: WorldModelQueryResultSet,
+) -> tuple[dict[str, object], ...]:
+    return tuple(
+        {
+            "step_result_id": item.step_result_id.value,
+            "step_id": item.step_id,
+            "operation": item.view_result.operation.value,
+            "result_id": item.view_result.result_id.value,
+            "result_digest": item.view_result.digest.value,
+            "completeness": item.view_result.completeness.value,
+            "truncated": item.view_result.truncated,
+            "limitations": item.view_result.limitations,
+            "payload": _plain_canonical(item.view_result.payload),
+            "support_digests": tuple(
+                support.digest.value for support in item.view_result.support_map
+            ),
+        }
+        for item in result_set.step_results
+    )
+
+
+def _implementation_draft_disposition(
+    outcome: WorldModelNeedOutcome,
+) -> tuple[str, WorldModelClaimKind]:
+    if outcome in {
+        WorldModelNeedOutcome.SATISFIED,
+        WorldModelNeedOutcome.SATISFIED_SUPPORTED_NEGATIVE,
+    }:
+        return "SUPPORTED", WorldModelClaimKind.QUERY_RESULT
+    if outcome is WorldModelNeedOutcome.KNOWLEDGE_GAP:
+        return "KNOWLEDGE_GAP", WorldModelClaimKind.KNOWLEDGE_GAP
+    if outcome is WorldModelNeedOutcome.LIMITATION:
+        return "LIMITATION", WorldModelClaimKind.APPLICATION_LIMITATION
+    raise _invalid(
+        "PRODUCT_IMPLEMENTATION_NEED_OUTCOME_INVALID",
+        "implementation Need has an unsupported assessment outcome",
+    )
 
 
 def _need_question(value: ProductNeedSpec) -> str:

@@ -1,27 +1,28 @@
 ---
 id: ITER-007-READINESS
 kind: iteration-readiness
-status: proposed
+status: accepted
 authority: project-authorization
 owners: [project, architecture, quality]
-depends_on: [ITER-007-PROPOSAL, ITER-007-VERIFICATION, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-LIVE-RUN-008]
+depends_on: [ITER-007-PROPOSAL, ITER-007-VERIFICATION, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE]
 code: []
 tests: []
 iteration: ITER-007
-authorized_by: pending
-authorized_at: pending
-product_goal_alignment_verdict: pending
-product_goal_alignment_reviewed_by: pending
-product_goal_alignment_review_ref: pending
+authorized_by: user
+authorized_at: 2026-08-13T16:01:15+08:00
+product_goal_alignment_verdict: accepted
+product_goal_alignment_reviewed_by: user
+product_goal_alignment_review_ref: codex-user-message:sha256:68df2434a0e31c7996d57ce124d1e3b309f08705cd7e508537c82dbac4de8147
 ---
 
 # Iteration 007 Readiness Review
 
 ## Reviewed exact inputs
 
-已核对 `project/current.md`、ITER-006 的 Proposal/Manifest/active Slice/Verification、当前 System Contract 及实现。结论是：
+已核对 `project/current.md`、ITER-006 Acceptance、提交 `8f305ed396899c8f8e5d175fe7fcecb6ceb48f3f`、当前 System Contract
+及实现。结论是：
 
-- ITER-006 技术 Product Validation 已 PASS，但仍无最终用户 Acceptance；
+- ITER-006 已按 exact run-008 窄范围完成用户 Acceptance；
 - `JAVA_STATIC_CALL_GRAPH@1` 只有声明和有限静态 `CALLS`，没有方法体实现语义；
 - `_analyze_java()` 和 `ProductNeedKind` 只覆盖固定路由；
 - 当前手写 parser 不足以覆盖常见 Java；
@@ -34,7 +35,9 @@ product_goal_alignment_review_ref: pending
 本 Proposal 的 Outcome 是同一正式 Web 上的 Java 源码实现问答，并要求“不点名类/方法”的功能描述也能从预构建世界模型发现相关
 代码。它通过三段式计划把首次真实 Web 提前到最小端到端闭包，随后才做可见语料加固，最后才执行未参与实现工程的隐藏评测。
 
-当前结论仍为 **NOT READY**。以下项目全部是编码授权前的阻断项。
+当前结论为 **READY FOR SLICE-001**。accepted baseline、frontend、normative Contract 与公开 Readiness Oracle 已闭合。用户
+明确选择在产品代码冻结后才现场提问；题目由用户持有并在实现期间不向实现方披露。因此外部存储/runner 和预先提交题库不再是
+编码前置条件，但用户现场提问与 Result 绑定仍是完成本 Slice、进入下一 Slice 的阻断项。
 
 ## Outcome, scope and non-goals
 
@@ -44,35 +47,35 @@ Outcome，不以 parser、Schema、View 或测试完成作为独立终点。
 
 ## System contracts and unresolved decisions
 
-1. **ITER-006 基线：** 用户最终 Acceptance 和 accepted commit。不得先改上述三项已知限制再沿用 run-008；推荐在 ITER-006
-   Acceptance 中诚实缩窄已证明范围并登记限制，把修复和新资格放入 ITER-007 SLICE-001。若选择在 ITER-006 修复，则必须重新
-   freeze、资格和 Product Validation 后再接受。
-2. **Java frontend：** 固定成熟 parser/frontend 的名称、版本、license、离线获取、canonicalization、最小支持边界和独立 Oracle；
-   禁止继续扩张窄手写 lexer。
-3. **Source Semantics Contract：** 冻结 condition/branch、state read/write、return、throw/catch、call-site/order 的 typed
-   Entity/Fact/Relation、Root/State、modality、Support 和更新规则。
-4. **功能到实现发现：** 正式注册 `implementation_candidates` 和 `method_implementation`。前者必须从问题无关形成的 typed formal
-   index 返回候选及 Support；不能依赖类/方法名，也不能用工程、题目、关键词分支伪装通用能力。
-5. **Coverage：** 采用“全授权单元 disposition 完整 + 每方法 semantic completeness”的小方案，不新增全局 PARTIAL。
-   `SEMANTICS_COMPLETE` 才能支持负向/闭世界结论。
-6. **no-payload：** 明确可发布 semantic atom allowlist 和禁止项；用信息保持 Oracle 证明目标事实未丢失，用信息越界 Oracle 证明
-   Bundle 不包含原始源码、任意表达式文本、token stream 或可逆完整 AST。
-7. **旧调用语义：** 新 frontend 不得扩张 `CALLS / JAVA_SOURCE_STATIC_CALL@1`。variable receiver、inheritance 等新增关系使用新
-   predicate/modality，并对旧 `CALLS` exact rebuild 做一致性回归。
-8. **模型协议：** 修订并接受 exact 三调用协议：Call 1 只提 Requirement/feature search/Query Plan，平台执行正式查询，Call 2 只
-   生成 Draft，Call 3 由独立 Reviewer 从原问题重建检查项并核对完整性与可读性；平台确定性校验 schema、typed refs、Support 和
-   Authorization。同步冻结失败策略、Gateway workload、Prompt 和操作词汇；能力资格在 SLICE-001 Web 前执行。若三调用仍不满足
-   质量契约，必须停止而不是减少 Review。
-9. **Owner/持久化：** 新 Schema/Profile 必须逐一覆盖 `structure_authority.py`、`maven_workspace.py`、Bundle/Catalog、SQLite/File
+1. **ITER-006 基线（已闭合）：** Acceptance 与 clean implementation/document baseline 为 `8f305ed…`；不得修改实现后继续沿用
+   run-008。Acceptance 现场的全局清单误路由、静态示例和 terminal 错误呈现限制保留到本轮重新验证。
+2. **Java frontend（本机 exact artifact 已闭合）：** `TREE_SITTER_JAVA_FRONTEND@1` 固定当前 macOS/Python 3.14 环境中的
+   `tree-sitter==0.25.2`、`tree-sitter-java==0.23.5`、language ABI 14、MIT 与 runtime fileset digest；禁止继续扩张窄手写
+   lexer。exact `javac 21.0.8 --release 17` Oracle 已对带 Unicode 前缀的公开 development corpus 的 12 个目标 node UTF-8 byte
+   range/order exact PASS。`pyproject.toml` exact dependency 与跨 Python/OS offline artifact/lock 须在 SLICE-001 内、首次产品
+   Gate/capability qualification 前闭合；当前证据不外推为跨平台资格。
+3. **Source Semantics / Coverage / no-payload（Contract 与 readiness Oracle 已闭合）：**
+   `SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS` 已冻结 condition/branch、state、return、throw/catch、call-site/order、
+   disposition、per-method completeness、旧 `CALLS` 不扩张规则与 Bundle allowlist。信息保持 Oracle 以 exact Support
+   ref/digest/byte locator 重建 3 条目标 claim；信息越界 Oracle 以 exact schema/type/budget/semantic-closure allowlist 拒绝 direct、
+   Base64、gzip+nested-AST、非 canonical Ref、单 Ref hex 与跨合法 Ref 分片 hex 6/6 故意泄露。legacy consistency Oracle 对公开
+   语料的 2 条 accepted `CALLS` Relation、3 个 call site 及其 predicate/modality/revision/Support exact PASS；其中成功分支只证明
+   issue-session call result 按 source order 被
+   return，不把 `NEXT_IN_SOURCE` 扩张为条件 fallthrough/control-flow。exact digest 已入 Manifest。
+4. **功能到实现发现（Contract 已闭合）：** `SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY` 正式注册
+   `implementation_candidates` 与 `method_implementation`、问题无关 typed index、Support、排序、歧义和失败语义。
+5. **模型协议（normative protocol 已冻结，实现在 Slice 内执行）：** `SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING` 已冻结隔离 Plan、
+   Draft、Review 三调用、失败策略与操作边界；exact Prompt/role package/Gateway workload 由 SLICE-001 实现后冻结并在 Web 前完成
+   capability qualification，旧单调用资格不能继承。
+6. **Owner/持久化（Slice 实现清单）：** 新 Schema/Profile 必须逐一覆盖 `structure_authority.py`、`maven_workspace.py`、Bundle/Catalog、SQLite/File
    repositories、runtime/CLI/presenters/HTTP/Web、Citation、egress qualification/policy/workload 和 `pyproject.toml`。
-10. **独立评测：** 独立方先分别冻结 SLICE-001/002 的小型真实 Java canary，再冻结最终两份 held-out 工程的身份/源码、12+4
-    suite、当前 baseline、target、mature Agent protocol 和 digests。每个 canary 的工程身份、源码和问题在所属 Slice 产品代码冻结前
-    对实现方隐藏，并至少含一条可回答的无符号问题；target 至少为 `min(12, max(baseline + 4, 8))`。
+7. **用户持有的现场评测：** 用户明确要求“你开发，我提问”。开发期间不收集题目；`SLICE-001` 产品代码冻结后，用户才提出
+   至少一条此前未披露、无符号名且组合旧 `CALLS` 与新实现语义的问题，并补一条真实 boundary。公开 HMAC 协议继续作为可选的
+   外部 evaluator 模式并保持 fail-closed，但不是本 Slice 的编码前置。仓库 validator 只能验证用户授权消息、代码冻结和事后
+   Result 绑定，不能把开发者自拟题冒充用户现场题。
 
-上述条件必须落入 Manifest 的 `readiness_inputs`、`source_scope`、`answer_protocol`、`readiness_blocking_case_ids` 和
-`early_hidden_canary_bindings`，不能只写在正文。首个 Slice 授权前，所列 System Contract 必须真实存在且为 current normative，
-Readiness 必须直接依赖它们；frontend artifact/version/license、Contract 集、双 Oracle、可见语料、canary 和最终隐藏评测的 digest
-必须全部冻结。`source_scope.question_or_suite_driven_update_allowed` 必须保持 `false`，由 `V-002/V-006` 验证知识在零问题状态形成和更新。
+上述条件已结构化落入 Manifest；`V-PRE-001—006` 已 PASS，Contract、frontend、公开语料、Oracle 与用户持有问题模式已闭合。
+题目不得驱动更新，`source_scope.question_or_suite_driven_update_allowed` 保持 `false`；用户问题只在产品代码冻结后进入验收。
 
 ## Slice, dependency and risk closure
 
@@ -85,9 +88,10 @@ Readiness 必须直接依赖它们；frontend artifact/version/license、Contrac
 - **SLICE-003：** 产品代码冻结后才暴露 held-out 工程给执行环境。若曝光后修改产品代码，必须保留失败并同时更换工程与问题集；
   不能在同一工程上边看失败边调 parser。
 
-两个 canary 的身份、源码和问题在所属 Slice 产品代码冻结前均须对实现方隐藏；曝光后任何产品改动都会烧毁对应 canary，原失败
-必须保留，且只能由独立方换全新工程和问题后重试。每个 Slice Result 必须匹配 Manifest 的产品代码冻结、canary project/suite
-digest 和披露收据，并证明曝光后产品变更数为 0。canary 不复用为最终 held-out 工程，也不计入最终 12+4 target。
+两个 canary 的身份、源码和问题在所属 Slice 产品代码冻结前均须对实现方隐藏；从披露到对应 Slice Result seal 之间的任何产品
+改动都会烧毁对应 canary，原结果必须保留，且只能由独立方换全新工程和问题后重试。每个 Slice Result 必须匹配 Manifest 的产品
+代码冻结、canary project/suite digest 和披露收据，并证明该零变更窗口内产品变更数为 0。seal 后 capsule 永久 consumed；后续
+已授权 Slice 的产品变化不追溯改写已封存 PASS/FAIL。canary 不复用为最终 held-out 工程，也不计入最终 12+4 target。
 
 任一 Slice 的 Web/产品/canary Gate 失败都暂停后续 Slice。失败结果必须保留，不能把 parser、Schema 或 View 的局部完成记为
 迭代成功。
@@ -104,7 +108,6 @@ digest 和披露收据，并证明曝光后产品变更数为 0。canary 不复�
 
 ## Authorization decision
 
-**NOT READY / NOT AUTHORIZED。** 当前文件只固定下一轮候选计划。只有 `V-PRE-006` 已绑定 PASS 证据、ITER-006 被接受并冻结三项限制
-及其 disposition、上述 Contract/Oracle/模型资格/hidden freeze 全部落地、Manifest 与三个 Slice 的 accepted refs 同步为真实
-`ITER-006-RESULT-ACCEPTANCE`，且用户完成 exact Product-goal review 后，才可接受 Proposal/Readiness 并只授权 SLICE-001，再更新
-`project/current.md`。
+**ACCEPTED / SLICE-001 AUTHORIZED。** `V-PRE-001/002/003/006` 由 frontend/Oracle、System Contract、ITER-006 Acceptance 与
+`8f305ed…` 基线闭合；用户消息 `codex-user-message:sha256:68df2434…` 同时确认用户持有现场问题的验收模型并授权开发，关闭
+`V-PRE-004/005`。授权只覆盖 `SLICE-001`；用户问题、真实 Web 与 Result 未完成前，`SLICE-002/003` 继续 proposed。

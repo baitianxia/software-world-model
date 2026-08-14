@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [application]
-depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-ADMISSION, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
+depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-ADMISSION, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-KNOWLEDGE-UPDATE]
 code: [src/software_world_model/application_services/knowledge_update.py, src/software_world_model/application_services/maven_structure.py, src/software_world_model/application_services/java_static_call.py, src/software_world_model/application_services/maven_structure_update.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/infrastructure/sqlite_knowledge_update_repository.py, src/software_world_model/infrastructure/sqlite_maven_structure_update_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/presenters.py]
 tests: [tests/test_knowledge_update.py, tests/test_maven_structure.py, tests/test_java_static_call.py, tests/test_maven_structure_update.py, tests/test_maven_structure_update_authority.py, tests/test_maven_structure_cli.py, tests/test_structure_read_bundle.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
@@ -35,6 +35,13 @@ Application 拥有 Update Attempt、Publication Policy、编排和 Result；具�
     `REPLACE_COVERAGE`；只增加不删除的受控补充才能使用 `ENRICH`。Application 不得根据当前数据库内容猜测模式。
 11. 问答请求不能隐式创建 Update Attempt。更新成功只移动相应 Scope 的 CURRENT，不改写已打开的 Read Session 或已经交付的回答。
 12. 需要隔离回答时，独立的幂等 post-publication 步骤从 committed exact Snapshot/ordered Read Set 生成并验证 no-payload Snapshot Read Bundle，返回 Bundle Receipt。它不是 Publication 事务或新知识；失败不回滚/改写 Snapshot，但该 Snapshot 保持 `READ_BUNDLE_UNAVAILABLE`，不能由问题请求临时生成。人工、计划或来源事件 Update 可以在零问题状态完成该步骤。
+13. `JAVA_SOURCE_SEMANTICS@1` Attempt 必须在任何问题或 suite 不可见的状态固定 exact Java source manifest、frontend/runtime/
+    grammar/ABI/fileset digest、canonical projection 和 semantic allowlist。每个授权 file/type/method 都进入 disposition manifest；
+    Source/Artifact/manifest 失败拒绝整个 Candidate，不能伪装成方法级 `FAILED`。
+14. Java Source Semantics Candidate 在 Snapshot publication 前先通过 legacy declaration/`CALLS` consistency Oracle；失败拒绝
+    Candidate 并保持旧 CURRENT。Snapshot committed 后，Bundle seal 必须分别通过信息保持 Oracle、信息越界 Oracle，并对同一
+    normalized closure 重跑 legacy consistency Oracle。后置 Oracle 只裁决 exact Bundle；失败不回滚已发布 Snapshot，但该 Snapshot
+    保持 `READ_BUNDLE_UNAVAILABLE`，不得由问题请求修改 allowlist、重新解析 Source 或生成工程/题目专用 index。
 
 ## Failure, recovery and implementation boundary
 

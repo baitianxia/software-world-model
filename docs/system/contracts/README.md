@@ -18,8 +18,8 @@ Contract 只保留跨模块或跨迭代不能自由改变的语义。判断一�
 | 域 | 文档 |
 |---|---|
 | Source | [Data Source](source/data-source.md)、[Source Artifact](source/source-artifact.md) |
-| Knowledge | [Knowledge Scope](knowledge/knowledge-scope.md)、[Reference Context](knowledge/reference-context.md)、[Schema Core](knowledge/schema-core.md)、[Context Comparison](knowledge/context-comparison.md)、[Evidence](knowledge/evidence.md)、[Entity](knowledge/entity.md)、[Fact](knowledge/fact.md)、[Inference & Conflict](knowledge/inference-conflict.md)、[Admission](knowledge/admission.md)、[Snapshot Publication](knowledge/snapshot-publication.md)、[Persistence](knowledge/persistence.md)、[Structure Model](knowledge/structure-model.md)、[Java Static Call Model](knowledge/java-static-call-model.md) |
-| Application | [Management](application/management.md)、[Knowledge Update](application/knowledge-update.md)、[Knowledge Use](application/knowledge-use.md)、[Structure View](application/structure-view.md)、[Java Static Call Behavior View](application/behavior-view.md)、[World Model Answering](application/world-model-answering.md)、[Agentic Task](application/agentic-task.md)、[Response Control](application/response-control.md) |
+| Knowledge | [Knowledge Scope](knowledge/knowledge-scope.md)、[Reference Context](knowledge/reference-context.md)、[Schema Core](knowledge/schema-core.md)、[Context Comparison](knowledge/context-comparison.md)、[Evidence](knowledge/evidence.md)、[Entity](knowledge/entity.md)、[Fact](knowledge/fact.md)、[Inference & Conflict](knowledge/inference-conflict.md)、[Admission](knowledge/admission.md)、[Snapshot Publication](knowledge/snapshot-publication.md)、[Persistence](knowledge/persistence.md)、[Structure Model](knowledge/structure-model.md)、[Java Static Call Model](knowledge/java-static-call-model.md)、[Java Source Semantics](knowledge/java-source-semantics.md) |
+| Application | [Management](application/management.md)、[Knowledge Update](application/knowledge-update.md)、[Knowledge Use](application/knowledge-use.md)、[Structure View](application/structure-view.md)、[Java Static Call Behavior View](application/behavior-view.md)、[Java Implementation Query](application/implementation-query.md)、[World Model Answering](application/world-model-answering.md)、[Agentic Task](application/agentic-task.md)、[Response Control](application/response-control.md) |
 | AI | [Model Gateway](ai/model-gateway.md)、[Capability Evaluation](ai/capability-evaluation.md) |
 | Cross-cutting | [Capability Execution](cross-cutting/capability-execution.md)、[Telemetry & Cost](cross-cutting/telemetry-cost.md) |
 
@@ -59,6 +59,9 @@ flowchart TD
     SM --> SP
     JM["Java Static Call Model"] --> F
     JM --> SP
+    JSM["Java Source Semantics"] --> JM
+    JSM --> F
+    JSM --> SP
 
     KU["Knowledge Update"] --> SA
     KU --> SP
@@ -68,8 +71,11 @@ flowchart TD
     SV --> USE
     BV["Behavior View"] --> JM
     BV --> USE
+    IQ["Implementation Query"] --> JSM
+    IQ --> USE
     WMA["World Model Answering"] --> SV
     WMA --> BV
+    WMA --> IQ
     WMA --> USE
     AT["Agentic Task"] --> KU
     AT --> USE

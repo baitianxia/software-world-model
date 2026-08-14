@@ -34,7 +34,7 @@ WORLD_MODEL_BROWSER_HTML = r'''<!doctype html>
       <aside class="boundary-card">
         <span class="boundary-title">执行边界</span>
         <dl>
-          <div><dt>每个问题</dt><dd>1 次模型调用</dd></div>
+          <div><dt>每个问题</dt><dd>Plan → Draft → Review · 3 次模型调用</dd></div>
           <div><dt>隐藏重试</dt><dd>0</dd></div>
           <div><dt>读取权限</dt><dd>固定 Read Bundle</dd></div>
           <div><dt>生产激活</dt><dd>未执行</dd></div>
@@ -58,6 +58,8 @@ WORLD_MODEL_BROWSER_HTML = r'''<!doctype html>
           <label class="sr-only" for="question">问题</label>
           <textarea id="question" maxlength="8000" rows="6" placeholder="例如：FlowService.start(String) 到 finish(String) 有哪些静态调用路径？" required></textarea>
           <div class="examples" aria-label="示例问题">
+            <button type="button" class="example" data-profile="JAVA_SOURCE_SEMANTICS@1" data-question="认证凭据失败和成功时，系统分别怎样处理？">功能实现</button>
+            <button type="button" class="example" data-profile="JAVA_SOURCE_SEMANTICS@1" data-question="这个实现是否能证明运行时一定调用哪个动态实现？">覆盖边界</button>
             <button type="button" class="example" data-profile="JAVA_STATIC_CALL_GRAPH@1" data-question="FlowService 有哪些方法？">方法清单</button>
             <button type="button" class="example" data-profile="JAVA_STATIC_CALL_GRAPH@1" data-question="FlowService.start(String) 直接调用哪些方法？">直接静态调用</button>
             <button type="button" class="example" data-profile="JAVA_STATIC_CALL_GRAPH@1" data-question="FlowService.start(String) 实际运行时会调用哪个实现？">运行时语义（应返回 Gap）</button>

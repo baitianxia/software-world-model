@@ -6,6 +6,11 @@ import unittest
 
 from software_world_model.ai_infrastructure import (
     GENERIC_QUERY_PLANNING,
+    IMPLEMENTATION_ANSWER_DRAFTING,
+    IMPLEMENTATION_ANSWER_REVIEW,
+    IMPLEMENTATION_QUERY_PLANNING,
+    JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES,
+    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_ANSWER_PROMPT_REF,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
     MAVEN_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -14,6 +19,7 @@ from software_world_model.ai_infrastructure import (
     WorldModelStrategyConfiguration,
     world_model_answer_output_contract_digest,
     world_model_answer_output_schemas,
+    java_source_semantics_world_model_output_contract_digest,
     world_model_answer_prompt_program_digest,
     world_model_answer_strategy_implementation_digest,
 )
@@ -135,6 +141,144 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             )
 
         self.assertEqual(gateway.contexts, [])
+
+    def test_java_source_semantics_contract_has_three_closed_role_schemas(self):
+        outputs = (
+            {
+                "need_key": "implementation-answer",
+                "snapshot": "snapshot_java",
+                "operations": [
+                    "implementation_candidates",
+                    "method_implementation",
+                ],
+                "search_terms": ["credentials"],
+                "limit": 5,
+            },
+            {
+                "disposition": "SUPPORTED",
+                "answer": "The typed branch controls the recorded call and throw.",
+                "step_result_ids": ["world_model_step_result_" + "1" * 32],
+                "support_digests": ["sha256:" + "2" * 64],
+                "gap_code": None,
+                "limitation_codes": [],
+            },
+            {
+                "decision": "APPROVE",
+                "finding_codes": [],
+                "checked_need_ids": ["implementation-answer"],
+                "checked_step_result_ids": [
+                    "world_model_step_result_" + "1" * 32
+                ],
+                "checked_support_digests": ["sha256:" + "2" * 64],
+            },
+        )
+        gateway = SequencedGateway(outputs)
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
+        )
+
+        plan = strategy.propose(
+            case_id="product:semantic:plan",
+            capability=IMPLEMENTATION_QUERY_PLANNING,
+            sealed_input={"original_question": "How is this implemented?"},
+            available_operations=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            ),
+        )
+        draft = strategy.propose(
+            case_id="product:semantic:draft",
+            capability=IMPLEMENTATION_ANSWER_DRAFTING,
+            sealed_input={"query_results": []},
+        )
+        review = strategy.propose(
+            case_id="product:semantic:review",
+            capability=IMPLEMENTATION_ANSWER_REVIEW,
+            sealed_input={"draft": outputs[1]},
+        )
+
+        self.assertEqual(
+            tuple(item.capability for item in (plan, draft, review)),
+            (
+                IMPLEMENTATION_QUERY_PLANNING,
+                IMPLEMENTATION_ANSWER_DRAFTING,
+                IMPLEMENTATION_ANSWER_REVIEW,
+            ),
+        )
+        self.assertEqual(len(gateway.contexts), 3)
+        self.assertEqual(
+            {item.output_schema_ref for item in gateway.contexts},
+            {
+                "java-implementation-query-plan@1",
+                "java-implementation-answer-draft@1",
+                "java-implementation-answer-review@2",
+            },
+        )
+        self.assertEqual(
+            len(
+                world_model_answer_output_schemas(
+                    include_java_source_semantics=True
+                )
+            ),
+            10,
+        )
+        self.assertNotEqual(
+            java_source_semantics_world_model_output_contract_digest(),
+            world_model_answer_output_contract_digest(),
+        )
+
+    def test_java_source_semantics_prompt_and_review_vocabulary_are_closed(self):
+        contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+        schemas = world_model_answer_output_schemas(
+            include_java_source_semantics=True
+        )
+        finding_schema = schemas[
+            "java-implementation-answer-review@2"
+        ].schema["properties"]["finding_codes"]
+
+        self.assertIn(
+            "return/returns/returned/returning or 返回 maps to the exact term return",
+            contract.prompt,
+        )
+        self.assertIn(
+            "an omission fault marker maps to MATERIAL_OMISSION",
+            contract.prompt,
+        )
+        self.assertEqual(
+            finding_schema["items"]["enum"],
+            list(JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES),
+        )
+        self.assertTrue(finding_schema["uniqueItems"])
+
+    def test_java_source_semantics_review_rejects_unregistered_finding_code(self):
+        gateway = SequencedGateway(
+            [
+                {
+                    "decision": "REJECT",
+                    "finding_codes": ["DRAFT_OMITS_QUERY_RESULT_ATOMS"],
+                    "checked_need_ids": ["implementation-answer"],
+                    "checked_step_result_ids": [],
+                    "checked_support_digests": [],
+                }
+            ]
+        )
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
+        )
+
+        with self.assertRaises(DomainError):
+            strategy.propose(
+                case_id="product:semantic:review-invalid-code",
+                capability=IMPLEMENTATION_ANSWER_REVIEW,
+                sealed_input={"draft": {"body": "incomplete"}},
+            )
 
     def test_all_closed_roles_use_one_oracle_free_no_tools_manifest(self):
         suite = load_capability_suite()

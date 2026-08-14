@@ -1,0 +1,302 @@
+{
+  "schema": "swm.iter-007.java-source-semantics-capability-suite@1",
+  "suite_ref": "ITER-007-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.2.2",
+  "purpose": "qualify feature planning, grounded implementation drafting, and fresh-context review without using product questions or evaluator oracles",
+  "proposal_contract": {
+    "capability_contract_version": "1.2.2",
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.2.2",
+    "prompt_ref": "java-source-semantics-world-model-prompt@3",
+    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@3",
+    "available_operations": [
+      "implementation_candidates",
+      "method_implementation"
+    ]
+  },
+  "closed_evaluation_protocol": {
+    "protocol_ref": "ITER-007-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.0",
+    "model_visibility": "ONE_SEALED_SYNTHETIC_CASE_ONLY_NO_ORACLE_PRODUCT_QUESTION_SUITE_SOURCE_OR_EVIDENCE_PAYLOAD",
+    "evaluator_independence": "SEPARATE_STDLIB_PROCESS_NO_PRODUCT_OR_STRATEGY_IMPORT",
+    "case_rule": "PASS_IFF_CONTRACT_FIELDS_EXACT_SEMANTIC_CONSTRAINTS_PASS_AND_NO_FORBIDDEN_EVENT_OTHERWISE_FAIL",
+    "result_rule": "CLOSED_PASS_IFF_ALL_TWELVE_REQUIRED_CASES_PASS_AND_FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO",
+    "provider_calls_per_case": 1,
+    "hidden_retry_count": 0,
+    "required_case_ids": [
+      "WM-JSS-CE-PLAN-ZH-001",
+      "WM-JSS-CE-PLAN-EN-002",
+      "WM-JSS-CE-PLAN-ORDER-003",
+      "WM-JSS-CE-PLAN-BOUNDARY-004",
+      "WM-JSS-CE-DRAFT-SUPPORTED-005",
+      "WM-JSS-CE-DRAFT-GAP-006",
+      "WM-JSS-CE-DRAFT-LIMITATION-007",
+      "WM-JSS-CE-DRAFT-DIRECTION-008",
+      "WM-JSS-CE-REVIEW-APPROVE-009",
+      "WM-JSS-CE-REVIEW-OMISSION-010",
+      "WM-JSS-CE-REVIEW-UNSUPPORTED-011",
+      "WM-JSS-CE-REVIEW-PAYLOAD-012"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "WM-JSS-CE-PLAN-ZH-001",
+      "capability": "IMPLEMENTATION_QUERY_PLANNING",
+      "available_operations": [
+        "implementation_candidates",
+        "method_implementation"
+      ],
+      "input": {
+        "original_question": "凭据无效时怎样记录失败并终止，成功时怎样创建会话？",
+        "response_language": "zh-CN",
+        "need_key": "implementation-answer",
+        "read_authority": {
+          "snapshot_ids": ["structure_snapshot_11111111111111111111111111111111"]
+        },
+        "profile_ref": "JAVA_SOURCE_SEMANTICS@1"
+      },
+      "projection_fields": ["need_key", "snapshot", "operations", "limit"],
+      "semantic_constraints": {
+        "search_term_concept_groups": [
+          ["credential", "credentials", "auth", "authentication", "凭据", "认证"],
+          ["failure", "fail", "invalid", "失败", "无效"],
+          ["session", "会话"]
+        ]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-PLAN-EN-002",
+      "capability": "IMPLEMENTATION_QUERY_PLANNING",
+      "available_operations": [
+        "implementation_candidates",
+        "method_implementation"
+      ],
+      "input": {
+        "original_question": "How does the service reject an invalid token and return the active account on success?",
+        "response_language": "en-US",
+        "need_key": "implementation-answer",
+        "read_authority": {
+          "snapshot_ids": ["structure_snapshot_22222222222222222222222222222222"]
+        },
+        "profile_ref": "JAVA_SOURCE_SEMANTICS@1"
+      },
+      "projection_fields": ["need_key", "snapshot", "operations", "limit"],
+      "semantic_constraints": {
+        "search_term_concept_groups": [
+          ["token"],
+          ["invalid", "reject", "rejection"],
+          ["account", "active"]
+        ]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-PLAN-ORDER-003",
+      "capability": "IMPLEMENTATION_QUERY_PLANNING",
+      "available_operations": [
+        "implementation_candidates",
+        "method_implementation"
+      ],
+      "input": {
+        "original_question": "Which implementation validates the order and records an audit event before returning?",
+        "response_language": "en-US",
+        "need_key": "implementation-answer",
+        "read_authority": {
+          "snapshot_ids": ["structure_snapshot_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
+        },
+        "profile_ref": "JAVA_SOURCE_SEMANTICS@1"
+      },
+      "projection_fields": ["need_key", "snapshot", "operations", "limit"],
+      "semantic_constraints": {
+        "search_term_concept_groups": [
+          ["order", "validate", "validation"],
+          ["audit"],
+          ["return"]
+        ]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-PLAN-BOUNDARY-004",
+      "capability": "IMPLEMENTATION_QUERY_PLANNING",
+      "available_operations": [
+        "implementation_candidates",
+        "method_implementation"
+      ],
+      "input": {
+        "original_question": "为什么生产环境偶尔变慢？",
+        "response_language": "zh-CN",
+        "need_key": "implementation-answer",
+        "read_authority": {
+          "snapshot_ids": ["structure_snapshot_44444444444444444444444444444444"]
+        },
+        "profile_ref": "JAVA_SOURCE_SEMANTICS@1"
+      },
+      "projection_fields": ["need_key", "snapshot", "operations", "limit"],
+      "semantic_constraints": {
+        "search_term_concept_groups": [
+          ["performance", "slow", "latency", "production", "性能", "变慢", "延迟", "生产"]
+        ]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-SUPPORTED-005",
+      "capability": "IMPLEMENTATION_ANSWER_DRAFTING",
+      "input": {
+        "original_question": "凭据无效时系统怎样处理，成功时又怎样建立会话？",
+        "response_language": "zh-CN",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}], "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "query_plan": {"steps": [{"operation": "IMPLEMENTATION_CANDIDATES"}, {"operation": "METHOD_IMPLEMENTATION"}], "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+        "query_results": [
+          {"step_result_id": "world_model_step_result_11111111111111111111111111111111", "operation": "IMPLEMENTATION_CANDIDATES", "payload": {"candidate_count": 1}},
+          {"step_result_id": "world_model_step_result_22222222222222222222222222222222", "operation": "METHOD_IMPLEMENTATION", "payload": {"ordered_atoms": [{"atom_kind": "BRANCH", "operator": "NOT", "semantic_form": "BOOLEAN_SLOT_TEST"}, {"atom_kind": "CALL_SITE", "target_method_name": "recordFailure"}, {"atom_kind": "THROW", "exception_type": "java.lang.IllegalStateException"}, {"atom_kind": "CALL_SITE", "target_method_name": "issueSession"}, {"atom_kind": "RETURN", "value_category": "CALL_RESULT"}], "legacy_calls": [{"target_method_name": "recordFailure", "direction": "OUTGOING"}, {"target_method_name": "issueSession", "direction": "OUTGOING"}]}}
+        ],
+        "need_assessment": {"need_id": "implementation-answer", "outcome": "SATISFIED"},
+        "assessment_disposition": "SUPPORTED",
+        "authorized_step_result_ids": ["world_model_step_result_11111111111111111111111111111111", "world_model_step_result_22222222222222222222222222222222"],
+        "authorized_support_digests": ["sha256:1111111111111111111111111111111111111111111111111111111111111111", "sha256:2222222222222222222222222222222222222222222222222222222222222222"],
+        "assessment_gap_code": null,
+        "assessment_limitation_codes": []
+      },
+      "projection_fields": ["disposition", "step_result_ids", "support_digests", "gap_code", "limitation_codes"],
+      "semantic_constraints": {
+        "answer_concept_groups": [
+          ["invalid", "无效", "not", "否定"],
+          ["record", "failure", "记录", "失败"],
+          ["throw", "exception", "抛", "异常"],
+          ["session", "会话"],
+          ["return", "返回"]
+        ]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-GAP-006",
+      "capability": "IMPLEMENTATION_ANSWER_DRAFTING",
+      "input": {
+        "original_question": "这个功能怎样实现？",
+        "response_language": "zh-CN",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}], "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        "query_plan": {"steps": [{"operation": "IMPLEMENTATION_CANDIDATES"}], "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"},
+        "query_results": [{"operation": "IMPLEMENTATION_CANDIDATES", "payload": {"candidate_count": 0}}],
+        "need_assessment": {"need_id": "implementation-answer", "outcome": "KNOWLEDGE_GAP", "gap_code": "IMPLEMENTATION_CANDIDATES_ZERO"},
+        "assessment_disposition": "KNOWLEDGE_GAP",
+        "authorized_step_result_ids": [],
+        "authorized_support_digests": [],
+        "assessment_gap_code": "IMPLEMENTATION_CANDIDATES_ZERO",
+        "assessment_limitation_codes": []
+      },
+      "projection_fields": ["disposition", "step_result_ids", "support_digests", "gap_code", "limitation_codes"],
+      "semantic_constraints": {
+        "answer_concept_groups": [["candidate", "knowledge", "候选", "知识", "缺口", "无法定位"]]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-LIMITATION-007",
+      "capability": "IMPLEMENTATION_ANSWER_DRAFTING",
+      "input": {
+        "original_question": "登录功能怎样实现？",
+        "response_language": "zh-CN",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}], "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+        "query_plan": {"steps": [{"operation": "IMPLEMENTATION_CANDIDATES"}], "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+        "query_results": [{"operation": "IMPLEMENTATION_CANDIDATES", "payload": {"candidate_count": 3}}],
+        "need_assessment": {"need_id": "implementation-answer", "outcome": "LIMITED", "limitations": ["ENTITY_SELECTOR_AMBIGUOUS"]},
+        "assessment_disposition": "LIMITATION",
+        "authorized_step_result_ids": [],
+        "authorized_support_digests": [],
+        "assessment_gap_code": null,
+        "assessment_limitation_codes": ["ENTITY_SELECTOR_AMBIGUOUS"]
+      },
+      "projection_fields": ["disposition", "step_result_ids", "support_digests", "gap_code", "limitation_codes"],
+      "semantic_constraints": {
+        "answer_concept_groups": [["ambiguous", "multiple", "candidate", "歧义", "多个", "候选", "不唯一"]]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-DRAFT-DIRECTION-008",
+      "capability": "IMPLEMENTATION_ANSWER_DRAFTING",
+      "input": {
+        "original_question": "保存前会调用什么，并返回什么？",
+        "response_language": "zh-CN",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}], "digest": "sha256:0101010101010101010101010101010101010101010101010101010101010101"},
+        "query_plan": {"steps": [{"operation": "IMPLEMENTATION_CANDIDATES"}, {"operation": "METHOD_IMPLEMENTATION"}], "digest": "sha256:0202020202020202020202020202020202020202020202020202020202020202"},
+        "query_results": [{"operation": "METHOD_IMPLEMENTATION", "payload": {"ordered_atoms": [{"atom_kind": "CALL_SITE", "target_method_name": "validate"}, {"atom_kind": "CALL_SITE", "target_method_name": "persist"}, {"atom_kind": "RETURN", "value_category": "BOOLEAN"}], "legacy_calls": [{"target_method_name": "validate", "direction": "OUTGOING"}, {"target_method_name": "persist", "direction": "OUTGOING"}]}}],
+        "need_assessment": {"need_id": "implementation-answer", "outcome": "SATISFIED"},
+        "assessment_disposition": "SUPPORTED",
+        "authorized_step_result_ids": ["world_model_step_result_33333333333333333333333333333333", "world_model_step_result_44444444444444444444444444444444"],
+        "authorized_support_digests": ["sha256:3333333333333333333333333333333333333333333333333333333333333333"],
+        "assessment_gap_code": null,
+        "assessment_limitation_codes": []
+      },
+      "projection_fields": ["disposition", "step_result_ids", "support_digests", "gap_code", "limitation_codes"],
+      "semantic_constraints": {
+        "answer_concept_groups": [["validate", "校验", "验证"], ["persist", "save", "持久", "保存"], ["return", "返回"]],
+        "answer_order_groups": [["validate", "校验", "验证"], ["persist", "save", "持久", "保存"], ["return", "返回"]]
+      }
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-APPROVE-009",
+      "capability": "IMPLEMENTATION_ANSWER_REVIEW",
+      "input": {
+        "original_question": "凭据无效与成功时分别怎样处理？",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}]},
+        "query_plan": {"steps": [{"operation": "IMPLEMENTATION_CANDIDATES"}, {"operation": "METHOD_IMPLEMENTATION"}]},
+        "query_results": [{"operation": "METHOD_IMPLEMENTATION", "payload": {"ordered_atoms": ["BRANCH", "CALL_SITE", "THROW", "CALL_SITE", "RETURN"]}}],
+        "assessment": {"outcome": "SATISFIED"},
+        "draft": {"body": "凭据无效时记录失败并抛出异常；成功时创建会话并返回调用结果。", "step_result_ids": ["world_model_step_result_55555555555555555555555555555555"]},
+        "required_checked_need_ids": ["implementation-answer"],
+        "required_checked_step_result_ids": ["world_model_step_result_55555555555555555555555555555555"],
+        "required_checked_support_digests": ["sha256:5555555555555555555555555555555555555555555555555555555555555555"]
+      },
+      "projection_fields": ["decision", "finding_codes", "checked_need_ids", "checked_step_result_ids", "checked_support_digests"],
+      "semantic_constraints": {}
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-OMISSION-010",
+      "capability": "IMPLEMENTATION_ANSWER_REVIEW",
+      "input": {
+        "original_question": "失败和成功两条路径分别怎样处理？",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}]},
+        "query_plan": {"steps": [{"operation": "METHOD_IMPLEMENTATION"}]},
+        "query_results": [{"operation": "METHOD_IMPLEMENTATION", "payload": {"ordered_atoms": ["BRANCH", "THROW", "RETURN"]}}],
+        "assessment": {"outcome": "SATISFIED"},
+        "draft": {"body": "成功时返回结果。", "fault_markers": ["OMITTED_FAILURE_BRANCH"]},
+        "required_checked_need_ids": ["implementation-answer"],
+        "required_checked_step_result_ids": ["world_model_step_result_66666666666666666666666666666666"],
+        "required_checked_support_digests": ["sha256:6666666666666666666666666666666666666666666666666666666666666666"]
+      },
+      "projection_fields": ["decision", "checked_need_ids", "checked_step_result_ids", "checked_support_digests"],
+      "semantic_constraints": {"required_finding_codes": ["MATERIAL_OMISSION"]}
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-UNSUPPORTED-011",
+      "capability": "IMPLEMENTATION_ANSWER_REVIEW",
+      "input": {
+        "original_question": "部署后是否一定不会失败？",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}]},
+        "query_plan": {"steps": [{"operation": "METHOD_IMPLEMENTATION"}]},
+        "query_results": [{"operation": "METHOD_IMPLEMENTATION", "payload": {"ordered_atoms": ["RETURN"], "knowledge_scope": "STATIC_SOURCE_SEMANTICS"}}],
+        "assessment": {"outcome": "SATISFIED"},
+        "draft": {"body": "部署后运行时一定不会失败。", "fault_markers": ["UNSUPPORTED_RUNTIME_CLAIM"]},
+        "required_checked_need_ids": ["implementation-answer"],
+        "required_checked_step_result_ids": ["world_model_step_result_77777777777777777777777777777777"],
+        "required_checked_support_digests": ["sha256:7777777777777777777777777777777777777777777777777777777777777777"]
+      },
+      "projection_fields": ["decision", "checked_need_ids", "checked_step_result_ids", "checked_support_digests"],
+      "semantic_constraints": {"required_finding_codes": ["UNSUPPORTED_RUNTIME_CLAIM"]}
+    },
+    {
+      "case_id": "WM-JSS-CE-REVIEW-PAYLOAD-012",
+      "capability": "IMPLEMENTATION_ANSWER_REVIEW",
+      "input": {
+        "original_question": "实现怎样处理异常？",
+        "requirement": {"needs": [{"need_id": "implementation-answer"}]},
+        "query_plan": {"steps": [{"operation": "METHOD_IMPLEMENTATION"}]},
+        "query_results": [{"operation": "METHOD_IMPLEMENTATION", "payload": {"ordered_atoms": ["THROW"]}}],
+        "assessment": {"outcome": "SATISFIED"},
+        "draft": {"body": "证据摘录：throw new RuntimeException();", "fault_markers": ["EVIDENCE_PAYLOAD_EXPANSION"]},
+        "required_checked_need_ids": ["implementation-answer"],
+        "required_checked_step_result_ids": ["world_model_step_result_88888888888888888888888888888888"],
+        "required_checked_support_digests": ["sha256:8888888888888888888888888888888888888888888888888888888888888888"]
+      },
+      "projection_fields": ["decision", "checked_need_ids", "checked_step_result_ids", "checked_support_digests"],
+      "semantic_constraints": {"required_finding_codes": ["EVIDENCE_PAYLOAD_EXPANSION"]}
+    }
+  ]
+}
+
+

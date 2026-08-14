@@ -4,13 +4,13 @@ kind: development-slice
 status: proposed
 authority: proposed-development
 owners: [quality, product]
-depends_on: [ITER-007-PROPOSAL, ITER-007-READINESS, ITER-007-SLICE-002, ITER-006-RESULT-LIVE-RUN-008]
+depends_on: [ITER-007-PROPOSAL, ITER-007-READINESS, ITER-007-SLICE-002, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE]
 code: [validation]
 tests: [tests, validation]
 iteration: ITER-007
 coding_input: false
 product_goal_gate: V-000
-product_goal_accepted_capability_refs: [ITER-005-RESULT-ACCEPTANCE]
+product_goal_accepted_capability_refs: [ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-003]
 product_goal_web_checkpoint_id: V-WEB-003
 product_goal_live_ad_hoc_checkpoint_id: V-ADHOC-001
@@ -21,8 +21,9 @@ product_goal_slice_gate_case_ids: [V-XD-003, V-WEB-003, V-007, V-007A, V-008, V-
 
 ## Status and dependencies
 
-`PROPOSED / BLOCKED BY SLICE-002, PRODUCT CODE FREEZE AND ITER-006 ACCEPTANCE`。只有 SLICE-002 Product/Web Gate PASS 并完成代码冻结
-后才可单独授权本 Slice。本段是独立验证，不允许继续修产品实现。
+`HISTORICAL PROPOSAL / NOT EXECUTED / PERMANENTLY NOT AUTHORIZABLE IN REJECTED ITER-007`。本 Slice 的前置 SLICE-001 已
+产品 FAIL，SLICE-002 也未执行。frontmatter 保留 `proposed` 只表示原计划未执行；任何后续 held-out 验证必须在新 Iteration 重新
+冻结项目、问题、baseline、target 和用户授权。
 
 ## Product-goal contribution and cumulative integration
 
@@ -39,7 +40,8 @@ product_goal_slice_gate_case_ids: [V-XD-003, V-WEB-003, V-007, V-007A, V-008, V-
 ## System contracts and invariants
 
 - 工程身份、源码和问题在产品代码冻结前对实现团队不可见，baseline 由独立环境运行；
-- 曝光后任何产品变化都使原失败永久保留，并要求工程和问题集同时更换后重新冻结；
+- 从披露到最终 Result seal 的任何产品变化都使原结果永久保留，并要求两工程、完整 12+4 suite、baseline 与 target 同时更换后
+  重新冻结；seal 后 capsule consumed；
 - 12 条 answerable 是唯一 supported count 分母，至少 6 条无符号名且每工程至少 2 条；
 - target 至少 `min(12, max(baseline + 4, 8))`，两个工程和四类问题均须有增量；
 - 4 条 boundary 独立 4/4 Gap；若成熟 Agent 仅用同一源码可答，模型 Gap 直接 FAIL；

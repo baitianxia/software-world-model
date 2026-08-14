@@ -17,9 +17,11 @@ Roadmap 按产品或系统结果组织方向，不按组件列任务。它用于
 ## Milestones
 
 - [M-001：正式知识单路径的本机体验基线](milestones/M-001-formal-knowledge-single-path.md) — achieved。
+- [M-002：通用软件工程问答 MVP 能力路径](milestones/M-002-general-software-qa-capability-path.md) — planned；当前最早未证明的是 Step 1 的 Java 结果驱动世界模型调查。
 
 ## Candidates
 
+- [受限 Agent 驱动的 World Model 调查](candidates/bounded-agentic-world-model-investigation.md) — ITER-008 proposed；仍未通过 Readiness 或授权。
 - [显式限定范围的生产启用](candidates/production-activation.md)
 - [Schema Evolution](candidates/schema-evolution.md)
 - [Semantic View](candidates/semantic-view.md)

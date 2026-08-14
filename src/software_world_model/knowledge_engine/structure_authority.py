@@ -30,6 +30,8 @@ from .scope import (
     ScopeType,
 )
 from .structure import (
+    JAVA_SOURCE_SEMANTICS_SCHEMA_DIGEST,
+    JAVA_SOURCE_SEMANTICS_SCHEMA_REF,
     JAVA_STATIC_CALL_SCHEMA_DIGEST,
     JAVA_STATIC_CALL_SCHEMA_REF,
     MAVEN_STRUCTURE_SCHEMA_DIGEST,
@@ -160,6 +162,16 @@ class StructureSchemaDefinition:
         return cls.create(
             schema_ref=JAVA_STATIC_CALL_SCHEMA_REF,
             schema_digest=JAVA_STATIC_CALL_SCHEMA_DIGEST,
+            eligible_scope_types=(ScopeType.SYSTEM,),
+        )
+
+    @classmethod
+    def java_source_semantics(cls) -> "StructureSchemaDefinition":
+        """Frozen ITER-007 schema; it is not authoritative until registered."""
+
+        return cls.create(
+            schema_ref=JAVA_SOURCE_SEMANTICS_SCHEMA_REF,
+            schema_digest=JAVA_SOURCE_SEMANTICS_SCHEMA_DIGEST,
             eligible_scope_types=(ScopeType.SYSTEM,),
         )
 

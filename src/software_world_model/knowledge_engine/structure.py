@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from enum import Enum
 import unicodedata
 from typing import Any, TypeAlias
+import re
 
 from software_world_model.cross_cutting import (
     CanonicalizationError,
@@ -56,13 +57,53 @@ JAVA_STATIC_CALL_CANONICALIZATION_REF = (
 JAVA_STATIC_CALL_CANONICALIZATION_DIGEST = Digest(
     "sha256:598c0ab07e3411ecc46b80743332290305c4325f5a098a258a78cdd3d338582f"
 )
+JAVA_SOURCE_SEMANTICS_SCHEMA_REF = "JAVA-SOURCE-SEMANTICS@1.0.0"
+JAVA_SOURCE_SEMANTICS_SCHEMA_DIGEST = digest_of(
+    [
+        JAVA_SOURCE_SEMANTICS_SCHEMA_REF,
+        "TREE_SITTER_JAVA_FRONTEND@1",
+        "JAVA_SOURCE_SEMANTICS_CANONICALIZATION@1",
+    ]
+)
+JAVA_SOURCE_SEMANTICS_PROFILE_REF = "JAVA_SOURCE_SEMANTICS@1"
+JAVA_SOURCE_SEMANTICS_COVERAGE_ROOT_REF = "JAVA_SOURCE_SEMANTICS_COVERAGE@1"
+JAVA_SOURCE_SEMANTICS_FRONTEND_REF = "TREE_SITTER_JAVA_FRONTEND@1"
+JAVA_SOURCE_SEMANTICS_FRONTEND_DIGEST = Digest(
+    "sha256:45b49edd3dbaaec472533c13a4a6d1e3e0eab6a3be2d1529685bdca5560e65b3"
+)
+JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_REF = (
+    "JAVA-SOURCE-SEMANTICS-EVALUATION-CONTEXT@1.0.0"
+)
+JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_DIGEST = digest_of(
+    [
+        JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_REF,
+        JAVA_SOURCE_SEMANTICS_FRONTEND_REF,
+        JAVA_SOURCE_SEMANTICS_FRONTEND_DIGEST,
+        "MIT",
+        "JAVA_LANGUAGE_ABI=14",
+    ]
+)
+JAVA_SOURCE_SEMANTICS_CANONICALIZATION_REF = (
+    "JAVA-SOURCE-SEMANTICS-CANONICALIZATION@1.0.0"
+)
+JAVA_SOURCE_SEMANTICS_CANONICALIZATION_DIGEST = digest_of(
+    [
+        JAVA_SOURCE_SEMANTICS_CANONICALIZATION_REF,
+        "UTF8_BYTE_RANGE",
+        "SOURCE_ORDER_ORDINAL",
+        "NO_SOURCE_PAYLOAD",
+    ]
+)
 
 
 class EntityType(str, Enum):
     SOFTWARE_SYSTEM = "SOFTWARE_SYSTEM"
     MAVEN_MODULE = "MAVEN_MODULE"
+    JAVA_SOURCE_FILE = "JAVA_SOURCE_FILE"
     JAVA_TYPE = "JAVA_TYPE"
     JAVA_METHOD = "JAVA_METHOD"
+    JAVA_IMPLEMENTATION_ATOM = "JAVA_IMPLEMENTATION_ATOM"
+    JAVA_STATE_SLOT = "JAVA_STATE_SLOT"
 
 
 class RelationPredicate(str, Enum):
@@ -70,6 +111,13 @@ class RelationPredicate(str, Enum):
     DEPENDS_ON = "DEPENDS_ON"
     DECLARES_METHOD = "DECLARES_METHOD"
     CALLS = "CALLS"
+    HAS_IMPLEMENTATION_ATOM = "HAS_IMPLEMENTATION_ATOM"
+    CONTROLS = "CONTROLS"
+    NEXT_IN_SOURCE = "NEXT_IN_SOURCE"
+    CALL_SITE_TARGETS = "CALL_SITE_TARGETS"
+    READS_STATE = "READS_STATE"
+    WRITES_STATE = "WRITES_STATE"
+    HANDLES_THROW = "HANDLES_THROW"
 
 
 class ObservationModality(str, Enum):
@@ -79,6 +127,132 @@ class ObservationModality(str, Enum):
     )
     JAVA_SOURCE_DECLARATION = "JAVA_SOURCE_DECLARATION@1"
     JAVA_SOURCE_STATIC_CALL = "JAVA_SOURCE_STATIC_CALL@1"
+    JAVA_SOURCE_IMPLEMENTATION_MEMBERSHIP = (
+        "JAVA_SOURCE_IMPLEMENTATION_MEMBERSHIP@1"
+    )
+    JAVA_SOURCE_TRUE_BRANCH_CONTROL = "JAVA_SOURCE_TRUE_BRANCH_CONTROL@1"
+    JAVA_SOURCE_FALSE_BRANCH_CONTROL = "JAVA_SOURCE_FALSE_BRANCH_CONTROL@1"
+    JAVA_SOURCE_ORDER = "JAVA_SOURCE_ORDER@1"
+    JAVA_SOURCE_CALL_SITE_TARGET = "JAVA_SOURCE_CALL_SITE_TARGET@1"
+    JAVA_SOURCE_STATE_READ = "JAVA_SOURCE_STATE_READ@1"
+    JAVA_SOURCE_STATE_WRITE = "JAVA_SOURCE_STATE_WRITE@1"
+    JAVA_SOURCE_LEXICAL_EXCEPTION_HANDLER = (
+        "JAVA_SOURCE_LEXICAL_EXCEPTION_HANDLER@1"
+    )
+
+
+class JavaSemanticDisposition(str, Enum):
+    SEMANTICS_COMPLETE = "SEMANTICS_COMPLETE"
+    UNSUPPORTED_EXCLUDED = "UNSUPPORTED_EXCLUDED"
+    FAILED = "FAILED"
+
+
+class JavaSemanticFacetCompleteness(str, Enum):
+    COMPLETE = "COMPLETE"
+    INCOMPLETE = "INCOMPLETE"
+    FAILED = "FAILED"
+
+
+class JavaImplementationAtomKind(str, Enum):
+    BRANCH = "BRANCH"
+    CALL_SITE = "CALL_SITE"
+    RETURN = "RETURN"
+    THROW = "THROW"
+    CATCH = "CATCH"
+    FINALLY = "FINALLY"
+    STATE_READ = "STATE_READ"
+    STATE_WRITE = "STATE_WRITE"
+
+
+class JavaStateSlotKind(str, Enum):
+    PARAMETER = "PARAMETER"
+    LOCAL = "LOCAL"
+    FIELD = "FIELD"
+
+
+class JavaSemanticForm(str, Enum):
+    BOOLEAN_SLOT_TEST = "BOOLEAN_SLOT_TEST"
+    STATIC_CALL = "STATIC_CALL"
+    RETURN_VALUE = "RETURN_VALUE"
+    THROW_CONSTRUCTION = "THROW_CONSTRUCTION"
+    LEXICAL_CATCH = "LEXICAL_CATCH"
+    LEXICAL_FINALLY = "LEXICAL_FINALLY"
+    STATE_ACCESS = "STATE_ACCESS"
+
+
+class JavaSemanticOperator(str, Enum):
+    NONE = "NONE"
+    NOT = "NOT"
+    IS_TRUE = "IS_TRUE"
+    IS_FALSE = "IS_FALSE"
+    IS_NULL = "IS_NULL"
+    NOT_NULL = "NOT_NULL"
+    AND = "AND"
+    OR = "OR"
+    DIRECT_CALL = "DIRECT_CALL"
+    RETURN = "RETURN"
+    THROW = "THROW"
+    READ = "READ"
+    WRITE = "WRITE"
+
+
+class JavaValueCategory(str, Enum):
+    BOOLEAN = "BOOLEAN"
+    NULL = "NULL"
+    INTEGER = "INTEGER"
+    ENUM = "ENUM"
+    CALL_RESULT = "CALL_RESULT"
+    VOID = "VOID"
+    EXCEPTION = "EXCEPTION"
+    STATE = "STATE"
+
+
+class JavaSemanticOperandKind(str, Enum):
+    ENTITY_REF = "ENTITY_REF"
+    BOOLEAN_LITERAL = "BOOLEAN_LITERAL"
+    NULL_LITERAL = "NULL_LITERAL"
+    INTEGER_LITERAL = "INTEGER_LITERAL"
+    ENUM_LITERAL = "ENUM_LITERAL"
+    TYPE_REF = "TYPE_REF"
+    CONSTRUCTOR_ARITY = "CONSTRUCTOR_ARITY"
+
+
+class JavaCallResolutionClass(str, Enum):
+    LEGACY_EXACT_STATIC_DIRECT = "LEGACY_EXACT_STATIC_DIRECT"
+
+
+JAVA_SOURCE_SEMANTICS_ENTITY_TYPES = tuple(
+    sorted(
+        (
+            EntityType.JAVA_SOURCE_FILE,
+            EntityType.JAVA_TYPE,
+            EntityType.JAVA_METHOD,
+            EntityType.JAVA_IMPLEMENTATION_ATOM,
+            EntityType.JAVA_STATE_SLOT,
+        ),
+        key=lambda item: item.value,
+    )
+)
+JAVA_SOURCE_SEMANTICS_RELATION_PREDICATES = tuple(
+    sorted(
+        (
+            RelationPredicate.DECLARES_METHOD,
+            RelationPredicate.CALLS,
+            RelationPredicate.HAS_IMPLEMENTATION_ATOM,
+            RelationPredicate.CONTROLS,
+            RelationPredicate.NEXT_IN_SOURCE,
+            RelationPredicate.CALL_SITE_TARGETS,
+            RelationPredicate.READS_STATE,
+            RelationPredicate.WRITES_STATE,
+            RelationPredicate.HANDLES_THROW,
+        ),
+        key=lambda item: item.value,
+    )
+)
+
+_JAVA_QUALIFIED_IDENTIFIER = re.compile(
+    r"^[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*$"
+)
 
 
 class FactKind(str, Enum):
@@ -268,12 +442,26 @@ _ENTITY_ROOT_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "effective_group_id",
         "artifact_id",
     ),
+    EntityType.JAVA_SOURCE_FILE: ("owning_scope_id", "source_path"),
     EntityType.JAVA_TYPE: ("owning_scope_id", "qualified_name"),
     EntityType.JAVA_METHOD: (
         "owning_scope_id",
         "declaring_type_qualified_name",
         "method_name",
         "parameter_types",
+    ),
+    EntityType.JAVA_IMPLEMENTATION_ATOM: (
+        "owning_scope_id",
+        "method_entity_root_id",
+        "atom_kind",
+        "structural_ordinal",
+    ),
+    EntityType.JAVA_STATE_SLOT: (
+        "owning_scope_id",
+        "declaring_entity_root_id",
+        "slot_kind",
+        "canonical_identifier",
+        "declaration_ordinal",
     ),
 }
 _ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
@@ -296,6 +484,11 @@ _ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "source_revision",
         "evidence_references",
     ),
+    EntityType.JAVA_SOURCE_FILE: (
+        "source_revision",
+        "disposition",
+        "evidence_references",
+    ),
     EntityType.JAVA_TYPE: (
         "simple_name",
         "package_name",
@@ -312,12 +505,40 @@ _ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
         "source_revision",
         "evidence_references",
     ),
+    EntityType.JAVA_IMPLEMENTATION_ATOM: (
+        "source_revision",
+        "source_order_ordinal",
+        "semantic_form",
+        "operator",
+        "value_category",
+        "semantic_operands",
+        "referenced_entity_root_ids",
+        "method_disposition",
+        "evidence_references",
+    ),
+    EntityType.JAVA_STATE_SLOT: (
+        "declared_type",
+        "source_revision",
+        "evidence_references",
+    ),
 }
+_JAVA_TYPE_SEMANTICS_STATE_FIELDS = _ENTITY_STATE_FIELDS[EntityType.JAVA_TYPE] + (
+    "disposition",
+)
+_JAVA_METHOD_SEMANTICS_STATE_FIELDS = _ENTITY_STATE_FIELDS[EntityType.JAVA_METHOD] + (
+    "method_disposition",
+    "declaration_completeness",
+    "legacy_static_call_completeness",
+    "implementation_semantics_completeness",
+)
 _ENTITY_IDENTITY_SCHEMES: dict[EntityType, str] = {
     EntityType.SOFTWARE_SYSTEM: "SOFTWARE_SYSTEM@1",
     EntityType.MAVEN_MODULE: "MAVEN_MODULE@1",
+    EntityType.JAVA_SOURCE_FILE: "JAVA_SOURCE_FILE@1",
     EntityType.JAVA_TYPE: "JAVA_TYPE@1",
     EntityType.JAVA_METHOD: "JAVA_METHOD@1",
+    EntityType.JAVA_IMPLEMENTATION_ATOM: "JAVA_IMPLEMENTATION_ATOM@1",
+    EntityType.JAVA_STATE_SLOT: "JAVA_STATE_SLOT@1",
 }
 _RELATION_STATE_FIELDS = (
     "subject_entity_state_id",
@@ -338,6 +559,13 @@ _PREDICATE_STATE_FIELDS: dict[RelationPredicate, tuple[str, ...]] = {
     ),
     RelationPredicate.DECLARES_METHOD: ("declaration_ordinal",),
     RelationPredicate.CALLS: ("call_site_count",),
+    RelationPredicate.HAS_IMPLEMENTATION_ATOM: ("source_order_ordinal",),
+    RelationPredicate.CONTROLS: ("controlled_source_order_ordinal",),
+    RelationPredicate.NEXT_IN_SOURCE: ("source_order_distance",),
+    RelationPredicate.CALL_SITE_TARGETS: ("resolution_class",),
+    RelationPredicate.READS_STATE: ("access_ordinal",),
+    RelationPredicate.WRITES_STATE: ("access_ordinal",),
+    RelationPredicate.HANDLES_THROW: ("handler_type",),
 }
 _COVERAGE_ROOT_FIELDS = (
     "owning_scope_id",
@@ -469,6 +697,19 @@ class EntityRoot:
         )
 
     @classmethod
+    def java_source_file(
+        cls,
+        *,
+        owning_scope_id: StableId,
+        source_path: str,
+    ) -> "EntityRoot":
+        return cls.create(
+            entity_type=EntityType.JAVA_SOURCE_FILE,
+            owning_scope_id=owning_scope_id,
+            identity_fields={"source_path": source_path},
+        )
+
+    @classmethod
     def java_type(
         cls,
         *,
@@ -497,6 +738,46 @@ class EntityRoot:
                 "declaring_type_qualified_name": declaring_type_qualified_name,
                 "method_name": method_name,
                 "parameter_types": tuple(parameter_types),
+            },
+        )
+
+    @classmethod
+    def java_implementation_atom(
+        cls,
+        *,
+        owning_scope_id: StableId,
+        method_entity_root_id: StableId,
+        atom_kind: str,
+        structural_ordinal: int,
+    ) -> "EntityRoot":
+        return cls.create(
+            entity_type=EntityType.JAVA_IMPLEMENTATION_ATOM,
+            owning_scope_id=owning_scope_id,
+            identity_fields={
+                "method_entity_root_id": method_entity_root_id,
+                "atom_kind": atom_kind,
+                "structural_ordinal": structural_ordinal,
+            },
+        )
+
+    @classmethod
+    def java_state_slot(
+        cls,
+        *,
+        owning_scope_id: StableId,
+        declaring_entity_root_id: StableId,
+        slot_kind: str,
+        canonical_identifier: str,
+        declaration_ordinal: int,
+    ) -> "EntityRoot":
+        return cls.create(
+            entity_type=EntityType.JAVA_STATE_SLOT,
+            owning_scope_id=owning_scope_id,
+            identity_fields={
+                "declaring_entity_root_id": declaring_entity_root_id,
+                "slot_kind": slot_kind,
+                "canonical_identifier": canonical_identifier,
+                "declaration_ordinal": declaration_ordinal,
             },
         )
 
@@ -593,9 +874,21 @@ class EntityState:
         return tuple(StableId(_expect_string(item, "evidence reference")) for item in value)
 
     def require_valid_identity(self) -> None:
+        expected_fields = _ENTITY_STATE_FIELDS[self.entity_type]
+        if (
+            self.entity_type is EntityType.JAVA_TYPE
+            and set(self.state_payload_fields) == set(_JAVA_TYPE_SEMANTICS_STATE_FIELDS)
+        ):
+            expected_fields = _JAVA_TYPE_SEMANTICS_STATE_FIELDS
+        elif (
+            self.entity_type is EntityType.JAVA_METHOD
+            and set(self.state_payload_fields)
+            == set(_JAVA_METHOD_SEMANTICS_STATE_FIELDS)
+        ):
+            expected_fields = _JAVA_METHOD_SEMANTICS_STATE_FIELDS
         _require_exact_keys(
             self.state_payload_fields,
-            _ENTITY_STATE_FIELDS[self.entity_type],
+            expected_fields,
             f"{self.entity_type.value} state payload",
         )
         state_digest = digest_of(
@@ -1446,6 +1739,7 @@ class EntityRecord:
         self.state.require_valid_identity()
         if self.root.entity_root_id != self.state.entity_root_id or self.root.entity_type != self.state.entity_type:
             _fail("ENTITY_RECORD_ROOT_STATE_MISMATCH", "Entity Root and State do not belong together")
+        _validate_java_semantic_entity_record(self.root, self.state)
 
     @property
     def root_id(self) -> StableId:
@@ -1704,6 +1998,68 @@ class StructureKnowledgeBatch:
                 "PROFILE_SCHEMA_MISMATCH",
                 "Java Static Call Profile requires its exact frozen Schema ref",
             )
+        elif self.coverage.root.schema_ref == JAVA_SOURCE_SEMANTICS_SCHEMA_REF:
+            if self.coverage.root.profile_ref != JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+                _fail(
+                    "PROFILE_SCHEMA_MISMATCH",
+                    "Java Source Semantics Schema requires its exact Profile ref",
+                )
+            if self.publication_mode is not PublicationMode.REPLACE_COVERAGE:
+                _fail(
+                    "PUBLICATION_MODE_MISMATCH",
+                    "Java Source Semantics complete Coverage requires REPLACE_COVERAGE",
+                )
+            if self.literal_facts:
+                _fail(
+                    "LITERAL_FACT_NOT_ALLOWED",
+                    "Java Source Semantics stores typed semantics in Entity States",
+                )
+            exact_definitions = (
+                (
+                    self.coverage.root.schema_digest,
+                    JAVA_SOURCE_SEMANTICS_SCHEMA_DIGEST,
+                ),
+                (
+                    self.coverage.root.maven_evaluation_context_ref,
+                    JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_REF,
+                ),
+                (
+                    self.coverage.root.maven_evaluation_context_digest,
+                    JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_DIGEST,
+                ),
+                (
+                    self.coverage.root.canonicalization_ref,
+                    JAVA_SOURCE_SEMANTICS_CANONICALIZATION_REF,
+                ),
+                (
+                    self.coverage.root.canonicalization_digest,
+                    JAVA_SOURCE_SEMANTICS_CANONICALIZATION_DIGEST,
+                ),
+                (
+                    self.coverage.root.coverage_root_ref,
+                    JAVA_SOURCE_SEMANTICS_COVERAGE_ROOT_REF,
+                ),
+            )
+            if any(actual != expected for actual, expected in exact_definitions):
+                _fail(
+                    "FROZEN_DEFINITION_MISMATCH",
+                    "Java Source Semantics Coverage must bind all frozen definitions",
+                )
+            if (
+                self.coverage.root.covered_entity_types
+                != JAVA_SOURCE_SEMANTICS_ENTITY_TYPES
+                or self.coverage.root.covered_relation_predicates
+                != JAVA_SOURCE_SEMANTICS_RELATION_PREDICATES
+            ):
+                _fail(
+                    "INCOMPLETE_PROFILE_COVERAGE",
+                    "Java Source Semantics Coverage must declare its entire schema",
+                )
+        elif self.coverage.root.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+            _fail(
+                "PROFILE_SCHEMA_MISMATCH",
+                "Java Source Semantics Profile requires its exact frozen Schema ref",
+            )
 
         _require_unique_records(self.entities, "Entity")
         _require_unique_records(self.relation_facts, "Relation Fact")
@@ -1742,6 +2098,12 @@ class StructureKnowledgeBatch:
             subject = _resolve_endpoint(fact.root.subject, candidates, "literal subject")
             if fact.state.subject_entity_state_id != subject.state_id:
                 _fail("DANGLING_SUBJECT_STATE", "Literal Fact subject State is outside the exact endpoint closure")
+
+        if self.coverage.root.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF:
+            _validate_java_source_semantics_closure(
+                entities=self.entities,
+                relation_facts=self.relation_facts,
+            )
 
         actual_members = CompleteMemberManifest.create(
             tuple(record.coverage_member for record in self.entities)
@@ -1812,6 +2174,203 @@ def compare_root_state(left: RootStateRecord, right: RootStateRecord) -> RootSta
     return RootStateIdentity.SAME_ROOT_DIFFERENT_STATE
 
 
+def _validate_java_source_semantics_closure(
+    *,
+    entities: Sequence[EntityRecord],
+    relation_facts: Sequence[RelationFactRecord],
+) -> None:
+    by_root = {item.root_id: item for item in entities}
+    source_paths = {
+        str(item.root.root_fields["source_path"])
+        for item in entities
+        if item.root.entity_type is EntityType.JAVA_SOURCE_FILE
+    }
+    methods = {
+        item.root_id: item
+        for item in entities
+        if item.root.entity_type is EntityType.JAVA_METHOD
+    }
+    atoms = {
+        item.root_id: item
+        for item in entities
+        if item.root.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+    }
+    for entity in entities:
+        state_fields = set(entity.state.state_payload_fields)
+        if entity.root.entity_type is EntityType.JAVA_TYPE:
+            if state_fields != set(_JAVA_TYPE_SEMANTICS_STATE_FIELDS):
+                _fail(
+                    "JAVA_DISPOSITION_MANIFEST_INCOMPLETE",
+                    "Java Source Semantics requires a disposition on every type",
+                )
+            if entity.state.state_payload_fields["source_path"] not in source_paths:
+                _fail(
+                    "JAVA_SOURCE_FILE_MANIFEST_INCOMPLETE",
+                    "Every Java type must resolve to one covered source file",
+                )
+        elif entity.root.entity_type is EntityType.JAVA_METHOD:
+            if state_fields != set(_JAVA_METHOD_SEMANTICS_STATE_FIELDS):
+                _fail(
+                    "JAVA_DISPOSITION_MANIFEST_INCOMPLETE",
+                    "Java Source Semantics requires disposition and facet completeness on every method",
+                )
+            if entity.state.state_payload_fields["source_path"] not in source_paths:
+                _fail(
+                    "JAVA_SOURCE_FILE_MANIFEST_INCOMPLETE",
+                    "Every Java method must resolve to one covered source file",
+                )
+        elif entity.root.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM:
+            method_id = StableId(
+                str(entity.root.root_fields["method_entity_root_id"])
+            )
+            if method_id not in methods:
+                _fail(
+                    "JAVA_ATOM_METHOD_DANGLING",
+                    "Java implementation Atom must belong to one covered method",
+                )
+            referenced = {
+                StableId(str(value))
+                for value in entity.state.state_payload_fields[
+                    "referenced_entity_root_ids"
+                ]
+            }
+            if not referenced <= set(by_root):
+                _fail(
+                    "JAVA_ATOM_ENTITY_REF_DANGLING",
+                    "Java Atom referenced Entity Roots must resolve in the exact closure",
+                )
+            operand_refs = {
+                StableId(str(operand["value"]))
+                for operand in entity.state.state_payload_fields["semantic_operands"]
+                if operand["kind"] == JavaSemanticOperandKind.ENTITY_REF.value
+            }
+            if operand_refs != referenced:
+                _fail(
+                    "JAVA_ATOM_ENTITY_REF_MISMATCH",
+                    "Java Atom typed operands and referenced Entity Roots must match",
+                )
+        elif entity.root.entity_type is EntityType.JAVA_STATE_SLOT:
+            declaring_id = StableId(
+                str(entity.root.root_fields["declaring_entity_root_id"])
+            )
+            declaring = by_root.get(declaring_id)
+            if declaring is None or declaring.root.entity_type not in {
+                EntityType.JAVA_TYPE,
+                EntityType.JAVA_METHOD,
+            }:
+                _fail(
+                    "JAVA_SLOT_DECLARATION_DANGLING",
+                    "Java state slot must belong to one covered type or method",
+                )
+
+    membership: dict[StableId, RelationFactRecord] = {}
+    next_pairs: set[tuple[StableId, StableId]] = set()
+    call_targets: set[StableId] = set()
+    declarations: set[StableId] = set()
+    for relation in relation_facts:
+        predicate = relation.root.predicate
+        if predicate is RelationPredicate.HAS_IMPLEMENTATION_ATOM:
+            atom_id = relation.root.object.entity_root_id
+            if atom_id in membership:
+                _fail(
+                    "JAVA_ATOM_MEMBERSHIP_DUPLICATE",
+                    "Each Java implementation Atom must have exactly one method membership",
+                )
+            atom = atoms[atom_id]
+            expected_method = StableId(
+                str(atom.root.root_fields["method_entity_root_id"])
+            )
+            if relation.root.subject.entity_root_id != expected_method:
+                _fail(
+                    "JAVA_ATOM_MEMBERSHIP_MISMATCH",
+                    "Java Atom membership method differs from its Root identity",
+                )
+            if relation.state.predicate_state_payload_fields[
+                "source_order_ordinal"
+            ] != atom.state.state_payload_fields["source_order_ordinal"]:
+                _fail(
+                    "JAVA_ATOM_MEMBERSHIP_ORDINAL_MISMATCH",
+                    "Java Atom membership ordinal differs from its State",
+                )
+            membership[atom_id] = relation
+        elif predicate is RelationPredicate.NEXT_IN_SOURCE:
+            next_pairs.add(
+                (
+                    relation.root.subject.entity_root_id,
+                    relation.root.object.entity_root_id,
+                )
+            )
+        elif predicate is RelationPredicate.CALL_SITE_TARGETS:
+            subject = atoms[relation.root.subject.entity_root_id]
+            if subject.root.root_fields["atom_kind"] != JavaImplementationAtomKind.CALL_SITE.value:
+                _fail(
+                    "JAVA_CALL_TARGET_SUBJECT_INVALID",
+                    "CALL_SITE_TARGETS subject must be a CALL_SITE Atom",
+                )
+            call_targets.add(subject.root_id)
+        elif predicate is RelationPredicate.DECLARES_METHOD:
+            declarations.add(relation.root.object.entity_root_id)
+        elif predicate is RelationPredicate.CONTROLS:
+            subject = atoms[relation.root.subject.entity_root_id]
+            if subject.root.root_fields["atom_kind"] != JavaImplementationAtomKind.BRANCH.value:
+                _fail(
+                    "JAVA_CONTROL_SUBJECT_INVALID",
+                    "CONTROLS subject must be a BRANCH Atom",
+                )
+
+    if set(membership) != set(atoms):
+        _fail(
+            "JAVA_ATOM_MEMBERSHIP_INCOMPLETE",
+            "Every Java implementation Atom requires exactly one method membership",
+        )
+    if declarations != set(methods):
+        _fail(
+            "JAVA_METHOD_DECLARATION_INCOMPLETE",
+            "Every Java method requires exactly one type declaration relation",
+        )
+    for method_id in methods:
+        ordered = sorted(
+            (
+                item.state.state_payload_fields["source_order_ordinal"],
+                item.root_id,
+            )
+            for item in atoms.values()
+            if item.root.root_fields["method_entity_root_id"] == method_id.value
+        )
+        if [ordinal for ordinal, _ in ordered] != list(range(len(ordered))):
+            _fail(
+                "JAVA_ATOM_SOURCE_ORDER_INCOMPLETE",
+                "Java method Atom ordinals must be contiguous from zero",
+            )
+        expected_pairs = set(zip(
+            (root_id for _, root_id in ordered),
+            (root_id for _, root_id in ordered[1:]),
+        ))
+        actual_pairs = {
+            pair
+            for pair in next_pairs
+            if StableId(
+                str(atoms[pair[0]].root.root_fields["method_entity_root_id"])
+            ) == method_id
+        }
+        if actual_pairs != expected_pairs:
+            _fail(
+                "JAVA_ATOM_SOURCE_ORDER_RELATIONS_INCOMPLETE",
+                "NEXT_IN_SOURCE must cover every adjacent Atom pair exactly",
+            )
+    expected_call_targets = {
+        item.root_id
+        for item in atoms.values()
+        if item.root.root_fields["atom_kind"]
+        == JavaImplementationAtomKind.CALL_SITE.value
+    }
+    if call_targets != expected_call_targets:
+        _fail(
+            "JAVA_CALL_TARGET_RELATIONS_INCOMPLETE",
+            "Every supported CALL_SITE Atom requires one target relation",
+        )
+
+
 def _resolve_endpoint(
     ref: EntityRef,
     candidates: Mapping[StableId, Sequence[EntityRecord]],
@@ -1866,12 +2425,62 @@ def _validate_relation_shape(
             and observation_modality
             is ObservationModality.JAVA_SOURCE_DECLARATION
         )
-    else:
+    elif predicate is RelationPredicate.CALLS:
         valid = (
             subject.entity_type is EntityType.JAVA_METHOD
             and object.entity_type is EntityType.JAVA_METHOD
             and observation_modality is ObservationModality.JAVA_SOURCE_STATIC_CALL
         )
+    elif predicate is RelationPredicate.HAS_IMPLEMENTATION_ATOM:
+        valid = (
+            subject.entity_type is EntityType.JAVA_METHOD
+            and object.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and observation_modality
+            is ObservationModality.JAVA_SOURCE_IMPLEMENTATION_MEMBERSHIP
+        )
+    elif predicate is RelationPredicate.CONTROLS:
+        valid = (
+            subject.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and object.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and observation_modality
+            in {
+                ObservationModality.JAVA_SOURCE_TRUE_BRANCH_CONTROL,
+                ObservationModality.JAVA_SOURCE_FALSE_BRANCH_CONTROL,
+            }
+        )
+    elif predicate is RelationPredicate.NEXT_IN_SOURCE:
+        valid = (
+            subject.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and object.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and observation_modality is ObservationModality.JAVA_SOURCE_ORDER
+        )
+    elif predicate is RelationPredicate.CALL_SITE_TARGETS:
+        valid = (
+            subject.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and object.entity_type is EntityType.JAVA_METHOD
+            and observation_modality
+            is ObservationModality.JAVA_SOURCE_CALL_SITE_TARGET
+        )
+    elif predicate in {RelationPredicate.READS_STATE, RelationPredicate.WRITES_STATE}:
+        expected_modality = (
+            ObservationModality.JAVA_SOURCE_STATE_READ
+            if predicate is RelationPredicate.READS_STATE
+            else ObservationModality.JAVA_SOURCE_STATE_WRITE
+        )
+        valid = (
+            subject.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and object.entity_type is EntityType.JAVA_STATE_SLOT
+            and observation_modality is expected_modality
+        )
+    elif predicate is RelationPredicate.HANDLES_THROW:
+        valid = (
+            subject.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and object.entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM
+            and observation_modality
+            is ObservationModality.JAVA_SOURCE_LEXICAL_EXCEPTION_HANDLER
+        )
+    else:  # pragma: no cover - all enum values are handled above
+        valid = False
     if not valid:
         _fail("RELATION_SCHEMA_MISMATCH", "Relation Fact endpoint types, predicate, and modality do not match")
 
@@ -1880,7 +2489,20 @@ def _normalize_entity_state_payload(
     entity_type: EntityType, values: Mapping[str, object]
 ) -> CanonicalFields:
     supplied = dict(values)
-    _require_exact_keys(supplied, _ENTITY_STATE_FIELDS[entity_type], f"{entity_type.value} state payload")
+    expected_fields = _ENTITY_STATE_FIELDS[entity_type]
+    if (
+        entity_type is EntityType.JAVA_TYPE
+        and set(supplied) == set(_JAVA_TYPE_SEMANTICS_STATE_FIELDS)
+    ):
+        expected_fields = _JAVA_TYPE_SEMANTICS_STATE_FIELDS
+    elif (
+        entity_type is EntityType.JAVA_METHOD
+        and set(supplied) == set(_JAVA_METHOD_SEMANTICS_STATE_FIELDS)
+    ):
+        expected_fields = _JAVA_METHOD_SEMANTICS_STATE_FIELDS
+    _require_exact_keys(
+        supplied, expected_fields, f"{entity_type.value} state payload"
+    )
     evidence = _sorted_unique_stable_ids(
         _require_sequence(supplied["evidence_references"], "entity evidence references"),
         "entity evidence reference",
@@ -1895,12 +2517,323 @@ def _normalize_entity_state_payload(
         supplied["modifiers"] = tuple(
             sorted({_text(item, "Java method modifier") for item in modifiers})
         )
-    for key in _ENTITY_STATE_FIELDS[entity_type]:
+    if entity_type is EntityType.JAVA_SOURCE_FILE:
+        supplied["disposition"] = _enum(
+            JavaSemanticDisposition,
+            supplied["disposition"],
+            "Java source-file disposition",
+        ).value
+    if entity_type is EntityType.JAVA_TYPE and expected_fields == _JAVA_TYPE_SEMANTICS_STATE_FIELDS:
+        supplied["disposition"] = _enum(
+            JavaSemanticDisposition,
+            supplied["disposition"],
+            "Java type disposition",
+        ).value
+    if entity_type is EntityType.JAVA_METHOD and expected_fields == _JAVA_METHOD_SEMANTICS_STATE_FIELDS:
+        supplied["method_disposition"] = _enum(
+            JavaSemanticDisposition,
+            supplied["method_disposition"],
+            "Java method disposition",
+        ).value
+        for key in (
+            "declaration_completeness",
+            "legacy_static_call_completeness",
+            "implementation_semantics_completeness",
+        ):
+            supplied[key] = _enum(
+                JavaSemanticFacetCompleteness,
+                supplied[key],
+                f"Java method {key}",
+            ).value
+    if entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM:
+        ordinal = supplied["source_order_ordinal"]
+        if type(ordinal) is not int or ordinal < 0:
+            _fail(
+                "JAVA_ATOM_ORDINAL_INVALID",
+                "Java implementation Atom ordinal must be non-negative",
+            )
+        supplied["semantic_form"] = _enum(
+            JavaSemanticForm,
+            supplied["semantic_form"],
+            "Java Atom semantic form",
+        ).value
+        supplied["operator"] = _enum(
+            JavaSemanticOperator,
+            supplied["operator"],
+            "Java Atom operator",
+        ).value
+        supplied["value_category"] = _enum(
+            JavaValueCategory,
+            supplied["value_category"],
+            "Java Atom value category",
+        ).value
+        supplied["method_disposition"] = _enum(
+            JavaSemanticDisposition,
+            supplied["method_disposition"],
+            "Java Atom method disposition",
+        ).value
+        operands = _require_sequence(
+            supplied["semantic_operands"], "Java Atom semantic operands"
+        )
+        if len(operands) > 8:
+            _fail(
+                "JAVA_ATOM_OPERAND_BUDGET_EXCEEDED",
+                "Java implementation Atom exceeds its semantic operand budget",
+            )
+        supplied["semantic_operands"] = tuple(
+            _normalize_java_semantic_operand(item) for item in operands
+        )
+        referenced = _sorted_unique_stable_ids(
+            _require_sequence(
+                supplied["referenced_entity_root_ids"],
+                "Java Atom referenced Entity Roots",
+            ),
+            "Java Atom referenced Entity Root",
+        )
+        supplied["referenced_entity_root_ids"] = tuple(
+            item.value for item in referenced
+        )
+    if entity_type is EntityType.JAVA_STATE_SLOT:
+        supplied["declared_type"] = _java_type_ref(
+            supplied["declared_type"], "Java state-slot declared type"
+        )
+    for key in expected_fields:
         if key != "evidence_references" and key != "source_binding_id":
             if entity_type is EntityType.JAVA_METHOD and key == "modifiers":
                 continue
+            if entity_type is EntityType.JAVA_IMPLEMENTATION_ATOM and key in {
+                "source_order_ordinal",
+                "semantic_operands",
+                "referenced_entity_root_ids",
+                "semantic_form",
+                "operator",
+                "value_category",
+                "method_disposition",
+            }:
+                continue
+            if entity_type is EntityType.JAVA_SOURCE_FILE and key == "disposition":
+                continue
+            if entity_type is EntityType.JAVA_TYPE and key == "disposition":
+                continue
+            if entity_type is EntityType.JAVA_METHOD and key in {
+                "method_disposition",
+                "declaration_completeness",
+                "legacy_static_call_completeness",
+                "implementation_semantics_completeness",
+            }:
+                continue
+            if entity_type is EntityType.JAVA_STATE_SLOT and key == "declared_type":
+                continue
             supplied[key] = _text(supplied[key], key)
     return CanonicalFields(supplied)
+
+
+def _normalize_java_semantic_operand(value: object) -> CanonicalFields:
+    if not isinstance(value, Mapping):
+        _fail(
+            "JAVA_ATOM_OPERAND_INVALID",
+            "Java semantic operands must be typed mappings",
+        )
+    supplied = dict(value)
+    _require_exact_keys(supplied, ("kind", "value"), "Java semantic operand")
+    kind = _enum(
+        JavaSemanticOperandKind,
+        supplied["kind"],
+        "Java semantic operand kind",
+    )
+    operand = supplied["value"]
+    if kind is JavaSemanticOperandKind.ENTITY_REF:
+        if isinstance(operand, str):
+            try:
+                operand = StableId(operand)
+            except ValueError:
+                _fail(
+                    "JAVA_ATOM_ENTITY_REF_INVALID",
+                    "Java semantic Entity Ref is not a StableId",
+                )
+        _require_stable_id(operand, "Java semantic Entity Ref", kind="entity_root")
+        normalized: object = operand.value
+    elif kind is JavaSemanticOperandKind.BOOLEAN_LITERAL:
+        if type(operand) is not bool:
+            _fail(
+                "JAVA_ATOM_LITERAL_INVALID",
+                "Java boolean semantic operand must be boolean",
+            )
+        normalized = operand
+    elif kind is JavaSemanticOperandKind.NULL_LITERAL:
+        if operand is not None:
+            _fail(
+                "JAVA_ATOM_LITERAL_INVALID",
+                "Java null semantic operand must be null",
+            )
+        normalized = None
+    elif kind in {
+        JavaSemanticOperandKind.INTEGER_LITERAL,
+        JavaSemanticOperandKind.CONSTRUCTOR_ARITY,
+    }:
+        minimum = 0 if kind is JavaSemanticOperandKind.CONSTRUCTOR_ARITY else -(2**31)
+        maximum = 255 if kind is JavaSemanticOperandKind.CONSTRUCTOR_ARITY else 2**31 - 1
+        if type(operand) is not int or not minimum <= operand <= maximum:
+            _fail(
+                "JAVA_ATOM_LITERAL_INVALID",
+                "Java integer semantic operand is outside its frozen budget",
+            )
+        normalized = operand
+    else:
+        normalized = _java_qualified_identifier(
+            operand,
+            "Java enum/type semantic operand",
+        )
+    return CanonicalFields({"kind": kind.value, "value": normalized})
+
+
+def _validate_java_semantic_entity_record(
+    root: EntityRoot,
+    state: EntityState,
+) -> None:
+    if root.entity_type is EntityType.JAVA_SOURCE_FILE:
+        _enum(
+            JavaSemanticDisposition,
+            state.state_payload_fields["disposition"],
+            "Java source-file disposition",
+        )
+        return
+    if root.entity_type is EntityType.JAVA_TYPE:
+        if "disposition" in state.state_payload_fields:
+            _enum(
+                JavaSemanticDisposition,
+                state.state_payload_fields["disposition"],
+                "Java type disposition",
+            )
+        return
+    if root.entity_type is EntityType.JAVA_METHOD:
+        if "method_disposition" in state.state_payload_fields:
+            disposition = _enum(
+                JavaSemanticDisposition,
+                state.state_payload_fields["method_disposition"],
+                "Java method disposition",
+            )
+            facets = tuple(
+                _enum(
+                    JavaSemanticFacetCompleteness,
+                    state.state_payload_fields[key],
+                    f"Java method {key}",
+                )
+                for key in (
+                    "declaration_completeness",
+                    "legacy_static_call_completeness",
+                    "implementation_semantics_completeness",
+                )
+            )
+            if disposition is JavaSemanticDisposition.SEMANTICS_COMPLETE and any(
+                item is not JavaSemanticFacetCompleteness.COMPLETE for item in facets
+            ):
+                _fail(
+                    "JAVA_METHOD_COMPLETENESS_INCONSISTENT",
+                    "SEMANTICS_COMPLETE methods require all completeness facets COMPLETE",
+                )
+        return
+    if root.entity_type is EntityType.JAVA_STATE_SLOT:
+        _enum(
+            JavaStateSlotKind,
+            root.root_fields["slot_kind"],
+            "Java state-slot kind",
+        )
+        _java_identifier(
+            root.root_fields["canonical_identifier"],
+            "Java state-slot identifier",
+        )
+        _java_type_ref(
+            state.state_payload_fields["declared_type"],
+            "Java state-slot declared type",
+        )
+        return
+    if root.entity_type is not EntityType.JAVA_IMPLEMENTATION_ATOM:
+        return
+    kind = _enum(
+        JavaImplementationAtomKind,
+        root.root_fields["atom_kind"],
+        "Java implementation Atom kind",
+    )
+    structural_ordinal = root.root_fields["structural_ordinal"]
+    source_ordinal = state.state_payload_fields["source_order_ordinal"]
+    if structural_ordinal != source_ordinal:
+        _fail(
+            "JAVA_ATOM_ORDINAL_MISMATCH",
+            "Java Atom structural and source-order ordinals must match",
+        )
+    form = _enum(JavaSemanticForm, state.state_payload_fields["semantic_form"], "Java Atom semantic form")
+    operator = _enum(JavaSemanticOperator, state.state_payload_fields["operator"], "Java Atom operator")
+    category = _enum(JavaValueCategory, state.state_payload_fields["value_category"], "Java Atom value category")
+    expected: dict[
+        JavaImplementationAtomKind,
+        tuple[set[JavaSemanticForm], set[JavaSemanticOperator], set[JavaValueCategory]],
+    ] = {
+        JavaImplementationAtomKind.BRANCH: (
+            {JavaSemanticForm.BOOLEAN_SLOT_TEST},
+            {
+                JavaSemanticOperator.NOT,
+                JavaSemanticOperator.IS_TRUE,
+                JavaSemanticOperator.IS_FALSE,
+                JavaSemanticOperator.IS_NULL,
+                JavaSemanticOperator.NOT_NULL,
+                JavaSemanticOperator.AND,
+                JavaSemanticOperator.OR,
+            },
+            {JavaValueCategory.BOOLEAN},
+        ),
+        JavaImplementationAtomKind.CALL_SITE: (
+            {JavaSemanticForm.STATIC_CALL},
+            {JavaSemanticOperator.DIRECT_CALL},
+            {JavaValueCategory.CALL_RESULT, JavaValueCategory.VOID},
+        ),
+        JavaImplementationAtomKind.RETURN: (
+            {JavaSemanticForm.RETURN_VALUE},
+            {JavaSemanticOperator.RETURN},
+            {
+                JavaValueCategory.BOOLEAN,
+                JavaValueCategory.NULL,
+                JavaValueCategory.INTEGER,
+                JavaValueCategory.ENUM,
+                JavaValueCategory.CALL_RESULT,
+                JavaValueCategory.VOID,
+                JavaValueCategory.STATE,
+            },
+        ),
+        JavaImplementationAtomKind.THROW: (
+            {JavaSemanticForm.THROW_CONSTRUCTION},
+            {JavaSemanticOperator.THROW},
+            {JavaValueCategory.EXCEPTION},
+        ),
+        JavaImplementationAtomKind.CATCH: (
+            {JavaSemanticForm.LEXICAL_CATCH},
+            {JavaSemanticOperator.NONE},
+            {JavaValueCategory.EXCEPTION},
+        ),
+        JavaImplementationAtomKind.FINALLY: (
+            {JavaSemanticForm.LEXICAL_FINALLY},
+            {JavaSemanticOperator.NONE},
+            {JavaValueCategory.VOID},
+        ),
+        JavaImplementationAtomKind.STATE_READ: (
+            {JavaSemanticForm.STATE_ACCESS},
+            {JavaSemanticOperator.READ},
+            {JavaValueCategory.STATE},
+        ),
+        JavaImplementationAtomKind.STATE_WRITE: (
+            {JavaSemanticForm.STATE_ACCESS},
+            {JavaSemanticOperator.WRITE},
+            {JavaValueCategory.STATE},
+        ),
+    }
+    forms, operators, categories = expected[kind]
+    if form not in forms or operator not in operators or category not in categories:
+        _fail(
+            "JAVA_ATOM_SEMANTIC_SHAPE_INVALID",
+            "Java Atom kind, form, operator, and value category are inconsistent",
+        )
+    for operand in state.state_payload_fields["semantic_operands"]:
+        _normalize_java_semantic_operand(operand)
 
 
 def _normalize_predicate_payload(
@@ -1932,13 +2865,42 @@ def _normalize_predicate_payload(
                 "DECLARATION_ORDINAL_INVALID",
                 "Java declaration ordinal must be a non-negative integer",
             )
-    else:
+    elif predicate is RelationPredicate.CALLS:
         count = supplied["call_site_count"]
         if type(count) is not int or count < 1:
             _fail(
                 "CALL_SITE_COUNT_INVALID",
                 "Java call relation must contain at least one exact call site",
             )
+    elif predicate in {
+        RelationPredicate.HAS_IMPLEMENTATION_ATOM,
+        RelationPredicate.CONTROLS,
+        RelationPredicate.NEXT_IN_SOURCE,
+        RelationPredicate.READS_STATE,
+        RelationPredicate.WRITES_STATE,
+    }:
+        field = _PREDICATE_STATE_FIELDS[predicate][0]
+        value = supplied[field]
+        minimum = 1 if predicate is RelationPredicate.NEXT_IN_SOURCE else 0
+        if type(value) is not int or value < minimum:
+            _fail(
+                "JAVA_SEMANTIC_RELATION_ORDINAL_INVALID",
+                f"{predicate.value} requires a valid canonical ordinal",
+            )
+        if predicate is RelationPredicate.NEXT_IN_SOURCE and value != 1:
+            _fail(
+                "JAVA_SOURCE_ORDER_DISTANCE_INVALID",
+                "NEXT_IN_SOURCE only relates adjacent implementation Atoms",
+            )
+    elif predicate is RelationPredicate.CALL_SITE_TARGETS:
+        supplied["resolution_class"] = _enum(
+            JavaCallResolutionClass,
+            supplied["resolution_class"],
+            "Java call-site resolution class",
+        ).value
+    else:
+        field = _PREDICATE_STATE_FIELDS[predicate][0]
+        supplied[field] = _java_qualified_identifier(supplied[field], field)
     return CanonicalFields(supplied)
 
 
@@ -2032,6 +2994,30 @@ def _exact_fields(values: Mapping[str, object], expected: Sequence[str], label: 
             normalized[key] = value.value
         elif isinstance(value, Digest):
             normalized[key] = value.value
+        elif key in {"structural_ordinal", "declaration_ordinal"}:
+            if type(value) is not int or value < 0:
+                _fail(
+                    "JAVA_STRUCTURAL_ORDINAL_INVALID",
+                    f"{key} must be a non-negative integer",
+                )
+            normalized[key] = value
+        elif key == "atom_kind":
+            normalized[key] = _enum(
+                JavaImplementationAtomKind,
+                value,
+                "Java implementation Atom kind",
+            ).value
+        elif key == "slot_kind":
+            normalized[key] = _enum(
+                JavaStateSlotKind,
+                value,
+                "Java state-slot kind",
+            ).value
+        elif key == "canonical_identifier":
+            normalized[key] = _java_identifier(
+                value,
+                "Java canonical identifier",
+            )
         elif key == "parameter_types":
             if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
                 _fail(
@@ -2044,6 +3030,44 @@ def _exact_fields(values: Mapping[str, object], expected: Sequence[str], label: 
         else:
             normalized[key] = _text(value, key)
     return CanonicalFields(normalized)
+
+
+def _java_identifier(value: object, label: str) -> str:
+    normalized = _text(value, label)
+    if len(normalized) > 64 or _JAVA_QUALIFIED_IDENTIFIER.fullmatch(normalized) is None or "." in normalized:
+        _fail(
+            "JAVA_IDENTIFIER_INVALID",
+            f"{label} is not a bounded Java identifier",
+        )
+    return normalized
+
+
+def _java_qualified_identifier(value: object, label: str) -> str:
+    normalized = _text(value, label)
+    segments = normalized.split(".")
+    if (
+        len(normalized) > 192
+        or any(len(segment) > 64 for segment in segments)
+        or _JAVA_QUALIFIED_IDENTIFIER.fullmatch(normalized) is None
+    ):
+        _fail(
+            "JAVA_QUALIFIED_IDENTIFIER_INVALID",
+            f"{label} is not a bounded Java qualified identifier",
+        )
+    return normalized
+
+
+def _java_type_ref(value: object, label: str) -> str:
+    normalized = _text(value, label)
+    base = normalized
+    dimensions = 0
+    while base.endswith("[]"):
+        base = base[:-2]
+        dimensions += 1
+    if dimensions > 8:
+        _fail("JAVA_TYPE_REF_INVALID", f"{label} exceeds the array budget")
+    _java_qualified_identifier(base, label)
+    return normalized
 
 
 def _require_exact_keys(values: Mapping[str, object], expected: Sequence[str], label: str) -> None:
@@ -2215,6 +3239,27 @@ __all__ = [
     "LiteralFactState",
     "LiteralObject",
     "LiteralType",
+    "JAVA_SOURCE_SEMANTICS_CANONICALIZATION_DIGEST",
+    "JAVA_SOURCE_SEMANTICS_CANONICALIZATION_REF",
+    "JAVA_SOURCE_SEMANTICS_COVERAGE_ROOT_REF",
+    "JAVA_SOURCE_SEMANTICS_ENTITY_TYPES",
+    "JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_DIGEST",
+    "JAVA_SOURCE_SEMANTICS_EVALUATION_CONTEXT_REF",
+    "JAVA_SOURCE_SEMANTICS_FRONTEND_DIGEST",
+    "JAVA_SOURCE_SEMANTICS_FRONTEND_REF",
+    "JAVA_SOURCE_SEMANTICS_PROFILE_REF",
+    "JAVA_SOURCE_SEMANTICS_RELATION_PREDICATES",
+    "JAVA_SOURCE_SEMANTICS_SCHEMA_DIGEST",
+    "JAVA_SOURCE_SEMANTICS_SCHEMA_REF",
+    "JavaCallResolutionClass",
+    "JavaImplementationAtomKind",
+    "JavaSemanticDisposition",
+    "JavaSemanticFacetCompleteness",
+    "JavaSemanticForm",
+    "JavaSemanticOperandKind",
+    "JavaSemanticOperator",
+    "JavaStateSlotKind",
+    "JavaValueCategory",
     "MAVEN_CANONICALIZATION_DIGEST",
     "MAVEN_CANONICALIZATION_REF",
     "MAVEN_EVALUATION_CONTEXT_DIGEST",

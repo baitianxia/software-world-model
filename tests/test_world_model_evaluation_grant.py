@@ -9,6 +9,9 @@ from unittest import mock
 from software_world_model.ai_infrastructure.java_model_egress_qualification import (
     JAVA_MODEL_EGRESS_POLICY_FILE_DIGEST,
 )
+from software_world_model.ai_infrastructure.java_source_semantics_model_egress_qualification import (
+    JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST,
+)
 from software_world_model.cross_cutting import Digest, canonical_json_bytes, digest_of
 from software_world_model.interface import world_model_runtime
 
@@ -298,6 +301,211 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
             qualification["java_gateway_freeze_digest"],
             freeze["document_digest"],
         )
+
+    def test_source_semantics_qualification_and_three_call_boundary_are_derived(self) -> None:
+        gateway_input = self.root / "source-semantics-gateway-input"
+        gateway_input.mkdir()
+        qualification_digest = Digest("sha256:" + "6" * 64)
+        qualification_document_digest = Digest("sha256:" + "7" * 64)
+        closed_result_digest = Digest("sha256:" + "8" * 64)
+        for name in (
+            "qualification.json",
+            "closed-result.json",
+            "egress-policy.json",
+        ):
+            (gateway_input / name).write_bytes(b"sealed by mocked loader")
+        binding = SimpleNamespace(
+            capability_qualification_ref=(
+                "capability-evaluation:evaluation_result_" + "9" * 32
+            ),
+            capability_qualification_digest=qualification_digest,
+            qualification_document_digest=qualification_document_digest,
+            closed_capability_result_digest=closed_result_digest,
+        )
+        permission_digest = "sha256:" + "a" * 64
+        schema = world_model_runtime._JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA
+        core = {
+            "schema": schema,
+            "freeze_ref": (
+                "ITER-007-JAVA-SOURCE-SEMANTICS-PRODUCT-"
+                "GATEWAY-CANDIDATE@1"
+            ),
+            "environment": "EVALUATION_ONLY",
+            "strategy_ref": "model-snapshot-first-world-model-answer@1.2.2",
+            "prompt_ref": "java-source-semantics-world-model-prompt@3",
+            "proposal_vocabulary_ref": (
+                "java-source-semantics-world-model-vocabulary@3"
+            ),
+            "capability_qualification_document_digest": (
+                qualification_document_digest.value
+            ),
+            "closed_capability_result_digest": closed_result_digest.value,
+            "egress_policy_digest": (
+                JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
+            ),
+            "conformance_result_ref": "CC-ARK-CHAT-NO-TOOLS-001:sealed",
+            "conformance_result_digest": world_model_runtime._EXPECTED_PROVIDER[
+                "conformance_digest"
+            ],
+            "permission_digest": permission_digest,
+            "production_activation": "NOT_EXECUTED",
+        }
+        freeze = {
+            **core,
+            "document_digest": digest_of([schema, core]).value,
+        }
+        (gateway_input / "g3b-freeze.json").write_bytes(
+            canonical_json_bytes(freeze)
+        )
+
+        with mock.patch(
+            "software_world_model.ai_infrastructure."
+            "java_source_semantics_model_egress_qualification."
+            "load_java_source_semantics_gateway_qualification_binding",
+            return_value=binding,
+        ):
+            provider, qualification = (
+                world_model_runtime._provider_binding_for_gateway_input(
+                    gateway_input
+                )
+            )
+
+        self.assertEqual(
+            provider["qualification_digest"], qualification_digest.value
+        )
+        self.assertEqual(
+            qualification["java_source_semantics_gateway_freeze_digest"],
+            freeze["document_digest"],
+        )
+        self.assertEqual(world_model_runtime._gateway_call_count(gateway_input), 3)
+        self.assertEqual(
+            world_model_runtime._gateway_qualification_binding_field(
+                gateway_input
+            ),
+            "java_source_semantics_capability_qualification",
+        )
+        self.assertEqual(
+            world_model_runtime._dispatch_policy(3),
+            "THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY",
+        )
+
+    def test_source_semantics_answer_gateway_postcondition_requires_three_calls(self) -> None:
+        baseline = {
+            "entrypoint_sha256": "b" * 64,
+            "source_semantics_capability_freeze_digest": "sha256:" + "c" * 64,
+            "role": "QUALIFIED_CAPABILITY_BASELINE_ONLY",
+        }
+        gateway_core = {
+            "schema": "SWM-WORLD-MODEL-AUTHORIZED-GATEWAY@1",
+            "status": "PASS",
+            "evaluation_grant_digest": "sha256:" + "d" * 64,
+            "disclosure_authorization_digest": "sha256:" + "e" * 64,
+            "authorization_receipt_digest": "sha256:" + "f" * 64,
+            "qualified_gateway_baseline": baseline,
+            "provider_call_count": 3,
+            "https_dispatch_count": 3,
+            "server_statuses": ["RESULT", "RESULT", "RESULT"],
+            "dns_operation_count_in_dispatch_process": 0,
+            "credential_value_recorded": False,
+            "provider_connection_capability": (
+                "INHERITED_EXACT_CONNECTED_SOCKET"
+            ),
+            "gateway_listener_capability": (
+                "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
+            ),
+            "new_socket_syscall_capability": "DENIED_BY_SEATBELT",
+            "numeric_provider_address": "93.184.216.34",
+            "numeric_provider_address_scope": "PUBLIC_UNICAST",
+        }
+        gateway = {
+            **gateway_core,
+            "document_digest": digest_of(
+                ["SWM-WORLD-MODEL-AUTHORIZED-GATEWAY@1", gateway_core]
+            ).value,
+        }
+        answer = {
+            "status": "PASS",
+            "run_ref": "question-1",
+            "provider_call_count": 3,
+            "network_operation_count": 3,
+            "source_access_count": 0,
+            "evidence_payload_access_count": 0,
+            "authority_database_access_count": 0,
+            "product_oracle_read_count": 0,
+            "baseline_result_read_count": 0,
+            "credential_visible": False,
+            "resolved_snapshot_ids": ["structure_snapshot_" + "1" * 32],
+        }
+        payload = {
+            "resolved_snapshot_ids": ["structure_snapshot_" + "1" * 32]
+        }
+
+        world_model_runtime._verify_answer_gateway(
+            answer,
+            gateway,
+            payload,
+            "question-1",
+            evaluation_grant_digest=gateway_core["evaluation_grant_digest"],
+            disclosure_authorization_digest=(
+                gateway_core["disclosure_authorization_digest"]
+            ),
+            authorization_receipt_digest=(
+                gateway_core["authorization_receipt_digest"]
+            ),
+        )
+
+        broken = {**answer, "provider_call_count": 1}
+        with self.assertRaisesRegex(RuntimeError, "postcondition failed"):
+            world_model_runtime._verify_answer_gateway(
+                broken,
+                gateway,
+                payload,
+                "question-1",
+                evaluation_grant_digest=gateway_core[
+                    "evaluation_grant_digest"
+                ],
+                disclosure_authorization_digest=gateway_core[
+                    "disclosure_authorization_digest"
+                ],
+                authorization_receipt_digest=gateway_core[
+                    "authorization_receipt_digest"
+                ],
+            )
+
+    def test_source_semantics_answer_audit_requires_three_gateway_connections(self) -> None:
+        report = self.root / "answer-role-report.json"
+        report.write_bytes(
+            canonical_json_bytes(
+                {
+                    "status": "PASS",
+                    "role": "answer",
+                    "operation_audit": {
+                        "status": "PASS",
+                        "allowed_network_operations": {
+                            "unix_connect": 3,
+                            "unix_bind": 0,
+                            "provider_connect": 0,
+                        },
+                        "prohibited_counts": {
+                            "source_operations": 0,
+                        },
+                    },
+                }
+            )
+        )
+
+        world_model_runtime._verify_role_success(
+            report,
+            "answer",
+            expected_unix_connect_count=3,
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "answer normal workload audit"):
+            world_model_runtime._verify_role_success(
+                report,
+                "answer",
+                expected_unix_connect_count=1,
+            )
 
 
 if __name__ == "__main__":

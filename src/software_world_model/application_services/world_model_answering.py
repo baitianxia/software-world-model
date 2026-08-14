@@ -25,6 +25,7 @@ from software_world_model.cross_cutting import (
 from software_world_model.knowledge_engine.structure import (
     CanonicalFields,
     EntityType,
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     RelationPredicate,
 )
 
@@ -73,6 +74,7 @@ class OfflineStage(str, Enum):
 
 class EntitySelectorOrigin(str, Enum):
     MENTION = "MENTION"
+    IMPLEMENTATION_FEATURES = "IMPLEMENTATION_FEATURES"
     CALLER_EXACT_REF = "CALLER_EXACT_REF"
 
 
@@ -942,6 +944,7 @@ class WorldModelEntitySelectorProposal:
     max_candidates: int = 100
     entity_root_id: StableId | None = None
     entity_state_id: StableId | None = None
+    search_terms: tuple[str, ...] = ()
 
     def canonical_value(self) -> dict[str, object]:
         return {
@@ -960,6 +963,7 @@ class WorldModelEntitySelectorProposal:
             "entity_state_id": (
                 self.entity_state_id.value if self.entity_state_id else None
             ),
+            "search_terms": self.search_terms,
         }
 
 
@@ -2020,6 +2024,8 @@ class InMemoryWorldModelAuthorityStore:
 _ALLOWED_QUERY_OPERATIONS = (
     StructureViewOperation.CHILD_MODULE_INVENTORY,
     StructureViewOperation.DECLARED_METHOD_INVENTORY,
+    StructureViewOperation.IMPLEMENTATION_CANDIDATES,
+    StructureViewOperation.METHOD_IMPLEMENTATION,
     StructureViewOperation.DIRECT_NEIGHBORHOOD,
     StructureViewOperation.PATH_EXISTS,
     StructureViewOperation.ALL_SIMPLE_PATHS,
@@ -2036,6 +2042,16 @@ _QUERY_STEP_SCHEMAS: dict[
     ),
     StructureViewOperation.DECLARED_METHOD_INVENTORY: (
         frozenset({"java_type"}),
+        frozenset(),
+        frozenset(),
+    ),
+    StructureViewOperation.IMPLEMENTATION_CANDIDATES: (
+        frozenset(),
+        frozenset({"snapshot_id", "search_terms", "limit"}),
+        frozenset(),
+    ),
+    StructureViewOperation.METHOD_IMPLEMENTATION: (
+        frozenset({"method"}),
         frozenset(),
         frozenset(),
     ),
@@ -2065,6 +2081,8 @@ _QUERY_STEP_SCHEMAS: dict[
 _QUERY_STEP_DEFAULTS: dict[StructureViewOperation, CanonicalFields] = {
     StructureViewOperation.CHILD_MODULE_INVENTORY: CanonicalFields({}),
     StructureViewOperation.DECLARED_METHOD_INVENTORY: CanonicalFields({}),
+    StructureViewOperation.IMPLEMENTATION_CANDIDATES: CanonicalFields({}),
+    StructureViewOperation.METHOD_IMPLEMENTATION: CanonicalFields({}),
     StructureViewOperation.DIRECT_NEIGHBORHOOD: CanonicalFields(
         {
             "direction": NeighborhoodDirection.BOTH.value,
@@ -2967,8 +2985,38 @@ class WorldModelAnsweringService:
                 "WORLD_MODEL_QUERY_SELECTOR_UNUSED",
                 "every resolved Entity selector must be consumed by a query step",
             )
+        for selector in proposal.selectors:
+            if selector.origin is not EntitySelectorOrigin.IMPLEMENTATION_FEATURES:
+                continue
+            matching_search_steps = tuple(
+                step
+                for step in proposal.steps
+                if step.operation
+                is StructureViewOperation.IMPLEMENTATION_CANDIDATES
+                and step.need_ids == selector.need_ids
+                and step.parameters["snapshot_id"]
+                == selector.snapshot_id.value
+                and step.parameters["search_terms"] == selector.search_terms
+                and step.parameters["limit"] == selector.max_candidates
+            )
+            consuming_method_steps = tuple(
+                step
+                for step in proposal.steps
+                if step.operation is StructureViewOperation.METHOD_IMPLEMENTATION
+                and selector.selector_id in step.arguments.values()
+            )
+            if len(matching_search_steps) != 1 or len(consuming_method_steps) != 1:
+                raise _invalid(
+                    "WORLD_MODEL_IMPLEMENTATION_CHAIN_INVALID",
+                    "implementation method selection must bind one exact candidate Result and one method query",
+                )
         total_entity_candidates = sum(
             selector.max_candidates for selector in proposal.selectors
+        ) + sum(
+            int(step.parameters["limit"])
+            for step in proposal.steps
+            if step.operation
+            is StructureViewOperation.IMPLEMENTATION_CANDIDATES
         )
         total_paths = sum(
             int(step.parameters["max_paths"])
@@ -3092,6 +3140,7 @@ class WorldModelAnsweringService:
                 selector.mention is None
                 or selector.entity_root_id is not None
                 or selector.entity_state_id is not None
+                or selector.search_terms
             ):
                 raise _invalid(
                     "WORLD_MODEL_ENTITY_SELECTOR_SHAPE_INVALID",
@@ -3105,6 +3154,28 @@ class WorldModelAnsweringService:
                         "an exact entity qualifier must be present in the original caller question",
                     )
             return
+        if selector.origin is EntitySelectorOrigin.IMPLEMENTATION_FEATURES:
+            if (
+                selector.mention is not None
+                or selector.entity_type is not None
+                or selector.canonical_ga is not None
+                or selector.canonical_gav is not None
+                or selector.entity_root_id is not None
+                or selector.entity_state_id is not None
+                or not 1 <= len(selector.search_terms) <= 12
+                or any(
+                    not isinstance(item, str)
+                    or not item
+                    or item != item.strip()
+                    for item in selector.search_terms
+                )
+                or selector.max_candidates > 20
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_IMPLEMENTATION_SELECTOR_INVALID",
+                    "implementation feature selector has an invalid closed shape",
+                )
+            return
         if selector.origin is not EntitySelectorOrigin.CALLER_EXACT_REF:
             raise _invalid(
                 "WORLD_MODEL_ENTITY_SELECTOR_ORIGIN_INVALID",
@@ -3117,6 +3188,7 @@ class WorldModelAnsweringService:
             or selector.canonical_gav is not None
             or selector.entity_root_id is None
             or selector.entity_state_id is None
+            or selector.search_terms
         ):
             raise _invalid(
                 "WORLD_MODEL_CALLER_ENTITY_REF_SHAPE_INVALID",
@@ -3215,6 +3287,31 @@ class WorldModelAnsweringService:
                     "WORLD_MODEL_QUERY_DIFF_ORDER_INVALID",
                     "Snapshot diff must preserve adjacent caller-declared Read Set order",
                 )
+        if step.operation is StructureViewOperation.IMPLEMENTATION_CANDIDATES:
+            snapshot_id = _stable_parameter(parameters, "snapshot_id")
+            search_terms = parameters.get("search_terms")
+            limit = parameters.get("limit")
+            if snapshot_id not in read_authority.snapshot_ids:
+                raise _invalid(
+                    "WORLD_MODEL_QUERY_SNAPSHOT_OUTSIDE_READ_SET",
+                    "implementation search Snapshot is outside the exact Read Set",
+                )
+            if (
+                not isinstance(search_terms, tuple)
+                or not 1 <= len(search_terms) <= 12
+                or any(
+                    not isinstance(item, str)
+                    or not item
+                    or item != item.strip()
+                    for item in search_terms
+                )
+                or type(limit) is not int
+                or not 1 <= limit <= 20
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_IMPLEMENTATION_SEARCH_INVALID",
+                    "implementation search terms or limit are outside the closed contract",
+                )
 
     def _resolve_selector(
         self,
@@ -3237,6 +3334,20 @@ class WorldModelAnsweringService:
                 else None
             )
             limitations = result.limitations
+            candidate_result = result
+        elif selector.origin is EntitySelectorOrigin.IMPLEMENTATION_FEATURES:
+            result = self._view.implementation_candidates(
+                snapshot_id=selector.snapshot_id,
+                search_terms=selector.search_terms,
+                limit=selector.max_candidates,
+            )
+            status = _implementation_resolution_status(result)
+            argument = (
+                StructureEntityArgument.from_unique_candidate(result)
+                if status is EntityResolutionStatus.UNIQUE
+                else None
+            )
+            limitations = _implementation_resolution_limitations(result, status)
             candidate_result = result
         else:
             assert selector.entity_root_id is not None
@@ -3504,6 +3615,14 @@ class WorldModelAnsweringService:
             result = self._view.declared_method_inventory(
                 java_type=arguments["java_type"]
             )
+        elif step.operation is StructureViewOperation.IMPLEMENTATION_CANDIDATES:
+            result = self._view.implementation_candidates(
+                snapshot_id=_stable_parameter(parameters, "snapshot_id"),
+                search_terms=parameters["search_terms"],
+                limit=parameters["limit"],
+            )
+        elif step.operation is StructureViewOperation.METHOD_IMPLEMENTATION:
+            result = self._view.method_implementation(method=arguments["method"])
         elif step.operation is StructureViewOperation.DIRECT_NEIGHBORHOOD:
             result = self._view.direct_neighborhood(
                 entity=arguments["entity"],
@@ -3586,12 +3705,32 @@ class WorldModelAnsweringService:
         relevant_steps = tuple(
             item for item in plan.steps if need.need_id in item.need_ids
         )
+        implementation_gap_results = tuple(
+            results_by_step[item.step_id]
+            for item in relevant_steps
+            if item.state is QueryStepState.READY
+            and item.step_id in results_by_step
+            and item.operation is StructureViewOperation.IMPLEMENTATION_CANDIDATES
+            and results_by_step[item.step_id].view_result.payload.get(
+                "query_status"
+            )
+            == "KNOWLEDGE_GAP"
+        )
         if explicit_gap is not None:
             outcome = WorldModelNeedOutcome.KNOWLEDGE_GAP
             step_results: tuple[WorldModelQueryStepResult, ...] = ()
             gap_code = explicit_gap.reason_code.value
             gap_detail = explicit_gap.detail
             limitations: tuple[str, ...] = ()
+        elif implementation_gap_results:
+            outcome = WorldModelNeedOutcome.KNOWLEDGE_GAP
+            step_results = ()
+            gap_code = "IMPLEMENTATION_CANDIDATES_ZERO"
+            gap_detail = (
+                "The exact formal feature index contains no implementation "
+                "candidate for the validated search terms."
+            )
+            limitations = ()
         elif any(item.state is QueryStepState.BLOCKED for item in relevant_steps):
             outcome = WorldModelNeedOutcome.LIMITATION
             step_results = tuple(
@@ -5163,10 +5302,17 @@ def _validate_exported_authority_chain(
         argument = resolution.argument
         if candidate is not None:
             candidate.require_valid()
+            expected_candidate_operation = (
+                StructureViewOperation.ENTITY_CANDIDATES
+                if resolution.selector.origin is EntitySelectorOrigin.MENTION
+                else StructureViewOperation.IMPLEMENTATION_CANDIDATES
+                if resolution.selector.origin
+                is EntitySelectorOrigin.IMPLEMENTATION_FEATURES
+                else None
+            )
             if (
-                resolution.selector.origin is not EntitySelectorOrigin.MENTION
-                or candidate.operation
-                is not StructureViewOperation.ENTITY_CANDIDATES
+                expected_candidate_operation is None
+                or candidate.operation is not expected_candidate_operation
                 or candidate.session_id
                 != question.read_authority.session_id
                 or candidate.session_digest
@@ -5242,6 +5388,37 @@ def _validate_exported_authority_chain(
                 raise _invalid(
                     "WORLD_MODEL_EXPORTED_CANDIDATE_PROOF_MISMATCH",
                     "exported mention resolution differs from its exact candidate Result",
+                )
+        elif (
+            resolution.selector.origin
+            is EntitySelectorOrigin.IMPLEMENTATION_FEATURES
+        ):
+            if candidate is None:
+                raise _invalid(
+                    "WORLD_MODEL_EXPORTED_CANDIDATE_PROOF_MISSING",
+                    "exported implementation resolution lacks its candidate Result",
+                )
+            candidate_status = _implementation_resolution_status(candidate)
+            expected_argument = (
+                StructureEntityArgument.from_unique_candidate(candidate)
+                if candidate_status is EntityResolutionStatus.UNIQUE
+                else None
+            )
+            if (
+                resolution.status is not candidate_status
+                or resolution.limitations
+                != _implementation_resolution_limitations(
+                    candidate, candidate_status
+                )
+                or argument != expected_argument
+                or candidate.payload.get("search_terms_original")
+                != resolution.selector.search_terms
+                or candidate.payload.get("limit")
+                != resolution.selector.max_candidates
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_EXPORTED_IMPLEMENTATION_CANDIDATE_MISMATCH",
+                    "exported implementation resolution differs from its exact candidate Result",
                 )
         elif (
             resolution.selector.origin
@@ -5420,6 +5597,14 @@ def _validate_exported_result_and_assessment(
             expected_snapshot_ids = (
                 _stable_parameter(step.parameters, "base_snapshot_id"),
                 _stable_parameter(step.parameters, "target_snapshot_id"),
+            )
+        elif (
+            step is not None
+            and step.operation
+            is StructureViewOperation.IMPLEMENTATION_CANDIDATES
+        ):
+            expected_snapshot_ids = (
+                _stable_parameter(step.parameters, "snapshot_id"),
             )
         elif step is not None:
             expected_snapshot_ids = tuple(
@@ -6012,6 +6197,20 @@ def _execution_boundary_is_valid(
         )
     ):
         return False
+    if question.read_authority.profile_refs == (
+        JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+    ):
+        return (
+            len(model_invocations) == 3
+            and tuple(item.stage for item in model_invocations)
+            == (
+                OfflineStage.QUERY_PLANNING,
+                OfflineStage.ANSWER_DRAFTING,
+                OfflineStage.ANSWER_REVIEW,
+            )
+            and provider_call_count == 3
+            and network_operation_count == 3
+        )
     return (
         len(model_invocations) <= provider_call_count <= _MAX_PROVIDER_CALLS
         and network_operation_count == provider_call_count
@@ -6075,6 +6274,52 @@ def _is_negative_result(result: StructureViewResult) -> bool:
     if result.operation is StructureViewOperation.ALL_SIMPLE_PATHS:
         return result.payload.get("path_count") == 0
     return False
+
+
+def _implementation_resolution_status(
+    result: StructureViewResult,
+) -> EntityResolutionStatus:
+    if result.operation is not StructureViewOperation.IMPLEMENTATION_CANDIDATES:
+        raise _invalid(
+            "WORLD_MODEL_IMPLEMENTATION_CANDIDATE_RESULT_REQUIRED",
+            "implementation resolution requires an implementation candidate Result",
+        )
+    candidate_count = result.payload.get("candidate_count")
+    query_status = result.payload.get("query_status")
+    if type(candidate_count) is not int or candidate_count < 0:
+        raise _invalid(
+            "WORLD_MODEL_IMPLEMENTATION_CANDIDATE_RESULT_INVALID",
+            "implementation candidate Result has an invalid candidate count",
+        )
+    if query_status == "EXECUTION_FAILURE":
+        return EntityResolutionStatus.INCOMPLETE_COVERAGE
+    if query_status not in {"SUPPORTED", "KNOWLEDGE_GAP"}:
+        raise _invalid(
+            "WORLD_MODEL_IMPLEMENTATION_CANDIDATE_RESULT_INVALID",
+            "implementation candidate Result has an invalid query status",
+        )
+    if result.truncated:
+        return EntityResolutionStatus.TRUNCATED
+    if candidate_count == 0:
+        return EntityResolutionStatus.ZERO
+    if candidate_count == 1:
+        return EntityResolutionStatus.UNIQUE
+    return EntityResolutionStatus.AMBIGUOUS
+
+
+def _implementation_resolution_limitations(
+    result: StructureViewResult,
+    status: EntityResolutionStatus,
+) -> tuple[str, ...]:
+    if status in {
+        EntityResolutionStatus.ZERO,
+        EntityResolutionStatus.TRUNCATED,
+        EntityResolutionStatus.INCOMPLETE_COVERAGE,
+    }:
+        return result.limitations
+    if status is EntityResolutionStatus.AMBIGUOUS:
+        return ("IMPLEMENTATION_ENTITY_RESOLUTION_AMBIGUOUS",)
+    return ()
 
 
 def _negative_supported(result: StructureViewResult) -> bool:

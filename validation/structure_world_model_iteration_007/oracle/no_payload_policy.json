@@ -1,0 +1,27 @@
+{
+  "schema": "ITER-007-NO-PAYLOAD-ORACLE@1",
+  "forbidden_keys": [
+    "ast",
+    "body",
+    "comment",
+    "cst",
+    "evidence_payload",
+    "excerpt",
+    "expression",
+    "javadoc",
+    "method_body",
+    "parser_node",
+    "payload",
+    "raw_source",
+    "source",
+    "source_text",
+    "token_stream",
+    "tokens"
+  ],
+  "maximum_contiguous_source_token_run": 12,
+  "required_claims": [
+    "invalid-credentials-controls-record-and-throw",
+    "issue-session-call-result-is-returned-in-source-order",
+    "legacy-calls-preserved"
+  ]
+}

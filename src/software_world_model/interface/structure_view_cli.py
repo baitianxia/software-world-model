@@ -79,6 +79,19 @@ def build_parser() -> argparse.ArgumentParser:
     methods = commands.add_parser("methods")
     _add_entity_selector(methods, "java_type")
 
+    implementation_candidates = commands.add_parser("implementation-candidates")
+    implementation_candidates.add_argument("--snapshot-id", required=True)
+    implementation_candidates.add_argument(
+        "--search-term",
+        action="append",
+        required=True,
+        help="formal feature-search term; repeat from 1 through 12 times",
+    )
+    implementation_candidates.add_argument("--limit", type=int, default=10)
+
+    method_implementation = commands.add_parser("method-implementation")
+    _add_entity_selector(method_implementation, "method")
+
     neighborhood = commands.add_parser("neighborhood")
     _add_entity_selector(neighborhood, "entity")
     neighborhood.add_argument(
@@ -182,6 +195,20 @@ def _execute(
             return limitation, True
         assert java_type is not None
         return service.declared_method_inventory(java_type=java_type), False
+    if arguments.command == "implementation-candidates":
+        result = service.implementation_candidates(
+            snapshot_id=_stable_id(arguments.snapshot_id, "Snapshot ID"),
+            search_terms=tuple(arguments.search_term),
+            limit=arguments.limit,
+        )
+        return result, result.payload["query_status"] != "SUPPORTED"
+    if arguments.command == "method-implementation":
+        method, limitation = _entity_argument(service, arguments, "method")
+        if limitation is not None:
+            return limitation, True
+        assert method is not None
+        result = service.method_implementation(method=method)
+        return result, result.payload["query_status"] != "SUPPORTED"
     if arguments.command == "neighborhood":
         entity, limitation = _entity_argument(service, arguments, "entity")
         if limitation is not None:

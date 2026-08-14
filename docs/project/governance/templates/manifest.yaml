@@ -10,6 +10,14 @@ baseline:
 
 product_goal_alignment:
   target_ref: SYS-PRODUCT-SUCCESS
+  capability_path_ref: <roadmap-milestone-id>
+  capability_path_step: <current-step-id>
+  predecessor_result_refs: []
+  critical_assumption_ids: <comma-separated-A-number-ids>
+  # Proposal 的 exact Critical assumptions section；Readiness 接受前替换为真实摘要，禁止开发后改写假设原文。
+  critical_assumption_catalog_digest: <sha256-exact-proposal-assumption-catalog>
+  end_of_iteration_web_capability: <user-visible-capability-if-accepted>
+  next_blocking_gap: <next-earliest-unproved-capability>
   baseline_gap: <current-general-source-qa-gap>
   accepted_capability_refs: []
   new_capability_slice_refs: []
@@ -21,6 +29,16 @@ product_goal_alignment:
   held_out_suite_digest: <sha256-evaluator-owned-suite>
   baseline_result_digest: <sha256-exact-baseline-result>
   mature_source_agent_protocol_digest: <sha256-exact-comparison-protocol>
+  mature_source_agent_rubric_digest: <sha256-exact-rubric-and-adjudication-policy>
+  positive_value_metric: <precommitted-measurable-world-model-advantage>
+  positive_value_unit: <unit>
+  positive_value_comparison: <at-most-or-at-least>
+  positive_value_threshold: <non-negative-integer>
+  positive_value_reuse_horizon_questions: <positive-integer>
+  mature_source_agent_cache_policy_digest: <sha256-exact-baseline-cache-policy>
+  positive_value_protocol_digest: <sha256-exact-formula-input-and-replay-protocol>
+  positive_value_freeze_receipt_ref: <codex-user-message-sha256>
+  positive_value_adjudication_owner: <user-or-independent-evaluator>
   authorized_software_sources_digest: <sha256-source-scope-including-code-doc-config>
   held_out_question_count: <positive-integer>
   held_out_answerable_question_count: <positive-integer>
@@ -51,8 +69,24 @@ product_goal_alignment:
     executes_cross_domain_case_id: <V-XD-NNN>
   # 可选：后续 Slice 的正式 Web checkpoint；每项必须绑定同一 Slice 的跨域 Case。
   additional_web_checkpoint_bindings: {}
-  # 多 Slice 时，最终验证前的每个 Slice 都应有一个独立持有的隐藏 canary。
+  # 多 Slice 时，最终验证前的每个 Slice 都应有一个独立持有的隐藏 canary；每项冻结问题总数、answerable、两类互补 boundary
+  # 和关联的 early negative Case。
   early_hidden_canary_bindings: {}
+  # 第一段必须把同一 canary 绑定到成熟替代方案对照和逐层诊断；正向价值阈值在编码前冻结，不能只要求答案不退步。
+  early_comparison_binding: {}
+  early_diagnostic_binding: {}
+  # 每个 Slice 恰好一个。PASS 只表示复盘完成；success_decision 才表示方案可继续或可接受。
+  reflection_gate_bindings:
+    slice_001:
+      case_id: <V-REFLECT-NNN>
+      new_slice_ref: <current-slice-id>
+      # 本 Slice 已到期且成功时必须全部 SUPPORTED 的有序子集；后续只能增加，最终 Slice 必须覆盖全部 critical_assumption_ids。
+      assumption_ids: <ordered-due-assumption-subset>
+      # 每个尚未到期的假设都必须绑定一个本 Slice 的 early blocking Case；若该 Case FAIL，blocked Result 必须追加结构化 Verdict 行。
+      conditional_falsifier_bindings: {}
+      success_decision: <CONTINUE-or-ACCEPT>
+      decision_owner: <independent-product-architecture-quality-owner>
+      required_before_next_authorization_or_acceptance: true
   live_ad_hoc_question_checkpoint: <verification-case-id>
   live_ad_hoc_checkpoint_binding:
     case_id: <V-ADHOC-NNN>
@@ -72,12 +106,23 @@ source_scope:
 
 answer_protocol:
   contract_ref: <current-system-contract-id>
-  planner_model_calls: 1
+  mode: bounded-result-driven-world-model-investigation
+  max_investigation_steps: <positive-integer>
+  max_investigation_model_calls: <positive-integer>
+  planner_model_call_upper_bound: <same-positive-integer>
+  max_query_bytes_per_step: <positive-integer>
+  max_result_bytes_per_step: <positive-integer>
+  max_total_query_bytes_per_question: <positive-integer-at-least-per-step>
+  max_total_result_bytes_per_question: <positive-integer-at-least-per-step>
+  max_wall_time_milliseconds_per_question: <positive-integer>
+  max_support_items_per_question: <positive-integer>
+  max_trace_bytes_per_question: <positive-integer>
+  budget_exhaustion_behavior: fail-closed-with-explicit-limitation
   draft_model_calls: 1
   independent_reviewer_model_calls: 1
   deterministic_schema_grounding_and_authorization_checks: true
   retries_allowed: false
-  exact_total_model_calls_per_question: 3
+  total_model_call_upper_bound_per_question: <planner-upper-bound-plus-two>
   status: pending
 
 readiness_inputs:
@@ -103,6 +148,8 @@ development:
       status: proposed
       coding_input: false
       result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: <none-first-slice-or-not-executed>
       product_code_freeze_digest: not-executed
       authorized_by: not-authorized
       authorized_at: not-authorized

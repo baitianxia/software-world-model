@@ -4,13 +4,13 @@ kind: development-slice
 status: proposed
 authority: proposed-development
 owners: [engineering, quality]
-depends_on: [ITER-007-PROPOSAL, ITER-007-READINESS, ITER-007-SLICE-001, ITER-006-RESULT-LIVE-RUN-008]
+depends_on: [ITER-007-PROPOSAL, ITER-007-READINESS, ITER-007-SLICE-001, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE]
 code: [src/software_world_model/application_services, src/software_world_model/knowledge_engine, src/software_world_model/infrastructure, src/software_world_model/interface, src/software_world_model/ai_infrastructure]
 tests: [tests, validation]
 iteration: ITER-007
 coding_input: false
 product_goal_gate: V-000
-product_goal_accepted_capability_refs: [ITER-005-RESULT-ACCEPTANCE]
+product_goal_accepted_capability_refs: [ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-002]
 product_goal_web_checkpoint_id: V-WEB-002
 product_goal_live_ad_hoc_checkpoint_id: V-ADHOC-001
@@ -21,8 +21,9 @@ product_goal_slice_gate_case_ids: [V-XD-002, V-WEB-002, V-CANARY-002, V-006]
 
 ## Status and dependencies
 
-`PROPOSED / BLOCKED BY SLICE-001 AND ITER-006 ACCEPTANCE`。只有 SLICE-001 Product/Web Gate PASS 并被标记 completed 后才可单独
-授权本 Slice；SLICE-003 继续 proposed。本段不得接触 held-out 工程身份、源码或问题。
+`HISTORICAL PROPOSAL / NOT EXECUTED / PERMANENTLY NOT AUTHORIZABLE IN REJECTED ITER-007`。本 Slice 在原计划中依赖
+SLICE-001 PASS；该前提已经失败。frontmatter 保留 `proposed` 只为满足 rejected Iteration 的历史序列，不表示未来仍可授权。
+若以后需要其中任何内容，必须在新 Iteration 重新提案和授权。
 
 ## Product-goal contribution and cumulative integration
 
@@ -73,7 +74,8 @@ ITER-003—006 accepted behavior 必须回归。可见 corpus 与 held-out corpu
 5. ITER-003—006 回归及 method inventory 排序、调用方向、“异常路径”反例全部 PASS。
 6. 完成可见 Gate 后冻结本 Slice 产品代码，再由独立评测方披露并执行 `V-CANARY-002`；它必须走同一正式产品链且 PASS，才允许
    授权 SLICE-003；可回答问题给 Gap 不算 PASS。Slice Result 必须绑定 code-freeze、canary project/suite 和 disclosure receipt
-   digest，并报告曝光后产品变更数 0。曝光后任何产品改动都必须保留原失败、烧毁该 canary，并由独立方换全新工程和问题后重新冻结。
+   digest，并报告从披露到 Slice Result seal 的产品变更数 0。该窗口内任何产品改动都必须保留原结果、烧毁该 canary，并由独立方
+   换全新工程和问题后重新冻结；seal 后 capsule consumed，后续已授权 Slice 的改动不追溯改写本 Slice 结果。
 
 ## Findings
 

@@ -35,17 +35,19 @@ Build Objective
 
 ```text
 Explicit WORLD_MODEL request
-  → immutable Requirement Revision + Needs / Joint Constraints
+  → isolated Plan proposal: immutable Requirement + feature terms + generic Query Plan
   → resolve CURRENT once or accept exact Snapshot ID / ordered Read Set
   → verify no-payload exact Snapshot Read Bundle
   → open exact Read Session / Set
   → validate generic Query Plan
-  → seal profile-matched Structure/Behavior View / Query Result + Coverage + Support refs
+  → seal profile-matched Structure/Behavior/Implementation Query Result + Coverage + Support refs
   → assess every Need / Joint Constraint
-  → independent Review + Authorization + Delivery, or explicit Knowledge Gap
+  → isolated Draft from the sealed Query Result
+  → isolated Review from the original question + sealed inputs
+  → deterministic Authorization + Delivery, or fail-closed/explicit Knowledge Gap
 ```
 
-整个请求关闭 Source Provider 与 Knowledge Update Port。答案进程只挂载产品 package 与无 Evidence payload 的 exact Snapshot Read Bundle，不挂载权威数据库、Evidence Store 或来源工作树。答案生成和审核只能读取固定 Snapshot 的查询/View 结果；知识不足不回源、不更新、不伪装满足。新 Snapshot 只影响之后打开的 Session。引用正文由密封结果后的独立 Citation Projector 进程从另一存储投影到浏览器，不能回传答案链。
+整个请求关闭 Source Provider 与 Knowledge Update Port。答案进程只挂载产品 package 与无 Evidence payload 的 exact Snapshot Read Bundle，不挂载权威数据库、Evidence Store 或来源工作树。答案生成和审核只能读取固定 Snapshot 的查询/View 结果；知识不足不回源、不更新、不伪装满足。`JAVA_SOURCE_SEMANTICS@1` 使用 Plan、Draft、Review 三个隔离模型调用，其他已接受 Profile 在取得新资格前保持各自原调用协议，不能交叉复用资格。该 Profile 的固定 Ark transport 每次请求都发送 `Connection: close`，因此 evaluator supervisor 必须在 Answer 启动前为三个授权调用分别建立一个 exact connected socket；Gateway child 按 Plan → Draft → Review 顺序各消费一个 descriptor，不能复用连接或临时创建第四个 socket。新 Snapshot 只影响之后打开的 Session。引用正文由密封结果后的独立 Citation Projector 进程从另一存储投影到浏览器，不能回传答案链。
 
 ## 直接源码调查
 

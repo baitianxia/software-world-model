@@ -1472,6 +1472,7 @@ def _reconstruct_resolutions(
                 "max_candidates",
                 "entity_root_id",
                 "entity_state_id",
+                "search_terms",
             },
             f"selector {index}",
         )
