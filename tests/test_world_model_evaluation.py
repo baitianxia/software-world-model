@@ -228,6 +228,7 @@ class WorldModelEvaluationPageTests(unittest.TestCase):
         self.assertEqual(page["delivery"]["state"], "DELIVERED")
         self.assertEqual(page["execution_boundary"]["provider_call_count"], 0)
         self.assertEqual(page["execution_boundary"]["network_operation_count"], 0)
+        self.assertNotIn("investigation_trace", page["query_plan"])
 
     def test_candidate_ambiguity_projects_application_limitation(self):
         chain = self.answering_fixture._execute(
@@ -304,6 +305,11 @@ class WorldModelEvaluationPageTests(unittest.TestCase):
 
             page_digest = write_world_model_evaluation_page(
                 path, chain, _IMPLEMENTATION_COMMIT
+            )
+
+            envelope = json.loads(path.read_bytes())
+            self.assertEqual(
+                envelope["format_ref"], WORLD_MODEL_EVALUATION_PAGE_FORMAT
             )
 
             self.assertEqual(

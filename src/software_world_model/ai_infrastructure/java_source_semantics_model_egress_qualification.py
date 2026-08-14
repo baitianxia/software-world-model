@@ -23,7 +23,7 @@ from .model_egress_gateway import (
 )
 from .volcengine_ark_chat_adapter import VolcengineArkModelConfiguration
 from .versioned_world_model_answer_strategy import (
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     java_source_semantics_world_model_output_contract_digest,
     world_model_answer_prompt_program_digest,
     world_model_answer_strategy_implementation_digest,
@@ -145,7 +145,7 @@ def load_java_source_semantics_gateway_qualification_binding(
     assert isinstance(result, Mapping)
     assert isinstance(validity, Mapping)
     assert isinstance(qualification, Mapping)
-    contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
     if (
         definition.get("capability_id") != "world-model-authority-proposal"
         or definition.get("capability_contract_version")
@@ -158,7 +158,9 @@ def load_java_source_semantics_gateway_qualification_binding(
         or definition.get("prompt_program_digest")
         != world_model_answer_prompt_program_digest(contract).value
         or definition.get("output_schema_digest")
-        != java_source_semantics_world_model_output_contract_digest().value
+        != java_source_semantics_world_model_output_contract_digest(
+            contract
+        ).value
         or definition.get("metric_contract_digest")
         != digest_of(
             JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT
@@ -264,7 +266,7 @@ def _qualification_proof(document: Mapping[str, object]) -> QualificationProof:
 def _verify_policy(policy: Mapping[str, object]) -> None:
     contract_value = policy.get("proposal_contract")
     requirements = policy.get("qualification_requirements")
-    contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
     if (
         policy.get("schema")
         != "swm.iter-007.java-source-semantics-model-egress-gateway-policy@1"

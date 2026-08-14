@@ -39,6 +39,13 @@ from .structure_view import (
     StructureViewResult,
     StructureViewService,
 )
+from .bounded_world_model_investigation import (
+    BoundedInvestigationTrace,
+    InvestigationEntityRef,
+    InvestigationOperation,
+    InvestigationTerminalStatus,
+    validate_bounded_investigation_trace,
+)
 
 
 WORLD_MODEL_MODE = "WORLD_MODEL"
@@ -62,6 +69,12 @@ _MAX_TOTAL_ENTITY_CANDIDATES = 1_000
 _MAX_TOTAL_PATHS = 2_000
 _MAX_TOTAL_PATH_EXPANSIONS = 200_000
 _MAX_PROVIDER_CALLS = 5
+_LEGACY_FIXED_SEMANTICS_STRATEGY_REF = (
+    "model-snapshot-first-world-model-answer@1.2.2"
+)
+_BOUNDED_SEMANTICS_STRATEGY_REF = (
+    "model-snapshot-first-world-model-answer@1.3.0"
+)
 
 
 class OfflineStage(str, Enum):
@@ -75,6 +88,7 @@ class OfflineStage(str, Enum):
 class EntitySelectorOrigin(str, Enum):
     MENTION = "MENTION"
     IMPLEMENTATION_FEATURES = "IMPLEMENTATION_FEATURES"
+    SEALED_INVESTIGATION_RESULT = "SEALED_INVESTIGATION_RESULT"
     CALLER_EXACT_REF = "CALLER_EXACT_REF"
 
 
@@ -945,9 +959,11 @@ class WorldModelEntitySelectorProposal:
     entity_root_id: StableId | None = None
     entity_state_id: StableId | None = None
     search_terms: tuple[str, ...] = ()
+    source_result_id: StableId | None = None
+    source_result_digest: Digest | None = None
 
     def canonical_value(self) -> dict[str, object]:
-        return {
+        value: dict[str, object] = {
             "selector_id": self.selector_id,
             "need_ids": self.need_ids,
             "snapshot_id": self.snapshot_id.value,
@@ -965,6 +981,21 @@ class WorldModelEntitySelectorProposal:
             ),
             "search_terms": self.search_terms,
         }
+        if (
+            self.source_result_id is not None
+            or self.source_result_digest is not None
+        ):
+            value["source_result_id"] = (
+                self.source_result_id.value
+                if self.source_result_id is not None
+                else None
+            )
+            value["source_result_digest"] = (
+                self.source_result_digest.value
+                if self.source_result_digest is not None
+                else None
+            )
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -1032,6 +1063,7 @@ class WorldModelQueryPlanProposal:
     explicit_gaps: tuple[WorldModelGapProposal, ...]
     invocation_id: StableId
     invocation_digest: Digest
+    investigation_trace: BoundedInvestigationTrace | None = None
 
 
 class WorldModelQueryPlanner(Protocol):
@@ -1140,11 +1172,12 @@ class WorldModelQueryPlan:
     capability_registry_digest: Digest
     steps: tuple[WorldModelQueryStep, ...]
     explicit_gaps: tuple[WorldModelGapProposal, ...]
+    investigation_trace: BoundedInvestigationTrace | None
     read_authority: WorldModelReadAuthority
     digest: Digest
 
     def canonical_value(self) -> dict[str, object]:
-        return {
+        value: dict[str, object] = {
             "plan_id": self.plan_id.value,
             "question_id": self.question_id.value,
             "requirement_id": self.requirement_id.value,
@@ -1160,6 +1193,11 @@ class WorldModelQueryPlan:
             "read_authority": self.read_authority.canonical_value(),
             "digest": self.digest.value,
         }
+        if self.investigation_trace is not None:
+            value["investigation_trace"] = (
+                self.investigation_trace.canonical_value()
+            )
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -2350,13 +2388,33 @@ class WorldModelAnsweringService:
                 "WORLD_MODEL_QUERY_OPERATION_UNREGISTERED",
                 "query proposal contains an unregistered operation",
             )
+        if proposal.investigation_trace is not None:
+            validate_bounded_investigation_trace(
+                proposal.investigation_trace,
+                view=self._view,
+                question_digest=question.digest,
+            )
+            if (
+                proposal.investigation_trace.need_ids
+                != tuple(item.need_id for item in requirement.needs)
+                or question.read_authority.profile_refs
+                != (JAVA_SOURCE_SEMANTICS_PROFILE_REF,)
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_TRACE_BINDING_INVALID",
+                    "bounded investigation trace binds another Requirement or Profile",
+                )
         proposal = self._normalize_plan_proposal(proposal)
         self._validate_plan_proposal(
             question, requirement, proposal, self._read_authority
         )
         proposal_digest = _query_plan_proposal_digest(proposal)
         resolutions = tuple(
-            self._resolve_selector(question, selector)
+            self._resolve_selector(
+                question,
+                selector,
+                investigation_trace=proposal.investigation_trace,
+            )
             for selector in proposal.selectors
         )
         resolution_core = {
@@ -2418,6 +2476,10 @@ class WorldModelAnsweringService:
             ),
             "read_authority": self._read_authority.canonical_value(),
         }
+        if proposal.investigation_trace is not None:
+            core["investigation_trace"] = (
+                proposal.investigation_trace.canonical_value()
+            )
         identity = digest_of(["WORLD_MODEL_QUERY_PLAN_ID@1", core])
         plan_id = _stable("world_model_query_plan", identity)
         return self._store.save(
@@ -2434,6 +2496,7 @@ class WorldModelAnsweringService:
                 ),
                 steps=steps,
                 explicit_gaps=proposal.explicit_gaps,
+                investigation_trace=proposal.investigation_trace,
                 read_authority=self._read_authority,
                 digest=digest_of(
                     [
@@ -2920,7 +2983,11 @@ class WorldModelAnsweringService:
         used_selector_ids: set[str] = set()
         for selector in proposal.selectors:
             WorldModelAnsweringService._validate_selector(
-                question, selector, need_ids, read_authority
+                question,
+                selector,
+                need_ids,
+                read_authority,
+                proposal.investigation_trace,
             )
         for step in proposal.steps:
             if (
@@ -2984,6 +3051,10 @@ class WorldModelAnsweringService:
             raise _invalid(
                 "WORLD_MODEL_QUERY_SELECTOR_UNUSED",
                 "every resolved Entity selector must be consumed by a query step",
+            )
+        if proposal.investigation_trace is not None:
+            WorldModelAnsweringService._validate_investigation_plan_binding(
+                proposal
             )
         for selector in proposal.selectors:
             if selector.origin is not EntitySelectorOrigin.IMPLEMENTATION_FEATURES:
@@ -3111,7 +3182,165 @@ class WorldModelAnsweringService:
             explicit_gaps=proposal.explicit_gaps,
             invocation_id=proposal.invocation_id,
             invocation_digest=proposal.invocation_digest,
+            investigation_trace=proposal.investigation_trace,
         )
+
+    @staticmethod
+    def _validate_investigation_plan_binding(
+        proposal: WorldModelQueryPlanProposal,
+    ) -> None:
+        trace = proposal.investigation_trace
+        assert trace is not None
+        if proposal.explicit_gaps:
+            raise _invalid(
+                "WORLD_MODEL_INVESTIGATION_PLAN_GAP_INVALID",
+                "bounded investigation Plan cannot replace its trace with an explicit Gap",
+            )
+        selectors = {item.selector_id: item for item in proposal.selectors}
+
+        def ref_value(value: InvestigationEntityRef) -> tuple[str, ...]:
+            return (
+                value.source_result_id.value,
+                value.source_result_digest.value,
+                value.entity_root_id.value,
+                value.entity_state_id.value,
+            )
+
+        def selector_value(selector_id: object) -> tuple[str, ...]:
+            if not isinstance(selector_id, str) or selector_id not in selectors:
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_PLAN_SELECTOR_INVALID",
+                    "investigation Plan uses an unknown selector",
+                )
+            selector = selectors[selector_id]
+            if (
+                selector.origin
+                is not EntitySelectorOrigin.SEALED_INVESTIGATION_RESULT
+                or selector.source_result_id is None
+                or selector.source_result_digest is None
+                or selector.entity_root_id is None
+                or selector.entity_state_id is None
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_PLAN_SELECTOR_INVALID",
+                    "investigation Plan selector lacks sealed Result provenance",
+                )
+            return (
+                selector.source_result_id.value,
+                selector.source_result_digest.value,
+                selector.entity_root_id.value,
+                selector.entity_state_id.value,
+            )
+
+        expected: list[
+            tuple[
+                StructureViewOperation,
+                tuple[tuple[str, tuple[str, ...]], ...],
+                CanonicalFields,
+            ]
+        ] = []
+        for trace_step in trace.steps:
+            item = trace_step.proposal
+            if item.operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES:
+                assert item.snapshot_id is not None
+                assert item.limit is not None
+                expected.append(
+                    (
+                        StructureViewOperation.IMPLEMENTATION_CANDIDATES,
+                        (),
+                        CanonicalFields(
+                            {
+                                "snapshot_id": item.snapshot_id.value,
+                                "search_terms": item.search_terms,
+                                "limit": item.limit,
+                            }
+                        ),
+                    )
+                )
+            elif item.operation is InvestigationOperation.METHOD_IMPLEMENTATIONS:
+                expected.extend(
+                    (
+                        StructureViewOperation.METHOD_IMPLEMENTATION,
+                        (("method", ref_value(value)),),
+                        CanonicalFields({}),
+                    )
+                    for value in item.method_refs
+                )
+            elif item.operation is InvestigationOperation.DECLARED_METHOD_INVENTORY:
+                expected.append(
+                    (
+                        StructureViewOperation.DECLARED_METHOD_INVENTORY,
+                        (("java_type", ref_value(item.entity_refs[0])),),
+                        CanonicalFields({}),
+                    )
+                )
+            elif item.operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+                expected.append(
+                    (
+                        StructureViewOperation.DIRECT_NEIGHBORHOOD,
+                        (("entity", ref_value(item.entity_refs[0])),),
+                        CanonicalFields(
+                            {
+                                "direction": item.direction.value,
+                                "predicate": (
+                                    item.predicate.value
+                                    if item.predicate is not None
+                                    else None
+                                ),
+                            }
+                        ),
+                    )
+                )
+            elif item.operation in {
+                InvestigationOperation.PATH_EXISTS,
+                InvestigationOperation.ALL_SIMPLE_PATHS,
+            }:
+                parameters: dict[str, object] = {
+                    "predicate": item.predicate.value,
+                    "max_depth": item.max_depth,
+                    "max_expansions": item.max_expansions,
+                }
+                if item.operation is InvestigationOperation.ALL_SIMPLE_PATHS:
+                    parameters["max_paths"] = item.max_paths
+                expected.append(
+                    (
+                        (
+                            StructureViewOperation.PATH_EXISTS
+                            if item.operation is InvestigationOperation.PATH_EXISTS
+                            else StructureViewOperation.ALL_SIMPLE_PATHS
+                        ),
+                        (
+                            ("source", ref_value(item.entity_refs[0])),
+                            ("target", ref_value(item.entity_refs[1])),
+                        ),
+                        CanonicalFields(parameters),
+                    )
+                )
+            else:  # pragma: no cover - trace steps cannot contain FINISH
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_PLAN_OPERATION_INVALID",
+                    "investigation trace contains a terminal operation as a step",
+                )
+        actual = tuple(
+            (
+                step.operation,
+                tuple(
+                    (name, selector_value(selector_id))
+                    for name, selector_id in step.arguments.items()
+                ),
+                step.parameters,
+            )
+            for step in proposal.steps
+        )
+        if (
+            actual != tuple(expected)
+            or any(step.need_ids != trace.need_ids for step in proposal.steps)
+            or any(step.constraint_ids for step in proposal.steps)
+        ):
+            raise _invalid(
+                "WORLD_MODEL_INVESTIGATION_PLAN_TRACE_MISMATCH",
+                "Query Plan does not exactly replay the sealed investigation trace",
+            )
 
     @staticmethod
     def _validate_selector(
@@ -3119,6 +3348,7 @@ class WorldModelAnsweringService:
         selector: WorldModelEntitySelectorProposal,
         need_ids: set[str],
         read_authority: WorldModelReadAuthority,
+        investigation_trace: BoundedInvestigationTrace | None,
     ) -> None:
         _text(selector.selector_id, "entity selector ID")
         if (
@@ -3141,6 +3371,8 @@ class WorldModelAnsweringService:
                 or selector.entity_root_id is not None
                 or selector.entity_state_id is not None
                 or selector.search_terms
+                or selector.source_result_id is not None
+                or selector.source_result_digest is not None
             ):
                 raise _invalid(
                     "WORLD_MODEL_ENTITY_SELECTOR_SHAPE_INVALID",
@@ -3162,6 +3394,8 @@ class WorldModelAnsweringService:
                 or selector.canonical_gav is not None
                 or selector.entity_root_id is not None
                 or selector.entity_state_id is not None
+                or selector.source_result_id is not None
+                or selector.source_result_digest is not None
                 or not 1 <= len(selector.search_terms) <= 12
                 or any(
                     not isinstance(item, str)
@@ -3174,6 +3408,39 @@ class WorldModelAnsweringService:
                 raise _invalid(
                     "WORLD_MODEL_IMPLEMENTATION_SELECTOR_INVALID",
                     "implementation feature selector has an invalid closed shape",
+                )
+            return
+        if selector.origin is EntitySelectorOrigin.SEALED_INVESTIGATION_RESULT:
+            if (
+                investigation_trace is None
+                or selector.mention is not None
+                or selector.entity_type is not None
+                or selector.canonical_ga is not None
+                or selector.canonical_gav is not None
+                or selector.entity_root_id is None
+                or selector.entity_state_id is None
+                or selector.search_terms
+                or selector.source_result_id is None
+                or selector.source_result_digest is None
+                or selector.max_candidates != 1
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_SELECTOR_INVALID",
+                    "investigation selector has an invalid closed provenance shape",
+                )
+            source_result = investigation_trace.result(
+                selector.source_result_id,
+                selector.source_result_digest,
+            )
+            argument = StructureEntityArgument.from_result_member(
+                source_result,
+                entity_root_id=selector.entity_root_id,
+                entity_state_id=selector.entity_state_id,
+            )
+            if argument.snapshot_id != selector.snapshot_id:
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_SELECTOR_SNAPSHOT_MISMATCH",
+                    "investigation selector binds an Entity from another Snapshot",
                 )
             return
         if selector.origin is not EntitySelectorOrigin.CALLER_EXACT_REF:
@@ -3189,6 +3456,8 @@ class WorldModelAnsweringService:
             or selector.entity_root_id is None
             or selector.entity_state_id is None
             or selector.search_terms
+            or selector.source_result_id is not None
+            or selector.source_result_digest is not None
         ):
             raise _invalid(
                 "WORLD_MODEL_CALLER_ENTITY_REF_SHAPE_INVALID",
@@ -3317,6 +3586,8 @@ class WorldModelAnsweringService:
         self,
         question: WorldModelQuestion,
         selector: WorldModelEntitySelectorProposal,
+        *,
+        investigation_trace: BoundedInvestigationTrace | None = None,
     ) -> WorldModelEntityResolution:
         if selector.origin is EntitySelectorOrigin.MENTION:
             result = self._view.entity_candidates(
@@ -3349,6 +3620,29 @@ class WorldModelAnsweringService:
             )
             limitations = _implementation_resolution_limitations(result, status)
             candidate_result = result
+        elif selector.origin is EntitySelectorOrigin.SEALED_INVESTIGATION_RESULT:
+            if (
+                investigation_trace is None
+                or selector.source_result_id is None
+                or selector.source_result_digest is None
+                or selector.entity_root_id is None
+                or selector.entity_state_id is None
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_INVESTIGATION_SELECTOR_INVALID",
+                    "investigation selector lacks its sealed trace provenance",
+                )
+            candidate_result = investigation_trace.result(
+                selector.source_result_id,
+                selector.source_result_digest,
+            )
+            argument = StructureEntityArgument.from_result_member(
+                candidate_result,
+                entity_root_id=selector.entity_root_id,
+                entity_state_id=selector.entity_state_id,
+            )
+            status = EntityResolutionStatus.UNIQUE
+            limitations = ()
         else:
             assert selector.entity_root_id is not None
             assert selector.entity_state_id is not None
@@ -3400,8 +3694,13 @@ class WorldModelAnsweringService:
         self,
         question: WorldModelQuestion,
         resolution: WorldModelEntityResolution,
+        investigation_trace: BoundedInvestigationTrace | None = None,
     ) -> None:
-        replay = self._resolve_selector(question, resolution.selector)
+        replay = self._resolve_selector(
+            question,
+            resolution.selector,
+            investigation_trace=investigation_trace,
+        )
         if replay != resolution:
             raise _invalid(
                 "WORLD_MODEL_ENTITY_RESOLUTION_REPLAY_MISMATCH",
@@ -3467,7 +3766,11 @@ class WorldModelAnsweringService:
                 "Query Plan authority chain is inconsistent",
             )
         for resolution in resolution_set.resolutions:
-            self._verify_resolution_for_question(question, resolution)
+            self._verify_resolution_for_question(
+                question,
+                resolution,
+                plan.investigation_trace,
+            )
         resolution_core = {
             "question_id": question.question_id.value,
             "requirement_id": requirement.requirement_id.value,
@@ -3525,6 +3828,12 @@ class WorldModelAnsweringService:
                 "WORLD_MODEL_QUERY_PLAN_STEP_MISMATCH",
                 "Query Plan steps do not match exact candidate authority",
             )
+        if plan.investigation_trace is not None:
+            validate_bounded_investigation_trace(
+                plan.investigation_trace,
+                view=self._view,
+                question_digest=question.digest,
+            )
         reconstructed_proposal = WorldModelQueryPlanProposal(
             requirement_id=requirement.requirement_id,
             requirement_digest=requirement.digest,
@@ -3547,6 +3856,7 @@ class WorldModelAnsweringService:
             explicit_gaps=plan.explicit_gaps,
             invocation_id=plan.planning_invocation.invocation_id,
             invocation_digest=plan.planning_invocation.digest,
+            investigation_trace=plan.investigation_trace,
         )
         if self._normalize_plan_proposal(reconstructed_proposal) != (
             reconstructed_proposal
@@ -3716,21 +4026,66 @@ class WorldModelAnsweringService:
             )
             == "KNOWLEDGE_GAP"
         )
+        implementation_candidate_results = tuple(
+            results_by_step[item.step_id]
+            for item in relevant_steps
+            if item.state is QueryStepState.READY
+            and item.step_id in results_by_step
+            and item.operation
+            is StructureViewOperation.IMPLEMENTATION_CANDIDATES
+        )
+        implementation_method_results = tuple(
+            results_by_step[item.step_id]
+            for item in relevant_steps
+            if item.state is QueryStepState.READY
+            and item.step_id in results_by_step
+            and item.operation is StructureViewOperation.METHOD_IMPLEMENTATION
+        )
+        trace = plan.investigation_trace
         if explicit_gap is not None:
             outcome = WorldModelNeedOutcome.KNOWLEDGE_GAP
             step_results: tuple[WorldModelQueryStepResult, ...] = ()
             gap_code = explicit_gap.reason_code.value
             gap_detail = explicit_gap.detail
             limitations: tuple[str, ...] = ()
-        elif implementation_gap_results:
-            outcome = WorldModelNeedOutcome.KNOWLEDGE_GAP
+        elif (
+            trace is not None
+            and trace.terminal_status is InvestigationTerminalStatus.LIMITATION
+        ):
+            outcome = WorldModelNeedOutcome.LIMITATION
             step_results = ()
-            gap_code = "IMPLEMENTATION_CANDIDATES_ZERO"
-            gap_detail = (
-                "The exact formal feature index contains no implementation "
-                "candidate for the validated search terms."
-            )
-            limitations = ()
+            gap_code = None
+            gap_detail = None
+            limitations = (trace.terminal_reason,)
+        elif (
+            implementation_gap_results
+            and len(implementation_gap_results)
+            == len(implementation_candidate_results)
+            and not implementation_method_results
+        ):
+            step_results = ()
+            if trace is not None and trace.completeness.bounded_absence_allowed:
+                outcome = WorldModelNeedOutcome.KNOWLEDGE_GAP
+                gap_code = "BOUNDED_ABSENCE"
+                gap_detail = (
+                    "The exact query closure, representation Coverage, and "
+                    "pre-question business-discovery Oracle jointly prove no "
+                    "matching implementation in the bounded Snapshot."
+                )
+                limitations = ()
+            elif trace is not None:
+                outcome = WorldModelNeedOutcome.LIMITATION
+                gap_code = None
+                gap_detail = None
+                limitations = trace.completeness.missing_limitation_codes
+            else:
+                outcome = WorldModelNeedOutcome.KNOWLEDGE_GAP
+                gap_code = "IMPLEMENTATION_CANDIDATES_ZERO"
+                gap_detail = (
+                    "The exact formal feature index contains no implementation "
+                    "candidate for the validated search terms."
+                )
+                limitations = ()
         elif any(item.state is QueryStepState.BLOCKED for item in relevant_steps):
             outcome = WorldModelNeedOutcome.LIMITATION
             step_results = tuple(
@@ -5308,6 +5663,9 @@ def _validate_exported_authority_chain(
                 else StructureViewOperation.IMPLEMENTATION_CANDIDATES
                 if resolution.selector.origin
                 is EntitySelectorOrigin.IMPLEMENTATION_FEATURES
+                else candidate.operation
+                if resolution.selector.origin
+                is EntitySelectorOrigin.SEALED_INVESTIGATION_RESULT
                 else None
             )
             if (
@@ -5422,6 +5780,46 @@ def _validate_exported_authority_chain(
                 )
         elif (
             resolution.selector.origin
+            is EntitySelectorOrigin.SEALED_INVESTIGATION_RESULT
+        ):
+            trace = plan.investigation_trace
+            selector = resolution.selector
+            if (
+                trace is None
+                or candidate is None
+                or argument is None
+                or selector.source_result_id is None
+                or selector.source_result_digest is None
+                or selector.entity_root_id is None
+                or selector.entity_state_id is None
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_EXPORTED_INVESTIGATION_PROOF_MISSING",
+                    "exported investigation resolution lacks exact trace provenance",
+                )
+            source_result = trace.result(
+                selector.source_result_id,
+                selector.source_result_digest,
+            )
+            expected_argument = StructureEntityArgument.from_result_member(
+                source_result,
+                entity_root_id=selector.entity_root_id,
+                entity_state_id=selector.entity_state_id,
+            )
+            if (
+                candidate != source_result
+                or argument != expected_argument
+                or argument.origin
+                is not StructureViewArgumentOrigin.SEALED_RESULT_MEMBER
+                or resolution.status is not EntityResolutionStatus.UNIQUE
+                or resolution.limitations
+            ):
+                raise _invalid(
+                    "WORLD_MODEL_EXPORTED_INVESTIGATION_PROOF_MISMATCH",
+                    "exported investigation resolution differs from its sealed Result member",
+                )
+        elif (
+            resolution.selector.origin
             is not EntitySelectorOrigin.CALLER_EXACT_REF
             or candidate is not None
             or resolution.status is not EntityResolutionStatus.UNIQUE
@@ -5451,6 +5849,26 @@ def _validate_exported_plan(chain: WorldModelAuthorityChain) -> None:
     requirement = chain.requirement
     resolutions = chain.resolutions
     plan = chain.plan
+    if plan.investigation_trace is not None:
+        trace = plan.investigation_trace
+        trace.require_valid()
+        if (
+            trace.question_digest != chain.question.digest
+            or trace.need_ids != tuple(item.need_id for item in requirement.needs)
+            or trace.session_id != chain.question.read_authority.session_id
+            or trace.session_digest != chain.question.read_authority.session_digest
+            or trace.read_set_digest
+            != chain.question.read_authority.read_set_digest
+            or trace.ordered_bundle_digest
+            != chain.question.read_authority.ordered_bundle_digest
+            or trace.snapshot_ids != chain.question.read_authority.snapshot_ids
+            or trace.snapshot_bundle_digests
+            != chain.question.read_authority.snapshot_bundle_digests
+        ):
+            raise _invalid(
+                "WORLD_MODEL_EXPORTED_INVESTIGATION_TRACE_MISMATCH",
+                "exported investigation trace binds another authority chain",
+            )
     _require_stable_record(
         plan,
         id_field="plan_id",
@@ -5511,6 +5929,7 @@ def _validate_exported_plan(chain: WorldModelAuthorityChain) -> None:
         explicit_gaps=plan.explicit_gaps,
         invocation_id=plan.planning_invocation.invocation_id,
         invocation_digest=plan.planning_invocation.digest,
+        investigation_trace=plan.investigation_trace,
     )
     if WorldModelAnsweringService._normalize_plan_proposal(
         reconstructed
@@ -6200,17 +6619,25 @@ def _execution_boundary_is_valid(
     if question.read_authority.profile_refs == (
         JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     ):
-        return (
-            len(model_invocations) == 3
-            and tuple(item.stage for item in model_invocations)
-            == (
+        if (
+            len(model_invocations) != 3
+            or tuple(item.stage for item in model_invocations)
+            != (
                 OfflineStage.QUERY_PLANNING,
                 OfflineStage.ANSWER_DRAFTING,
                 OfflineStage.ANSWER_REVIEW,
             )
-            and provider_call_count == 3
-            and network_operation_count == 3
-        )
+        ):
+            return False
+        strategy_refs = {item.strategy_ref for item in model_invocations}
+        if strategy_refs == {_LEGACY_FIXED_SEMANTICS_STRATEGY_REF}:
+            return provider_call_count == network_operation_count == 3
+        if strategy_refs == {_BOUNDED_SEMANTICS_STRATEGY_REF}:
+            return (
+                4 <= provider_call_count <= 6
+                and network_operation_count == provider_call_count
+            )
+        return False
     return (
         len(model_invocations) <= provider_call_count <= _MAX_PROVIDER_CALLS
         and network_operation_count == provider_call_count
@@ -6220,24 +6647,29 @@ def _execution_boundary_is_valid(
 def _query_plan_proposal_digest(
     proposal: WorldModelQueryPlanProposal,
 ) -> Digest:
+    core: dict[str, object] = {
+        "requirement_id": proposal.requirement_id.value,
+        "requirement_digest": proposal.requirement_digest.value,
+        "read_set_digest": proposal.read_set_digest.value,
+        "ordered_bundle_digest": proposal.ordered_bundle_digest.value,
+        "selectors": tuple(
+            item.canonical_value() for item in proposal.selectors
+        ),
+        "steps": tuple(item.canonical_value() for item in proposal.steps),
+        "explicit_gaps": tuple(
+            item.canonical_value() for item in proposal.explicit_gaps
+        ),
+        "invocation_id": proposal.invocation_id.value,
+        "invocation_digest": proposal.invocation_digest.value,
+    }
+    if proposal.investigation_trace is not None:
+        core["investigation_trace"] = (
+            proposal.investigation_trace.canonical_value()
+        )
     return digest_of(
         [
             "WORLD_MODEL_QUERY_PLAN_PROPOSAL@1",
-            {
-                "requirement_id": proposal.requirement_id.value,
-                "requirement_digest": proposal.requirement_digest.value,
-                "read_set_digest": proposal.read_set_digest.value,
-                "ordered_bundle_digest": proposal.ordered_bundle_digest.value,
-                "selectors": tuple(
-                    item.canonical_value() for item in proposal.selectors
-                ),
-                "steps": tuple(item.canonical_value() for item in proposal.steps),
-                "explicit_gaps": tuple(
-                    item.canonical_value() for item in proposal.explicit_gaps
-                ),
-                "invocation_id": proposal.invocation_id.value,
-                "invocation_digest": proposal.invocation_digest.value,
-            },
+            core,
         ]
     )
 

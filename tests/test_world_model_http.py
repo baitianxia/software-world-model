@@ -173,6 +173,17 @@ class _WrongIdentityExecutor(_Executor):
 
 
 class DynamicWorldModelHttpTests(unittest.TestCase):
+    def test_health_accepts_bounded_four_to_six_dispatch_policy(self) -> None:
+        health = _Executor().health()
+        health["dispatch_policy"] = (
+            "FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
+        )
+
+        self.assertEqual(
+            DynamicCatalogWorldModelRunner._validated_health(health),
+            health,
+        )
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

@@ -8,7 +8,9 @@ from software_world_model.ai_infrastructure import (
     GENERIC_QUERY_PLANNING,
     IMPLEMENTATION_ANSWER_DRAFTING,
     IMPLEMENTATION_ANSWER_REVIEW,
+    IMPLEMENTATION_INVESTIGATION,
     IMPLEMENTATION_QUERY_PLANNING,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_ANSWER_PROMPT_REF,
@@ -142,7 +144,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
 
         self.assertEqual(gateway.contexts, [])
 
-    def test_java_source_semantics_contract_has_three_closed_role_schemas(self):
+    def test_fixed_java_source_semantics_contract_has_three_closed_role_schemas(self):
         outputs = (
             {
                 "need_key": "implementation-answer",
@@ -177,7 +179,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             gateway,
             configuration(),
             proposal_contract=(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
             ),
         )
 
@@ -186,7 +188,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             capability=IMPLEMENTATION_QUERY_PLANNING,
             sealed_input={"original_question": "How is this implemented?"},
             available_operations=(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
             ),
         )
         draft = strategy.propose(
@@ -223,11 +225,48 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
                     include_java_source_semantics=True
                 )
             ),
-            10,
+            11,
         )
         self.assertNotEqual(
-            java_source_semantics_world_model_output_contract_digest(),
+            java_source_semantics_world_model_output_contract_digest(
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
             world_model_answer_output_contract_digest(),
+        )
+
+    def test_active_java_source_semantics_contract_is_bounded_investigation(self):
+        contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+
+        self.assertEqual(contract.strategy_version, "1.3.0")
+        self.assertEqual(
+            contract.capabilities,
+            (
+                IMPLEMENTATION_INVESTIGATION,
+                IMPLEMENTATION_ANSWER_DRAFTING,
+                IMPLEMENTATION_ANSWER_REVIEW,
+            ),
+        )
+        self.assertEqual(
+            contract.available_operations,
+            (
+                "implementation_candidates",
+                "method_implementations",
+                "declared_method_inventory",
+                "direct_neighborhood",
+                "path_exists",
+                "all_simple_paths",
+                "FINISH",
+            ),
+        )
+        self.assertEqual(
+            len(world_model_answer_output_schemas(include_java_source_semantics=True)),
+            11,
+        )
+        self.assertNotEqual(
+            java_source_semantics_world_model_output_contract_digest(contract),
+            java_source_semantics_world_model_output_contract_digest(
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
         )
 
     def test_java_source_semantics_prompt_and_review_vocabulary_are_closed(self):

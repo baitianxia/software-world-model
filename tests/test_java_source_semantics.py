@@ -20,7 +20,15 @@ from software_world_model.application_services.java_static_call import (
     JavaSourceEvidenceMetadata,
 )
 from software_world_model.application_services.knowledge_use import TaskBoundary
+from software_world_model.application_services.world_model_answering import (
+    WorldModelAnsweringService,
+    WorldModelQueryPlanProposal,
+    WorldModelQueryStepProposal,
+)
 from software_world_model.application_services.structure_read_bundle import (
+    JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF,
+    StructureBusinessDiscoveryRecallBinding,
+    StructureBusinessDiscoveryRecallVerdict,
     StructureOrderedReadBundle,
     StructureSnapshotBundleReference,
 )
@@ -34,12 +42,12 @@ from software_world_model.application_services.structure_view import (
     StructureViewService,
 )
 from software_world_model.ai_infrastructure.model_egress_gateway import (
-    JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
+    BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
 )
 from software_world_model.ai_infrastructure.versioned_world_model_answer_strategy import (
     IMPLEMENTATION_ANSWER_DRAFTING,
     IMPLEMENTATION_ANSWER_REVIEW,
-    IMPLEMENTATION_QUERY_PLANNING,
+    IMPLEMENTATION_INVESTIGATION,
 )
 from software_world_model.application_services.maven_structure import GitEntryMetadata
 from software_world_model.cross_cutting import (
@@ -58,6 +66,7 @@ from software_world_model.infrastructure.file_structure_read_bundle import (
     FileStructureReadBundleStore,
 )
 from software_world_model.knowledge_engine.structure import (
+    JAVA_SOURCE_SEMANTICS_PROFILE_REF,
     EntityType,
     JavaImplementationAtomKind,
     JavaSemanticDisposition,
@@ -73,10 +82,11 @@ from software_world_model.interface.world_model_product import (
     WorldModelProductAnswerService,
 )
 from software_world_model.interface.world_model_evaluation import (
+    BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT,
     world_model_evaluation_page_payload,
 )
 from software_world_model.interface.world_model_runtime_assets import (
-    java_source_semantics_answer_workload,
+    bounded_java_source_semantics_answer_workload,
 )
 from tests import test_structure_publication as _publication_tests
 from tests.test_java_static_call import _snapshot_bundle
@@ -182,7 +192,11 @@ def _method_signature(record: object) -> str:
 class _QualifiedSemanticsFixtureModel:
     strategy_ref = JAVA_SOURCE_SEMANTICS_PRODUCT_STRATEGY_REF
 
-    def __init__(self, *, search_terms: tuple[str, ...] = ("credentials",)) -> None:
+    def __init__(
+        self,
+        *,
+        search_terms: tuple[str, ...] = ("credentials", "failure", "session"),
+    ) -> None:
         self.provider_call_count = 0
         self.network_operation_count = 0
         self.capabilities: list[str] = []
@@ -202,15 +216,80 @@ class _QualifiedSemanticsFixtureModel:
         self.network_operation_count += 1
         self.capabilities.append(capability)
         self.sealed_inputs.append(sealed_input)
-        if capability == IMPLEMENTATION_QUERY_PLANNING:
+        if capability == IMPLEMENTATION_INVESTIGATION:
+            step_index = sealed_input["step_index"]
+            base = {
+                "step_index": step_index,
+                "trace_digest": sealed_input["trace_digest"],
+                "operation": "FINISH",
+                "snapshot_id": None,
+                "search_terms": [],
+                "limit": None,
+                "candidate_result_id": None,
+                "candidate_result_digest": None,
+                "method_refs": [],
+                "entity_refs": [],
+                "direction": None,
+                "predicate": None,
+                "max_depth": None,
+                "max_paths": None,
+                "max_expansions": None,
+                "finish_reason": "typed-support-or-boundary-complete",
+            }
+            if step_index == 1:
+                return SimpleNamespace(
+                    normalized_result={
+                        **base,
+                        "operation": "implementation_candidates",
+                        "snapshot_id": sealed_input["read_authority"][
+                            "snapshot_ids"
+                        ][-1],
+                        "search_terms": list(self.search_terms),
+                        "limit": 5,
+                        "finish_reason": None,
+                    }
+                )
+            previous = sealed_input["previous_result"]
+            if step_index == 2:
+                candidate_result = previous["results"][0]
+                candidates = candidate_result["payload"]["candidates"]
+                if candidates:
+                    return SimpleNamespace(
+                        normalized_result={
+                            **base,
+                            "operation": "method_implementations",
+                            "candidate_result_id": candidate_result["result_id"],
+                            "candidate_result_digest": candidate_result["digest"],
+                            "method_refs": [
+                                {
+                                    "source_result_id": candidate_result[
+                                        "result_id"
+                                    ],
+                                    "source_result_digest": candidate_result[
+                                        "digest"
+                                    ],
+                                    "entity_root_id": item["method"]["root_id"],
+                                    "entity_state_id": item["method"]["state_id"],
+                                }
+                                for item in candidates[:3]
+                            ],
+                            "finish_reason": None,
+                        }
+                    )
+                return SimpleNamespace(
+                    normalized_result={
+                        **base,
+                        "operation": "implementation_candidates",
+                        "snapshot_id": sealed_input["read_authority"][
+                            "snapshot_ids"
+                        ][-1],
+                        "search_terms": ["alternateDiscoveryEntry"],
+                        "limit": 5,
+                        "finish_reason": None,
+                    }
+                )
             return SimpleNamespace(
-                normalized_result={
-                    "need_key": sealed_input["need_key"],
-                    "snapshot": sealed_input["read_authority"]["snapshot_ids"][-1],
-                    "operations": list(available_operations),
-                    "search_terms": list(self.search_terms),
-                    "limit": 5,
-                }
+                normalized_result=base
             )
         if capability == IMPLEMENTATION_ANSWER_DRAFTING:
             disposition = sealed_input["assessment_disposition"]
@@ -257,8 +336,12 @@ class _QualifiedSemanticsFixtureModel:
 
 
 class _FormalSemanticsFixtureModel(_QualifiedSemanticsFixtureModel):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        *,
+        search_terms: tuple[str, ...] = ("credentials", "failure", "session"),
+    ) -> None:
+        super().__init__(search_terms=search_terms)
         self.audits: list[object] = []
 
     def propose(self, **arguments) -> object:
@@ -311,6 +394,35 @@ class _InvalidReviewCodeFixtureModel(_QualifiedSemanticsFixtureModel):
                 "finding_codes": ["DRAFT_OMITS_QUERY_RESULT_ATOMS"],
             }
         )
+
+
+class _MixedPositiveAndZeroCandidateFixtureModel(
+    _QualifiedSemanticsFixtureModel
+):
+    def propose(self, **arguments) -> object:
+        proposal = super().propose(**arguments)
+        sealed_input = arguments["sealed_input"]
+        if (
+            arguments["capability"] == IMPLEMENTATION_INVESTIGATION
+            and sealed_input["step_index"] == 2
+        ):
+            normalized = proposal.normalized_result
+            return SimpleNamespace(
+                normalized_result={
+                    **normalized,
+                    "operation": "implementation_candidates",
+                    "snapshot_id": sealed_input["read_authority"][
+                        "snapshot_ids"
+                    ][-1],
+                    "search_terms": ["definitelyAbsentFeature"],
+                    "limit": 5,
+                    "candidate_result_id": None,
+                    "candidate_result_digest": None,
+                    "method_refs": [],
+                    "finish_reason": None,
+                }
+            )
+        return proposal
 
 
 class JavaSourceSemanticsEvaluatorTests(TestCase):
@@ -578,6 +690,31 @@ class JavaImplementationViewTests(TestCase):
         self.session = session
         self.service = StructureViewService(envelope, ((bundle, file_digest),))
 
+    def _view_with_complete_discovery_recall(self) -> StructureViewService:
+        recall = StructureBusinessDiscoveryRecallBinding.create(
+            oracle_ref="fixture-pre-question-discovery-oracle@1",
+            oracle_result_digest=digest_of(
+                "fixture-pre-question-discovery-result"
+            ),
+            profile_ref=JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+            discovery_contract_ref=(
+                JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF
+            ),
+            snapshot_id=self.snapshot_id,
+            snapshot_bundle_digest=self.bundle.digest,
+            counterexample_classes=("naming", "synonym", "alternate-entry"),
+            verdict=StructureBusinessDiscoveryRecallVerdict.COMPLETE,
+        )
+        envelope = StructureOrderedReadBundle.create(
+            session=self.session,
+            snapshots=self.envelope.snapshots,
+            business_discovery_recall_bindings=(recall,),
+        )
+        return StructureViewService(
+            envelope,
+            ((self.bundle, envelope.snapshots[0].file_digest),),
+        )
+
     def test_feature_search_ranks_cross_domain_method_without_symbol_input(self) -> None:
         result = self.service.implementation_candidates(
             snapshot_id=self.snapshot_id,
@@ -636,7 +773,7 @@ class JavaImplementationViewTests(TestCase):
         self.assertNotIn("if (!credentialsValid)", serialized)
         self.assertNotIn("throw new IllegalStateException", serialized)
 
-    def test_product_uses_exact_three_call_generic_implementation_chain(self) -> None:
+    def test_product_uses_bounded_multi_method_implementation_chain(self) -> None:
         model = _QualifiedSemanticsFixtureModel()
 
         execution = WorldModelProductAnswerService(
@@ -656,29 +793,45 @@ class JavaImplementationViewTests(TestCase):
         self.assertEqual(
             model.capabilities,
             [
-                IMPLEMENTATION_QUERY_PLANNING,
+                IMPLEMENTATION_INVESTIGATION,
+                IMPLEMENTATION_INVESTIGATION,
+                IMPLEMENTATION_INVESTIGATION,
                 IMPLEMENTATION_ANSWER_DRAFTING,
                 IMPLEMENTATION_ANSWER_REVIEW,
             ],
         )
-        self.assertEqual(execution.chain.provider_call_count, 3)
-        self.assertEqual(execution.chain.network_operation_count, 3)
-        self.assertEqual(len(execution.model_proposals), 3)
+        self.assertEqual(execution.chain.provider_call_count, 5)
+        self.assertEqual(execution.chain.network_operation_count, 5)
+        self.assertEqual(len(execution.model_proposals), 5)
         self.assertEqual(
             tuple(item.operation for item in execution.chain.plan.steps),
             (
                 StructureViewOperation.IMPLEMENTATION_CANDIDATES,
                 StructureViewOperation.METHOD_IMPLEMENTATION,
+                StructureViewOperation.METHOD_IMPLEMENTATION,
+                StructureViewOperation.METHOD_IMPLEMENTATION,
             ),
         )
-        self.assertEqual(len(execution.chain.result_set.step_results), 2)
-        method_result = execution.chain.result_set.step_results[1].view_result
-        self.assertEqual(method_result.payload["query_status"], "SUPPORTED")
-        self.assertEqual(len(method_result.payload["legacy_calls"]), 2)
+        self.assertEqual(len(execution.chain.result_set.step_results), 4)
+        method_results = tuple(
+            item.view_result
+            for item in execution.chain.result_set.step_results[1:]
+        )
+        self.assertTrue(
+            all(item.payload["query_status"] == "SUPPORTED" for item in method_results)
+        )
+        self.assertEqual(
+            tuple(item.payload["canonical_signature"] for item in method_results),
+            (
+                "dev.acme.auth.LoginService#authenticate(boolean)",
+                "dev.acme.auth.LoginService#issueSession()",
+                "dev.acme.auth.LoginService#recordFailure()",
+            ),
+        )
         self.assertIn("记录失败并抛出异常", execution.chain.draft.body)
         self.assertEqual(
             execution.chain.question.model_route,
-            JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
+            BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
         )
         planning_input = json.dumps(
             model.sealed_inputs[0], ensure_ascii=False, sort_keys=True
@@ -689,11 +842,42 @@ class JavaImplementationViewTests(TestCase):
             execution.chain,
             "0" * 40,
         )
-        self.assertEqual(page["execution_boundary"]["provider_call_count"], 3)
+        self.assertEqual(page["execution_boundary"]["provider_call_count"], 5)
         self.assertEqual(
-            page["candidate_resolutions"]["resolutions"][0]["status"],
-            "UNIQUE",
+            [item["status"] for item in page["candidate_resolutions"]["resolutions"]],
+            ["UNIQUE", "UNIQUE", "UNIQUE"],
         )
+
+        plan = execution.chain.plan
+        tampered_proposal = WorldModelQueryPlanProposal(
+            requirement_id=plan.requirement_id,
+            requirement_digest=plan.requirement_digest,
+            read_set_digest=plan.read_authority.read_set_digest,
+            ordered_bundle_digest=plan.read_authority.ordered_bundle_digest,
+            selectors=tuple(
+                item.selector
+                for item in execution.chain.resolutions.resolutions
+            ),
+            steps=tuple(
+                WorldModelQueryStepProposal(
+                    step_id=item.step_id,
+                    need_ids=item.need_ids,
+                    operation=item.operation,
+                    arguments=item.arguments,
+                    parameters=item.parameters,
+                    constraint_ids=item.constraint_ids,
+                )
+                for item in reversed(plan.steps)
+            ),
+            explicit_gaps=plan.explicit_gaps,
+            invocation_id=plan.planning_invocation.invocation_id,
+            invocation_digest=plan.planning_invocation.digest,
+            investigation_trace=plan.investigation_trace,
+        )
+        with self.assertRaisesRegex(DomainError, "exactly replay"):
+            WorldModelAnsweringService._validate_investigation_plan_binding(
+                tampered_proposal
+            )
 
     def test_product_rejects_a_review_code_outside_the_versioned_vocabulary(self) -> None:
         model = _InvalidReviewCodeFixtureModel()
@@ -715,8 +899,10 @@ class JavaImplementationViewTests(TestCase):
                 permission_digest=digest_of("iter-007-visible-permission"),
             )
 
-    def test_formal_answer_workload_reads_only_bundles_and_seals_three_calls(self) -> None:
-        model = _FormalSemanticsFixtureModel()
+    def test_formal_answer_workload_uses_sealed_recall_for_bounded_absence(self) -> None:
+        model = _FormalSemanticsFixtureModel(
+            search_terms=("definitelyAbsentFeature",)
+        )
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             snapshot_path = root / "snapshot.json"
@@ -744,15 +930,35 @@ class JavaImplementationViewTests(TestCase):
                         file_digest=stored_snapshot.file_digest,
                     ),
                 ),
+                business_discovery_recall_bindings=(
+                    StructureBusinessDiscoveryRecallBinding.create(
+                        oracle_ref="formal-pre-question-recall-oracle@1",
+                        oracle_result_digest=digest_of(
+                            "formal-pre-question-recall-result"
+                        ),
+                        profile_ref=JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+                        discovery_contract_ref=(
+                            JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF
+                        ),
+                        snapshot_id=self.snapshot_id,
+                        snapshot_bundle_digest=self.bundle.digest,
+                        counterexample_classes=(
+                            "naming",
+                            "synonym",
+                            "alternate-entry",
+                        ),
+                        verdict=(
+                            StructureBusinessDiscoveryRecallVerdict.COMPLETE
+                        ),
+                    ),
+                ),
             )
             stored_ordered = store.write_ordered(
                 str(ordered_path), envelope
             )
             payload = {
-                "case_id": "ITER-007-FORMAL-ASSET-TEST",
-                "question_variant": (
-                    "凭据无效时系统怎样处理，成功时怎样建立会话？"
-                ),
+                "case_id": "ITER-008-FORMAL-ABSENCE-ASSET-TEST",
+                "question_variant": "请解释这个不存在的功能如何实现。",
                 "resolved_snapshot_ids": [self.snapshot_id.value],
             }
             import base64
@@ -783,51 +989,80 @@ class JavaImplementationViewTests(TestCase):
 
             with (
                 patch.object(
-                    java_source_semantics_answer_workload,
+                    bounded_java_source_semantics_answer_workload,
                     "UnixSocketModelGatewayClient",
                     return_value=model,
                 ),
                 patch.object(
-                    java_source_semantics_answer_workload,
+                    bounded_java_source_semantics_answer_workload,
                     "WorldModelCapabilityStrategy",
                     return_value=model,
                 ),
                 patch.dict(
-                    java_source_semantics_answer_workload.os.environ,
+                    bounded_java_source_semantics_answer_workload.os.environ,
                     {},
                     clear=True,
                 ),
                 redirect_stdout(StringIO()),
             ):
-                code = java_source_semantics_answer_workload.main(arguments)
+                code = bounded_java_source_semantics_answer_workload.main(
+                    arguments
+                )
 
             self.assertEqual(code, 0)
             summary = json.loads(summary_path.read_text(encoding="utf-8"))
-            self.assertEqual(summary["provider_call_count"], 3)
-            self.assertEqual(summary["network_operation_count"], 3)
+            self.assertEqual(summary["provider_call_count"], 5)
+            self.assertEqual(summary["network_operation_count"], 5)
             self.assertEqual(
                 summary["model_capabilities"],
                 [
-                    IMPLEMENTATION_QUERY_PLANNING,
+                    IMPLEMENTATION_INVESTIGATION,
+                    IMPLEMENTATION_INVESTIGATION,
+                    IMPLEMENTATION_INVESTIGATION,
                     IMPLEMENTATION_ANSWER_DRAFTING,
                     IMPLEMENTATION_ANSWER_REVIEW,
                 ],
             )
-            self.assertEqual(len(summary["model_call_ids"]), 3)
-            self.assertEqual(len(summary["gateway_audits"]), 3)
+            self.assertEqual(len(summary["model_call_ids"]), 5)
+            self.assertEqual(len(summary["gateway_audits"]), 5)
+            self.assertEqual(summary["product_oracle_read_count"], 0)
+            model_input = json.dumps(
+                model.sealed_inputs,
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            self.assertNotIn("oracle_ref", model_input)
+            self.assertNotIn("oracle_result_digest", model_input)
+            self.assertNotIn("discovery_oracle", model_input)
+            self.assertIn("business_discovery_recall", model_input)
+            page_envelope = json.loads(page_path.read_bytes())
+            self.assertEqual(
+                page_envelope["format_ref"],
+                BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT,
+            )
+            self.assertIn(
+                "BOUNDED_ABSENCE",
+                page_path.read_text(encoding="utf-8"),
+            )
             self.assertTrue(page_path.is_file())
             self.assertTrue(any(citations.iterdir()))
 
-    def test_zero_candidate_is_a_gap_and_ambiguous_candidates_are_a_limitation(self) -> None:
+    def test_zero_candidate_is_limited_and_multiple_candidates_are_investigated(self) -> None:
         cases = (
-            (("definitelyAbsentFeature",), "KNOWLEDGE_GAP", 1),
-            (("login",), "LIMITATION", 1),
+            (("definitelyAbsentFeature",), "LIMITATION", 2, self.service),
+            (
+                ("definitelyAbsentFeature",),
+                "KNOWLEDGE_GAP",
+                2,
+                self._view_with_complete_discovery_recall(),
+            ),
+            (("login",), "SUPPORTED", 4, self.service),
         )
-        for terms, expected_disposition, expected_result_count in cases:
-            with self.subTest(terms=terms):
+        for terms, expected_disposition, expected_result_count, view in cases:
+            with self.subTest(terms=terms, disposition=expected_disposition):
                 model = _QualifiedSemanticsFixtureModel(search_terms=terms)
                 execution = WorldModelProductAnswerService(
-                    view=self.service,
+                    view=view,
                     snapshot_bundles=(self.bundle,),
                     model_strategy=model,
                     gateway_counters=model,
@@ -841,16 +1076,40 @@ class JavaImplementationViewTests(TestCase):
                     ),
                 )
 
-                self.assertEqual(model.provider_call_count, 3)
+                self.assertEqual(model.provider_call_count, 5)
                 self.assertEqual(
-                    model.sealed_inputs[1]["assessment_disposition"],
+                    model.sealed_inputs[3]["assessment_disposition"],
                     expected_disposition,
                 )
                 self.assertEqual(
                     len(execution.chain.result_set.step_results),
                     expected_result_count,
                 )
-                self.assertEqual(
-                    execution.chain.plan.steps[1].state.value,
-                    "BLOCKED",
+                self.assertTrue(
+                    all(item.state.value == "READY" for item in execution.chain.plan.steps)
                 )
+
+    def test_bounded_absence_rejects_an_ignored_positive_candidate_result(self) -> None:
+        view = self._view_with_complete_discovery_recall()
+        model = _MixedPositiveAndZeroCandidateFixtureModel()
+
+        execution = WorldModelProductAnswerService(
+            view=view,
+            snapshot_bundles=(self.bundle,),
+            model_strategy=model,
+            gateway_counters=model,
+        ).execute(
+            request_ref="ITER-008-MIXED-CANDIDATE-NEGATIVE",
+            original_question="请解释凭据处理功能是否存在。",
+            response_language="zh-CN",
+            classification="INTERNAL",
+            permission_digest=digest_of("iter-008-mixed-candidate"),
+        )
+
+        assessment = execution.chain.assessment.needs[0]
+        self.assertEqual(assessment.outcome.value, "LIMITATION")
+        self.assertIsNone(assessment.gap_code)
+        self.assertNotEqual(
+            execution.chain.draft.claims[0].kind.value,
+            "KNOWLEDGE_GAP",
+        )

@@ -14,8 +14,11 @@ from typing import Callable, Mapping
 
 from software_world_model.application_services.knowledge_use import TaskBoundary
 from software_world_model.application_services.structure_read_bundle import (
+    STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
     STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
     STRUCTURE_SNAPSHOT_READ_BUNDLE_FORMAT,
+    StructureBusinessDiscoveryRecallBinding,
+    StructureBusinessDiscoveryRecallVerdict,
     StoredStructureReadBundle,
     StructureBundleUpstreamEntityRecord,
     StructureOrderedReadBundle,
@@ -142,7 +145,7 @@ class FileStructureReadBundleStore:
         return self._write(
             locator,
             bundle.document(),
-            format_ref=STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+            format_ref=bundle.format_ref,
             bundle_digest=bundle.digest,
             parser=self.read_ordered,
         )
@@ -172,7 +175,10 @@ class FileStructureReadBundleStore:
         try:
             if format_ref == STRUCTURE_SNAPSHOT_READ_BUNDLE_FORMAT:
                 bundle = _snapshot_bundle(document)
-            elif format_ref == STRUCTURE_ORDERED_READ_BUNDLE_FORMAT:
+            elif format_ref in {
+                STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+                STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
+            }:
                 bundle = _ordered_bundle(document)
             else:
                 raise _invalid(
@@ -355,22 +361,29 @@ def _snapshot_bundle(document: Mapping[str, object]) -> StructureSnapshotReadBun
 
 
 def _ordered_bundle(document: Mapping[str, object]) -> StructureOrderedReadBundle:
-    value = _object(
-        document,
-        {
-            "format_ref",
-            "session",
-            "snapshots",
-            "payload_policy",
-            "bundle_digest",
-        },
-        "ordered Bundle",
-    )
-    if _string(value["format_ref"], "Bundle format") != STRUCTURE_ORDERED_READ_BUNDLE_FORMAT:
+    format_ref = _string(document.get("format_ref"), "Bundle format")
+    if format_ref not in {
+        STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+        STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
+    }:
         raise _invalid(
             "READ_BUNDLE_FORMAT_UNSUPPORTED",
             "ordered Structure Bundle format is unsupported",
         )
+    expected_fields = {
+        "format_ref",
+        "session",
+        "snapshots",
+        "payload_policy",
+        "bundle_digest",
+    }
+    if format_ref == STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT:
+        expected_fields.add("business_discovery_recall_bindings")
+    value = _object(
+        document,
+        expected_fields,
+        "ordered Bundle",
+    )
     _payload_policy(value["payload_policy"])
     references = []
     for item in _array(value["snapshots"], "ordered Snapshot references"):
@@ -408,6 +421,65 @@ def _ordered_bundle(document: Mapping[str, object]) -> StructureOrderedReadBundl
         session=_session(value["session"]),
         snapshots=tuple(references),
         digest=Digest(_string(value["bundle_digest"], "Bundle digest")),
+        business_discovery_recall_bindings=(
+            tuple(
+                _business_discovery_recall_binding(item)
+                for item in _array(
+                    value["business_discovery_recall_bindings"],
+                    "business discovery recall bindings",
+                )
+            )
+            if format_ref
+            == STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT
+            else ()
+        ),
+        format_ref=format_ref,
+    )
+
+
+def _business_discovery_recall_binding(
+    value: object,
+) -> StructureBusinessDiscoveryRecallBinding:
+    item = _object(
+        value,
+        {
+            "oracle_ref",
+            "oracle_result_digest",
+            "profile_ref",
+            "discovery_contract_ref",
+            "snapshot_id",
+            "snapshot_bundle_digest",
+            "counterexample_classes",
+            "verdict",
+            "digest",
+        },
+        "business discovery recall binding",
+    )
+    return StructureBusinessDiscoveryRecallBinding(
+        oracle_ref=_string(item["oracle_ref"], "discovery Oracle ref"),
+        oracle_result_digest=Digest(
+            _string(item["oracle_result_digest"], "Oracle result digest")
+        ),
+        profile_ref=_string(item["profile_ref"], "discovery Profile ref"),
+        discovery_contract_ref=_string(
+            item["discovery_contract_ref"],
+            "discovery Contract ref",
+        ),
+        snapshot_id=StableId(_string(item["snapshot_id"], "Snapshot ID")),
+        snapshot_bundle_digest=Digest(
+            _string(item["snapshot_bundle_digest"], "Snapshot Bundle digest")
+        ),
+        counterexample_classes=tuple(
+            _string(entry, "counterexample class")
+            for entry in _array(
+                item["counterexample_classes"],
+                "counterexample classes",
+            )
+        ),
+        verdict=StructureBusinessDiscoveryRecallVerdict(
+            _string(item["verdict"], "discovery recall verdict")
+        ),
+        digest=Digest(_string(item["digest"], "discovery binding digest")),
     )
 
 

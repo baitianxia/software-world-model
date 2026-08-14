@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Mapping
 
 from software_world_model.ai_infrastructure import (
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     JavaSourceSemanticsWorldModelEvaluationCase,
     JavaSourceSemanticsWorldModelEvaluationRole,
     create_java_source_semantics_world_model_evaluation_definition,
@@ -87,7 +87,7 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         or suite.get("suite_ref") != PINNED_SUITE_REF
     ):
         _invalid("Java source-semantics capability suite identity is invalid")
-    contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
     if suite.get("proposal_contract") != {
         "capability_contract_version": contract.capability_contract_version,
         "strategy_ref": contract.strategy_ref,

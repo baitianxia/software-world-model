@@ -306,6 +306,49 @@ class PinnedArkHTTPSTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, ErrorCode.CONTROL_STATE_DENIED)
         self.assertEqual(transport.provider_call_count, 5)
 
+    def test_bounded_transport_closes_and_audits_unused_descriptors(self) -> None:
+        contexts = _TLSContext()
+        inherited = [_RawSocket() for _ in range(6)]
+        audits: list[dict[str, object]] = []
+        transport = PinnedIPVolcengineArkChatTransport(
+            numeric_address="8.8.8.8",
+            api_key_resolver=lambda: "secret",
+            connected_socket_fds=(17, 18, 19, 20, 21, 22),
+            tls_context=contexts,
+            audit_writer=lambda value: audits.append(dict(value)),
+            maximum_calls=6,
+        )
+        with (
+            patch(
+                "software_world_model.ai_infrastructure.pinned_ark_https.socket.socket",
+                side_effect=inherited,
+            ) as constructor,
+            patch(
+                "software_world_model.ai_infrastructure.pinned_ark_https.http.client.HTTPResponse",
+                _HTTPResponse,
+            ),
+        ):
+            for ordinal in range(4):
+                transport.post_json(
+                    endpoint=DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
+                    body=b"{}",
+                    client_request_id=f"swm-bounded-{ordinal}",
+                    timeout_milliseconds=1000,
+                )
+            unused_closed = transport.close_unused_connected_sockets()
+
+        self.assertEqual(unused_closed, 2)
+        self.assertEqual(
+            [item.kwargs["fileno"] for item in constructor.call_args_list],
+            [17, 18, 19, 20, 21, 22],
+        )
+        self.assertTrue(inherited[4].closed)
+        self.assertTrue(inherited[5].closed)
+        self.assertEqual(
+            [item["outcome"] for item in audits[-2:]],
+            ["UNUSED_CLOSED", "UNUSED_CLOSED"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

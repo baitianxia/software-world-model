@@ -121,10 +121,10 @@ class PinnedIPVolcengineArkChatTransport:
         )
         self._tls_context = tls_context or _verified_tls_context()
         self._audit_writer = audit_writer or (lambda _: None)
-        if type(maximum_calls) is not int or maximum_calls != _MAX_PROVIDER_CALLS:
+        if type(maximum_calls) is not int or maximum_calls not in {5, 6}:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "pinned Ark transport call cap must be exactly five",
+                "pinned Ark transport call cap must be exactly five or six",
             )
         self._maximum_calls = maximum_calls
         self._audits: list[PinnedArkDispatchAudit] = []
@@ -140,6 +140,38 @@ class PinnedIPVolcengineArkChatTransport:
     @property
     def audits(self) -> tuple[PinnedArkDispatchAudit, ...]:
         return tuple(self._audits)
+
+    def close_unused_connected_sockets(self) -> int:
+        """Close every provisioned descriptor that no Provider call consumed."""
+
+        closed = 0
+        family = (
+            socket.AF_INET6 if self._address.version == 6 else socket.AF_INET
+        )
+        while self._connected_socket_fds:
+            descriptor = self._connected_socket_fds.pop(0)
+            try:
+                socket.socket(
+                    family,
+                    socket.SOCK_STREAM,
+                    fileno=descriptor,
+                ).close()
+            except OSError as exc:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "unused inherited Provider descriptor could not be closed",
+                ) from exc
+            closed += 1
+            self._audit_writer(
+                {
+                    "schema": "SWM-PINNED-ARK-DESCRIPTOR-AUDIT@1",
+                    "ordinal": len(self._audits) + closed,
+                    "numeric_address": str(self._address),
+                    "outcome": "UNUSED_CLOSED",
+                    "failure_code": None,
+                }
+            )
+        return closed
 
     def post_json(
         self,
@@ -168,7 +200,7 @@ class PinnedIPVolcengineArkChatTransport:
         if len(self._audits) >= self._maximum_calls:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
-                "pinned Ark Provider call fuse exceeded five calls",
+                "pinned Ark Provider call fuse exceeded its exact call cap",
             )
 
         ordinal = len(self._audits) + 1

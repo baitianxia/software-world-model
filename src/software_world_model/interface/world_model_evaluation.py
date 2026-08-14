@@ -41,8 +41,10 @@ from software_world_model.cross_cutting import (
 
 
 WORLD_MODEL_EVALUATION_PAGE_FORMAT = "WORLD_MODEL_EVALUATION_PAGE@1"
+BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT = "WORLD_MODEL_EVALUATION_PAGE@2"
 
 _PAGE_DIGEST_DOMAIN = "WORLD_MODEL_EVALUATION_PAGE_PAYLOAD@1"
+_BOUNDED_PAGE_DIGEST_DOMAIN = "WORLD_MODEL_EVALUATION_PAGE_PAYLOAD@2"
 _MAXIMUM_PAGE_BYTES = 64 * 1024 * 1024
 _COMMIT_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 _DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -147,9 +149,18 @@ def world_model_evaluation_page_envelope(
     """Return the strict, digest-bound JSON document for an evaluation page."""
 
     page = world_model_evaluation_page_payload(chain, implementation_commit)
-    page_digest = digest_of([_PAGE_DIGEST_DOMAIN, page])
+    bounded = chain.plan.investigation_trace is not None
+    format_ref = (
+        BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT
+        if bounded
+        else WORLD_MODEL_EVALUATION_PAGE_FORMAT
+    )
+    digest_domain = (
+        _BOUNDED_PAGE_DIGEST_DOMAIN if bounded else _PAGE_DIGEST_DOMAIN
+    )
+    page_digest = digest_of([digest_domain, page])
     return {
-        "format_ref": WORLD_MODEL_EVALUATION_PAGE_FORMAT,
+        "format_ref": format_ref,
         "page": page,
         "page_digest": page_digest.value,
     }
@@ -197,12 +208,25 @@ def read_world_model_evaluation_page(
         {"format_ref", "page", "page_digest"},
         "evaluation page envelope",
     )
-    if envelope["format_ref"] != WORLD_MODEL_EVALUATION_PAGE_FORMAT:
+    format_ref = envelope["format_ref"]
+    if format_ref not in {
+        WORLD_MODEL_EVALUATION_PAGE_FORMAT,
+        BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT,
+    }:
         raise _invalid(
             "WORLD_MODEL_EVALUATION_PAGE_FORMAT_INVALID",
             "world-model evaluation page format is unsupported",
         )
     page = _mapping(envelope["page"], "evaluation page")
+    query_plan = _mapping(page.get("query_plan"), "Query Plan")
+    has_investigation_trace = "investigation_trace" in query_plan
+    if has_investigation_trace != (
+        format_ref == BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT
+    ):
+        raise _invalid(
+            "WORLD_MODEL_EVALUATION_PAGE_FORMAT_INVALID",
+            "world-model evaluation page format does not match its Query Plan",
+        )
     page_digest = _digest_text(envelope["page_digest"], "evaluation page digest")
     trusted_page_digest = _digest_text(
         expected_page_digest, "expected evaluation page digest"
@@ -212,7 +236,12 @@ def read_world_model_evaluation_page(
             "WORLD_MODEL_EVALUATION_EXPECTED_PAGE_DIGEST_MISMATCH",
             "evaluation page does not match the trusted PAGE digest",
         )
-    expected_digest = digest_of([_PAGE_DIGEST_DOMAIN, page])
+    digest_domain = (
+        _BOUNDED_PAGE_DIGEST_DOMAIN
+        if has_investigation_trace
+        else _PAGE_DIGEST_DOMAIN
+    )
+    expected_digest = digest_of([digest_domain, page])
     if page_digest != expected_digest.value:
         raise _inconsistent(
             "WORLD_MODEL_EVALUATION_PAGE_DIGEST_MISMATCH",
@@ -407,7 +436,7 @@ def _candidate_resolutions_payload(
 
 def _query_plan_payload(chain: WorldModelAuthorityChain) -> dict[str, object]:
     plan = chain.plan
-    return {
+    value: dict[str, object] = {
         "plan_id": plan.plan_id.value,
         "plan_digest": plan.digest.value,
         "question_id": plan.question_id.value,
@@ -436,6 +465,11 @@ def _query_plan_payload(chain: WorldModelAuthorityChain) -> dict[str, object]:
         ],
         "read_authority_digest": plan.read_authority.digest.value,
     }
+    if plan.investigation_trace is not None:
+        value["investigation_trace"] = _json_value(
+            plan.investigation_trace.canonical_value()
+        )
+    return value
 
 
 def _query_results_payload(chain: WorldModelAuthorityChain) -> dict[str, object]:
@@ -827,7 +861,12 @@ def _validate_page(page: Mapping[str, object]) -> None:
         },
         "execution boundary",
     )
-    if not _page_execution_boundary_is_valid(boundary, request):
+    query_plan = _mapping(page["query_plan"], "Query Plan")
+    if not _page_execution_boundary_is_valid(
+        boundary,
+        request,
+        bounded="investigation_trace" in query_plan,
+    ):
         raise _invalid(
             "WORLD_MODEL_EVALUATION_EXECUTION_BOUNDARY_INVALID",
             "evaluation page does not prove its exact no-payload boundary",
@@ -850,6 +889,8 @@ def _request_execution_boundary_is_valid(
 def _page_execution_boundary_is_valid(
     boundary: Mapping[str, object],
     request: Mapping[str, object],
+    *,
+    bounded: bool,
 ) -> bool:
     provider_calls = boundary.get("provider_call_count")
     network_operations = boundary.get("network_operation_count")
@@ -870,7 +911,11 @@ def _page_execution_boundary_is_valid(
         external is True
         and isinstance(route, str)
         and bool(route)
-        and 1 <= provider_calls <= 5
+        and (
+            4 <= provider_calls <= 6
+            if bounded
+            else 1 <= provider_calls <= 5
+        )
         and network_operations == provider_calls
     )
 
@@ -1458,22 +1503,26 @@ def _reconstruct_resolutions(
             f"candidate resolution {index}",
         )
         selector = _mapping(resolution["selector"], f"selector {index}")
+        selector_fields = {
+            "selector_id",
+            "need_ids",
+            "snapshot_id",
+            "origin",
+            "mention",
+            "entity_type",
+            "canonical_ga",
+            "canonical_gav",
+            "max_candidates",
+            "entity_root_id",
+            "entity_state_id",
+            "search_terms",
+        }
+        source_fields = {"source_result_id", "source_result_digest"}
+        if source_fields & set(selector):
+            selector_fields |= source_fields
         _exact_keys(
             selector,
-            {
-                "selector_id",
-                "need_ids",
-                "snapshot_id",
-                "origin",
-                "mention",
-                "entity_type",
-                "canonical_ga",
-                "canonical_gav",
-                "max_candidates",
-                "entity_root_id",
-                "entity_state_id",
-                "search_terms",
-            },
+            selector_fields,
             f"selector {index}",
         )
         candidate = candidate_views.get(resolution["resolution_id"])
@@ -1588,22 +1637,25 @@ def _reconstruct_plan(
     value: object, read_authority: Mapping[str, object]
 ) -> dict[str, object]:
     projected = _mapping(value, "Query Plan")
+    plan_fields = {
+        "plan_id",
+        "plan_digest",
+        "question_id",
+        "requirement_id",
+        "requirement_digest",
+        "resolution_set_id",
+        "resolution_set_digest",
+        "planning_invocation",
+        "capability_registry_digest",
+        "steps",
+        "explicit_gaps",
+        "read_authority_digest",
+    }
+    if "investigation_trace" in projected:
+        plan_fields.add("investigation_trace")
     _exact_keys(
         projected,
-        {
-            "plan_id",
-            "plan_digest",
-            "question_id",
-            "requirement_id",
-            "requirement_digest",
-            "resolution_set_id",
-            "resolution_set_digest",
-            "planning_invocation",
-            "capability_registry_digest",
-            "steps",
-            "explicit_gaps",
-            "read_authority_digest",
-        },
+        plan_fields,
         "Query Plan",
     )
     invocation = _reconstruct_invocation(
@@ -1653,7 +1705,7 @@ def _reconstruct_plan(
         )
     if projected["read_authority_digest"] != read_authority["digest"]:
         raise _authority_mismatch("Query Plan Read Set")
-    record = {
+    record: dict[str, object] = {
         "plan_id": projected["plan_id"],
         "question_id": projected["question_id"],
         "requirement_id": projected["requirement_id"],
@@ -1667,6 +1719,8 @@ def _reconstruct_plan(
         "read_authority": dict(read_authority),
         "digest": projected["plan_digest"],
     }
+    if "investigation_trace" in projected:
+        record["investigation_trace"] = projected["investigation_trace"]
     _require_stable_mapping(
         record,
         id_field="plan_id",
@@ -2375,23 +2429,25 @@ def _require_authority_cross_links(
         }
         for step in plan["steps"]
     ]
-    plan_proposal_digest = digest_of(
-        [
-            "WORLD_MODEL_QUERY_PLAN_PROPOSAL@1",
-            {
-                "requirement_id": requirement["requirement_id"],
-                "requirement_digest": requirement["digest"],
-                "read_set_digest": read_authority["read_set_digest"],
-                "ordered_bundle_digest": read_authority["ordered_bundle_digest"],
-                "selectors": [
-                    item["selector"] for item in resolutions["resolutions"]
-                ],
-                "steps": proposal_steps,
-                "explicit_gaps": plan["explicit_gaps"],
-                "invocation_id": plan["planning_invocation"]["invocation_id"],
-                "invocation_digest": plan["planning_invocation"]["digest"],
-            },
+    plan_proposal_core = {
+        "requirement_id": requirement["requirement_id"],
+        "requirement_digest": requirement["digest"],
+        "read_set_digest": read_authority["read_set_digest"],
+        "ordered_bundle_digest": read_authority["ordered_bundle_digest"],
+        "selectors": [
+            item["selector"] for item in resolutions["resolutions"]
+        ],
+        "steps": proposal_steps,
+        "explicit_gaps": plan["explicit_gaps"],
+        "invocation_id": plan["planning_invocation"]["invocation_id"],
+        "invocation_digest": plan["planning_invocation"]["digest"],
+    }
+    if "investigation_trace" in plan:
+        plan_proposal_core["investigation_trace"] = plan[
+            "investigation_trace"
         ]
+    plan_proposal_digest = digest_of(
+        ["WORLD_MODEL_QUERY_PLAN_PROPOSAL@1", plan_proposal_core]
     ).value
     if resolutions["proposal_digest"] != plan_proposal_digest:
         raise _authority_mismatch("Query Plan proposal binding")
@@ -2975,6 +3031,7 @@ def _inconsistent(reason_code: str, message: str) -> DomainError:
 
 
 __all__ = [
+    "BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT",
     "WORLD_MODEL_EVALUATION_PAGE_FORMAT",
     "read_world_model_evaluation_page",
     "world_model_evaluation_page_envelope",

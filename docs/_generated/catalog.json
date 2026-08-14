@@ -1168,6 +1168,55 @@
     "path": "docs/project/iterations/iteration-007/findings/FINDING-007-009.md"
   },
   {
+    "id": "FINDING-008-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-001.md"
+  },
+  {
+    "id": "FINDING-008-002",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-002.md"
+  },
+  {
+    "id": "FINDING-008-003",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-003.md"
+  },
+  {
+    "id": "FINDING-008-004",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "interface",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-004.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -2529,8 +2578,8 @@
   {
     "id": "ITER-008-FINDINGS",
     "kind": "iteration-findings-index",
-    "status": "open",
-    "authority": "project-feedback",
+    "status": "dispositioned",
+    "authority": "development-evidence",
     "owners": [
       "engineering",
       "architecture",

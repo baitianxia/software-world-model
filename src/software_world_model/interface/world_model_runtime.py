@@ -85,10 +85,16 @@ _JAVA_GATEWAY_FREEZE_SCHEMA = "SWM-ITER-006-JAVA-GATEWAY-FREEZE@1"
 _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA = (
     "SWM-ITER-007-JAVA-SOURCE-SEMANTICS-GATEWAY-FREEZE@1"
 )
+_BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA = (
+    "SWM-ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-GATEWAY-FREEZE@1"
+)
 _LEGACY_GATEWAY_FREEZE_SCHEMA = "swm.iter-003.g3b-input-freeze@1"
 _ONE_CALL_DISPATCH_POLICY = "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY"
 _SOURCE_SEMANTICS_DISPATCH_POLICY = (
     "THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
+)
+_BOUNDED_SOURCE_SEMANTICS_DISPATCH_POLICY = (
+    "FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
 )
 _ROLE_ENTRYPOINTS = {
     "answer": ".g3b/answer_workload.py",
@@ -436,14 +442,14 @@ class SealedWorldModelExecutor:
     ) -> tuple[dict[str, object], _ExecutorRequestRecord]:
         terminal_path = run_root / "terminal.json"
         persisted_terminal = _load_json(terminal_path)
-        expected_calls = self._provider_call_count
+        provisioned_calls = self._provider_call_count
         if (
             terminal.get("status") != "SUCCESS"
             or persisted_terminal.get("status") != "SUCCESS"
             or persisted_terminal.get("attempt_count") != 1
             or persisted_terminal.get("selective_retry_count") != 0
             or persisted_terminal.get("provider_connection_handoff_count")
-            != expected_calls
+            != provisioned_calls
             or persisted_terminal.get("gateway_listener_handoff_count") != 1
             or persisted_terminal.get("production_activation") != "NOT_EXECUTED"
             or _document_digest(persisted_terminal)
@@ -457,6 +463,19 @@ class SealedWorldModelExecutor:
             persisted_terminal.get("answer_summary"), run_root
         )
         summary = _load_json(summary_path)
+        expected_calls = summary.get("provider_call_count")
+        if (
+            type(expected_calls) is not int
+            or (
+                provisioned_calls == 6
+                and not 4 <= expected_calls <= 6
+            )
+            or (
+                provisioned_calls != 6
+                and expected_calls != provisioned_calls
+            )
+        ):
+            raise RuntimeError("answer Provider call count is outside its protocol")
         timing = _load_json(run_root / "timing.json")
         if (
             _document_digest(timing) != timing.get("document_digest")
@@ -761,7 +780,11 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
     launcher_hashes = _string_map(
         document.get("launcher_files"), "launcher file digests"
     )
-    launcher_files = _launcher_files()
+    launcher_files = _launcher_files(
+        include_bounded=(
+            _gateway_call_count(gateway_input) == 6
+        )
+    )
     if set(launcher_hashes) != set(launcher_files):
         raise ValueError("launcher file digest set is not closed")
     for label, file_path in launcher_files.items():
@@ -806,6 +829,7 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
             for field in {
                 "java_capability_qualification",
                 "java_source_semantics_capability_qualification",
+                "bounded_java_source_semantics_capability_qualification",
             }
             if field != qualification_binding_field
         )
@@ -890,6 +914,11 @@ def _provider_binding_for_gateway_input(
     schema = freeze.get("schema")
     if schema == _LEGACY_GATEWAY_FREEZE_SCHEMA:
         return dict(_EXPECTED_PROVIDER), None
+    if schema == _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return _bounded_java_source_semantics_provider_binding(
+            gateway_input,
+            freeze,
+        )
     if schema == _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
         return _java_source_semantics_provider_binding(gateway_input, freeze)
     if schema != _JAVA_GATEWAY_FREEZE_SCHEMA:
@@ -1079,8 +1108,111 @@ def _java_source_semantics_provider_binding(
     return expected_provider, qualification
 
 
+def _bounded_java_source_semantics_provider_binding(
+    gateway_input: Path,
+    freeze: Mapping[str, object],
+) -> tuple[dict[str, object], dict[str, object]]:
+    from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_egress_qualification import (
+        BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST,
+        load_bounded_java_source_semantics_gateway_qualification_binding,
+    )
+
+    binding = load_bounded_java_source_semantics_gateway_qualification_binding(
+        qualification_path=gateway_input / "qualification.json",
+        closed_result_path=gateway_input / "closed-result.json",
+        policy_path=gateway_input / "egress-policy.json",
+    )
+    expected_freeze_keys = {
+        "schema",
+        "freeze_ref",
+        "environment",
+        "strategy_ref",
+        "prompt_ref",
+        "proposal_vocabulary_ref",
+        "capability_qualification_document_digest",
+        "closed_capability_result_digest",
+        "egress_policy_digest",
+        "conformance_result_ref",
+        "conformance_result_digest",
+        "permission_digest",
+        "production_activation",
+        "document_digest",
+    }
+    _exact_keys(
+        freeze,
+        expected_freeze_keys,
+        "bounded source-semantics Gateway freeze",
+    )
+    freeze_core = {
+        key: value for key, value in freeze.items() if key != "document_digest"
+    }
+    if (
+        freeze.get("freeze_ref")
+        != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-PRODUCT-GATEWAY-CANDIDATE@1"
+        or freeze.get("environment") != "EVALUATION_ONLY"
+        or freeze.get("strategy_ref")
+        != "model-snapshot-first-world-model-answer@1.3.0"
+        or freeze.get("prompt_ref")
+        != "java-source-semantics-world-model-prompt@4"
+        or freeze.get("proposal_vocabulary_ref")
+        != "java-source-semantics-world-model-vocabulary@4"
+        or freeze.get("capability_qualification_document_digest")
+        != binding.qualification_document_digest.value
+        or freeze.get("closed_capability_result_digest")
+        != binding.closed_capability_result_digest.value
+        or freeze.get("egress_policy_digest")
+        != BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
+        or freeze.get("conformance_result_digest")
+        != _EXPECTED_PROVIDER["conformance_digest"]
+        or freeze.get("production_activation") != "NOT_EXECUTED"
+        or freeze.get("document_digest")
+        != digest_of(
+            [_BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA, freeze_core]
+        ).value
+    ):
+        raise ValueError(
+            "bounded source-semantics Gateway freeze is not an exact qualified authority"
+        )
+    permission_digest = _digest_text(
+        freeze.get("permission_digest"),
+        "bounded source-semantics Gateway permission digest",
+    )
+    expected_provider = dict(_EXPECTED_PROVIDER)
+    expected_provider["qualification_digest"] = (
+        binding.capability_qualification_digest.value
+    )
+    qualification = {
+        "capability_qualification_ref": binding.capability_qualification_ref,
+        "capability_qualification_digest": (
+            binding.capability_qualification_digest.value
+        ),
+        "capability_qualification_document_digest": (
+            binding.qualification_document_digest.value
+        ),
+        "closed_capability_result_digest": (
+            binding.closed_capability_result_digest.value
+        ),
+        "conformance_result_ref": _text(
+            freeze.get("conformance_result_ref"),
+            "bounded source-semantics Gateway conformance result reference",
+        ),
+        "conformance_result_digest": _digest_text(
+            freeze.get("conformance_result_digest"),
+            "bounded source-semantics Gateway conformance result digest",
+        ),
+        "bounded_java_source_semantics_gateway_freeze_digest": _digest_text(
+            freeze.get("document_digest"),
+            "bounded source-semantics Gateway freeze digest",
+        ),
+        "permission_digest": permission_digest,
+    }
+    return expected_provider, qualification
+
+
 def _gateway_call_count(gateway_input: Path) -> int:
     freeze = _load_json(gateway_input / "g3b-freeze.json")
+    if freeze.get("schema") == _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return 6
     if freeze.get("schema") == _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
         return 3
     if freeze.get("schema") in {
@@ -1100,6 +1232,8 @@ def _gateway_qualification_binding_field(gateway_input: Path) -> str | None:
         return "java_capability_qualification"
     if schema == _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
         return "java_source_semantics_capability_qualification"
+    if schema == _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return "bounded_java_source_semantics_capability_qualification"
     raise ValueError("qualified Gateway freeze schema is unsupported")
 
 
@@ -1108,12 +1242,17 @@ def _dispatch_policy(provider_call_count: int) -> str:
         return _ONE_CALL_DISPATCH_POLICY
     if provider_call_count == 3:
         return _SOURCE_SEMANTICS_DISPATCH_POLICY
+    if provider_call_count == 6:
+        return _BOUNDED_SOURCE_SEMANTICS_DISPATCH_POLICY
     raise ValueError("qualified Gateway provider call count is unsupported")
 
 
-def _launcher_files() -> Mapping[str, Path]:
+def _launcher_files(
+    *,
+    include_bounded: bool = False,
+) -> Mapping[str, Path]:
     interface = Path(__file__).resolve(strict=True).parent
-    return {
+    files = {
         "world_model_runtime.py": interface / "world_model_runtime.py",
         "world_model_http.py": interface / "world_model_http.py",
         "world_model_browser.py": interface / "world_model_browser.py",
@@ -1139,6 +1278,14 @@ def _launcher_files() -> Mapping[str, Path]:
             ASSET_ROOT / "provider_socket_worker.py"
         ),
     }
+    if include_bounded:
+        files[
+            "runtime_assets/bounded_java_source_semantics_answer_workload.py"
+        ] = ASSET_ROOT / "bounded_java_source_semantics_answer_workload.py"
+        files[
+            "runtime_assets/bounded_java_source_semantics_gateway_workload.py"
+        ] = ASSET_ROOT / "bounded_java_source_semantics_gateway_workload.py"
+    return files
 
 
 def _prepare_gateway_input(
@@ -1490,7 +1637,8 @@ def _run_one(
         "--transport-audit-output", str(gateway_output / "transport-audit.jsonl"),
         "--summary-output", str(gateway_summary),
         "--startup-timeout-seconds", "30",
-        "--idle-timeout-seconds", "5.0" if gateway_call_count == 3 else "0.25",
+        "--idle-timeout-seconds",
+        "5.0" if gateway_call_count in {3, 6} else "0.25",
     ])
     gateway_policy = _audit_policy(
         role="gateway",
@@ -1641,10 +1789,25 @@ def _run_one(
         gateway_value = _load_json(gateway_summary)
         postcondition_phase = "ROLE_POSTCONDITION"
         try:
+            actual_gateway_calls = answer_value.get("provider_call_count")
+            if (
+                type(actual_gateway_calls) is not int
+                or (
+                    gateway_call_count == 6
+                    and not 4 <= actual_gateway_calls <= 6
+                )
+                or (
+                    gateway_call_count != 6
+                    and actual_gateway_calls != gateway_call_count
+                )
+            ):
+                raise RuntimeError(
+                    "Answer did not report an allowed exact Provider call count"
+                )
             _verify_role_success(
                 answer_report,
                 "answer",
-                expected_unix_connect_count=gateway_call_count,
+                expected_unix_connect_count=actual_gateway_calls,
             )
             _verify_role_success(
                 gateway_report,
@@ -2446,8 +2609,17 @@ def _verify_answer_gateway(
     baseline = gateway.get("qualified_gateway_baseline")
     if not isinstance(baseline, Mapping):
         raise RuntimeError("qualified Gateway baseline is invalid")
+    bounded = (
+        "bounded_source_semantics_capability_freeze_digest" in baseline
+    )
     semantic = "source_semantics_capability_freeze_digest" in baseline
-    expected_calls = 3 if semantic else 1
+    expected_calls = answer.get("provider_call_count") if bounded else (
+        3 if semantic else 1
+    )
+    if type(expected_calls) is not int or (
+        bounded and not 4 <= expected_calls <= 6
+    ):
+        raise RuntimeError("Answer/Gateway Provider call count is invalid")
     expected_statuses = ["RESULT"] * expected_calls
     if (
         answer.get("status") != "PASS"
@@ -2478,6 +2650,16 @@ def _verify_answer_gateway(
         or gateway.get("provider_call_count") != expected_calls
         or gateway.get("https_dispatch_count") != expected_calls
         or gateway.get("server_statuses") != expected_statuses
+        or (
+            bounded
+            and (
+                gateway.get("provider_descriptor_provisioned_count") != 6
+                or gateway.get("provider_descriptor_consumed_count")
+                != expected_calls
+                or gateway.get("provider_descriptor_unused_closed_count")
+                != 6 - expected_calls
+            )
+        )
         or gateway.get("dns_operation_count_in_dispatch_process") != 0
         or gateway.get("credential_value_recorded") is not False
         or gateway.get("provider_connection_capability")

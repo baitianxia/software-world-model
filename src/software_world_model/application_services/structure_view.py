@@ -15,6 +15,7 @@ import re
 import unicodedata
 
 from software_world_model.application_services.structure_read_bundle import (
+    StructureBusinessDiscoveryRecallBinding,
     StructureOrderedReadBundle,
     StructureSnapshotReadBundle,
 )
@@ -76,6 +77,7 @@ class StructureViewCompleteness(str, Enum):
 class StructureViewArgumentOrigin(str, Enum):
     CALLER_EXACT_REF = "CALLER_EXACT_REF"
     SEALED_UNIQUE_CANDIDATE = "SEALED_UNIQUE_CANDIDATE"
+    SEALED_RESULT_MEMBER = "SEALED_RESULT_MEMBER"
 
 
 class NeighborhoodDirection(str, Enum):
@@ -730,6 +732,50 @@ class StructureEntityArgument:
         )
 
     @classmethod
+    def from_result_member(
+        cls,
+        result: StructureViewResult,
+        *,
+        entity_root_id: StableId,
+        entity_state_id: StableId,
+    ) -> "StructureEntityArgument":
+        """Bind one exact Entity member exposed by a sealed typed Result.
+
+        Unlike ``from_unique_candidate``, this constructor deliberately does
+        not collapse a 0/N result into a unique resolution.  It proves only
+        that the selected Root/State pair is a public member of the exact
+        Result and leaves relevance and query sufficiency to the investigation
+        authority chain.
+        """
+
+        result.require_valid()
+        if len(result.snapshot_ids) != 1:
+            raise _invalid(
+                "VIEW_RESULT_MEMBER_SNAPSHOT_INVALID",
+                "typed Result member requires one exact Snapshot",
+            )
+        root_id = _typed_stable_id(entity_root_id, "result member Root ID")
+        state_id = _typed_stable_id(entity_state_id, "result member State ID")
+        if (root_id, state_id) not in _public_result_entity_refs(result):
+            raise _invalid(
+                "VIEW_RESULT_MEMBER_NOT_EXPOSED",
+                "typed Entity argument is not a public member of the sealed Result",
+            )
+        return cls._create(
+            origin=StructureViewArgumentOrigin.SEALED_RESULT_MEMBER,
+            session_id=result.session_id,
+            read_set_digest=result.read_set_digest,
+            ordered_bundle_digest=result.ordered_bundle_digest,
+            snapshot_id=result.snapshot_ids[0],
+            snapshot_bundle_digest=result.snapshot_bundle_digests[0],
+            entity_root_id=root_id,
+            entity_state_id=state_id,
+            candidate_result=result,
+            candidate_result_id=result.result_id,
+            candidate_result_digest=result.digest,
+        )
+
+    @classmethod
     def caller_exact_ref(
         cls,
         *,
@@ -823,7 +869,10 @@ class StructureEntityArgument:
                 "VIEW_ENTITY_ARGUMENT_DIGEST_MISMATCH",
                 "typed Entity argument is not canonical",
             )
-        if self.origin is StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE:
+        if self.origin in {
+            StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE,
+            StructureViewArgumentOrigin.SEALED_RESULT_MEMBER,
+        }:
             if (
                 self.candidate_result is None
                 or self.candidate_result_id is None
@@ -843,8 +892,15 @@ class StructureEntityArgument:
                 )
             try:
                 self.candidate_result.require_valid()
-                rebuilt = type(self).from_unique_candidate(
-                    self.candidate_result
+                rebuilt = (
+                    type(self).from_unique_candidate(self.candidate_result)
+                    if self.origin
+                    is StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE
+                    else type(self).from_result_member(
+                        self.candidate_result,
+                        entity_root_id=self.entity_root_id,
+                        entity_state_id=self.entity_state_id,
+                    )
                 )
             except DomainError as exc:
                 raise _invalid(
@@ -854,7 +910,7 @@ class StructureEntityArgument:
             if rebuilt != self:
                 raise _invalid(
                     "VIEW_CANDIDATE_PROOF_MISMATCH",
-                    "candidate-derived Entity argument proof does not bind its exact unique candidate",
+                    "result-derived Entity argument proof does not bind its exact public member",
                 )
             return
         if (
@@ -917,6 +973,16 @@ class StructureViewService:
                 "VIEW_DUPLICATE_SNAPSHOT_BUNDLE",
                 "Structure View cannot mount a Snapshot bundle twice",
             )
+        for recall in ordered_bundle.business_discovery_recall_bindings:
+            bundle = self._by_snapshot.get(recall.snapshot_id)
+            if bundle is None or not any(
+                coverage.root.profile_ref == recall.profile_ref
+                for coverage in bundle.coverages
+            ):
+                raise _invalid(
+                    "VIEW_DISCOVERY_RECALL_PROFILE_MISMATCH",
+                    "discovery recall authority binds a Profile absent from its exact Snapshot",
+                )
         # Build the derived feature index when the exact no-payload Bundle is
         # mounted, before any question or search terms are available.  The
         # index is deliberately not authoritative: it can always be rebuilt
@@ -956,6 +1022,12 @@ class StructureViewService:
     @property
     def snapshot_ids(self) -> tuple[StableId, ...]:
         return tuple(bundle.snapshot_id for bundle in self._bundles)
+
+    @property
+    def business_discovery_recall_bindings(
+        self,
+    ) -> tuple[StructureBusinessDiscoveryRecallBinding, ...]:
+        return self._ordered.business_discovery_recall_bindings
 
     def entity_candidates(
         self,
@@ -1235,6 +1307,9 @@ class StructureViewService:
                 "search_terms_original": original_terms,
                 "normalized_terms": normalized_terms,
                 "limit": limit,
+                "total": len(ranked),
+                "returned": len(candidates),
+                "next_cursor": None,
                 "candidate_count": len(candidates),
                 "candidates": tuple(candidates),
                 "ranking": (
@@ -1943,7 +2018,10 @@ class StructureViewService:
                 "typed Entity argument does not match the exact Snapshot State",
             )
         argument.require_valid()
-        if argument.origin is StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE:
+        if argument.origin in {
+            StructureViewArgumentOrigin.SEALED_UNIQUE_CANDIDATE,
+            StructureViewArgumentOrigin.SEALED_RESULT_MEMBER,
+        }:
             if (
                 argument.candidate_result_id is None
                 or argument.candidate_result_digest is None
@@ -1962,47 +2040,11 @@ class StructureViewService:
                     "VIEW_CANDIDATE_PROOF_MISMATCH",
                     "candidate-derived Entity argument proof identity does not match",
                 )
-            proof_payload = proof.payload
-            if proof.operation is StructureViewOperation.ENTITY_CANDIDATES:
-                replay = self.entity_candidates(
-                    snapshot_id=argument.snapshot_id,
-                    mention=_mapping_text(proof_payload, "mention_original"),
-                    entity_type=proof_payload["entity_type"],
-                    exact_root_id=(
-                        StableId(proof_payload["exact_root_id"])
-                        if isinstance(proof_payload["exact_root_id"], str)
-                        else None
-                    ),
-                    canonical_ga=(
-                        proof_payload["canonical_ga"]
-                        if isinstance(proof_payload["canonical_ga"], str)
-                        else None
-                    ),
-                    canonical_gav=(
-                        proof_payload["canonical_gav"]
-                        if isinstance(proof_payload["canonical_gav"], str)
-                        else None
-                    ),
-                    max_candidates=_mapping_int(proof_payload, "max_candidates"),
-                )
-            elif proof.operation is StructureViewOperation.IMPLEMENTATION_CANDIDATES:
-                replay = self.implementation_candidates(
-                    snapshot_id=argument.snapshot_id,
-                    search_terms=_mapping_string_sequence(
-                        proof_payload,
-                        "search_terms_original",
-                    ),
-                    limit=_mapping_int(proof_payload, "limit"),
-                )
-            else:
-                raise _invalid(
-                    "VIEW_CANDIDATE_PROOF_INVALID",
-                    "candidate-derived Entity argument uses an unsupported operation",
-                )
+            replay = _replay_structure_view_result(self, proof)
             if replay != proof:
                 raise _invalid(
                     "VIEW_CANDIDATE_PROOF_INVALID",
-                    "candidate-derived Entity argument does not contain a valid sealed Result",
+                    "result-derived Entity argument does not contain a valid sealed Result",
                 )
         elif (
             argument.origin is not StructureViewArgumentOrigin.CALLER_EXACT_REF
@@ -2825,6 +2867,177 @@ def _unique_support(
                 item.root_id.value,
             ),
         )
+    )
+
+
+def _typed_stable_id(value: object, label: str) -> StableId:
+    if not isinstance(value, StableId):
+        raise _invalid(
+            "VIEW_STABLE_ID_REQUIRED",
+            f"{label} must be a typed StableId",
+        )
+    return value
+
+
+def _public_result_entity_refs(
+    result: StructureViewResult,
+) -> frozenset[tuple[StableId, StableId]]:
+    """Return Entity Root/State pairs both exposed and support-authorized."""
+
+    exposed: set[tuple[StableId, StableId]] = set()
+
+    def visit(value: object) -> None:
+        if isinstance(value, Mapping):
+            for root_key, state_key in (
+                ("root_id", "state_id"),
+                ("entity_root_id", "entity_state_id"),
+            ):
+                root_value = value.get(root_key)
+                state_value = value.get(state_key)
+                if isinstance(root_value, str) and isinstance(state_value, str):
+                    try:
+                        exposed.add((StableId(root_value), StableId(state_value)))
+                    except (TypeError, ValueError):
+                        pass
+            for nested in value.values():
+                visit(nested)
+        elif isinstance(value, (tuple, list)):
+            for nested in value:
+                visit(nested)
+
+    visit(result.payload)
+    supported = {
+        (item.root_id, item.state_id) for item in result.support_map
+    }
+    return frozenset(exposed & supported)
+
+
+def _caller_argument_from_result_field(
+    service: StructureViewService,
+    result: StructureViewResult,
+    key: str,
+) -> StructureEntityArgument:
+    value = result.payload.get(key)
+    if not isinstance(value, Mapping):
+        raise _invalid(
+            "VIEW_RESULT_ENTITY_FIELD_INVALID",
+            f"sealed View Result field {key} is not an Entity",
+        )
+    root_value = value.get("root_id", value.get("entity_root_id"))
+    state_value = value.get("state_id", value.get("entity_state_id"))
+    if not isinstance(root_value, str) or not isinstance(state_value, str):
+        raise _invalid(
+            "VIEW_RESULT_ENTITY_FIELD_INVALID",
+            f"sealed View Result field {key} has no exact Root/State pair",
+        )
+    return StructureEntityArgument.caller_exact_ref(
+        service=service,
+        snapshot_id=result.snapshot_ids[0],
+        entity_root_id=StableId(root_value),
+        entity_state_id=StableId(state_value),
+    )
+
+
+def _replay_structure_view_result(
+    service: StructureViewService,
+    result: StructureViewResult,
+) -> StructureViewResult:
+    """Replay a sealed Result before it may authorize a later Entity Ref."""
+
+    payload = result.payload
+    operation = result.operation
+    if operation is StructureViewOperation.ENTITY_CANDIDATES:
+        exact_root = payload.get("exact_root_id")
+        return service.entity_candidates(
+            snapshot_id=result.snapshot_ids[0],
+            mention=_mapping_text(payload, "mention_original"),
+            entity_type=payload.get("entity_type"),
+            exact_root_id=(
+                StableId(exact_root) if isinstance(exact_root, str) else None
+            ),
+            canonical_ga=(
+                payload.get("canonical_ga")
+                if isinstance(payload.get("canonical_ga"), str)
+                else None
+            ),
+            canonical_gav=(
+                payload.get("canonical_gav")
+                if isinstance(payload.get("canonical_gav"), str)
+                else None
+            ),
+            max_candidates=_mapping_int(payload, "max_candidates"),
+        )
+    if operation is StructureViewOperation.IMPLEMENTATION_CANDIDATES:
+        return service.implementation_candidates(
+            snapshot_id=result.snapshot_ids[0],
+            search_terms=_mapping_string_sequence(
+                payload, "search_terms_original"
+            ),
+            limit=_mapping_int(payload, "limit"),
+        )
+    if operation is StructureViewOperation.METHOD_IMPLEMENTATION:
+        return service.method_implementation(
+            method=_caller_argument_from_result_field(
+                service, result, "method"
+            )
+        )
+    if operation is StructureViewOperation.CHILD_MODULE_INVENTORY:
+        return service.child_module_inventory(
+            system=_caller_argument_from_result_field(
+                service, result, "system"
+            )
+        )
+    if operation is StructureViewOperation.DECLARED_METHOD_INVENTORY:
+        return service.declared_method_inventory(
+            java_type=_caller_argument_from_result_field(
+                service, result, "java_type"
+            )
+        )
+    if operation is StructureViewOperation.DIRECT_NEIGHBORHOOD:
+        return service.direct_neighborhood(
+            entity=_caller_argument_from_result_field(
+                service, result, "entity"
+            ),
+            direction=_mapping_text(payload, "direction"),
+            predicate=payload.get("predicate"),
+        )
+    if operation is StructureViewOperation.PATH_EXISTS:
+        return service.path_exists(
+            source=_caller_argument_from_result_field(
+                service, result, "source"
+            ),
+            target=_caller_argument_from_result_field(
+                service, result, "target"
+            ),
+            predicate=_mapping_text(payload, "predicate"),
+            max_depth=_mapping_int(payload, "max_depth"),
+            max_expansions=_mapping_int(payload, "max_expansions"),
+        )
+    if operation is StructureViewOperation.ALL_SIMPLE_PATHS:
+        return service.all_simple_paths(
+            source=_caller_argument_from_result_field(
+                service, result, "source"
+            ),
+            target=_caller_argument_from_result_field(
+                service, result, "target"
+            ),
+            predicate=_mapping_text(payload, "predicate"),
+            max_depth=_mapping_int(payload, "max_depth"),
+            max_paths=_mapping_int(payload, "max_paths"),
+            max_expansions=_mapping_int(payload, "max_expansions"),
+        )
+    if operation is StructureViewOperation.ORDERED_SNAPSHOT_DIFF:
+        return service.ordered_snapshot_diff(
+            base_snapshot_id=StableId(
+                _mapping_text(payload, "base_snapshot_id")
+            ),
+            target_snapshot_id=StableId(
+                _mapping_text(payload, "target_snapshot_id")
+            ),
+        )
+    raise _invalid(
+        "VIEW_RESULT_REPLAY_UNSUPPORTED",
+        "sealed View Result operation cannot authorize a later Entity Ref",
     )
 
 

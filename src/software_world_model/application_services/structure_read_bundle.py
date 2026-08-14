@@ -46,6 +46,12 @@ from software_world_model.knowledge_engine.structure_publication import (
 
 STRUCTURE_SNAPSHOT_READ_BUNDLE_FORMAT = "STRUCTURE_SNAPSHOT_READ_BUNDLE@1"
 STRUCTURE_ORDERED_READ_BUNDLE_FORMAT = "STRUCTURE_ORDERED_READ_BUNDLE@1"
+STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT = (
+    "STRUCTURE_ORDERED_READ_BUNDLE@2"
+)
+JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF = (
+    "JAVA_IMPLEMENTATION_FEATURE_INDEX@1"
+)
 
 
 class StructureReadBundleKind(str, Enum):
@@ -56,6 +62,11 @@ class StructureReadBundleKind(str, Enum):
 class StructureReadBundleAvailabilityStatus(str, Enum):
     AVAILABLE = "AVAILABLE"
     UNAVAILABLE = "UNAVAILABLE"
+
+
+class StructureBusinessDiscoveryRecallVerdict(str, Enum):
+    COMPLETE = "COMPLETE"
+    UNKNOWN = "UNKNOWN"
 
 
 @dataclass(frozen=True, slots=True)
@@ -424,12 +435,149 @@ class StructureSnapshotBundleReference:
 
 
 @dataclass(frozen=True, slots=True)
+class StructureBusinessDiscoveryRecallBinding:
+    """Pre-question independent recall verdict sealed into Read Authority.
+
+    The binding contains no question, source payload, or evaluator output.  It
+    carries only the exact result identity needed for Application code to use
+    a recall verdict without mounting the private evaluation Oracle in the
+    Answer process.
+    """
+
+    oracle_ref: str
+    oracle_result_digest: Digest
+    profile_ref: str
+    discovery_contract_ref: str
+    snapshot_id: StableId
+    snapshot_bundle_digest: Digest
+    counterexample_classes: tuple[str, ...]
+    verdict: StructureBusinessDiscoveryRecallVerdict
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        oracle_ref: str,
+        oracle_result_digest: Digest,
+        profile_ref: str,
+        discovery_contract_ref: str,
+        snapshot_id: StableId,
+        snapshot_bundle_digest: Digest,
+        counterexample_classes: tuple[str, ...],
+        verdict: StructureBusinessDiscoveryRecallVerdict,
+    ) -> "StructureBusinessDiscoveryRecallBinding":
+        if (
+            not isinstance(snapshot_id, StableId)
+            or snapshot_id.kind != "structure_snapshot"
+            or not isinstance(oracle_result_digest, Digest)
+            or not isinstance(snapshot_bundle_digest, Digest)
+            or not isinstance(verdict, StructureBusinessDiscoveryRecallVerdict)
+            or not isinstance(counterexample_classes, tuple)
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_BINDING_INVALID",
+                "discovery recall binding has an invalid typed authority field",
+            )
+        normalized_oracle_ref = _text(oracle_ref, "discovery Oracle ref")
+        normalized_profile_ref = _text(profile_ref, "discovery Profile ref")
+        normalized_contract_ref = _text(
+            discovery_contract_ref,
+            "discovery Contract ref",
+        )
+        normalized_classes = tuple(
+            sorted(
+                {
+                    _text(item, "counterexample class")
+                    for item in counterexample_classes
+                }
+            )
+        )
+        if (
+            verdict is StructureBusinessDiscoveryRecallVerdict.COMPLETE
+            and normalized_classes != ("alternate-entry", "naming", "synonym")
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_INCOMPLETE",
+                "COMPLETE discovery recall must bind naming, synonym, and alternate-entry counterexamples",
+            )
+        core = {
+            "oracle_ref": normalized_oracle_ref,
+            "oracle_result_digest": oracle_result_digest.value,
+            "profile_ref": normalized_profile_ref,
+            "discovery_contract_ref": normalized_contract_ref,
+            "snapshot_id": snapshot_id.value,
+            "snapshot_bundle_digest": snapshot_bundle_digest.value,
+            "counterexample_classes": normalized_classes,
+            "verdict": verdict.value,
+        }
+        value = cls(
+            oracle_ref=normalized_oracle_ref,
+            oracle_result_digest=oracle_result_digest,
+            profile_ref=normalized_profile_ref,
+            discovery_contract_ref=normalized_contract_ref,
+            snapshot_id=snapshot_id,
+            snapshot_bundle_digest=snapshot_bundle_digest,
+            counterexample_classes=normalized_classes,
+            verdict=verdict,
+            digest=digest_of(
+                ["STRUCTURE_BUSINESS_DISCOVERY_RECALL_BINDING@1", core]
+            ),
+        )
+        return value
+
+    def canonical_value(self) -> dict[str, object]:
+        return {
+            "oracle_ref": self.oracle_ref,
+            "oracle_result_digest": self.oracle_result_digest.value,
+            "profile_ref": self.profile_ref,
+            "discovery_contract_ref": self.discovery_contract_ref,
+            "snapshot_id": self.snapshot_id.value,
+            "snapshot_bundle_digest": self.snapshot_bundle_digest.value,
+            "counterexample_classes": self.counterexample_classes,
+            "verdict": self.verdict.value,
+            "digest": self.digest.value,
+        }
+
+    def require_valid(self) -> None:
+        if (
+            not isinstance(self.snapshot_id, StableId)
+            or self.snapshot_id.kind != "structure_snapshot"
+            or not isinstance(self.oracle_result_digest, Digest)
+            or not isinstance(self.snapshot_bundle_digest, Digest)
+            or not isinstance(self.verdict, StructureBusinessDiscoveryRecallVerdict)
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_BINDING_INVALID",
+                "discovery recall binding has an invalid typed authority field",
+            )
+        expected = type(self).create(
+            oracle_ref=self.oracle_ref,
+            oracle_result_digest=self.oracle_result_digest,
+            profile_ref=self.profile_ref,
+            discovery_contract_ref=self.discovery_contract_ref,
+            snapshot_id=self.snapshot_id,
+            snapshot_bundle_digest=self.snapshot_bundle_digest,
+            counterexample_classes=self.counterexample_classes,
+            verdict=self.verdict,
+        )
+        if self != expected:
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_BINDING_INVALID",
+                "discovery recall binding is not canonical",
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class StructureOrderedReadBundle:
     """Exact caller-ordered Bundle set bound to one persisted read Session."""
 
     session: StructureReadSession
     snapshots: tuple[StructureSnapshotBundleReference, ...]
     digest: Digest
+    business_discovery_recall_bindings: tuple[
+        StructureBusinessDiscoveryRecallBinding, ...
+    ] = ()
     format_ref: str = STRUCTURE_ORDERED_READ_BUNDLE_FORMAT
 
     @classmethod
@@ -438,15 +586,41 @@ class StructureOrderedReadBundle:
         *,
         session: StructureReadSession,
         snapshots: tuple[StructureSnapshotBundleReference, ...],
+        business_discovery_recall_bindings: tuple[
+            StructureBusinessDiscoveryRecallBinding, ...
+        ] = (),
     ) -> "StructureOrderedReadBundle":
+        if any(
+            not isinstance(item, StructureBusinessDiscoveryRecallBinding)
+            for item in business_discovery_recall_bindings
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_SET_INVALID",
+                "discovery recall bindings must be typed authorities",
+            )
+        normalized_recall = tuple(
+            sorted(
+                business_discovery_recall_bindings,
+                key=lambda item: item.snapshot_id.value,
+            )
+        )
+        format_ref = (
+            STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT
+            if normalized_recall
+            else STRUCTURE_ORDERED_READ_BUNDLE_FORMAT
+        )
         core = structure_ordered_read_bundle_core(
             session=session,
             snapshots=snapshots,
+            business_discovery_recall_bindings=normalized_recall,
+            format_ref=format_ref,
         )
         value = cls(
             session=session,
             snapshots=snapshots,
-            digest=digest_of([STRUCTURE_ORDERED_READ_BUNDLE_FORMAT, core]),
+            digest=digest_of([format_ref, core]),
+            business_discovery_recall_bindings=normalized_recall,
+            format_ref=format_ref,
         )
         value.require_valid()
         return value
@@ -455,16 +629,35 @@ class StructureOrderedReadBundle:
         return structure_ordered_read_bundle_core(
             session=self.session,
             snapshots=self.snapshots,
+            business_discovery_recall_bindings=(
+                self.business_discovery_recall_bindings
+            ),
+            format_ref=self.format_ref,
         )
 
     def document(self) -> dict[str, object]:
         return {**self.canonical_core(), "bundle_digest": self.digest.value}
 
     def require_valid(self) -> None:
-        if self.format_ref != STRUCTURE_ORDERED_READ_BUNDLE_FORMAT:
+        if self.format_ref not in {
+            STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+            STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
+        }:
             raise _invalid(
                 "READ_BUNDLE_FORMAT_UNSUPPORTED",
                 "ordered Structure Bundle format is not supported",
+            )
+        if (
+            self.format_ref == STRUCTURE_ORDERED_READ_BUNDLE_FORMAT
+            and self.business_discovery_recall_bindings
+        ) or (
+            self.format_ref
+            == STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT
+            and not self.business_discovery_recall_bindings
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_FORMAT_INVALID",
+                "ordered Bundle format and discovery recall bindings disagree",
             )
         if not isinstance(self.session, StructureReadSession):
             raise _invalid(
@@ -497,8 +690,35 @@ class StructureOrderedReadBundle:
                 "READ_BUNDLE_ORDERED_SET_DUPLICATE",
                 "ordered Bundle cannot repeat a Snapshot",
             )
+        expected_recall = tuple(
+            sorted(
+                self.business_discovery_recall_bindings,
+                key=lambda item: item.snapshot_id.value,
+            )
+        )
+        if (
+            self.business_discovery_recall_bindings != expected_recall
+            or len({item.snapshot_id for item in expected_recall})
+            != len(expected_recall)
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_SET_INVALID",
+                "discovery recall bindings must be sorted and unique by Snapshot",
+            )
+        references = {item.snapshot_id: item for item in self.snapshots}
+        for binding in expected_recall:
+            binding.require_valid()
+            reference = references.get(binding.snapshot_id)
+            if (
+                reference is None
+                or binding.snapshot_bundle_digest != reference.bundle_digest
+            ):
+                raise _invalid(
+                    "READ_BUNDLE_DISCOVERY_RECALL_SNAPSHOT_MISMATCH",
+                    "discovery recall binding targets another Snapshot Bundle",
+                )
         expected_digest = digest_of(
-            [STRUCTURE_ORDERED_READ_BUNDLE_FORMAT, self.canonical_core()]
+            [self.format_ref, self.canonical_core()]
         )
         if self.digest != expected_digest:
             raise _invalid(
@@ -555,6 +775,7 @@ class StoredStructureReadBundle:
         if self.format_ref not in {
             STRUCTURE_SNAPSHOT_READ_BUNDLE_FORMAT,
             STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+            STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
         }:
             raise _invalid(
                 "READ_BUNDLE_FORMAT_UNSUPPORTED",
@@ -681,7 +902,10 @@ class StructureReadBundleReceipt:
                 or self.session_id.kind != "structure_read_session"
                 or self.read_set_digest is None
                 or self.stored_bundle.format_ref
-                != STRUCTURE_ORDERED_READ_BUNDLE_FORMAT
+                not in {
+                    STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+                    STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
+                }
             ):
                 raise _invalid(
                     "READ_BUNDLE_ORDERED_RECEIPT_SHAPE_INVALID",
@@ -879,21 +1103,43 @@ class StructureReadBundleService:
         session_id: StableId,
         idempotency_key: IdempotencyKey,
         destination: str,
+        business_discovery_recall_bindings: tuple[
+            StructureBusinessDiscoveryRecallBinding, ...
+        ] = (),
     ) -> StructureReadBundleReceipt:
         locator = _text(destination, "ordered Bundle destination")
         session = self._sessions.get_session(session_id)
         session.require_valid()
-        request_digest = digest_of(
-            [
-                "BUILD_STRUCTURE_ORDERED_READ_BUNDLE@1",
-                {
-                    "session_id": session.session_id.value,
-                    "session_digest": session.digest.value,
-                    "read_set_digest": session.read_set_digest.value,
-                    "destination": locator,
-                },
-            ]
+        if any(
+            not isinstance(item, StructureBusinessDiscoveryRecallBinding)
+            for item in business_discovery_recall_bindings
+        ):
+            raise _invalid(
+                "READ_BUNDLE_DISCOVERY_RECALL_SET_INVALID",
+                "discovery recall bindings must be typed authorities",
+            )
+        normalized_recall = tuple(
+            sorted(
+                business_discovery_recall_bindings,
+                key=lambda item: item.snapshot_id.value,
+            )
         )
+        for item in normalized_recall:
+            item.require_valid()
+        request_value: dict[str, object] = {
+            "session_id": session.session_id.value,
+            "session_digest": session.digest.value,
+            "read_set_digest": session.read_set_digest.value,
+            "destination": locator,
+        }
+        request_contract = "BUILD_STRUCTURE_ORDERED_READ_BUNDLE@1"
+        if normalized_recall:
+            request_contract = "BUILD_STRUCTURE_ORDERED_READ_BUNDLE@2"
+            request_value["business_discovery_recall_bindings"] = tuple(
+                item.canonical_value()
+                for item in normalized_recall
+            )
+        request_digest = digest_of([request_contract, request_value])
         replay = self._repository.replay(
             idempotency_key=idempotency_key,
             request_digest=request_digest,
@@ -941,6 +1187,7 @@ class StructureReadBundleService:
         envelope = StructureOrderedReadBundle.create(
             session=session,
             snapshots=tuple(references),
+            business_discovery_recall_bindings=normalized_recall,
         )
         envelope.verify_snapshot_bundles(tuple(loaded))
         if replay is not None:
@@ -949,7 +1196,7 @@ class StructureReadBundleService:
         stored = self._files.write_ordered(locator, envelope)
         if (
             stored.bundle_digest != envelope.digest
-            or stored.format_ref != STRUCTURE_ORDERED_READ_BUNDLE_FORMAT
+            or stored.format_ref != envelope.format_ref
         ):
             raise _inconsistent(
                 "Bundle file store returned another ordered semantic digest"
@@ -1183,9 +1430,13 @@ def structure_ordered_read_bundle_core(
     *,
     session: StructureReadSession,
     snapshots: tuple[StructureSnapshotBundleReference, ...],
+    business_discovery_recall_bindings: tuple[
+        StructureBusinessDiscoveryRecallBinding, ...
+    ] = (),
+    format_ref: str = STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
 ) -> dict[str, object]:
-    return {
-        "format_ref": STRUCTURE_ORDERED_READ_BUNDLE_FORMAT,
+    value: dict[str, object] = {
+        "format_ref": format_ref,
         "session": _session_value(session),
         "snapshots": tuple(
             {
@@ -1206,6 +1457,12 @@ def structure_ordered_read_bundle_core(
             "provider_input_fields": 0,
         },
     }
+    if format_ref == STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT:
+        value["business_discovery_recall_bindings"] = tuple(
+            item.canonical_value()
+            for item in business_discovery_recall_bindings
+        )
+    return value
 
 
 def structure_read_bundle_receipt_core(
@@ -1712,9 +1969,13 @@ def _inconsistent(message: str) -> DomainError:
 
 
 __all__ = [
+    "JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF",
     "STRUCTURE_ORDERED_READ_BUNDLE_FORMAT",
+    "STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT",
     "STRUCTURE_SNAPSHOT_READ_BUNDLE_FORMAT",
     "StoredStructureReadBundle",
+    "StructureBusinessDiscoveryRecallBinding",
+    "StructureBusinessDiscoveryRecallVerdict",
     "StructureBundleUpstreamEntityRecord",
     "StructureOrderedReadBundle",
     "StructureReadBundleAvailability",

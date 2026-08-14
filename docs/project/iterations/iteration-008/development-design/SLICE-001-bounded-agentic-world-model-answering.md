@@ -77,6 +77,12 @@ schema 和 Bundle 只能作为 unaccepted assets 重新通过本 Slice Gate，�
 调查 trace 必须绑定 question、Need、exact Snapshot/Bundle、每个 proposal/result、Support、预算消耗、Draft、Review 与 terminal；用户可见
 Citation 仍通过授权端点读取，Answer worker 不获得源码 payload。
 
+实现期确认显式 `FINISH` 本身也是一次 Investigation 模型调用，并且只能发生在至少两个已执行调查回合之后。因此冻结的
+2—4 Investigation / 4—6 total 仍是 Gateway 安全 envelope，但当前可达的正常成功路径实际消费 3—4 次 Investigation、总计 5—6 次；
+4-call 下界不作为本 Slice 成功 fixture 的预期值。Supervisor 仍只按上限预建 6 个 descriptor，Result 必须报告 exact consumed count，
+并关闭、审计所有未消费项；不得通过隐藏 terminal、伪造调用或放宽 two-Result 规则凑下界。详见
+[FINDING-008-002](../findings/FINDING-008-002.md)。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

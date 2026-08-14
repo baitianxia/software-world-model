@@ -13,7 +13,7 @@ import subprocess
 
 from software_world_model.ai_infrastructure import (
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT,
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     VolcengineArkModelConfiguration,
     WorldModelStrategyConfiguration,
     java_source_semantics_world_model_output_contract_digest,
@@ -104,7 +104,7 @@ def create_freeze(
     timestamp = (created_at or datetime.now(timezone.utc)).astimezone(timezone.utc)
     if timestamp.tzinfo is None:
         raise FreezeError("freeze timestamp must be timezone-aware")
-    contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
     timestamp_text = timestamp.isoformat().replace("+00:00", "Z")
     core = {
         "schema": FREEZE_SCHEMA,
@@ -126,7 +126,9 @@ def create_freeze(
                 world_model_answer_prompt_program_digest(contract).value
             ),
             "output_contract_digest": (
-                java_source_semantics_world_model_output_contract_digest().value
+                java_source_semantics_world_model_output_contract_digest(
+                    contract
+                ).value
             ),
             "proposal_vocabulary_ref": contract.proposal_vocabulary_ref,
             "available_operations": list(contract.available_operations),

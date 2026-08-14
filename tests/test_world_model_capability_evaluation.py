@@ -4,7 +4,7 @@ import unittest
 
 from software_world_model.ai_infrastructure import (
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT,
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     JavaSourceSemanticsWorldModelEvaluationCase,
     JavaSourceSemanticsWorldModelEvaluationRole,
     WORLD_MODEL_EVALUATION_METRIC_CONTRACT,
@@ -133,11 +133,13 @@ class WorldModelCapabilityEvaluationTests(unittest.TestCase):
         self.assertEqual(len(definition.cases), 12)
         self.assertEqual(
             definition.strategy_version,
-            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_version,
+            JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT.strategy_version,
         )
         self.assertEqual(
             definition.output_schema_digest,
-            java_source_semantics_world_model_output_contract_digest(),
+            java_source_semantics_world_model_output_contract_digest(
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
         )
         self.assertEqual(
             definition.metric_contract_digest,

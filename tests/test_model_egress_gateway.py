@@ -27,6 +27,8 @@ from software_world_model.ai_infrastructure import (
     UnixSocketModelGatewayClient,
     QualifiedJavaModelEgressGatewayPolicy,
     QualifiedJavaSourceSemanticsModelEgressGatewayPolicy,
+    BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
     WorldModelCapabilityStrategy,
@@ -183,6 +185,38 @@ class ModelEgressGatewayTests(unittest.TestCase):
             ),
         )
 
+    def bounded_semantic_policy(
+        self, *, valid_until=None
+    ) -> QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
+        return QualifiedJavaSourceSemanticsModelEgressGatewayPolicy(
+            policy_ref=(
+                BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
+            ),
+            policy_digest=Digest(
+                "sha256:378e6a9acde3922390a26759affacbe2510d03e014cafe47f944ed3328b579d9"
+            ),
+            provider_type="VOLCENGINE_ARK",
+            adapter_version="openai-chat-completions-no-tools@8",
+            model_ref="glm-5-2-260617",
+            provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+            endpoint=(
+                "https://ark.cn-beijing.volces.com:443/"
+                "api/coding/v3/chat/completions"
+            ),
+            credential_reference="env:ARK_API_KEY",
+            conformance_result_ref=_CONFORMANCE_REF,
+            capability_qualification_ref=(
+                "capability-evaluation:evaluation_result_"
+                "88888888888888888888888888888888"
+            ),
+            capability_qualification_digest=Digest("sha256:" + "8" * 64),
+            closed_capability_result_digest=Digest("sha256:" + "9" * 64),
+            qualification_valid_until=(
+                valid_until or datetime.now(timezone.utc) + timedelta(days=1)
+            ),
+            max_provider_calls=6,
+        )
+
     def java_policy(self, *, valid_until=None) -> QualifiedJavaModelEgressGatewayPolicy:
         return QualifiedJavaModelEgressGatewayPolicy(
             policy_ref="ITER-006-JAVA-MODEL-EGRESS-GATEWAY@1.0.0",
@@ -322,11 +356,11 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 qualification_ref=_QUALIFICATION_REF,
             ),
             proposal_contract=(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
             ),
         )
         available_operations = (
-            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
             if capability == "IMPLEMENTATION_QUERY_PLANNING"
             else ()
         )
@@ -335,6 +369,69 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 case_id=f"product:semantic-{capability.casefold()}",
                 capability=capability,
                 sealed_input={"role": capability},
+                available_operations=available_operations,
+            )
+        assert capture.context is not None
+        return capture.context
+
+    def bounded_semantic_context(
+        self,
+        capability: str,
+        *,
+        investigation_ordinal: int = 1,
+    ) -> ModelExecutionContext:
+        class Capture:
+            context: ModelExecutionContext | None = None
+
+            def invoke(self, context):
+                self.context = context
+                raise RuntimeError("captured")
+
+        capture = Capture()
+        strategy = WorldModelCapabilityStrategy(
+            capture,
+            WorldModelStrategyConfiguration(
+                provider_type="VOLCENGINE_ARK",
+                adapter_version="openai-chat-completions-no-tools@8",
+                model_ref="glm-5-2-260617",
+                provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+                qualification_ref=_QUALIFICATION_REF,
+            ),
+            proposal_contract=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
+        )
+        if capability == "IMPLEMENTATION_INVESTIGATION":
+            sealed_input = {
+                "original_question": "How is authentication implemented?",
+                "response_language": "en",
+                "need_key": "implementation-answer",
+                "read_authority": {"snapshot_ids": ["snapshot"]},
+                "profile_ref": "JAVA_SOURCE_SEMANTICS@1",
+                "step_index": investigation_ordinal,
+                "trace_digest": "sha256:" + str(investigation_ordinal) * 64,
+                "previous_result": (
+                    None if investigation_ordinal == 1 else {"result": "sealed"}
+                ),
+                "progress_receipt": (
+                    None if investigation_ordinal == 1 else {"progress": "sealed"}
+                ),
+                "remaining_budget": {
+                    "model_calls": 5 - investigation_ordinal,
+                    "execution_steps": 5 - investigation_ordinal,
+                },
+            }
+            available_operations = (
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            )
+        else:
+            sealed_input = {"role": capability}
+            available_operations = ()
+        with self.assertRaisesRegex(RuntimeError, "captured"):
+            strategy.propose(
+                case_id=f"product:bounded-{capability.casefold()}",
+                capability=capability,
+                sealed_input=sealed_input,
                 available_operations=available_operations,
             )
         assert capture.context is not None
@@ -383,6 +480,57 @@ class ModelEgressGatewayTests(unittest.TestCase):
         self.assertEqual(fourth.exception.code, ErrorCode.QUALIFICATION_INVALID)
         self.assertEqual(
             out_of_order.exception.code, ErrorCode.QUALIFICATION_INVALID
+        )
+
+    def test_bounded_semantics_policy_enforces_two_to_four_then_draft_review(self) -> None:
+        policy = self.bounded_semantic_policy()
+        with self.assertRaises(DomainError) as too_early:
+            policy.validate_context(
+                self.bounded_semantic_context("IMPLEMENTATION_ANSWER_DRAFTING")
+            )
+
+        policy.validate_context(
+            self.bounded_semantic_context(
+                "IMPLEMENTATION_INVESTIGATION", investigation_ordinal=1
+            )
+        )
+        policy.validate_context(
+            self.bounded_semantic_context(
+                "IMPLEMENTATION_INVESTIGATION", investigation_ordinal=2
+            )
+        )
+        policy.validate_context(
+            self.bounded_semantic_context("IMPLEMENTATION_ANSWER_DRAFTING")
+        )
+        policy.validate_context(
+            self.bounded_semantic_context("IMPLEMENTATION_ANSWER_REVIEW")
+        )
+        with self.assertRaises(DomainError) as after_review:
+            policy.validate_context(
+                self.bounded_semantic_context("IMPLEMENTATION_ANSWER_REVIEW")
+            )
+
+        maximum = self.bounded_semantic_policy()
+        for ordinal in range(1, 5):
+            maximum.validate_context(
+                self.bounded_semantic_context(
+                    "IMPLEMENTATION_INVESTIGATION",
+                    investigation_ordinal=ordinal,
+                )
+            )
+        with self.assertRaises(DomainError) as fifth_investigation:
+            maximum.validate_context(
+                self.bounded_semantic_context(
+                    "IMPLEMENTATION_INVESTIGATION",
+                    investigation_ordinal=5,
+                )
+            )
+
+        self.assertEqual(too_early.exception.code, ErrorCode.QUALIFICATION_INVALID)
+        self.assertEqual(after_review.exception.code, ErrorCode.QUALIFICATION_INVALID)
+        self.assertEqual(
+            fifth_investigation.exception.code,
+            ErrorCode.QUALIFICATION_INVALID,
         )
 
     def test_round_trip_binds_request_result_and_audits(self) -> None:

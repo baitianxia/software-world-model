@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 _EXPORT_MODULES = {
     "ActivatedApplicationAssembly": ".agentic_runtime",
     "AgenticTaskServiceAssembly": ".agentic_runtime",
+    "BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT": ".world_model_evaluation",
     "EvidenceTaskServiceAssembly": ".agentic_runtime",
     "ApplicationRuntime": ".runtime",
     "WORLD_MODEL_EVALUATION_PAGE_FORMAT": ".world_model_evaluation",
@@ -61,6 +62,7 @@ if TYPE_CHECKING:
     )
     from .runtime import ApplicationRuntime
     from .world_model_evaluation import (
+        BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT,
         WORLD_MODEL_EVALUATION_PAGE_FORMAT,
         read_world_model_evaluation_page,
         world_model_evaluation_page_envelope,
@@ -71,6 +73,7 @@ if TYPE_CHECKING:
 __all__ = [
     "ActivatedApplicationAssembly",
     "AgenticTaskServiceAssembly",
+    "BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT",
     "EvidenceTaskServiceAssembly",
     "ApplicationRuntime",
     "WORLD_MODEL_EVALUATION_PAGE_FORMAT",

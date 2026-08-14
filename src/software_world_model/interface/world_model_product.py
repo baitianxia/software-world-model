@@ -18,7 +18,7 @@ from typing import Mapping, Protocol, Sequence
 
 from software_world_model.ai_infrastructure.model_egress_gateway import (
     JAVA_MODEL_EGRESS_GATEWAY_ROUTE,
-    JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
+    BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
     MODEL_EGRESS_GATEWAY_ROUTE,
 )
 from software_world_model.ai_infrastructure.world_model_answer_strategy import (
@@ -32,7 +32,7 @@ from software_world_model.ai_infrastructure.world_model_answer_strategy import (
 from software_world_model.ai_infrastructure.versioned_world_model_answer_strategy import (
     IMPLEMENTATION_ANSWER_DRAFTING,
     IMPLEMENTATION_ANSWER_REVIEW,
-    IMPLEMENTATION_QUERY_PLANNING,
+    IMPLEMENTATION_INVESTIGATION,
     JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -40,6 +40,13 @@ from software_world_model.ai_infrastructure.versioned_world_model_answer_strateg
 )
 from software_world_model.application_services.structure_read_bundle import (
     StructureSnapshotReadBundle,
+)
+from software_world_model.application_services.bounded_world_model_investigation import (
+    BoundedInvestigationTrace,
+    BoundedWorldModelInvestigationSession,
+    InvestigationEntityRef,
+    InvestigationOperation,
+    InvestigationProposal,
 )
 from software_world_model.application_services.structure_view import (
     NeighborhoodDirection,
@@ -999,7 +1006,7 @@ class ProductRequirementReviewer(WorldModelRequirementFidelityReviewer):
 
 
 class _ProductModelProposalRecorder:
-    """Collect the three isolated provider proposals in execution order."""
+    """Collect isolated provider proposals in exact execution order."""
 
     def __init__(self) -> None:
         self._items: list[WorldModelCapabilityProposal] = []
@@ -1078,7 +1085,7 @@ class JavaSourceSemanticsRequirementReviewer(
 
 
 class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
-    """Call 1: propose feature terms, then seal the generic two-operation Plan."""
+    """Run a bounded result-driven investigation, then seal its replay Plan."""
 
     execution_mode = QUALIFIED_MODEL_STRATEGY_MODE
 
@@ -1089,11 +1096,13 @@ class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
         recorder: _ProductModelProposalRecorder,
         strategy_ref: str,
         provider_route: str,
+        view,
     ) -> None:
         self._model = model_strategy
         self._recorder = recorder
         self.strategy_ref = strategy_ref
         self.provider_route = provider_route
+        self._view = view
 
     def plan(
         self,
@@ -1108,83 +1117,76 @@ class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
                 "PRODUCT_IMPLEMENTATION_REQUIREMENT_INVALID",
                 "implementation Plan requires the one preserved free-form Need",
             )
-        proposal = self._model.propose(
-            case_id=f"product:{question.request_ref}:plan",
-            capability=IMPLEMENTATION_QUERY_PLANNING,
-            sealed_input={
-                "original_question": question.original_question,
-                "response_language": question.response_language,
-                "need_key": need_ids[0],
-                "read_authority": question.read_authority.canonical_value(),
-                "profile_ref": JAVA_SOURCE_SEMANTICS_PROFILE_REF,
-            },
-            available_operations=(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
-            ),
+        session = BoundedWorldModelInvestigationSession(
+            view=self._view,
+            question_digest=question.digest,
+            need_ids=need_ids,
         )
-        self._recorder.append(proposal)
-        normalized = proposal.normalized_result
-        search_terms = _closed_text_list(
-            normalized.get("search_terms"),
-            "implementation search terms",
-            minimum=1,
-            maximum=12,
-        )
-        if len({item.casefold() for item in search_terms}) != len(search_terms):
-            raise _invalid(
-                "PRODUCT_IMPLEMENTATION_SEARCH_DUPLICATE",
-                "model Plan repeated a normalized implementation search term",
+        previous_result: object = None
+        previous_progress: object = None
+        while not session.terminal:
+            step_index = session.model_call_count + 1
+            model_proposal = self._model.propose(
+                case_id=(
+                    f"product:{question.request_ref}:investigation:{step_index}"
+                ),
+                capability=IMPLEMENTATION_INVESTIGATION,
+                sealed_input={
+                    "original_question": question.original_question,
+                    "response_language": question.response_language,
+                    "need_key": need_ids[0],
+                    "read_authority": question.read_authority.canonical_value(),
+                    "profile_ref": JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+                    "step_index": step_index,
+                    "trace_digest": session.trace_digest.value,
+                    "previous_result": previous_result,
+                    "progress_receipt": previous_progress,
+                    "remaining_budget": {
+                        "model_calls": 4 - session.model_call_count,
+                        "execution_steps": 4 - len(session.steps),
+                    },
+                },
+                available_operations=(
+                    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+                ),
             )
-        operations = _closed_text_list(
-            normalized.get("operations"),
-            "implementation operations",
-            minimum=2,
-            maximum=2,
-        )
-        snapshot_value = normalized.get("snapshot")
-        limit = normalized.get("limit")
-        if (
-            normalized.get("need_key") != need_ids[0]
-            or operations
-            != JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
-            or not isinstance(snapshot_value, str)
-            or snapshot_value
-            not in {
-                item.value for item in question.read_authority.snapshot_ids
-            }
-            or type(limit) is not int
-            or not 1 <= limit <= 20
-        ):
-            raise _invalid(
-                "PRODUCT_IMPLEMENTATION_MODEL_PLAN_INVALID",
-                "model Plan is outside the exact implementation operation contract",
+            self._recorder.append(model_proposal)
+            normalized = getattr(model_proposal, "normalized_result", None)
+            if not isinstance(normalized, Mapping):
+                raise _invalid(
+                    "PRODUCT_INVESTIGATION_MODEL_OUTPUT_INVALID",
+                    "investigation model returned no closed normalized proposal",
+                )
+            model_digest = getattr(model_proposal, "digest", None)
+            if not isinstance(model_digest, Digest):
+                model_digest = digest_of(
+                    [
+                        "PRODUCT_INVESTIGATION_MODEL_PROPOSAL@1",
+                        step_index,
+                        normalized,
+                    ]
+                )
+            typed_proposal = InvestigationProposal.from_mapping(
+                normalized,
+                model_proposal_digest=model_digest,
             )
-        snapshot_id = StableId(snapshot_value)
-        selector_id = "implementation-method-candidate"
-        selector = WorldModelEntitySelectorProposal(
-            selector_id=selector_id,
-            need_ids=need_ids,
-            snapshot_id=snapshot_id,
-            origin=EntitySelectorOrigin.IMPLEMENTATION_FEATURES,
-            max_candidates=limit,
-            search_terms=search_terms,
-        )
-        candidate_step = WorldModelQueryStepProposal.create(
-            step_id="implementation-candidates",
-            need_ids=need_ids,
-            operation=StructureViewOperation.IMPLEMENTATION_CANDIDATES,
-            parameters={
-                "snapshot_id": snapshot_id.value,
-                "search_terms": search_terms,
-                "limit": limit,
-            },
-        )
-        method_step = WorldModelQueryStepProposal.create(
-            step_id="method-implementation",
-            need_ids=need_ids,
-            operation=StructureViewOperation.METHOD_IMPLEMENTATION,
-            arguments={"method": selector_id},
-        )
+            executed = session.submit(typed_proposal)
+            if executed is not None:
+                previous_result = {
+                    "operation": executed.proposal.operation.value,
+                    "results": tuple(
+                        _plain_canonical(item.canonical_value())
+                        for item in executed.results
+                    ),
+                }
+                previous_progress = {
+                    "progress_token": executed.progress_token.value,
+                    "query_bytes": executed.query_bytes,
+                    "result_bytes": executed.result_bytes,
+                    "support_item_count": executed.support_item_count,
+                }
+        trace = session.seal()
+        selectors, steps = _investigation_query_plan(trace, need_ids)
         return WorldModelQueryPlanProposal(
             requirement_id=requirement.requirement_id,
             requirement_digest=requirement.digest,
@@ -1192,16 +1194,17 @@ class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
             ordered_bundle_digest=(
                 requirement.read_authority.ordered_bundle_digest
             ),
-            selectors=(selector,),
-            steps=(candidate_step, method_step),
+            selectors=selectors,
+            steps=steps,
             explicit_gaps=(),
             invocation_id=invocation.invocation_id,
             invocation_digest=invocation.digest,
+            investigation_trace=trace,
         )
 
 
 class JavaSourceSemanticsDraftGenerator(WorldModelDraftGenerator):
-    """Call 2: generate one answer Claim from sealed formal query Results."""
+    """Generate one answer Claim from the sealed investigation and Results."""
 
     execution_mode = QUALIFIED_MODEL_STRATEGY_MODE
 
@@ -1267,6 +1270,13 @@ class JavaSourceSemanticsDraftGenerator(WorldModelDraftGenerator):
                     "steps": tuple(
                         _plain_canonical(item.canonical_value())
                         for item in plan.steps
+                    ),
+                    "investigation_trace": (
+                        _model_visible_investigation_trace(
+                            plan.investigation_trace
+                        )
+                        if plan.investigation_trace is not None
+                        else None
                     ),
                     "digest": plan.digest.value,
                 },
@@ -1380,7 +1390,7 @@ class JavaSourceSemanticsAnswerReviewer(WorldModelAnswerReviewer):
                 "original_question": question.original_question,
                 "response_language": question.response_language,
                 "requirement": _plain_canonical(requirement.canonical_value()),
-                "query_plan": _plain_canonical(plan.canonical_value()),
+                "query_plan": _model_visible_query_plan(plan),
                 "query_results": _implementation_query_results(result_set),
                 "assessment": _plain_canonical(assessment.canonical_value()),
                 "draft": _plain_canonical(draft.canonical_value()),
@@ -2547,7 +2557,7 @@ class WorldModelProductAnswerService:
             )
         self._model_strategy_ref = expected_strategy_ref
         self._model_route = (
-            JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE
+            BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE
             if self._catalog.profile_ref == JAVA_SOURCE_SEMANTICS_PROFILE_REF
             else JAVA_MODEL_EGRESS_GATEWAY_ROUTE
             if self._catalog.profile_ref == JAVA_STATIC_CALL_PROFILE_REF
@@ -2584,6 +2594,7 @@ class WorldModelProductAnswerService:
                 recorder=recorder,
                 strategy_ref=self._model_strategy_ref,
                 provider_route=self._model_route,
+                view=self._view,
             )
             draft_generator = JavaSourceSemanticsDraftGenerator(
                 model_strategy=self._model_strategy,
@@ -2661,6 +2672,160 @@ class WorldModelProductAnswerService:
         )
 
 
+def _investigation_query_plan(
+    trace: BoundedInvestigationTrace,
+    need_ids: tuple[str, ...],
+) -> tuple[
+    tuple[WorldModelEntitySelectorProposal, ...],
+    tuple[WorldModelQueryStepProposal, ...],
+]:
+    selectors: list[WorldModelEntitySelectorProposal] = []
+    steps: list[WorldModelQueryStepProposal] = []
+
+    def selector_for(
+        value: InvestigationEntityRef,
+        *,
+        label: str,
+    ) -> str:
+        source = trace.result(
+            value.source_result_id,
+            value.source_result_digest,
+        )
+        if len(source.snapshot_ids) != 1:
+            raise _invalid(
+                "PRODUCT_INVESTIGATION_SELECTOR_SNAPSHOT_INVALID",
+                "investigation Entity Ref source does not bind one Snapshot",
+            )
+        selector_id = f"investigation-{label}-{len(selectors) + 1}"
+        selectors.append(
+            WorldModelEntitySelectorProposal(
+                selector_id=selector_id,
+                need_ids=need_ids,
+                snapshot_id=source.snapshot_ids[0],
+                origin=EntitySelectorOrigin.SEALED_INVESTIGATION_RESULT,
+                max_candidates=1,
+                entity_root_id=value.entity_root_id,
+                entity_state_id=value.entity_state_id,
+                source_result_id=value.source_result_id,
+                source_result_digest=value.source_result_digest,
+            )
+        )
+        return selector_id
+
+    for investigation_index, investigation_step in enumerate(
+        trace.steps, start=1
+    ):
+        proposal = investigation_step.proposal
+        prefix = f"investigation-{investigation_index}"
+        if proposal.operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES:
+            assert proposal.snapshot_id is not None
+            assert proposal.limit is not None
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id=f"{prefix}-candidates",
+                    need_ids=need_ids,
+                    operation=StructureViewOperation.IMPLEMENTATION_CANDIDATES,
+                    parameters={
+                        "snapshot_id": proposal.snapshot_id.value,
+                        "search_terms": proposal.search_terms,
+                        "limit": proposal.limit,
+                    },
+                )
+            )
+        elif proposal.operation is InvestigationOperation.METHOD_IMPLEMENTATIONS:
+            for method_index, method_ref in enumerate(
+                proposal.method_refs, start=1
+            ):
+                selector_id = selector_for(
+                    method_ref,
+                    label=f"{investigation_index}-method-{method_index}",
+                )
+                steps.append(
+                    WorldModelQueryStepProposal.create(
+                        step_id=f"{prefix}-method-{method_index}",
+                        need_ids=need_ids,
+                        operation=StructureViewOperation.METHOD_IMPLEMENTATION,
+                        arguments={"method": selector_id},
+                    )
+                )
+        elif proposal.operation is InvestigationOperation.DECLARED_METHOD_INVENTORY:
+            selector_id = selector_for(
+                proposal.entity_refs[0],
+                label=f"{investigation_index}-java-type",
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id=f"{prefix}-method-inventory",
+                    need_ids=need_ids,
+                    operation=StructureViewOperation.DECLARED_METHOD_INVENTORY,
+                    arguments={"java_type": selector_id},
+                )
+            )
+        elif proposal.operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+            selector_id = selector_for(
+                proposal.entity_refs[0],
+                label=f"{investigation_index}-entity",
+            )
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id=f"{prefix}-neighborhood",
+                    need_ids=need_ids,
+                    operation=StructureViewOperation.DIRECT_NEIGHBORHOOD,
+                    arguments={"entity": selector_id},
+                    parameters={
+                        "direction": proposal.direction.value,
+                        "predicate": (
+                            proposal.predicate.value
+                            if proposal.predicate is not None
+                            else None
+                        ),
+                    },
+                )
+            )
+        elif proposal.operation in {
+            InvestigationOperation.PATH_EXISTS,
+            InvestigationOperation.ALL_SIMPLE_PATHS,
+        }:
+            source_id = selector_for(
+                proposal.entity_refs[0],
+                label=f"{investigation_index}-source",
+            )
+            target_id = selector_for(
+                proposal.entity_refs[1],
+                label=f"{investigation_index}-target",
+            )
+            parameters = {
+                "predicate": proposal.predicate.value,
+                "max_depth": proposal.max_depth,
+                "max_expansions": proposal.max_expansions,
+            }
+            if proposal.operation is InvestigationOperation.ALL_SIMPLE_PATHS:
+                parameters["max_paths"] = proposal.max_paths
+            steps.append(
+                WorldModelQueryStepProposal.create(
+                    step_id=(
+                        f"{prefix}-path-exists"
+                        if proposal.operation is InvestigationOperation.PATH_EXISTS
+                        else f"{prefix}-all-paths"
+                    ),
+                    need_ids=need_ids,
+                    operation=(
+                        StructureViewOperation.PATH_EXISTS
+                        if proposal.operation is InvestigationOperation.PATH_EXISTS
+                        else StructureViewOperation.ALL_SIMPLE_PATHS
+                    ),
+                    arguments={"source": source_id, "target": target_id},
+                    parameters=parameters,
+                )
+            )
+        else:  # pragma: no cover - FINISH is not an executed trace step
+            raise _invalid(
+                "PRODUCT_INVESTIGATION_OPERATION_INVALID",
+                "terminal or unknown investigation operation entered Query Plan",
+            )
+    return tuple(selectors), tuple(steps)
+
+
 def _closed_text_list(
     value: object,
     label: str,
@@ -2695,6 +2860,37 @@ def _plain_canonical(value: object) -> object:
         }
     if isinstance(value, (tuple, list)):
         return tuple(_plain_canonical(item) for item in value)
+    return value
+
+
+def _model_visible_investigation_trace(
+    trace: BoundedInvestigationTrace,
+) -> dict[str, object]:
+    """Project a sealed Trace without exposing its independent Oracle identity."""
+
+    value = _plain_canonical(trace.canonical_value())
+    if not isinstance(value, dict):  # pragma: no cover - canonical DTO invariant
+        raise _invalid(
+            "PRODUCT_INVESTIGATION_TRACE_PROJECTION_INVALID",
+            "investigation trace did not project to one closed object",
+        )
+    value.pop("discovery_oracle", None)
+    return value
+
+
+def _model_visible_query_plan(
+    plan: WorldModelQueryPlan,
+) -> dict[str, object]:
+    value = _plain_canonical(plan.canonical_value())
+    if not isinstance(value, dict):  # pragma: no cover - canonical DTO invariant
+        raise _invalid(
+            "PRODUCT_QUERY_PLAN_PROJECTION_INVALID",
+            "Query Plan did not project to one closed object",
+        )
+    if plan.investigation_trace is not None:
+        value["investigation_trace"] = _model_visible_investigation_trace(
+            plan.investigation_trace
+        )
     return value
 
 

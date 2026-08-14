@@ -11,7 +11,7 @@ import sys
 from typing import Mapping
 
 from software_world_model.ai_infrastructure import (
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     WorldModelCapabilityStrategy,
     WorldModelEvaluationOutput,
     WorldModelEvaluationReview,
@@ -61,7 +61,7 @@ class LiveJavaSourceSemanticsCapabilityCaseRunner:
             gateway,
             configuration,
             proposal_contract=(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
             ),
         )
         self._configuration = configuration
@@ -196,7 +196,7 @@ class LiveJavaSourceSemanticsCapabilityCaseRunner:
             "independent_review_document_digest": review["document_digest"],
             "strategy_implementation_digest": (
                 world_model_answer_strategy_implementation_digest(
-                    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+                    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
                 ).value
             ),
             "strategy_configuration_digest": self._configuration.digest.value,
@@ -299,7 +299,7 @@ class LiveJavaSourceSemanticsCapabilityCaseRunner:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "source-semantics capability manifest is invalid",
             )
-        contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+        contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
         items = manifest.get("items")
         if (
             manifest.get("strategy_ref") != contract.strategy_ref

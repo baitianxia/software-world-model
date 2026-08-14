@@ -9,6 +9,10 @@ import unittest
 
 from software_world_model.application_services.knowledge_use import TaskBoundary
 from software_world_model.application_services.structure_read_bundle import (
+    JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF,
+    STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
+    StructureBusinessDiscoveryRecallBinding,
+    StructureBusinessDiscoveryRecallVerdict,
     StructureOrderedReadBundle,
     StructureReadBundleAvailabilityStatus,
     StructureReadBundleService,
@@ -485,6 +489,67 @@ class StructureReadBundleTests(unittest.TestCase):
                 self.files.read_snapshot(receipt_b.stored_bundle.locator),
                 self.files.read_snapshot(receipt_a.stored_bundle.locator),
             )
+        )
+
+    def test_ordered_envelope_seals_pre_question_discovery_recall_binding(self) -> None:
+        session = self._comparison_session()
+        receipt_a = self._build_a()
+        receipt_b = self.service.build_snapshot(
+            snapshot_id=self.b[0].snapshot_id,
+            idempotency_key=IdempotencyKey("bundle-b-discovery"),
+            destination=self._destination("b-discovery.json"),
+        )
+        bundle_b, _ = self.files.read_snapshot(receipt_b.stored_bundle.locator)
+        binding = StructureBusinessDiscoveryRecallBinding.create(
+            oracle_ref="pre-question-recall-oracle@1",
+            oracle_result_digest=digest_of("pre-question-recall-result"),
+            profile_ref="TEST-STRUCTURE-PROFILE@1",
+            discovery_contract_ref=(
+                JAVA_IMPLEMENTATION_FEATURE_DISCOVERY_CONTRACT_REF
+            ),
+            snapshot_id=bundle_b.snapshot_id,
+            snapshot_bundle_digest=bundle_b.digest,
+            counterexample_classes=("synonym", "alternate-entry", "naming"),
+            verdict=StructureBusinessDiscoveryRecallVerdict.COMPLETE,
+        )
+        ordered_receipt = self.service.build_ordered(
+            session_id=session.session_id,
+            idempotency_key=IdempotencyKey("ordered-discovery"),
+            destination=self._destination("ordered-discovery.json"),
+            business_discovery_recall_bindings=(binding,),
+        )
+
+        ordered, _ = self.files.read_ordered(
+            ordered_receipt.stored_bundle.locator
+        )
+        self.assertEqual(
+            ordered.format_ref,
+            STRUCTURE_ORDERED_READ_BUNDLE_WITH_DISCOVERY_FORMAT,
+        )
+        self.assertEqual(
+            ordered.business_discovery_recall_bindings,
+            (binding,),
+        )
+        ordered.verify_snapshot_bundles(
+            (
+                self.files.read_snapshot(receipt_b.stored_bundle.locator),
+                self.files.read_snapshot(receipt_a.stored_bundle.locator),
+            )
+        )
+
+        document = json.loads(
+            Path(ordered_receipt.stored_bundle.locator).read_bytes()
+        )
+        document["business_discovery_recall_bindings"][0][
+            "oracle_result_digest"
+        ] = digest_of("tampered-recall-result").value
+        tampered = self.root / "ordered-discovery-tampered.json"
+        tampered.write_bytes(canonical_json_bytes(document))
+        with self.assertRaises(DomainError) as raised:
+            self.files.read_ordered(str(tampered))
+        self.assertEqual(
+            self._reason(raised.exception),
+            "READ_BUNDLE_DISCOVERY_RECALL_BINDING_INVALID",
         )
 
     def test_ordered_first_write_rejects_store_metadata_before_receipt(self) -> None:

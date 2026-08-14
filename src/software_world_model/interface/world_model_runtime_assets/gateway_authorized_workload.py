@@ -27,6 +27,9 @@ _JAVA_GATEWAY_SHA256 = (
 _JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256 = (
     "2ca2f8f2e9b8ff3d352bdbb8f673f559723221b1f2d42bcbc7edf4d9372c6900"
 )
+_BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256 = (
+    "fe6abe87a2d26c32afba4e260eb00673c346e0f7dc80d437dd967be5e55c6629"
+)
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
@@ -101,7 +104,11 @@ def main(argv: list[str] | None = None) -> int:
         return code
     baseline_summary = _load_exact_document(baseline_output)
     baseline_schema = baseline_summary.get("schema")
-    expected_calls = (
+    bounded = (
+        baseline_schema
+        == "swm.iter-008.bounded-java-source-semantics-gateway-workload@1"
+    )
+    expected_calls = baseline_summary.get("provider_call_count") if bounded else (
         3
         if baseline_schema
         == "swm.iter-007.java-source-semantics-gateway-workload@1"
@@ -110,8 +117,19 @@ def main(argv: list[str] | None = None) -> int:
     if (
         baseline_summary.get("status") != "PASS"
         or baseline_summary.get("production_activation") != "NOT_EXECUTED"
+        or (bounded and (not isinstance(expected_calls, int) or not 4 <= expected_calls <= 6))
         or baseline_summary.get("provider_call_count") != expected_calls
         or baseline_summary.get("https_dispatch_count") != expected_calls
+        or (
+            bounded
+            and (
+                baseline_summary.get("provider_descriptor_provisioned_count") != 6
+                or baseline_summary.get("provider_descriptor_consumed_count")
+                != expected_calls
+                or baseline_summary.get("provider_descriptor_unused_closed_count")
+                != 6 - expected_calls
+            )
+        )
     ):
         raise RuntimeError("qualified Gateway baseline call protocol did not pass")
     if baseline_schema == "swm.iter-003.g3b-gateway-workload@1":
@@ -131,6 +149,14 @@ def main(argv: list[str] | None = None) -> int:
             "java_source_semantics_gateway_freeze_digest"
         ]
         baseline_freeze_key = "source_semantics_capability_freeze_digest"
+    elif bounded:
+        baseline_sha256 = _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256
+        baseline_freeze_digest = baseline_summary[
+            "bounded_java_source_semantics_gateway_freeze_digest"
+        ]
+        baseline_freeze_key = (
+            "bounded_source_semantics_capability_freeze_digest"
+        )
     else:
         raise RuntimeError("qualified Gateway baseline schema is invalid")
     summary_core = {
@@ -145,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
             "java_gateway_freeze_digest",
             "java_source_semantics_gateway_freeze_ref",
             "java_source_semantics_gateway_freeze_digest",
+            "bounded_java_source_semantics_gateway_freeze_ref",
+            "bounded_java_source_semantics_gateway_freeze_digest",
             "permission_digest",
             "document_digest",
         }
@@ -197,6 +225,13 @@ def _load_qualified_baseline(baseline_arguments: list[str]) -> ModuleType:
         filename = "java_source_semantics_gateway_workload.py"
         expected_sha256 = _JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256
         module_name = "_swm_qualified_java_source_semantics_gateway_baseline"
+    elif (
+        freeze.get("schema")
+        == "SWM-ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-GATEWAY-FREEZE@1"
+    ):
+        filename = "bounded_java_source_semantics_gateway_workload.py"
+        expected_sha256 = _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256
+        module_name = "_swm_qualified_bounded_java_source_semantics_gateway_baseline"
     else:
         raise RuntimeError("qualified Gateway freeze schema is unsupported")
     path = _exact_file(

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from software_world_model.ai_infrastructure import (
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     ModelGateway,
     ReviewedWorldModelEvaluationCaseExecutor,
     UrllibVolcengineArkChatTransport,
@@ -422,7 +422,7 @@ def _verify_freeze(
     conformance_result_path: Path,
 ) -> dict[str, object]:
     freeze = _load_document(freeze_path, FREEZE_SCHEMA)
-    contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
     proposal = freeze.get("proposal_contract", {})
     if (
         freeze.get("candidate_identity") != _candidate_identity()
@@ -440,7 +440,7 @@ def _verify_freeze(
         or proposal.get("prompt_program_digest")
         != world_model_answer_prompt_program_digest(contract).value
         or proposal.get("output_contract_digest")
-        != java_source_semantics_world_model_output_contract_digest().value
+        != java_source_semantics_world_model_output_contract_digest(contract).value
         or proposal.get("available_operations")
         != list(contract.available_operations)
         or proposal.get("capabilities") != list(contract.capabilities)

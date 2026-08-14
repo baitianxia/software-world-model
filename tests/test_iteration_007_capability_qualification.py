@@ -11,7 +11,7 @@ from unittest import mock
 
 from software_world_model.ai_infrastructure import (
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT,
-    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+    JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     java_source_semantics_world_model_capability_registry,
     java_source_semantics_world_model_output_contract_digest,
     world_model_answer_prompt_program_digest,
@@ -162,7 +162,7 @@ class Iteration007CapabilityQualificationTests(unittest.TestCase):
             **qualification_core,
             "document_digest": digest_of(qualification_core).value,
         }
-        contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+        contract = JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
         definition = {
             "capability_id": "world-model-authority-proposal",
             "capability_contract_version": "1.2.2",
@@ -175,7 +175,9 @@ class Iteration007CapabilityQualificationTests(unittest.TestCase):
                 world_model_answer_prompt_program_digest(contract).value
             ),
             "output_schema_digest": (
-                java_source_semantics_world_model_output_contract_digest().value
+                java_source_semantics_world_model_output_contract_digest(
+                    contract
+                ).value
             ),
             "metric_contract_digest": digest_of(
                 JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_METRIC_CONTRACT
@@ -347,7 +349,7 @@ class Iteration007CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(
             suite["cases"][0]["available_operations"],
             list(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
             ),
         )
 
@@ -373,18 +375,20 @@ class Iteration007CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(
             definition.implementation_digest,
             world_model_answer_strategy_implementation_digest(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
             ),
         )
         self.assertEqual(
             definition.prompt_program_digest,
             world_model_answer_prompt_program_digest(
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
             ),
         )
         self.assertEqual(
             definition.output_schema_digest,
-            java_source_semantics_world_model_output_contract_digest(),
+            java_source_semantics_world_model_output_contract_digest(
+                JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
+            ),
         )
         self.assertEqual(
             definition.metric_contract_digest,

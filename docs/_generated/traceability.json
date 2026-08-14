@@ -997,6 +997,63 @@
       "tests/test_java_source_semantics.py"
     ]
   },
+  "FINDING-008-001": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-001.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/java_source_semantics_model_egress_qualification.py",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_qualification.py"
+    ],
+    "tests": [
+      "tests/test_iteration_007_capability_qualification.py",
+      "tests/test_iteration_008_capability_qualification.py",
+      "tests/test_world_model_answer_strategy.py"
+    ]
+  },
+  "FINDING-008-002": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-002.md",
+    "code": [
+      "src/software_world_model/application_services/bounded_world_model_investigation.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/ai_infrastructure/pinned_ark_https.py"
+    ],
+    "tests": [
+      "tests/test_bounded_world_model_investigation.py",
+      "tests/test_java_source_semantics.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_pinned_ark_https.py"
+    ]
+  },
+  "FINDING-008-003": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-003.md",
+    "code": [
+      "src/software_world_model/application_services/structure_read_bundle.py",
+      "src/software_world_model/application_services/bounded_world_model_investigation.py",
+      "src/software_world_model/infrastructure/file_structure_read_bundle.py",
+      "src/software_world_model/interface/world_model_product.py"
+    ],
+    "tests": [
+      "tests/test_structure_read_bundle.py",
+      "tests/test_bounded_world_model_investigation.py",
+      "tests/test_java_source_semantics.py"
+    ]
+  },
+  "FINDING-008-004": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-004.md",
+    "code": [
+      "src/software_world_model/interface/world_model_evaluation.py",
+      "src/software_world_model/interface/world_model_runtime.py",
+      "src/software_world_model/interface/world_model_runtime_assets/java_source_semantics_answer_workload.py",
+      "src/software_world_model/interface/world_model_runtime_assets/bounded_java_source_semantics_answer_workload.py"
+    ],
+    "tests": [
+      "tests/test_iteration_007_slice1_freeze.py",
+      "tests/test_world_model_evaluation.py",
+      "tests/test_java_source_semantics.py",
+      "tests/test_iteration_008_capability_qualification.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

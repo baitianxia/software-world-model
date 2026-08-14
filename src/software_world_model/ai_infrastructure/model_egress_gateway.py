@@ -59,6 +59,12 @@ JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF = (
 JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
 )
+BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF = (
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.0.0"
+)
+BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
+    f"AF_UNIX:{BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
+)
 MODEL_EGRESS_REQUEST_SCHEMA = "swm.model-egress-request@1"
 MODEL_EGRESS_RESPONSE_SCHEMA = "swm.model-egress-response@1"
 
@@ -104,6 +110,7 @@ _EXACT_SCHEMA_BY_STAGE = {
     "INDEPENDENT_ANSWER_REVIEW": "world-model-independent-review@1",
     "ENTITY_CANDIDATE_RESOLUTION": "world-model-entity-resolution@1",
     "IMPLEMENTATION_QUERY_PLANNING": "java-implementation-query-plan@1",
+    "IMPLEMENTATION_INVESTIGATION": "java-bounded-implementation-investigation@1",
     "IMPLEMENTATION_ANSWER_DRAFTING": "java-implementation-answer-draft@1",
     "IMPLEMENTATION_ANSWER_REVIEW": "java-implementation-answer-review@2",
 }
@@ -112,6 +119,9 @@ _JAVA_EXACT_POLICY_DIGEST = Digest(
 )
 _JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
     "sha256:9e4e3dcbb0584b2574bfa71c5e31275e5496255e0ce41cdc5fc8f05e18e243b5"
+)
+_BOUNDED_JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
+    "sha256:378e6a9acde3922390a26759affacbe2510d03e014cafe47f944ed3328b579d9"
 )
 _FORBIDDEN_MODEL_INPUT_KEYS = {
     "expected",
@@ -502,7 +512,7 @@ class QualifiedJavaModelEgressGatewayPolicy:
 
 @dataclass(slots=True)
 class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
-    """Exact ITER-007 three-call policy for Java implementation answers."""
+    """Exact fixed or bounded Java implementation-answer Gateway policy."""
 
     policy_ref: str
     policy_digest: Digest
@@ -536,11 +546,25 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
             (self.capability_qualification_ref, "capability qualification reference"),
         ):
             _text(value, label)
+        exact_policy = (
+            self.policy_ref,
+            self.policy_digest,
+            self.max_provider_calls,
+        )
         if (
-            self.policy_ref
-            != JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
-            or self.policy_digest
-            != _JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST
+            exact_policy
+            not in {
+                (
+                    JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF,
+                    _JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST,
+                    3,
+                ),
+                (
+                    BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF,
+                    _BOUNDED_JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST,
+                    6,
+                ),
+            }
             or self.provider_type != _EXACT_PROVIDER_TYPE
             or self.adapter_version != _EXACT_ADAPTER_VERSION
             or self.model_ref != _EXACT_MODEL_REF
@@ -565,14 +589,14 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
                 ErrorCode.QUALIFICATION_INVALID,
                 "Java source-semantics qualification expiration is invalid",
             )
-        if type(self.max_provider_calls) is not int or self.max_provider_calls != 3:
-            raise DomainError(
-                ErrorCode.INVALID_ARGUMENT,
-                "Java source-semantics Gateway call cap must be exactly three",
-            )
+
+    @property
+    def validated_stages(self) -> tuple[str, ...]:
+        return tuple(self._validated_stages)
 
     def validate_context(self, context: ModelExecutionContext) -> None:
         from .versioned_world_model_answer_strategy import (
+            JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
             JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
         )
 
@@ -583,13 +607,50 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
                 ErrorCode.QUALIFICATION_INVALID,
                 "Java source-semantics capability qualification expired before dispatch",
             )
-        contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
-        if len(self._validated_stages) >= len(contract.capabilities):
-            raise DomainError(
-                ErrorCode.QUALIFICATION_INVALID,
-                "Java source-semantics Gateway received more than three calls",
+        bounded = (
+            self.policy_ref
+            == BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
+        )
+        contract = (
+            JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+            if bounded
+            else JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT
+        )
+        actual_stage = context.manifest.execution_stage
+        if bounded:
+            investigation_count = self._validated_stages.count(
+                "IMPLEMENTATION_INVESTIGATION"
             )
-        expected_stage = contract.capabilities[len(self._validated_stages)]
+            if not self._validated_stages:
+                allowed_stages = {"IMPLEMENTATION_INVESTIGATION"}
+            elif all(
+                item == "IMPLEMENTATION_INVESTIGATION"
+                for item in self._validated_stages
+            ):
+                allowed_stages = (
+                    {"IMPLEMENTATION_ANSWER_DRAFTING"}
+                    if investigation_count >= 4
+                    else {"IMPLEMENTATION_INVESTIGATION"}
+                )
+                if investigation_count >= 2:
+                    allowed_stages.add("IMPLEMENTATION_ANSWER_DRAFTING")
+            elif self._validated_stages[-1] == "IMPLEMENTATION_ANSWER_DRAFTING":
+                allowed_stages = {"IMPLEMENTATION_ANSWER_REVIEW"}
+            else:
+                allowed_stages = set()
+            if actual_stage not in allowed_stages:
+                raise DomainError(
+                    ErrorCode.QUALIFICATION_INVALID,
+                    "bounded Java source-semantics Gateway role sequence is invalid",
+                )
+            expected_stage = actual_stage
+        else:
+            if len(self._validated_stages) >= len(contract.capabilities):
+                raise DomainError(
+                    ErrorCode.QUALIFICATION_INVALID,
+                    "Java source-semantics Gateway received more than three calls",
+                )
+            expected_stage = contract.capabilities[len(self._validated_stages)]
         items = context.manifest.items
         sealed_authority = items[1].authority_reference if len(items) == 3 else None
         qualification_ref = f"evaluation-only:{self.conformance_result_ref}"
@@ -660,7 +721,10 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
             "sealed Java source-semantics product model input",
         )
         expected_keys = {"case_id", "capability", "input"}
-        if expected_stage == "IMPLEMENTATION_QUERY_PLANNING":
+        if expected_stage in {
+            "IMPLEMENTATION_QUERY_PLANNING",
+            "IMPLEMENTATION_INVESTIGATION",
+        }:
             expected_keys.add("available_operations")
         if (
             set(sealed_value) != expected_keys
@@ -668,7 +732,11 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
             or sealed_value.get("capability") != expected_stage
             or _contains_forbidden_model_key(sealed_value)
             or (
-                expected_stage == "IMPLEMENTATION_QUERY_PLANNING"
+                expected_stage
+                in {
+                    "IMPLEMENTATION_QUERY_PLANNING",
+                    "IMPLEMENTATION_INVESTIGATION",
+                }
                 and sealed_value.get("available_operations")
                 != list(contract.available_operations)
             )
@@ -677,6 +745,57 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
                 ErrorCode.QUALIFICATION_INVALID,
                 "sealed Java source-semantics input violates its closed role contract",
             )
+        if bounded and expected_stage == "IMPLEMENTATION_INVESTIGATION":
+            investigation_input = sealed_value.get("input")
+            exact_input_keys = {
+                "original_question",
+                "response_language",
+                "need_key",
+                "read_authority",
+                "profile_ref",
+                "step_index",
+                "trace_digest",
+                "previous_result",
+                "progress_receipt",
+                "remaining_budget",
+            }
+            previous_count = len(self._validated_stages)
+            if (
+                not isinstance(investigation_input, Mapping)
+                or set(investigation_input) != exact_input_keys
+                or investigation_input.get("profile_ref")
+                != "JAVA_SOURCE_SEMANTICS@1"
+                or investigation_input.get("step_index") != previous_count + 1
+                or not isinstance(investigation_input.get("read_authority"), Mapping)
+                or not isinstance(investigation_input.get("trace_digest"), str)
+                or (
+                    previous_count == 0
+                    and (
+                        investigation_input.get("previous_result") is not None
+                        or investigation_input.get("progress_receipt") is not None
+                    )
+                )
+                or (
+                    previous_count > 0
+                    and (
+                        not isinstance(
+                            investigation_input.get("previous_result"), Mapping
+                        )
+                        or not isinstance(
+                            investigation_input.get("progress_receipt"), Mapping
+                        )
+                    )
+                )
+                or investigation_input.get("remaining_budget")
+                != {
+                    "model_calls": 4 - previous_count,
+                    "execution_steps": 4 - previous_count,
+                }
+            ):
+                raise DomainError(
+                    ErrorCode.QUALIFICATION_INVALID,
+                    "bounded investigation input is outside the exact product trace shape",
+                )
         self._validated_stages.append(expected_stage)
 
     def validate_result(self, result: ModelGatewayResult) -> None:
@@ -757,10 +876,10 @@ class UnixSocketModelGatewayClient:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT, "gateway timeout must be positive"
             )
-        if type(maximum_calls) is not int or maximum_calls != _MAX_PROVIDER_CALLS:
+        if type(maximum_calls) is not int or maximum_calls not in {5, 6}:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "answer-side gateway cap must be exactly five",
+                "answer-side gateway cap must be exactly five or six",
             )
         self._timeout = timeout_seconds
         self._maximum_calls = maximum_calls
@@ -782,7 +901,7 @@ class UnixSocketModelGatewayClient:
         if len(self._audits) >= self._maximum_calls:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
-                "world-model Provider call fuse exceeded five calls",
+                "world-model Provider call fuse exceeded its exact call cap",
             )
         request_core = {
             "schema": MODEL_EGRESS_REQUEST_SCHEMA,
