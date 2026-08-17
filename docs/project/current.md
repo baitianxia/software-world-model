@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-17
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-001-outcome-unknown-awaiting-new-conformance-authorization
+worktree_status: iteration-008-run-002-tls-failure-awaiting-bounded-diagnostic-authorization
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-001-conformance-unknown-authorization-consumed-new-freeze-required-capability-not-executed-production-not-activated
+live_model_path: iteration-008-run-002-first-call-tls-failure-authorization-consumed-diagnosis-required-capability-not-executed-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / Conformance run-001 outcome unknown** | bounded investigation 产品内核与 18-case / 39-call 本地协议已实现；当前 Adapter `@8` 的 run-001 单次授权已消费但未形成 PASS Result，Capability、正式 Web 与 canary 均未执行或授权 |
+| Iteration 008 | **SLICE-001 authorized / Conformance blocked on TLS diagnosis** | bounded investigation 产品内核与 18-case / 39-call 本地协议已实现；run-001 outcome unknown，修复后的 run-002 在第 1 次调用以 `TLS_FAILURE` 密封关闭；两个授权均已消费，Capability、正式 Web 与 canary 均未执行或授权 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -60,10 +60,15 @@ run-001 已在 exact candidate `872d1e9ec6bd185dd05aa2974a33faf2ef509d5b` 上取
 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 `@8` 的 PASS Result。旧 runner 只密封 invocation，因此现有证据只能证明执行过 1—2 次
 调用，无法恢复更精确计数或网络原因；不得猜测、补造或用原授权重试。失败证据缺口及 runner 修复见 `FINDING-008-007`。
 
-因此下一 live 步骤仍不是 Capability 或产品题。先提交 observability 修复，在新的 clean exact Git candidate 上生成零 Provider call
-preflight，再申请一份新的、只允许 2 次 synthetic Conformance call 的独立授权；只有该 Result 对当前 `@8` PASS 后，才生成绑定
-同一 candidate 与该 Result 的 18-case / 39-call Capability freeze，并申请第二份独立授权。两份新授权都不包含 retry、hidden
-canary、正式 Web、SLICE-002、Production Activation 或 push。资格顺序见 `FINDING-008-005`。
+observability 修复提交 `60e1081e89705882fab17a67fc75dcb152b7994d` 后，run-002 绑定 preflight
+`sha256:86874caa477b5bc0edee5845db3e9ce11ea6cfbd6012527636f6b07ad23fad45` 获得新授权。它在第 1 次 Provider request
+以 `TLS_FAILURE` 密封关闭，exact attempt count 为 1，第 2 次调用没有发生；原始 prompt/response 与 credential 未持久化。授权已经消费，
+不得重试，也没有形成当前 `@8` 的 PASS Result。
+
+因此下一 live 步骤仍不是 Capability、产品题或另一轮 Conformance。必须先为 exact Ark host 形成 credential-free、最多一次 TLS
+handshake 的独立诊断范围并取得新授权；在 root cause 与处置可复核前，不得生成 run-003，也不得静默启用 ambient proxy 或关闭证书验证。
+诊断完成后才回到 `FINDING-008-005` 的 Conformance → Capability 双 Gate。hidden canary、正式 Web、SLICE-002、Production
+Activation 与 push 继续不在授权内。详见 `FINDING-008-008`。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

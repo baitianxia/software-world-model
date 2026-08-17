@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记七条已处置 Finding：
+本 Slice 当前登记八条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -29,6 +29,8 @@ iteration: ITER-008
   ref、digest 和 scope 绑定；仅让每份文档各自 digest 正确不能构成分派授权。
 - [FINDING-008-007](FINDING-008-007.md)：run-001 的 Provider 结果未知且旧 runner 未密封 exact attempt/reason；该一次性授权已消费且
   不得重试，后续 runner 必须在返回控制前写入 sanitized failure/terminal，并以实际 dispatch count 约束 qualification。
+- [FINDING-008-008](FINDING-008-008.md)：run-002 在第一次调用以 `TLS_FAILURE` 失败关闭并证明 observability 修复生效；在新的
+  credential-free、单次 TLS 诊断获得独立授权并形成 root cause 前，不得盲目生成或执行下一份 Conformance freeze。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

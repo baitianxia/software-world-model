@@ -89,6 +89,12 @@ candidate、exact suite/oracle/evaluator 和该 Result 的 18-case / 39-call Cap
 包含 retry、hidden canary、正式 Web、SLICE-002、Production Activation 或 push；未获对应授权时不得读取 credential 或建立 Provider
 transport。详见 [FINDING-008-005](../findings/FINDING-008-005.md)。
 
+run-001 的结果未知且旧 runner 缺少 terminal；修复后的 run-002 在第 1 次请求以 `TLS_FAILURE` 密封关闭，两个 grant 均已消费且不得
+重试。不得用连续 Conformance grant 猜测网络状态。新的 live 顺序在原两级 Gate 前增加诊断阻断：先冻结并单独授权最多一次、
+credential-free、只对 exact Ark host 建立 TLS handshake 的诊断，不发送 bearer 或 HTTP body；只有形成 root cause 并完成必要处置后，
+才允许从新的 clean candidate 生成下一份 2-call Conformance preflight。不得通过 ambient proxy、关闭证书验证或扩大 payload boundary
+绕过失败。详见 [FINDING-008-008](../findings/FINDING-008-008.md)。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

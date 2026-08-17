@@ -19,6 +19,11 @@ runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码�
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、
 hidden canary 和 Production Activation 均未执行。
 
+修复 observability 后的 run-002 绑定 candidate `60e1081e…` 与 preflight `sha256:86874caa…fad45`；它在第 1 次 Provider request
+以 `TLS_FAILURE` 密封关闭，exact attempt count 为 1，第二次 call 未发生。该授权同样已经消费且不得重试；sanitized failure/terminal
+完整保留，证明修复生效但不构成 Conformance PASS。后续必须先按
+[FINDING-008-008](../findings/FINDING-008-008.md) 独立诊断 TLS，不能直接创建 run-003。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

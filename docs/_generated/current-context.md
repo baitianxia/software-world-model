@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-run-001-outcome-unknown-awaiting-new-conformance-authorization`
+- Worktree status: `iteration-008-run-002-tls-failure-awaiting-bounded-diagnostic-authorization`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-run-001-conformance-unknown-authorization-consumed-new-freeze-required-capability-not-executed-production-not-activated`
+- Live model path: `iteration-008-run-002-first-call-tls-failure-authorization-consumed-diagnosis-required-capability-not-executed-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
