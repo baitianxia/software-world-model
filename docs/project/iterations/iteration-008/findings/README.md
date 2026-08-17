@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记八条已处置 Finding：
+本 Slice 当前登记十条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -31,6 +31,12 @@ iteration: ITER-008
   不得重试，后续 runner 必须在返回控制前写入 sanitized failure/terminal，并以实际 dispatch count 约束 qualification。
 - [FINDING-008-008](FINDING-008-008.md)：direct、loopback proxy tunnel 与用户声明的 TUN 路径都在证书验证前以 TLS EOF 关闭；
   当前 live qualification 进入 environment/external-state hold，路径恢复前不得改 Adapter 或生成下一份 Conformance freeze。
+- [FINDING-008-009](FINDING-008-009.md)：替代节点已证明 Ark TLS 和一次最小模型调用可用，原节点则呈现 Python/OpenSSL
+  与浏览器路径分流；用户决定更换 Provider，因此停止 Ark live 工作，Provider-independent 实现保持冻结，新 Provider 必须以 exact
+  contract 和独立资格 Gate 接入。
+- [FINDING-008-010](FINDING-008-010.md)：DeepSeek 已以独立 `DEEPSEEK` Provider、exact endpoint/model/secret/wire/network
+  contract、Adapter `@1` 与 2-call Conformance 接入；离线 Gate 已闭合，但正式 runtime 保持 Ark，先等待 API Key 和独立最小模型
+  diagnostic 授权，不能从离线测试推导 live 可用性。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

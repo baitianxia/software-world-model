@@ -38,6 +38,19 @@ verification 前以相同 `SSLEOFError` / errno 8 关闭；proxy authorization�
 verification 前得到相同 `SSLEOFError` / errno 8；其 sanitized Result 与原 direct probe 的文件 digest 完全相同。TUN 模式声明没有形成
 路径恢复证据，hold 继续生效。
 
+更换节点后，credential-free changed-node TLS diagnostic run-004 恰好一次 verified handshake PASS；随后单独冻结和授权的唯一一次
+`ark-code-latest` 最小模型诊断也 PASS，请求模型为 `ark-code-latest`，Provider response model 为 `auto`，输出符合 Adapter-compatible
+strict JSON。二者证明该时点替代路由与最小调用可用，但都不是 Adapter `@8` Conformance、Capability 或 Product Result。
+
+切回原节点后，credential-free original-node TLS diagnostic run-005 恰好一次 handshake 再次以相同 `SSLEOFError` 关闭；用户同时在
+全新无痕浏览器到达同一 endpoint 的 Ark HTTP `AuthenticationError`。因此当前结论是 Python/OpenSSL 与浏览器使用的客户端/路由路径
+存在选择性差异，而不是 Ark 或该节点对所有客户端整体不可用；现有证据仍不支持修改应用 Adapter。
+
+用户随后决定更换模型 Provider。Ark live qualification 自此停止，不再生成 Ark freeze 或调用；Provider-independent 的 bounded
+investigation 实现与确定性验证已经闭合。新 Provider 明确前没有新的 Product Result；后续必须先冻结其 exact endpoint、协议、模型
+identity、secret 与网络边界，再从独立 Conformance 和 Capability Gate 开始，不能继承上述 Ark 诊断或已消费授权。详见
+[FINDING-008-009](../findings/FINDING-008-009.md)。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

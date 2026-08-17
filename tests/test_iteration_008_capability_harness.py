@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from software_world_model.ai_infrastructure import (
-    DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
+    DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     ProviderHTTPResponse,
     ProviderOutcomeUnknown,
@@ -195,7 +195,7 @@ def _case_documents(
 _SUITE, _ORACLE = load_capability_inputs()
 
 
-class _EchoingArkTransport:
+class _EchoingDeepSeekTransport:
     def __init__(self) -> None:
         self.calls = 0
 
@@ -221,7 +221,7 @@ class _EchoingArkTransport:
                 {
                     "id": f"chatcmpl_iter008_{self.calls}",
                     "object": "chat.completion",
-                    "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
+                    "model": DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
                     "choices": [
                         {
                             "index": 0,
@@ -278,7 +278,7 @@ class _PassingCapabilityTransport:
                 {
                     "id": f"chatcmpl_iter008_capability_{self.calls}",
                     "object": "chat.completion",
-                    "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
+                    "model": DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
                     "choices": [
                         {
                             "index": 0,
@@ -299,7 +299,7 @@ class _PassingCapabilityTransport:
         )
 
 
-class _UnknownArkTransport:
+class _UnknownDeepSeekTransport:
     def __init__(self) -> None:
         self.calls = 0
 
@@ -339,10 +339,12 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
         definition = build_evaluation_definition(
             _SUITE,
             _ORACLE,
-            conformance_result_ref="CC-ARK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64,
+            conformance_result_ref=(
+                "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64
+            ),
             provider_configuration_fingerprint=Digest("sha256:" + "2" * 64),
-            actual_model_fingerprint="glm-5.2",
-            adapter_version="openai-chat-completions-no-tools@8",
+            actual_model_fingerprint="deepseek-v4-pro",
+            adapter_version="deepseek-chat-completions-no-tools@1",
             exact_candidate_checkpoint_ref="git:" + "3" * 40,
             environment_ref="iter-008-bounded-capability@1",
             reference_strategy_ref="standalone-evaluator@1",
@@ -445,16 +447,16 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertFalse(preflight["external_model_called"])
             self.assertFalse(preflight["hidden_canary_disclosed"])
             self.assertEqual(
-                preflight["ark_conformance"]["authorization_scope"][
+                preflight["deepseek_conformance"]["authorization_scope"][
                     "planned_provider_call_count"
                 ],
                 2,
             )
             request = authorize._load_request(request_path)
-            self.assertEqual(request["phase"], "ARK_CONFORMANCE")
+            self.assertEqual(request["phase"], "DEEPSEEK_CONFORMANCE")
             self.assertEqual(
                 request["authorization_scope"]["adapter_version"],
-                "openai-chat-completions-no-tools@8",
+                "deepseek-chat-completions-no-tools@1",
             )
             verified = freeze.verify_preflight(preflight_path)
             self.assertEqual(
@@ -502,7 +504,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 single_use_result_directory=root / "result",
             )
             self.assertTrue(output.is_file())
-            self.assertEqual(document["phase"], "ARK_CONFORMANCE")
+            self.assertEqual(document["phase"], "DEEPSEEK_CONFORMANCE")
             self.assertFalse(document["hidden_canary_disclosure_authorized"])
 
     def test_authorization_request_must_bind_the_executed_preflight(self) -> None:
@@ -538,12 +540,12 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 authorization_ref="codex-user-message:sha256:" + "f" * 64,
                 single_use_result_directory=root / "result",
             )
-            transport = _EchoingArkTransport()
+            transport = _EchoingDeepSeekTransport()
             with self.assertRaisesRegex(DomainError, "exact freeze"):
                 cli._run_authorized_conformance(
                     preflight_path=preflight_path,
                     authorization_path=authorization_path,
-                    environment={"ARK_API_KEY": "must-not-be-read"},
+                    environment={"DEEPSEEK_API_KEY": "must-not-be-read"},
                     transport=transport,
                 )
             self.assertEqual(transport.calls, 0)
@@ -571,11 +573,13 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 authorization_ref="codex-user-message:sha256:" + "c" * 64,
                 single_use_result_directory=root / "result",
             )
-            transport = _EchoingArkTransport()
+            transport = _EchoingDeepSeekTransport()
             payload, code = cli._run_authorized_conformance(
                 preflight_path=preflight_path,
                 authorization_path=authorization_path,
-                environment={"ARK_API_KEY": "fixture-secret-never-persist"},
+                environment={
+                    "DEEPSEEK_API_KEY": "fixture-secret-never-persist"
+                },
                 transport=transport,
             )
             self.assertEqual(code, 0)
@@ -610,13 +614,13 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 authorization_ref="codex-user-message:sha256:" + "9" * 64,
                 single_use_result_directory=root / "result",
             )
-            transport = _UnknownArkTransport()
+            transport = _UnknownDeepSeekTransport()
             with self.assertRaises(ProviderOutcomeUnknown):
                 cli._run_authorized_conformance(
                     preflight_path=preflight_path,
                     authorization_path=authorization_path,
                     environment={
-                        "ARK_API_KEY": "fixture-secret-never-persist"
+                        "DEEPSEEK_API_KEY": "fixture-secret-never-persist"
                     },
                     transport=transport,
                 )
@@ -665,9 +669,9 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                     preflight_path=preflight_path,
                     authorization_path=conformance_authorization,
                     environment={
-                        "ARK_API_KEY": "fixture-secret-never-persist"
+                        "DEEPSEEK_API_KEY": "fixture-secret-never-persist"
                     },
-                    transport=_EchoingArkTransport(),
+                    transport=_EchoingDeepSeekTransport(),
                 )
             )
             self.assertEqual(conformance_code, 0)
@@ -691,7 +695,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 authorization_ref="codex-user-message:sha256:" + "7" * 64,
                 single_use_result_directory=root / "capability-result",
             )
-            transport = _UnknownArkTransport()
+            transport = _UnknownDeepSeekTransport()
             with self.assertRaises(ProviderOutcomeUnknown):
                 cli._run_authorized_capability(
                     freeze=capability_freeze,
@@ -701,7 +705,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                         conformance_payload["result_path"]
                     ),
                     environment={
-                        "ARK_API_KEY": "fixture-secret-never-persist"
+                        "DEEPSEEK_API_KEY": "fixture-secret-never-persist"
                     },
                     transport=transport,
                 )
@@ -752,9 +756,9 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                     preflight_path=preflight_path,
                     authorization_path=conformance_authorization,
                     environment={
-                        "ARK_API_KEY": "fixture-secret-never-persist"
+                        "DEEPSEEK_API_KEY": "fixture-secret-never-persist"
                     },
-                    transport=_EchoingArkTransport(),
+                    transport=_EchoingDeepSeekTransport(),
                 )
             )
             self.assertEqual(conformance_code, 0)
@@ -805,7 +809,9 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 freeze_path=capability_freeze_path,
                 authorization_path=capability_authorization,
                 conformance_result_path=Path(conformance_payload["result_path"]),
-                environment={"ARK_API_KEY": "fixture-secret-never-persist"},
+                environment={
+                    "DEEPSEEK_API_KEY": "fixture-secret-never-persist"
+                },
                 transport=transport,
             )
             if code:

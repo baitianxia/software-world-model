@@ -13,8 +13,11 @@ from typing import Mapping
 from software_world_model.cross_cutting import canonical_json_bytes, digest_of
 
 
+MODEL_DIAGNOSTIC_REQUEST_SCHEMA = (
+    "SWM-ITER-008-DEEPSEEK-MODEL-DIAGNOSTIC-AUTHORIZATION-REQUEST@1"
+)
 CONFORMANCE_REQUEST_SCHEMA = (
-    "SWM-ITER-008-ARK-CONFORMANCE-AUTHORIZATION-REQUEST@1"
+    "SWM-ITER-008-DEEPSEEK-CONFORMANCE-AUTHORIZATION-REQUEST@1"
 )
 CAPABILITY_REQUEST_SCHEMA = (
     "SWM-ITER-008-BOUNDED-CAPABILITY-AUTHORIZATION-REQUEST@1"
@@ -54,7 +57,11 @@ def create_authorization(
     ):
         raise AuthorizationError("result directory must be one new canonical path")
     phase = request.get("phase")
-    if phase not in {"ARK_CONFORMANCE", "BOUNDED_CAPABILITY_QUALIFICATION"}:
+    if phase not in {
+        "DEEPSEEK_MODEL_DIAGNOSTIC",
+        "DEEPSEEK_CONFORMANCE",
+        "BOUNDED_CAPABILITY_QUALIFICATION",
+    }:
         raise AuthorizationError("authorization request phase is invalid")
     scope = request.get("authorization_scope")
     if not isinstance(scope, Mapping):
@@ -141,6 +148,7 @@ def _load_request(path: Path) -> dict[str, object]:
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         raise AuthorizationError("authorization request cannot be loaded") from exc
     if not isinstance(raw, dict) or raw.get("schema") not in {
+        MODEL_DIAGNOSTIC_REQUEST_SCHEMA,
         CONFORMANCE_REQUEST_SCHEMA,
         CAPABILITY_REQUEST_SCHEMA,
     }:
@@ -168,11 +176,11 @@ def _load_request(path: Path) -> dict[str, object]:
         or raw.get("document_digest") != digest_of([schema, core]).value
     ):
         raise AuthorizationError("authorization request digest is invalid")
-    expected_phase = (
-        "ARK_CONFORMANCE"
-        if schema == CONFORMANCE_REQUEST_SCHEMA
-        else "BOUNDED_CAPABILITY_QUALIFICATION"
-    )
+    expected_phase = {
+        MODEL_DIAGNOSTIC_REQUEST_SCHEMA: "DEEPSEEK_MODEL_DIAGNOSTIC",
+        CONFORMANCE_REQUEST_SCHEMA: "DEEPSEEK_CONFORMANCE",
+        CAPABILITY_REQUEST_SCHEMA: "BOUNDED_CAPABILITY_QUALIFICATION",
+    }[schema]
     if (
         raw.get("status") != "AWAITING_USER_AUTHORIZATION"
         or raw.get("phase") != expected_phase

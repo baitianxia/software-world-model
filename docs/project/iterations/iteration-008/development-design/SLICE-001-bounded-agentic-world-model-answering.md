@@ -83,7 +83,7 @@ Citation 仍通过授权端点读取，Answer worker 不获得源码 payload。
 并关闭、审计所有未消费项；不得通过隐藏 terminal、伪造调用或放宽 two-Result 规则凑下界。详见
 [FINDING-008-002](../findings/FINDING-008-002.md)。
 
-当前 Adapter `openai-chat-completions-no-tools@8` 没有可继承的密封 Conformance Result，因此 live 资格顺序进一步固定为两个互不继承的
+当时的 Ark Adapter `openai-chat-completions-no-tools@8` 没有可继承的密封 Conformance Result，因此 live 资格顺序进一步固定为两个互不继承的
 Gate：先在 clean exact candidate 上无网络冻结并单独申请恰好 2 次 Conformance call；只有当前 `@8` Result PASS 后，才可冻结绑定同一
 candidate、exact suite/oracle/evaluator 和该 Result 的 18-case / 39-call Capability Evaluation，并另行申请 Provider 授权。任一授权都不
 包含 retry、hidden canary、正式 Web、SLICE-002、Production Activation 或 push；未获对应授权时不得读取 credential 或建立 Provider
@@ -103,6 +103,26 @@ clean candidate 和新 Conformance 授权开始。
 
 用户关闭系统代理并声明全流量 TUN 后，单独冻结和授权的 TUN direct probe 仍以完全相同的 `SSLEOFError` 在 certificate verification 前
 关闭；因此环境声明不等于路径恢复。后续恢复证据必须是一次实际 verified handshake PASS，不能再用模式切换或连续失败 probe 替代。
+
+更换节点后，独立 run-004 已取得一次 verified TLS handshake PASS，一次最小 `ark-code-latest` model diagnostic 也 PASS；切回原节点后，
+run-005 又复现相同 Python/OpenSSL TLS EOF，而无痕浏览器可以到达 Ark HTTP AuthenticationError。该证据只证明客户端/路由路径分流和
+替代路由的时点可用性，不构成 Conformance/Capability，也不支持修改 Adapter。用户随后决定更换模型 Provider，故 Ark live 工作停止。
+
+Provider-independent 实现与确定性验证已经闭合；剩余 Conformance、Capability、正式 Web 和 canary 都是 Provider-dependent Gate。
+新 Provider 明确前不创建猜测性 Adapter、不改 Ark default model，也不改写当前 System Provider 真相。新接入必须冻结 exact Provider、
+endpoint/path、protocol、请求与响应模型 identity、secret、TLS/proxy、retry/error semantics，并取得独立资格和调用授权；若改变 System
+Contract 或安全 Owner，先更新对应 System 文档/ADR。详见 [FINDING-008-009](../findings/FINDING-008-009.md)。
+
+用户现已选择 DeepSeek。当前 exact candidate 使用独立 `DEEPSEEK` Provider、
+`https://api.deepseek.com/chat/completions`、默认及期望响应 identity `deepseek-v4-pro`、secret reference
+`env:DEEPSEEK_API_KEY` 与 Adapter `deepseek-chat-completions-no-tools@1`；`deepseek-v4-flash` 只允许显式选择，旧 alias 不回退。
+独立 2-call Conformance 与 ITER-008 39-call Capability runner 已完成 fake-transport 闭合，但尚未读取真实 key 或发起 live 调用。
+按用户要求先验证模型可用性，再调整正式 runtime/product egress policy；当前正式 runtime 继续保持 Ark，且 DeepSeek 的最小模型 diagnostic、
+Conformance、Capability、正式 Web 与 Production Activation 均未执行。详见
+[FINDING-008-010](../findings/FINDING-008-010.md)。
+
+最小模型 diagnostic 先经过独立 zero-network freeze 和 post-freeze 单次授权；runner 在唯一 dispatch 前密封 invocation，并对 PASS、
+已知 Provider FAIL 或 outcome unknown 写入 sanitized result/failure 与 terminal。该 1-call grant 不授权或替代后续 2-call Conformance。
 
 ## Open questions and implementation risks
 

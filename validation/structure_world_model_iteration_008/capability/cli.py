@@ -1,4 +1,4 @@
-"""Verify or execute authorized ITER-008 Conformance and capability phases."""
+"""Verify or execute authorized ITER-008 DeepSeek evaluation phases."""
 
 from __future__ import annotations
 
@@ -9,23 +9,24 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from software_world_model.ai_infrastructure import (
-    ChatCompletionsTransport,
+    DeepSeekChatCompletionsNoToolsAdapter,
+    DeepSeekChatCompletionsTransport,
+    DeepSeekModelConfiguration,
     ModelGateway,
     ProviderHTTPResponse,
     ProviderOutcomeUnknown,
-    RecordingChatCompletionsTransport,
+    RecordingDeepSeekChatCompletionsTransport,
     ReviewedWorldModelEvaluationCaseExecutor,
-    UrllibVolcengineArkChatTransport,
-    VolcengineArkChatCompletionsNoToolsAdapter,
-    VolcengineArkModelConfiguration,
+    UrllibDeepSeekChatTransport,
     WorldModelStrategyConfiguration,
     bounded_java_source_semantics_world_model_capability_registry,
-    load_ark_chat_conformance_qualification,
+    load_deepseek_chat_conformance_qualification,
     world_model_answer_output_schemas,
 )
-from software_world_model.ai_infrastructure.ark_chat_conformance import (
-    run_ark_chat_conformance,
-    seal_ark_chat_conformance_result,
+from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
+    current_deepseek_implementation_manifest,
+    run_deepseek_chat_conformance,
+    seal_deepseek_chat_conformance_result,
 )
 from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_egress_qualification import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_CLOSED_RESULT_SCHEMA,
@@ -49,16 +50,21 @@ from software_world_model.infrastructure import (
     SqliteDatabase,
     SqliteModelGatewayRepository,
 )
+from software_world_model.interface.deepseek_provider_cli import (
+    run_deepseek_model_probe,
+)
 
 from . import authorize
 from .freeze import (
     CAPABILITY_FREEZE_SCHEMA,
     EVALUATOR_PATH,
+    MODEL_DIAGNOSTIC_FREEZE_SCHEMA,
     _capability_scope,
     _candidate_identity,
     _closed_inputs,
     _conformance_completed_at,
     _load_document,
+    _model_diagnostic_scope,
     _package_manifest,
     _parse_time,
     _proposal_contract,
@@ -78,8 +84,11 @@ from .manifest import (
 )
 
 
+MODEL_DIAGNOSTIC_INVOCATION_SCHEMA = (
+    "swm.iter-008.deepseek-model-diagnostic-authorized-invocation@1"
+)
 CONFORMANCE_INVOCATION_SCHEMA = (
-    "swm.iter-008.ark-conformance-authorized-invocation@1"
+    "swm.iter-008.deepseek-conformance-authorized-invocation@1"
 )
 CAPABILITY_INVOCATION_SCHEMA = (
     "swm.iter-008.bounded-java-source-semantics-ce-invocation@1"
@@ -89,8 +98,8 @@ CAPABILITY_INVOCATION_SCHEMA = (
 class _ProviderDispatchAudit:
     """Preserve request evidence and the reason hidden by ModelGateway."""
 
-    def __init__(self, delegate: ChatCompletionsTransport) -> None:
-        self._recording = RecordingChatCompletionsTransport(delegate)
+    def __init__(self, delegate: DeepSeekChatCompletionsTransport) -> None:
+        self._recording = RecordingDeepSeekChatCompletionsTransport(delegate)
         self.requests = self._recording.requests
         self.outcome_unknown_reason_codes: list[str] = []
 
@@ -117,6 +126,11 @@ class _ProviderDispatchAudit:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    verify_diagnostic = commands.add_parser("verify-model-diagnostic-freeze")
+    verify_diagnostic.add_argument("--freeze", required=True)
+    run_diagnostic = commands.add_parser("run-model-diagnostic")
+    run_diagnostic.add_argument("--freeze", required=True)
+    run_diagnostic.add_argument("--authorization", required=True)
     verify_pre = commands.add_parser("verify-preflight")
     verify_pre.add_argument("--preflight", required=True)
     run_conformance = commands.add_parser("run-conformance")
@@ -136,12 +150,30 @@ def main(
     argv: Sequence[str] | None = None,
     *,
     environment: Mapping[str, str] | None = None,
-    transport: ChatCompletionsTransport | None = None,
+    transport: DeepSeekChatCompletionsTransport | None = None,
 ) -> int:
     arguments = _parser().parse_args(argv)
     env = os.environ if environment is None else environment
     try:
-        if arguments.command == "verify-preflight":
+        if arguments.command == "verify-model-diagnostic-freeze":
+            freeze = _verify_model_diagnostic_freeze(Path(arguments.freeze))
+            payload = {
+                "status": "PASS_AWAITING_MODEL_DIAGNOSTIC_AUTHORIZATION",
+                "freeze_digest": freeze["document_digest"],
+                "planned_provider_call_count": 1,
+                "external_model_called": False,
+                "hidden_canary_disclosed": False,
+                "production_activation": "NOT_EXECUTED",
+            }
+            code = 0
+        elif arguments.command == "run-model-diagnostic":
+            payload, code = _run_authorized_model_diagnostic(
+                freeze_path=Path(arguments.freeze),
+                authorization_path=Path(arguments.authorization),
+                environment=env,
+                transport=transport,
+            )
+        elif arguments.command == "verify-preflight":
             preflight = verify_preflight(Path(arguments.preflight))
             payload = {
                 "status": "PASS_AWAITING_CONFORMANCE_AUTHORIZATION",
@@ -214,12 +246,315 @@ def main(
     return code
 
 
+def _run_authorized_model_diagnostic(
+    *,
+    freeze_path: Path,
+    authorization_path: Path,
+    environment: Mapping[str, str],
+    transport: DeepSeekChatCompletionsTransport | None,
+) -> tuple[dict[str, object], int]:
+    freeze = _verify_model_diagnostic_freeze(freeze_path)
+    request = authorize._load_request(
+        freeze_path.parent / "model-diagnostic-authorization-request.json"
+    )
+    _verify_request_binding(
+        request,
+        freeze=freeze,
+        phase="DEEPSEEK_MODEL_DIAGNOSTIC",
+        scope_owner="dispatch_contract",
+    )
+    authorization = authorize.load_authorization(authorization_path, request)
+    result_directory = _new_result_directory(authorization)
+    invocation_core = {
+        "schema": MODEL_DIAGNOSTIC_INVOCATION_SCHEMA,
+        "freeze_digest": freeze["document_digest"],
+        "authorization_digest": authorization["document_digest"],
+        "authorization_ref": authorization["authorization_ref"],
+        "authorization_scope": authorization["authorization_scope"],
+        "evidence_policy": "PERSIST_BEFORE_ONLY_PROVIDER_DISPATCH",
+        "hidden_canary_disclosed": False,
+        "production_activation": "NOT_EXECUTED",
+    }
+    _write_once(
+        result_directory / "invocation.json", _document(invocation_core)
+    )
+    configuration = DeepSeekModelConfiguration()
+    active_transport = transport or UrllibDeepSeekChatTransport(
+        api_key_resolver=lambda: configuration.resolve_api_key(environment)
+    )
+    dispatch_audit = _ProviderDispatchAudit(active_transport)
+    try:
+        response = run_deepseek_model_probe(
+            configuration,
+            dispatch_audit,
+            timeout_milliseconds=30_000,
+            max_output_tokens=64,
+        )
+        if (
+            response.actual_model_fingerprint
+            != configuration.actual_model_fingerprint
+        ):
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "DeepSeek model diagnostic returned another model identity",
+            )
+        if not response.usage_complete:
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "DeepSeek model diagnostic returned incomplete token usage",
+            )
+    except ProviderOutcomeUnknown as exc:
+        _seal_model_diagnostic_failure(
+            result_directory=result_directory,
+            freeze=freeze,
+            authorization=authorization,
+            dispatch_audit=dispatch_audit,
+            status="PROVIDER_OUTCOME_UNKNOWN",
+            failure_code=exc.reason_code,
+            safe_details={},
+        )
+        raise
+    except DomainError as exc:
+        safe_details = {
+            key: value
+            for key, value in exc.details.items()
+            if key
+            in {
+                "http_status",
+                "provider_error_code",
+                "provider_error_type",
+                "provider_request_id",
+                "finish_reason",
+            }
+        }
+        failure_path = _seal_model_diagnostic_failure(
+            result_directory=result_directory,
+            freeze=freeze,
+            authorization=authorization,
+            dispatch_audit=dispatch_audit,
+            status="MODEL_DIAGNOSTIC_FAIL",
+            failure_code=exc.code.value,
+            safe_details=safe_details,
+        )
+        return (
+            {
+                "status": "MODEL_DIAGNOSTIC_FAIL",
+                "failure_path": str(failure_path),
+                "provider_request_count": len(dispatch_audit.requests),
+                "authorization_consumed": True,
+                "hidden_canary_disclosed": False,
+                "production_activation": "NOT_EXECUTED",
+            },
+            4,
+        )
+    if len(dispatch_audit.requests) != 1:
+        failure_path = _seal_model_diagnostic_failure(
+            result_directory=result_directory,
+            freeze=freeze,
+            authorization=authorization,
+            dispatch_audit=dispatch_audit,
+            status="MODEL_DIAGNOSTIC_FAIL",
+            failure_code="PROVIDER_REQUEST_COUNT_MISMATCH",
+            safe_details={},
+        )
+        return (
+            {
+                "status": "MODEL_DIAGNOSTIC_FAIL",
+                "failure_path": str(failure_path),
+                "provider_request_count": len(dispatch_audit.requests),
+                "authorization_consumed": True,
+                "hidden_canary_disclosed": False,
+                "production_activation": "NOT_EXECUTED",
+            },
+            4,
+        )
+    recorded = dispatch_audit.requests[0]
+    result_core = {
+        "schema": "swm.iter-008.deepseek-model-diagnostic-result@1",
+        "status": "PASS",
+        "freeze_digest": freeze["document_digest"],
+        "authorization_digest": authorization["document_digest"],
+        "provider": {
+            "provider_type": configuration.provider_type,
+            "endpoint": configuration.endpoint,
+            "adapter_version": configuration.adapter_version,
+            "configuration_fingerprint": configuration.fingerprint.value,
+            "requested_model_ref": configuration.model_ref,
+            "actual_model_fingerprint": response.actual_model_fingerprint,
+            "provider_request_id": response.provider_request_id,
+        },
+        "execution": {
+            "provider_request_count": 1,
+            "request_body_digest": (
+                "sha256:" + hashlib.sha256(recorded.body).hexdigest()
+            ),
+            "input_tokens": response.input_tokens,
+            "output_tokens": response.output_tokens,
+            "usage_complete": response.usage_complete,
+            "termination_reason": response.termination_reason,
+            "output_normalization": response.output_normalization,
+            "strict_json_probe_valid": True,
+            "raw_prompt_persisted": False,
+            "raw_response_persisted": False,
+        },
+        "authorization_consumed": True,
+        "retry_permitted_with_same_authorization": False,
+        "capability_qualification": "NOT_EXECUTED",
+        "hidden_canary_disclosed": False,
+        "production_activation": "NOT_EXECUTED",
+    }
+    result_path = result_directory / "result.json"
+    result = _document(result_core)
+    _write_once(result_path, result)
+    terminal_core = {
+        "schema": "swm.iter-008.deepseek-model-diagnostic-terminal@1",
+        "status": "PASS",
+        "freeze_digest": freeze["document_digest"],
+        "authorization_digest": authorization["document_digest"],
+        "result_path": str(result_path),
+        "result_digest": result["document_digest"],
+        "provider_request_count": 1,
+        "authorization_consumed": True,
+        "retry_permitted_with_same_authorization": False,
+        "hidden_canary_disclosed": False,
+        "production_activation": "NOT_EXECUTED",
+    }
+    _write_once(
+        result_directory / "terminal.json", _document(terminal_core)
+    )
+    return (
+        {
+            "status": "MODEL_DIAGNOSTIC_PASS",
+            "result_path": str(result_path),
+            "result_digest": result["document_digest"],
+            "actual_model_fingerprint": response.actual_model_fingerprint,
+            "provider_request_id": response.provider_request_id,
+            "provider_request_count": 1,
+            "input_tokens": response.input_tokens,
+            "output_tokens": response.output_tokens,
+            "authorization_consumed": True,
+            "hidden_canary_disclosed": False,
+            "production_activation": "NOT_EXECUTED",
+        },
+        0,
+    )
+
+
+def _seal_model_diagnostic_failure(
+    *,
+    result_directory: Path,
+    freeze: Mapping[str, object],
+    authorization: Mapping[str, object],
+    dispatch_audit: _ProviderDispatchAudit,
+    status: str,
+    failure_code: str,
+    safe_details: Mapping[str, object],
+) -> Path:
+    failure_core = {
+        "schema": "swm.iter-008.deepseek-model-diagnostic-failure@1",
+        "status": status,
+        "freeze_digest": freeze["document_digest"],
+        "authorization_digest": authorization["document_digest"],
+        "failure_code": failure_code,
+        "safe_provider_details": dict(safe_details),
+        "attempted_provider_request_count": len(dispatch_audit.requests),
+        "attempted_request_body_digests": [
+            "sha256:" + hashlib.sha256(item.body).hexdigest()
+            for item in dispatch_audit.requests
+        ],
+        "raw_prompt_persisted": False,
+        "raw_response_persisted": False,
+        "authorization_consumed": True,
+        "retry_permitted_with_same_authorization": False,
+        "hidden_canary_disclosed": False,
+        "production_activation": "NOT_EXECUTED",
+    }
+    failure_path = result_directory / "failure.json"
+    _write_once(failure_path, _document(failure_core))
+    terminal_core = {
+        "schema": "swm.iter-008.deepseek-model-diagnostic-terminal@1",
+        "status": status,
+        "freeze_digest": freeze["document_digest"],
+        "authorization_digest": authorization["document_digest"],
+        "failure_path": str(failure_path),
+        "provider_request_count": len(dispatch_audit.requests),
+        "authorization_consumed": True,
+        "retry_permitted_with_same_authorization": False,
+        "hidden_canary_disclosed": False,
+        "production_activation": "NOT_EXECUTED",
+    }
+    _write_once(
+        result_directory / "terminal.json", _document(terminal_core)
+    )
+    return failure_path
+
+
+def _verify_model_diagnostic_freeze(
+    freeze_path: Path,
+) -> dict[str, object]:
+    freeze = _load_document(freeze_path, MODEL_DIAGNOSTIC_FREEZE_SCHEMA)
+    configuration = DeepSeekModelConfiguration()
+    implementation = current_deepseek_implementation_manifest()
+    scope = _model_diagnostic_scope(configuration, implementation)
+    expected_fields = {
+        "schema",
+        "freeze_ref",
+        "created_at",
+        "environment",
+        "candidate_identity",
+        "package_manifest",
+        "provider",
+        "dispatch_contract",
+        "external_model_called_during_freeze",
+        "raw_prompt_persisted",
+        "raw_response_persisted",
+        "hidden_canary_disclosed",
+        "production_activation",
+        "git_stage_commit_push",
+        "document_digest",
+    }
+    if (
+        set(freeze) != expected_fields
+        or freeze.get("freeze_ref")
+        != "ITER-008-DEEPSEEK-MODEL-DIAGNOSTIC-RUN-CANDIDATE@1"
+        or freeze.get("environment") != "EVALUATION_ONLY"
+        or freeze.get("candidate_identity")
+        != _candidate_identity(require_clean=True)
+        or freeze.get("package_manifest") != _package_manifest()
+        or freeze.get("provider")
+        != {
+            "authorization_scope": scope,
+            "implementation_manifest": implementation,
+            "credential_reference": configuration.secret_reference,
+        }
+        or freeze.get("dispatch_contract")
+        != {
+            "status": "HELD_AWAITING_EXACT_USER_AUTHORIZATION",
+            "authorization_scope": scope,
+            "credential_read_before_authorization": False,
+            "provider_socket_before_authorization": False,
+        }
+        or freeze.get("external_model_called_during_freeze") is not False
+        or freeze.get("raw_prompt_persisted") is not False
+        or freeze.get("raw_response_persisted") is not False
+        or freeze.get("hidden_canary_disclosed") is not False
+        or freeze.get("production_activation") != "NOT_EXECUTED"
+        or freeze.get("git_stage_commit_push") != "NOT_EXECUTED"
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek model diagnostic freeze drifted from the candidate",
+        )
+    _parse_time(freeze.get("created_at"), "model diagnostic freeze time")
+    return freeze
+
+
 def _run_authorized_conformance(
     *,
     preflight_path: Path,
     authorization_path: Path,
     environment: Mapping[str, str],
-    transport: ChatCompletionsTransport | None,
+    transport: DeepSeekChatCompletionsTransport | None,
 ) -> tuple[dict[str, object], int]:
     preflight = verify_preflight(preflight_path)
     request = authorize._load_request(
@@ -228,8 +563,8 @@ def _run_authorized_conformance(
     _verify_request_binding(
         request,
         freeze=preflight,
-        phase="ARK_CONFORMANCE",
-        scope_owner="ark_conformance",
+        phase="DEEPSEEK_CONFORMANCE",
+        scope_owner="deepseek_conformance",
     )
     authorization = authorize.load_authorization(authorization_path, request)
     result_directory = _new_result_directory(authorization)
@@ -247,13 +582,13 @@ def _run_authorized_conformance(
         result_directory / "invocation.json",
         _document(invocation_core),
     )
-    configuration = VolcengineArkModelConfiguration()
-    active_transport = transport or UrllibVolcengineArkChatTransport(
+    configuration = DeepSeekModelConfiguration()
+    active_transport = transport or UrllibDeepSeekChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
     dispatch_audit = _ProviderDispatchAudit(active_transport)
     try:
-        result = run_ark_chat_conformance(
+        result = run_deepseek_chat_conformance(
             configuration=configuration,
             transport=dispatch_audit,
             environment=environment,
@@ -267,7 +602,7 @@ def _run_authorized_conformance(
             for item in dispatch_audit.requests
         ]
         failure_core = {
-            "schema": "swm.iter-008.ark-conformance-failure@1",
+            "schema": "swm.iter-008.deepseek-conformance-failure@1",
             "status": "PROVIDER_OUTCOME_UNKNOWN",
             "preflight_digest": preflight["document_digest"],
             "authorization_digest": authorization["document_digest"],
@@ -284,7 +619,7 @@ def _run_authorized_conformance(
         failure_path = result_directory / "failure.json"
         _write_once(failure_path, _document(failure_core))
         terminal_core = {
-            "schema": "swm.iter-008.ark-conformance-terminal@1",
+            "schema": "swm.iter-008.deepseek-conformance-terminal@1",
             "status": "PROVIDER_OUTCOME_UNKNOWN",
             "preflight_digest": preflight["document_digest"],
             "authorization_digest": authorization["document_digest"],
@@ -299,10 +634,12 @@ def _run_authorized_conformance(
             result_directory / "terminal.json", _document(terminal_core)
         )
         raise
-    result_path = seal_ark_chat_conformance_result(result, result_directory)
+    result_path = seal_deepseek_chat_conformance_result(
+        result, result_directory
+    )
     passed = result["outcome"] == "PASS" and result["execution"]["request_count"] == 2
     terminal_core = {
-        "schema": "swm.iter-008.ark-conformance-terminal@1",
+        "schema": "swm.iter-008.deepseek-conformance-terminal@1",
         "status": "PASS" if passed else "FAIL",
         "preflight_digest": preflight["document_digest"],
         "authorization_digest": authorization["document_digest"],
@@ -336,7 +673,7 @@ def _run_authorized_capability(
     authorization_path: Path,
     conformance_result_path: Path,
     environment: Mapping[str, str],
-    transport: ChatCompletionsTransport | None,
+    transport: DeepSeekChatCompletionsTransport | None,
 ) -> tuple[dict[str, object], int]:
     request = authorize._load_request(
         freeze_path.parent / "capability-authorization-request.json"
@@ -365,15 +702,15 @@ def _run_authorized_capability(
     }
     _write_once(result_directory / "invocation.json", _document(invocation_core))
 
-    configuration = VolcengineArkModelConfiguration()
-    conformance = load_ark_chat_conformance_qualification(
+    configuration = DeepSeekModelConfiguration()
+    conformance = load_deepseek_chat_conformance_qualification(
         conformance_result_path.resolve(strict=True), configuration
     )
-    active_transport = transport or UrllibVolcengineArkChatTransport(
+    active_transport = transport or UrllibDeepSeekChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
     dispatch_audit = _ProviderDispatchAudit(active_transport)
-    adapter = VolcengineArkChatCompletionsNoToolsAdapter(
+    adapter = DeepSeekChatCompletionsNoToolsAdapter(
         transport=dispatch_audit,
         configuration=configuration,
         output_schemas=world_model_answer_output_schemas(
@@ -493,7 +830,7 @@ def _run_authorized_capability(
             exc, ProviderOutcomeUnknown
         ):
             raise ProviderOutcomeUnknown(
-                "Ark Chat Completions outcome is unknown",
+                "DeepSeek Chat Completions outcome is unknown",
                 reason_code=provider_outcome_reason or "UNKNOWN_NETWORK_FAILURE",
             ) from exc
         raise
@@ -731,8 +1068,8 @@ def _verify_capability_freeze(
             ErrorCode.QUALIFICATION_INVALID,
             "bounded capability preflight digest is invalid",
         ) from exc
-    configuration = VolcengineArkModelConfiguration()
-    conformance = load_ark_chat_conformance_qualification(
+    configuration = DeepSeekModelConfiguration()
+    conformance = load_deepseek_chat_conformance_qualification(
         conformance_result_path.resolve(strict=True), configuration
     )
     suite, oracle = load_capability_inputs()

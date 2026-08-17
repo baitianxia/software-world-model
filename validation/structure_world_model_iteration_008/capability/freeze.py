@@ -1,4 +1,4 @@
-"""Create zero-provider preflight and post-Conformance capability freezes."""
+"""Create zero-provider diagnostic, Conformance, and capability freezes."""
 
 from __future__ import annotations
 
@@ -13,23 +13,26 @@ import subprocess
 from typing import Mapping
 
 from software_world_model.ai_infrastructure import (
-    ArkChatConformanceQualification,
     BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT,
+    DeepSeekChatConformanceQualification,
+    DeepSeekModelConfiguration,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
-    VolcengineArkModelConfiguration,
     WorldModelStrategyConfiguration,
     java_source_semantics_world_model_output_contract_digest,
-    load_ark_chat_conformance_qualification,
+    load_deepseek_chat_conformance_qualification,
     world_model_answer_prompt_program_digest,
     world_model_answer_strategy_implementation_digest,
 )
-from software_world_model.ai_infrastructure.ark_chat_conformance import (
-    ARK_CHAT_CONFORMANCE_FIXTURE_ID,
-    ARK_CHAT_CONFORMANCE_FIXTURE_VERSION,
-    _fixture_manifest,
-    current_ark_implementation_manifest,
+from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
+    DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID,
+    DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION,
+    current_deepseek_implementation_manifest,
+    deepseek_chat_conformance_fixture_digest,
 )
 from software_world_model.cross_cutting import canonical_json_bytes, digest_of
+from software_world_model.interface.deepseek_provider_cli import (
+    deepseek_model_probe_contract_digest,
+)
 
 from . import authorize, evaluator
 from .manifest import (
@@ -44,6 +47,9 @@ from .manifest import (
 )
 
 
+MODEL_DIAGNOSTIC_FREEZE_SCHEMA = (
+    "SWM-ITER-008-DEEPSEEK-MODEL-DIAGNOSTIC-FREEZE@1"
+)
 PREFLIGHT_SCHEMA = "SWM-ITER-008-BOUNDED-CAPABILITY-PREFLIGHT@1"
 CAPABILITY_FREEZE_SCHEMA = (
     "SWM-ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-FREEZE@1"
@@ -68,6 +74,78 @@ class FreezeError(RuntimeError):
     pass
 
 
+def create_model_diagnostic_freeze(
+    *,
+    output_directory: Path,
+    created_at: datetime | None = None,
+) -> tuple[Path, Path, dict[str, object]]:
+    identity = _candidate_identity(require_clean=True)
+    package = _package_manifest()
+    configuration = DeepSeekModelConfiguration()
+    implementation = current_deepseek_implementation_manifest()
+    timestamp = _aware(created_at or datetime.now(timezone.utc))
+    timestamp_text = timestamp.isoformat().replace("+00:00", "Z")
+    scope = _model_diagnostic_scope(configuration, implementation)
+    core = {
+        "schema": MODEL_DIAGNOSTIC_FREEZE_SCHEMA,
+        "freeze_ref": "ITER-008-DEEPSEEK-MODEL-DIAGNOSTIC-RUN-CANDIDATE@1",
+        "created_at": timestamp_text,
+        "environment": "EVALUATION_ONLY",
+        "candidate_identity": identity,
+        "package_manifest": package,
+        "provider": {
+            "authorization_scope": scope,
+            "implementation_manifest": implementation,
+            "credential_reference": configuration.secret_reference,
+        },
+        "dispatch_contract": {
+            "status": "HELD_AWAITING_EXACT_USER_AUTHORIZATION",
+            "authorization_scope": scope,
+            "credential_read_before_authorization": False,
+            "provider_socket_before_authorization": False,
+        },
+        "external_model_called_during_freeze": False,
+        "raw_prompt_persisted": False,
+        "raw_response_persisted": False,
+        "hidden_canary_disclosed": False,
+        "production_activation": "NOT_EXECUTED",
+        "git_stage_commit_push": "NOT_EXECUTED",
+    }
+    freeze = {
+        **core,
+        "document_digest": digest_of(
+            [MODEL_DIAGNOSTIC_FREEZE_SCHEMA, core]
+        ).value,
+    }
+    output = _future_directory(output_directory)
+    freeze_path = output / "model-diagnostic-freeze.json"
+    _write_once(freeze_path, freeze)
+    request_core = {
+        "schema": authorize.MODEL_DIAGNOSTIC_REQUEST_SCHEMA,
+        "status": "AWAITING_USER_AUTHORIZATION",
+        "phase": "DEEPSEEK_MODEL_DIAGNOSTIC",
+        "created_at": timestamp_text,
+        "freeze_ref": core["freeze_ref"],
+        "freeze_digest": freeze["document_digest"],
+        "authorization_scope": scope,
+        "authorization_must_postdate_freeze": True,
+        "single_use": True,
+        "retry_permitted": False,
+        "hidden_canary_disclosure_requested": False,
+        "production_activation": "NOT_EXECUTED",
+        "git_stage_commit_push": "NOT_EXECUTED",
+    }
+    request = {
+        **request_core,
+        "document_digest": digest_of(
+            [authorize.MODEL_DIAGNOSTIC_REQUEST_SCHEMA, request_core]
+        ).value,
+    }
+    request_path = output / "model-diagnostic-authorization-request.json"
+    _write_once(request_path, request)
+    return freeze_path, request_path, freeze
+
+
 def create_preflight(
     *,
     output_directory: Path,
@@ -77,11 +155,13 @@ def create_preflight(
     _verify_evaluator_source(EVALUATOR_PATH)
     identity = _candidate_identity(require_clean=True)
     package = _package_manifest()
-    configuration = VolcengineArkModelConfiguration()
+    configuration = DeepSeekModelConfiguration()
     timestamp = _aware(created_at or datetime.now(timezone.utc))
     timestamp_text = timestamp.isoformat().replace("+00:00", "Z")
-    ark_implementation = current_ark_implementation_manifest()
-    conformance_scope = _conformance_scope(configuration, ark_implementation)
+    deepseek_implementation = current_deepseek_implementation_manifest()
+    conformance_scope = _conformance_scope(
+        configuration, deepseek_implementation
+    )
     core = {
         "schema": PREFLIGHT_SCHEMA,
         "freeze_ref": "ITER-008-BOUNDED-CAPABILITY-PREFLIGHT@1",
@@ -91,10 +171,10 @@ def create_preflight(
         "package_manifest": package,
         "proposal_contract": _proposal_contract(),
         "closed_inputs": _closed_inputs(),
-        "ark_conformance": {
+        "deepseek_conformance": {
             "status": "NOT_EXECUTED_AWAITING_EXACT_USER_AUTHORIZATION",
             "authorization_scope": conformance_scope,
-            "implementation_manifest": ark_implementation,
+            "implementation_manifest": deepseek_implementation,
             "credential_read_before_authorization": False,
             "provider_socket_before_authorization": False,
         },
@@ -118,7 +198,7 @@ def create_preflight(
     request_core = {
         "schema": authorize.CONFORMANCE_REQUEST_SCHEMA,
         "status": "AWAITING_USER_AUTHORIZATION",
-        "phase": "ARK_CONFORMANCE",
+        "phase": "DEEPSEEK_CONFORMANCE",
         "created_at": timestamp_text,
         "freeze_ref": core["freeze_ref"],
         "freeze_digest": preflight["document_digest"],
@@ -149,9 +229,9 @@ def create_capability_freeze(
     created_at: datetime | None = None,
 ) -> tuple[Path, Path, dict[str, object]]:
     preflight = verify_preflight(preflight_path)
-    configuration = VolcengineArkModelConfiguration()
+    configuration = DeepSeekModelConfiguration()
     conformance_path = conformance_result_path.resolve(strict=True)
-    conformance = load_ark_chat_conformance_qualification(
+    conformance = load_deepseek_chat_conformance_qualification(
         conformance_path,
         configuration,
     )
@@ -265,8 +345,8 @@ def create_capability_freeze(
 
 def verify_preflight(path: Path) -> dict[str, object]:
     value = _load_document(path, PREFLIGHT_SCHEMA)
-    configuration = VolcengineArkModelConfiguration()
-    ark_implementation = current_ark_implementation_manifest()
+    configuration = DeepSeekModelConfiguration()
+    deepseek_implementation = current_deepseek_implementation_manifest()
     expected_fields = {
         "schema",
         "freeze_ref",
@@ -276,7 +356,7 @@ def verify_preflight(path: Path) -> dict[str, object]:
         "package_manifest",
         "proposal_contract",
         "closed_inputs",
-        "ark_conformance",
+        "deepseek_conformance",
         "capability_qualification",
         "external_model_called",
         "hidden_canary_disclosed",
@@ -294,13 +374,13 @@ def verify_preflight(path: Path) -> dict[str, object]:
         or value.get("package_manifest") != _package_manifest()
         or value.get("proposal_contract") != _proposal_contract()
         or value.get("closed_inputs") != _closed_inputs()
-        or value.get("ark_conformance")
+        or value.get("deepseek_conformance")
         != {
             "status": "NOT_EXECUTED_AWAITING_EXACT_USER_AUTHORIZATION",
             "authorization_scope": _conformance_scope(
-                configuration, ark_implementation
+                configuration, deepseek_implementation
             ),
-            "implementation_manifest": ark_implementation,
+            "implementation_manifest": deepseek_implementation,
             "credential_read_before_authorization": False,
             "provider_socket_before_authorization": False,
         }
@@ -362,12 +442,12 @@ def _closed_inputs() -> dict[str, object]:
     }
 
 
-def _conformance_scope(
-    configuration: VolcengineArkModelConfiguration,
-    ark_implementation: Mapping[str, object],
+def _model_diagnostic_scope(
+    configuration: DeepSeekModelConfiguration,
+    deepseek_implementation: Mapping[str, object],
 ) -> dict[str, object]:
     return {
-        "destination": "VOLCENGINE_ARK",
+        "destination": "DEEPSEEK",
         "provider_type": configuration.provider_type,
         "endpoint": configuration.endpoint,
         "adapter_version": configuration.adapter_version,
@@ -376,10 +456,45 @@ def _conformance_scope(
             configuration.actual_model_fingerprint
         ),
         "configuration_fingerprint": configuration.fingerprint.value,
-        "conformance_fixture_id": ARK_CHAT_CONFORMANCE_FIXTURE_ID,
-        "conformance_fixture_version": ARK_CHAT_CONFORMANCE_FIXTURE_VERSION,
-        "conformance_fixture_digest": _fixture_manifest().value,
-        "ark_implementation_digest": ark_implementation["aggregate_digest"],
+        "deepseek_implementation_digest": deepseek_implementation[
+            "aggregate_digest"
+        ],
+        "probe_contract_digest": deepseek_model_probe_contract_digest().value,
+        "timeout_milliseconds": 30_000,
+        "max_output_tokens": 64,
+        "planned_provider_call_count": 1,
+        "hidden_retry_count": 0,
+        "payload_boundary": (
+            "ONE_STATIC_STRICT_JSON_STATUS_PROBE_NO_PRODUCT_QUESTION_"
+            "SOURCE_EVIDENCE_OR_HIDDEN_CANARY"
+        ),
+    }
+
+
+def _conformance_scope(
+    configuration: DeepSeekModelConfiguration,
+    deepseek_implementation: Mapping[str, object],
+) -> dict[str, object]:
+    return {
+        "destination": "DEEPSEEK",
+        "provider_type": configuration.provider_type,
+        "endpoint": configuration.endpoint,
+        "adapter_version": configuration.adapter_version,
+        "requested_model_ref": configuration.model_ref,
+        "expected_actual_model_fingerprint": (
+            configuration.actual_model_fingerprint
+        ),
+        "configuration_fingerprint": configuration.fingerprint.value,
+        "conformance_fixture_id": DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID,
+        "conformance_fixture_version": (
+            DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION
+        ),
+        "conformance_fixture_digest": (
+            deepseek_chat_conformance_fixture_digest().value
+        ),
+        "deepseek_implementation_digest": deepseek_implementation[
+            "aggregate_digest"
+        ],
         "planned_provider_call_count": 2,
         "hidden_retry_count": 0,
         "payload_boundary": (
@@ -390,11 +505,11 @@ def _conformance_scope(
 
 
 def _capability_scope(
-    configuration: VolcengineArkModelConfiguration,
-    conformance: ArkChatConformanceQualification,
+    configuration: DeepSeekModelConfiguration,
+    conformance: DeepSeekChatConformanceQualification,
 ) -> dict[str, object]:
     return {
-        "destination": "VOLCENGINE_ARK",
+        "destination": "DEEPSEEK",
         "provider_type": configuration.provider_type,
         "endpoint": configuration.endpoint,
         "adapter_version": configuration.adapter_version,
@@ -476,6 +591,7 @@ def _verify_evaluator_source(path: Path) -> None:
         "WorldModelCapabilityStrategy",
         "world_model_product",
         "VolcengineArk",
+        "DeepSeek",
     ):
         if token in source:
             raise FreezeError("independent evaluator references evaluated code")
@@ -613,6 +729,8 @@ def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    diagnostic = commands.add_parser("model-diagnostic")
+    diagnostic.add_argument("--output-directory", required=True)
     preflight = commands.add_parser("preflight")
     preflight.add_argument("--output-directory", required=True)
     capability = commands.add_parser("capability")
@@ -625,12 +743,19 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     try:
-        if arguments.command == "preflight":
+        if arguments.command == "model-diagnostic":
+            freeze_path, request_path, freeze = create_model_diagnostic_freeze(
+                output_directory=Path(arguments.output_directory)
+            )
+            status = "MODEL_DIAGNOSTIC_FROZEN_AWAITING_USER_AUTHORIZATION"
+            phase = "DEEPSEEK_MODEL_DIAGNOSTIC"
+            planned_calls = 1
+        elif arguments.command == "preflight":
             freeze_path, request_path, freeze = create_preflight(
                 output_directory=Path(arguments.output_directory)
             )
             status = "PREFLIGHT_FROZEN_AWAITING_CONFORMANCE_AUTHORIZATION"
-            phase = "ARK_CONFORMANCE"
+            phase = "DEEPSEEK_CONFORMANCE"
             planned_calls = 2
         else:
             freeze_path, request_path, freeze = create_capability_freeze(

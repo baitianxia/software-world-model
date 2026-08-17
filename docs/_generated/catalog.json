@@ -1269,6 +1269,34 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-008.md"
   },
   {
+    "id": "FINDING-008-009",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "architecture",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-009.md"
+  },
+  {
+    "id": "FINDING-008-010",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "architecture",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-010.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

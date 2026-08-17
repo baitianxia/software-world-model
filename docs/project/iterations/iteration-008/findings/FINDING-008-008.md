@@ -78,6 +78,16 @@ TLS 阶段得到同一 EOF；现有应用代码没有可由该证据支持的修
 因此“系统代理已关闭、TUN 已启用”的环境声明本身没有恢复该域名的 verified TLS 路径；可能是 TUN 规则仍对该域名 DIRECT，或所选
 TUN 上游与其他路径共享同一失败出口，但当前 evidence 不能在两者间下结论。
 
+## Subsequent evidence
+
+用户更换节点后，changed-node TLS diagnostic run-004 恰好一次 verified handshake PASS，满足本 Finding 定义的路径恢复诊断条件；
+随后一次最小 `ark-code-latest` model diagnostic 也成功，但二者都不是 Conformance 或 Capability 证据。用户切回原节点后，run-005
+再次得到与 run-001/run-003 相同的 TLS EOF，而无痕浏览器能到达同一 endpoint 的 Ark HTTP AuthenticationError。后续证据因此把范围
+收窄为客户端/路由选择性交互，不支持“Ark 或原节点整体不可用”的结论，也没有产生应用代码修复点。
+
+用户随后决定更换模型 Provider；本 Finding 的原始环境 hold 已完成其诊断职责，当前 Provider-dependent 执行顺序由
+[FINDING-008-009](FINDING-008-009.md) 接续，不从 alternate-route PASS 推导 Ark Conformance、Capability 或 Product 资格。
+
 ## Impact and classification
 
 该失败阻断的是本 Iteration 的 live 资格顺序，没有证据表明 Provider Contract、Gateway Owner 或安全不变量需要改变。直接改为使用 ambient
@@ -86,9 +96,10 @@ proxy 会改变 bearer credential 的目标边界，不能作为未经设计和�
 
 ## Decision and disposition
 
-run-002 Conformance、direct diagnostic 与 proxy diagnostic evidence 保持原样，三个授权都不得重用。当前 live qualification 进入
-environment/external-state hold：在 exact Ark host 的 TLS 路径由网络环境或 Provider 侧恢复，并由不消费 Conformance grant 的独立证据确认
-之前，不生成 Conformance run-003，不修改 Adapter，不启用 ambient proxy，不关闭证书验证，也不申请新的 Provider 调用。
+run-002 Conformance、direct diagnostic、proxy diagnostic 与 TUN diagnostic evidence 保持原样，所有授权都不得重用。当时的 live
+qualification 正确进入 environment/external-state hold：在 exact Ark host 的 TLS 路径由网络环境或 Provider 侧恢复，并由不消费
+Conformance grant 的独立证据确认之前，不生成 Conformance run-003，不修改 Adapter，不启用 ambient proxy，不关闭证书验证，也不申请
+新的 Provider 调用。
 
 恢复条件是 verified handshake 能到达证书验证并完成；仅有 proxy 变量、TCP connect、CONNECT 200 或历史 PASS 都不满足。恢复后仍须从
 新的 clean exact candidate 重新生成 2-call Conformance preflight，并取得新的用户授权；不得从诊断 PASS 推导 Provider、Capability 或
@@ -102,4 +113,5 @@ Production 资格。
 - direct diagnostic 恰好执行一次 handshake 并以 `SSLEOFError` 关闭，未发送 HTTP/application payload；
 - proxy diagnostic 恰好执行一次 CONNECT 和一次 handshake；CONNECT 完成，但 TLS 同样在证书验证前以 `SSLEOFError` 关闭；
 - TUN direct diagnostic 在用户声明的新网络模式下恰好执行一次 handshake，仍以完全相同的 sanitized Result 关闭；
-- 当前证据支持“direct、proxy tunnel 与当前 TUN 路径的共同下游 TLS 不可用”，不把应用代码、网络模式声明或历史 PASS 外推为 root cause。
+- 当时证据支持“direct、proxy tunnel 与当时 TUN 路径的共同下游 TLS 不可用”；后续 alternate-route PASS 与 original-route/browser
+  分流证据进一步把问题收窄为客户端/路由选择性交互，不把应用代码、网络模式声明、历史 PASS 或浏览器 PASS 外推为 root cause。

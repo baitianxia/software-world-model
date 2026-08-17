@@ -308,7 +308,7 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                 f"bounded-java-source-semantics-capability-sink:{case_id}"
             ),
             sink_manifest_digest=digest_of(sink_manifest),
-            generator_origin="volcengine-ark-bounded-source-semantics-proposal",
+            generator_origin="deepseek-bounded-source-semantics-proposal",
             actual_model_fingerprint=str(usage["actual_model_fingerprint"]),
             provider_request_ids=request_ids,
             input_tokens=int(usage["input_tokens"]),
