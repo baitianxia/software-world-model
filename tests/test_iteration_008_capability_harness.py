@@ -96,6 +96,38 @@ def _passing_normalized(
     return projection
 
 
+def _passing_model_output(
+    case: dict[str, object],
+    step: dict[str, object],
+    expected: dict[str, object],
+) -> dict[str, object]:
+    if case["capability"] != "IMPLEMENTATION_INVESTIGATION":
+        return _passing_normalized(case, step, expected)
+    projection = expected_step_projection(_SUITE, case, step, expected)
+    constraints = step["semantic_constraints"]
+    assert isinstance(constraints, dict)
+    search_groups = constraints.get("search_term_concept_groups", [])
+    finish_groups = constraints.get("finish_reason_concept_groups", [])
+    relation_intent = None
+    if projection["operation"] == "direct_neighborhood":
+        relation_intent = {
+            ("OUTGOING", "CALLS"): "OUTGOING_CALLS",
+            ("INCOMING", "CALLS"): "INCOMING_CALLS",
+            ("BOTH", "CALLS"): "BOTH_CALLS",
+            ("INCOMING", "DECLARES_METHOD"): "DECLARING_TYPE",
+        }[(projection["direction"], projection["predicate"])]
+    return {
+        "operation": projection["operation"],
+        "search_terms": [group[0] for group in search_groups],
+        "relation_intent": relation_intent,
+        "finish_reason": (
+            " ".join(group[0] for group in finish_groups)
+            if finish_groups
+            else None
+        ),
+    }
+
+
 def _case_documents(
     case: dict[str, object], oracle_case: dict[str, object]
 ) -> tuple[dict[str, object], dict[str, object]]:
@@ -251,7 +283,7 @@ class _PassingCapabilityTransport:
                 zip(case["steps"], oracle_case["steps"]), start=1
             ):
                 self._outputs[f"{case['case_id']}:call-{call_index}"] = (
-                    _passing_normalized(case, step, expected)
+                    _passing_model_output(case, step, expected)
                 )
 
     def post_json(self, **arguments):
@@ -329,7 +361,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             PINNED_ORACLE_FILE_DIGEST,
         )
         self.assertEqual(len(PINNED_REQUIRED_CASE_CALLS), 18)
-        self.assertEqual(PINNED_PROVIDER_REQUEST_COUNT, 39)
+        self.assertEqual(PINNED_PROVIDER_REQUEST_COUNT, 41)
         self.assertEqual(
             tuple(case["case_id"] for case in _SUITE["cases"]),
             PINNED_REQUIRED_CASE_IDS,
@@ -348,10 +380,10 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             exact_candidate_checkpoint_ref="git:" + "3" * 40,
             environment_ref="iter-008-bounded-capability@1",
             reference_strategy_ref="standalone-evaluator@1",
-            resource_policy_ref="thirty-nine-no-retry@1",
+            resource_policy_ref="forty-one-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.3.2")
+        self.assertEqual(definition.strategy_version, "1.4.0")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),
@@ -368,6 +400,33 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 "all_simple_paths",
                 "FINISH",
             ),
+        )
+
+    def test_sealed_previous_result_uses_product_progress_boundary(self) -> None:
+        case = next(
+            item
+            for item in _SUITE["cases"]
+            if item["case_id"] == "WM-JSS-I8-DECLARED-INVENTORY-005"
+        )
+        sealed = sealed_step_input(_SUITE, case, case["steps"][1])
+        previous = sealed["previous_result"]
+        self.assertIsInstance(previous, dict)
+        result = previous["results"][0]
+        self.assertNotIn("query_result_completeness", result)
+        self.assertNotIn("knowledge_representation", result)
+        self.assertNotIn("business_discovery_recall", result)
+        self.assertIn("entities", result["payload"])
+        self.assertEqual(
+            sealed["progress_receipt"]["completeness"],
+            {
+                "query_result": "COMPLETE",
+                "knowledge_representation": "COMPLETE",
+                "business_discovery_recall": "UNKNOWN",
+                "bounded_absence_allowed": False,
+                "missing_limitation_codes": [
+                    "BUSINESS_DISCOVERY_RECALL_UNPROVEN"
+                ],
+            },
         )
 
     def test_all_eighteen_deterministic_evaluator_examples_pass(self) -> None:
@@ -729,7 +788,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertFalse(failure["raw_prompt_persisted"])
             self.assertFalse(failure["raw_response_persisted"])
 
-    def test_full_fake_transport_flow_closes_thirty_nine_call_result(self) -> None:
+    def test_full_fake_transport_flow_closes_forty_one_call_result(self) -> None:
         fake_identity = {
             "commit": "1" * 40,
             "tree": "2" * 40,
@@ -774,6 +833,16 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                     output_directory=root / "capability-freeze",
                     created_at=capability_created,
                 )
+            )
+            scope = capability_freeze["dispatch_contract"][
+                "authorization_scope"
+            ]
+            self.assertEqual(scope["planned_provider_call_count"], 41)
+            self.assertEqual(
+                scope["payload_boundary"],
+                "FORTY_ONE_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
+                "EIGHTEEN_CASES_NO_PRODUCT_QUESTION_SOURCE_EVIDENCE_OR_"
+                "HIDDEN_CANARY",
             )
             with patch.object(
                 cli, "_candidate_identity", return_value=fake_identity
@@ -860,8 +929,8 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(payload["status"], "CAPABILITY_EVALUATION_PASS")
             self.assertEqual(payload["case_count"], 18)
-            self.assertEqual(payload["provider_request_count"], 39)
-            self.assertEqual(transport.calls, 39)
+            self.assertEqual(payload["provider_request_count"], 41)
+            self.assertEqual(transport.calls, 41)
             binding = load_bounded_java_source_semantics_gateway_qualification_binding(
                 qualification_path=payload["qualification_path"],
                 closed_result_path=payload["result_path"],

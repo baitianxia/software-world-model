@@ -28,10 +28,13 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
 4. Activation 绑定 Capability 声明的 normalized Activation Scope、单调 revision 和当前有效资格；environment、expiration 等维度只在该 Capability Contract 声明时生效。评测通过不会自动激活。
 5. evaluation-only Sink 与生产 Sink 隔离，历史评测输出不得进入正式知识或生产答案。
 6. 回退不能降低权限、隔离、输入闭包或产品边界。
-7. Result-driven Strategy 的 Definition 必须覆盖每个调查阶段、0/N candidate、至少两个结果驱动回合、合法 early finish、最大步数、
-   budget/cycle/progress、Ref provenance、Draft、独立 Review 与三层负向证明。固定三调用或单方法 Qualification 不能授权 bounded
-   investigation；operation set、Prompt/schema、预算、role sequence、Gateway connection policy 或 trace contract 任一变化均需新 closed
-   Result。Qualification 必须保存每个 step 的 exact input/result/trace digest 与真实调用计数，汇总 PASS 不能替代逐 Case 证据。
+7. Result-driven Strategy 的 Definition 必须覆盖每个调查阶段、0/N candidate、一个已执行 Result 后的合法 FINISH、多 Result 转换、
+   最大步数、budget/cycle/progress、Ref provenance、Draft、独立 Review 与三层负向证明。模型只输出 semantic intent 时，Definition
+   还必须经同一个 production argument compiler 验证 exact typed proposal；synthetic previous Result、progress completeness 与 operation
+   transition 必须是正式产品可达状态，不能为满足 Oracle 伪造 scope Ref 或按回合序号改变同一 Result 的语义。固定三调用或单方法
+   Qualification 不能授权 bounded investigation；operation set、Prompt/schema、argument compiler、预算、role sequence、Gateway
+   connection policy 或 trace contract 任一变化均需新 closed Result。Qualification 必须保存每个 step 的 exact input/result/trace digest
+   与真实调用计数，汇总 PASS 不能替代逐 Case 证据。
 
 ## Failure and evidence boundary
 

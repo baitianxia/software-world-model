@@ -191,7 +191,7 @@ readiness_inputs:
     - docs/system/contracts/knowledge/java-source-semantics.md
     - docs/system/operations/local-browser.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:bf54c3dbb2fe66d25b907848f5eac4589217dd62bd3c77e328ffe9114de8ebb2
+  system_contract_set_digest: sha256:10e41a5501491a27b7873985839e5986d313968d26b5ea4e977d4aecc8a50c6f
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

@@ -118,6 +118,34 @@ budget exhaustion 与 Review 五项 FAIL，所以 Qualification 与 Production A
 `@6`，只澄清 previous Result、budget、Ref copy、正/负 FINISH 和 Review taxonomy；18/39、Oracle、metric、阈值与 no-retry 不变。
 完成 deterministic verification 后只再执行一轮新候选资格；run-005 的 standing authorization 已消费，不得复用。
 
+`1.3.2` clean candidate `6e443a324d2289321457b6d828163d0dc9005300`（tree
+`8ceb39e78eace1faac5280a867ebbd40a668e500`）的 DeepSeek Conformance run-006 绑定 preflight
+`sha256:03d02deffe7afe7601536b68630ce98accf723799f50d7e168f1cb1815247990`，恰好完成 2 次 request、12/12 Case PASS；result digest
+为 `sha256:b80972ae436dc5523b645bfb7efebc9b5c815141190f2fd7642320d8089bdf50`，唯一模型 identity 为 `deepseek-v4-pro`，tokens 为
+375/76，raw payload 未持久化。
+
+同候选 Capability run-006 绑定 freeze
+`sha256:e2e40a3c7dc9ca6d82e6f38fca0d6ced2fa2384f38f4cdd17222e1977246a767`，完整执行 39 calls / 18 Case、无 retry、
+`unknown_count=0`，tokens 为 126228/10227。closed Result
+`var/iteration-008/capability/run-006-capability-result/closed-evaluation-result.json` 的 result/document/terminal digest 为
+`sha256:85a51dc5c4182f99a9c9adaca9becbba213811d211e452b72a1d5dcda0f99692` /
+`sha256:fa38bc981ed37efbe1b77642be4819e3d7cf45f0198bb50362371689356773d3` /
+`sha256:884d6a35fdd3372a2af55ff206e11752ff4995385ee5d86a9f0a2b3828205cf5`。12/18 Case PASS；N candidates、result-driven batch、
+declared inventory、budget exhaustion、negative complete 与 negative query-unknown 六项 FAIL，所以 Qualification 与 Production
+Activation 均未执行。
+
+该失败按 [FINDING-008-014](../findings/FINDING-008-014.md) 处置为 system-contract 架构证据，而不是继续 Prompt 重试：模型只输出
+semantic intent，Application 编译 exact authority arguments；qualification 只使用产品可达 previous Result，补入正式 progress
+completeness projection，并使一个 executed Result + FINISH 成为合法 2-call investigation。active contract/Strategy 已版本化为
+`1.4.0`、prompt/vocabulary `@7`、policy `@1.1.0`、suite/oracle `@1.4.0`。18 Case、metric、18/18 threshold、forbidden events 与
+no-retry 不变；显式合法 transition 使 fake-transport exact count 调整为 41。本架构处置没有发起新的 Provider call；live
+requalification 仍待新的 clean candidate，正式 runtime 保持 Ark。
+
+`1.4.0` 离线验证已形成：affected contract/policy/capability/product/runtime 117/117 PASS；同一个 production compiler 下的
+18-case fake transport 41 calls / 18/18 PASS；full discovery 978/978 PASS、退出码 0，仅出现既有 SQLite connection
+`ResourceWarning`；318 份 current documents 与 `git diff --check` PASS。这些是实现与资格输入证据，不是 Product Result、live
+Capability Qualification 或 Activation。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

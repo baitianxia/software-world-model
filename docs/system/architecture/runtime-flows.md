@@ -55,17 +55,19 @@ Explicit WORLD_MODEL request
 
 ```text
 immutable Requirement
-  → 2—4 次 result-driven investigation proposal / typed result
+  → 2—4 次 semantic intent / compiled typed operation / typed result
   → sealed trace + progress/budget receipts
   → one Draft
   → independent Review
   → Authorization / Delivery
 ```
 
-每轮 Agent 只提出一个 allowlisted typed operation，Application 校验 exact Snapshot、前序 result provenance、Ref、bytes、Support、
-progress 和剩余预算后才执行。候选搜索可以返回 0/N；方法实现查询可在同一 candidate result 内选择最多 3 个 exact method Ref，
-不取排名第一也不无界展开。达到 FINISH 前至少有两个调查回合；重复 query、无进展、越界或预算耗尽返回具体 Limitation，并保持
-Source/Update/Direct fallback 为 0。查询、表示与业务发现三层完整性没有同时证明时，不得给 bounded absence。
+每轮 Agent 只提出一个 allowlisted semantic operation/relation intent；Application 从 sealed input 编译 exact Snapshot、前序 Result
+binding、Entity Ref、direction/predicate 与 bounds，再校验 bytes、Support、progress 和剩余预算后执行。候选搜索可以返回 0/N；方法
+实现查询可在同一 candidate result 内选择最多 3 个 exact method Ref，不取排名第一也不无界展开。至少一个 Result 执行后可以显式
+FINISH；FINISH 本身计作调用，所以 1 query + FINISH 是合法 2-call investigation。重复 query、无进展、越界或预算耗尽返回具体
+Limitation，并保持 Source/Update/Direct fallback 为 0。查询、表示与业务发现三层完整性只由平台通过 progress receipt 投影；没有
+同时证明时不得给 bounded absence，评测 Oracle identity 不进入 Answer。
 
 该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway supervisor 可以预建上限 6 个独立 Provider
 connection；Gateway 按实际角色顺序消费，未使用 descriptor 在 terminal 后销毁并审计。旧固定三调用资格和 connection receipt 不得

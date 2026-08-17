@@ -218,6 +218,7 @@ from .bounded_world_model_investigation import (
     InvestigationProposal,
     InvestigationStep,
     InvestigationTerminalStatus,
+    compile_investigation_intent,
     validate_bounded_investigation_trace,
 )
 from .world_model_answering import (
@@ -482,6 +483,7 @@ __all__ = [
     "InvestigationProposal",
     "InvestigationStep",
     "InvestigationTerminalStatus",
+    "compile_investigation_intent",
     "validate_bounded_investigation_trace",
     "EVALUATION_ONLY_SINK",
     "OFFLINE_STRATEGY_MODE",

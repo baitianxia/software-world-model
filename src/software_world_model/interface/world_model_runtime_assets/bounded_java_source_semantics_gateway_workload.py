@@ -259,11 +259,11 @@ def _verify_freeze(value: Mapping[str, object]) -> str:
         != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-PRODUCT-GATEWAY-CANDIDATE@1"
         or value.get("environment") != "EVALUATION_ONLY"
         or value.get("strategy_ref")
-        != "model-snapshot-first-world-model-answer@1.3.2"
+        != "model-snapshot-first-world-model-answer@1.4.0"
         or value.get("prompt_ref")
-        != "java-source-semantics-world-model-prompt@6"
+        != "java-source-semantics-world-model-prompt@7"
         or value.get("proposal_vocabulary_ref")
-        != "java-source-semantics-world-model-vocabulary@6"
+        != "java-source-semantics-world-model-vocabulary@7"
         or value.get("egress_policy_digest")
         != BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
         or value.get("production_activation") != "NOT_EXECUTED"

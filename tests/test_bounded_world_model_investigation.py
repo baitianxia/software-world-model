@@ -9,6 +9,7 @@ from software_world_model.application_services.bounded_world_model_investigation
     InvestigationCompletenessVerdict,
     InvestigationProposal,
     InvestigationTerminalStatus,
+    compile_investigation_intent,
     validate_bounded_investigation_trace,
 )
 from software_world_model.application_services.structure_read_bundle import (
@@ -66,6 +67,45 @@ def _ref(result: object, entity: object) -> dict[str, str]:
         "source_result_digest": result.digest.value,
         "entity_root_id": entity["root_id"],
         "entity_state_id": entity["state_id"],
+    }
+
+
+def _sealed_input(
+    session: BoundedWorldModelInvestigationSession,
+    *,
+    snapshot_id: object,
+    previous_step: object | None = None,
+) -> dict[str, object]:
+    previous_result = None
+    previous_progress = None
+    if previous_step is not None:
+        previous_result = {
+            "operation": previous_step.proposal.operation.value,
+            "results": tuple(
+                item.canonical_value() for item in previous_step.results
+            ),
+        }
+        previous_progress = {
+            "progress_token": previous_step.progress_token.value,
+            "query_bytes": previous_step.query_bytes,
+            "result_bytes": previous_step.result_bytes,
+            "support_item_count": previous_step.support_item_count,
+            "completeness": session.current_completeness.canonical_value(),
+        }
+    return {
+        "original_question": "Explain all relevant methods and direct calls.",
+        "response_language": "en",
+        "need_key": "implementation-answer",
+        "read_authority": {"snapshot_ids": [snapshot_id.value]},
+        "profile_ref": JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+        "step_index": session.model_call_count + 1,
+        "trace_digest": session.trace_digest.value,
+        "previous_result": previous_result,
+        "progress_receipt": previous_progress,
+        "remaining_budget": {
+            "model_calls": 4 - session.model_call_count,
+            "execution_steps": 4 - len(session.steps),
+        },
     }
 
 
@@ -167,6 +207,173 @@ class BoundedWorldModelInvestigationTests(TestCase):
             view=self.view,
             question_digest=self.question_digest,
         )
+
+    def test_platform_compiles_opaque_arguments_and_valid_inventory_transition(self) -> None:
+        session = self._session()
+        candidate_mapping = compile_investigation_intent(
+            {
+                "operation": "implementation_candidates",
+                "search_terms": ["credentials", "failure", "session"],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+            ),
+        )
+        candidate_step = session.submit(
+            InvestigationProposal.from_mapping(
+                candidate_mapping,
+                model_proposal_digest=digest_of("candidate-intent"),
+            )
+        )
+        assert candidate_step is not None
+
+        declaring_mapping = compile_investigation_intent(
+            {
+                "operation": "direct_neighborhood",
+                "search_terms": [],
+                "relation_intent": "DECLARING_TYPE",
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=candidate_step,
+            ),
+        )
+        self.assertEqual(declaring_mapping["direction"], "INCOMING")
+        self.assertEqual(declaring_mapping["predicate"], "DECLARES_METHOD")
+        self.assertEqual(
+            declaring_mapping["entity_refs"][0]["source_result_id"],
+            candidate_step.results[0].result_id.value,
+        )
+        declaring_step = session.submit(
+            InvestigationProposal.from_mapping(
+                declaring_mapping,
+                model_proposal_digest=digest_of("declaring-type-intent"),
+            )
+        )
+        assert declaring_step is not None
+
+        inventory_mapping = compile_investigation_intent(
+            {
+                "operation": "declared_method_inventory",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=declaring_step,
+            ),
+        )
+        inventory_step = session.submit(
+            InvestigationProposal.from_mapping(
+                inventory_mapping,
+                model_proposal_digest=digest_of("inventory-intent"),
+            )
+        )
+        assert inventory_step is not None
+        self.assertEqual(inventory_step.results[0].payload["method_count"], 3)
+
+        finish_mapping = compile_investigation_intent(
+            {
+                "operation": "FINISH",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": "typed support is complete",
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=inventory_step,
+            ),
+        )
+        session.submit(
+            InvestigationProposal.from_mapping(
+                finish_mapping,
+                model_proposal_digest=digest_of("finish-intent"),
+            )
+        )
+        validate_bounded_investigation_trace(
+            session.seal(),
+            view=self.view,
+            question_digest=self.question_digest,
+        )
+
+    def test_path_intent_selects_method_endpoints_from_real_batch_results(self) -> None:
+        session = self._session()
+        candidate_mapping = compile_investigation_intent(
+            {
+                "operation": "implementation_candidates",
+                "search_terms": ["credentials", "failure", "session"],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+            ),
+        )
+        candidate_step = session.submit(
+            InvestigationProposal.from_mapping(
+                candidate_mapping,
+                model_proposal_digest=digest_of("path-candidate-intent"),
+            )
+        )
+        assert candidate_step is not None
+        method_mapping = compile_investigation_intent(
+            {
+                "operation": "method_implementations",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=candidate_step,
+            ),
+        )
+        method_step = session.submit(
+            InvestigationProposal.from_mapping(
+                method_mapping,
+                model_proposal_digest=digest_of("path-method-intent"),
+            )
+        )
+        assert method_step is not None
+        self.assertEqual(len(method_step.results), 3)
+
+        path_mapping = compile_investigation_intent(
+            {
+                "operation": "path_exists",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=method_step,
+            ),
+        )
+        self.assertEqual(
+            tuple(item["entity_root_id"] for item in path_mapping["entity_refs"]),
+            tuple(
+                item.payload["method"]["root_id"]
+                for item in method_step.results[:2]
+            ),
+        )
+        executed = session.submit(
+            InvestigationProposal.from_mapping(
+                path_mapping,
+                model_proposal_digest=digest_of("path-relation-intent"),
+            )
+        )
+        self.assertIsNotNone(executed)
 
     def test_zero_candidates_are_limitation_without_discovery_oracle(self) -> None:
         session = self._session()
@@ -278,7 +485,21 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 )
             )
 
-    def test_cycle_and_early_finish_fail_closed(self) -> None:
+    def test_cycle_and_finish_without_result_fail_closed(self) -> None:
+        empty = self._session()
+        with self.assertRaisesRegex(DomainError, "at least one executed"):
+            empty.submit(_proposal(empty, "FINISH", finish_reason="too-early"))
+        with self.assertRaisesRegex(DomainError, "terminal investigation"):
+            empty.submit(
+                _proposal(
+                    empty,
+                    "implementation_candidates",
+                    snapshot_id=self.snapshot_id.value,
+                    search_terms=["session"],
+                    limit=10,
+                )
+            )
+
         session = self._session()
         session.submit(
             _proposal(
@@ -289,8 +510,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 limit=10,
             )
         )
-        with self.assertRaisesRegex(DomainError, "at least two executed"):
-            session.submit(_proposal(session, "FINISH", finish_reason="too-early"))
+        session.submit(_proposal(session, "FINISH", finish_reason="complete"))
         with self.assertRaisesRegex(DomainError, "terminal investigation"):
             session.submit(
                 _proposal(
@@ -301,8 +521,10 @@ class BoundedWorldModelInvestigationTests(TestCase):
                     limit=10,
                 )
             )
-        with self.assertRaisesRegex(DomainError, "cannot be resumed or sealed"):
-            session.seal()
+        self.assertEqual(
+            session.seal().terminal_status,
+            InvestigationTerminalStatus.FINISHED,
+        )
 
         cycle = self._session()
         for _ in range(2):

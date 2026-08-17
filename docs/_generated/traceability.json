@@ -1160,6 +1160,21 @@
       "tests/test_iteration_008_capability_qualification.py"
     ]
   },
+  "FINDING-008-014": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-014.md",
+    "code": [
+      "src/software_world_model/application_services/bounded_world_model_investigation.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "validation/structure_world_model_iteration_008/capability/manifest.py"
+    ],
+    "tests": [
+      "tests/test_bounded_world_model_investigation.py",
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_008_capability_harness.py",
+      "tests/test_iteration_008_capability_qualification.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

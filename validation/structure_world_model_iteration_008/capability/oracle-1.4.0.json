@@ -1,7 +1,7 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-capability-oracle@1",
-  "oracle_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.3.2",
-  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.3.2",
+  "oracle_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.4.0",
+  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.0",
   "forbidden_event_sets": {
     "investigation": [
       "SOURCE_ACCESS",
@@ -70,13 +70,16 @@
       "case_id": "WM-JSS-I8-DECLARED-INVENTORY-005",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
-        {"operation": "declared_method_inventory", "arguments": {"entity_refs_ref": "three_candidates:first"}, "forbidden_events_ref": "investigation"}
+        {"operation": "direct_neighborhood", "arguments": {"entity_refs_ref": "three_candidates:first", "direction": "INCOMING", "predicate": "DECLARES_METHOD"}, "forbidden_events_ref": "investigation"},
+        {"operation": "declared_method_inventory", "arguments": {"entity_refs_ref": "declaring_type:first"}, "forbidden_events_ref": "investigation"},
+        {"operation": "FINISH", "arguments": {}, "forbidden_events_ref": "investigation"}
       ]
     },
     {
       "case_id": "WM-JSS-I8-DIRECT-NEIGHBORHOOD-006",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
+        {"operation": "method_implementations", "arguments": {"candidate_result_id": "world_model_step_result_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "candidate_result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "method_refs_ref": "three_candidates"}, "forbidden_events_ref": "investigation"},
         {"operation": "direct_neighborhood", "arguments": {"entity_refs_ref": "method_batch:first", "direction": "OUTGOING", "predicate": "CALLS"}, "forbidden_events_ref": "investigation"}
       ]
     },
@@ -84,6 +87,7 @@
       "case_id": "WM-JSS-I8-PATH-EXISTS-007",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
+        {"operation": "method_implementations", "arguments": {"candidate_result_id": "world_model_step_result_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "candidate_result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "method_refs_ref": "three_candidates"}, "forbidden_events_ref": "investigation"},
         {"operation": "path_exists", "arguments": {"entity_refs_ref": "method_batch:first-two", "predicate": "CALLS", "max_depth": 8, "max_expansions": 256}, "forbidden_events_ref": "investigation"}
       ]
     },
@@ -91,6 +95,7 @@
       "case_id": "WM-JSS-I8-ALL-SIMPLE-PATHS-008",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
+        {"operation": "method_implementations", "arguments": {"candidate_result_id": "world_model_step_result_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "candidate_result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "method_refs_ref": "three_candidates"}, "forbidden_events_ref": "investigation"},
         {"operation": "all_simple_paths", "arguments": {"entity_refs_ref": "method_batch:first-two", "predicate": "CALLS", "max_depth": 8, "max_paths": 16, "max_expansions": 256}, "forbidden_events_ref": "investigation"}
       ]
     },
@@ -116,8 +121,8 @@
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
         {"operation": "method_implementations", "arguments": {"candidate_result_id": "world_model_step_result_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "candidate_result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "method_refs_ref": "three_candidates"}, "forbidden_events_ref": "investigation"},
-        {"operation": "declared_method_inventory", "arguments": {"entity_refs_ref": "method_batch:first"}, "forbidden_events_ref": "investigation"},
         {"operation": "direct_neighborhood", "arguments": {"entity_refs_ref": "method_batch:first", "direction": "OUTGOING", "predicate": "CALLS"}, "forbidden_events_ref": "investigation"}
+        ,{"operation": "all_simple_paths", "arguments": {"entity_refs_ref": "direct_calls:first-two", "predicate": "CALLS", "max_depth": 8, "max_paths": 16, "max_expansions": 256}, "forbidden_events_ref": "investigation"}
       ]
     },
     {
@@ -138,7 +143,6 @@
       "case_id": "WM-JSS-I8-NEGATIVE-COMPLETE-014",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
-        {"operation": "declared_method_inventory", "arguments": {"entity_refs_ref": "zero_candidates:scope"}, "forbidden_events_ref": "investigation"},
         {"operation": "FINISH", "arguments": {}, "forbidden_events_ref": "investigation"}
       ]
     },
@@ -146,7 +150,6 @@
       "case_id": "WM-JSS-I8-NEGATIVE-QUERY-UNKNOWN-015",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
-        {"operation": "declared_method_inventory", "arguments": {"entity_refs_ref": "zero_candidates:scope"}, "forbidden_events_ref": "investigation"},
         {"operation": "FINISH", "arguments": {}, "forbidden_events_ref": "investigation"}
       ]
     },
@@ -154,7 +157,6 @@
       "case_id": "WM-JSS-I8-NEGATIVE-REPRESENTATION-UNKNOWN-016",
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
-        {"operation": "declared_method_inventory", "arguments": {"entity_refs_ref": "zero_candidates:scope"}, "forbidden_events_ref": "investigation"},
         {"operation": "FINISH", "arguments": {}, "forbidden_events_ref": "investigation"}
       ]
     },

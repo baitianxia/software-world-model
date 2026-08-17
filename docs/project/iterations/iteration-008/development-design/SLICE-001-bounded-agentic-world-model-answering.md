@@ -50,7 +50,7 @@ Manifest 已冻结 baseline `38ebed2…`、`SYS-ADR-015`/System Contract fileset
 ## System contracts and invariants
 
 - `Question → immutable Needs → bounded query loop → sealed trace → Draft → independent Review → Delivery`；
-- Agent 每一步只能提交 typed operation；平台校验 operation、Snapshot、Context、Ref、limit、budget 和 Support；
+- Agent 每一步只能提交 semantic operation/relation intent；平台编译并校验 typed operation、Snapshot、Context、Ref、limit、budget 和 Support；
 - operation 至少覆盖 implementation candidates、method implementation、declared method inventory、direct neighborhood 与 path；
 - 多候选是正常输入，不要求唯一；本段只需冻结足以完成 early canary 的最小有界 result contract；
 - 下单回归不得输出无关登录支持；查询、表示、业务发现任一完整性未证明时只能 Limitation，不得声称绝对不存在；
@@ -77,11 +77,12 @@ schema 和 Bundle 只能作为 unaccepted assets 重新通过本 Slice Gate，�
 调查 trace 必须绑定 question、Need、exact Snapshot/Bundle、每个 proposal/result、Support、预算消耗、Draft、Review 与 terminal；用户可见
 Citation 仍通过授权端点读取，Answer worker 不获得源码 payload。
 
-实现期确认显式 `FINISH` 本身也是一次 Investigation 模型调用，并且只能发生在至少两个已执行调查回合之后。因此冻结的
-2—4 Investigation / 4—6 total 仍是 Gateway 安全 envelope，但当前可达的正常成功路径实际消费 3—4 次 Investigation、总计 5—6 次；
-4-call 下界不作为本 Slice 成功 fixture 的预期值。Supervisor 仍只按上限预建 6 个 descriptor，Result 必须报告 exact consumed count，
-并关闭、审计所有未消费项；不得通过隐藏 terminal、伪造调用或放宽 two-Result 规则凑下界。详见
-[FINDING-008-002](../findings/FINDING-008-002.md)。
+实现期先确认显式 `FINISH` 本身也是一次 Investigation 模型调用；当时的 proposal 还要求 FINISH 前至少两个 executed Result，因此
+正常成功路径只能消费 3—4 次 Investigation。run-006 随后的产品一致性审查证明这让冻结的 2-call 下界不可达：一个已执行的完整
+Result 已足以支持显式 FINISH，尤其真实零候选边界不应为凑调用数制造第二个伪查询。活动规则据此修订为至少一个 executed Result
+后允许 FINISH，故 1 query + FINISH 构成合法 2-call investigation；零 Result FINISH 仍失败关闭。2—4 Investigation / 4—6 total、
+Supervisor 上限 6 descriptors、exact consumed count 和未使用 descriptor 销毁审计均不变。详见
+[FINDING-008-002](../findings/FINDING-008-002.md) 与 [FINDING-008-014](../findings/FINDING-008-014.md)。
 
 当时的 Ark Adapter `openai-chat-completions-no-tools@8` 没有可继承的密封 Conformance Result，因此 live 资格顺序进一步固定为两个互不继承的
 Gate：先在 clean exact candidate 上无网络冻结并单独申请恰好 2 次 Conformance call；只有当前 `@8` Result PASS 后，才可冻结绑定同一
@@ -154,6 +155,23 @@ Result 禁止重启 search、remaining budget 包含当前 proposal、Ref identi
 以及 incomplete-absence Review 只使用 `QUERY_INCOMPLETE`。本 Slice 将 contract 再版本化为 `1.3.2` / prompt-vocabulary `@6`、policy
 `@1.0.2` 与 suite/oracle `@1.3.2`，仍不改 18 Case、39 calls、Oracle、阈值或 no-retry。完成验证后只再执行一轮完整资格；若仍
 FAIL，则停止无新架构证据的 Prompt 重复迭代。详见 [FINDING-008-013](../findings/FINDING-008-013.md)。
+
+`1.3.2` clean candidate `6e443a3…` 的 Conformance run-006 恰好 2 calls / 12 Case PASS；同候选 Capability run-006 无 retry 地完成
+39 calls / 18 Case、`unknown_count=0`，但只有 12/18 PASS。失败中两个仍是模型重建 opaque Ref 的字符漂移；更重要的是，产品实现
+审查发现旧 suite/oracle 直接把 JAVA_METHOD 交给只接受 JAVA_TYPE 的 inventory、对同一 previous Result 按回合期待不同操作，并在
+真实零候选 Result 中伪造 scope Ref。正式 progress receipt 也未包含资格 fixture 已提供的 completeness verdict。
+
+这不是继续补 Prompt 的理由，而是 Agent/Application authority 边界和 qualification 产品真实性缺陷。本 Slice 按
+[FINDING-008-014](../findings/FINDING-008-014.md) 更新 System：模型只输出 operation/search/relation/finish semantic intent；Application
+以 `java-source-semantics-investigation-argument-compiler@1` 从 sealed input 编译 exact typed arguments。活动 contract/Strategy 升级为
+`1.4.0`、prompt/vocabulary `@7`、policy `@1.1.0`、suite/oracle `@1.4.0`；Case 仍为 18、阈值仍是 18/18，但产品可达 transition 的
+显式覆盖使调用数调整为 41。run-006 后不再发起同 prompt Provider 重试；先完成本地 contract、fake transport、full-suite 与 docs
+闭包，新的 live requalification 留待 clean candidate 独立开始。正式 runtime 仍保持 Ark，正式 Web、hidden canary、SLICE-002 与
+Production Activation 均未执行。
+
+`1.4.0` 离线闭包现已完成：affected contract/policy/capability/product/runtime 回归 117/117 PASS；18-case fake transport 恰好
+41 calls / 18/18 PASS；full discovery 978/978 PASS（仅有既有 SQLite connection `ResourceWarning`）；318 份 current documents 与
+`git diff --check` PASS。该证据只关闭本地实现与资格输入一致性，不替代真实模型 Capability 或正式产品 Gate。
 
 ## Open questions and implementation risks
 

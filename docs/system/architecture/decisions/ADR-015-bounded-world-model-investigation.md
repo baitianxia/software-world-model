@@ -27,23 +27,27 @@ Bundle。ITER-007 的固定 `Plan → 单方法选择 → Draft → Review` 却�
 
 ```text
 immutable Question / Needs / exact Read Authority
-  → Agent proposes one typed investigation operation
-  → Application validates operation, arguments, provenance and remaining budget
+  → Agent proposes one semantic investigation intent
+  → Application compiles exact authority arguments and validates provenance/budget
   → Knowledge Use executes against the exact no-payload Bundle
   → Application seals the typed result and progress receipt
-  → Agent receives only the sealed trace prefix and proposes the next operation or FINISH
+  → Agent receives only the sealed trace prefix/completeness projection and proposes the next intent or FINISH
   → sealed investigation trace
   → one Draft
   → independent Review
   → deterministic Authorization / Delivery
 ```
 
-平台而不是 Agent 拥有 operation allowlist、typed Ref、Snapshot fence、查询执行、Support、预算、cycle/progress、trace seal 和终态。
+Agent 只拥有 operation、通用 search terms、closed relation intent 与 FINISH explanation。平台而不是 Agent 拥有 operation allowlist、
+typed Ref、Result binding、Snapshot fence、direction/predicate expansion、graph bounds、查询执行、Support、预算、cycle/progress、trace seal
+和终态；Application 必须从 sealed input deterministic 编译这些 authority 参数，不能要求模型复制、重建或猜测 opaque identifier。
 Agent 看不到 Repository、Source file、Artifact/Evidence payload、完整 AST、Knowledge Update、Citation observation、Direct
 Investigation、评测 Oracle 或其他角色私有输出。每轮 proposal 只在验证后执行；模型输出本身不是查询结果或授权。
 
-首个受权闭包允许每题 2—4 次调查模型调用，随后恰好 1 次 Draft 和 1 次独立 Review，总调用上限为 6，不重试。每轮只提交一个
-typed operation；批量 `method_implementation` 仍是一个查询，最多携带 3 个来自同一已密封 candidate result 的 exact method Ref。
+首个受权闭包允许每题 2—4 次调查模型调用，随后恰好 1 次 Draft 和 1 次独立 Review，总调用上限为 6，不重试。一个已执行 Result
+之后即可显式 `FINISH`，且 `FINISH` 自身计作一次调用，因此 1 query + FINISH 构成合法 2-call investigation；零 Result 的 FINISH
+仍失败关闭。每轮只提交一个 semantic intent，Application 只编译一个 typed operation；批量 `method_implementation` 仍是一个查询，
+最多携带 3 个来自同一已密封 candidate result 的 exact method Ref。
 调用、query/result bytes、Support、trace 和 wall time 均由当前 Contract 固定。预算耗尽、无进展、重复 proposal、Ref 越界或结果
 未知都失败关闭为具体 Limitation，不取消 Review，也不转入 Source/Direct。
 
@@ -51,7 +55,7 @@ Gateway 可以在 Answer 启动前预建调用上限数量的 exact Provider con
 Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题、跨角色或跨 session 复用。每个实际调用仍拥有唯一 workload、manifest、
 receipt 和 transport audit。
 
-负向结论必须分别拥有三个独立证明：
+progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle identity、评测期望或隐藏输入。负向结论必须分别拥有三个独立证明：
 
 1. **Query result completeness**：所有授权页已读，`total/truncated/cursor` 闭合；
 2. **Knowledge representation coverage**：授权单元和相关 facet 均有明确 disposition，unsupported/failed 不被当成空事实；

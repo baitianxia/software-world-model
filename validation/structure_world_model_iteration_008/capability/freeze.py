@@ -65,8 +65,8 @@ PACKAGE_FILE_NAMES = (
     "freeze.py",
     "live_runner.py",
     "manifest.py",
-    "oracle-1.3.2.json",
-    "suite-1.3.2.json",
+    "oracle-1.4.0.json",
+    "suite-1.4.0.json",
 )
 
 
@@ -263,7 +263,7 @@ def create_capability_freeze(
         ),
         reference_strategy_ref=f"standalone-stdlib-evaluator:{evaluator_digest}",
         resource_policy_ref=(
-            "thirty-nine-calls-across-eighteen-cases-no-retry:"
+            "forty-one-calls-across-eighteen-cases-no-retry:"
             f"{strategy_configuration.digest.value}"
         ),
         valid_for_seconds=604800,
@@ -527,7 +527,7 @@ def _capability_scope(
         "planned_provider_call_count": PINNED_PROVIDER_REQUEST_COUNT,
         "hidden_retry_count": 0,
         "payload_boundary": (
-            "THIRTY_NINE_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
+            "FORTY_ONE_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
             "EIGHTEEN_CASES_NO_PRODUCT_QUESTION_SOURCE_EVIDENCE_OR_"
             "HIDDEN_CANARY"
         ),

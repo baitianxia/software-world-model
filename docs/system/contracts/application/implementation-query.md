@@ -68,8 +68,11 @@ Query 不得根据已知题目替换答案。问题措辞改变只允许改变 v
 ### 声明与图操作
 
 `declared_method_inventory`、`direct_neighborhood`、`path_exists/all_simple_paths` 继续使用 Structure View 的现有 typed Contract。
-Agent 只能使用同一调查 trace 已授权的 exact Entity Ref；`CALLS` direction 必须显式给出，path 的 predicate、depth、count 和 expansion
-均受本题预算约束。它们不能读取 Source，也不能把名称匹配重建成图。
+Agent 只能提出同一调查 trace 上的 semantic operation/relation intent；Application 从 immediately preceding sealed Result 编译 exact
+Entity Ref、direction/predicate 与固定 bounds。`declared_method_inventory` 只接受 `JAVA_TYPE` Ref；当上一轮只暴露 `JAVA_METHOD`
+时，有效组合路径必须先执行 `direct_neighborhood(INCOMING, DECLARES_METHOD)` 取得实际 JAVA_TYPE Result，再对该 Result 执行
+inventory，不能把 method Ref 直接传入。`CALLS` direction 必须由 closed relation intent 显式选择，path 的 predicate、depth、count 和
+expansion 均由平台冻结并受本题预算约束。它们不能读取 Source，也不能把名称匹配重建成图。
 
 ### Result envelope 与完整性
 
@@ -83,8 +86,9 @@ Coverage/facet disposition、Support、serialized byte count 和 progress token�
 
 ## Composition and sufficiency
 
-一个功能问题可以先执行一次或多次 candidate search，再对选中的 typed candidates 执行单项或有界批量实现查询，并与 method inventory、direct
-neighborhood、path 或 ordered diff 组合。每个 Requirement Need 必须保存其 operation inputs/result digest；跨域答案必须在同一
+一个功能问题可以先执行 candidate search，再对选中的 typed candidates 执行单项或有界批量实现查询，并与 method inventory、direct
+neighborhood、path 或 ordered diff 组合。当前 bounded contract 的 later step 只消费 immediately preceding sealed Result，不能重启
+candidate search，也不能按回合序号对同一 previous Result 期待不同 authority transition。每个 Requirement Need 必须保存其 operation inputs/result digest；跨域答案必须在同一
 Need/Support chain 中同时引用旧 `CALLS` 与实现事实，不能仅在正文拼接两段互不约束的结果。
 
 Query Result 必须区分 `SUPPORTED`、`KNOWLEDGE_GAP`、`ENTITY_RESOLUTION_LIMITATION`、`METHOD_SEMANTICS_LIMITATION` 与

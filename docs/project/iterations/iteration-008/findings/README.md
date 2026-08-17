@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记十三条已处置 Finding：
+本 Slice 当前登记十四条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -45,6 +45,10 @@ iteration: ITER-008
 - [FINDING-008-013](FINDING-008-013.md)：`1.3.1` 的 run-005 完整完成 39 calls 并把结果提高到 13/18；剩余五个失败收敛为
   declared-set primary Need、remaining-budget 当前回合、逐字符 Ref、正/负 FINISH 与 Reviewer code precedence 歧义，以通用
   `1.3.2` / prompt-vocabulary `@6` 处置，原 Case、Oracle 与阈值不变。
+- [FINDING-008-014](FINDING-008-014.md)：`1.3.2` run-006 完成 39 calls 并取得 12/18，但进一步证明让模型复制 opaque
+  authority 参数是职责倒置，且旧资格包含产品不可达的 inventory、budget 与 negative 状态。活动契约升级为 `1.4.0`：模型只提
+  semantic intent，Application 编译 exact typed arguments；修复 declaring-type、progress completeness 与 2-call FINISH 边界，并以
+  产品可达的 18-case / 41-call suite/oracle 重新冻结离线资格输入。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

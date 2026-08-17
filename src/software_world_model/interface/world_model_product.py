@@ -1184,6 +1184,9 @@ class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
                     "query_bytes": executed.query_bytes,
                     "result_bytes": executed.result_bytes,
                     "support_item_count": executed.support_item_count,
+                    "completeness": (
+                        session.current_completeness.canonical_value()
+                    ),
                 }
         trace = session.seal()
         selectors, steps = _investigation_query_plan(trace, need_ids)

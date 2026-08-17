@@ -237,7 +237,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.3.2")
+        self.assertEqual(contract.strategy_version, "1.4.0")
         self.assertEqual(
             contract.capabilities,
             (
@@ -287,43 +287,43 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
-            "step_index and trace_digest are opaque platform authority",
+            "The platform, not you, owns step_index, trace_digest",
             contract.prompt,
         )
         self.assertIn(
-            "a non-null previous_result never maps back to implementation_candidates",
+            "On later steps search_terms must be empty and implementation_candidates is forbidden",
             contract.prompt,
         )
         self.assertIn(
-            "path_exists with predicate CALLS, max_depth 8, and max_expansions 256",
+            "the platform binds the first two canonical refs and fixed bounds",
             contract.prompt,
         )
         self.assertIn(
-            "maps directly to declared_method_inventory for only the first canonical Ref",
+            "Never send a method Ref directly to declared_method_inventory",
             contract.prompt,
         )
         self.assertIn(
-            "use the stable order declared_method_inventory then direct_neighborhood with OUTGOING CALLS",
+            "DECLARING_TYPE is the only valid path from an exact method Ref",
             contract.prompt,
         )
         self.assertIn(
-            "a value of 1 permits one final required non-FINISH query",
+            "a value of 1 still permits one final required query",
             contract.prompt,
         )
         self.assertIn(
-            "Copy every selected Ref object and each of its four identifier strings character-for-character",
+            "Never copy, reconstruct, abbreviate, or invent those authority values",
             contract.prompt,
         )
         self.assertIn(
-            "set every field outside the chosen operation's canonical shape to null or an empty array",
+            "Return only operation, search_terms, relation_intent, and finish_reason",
             contract.prompt,
         )
         self.assertIn(
-            "business-discovery recall are all COMPLETE",
+            "business_discovery_recall all COMPLETE",
             contract.prompt,
         )
         self.assertIn(
-            "first classify FINISH as positive support sufficiency or negative absence",
+            "FINISH is allowed after at least one executed Result",
             contract.prompt,
         )
         self.assertIn(
@@ -346,6 +346,13 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             list(JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES),
         )
         self.assertTrue(finding_schema["uniqueItems"])
+        intent_schema = schemas[
+            "java-bounded-implementation-investigation-intent@1"
+        ].schema
+        self.assertEqual(
+            set(intent_schema["properties"]),
+            {"operation", "search_terms", "relation_intent", "finish_reason"},
+        )
 
     def test_java_source_semantics_review_rejects_unregistered_finding_code(self):
         gateway = SequencedGateway(

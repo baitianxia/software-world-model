@@ -29,16 +29,16 @@ from software_world_model.cross_cutting import (
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.3.2"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.0"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.3.2"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.4.0"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:6ed7757aa62047d83c48db6f9f79b51f7960ea928f292515497f6d306e76a7c2"
+    "sha256:89886e756010d1ca2dc1791b265b3bce5366b51ba8db1ed8765fa8238a0512db"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:7139c28bbb79418989b379ea35402a83283528ac211bfba6fec1c0a523f6b180"
+    "sha256:d04c3a96da27ae81b3d51c7c6f65c75fa5d51feb9f5e0b616f75fb095730fb7f"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -50,8 +50,8 @@ PINNED_PROVIDER_REQUEST_COUNT = sum(
     count for _, count in PINNED_REQUIRED_CASE_CALLS
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.3.2.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.3.2.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.4.0.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.4.0.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -168,7 +168,7 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         != (
             "CLOSED_PASS_IFF_ALL_EIGHTEEN_REQUIRED_CASES_PASS_AND_"
             "FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO_AND_PROVIDER_"
-            "REQUEST_COUNT_THIRTY_NINE"
+            "REQUEST_COUNT_FORTY_ONE"
         )
     ):
         _invalid("bounded closed evaluation protocol drifted")
@@ -185,10 +185,13 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         != {
             "three_candidates",
             "zero_candidates_recall_unknown",
+            "zero_candidates_complete",
+            "zero_candidates_query_unknown",
+            "zero_candidates_representation_unknown",
             "method_batch_complete",
+            "declaring_type_neighborhood",
+            "direct_calls_complete",
             "declared_inventory_complete",
-            "declared_inventory_query_unknown",
-            "declared_inventory_representation_unknown",
         }
         or not isinstance(projections, Mapping)
         or set(projections) != {"investigation", "draft", "review"}
@@ -373,7 +376,15 @@ def sealed_step_input(
     fixtures = suite.get("sealed_result_fixtures")
     assert isinstance(authority, Mapping) and isinstance(fixtures, Mapping)
     previous_ref = step.get("previous_result_ref")
-    previous = None if previous_ref is None else fixtures[previous_ref]
+    fixture = None if previous_ref is None else fixtures[previous_ref]
+    previous = (
+        None if fixture is None else _model_visible_previous_result(fixture)
+    )
+    progress = copy.deepcopy(step["progress_receipt"])
+    if fixture is not None:
+        if not isinstance(progress, dict):
+            _invalid("bounded later-step progress receipt is absent")
+        progress["completeness"] = _fixture_completeness(fixture)
     return {
         "original_question": case["original_question"],
         "response_language": case["response_language"],
@@ -383,8 +394,122 @@ def sealed_step_input(
         "step_index": step["step_index"],
         "trace_digest": step["trace_digest"],
         "previous_result": copy.deepcopy(previous),
-        "progress_receipt": copy.deepcopy(step["progress_receipt"]),
+        "progress_receipt": progress,
         "remaining_budget": copy.deepcopy(step["remaining_budget"]),
+    }
+
+
+def _model_visible_previous_result(value: object) -> dict[str, object]:
+    """Project synthetic authority through the same boundary as the product."""
+
+    if not isinstance(value, Mapping) or not isinstance(
+        value.get("operation"), str
+    ):
+        _invalid("bounded previous Result fixture is invalid")
+    raw_results = value.get("results")
+    if (
+        not isinstance(raw_results, list)
+        or not raw_results
+        or any(not isinstance(item, Mapping) for item in raw_results)
+    ):
+        _invalid("bounded previous Result fixture Results are invalid")
+    projected_results: list[dict[str, object]] = []
+    fixture_only = {
+        "result_id",
+        "digest",
+        "query_result_completeness",
+        "knowledge_representation",
+        "business_discovery_recall",
+        "truncated",
+        "entity_refs",
+    }
+    result_operation = (
+        "method_implementation"
+        if value["operation"] == "method_implementations"
+        else value["operation"]
+    )
+    for raw in raw_results:
+        payload = {
+            str(key): copy.deepcopy(item)
+            for key, item in raw.items()
+            if key not in fixture_only
+        }
+        raw_refs = raw.get("entity_refs")
+        if raw_refs is not None:
+            if not isinstance(raw_refs, list):
+                _invalid("bounded previous Result Entity refs are invalid")
+            entities: list[dict[str, object]] = []
+            for raw_ref in raw_refs:
+                if not isinstance(raw_ref, Mapping):
+                    _invalid("bounded previous Result Entity ref is invalid")
+                entity = {
+                    "root_id": copy.deepcopy(raw_ref.get("entity_root_id")),
+                    "state_id": copy.deepcopy(raw_ref.get("entity_state_id")),
+                }
+                if "entity_type" in raw_ref:
+                    entity["entity_type"] = copy.deepcopy(raw_ref["entity_type"])
+                entities.append(entity)
+            payload["entities"] = entities
+        projected_results.append(
+            {
+                "result_id": copy.deepcopy(raw.get("result_id")),
+                "operation": copy.deepcopy(result_operation),
+                "completeness": copy.deepcopy(
+                    raw.get("query_result_completeness")
+                ),
+                "truncated": copy.deepcopy(raw.get("truncated", False)),
+                "payload": payload,
+                "digest": copy.deepcopy(raw.get("digest")),
+            }
+        )
+    return {
+        "operation": copy.deepcopy(value["operation"]),
+        "results": projected_results,
+    }
+
+
+def _fixture_completeness(value: object) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        _invalid("bounded completeness fixture is invalid")
+    results = value.get("results")
+    if (
+        not isinstance(results, list)
+        or not results
+        or any(not isinstance(item, Mapping) for item in results)
+    ):
+        _invalid("bounded completeness fixture Results are invalid")
+    query = (
+        "COMPLETE"
+        if all(
+            item.get("query_result_completeness") == "COMPLETE"
+            and item.get("truncated") is not True
+            for item in results
+        )
+        else "UNKNOWN"
+    )
+    representation = (
+        "COMPLETE"
+        if all(item.get("knowledge_representation") == "COMPLETE" for item in results)
+        else "UNKNOWN"
+    )
+    discovery = (
+        "COMPLETE"
+        if all(item.get("business_discovery_recall") == "COMPLETE" for item in results)
+        else "UNKNOWN"
+    )
+    missing = []
+    if query != "COMPLETE":
+        missing.append("QUERY_RESULT_COMPLETENESS_UNPROVEN")
+    if representation != "COMPLETE":
+        missing.append("KNOWLEDGE_REPRESENTATION_COVERAGE_UNPROVEN")
+    if discovery != "COMPLETE":
+        missing.append("BUSINESS_DISCOVERY_RECALL_UNPROVEN")
+    return {
+        "query_result": query,
+        "knowledge_representation": representation,
+        "business_discovery_recall": discovery,
+        "bounded_absence_allowed": not missing,
+        "missing_limitation_codes": missing,
     }
 
 
@@ -503,7 +628,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.3.2",
+            case_version="1.4.0",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -514,7 +639,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.3.2",
+        evaluation_version="1.4.0",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,
@@ -549,7 +674,7 @@ def _resolved_arguments(
     if method_ref is not None:
         if method_ref != "three_candidates":
             _invalid("bounded method ref fixture is invalid")
-        value["method_refs"] = copy.deepcopy(
+        value["method_refs"] = _projection_refs(
             fixtures["three_candidates"]["results"][0]["entity_refs"]
         )
     if entity_ref is not None:
@@ -563,16 +688,34 @@ def _resolved_arguments(
             "method_batch:first-two": (
                 fixtures["method_batch_complete"]["results"][0]["entity_refs"][:2]
             ),
-            "zero_candidates:scope": [
-                fixtures["zero_candidates_recall_unknown"]["results"][0][
-                    "scope_entity_ref"
-                ]
-            ],
+            "declaring_type:first": (
+                fixtures["declaring_type_neighborhood"]["results"][0]["entity_refs"][:1]
+            ),
+            "direct_calls:first-two": (
+                fixtures["direct_calls_complete"]["results"][0]["entity_refs"][:2]
+            ),
         }
         if entity_ref not in choices:
             _invalid("bounded Entity Ref fixture is invalid")
-        value["entity_refs"] = copy.deepcopy(choices[entity_ref])
+        value["entity_refs"] = _projection_refs(choices[entity_ref])
     return value
+
+
+def _projection_refs(values: object) -> list[dict[str, object]]:
+    if not isinstance(values, (list, tuple)):
+        _invalid("bounded projection refs are invalid")
+    fields = (
+        "source_result_id",
+        "source_result_digest",
+        "entity_root_id",
+        "entity_state_id",
+    )
+    projected: list[dict[str, object]] = []
+    for value in values:
+        if not isinstance(value, Mapping) or any(field not in value for field in fields):
+            _invalid("bounded projection ref is incomplete")
+        projected.append({field: copy.deepcopy(value[field]) for field in fields})
+    return projected
 
 
 def _verify_operation_projection(

@@ -29,6 +29,7 @@ from .model_egress_gateway import (
 )
 from .volcengine_ark_chat_adapter import VolcengineArkModelConfiguration
 from .versioned_world_model_answer_strategy import (
+    JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     java_source_semantics_world_model_output_contract_digest,
     world_model_answer_prompt_program_digest,
@@ -58,26 +59,26 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
     ("WM-JSS-I8-ZERO-CANDIDATES-002", 1),
     ("WM-JSS-I8-N-CANDIDATES-003", 1),
     ("WM-JSS-I8-RESULT-DRIVEN-BATCH-004", 2),
-    ("WM-JSS-I8-DECLARED-INVENTORY-005", 2),
-    ("WM-JSS-I8-DIRECT-NEIGHBORHOOD-006", 2),
-    ("WM-JSS-I8-PATH-EXISTS-007", 2),
-    ("WM-JSS-I8-ALL-SIMPLE-PATHS-008", 2),
+    ("WM-JSS-I8-DECLARED-INVENTORY-005", 4),
+    ("WM-JSS-I8-DIRECT-NEIGHBORHOOD-006", 3),
+    ("WM-JSS-I8-PATH-EXISTS-007", 3),
+    ("WM-JSS-I8-ALL-SIMPLE-PATHS-008", 3),
     ("WM-JSS-I8-LEGAL-FINISH-009", 3),
     ("WM-JSS-I8-MAX-FOUR-010", 4),
     ("WM-JSS-I8-BUDGET-EXHAUSTION-011", 4),
     ("WM-JSS-I8-CYCLE-PROGRESS-012", 2),
     ("WM-JSS-I8-REF-PROVENANCE-013", 2),
-    ("WM-JSS-I8-NEGATIVE-COMPLETE-014", 3),
-    ("WM-JSS-I8-NEGATIVE-QUERY-UNKNOWN-015", 3),
-    ("WM-JSS-I8-NEGATIVE-REPRESENTATION-UNKNOWN-016", 3),
+    ("WM-JSS-I8-NEGATIVE-COMPLETE-014", 2),
+    ("WM-JSS-I8-NEGATIVE-QUERY-UNKNOWN-015", 2),
+    ("WM-JSS-I8-NEGATIVE-REPRESENTATION-UNKNOWN-016", 2),
     ("WM-JSS-I8-DRAFT-017", 1),
     ("WM-JSS-I8-REVIEW-018", 1),
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST = Digest(
-    "sha256:6ed7757aa62047d83c48db6f9f79b51f7960ea928f292515497f6d306e76a7c2"
+    "sha256:89886e756010d1ca2dc1791b265b3bce5366b51ba8db1ed8765fa8238a0512db"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_ORACLE_DIGEST = Digest(
-    "sha256:7139c28bbb79418989b379ea35402a83283528ac211bfba6fec1c0a523f6b180"
+    "sha256:d04c3a96da27ae81b3d51c7c6f65c75fa5d51feb9f5e0b616f75fb095730fb7f"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     Path(__file__).resolve().with_name(
@@ -85,7 +86,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:990f24e165deaeaf3df10a0efe96b7588247e92c674dc6149a5ff6d7d69489d4"
+    "sha256:8e8dc5ae95daa2b85eae165595980e45e7507fbca5cb8ec4085eed5dee6f1184"
 )
 
 
@@ -395,6 +396,8 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or contract_value.get("prompt_ref") != contract.prompt_ref
         or contract_value.get("proposal_vocabulary_ref")
         != contract.proposal_vocabulary_ref
+        or contract_value.get("argument_compiler_ref")
+        != JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF
         or contract_value.get("available_operations")
         != list(contract.available_operations)
         or not isinstance(call_protocol, Mapping)

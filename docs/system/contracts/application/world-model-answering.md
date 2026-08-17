@@ -25,7 +25,7 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
 
 1. Request 固定 `WORLD_MODEL`、原问题、响应语言、Scope、Snapshot selector/read-set selector、Profile、权限和资源上限；模式不能在 Attempt 内变化。
 2. Requirement 必须保留全部问题、条件、比较、关系和输出约束。每个 Need 显式映射到一个或多个 validated generic View/query operation，或映射到明确 Knowledge Gap。
-3. Query Plan 只能选择 Capability Registry 对当前 Profile 已接受的通用操作，例如 entity candidates、module/method inventory、direct neighborhood、path existence、all simple paths、ordered snapshot diff、`implementation_candidates` 与 `method_implementation`。模型 proposal contract 必须同时绑定 Profile、capability/Strategy version、Prompt、proposal vocabulary 与 exact operation set；Profile 引入新操作或改变映射时必须形成新 contract 和 closed Capability Evaluation，旧 qualification 不得继承、fallback 或通过放宽 Gateway policy 复用。自然语言 exact mention 必须先经过同一 Read Session 的受控 entity lookup；功能发现候选则按 Implementation Query Contract 保留 0/N 集合与排名依据。后续 typed argument 只接受用户给出的 exact Ref 或同一 Session 已密封 candidate result 中的 Ref，不能由模型猜造。Application 重新校验 Snapshot、EntityRef、predicate/modality、方向、分页和预算；工程名、固定问题文本或显示名称不能成为隐藏分支。
+3. Query Plan 只能选择 Capability Registry 对当前 Profile 已接受的通用操作，例如 entity candidates、module/method inventory、direct neighborhood、path existence、all simple paths、ordered snapshot diff、`implementation_candidates` 与 `method_implementation`。模型 proposal contract 必须同时绑定 Profile、capability/Strategy version、Prompt、proposal vocabulary 与 exact operation set；Profile 引入新操作或改变映射时必须形成新 contract 和 closed Capability Evaluation，旧 qualification 不得继承、fallback 或通过放宽 Gateway policy 复用。自然语言 exact mention 必须先经过同一 Read Session 的受控 entity lookup；功能发现候选则按 Implementation Query Contract 保留 0/N 集合与排名依据。后续模型只提出 semantic intent；typed argument 只接受用户给出的 exact Ref 或同一 Session 已密封 Result 中由 Application deterministic 编译的 Ref，不能由模型猜造、复制或重建。Application 重新校验 Snapshot、Result/EntityRef、predicate/modality、方向、分页和预算；工程名、固定问题文本或显示名称不能成为隐藏分支。
 4. Query Result 固定 exact Read Session/Set、Read Bundle digest、operation inputs、Coverage、completeness、Support Map 和 digest。答案进程不挂载权威数据库或 Evidence Store，网络默认拒绝；真实模型阶段只能通过 Manifest 固定的 exact Model Egress Gateway 访问已取得资格的 Provider endpoint，不能直连 DNS、公网、Source remote 或 Citation Projector。模型无 Source、Repository、Artifact/Evidence 内容或 Direct Investigation 工具，只能看到已发布 typed State、Gap 以及 Support ref/locator/digest。独立 Citation Projector 不出网，其 observation 只能进入浏览器展示，且不得回流到答案链。
 5. 每个 Answer Claim 必须绑定同一 Query Result 中的正式 Entity/Fact/Gap；所有 Need 和 Joint Constraint 分别评估。部分支持不得被流畅总结扩张为完整答案。
 6. 独立 Reviewer 从原问题重建检查项，核对 Requirement fidelity、query completeness、grounding、比较方向、语言和可读性。重写只能使用同一 Read Set/Query Result；缺知识只能返回 Gap，不能补检索源码。
@@ -33,16 +33,18 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
 8. Product Validation 必须包含措辞变化、不同 Entity 标识、同名歧义、负向/无路径和不受支持问题；同一核心实现不得按工程、commit 或冻结题目硬编码答案。
 9. `JAVA_SOURCE_SEMANTICS@1` 的 bounded-investigation Strategy 每个成功 Delivery 使用隔离角色且不重试：
    1. Investigation 执行 2—4 个模型回合。第一个回合只读取原问题、语言、exact Read Authority、Profile/capability schema 与
-      operation vocabulary；之后每回合只增加前一轮 sealed typed result、progress/budget receipt 与完整 trace digest。每次只能
-      提出一个 `implementation_candidates`、有界 `method_implementations`、declared inventory、direct neighborhood、path 查询或
-      `FINISH`。search terms 必须覆盖问题中的动作、对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以
-      归一语言/词形，但不得加入工程、题目或符号专用词典。Ref 只能来自同一 trace 的 exact result；
-   2. Application 在每轮前后校验 operation shape、Snapshot/Bundle、Ref provenance、query/result bytes、Support、progress/cycle、
-      trace bytes、wall time 和调用预算。Result 未密封不得进入下一回合；`FINISH` 至少发生在两个已执行调查回合之后；
+      operation vocabulary；之后每回合只增加前一轮 sealed typed result、progress/budget receipt、平台计算的三层 completeness
+      projection 与完整 trace digest。每次模型只提出一个 operation、通用 search terms、closed relation intent 或 FINISH explanation；
+      不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
+      对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；
+   2. Application 从 sealed input deterministic 编译一个完整 typed proposal，并在每轮前后校验 operation shape、Snapshot/Bundle、
+      Ref provenance、query/result bytes、Support、progress/cycle、trace bytes、wall time 和调用预算。Result 未密封不得进入下一回合；
+      `FINISH` 至少发生在一个已执行调查 Result 之后且自身占用一个回合，因此 1 query + FINISH 是合法的 2-call investigation；
    3. Draft Call 只读取原问题、不可变 Requirement、完整 sealed trace、Need Assessment 和允许的 Support/Gap，生成逐 Claim 绑定的
       Draft；它不读取 Source、调查角色私有输出、Citation observation 或 Reviewer；
    4. Review Call 在全新上下文中读取原问题、同一 Requirement/trace/assessment 和 Draft，独立核对 fidelity、候选与查询完整性、
       grounding、方向、三层负向证明、语言与可读性。
+   completeness projection 只能来自同一正式 Read Authority 的平台判定，不得把评测 Oracle identity 或隐藏期望送入 Answer。
    Review finding code 必须来自版本化 vocabulary；遗漏候选/方法、查询未穷尽、无依据负向结论、静态事实不支持的运行时断言与
    Source/Evidence payload 展开使用不同稳定 code。Schema 和 Application 同时拒绝未注册、重复或乱序 code。平台在每次 Call 前后
    重验 role package、input/output schema、Snapshot/Bundle/result/trace digest、operation/Support allowlist 和 grant。实际 Provider
