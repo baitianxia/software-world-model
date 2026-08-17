@@ -237,7 +237,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.3.1")
+        self.assertEqual(contract.strategy_version, "1.3.2")
         self.assertEqual(
             contract.capabilities,
             (
@@ -291,15 +291,27 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
+            "a non-null previous_result never maps back to implementation_candidates",
+            contract.prompt,
+        )
+        self.assertIn(
             "path_exists with predicate CALLS, max_depth 8, and max_expansions 256",
             contract.prompt,
         )
         self.assertIn(
-            "map that candidate Result directly to declared_method_inventory for only its first canonical Ref",
+            "maps directly to declared_method_inventory for only the first canonical Ref",
             contract.prompt,
         )
         self.assertIn(
             "use the stable order declared_method_inventory then direct_neighborhood with OUTGOING CALLS",
+            contract.prompt,
+        )
+        self.assertIn(
+            "a value of 1 permits one final required non-FINISH query",
+            contract.prompt,
+        )
+        self.assertIn(
+            "Copy every selected Ref object and each of its four identifier strings character-for-character",
             contract.prompt,
         )
         self.assertIn(
@@ -311,7 +323,15 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
+            "first classify FINISH as positive support sufficiency or negative absence",
+            contract.prompt,
+        )
+        self.assertIn(
             "REJECT with QUERY_INCOMPLETE whenever any query-result completeness",
+            contract.prompt,
+        )
+        self.assertIn(
+            "is one QUERY_INCOMPLETE fault, not an UNSUPPORTED_RUNTIME_CLAIM",
             contract.prompt,
         )
         for case_or_provider_patch in (

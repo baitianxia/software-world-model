@@ -101,6 +101,23 @@ shape、graph bounds、result-driven progress 和三层完整性 Review 规则�
 `1.3.1` / prompt-vocabulary `@5`，但不修改原 18 Case、39-call、Oracle、metric、阈值或 no-retry 规则。run-003/004 作为失败证据
 永久保留；新 contract 必须在新的 clean exact candidate 上重新通过 Conformance 与 Capability，不能继承本次资格。
 
+`1.3.1` clean candidate `d9f401f290bd229f95e03853caa7e4089cf96873` 的 DeepSeek Conformance run-005 绑定 preflight
+`sha256:f4dc39bdc0622f0066ee442502f587335794e7ca53d1b32ad1ca24f6a13ab71b`，恰好完成 2 次 request、12/12 Case PASS；result digest
+为 `sha256:9d2aa4a2c511cb2449828888c26d314956683fba6892abd0242a1afd99bb80ae`，唯一模型 identity 为 `deepseek-v4-pro`，tokens 为
+369/83，raw payload 未持久化。
+
+同候选 Capability run-005 绑定 freeze
+`sha256:5f8e06889286243ffdc4e4e3d060e800501a80bc7a1177c912f4984304386750`，完整执行 39 calls / 18 Case、无 retry、
+`unknown_count=0`，tokens 为 117180/10108。closed Result
+`var/iteration-008/capability/run-005-capability-result/closed-evaluation-result.json` 的 result/document digest 为
+`sha256:271033468489b50107366d2cbff6e97fba3b4840f34bd6c26c8356eb96a75775` /
+`sha256:aed052c6ad3db156fdb0de0b57f22e0aeb3fef7a551573917585ed3e69fadd02`。13/18 Case PASS；declared inventory、legal finish、max-four、
+budget exhaustion 与 Review 五项 FAIL，所以 Qualification 与 Production Activation 均未执行。
+
+该进展与剩余根因按 [FINDING-008-013](../findings/FINDING-008-013.md) 保留。active contract 继续版本化为 `1.3.2` / prompt-vocabulary
+`@6`，只澄清 previous Result、budget、Ref copy、正/负 FINISH 和 Review taxonomy；18/39、Oracle、metric、阈值与 no-retry 不变。
+完成 deterministic verification 后只再执行一轮新候选资格；run-005 的 standing authorization 已消费，不得复用。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

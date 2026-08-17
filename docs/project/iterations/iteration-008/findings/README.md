@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记十二条已处置 Finding：
+本 Slice 当前登记十三条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -42,6 +42,9 @@ iteration: ITER-008
 - [FINDING-008-012](FINDING-008-012.md)：完整 DeepSeek Capability run-004 完成 39 calls / 18 Case 却只有 2 Case PASS，证明
   model-visible Proposal Contract 没有完整暴露 exact operation field shape、graph bounds、result-driven progress 与三层完整性规则；
   以 Provider-independent `1.3.1` / prompt-vocabulary `@5` 版本化处置，不降低或改写原 Oracle。
+- [FINDING-008-013](FINDING-008-013.md)：`1.3.1` 的 run-005 完整完成 39 calls 并把结果提高到 13/18；剩余五个失败收敛为
+  declared-set primary Need、remaining-budget 当前回合、逐字符 Ref、正/负 FINISH 与 Reviewer code precedence 歧义，以通用
+  `1.3.2` / prompt-vocabulary `@6` 处置，原 Case、Oracle 与阈值不变。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

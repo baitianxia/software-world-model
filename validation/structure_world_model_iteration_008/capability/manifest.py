@@ -29,16 +29,16 @@ from software_world_model.cross_cutting import (
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.3.1"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.3.2"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.3.1"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.3.2"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:25962b4eaab44521d1149d8a1504c1ee38bf280ca86edbcc3d3df457b5c9030d"
+    "sha256:6ed7757aa62047d83c48db6f9f79b51f7960ea928f292515497f6d306e76a7c2"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:8e204427b904702d1492e97a192a397be566ec0cd3d332b39d450cf59056ef54"
+    "sha256:7139c28bbb79418989b379ea35402a83283528ac211bfba6fec1c0a523f6b180"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -50,8 +50,8 @@ PINNED_PROVIDER_REQUEST_COUNT = sum(
     count for _, count in PINNED_REQUIRED_CASE_CALLS
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.3.1.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.3.1.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.3.2.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.3.2.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -503,7 +503,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.3.1",
+            case_version="1.3.2",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -514,7 +514,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.3.1",
+        evaluation_version="1.3.2",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,

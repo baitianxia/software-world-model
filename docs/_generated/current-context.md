@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-deepseek-capability-run-004-failed-proposal-contract-1.3.1-requalification-in-progress`
+- Worktree status: `iteration-008-deepseek-capability-run-005-thirteen-of-eighteen-proposal-contract-1.3.2-final-requalification-in-progress`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-deepseek-v4-pro-conformance-run-003-pass-capability-run-003-unknown-run-004-fail-new-contract-not-qualified-production-not-activated`
+- Live model path: `iteration-008-deepseek-v4-pro-conformance-run-005-pass-capability-run-005-thirteen-of-eighteen-new-contract-not-qualified-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

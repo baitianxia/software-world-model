@@ -145,6 +145,16 @@ policy `@1.0.1` 和 suite/oracle identity `@1.3.1`。原 18 Case、39-call、Ora
 Provider、Case、工程、符号或答案特判。新 exact candidate 必须重新通过 Conformance 和完整 Capability Gate。详见
 [FINDING-008-012](../findings/FINDING-008-012.md)。
 
+`1.3.1` clean candidate `d9f401f…` 的 Conformance run-005 恰好 2 calls / 12 Case PASS；同候选 Capability run-005 随后完整执行
+39 calls / 18 Case、`unknown_count=0`，并从 run-004 的 2/18 提高到 13/18。剩余五项固定为 declared inventory、legal finish、
+max-four、budget exhaustion 与 Review；Qualification 和 Activation 仍未形成。
+
+逐字段证据将剩余失败收敛为通用 contract precedence：declared-set enumeration 与 method behavior 的 primary Need、non-null previous
+Result 禁止重启 search、remaining budget 包含当前 proposal、Ref identifier 逐字符复制、正向 support FINISH 不套用负向 recall 条件，
+以及 incomplete-absence Review 只使用 `QUERY_INCOMPLETE`。本 Slice 将 contract 再版本化为 `1.3.2` / prompt-vocabulary `@6`、policy
+`@1.0.2` 与 suite/oracle `@1.3.2`，仍不改 18 Case、39 calls、Oracle、阈值或 no-retry。完成验证后只再执行一轮完整资格；若仍
+FAIL，则停止无新架构证据的 Prompt 重复迭代。详见 [FINDING-008-013](../findings/FINDING-008-013.md)。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；
