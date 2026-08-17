@@ -35,8 +35,8 @@ iteration: ITER-008
   与浏览器路径分流；用户决定更换 Provider，因此停止 Ark live 工作，Provider-independent 实现保持冻结，新 Provider 必须以 exact
   contract 和独立资格 Gate 接入。
 - [FINDING-008-010](FINDING-008-010.md)：DeepSeek 已以独立 `DEEPSEEK` Provider、exact endpoint/model/secret/wire/network
-  contract、Adapter `@1` 与 2-call Conformance 接入；离线 Gate 已闭合，但正式 runtime 保持 Ark，先等待 API Key 和独立最小模型
-  diagnostic 授权，不能从离线测试推导 live 可用性。
+  contract、Adapter `@1` 与独立 Gate 接入；最小 `deepseek-v4-pro` model diagnostic 已按 1-call exact authorization PASS，但正式
+  runtime 保持 Ark，后续 2-call Conformance 与 39-call Capability 仍须分别冻结和授权。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

@@ -52,13 +52,29 @@ identity，`deepseek-v4-flash` 只作为显式可选项，不接受旧 alias 的
 每个 Provider 仍有独立版本化 Adapter、exact configuration fingerprint、live Conformance 与 Capability Gate，secret 仍只在授权后的
 dispatch 前解析。因此分类为 `iteration-design`，主处置写回 `ITER-008-SLICE-001`。
 
-正式 bounded Web runtime、已冻结的 product egress policy 与历史 ITER-003—007 Ark 证据本次保持不变。DeepSeek 最小 live 调用与
-Conformance 尚未执行，不能把离线测试解释为模型可用、能力合格或生产可用。
+正式 bounded Web runtime、已冻结的 product egress policy 与历史 ITER-003—007 Ark 证据本次保持不变。DeepSeek 最小 live 调用随后
+已按独立授权 PASS，但 Conformance 尚未执行；该诊断只证明 exact endpoint/model/static probe 在该时点可用，不能解释为 Adapter
+Conformance、业务能力合格或生产可用。
+
+## Subsequent live evidence
+
+clean candidate `8cbb3ab69871603d4cc77826eee1082e4e566f55`（tree `fa39f3e575104806499898cf396ac1c1681f3564`）
+生成 DeepSeek model diagnostic run-001 freeze
+`sha256:1c17dbe86ae42cd7f9d0d8d210ad90cf971c5d9d2d41772b2cfe3a081622c6d9`。用户 exact authorization ref 为
+`codex-user-message:sha256:9f4eca3367b2f5f09774af175a0e8aef5c1bcb5c250fc7f1ccf98868b48008a4`，authorization digest 为
+`sha256:00a1bbc625070cb6e555a95b171c68ecb47c6d4c4bbde6b1b3b13fc0fac33810`。
+
+runner 恰好执行 1 次请求并返回 `MODEL_DIAGNOSTIC_PASS`：请求和响应 identity 均为 `deepseek-v4-pro`，strict JSON probe 合格，
+input/output tokens 为 115/5，Provider request id 为 `e267523d-7756-4e37-9952-157428cdcda9`。result/terminal digest 分别为
+`sha256:42d1cacddf878d367b7eea89029563b503fbcf049f244f32e8409b9e629d27b6` 和
+`sha256:6202f52af2656f6b101003cc60f4b2904a1df13cf73db910444c077319c261c5`。invocation/result/terminal 均为 0600，
+digest 复核 PASS；credential、raw prompt 与 raw response 未持久化，授权已消费且不可重试。
 
 ## Decision and disposition
 
-保留 DeepSeek 为独立新 Provider，默认模型固定为 `deepseek-v4-pro`，并先完成 model availability 验证，再考虑正式 runtime/policy
-切换。API Key 只置于 `DEEPSEEK_API_KEY` 环境引用中；不得写入仓库、命令参数、freeze、日志或 Result。
+保留 DeepSeek 为独立新 Provider，默认模型固定为 `deepseek-v4-pro`。model availability 已按单次诊断 PASS；下一步先完成独立
+2-call Conformance，再决定是否申请 39-call Capability，仍不提前切换正式 runtime/policy。API Key 只置于
+`DEEPSEEK_API_KEY` 环境引用中；不得写入仓库、命令参数、freeze、日志或 Result。
 
 任何 live 步骤仍须先生成绑定当时 clean exact candidate、endpoint、model、Adapter、call count、payload boundary 与 result directory
 的 freeze，再取得用户对该 digest 的一次性明确授权。最小 model diagnostic、2-call Conformance、39-call Capability 是三个不同 Gate，
@@ -73,4 +89,5 @@ Conformance 尚未执行，不能把离线测试解释为模型可用、能力�
 - full discovery 实际运行 954 项，但因当前 worktree 缺少历史 validation repository Git metadata / `var/` 密封资产以及 sandbox
   禁止 AF_UNIX listener，以 5 failures、30 errors、1 skipped 结束；因此不把全量 suite 记为 PASS。上述 73 项受影响范围回归独立 PASS；
 - `python3 scripts/docs.py check` 对 314 份 current documents PASS，`git diff --check` 与相关 Python compile check PASS；
-- live DeepSeek model diagnostic、Conformance、Capability、正式 Web、hidden canary、SLICE-002 与 Production Activation 均未执行。
+- live DeepSeek model diagnostic 恰好执行 1 次并 PASS；Conformance、Capability、正式 Web、hidden canary、SLICE-002 与
+  Production Activation 均未执行。

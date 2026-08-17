@@ -51,6 +51,15 @@ investigation 实现与确定性验证已经闭合。新 Provider 明确前没�
 identity、secret 与网络边界，再从独立 Conformance 和 Capability Gate 开始，不能继承上述 Ark 诊断或已消费授权。详见
 [FINDING-008-009](../findings/FINDING-008-009.md)。
 
+DeepSeek model diagnostic run-001 随后绑定 clean candidate `8cbb3ab69871603d4cc77826eee1082e4e566f55` 与 freeze
+`sha256:1c17dbe86ae42cd7f9d0d8d210ad90cf971c5d9d2d41772b2cfe3a081622c6d9`，取得只授权一个静态 strict-JSON probe 的
+post-freeze user grant。runner 恰好调用一次并返回 `MODEL_DIAGNOSTIC_PASS`：请求/响应 identity 均为 `deepseek-v4-pro`，input/output
+tokens 为 115/5；result/terminal digest 分别为
+`sha256:42d1cacddf878d367b7eea89029563b503fbcf049f244f32e8409b9e629d27b6` /
+`sha256:6202f52af2656f6b101003cc60f4b2904a1df13cf73db910444c077319c261c5`。三份执行证据 digest 与 0600 权限复核 PASS，
+credential、raw prompt/response 未持久化，授权已消费且不可重试。该诊断只证明 exact endpoint/model 在该时点可完成最小调用，不是
+Conformance、Capability 或 Product Result；正式 runtime 仍保持 Ark。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

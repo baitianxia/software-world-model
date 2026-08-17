@@ -116,13 +116,15 @@ Contract 或安全 Owner，先更新对应 System 文档/ADR。详见 [FINDING-0
 用户现已选择 DeepSeek。当前 exact candidate 使用独立 `DEEPSEEK` Provider、
 `https://api.deepseek.com/chat/completions`、默认及期望响应 identity `deepseek-v4-pro`、secret reference
 `env:DEEPSEEK_API_KEY` 与 Adapter `deepseek-chat-completions-no-tools@1`；`deepseek-v4-flash` 只允许显式选择，旧 alias 不回退。
-独立 2-call Conformance 与 ITER-008 39-call Capability runner 已完成 fake-transport 闭合，但尚未读取真实 key 或发起 live 调用。
-按用户要求先验证模型可用性，再调整正式 runtime/product egress policy；当前正式 runtime 继续保持 Ark，且 DeepSeek 的最小模型 diagnostic、
-Conformance、Capability、正式 Web 与 Production Activation 均未执行。详见
+独立 2-call Conformance 与 ITER-008 39-call Capability runner 已完成 fake-transport 闭合。按用户要求先验证模型可用性，再调整正式
+runtime/product egress policy；当前正式 runtime 继续保持 Ark。DeepSeek 最小 model diagnostic run-001 已在 clean candidate
+`8cbb3ab…` 上按 post-freeze 单次授权恰好调用 1 次并 PASS，请求/响应 identity 均为 `deepseek-v4-pro`；这只解除 model availability
+顺序阻断，不构成 Conformance 或 Capability。Conformance、Capability、正式 Web 与 Production Activation 均未执行。详见
 [FINDING-008-010](../findings/FINDING-008-010.md)。
 
 最小模型 diagnostic 先经过独立 zero-network freeze 和 post-freeze 单次授权；runner 在唯一 dispatch 前密封 invocation，并对 PASS、
 已知 Provider FAIL 或 outcome unknown 写入 sanitized result/failure 与 terminal。该 1-call grant 不授权或替代后续 2-call Conformance。
+该授权现已消费且不可重试；下一步从包含本证据写回的新 clean candidate 生成独立 Conformance preflight，并另行申请恰好 2 次调用。
 
 ## Open questions and implementation risks
 
