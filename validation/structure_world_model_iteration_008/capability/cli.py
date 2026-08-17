@@ -9,8 +9,11 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from software_world_model.ai_infrastructure import (
+    ChatCompletionsTransport,
     ModelGateway,
+    ProviderHTTPResponse,
     ProviderOutcomeUnknown,
+    RecordingChatCompletionsTransport,
     ReviewedWorldModelEvaluationCaseExecutor,
     UrllibVolcengineArkChatTransport,
     VolcengineArkChatCompletionsNoToolsAdapter,
@@ -83,6 +86,34 @@ CAPABILITY_INVOCATION_SCHEMA = (
 )
 
 
+class _ProviderDispatchAudit:
+    """Preserve request evidence and the reason hidden by ModelGateway."""
+
+    def __init__(self, delegate: ChatCompletionsTransport) -> None:
+        self._recording = RecordingChatCompletionsTransport(delegate)
+        self.requests = self._recording.requests
+        self.outcome_unknown_reason_codes: list[str] = []
+
+    def post_json(
+        self,
+        *,
+        endpoint: str,
+        body: bytes,
+        client_request_id: str,
+        timeout_milliseconds: int,
+    ) -> ProviderHTTPResponse:
+        try:
+            return self._recording.post_json(
+                endpoint=endpoint,
+                body=body,
+                client_request_id=client_request_id,
+                timeout_milliseconds=timeout_milliseconds,
+            )
+        except ProviderOutcomeUnknown as exc:
+            self.outcome_unknown_reason_codes.append(exc.reason_code)
+            raise
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -105,7 +136,7 @@ def main(
     argv: Sequence[str] | None = None,
     *,
     environment: Mapping[str, str] | None = None,
-    transport: object | None = None,
+    transport: ChatCompletionsTransport | None = None,
 ) -> int:
     arguments = _parser().parse_args(argv)
     env = os.environ if environment is None else environment
@@ -170,6 +201,14 @@ def main(
             "hidden_canary_disclosed": False,
             "production_activation": "NOT_EXECUTED",
         }
+        if isinstance(exc, ProviderOutcomeUnknown):
+            payload.update(
+                {
+                    "reason_code": exc.reason_code,
+                    "authorization_consumed": True,
+                    "retry_permitted_with_same_authorization": False,
+                }
+            )
         code = 2
     print(canonical_json_bytes(payload).decode("utf-8"))
     return code
@@ -180,7 +219,7 @@ def _run_authorized_conformance(
     preflight_path: Path,
     authorization_path: Path,
     environment: Mapping[str, str],
-    transport: object | None,
+    transport: ChatCompletionsTransport | None,
 ) -> tuple[dict[str, object], int]:
     preflight = verify_preflight(preflight_path)
     request = authorize._load_request(
@@ -212,14 +251,54 @@ def _run_authorized_conformance(
     active_transport = transport or UrllibVolcengineArkChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
-    result = run_ark_chat_conformance(
-        configuration=configuration,
-        transport=active_transport,
-        environment=environment,
-        operator="iter-008-capability-owner",
-        timeout_milliseconds=180_000,
-        max_output_tokens=256,
-    )
+    dispatch_audit = _ProviderDispatchAudit(active_transport)
+    try:
+        result = run_ark_chat_conformance(
+            configuration=configuration,
+            transport=dispatch_audit,
+            environment=environment,
+            operator="iter-008-capability-owner",
+            timeout_milliseconds=180_000,
+            max_output_tokens=256,
+        )
+    except ProviderOutcomeUnknown as exc:
+        attempted_request_digests = [
+            "sha256:" + hashlib.sha256(item.body).hexdigest()
+            for item in dispatch_audit.requests
+        ]
+        failure_core = {
+            "schema": "swm.iter-008.ark-conformance-failure@1",
+            "status": "PROVIDER_OUTCOME_UNKNOWN",
+            "preflight_digest": preflight["document_digest"],
+            "authorization_digest": authorization["document_digest"],
+            "provider_outcome_reason_code": exc.reason_code,
+            "attempted_provider_request_count": len(dispatch_audit.requests),
+            "attempted_request_body_digests": attempted_request_digests,
+            "raw_prompt_persisted": False,
+            "raw_response_persisted": False,
+            "authorization_consumed": True,
+            "retry_permitted_with_same_authorization": False,
+            "hidden_canary_disclosed": False,
+            "production_activation": "NOT_EXECUTED",
+        }
+        failure_path = result_directory / "failure.json"
+        _write_once(failure_path, _document(failure_core))
+        terminal_core = {
+            "schema": "swm.iter-008.ark-conformance-terminal@1",
+            "status": "PROVIDER_OUTCOME_UNKNOWN",
+            "preflight_digest": preflight["document_digest"],
+            "authorization_digest": authorization["document_digest"],
+            "failure_path": str(failure_path),
+            "provider_request_count": len(dispatch_audit.requests),
+            "authorization_consumed": True,
+            "retry_permitted_with_same_authorization": False,
+            "hidden_canary_disclosed": False,
+            "production_activation": "NOT_EXECUTED",
+        }
+        _write_once(
+            result_directory / "terminal.json", _document(terminal_core)
+        )
+        raise
     result_path = seal_ark_chat_conformance_result(result, result_directory)
     passed = result["outcome"] == "PASS" and result["execution"]["request_count"] == 2
     terminal_core = {
@@ -257,7 +336,7 @@ def _run_authorized_capability(
     authorization_path: Path,
     conformance_result_path: Path,
     environment: Mapping[str, str],
-    transport: object | None,
+    transport: ChatCompletionsTransport | None,
 ) -> tuple[dict[str, object], int]:
     request = authorize._load_request(
         freeze_path.parent / "capability-authorization-request.json"
@@ -293,8 +372,9 @@ def _run_authorized_capability(
     active_transport = transport or UrllibVolcengineArkChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
+    dispatch_audit = _ProviderDispatchAudit(active_transport)
     adapter = VolcengineArkChatCompletionsNoToolsAdapter(
-        transport=active_transport,
+        transport=dispatch_audit,
         configuration=configuration,
         output_schemas=world_model_answer_output_schemas(
             include_java_source_semantics=True
@@ -345,26 +425,77 @@ def _run_authorized_capability(
             evidence_paths.append(str(evidence_path))
             case_evidence.append(summary)
     except Exception as exc:
+        provider_outcome_unknown = isinstance(
+            exc, ProviderOutcomeUnknown
+        ) or bool(dispatch_audit.outcome_unknown_reason_codes)
+        provider_outcome_reason = (
+            exc.reason_code
+            if isinstance(exc, ProviderOutcomeUnknown)
+            else dispatch_audit.outcome_unknown_reason_codes[-1]
+            if dispatch_audit.outcome_unknown_reason_codes
+            else None
+        )
+        attempted_request_digests = [
+            "sha256:" + hashlib.sha256(item.body).hexdigest()
+            for item in dispatch_audit.requests
+        ]
         failure_core = {
             "schema": "swm.iter-008.bounded-java-source-semantics-ce-failure@1",
+            "status": (
+                "PROVIDER_OUTCOME_UNKNOWN"
+                if provider_outcome_unknown
+                else "EXECUTION_FAILED"
+            ),
             "freeze_digest": freeze["document_digest"],
             "authorization_digest": authorization["document_digest"],
             "completed_case_count": len(outputs),
             "completed_provider_request_count": sum(
                 len(item.provider_request_ids) for item in outputs.values()
             ),
+            "attempted_provider_request_count": len(dispatch_audit.requests),
+            "attempted_request_body_digests": attempted_request_digests,
             "failure_type": type(exc).__name__,
             "failure_code": (
-                exc.code.value
+                provider_outcome_reason
+                if provider_outcome_unknown
+                else exc.code.value
                 if isinstance(exc, DomainError)
                 else "OUTCOME_UNKNOWN"
             ),
             "message": exc.message if isinstance(exc, DomainError) else str(exc),
+            "raw_prompt_persisted": False,
+            "raw_response_persisted": False,
+            "authorization_consumed": True,
             "retry_permitted_with_same_authorization": False,
             "hidden_canary_disclosed": False,
             "production_activation": "NOT_EXECUTED",
         }
-        _write_once(result_directory / "failure.json", _document(failure_core))
+        failure_path = result_directory / "failure.json"
+        _write_once(failure_path, _document(failure_core))
+        terminal_core = {
+            "schema": (
+                "swm.iter-008.bounded-java-source-semantics-ce-terminal@1"
+            ),
+            "status": failure_core["status"],
+            "freeze_digest": freeze["document_digest"],
+            "authorization_digest": authorization["document_digest"],
+            "failure_path": str(failure_path),
+            "provider_request_count": len(dispatch_audit.requests),
+            "authorization_consumed": True,
+            "retry_permitted_with_same_authorization": False,
+            "hidden_canary_disclosed": False,
+            "production_activation": "NOT_EXECUTED",
+        }
+        _write_once(
+            result_directory / "terminal.json", _document(terminal_core)
+        )
+        if provider_outcome_unknown and not isinstance(
+            exc, ProviderOutcomeUnknown
+        ):
+            raise ProviderOutcomeUnknown(
+                "Ark Chat Completions outcome is unknown",
+                reason_code=provider_outcome_reason or "UNKNOWN_NETWORK_FAILURE",
+            ) from exc
         raise
 
     identity = freeze.get("candidate_identity")
@@ -437,9 +568,24 @@ def _run_authorized_capability(
     result = completion.result
     validity = completion.validity
     proof = completion.qualification
-    provider_request_count = sum(
+    output_provider_request_count = sum(
         len(item.provider_request_ids) for item in outputs.values()
     )
+    provider_request_count = len(dispatch_audit.requests)
+    passed = (
+        proof is not None
+        and result.conclusion.value == "PASS"
+        and validity.status.value == "VALID"
+        and len(result.passed_case_ids) == len(PINNED_REQUIRED_CASE_IDS)
+        and frozenset(result.passed_case_ids)
+        == frozenset(PINNED_REQUIRED_CASE_IDS)
+        and not result.failed_case_ids
+        and not result.inconclusive_case_ids
+        and output_provider_request_count == provider_request_count
+        and provider_request_count == PINNED_PROVIDER_REQUEST_COUNT
+        and all(item["status"] == "PASS" for item in case_evidence)
+    )
+    sealed_proof = proof if passed else None
     result_core = {
         "schema": BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_CLOSED_RESULT_SCHEMA,
         "freeze_digest": freeze["document_digest"],
@@ -454,8 +600,10 @@ def _run_authorized_capability(
         "attempts": [_attempt_document(item) for item in execution.attempts],
         "result": _result_document(result),
         "validity": _validity_document(validity),
-        "qualification": _qualification_document(proof) if proof else None,
-        "closed_result_status": "PASS_VALID" if proof else "FAIL_OR_INVALID",
+        "qualification": (
+            _qualification_document(sealed_proof) if sealed_proof else None
+        ),
+        "closed_result_status": "PASS_VALID" if passed else "FAIL_OR_INVALID",
         "failure_count": len(result.failed_case_ids),
         "unknown_count": len(result.inconclusive_case_ids),
         "required_case_count": len(PINNED_REQUIRED_CASE_IDS),
@@ -469,10 +617,10 @@ def _run_authorized_capability(
         {**result_core, "document_digest": digest_of(result_core).value},
     )
     qualification_path = None
-    if proof is not None:
+    if sealed_proof is not None:
         qualification_core = {
             "schema": BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_QUALIFICATION_DOCUMENT_SCHEMA,
-            "proof": _qualification_document(proof),
+            "proof": _qualification_document(sealed_proof),
         }
         qualification_path = result_directory / "capability-qualification.json"
         _write_once(
@@ -482,18 +630,6 @@ def _run_authorized_capability(
                 "document_digest": digest_of(qualification_core).value,
             },
         )
-    passed = (
-        proof is not None
-        and result.conclusion.value == "PASS"
-        and validity.status.value == "VALID"
-        and len(result.passed_case_ids) == len(PINNED_REQUIRED_CASE_IDS)
-        and frozenset(result.passed_case_ids)
-        == frozenset(PINNED_REQUIRED_CASE_IDS)
-        and not result.failed_case_ids
-        and not result.inconclusive_case_ids
-        and provider_request_count == PINNED_PROVIDER_REQUEST_COUNT
-        and all(item["status"] == "PASS" for item in case_evidence)
-    )
     terminal_core = {
         "schema": "swm.iter-008.bounded-java-source-semantics-ce-terminal@1",
         "status": "PASS" if passed else "FAIL",
@@ -519,8 +655,12 @@ def _run_authorized_capability(
             "qualification_path": str(qualification_path) if qualification_path else None,
             "result_id": result.result_id.value,
             "result_digest": result.digest.value,
-            "qualification_ref": proof.proof_ref if proof else None,
-            "qualification_digest": proof.digest.value if proof else None,
+            "qualification_ref": (
+                sealed_proof.proof_ref if sealed_proof else None
+            ),
+            "qualification_digest": (
+                sealed_proof.digest.value if sealed_proof else None
+            ),
             "case_count": len(execution.attempts),
             "provider_request_count": provider_request_count,
             "authorization_consumed": True,

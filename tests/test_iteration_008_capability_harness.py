@@ -13,6 +13,7 @@ from software_world_model.ai_infrastructure import (
     DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     ProviderHTTPResponse,
+    ProviderOutcomeUnknown,
     load_bounded_java_source_semantics_gateway_qualification_binding,
 )
 from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_egress_qualification import (
@@ -298,6 +299,17 @@ class _PassingCapabilityTransport:
         )
 
 
+class _UnknownArkTransport:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def post_json(self, **_arguments):
+        self.calls += 1
+        raise ProviderOutcomeUnknown(
+            "fixture outcome unknown", reason_code="TIMEOUT"
+        )
+
+
 class Iteration008CapabilityHarnessTests(unittest.TestCase):
     def test_pinned_inputs_bind_raw_files_and_product_loader(self) -> None:
         self.assertEqual(
@@ -575,6 +587,143 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 "fixture-secret-never-persist",
                 (root / "result" / "terminal.json").read_text(),
             )
+
+    def test_unknown_conformance_outcome_is_sealed_without_retry(self) -> None:
+        fake_identity = {
+            "commit": "1" * 40,
+            "tree": "2" * 40,
+            "worktree_status": "CLEAN",
+            "identity_scope": "EXACT_GIT_COMMIT_AND_TREE@1",
+        }
+        created = datetime(2026, 8, 17, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            freeze, "_candidate_identity", return_value=fake_identity
+        ):
+            root = Path(directory).resolve()
+            preflight_path, request_path, _ = freeze.create_preflight(
+                output_directory=root / "preflight", created_at=created
+            )
+            authorization_path, _ = authorize.create_authorization(
+                request_path=request_path,
+                output_path=root / "authorization.json",
+                authorized_at=created + timedelta(seconds=1),
+                authorization_ref="codex-user-message:sha256:" + "9" * 64,
+                single_use_result_directory=root / "result",
+            )
+            transport = _UnknownArkTransport()
+            with self.assertRaises(ProviderOutcomeUnknown):
+                cli._run_authorized_conformance(
+                    preflight_path=preflight_path,
+                    authorization_path=authorization_path,
+                    environment={
+                        "ARK_API_KEY": "fixture-secret-never-persist"
+                    },
+                    transport=transport,
+                )
+            self.assertEqual(transport.calls, 1)
+            failure = json.loads((root / "result" / "failure.json").read_text())
+            terminal = json.loads(
+                (root / "result" / "terminal.json").read_text()
+            )
+            self.assertEqual(failure["status"], "PROVIDER_OUTCOME_UNKNOWN")
+            self.assertEqual(failure["provider_outcome_reason_code"], "TIMEOUT")
+            self.assertEqual(failure["attempted_provider_request_count"], 1)
+            self.assertEqual(len(failure["attempted_request_body_digests"]), 1)
+            self.assertEqual(terminal["status"], "PROVIDER_OUTCOME_UNKNOWN")
+            self.assertEqual(terminal["provider_request_count"], 1)
+            self.assertTrue(terminal["authorization_consumed"])
+            self.assertFalse(terminal["retry_permitted_with_same_authorization"])
+            self.assertNotIn(
+                "fixture-secret-never-persist",
+                (root / "result" / "failure.json").read_text(),
+            )
+
+    def test_unknown_capability_outcome_is_sealed_without_retry(self) -> None:
+        fake_identity = {
+            "commit": "1" * 40,
+            "tree": "2" * 40,
+            "worktree_status": "CLEAN",
+            "identity_scope": "EXACT_GIT_COMMIT_AND_TREE@1",
+        }
+        created = datetime(2026, 8, 17, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            freeze, "_candidate_identity", return_value=fake_identity
+        ):
+            root = Path(directory).resolve()
+            preflight_path, conformance_request, _ = freeze.create_preflight(
+                output_directory=root / "preflight", created_at=created
+            )
+            conformance_authorization, _ = authorize.create_authorization(
+                request_path=conformance_request,
+                output_path=root / "conformance-authorization.json",
+                authorized_at=created + timedelta(seconds=1),
+                authorization_ref="codex-user-message:sha256:" + "8" * 64,
+                single_use_result_directory=root / "conformance-result",
+            )
+            conformance_payload, conformance_code = (
+                cli._run_authorized_conformance(
+                    preflight_path=preflight_path,
+                    authorization_path=conformance_authorization,
+                    environment={
+                        "ARK_API_KEY": "fixture-secret-never-persist"
+                    },
+                    transport=_EchoingArkTransport(),
+                )
+            )
+            self.assertEqual(conformance_code, 0)
+            capability_created = datetime.now(timezone.utc) + timedelta(
+                seconds=1
+            )
+            capability_freeze_path, capability_request, capability_freeze = (
+                freeze.create_capability_freeze(
+                    preflight_path=preflight_path,
+                    conformance_result_path=Path(
+                        conformance_payload["result_path"]
+                    ),
+                    output_directory=root / "capability-freeze",
+                    created_at=capability_created,
+                )
+            )
+            capability_authorization, _ = authorize.create_authorization(
+                request_path=capability_request,
+                output_path=root / "capability-authorization.json",
+                authorized_at=capability_created + timedelta(seconds=1),
+                authorization_ref="codex-user-message:sha256:" + "7" * 64,
+                single_use_result_directory=root / "capability-result",
+            )
+            transport = _UnknownArkTransport()
+            with self.assertRaises(ProviderOutcomeUnknown):
+                cli._run_authorized_capability(
+                    freeze=capability_freeze,
+                    freeze_path=capability_freeze_path,
+                    authorization_path=capability_authorization,
+                    conformance_result_path=Path(
+                        conformance_payload["result_path"]
+                    ),
+                    environment={
+                        "ARK_API_KEY": "fixture-secret-never-persist"
+                    },
+                    transport=transport,
+                )
+            self.assertEqual(transport.calls, 1)
+            failure = json.loads(
+                (root / "capability-result" / "failure.json").read_text()
+            )
+            terminal = json.loads(
+                (root / "capability-result" / "terminal.json").read_text()
+            )
+            self.assertEqual(failure["status"], "PROVIDER_OUTCOME_UNKNOWN")
+            self.assertEqual(failure["failure_code"], "TIMEOUT")
+            self.assertEqual(failure["attempted_provider_request_count"], 1)
+            self.assertEqual(terminal["status"], "PROVIDER_OUTCOME_UNKNOWN")
+            self.assertEqual(terminal["provider_request_count"], 1)
+            self.assertFalse(terminal["retry_permitted_with_same_authorization"])
+            failure_text = (
+                root / "capability-result" / "failure.json"
+            ).read_text()
+            self.assertNotIn("fixture-secret-never-persist", failure_text)
+            self.assertFalse(failure["raw_prompt_persisted"])
+            self.assertFalse(failure["raw_response_persisted"])
 
     def test_full_fake_transport_flow_closes_thirty_nine_call_result(self) -> None:
         fake_identity = {

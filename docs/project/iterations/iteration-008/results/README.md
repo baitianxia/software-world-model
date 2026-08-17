@@ -12,7 +12,12 @@ iteration: ITER-008
 
 # ITER-008 Results
 
-尚无执行结果。Proposal、Readiness 说明、开发者自拟问题或测试数量都不是 Product Result。
+尚无 Product Result。Proposal、Readiness 说明、开发者自拟问题或测试数量都不是 Product Result。
+
+前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
+runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
+[FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、
+hidden canary 和 Production Activation 均未执行。
 
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
