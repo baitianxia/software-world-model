@@ -98,8 +98,11 @@ credential-free、只对 exact Ark host 建立 TLS handshake 的诊断，不发�
 独立授权的 direct TLS diagnostic 证明 TCP connect 完成，但唯一一次 handshake 在 certificate verification 前以 `SSLEOFError` 关闭；
 随后独立授权的 loopback proxy 对照成功完成唯一 CONNECT，唯一 TLS handshake 却以相同 EOF 关闭。两次诊断的
 credential/Ark HTTP/application payload 均为 0。这排除了 proxy 不可达与“仅因 Adapter 禁用 ambient proxy”解释，当前 live qualification
-进入 environment/external-state hold：verified TLS 路径恢复前，不改 Adapter、不生成 run-003、不申请 Provider 调用。路径恢复后仍从新的
+进入 environment/external-state hold：verified TLS 路径恢复前，不改 Adapter、不生成 Conformance run-003、不申请 Provider 调用。路径恢复后仍从新的
 clean candidate 和新 Conformance 授权开始。
+
+用户关闭系统代理并声明全流量 TUN 后，单独冻结和授权的 TUN direct probe 仍以完全相同的 `SSLEOFError` 在 certificate verification 前
+关闭；因此环境声明不等于路径恢复。后续恢复证据必须是一次实际 verified handshake PASS，不能再用模式切换或连续失败 probe 替代。
 
 ## Open questions and implementation risks
 

@@ -13,7 +13,7 @@ disposition: hold-live-qualification-until-external-tls-path-is-restored
 target: ITER-008-SLICE-001
 ---
 
-# FINDING-008-008：direct 与 proxy TLS 均在证书验证前被 EOF 关闭
+# FINDING-008-008：direct、proxy 与 TUN TLS 均在证书验证前被 EOF 关闭
 
 ## Observation
 
@@ -68,6 +68,16 @@ digest 为 `sha256:fc66da26262faf909b129367455eb5758b5c544e091c0ace4c9d92bcb80a4
 这排除了“loopback proxy 不可达”以及“仅因产品 transport 忽略 ambient proxy”作为当前失败解释。direct 与 proxy tunnel 在共同的下游
 TLS 阶段得到同一 EOF；现有应用代码没有可由该证据支持的修复点。
 
+用户随后关闭系统代理并声明所有流量改走 TUN。独立授权的 TUN direct diagnostic run-003 绑定 freeze file
+`sha256:51677bddb6197352c02869296612edf3b61f0695626f6badc4db95c9e625ce85`，仍使用同一 frozen probe、CA、exact host/SNI 和一次握手
+上限。Result file digest 与原 direct probe 相同，为
+`sha256:78ec3d31d4bb4c0b878c169995a62848da4d582698a31f2df6cf628b3e78df50`；terminal file digest 为
+`sha256:39d081d86258bf661e98654178ecf19127611f02baea51702e00658cd3d530cc`。它仍在 certificate verification 前以相同
+`SSLEOFError` / errno 8 关闭，credential、HTTP 和 application payload 均为 0。
+
+因此“系统代理已关闭、TUN 已启用”的环境声明本身没有恢复该域名的 verified TLS 路径；可能是 TUN 规则仍对该域名 DIRECT，或所选
+TUN 上游与其他路径共享同一失败出口，但当前 evidence 不能在两者间下结论。
+
 ## Impact and classification
 
 该失败阻断的是本 Iteration 的 live 资格顺序，没有证据表明 Provider Contract、Gateway Owner 或安全不变量需要改变。直接改为使用 ambient
@@ -78,7 +88,7 @@ proxy 会改变 bearer credential 的目标边界，不能作为未经设计和�
 
 run-002 Conformance、direct diagnostic 与 proxy diagnostic evidence 保持原样，三个授权都不得重用。当前 live qualification 进入
 environment/external-state hold：在 exact Ark host 的 TLS 路径由网络环境或 Provider 侧恢复，并由不消费 Conformance grant 的独立证据确认
-之前，不生成 run-003，不修改 Adapter，不启用 ambient proxy，不关闭证书验证，也不申请新的 Provider 调用。
+之前，不生成 Conformance run-003，不修改 Adapter，不启用 ambient proxy，不关闭证书验证，也不申请新的 Provider 调用。
 
 恢复条件是 verified handshake 能到达证书验证并完成；仅有 proxy 变量、TCP connect、CONNECT 200 或历史 PASS 都不满足。恢复后仍须从
 新的 clean exact candidate 重新生成 2-call Conformance preflight，并取得新的用户授权；不得从诊断 PASS 推导 Provider、Capability 或
@@ -91,4 +101,5 @@ Production 资格。
 - 本机检查没有访问 Ark，且未读取或输出 credential；
 - direct diagnostic 恰好执行一次 handshake 并以 `SSLEOFError` 关闭，未发送 HTTP/application payload；
 - proxy diagnostic 恰好执行一次 CONNECT 和一次 handshake；CONNECT 完成，但 TLS 同样在证书验证前以 `SSLEOFError` 关闭；
-- 当前证据支持“direct 与 proxy tunnel 的共同下游 TLS 路径不可用”，不把应用代码、proxy 存在或历史 PASS 外推为已确认 root cause。
+- TUN direct diagnostic 在用户声明的新网络模式下恰好执行一次 handshake，仍以完全相同的 sanitized Result 关闭；
+- 当前证据支持“direct、proxy tunnel 与当前 TUN 路径的共同下游 TLS 不可用”，不把应用代码、网络模式声明或历史 PASS 外推为 root cause。

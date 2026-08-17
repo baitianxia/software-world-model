@@ -34,6 +34,10 @@ verification 前以相同 `SSLEOFError` / errno 8 关闭；proxy authorization�
 因此不是 proxy 不可达或仅由 Adapter 禁用 ambient proxy 导致。live qualification 进入 environment/external-state hold，TLS 路径恢复前不再
 生成 Conformance freeze；本诊断同样不是 Conformance 或 Product Result。
 
+用户关闭系统代理并声明全流量 TUN 后，credential-free TUN direct diagnostic run-003 仍只执行一次 handshake，并在 certificate
+verification 前得到相同 `SSLEOFError` / errno 8；其 sanitized Result 与原 direct probe 的文件 digest 完全相同。TUN 模式声明没有形成
+路径恢复证据，hold 继续生效。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。
