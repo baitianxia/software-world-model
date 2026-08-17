@@ -24,6 +24,11 @@ hidden canary 和 Production Activation 均未执行。
 完整保留，证明修复生效但不构成 Conformance PASS。后续必须先按
 [FINDING-008-008](../findings/FINDING-008-008.md) 独立诊断 TLS，不能直接创建 run-003。
 
+credential-free direct TLS diagnostic run-001 随后只执行一次 handshake：TCP connect 成功后，在 certificate verification 前以
+`SSLEOFError` / errno 8 关闭；credential、HTTP request 与 application payload byte 均为 0。该 Result 排除了本次 DNS、TCP connect
+和 CA verify 阶段失败，但没有证明远端或 direct egress 中哪一方关闭连接。下一步只能是另行授权的 frozen loopback proxy 对照，仍不构成
+Conformance 或 Product Result。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

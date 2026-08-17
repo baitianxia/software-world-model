@@ -9,11 +9,11 @@ code: [src/software_world_model/ai_infrastructure/direct_https.py, src/software_
 tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_iteration_008_capability_harness.py]
 iteration: ITER-008
 classification: iteration-design
-disposition: require-bounded-tls-diagnosis-before-another-conformance-freeze
+disposition: require-bounded-explicit-proxy-comparison-before-transport-decision
 target: ITER-008-SLICE-001
 ---
 
-# FINDING-008-008：run-002 在第一次 TLS 握手失败后关闭
+# FINDING-008-008：run-002 的 direct TLS 在证书验证前被 EOF 关闭
 
 ## Observation
 
@@ -41,6 +41,20 @@ Conformance Result，39-call Capability Gate 继续关闭。
   network mode。当前环境存在小写 proxy variables，但 transport 按安全设计显式忽略 ambient proxy。现有证据不足以判断 CA、远端 TLS、
   直连网络策略或瞬态握手中的哪一项是根因。
 
+随后独立授权的 credential-free TLS diagnostic run-001 绑定 freeze file
+`sha256:84664c79a5eabe2c43ec98ce911ebd2f3d43b23ecf45cd6cf8ee0d8c12a6b86b`，只对 exact host/SNI 建立一次 direct
+TLS handshake。Result file digest 为 `sha256:78ec3d31d4bb4c0b878c169995a62848da4d582698a31f2df6cf628b3e78df50`，terminal file
+digest 为 `sha256:fc66da26262faf909b129367455eb5758b5c544e091c0ace4c9d92bcb80a43b6`。结果为 `SSLEOFError` / errno 8：
+
+- TCP connect 已完成，TLS handshake attempt count 恰好为 1；
+- `/etc/ssl/cert.pem` fallback 已加载，但没有到达 certificate verification，`verify_code` / `verify_message` 均为空；
+- credential、HTTP request 和 application payload byte 均为 0；
+- 当前小写 `http_proxy` / `https_proxy` 指向无凭据的 `127.0.0.1:7897`，`all_proxy` 指向同一端口的 SOCKS5；该存在性不能单独
+  证明 proxy 路径可用或应被产品采用。
+
+因此可以排除 DNS、TCP connect 和 CA certificate verification 作为这一次失败阶段，却仍不能只凭 EOF 区分远端关闭与 direct egress
+路径中的中间策略。
+
 ## Impact and classification
 
 该失败阻断的是本 Iteration 的 live 资格顺序，没有证据表明 Provider Contract、Gateway Owner 或安全不变量需要改变。直接改为使用 ambient
@@ -49,16 +63,19 @@ proxy 会改变 bearer credential 的目标边界，不能作为未经设计和�
 
 ## Decision and disposition
 
-run-002 与其三份 evidence 保持原样，授权不得重用。不得立即生成 run-003 Conformance freeze。下一外部步骤必须先形成独立、credential-free
-且有界的 TLS 诊断范围：只允许对 exact Ark host 做最多一次 TLS handshake，不发送 bearer、HTTP request body、产品题、源码、Evidence 或
-hidden canary；该网络动作仍需新的明确用户授权。
+run-002 与 direct TLS diagnostic evidence 保持原样，两个授权都不得重用。不得立即生成 run-003 Conformance freeze，也不得把 ambient
+proxy 的存在当作采用依据。下一外部步骤只允许一次对照：显式连接 frozen loopback HTTP proxy `127.0.0.1:7897`，发送一条
+`CONNECT ark.cn-beijing.volces.com:443`，然后对 exact SNI 做最多一次 verified TLS handshake；不读取 credential，不发送 Ark HTTP
+request、body、产品题、源码、Evidence 或 hidden canary。该动作必须另行冻结和授权。
 
-只有诊断形成可复核 root cause，并完成必要的 environment/configuration 或实现处置及本地回归后，才允许基于新的 clean exact candidate
-生成 Conformance preflight，再申请新的 2-call 授权。任何修复都不得静默启用 ambient proxy、关闭证书验证或复用 run-002 grant。
+若 proxy 对照无法连接，停止编码并把环境交付为 blocker；若 proxy 对照通过，只证明当前网络需要该路径，仍须单独设计显式、受控、可审计的
+proxy configuration，不能读取 ambient value 或直接发送 bearer。只有形成可复核 root cause，并完成必要处置及本地回归后，才允许基于
+新的 clean exact candidate 生成 Conformance preflight。任何修复都不得关闭证书验证或复用旧 grant。
 
 ## Verification after disposition
 
 - run-002 exact attempt count 为 1，第二次 Conformance call、Capability、正式 Web、hidden canary 与 Production Activation 均未执行；
 - runner 在返回控制前密封 sanitized failure 和 terminal，验证了 `FINDING-008-007` 的处置；
 - 本机检查没有访问 Ark，且未读取或输出 credential；
-- 当前证据只支持 `TLS_FAILURE` 分类，不把代理存在、CA fallback 或历史 PASS 外推为已确认 root cause。
+- direct diagnostic 恰好执行一次 handshake 并以 `SSLEOFError` 关闭，未发送 HTTP/application payload；
+- 当前证据支持“direct TLS 在证书验证前被 EOF 关闭”，但不把 proxy 存在或历史 PASS 外推为已确认 root cause。
