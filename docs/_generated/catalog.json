@@ -1309,6 +1309,20 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-011.md"
   },
   {
+    "id": "FINDING-008-012",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-012.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

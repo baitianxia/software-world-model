@@ -133,6 +133,18 @@ suite、oracle、evaluator 或产品协议；但 exact Git candidate 已变化�
 candidate 重新生成 Conformance preflight、取得新的 2-call 授权并 PASS，之后才能形成和申请新的 39-call Capability freeze。详见
 [FINDING-008-011](../findings/FINDING-008-011.md)。
 
+修复后的 candidate `3d2f35c…` 已以新的 exact preflight 恰好完成 2 次 DeepSeek Conformance call 并 PASS。其 Capability run-003
+随后在第 25 次 dispatch 以 `TLS_FAILURE / PROVIDER_OUTCOME_UNKNOWN` 密封关闭，24 次 request / 11 Case 已完成且没有 retry；
+Adapter 同一 CA fallback 的 credential-free 对照随后 5/5 verified TLS 1.3 PASS。新冻结的 run-004 最终完整执行 39 calls / 18 Case，
+`unknown_count=0`，但只有首轮 candidate 与 Draft 两个 Case PASS，其余 16 Case FAIL，因此没有 Capability Qualification 或 Activation。
+
+run-004 的 sealed output 对照 unchanged Oracle 表明：`prompt@4` 没有完整向模型说明每个 operation 的 exact relevant/irrelevant field
+shape、本闭包 graph bounds、部分 result-driven operation 选择和三层完整性 Review 条件。System Contract 已拥有这些 Owner 与不变量，
+故不改系统语义；本 Slice 将 Proposal Contract 版本化为 capability/Strategy `1.3.1`、prompt/vocabulary `@5`、bounded egress
+policy `@1.0.1` 和 suite/oracle identity `@1.3.1`。原 18 Case、39-call、Oracle verdict、metric、阈值与 no-retry 保持不变，禁止
+Provider、Case、工程、符号或答案特判。新 exact candidate 必须重新通过 Conformance 和完整 Capability Gate。详见
+[FINDING-008-012](../findings/FINDING-008-012.md)。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

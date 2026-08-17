@@ -74,6 +74,33 @@ authorization consumed/no-retry 均复核 PASS。该 Result 是 Adapter Conforma
 [FINDING-008-011](../findings/FINDING-008-011.md) 修复；修复改变 exact candidate，旧 freeze 必须保留但不得执行，后续先重新取得与修复
 candidate 相同的 Conformance 资格。
 
+修复后的 candidate `3d2f35c35efe56edce7a1938afcc8e8acbb8425b` 随后以 preflight
+`sha256:3a95fe038ac8ae8b8277187c0a8ea87516fc1f5d6688878dc2908af85eec8a36` 恰好执行 2 次 DeepSeek Conformance call 并 PASS；
+Result 位于
+`var/iteration-008/capability/run-003-conformance-result/CC-DEEPSEEK-CHAT-NO-TOOLS-001-ccrun_bd3d72cf9895446a9dc455c81cb59bcd.json`，
+digest 为 `sha256:627ff4c9329f3e09d33b3b0d6b1ec5624d33006ab189f0fc9ea8a3ad22516438`，唯一 response identity 为
+`deepseek-v4-pro`。
+
+同候选 Capability run-003 绑定 freeze
+`sha256:05267d91cfe87347f48dab62f7b51c0268bf6908d9470f1fe5e075571c677ce8`，在第 25 次 Provider dispatch 以
+`TLS_FAILURE / PROVIDER_OUTCOME_UNKNOWN` 密封关闭：attempted/completed request 为 25/24，completed case 为 11，无 retry。
+随后以 Adapter 同一 CA fallback `/etc/ssl/cert.pem` 执行的 credential-free 对照连续 5/5 verified TLS 1.3 PASS；该诊断只校验
+transport，不重试或改写 run-003。
+
+Capability run-004 绑定 freeze
+`sha256:946952576429932cd9fc8d979ad16d2d520f346d9f0a660376691063ed2c9292`，完整执行 39 次 Provider request 与 18 个 Case，
+`unknown_count=0`，input/output tokens 为 88047/10249，唯一模型 identity 为 `deepseek-v4-pro`。closed Result 位于
+`var/iteration-008/capability/run-004-capability-result/closed-evaluation-result.json`；result/document digest 为
+`sha256:b2308facc71a051d644fbbb78f07551f840d0c1b2790610de4d86c2e46f3ccca` /
+`sha256:6d698e8474c4ae3e3aa1f6705e5d7b4d2b2f6857602c7c923dedad554a11c876`。只有
+`WM-JSS-I8-FIRST-CANDIDATES-001` 与 `WM-JSS-I8-DRAFT-017` PASS，其余 16 Case FAIL；Qualification 与 Production Activation 均为
+`NOT_EXECUTED`。
+
+该失败按 [FINDING-008-012](../findings/FINDING-008-012.md) 归因为 model-visible Proposal Contract 不充分：canonical operation field
+shape、graph bounds、result-driven progress 和三层完整性 Review 规则没有完整进入 `prompt@4`。处置把 active contract 版本化为
+`1.3.1` / prompt-vocabulary `@5`，但不修改原 18 Case、39-call、Oracle、metric、阈值或 no-retry 规则。run-003/004 作为失败证据
+永久保留；新 contract 必须在新的 clean exact candidate 上重新通过 Conformance 与 Capability，不能继承本次资格。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

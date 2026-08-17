@@ -1,7 +1,7 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-capability-oracle@1",
-  "oracle_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.3.0",
-  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.3.0",
+  "oracle_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.3.1",
+  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.3.1",
   "forbidden_event_sets": {
     "investigation": [
       "SOURCE_ACCESS",

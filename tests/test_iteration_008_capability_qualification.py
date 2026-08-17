@@ -181,7 +181,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(policy.max_provider_calls, 6)
         self.assertEqual(
             policy.policy_ref,
-            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.0.0",
+            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.0.1",
         )
 
     def test_evaluation_definition_and_registry_bind_active_contract(self) -> None:
@@ -224,7 +224,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         )
 
         self.assertEqual(len(definition.cases), 18)
-        self.assertEqual(definition.strategy_version, "1.3.0")
+        self.assertEqual(definition.strategy_version, "1.3.1")
         self.assertEqual(
             definition.output_schema_digest,
             java_source_semantics_world_model_output_contract_digest(
