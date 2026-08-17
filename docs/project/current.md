@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-17
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-deepseek-model-diagnostic-pass-conformance-freeze-pending
+worktree_status: iteration-008-deepseek-conformance-pass-capability-verifier-fix-requalification-pending
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deepseek-v4-pro-one-call-diagnostic-pass-conformance-not-executed-capability-not-executed-production-not-activated
+live_model_path: iteration-008-deepseek-v4-pro-diagnostic-and-conformance-run-001-pass-capability-not-executed-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / DeepSeek Conformance pending** | DeepSeek 独立 Adapter、exact contract 与 Gate 已离线闭合；1-call `deepseek-v4-pro` model diagnostic 按 exact freeze/authorization PASS，证明该时点最小模型可用，但 live Conformance、Capability、正式 Web 与 canary 均未执行或授权，正式 runtime 仍保持 Ark |
+| Iteration 008 | **SLICE-001 authorized / DeepSeek candidate requalification pending** | DeepSeek 独立 Adapter、exact contract 与 Gate 已离线闭合；1-call model diagnostic 与 2-call Conformance run-001 均按 exact freeze/authorization PASS。首次 Capability freeze 的独立校验暴露 verifier 缺失 import，39-call Capability 从未授权或执行；修复后须由新的 clean candidate 重新取得同候选 Conformance，正式 runtime 仍保持 Ark |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -104,8 +104,19 @@ credential，也没有公网调用。正式 bounded runtime 与 product egress p
 credential 先经一次无网络布尔检查确认为可见，密钥值未输出或持久化。随后 clean candidate `8cbb3ab…` 生成 model diagnostic
 run-001 freeze `sha256:1c17dbe8…c6d9` 并取得 exact 单次授权；runner 恰好调用 1 次并返回 `MODEL_DIAGNOSTIC_PASS`，请求/响应 identity
 均为 `deepseek-v4-pro`，input/output tokens 为 115/5。result/terminal digest 为 `sha256:42d1cacd…27b6` / `sha256:6202f52a…61c5`；
-证据 digest、0600 权限和 secret/raw payload absence 复核 PASS，授权已消费且不可重试。该结果不是 Conformance 或 Capability；下一步
-从写回后的新 clean candidate 生成独立 2-call Conformance preflight。
+证据 digest、0600 权限和 secret/raw payload absence 复核 PASS，授权已消费且不可重试。该结果不是 Conformance 或 Capability。
+
+写回后的 clean candidate `45fe1523b286f944cdc1ea781f49fe2bc5461da2`（tree `31fead7b…`）随后以 preflight
+`sha256:243d154eb3d89072d947a9bd678fd52786ff847cee309cbc38e9ccdef452b3a6` 取得新的 exact 2-call 授权。runner 恰好调用 2 次并返回
+`CONFORMANCE_PASS`：12/12 case PASS，响应 identity 仅为 `deepseek-v4-pro`，input/output tokens 为 378/87，usage 完整；result/terminal
+digest 为 `sha256:390378f0…1d37e` / `sha256:4e81b650…54261`。六份 freeze/authorization/执行证据均为 0600，digest、资格有效期、授权消费、
+无 retry 及 secret/raw payload absence 复核 PASS。
+
+同一候选随后零调用生成 Capability freeze `sha256:ad1ba1fd75739e3dcbc5e127301bb0817a3cd6b3c3258af4d86782f6d7d72551`，但独立
+`verify-capability-freeze` 在授权前因 verifier 未导入既有 metric contract 常量而触发 `NameError`。该 freeze 未请求授权，39-call
+Capability 没有读取 credential 或建立 Provider transport。缺陷按 `FINDING-008-011` 以最小 import 和有效 freeze 正向回归修复；由于
+修复改变 exact Git candidate，旧 Capability freeze 不得执行，下一步须从修复后的 clean candidate 重新完成同候选 2-call Conformance，
+再形成新的 Capability freeze 和独立授权请求。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

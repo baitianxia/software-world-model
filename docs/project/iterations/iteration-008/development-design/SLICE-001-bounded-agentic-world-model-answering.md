@@ -119,12 +119,19 @@ Contract 或安全 Owner，先更新对应 System 文档/ADR。详见 [FINDING-0
 独立 2-call Conformance 与 ITER-008 39-call Capability runner 已完成 fake-transport 闭合。按用户要求先验证模型可用性，再调整正式
 runtime/product egress policy；当前正式 runtime 继续保持 Ark。DeepSeek 最小 model diagnostic run-001 已在 clean candidate
 `8cbb3ab…` 上按 post-freeze 单次授权恰好调用 1 次并 PASS，请求/响应 identity 均为 `deepseek-v4-pro`；这只解除 model availability
-顺序阻断，不构成 Conformance 或 Capability。Conformance、Capability、正式 Web 与 Production Activation 均未执行。详见
-[FINDING-008-010](../findings/FINDING-008-010.md)。
+顺序阻断，本身不构成 Conformance 或 Capability。后续 Conformance run-001 已 PASS；Capability、正式 Web 与 Production Activation
+均未执行。详见 [FINDING-008-010](../findings/FINDING-008-010.md)。
 
 最小模型 diagnostic 先经过独立 zero-network freeze 和 post-freeze 单次授权；runner 在唯一 dispatch 前密封 invocation，并对 PASS、
 已知 Provider FAIL 或 outcome unknown 写入 sanitized result/failure 与 terminal。该 1-call grant 不授权或替代后续 2-call Conformance。
-该授权现已消费且不可重试；下一步从包含本证据写回的新 clean candidate 生成独立 Conformance preflight，并另行申请恰好 2 次调用。
+该授权现已消费且不可重试。包含诊断证据写回的 clean candidate `45fe1523…` 随后按独立 preflight 和 post-freeze grant 恰好执行 2 次
+Conformance call，12/12 case PASS，响应 identity 仅为 `deepseek-v4-pro`；该授权同样已消费且不可重试。
+
+同候选的 Capability freeze 随后在零 Provider 调用阶段形成，但独立 verifier 在授权前因缺失 metric contract import 触发 `NameError`。
+因此该 freeze 不可授权或执行，39-call Capability 仍未发生。修复只补齐 verifier import 并增加有效 freeze 正向回归，不改变 Provider、
+suite、oracle、evaluator 或产品协议；但 exact Git candidate 已变化。按 `FINDING-008-005` 的同候选规则，下一步必须从修复后的 clean
+candidate 重新生成 Conformance preflight、取得新的 2-call 授权并 PASS，之后才能形成和申请新的 39-call Capability freeze。详见
+[FINDING-008-011](../findings/FINDING-008-011.md)。
 
 ## Open questions and implementation risks
 

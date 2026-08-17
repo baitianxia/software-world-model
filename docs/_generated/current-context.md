@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-deepseek-model-diagnostic-pass-conformance-freeze-pending`
+- Worktree status: `iteration-008-deepseek-conformance-pass-capability-verifier-fix-requalification-pending`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-deepseek-v4-pro-one-call-diagnostic-pass-conformance-not-executed-capability-not-executed-production-not-activated`
+- Live model path: `iteration-008-deepseek-v4-pro-diagnostic-and-conformance-run-001-pass-capability-not-executed-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

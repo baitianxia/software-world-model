@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记十条已处置 Finding：
+本 Slice 当前登记十一条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -35,8 +35,10 @@ iteration: ITER-008
   与浏览器路径分流；用户决定更换 Provider，因此停止 Ark live 工作，Provider-independent 实现保持冻结，新 Provider 必须以 exact
   contract 和独立资格 Gate 接入。
 - [FINDING-008-010](FINDING-008-010.md)：DeepSeek 已以独立 `DEEPSEEK` Provider、exact endpoint/model/secret/wire/network
-  contract、Adapter `@1` 与独立 Gate 接入；最小 `deepseek-v4-pro` model diagnostic 已按 1-call exact authorization PASS，但正式
-  runtime 保持 Ark，后续 2-call Conformance 与 39-call Capability 仍须分别冻结和授权。
+  contract、Adapter `@1` 与独立 Gate 接入；最小 model diagnostic 与 2-call Conformance run-001 已分别按 exact authorization PASS，
+  但正式 runtime 保持 Ark，39-call Capability 仍须独立冻结和授权。
+- [FINDING-008-011](FINDING-008-011.md)：首次 DeepSeek Capability freeze 的独立校验在授权前暴露 verifier 缺失 metric contract import；
+  以最小 import 和有效 freeze 正向回归修复，旧 freeze 不执行，修复后的 exact candidate 必须重新通过同候选 Conformance Gate。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

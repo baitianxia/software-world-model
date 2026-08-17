@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from software_world_model.ai_infrastructure import (
+    BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekChatCompletionsTransport,
     DeepSeekModelConfiguration,

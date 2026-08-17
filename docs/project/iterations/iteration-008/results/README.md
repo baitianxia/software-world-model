@@ -60,6 +60,20 @@ tokens 为 115/5；result/terminal digest 分别为
 credential、raw prompt/response 未持久化，授权已消费且不可重试。该诊断只证明 exact endpoint/model 在该时点可完成最小调用，不是
 Conformance、Capability 或 Product Result；正式 runtime 仍保持 Ark。
 
+DeepSeek Conformance run-001 随后绑定 clean candidate `45fe1523b286f944cdc1ea781f49fe2bc5461da2` 与 preflight
+`sha256:243d154eb3d89072d947a9bd678fd52786ff847cee309cbc38e9ccdef452b3a6`，取得只授权两次 synthetic request 的 post-freeze user grant。
+runner 恰好调用 2 次并返回 `CONFORMANCE_PASS`：12/12 case PASS，响应 identity 仅为 `deepseek-v4-pro`，input/output tokens 为
+378/87，usage 完整。result/terminal digest 为
+`sha256:390378f02094d70fff4b404acc48f1ce18050761aa027d9a64d43d91f151d37e` /
+`sha256:4e81b6507cc6546ca1bc54bf682a0d2fda8ad68fa03a4c17160c56ced5154261`；证据 digest、0600 权限、secret/raw payload absence、
+authorization consumed/no-retry 均复核 PASS。该 Result 是 Adapter Conformance 证据，不是 Capability 或 Product Result。
+
+同一候选零调用生成的 Capability freeze
+`sha256:ad1ba1fd75739e3dcbc5e127301bb0817a3cd6b3c3258af4d86782f6d7d72551` 在独立授权前校验中因 verifier 缺少 metric contract import
+触发 `NameError`。因此没有申请该 freeze 的授权，也没有读取 credential 或执行任何 39-call Capability request。缺陷和正向回归按
+[FINDING-008-011](../findings/FINDING-008-011.md) 修复；修复改变 exact candidate，旧 freeze 必须保留但不得执行，后续先重新取得与修复
+candidate 相同的 Conformance 资格。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

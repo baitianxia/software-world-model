@@ -775,6 +775,16 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                     created_at=capability_created,
                 )
             )
+            with patch.object(
+                cli, "_candidate_identity", return_value=fake_identity
+            ):
+                self.assertEqual(
+                    cli._verify_capability_freeze(
+                        capability_freeze_path,
+                        Path(conformance_payload["result_path"]),
+                    ),
+                    capability_freeze,
+                )
             tampered_freeze = copy.deepcopy(capability_freeze)
             tampered_freeze["evaluation_definition"]["strategy_version"] = (
                 "1.2.2"

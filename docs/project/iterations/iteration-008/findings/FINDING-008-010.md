@@ -13,7 +13,7 @@ disposition: prepare-deepseek-provider-and-hold-live-gates-until-key-and-exact-a
 target: ITER-008-SLICE-001
 ---
 
-# FINDING-008-010：DeepSeek 独立 Provider 契约已离线闭合，live 资格继续等待
+# FINDING-008-010：DeepSeek 独立 Provider 契约已离线闭合，live 资格按 Gate 推进
 
 ## Observation
 
@@ -53,8 +53,7 @@ identity，`deepseek-v4-flash` 只作为显式可选项，不接受旧 alias 的
 dispatch 前解析。因此分类为 `iteration-design`，主处置写回 `ITER-008-SLICE-001`。
 
 正式 bounded Web runtime、已冻结的 product egress policy 与历史 ITER-003—007 Ark 证据本次保持不变。DeepSeek 最小 live 调用随后
-已按独立授权 PASS，但 Conformance 尚未执行；该诊断只证明 exact endpoint/model/static probe 在该时点可用，不能解释为 Adapter
-Conformance、业务能力合格或生产可用。
+已按独立授权 PASS，后续 2-call Conformance run-001 也按另一份 exact 授权 PASS；两者仍不能解释为业务 Capability、产品结果或生产可用。
 
 ## Subsequent live evidence
 
@@ -70,10 +69,25 @@ input/output tokens 为 115/5，Provider request id 为 `e267523d-7756-4e37-9952
 `sha256:6202f52af2656f6b101003cc60f4b2904a1df13cf73db910444c077319c261c5`。invocation/result/terminal 均为 0600，
 digest 复核 PASS；credential、raw prompt 与 raw response 未持久化，授权已消费且不可重试。
 
+写回后的 clean candidate `45fe1523b286f944cdc1ea781f49fe2bc5461da2`（tree
+`31fead7b483c59337b8b29acfbd13cd425e69557`）生成 Conformance run-001 preflight
+`sha256:243d154eb3d89072d947a9bd678fd52786ff847cee309cbc38e9ccdef452b3a6`。用户 exact authorization ref 为
+`codex-user-message:sha256:82df7218972365cd9c251a3d2600d9e35f0f5fca3be9cf8ac6c21d5d527e4082`，authorization digest 为
+`sha256:4391deea9b0e5de7f4c42bbc92fc5612fc72a602c70bac6ca6e200d17e606a01`。
+
+runner 恰好执行 2 次 synthetic request 并返回 `CONFORMANCE_PASS`：12/12 case PASS，请求模型和唯一响应 identity 均为
+`deepseek-v4-pro`，input/output tokens 为 378/87，usage 完整；Provider request ids 为
+`eabb5d83-a620-40e6-aab0-4c957058f8ca`、`e28b9c86-5c25-4472-a373-12e05c1d7630`。result/terminal digest 分别为
+`sha256:390378f02094d70fff4b404acc48f1ce18050761aa027d9a64d43d91f151d37e` 与
+`sha256:4e81b6507cc6546ca1bc54bf682a0d2fda8ad68fa03a4c17160c56ced5154261`，资格有效至
+`2026-09-16T11:52:36.748495Z`。六份证据均为 0600，digest 和当前 DeepSeek implementation/configuration binding 复核 PASS；credential、
+raw prompt 与 raw response 未持久化，授权已消费且不可重试。
+
 ## Decision and disposition
 
-保留 DeepSeek 为独立新 Provider，默认模型固定为 `deepseek-v4-pro`。model availability 已按单次诊断 PASS；下一步先完成独立
-2-call Conformance，再决定是否申请 39-call Capability，仍不提前切换正式 runtime/policy。API Key 只置于
+保留 DeepSeek 为独立新 Provider，默认模型固定为 `deepseek-v4-pro`。model availability 与本候选 Conformance 已分别按独立授权 PASS；
+下一步仍须先闭合 `FINDING-008-011` 的 Capability verifier 缺陷并对修复后的 exact candidate 重新完成同候选 Conformance，再决定是否申请
+39-call Capability，仍不提前切换正式 runtime/policy。API Key 只置于
 `DEEPSEEK_API_KEY` 环境引用中；不得写入仓库、命令参数、freeze、日志或 Result。
 
 任何 live 步骤仍须先生成绑定当时 clean exact candidate、endpoint、model、Adapter、call count、payload boundary 与 result directory
@@ -83,11 +97,11 @@ digest 复核 PASS；credential、raw prompt 与 raw response 未持久化，授
 ## Verification after disposition
 
 - DeepSeek Adapter、model diagnostic、Conformance、CLI、ITER-008 fake transport、现有 Gateway/Ark 回归与历史 Ark
-  implementation-manifest 检查共 73 项通过；测试没有读取真实 credential 或建立公网连接；
+  implementation-manifest 检查共 85 项通过；测试没有读取真实 credential 或建立公网连接；
 - 原 Ark Adapter / Conformance 实现未修改，其历史 implementation manifest identity 保持可验证；
 - ITER-008 既有 bounded product egress qualification 测试仍以 Ark 正式 runtime policy 通过，证明本次没有提前切换产品 egress；
 - full discovery 实际运行 954 项，但因当前 worktree 缺少历史 validation repository Git metadata / `var/` 密封资产以及 sandbox
-  禁止 AF_UNIX listener，以 5 failures、30 errors、1 skipped 结束；因此不把全量 suite 记为 PASS。上述 73 项受影响范围回归独立 PASS；
-- `python3 scripts/docs.py check` 对 314 份 current documents PASS，`git diff --check` 与相关 Python compile check PASS；
-- live DeepSeek model diagnostic 恰好执行 1 次并 PASS；Conformance、Capability、正式 Web、hidden canary、SLICE-002 与
-  Production Activation 均未执行。
+  禁止 AF_UNIX listener，以 5 failures、30 errors、1 skipped 结束；因此不把全量 suite 记为 PASS。上述 85 项受影响范围回归独立 PASS；
+- `python3 scripts/docs.py check` 对 315 份 current documents PASS，`git diff --check` 与相关 Python compile check PASS；
+- live DeepSeek model diagnostic 恰好执行 1 次并 PASS，独立 Conformance 恰好执行 2 次且 12/12 PASS；Capability、正式 Web、hidden
+  canary、SLICE-002 与 Production Activation 均未执行。
