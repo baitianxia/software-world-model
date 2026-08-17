@@ -73,18 +73,11 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
     ("WM-JSS-I8-DRAFT-017", 1),
     ("WM-JSS-I8-REVIEW-018", 1),
 )
-BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST = digest_of(
-    [
-        "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1",
-        BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS,
-    ]
+BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST = Digest(
+    "sha256:bd3b48b195f56854520718ca057ba2bf8d5ff5665a6d7e3cc1551b1f0db6ad56"
 )
-BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_ORACLE_DIGEST = digest_of(
-    [
-        "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1",
-        tuple(case_id for case_id, _ in BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS),
-        BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT,
-    ]
+BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_ORACLE_DIGEST = Digest(
+    "sha256:9e3fbf5c20e8ee58109acc4df00ee613d725a8c466c42795ce52ad6c073e9f29"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     Path(__file__).resolve().with_name(
@@ -229,7 +222,13 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         != expected_cases
         or len(definition_cases) != len(expected_cases)
         or result.get("conclusion") != "PASS"
-        or tuple(result.get("passed_case_ids", ())) != expected_cases
+        or not isinstance(result.get("passed_case_ids"), list)
+        or len(result["passed_case_ids"]) != len(expected_cases)
+        or any(
+            not isinstance(case_id, str)
+            for case_id in result["passed_case_ids"]
+        )
+        or frozenset(result["passed_case_ids"]) != frozenset(expected_cases)
         or result.get("failed_case_ids") != []
         or result.get("inconclusive_case_ids") != []
         or validity.get("status") != "VALID"

@@ -7,12 +7,12 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-SLICE-001]
 code: []
 tests: []
-as_of: 2026-08-14
+as_of: 2026-08-17
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-slice-001-authorized-in-progress
+worktree_status: iteration-008-deterministic-capability-protocol-awaiting-clean-freeze
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deterministic-development-only-no-new-live-dispatch-production-not-activated
+live_model_path: iteration-008-current-conformance-and-capability-await-separate-live-authorizations-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **Proposed / not ready / not authorized** | 候选内容是 Agent 仅通过预构建 World Model 做结果驱动、多方法调查，并从正式 Web 与成熟源码 Agent 逐题对照；尚未授权 System 设计写回或编码 |
+| Iteration 008 | **SLICE-001 authorized / deterministic development in progress** | bounded investigation 产品内核已实现；18-case / 39-call Capability 协议完成纯本地闭环，但当前 Adapter `@8` 的新 Conformance、Capability、正式 Web 与 canary 均未执行或授权 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -50,6 +50,16 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 保存在本机 `var/`，只通过 Result 中的 ID、Digest 和路径引用，不进入 Git。
 
 ## 当前执行顺序
+
+ITER-008 当前只推进已授权的 SLICE-001。bounded 产品内核和确定性测试已完成第一轮实现；Capability suite/oracle/evaluator 固定为
+18 个 Case、39 次模型调用，纯本地 fake transport 已证明 18/18 PASS 和 exact call count，未读取 credential、未建立 Provider transport。
+本机现存 15 份 Ark Conformance Result 全部属于 Adapter `@1`—`@7`，对当前
+`openai-chat-completions-no-tools@8` 均以 `QUALIFICATION_INVALID` 失败关闭。
+
+因此下一 live 步骤不是直接执行 Capability 或产品题。先在 clean exact Git candidate 上生成零 Provider call 的 preflight，申请只允许
+2 次 synthetic Conformance call 的独立授权；只有该 Result 对当前 `@8` PASS 后，才生成绑定同一 candidate 与该 Result 的
+18-case / 39-call Capability freeze，并申请第二份独立授权。两份授权都不包含 retry、hidden canary、正式 Web、SLICE-002、Production
+Activation 或 push。详见 `FINDING-008-005`。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

@@ -83,6 +83,12 @@ Citation 仍通过授权端点读取，Answer worker 不获得源码 payload。
 并关闭、审计所有未消费项；不得通过隐藏 terminal、伪造调用或放宽 two-Result 规则凑下界。详见
 [FINDING-008-002](../findings/FINDING-008-002.md)。
 
+当前 Adapter `openai-chat-completions-no-tools@8` 没有可继承的密封 Conformance Result，因此 live 资格顺序进一步固定为两个互不继承的
+Gate：先在 clean exact candidate 上无网络冻结并单独申请恰好 2 次 Conformance call；只有当前 `@8` Result PASS 后，才可冻结绑定同一
+candidate、exact suite/oracle/evaluator 和该 Result 的 18-case / 39-call Capability Evaluation，并另行申请 Provider 授权。任一授权都不
+包含 retry、hidden canary、正式 Web、SLICE-002、Production Activation 或 push；未获对应授权时不得读取 credential 或建立 Provider
+transport。详见 [FINDING-008-005](../findings/FINDING-008-005.md)。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

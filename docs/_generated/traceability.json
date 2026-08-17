@@ -1054,6 +1054,27 @@
       "tests/test_iteration_008_capability_qualification.py"
     ]
   },
+  "FINDING-008-005": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-005.md",
+    "code": [
+      "validation/structure_world_model_iteration_008/capability",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py"
+    ],
+    "tests": [
+      "tests/test_iteration_008_capability_harness.py"
+    ]
+  },
+  "FINDING-008-006": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-006.md",
+    "code": [
+      "validation/structure_world_model_iteration_008/capability/authorize.py",
+      "validation/structure_world_model_iteration_008/capability/cli.py",
+      "validation/structure_world_model_iteration_008/capability/freeze.py"
+    ],
+    "tests": [
+      "tests/test_iteration_008_capability_harness.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
