@@ -29,8 +29,8 @@ iteration: ITER-008
   ref、digest 和 scope 绑定；仅让每份文档各自 digest 正确不能构成分派授权。
 - [FINDING-008-007](FINDING-008-007.md)：run-001 的 Provider 结果未知且旧 runner 未密封 exact attempt/reason；该一次性授权已消费且
   不得重试，后续 runner 必须在返回控制前写入 sanitized failure/terminal，并以实际 dispatch count 约束 qualification。
-- [FINDING-008-008](FINDING-008-008.md)：run-002 与独立 direct probe 都在证书验证前以 TLS EOF 关闭；在一次 frozen、
-  credential-free 的 loopback proxy 对照形成证据前，不得采用 ambient proxy，也不得生成下一份 Conformance freeze。
+- [FINDING-008-008](FINDING-008-008.md)：direct 与 loopback proxy tunnel 都在证书验证前以 TLS EOF 关闭；当前 live qualification
+  进入 environment/external-state hold，路径恢复前不得改 Adapter、采用 ambient proxy 或生成下一份 Conformance freeze。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

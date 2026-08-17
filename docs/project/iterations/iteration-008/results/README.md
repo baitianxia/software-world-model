@@ -29,6 +29,11 @@ credential-free direct TLS diagnostic run-001 随后只执行一次 handshake：
 和 CA verify 阶段失败，但没有证明远端或 direct egress 中哪一方关闭连接。下一步只能是另行授权的 frozen loopback proxy 对照，仍不构成
 Conformance 或 Product Result。
 
+credential-free proxy TLS diagnostic run-002 随后完成唯一一条 loopback CONNECT，但其唯一 verified TLS handshake 仍在 certificate
+verification 前以相同 `SSLEOFError` / errno 8 关闭；proxy authorization、credential、Ark HTTP request 和 target payload 均为 0。
+因此不是 proxy 不可达或仅由 Adapter 禁用 ambient proxy 导致。live qualification 进入 environment/external-state hold，TLS 路径恢复前不再
+生成 Conformance freeze；本诊断同样不是 Conformance 或 Product Result。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-17
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-direct-tls-eof-awaiting-explicit-proxy-comparison-authorization
+worktree_status: iteration-008-live-qualification-held-on-external-tls-path
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-direct-tls-eof-before-certificate-verification-explicit-proxy-comparison-required-capability-not-executed-production-not-activated
+live_model_path: iteration-008-direct-and-proxy-tls-eof-before-certificate-verification-no-new-live-freeze-capability-not-executed-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / direct TLS EOF before certificate verification** | run-002 与独立 direct probe 均在 TLS 阶段关闭；probe 证明 TCP connect 后唯一 handshake 以 `SSLEOFError` 结束。下一步只允许 credential-free loopback proxy 对照；Capability、正式 Web 与 canary 均未执行或授权 |
+| Iteration 008 | **SLICE-001 authorized / live qualification held on external TLS path** | run-002、direct probe 与 proxy tunnel probe 均在证书验证前 TLS EOF；proxy CONNECT 成功但下游 handshake 仍失败。路径恢复前不再生成 live freeze；Capability、正式 Web 与 canary 均未执行或授权 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -69,9 +69,13 @@ observability 修复提交 `60e1081e89705882fab17a67fc75dcb152b7994d` 后，run-
 关闭；credential、HTTP request 与 application payload byte 均为 0。这排除了本次 DNS、TCP connect 和 CA verify 阶段失败，却不能仅凭
 EOF 区分远端与 direct egress 路径。当前环境声明无凭据 loopback proxy `127.0.0.1:7897`，但存在性不是采用证据。
 
-因此下一 live 步骤仍不是 Capability、产品题或另一轮 Conformance。只允许另行冻结并授权一次显式 loopback HTTP proxy CONNECT + verified
-TLS 对照，继续禁止 bearer 和 Ark HTTP body；对照失败则停止为环境 blocker，对照通过也必须先设计受控 proxy configuration，不能读取
-ambient value。hidden canary、正式 Web、SLICE-002、Production Activation 与 push 继续不在授权内。详见 `FINDING-008-008`。
+独立授权的 loopback proxy 对照随后成功完成唯一一条 CONNECT，但其唯一 verified TLS handshake 仍在 certificate verification 前以相同
+`SSLEOFError` / errno 8 关闭；proxy authorization、credential、Ark HTTP request 与 target payload 均为 0。因此问题不是 proxy
+不可达，也不能归因于 Adapter 禁用 ambient proxy；direct 与 proxy tunnel 的共同下游 TLS 路径当前不可用。
+
+live qualification 现进入 environment/external-state hold。verified TLS 路径恢复前，不改 Adapter、不启用 ambient proxy、不关闭证书
+验证、不生成 run-003，也不申请新的 Provider 调用。恢复后仍须从新的 clean candidate、2-call Conformance preflight 和新用户授权开始。
+Capability、hidden canary、正式 Web、SLICE-002、Production Activation 与 push 继续不在授权内。详见 `FINDING-008-008`。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

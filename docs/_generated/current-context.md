@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-direct-tls-eof-awaiting-explicit-proxy-comparison-authorization`
+- Worktree status: `iteration-008-live-qualification-held-on-external-tls-path`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-direct-tls-eof-before-certificate-verification-explicit-proxy-comparison-required-capability-not-executed-production-not-activated`
+- Live model path: `iteration-008-direct-and-proxy-tls-eof-before-certificate-verification-no-new-live-freeze-capability-not-executed-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

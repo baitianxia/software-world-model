@@ -95,10 +95,11 @@ credential-free、只对 exact Ark host 建立 TLS handshake 的诊断，不发�
 才允许从新的 clean candidate 生成下一份 2-call Conformance preflight。不得通过 ambient proxy、关闭证书验证或扩大 payload boundary
 绕过失败。详见 [FINDING-008-008](../findings/FINDING-008-008.md)。
 
-独立授权的 direct TLS diagnostic 随后证明 TCP connect 完成，但唯一一次 handshake 在 certificate verification 前以
-`SSLEOFError` 关闭，且 credential/HTTP/application payload 均为 0。下一诊断只允许对 frozen loopback HTTP proxy
-`127.0.0.1:7897` 做一次显式 CONNECT + verified TLS 对照，并继续禁止 bearer 与 Ark HTTP body；若对照失败则作为环境 blocker 停止，
-若对照通过也必须先设计显式受控 proxy configuration，不能直接读取 ambient proxy。该对照仍需新的 exact freeze 与用户授权。
+独立授权的 direct TLS diagnostic 证明 TCP connect 完成，但唯一一次 handshake 在 certificate verification 前以 `SSLEOFError` 关闭；
+随后独立授权的 loopback proxy 对照成功完成唯一 CONNECT，唯一 TLS handshake 却以相同 EOF 关闭。两次诊断的
+credential/Ark HTTP/application payload 均为 0。这排除了 proxy 不可达与“仅因 Adapter 禁用 ambient proxy”解释，当前 live qualification
+进入 environment/external-state hold：verified TLS 路径恢复前，不改 Adapter、不生成 run-003、不申请 Provider 调用。路径恢复后仍从新的
+clean candidate 和新 Conformance 授权开始。
 
 ## Open questions and implementation risks
 
