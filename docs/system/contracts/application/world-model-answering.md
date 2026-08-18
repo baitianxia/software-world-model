@@ -37,9 +37,14 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       projection 与完整 trace digest。每次模型只提出一个 operation、通用 search terms、closed relation intent 或 FINISH explanation；
       不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
       对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；
+      平台在最多 12 个 raw term 的输入上按 Unicode casefold 去重并保留首次拼写/顺序，该无损规范化不得改变权限、
+      Snapshot、operation 或 query bound；Ref 和其他 authority collection 仍严格拒绝重复；
    2. Application 从 sealed input deterministic 编译一个完整 typed proposal，并在每轮前后校验 operation shape、Snapshot/Bundle、
       Ref provenance、query/result bytes、Support、progress/cycle、trace bytes、wall time 和调用预算。Result 未密封不得进入下一回合；
       `FINISH` 至少发生在一个已执行调查 Result 之后且自身占用一个回合，因此 1 query + FINISH 是合法的 2-call investigation；
+      `remaining_budget=1` 仍允许最后一个能减少明确证据缺口的 query；该 query 执行后由 Session 自动密封
+      `LIMITATION / INVESTIGATION_BUDGET_EXHAUSTED`，不再要求第五个 `FINISH` 回合。cycle 以已执行 operation 与 exact Result progress
+      token 判定，不能仅因两个不同 sealed state 选择同名 operation 而推导；
    3. Draft Call 只读取原问题、不可变 Requirement、完整 sealed trace、Need Assessment 和允许的 Support/Gap，生成逐 Claim 绑定的
       Draft；它不读取 Source、调查角色私有输出、Citation observation 或 Reviewer；
    4. Review Call 在全新上下文中读取原问题、同一 Requirement/trace/assessment 和 Draft，独立核对 fidelity、候选与查询完整性、

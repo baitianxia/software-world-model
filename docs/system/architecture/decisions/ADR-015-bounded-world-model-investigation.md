@@ -50,6 +50,9 @@ Investigation、评测 Oracle 或其他角色私有输出。每轮 proposal 只�
 最多携带 3 个来自同一已密封 candidate result 的 exact method Ref。
 调用、query/result bytes、Support、trace 和 wall time 均由当前 Contract 固定。预算耗尽、无进展、重复 proposal、Ref 越界或结果
 未知都失败关闭为具体 Limitation，不取消 Review，也不转入 Source/Direct。
+`remaining_budget=1` 时 Agent 可以选择最后一个有证据增益的 query；Application 执行并密封 Result 后立即以
+`INVESTIGATION_BUDGET_EXHAUSTED` 终止 Session，不需要超出上限的额外 `FINISH`。无进展/cycle 依据是同一 Session 中已执行的
+exact query 和 Result progress token，而不是脱离 sealed state 单独比较 operation 名称。
 
 Gateway 可以在 Answer 启动前预建调用上限数量的 exact Provider connection。实际调用数必须落在冻结区间；未消费 descriptor 在
 Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题、跨角色或跨 session 复用。每个实际调用仍拥有唯一 workload、manifest、

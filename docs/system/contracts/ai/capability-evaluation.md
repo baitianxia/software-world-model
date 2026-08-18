@@ -35,6 +35,10 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
    Qualification 不能授权 bounded investigation；operation set、Prompt/schema、argument compiler、预算、role sequence、Gateway
    connection policy 或 trace contract 任一变化均需新 closed Result。Qualification 必须保存每个 step 的 exact input/result/trace digest
    与真实调用计数，汇总 PASS 不能替代逐 Case 证据。
+8. Oracle 可以在运行前为一个 sealed state 冻结有限、唯一且同等合法的 exact typed projection 集合；实际输出必须
+   精确命中其中一项，不得在看到结果后追加选项或放宽字段/语义约束。资格 Case 中分别评估的 sealed-state 调用互相独立；
+   相邻样本选择相同 operation 名称不构成 cycle。`QUERY_REPEATED` 只能由同一产品 Session 执行后的 exact query/result progress
+   token 重复或等价的已密封审计证据推导。
 
 ## Failure and evidence boundary
 

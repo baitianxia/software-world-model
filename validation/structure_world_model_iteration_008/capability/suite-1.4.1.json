@@ -1,12 +1,12 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-capability-suite@1",
-  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.0",
+  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.1",
   "purpose": "Qualify the exact bounded result-driven Investigation, Draft, and independent Review proposal contract without product questions, source, evidence payload, or evaluator oracle exposure.",
   "proposal_contract": {
-    "capability_contract_version": "1.4.0",
-    "strategy_ref": "model-snapshot-first-world-model-answer@1.4.0",
-    "prompt_ref": "java-source-semantics-world-model-prompt@7",
-    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@7",
+    "capability_contract_version": "1.4.1",
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.4.1",
+    "prompt_ref": "java-source-semantics-world-model-prompt@8",
+    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@8",
     "available_operations": [
       "implementation_candidates",
       "method_implementations",
@@ -18,10 +18,10 @@
     ]
   },
   "closed_evaluation_protocol": {
-    "protocol_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.0",
-    "model_visibility": "ONE_SEALED_SYNTHETIC_STEP_ONLY_NO_ORACLE_PRODUCT_QUESTION_SUITE_SOURCE_OR_EVIDENCE_PAYLOAD",
+    "protocol_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.1",
+    "model_visibility": "ONE_INDEPENDENT_SEALED_SYNTHETIC_STATE_PER_CALL_NO_ORACLE_PRODUCT_QUESTION_SUITE_SOURCE_OR_EVIDENCE_PAYLOAD",
     "evaluator_independence": "SEPARATE_STDLIB_PROCESS_NO_PRODUCT_OR_STRATEGY_IMPORT",
-    "case_rule": "PASS_IFF_EVERY_CALL_HAS_EXACT_INPUT_RESULT_TRACE_EVIDENCE_CONTRACT_PROJECTION_AND_SEMANTIC_CONSTRAINTS_PASS_AND_NO_FORBIDDEN_EVENT",
+    "case_rule": "PASS_IFF_EVERY_CALL_HAS_EXACT_INPUT_RESULT_TRACE_EVIDENCE_CONTRACT_PROJECTION_IN_THE_FROZEN_ACCEPTED_SET_AND_SEMANTIC_CONSTRAINTS_PASS_AND_NO_FORBIDDEN_EVENT",
     "result_rule": "CLOSED_PASS_IFF_ALL_EIGHTEEN_REQUIRED_CASES_PASS_AND_FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO_AND_PROVIDER_REQUEST_COUNT_FORTY_ONE",
     "hidden_retry_count": 0,
     "planned_provider_call_count": 41,
@@ -151,10 +151,42 @@
         "knowledge_representation": "COMPLETE",
         "business_discovery_recall": "UNKNOWN",
         "method_count": 3,
+        "query_status": "SUPPORTED",
+        "implementation_semantics_completeness": "COMPLETE",
         "support_digests": [
           "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
           "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ],
+        "ordered_atoms": [
+          {
+            "root_id": "entity_root_11111111111111111111111111111111",
+            "state_id": "entity_state_11111111111111111111111111111111",
+            "entity_type": "JAVA_IMPLEMENTATION_ATOM",
+            "root_fields": {"atom_kind": "BRANCH"},
+            "state_fields": {"branch_outcome": "FAILURE"}
+          },
+          {
+            "root_id": "entity_root_22222222222222222222222222222222",
+            "state_id": "entity_state_22222222222222222222222222222222",
+            "entity_type": "JAVA_IMPLEMENTATION_ATOM",
+            "root_fields": {"atom_kind": "THROW"},
+            "state_fields": {"branch_outcome": "FAILURE"}
+          },
+          {
+            "root_id": "entity_root_33333333333333333333333333333333",
+            "state_id": "entity_state_33333333333333333333333333333333",
+            "entity_type": "JAVA_IMPLEMENTATION_ATOM",
+            "root_fields": {"atom_kind": "BRANCH"},
+            "state_fields": {"branch_outcome": "SUCCESS"}
+          },
+          {
+            "root_id": "entity_root_44444444444444444444444444444444",
+            "state_id": "entity_state_44444444444444444444444444444444",
+            "entity_type": "JAVA_IMPLEMENTATION_ATOM",
+            "root_fields": {"atom_kind": "RETURN"},
+            "state_fields": {"branch_outcome": "SUCCESS"}
+          }
         ],
         "entity_refs": [
           {
@@ -363,7 +395,7 @@
     {
       "case_id": "WM-JSS-I8-DECLARED-INVENTORY-005",
       "capability": "IMPLEMENTATION_INVESTIGATION",
-      "original_question": "Which declared methods could implement account locking?",
+      "original_question": "List the complete declared-method inventory of the declaring type that contains an account-locking candidate.",
       "response_language": "en",
       "steps": [
         {"step_index": 1, "trace_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "previous_result_ref": null, "progress_receipt": null, "remaining_budget": {"model_calls": 4, "execution_steps": 4}, "projection_ref": "investigation", "semantic_constraints": {"search_term_concept_groups": [["account"], ["lock", "locking"]]}},

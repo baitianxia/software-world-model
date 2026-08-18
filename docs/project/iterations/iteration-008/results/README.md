@@ -146,6 +146,21 @@ requalification 仍待新的 clean candidate，正式 runtime 保持 Ark。
 `ResourceWarning`；318 份 current documents 与 `git diff --check` PASS。这些是实现与资格输入证据，不是 Product Result、live
 Capability Qualification 或 Activation。
 
+`1.4.0` clean candidate `f056cb86b76ab3364208d9cfbba7f2562ed68688` 的 DeepSeek Conformance run-007 随后恰好
+2 calls / 12 Case PASS；preflight/result digest 为
+`sha256:c8e962711ce617f113e9589564b75eb00538e6e0b8506686a10394f5e1245ac0` /
+`sha256:26a6460003c7f930d99c139d5813efd6046523a46a19eea25f421962c1a09bd0`。同候选 Capability run-007 绑定 freeze
+`sha256:975b195a060bbc51a5376dc80af0ad551d4a8c2eb46c72a8efb1fb07d3cd64a2`，在第 38 次 request 已返回后因
+model-owned search term 重复而失败关闭；37 次 request 与 15 Case 完整落盘，无 retry。failure/terminal digest 为
+`sha256:82905e643b9c9968ce9d00f3b1e3f87c33a5a92d98ab24eaca4e39251ef174b5` /
+`sha256:0f160da005c79fc488a1ff66b249dffe9c35788fc5b044cdeb43a84c7036a8df`，未形成 Qualification 或 Activation。
+
+完整评审的 15 Case 为 10 PASS / 5 FAIL。按 [FINDING-008-015](../findings/FINDING-008-015.md)，活动 contract 已版本化为
+capability/Strategy `1.4.1`、prompt/vocabulary `@8`、argument compiler `@2`、policy `@1.1.1` 与 suite/oracle `@1.4.1`：
+Application 对有界 search term 按 casefold 保留首次顺序去重；Oracle 可预冻结有限的等价 exact projection 集合；
+evaluator 不再把不同 sealed-state 样本的同名 operation 视为 cycle。本地 affected 66/66、fake transport 41 calls /
+18/18 与 full discovery 980/980 PASS；新 live qualification 仍必须绑定 clean exact candidate 和全新 freeze。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

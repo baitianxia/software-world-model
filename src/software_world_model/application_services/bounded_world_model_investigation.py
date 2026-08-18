@@ -269,7 +269,7 @@ def compile_investigation_intent(
             "INVESTIGATION_OPERATION_INVALID",
             "investigation intent uses an unregistered operation",
         ) from exc
-    search_terms = _text_sequence(
+    search_terms = _deduplicated_text_sequence(
         value.get("search_terms"),
         "investigation search terms",
         maximum=12,
@@ -1812,6 +1812,33 @@ def _text_sequence(value: object, label: str, *, maximum: int) -> tuple[str, ...
             f"{label} contains duplicate normalized values",
         )
     return normalized
+
+
+def _deduplicated_text_sequence(
+    value: object, label: str, *, maximum: int
+) -> tuple[str, ...]:
+    """Canonicalize harmless model repetition before typed validation.
+
+    The raw list remains bounded, and the first spelling/order wins.  This is
+    appropriate only for model-owned search vocabulary; authority references
+    and typed proposal collections continue to reject duplicates.
+    """
+
+    if not isinstance(value, (tuple, list)) or len(value) > maximum:
+        raise _invalid(
+            "INVESTIGATION_TEXT_LIST_INVALID",
+            f"{label} is outside its closed bound",
+        )
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in value:
+        item = _text(raw, label)
+        key = item.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(item)
+    return tuple(normalized)
 
 
 def _text(value: object, label: str) -> str:

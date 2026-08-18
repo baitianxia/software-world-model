@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Mapping
 
 
-PACKET_SCHEMA = "swm.iter-008.bounded-java-source-semantics-ce-evaluator-packet@1"
-RESULT_SCHEMA = "swm.iter-008.bounded-java-source-semantics-ce-normalized-result@1"
-REVIEW_SCHEMA = "swm.iter-008.bounded-java-source-semantics-ce-independent-review@1"
+PACKET_SCHEMA = "swm.iter-008.bounded-java-source-semantics-ce-evaluator-packet@2"
+RESULT_SCHEMA = "swm.iter-008.bounded-java-source-semantics-ce-normalized-result@2"
+REVIEW_SCHEMA = "swm.iter-008.bounded-java-source-semantics-ce-independent-review@2"
 
 
 def evaluate(packet: object, result: object) -> dict[str, object]:
@@ -73,7 +73,6 @@ def evaluate(packet: object, result: object) -> dict[str, object]:
     findings: list[str] = []
     derived_events: set[str] = set(audit["observed_events"])
     forbidden_observed: set[str] = set()
-    prior_operation: object = None
     semantic_failures = 0
     exact_failures = 0
     for expected_step, actual_step in zip(packet_steps, result_steps):
@@ -84,7 +83,7 @@ def evaluate(packet: object, result: object) -> dict[str, object]:
             "sealed_input_digest",
             "projection_fields",
             "semantic_constraints",
-            "expected_projection",
+            "expected_projections",
             "forbidden_events",
         }:
             raise ValueError("evaluator packet step shape is invalid")
@@ -125,10 +124,18 @@ def evaluate(packet: object, result: object) -> dict[str, object]:
         if len(fields) != len(set(fields)) or any(field not in normalized for field in fields):
             raise ValueError("projection field set is invalid")
         projection = {field: normalized[field] for field in fields}
-        expected = expected_step.get("expected_projection")
-        if not isinstance(expected, Mapping) or set(expected) != set(fields):
-            raise ValueError("expected projection is invalid")
-        exact = projection == expected
+        expected = expected_step.get("expected_projections")
+        if (
+            not isinstance(expected, list)
+            or not expected
+            or any(
+                not isinstance(item, Mapping) or set(item) != set(fields)
+                for item in expected
+            )
+            or len({_digest(item) for item in expected}) != len(expected)
+        ):
+            raise ValueError("accepted projection set is invalid")
+        exact = projection in expected
         if not exact:
             exact_failures += 1
             findings.append(f"CALL_{call_index}:CONTRACT_PROJECTION_NOT_EXACT")
@@ -139,11 +146,6 @@ def evaluate(packet: object, result: object) -> dict[str, object]:
         if not semantic:
             semantic_failures += 1
             findings.append(f"CALL_{call_index}:SEMANTIC_CONSTRAINT_NOT_SATISFIED")
-        operation = normalized.get("operation")
-        if operation is not None and operation == prior_operation:
-            derived_events.add("QUERY_REPEATED")
-        if operation is not None:
-            prior_operation = operation
         sealed_input = expected_step.get("sealed_input", {})
         if not isinstance(sealed_input, Mapping):
             raise ValueError("sealed evaluator input is invalid")

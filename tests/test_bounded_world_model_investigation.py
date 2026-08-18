@@ -304,6 +304,42 @@ class BoundedWorldModelInvestigationTests(TestCase):
             question_digest=self.question_digest,
         )
 
+    def test_platform_deduplicates_model_owned_search_terms_in_first_seen_order(self) -> None:
+        session = self._session()
+
+        mapping = compile_investigation_intent(
+            {
+                "operation": "implementation_candidates",
+                "search_terms": ["account", "order", "ORDER", "locking"],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+            ),
+        )
+
+        self.assertEqual(mapping["search_terms"], ["account", "order", "locking"])
+        InvestigationProposal.from_mapping(
+            mapping,
+            model_proposal_digest=digest_of("deduplicated-search-intent"),
+        ).require_valid()
+
+        with self.assertRaisesRegex(DomainError, "outside its closed bound"):
+            compile_investigation_intent(
+                {
+                    "operation": "implementation_candidates",
+                    "search_terms": [f"term-{index}" for index in range(13)],
+                    "relation_intent": None,
+                    "finish_reason": None,
+                },
+                sealed_input=_sealed_input(
+                    session,
+                    snapshot_id=self.snapshot_id,
+                ),
+            )
+
     def test_path_intent_selects_method_endpoints_from_real_batch_results(self) -> None:
         session = self._session()
         candidate_mapping = compile_investigation_intent(
@@ -325,6 +361,42 @@ class BoundedWorldModelInvestigationTests(TestCase):
             )
         )
         assert candidate_step is not None
+        candidate_direct_mapping = compile_investigation_intent(
+            {
+                "operation": "direct_neighborhood",
+                "search_terms": [],
+                "relation_intent": "OUTGOING_CALLS",
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=candidate_step,
+            ),
+        )
+        self.assertEqual(
+            candidate_direct_mapping["entity_refs"],
+            [
+                _ref(
+                    candidate_step.results[0],
+                    candidate_step.results[0].payload["candidates"][0]["method"],
+                )
+            ],
+        )
+        candidate_path_mapping = compile_investigation_intent(
+            {
+                "operation": "path_exists",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=candidate_step,
+            ),
+        )
+        self.assertEqual(len(candidate_path_mapping["entity_refs"]), 2)
         method_mapping = compile_investigation_intent(
             {
                 "operation": "method_implementations",

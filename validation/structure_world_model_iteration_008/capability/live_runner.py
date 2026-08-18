@@ -35,7 +35,7 @@ from .manifest import (
     PINNED_SUITE_REF,
     case_fixture_digest,
     case_oracle_digest,
-    expected_step_projection,
+    expected_step_projections,
     forbidden_events,
     sealed_step_input,
 )
@@ -187,8 +187,10 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                     "sealed_input_digest": input_digest,
                     "projection_fields": projection_sets[step["projection_ref"]],
                     "semantic_constraints": step["semantic_constraints"],
-                    "expected_projection": expected_step_projection(
-                        suite, case, step, oracle_step
+                    "expected_projections": list(
+                        expected_step_projections(
+                            suite, case, step, oracle_step
+                        )
                     ),
                     "forbidden_events": forbidden_events(oracle, oracle_step),
                 }
@@ -467,6 +469,7 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                 token in serialized
                 for token in (
                     "expected_projection",
+                    "expected_projections",
                     "projection_fields",
                     "semantic_constraints",
                     "forbidden_events",

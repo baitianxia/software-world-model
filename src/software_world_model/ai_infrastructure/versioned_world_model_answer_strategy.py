@@ -66,16 +66,16 @@ JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_ANSWER_PROMPT_REF = (
 JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_VOCABULARY_REF = (
     "java-source-semantics-world-model-vocabulary@3"
 )
-JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CAPABILITY_CONTRACT_VERSION = "1.4.0"
-JAVA_SOURCE_SEMANTICS_WORLD_MODEL_ANSWER_STRATEGY_VERSION = "1.4.0"
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CAPABILITY_CONTRACT_VERSION = "1.4.1"
+JAVA_SOURCE_SEMANTICS_WORLD_MODEL_ANSWER_STRATEGY_VERSION = "1.4.1"
 JAVA_SOURCE_SEMANTICS_WORLD_MODEL_ANSWER_PROMPT_REF = (
-    "java-source-semantics-world-model-prompt@7"
+    "java-source-semantics-world-model-prompt@8"
 )
 JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_VOCABULARY_REF = (
-    "java-source-semantics-world-model-vocabulary@7"
+    "java-source-semantics-world-model-vocabulary@8"
 )
 JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF = (
-    "java-source-semantics-investigation-argument-compiler@1"
+    "java-source-semantics-investigation-argument-compiler@2"
 )
 IMPLEMENTATION_QUERY_PLANNING = "IMPLEMENTATION_QUERY_PLANNING"
 IMPLEMENTATION_INVESTIGATION = "IMPLEMENTATION_INVESTIGATION"
@@ -138,9 +138,9 @@ _JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROMPT = (
 
 IMPLEMENTATION_INVESTIGATION: choose exactly one semantic operation intent from available_operations using only the original question, the immediately preceding sealed typed Result, the platform progress/completeness receipt, and the remaining budget. Return only operation, search_terms, relation_intent, and finish_reason. The platform, not you, owns step_index, trace_digest, Snapshot identity, Result/Entity Ref strings, candidate binding, direction/predicate expansion, graph bounds, budgets, and the final typed operation shape. Never copy, reconstruct, abbreviate, or invent those authority values.
 
-On step 1 choose implementation_candidates. Derive 1 through 12 concise general feature terms. Preserve every material noun, verb, modifier, relationship, quantifier, action, object, ordering or audit concept, branch outcome, return, and throw concept explicitly present in the original question; do not replace terms such as direct, all, method, implementation, candidate, call, or path only with broader synonyms. Normalize common language and inflection but never invent a project, class, method, signature, or hidden-evaluation synonym. Set relation_intent and finish_reason to null.
+On step 1 choose implementation_candidates. Derive 1 through 12 concise general feature terms. Preserve every material noun, verb, modifier, relationship, quantifier, action, object, ordering or audit concept, branch outcome, return, and throw concept explicitly present in the original question; do not replace terms such as direct, all, method, implementation, candidate, call, or path only with broader synonyms. Normalize common language and inflection, return each case-insensitively normalized term at most once, and never invent a project, class, method, signature, or hidden-evaluation synonym. Set relation_intent and finish_reason to null.
 
-On later steps search_terms must be empty and implementation_candidates is forbidden. A complete non-empty candidate Result maps to method_implementations when method behavior is required; the platform binds the exact candidate Result and first three canonical method refs. A direct-neighborhood intent must also choose one closed relation_intent: OUTGOING_CALLS, INCOMING_CALLS, BOTH_CALLS, or DECLARING_TYPE. DECLARING_TYPE is the only valid path from an exact method Ref to its declaring JAVA_TYPE; only a following Result that actually exposes that type can map to declared_method_inventory. Never send a method Ref directly to declared_method_inventory. Use OUTGOING_CALLS for direct callees, INCOMING_CALLS for callers, and BOTH_CALLS only when both directions are explicitly required. path_exists and all_simple_paths apply to CALLS; the platform binds the first two canonical refs and fixed bounds. remaining_budget includes the current proposal, so a value of 1 still permits one final required query. Do not repeat a query or FINISH while an explicitly requested evidence class remains and budget is available.
+On later steps search_terms must be empty and implementation_candidates is forbidden. A complete non-empty candidate Result maps to method_implementations when method behavior is required; the platform binds the exact candidate Result and first three canonical method refs. An explicit request for the declaring type's declared methods or complete declared-method inventory is not a method-behavior request: choose direct_neighborhood with DECLARING_TYPE from the candidate method before declared_method_inventory, so the four-call budget still leaves room for FINISH. A direct-neighborhood intent must also choose one closed relation_intent: OUTGOING_CALLS, INCOMING_CALLS, BOTH_CALLS, or DECLARING_TYPE. DECLARING_TYPE is the only valid path from an exact method Ref to its declaring JAVA_TYPE; only a following Result that actually exposes that type can map to declared_method_inventory. Never send a method Ref directly to declared_method_inventory. Use OUTGOING_CALLS for direct callees, INCOMING_CALLS for callers, and BOTH_CALLS only when both directions are explicitly required. path_exists and all_simple_paths apply to CALLS; the platform binds the first two canonical refs and fixed bounds. remaining_budget includes the current proposal, so a value of 1 still permits one final required query and the platform will seal a budget Limitation after that query. An UNKNOWN completeness layer prohibits an absence claim but does not by itself require FINISH: while a concrete evidence class requested by the original question is not supplied by the immediately previous Result and a legal query can still reduce that gap, choose that query. Do not repeat an exact query or FINISH while such requested evidence remains and budget is available.
 
 FINISH is allowed after at least one executed Result. Positive FINISH requires sufficient typed method or relation support and must say support or evidence is sufficient or complete. Negative FINISH must use the platform completeness receipt: only query_result, knowledge_representation, and business_discovery_recall all COMPLETE permit a reason that explicitly says bounded or authorized absence and complete. If query completeness is UNKNOWN or truncated, state a limitation and name query incompleteness; if representation coverage is UNKNOWN, state a limitation and name representation or coverage incompleteness; if discovery recall is UNKNOWN, state that absence cannot be established because discovery recall is unknown or incomplete. For FINISH set relation_intent to null and provide a non-empty finish_reason; for every non-FINISH operation finish_reason is null.
 
@@ -201,6 +201,7 @@ WORLD_MODEL_IMPLEMENTATION_INVESTIGATION_OUTPUT_SCHEMA = OutputSchemaDefinition(
                 "type": "array",
                 "items": {"type": "string"},
                 "maxItems": 12,
+                "uniqueItems": True,
             },
             "relation_intent": {
                 "type": ["string", "null"],

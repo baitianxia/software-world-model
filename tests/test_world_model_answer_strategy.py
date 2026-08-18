@@ -237,7 +237,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.4.0")
+        self.assertEqual(contract.strategy_version, "1.4.1")
         self.assertEqual(
             contract.capabilities,
             (
@@ -311,6 +311,18 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
+            "return each case-insensitively normalized term at most once",
+            contract.prompt,
+        )
+        self.assertIn(
+            "An UNKNOWN completeness layer prohibits an absence claim but does not by itself require FINISH",
+            contract.prompt,
+        )
+        self.assertIn(
+            "An explicit request for the declaring type's declared methods",
+            contract.prompt,
+        )
+        self.assertIn(
             "Never copy, reconstruct, abbreviate, or invent those authority values",
             contract.prompt,
         )
@@ -352,6 +364,9 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         self.assertEqual(
             set(intent_schema["properties"]),
             {"operation", "search_terms", "relation_intent", "finish_reason"},
+        )
+        self.assertTrue(
+            intent_schema["properties"]["search_terms"]["uniqueItems"]
         )
 
     def test_java_source_semantics_review_rejects_unregistered_finding_code(self):

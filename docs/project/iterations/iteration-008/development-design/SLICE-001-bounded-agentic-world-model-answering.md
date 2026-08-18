@@ -173,6 +173,14 @@ Production Activation 均未执行。
 41 calls / 18/18 PASS；full discovery 978/978 PASS（仅有既有 SQLite connection `ResourceWarning`）；318 份 current documents 与
 `git diff --check` PASS。该证据只关闭本地实现与资格输入一致性，不替代真实模型 Capability 或正式产品 Gate。
 
+`1.4.0` run-007 的 Conformance 12/12 PASS，但 Capability 在第 38 次 request 返回后因重复 search term 失败关闭；
+已完整评审的 15 Case 为 10 PASS / 5 FAIL。证据还暴露资格把合法短路径限制成单一 sequence，并将不同 sealed-state
+样本的同名 operation 误判为 cycle。按 [FINDING-008-015](../findings/FINDING-008-015.md)，活动 contract 升级为 `1.4.1`：
+model-owned term 在 raw 12 项上限内由 Application 按 casefold 去重；Oracle 为每个 sealed state 预冻结有限等价 exact
+projection 集合；cycle 只从同一产品 Session 的 executed progress 证据推导。Case 仍为 18、调用仍为 41、阈值仍为
+18/18，no-retry 不变。本地 affected 66/66、fake transport 18/18 和 full discovery 980/980 PASS；新 live Conformance/
+Capability 必须从修复后的 clean candidate 以全新 freeze 独立开始。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

@@ -43,6 +43,7 @@ from validation.structure_world_model_iteration_008.capability.manifest import (
     build_evaluation_definition,
     case_pairs,
     expected_step_projection,
+    expected_step_projections,
     forbidden_events,
     load_capability_inputs,
     sealed_step_input,
@@ -151,8 +152,10 @@ def _case_documents(
                     step["projection_ref"]
                 ],
                 "semantic_constraints": step["semantic_constraints"],
-                "expected_projection": expected_step_projection(
-                    _SUITE, case, step, expected
+                "expected_projections": list(
+                    expected_step_projections(
+                        _SUITE, case, step, expected
+                    )
                 ),
                 "forbidden_events": forbidden_events(_ORACLE, expected),
             }
@@ -383,7 +386,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-one-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.4.0")
+        self.assertEqual(definition.strategy_version, "1.4.1")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),
@@ -443,6 +446,38 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             )
             request_count += review["model_call_count"]
         self.assertEqual(request_count, PINNED_PROVIDER_REQUEST_COUNT)
+
+    def test_frozen_alternative_projection_is_exact_without_cross_sample_cycle(self) -> None:
+        case, oracle_case = case_pairs(_SUITE, _ORACLE)[5]
+        packet, result = _case_documents(dict(case), dict(oracle_case))
+        accepted = expected_step_projections(
+            _SUITE,
+            case,
+            case["steps"][1],
+            oracle_case["steps"][1],
+        )
+        self.assertEqual(len(accepted), 2)
+        normalized = result["step_results"][1]["normalized_result"]
+        normalized.update(accepted[1])
+        normalized_digest = digest_of(normalized).value
+        result["step_results"][1]["normalized_result_digest"] = normalized_digest
+        result["step_results"][1]["evidence_trace_digest"] = (
+            evaluator._step_trace_digest(
+                str(case["case_id"]),
+                2,
+                result["step_results"][1]["sealed_input_digest"],
+                normalized_digest,
+            )
+        )
+        core = {
+            key: value for key, value in result.items() if key != "document_digest"
+        }
+        result["document_digest"] = evaluator._document_digest(core)
+
+        review = evaluator.evaluate(packet, result)
+
+        self.assertEqual(review["conclusion"], "PASS")
+        self.assertNotIn("QUERY_REPEATED", review["derived_events"])
 
     def test_tampered_ref_fails_exact_oracle(self) -> None:
         case, oracle_case = case_pairs(_SUITE, _ORACLE)[2]

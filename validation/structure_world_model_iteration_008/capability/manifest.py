@@ -29,16 +29,16 @@ from software_world_model.cross_cutting import (
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.0"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.1"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.4.0"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.4.1"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:89886e756010d1ca2dc1791b265b3bce5366b51ba8db1ed8765fa8238a0512db"
+    "sha256:e7a4a08d9969759d86e7024f4107314f8934b2cb885779488c9ac5fdf36c4b20"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:d04c3a96da27ae81b3d51c7c6f65c75fa5d51feb9f5e0b616f75fb095730fb7f"
+    "sha256:f6c1ff74dc9ba73a94060dc11fcfa09d56f0b960609609623489f5534dba3576"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -50,8 +50,8 @@ PINNED_PROVIDER_REQUEST_COUNT = sum(
     count for _, count in PINNED_REQUIRED_CASE_CALLS
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.4.0.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.4.0.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.4.1.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.4.1.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -146,7 +146,7 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
     required_calls = protocol.get("required_case_calls")
     if (
         protocol.get("protocol_ref")
-        != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.0"
+        != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.1"
         or protocol.get("hidden_retry_count") != 0
         or protocol.get("planned_provider_call_count")
         != PINNED_PROVIDER_REQUEST_COUNT
@@ -161,8 +161,8 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         or protocol.get("case_rule")
         != (
             "PASS_IFF_EVERY_CALL_HAS_EXACT_INPUT_RESULT_TRACE_EVIDENCE_"
-            "CONTRACT_PROJECTION_AND_SEMANTIC_CONSTRAINTS_PASS_AND_NO_"
-            "FORBIDDEN_EVENT"
+            "CONTRACT_PROJECTION_IN_THE_FROZEN_ACCEPTED_SET_AND_SEMANTIC_"
+            "CONSTRAINTS_PASS_AND_NO_FORBIDDEN_EVENT"
         )
         or protocol.get("result_rule")
         != (
@@ -350,15 +350,20 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
                 _invalid("bounded oracle step is invalid")
             if set(expected) not in (
                 {"operation", "arguments", "forbidden_events_ref"},
+                {"accepted_operations", "forbidden_events_ref"},
                 {"expected_projection", "forbidden_events_ref"},
             ):
                 _invalid("bounded oracle step shape is invalid")
             event_ref = expected.get("forbidden_events_ref")
             if event_ref not in event_sets:
                 _invalid("bounded oracle event set reference is invalid")
-            projection = expected_step_projection(suite, case, step, expected)
+            accepted = expected_step_projections(suite, case, step, expected)
             fields = projections[step["projection_ref"]]
-            if set(projection) != set(fields):
+            if (
+                not accepted
+                or any(set(projection) != set(fields) for projection in accepted)
+                or len({digest_of(item).value for item in accepted}) != len(accepted)
+            ):
                 _invalid("bounded oracle projection is not exact")
 
 
@@ -519,6 +524,11 @@ def expected_step_projection(
     step: Mapping[str, object],
     oracle_step: Mapping[str, object],
 ) -> dict[str, object]:
+    accepted = oracle_step.get("accepted_operations")
+    if isinstance(accepted, list) and accepted:
+        primary = accepted[0]
+        if isinstance(primary, Mapping):
+            oracle_step = primary
     direct = oracle_step.get("expected_projection")
     if isinstance(direct, Mapping):
         return copy.deepcopy(dict(direct))
@@ -553,6 +563,39 @@ def expected_step_projection(
     value.update(resolved)
     _verify_operation_projection(operation, value)
     return value
+
+
+def expected_step_projections(
+    suite: Mapping[str, object],
+    case: Mapping[str, object],
+    step: Mapping[str, object],
+    oracle_step: Mapping[str, object],
+) -> tuple[dict[str, object], ...]:
+    accepted = oracle_step.get("accepted_operations")
+    if accepted is None:
+        return (expected_step_projection(suite, case, step, oracle_step),)
+    if (
+        not isinstance(accepted, list)
+        or not accepted
+        or any(
+            not isinstance(item, Mapping)
+            or set(item) != {"operation", "arguments"}
+            for item in accepted
+        )
+    ):
+        _invalid("bounded accepted operation set is invalid")
+    return tuple(
+        expected_step_projection(
+            suite,
+            case,
+            step,
+            {
+                "operation": item["operation"],
+                "arguments": item["arguments"],
+            },
+        )
+        for item in accepted
+    )
 
 
 def forbidden_events(
@@ -594,7 +637,7 @@ def case_oracle_digest(
                         step["projection_ref"]
                     ],
                     "semantic_constraints": step["semantic_constraints"],
-                    "expected_projection": expected_step_projection(
+                    "expected_projections": expected_step_projections(
                         suite, case, step, oracle_step
                     ),
                     "forbidden_events": forbidden_events(oracle, oracle_step),
@@ -628,7 +671,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.4.0",
+            case_version="1.4.1",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -639,7 +682,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.4.0",
+        evaluation_version="1.4.1",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,
@@ -681,6 +724,9 @@ def _resolved_arguments(
         choices = {
             "three_candidates:first": (
                 fixtures["three_candidates"]["results"][0]["entity_refs"][:1]
+            ),
+            "three_candidates:first-two": (
+                fixtures["three_candidates"]["results"][0]["entity_refs"][:2]
             ),
             "method_batch:first": (
                 fixtures["method_batch_complete"]["results"][0]["entity_refs"][:1]

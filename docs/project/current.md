@@ -7,12 +7,12 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-SLICE-001]
 code: []
 tests: []
-as_of: 2026-08-17
+as_of: 2026-08-18
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-006-architecture-evidence-semantic-intent-compiler-1.4.0-local-verification-in-progress
+worktree_status: iteration-008-run-007-verification-evidence-contract-1.4.1-local-verification-complete-awaiting-clean-candidate-requalification
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deepseek-v4-pro-conformance-run-006-pass-capability-run-006-twelve-of-eighteen-architecture-redirect-not-qualified-production-not-activated
+live_model_path: iteration-008-deepseek-v4-pro-conformance-run-007-pass-capability-run-007-failed-closed-after-request-thirty-eight-not-qualified-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / architecture redirect under local verification** | `1.3.2` candidate 的 DeepSeek Conformance run-006 PASS；Capability run-006 完整执行 39 calls / 18 Case、无 unknown，但只有 12/18。证据证明模型复制 opaque authority 参数是职责倒置，旧 suite 还包含产品不可达状态；现以 `1.4.0` semantic-intent compiler 和产品可达 18-case / 41-call qualification 修复，尚未 live requalify；正式 runtime 仍保持 Ark |
+| Iteration 008 | **SLICE-001 authorized / verification repair locally complete** | `1.4.0` candidate 的 DeepSeek Conformance run-007 12/12 PASS；Capability 在第 38 次 request 返回后因重复 search term 失败关闭。已完整评审的 15 Case 还暴露单路径 Oracle 与跨独立样本 cycle 误判；现以 `1.4.1` 规范化 model-owned term、预冻结等价 exact projection 集合并只按 product progress 判定 cycle。本地 980/980 PASS，待 clean candidate 新资格；正式 runtime 仍保持 Ark |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -51,9 +51,10 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-ITER-008 当前只推进已授权的 SLICE-001。活动 bounded contract 已升级为 semantic-intent compiler `1.4.0`；Capability
-suite/oracle/evaluator 保持 18 个 Case 和 18/18 threshold，但以 41 次模型调用覆盖产品可达 transition。纯本地 fake transport 已证明
-18/18 PASS 和 exact call count；本轮架构修复未读取 credential、未建立 Provider transport。
+ITER-008 当前只推进已授权的 SLICE-001。活动 bounded contract 为 semantic-intent compiler `1.4.1`；Capability
+suite/oracle/evaluator 保持 18 个 Case、18/18 threshold 与 41 次调用，并对一个 sealed state 允许运行前冻结的有限等价 exact
+projection 集合。Application 对最多 12 个 model-owned search term 按 casefold 保留首次顺序去重；evaluator 不再以独立
+sealed-state 样本的 operation 同名推导 cycle。纯本地 fake transport 仍证明 18/18 PASS 和 exact call count。
 本机现存 15 份 Ark Conformance Result 全部属于 Adapter `@1`—`@7`，对当前
 `openai-chat-completions-no-tools@8` 均以 `QUALIFICATION_INVALID` 失败关闭。
 
@@ -165,6 +166,20 @@ canary、SLICE-002 与 Production Activation 均未执行。
 `1.4.0` 当前离线验证为 affected 117/117、18-case fake transport 41 calls / 18/18、full discovery 978/978、current documents
 318/318 与 `git diff --check` PASS；full run 仅出现既有 SQLite connection `ResourceWarning`。这些结果不替代 live Capability 或产品
 Gate。
+
+`1.4.0` clean candidate `f056cb86b76ab3364208d9cfbba7f2562ed68688` 随后完成 run-007：Conformance 绑定 preflight
+`sha256:c8e962711ce617f113e9589564b75eb00538e6e0b8506686a10394f5e1245ac0`，恰好 2 calls / 12 Case PASS，result digest 为
+`sha256:26a6460003c7f930d99c139d5813efd6046523a46a19eea25f421962c1a09bd0`。Capability freeze
+`sha256:975b195a060bbc51a5376dc80af0ad551d4a8c2eb46c72a8efb1fb07d3cd64a2` 在第 38 次 Provider request 已返回后，因
+`NEGATIVE-REPRESENTATION-UNKNOWN-016:call-1` 的 12 个 search term 重复 `order` 而失败关闭。37 次 request / 15 Case
+完整落盘，无 retry，failure/terminal digest 为 `sha256:82905e643b9c9968ce9d00f3b1e3f87c33a5a92d98ab24eaca4e39251ef174b5` /
+`sha256:0f160da005c79fc488a1ff66b249dffe9c35788fc5b044cdeb43a84c7036a8df`。
+
+已完整评审的 15 Case 为 10 PASS / 5 FAIL；证据将偏差分成 declared-inventory 与过早 FINISH 的模型缺口，以及三项资格
+缺陷：可无损去重的 model-owned term 被当成整轮失败、单一 Oracle 拒绝合法短路径、独立 sealed-state 样本按 operation 名称误判
+cycle。按 `FINDING-008-015` 升级到 capability/Strategy `1.4.1`、prompt/vocabulary `@8`、compiler `@2`、policy `@1.1.1`
+与 suite/oracle `@1.4.1`。本地 affected 66/66、18-case fake transport 41 calls / 18/18 和 full discovery 980/980 PASS；新 live
+Conformance/Capability 必须等 clean commit 后以全新 freeze 执行。正式 Web、hidden canary、SLICE-002 与 Production Activation 仍未执行。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。
