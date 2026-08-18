@@ -1,7 +1,7 @@
 ---
 id: FINDING-008-017
 kind: implementation-finding
-status: dispositioned
+status: superseded
 authority: development-evidence
 owners: [ai, engineering, quality, project]
 depends_on: [ITER-008-SLICE-001, FINDING-008-016, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
@@ -11,6 +11,7 @@ iteration: ITER-008
 classification: iteration-design
 disposition: stop-deepseek-qualification-and-require-explicit-model-or-protocol-redirect
 target: ITER-008-SLICE-001
+superseded_by: FINDING-008-018
 ---
 
 # FINDING-008-017：run-009 最终资格仍违反 path semantic intent
@@ -81,3 +82,10 @@ threshold，也不把前 7 项 PASS 推导成部分资格。DeepSeek `@2` 保留
   configured secret 不在 run-009 artifacts 中，credential 与 raw HTTP envelope 未持久化；资格所需的 authorized input manifest 与
   normalized model output 只保存在受保护的本机 Result 边界。
 - 本次只形成资格失败证据；Production Activation 保持 `NOT_EXECUTED`。
+
+## Supersession
+
+run-009 的调用、失败位置和未形成 Qualification 等事实继续有效；但“非适用 relation slot 不能丢弃、因此停止等待 redirect”的设计判断，
+已由用户消息 `codex-user-message:sha256:375246d919e8541021acd7b319f13d5af928794ff23a022ae01a82531a09a8e2`
+明确重定向，并由 [FINDING-008-018](FINDING-008-018.md) 取代。新决定把 `operation` 作为 semantic-intent discriminant，
+由 Application 只解释所选 operation 拥有的 slot；这不是 retry run-009，也不改变其历史 Result。

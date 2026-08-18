@@ -196,6 +196,15 @@ failure/terminal digest 为 `sha256:beadc9bbca1544bebcf29620a13b98128e65bdcc9c72
 按 [FINDING-008-017](../findings/FINDING-008-017.md)，run-009 是该路径预提交的最终尝试。不会创建 run-010，也不会放宽 Prompt、
 compiler、Oracle 或 18/18 threshold；后续 live Product Gate 等待新的显式模型或 constrained-protocol redirect decision。
 
+该等待状态随后由用户消息
+`codex-user-message:sha256:375246d919e8541021acd7b319f13d5af928794ff23a022ae01a82531a09a8e2` 明确解除。按
+[FINDING-008-018](../findings/FINDING-008-018.md)，run-009 的 `all_simple_paths` 已选对 operation；错误在 Application 把只对
+direct-neighborhood 有意义的固定 relation slot 当成 path 语义。新 compiler `@3` 按 operation 投影 semantic slot，Gateway policy
+升级为 `@1.1.2`；相关 slot、authority 和 transition 仍严格验证。Prompt、suite、Oracle、Provider 参数、18/18 和 no-retry 不变。
+run-009 Result 不改写、不 retry；新 clean candidate 必须以全新 Conformance/Capability freeze 重新资格，PASS 前不进入 Product Gate。
+该 redirect 的本地证据为定向 54/54、含原反例的 fake transport 41 calls / 18/18、full discovery 982/982、current documents
+322/322、diff 与 secret scan PASS；这些不替代 live Qualification。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

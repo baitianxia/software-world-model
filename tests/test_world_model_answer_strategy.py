@@ -10,6 +10,7 @@ from software_world_model.ai_infrastructure import (
     IMPLEMENTATION_ANSWER_REVIEW,
     IMPLEMENTATION_INVESTIGATION,
     IMPLEMENTATION_QUERY_PLANNING,
+    JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -238,6 +239,10 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
         self.assertEqual(contract.strategy_version, "1.4.1")
+        self.assertEqual(
+            JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
+            "java-source-semantics-investigation-argument-compiler@3",
+        )
         self.assertEqual(
             contract.capabilities,
             (

@@ -340,6 +340,126 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 ),
             )
 
+    def test_platform_projects_only_the_selected_operation_semantic_slots(self) -> None:
+        session = self._session()
+        sealed_input = _sealed_input(session, snapshot_id=self.snapshot_id)
+        canonical_candidate = compile_investigation_intent(
+            {
+                "operation": "implementation_candidates",
+                "search_terms": ["credentials", "failure", "session"],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=sealed_input,
+        )
+        projected_candidate = compile_investigation_intent(
+            {
+                "operation": "implementation_candidates",
+                "search_terms": ["credentials", "failure", "session"],
+                "relation_intent": "BOTH_CALLS",
+                "finish_reason": "irrelevant fixed-envelope residue",
+            },
+            sealed_input=sealed_input,
+        )
+        self.assertEqual(projected_candidate, canonical_candidate)
+        candidate_step = session.submit(
+            InvestigationProposal.from_mapping(
+                projected_candidate,
+                model_proposal_digest=digest_of("projected-candidate-intent"),
+            )
+        )
+        assert candidate_step is not None
+
+        later_input = _sealed_input(
+            session,
+            snapshot_id=self.snapshot_id,
+            previous_step=candidate_step,
+        )
+        canonical_method_batch = compile_investigation_intent(
+            {
+                "operation": "method_implementations",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=later_input,
+        )
+        projected_method_batch = compile_investigation_intent(
+            {
+                "operation": "method_implementations",
+                "search_terms": ["irrelevant"],
+                "relation_intent": "INCOMING_CALLS",
+                "finish_reason": "irrelevant fixed-envelope residue",
+            },
+            sealed_input=later_input,
+        )
+        self.assertEqual(projected_method_batch, canonical_method_batch)
+
+        canonical_direct = compile_investigation_intent(
+            {
+                "operation": "direct_neighborhood",
+                "search_terms": [],
+                "relation_intent": "OUTGOING_CALLS",
+                "finish_reason": None,
+            },
+            sealed_input=later_input,
+        )
+        projected_direct = compile_investigation_intent(
+            {
+                "operation": "direct_neighborhood",
+                "search_terms": ["irrelevant"],
+                "relation_intent": "OUTGOING_CALLS",
+                "finish_reason": "irrelevant fixed-envelope residue",
+            },
+            sealed_input=later_input,
+        )
+        self.assertEqual(projected_direct, canonical_direct)
+
+        canonical_finish = compile_investigation_intent(
+            {
+                "operation": "FINISH",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": "typed support is complete",
+            },
+            sealed_input=later_input,
+        )
+        projected_finish = compile_investigation_intent(
+            {
+                "operation": "FINISH",
+                "search_terms": ["irrelevant"],
+                "relation_intent": "BOTH_CALLS",
+                "finish_reason": "typed support is complete",
+            },
+            sealed_input=later_input,
+        )
+        self.assertEqual(projected_finish, canonical_finish)
+
+        with self.assertRaisesRegex(
+            DomainError, "relation intent is not registered"
+        ):
+            compile_investigation_intent(
+                {
+                    "operation": "direct_neighborhood",
+                    "search_terms": [],
+                    "relation_intent": None,
+                    "finish_reason": None,
+                },
+                sealed_input=later_input,
+            )
+        with self.assertRaisesRegex(
+            DomainError, "requires one terminal explanation"
+        ):
+            compile_investigation_intent(
+                {
+                    "operation": "FINISH",
+                    "search_terms": [],
+                    "relation_intent": None,
+                    "finish_reason": None,
+                },
+                sealed_input=later_input,
+            )
+
     def test_path_intent_selects_method_endpoints_from_real_batch_results(self) -> None:
         session = self._session()
         candidate_mapping = compile_investigation_intent(
@@ -439,6 +559,33 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 for item in method_step.results[:2]
             ),
         )
+        canonical_all_paths_mapping = compile_investigation_intent(
+            {
+                "operation": "all_simple_paths",
+                "search_terms": [],
+                "relation_intent": None,
+                "finish_reason": None,
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=method_step,
+            ),
+        )
+        projected_all_paths_mapping = compile_investigation_intent(
+            {
+                "operation": "all_simple_paths",
+                "search_terms": ["irrelevant"],
+                "relation_intent": "BOTH_CALLS",
+                "finish_reason": "irrelevant fixed-envelope residue",
+            },
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=method_step,
+            ),
+        )
+        self.assertEqual(projected_all_paths_mapping, canonical_all_paths_mapping)
         executed = session.submit(
             InvestigationProposal.from_mapping(
                 path_mapping,

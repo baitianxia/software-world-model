@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记十七条已处置 Finding：
+本 Slice 当前登记十八条已处置或被后续决定取代的 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -59,7 +59,10 @@ iteration: ITER-008
   Conformance `1.0.1` 共同约束；只允许一次全新 run-009 资格链。
 - [FINDING-008-017](FINDING-008-017.md)：run-009 证明 Adapter `@2` 的 temperature-zero Conformance 12/12 PASS，但
   Capability 在前 7 Case PASS 后因 path intent 携带 `BOTH_CALLS` 失败关闭；18 次实际 request 均完成。该 relation intent 不能无损
-  忽略，故执行预提交停止规则，不 retry、不创建 run-010，等待显式的模型或协议 redirect decision。
+  忽略的旧判断与停止等待状态已由后续显式协议 redirect 取代；run-009 失败证据本身继续保留。
+- [FINDING-008-018](FINDING-008-018.md)：用户明确要求集成层适配模型。固定 JSON envelope 不是所有 operation 共享语义的结构；
+  Application 改为按 operation 只解释其拥有的 slot，非适用 slot 被确定性投影掉，相关 slot 与全部 authority/transition 仍严格校验。
+  compiler 升级为 `@3`、Gateway policy 升级为 `@1.1.2`；Prompt、suite、Oracle、18/18 和 no-retry 不变，clean candidate 需全新资格。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

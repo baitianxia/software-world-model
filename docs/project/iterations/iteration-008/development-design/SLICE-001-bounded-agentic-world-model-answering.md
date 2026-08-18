@@ -198,6 +198,20 @@ Capability 前 7 个 Case independent Review 全 PASS，但在第 8 个 Case 的
 参数、compiler、suite、Oracle 或 threshold。DeepSeek 保持“Conformance PASS / bounded Capability NOT QUALIFIED”；正式 Web、early
 canary 与 V-REFLECT-001 不得执行。SLICE-001 当前等待新的显式模型或协议 redirect decision。
 
+用户随后以消息 `codex-user-message:sha256:375246d919e8541021acd7b319f13d5af928794ff23a022ae01a82531a09a8e2`
+明确作出协议 redirect：由集成层适配模型，而不是要求模型适配平台内部固定序列化形状。按
+[FINDING-008-018](../findings/FINDING-008-018.md)，`operation` 是 semantic-intent discriminant；Application 只解释该 operation
+拥有的 slot，并确定性丢弃其他固定 envelope slot。适用 slot、transition、Ref provenance、predicate、bounds、budget 和外层 closed
+shape 仍严格验证。argument compiler 升级为 `@3`，Gateway policy 升级为 `@1.1.2`；capability/Strategy `1.4.1`、prompt/vocabulary
+`@8`、suite/oracle `@1.4.1`、18 Case、41 calls、18/18 threshold、temperature 0 与 no-retry 全部不变。run-009 仍是旧 compiler
+`@2` 的失败证据，不 retry；完成本地/full/docs 验证和 clean commit 后，以全新 freeze 执行一次新候选 Conformance + Capability
+requalification，未 PASS 前正式 Web、early canary 与 V-REFLECT-001 继续阻断。
+
+本地验证现已闭合：定向 compiler/contract/policy/fake-live-harness 54/54 PASS；其中 fake transport 使用 run-009 的
+`all_simple_paths + BOTH_CALLS` 反例完整完成 41 requests / 18 Case 并 18/18 PASS；full discovery 982/982 PASS，仅有既有 SQLite
+connection `ResourceWarning`；current documents 322/322、`git diff --check` 与 credential-shaped secret scan PASS。这些仍不是 live
+Qualification；新 Conformance/Capability 只能从写回后的 clean exact candidate 重新冻结。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

@@ -1381,7 +1381,7 @@
   {
     "id": "FINDING-008-017",
     "kind": "implementation-finding",
-    "status": "dispositioned",
+    "status": "superseded",
     "authority": "development-evidence",
     "owners": [
       "ai",
@@ -1391,6 +1391,21 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-017.md"
+  },
+  {
+    "id": "FINDING-008-018",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "architecture",
+      "engineering",
+      "ai",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-018.md"
   },
   {
     "id": "ITER-001-DECISIONS",

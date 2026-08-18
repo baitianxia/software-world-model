@@ -288,6 +288,9 @@ class _PassingCapabilityTransport:
                 self._outputs[f"{case['case_id']}:call-{call_index}"] = (
                     _passing_model_output(case, step, expected)
                 )
+        self._outputs[
+            "WM-JSS-I8-ALL-SIMPLE-PATHS-008:call-3"
+        ]["relation_intent"] = "BOTH_CALLS"
 
     def post_json(self, **arguments):
         self.calls += 1

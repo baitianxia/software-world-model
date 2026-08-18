@@ -75,7 +75,7 @@ JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_VOCABULARY_REF = (
     "java-source-semantics-world-model-vocabulary@8"
 )
 JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF = (
-    "java-source-semantics-investigation-argument-compiler@2"
+    "java-source-semantics-investigation-argument-compiler@3"
 )
 IMPLEMENTATION_QUERY_PLANNING = "IMPLEMENTATION_QUERY_PLANNING"
 IMPLEMENTATION_INVESTIGATION = "IMPLEMENTATION_INVESTIGATION"
