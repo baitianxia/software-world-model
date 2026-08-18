@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记十六条已处置 Finding：
+本 Slice 当前登记十七条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -57,6 +57,9 @@ iteration: ITER-008
   request 后因不可编译的 inventory intent 失败关闭；Adapter 未发送或冻结 temperature，实际继承 Provider 默认值 1。
   Provider 协议升级为 `deepseek-chat-completions-no-tools@2`，固定 `temperature: 0` 并由 configuration fingerprint 与
   Conformance `1.0.1` 共同约束；只允许一次全新 run-009 资格链。
+- [FINDING-008-017](FINDING-008-017.md)：run-009 证明 Adapter `@2` 的 temperature-zero Conformance 12/12 PASS，但
+  Capability 在前 7 Case PASS 后因 path intent 携带 `BOTH_CALLS` 失败关闭；18 次实际 request 均完成。该 relation intent 不能无损
+  忽略，故执行预提交停止规则，不 retry、不创建 run-010，等待显式的模型或协议 redirect decision。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

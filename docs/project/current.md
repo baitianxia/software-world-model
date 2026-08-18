@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-18
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-008-failed-closed-deepseek-temperature-zero-protocol-repair-locally-verified-awaiting-clean-candidate
+worktree_status: iteration-008-run-009-capability-failed-closed-final-attempt-stopped-awaiting-explicit-redirect-decision
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deepseek-v4-pro-conformance-run-008-pass-capability-run-008-failed-closed-after-request-two-adapter-at-2-local-repair-not-yet-qualified-production-not-activated
+live_model_path: iteration-008-deepseek-v4-pro-adapter-at-2-conformance-run-009-pass-capability-run-009-failed-closed-after-request-eighteen-seven-cases-pass-not-qualified-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / Provider protocol repair in verification** | `1.4.1` run-008 Conformance 12/12 PASS；Capability 的第二次已完成 request 选择不可编译的 inventory intent 并失败关闭。Adapter `@1` 未冻结 temperature、继承 Provider 默认值 1；现升级 `@2` 并固定 numeric 0，只允许一次新 run-009 资格链。正式 runtime 仍保持 Ark |
+| Iteration 008 | **SLICE-001 authorized / live qualification stopped** | Adapter `@2` temperature-zero run-009 Conformance 12/12 PASS；Capability 前 7 Case PASS，第 18 次已完成 request 的 path intent 携带非法 `BOTH_CALLS` 后失败关闭。最终尝试已耗尽，不 retry/run-010；等待显式模型或协议 redirect decision，正式 runtime 仍保持 Ark |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -196,6 +196,23 @@ fixture `1.0.1`，固定 JSON numeric `temperature: 0` 并纳入 configuration f
 检查。旧 `@1` Result 全部 stale。定向 40/40、full discovery 981/981、current documents 320/320 与 `git diff --check` PASS；
 完成 clean commit 后只执行一次全新 run-009 Conformance + Capability；若仍未达到 18/18，停止继续调整 Prompt 或 Provider 参数。
 正式 Web、hidden canary、SLICE-002 与 Production Activation 仍未执行。
+
+temperature-zero protocol repair 的 clean candidate `5d2bce381e9c9495571c148a69c3fb43ee3f6dc8` 随后完成最终 run-009。
+Conformance preflight/result/terminal digest 为
+`sha256:7408d2ee7f49d4f3ff83b93321510e38003d9da4436af77f1bb0d2a485860d4e` /
+`sha256:c2b999fb4c313e0913a49284ddb3783672761fd6155924f9a7154a0d6298db76` /
+`sha256:197a15e21fa90d2e001db8fe0cdb1357c2abf0537adbf29cf7fd64a90bb873c1`，恰好 2 calls、12/12 PASS，证明 Adapter `@2`、
+fixture `1.0.1`、temperature 0 与 `deepseek-v4-pro` exact identity。
+
+同候选 Capability freeze `sha256:d436a104be64ef22caf8f499c950863b36cecf12cede1fb4c624b14e1a6eec35` 在前 7 Case
+independent Review 全 PASS 后，于 `ALL-SIMPLE-PATHS-008:call-3` 失败关闭。18 个实际 Provider call record 均已 `COMPLETED`；最后一次
+semantic intent 选择 `all_simple_paths` 却携带只属于 direct-neighborhood 的 `BOTH_CALLS`，不能在不改变有向 path 语义的情况下忽略。
+failure/terminal digest 为 `sha256:beadc9bbca1544bebcf29620a13b98128e65bdcc9c72364515c1fc2a38e763fb` /
+`sha256:99fc7923db8696f4a3a3b81ac5960459b81698737597a2a0325d82a28e4f422c`；无 retry、Qualification 或 Activation。
+
+按 `FINDING-008-017`，预提交的最终资格尝试已经耗尽：不创建 run-010，不再调整 Prompt、Provider 参数、compiler、suite、Oracle 或
+threshold。V-WEB-001、hidden canary、SLICE-002 和 Production Activation 继续阻断。后续必须先取得新的显式 redirect decision：恢复
+Ark Python/OpenSSL verified TLS 路径、选择另一个独立资格模型，或重新设计 constrained transition 协议。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

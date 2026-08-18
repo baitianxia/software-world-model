@@ -1203,6 +1203,19 @@
       "tests/test_iteration_008_capability_harness.py"
     ]
   },
+  "FINDING-008-017": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-017.md",
+    "code": [
+      "src/software_world_model/application_services/bounded_world_model_investigation.py",
+      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "validation/structure_world_model_iteration_008/capability/live_runner.py"
+    ],
+    "tests": [
+      "tests/test_bounded_world_model_investigation.py",
+      "tests/test_deepseek_chat_adapter.py",
+      "tests/test_iteration_008_capability_harness.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

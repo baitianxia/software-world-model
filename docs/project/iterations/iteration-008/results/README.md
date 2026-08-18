@@ -179,6 +179,23 @@ temperature，实际继承 Provider 默认值 1；Provider protocol 改为 `deep
 `1.0.1`，固定 JSON numeric `temperature: 0` 并由 configuration fingerprint 与 live wire Case 共同验证。旧 `@1` Result 全部 stale；
 新 clean candidate 只允许一次 run-009 Conformance + Capability 资格链。
 
+temperature-zero protocol repair 的 clean candidate `5d2bce381e9c9495571c148a69c3fb43ee3f6dc8` 随后完成 run-009。
+Conformance preflight/result/terminal digest 为
+`sha256:7408d2ee7f49d4f3ff83b93321510e38003d9da4436af77f1bb0d2a485860d4e` /
+`sha256:c2b999fb4c313e0913a49284ddb3783672761fd6155924f9a7154a0d6298db76` /
+`sha256:197a15e21fa90d2e001db8fe0cdb1357c2abf0537adbf29cf7fd64a90bb873c1`；Adapter `@2`、fixture `1.0.1` 恰好执行
+2 calls / 12 Case PASS，temperature 为 numeric 0，唯一模型 identity 为 `deepseek-v4-pro`，tokens 为 377/77，usage 完整。
+
+同候选 Capability run-009 绑定 freeze
+`sha256:d436a104be64ef22caf8f499c950863b36cecf12cede1fb4c624b14e1a6eec35`，前 7 个 required Case 均取得 independent
+Review PASS。第 8 个 `ALL-SIMPLE-PATHS-008:call-3` Provider response 完成后，因 `all_simple_paths` intent 携带只适用于 direct
+neighborhood 的 `BOTH_CALLS` 而失败关闭。18 个实际 request 全部 `COMPLETED`，tokens 为 46,946/1,021，identity/usage 完整；
+failure/terminal digest 为 `sha256:beadc9bbca1544bebcf29620a13b98128e65bdcc9c72364515c1fc2a38e763fb` /
+`sha256:99fc7923db8696f4a3a3b81ac5960459b81698737597a2a0325d82a28e4f422c`。无 retry，未形成 Qualification 或 Activation。
+
+按 [FINDING-008-017](../findings/FINDING-008-017.md)，run-009 是该路径预提交的最终尝试。不会创建 run-010，也不会放宽 Prompt、
+compiler、Oracle 或 18/18 threshold；后续 live Product Gate 等待新的显式模型或 constrained-protocol redirect decision。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

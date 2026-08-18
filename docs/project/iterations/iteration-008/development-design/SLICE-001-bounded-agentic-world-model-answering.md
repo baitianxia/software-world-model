@@ -190,6 +190,14 @@ fingerprint 与 live wire Gate。完成 deterministic/full/docs 验证和 clean 
 当前定向 40/40、full discovery 981/981、current documents 320/320 与 `git diff --check` PASS。若 run-009 仍未达到 18/18，
 停止继续调整 Prompt 或 Provider 参数。正式 runtime 继续保持 Ark。
 
+最终 run-009 在 clean candidate `5d2bce3…` 上取得 Adapter `@2` / fixture `1.0.1` 的 2-call、12/12 Conformance PASS；同候选
+Capability 前 7 个 Case independent Review 全 PASS，但在第 8 个 Case 的第 3 步失败关闭。全部 18 个实际 request 都已完成；模型为
+`all_simple_paths` 返回 `BOTH_CALLS` relation intent，而该字段只适用于 direct neighborhood，不能由 Application 无损忽略。
+
+按 [FINDING-008-017](../findings/FINDING-008-017.md) 执行最终停止规则：不 retry、不创建 run-010、不继续修改 Prompt、Provider
+参数、compiler、suite、Oracle 或 threshold。DeepSeek 保持“Conformance PASS / bounded Capability NOT QUALIFIED”；正式 Web、early
+canary 与 V-REFLECT-001 不得执行。SLICE-001 当前等待新的显式模型或协议 redirect decision。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；
