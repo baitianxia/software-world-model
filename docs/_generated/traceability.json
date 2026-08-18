@@ -1191,6 +1191,18 @@
       "tests/test_iteration_008_capability_qualification.py"
     ]
   },
+  "FINDING-008-016": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-016.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/deepseek_chat_conformance.py"
+    ],
+    "tests": [
+      "tests/test_deepseek_chat_adapter.py",
+      "tests/test_deepseek_chat_conformance.py",
+      "tests/test_iteration_008_capability_harness.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

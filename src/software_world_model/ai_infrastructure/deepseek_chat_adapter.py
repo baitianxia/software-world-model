@@ -44,6 +44,7 @@ DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT = (
 DEFAULT_DEEPSEEK_MODEL = "deepseek-v4-pro"
 DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT = "deepseek-v4-pro"
 DEFAULT_DEEPSEEK_API_KEY_ENV = "DEEPSEEK_API_KEY"
+DEFAULT_DEEPSEEK_TEMPERATURE = 0
 SUPPORTED_DEEPSEEK_MODELS = frozenset(
     {"deepseek-v4-pro", "deepseek-v4-flash"}
 )
@@ -65,6 +66,7 @@ class DeepSeekModelConfiguration:
     model_ref: str = DEFAULT_DEEPSEEK_MODEL
     actual_model_fingerprint: str = DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT
     api_key_environment_variable: str = DEFAULT_DEEPSEEK_API_KEY_ENV
+    temperature: int = DEFAULT_DEEPSEEK_TEMPERATURE
 
     def __post_init__(self) -> None:
         _require_deepseek_https_endpoint(self.endpoint)
@@ -87,6 +89,14 @@ class DeepSeekModelConfiguration:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "DeepSeek API key environment variable name is invalid",
+            )
+        if (
+            type(self.temperature) is not int
+            or self.temperature != DEFAULT_DEEPSEEK_TEMPERATURE
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "DeepSeek no-tools adapter requires the exact frozen temperature 0",
             )
 
     @property
@@ -121,6 +131,7 @@ class DeepSeekModelConfiguration:
                 "model_ref": self.model_ref,
                 "actual_model_fingerprint": self.actual_model_fingerprint,
                 "thinking_mode": "DISABLED",
+                "temperature": self.temperature,
                 "secret_reference": self.secret_reference,
             }
         )
@@ -149,6 +160,7 @@ class DeepSeekModelConfiguration:
             "model_ref": self.model_ref,
             "actual_model_fingerprint": self.actual_model_fingerprint,
             "thinking_mode": "DISABLED",
+            "temperature": self.temperature,
             "secret_reference": self.secret_reference,
             "credential_configured": self.credential_configured(environment),
             "configuration_fingerprint": self.fingerprint.value,
@@ -271,7 +283,7 @@ class UrllibDeepSeekChatTransport:
 
 class DeepSeekChatCompletionsNoToolsAdapter:
     provider_type = "DEEPSEEK"
-    adapter_version = "deepseek-chat-completions-no-tools@1"
+    adapter_version = "deepseek-chat-completions-no-tools@2"
 
     def __init__(
         self,
@@ -352,6 +364,7 @@ class DeepSeekChatCompletionsNoToolsAdapter:
             "stream": False,
             "max_tokens": request.max_output_tokens,
             "thinking": {"type": "disabled"},
+            "temperature": self._configuration.temperature,
             "response_format": {"type": "json_object"},
         }
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -614,6 +627,7 @@ __all__ = [
     "DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT",
     "DEFAULT_DEEPSEEK_MODEL",
     "DEFAULT_DEEPSEEK_OPENAI_BASE_URL",
+    "DEFAULT_DEEPSEEK_TEMPERATURE",
     "SUPPORTED_DEEPSEEK_MODELS",
     "DeepSeekChatCompletionsNoToolsAdapter",
     "DeepSeekChatCompletionsTransport",

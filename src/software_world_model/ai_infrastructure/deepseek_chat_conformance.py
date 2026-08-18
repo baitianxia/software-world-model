@@ -39,7 +39,7 @@ from .openai_responses_adapter import OutputSchemaDefinition, ProviderHTTPRespon
 
 
 DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-DEEPSEEK-CHAT-NO-TOOLS-001"
-DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.0.0"
+DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.0.1"
 DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.deepseek-chat-conformance-result@1"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "deepseek-conformance-live"
@@ -50,6 +50,7 @@ _WIRE_ALLOWLIST = frozenset(
         "stream",
         "max_tokens",
         "thinking",
+        "temperature",
         "response_format",
     }
 )
@@ -221,6 +222,7 @@ def run_deepseek_chat_conformance(
             "actual_model_fingerprints": actual_models,
             "identity_policy": "REQUEST_MODEL_AND_EXACT_RESPONSE_MODEL_REQUIRED",
             "thinking_mode": "DISABLED",
+            "temperature": configuration.temperature,
         },
         "execution": {
             "request_count": len(recording.requests),
@@ -259,6 +261,7 @@ def run_deepseek_chat_conformance(
                 "adapter_version_change",
                 "model_identity_change",
                 "thinking_mode_change",
+                "temperature_change",
                 "provider_protocol_change",
                 "valid_until_elapsed",
             ],
@@ -333,6 +336,7 @@ def load_deepseek_chat_conformance_qualification(
         or model.get("expected_actual_model_fingerprint")
         != configuration.actual_model_fingerprint
         or model.get("thinking_mode") != "DISABLED"
+        or model.get("temperature") != configuration.temperature
     ):
         raise DomainError(
             ErrorCode.QUALIFICATION_INVALID,
@@ -585,6 +589,7 @@ def _evaluate_cases(
         and "closed JSON Schema" in body["messages"][0].get("content", "")
         and '"additionalProperties":false' in body["messages"][0].get("content", "")
         and body.get("thinking") == {"type": "disabled"}
+        and body.get("temperature") == configuration.temperature
         for body in bodies
     )
     separated = (

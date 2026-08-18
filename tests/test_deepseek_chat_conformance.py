@@ -19,7 +19,7 @@ from software_world_model.ai_infrastructure import (
     run_deepseek_chat_conformance,
     seal_deepseek_chat_conformance_result,
 )
-from software_world_model.cross_cutting import DomainError, ErrorCode
+from software_world_model.cross_cutting import DomainError, ErrorCode, digest_of
 from software_world_model.interface.deepseek_provider_cli import (
     main as deepseek_provider_main,
 )
@@ -138,6 +138,7 @@ class DeepSeekChatConformanceTests(unittest.TestCase):
         self.assertEqual(result["execution"]["input_tokens"], 20)
         self.assertEqual(result["execution"]["output_tokens"], 10)
         self.assertEqual(result["model"]["thinking_mode"], "DISABLED")
+        self.assertEqual(result["model"]["temperature"], 0)
         serialized = json.dumps(result)
         self.assertNotIn("fixture-secret-never-persist", serialized)
         self.assertNotIn("nonce-first", serialized)
@@ -209,6 +210,32 @@ class DeepSeekChatConformanceTests(unittest.TestCase):
                     now=self.clock_value,
                 )
             self.assertEqual(tampered.exception.code, ErrorCode.QUALIFICATION_INVALID)
+
+            temperature_path = seal_deepseek_chat_conformance_result(
+                self.run_result(), Path(directory) / "temperature"
+            )
+            temperature_document = json.loads(temperature_path.read_text())
+            temperature_document["model"]["temperature"] = 1
+            temperature_document["result_digest"] = digest_of(
+                {
+                    key: value
+                    for key, value in temperature_document.items()
+                    if key != "result_digest"
+                }
+            ).value
+            temperature_path.write_text(
+                json.dumps(temperature_document), encoding="utf-8"
+            )
+            with self.assertRaises(DomainError) as temperature_tampered:
+                load_deepseek_chat_conformance_qualification(
+                    temperature_path,
+                    self.configuration,
+                    now=self.clock_value,
+                )
+            self.assertEqual(
+                temperature_tampered.exception.code,
+                ErrorCode.QUALIFICATION_INVALID,
+            )
 
     def test_implementation_manifest_is_deepseek_specific(self) -> None:
         manifest = current_deepseek_implementation_manifest()

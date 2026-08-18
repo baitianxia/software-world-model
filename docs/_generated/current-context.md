@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-run-007-verification-evidence-contract-1.4.1-local-verification-complete-awaiting-clean-candidate-requalification`
+- Worktree status: `iteration-008-run-008-failed-closed-deepseek-temperature-zero-protocol-repair-locally-verified-awaiting-clean-candidate`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-deepseek-v4-pro-conformance-run-007-pass-capability-run-007-failed-closed-after-request-thirty-eight-not-qualified-production-not-activated`
+- Live model path: `iteration-008-deepseek-v4-pro-conformance-run-008-pass-capability-run-008-failed-closed-after-request-two-adapter-at-2-local-repair-not-yet-qualified-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

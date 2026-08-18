@@ -12,6 +12,7 @@ from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
     DEFAULT_DEEPSEEK_MODEL,
     DEFAULT_DEEPSEEK_OPENAI_BASE_URL,
+    DEFAULT_DEEPSEEK_TEMPERATURE,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekModelConfiguration,
     RecordingDeepSeekChatCompletionsTransport,
@@ -163,6 +164,11 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(configuration.model_ref, "deepseek-v4-pro")
         self.assertEqual(missing["secret_reference"], "env:DEEPSEEK_API_KEY")
         self.assertEqual(missing["thinking_mode"], "DISABLED")
+        self.assertEqual(missing["temperature"], DEFAULT_DEEPSEEK_TEMPERATURE)
+        self.assertEqual(
+            configuration.adapter_version,
+            "deepseek-chat-completions-no-tools@2",
+        )
         self.assertFalse(missing["credential_configured"])
         self.assertTrue(present["credential_configured"])
         self.assertNotIn("do-not-expose", json.dumps(present))
@@ -203,6 +209,7 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
                 "stream",
                 "max_tokens",
                 "thinking",
+                "temperature",
                 "response_format",
             },
         )
@@ -211,6 +218,7 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertIn('"additionalProperties":false', payload["messages"][0]["content"])
         self.assertFalse(payload["stream"])
         self.assertEqual(payload["thinking"], {"type": "disabled"})
+        self.assertEqual(payload["temperature"], 0)
         self.assertEqual(payload["response_format"], {"type": "json_object"})
         self.assertNotIn("tools", payload)
         self.assertNotIn("store", payload)
@@ -312,6 +320,25 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         for endpoint in endpoints:
             with self.subTest(endpoint=endpoint), self.assertRaises(DomainError) as raised:
                 DeepSeekModelConfiguration(endpoint=endpoint)
+            self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
+
+    def test_configuration_rejects_temperature_drift(self) -> None:
+        self.assertEqual(DeepSeekModelConfiguration().temperature, 0)
+
+        for temperature in (
+            True,
+            -1,
+            1,
+            0.0,
+            0.5,
+            float("nan"),
+            float("inf"),
+            "0",
+        ):
+            with self.subTest(temperature=temperature), self.assertRaises(
+                DomainError
+            ) as raised:
+                DeepSeekModelConfiguration(temperature=temperature)  # type: ignore[arg-type]
             self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
 
     def test_transport_classifies_network_failures(self) -> None:

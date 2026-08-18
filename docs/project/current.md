@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-18
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-007-verification-evidence-contract-1.4.1-local-verification-complete-awaiting-clean-candidate-requalification
+worktree_status: iteration-008-run-008-failed-closed-deepseek-temperature-zero-protocol-repair-locally-verified-awaiting-clean-candidate
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deepseek-v4-pro-conformance-run-007-pass-capability-run-007-failed-closed-after-request-thirty-eight-not-qualified-production-not-activated
+live_model_path: iteration-008-deepseek-v4-pro-conformance-run-008-pass-capability-run-008-failed-closed-after-request-two-adapter-at-2-local-repair-not-yet-qualified-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / verification repair locally complete** | `1.4.0` candidate 的 DeepSeek Conformance run-007 12/12 PASS；Capability 在第 38 次 request 返回后因重复 search term 失败关闭。已完整评审的 15 Case 还暴露单路径 Oracle 与跨独立样本 cycle 误判；现以 `1.4.1` 规范化 model-owned term、预冻结等价 exact projection 集合并只按 product progress 判定 cycle。本地 980/980 PASS，待 clean candidate 新资格；正式 runtime 仍保持 Ark |
+| Iteration 008 | **SLICE-001 authorized / Provider protocol repair in verification** | `1.4.1` run-008 Conformance 12/12 PASS；Capability 的第二次已完成 request 选择不可编译的 inventory intent 并失败关闭。Adapter `@1` 未冻结 temperature、继承 Provider 默认值 1；现升级 `@2` 并固定 numeric 0，只允许一次新 run-009 资格链。正式 runtime 仍保持 Ark |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -99,7 +99,7 @@ System Contract/安全 Owner，必须先更新对应 System 文档/ADR。详见 
 用户现已指定新增 DeepSeek，并已把 API Key 配置到受控执行环境。独立 `DEEPSEEK` Provider 已冻结
 `https://api.deepseek.com/chat/completions`、默认与期望响应 identity `deepseek-v4-pro`、可选 `deepseek-v4-flash`、
 `env:DEEPSEEK_API_KEY`、direct verified TLS / ambient proxy disabled、no tools / no session / no retry 与 Adapter
-`deepseek-chat-completions-no-tools@1`。Adapter、独立 2-call Conformance、CLI 及 ITER-008 fake-transport Gate 已离线通过；没有读取真实
+`deepseek-chat-completions-no-tools@1`。该初始版本的 Adapter、独立 2-call Conformance、CLI 及 ITER-008 fake-transport Gate 已离线通过；没有读取真实
 credential，也没有公网调用。正式 bounded runtime 与 product egress policy 继续保持 Ark，按用户要求先从新 exact candidate 冻结并
 单独授权最小 DeepSeek model diagnostic，PASS 后才能依次申请 Conformance 与 Capability。详见 `FINDING-008-010`。
 
@@ -180,6 +180,22 @@ Gate。
 cycle。按 `FINDING-008-015` 升级到 capability/Strategy `1.4.1`、prompt/vocabulary `@8`、compiler `@2`、policy `@1.1.1`
 与 suite/oracle `@1.4.1`。本地 affected 66/66、18-case fake transport 41 calls / 18/18 和 full discovery 980/980 PASS；新 live
 Conformance/Capability 必须等 clean commit 后以全新 freeze 执行。正式 Web、hidden canary、SLICE-002 与 Production Activation 仍未执行。
+
+`1.4.1` clean candidate `e299c097ee02dd89c404a368f070da9d546ba973` 随后完成 run-008：Conformance 绑定 preflight
+`sha256:e031932adb843c4109a3920337d2502e406a71b28ff97d4db119388c599cb005`，恰好 2 calls / 12 Case PASS，result/terminal
+digest 为 `sha256:e13ac784248589ec1b029a98fbe8a2515bebe8619275977d5d65b57921ba3d27` /
+`sha256:a52bf779d5d4727805a359c5ee1f10b659f9e6f25de373e752e2fd6bbd073151`。Capability freeze
+`sha256:ac0f0c6e76fe7b6bed003185b74622b9af6c6d88ab4a9b04380c97440916dca1` 在第二次已完成 Provider request 后失败关闭：
+`ZERO-CANDIDATES-002` 返回 `declared_method_inventory` intent，但 sealed state 没有可绑定的 exact `JAVA_TYPE` Ref；仅首个 Case 完成并
+PASS，无 retry，failure/terminal digest 为 `sha256:463cd849706040c44ee7f62bdfe2e37bcaa83177ea1651ac1799ea000e8e89c4` /
+`sha256:7b8cdbd8ab55a5b12f8f39c665cf16597f3a8029109b21ccf32c92e722535416`。
+
+按 `FINDING-008-016`，不再修改 Prompt、suite、Oracle 或 threshold。代码审查确认 DeepSeek Adapter `@1` 未发送或冻结
+temperature，因此实际继承 Provider 默认值 1；活动 Provider protocol 升级为 `deepseek-chat-completions-no-tools@2`、Conformance
+fixture `1.0.1`，固定 JSON numeric `temperature: 0` 并纳入 configuration fingerprint、公开状态、sanitized Result 与 live wire
+检查。旧 `@1` Result 全部 stale。定向 40/40、full discovery 981/981、current documents 320/320 与 `git diff --check` PASS；
+完成 clean commit 后只执行一次全新 run-009 Conformance + Capability；若仍未达到 18/18，停止继续调整 Prompt 或 Provider 参数。
+正式 Web、hidden canary、SLICE-002 与 Production Activation 仍未执行。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

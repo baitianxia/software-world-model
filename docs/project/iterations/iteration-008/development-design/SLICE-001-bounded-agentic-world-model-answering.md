@@ -116,7 +116,7 @@ Contract 或安全 Owner，先更新对应 System 文档/ADR。详见 [FINDING-0
 
 用户现已选择 DeepSeek。当前 exact candidate 使用独立 `DEEPSEEK` Provider、
 `https://api.deepseek.com/chat/completions`、默认及期望响应 identity `deepseek-v4-pro`、secret reference
-`env:DEEPSEEK_API_KEY` 与 Adapter `deepseek-chat-completions-no-tools@1`；`deepseek-v4-flash` 只允许显式选择，旧 alias 不回退。
+`env:DEEPSEEK_API_KEY` 与初始 Adapter `deepseek-chat-completions-no-tools@1`；`deepseek-v4-flash` 只允许显式选择，旧 alias 不回退。
 独立 2-call Conformance 与 ITER-008 39-call Capability runner 已完成 fake-transport 闭合。按用户要求先验证模型可用性，再调整正式
 runtime/product egress policy；当前正式 runtime 继续保持 Ark。DeepSeek 最小 model diagnostic run-001 已在 clean candidate
 `8cbb3ab…` 上按 post-freeze 单次授权恰好调用 1 次并 PASS，请求/响应 identity 均为 `deepseek-v4-pro`；这只解除 model availability
@@ -180,6 +180,15 @@ model-owned term 在 raw 12 项上限内由 Application 按 casefold 去重；Or
 projection 集合；cycle 只从同一产品 Session 的 executed progress 证据推导。Case 仍为 18、调用仍为 41、阈值仍为
 18/18，no-retry 不变。本地 affected 66/66、fake transport 18/18 和 full discovery 980/980 PASS；新 live Conformance/
 Capability 必须从修复后的 clean candidate 以全新 freeze 独立开始。
+
+`1.4.1` run-008 Conformance 12/12 PASS，但 Capability 在第二个已完成 Provider request 后因不可编译的
+`declared_method_inventory` intent 失败关闭；只有首个 Case 完成并 PASS。相同 zero-candidate sealed state 在 run-007 曾合法
+FINISH，且 Adapter `@1` 没有发送或冻结 temperature，实际继承 Provider 默认值 1。按
+[FINDING-008-016](../findings/FINDING-008-016.md)，本 Slice 不再改 Prompt/suite/Oracle/threshold，而将 Provider protocol 升级为
+`deepseek-chat-completions-no-tools@2`、Conformance fixture `1.0.1`，固定 JSON numeric `temperature: 0` 并把它纳入 configuration
+fingerprint 与 live wire Gate。完成 deterministic/full/docs 验证和 clean commit 后只执行一次 run-009 Conformance + Capability；
+当前定向 40/40、full discovery 981/981、current documents 320/320 与 `git diff --check` PASS。若 run-009 仍未达到 18/18，
+停止继续调整 Prompt 或 Provider 参数。正式 runtime 继续保持 Ark。
 
 ## Open questions and implementation risks
 

@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记十五条已处置 Finding：
+本 Slice 当前登记十六条已处置 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -53,6 +53,10 @@ iteration: ITER-008
   search term 失败关闭；已完整评审的 15 Case 还证明单路径 Oracle 与按 operation 名称推导 cycle 会拒绝合法产品行为。
   活动契约升级为 `1.4.1`：Application 对有界 model-owned term 按 casefold 去重，Oracle 预冻结有限的等价 exact
   projection 集合，evaluator 只根据同一产品 Session 的 progress 证据判定 cycle。
+- [FINDING-008-016](FINDING-008-016.md)：`1.4.1` run-008 Conformance 12/12 PASS，但 Capability 在第二次已完成的 Provider
+  request 后因不可编译的 inventory intent 失败关闭；Adapter 未发送或冻结 temperature，实际继承 Provider 默认值 1。
+  Provider 协议升级为 `deepseek-chat-completions-no-tools@2`，固定 `temperature: 0` 并由 configuration fingerprint 与
+  Conformance `1.0.1` 共同约束；只允许一次全新 run-009 资格链。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

@@ -161,6 +161,24 @@ Application 对有界 search term 按 casefold 保留首次顺序去重；Oracle
 evaluator 不再把不同 sealed-state 样本的同名 operation 视为 cycle。本地 affected 66/66、fake transport 41 calls /
 18/18 与 full discovery 980/980 PASS；新 live qualification 仍必须绑定 clean exact candidate 和全新 freeze。
 
+`1.4.1` clean candidate `e299c097ee02dd89c404a368f070da9d546ba973` 的 DeepSeek Conformance run-008 绑定 preflight
+`sha256:e031932adb843c4109a3920337d2502e406a71b28ff97d4db119388c599cb005`，恰好完成 2 calls / 12 Case PASS；
+result/terminal digest 为 `sha256:e13ac784248589ec1b029a98fbe8a2515bebe8619275977d5d65b57921ba3d27` /
+`sha256:a52bf779d5d4727805a359c5ee1f10b659f9e6f25de373e752e2fd6bbd073151`，唯一模型 identity 为 `deepseek-v4-pro`，tokens 为
+372/84，usage 完整。
+
+同候选 Capability run-008 绑定 freeze
+`sha256:ac0f0c6e76fe7b6bed003185b74622b9af6c6d88ab4a9b04380c97440916dca1`，在第二次已完成 Provider request 后失败关闭。
+`WM-JSS-I8-FIRST-CANDIDATES-001` 独立 Review PASS；`ZERO-CANDIDATES-002:call-1` 返回没有 exact `JAVA_TYPE` Ref 可绑定的
+`declared_method_inventory` intent，compiler 以 `INVALID_ARGUMENT` 拒绝。attempted requests / completed Cases 为 2 / 1，
+failure/terminal digest 为 `sha256:463cd849706040c44ee7f62bdfe2e37bcaa83177ea1651ac1799ea000e8e89c4` /
+`sha256:7b8cdbd8ab55a5b12f8f39c665cf16597f3a8029109b21ccf32c92e722535416`；无 retry，未形成 Qualification 或 Activation。
+
+按 [FINDING-008-016](../findings/FINDING-008-016.md)，这不是继续调整 Prompt 的依据。Adapter `@1` 没有发送或冻结
+temperature，实际继承 Provider 默认值 1；Provider protocol 改为 `deepseek-chat-completions-no-tools@2`、Conformance fixture
+`1.0.1`，固定 JSON numeric `temperature: 0` 并由 configuration fingerprint 与 live wire Case 共同验证。旧 `@1` Result 全部 stale；
+新 clean candidate 只允许一次 run-009 Conformance + Capability 资格链。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

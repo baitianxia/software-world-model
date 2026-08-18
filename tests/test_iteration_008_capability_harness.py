@@ -379,7 +379,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             ),
             provider_configuration_fingerprint=Digest("sha256:" + "2" * 64),
             actual_model_fingerprint="deepseek-v4-pro",
-            adapter_version="deepseek-chat-completions-no-tools@1",
+            adapter_version="deepseek-chat-completions-no-tools@2",
             exact_candidate_checkpoint_ref="git:" + "3" * 40,
             environment_ref="iter-008-bounded-capability@1",
             reference_strategy_ref="standalone-evaluator@1",
@@ -550,7 +550,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(request["phase"], "DEEPSEEK_CONFORMANCE")
             self.assertEqual(
                 request["authorization_scope"]["adapter_version"],
-                "deepseek-chat-completions-no-tools@1",
+                "deepseek-chat-completions-no-tools@2",
             )
             verified = freeze.verify_preflight(preflight_path)
             self.assertEqual(
