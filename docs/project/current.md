@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-008-freeze-test-dependency-fixed-run-009-next
+worktree_status: iteration-008-run-010-formal-freeze-pass-live-authorization-next
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-008-freeze-test-dependency-fixed-run-009-next
+live_model_path: iteration-008-run-010-formal-freeze-pass-live-authorization-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-027 18/18 qualified / run-009 formal freeze next** | clean candidate `be9ab1e…` 的 run-027 Conformance 2/2 / 12/12、Capability 40 calls / 18 Case / 18/18 PASS，V-002 PASS。证据提交后的 formal run-008 在零模型调用的 focused 阶段因 unit test 隐式依赖未跟踪 workspace `var/` 而 88 PASS / 1 ERROR；accepted baseline 本身未漂移。`FINDING-008-039` 已用 hermetic temporary fixture 修复，clean producer focused 89/89 PASS；run-008 不复用，下一 Gate 为全新 run-009 formal freeze/Web。canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-027 18/18 qualified / run-010 formal freeze PASS** | run-027 Conformance 2/2 / 12/12、Capability 40 calls / 18 Case / 18/18 PASS，V-002 PASS。run-008 的非 hermetic unit test 已由 `FINDING-008-039` 修复；run-009 又证明纯 Git checkout 缺少 full-suite 必需的受保护历史验证输入。`FINDING-008-040` 区分 clean tracked product source 与 ignored validation corpus；正确装配的 run-010 以 focused 89/89、candidate 37/37、full 1038 exact hold、docs/prelisten PASS，freeze 模型调用 0。下一 Gate 为绑定 exact freeze 的正式公开 Web 授权与执行；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -573,6 +573,18 @@ staging，所以 baseline 没有漂移；失败来自 unit test 的隐式本机 
 `FINDING-008-039` 已将该 unit test 改为自包含 temporary baseline fixture，实际 formal CLI 的显式 exact baseline digest Gate 不变；
 无 `var/iteration-006` 的 clean producer 中单项 1/1、focused 89/89 PASS。run-008 永久保留且不复用，下一尝试为全新
 `run-009-freeze`。
+
+run-009 随后在纯 Git checkout 中通过 focused 89/89 与 candidate-package 37/37，但 full discovery 因缺少仓库有意忽略的五个
+`validation-projects/` nested repositories 和历史 frozen `var/` 语料，只发现 1020 项并出现 8 FAIL、25 ERROR、1 skip；没有
+formal report 或外部模型调用。`FINDING-008-040` 将 formal producer 明确分成 exact clean tracked product source 与受保护历史验证
+输入；后者只服务 full regression，不进入 source snapshot、candidate package 或产品 manifest。
+
+正确装配的 formal `run-010-freeze` 使用 tracked commit `3f4e4789adea9f0dfe7c754ea3d659e6d71c9c1f` / tree
+`a7a38cc457e0a42223976566a0171fd98319f35f` 并 PASS：focused 89/89、candidate 37/37、docs/prelisten PASS，full 1038 中
+1033 PASS 且只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report/deterministic qualification/candidate-stage digest 为
+`sha256:42281ade…361a` / `sha256:96a96370…7876` / `sha256:ce4d635a…886c`；freeze 外部模型 dispatch、Git 发布与
+Activation 均未执行。pending grant `sha256:e3c9bed5…b082` 仍为未授权状态，下一 Gate 是晚于该 exact freeze 的公开 Web 授权；
+hidden canary 仍未披露。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

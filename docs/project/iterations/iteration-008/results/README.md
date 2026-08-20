@@ -114,7 +114,24 @@ product freeze/Web。尚无 Product Result，hidden canary 与 Production Activa
 ITER-006 baseline。实际 CLI 显式提供的 accepted baseline 已先成功完成 staging，故这不是 baseline drift。按
 [FINDING-008-039](../findings/FINDING-008-039.md)，测试改用 hermetic temporary fixture，formal CLI 的 exact baseline digest Gate
 不变；无历史 `var/` 的 clean producer 中单项 1/1、focused 89/89 PASS。run-008 失败目录保留且不得复用；下一尝试必须使用
-`run-009-freeze` 未来路径。尚无 Product Result，hidden canary 与 Activation 未执行。
+`run-009-freeze` 未来路径。
+
+run-009 在纯 Git checkout 中通过 focused 89/89 与 candidate-package 37/37，随后因缺少 full regression 的受保护本机输入而停止：
+只发现 1020 项，出现 8 FAIL、25 ERROR 与 1 skip。缺失输入包括五个 ignored `validation-projects/` nested repositories 和
+ITER-003/007 历史 frozen evidence；它们是历史验证语料，不是产品 source。run-009 没有 report、grant、Web 或外部模型调用，目录
+保留且不可复用。处置见 [FINDING-008-040](../findings/FINDING-008-040.md)。
+
+全新 `run-010-freeze` 从 exact tracked commit `3f4e4789adea9f0dfe7c754ea3d659e6d71c9c1f` / tree
+`a7a38cc457e0a42223976566a0171fd98319f35f` 装配 clean product source，并独立挂载受保护历史验证输入。正式 freeze PASS：focused
+89/89、candidate-package 37/37、docs 与 unauthorized-prelisten PASS；full 1038 中 1033 PASS，只保留
+`FINDING-008-020` 的 exact 4 FAIL + 1 ERROR，gate 为 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。report/deterministic
+qualification/candidate-stage digest 为 `sha256:42281ade…361a` / `sha256:96a96370…7876` / `sha256:ce4d635a…886c`；source
+snapshot commit/tree/manifest 为 `e65691be…341` / `330a6505…011` / `sha256:e1f4c414…247`。freeze 外部模型 dispatch、Git 发布与
+Activation 均为 `NOT_EXECUTED`。
+
+pending evaluation grant digest 为 `sha256:e3c9bed5…b082`，仍为 `live_dispatch_authorized=false`；formal report 明确
+`AWAITING_USER_AFTER_CODE_FREEZE`。因此尚无 Product Result，下一 Gate 是晚于该 exact freeze 的用户公开 Web 授权；hidden canary
+仍未披露，Production Activation 未执行。
 
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按

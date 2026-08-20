@@ -285,7 +285,17 @@ product freeze/Web。该资格不授权 hidden canary、SLICE-002 或 Production
 `_candidate_stage`，却忽略 CLI 显式 `--baseline-stage`，另从 clean producer 中不存在的未跟踪 workspace `var/` 读取 baseline，
 结果 88 PASS / 1 ERROR。实际 accepted baseline staging 已在测试前成功，因此不是 digest drift。测试现使用 hermetic temporary
 fixture，formal CLI 的真实 exact baseline Gate 不变；不含历史 `var/` 的 clean producer focused 89/89 PASS。run-008 不形成或
-复用 freeze，Readiness 下一 Gate 是全新 run-009 formal freeze。
+复用 freeze。
+
+run-009 的 focused 89/89 与 candidate-package 37/37 随后 PASS，但纯 Git checkout 没有 full-suite 按既有协议读取的受保护
+`validation-projects/` nested repositories 与历史 `var/` evidence，full discovery 只发现 1020 项并出现 8 FAIL、25 ERROR、
+1 skip，未形成 report 或外部模型调用。`FINDING-008-040` 明确 formal producer 的 clean product source 与 ignored validation
+inputs 是两层独立边界；后者不进入 source snapshot/candidate package，只由 exact full-regression gate 校验。
+
+正确装配的 run-010 已从 tracked commit `3f4e4789…c9c1f` / tree `a7a38cc…f35f` 完成 formal freeze：focused 89/89、candidate
+37/37、docs/prelisten PASS，full 1038 中 1033 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report 与
+deterministic qualification digest 为 `sha256:42281ade…361a` / `sha256:96a96370…7876`，freeze 外部模型 dispatch 为 0；
+pending grant `sha256:e3c9bed5…b082` 仍未授权。Readiness 下一 Gate 是绑定该 exact freeze 的公开 Web 授权与执行。
 
 ## Slice, dependency and risk closure
 

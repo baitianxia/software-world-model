@@ -535,6 +535,17 @@ unit test 自行读取 clean producer 中不存在的未跟踪 workspace `var/it
 [FINDING-008-039](../findings/FINDING-008-039.md) 将测试改为 hermetic temporary fixture，保留 formal CLI 的真实 exact baseline
 digest Gate；不含历史 `var/` 的 clean producer 单项 1/1、focused 89/89 PASS。run-008 不得复用，下一 formal 尝试为 run-009。
 
+run-009 已通过 focused 89/89 和 candidate-package 37/37，但纯 Git checkout 缺少 full regression 有意读取的 ignored
+`validation-projects/` repositories 与历史 frozen `var/` evidence，完整执行面退化为 1020 项、8 FAIL、25 ERROR、1 skip，未形成
+report。按 [FINDING-008-040](../findings/FINDING-008-040.md)，formal producer 将 exact clean tracked product source 与受保护历史
+验证输入分层；验证语料不进入 source snapshot、candidate stage 或产品 identity，缺失/漂移仍由 exact 1038 test gate 失败关闭。
+
+正确装配的 `run-010-freeze` 使用 tracked commit `3f4e4789…c9c1f` / tree `a7a38cc…f35f`，focused 89/89、candidate 37/37、
+docs/prelisten PASS；full 1038 中 1033 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report/deterministic
+qualification/stage digest 为 `sha256:42281ade…361a` / `sha256:96a96370…7876` / `sha256:ce4d635a…886c`，freeze 外部模型调用
+与 Activation 均未执行。formal freeze 已闭合；下一步只允许取得晚于 exact freeze 的公开 Web 授权并执行登录/下单/跨域题，
+hidden canary 仍不执行。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

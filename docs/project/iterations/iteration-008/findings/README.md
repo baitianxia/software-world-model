@@ -12,10 +12,15 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十九条 Finding；三十九条均已处置或被后续决定取代。`FINDING-008-039` 记录证据写回后的 formal run-008
+本 Slice 当前登记四十条 Finding；四十条均已处置或被后续决定取代。`FINDING-008-040` 记录 run-009 虽通过 focused 89/89 与
+candidate 37/37，却因纯 Git checkout 缺少 full-suite 必需的 protected `validation-projects/` 与历史 `var/` 输入而只发现 1020 项、
+8 FAIL / 25 ERROR / 1 skip。formal producer 现明确分层 clean tracked product source 与 ignored validation corpus；正确装配的
+run-010 以 focused 89/89、candidate 37/37、full 1038 exact hold、docs/prelisten PASS，模型调用 0，正式 freeze Gate 已闭合，
+公开 Web post-freeze grant 为下一阻断。`FINDING-008-039` 记录证据写回后的 formal run-008
 在零模型调用的 focused 阶段因 unit test 隐式依赖 clean producer 不含的未跟踪 workspace `var/` 而 88 PASS / 1 ERROR；实际
 CLI baseline 已先成功 staging，不是 digest drift。测试现使用 hermetic temporary fixture，formal exact baseline Gate 不变；
-无历史 `var/` 的 clean producer focused 89/89 PASS，run-009 formal freeze 为下一 Gate。`FINDING-008-038` 记录 run-026 Conformance 2/2 PASS、
+无历史 `var/` 的 clean producer focused 89/89 PASS；run-009/run-010 的 producer 装配与正式冻结结论由 `FINDING-008-040` 接续。
+`FINDING-008-038` 记录 run-026 Conformance 2/2 PASS、
 Capability 40 calls / 18 Case 完成且 transport 零 unknown/retry，但 positive Review 与 negative Review 返回同一个 REJECT，结果
 17/18。根因是 model-visible wire 仍把不适用的 recall 缺失码送给 SATISFIED Need；terminal compiler `@2` 现编译不可伪造的
 positive/three-layer scope。clean candidate `be9ab1e…` 的 run-027 随后完成 Conformance 2/2 / 12/12 与 Capability 40 calls /
@@ -203,6 +208,10 @@ canary、SLICE-002 与 Production Activation gate：
   硬编码未跟踪 workspace `var/iteration-006` 而 88 PASS / 1 ERROR；CLI 显式 accepted baseline 已先成功 staging。测试改为
   hermetic temporary baseline fixture，formal exact baseline digest Gate 不变；无历史 `var/` 的 clean producer 单项 1/1、
   focused 89/89 PASS。run-008 不复用，下一尝试为全新 run-009 formal freeze。
+- [FINDING-008-040](FINDING-008-040.md)：run-009 的 pure Git producer 通过 focused/candidate，却缺少 full regression 有意读取的
+  ignored nested repositories 与 frozen evidence，未形成 report。formal producer 现把 exact clean tracked product source 与受保护
+  历史验证语料分层；后者不进入产品 identity，只由 1038 项 exact gate 校验。正确装配的 run-010 formal freeze PASS，report /
+  deterministic digest 为 `sha256:42281ade…361a` / `sha256:96a96370…7876`；external model dispatch 0，post-freeze Web grant 待定。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。
