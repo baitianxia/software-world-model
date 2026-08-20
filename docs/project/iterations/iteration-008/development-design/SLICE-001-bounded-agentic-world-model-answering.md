@@ -254,6 +254,20 @@ closed evaluation `@1.0.2`；18 Case / 40 calls、18/18、temperature 0、no-ret
 compileall、diff check、路径级 secret scan 与 System Contract fileset 重算通过，`FINDING-008-022` 已处置；clean candidate 和全新
 run-013 live requalification 待完成。
 
+上述闭包以 clean candidate `a93666ce51f24149a487581a3c12283691cbd14b` / tree
+`e3ffdb9d72aa1202a6029a5202db20af3178ad8b` 执行 run-013。Conformance preflight/authorization/result 为
+`sha256:38a95bcddae1bbb03de98c419d8577cd98903560ecbca681524b2379f9ce467e` /
+`sha256:1c0225c7420bcea9634a805bc1a1181a73f29ed28c8906bce5ce569f8bb6d1cf` /
+`sha256:8505983e13d9e2ab4ec9fbeec6b92b2cc9369fb89f921582457fd8703146c2c1`，恰好 2 requests / 12/12 PASS。Capability
+freeze/authorization/result/qualification 为
+`sha256:11524d4c219c13c8593cbdfb499e2b23c809b3cfdcf56eb4e06d3adddf9b469b` /
+`sha256:d56412847278bdf15ba59522dede32c4eebfb6594c7a7271616ebd6a3f602fbb` /
+`sha256:b05583d6edf669008253618c0bd3cd2c872da037da33a8dacae3c46f2ee1ca25` /
+`sha256:61f18bd62d217ad68ac778a5aa4e8537eff180f4009067a75c8e2c011102a0c1`，恰好 40 requests / 18 Case，18/18
+independent PASS、failure/unknown 为 0。两阶段唯一 identity 均为 `deepseek-v4-pro`，temperature 0、thinking disabled、usage 完整，
+无 retry、hidden canary disclosure、正式 Web 或 Production Activation。V-002 已闭合；后续进入公开 product/runtime、Source-off、
+security 与正式 Web Gate，不能直接跳到 hidden canary 或 Reflection。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

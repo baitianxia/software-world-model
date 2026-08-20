@@ -263,6 +263,26 @@ outgoing direct 是重复 evidence alias。Application 现按 formal relation �
 `FINDING-008-020` 已隔离的 ITER-003 frozen CLI drift。compileall、diff check、路径级 secret scan 与 System Contract fileset 重算
 通过，`FINDING-008-022` 已处置；clean candidate 与全新 run-013 live qualification 待完成，V-002 继续 blocking。
 
+上述实现形成 clean candidate `a93666ce51f24149a487581a3c12283691cbd14b` / tree
+`e3ffdb9d72aa1202a6029a5202db20af3178ad8b` 并完成 run-013。Conformance preflight/authorization/result/terminal digest 为
+`sha256:38a95bcddae1bbb03de98c419d8577cd98903560ecbca681524b2379f9ce467e` /
+`sha256:1c0225c7420bcea9634a805bc1a1181a73f29ed28c8906bce5ce569f8bb6d1cf` /
+`sha256:8505983e13d9e2ab4ec9fbeec6b92b2cc9369fb89f921582457fd8703146c2c1` /
+`sha256:cb4cd8efd219e18ea88d0a78ae6f34cb5410daa38863e96780ef18dd393fb6ad`；2 requests / 12/12 PASS，唯一 identity
+`deepseek-v4-pro`，tokens 374/86，temperature 0、thinking disabled、usage 完整。
+
+Capability freeze/authorization/result/closed-document/qualification/qualification-document/terminal digest 为
+`sha256:11524d4c219c13c8593cbdfb499e2b23c809b3cfdcf56eb4e06d3adddf9b469b` /
+`sha256:d56412847278bdf15ba59522dede32c4eebfb6594c7a7271616ebd6a3f602fbb` /
+`sha256:b05583d6edf669008253618c0bd3cd2c872da037da33a8dacae3c46f2ee1ca25` /
+`sha256:e8995c818c48734b186b20019d3077303fe88928ab025b64cf7420399755e352` /
+`sha256:61f18bd62d217ad68ac778a5aa4e8537eff180f4009067a75c8e2c011102a0c1` /
+`sha256:b2fcb7e4f26256a369c7d5ae9bad63f2e049bfdba4ae13c6cb35ae4d45a79109` /
+`sha256:e5200a15709585be50f6cb4c56a5f3ff7087f0e53bc8483518a58bc48cdab7fd`。40 requests / 18 Case 全部执行，18/18
+independent PASS、failure/unknown 为 0，唯一 identity `deepseek-v4-pro`，tokens 103471/2909、usage 全部完整；same-authorization retry
+为 false，hidden canary、正式 Web 与 Production Activation 均未执行。资格有效至 `2026-08-27T05:19:50.677774+00:00`；V-002
+转为 PASS，后续 product/runtime、Source-off、security、公开 Web 与 early canary Gate 仍 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

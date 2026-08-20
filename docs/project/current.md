@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-outgoing-call-evidence-subsumption-at-1.5.2-local-validation-complete-clean-candidate-pending
+worktree_status: iteration-008-run-013-capability-qualified-product-gates-pending
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deepseek-v4-pro-run-012-conformance-pass-capability-failed-after-9-pass-cases-outgoing-call-evidence-subsumption-locally-qualified-run-013-pending-production-not-activated
+live_model_path: iteration-008-deepseek-v4-pro-run-013-conformance-and-capability-pass-formal-web-and-canary-not-executed-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / fourth protocol redirect in local validation** | run-012 Conformance 12/12 PASS；Capability 前 9 Case / 21 calls 全 PASS，第 22 次 completed request 暴露 method result 与 standalone outgoing-direct evidence 重复。按 `FINDING-008-022`，Application 将该 formal alias 收敛为 method；活动 contract `1.5.2` 正在本地闭包，正式 runtime 仍保持 Ark |
+| Iteration 008 | **SLICE-001 authorized / V-002 capability qualified** | clean candidate `a93666ce…` 的 run-013 Conformance 12/12、Capability 18/18 PASS，恰好执行 2 + 40 次 DeepSeek requests、零重试；正式 Web、early canary、Agent 对照、Reflection 与 Production Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -287,7 +287,25 @@ terms、工程、Case、Oracle 或未来 Result；path/incoming/both 继续保�
 `@1.5.2`，closed evaluation `@1.0.2` 固定 18 Case / 40 calls。相关 DeepSeek/Gateway/runtime/product 回归 169/169、fake transport
 40 calls / 18/18、current documents 326/326 PASS；完整回归为 980/985，唯一五项仍是 `FINDING-008-020` 已隔离的 ITER-003 frozen
 Codex CLI drift。compileall、diff check、路径级 secret scan 与两套 System Contract fileset digest 重算均通过，`FINDING-008-022`
-已处置；clean candidate 与全新 run-013 live qualification 待完成，产品 Gate 继续阻断。
+已处置。
+
+上述实现形成 clean candidate `a93666ce51f24149a487581a3c12283691cbd14b`（tree
+`e3ffdb9d72aa1202a6029a5202db20af3178ad8b`）并完成 run-013。Conformance preflight/authorization/result/terminal digest 为
+`sha256:38a95bcddae1bbb03de98c419d8577cd98903560ecbca681524b2379f9ce467e` /
+`sha256:1c0225c7420bcea9634a805bc1a1181a73f29ed28c8906bce5ce569f8bb6d1cf` /
+`sha256:8505983e13d9e2ab4ec9fbeec6b92b2cc9369fb89f921582457fd8703146c2c1` /
+`sha256:cb4cd8efd219e18ea88d0a78ae6f34cb5410daa38863e96780ef18dd393fb6ad`，恰好 2 requests / 12/12 PASS，唯一
+identity `deepseek-v4-pro`，tokens 374/86，temperature 0、thinking disabled、usage 完整。
+
+Capability freeze/authorization/result/qualification/terminal digest 为
+`sha256:11524d4c219c13c8593cbdfb499e2b23c809b3cfdcf56eb4e06d3adddf9b469b` /
+`sha256:d56412847278bdf15ba59522dede32c4eebfb6594c7a7271616ebd6a3f602fbb` /
+`sha256:b05583d6edf669008253618c0bd3cd2c872da037da33a8dacae3c46f2ee1ca25` /
+`sha256:61f18bd62d217ad68ac778a5aa4e8537eff180f4009067a75c8e2c011102a0c1` /
+`sha256:e5200a15709585be50f6cb4c56a5f3ff7087f0e53bc8483518a58bc48cdab7fd`。它恰好完成 40 requests / 18 Case，
+18/18 independent PASS、failure/unknown 均为 0，唯一 identity `deepseek-v4-pro`，tokens 103471/2909、usage 全部完整；无 retry、
+hidden canary disclosure、正式 Web 或 Production Activation。资格有效至 `2026-08-27T05:19:50.677774+00:00`；V-002 因而 PASS，
+下一个阻断是正式 runtime/Web 的公开回归、隔离与安全 Gate，随后才可烧录 early canary 和执行独立 Agent 对照。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

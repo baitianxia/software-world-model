@@ -78,7 +78,7 @@ iteration: ITER-008
   completed request 因模型为 outgoing trace 选择 method evidence、suite 选择重复 outgoing direct evidence 而失败关闭。正式 method
   result 已包含带 Support 的 exact outgoing CALLS；Application 将 standalone outgoing-direct alias 收敛到 method，path/incoming/both
   不变，活动协议升级为 `1.5.2/@11/@6/@1.2.2`、suite/oracle `@1.5.2` 与 18 Case / 40 calls；相关 169/169、fake transport
-  18/18、docs 326/326 与本地完整门禁均已闭合，Finding 已处置，新 live qualification 仍 blocking。
+  18/18、docs 326/326 与本地完整门禁均已闭合。随后 run-013 Conformance 12/12、Capability 40 calls / 18/18 PASS，Finding 已处置。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

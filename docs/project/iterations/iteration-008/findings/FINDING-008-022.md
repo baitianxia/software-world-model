@@ -82,3 +82,15 @@ DeepSeek Adapter/Conformance、compiler、Gateway AF_UNIX、runtime 与 product 
 `sha256:6f470e7cfc7c0812474219a3530e8ad23817fcfddb192647bafedb4fde72d349`。Finding 因此处置到
 `SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY`、相邻 System Contract、活动设计、代码与测试；run-012 仍保留为失败证据。
 新的 run-013 live qualification 未达到 18/18 前，正式 Web、hidden canary、SLICE-002 与 Production Activation 继续 blocking。
+
+处置后 clean candidate `a93666ce51f24149a487581a3c12283691cbd14b` / tree
+`e3ffdb9d72aa1202a6029a5202db20af3178ad8b` 完成 run-013。Conformance 以 preflight/result
+`sha256:38a95bcddae1bbb03de98c419d8577cd98903560ecbca681524b2379f9ce467e` /
+`sha256:8505983e13d9e2ab4ec9fbeec6b92b2cc9369fb89f921582457fd8703146c2c1` 完成 2 requests / 12/12 PASS；Capability 以
+freeze/result/qualification
+`sha256:11524d4c219c13c8593cbdfb499e2b23c809b3cfdcf56eb4e06d3adddf9b469b` /
+`sha256:b05583d6edf669008253618c0bd3cd2c872da037da33a8dacae3c46f2ee1ca25` /
+`sha256:61f18bd62d217ad68ac778a5aa4e8537eff180f4009067a75c8e2c011102a0c1` 恰好完成 40 requests / 18 Case、18/18
+independent PASS，failure/unknown 为 0。唯一模型 identity 为 `deepseek-v4-pro`，usage 完整、零重试；该 live 证据确认本 Finding 的
+Contract redirect 可由当前 Provider 遵循。V-002 已 PASS；正式 Web、hidden canary、SLICE-002 与 Production Activation 仍由各自
+Gate 独立阻断。
