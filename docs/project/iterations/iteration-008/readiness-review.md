@@ -240,6 +240,18 @@ raw 空 terminal authority collection PASS，直接验证 `FINDING-008-035` 的 
 下一次 credential/HTTP 前；Adapter/policy/audit 升级为 `@7/@1.4.9/@2`。上游 `1.5.8/@17`、suite/oracle 与 threshold 不变。
 run-024 授权已消费且不能 retry；新 transport identity 的 Conformance/Capability 仍是当前 Readiness blocking Gate。
 
+clean exact candidate `34048ae770944a11aa4e01d0249b90933a30e8c7` / tree
+`153c2dc625fd3e72e6b49c6d6cf94be95a3ef894` 的 run-025 随后关闭该 Gate。Conformance 恰好 2 requests / 12/12 PASS，
+preflight/result digest 为 `sha256:b5590984ae031142c8fa61da043a25b53defc4b8089041920b2773e4ccdd69f0` /
+`sha256:476f4d871ff4e269ca8e0c90a4b84361f390a3346d32deb578a0af0697af0518`；Capability 完成 40 calls / 18 Case /
+18/18 PASS，TLS attempt/success `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，每条 session 恰好最多
+20 dispatch。Capability result/qualification document/terminal digest 为
+`sha256:caf062a2a49fd28e6046937fd10f633c5155f9c47c60565a8d422c2a7b98cc11` /
+`sha256:7d3b4ea2c5527f1e621e5d268105626f5ccf06c00cc9e7b74ae3dcea6bea208a` /
+`sha256:b0dd529152e6c7e43b231a3d439e65de38ea95542cc173b5a25dbe124564a8d6`，资格有效至
+`2026-08-27T13:19:05.298209+00:00`。V-002 对 current exact identity PASS；Readiness 的下一阻断是从证据写回后的 clean
+producer 生成全新 formal product freeze 并执行公开 Web。该资格不授权 hidden canary、SLICE-002 或 Production Activation。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

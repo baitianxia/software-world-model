@@ -89,3 +89,33 @@ prepared Codex binary digest drift FAIL。没有新增 failure/error，该事实
 - System fileset digest：ITER-008
   `sha256:61ebccc713f462a3001deecd484d777b64a774fe0d22824983009ef7a91036f8`；共享文档使 ITER-007 同步重算为
   `sha256:bdbd563dca944b9899f5dacb12170005d630320e82ca2645f0d00b7a037c5e94`。
+
+System/code/test 处置形成 clean exact candidate `34048ae770944a11aa4e01d0249b90933a30e8c7` / tree
+`153c2dc625fd3e72e6b49c6d6cf94be95a3ef894`，随后完成 run-025：
+
+- Conformance preflight/authorization/result/terminal digest 为
+  `sha256:b5590984ae031142c8fa61da043a25b53defc4b8089041920b2773e4ccdd69f0` /
+  `sha256:9e79ef2fafae3a22fe34e208ded9c731b4e6578a9e02166c24c3b9f12d05fc6d` /
+  `sha256:476f4d871ff4e269ca8e0c90a4b84361f390a3346d32deb578a0af0697af0518` /
+  `sha256:9e1151ac2dc8426d4193757ea90179311cba6be52ed637bde3c5d055aee34049`。恰好 2 requests / 12/12 PASS，
+  TLS `1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`，唯一 response identity 为 `deepseek-v4-pro`；
+- Capability freeze/authorization digest 为
+  `sha256:011544d5fc63175d9383688137c9780430f7073f91dbe8906e1e1389bd024924` /
+  `sha256:7955eb9692389b4de20fa7be972a0990cc4bf94cbb32174d8abf51f3b1ce15a2`。运行完成 40 calls / 18 Case /
+  18/18 PASS，input/output tokens `84,420/2,463`，failure/unknown 均为 0；
+- transport 为 TLS attempt/success `2/2`、reuse `38`、HTTP/credential `40/40`、post-dispatch unknown/request retry `0`，
+  `maximum_http_dispatches_per_tls_session=20`。两次 certificate digest 相同，但分别来自两条 verified session；这是真实执行证据，
+  不是从配置推导；
+- result/closed-document/qualification-proof/qualification-document/terminal digest 为
+  `sha256:caf062a2a49fd28e6046937fd10f633c5155f9c47c60565a8d422c2a7b98cc11` /
+  `sha256:53fe0e402ee737ec4200ecc408618e4b42fff42dfaf6ae3bd9b5ec358fc1570a` /
+  `sha256:b407f6ad708d6a3b071325d599e9616af89cce249f7202b38e740f02eb948453` /
+  `sha256:7d3b4ea2c5527f1e621e5d268105626f5ccf06c00cc9e7b74ae3dcea6bea208a` /
+  `sha256:b0dd529152e6c7e43b231a3d439e65de38ea95542cc173b5a25dbe124564a8d6`；
+- Qualification ref 为 `capability-evaluation:evaluation_result_81d1cb091ea249e78bbdf562aabc7403`，valid until
+  `2026-08-27T13:19:05.298209+00:00`。exact loader 已用该 evidence 创建六调用 `@1.4.9` Gateway policy；全部 85 份 JSON
+  为 `0600`，完整 run-025 目录 credential-shaped secret scan 无命中。两份授权均已消费且不可重试；hidden canary 未披露，
+  Production Activation 为 `NOT_EXECUTED`。
+
+因此 V-002 对当前 `1.5.8/@17/@1.4.9` + Adapter/connection/audit `@7/@2/@2` exact identity PASS；下一阻断重新变为从本次
+证据写回后的 clean producer 生成全新 formal product freeze，再执行公开 Web。该 PASS 不授权 canary、SLICE-002 或 Activation。

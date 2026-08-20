@@ -485,6 +485,20 @@ logical request 在 credential/Authorization/HTTP 前主动轮换；一次运行
 bounded policy 升级为 `@1.4.9`，freeze/authorization/closed Result 均显式绑定 20-call 上限。上游 `1.5.8/@17`、两个 compiler、
 suite/oracle、18/40、1000-token output 与 18/18 threshold 不变；新 Adapter identity 完整资格化前 formal product Web 继续阻断。
 
+clean exact candidate `34048ae770944a11aa4e01d0249b90933a30e8c7` / tree
+`153c2dc625fd3e72e6b49c6d6cf94be95a3ef894` 的 run-025 已完成该资格化。Conformance 恰好 2 requests / 12/12 PASS；Capability
+完成 40 calls / 18 Case / 18/18 PASS，TLS attempt/success `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，且
+`maximum_http_dispatches_per_tls_session=20`，直接证明第 21 个 logical request 在 dispatch 前轮换。Capability
+result/closed/qualification-proof/qualification-document/terminal digest 为
+`sha256:caf062a2a49fd28e6046937fd10f633c5155f9c47c60565a8d422c2a7b98cc11` /
+`sha256:53fe0e402ee737ec4200ecc408618e4b42fff42dfaf6ae3bd9b5ec358fc1570a` /
+`sha256:b407f6ad708d6a3b071325d599e9616af89cce249f7202b38e740f02eb948453` /
+`sha256:7d3b4ea2c5527f1e621e5d268105626f5ccf06c00cc9e7b74ae3dcea6bea208a` /
+`sha256:b0dd529152e6c7e43b231a3d439e65de38ea95542cc173b5a25dbe124564a8d6`，Qualification ref 为
+`capability-evaluation:evaluation_result_81d1cb091ea249e78bbdf562aabc7403`，有效至
+`2026-08-27T13:19:05.298209+00:00`。V-002 因而对 current exact identity PASS；下一步只能从证据写回后的 clean producer
+生成全新 formal product freeze，再执行公开 Web，不能据此进入 hidden canary 或 Production Activation。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

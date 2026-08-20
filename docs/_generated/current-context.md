@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-deepseek-bounded-session-rotation-awaiting-requalification`
+- Worktree status: `iteration-008-run-025-qualified-formal-product-refreeze-next`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-adapter-7-conformance-capability-next`
+- Live model path: `iteration-008-run-025-qualified-formal-product-refreeze-next`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

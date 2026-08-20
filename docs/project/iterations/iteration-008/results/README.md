@@ -45,6 +45,20 @@ unknown 关闭；HTTP/credential 40/40、retry 0，failure/terminal digest 为 `
 与 policy `@1.4.9`，每条 verified session 最多 20 dispatch，轮换在 credential/HTTP 前，request retry 仍为 0。上游
 `1.5.8/@17` 与 suite/oracle 不变；新 identity 完整资格化前 formal product freeze/Web 继续 blocking。
 
+clean exact candidate `34048ae770944a11aa4e01d0249b90933a30e8c7` / tree
+`153c2dc625fd3e72e6b49c6d6cf94be95a3ef894` 的 run-025 已完成新 identity 资格化。Conformance 为 2 requests / 12/12
+PASS；Capability 为 40 calls / 18 Case / 18/18 PASS，TLS attempt/success `2/2`、reuse `38`、HTTP/credential `40/40`、
+unknown/retry `0`，实际执行两条各不超过 20 dispatch 的 verified session。Capability result/closed-document/
+qualification-proof/qualification-document/terminal digest 为
+`sha256:caf062a2a49fd28e6046937fd10f633c5155f9c47c60565a8d422c2a7b98cc11` /
+`sha256:53fe0e402ee737ec4200ecc408618e4b42fff42dfaf6ae3bd9b5ec358fc1570a` /
+`sha256:b407f6ad708d6a3b071325d599e9616af89cce249f7202b38e740f02eb948453` /
+`sha256:7d3b4ea2c5527f1e621e5d268105626f5ccf06c00cc9e7b74ae3dcea6bea208a` /
+`sha256:b0dd529152e6c7e43b231a3d439e65de38ea95542cc173b5a25dbe124564a8d6`。Qualification ref 为
+`capability-evaluation:evaluation_result_81d1cb091ea249e78bbdf562aabc7403`，有效至
+`2026-08-27T13:19:05.298209+00:00`。两份授权均已消费且不可 retry；V-002 PASS，下一步是全新 formal product freeze/Web，
+hidden canary 与 Production Activation 仍未执行。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

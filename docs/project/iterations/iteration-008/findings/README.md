@@ -15,7 +15,9 @@ iteration: ITER-008
 本 Slice 当前登记三十六条 Finding；三十六条均已处置或被后续决定取代。`FINDING-008-036` 记录 terminal-owner candidate 的
 run-024 已完成 Conformance 2/2、Capability 前 39 responses / 17 Case 与 Draft raw-empty PASS，却在唯一 TLS session 运行约 120 秒、
 第 40 次 Review request dispatch 后收到 `REMOTE_DISCONNECTED`。活动 transport 处置把每条 verified session 限为 20 dispatch，
-升级 Adapter/policy/connection/audit 为 `@7/@1.4.9/@2/@2`，request retry 仍为 0；新 identity 的完整资格继续 blocking。
+升级 Adapter/policy/connection/audit 为 `@7/@1.4.9/@2/@2`，request retry 仍为 0。clean candidate `34048ae…` 的 run-025
+随后完成 Conformance 2/2 / 12/12 与 Capability 40 calls / 18 Case / 18/18 PASS，实际使用 TLS `2/2`、reuse `38`、
+HTTP/credential `40/40`、unknown/retry `0`；V-002 PASS，下一步为全新 formal product freeze/Web。
 `FINDING-008-035` 记录 run-006 的旧 Draft authority 回显截断，并把 terminal authority collection 收回 Application，以 raw-empty /
 normalized-exact compiler 绑定，升级上游为 `1.5.8/@17` 与 suite/oracle `@1.5.8`；run-024 Draft 已直接证明该 Owner 调整有效。
 `FINDING-008-034` 记录 run-005 正式登录题在 Provider
@@ -169,7 +171,9 @@ canary、SLICE-002 与 Production Activation gate：
   完成 39 responses / 17 Case，Draft 以 104 tokens、raw 空 authority collection PASS，第 40 次 Review request 却在唯一 TLS
   session 约 120 秒处 `REMOTE_DISCONNECTED`。活动 Adapter `@7` / connection policy `@2` / audit `@2` 将每条 session 限为
   20 dispatch，40-call 正常轮换一次并保留第 3 次 acquisition 余量；bounded policy 升级为 `@1.4.9`，任何已 dispatch request
-  仍 outcome unknown 且不重发。上游 `1.5.8/@17`、suite/oracle 与 threshold 不变；新 live qualification 继续 blocking。
+  仍 outcome unknown 且不重发。上游 `1.5.8/@17`、suite/oracle 与 threshold 不变。clean candidate `34048ae…` 的 run-025
+  Conformance 2/2 / 12/12、Capability 40/18/18 全部 PASS，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry
+  `0`，直接验证 20 dispatch/session 轮换；V-002 已闭合，formal product freeze/Web 为下一阻断。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。
