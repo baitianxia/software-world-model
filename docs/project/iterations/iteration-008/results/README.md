@@ -20,6 +20,13 @@ POST 前显示旧三调用边界；同一 public validator 也会拒绝 bounded 
 修复；旧 freeze/grant 因 source identity 改变不可继续使用，新的 formal refreeze/Web 仍 blocking。hidden canary 未披露，Production
 Activation 为 `NOT_EXECUTED`。
 
+修复后的 formal `run-005-freeze`、authorized startup 与 4—6 call UI 均 PASS；首个登录题仍没有形成 Product Result。Gateway
+authorized wrapper 在 560 ms 内因 packaged bounded workload self-integrity pin 过期而失败，terminal digest 为
+`sha256:5288b0c2354251d2b762d755807b3ab8bde4bece21e4de5fd152e692ca00a791`。credential/TLS/HTTP/model call 与 retry 均为 0，
+Source/Update/Direct/Evidence payload access 为 0，browser console clean；后续题未执行。该偏差按
+[FINDING-008-034](../findings/FINDING-008-034.md) 以 `54bc8c8…` 修复；旧 run-005 freeze/grant/session 不可复用，新的 formal
+refreeze/Web 继续 blocking。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

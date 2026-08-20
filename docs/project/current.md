@@ -10,7 +10,7 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-web-dispatch-policy-repair-awaiting-formal-refreeze
+worktree_status: iteration-008-gateway-integrity-pin-repair-awaiting-formal-refreeze
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
 live_model_path: iteration-008-run-023-qualified-formal-product-refreeze-next
 ---
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-023 capability PASS / formal product refreeze next** | Application compiler `@7` / Adapter `@6` 的 run-023 Conformance 2/2 / 12/12 与 Capability 40 calls / 18 Case / 18/18 PASS。首个 formal `run-004-freeze` 及授权启动已 PASS，但 Web 在问题 POST 前暴露旧三调用 UI/validator 假设；模型调用为 0。`FINDING-008-033` 已以 candidate `41b766a…` 修复，旧 freeze/grant 不可继续使用；必须全新 refreeze 后再执行公开 Web。Qualification 有效至 `2026-08-27T11:28:37.309517+00:00`；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-023 capability PASS / formal product refreeze next** | run-023 Conformance 2/2 / 12/12 与 Capability 40 calls / 18 Case / 18/18 PASS。`FINDING-008-033` 修复 run-004 的旧三调用 Web 假设后，run-005 refreeze/startup PASS；首个登录题又在 Provider 前暴露 Gateway wrapper 的 stale bounded workload pin，credential/TLS/HTTP/model call 均为 0。`FINDING-008-034` 已以 `54bc8c8…` 同步 pin 并新增直接 hash 回归；旧 run-005 freeze/grant/session 不可继续使用，必须全新 refreeze。Qualification 有效至 `2026-08-27T11:28:37.309517+00:00`；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -479,6 +479,18 @@ preflight/receipt 为 `sha256:61ae7e8f…29e` / `sha256:cfc86952…2b30`，但�
 109/109 PASS。旧 run-004 freeze/grant 因 product identity 改变不得继续使用；下一步是从写回后的 clean candidate 全新 formal
 refreeze，再执行公开登录/下单 Web。run-023 qualification chain 未被改写，hidden canary 仍未披露，Production Activation 仍为
 `NOT_EXECUTED`。
+
+run-005 refreeze 随后以 source snapshot `f7796993…`、focused 88/88、candidate 37/37、full 1025/1030 与精确历史 hold Gate PASS；
+report/grant 为 `sha256:93200c78…a7ff` / `sha256:72949de7…84d`。startup receipt `sha256:869287ec…8a00` PASS，页面已正确显示
+4—6 calls。首个登录题却在 560 ms 内失败，terminal `sha256:5288b0c2…a791` 的 Gateway role 在接受请求前为 `RuntimeError`：
+packaged bounded workload raw SHA-256 为 `af5059c2…e3c3`，authorized wrapper 仍 pin 旧 `ac0cf321…f49c`。Gateway network audit、
+credential、TLS、HTTP 与模型调用均为 0；Source/Update/Direct/Evidence payload 访问为 0，browser console clean，后续问题未执行。
+
+`FINDING-008-034` 以提交 `54bc8c8fa7d2ab9709191d448dbd7509c3aa4095` / tree
+`4cc184e1c61178cd825904271777774c1dea5cf7` 同步 self-integrity pin，并新增三份 current packaged Gateway entrypoint 的直接 file/hash
+回归，gateway/freeze 14/14、扩展 focused 110/110 PASS。System exact-integrity contract 未改变。旧 run-005 request 不 retry，且其
+freeze/grant/session 因 launcher identity 改变不得复用；下一步仍是全新 formal refreeze，再从登录题开始。hidden canary 未披露，
+Production Activation 为 `NOT_EXECUTED`。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

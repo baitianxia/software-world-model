@@ -4,7 +4,7 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-web-dispatch-policy-repair-awaiting-formal-refreeze`
+- Worktree status: `iteration-008-gateway-integrity-pin-repair-awaiting-formal-refreeze`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
 - Live model path: `iteration-008-run-023-qualified-formal-product-refreeze-next`
 - Normative source: `docs/system/`

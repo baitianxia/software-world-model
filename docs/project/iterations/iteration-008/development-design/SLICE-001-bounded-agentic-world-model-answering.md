@@ -452,6 +452,13 @@ Production Activation 保持 `NOT_EXECUTED`。
 接受、3 拒绝，相关 21/21 与扩展 focused 109/109 PASS。System 4—6 call 规范未改变。旧 run-004 freeze/grant 因 candidate source
 变化不得继续使用；必须从新 clean producer 全新 formal refreeze 后才能执行公开登录/下单问题。
 
+run-005 refreeze/startup 与正确的 4—6 call 页面随后 PASS，但首个登录题在 560 ms 内、任何 Provider HTTP 前暴露
+`FINDING-008-034`：candidate stage 中 bounded Gateway workload raw SHA-256 已为 `af5059c2…e3c3`，authorized wrapper 仍校验旧
+`ac0cf321…f49c`，所以 Gateway 在 listener accept、credential/TLS/HTTP 前失败关闭。模型调用与 retry 均为 0；下单/跨域题未执行。
+修复提交 `54bc8c8fa7d2ab9709191d448dbd7509c3aa4095` 同步 pin，并新增三份 current packaged entrypoint 的直接 hash 回归；
+gateway/freeze 14/14、扩展 focused 110/110 PASS。System integrity contract 未改变。run-005 freeze/grant/session 永久保留但不可
+复用，必须再次全新 formal refreeze。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

@@ -12,7 +12,9 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十三条 Finding；三十三条均已处置或被后续决定取代。`FINDING-008-033` 记录 run-004 formal Web 在任何问题
+本 Slice 当前登记三十四条 Finding；三十四条均已处置或被后续决定取代。`FINDING-008-034` 记录 run-005 正式登录题在 Provider
+调用前暴露的 stale Gateway self-integrity pin；实际 packaged bounded entrypoint 为 `af5059…`，wrapper 仍校验旧 `ac0cf3…`，
+现已同步 pin 并新增真实 file/hash 回归，旧 freeze/grant/session 不可继续使用。`FINDING-008-033` 记录 run-004 formal Web 在任何问题
 POST 前暴露的旧三调用 UI/validator 假设；现已由 startup `dispatch_policy` 统一驱动页面披露与 1/3/4—6 call 结果校验，旧 freeze/
 grant 因 product identity 改变不得继续使用，新的 formal product freeze 仍是 blocking Gate。`FINDING-008-032` 记录 Adapter `@5` 的 run-022 已完整
 执行 40 calls / 18 Case，却仍遗漏 `methods/implementations`；活动处置把问题直接 ASCII 词项的机械保留放回 Application compiler
@@ -147,6 +149,10 @@ canary、SLICE-002 与 Production Activation gate：
   旧三调用文案，HTTP public validator 也会拒绝合法 4—6 call Result；会话 request count 和模型调用均为 0。实现现以已校验 startup
   `dispatch_policy` 统一驱动 UI 与结果调用数边界，bounded 4/5/6 接受、3 拒绝；System Contract 未改变。修复提交
   `41b766a…` 后旧 freeze/grant 不得继续使用，必须全新 formal product freeze。
+- [FINDING-008-034](FINDING-008-034.md)：run-005 refreeze/startup 与 4—6 call UI 均 PASS，但登录题在 560 ms 内于 Provider 前
+  失败：Gateway packaged bounded workload raw SHA-256 为 `af5059…`，authorized wrapper 仍 pin 旧 `ac0cf3…`，所以 listener accept、
+  credential、TLS、HTTP 与模型调用均为 0。修复提交 `54bc8c8…` 同步 pin，并新增三份 current packaged entrypoint 的直接 hash
+  回归；扩展 focused 110/110 PASS。旧 run-005 freeze/grant/session 保留且不可复用，必须全新 refreeze。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。
