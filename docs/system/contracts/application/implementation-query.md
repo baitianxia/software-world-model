@@ -35,6 +35,9 @@ Query search term 使用同一 normalization，不做隐藏 stemming、embedding
 
 - `search_terms` 是 Planner 从原问题提出、平台验证的 1—12 个非空通用检索词；不得包含 Scope 外部 Ref 或隐藏 operation。
   平台在 raw list 的 12 项上限内以 Unicode casefold 归一去重，保留首次拼写和顺序；规范化后仍必须至少有一项。
+- term provenance 按原问题中的语义来源判断，而不是把 Prompt 中也出现的词当成禁用词；原问题明确包含的 material retrieval
+  concept 仍须保留。Planner 可以做常见词形、翻译或 identifier-like normalization，但不得仅从抽象 outcome 推断问题没有请求的
+  具体执行机制，例如不能把未说明实现方式的 success/failure 自动改写为 return/throw。
 - `limit` 为 1—20；查询必须扫描 exact index，而不是按工程、commit、问题文本或枚举题型分支。
 - 结果按 `matched unique normalized term count`、`matched field-class count`、`SEMANTICS_COMPLETE` 优先级降序，再按 canonical
   method signature 与 Root ID 升序稳定排序。排名只能组织候选，不能把高分候选变成已证明的唯一答案。

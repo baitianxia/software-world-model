@@ -329,6 +329,32 @@ compiler `@6`、Application ledger、18 Case、40 calls、18/18、temperature 0�
 330/330、compileall、diff check 与路径级 secret scan PASS。当前 System fileset digest 为
 `sha256:0143229ee22d1db3962e6bc6fedf7982fea96642fe84d1f116667f3b144219a5`；这些确定性结果不替代新的 live qualification。
 
+`1.5.4/@13` clean candidate `51c8ac369…` 的 run-018 Conformance 2 calls / 12/12 PASS；Capability 无 retry 地完成
+40 calls / 18 Case，transport 为 TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0。PATH-EXISTS、MAX-FOUR、所有
+operation/compiler/typed Ref projection 与第二步 result-driven transition 均正确，但两个首轮 search-term semantic constraint 使
+closed result 为 16/18 FAIL；详见 [FINDING-008-027](../findings/FINDING-008-027.md)。
+
+REF-PROVENANCE 的 Prompt 缺口是 model 把原问题明确拥有、同时也出现在 instruction vocabulary 中的 `implementation` 过滤掉；
+RESULT-DRIVEN-BATCH 则是 qualification 假阴性：问题只请求抽象 failure/success flow，模型返回全部 question-owned concept，旧 suite
+仍强加未请求的 `return/throw` 实现机制。活动设计不把测试适配成特判：Prompt 采用通用 question-origin check 并禁止 broad-topic
+压缩；Capability Evaluation Contract 禁止 semantic constraint 把一种可能实现提升为唯一表达。suite 只移除那两个无输入依据的 term
+要求，REF-PROVENANCE 的显式 `implementation/candidate` 约束与全部 operation Oracle 保留。
+
+活动身份升级为 capability/Strategy `1.5.5`、prompt/vocabulary `@14`、policy `@1.4.3` 与 suite/oracle `@1.5.5`；Adapter `@4`、
+fixture `1.2.0`、compiler `@6`、Application ledger、18 Case、40 calls、18/18、temperature 0、persistent TLS 和 no-retry 不变。
+System fileset digest 为 `sha256:948647ad…7aaa4`；run-018 永久失败关闭，新 clean candidate 必须重新完成 Conformance 与完整
+Capability，之后才可进入 product freeze。
+
+当前确定性 identity 为 prompt program `sha256:0019eeec2cc7a96008aacf56560b9dca905613c68f35c5caca3891ebc4a1f9b0`、
+Strategy implementation `sha256:4aa70b9275802cd3a2cec459c6a5af1407141e95dce56c879df3895216ca8536`、output schema
+`sha256:9c2f3505c87d677d416c277ea853649f3bf865ffd7dfcaeaea6bc708e080e775`、policy raw
+`sha256:803f55d36ee096371342164f20891a73801afeb359d87e492b33c59e8b174fbe`、qualification resource policy
+`sha256:706542ff3f621d5c9b51d6b2232927403535ebc037812dfb726c58e01e5e5f3f`、suite/oracle raw
+`sha256:9e7ddae7f335cd889141b231cea6182b43bc05a6674cd8a9be7433792774213b` /
+`sha256:8fabaef66384ba4b29855a072905a733159bc1f713ffd1d3bdbb9cbfa55669f7`，product bounded Gateway workload
+`sha256:1eaa8bbab9b6d7123e8c2953b0310ae3edd7cbdcffdb38c5657ca531c9525aab`。相关回归 117/117、fake 40-call / 18/18、
+docs 331/331、compileall/diff/secret scan PASS；完整执行面 1013/1018，唯一五项仍属于 `FINDING-008-020`。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

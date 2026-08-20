@@ -142,6 +142,22 @@ Conformance `1.2.0/@2`、compiler `@6`、18 Case / 40 calls、18/18、persistent
 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
 `sha256:0143229ee22d1db3962e6bc6fedf7982fea96642fe84d1f116667f3b144219a5`。
 
+该身份的 run-018 Conformance 2 calls / 12/12 PASS；Capability 无 retry 完成 40 calls / 18 Case，TLS 1/1、reuse 39、
+HTTP/credential 40/40、unknown/retry 0，但两个首轮 search-term constraint 使 closed result 为 16/18 FAIL。PATH-EXISTS、
+MAX-FOUR、operation/compiler/Ref projection 与所有第二步 transition 均 PASS。REF-PROVENANCE 暴露 Prompt 对 question-owned term
+来源判断不够明确；RESULT-DRIVEN-BATCH 则证明旧 semantic constraint 把原问题未请求的 `return/throw` 具体机制误作唯一等价表达。
+
+按 `FINDING-008-027`，Readiness search-term 边界重冻结为：term provenance 只按 original question 的语义来源判断，不能因为同词也
+出现于 Prompt 就删除；常见 normalization 允许，但不得从抽象 outcome 推断未请求的 execution mechanism。Capability semantic
+constraint 只能要求产品输入与 System Contract 可证明拥有的 concept。活动 identity 为 capability/Strategy `1.5.5`、prompt/vocabulary
+`@14`、suite/oracle `@1.5.5`、policy `@1.4.3`；operation Oracle、18/40、18/18、Adapter `@4`、compiler `@6`、persistent TLS 与
+no-retry 不变。更新后的 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为 `sha256:948647adf5e857ea1a782ab04396c92bfa5a51e8a26b7d35ab6dca984f67aaa4`。
+run-018 永久 FAIL，新身份必须从 clean candidate 完成全新 Conformance 与 Capability；PASS 前全部产品 Gate 继续阻断。
+
+本地重冻结验证为相关 117/117、fake transport 40 calls / 18/18、current documents 331/331、compileall/diff/secret scan PASS；
+完整执行面 1013/1018，唯一四个 failure 与一个 error 的名称和原因仍完全属于 `FINDING-008-020` 的 ITER-003 frozen runtime drift。
+这些结果不替代 live run-019。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

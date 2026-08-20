@@ -362,6 +362,25 @@ no-retry 不变。相关回归 121/121、fake 40-call / 18/18、docs 330/330、c
 1012/1017，唯一五项仍为 `FINDING-008-020` 的历史 drift。System fileset digest 为
 `sha256:0143229ee22d1db3962e6bc6fedf7982fea96642fe84d1f116667f3b144219a5`；新 live qualification 尚待闭合。
 
+`1.5.4/@13` candidate 随后形成 clean commit `51c8ac369b29b609d6a5dcf53f55370a0cb49f04` / tree
+`10abd04fd45fdd13a156fac9349a7a6e21690d8b` 并执行 run-018。Conformance preflight/authorization/result digest 为
+`sha256:5e1d00112eb592e68b3e8861c1a99a8d88d83b38e0456e05badc436d3b477934` /
+`sha256:eb8b08aea2f44cafb0fbbfef4ceabb35160cf7dc4d6e7851ae366d728f6341c2` /
+`sha256:e5ac81e07a36badc53c34699e262168b2ca2052d1503d9d25e2ea71eb37f4727`，2 requests / 12/12 PASS。Capability
+freeze/authorization digest 为 `sha256:93cef5a0c2315ed6bc603ee6a9ae5a327a120d5bb3781010f85f8d3f75ac059d` /
+`sha256:b41bad4b7a56553b9601b102cc856a7db3c35b8157a5cb13671dbe860b9f3d2a`；40 calls / 18 Case 全部完成，TLS 1/1、
+reuse 39、HTTP/credential 40/40、unknown/retry 0，input/output tokens 73,874/2,584。closed result 为 16/18 FAIL，
+result/document/terminal digest 为 `sha256:6cd3f4f8…2459e` / `sha256:4fe292ac…99f04` / `sha256:39a86a2d…8cbf2`。
+
+两个失败均只有首轮 `SEMANTIC_CONSTRAINT_NOT_SATISFIED`；operation、typed projection、第二步 candidate binding 和 exact Ref
+provenance 均 PASS。REF-PROVENANCE 遗漏了原问题明确包含的 `implementation`；RESULT-DRIVEN-BATCH 的输出已覆盖原问题概念，
+旧 suite 却要求未请求的 `return/throw`。按 [FINDING-008-027](../findings/FINDING-008-027.md)，活动 Prompt 改为 question-origin
+check，System Capability Evaluation 禁止把一种可能执行机制当成唯一等价表达；活动身份为 `1.5.5/@14/@1.4.3`、suite/oracle
+`@1.5.5`。operation Oracle、18 Case / 40 calls、18/18、Adapter `@4`、compiler `@6`、persistent TLS 与 no-retry 不变。
+System fileset digest 为 `sha256:948647ad…7aaa4`。run-018 不重评、不 retry，也没有 Qualification、Web、canary 或 Activation；
+相关 117/117、fake 40-call / 18/18、docs 331/331、compileall/diff/secret scan PASS；完整执行面 1013/1018，唯一五项仍为
+`FINDING-008-020` 的历史 drift。新 live qualification 仍 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

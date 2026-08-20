@@ -238,7 +238,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.4")
+        self.assertEqual(contract.strategy_version, "1.5.5")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@6",
@@ -349,7 +349,23 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             investigation_prompt,
         )
         self.assertIn(
-            "delete every term introduced only by these instructions",
+            "Determine origin from the original question rather than from vocabulary overlap",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "Positively requested code-artifact, evidence-relation, or returned-set nouns",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "concepts that occur only in a negated presentation, authority, or budget constraint",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "delete every term that has no corresponding question concept",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "never copy an instructional example or infer an unrequested concrete execution mechanism",
             investigation_prompt,
         )
         self.assertIn(

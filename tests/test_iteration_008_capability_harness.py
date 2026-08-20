@@ -424,6 +424,24 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             PINNED_REQUIRED_CASE_IDS,
         )
 
+    def test_search_term_constraints_follow_question_owned_concepts(self) -> None:
+        cases = {case["case_id"]: case for case in _SUITE["cases"]}
+        flow_groups = cases["WM-JSS-I8-RESULT-DRIVEN-BATCH-004"]["steps"][0][
+            "semantic_constraints"
+        ]["search_term_concept_groups"]
+        provenance_groups = cases["WM-JSS-I8-REF-PROVENANCE-013"]["steps"][0][
+            "semantic_constraints"
+        ]["search_term_concept_groups"]
+
+        self.assertEqual(
+            flow_groups,
+            [["authentication", "auth"], ["failure", "invalid"], ["success"]],
+        )
+        self.assertNotIn(["return"], flow_groups)
+        self.assertNotIn(["throw"], flow_groups)
+        self.assertIn(["implementation", "implementations"], provenance_groups)
+        self.assertIn(["candidate", "candidates"], provenance_groups)
+
     def test_definition_binds_exact_eighteen_case_contract(self) -> None:
         definition = build_evaluation_definition(
             _SUITE,
@@ -440,7 +458,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.4")
+        self.assertEqual(definition.strategy_version, "1.5.5")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),

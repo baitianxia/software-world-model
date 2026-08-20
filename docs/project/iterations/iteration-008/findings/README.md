@@ -12,8 +12,8 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十六条 Finding；二十六条均已处置或被后续决定取代。`FINDING-008-026` 已把 monolithic prompt 的自然语言
-section 声明升级为 Gateway 可校验的 capability-selected semantic authority，但不豁免当前 live 资格、正式 Web、canary、
+本 Slice 当前登记二十七条 Finding；二十七条均已处置或被后续决定取代。`FINDING-008-027` 已把 search-term 资格约束收敛到
+question-owned、产品真实的 concept，同时强化模型侧的语义来源检查，但不豁免当前 live 资格、正式 Web、canary、
 SLICE-002 与 Production Activation gate：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
@@ -101,6 +101,11 @@ SLICE-002 与 Production Activation gate：
   Gateway 现于 Manifest 前按 sealed capability 选择唯一 prompt entry，并绑定 `capability-prompt-selection@1`；活动身份升级为
   `1.5.4/@13/@1.4.2` 与 suite/oracle `@1.5.4`，Adapter `@4`、compiler `@6`、18/40、Oracle、18/18 和 no-retry 不变。
   run-017 永久失败关闭，新 live 资格仍 blocking。
+- [FINDING-008-027](FINDING-008-027.md)：`1.5.4/@13` 的 run-018 完成 40 calls / 18 Case、transport 零 unknown/retry，且
+  PATH-EXISTS、MAX-FOUR、operation/compiler/Ref projection 均正确，但两个首轮 search-term semantic constraint 使结果为 16/18。
+  REF-PROVENANCE 暴露 question concept 与 instruction vocabulary 重叠时的来源判定歧义；RESULT-DRIVEN-BATCH 则证明旧 suite
+  把未请求的 `return/throw` 实现机制误作唯一等价表达。活动身份升级为 `1.5.5/@14/@1.4.3` 与 suite/oracle `@1.5.5`；
+  operation Oracle、18 Case / 40 calls、18/18、Adapter `@4`、compiler `@6` 和 no-retry 不变，run-018 永久 FAIL，新资格仍 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

@@ -42,6 +42,10 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
    精确命中其中一项，不得在看到结果后追加选项或放宽字段/语义约束。资格 Case 中分别评估的 sealed-state 调用互相独立；
    相邻样本选择相同 operation 名称不构成 cycle。`QUERY_REPEATED` 只能由同一产品 Session 执行后的 exact query/result progress
    token 重复或等价的已密封审计证据推导。
+9. semantic constraint 必须只要求 System Contract 规定且产品输入可证明拥有的概念，不得把一种可能的实现机制提升为唯一等价表达。
+   对通用 search term 的评估可以要求覆盖原问题 material concept 及其已声明 normalization，但不能因为抽象 success/failure flow
+   额外要求原问题未请求的 return/throw；这种 evaluator 假阴性必须版本化修正并保留旧结果，不能据此降低 operation Oracle、Case、
+   threshold、Ref provenance、budget 或完整性规则。
 
 ## Failure and evidence boundary
 
