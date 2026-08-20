@@ -58,6 +58,26 @@ _DISPATCH_POLICIES = frozenset(
         "FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY",
     }
 )
+
+
+def _provider_call_count_matches_dispatch_policy(
+    dispatch_policy: str,
+    provider_call_count: object,
+) -> bool:
+    if type(provider_call_count) is not int:
+        return False
+    if dispatch_policy == "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY":
+        return provider_call_count == 1
+    if dispatch_policy == "THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY":
+        return provider_call_count == 3
+    if (
+        dispatch_policy
+        == "FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
+    ):
+        return 4 <= provider_call_count <= 6
+    return False
+
+
 _REQUIRED_AUTHORITY_TABLES = {
     "app_maven_workspace_attempts": (
         "attempt_id",
@@ -376,6 +396,7 @@ class DynamicCatalogWorldModelRunner:
                 resolved=resolved,
                 accepted_commit=str(self._health["evaluation_subject_commit"]),
                 accepted_tree=str(self._health["evaluation_subject_tree"]),
+                dispatch_policy=str(self._health["dispatch_policy"]),
             )
             result["authority_fence"] = {
                 "before": before.public_value(),
@@ -549,6 +570,7 @@ class DynamicCatalogWorldModelRunner:
         resolved: ResolvedReadSetInput,
         accepted_commit: str,
         accepted_tree: str,
+        dispatch_policy: str,
     ) -> tuple[dict[str, object], tuple[str, ...]]:
         result = dict(value)
         entry = resolved.registration
@@ -569,20 +591,7 @@ class DynamicCatalogWorldModelRunner:
         ]
         stages = page.get("authority_chain", {}).get("stages", [])
         selected = result.get("read_set_id", result.get("dataset_id"))
-        profile_refs = tuple(
-            sorted(
-                {
-                    coverage.profile_ref
-                    for snapshot in entry.snapshot_bindings
-                    for coverage in snapshot.coverages
-                }
-            )
-        )
-        expected_provider_calls = (
-            3
-            if profile_refs == (JAVA_SOURCE_SEMANTICS_PROFILE_REF,)
-            else 1
-        )
+        provider_call_count = execution.get("provider_call_count")
         if (
             result.get("request_id") != request_id
             or selected != entry.read_set_id.value
@@ -604,9 +613,12 @@ class DynamicCatalogWorldModelRunner:
             or not isinstance(stages, list)
             or len(stages) != 10
             or execution.get("attempt_count") != 1
-            or execution.get("provider_call_count") != expected_provider_calls
+            or not _provider_call_count_matches_dispatch_policy(
+                dispatch_policy,
+                provider_call_count,
+            )
             or execution.get("network_operation_count")
-            != execution.get("provider_call_count")
+            != provider_call_count
             or execution.get("selective_retry_count") != 0
             or execution.get("source_access_count") != 0
             or execution.get("evidence_payload_access_count") != 0

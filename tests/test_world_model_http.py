@@ -45,9 +45,16 @@ _TREE = "d" * 40
 
 
 class _Executor:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        provider_call_count: int = 1,
+        dispatch_policy: str = "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY",
+    ) -> None:
         self.executions = []
         self.citations = []
+        self.provider_call_count = provider_call_count
+        self.dispatch_policy = dispatch_policy
 
     def health(self):
         return {
@@ -67,7 +74,7 @@ class _Executor:
             "launcher_manifest_digest": _DIGEST,
             "provider_subject_digest": _DIGEST,
             "gateway_authorization_receipt_digest": _DIGEST,
-            "dispatch_policy": "ONE_CALL_PER_QUESTION_NO_HIDDEN_RETRY",
+            "dispatch_policy": self.dispatch_policy,
             "production_activation": "NOT_EXECUTED",
         }
 
@@ -115,8 +122,8 @@ class _Executor:
             ],
             "execution": {
                 "attempt_count": 1,
-                "provider_call_count": 1,
-                "network_operation_count": 1,
+                "provider_call_count": self.provider_call_count,
+                "network_operation_count": self.provider_call_count,
                 "selective_retry_count": 0,
                 "source_access_count": 0,
                 "evidence_payload_access_count": 0,
@@ -183,6 +190,43 @@ class DynamicWorldModelHttpTests(unittest.TestCase):
             DynamicCatalogWorldModelRunner._validated_health(health),
             health,
         )
+
+    def test_result_call_count_follows_bounded_startup_dispatch_policy(self) -> None:
+        policy = "FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
+        for provider_call_count in (4, 5, 6):
+            with self.subTest(provider_call_count=provider_call_count):
+                runner = DynamicCatalogWorldModelRunner(
+                    catalog_store=self.catalog_store,
+                    bundle_store=self.bundle_store,
+                    executor=_Executor(
+                        provider_call_count=provider_call_count,
+                        dispatch_policy=policy,
+                    ),
+                    authority_probe=self.probe,
+                )
+                result = runner.ask(
+                    request_id=f"wm-bounded-{provider_call_count}",
+                    dataset_id=self.read_set_id,
+                    question="列出所有 reactor 子模块。",
+                )
+                self.assertEqual(
+                    result["execution"]["provider_call_count"],
+                    provider_call_count,
+                )
+
+        invalid = DynamicCatalogWorldModelRunner(
+            catalog_store=self.catalog_store,
+            bundle_store=self.bundle_store,
+            executor=_Executor(provider_call_count=3, dispatch_policy=policy),
+            authority_probe=self.probe,
+        )
+        with self.assertRaises(PublicRunnerError) as raised:
+            invalid.ask(
+                request_id="wm-bounded-invalid",
+                dataset_id=self.read_set_id,
+                question="列出所有 reactor 子模块。",
+            )
+        self.assertEqual(raised.exception.code, "WORLD_MODEL_RESULT_INVALID")
 
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
