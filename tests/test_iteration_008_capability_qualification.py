@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, timedelta, timezone
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -26,6 +27,9 @@ from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS,
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF,
     load_bounded_java_source_semantics_gateway_qualification_binding,
+)
+from software_world_model.ai_infrastructure import (
+    bounded_java_source_semantics_model_egress_qualification as qualification_module,
 )
 from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DeepSeekModelConfiguration,
@@ -160,6 +164,30 @@ def _documents() -> tuple[dict[str, object], dict[str, object]]:
             count
             for _, count in BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
         ),
+        "transport_session": {
+            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+            "connection_policy": (
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+            ),
+            "maximum_pre_dispatch_tls_handshake_attempts": 3,
+            "tls_handshake_attempt_count": 1,
+            "tls_handshake_success_count": 1,
+            "pre_dispatch_tls_handshake_failure_count": 0,
+            "pre_dispatch_tls_failure_codes": [],
+            "http_dispatch_count": 40,
+            "connection_reuse_count": 39,
+            "verified_peer_certificate_sha256s": [
+                "sha256:" + "c" * 64
+            ],
+            "post_dispatch_outcome_unknown_count": 0,
+            "post_dispatch_failure_codes": [],
+            "request_retry_count": 0,
+            "credential_resolution_count": 40,
+            "credential_resolution_success_count": 40,
+            "credential_resolution_policy": (
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+            ),
+        },
         "production_activation": "NOT_EXECUTED",
     }
     closed = {**closed_core, "document_digest": digest_of(closed_core).value}
@@ -195,7 +223,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(policy.max_provider_calls, 6)
         self.assertEqual(
             policy.policy_ref,
-            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.3.0",
+            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.0",
         )
 
     def test_evaluation_definition_and_registry_bind_active_contract(self) -> None:
@@ -227,7 +255,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                     DeepSeekModelConfiguration().fingerprint
                 ),
                 model_ref="deepseek-v4-pro",
-                adapter_version="deepseek-chat-completions-no-tools@2",
+                adapter_version="deepseek-chat-completions-no-tools@3",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -265,7 +293,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                     DeepSeekModelConfiguration().fingerprint
                 ),
                 model_ref="deepseek-v4-pro",
-                adapter_version="deepseek-chat-completions-no-tools@2",
+                adapter_version="deepseek-chat-completions-no-tools@3",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -298,6 +326,18 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         with self.assertRaises(DomainError):
             self._load(qualification, incomplete)
 
+        retried = copy.deepcopy(closed)
+        retried["transport_session"]["request_retry_count"] = 1
+        retried_core = {
+            key: value
+            for key, value in retried.items()
+            if key != "document_digest"
+        }
+        retried["document_digest"] = digest_of(retried_core).value
+
+        with self.assertRaises(DomainError):
+            self._load(qualification, retried)
+
     def test_old_provider_resource_policy_or_adapter_cannot_be_reused(self) -> None:
         qualification, closed = _documents()
         for field, value in (
@@ -320,7 +360,22 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             with self.assertRaises(DomainError):
                 self._load(qualification, drifted)
 
-    def test_runtime_provisions_six_but_accepts_four_to_six_consumed(self) -> None:
+    def test_gateway_role_connection_or_credential_drift_is_rejected(self) -> None:
+        policy = json.loads(
+            qualification_module.BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH.read_text()
+        )
+        for field, value in (
+            ("credential_visibility", "GATEWAY_ONLY"),
+            ("descriptor_policy", "PROVISION_SIX_CONSUME_SIX"),
+            ("connection_policy", "ONE_REQUEST_ONE_CONNECTION"),
+            ("pre_dispatch_tls_policy", "UNBOUNDED"),
+        ):
+            drifted = copy.deepcopy(policy)
+            drifted["roles"]["model_egress_gateway"][field] = value
+            with self.subTest(field=field), self.assertRaises(DomainError):
+                qualification_module._verify_policy(drifted)
+
+    def test_runtime_provisions_three_tls_candidates_for_four_to_six_calls(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "g3b-freeze.json").write_bytes(
@@ -333,6 +388,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                 )
             )
             self.assertEqual(world_model_runtime._gateway_call_count(root), 6)
+            self.assertEqual(world_model_runtime._gateway_descriptor_count(root), 3)
             self.assertEqual(
                 world_model_runtime._gateway_qualification_binding_field(root),
                 "bounded_java_source_semantics_capability_qualification",
@@ -357,7 +413,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "baseline_result_read_count": 0,
             "credential_visible": False,
             "provider_type": "DEEPSEEK",
-            "adapter_version": "deepseek-chat-completions-no-tools@2",
+            "adapter_version": "deepseek-chat-completions-no-tools@3",
             "requested_model_ref": "deepseek-v4-pro",
             "conformance_result_ref": (
                 "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64
@@ -385,18 +441,33 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
             "selected_provider_type": "DEEPSEEK",
             "provider_type": "DEEPSEEK",
-            "adapter_version": "deepseek-chat-completions-no-tools@2",
+            "adapter_version": "deepseek-chat-completions-no-tools@3",
             "requested_model_ref": "deepseek-v4-pro",
             "expected_actual_model_fingerprint": "deepseek-v4-pro",
             "credential_reference": "env:DEEPSEEK_API_KEY",
             "fallback_after_dispatch": False,
-            "provider_descriptor_provisioned_count": 6,
-            "provider_descriptor_consumed_count": 5,
-            "provider_descriptor_unused_closed_count": 1,
+            "provider_connection_policy": (
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+            ),
+            "maximum_pre_dispatch_tls_handshake_attempts": 3,
+            "provider_descriptor_provisioned_count": 3,
+            "provider_descriptor_consumed_count": 1,
+            "provider_descriptor_unused_closed_count": 2,
+            "tls_handshake_attempt_count": 1,
+            "tls_handshake_success_count": 1,
+            "pre_dispatch_tls_handshake_failure_count": 0,
+            "pre_dispatch_tls_failure_codes": [],
+            "verified_peer_certificate_sha256s": [
+                "sha256:" + "c" * 64
+            ],
+            "connection_reuse_count": 4,
+            "request_retry_count": 0,
+            "credential_resolution_count": 5,
+            "credential_resolution_success_count": 5,
             "dns_operation_count_in_dispatch_process": 0,
             "credential_value_recorded": False,
             "provider_connection_capability": (
-                "INHERITED_EXACT_CONNECTED_SOCKET"
+                "INHERITED_EXACT_CONNECTED_SOCKET_SET"
             ),
             "gateway_listener_capability": (
                 "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"

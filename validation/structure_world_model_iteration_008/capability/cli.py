@@ -13,14 +13,15 @@ from software_world_model.ai_infrastructure import (
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekChatCompletionsTransport,
     DeepSeekModelConfiguration,
+    PersistentDeepSeekChatTransport,
     ModelGateway,
     ProviderHTTPResponse,
     ProviderOutcomeUnknown,
     RecordingDeepSeekChatCompletionsTransport,
     ReviewedWorldModelEvaluationCaseExecutor,
-    UrllibDeepSeekChatTransport,
     WorldModelStrategyConfiguration,
     bounded_java_source_semantics_world_model_capability_registry,
+    deepseek_transport_session_audit,
     load_deepseek_chat_conformance_qualification,
     world_model_answer_output_schemas,
 )
@@ -123,6 +124,9 @@ class _ProviderDispatchAudit:
         except ProviderOutcomeUnknown as exc:
             self.outcome_unknown_reason_codes.append(exc.reason_code)
             raise
+
+    def session_audit(self) -> dict[str, object]:
+        return deepseek_transport_session_audit(self._recording)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -281,7 +285,7 @@ def _run_authorized_model_diagnostic(
         result_directory / "invocation.json", _document(invocation_core)
     )
     configuration = DeepSeekModelConfiguration()
-    active_transport = transport or UrllibDeepSeekChatTransport(
+    active_transport = transport or PersistentDeepSeekChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
     dispatch_audit = _ProviderDispatchAudit(active_transport)
@@ -398,6 +402,7 @@ def _run_authorized_model_diagnostic(
             "strict_json_probe_valid": True,
             "raw_prompt_persisted": False,
             "raw_response_persisted": False,
+            "transport_session": dispatch_audit.session_audit(),
         },
         "authorization_consumed": True,
         "retry_permitted_with_same_authorization": False,
@@ -464,6 +469,7 @@ def _seal_model_diagnostic_failure(
             "sha256:" + hashlib.sha256(item.body).hexdigest()
             for item in dispatch_audit.requests
         ],
+        "transport_session": dispatch_audit.session_audit(),
         "raw_prompt_persisted": False,
         "raw_response_persisted": False,
         "authorization_consumed": True,
@@ -585,7 +591,7 @@ def _run_authorized_conformance(
         _document(invocation_core),
     )
     configuration = DeepSeekModelConfiguration()
-    active_transport = transport or UrllibDeepSeekChatTransport(
+    active_transport = transport or PersistentDeepSeekChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
     dispatch_audit = _ProviderDispatchAudit(active_transport)
@@ -611,6 +617,7 @@ def _run_authorized_conformance(
             "provider_outcome_reason_code": exc.reason_code,
             "attempted_provider_request_count": len(dispatch_audit.requests),
             "attempted_request_body_digests": attempted_request_digests,
+            "transport_session": dispatch_audit.session_audit(),
             "raw_prompt_persisted": False,
             "raw_response_persisted": False,
             "authorization_consumed": True,
@@ -639,7 +646,12 @@ def _run_authorized_conformance(
     result_path = seal_deepseek_chat_conformance_result(
         result, result_directory
     )
-    passed = result["outcome"] == "PASS" and result["execution"]["request_count"] == 2
+    passed = (
+        result["outcome"] == "PASS"
+        and result["execution"]["request_count"] == 2
+        and result["execution"]["transport_session"]["http_dispatch_count"]
+        == 2
+    )
     terminal_core = {
         "schema": "swm.iter-008.deepseek-conformance-terminal@1",
         "status": "PASS" if passed else "FAIL",
@@ -718,7 +730,7 @@ def _run_authorized_capability(
         timeout_milliseconds=180_000,
         classification="INTERNAL",
     )
-    active_transport = transport or UrllibDeepSeekChatTransport(
+    active_transport = transport or PersistentDeepSeekChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
     dispatch_audit = _ProviderDispatchAudit(active_transport)
@@ -793,6 +805,7 @@ def _run_authorized_capability(
             ),
             "attempted_provider_request_count": len(dispatch_audit.requests),
             "attempted_request_body_digests": attempted_request_digests,
+            "transport_session": dispatch_audit.session_audit(),
             "failure_type": type(exc).__name__,
             "failure_code": (
                 provider_outcome_reason
@@ -908,6 +921,22 @@ def _run_authorized_capability(
         len(item.provider_request_ids) for item in outputs.values()
     )
     provider_request_count = len(dispatch_audit.requests)
+    transport_session = dispatch_audit.session_audit()
+    transport_session_passed = (
+        transport_session["http_dispatch_count"] == PINNED_PROVIDER_REQUEST_COUNT
+        and 1 <= transport_session["tls_handshake_success_count"] <= 3
+        and transport_session["connection_reuse_count"]
+        == (
+            PINNED_PROVIDER_REQUEST_COUNT
+            - transport_session["tls_handshake_success_count"]
+        )
+        and transport_session["post_dispatch_outcome_unknown_count"] == 0
+        and transport_session["request_retry_count"] == 0
+        and transport_session["credential_resolution_count"]
+        == PINNED_PROVIDER_REQUEST_COUNT
+        and transport_session["credential_resolution_success_count"]
+        == PINNED_PROVIDER_REQUEST_COUNT
+    )
     passed = (
         proof is not None
         and result.conclusion.value == "PASS"
@@ -919,6 +948,7 @@ def _run_authorized_capability(
         and not result.inconclusive_case_ids
         and output_provider_request_count == provider_request_count
         and provider_request_count == PINNED_PROVIDER_REQUEST_COUNT
+        and transport_session_passed
         and all(item["status"] == "PASS" for item in case_evidence)
     )
     sealed_proof = proof if passed else None
@@ -944,6 +974,7 @@ def _run_authorized_capability(
         "unknown_count": len(result.inconclusive_case_ids),
         "required_case_count": len(PINNED_REQUIRED_CASE_IDS),
         "provider_request_count": provider_request_count,
+        "transport_session": transport_session,
         "hidden_canary_disclosed": False,
         "production_activation": "NOT_EXECUTED",
     }

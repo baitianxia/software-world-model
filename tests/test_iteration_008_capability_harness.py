@@ -236,6 +236,31 @@ def _case_documents(
 _SUITE, _ORACLE = load_capability_inputs()
 
 
+def _transport_session_audit(calls: int, *, unknown: int = 0):
+    return {
+        "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+        "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+        "maximum_pre_dispatch_tls_handshake_attempts": 3,
+        "tls_handshake_attempt_count": 1 if calls else 0,
+        "tls_handshake_success_count": 1 if calls else 0,
+        "pre_dispatch_tls_handshake_failure_count": 0,
+        "pre_dispatch_tls_failure_codes": [],
+        "http_dispatch_count": calls,
+        "connection_reuse_count": max(0, calls - 1),
+        "verified_peer_certificate_sha256s": (
+            ["sha256:" + "c" * 64] if calls else []
+        ),
+        "post_dispatch_outcome_unknown_count": unknown,
+        "post_dispatch_failure_codes": ["TIMEOUT"] * unknown,
+        "request_retry_count": 0,
+        "credential_resolution_count": calls,
+        "credential_resolution_success_count": calls,
+        "credential_resolution_policy": (
+            "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+        ),
+    }
+
+
 class _EchoingDeepSeekTransport:
     def __init__(self) -> None:
         self.calls = 0
@@ -281,6 +306,9 @@ class _EchoingDeepSeekTransport:
                 }
             ).encode(),
         )
+
+    def session_audit(self):
+        return _transport_session_audit(self.calls)
 
 
 class _PassingCapabilityTransport:
@@ -353,6 +381,9 @@ class _PassingCapabilityTransport:
             ).encode(),
         )
 
+    def session_audit(self):
+        return _transport_session_audit(self.calls)
+
 
 class _UnknownDeepSeekTransport:
     def __init__(self) -> None:
@@ -363,6 +394,9 @@ class _UnknownDeepSeekTransport:
         raise ProviderOutcomeUnknown(
             "fixture outcome unknown", reason_code="TIMEOUT"
         )
+
+    def session_audit(self):
+        return _transport_session_audit(self.calls, unknown=self.calls)
 
 
 class Iteration008CapabilityHarnessTests(unittest.TestCase):
@@ -399,7 +433,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             ),
             provider_configuration_fingerprint=Digest("sha256:" + "2" * 64),
             actual_model_fingerprint="deepseek-v4-pro",
-            adapter_version="deepseek-chat-completions-no-tools@2",
+            adapter_version="deepseek-chat-completions-no-tools@3",
             exact_candidate_checkpoint_ref="git:" + "3" * 40,
             environment_ref="iter-008-bounded-capability@1",
             reference_strategy_ref="standalone-evaluator@1",
@@ -570,7 +604,24 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(request["phase"], "DEEPSEEK_CONFORMANCE")
             self.assertEqual(
                 request["authorization_scope"]["adapter_version"],
-                "deepseek-chat-completions-no-tools@2",
+                "deepseek-chat-completions-no-tools@3",
+            )
+            self.assertEqual(
+                request["authorization_scope"]["connection_policy"],
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+            )
+            self.assertEqual(
+                request["authorization_scope"][
+                    "maximum_pre_dispatch_tls_handshake_attempts"
+                ],
+                3,
+            )
+            self.assertEqual(
+                request["authorization_scope"]["credential_resolution_policy"],
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH",
+            )
+            self.assertFalse(
+                request["authorization_scope"]["request_retry_allowed"]
             )
             verified = freeze.verify_preflight(preflight_path)
             self.assertEqual(
@@ -893,6 +944,18 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
                 "authorization_scope"
             ]
             self.assertEqual(scope["planned_provider_call_count"], 40)
+            self.assertEqual(
+                scope["connection_policy"],
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+            )
+            self.assertEqual(
+                scope["maximum_pre_dispatch_tls_handshake_attempts"], 3
+            )
+            self.assertEqual(
+                scope["credential_resolution_policy"],
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH",
+            )
+            self.assertFalse(scope["request_retry_allowed"])
             self.assertEqual(
                 scope["payload_boundary"],
                 "FORTY_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"

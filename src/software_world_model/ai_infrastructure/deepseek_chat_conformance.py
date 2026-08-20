@@ -29,18 +29,23 @@ from software_world_model.cross_cutting import (
 )
 
 from .deepseek_chat_adapter import (
+    DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+    DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY,
+    DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekChatCompletionsTransport,
     DeepSeekModelConfiguration,
     RecordingDeepSeekChatCompletionsTransport,
+    deepseek_transport_session_audit,
+    verify_deepseek_transport_session_audit,
 )
 from .model_gateway import ProviderRequest, RenderedMessage
 from .openai_responses_adapter import OutputSchemaDefinition, ProviderHTTPResponse
 
 
 DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-DEEPSEEK-CHAT-NO-TOOLS-001"
-DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.0.1"
-DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.deepseek-chat-conformance-result@1"
+DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.1.0"
+DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.deepseek-chat-conformance-result@2"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "deepseek-conformance-live"
 _WIRE_ALLOWLIST = frozenset(
@@ -110,7 +115,6 @@ def run_deepseek_chat_conformance(
         raise DomainError(ErrorCode.INVALID_ARGUMENT, "conformance operator is required")
     if timeout_milliseconds < 1 or max_output_tokens < 1:
         raise DomainError(ErrorCode.INVALID_ARGUMENT, "conformance resource bounds must be positive")
-    secret = configuration.resolve_api_key(environment)
     now = clock or (lambda: datetime.now(timezone.utc))
     monotonic_clock = monotonic or time.monotonic
     nonce = nonce_factory or (lambda: secrets.token_hex(16))
@@ -172,7 +176,6 @@ def run_deepseek_chat_conformance(
         recording=recording,
         responses=tuple(responses),
         canaries=canaries,
-        secret=secret,
         live_failure=failure,
     )
     outcome = "PASS" if all(item["outcome"] == "PASS" for item in cases) else "FAIL"
@@ -190,6 +193,7 @@ def run_deepseek_chat_conformance(
             if response.actual_model_fingerprint is not None
         }
     )
+    transport_session = deepseek_transport_session_audit(transport)
     result_core: dict[str, object] = {
         "schema": DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA,
         "fixture_id": DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID,
@@ -209,7 +213,9 @@ def run_deepseek_chat_conformance(
             "endpoint": configuration.endpoint,
             "configuration_fingerprint": configuration.fingerprint.value,
             "secret_reference": configuration.secret_reference,
-            "credential_configured": True,
+            "credential_configured": (
+                transport_session["credential_resolution_success_count"] > 0
+            ),
         },
         "adapter": {
             "adapter_version": configuration.adapter_version,
@@ -236,6 +242,7 @@ def run_deepseek_chat_conformance(
             and all(response.usage_complete for response in responses),
             "raw_prompt_persisted": False,
             "raw_response_persisted": False,
+            "transport_session": transport_session,
         },
         "environment": {
             "python_implementation": platform.python_implementation(),
@@ -262,6 +269,8 @@ def run_deepseek_chat_conformance(
                 "model_identity_change",
                 "thinking_mode_change",
                 "temperature_change",
+                "connection_policy_change",
+                "transport_session_audit_change",
                 "provider_protocol_change",
                 "valid_until_elapsed",
             ],
@@ -444,6 +453,59 @@ def verify_deepseek_chat_conformance_document(
                 "DeepSeek conformance case evidence digest is invalid",
             ) from exc
     case_pass = all(item["outcome"] == "PASS" for item in cases)
+    execution = document.get("execution")
+    if not isinstance(execution, dict) or set(execution) != {
+        "request_count",
+        "provider_request_ids",
+        "request_body_digests",
+        "input_tokens",
+        "output_tokens",
+        "usage_complete",
+        "raw_prompt_persisted",
+        "raw_response_persisted",
+        "transport_session",
+    }:
+        _invalid("DeepSeek conformance execution evidence is invalid")
+    try:
+        transport_session = verify_deepseek_transport_session_audit(
+            execution.get("transport_session")
+        )
+    except DomainError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek conformance transport session evidence is invalid",
+        ) from exc
+    request_count = execution.get("request_count")
+    if (
+        type(request_count) is not int
+        or request_count < 0
+        or not isinstance(execution.get("provider_request_ids"), list)
+        or not isinstance(execution.get("request_body_digests"), list)
+        or len(execution["request_body_digests"]) != request_count
+        or execution.get("raw_prompt_persisted") is not False
+        or execution.get("raw_response_persisted") is not False
+    ):
+        _invalid("DeepSeek conformance request evidence is inconsistent")
+    try:
+        tuple(Digest(str(item)) for item in execution["request_body_digests"])
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek conformance request digest is invalid",
+        ) from exc
+    if document.get("outcome") == "PASS" and (
+        request_count != 2
+        or len(execution["provider_request_ids"]) != 2
+        or execution.get("usage_complete") is not True
+        or transport_session["http_dispatch_count"] != 2
+        or not 1 <= transport_session["tls_handshake_success_count"] <= 2
+        or transport_session["connection_reuse_count"]
+        != 2 - transport_session["tls_handshake_success_count"]
+        or transport_session["post_dispatch_outcome_unknown_count"] != 0
+        or transport_session["credential_resolution_count"] != 2
+        or transport_session["credential_resolution_success_count"] != 2
+    ):
+        _invalid("DeepSeek PASS did not prove the persistent TLS policy")
     validity = document.get("validity")
     if not isinstance(validity, dict):
         _invalid("DeepSeek conformance validity is missing")
@@ -488,6 +550,17 @@ def deepseek_chat_conformance_fixture_digest() -> Digest:
             "case_ids": [f"CC-DEEPSEEK-{number:02d}" for number in range(1, 13)],
             "live_call_count": 2,
             "wire_allowlist": sorted(_WIRE_ALLOWLIST),
+            "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+            "maximum_pre_dispatch_tls_handshakes": (
+                DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+            ),
+            "credential_resolution_policy": (
+                DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
+            ),
+            "request_retry_allowed": False,
+            "transport_session_audit_schema": (
+                "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+            ),
             "result_schema": DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA,
         }
     )
@@ -534,7 +607,6 @@ def _evaluate_cases(
     recording: RecordingDeepSeekChatCompletionsTransport,
     responses: tuple[object, ...],
     canaries: tuple[str, str],
-    secret: str,
     live_failure: DomainError | None,
 ) -> list[dict[str, object]]:
     bodies = []
@@ -609,13 +681,17 @@ def _evaluate_cases(
         and len({getattr(response, "provider_request_id", None) for response in responses}) == 2
         and all(getattr(response, "provider_request_id", None) for response in responses)
     )
+    secret_sentinel = "conformance-secret-sentinel-never-persist"
     serialized_public = canonical_json_bytes(
         configuration.public_status(
-            {configuration.api_key_environment_variable: secret}
+            {configuration.api_key_environment_variable: secret_sentinel}
         )
     )
-    secret_clean = secret.encode() not in serialized_public and all(
-        secret.encode() not in request.body for request in recording.requests
+    secret_clean = secret_sentinel.encode() not in serialized_public and all(
+        b"Authorization" not in request.body
+        and b"Bearer " not in request.body
+        and configuration.secret_reference.encode() not in request.body
+        for request in recording.requests
     )
     admission_held = _adapter_capabilities_offline(configuration) and all(
         local_denials.values()

@@ -14,7 +14,7 @@ from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekChatCompletionsTransport,
     DeepSeekModelConfiguration,
-    UrllibDeepSeekChatTransport,
+    PersistentDeepSeekChatTransport,
 )
 from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
     run_deepseek_chat_conformance,
@@ -93,7 +93,7 @@ def main(
         elif arguments.command == "probe":
             if arguments.timeout_milliseconds < 1 or arguments.max_output_tokens < 1:
                 raise ValueError("probe resource bounds must be positive")
-            active_transport = transport or UrllibDeepSeekChatTransport(
+            active_transport = transport or PersistentDeepSeekChatTransport(
                 api_key_resolver=lambda: configuration.resolve_api_key(
                     environment_values
                 )
@@ -117,7 +117,7 @@ def main(
             }
             exit_code = 0
         else:
-            active_transport = transport or UrllibDeepSeekChatTransport(
+            active_transport = transport or PersistentDeepSeekChatTransport(
                 api_key_resolver=lambda: configuration.resolve_api_key(
                     environment_values
                 )

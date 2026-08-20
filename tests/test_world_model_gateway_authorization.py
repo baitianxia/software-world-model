@@ -247,7 +247,7 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
             baseline_core = {
                 "schema": (
                     "swm.iter-008.bounded-java-source-semantics-"
-                    "gateway-workload@1"
+                    "gateway-workload@2"
                 ),
                 "status": "PASS",
                 "provider_selection_policy": (
@@ -256,7 +256,7 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
                 "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
                 "selected_provider_type": "DEEPSEEK",
                 "provider_type": "DEEPSEEK",
-                "adapter_version": "deepseek-chat-completions-no-tools@2",
+                "adapter_version": "deepseek-chat-completions-no-tools@3",
                 "requested_model_ref": "deepseek-v4-pro",
                 "expected_actual_model_fingerprint": "deepseek-v4-pro",
                 "credential_reference": "env:DEEPSEEK_API_KEY",
@@ -264,9 +264,24 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
                 "provider_call_count": 5,
                 "https_dispatch_count": 5,
                 "server_statuses": ["RESULT"] * 5,
-                "provider_descriptor_provisioned_count": 6,
-                "provider_descriptor_consumed_count": 5,
-                "provider_descriptor_unused_closed_count": 1,
+                "provider_connection_policy": (
+                    "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                ),
+                "maximum_pre_dispatch_tls_handshake_attempts": 3,
+                "provider_descriptor_provisioned_count": 3,
+                "provider_descriptor_consumed_count": 1,
+                "provider_descriptor_unused_closed_count": 2,
+                "tls_handshake_attempt_count": 1,
+                "tls_handshake_success_count": 1,
+                "pre_dispatch_tls_handshake_failure_count": 0,
+                "pre_dispatch_tls_failure_codes": [],
+                "verified_peer_certificate_sha256s": [
+                    "sha256:" + "c" * 64
+                ],
+                "connection_reuse_count": 4,
+                "request_retry_count": 0,
+                "credential_resolution_count": 5,
+                "credential_resolution_success_count": 5,
                 "bounded_java_source_semantics_gateway_freeze_ref": "bounded",
                 "bounded_java_source_semantics_gateway_freeze_digest": _DIGEST_A,
                 "permission_digest": _DIGEST_B,
@@ -296,7 +311,8 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
         value = json.loads(output.read_text(encoding="utf-8"))
         self.assertEqual(value["provider_type"], "DEEPSEEK")
         self.assertEqual(value["provider_call_count"], 5)
-        self.assertEqual(value["provider_descriptor_unused_closed_count"], 1)
+        self.assertEqual(value["provider_descriptor_unused_closed_count"], 2)
+        self.assertEqual(value["connection_reuse_count"], 4)
         self.assertEqual(
             value["qualified_gateway_baseline"],
             {

@@ -281,6 +281,24 @@ inherited connected descriptor、verified TLS SNI/certificate、exact path、lat
 policy ref/digest，资格 loader 同时验证 DeepSeek Adapter `@2`；因此 run-013 不会被复用为新 route 的授权。新 clean candidate 需执行
 全新 Conformance 与 18-case / 40-call Capability qualification，通过后才进入确定性 product freeze、公开 Web 和 early canary。
 
+上述 route candidate `5ffb6ef1…` 的 run-014 Conformance 2 calls / 12/12 PASS，但 Capability 第 4 个独立 TLS session 在证书验证前
+EOF；独立 run-015 在前 5 Case / 9 requests PASS 后于第 10 个 session 同样关闭。两轮都没有 retry 或 Provider 切换。短序列
+credential-free TLS 对照和单一 verified connection 上连续两次无凭据 HTTP 401/keep-alive 对照证明模型 endpoint 可用，失败机会来自
+每 request 重建 TLS 与当前 TUN 的交互。详见 [FINDING-008-024](../findings/FINDING-008-024.md)。
+
+活动实现据此使用 DeepSeek Adapter `deepseek-chat-completions-no-tools@3`、Conformance fixture `1.1.0` / Result `@2`、egress policy
+`ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.0` 和
+`PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1`。direct qualification transport 显式持有 verified TLS socket，避免标准库隐式重连；
+pinned product transport 接收恰好 3 个 supervisor-connected descriptor。两者只在 credential/Authorization/HTTP bytes 前最多进行
+3 次 acquisition，成功 session 在同一 authorized run 内复用；服务端完整响应后明确关闭时，下一逻辑 request 才可使用剩余
+descriptor。任何 bytes 可能发送后的失败立即 outcome unknown，绝不重发。
+
+Transport audit 与 Provider call audit 分开：Conformance/Capability Result 记录 TLS attempts/successes、verified certificate digest、
+HTTP dispatch、connection reuse、credential resolution、post-dispatch unknown 和 `request_retry_count=0`；product workload 另记录
+descriptor consumed/unused-close，并验证 `3 = TLS attempts + unused_closed`。每个 Investigation/Draft/Review request 的 Manifest、
+model call、request ID、body/result digest 与 role sequence 保持独立。该变化重新失效 run-014/015 与之前全部 qualification；新的 clean
+candidate 必须重新完成 2-call Conformance 和 18-case / 40-call closed Capability，PASS 前不得生成正式 product freeze。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

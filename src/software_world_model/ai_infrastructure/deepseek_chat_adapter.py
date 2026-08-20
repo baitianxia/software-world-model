@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from hashlib import sha256
 import http.client
 import json
 import os
@@ -18,13 +19,11 @@ import re
 import socket
 import ssl
 from typing import Callable, Mapping, Protocol
-from urllib import error as urllib_error
-from urllib import request as urllib_request
 from urllib.parse import urlsplit
 
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, digest_of
 
-from .direct_https import build_direct_https_opener
+from .direct_https import build_verified_tls_context
 from .model_gateway import (
     AdapterConformanceLevel,
     AdapterResponse,
@@ -45,12 +44,20 @@ DEFAULT_DEEPSEEK_MODEL = "deepseek-v4-pro"
 DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT = "deepseek-v4-pro"
 DEFAULT_DEEPSEEK_API_KEY_ENV = "DEEPSEEK_API_KEY"
 DEFAULT_DEEPSEEK_TEMPERATURE = 0
+DEFAULT_DEEPSEEK_CONNECTION_POLICY = (
+    "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+)
+DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY = (
+    "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+)
+DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES = 3
 SUPPORTED_DEEPSEEK_MODELS = frozenset(
     {"deepseek-v4-pro", "deepseek-v4-flash"}
 )
 _DEEPSEEK_HOST = "api.deepseek.com"
 _DEEPSEEK_PORT = 443
 _DEEPSEEK_PATH = "/chat/completions"
+_MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 _ENVIRONMENT_NAME = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 _MARKDOWN_JSON_FENCE = re.compile(
     r"\A(?P<prefix>[\s\S]*?)```json[ \t]*\r?\n(?P<body>[\s\S]*?)\r?\n```\Z"
@@ -132,6 +139,14 @@ class DeepSeekModelConfiguration:
                 "actual_model_fingerprint": self.actual_model_fingerprint,
                 "thinking_mode": "DISABLED",
                 "temperature": self.temperature,
+                "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+                "maximum_pre_dispatch_tls_handshakes": (
+                    DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+                ),
+                "credential_resolution_policy": (
+                    DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
+                ),
+                "request_retry_allowed": False,
                 "secret_reference": self.secret_reference,
             }
         )
@@ -161,6 +176,14 @@ class DeepSeekModelConfiguration:
             "actual_model_fingerprint": self.actual_model_fingerprint,
             "thinking_mode": "DISABLED",
             "temperature": self.temperature,
+            "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+            "maximum_pre_dispatch_tls_handshakes": (
+                DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+            ),
+            "credential_resolution_policy": (
+                DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
+            ),
+            "request_retry_allowed": False,
             "secret_reference": self.secret_reference,
             "credential_configured": self.credential_configured(environment),
             "configuration_fingerprint": self.fingerprint.value,
@@ -223,13 +246,148 @@ class RecordingDeepSeekChatCompletionsTransport:
             timeout_milliseconds=timeout_milliseconds,
         )
 
+    def session_audit(self) -> dict[str, object]:
+        return deepseek_transport_session_audit(self._delegate)
 
-class UrllibDeepSeekChatTransport:
-    """Bearer-authenticated direct HTTPS transport with an exact host boundary."""
 
-    def __init__(self, *, api_key_resolver: Callable[[], str], opener: object | None = None) -> None:
+class _VerifiedTLSSocket(Protocol):
+    def settimeout(self, value: float) -> None: ...
+
+    def getpeercert(self, *, binary_form: bool = False) -> object: ...
+
+    def sendall(self, value: bytes) -> None: ...
+
+    def close(self) -> None: ...
+
+
+class PersistentDeepSeekChatTransport:
+    """Direct exact-host HTTPS with one bounded persistent TLS session.
+
+    Up to three credential-free TLS handshakes may be attempted across the
+    transport lifetime.  The credential is resolved only after a verified
+    connection exists.  Once HTTP dispatch begins, a network failure is never
+    retried and is conservatively reported as outcome unknown.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key_resolver: Callable[[], str],
+        connection_factory: Callable[[float], _VerifiedTLSSocket] | None = None,
+        tls_context: ssl.SSLContext | None = None,
+        maximum_pre_dispatch_tls_handshakes: int = (
+            DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+        ),
+    ) -> None:
+        if (
+            type(maximum_pre_dispatch_tls_handshakes) is not int
+            or maximum_pre_dispatch_tls_handshakes
+            != DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "DeepSeek transport requires exactly three pre-dispatch TLS attempts",
+            )
         self._api_key_resolver = api_key_resolver
-        self._opener = opener or build_direct_https_opener()
+        self._tls_context = tls_context or build_verified_tls_context()
+        self._connection_factory = connection_factory or self._new_tls_socket
+        self._maximum_tls_handshakes = maximum_pre_dispatch_tls_handshakes
+        self._tls_socket: _VerifiedTLSSocket | None = None
+        self._tls_handshake_attempt_count = 0
+        self._tls_handshake_success_count = 0
+        self._connection_reuse_count = 0
+        self._http_dispatch_count = 0
+        self._pre_dispatch_tls_failure_codes: list[str] = []
+        self._peer_certificate_sha256s: list[str] = []
+        self._post_dispatch_failure_codes: list[str] = []
+        self._credential_resolution_count = 0
+        self._credential_resolution_success_count = 0
+
+    @property
+    def tls_handshake_attempt_count(self) -> int:
+        return self._tls_handshake_attempt_count
+
+    @property
+    def tls_handshake_success_count(self) -> int:
+        return self._tls_handshake_success_count
+
+    @property
+    def connection_reuse_count(self) -> int:
+        return self._connection_reuse_count
+
+    @property
+    def http_dispatch_count(self) -> int:
+        return self._http_dispatch_count
+
+    @property
+    def pre_dispatch_tls_failure_codes(self) -> tuple[str, ...]:
+        return tuple(self._pre_dispatch_tls_failure_codes)
+
+    @property
+    def peer_certificate_sha256(self) -> str | None:
+        return (
+            self._peer_certificate_sha256s[-1]
+            if self._peer_certificate_sha256s
+            else None
+        )
+
+    @property
+    def peer_certificate_sha256s(self) -> tuple[str, ...]:
+        return tuple(self._peer_certificate_sha256s)
+
+    @property
+    def post_dispatch_failure_codes(self) -> tuple[str, ...]:
+        return tuple(self._post_dispatch_failure_codes)
+
+    @property
+    def credential_resolution_count(self) -> int:
+        return self._credential_resolution_count
+
+    @property
+    def credential_resolution_success_count(self) -> int:
+        return self._credential_resolution_success_count
+
+    def session_audit(self) -> dict[str, object]:
+        return {
+            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+            "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+            "maximum_pre_dispatch_tls_handshake_attempts": (
+                self._maximum_tls_handshakes
+            ),
+            "tls_handshake_attempt_count": self._tls_handshake_attempt_count,
+            "tls_handshake_success_count": self._tls_handshake_success_count,
+            "pre_dispatch_tls_handshake_failure_count": len(
+                self._pre_dispatch_tls_failure_codes
+            ),
+            "pre_dispatch_tls_failure_codes": list(
+                self._pre_dispatch_tls_failure_codes
+            ),
+            "http_dispatch_count": self._http_dispatch_count,
+            "connection_reuse_count": self._connection_reuse_count,
+            "verified_peer_certificate_sha256s": list(
+                self._peer_certificate_sha256s
+            ),
+            "post_dispatch_outcome_unknown_count": len(
+                self._post_dispatch_failure_codes
+            ),
+            "post_dispatch_failure_codes": list(
+                self._post_dispatch_failure_codes
+            ),
+            "request_retry_count": 0,
+            "credential_resolution_count": self._credential_resolution_count,
+            "credential_resolution_success_count": (
+                self._credential_resolution_success_count
+            ),
+            "credential_resolution_policy": (
+                DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
+            ),
+        }
+
+    def close(self) -> None:
+        tls_socket = self._tls_socket
+        self._tls_socket = None
+        if tls_socket is not None:
+            tls_socket.close()
 
     def post_json(
         self,
@@ -240,50 +398,283 @@ class UrllibDeepSeekChatTransport:
         timeout_milliseconds: int,
     ) -> ProviderHTTPResponse:
         _require_deepseek_https_endpoint(endpoint)
-        api_key = self._api_key_resolver()
-        if not api_key:
+        if not isinstance(body, bytes) or not body:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "DeepSeek request body is empty",
+            )
+        if (
+            not isinstance(client_request_id, str)
+            or not client_request_id
+            or "\r" in client_request_id
+            or "\n" in client_request_id
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "DeepSeek client request ID is invalid",
+            )
+        if type(timeout_milliseconds) is not int or timeout_milliseconds < 1:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "DeepSeek timeout must be positive",
+            )
+        reused = self._tls_socket is not None
+        tls_socket = self._ensure_tls_socket(timeout_milliseconds / 1000)
+        self._credential_resolution_count += 1
+        try:
+            api_key = self._api_key_resolver()
+        except Exception:
+            self.close()
+            raise
+        if (
+            not isinstance(api_key, str)
+            or not api_key
+            or "\r" in api_key
+            or "\n" in api_key
+        ):
+            self.close()
             raise DomainError(
                 ErrorCode.LIVE_INTEGRATION_HELD,
                 "DeepSeek credential is not configured",
             )
-        request = urllib_request.Request(
-            endpoint,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "X-Client-Request-Id": client_request_id,
-            },
-            method="POST",
-        )
         try:
-            with self._opener.open(request, timeout=timeout_milliseconds / 1000) as response:
-                return ProviderHTTPResponse(
-                    status_code=response.status,
-                    headers={key.lower(): value for key, value in response.headers.items()},
-                    body=response.read(),
-                )
-        except urllib_error.HTTPError as exc:
-            return ProviderHTTPResponse(
-                status_code=exc.code,
-                headers={key.lower(): value for key, value in exc.headers.items()},
-                body=exc.read(),
+            api_key.encode("ascii")
+            client_request_id.encode("ascii")
+        except UnicodeEncodeError as exc:
+            self.close()
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "DeepSeek credential or client request ID is not ASCII",
+            ) from exc
+        self._credential_resolution_success_count += 1
+        if reused:
+            self._connection_reuse_count += 1
+        self._http_dispatch_count += 1
+        try:
+            request_headers = (
+                f"POST {_DEEPSEEK_PATH} HTTP/1.1\r\n".encode("ascii")
+                + f"Host: {_DEEPSEEK_HOST}\r\n".encode("ascii")
+                + b"Authorization: Bearer "
+                + api_key.encode("ascii")
+                + b"\r\nContent-Type: application/json\r\n"
+                + b"X-Client-Request-Id: "
+                + client_request_id.encode("ascii")
+                + b"\r\n"
+                + f"Content-Length: {len(body)}\r\n".encode("ascii")
+                + b"Connection: keep-alive\r\n\r\n"
             )
+            tls_socket.sendall(request_headers + body)
+            response = http.client.HTTPResponse(tls_socket)
+            response.begin()
+            response_body = response.read(_MAX_RESPONSE_BYTES + 1)
+            if len(response_body) > _MAX_RESPONSE_BYTES:
+                self.close()
+                raise DomainError(
+                    ErrorCode.PROVIDER_OUTPUT_FORBIDDEN,
+                    "DeepSeek response exceeds the closed size limit",
+                )
+            headers = {key.lower(): value for key, value in response.getheaders()}
+            result = ProviderHTTPResponse(
+                status_code=response.status,
+                headers=headers,
+                body=response_body,
+            )
+            if (
+                response.will_close
+                or headers.get("connection", "").lower() == "close"
+            ):
+                self.close()
+            return result
         except (
-            urllib_error.URLError,
+            OSError,
             TimeoutError,
             socket.timeout,
+            ssl.SSLError,
+            http.client.HTTPException,
             http.client.RemoteDisconnected,
         ) as exc:
+            self._post_dispatch_failure_codes.append(
+                _network_failure_reason(exc)
+            )
+            self.close()
             raise ProviderOutcomeUnknown(
                 "DeepSeek Chat Completions outcome is unknown",
                 reason_code=_network_failure_reason(exc),
             ) from exc
 
+    def _new_tls_socket(self, timeout_seconds: float) -> _VerifiedTLSSocket:
+        raw_socket = socket.create_connection(
+            (_DEEPSEEK_HOST, _DEEPSEEK_PORT),
+            timeout=timeout_seconds,
+        )
+        try:
+            return self._tls_context.wrap_socket(
+                raw_socket,
+                server_hostname=_DEEPSEEK_HOST,
+            )
+        except Exception:
+            raw_socket.close()
+            raise
+
+    def _ensure_tls_socket(self, timeout_seconds: float) -> _VerifiedTLSSocket:
+        if self._tls_socket is not None:
+            self._tls_socket.settimeout(timeout_seconds)
+            return self._tls_socket
+        last_code = "TLS_PRE_DISPATCH_UNAVAILABLE"
+        while self._tls_handshake_attempt_count < self._maximum_tls_handshakes:
+            self._tls_handshake_attempt_count += 1
+            tls_socket: _VerifiedTLSSocket | None = None
+            try:
+                tls_socket = self._connection_factory(timeout_seconds)
+                certificate = tls_socket.getpeercert(binary_form=True)
+                if not isinstance(certificate, bytes) or not certificate:
+                    raise ssl.SSLError(
+                        "DeepSeek peer did not provide a certificate"
+                    )
+            except (
+                OSError,
+                TimeoutError,
+                socket.timeout,
+                ssl.SSLError,
+                http.client.HTTPException,
+            ) as exc:
+                if tls_socket is not None:
+                    tls_socket.close()
+                last_code = _network_failure_reason(exc)
+                self._pre_dispatch_tls_failure_codes.append(last_code)
+                continue
+            self._tls_handshake_success_count += 1
+            self._peer_certificate_sha256s.append(
+                "sha256:" + sha256(certificate).hexdigest()
+            )
+            self._tls_socket = tls_socket
+            return tls_socket
+        raise DomainError(
+            ErrorCode.LIVE_INTEGRATION_HELD,
+            "DeepSeek credential-free TLS acquisition exhausted",
+            {
+                "tls_handshake_attempt_count": self._tls_handshake_attempt_count,
+                "last_failure_code": last_code,
+            },
+        )
+
+
+def deepseek_transport_session_audit(
+    transport: object,
+) -> dict[str, object]:
+    method = getattr(transport, "session_audit", None)
+    if not callable(method):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek transport does not expose the required session audit",
+        )
+    return verify_deepseek_transport_session_audit(method())
+
+
+def verify_deepseek_transport_session_audit(
+    value: object,
+) -> dict[str, object]:
+    required = {
+        "schema",
+        "connection_policy",
+        "maximum_pre_dispatch_tls_handshake_attempts",
+        "tls_handshake_attempt_count",
+        "tls_handshake_success_count",
+        "pre_dispatch_tls_handshake_failure_count",
+        "pre_dispatch_tls_failure_codes",
+        "http_dispatch_count",
+        "connection_reuse_count",
+        "verified_peer_certificate_sha256s",
+        "post_dispatch_outcome_unknown_count",
+        "post_dispatch_failure_codes",
+        "request_retry_count",
+        "credential_resolution_count",
+        "credential_resolution_success_count",
+        "credential_resolution_policy",
+    }
+    if not isinstance(value, Mapping) or set(value) != required:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek transport session audit shape is invalid",
+        )
+    integers = (
+        "maximum_pre_dispatch_tls_handshake_attempts",
+        "tls_handshake_attempt_count",
+        "tls_handshake_success_count",
+        "pre_dispatch_tls_handshake_failure_count",
+        "http_dispatch_count",
+        "connection_reuse_count",
+        "post_dispatch_outcome_unknown_count",
+        "request_retry_count",
+        "credential_resolution_count",
+        "credential_resolution_success_count",
+    )
+    if any(type(value.get(field)) is not int for field in integers):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek transport session audit counters are invalid",
+        )
+    attempts = int(value["tls_handshake_attempt_count"])
+    successes = int(value["tls_handshake_success_count"])
+    pre_dispatch_failures = int(
+        value["pre_dispatch_tls_handshake_failure_count"]
+    )
+    dispatches = int(value["http_dispatch_count"])
+    reuse = int(value["connection_reuse_count"])
+    unknown = int(value["post_dispatch_outcome_unknown_count"])
+    credential_reads = int(value["credential_resolution_count"])
+    credential_successes = int(value["credential_resolution_success_count"])
+    pre_dispatch_codes = value["pre_dispatch_tls_failure_codes"]
+    post_dispatch_codes = value["post_dispatch_failure_codes"]
+    certificate_digests = value["verified_peer_certificate_sha256s"]
+    if (
+        value.get("schema") != "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+        or value.get("connection_policy") != DEFAULT_DEEPSEEK_CONNECTION_POLICY
+        or value.get("maximum_pre_dispatch_tls_handshake_attempts")
+        != DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+        or value.get("credential_resolution_policy")
+        != DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
+        or value.get("request_retry_count") != 0
+        or not 0 <= successes <= attempts <= 3
+        or pre_dispatch_failures != attempts - successes
+        or not 0 <= reuse <= max(0, dispatches - 1)
+        or not 0 <= unknown <= dispatches
+        or credential_successes != dispatches
+        or successes > credential_reads
+        or dispatches - reuse > successes
+        or not isinstance(pre_dispatch_codes, list)
+        or len(pre_dispatch_codes) != pre_dispatch_failures
+        or not isinstance(post_dispatch_codes, list)
+        or len(post_dispatch_codes) != unknown
+        or not isinstance(certificate_digests, list)
+        or len(certificate_digests) != successes
+        or any(
+            not isinstance(code, str)
+            or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,127}", code)
+            for code in (*pre_dispatch_codes, *post_dispatch_codes)
+        )
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek transport session audit is internally inconsistent",
+        )
+    try:
+        tuple(Digest(str(item)) for item in certificate_digests)
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "DeepSeek transport certificate audit is invalid",
+        ) from exc
+    return dict(value)
+
+
+# Compatibility name retained for callers outside the active ITER-008 path.
+UrllibDeepSeekChatTransport = PersistentDeepSeekChatTransport
+
 
 class DeepSeekChatCompletionsNoToolsAdapter:
     provider_type = "DEEPSEEK"
-    adapter_version = "deepseek-chat-completions-no-tools@2"
+    adapter_version = "deepseek-chat-completions-no-tools@3"
 
     def __init__(
         self,
@@ -607,7 +998,7 @@ def _usage(value: object) -> tuple[int | None, int | None, bool]:
 def _network_failure_reason(exc: BaseException) -> str:
     if isinstance(exc, (TimeoutError, socket.timeout)):
         return "TIMEOUT"
-    reason = exc.reason if isinstance(exc, urllib_error.URLError) else exc
+    reason = exc
     if isinstance(reason, http.client.RemoteDisconnected):
         return "REMOTE_DISCONNECTED"
     if isinstance(reason, socket.gaierror):
@@ -625,6 +1016,9 @@ __all__ = [
     "DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT",
     "DEFAULT_DEEPSEEK_API_KEY_ENV",
     "DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT",
+    "DEFAULT_DEEPSEEK_CONNECTION_POLICY",
+    "DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY",
+    "DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES",
     "DEFAULT_DEEPSEEK_MODEL",
     "DEFAULT_DEEPSEEK_OPENAI_BASE_URL",
     "DEFAULT_DEEPSEEK_TEMPERATURE",
@@ -632,7 +1026,10 @@ __all__ = [
     "DeepSeekChatCompletionsNoToolsAdapter",
     "DeepSeekChatCompletionsTransport",
     "DeepSeekModelConfiguration",
+    "PersistentDeepSeekChatTransport",
     "RecordedDeepSeekChatCompletionsRequest",
     "RecordingDeepSeekChatCompletionsTransport",
     "UrllibDeepSeekChatTransport",
+    "deepseek_transport_session_audit",
+    "verify_deepseek_transport_session_audit",
 ]

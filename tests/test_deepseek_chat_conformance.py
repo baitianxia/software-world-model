@@ -76,6 +76,30 @@ class EchoingDeepSeekTransport:
             ).encode("utf-8"),
         )
 
+    def session_audit(self):
+        return {
+            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+            "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+            "maximum_pre_dispatch_tls_handshake_attempts": 3,
+            "tls_handshake_attempt_count": 1 if self.calls else 0,
+            "tls_handshake_success_count": 1 if self.calls else 0,
+            "pre_dispatch_tls_handshake_failure_count": 0,
+            "pre_dispatch_tls_failure_codes": [],
+            "http_dispatch_count": self.calls,
+            "connection_reuse_count": max(0, self.calls - 1),
+            "verified_peer_certificate_sha256s": (
+                ["sha256:" + "c" * 64] if self.calls else []
+            ),
+            "post_dispatch_outcome_unknown_count": 0,
+            "post_dispatch_failure_codes": [],
+            "request_retry_count": 0,
+            "credential_resolution_count": self.calls,
+            "credential_resolution_success_count": self.calls,
+            "credential_resolution_policy": (
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+            ),
+        }
+
 
 class ProbeDeepSeekTransport:
     def post_json(self, **arguments):
@@ -137,6 +161,10 @@ class DeepSeekChatConformanceTests(unittest.TestCase):
         self.assertEqual(result["execution"]["request_count"], 2)
         self.assertEqual(result["execution"]["input_tokens"], 20)
         self.assertEqual(result["execution"]["output_tokens"], 10)
+        self.assertEqual(
+            result["execution"]["transport_session"]["connection_reuse_count"],
+            1,
+        )
         self.assertEqual(result["model"]["thinking_mode"], "DISABLED")
         self.assertEqual(result["model"]["temperature"], 0)
         serialized = json.dumps(result)
@@ -234,6 +262,34 @@ class DeepSeekChatConformanceTests(unittest.TestCase):
                 )
             self.assertEqual(
                 temperature_tampered.exception.code,
+                ErrorCode.QUALIFICATION_INVALID,
+            )
+
+            session_path = seal_deepseek_chat_conformance_result(
+                self.run_result(), Path(directory) / "session"
+            )
+            session_document = json.loads(session_path.read_text())
+            session_document["execution"]["transport_session"][
+                "connection_reuse_count"
+            ] = 0
+            session_document["result_digest"] = digest_of(
+                {
+                    key: value
+                    for key, value in session_document.items()
+                    if key != "result_digest"
+                }
+            ).value
+            session_path.write_text(
+                json.dumps(session_document), encoding="utf-8"
+            )
+            with self.assertRaises(DomainError) as session_tampered:
+                load_deepseek_chat_conformance_qualification(
+                    session_path,
+                    self.configuration,
+                    now=self.clock_value,
+                )
+            self.assertEqual(
+                session_tampered.exception.code,
                 ErrorCode.QUALIFICATION_INVALID,
             )
 

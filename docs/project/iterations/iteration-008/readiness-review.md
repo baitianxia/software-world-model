@@ -98,6 +98,21 @@ System fileset；当前 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
 Capability，但其旧 resource policy 不能授权新 product route。新 clean candidate 必须把 exact model-egress policy ref/digest 写入
 Capability Definition，并形成全新 Conformance + closed Capability Result；随后才可形成正式 product freeze。
 
+该新 route 的 run-014/015 又形成 `FINDING-008-024`。两轮在失败前的模型 output、typed step 与 independent evaluator 均 PASS，
+但分别在第 4、第 10 个独立 TLS session 于 certificate verification 前 EOF；同一时段 credential-free TLS 对照可成功，且 endpoint
+明确允许同一 verified connection 连续处理两次 HTTP/1.1 keep-alive request。根因是“一请求一 TLS session”把当前 TUN 的间歇 EOF
+放大为 40-call qualification 的系统性失败机会，不是模型或 Oracle 偏差。
+
+Readiness connection contract 因而重冻结为：DeepSeek Adapter `@3`、Conformance fixture `1.1.0` / Result `@2`、bounded egress
+policy `@1.4.0` 与 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1`。direct 与 product transport 都只能在 credential/Authorization/HTTP
+bytes 前进行最多 3 次 credential-free TLS acquisition；成功 session 可在同一授权 run 内复用，但每个 request 的 Manifest、ID、
+body/result digest 与调用审计仍独立。HTTP dispatch 后任何网络失败均 outcome unknown、零 retry。Capability closed Result 必须证明
+40 HTTP dispatch、TLS attempts/successes、reuse、credential resolution 与 post-dispatch unknown 计数；product supervisor 只预置 3 个
+exact connected descriptor，并闭合 `provisioned = TLS attempts + unused_closed`。旧 run-014/015 均永久失败关闭，新 candidate 必须
+重新通过本地门禁、Conformance 与完整 Capability 后才能形成 product freeze。对应重冻结的
+`ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
+`sha256:b1193e2a97f8c4c8db26dd2d3cbe98ff0b8fb7d6e8414fb15b71d1e0536b5df7`。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

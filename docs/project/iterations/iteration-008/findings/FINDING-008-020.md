@@ -59,5 +59,5 @@ runtime 建立独立、前瞻性冻结和对照；两者都不能改写历史 Re
 
 主处置写入 `ITER-008-VERIFICATION`；Finding 本身已完成根因隔离和验证规则回写，状态为 `dispositioned`。
 
-在 DeepSeek route 适配 candidate 上重跑完整执行面得到 1001/1006；新增测试全部通过，唯一四项 failure 与一项 error 仍精确是上述
-historical freeze drift。该最新计数同样不得写成 full-suite PASS。
+在 DeepSeek persistent-TLS route 适配 candidate 上重跑完整执行面得到 1010/1015；新增测试全部通过，唯一四项 failure 与一项 error
+仍精确是上述 historical freeze drift。该最新计数同样不得写成 full-suite PASS。

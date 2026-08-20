@@ -5,6 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, application, knowledge, ai, quality]
 depends_on: [SYS-ADR-005, SYS-ADR-008, SYS-ADR-010, SYS-ADR-014, SYS-PRODUCT-SUCCESS]
+derived_from: [FINDING-008-024]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -69,9 +70,13 @@ investigation；尚无任何 Result 时的 FINISH 仍失败关闭。每轮 Appli
 `INVESTIGATION_BUDGET_EXHAUSTED` 终止 Session，不需要超出上限的额外 `FINISH`。无进展/cycle 依据是同一 Session 中已执行的
 exact query 和 Result progress token，而不是脱离 sealed state 单独比较 operation 名称。
 
-Gateway 可以在 Answer 启动前预建调用上限数量的 exact Provider connection。实际调用数必须落在冻结区间；未消费 descriptor 在
-Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题、跨角色或跨 session 复用。每个实际调用仍拥有唯一 workload、manifest、
-receipt 和 transport audit。
+Gateway 可以在 Answer 启动前按已资格 connection policy 预建有界 exact Provider descriptor set；descriptor 数不能从调用上限自动
+推导。默认 policy 保持一请求一连接。Provider endpoint 明确支持且已由 Conformance 与 Capability Result 证明时，版本化 persistent
+verified TLS policy 可以在同一授权 Gateway run 内复用一个 TLS session；这只是 transport 复用，不是 Provider session memory，也不
+合并逻辑调用身份。只有 credential 尚未解析、Authorization/HTTP bytes 尚未发送时，才能消费下一个 descriptor 重新取得 TLS；任何
+request bytes 可能已发送后的连接失败立即 outcome unknown，禁止 request retry。实际调用数仍必须落在冻结区间；未消费 descriptor 在
+Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题或跨 session 复用。每个实际调用仍拥有唯一 workload、manifest、receipt、
+request ID、body/result digest 和 transport audit；TLS attempt/success/reuse 与 Provider call count 分开闭合。
 
 当候选声明 Provider preference 时，偏好只用于 product freeze 前的资格 route 选择。每条 route 必须独立持有 current Adapter
 Conformance、同一 Strategy/Configuration 的 Capability Qualification、exact endpoint/secret reference 与隔离 transport；Application
@@ -95,7 +100,7 @@ progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle
 
 ## Consequences
 
-问答从固定三调用变为有界可变调查，Strategy、Capability Evaluation、Gateway、正式 Web 与审计必须共同版本化；旧
+问答从固定三调用变为有界可变调查，Strategy、Capability Evaluation、Gateway、connection policy、正式 Web 与审计必须共同版本化；旧
 `JAVA_SOURCE_SEMANTICS@1` 三调用资格不能继承。调查 trace 增加实现复杂度和时延，因此产品 Gate 必须与成熟源码 Agent 逐题比较，
 并在编码前冻结可重放的正向价值阈值。若最小闭包仍低于成熟 Agent、必须读 Source、或不能在预算内组合多个方法，本方案应停止并
 记录为架构反证，而不是继续扩张语法或预算。

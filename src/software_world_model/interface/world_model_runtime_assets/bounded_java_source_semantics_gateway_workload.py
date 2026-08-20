@@ -50,10 +50,10 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA = (
 def main(argv: list[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     descriptors = tuple(arguments.connected_provider_socket_fd)
-    if len(descriptors) != 6 or len(set(descriptors)) != 6:
+    if len(descriptors) != 3 or len(set(descriptors)) != 3:
         raise DomainError(
             ErrorCode.CONTROL_STATE_DENIED,
-            "bounded source-semantics Gateway requires exactly six connected sockets",
+            "bounded source-semantics Gateway requires exactly three connected sockets",
         )
     implementation_commit = _commit(arguments.implementation_commit)
     freeze = _load_document(arguments.g3b_freeze)
@@ -148,15 +148,72 @@ def main(argv: list[str] | None = None) -> int:
             startup_timeout_seconds=arguments.startup_timeout_seconds,
             idle_timeout_seconds=arguments.idle_timeout_seconds,
         )
-    unused_closed = transport.close_unused_connected_sockets()
+    unused_closed = transport.close_session_and_unused_connected_sockets()
 
     statuses = [str(item["status"]) for item in server_audits]
     dispatch_audits = [
-        item for item in transport_audits if item.get("outcome") != "UNUSED_CLOSED"
+        item
+        for item in transport_audits
+        if item.get("schema") == "SWM-PINNED-DEEPSEEK-DISPATCH-AUDIT@2"
     ]
     unused_audits = [
         item for item in transport_audits if item.get("outcome") == "UNUSED_CLOSED"
     ]
+    tls_audits = [
+        item
+        for item in transport_audits
+        if item.get("schema")
+        == "SWM-PINNED-DEEPSEEK-TLS-HANDSHAKE-AUDIT@1"
+    ]
+    tls_success_count = transport.tls_handshake_success_count
+    tls_attempt_count = transport.tls_handshake_attempt_count
+    connection_reuse_count = transport.connection_reuse_count
+    verified_tls_audits = [
+        item for item in tls_audits if item.get("outcome") == "VERIFIED"
+    ]
+    failed_tls_audits = [
+        item
+        for item in tls_audits
+        if item.get("outcome") == "FAILED_BEFORE_CREDENTIAL"
+    ]
+    verified_connections = {
+        item.get("ordinal"): item.get("peer_certificate_sha256")
+        for item in verified_tls_audits
+    }
+    seen_connections: set[object] = set()
+    dispatch_audits_valid = True
+    for ordinal, item in enumerate(dispatch_audits, start=1):
+        connection_ordinal = item.get("tls_connection_ordinal")
+        expected_reuse = connection_ordinal in seen_connections
+        dispatch_audits_valid = dispatch_audits_valid and (
+            item.get("ordinal") == ordinal
+            and item.get("outcome") == "HTTP_RESPONSE"
+            and item.get("failure_code") is None
+            and isinstance(item.get("status_code"), int)
+            and 200 <= item["status_code"] < 300
+            and item.get("response_body_digest") is not None
+            and connection_ordinal in verified_connections
+            and item.get("peer_certificate_sha256")
+            == verified_connections.get(connection_ordinal)
+            and item.get("connection_reused") is expected_reuse
+        )
+        seen_connections.add(connection_ordinal)
+    tls_audits_valid = (
+        [item.get("ordinal") for item in tls_audits]
+        == list(range(1, tls_attempt_count + 1))
+        and len(verified_tls_audits) == tls_success_count
+        and len(failed_tls_audits) == tls_attempt_count - tls_success_count
+        and all(
+            item.get("failure_code") is None
+            and item.get("peer_certificate_sha256") is not None
+            for item in verified_tls_audits
+        )
+        and all(
+            item.get("failure_code") is not None
+            and item.get("peer_certificate_sha256") is None
+            for item in failed_tls_audits
+        )
+    )
     sequence = policy.validated_stages
     protocol_valid = (
         4 <= request_count <= 6
@@ -165,14 +222,22 @@ def main(argv: list[str] | None = None) -> int:
         == ("IMPLEMENTATION_ANSWER_DRAFTING", "IMPLEMENTATION_ANSWER_REVIEW")
     )
     summary_core = {
-        "schema": "swm.iter-008.bounded-java-source-semantics-gateway-workload@1",
+        "schema": "swm.iter-008.bounded-java-source-semantics-gateway-workload@2",
         "status": (
             "PASS"
             if protocol_valid
             and statuses == ["RESULT"] * request_count
             and len(dispatch_audits) == request_count
-            and unused_closed == 6 - request_count
+            and 1 <= tls_success_count <= 3
+            and tls_success_count <= tls_attempt_count <= 3
+            and connection_reuse_count == request_count - tls_success_count
+            and transport.credential_resolution_count == request_count
+            and transport.credential_resolution_success_count == request_count
+            and unused_closed == 3 - tls_attempt_count
             and len(unused_audits) == unused_closed
+            and len(tls_audits) == tls_attempt_count
+            and tls_audits_valid
+            and dispatch_audits_valid
             else "FAIL"
         ),
         "environment": "EVALUATION_ONLY",
@@ -215,12 +280,33 @@ def main(argv: list[str] | None = None) -> int:
             == 1
             else None
         ),
-        "provider_connection_capability": "INHERITED_EXACT_CONNECTED_SOCKET",
+        "provider_connection_capability": "INHERITED_EXACT_CONNECTED_SOCKET_SET",
+        "provider_connection_policy": (
+            "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+        ),
+        "maximum_pre_dispatch_tls_handshake_attempts": 3,
         "gateway_listener_capability": "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER",
         "new_socket_syscall_capability": "DENIED_BY_SEATBELT",
-        "provider_descriptor_provisioned_count": 6,
-        "provider_descriptor_consumed_count": request_count,
+        "provider_descriptor_provisioned_count": 3,
+        "provider_descriptor_consumed_count": tls_attempt_count,
         "provider_descriptor_unused_closed_count": unused_closed,
+        "tls_handshake_attempt_count": tls_attempt_count,
+        "tls_handshake_success_count": tls_success_count,
+        "pre_dispatch_tls_handshake_failure_count": (
+            tls_attempt_count - tls_success_count
+        ),
+        "pre_dispatch_tls_failure_codes": [
+            item["failure_code"] for item in failed_tls_audits
+        ],
+        "verified_peer_certificate_sha256s": [
+            item["peer_certificate_sha256"] for item in verified_tls_audits
+        ],
+        "connection_reuse_count": connection_reuse_count,
+        "request_retry_count": 0,
+        "credential_resolution_count": transport.credential_resolution_count,
+        "credential_resolution_success_count": (
+            transport.credential_resolution_success_count
+        ),
         "provider_call_count": request_count,
         "https_dispatch_count": len(dispatch_audits),
         "server_audit_count": len(server_audits),

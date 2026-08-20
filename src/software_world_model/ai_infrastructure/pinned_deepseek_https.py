@@ -1,9 +1,10 @@
 """Pinned-address DeepSeek HTTPS transport for the isolated Model Gateway.
 
 DNS resolution and TCP connection belong to the credential-free runtime
-supervisor.  This dispatch transport receives six exact connected descriptors,
+supervisor.  This dispatch transport receives three exact connected descriptors,
 revalidates their numeric peer, verifies TLS for ``api.deepseek.com``, and only
-then resolves ``DEEPSEEK_API_KEY``.  It never retries a Provider request.
+then resolves ``DEEPSEEK_API_KEY``.  A verified TLS session is reused within the
+authorized run; it never retries a Provider request after HTTP dispatch begins.
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ DEEPSEEK_PROVIDER_HOST = "api.deepseek.com"
 DEEPSEEK_PROVIDER_PORT = 443
 DEEPSEEK_PROVIDER_PATH = "/chat/completions"
 _MAX_RESPONSE_BYTES = 16 * 1024 * 1024
+_PROVISIONED_CONNECTED_DESCRIPTOR_COUNT = 3
 _SYSTEM_CA_FILE_CANDIDATES = (
     "/private/etc/ssl/cert.pem",
     "/etc/ssl/cert.pem",
@@ -41,6 +43,29 @@ _SYSTEM_CA_FILE_CANDIDATES = (
     "/etc/pki/tls/certs/ca-bundle.crt",
 )
 _EXECUTOR_SYNTHETIC_EXTERNAL_NETWORK = ipaddress.ip_network("198.18.0.0/15")
+
+
+@dataclass(frozen=True, slots=True)
+class PinnedDeepSeekTLSHandshakeAudit:
+    ordinal: int
+    numeric_address: str
+    address_scope: str
+    address_family: str
+    outcome: str
+    peer_certificate_sha256: str | None
+    failure_code: str | None
+
+    def canonical_value(self) -> dict[str, object]:
+        return {
+            "schema": "SWM-PINNED-DEEPSEEK-TLS-HANDSHAKE-AUDIT@1",
+            "ordinal": self.ordinal,
+            "numeric_address": self.numeric_address,
+            "address_scope": self.address_scope,
+            "address_family": self.address_family,
+            "outcome": self.outcome,
+            "peer_certificate_sha256": self.peer_certificate_sha256,
+            "failure_code": self.failure_code,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,11 +80,14 @@ class PinnedDeepSeekDispatchAudit:
     status_code: int | None
     response_body_digest: Digest | None
     peer_certificate_sha256: str | None
+    tls_connection_ordinal: int
+    connection_reused: bool
     outcome: str
     failure_code: str | None
 
     def canonical_value(self) -> dict[str, object]:
         return {
+            "schema": "SWM-PINNED-DEEPSEEK-DISPATCH-AUDIT@2",
             "ordinal": self.ordinal,
             "endpoint": self.endpoint,
             "numeric_address": self.numeric_address,
@@ -74,13 +102,15 @@ class PinnedDeepSeekDispatchAudit:
                 else None
             ),
             "peer_certificate_sha256": self.peer_certificate_sha256,
+            "tls_connection_ordinal": self.tls_connection_ordinal,
+            "connection_reused": self.connection_reused,
             "outcome": self.outcome,
             "failure_code": self.failure_code,
         }
 
 
 class PinnedIPDeepSeekChatTransport:
-    """Bearer-authenticated exact DeepSeek transport with no runtime DNS."""
+    """Exact DeepSeek transport with a persistent inherited TLS session."""
 
     def __init__(
         self,
@@ -103,17 +133,24 @@ class PinnedIPDeepSeekChatTransport:
             or len(set(connected_socket_fds)) != len(connected_socket_fds)
             or type(maximum_calls) is not int
             or maximum_calls != 6
-            or len(connected_socket_fds) != maximum_calls
+            or len(connected_socket_fds)
+            != _PROVISIONED_CONNECTED_DESCRIPTOR_COUNT
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "pinned DeepSeek transport requires six unique connected descriptors",
+                "pinned DeepSeek transport requires three unique connected descriptors",
             )
         self._connected_socket_fds = list(connected_socket_fds)
         self._tls_context = tls_context or _verified_tls_context()
         self._audit_writer = audit_writer or (lambda _: None)
         self._maximum_calls = maximum_calls
         self._audits: list[PinnedDeepSeekDispatchAudit] = []
+        self._tls_handshake_audits: list[PinnedDeepSeekTLSHandshakeAudit] = []
+        self._active_tls_socket: ssl.SSLSocket | None = None
+        self._active_certificate_digest: str | None = None
+        self._active_connection_ordinal: int | None = None
+        self._credential_resolution_count = 0
+        self._credential_resolution_success_count = 0
 
     @property
     def provider_call_count(self) -> int:
@@ -127,7 +164,56 @@ class PinnedIPDeepSeekChatTransport:
     def audits(self) -> tuple[PinnedDeepSeekDispatchAudit, ...]:
         return tuple(self._audits)
 
+    @property
+    def tls_handshake_audits(self) -> tuple[PinnedDeepSeekTLSHandshakeAudit, ...]:
+        return tuple(self._tls_handshake_audits)
+
+    @property
+    def tls_handshake_attempt_count(self) -> int:
+        return len(self._tls_handshake_audits)
+
+    @property
+    def tls_handshake_success_count(self) -> int:
+        return sum(
+            item.outcome == "VERIFIED" for item in self._tls_handshake_audits
+        )
+
+    @property
+    def connection_reuse_count(self) -> int:
+        return sum(item.connection_reused for item in self._audits)
+
+    @property
+    def descriptor_consumed_count(self) -> int:
+        return len(self._tls_handshake_audits)
+
+    @property
+    def descriptor_unused_count(self) -> int:
+        return len(self._connected_socket_fds)
+
+    @property
+    def credential_resolution_count(self) -> int:
+        return self._credential_resolution_count
+
+    @property
+    def credential_resolution_success_count(self) -> int:
+        return self._credential_resolution_success_count
+
     def close_unused_connected_sockets(self) -> int:
+        return self.close_session_and_unused_connected_sockets()
+
+    def close_session_and_unused_connected_sockets(self) -> int:
+        if self._active_tls_socket is not None:
+            self._active_tls_socket.close()
+            self._active_tls_socket = None
+            self._active_certificate_digest = None
+            self._active_connection_ordinal = None
+            self._audit_writer(
+                {
+                    "schema": "SWM-PINNED-DEEPSEEK-TLS-SESSION-AUDIT@1",
+                    "outcome": "ACTIVE_TLS_CLOSED",
+                    "failure_code": None,
+                }
+            )
         closed = 0
         family = socket.AF_INET6 if self._address.version == 6 else socket.AF_INET
         while self._connected_socket_fds:
@@ -143,7 +229,7 @@ class PinnedIPDeepSeekChatTransport:
             self._audit_writer(
                 {
                     "schema": "SWM-PINNED-DEEPSEEK-DESCRIPTOR-AUDIT@1",
-                    "ordinal": len(self._audits) + closed,
+                    "ordinal": self.descriptor_consumed_count + closed,
                     "numeric_address": str(self._address),
                     "outcome": "UNUSED_CLOSED",
                     "failure_code": None,
@@ -190,37 +276,15 @@ class PinnedIPDeepSeekChatTransport:
         body_digest = _bytes_digest(body)
         status_code: int | None = None
         response_digest: Digest | None = None
-        certificate_digest: str | None = None
-        raw_socket: socket.socket | None = None
-        tls_socket: ssl.SSLSocket | None = None
+        reused_connection = self._active_tls_socket is not None
+        tls_socket = self._ensure_tls_socket(
+            timeout_milliseconds=timeout_milliseconds
+        )
+        certificate_digest = self._active_certificate_digest
+        connection_ordinal = self._required_active_connection_ordinal()
+        close_after_response = False
+        self._credential_resolution_count += 1
         try:
-            family = (
-                socket.AF_INET6 if self._address.version == 6 else socket.AF_INET
-            )
-            raw_socket = socket.socket(
-                family,
-                socket.SOCK_STREAM,
-                fileno=self._connected_socket_fds.pop(0),
-            )
-            raw_socket.settimeout(timeout_milliseconds / 1000)
-            peer = raw_socket.getpeername()
-            if (
-                peer[1] != DEEPSEEK_PROVIDER_PORT
-                or _numeric_address(str(peer[0])) != self._address
-            ):
-                raise DomainError(
-                    ErrorCode.QUALIFICATION_INVALID,
-                    "DeepSeek socket peer is not the exact inherited pin",
-                )
-            tls_socket = self._tls_context.wrap_socket(
-                raw_socket,
-                server_hostname=DEEPSEEK_PROVIDER_HOST,
-            )
-            raw_socket = None
-            certificate = tls_socket.getpeercert(binary_form=True)
-            if not certificate:
-                raise ssl.SSLError("DeepSeek peer did not provide a certificate")
-            certificate_digest = "sha256:" + sha256(certificate).hexdigest()
             api_key = self._api_key_resolver()
             if (
                 not isinstance(api_key, str)
@@ -240,6 +304,11 @@ class PinnedIPDeepSeekChatTransport:
                     ErrorCode.INVALID_ARGUMENT,
                     "DeepSeek credential or client request ID is not ASCII",
                 ) from exc
+        except Exception:
+            self._close_active_tls_socket()
+            raise
+        self._credential_resolution_success_count += 1
+        try:
             headers = (
                 f"POST {DEEPSEEK_PROVIDER_PATH} HTTP/1.1\r\n".encode("ascii")
                 + f"Host: {DEEPSEEK_PROVIDER_HOST}\r\n".encode("ascii")
@@ -250,7 +319,7 @@ class PinnedIPDeepSeekChatTransport:
                 + request_id
                 + b"\r\n"
                 + f"Content-Length: {len(body)}\r\n".encode("ascii")
-                + b"Connection: close\r\n\r\n"
+                + b"Connection: keep-alive\r\n\r\n"
             )
             tls_socket.sendall(headers + body)
             response = http.client.HTTPResponse(tls_socket)
@@ -263,11 +332,19 @@ class PinnedIPDeepSeekChatTransport:
                 )
             status_code = response.status
             response_digest = _bytes_digest(response_body)
+            response_headers = {
+                key.lower(): value for key, value in response.getheaders()
+            }
             result = ProviderHTTPResponse(
                 status_code=status_code,
-                headers={key.lower(): value for key, value in response.getheaders()},
+                headers=response_headers,
                 body=response_body,
             )
+            if (
+                response.will_close
+                or response_headers.get("connection", "").lower() == "close"
+            ):
+                close_after_response = True
         except DomainError as exc:
             self._record_audit(
                 ordinal,
@@ -276,9 +353,12 @@ class PinnedIPDeepSeekChatTransport:
                 status_code,
                 response_digest,
                 certificate_digest,
+                connection_ordinal,
+                reused_connection,
                 "REJECTED",
                 exc.code.value,
             )
+            self._close_active_tls_socket()
             raise
         except (OSError, TimeoutError, ssl.SSLError, http.client.HTTPException) as exc:
             failure_code = _network_failure_code(exc)
@@ -289,19 +369,16 @@ class PinnedIPDeepSeekChatTransport:
                 status_code,
                 response_digest,
                 certificate_digest,
+                connection_ordinal,
+                reused_connection,
                 "OUTCOME_UNKNOWN",
                 failure_code,
             )
+            self._close_active_tls_socket()
             raise ProviderOutcomeUnknown(
                 "DeepSeek Chat Completions outcome is unknown",
                 reason_code=failure_code,
             ) from exc
-        finally:
-            if tls_socket is not None:
-                tls_socket.close()
-            if raw_socket is not None:
-                raw_socket.close()
-
         self._record_audit(
             ordinal,
             body_digest,
@@ -309,10 +386,135 @@ class PinnedIPDeepSeekChatTransport:
             status_code,
             response_digest,
             certificate_digest,
+            connection_ordinal,
+            reused_connection,
             "HTTP_RESPONSE",
             None,
         )
+        if close_after_response:
+            self._close_active_tls_socket()
         return result
+
+    def _ensure_tls_socket(self, *, timeout_milliseconds: int) -> ssl.SSLSocket:
+        if self._active_tls_socket is not None:
+            self._active_tls_socket.settimeout(timeout_milliseconds / 1000)
+            return self._active_tls_socket
+        family = socket.AF_INET6 if self._address.version == 6 else socket.AF_INET
+        while self._connected_socket_fds:
+            descriptor = self._connected_socket_fds.pop(0)
+            ordinal = len(self._tls_handshake_audits) + 1
+            raw_socket: socket.socket | None = None
+            tls_socket: ssl.SSLSocket | None = None
+            try:
+                raw_socket = socket.socket(
+                    family,
+                    socket.SOCK_STREAM,
+                    fileno=descriptor,
+                )
+                raw_socket.settimeout(timeout_milliseconds / 1000)
+                peer = raw_socket.getpeername()
+                if (
+                    peer[1] != DEEPSEEK_PROVIDER_PORT
+                    or _numeric_address(str(peer[0])) != self._address
+                ):
+                    raise DomainError(
+                        ErrorCode.QUALIFICATION_INVALID,
+                        "DeepSeek socket peer is not the exact inherited pin",
+                    )
+                tls_socket = self._tls_context.wrap_socket(
+                    raw_socket,
+                    server_hostname=DEEPSEEK_PROVIDER_HOST,
+                )
+                raw_socket = None
+                certificate = tls_socket.getpeercert(binary_form=True)
+                if not certificate:
+                    raise ssl.SSLError(
+                        "DeepSeek peer did not provide a certificate"
+                    )
+                certificate_digest = (
+                    "sha256:" + sha256(certificate).hexdigest()
+                )
+            except DomainError as exc:
+                self._record_tls_handshake(
+                    ordinal=ordinal,
+                    outcome="REJECTED",
+                    certificate_digest=None,
+                    failure_code=exc.code.value,
+                )
+                if tls_socket is not None:
+                    tls_socket.close()
+                if raw_socket is not None:
+                    raw_socket.close()
+                raise
+            except (
+                OSError,
+                TimeoutError,
+                ssl.SSLError,
+                http.client.HTTPException,
+            ) as exc:
+                self._record_tls_handshake(
+                    ordinal=ordinal,
+                    outcome="FAILED_BEFORE_CREDENTIAL",
+                    certificate_digest=None,
+                    failure_code=_network_failure_code(exc),
+                )
+                if tls_socket is not None:
+                    tls_socket.close()
+                if raw_socket is not None:
+                    raw_socket.close()
+                continue
+            self._record_tls_handshake(
+                ordinal=ordinal,
+                outcome="VERIFIED",
+                certificate_digest=certificate_digest,
+                failure_code=None,
+            )
+            self._active_tls_socket = tls_socket
+            self._active_certificate_digest = certificate_digest
+            self._active_connection_ordinal = ordinal
+            return tls_socket
+        raise DomainError(
+            ErrorCode.LIVE_INTEGRATION_HELD,
+            "DeepSeek credential-free TLS acquisition exhausted",
+            {
+                "tls_handshake_attempt_count": self.tls_handshake_attempt_count,
+                "provider_request_count": self.provider_call_count,
+            },
+        )
+
+    def _record_tls_handshake(
+        self,
+        *,
+        ordinal: int,
+        outcome: str,
+        certificate_digest: str | None,
+        failure_code: str | None,
+    ) -> None:
+        audit = PinnedDeepSeekTLSHandshakeAudit(
+            ordinal=ordinal,
+            numeric_address=str(self._address),
+            address_scope=_numeric_address_scope(self._address),
+            address_family=(
+                "AF_INET6" if self._address.version == 6 else "AF_INET"
+            ),
+            outcome=outcome,
+            peer_certificate_sha256=certificate_digest,
+            failure_code=failure_code,
+        )
+        self._tls_handshake_audits.append(audit)
+        self._audit_writer(audit.canonical_value())
+
+    def _close_active_tls_socket(self) -> None:
+        if self._active_tls_socket is not None:
+            self._active_tls_socket.close()
+        self._active_tls_socket = None
+        self._active_certificate_digest = None
+        self._active_connection_ordinal = None
+
+    def _required_active_connection_ordinal(self) -> int:
+        if self._active_connection_ordinal is None:
+            return max(1, self.tls_handshake_attempt_count)
+        return self._active_connection_ordinal
 
     def _record_audit(
         self,
@@ -322,6 +524,8 @@ class PinnedIPDeepSeekChatTransport:
         status_code: int | None,
         response_digest: Digest | None,
         certificate_digest: str | None,
+        tls_connection_ordinal: int,
+        connection_reused: bool,
         outcome: str,
         failure_code: str | None,
     ) -> None:
@@ -338,6 +542,8 @@ class PinnedIPDeepSeekChatTransport:
             status_code=status_code,
             response_body_digest=response_digest,
             peer_certificate_sha256=certificate_digest,
+            tls_connection_ordinal=tls_connection_ordinal,
+            connection_reused=connection_reused,
             outcome=outcome,
             failure_code=failure_code,
         )
@@ -425,5 +631,6 @@ __all__ = [
     "DEEPSEEK_PROVIDER_PATH",
     "DEEPSEEK_PROVIDER_PORT",
     "PinnedDeepSeekDispatchAudit",
+    "PinnedDeepSeekTLSHandshakeAudit",
     "PinnedIPDeepSeekChatTransport",
 ]

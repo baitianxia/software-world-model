@@ -88,7 +88,7 @@ _EXPECTED_PROVIDER = {
 }
 _BOUNDED_DEEPSEEK_PROVIDER = {
     "provider_type": "DEEPSEEK",
-    "adapter": "deepseek-chat-completions-no-tools@2",
+    "adapter": "deepseek-chat-completions-no-tools@3",
     "requested_model": "deepseek-v4-pro",
     "observed_model": "deepseek-v4-pro",
     "endpoint": "https://api.deepseek.com/chat/completions",
@@ -235,6 +235,9 @@ class SealedWorldModelExecutor:
             self._authorization_receipt_digest,
         ) = _prepare_gateway_input(grant, startup_root / "gateway-input")
         self._provider_call_count = _gateway_call_count(self._gateway_input)
+        self._provider_descriptor_count = _gateway_descriptor_count(
+            self._gateway_input
+        )
         self._provider_type = _provider_type(grant.provider)
         bootstrap_connection, bootstrap = _provision_provider_socket(
             provider_type=self._provider_type
@@ -477,13 +480,14 @@ class SealedWorldModelExecutor:
         terminal_path = run_root / "terminal.json"
         persisted_terminal = _load_json(terminal_path)
         provisioned_calls = self._provider_call_count
+        handed_off_connections = self._provider_descriptor_count
         if (
             terminal.get("status") != "SUCCESS"
             or persisted_terminal.get("status") != "SUCCESS"
             or persisted_terminal.get("attempt_count") != 1
             or persisted_terminal.get("selective_retry_count") != 0
             or persisted_terminal.get("provider_connection_handoff_count")
-            != provisioned_calls
+            != handed_off_connections
             or persisted_terminal.get("gateway_listener_handoff_count") != 1
             or persisted_terminal.get("production_activation") != "NOT_EXECUTED"
             or _document_digest(persisted_terminal)
@@ -1272,6 +1276,13 @@ def _gateway_call_count(gateway_input: Path) -> int:
     raise ValueError("qualified Gateway freeze schema is unsupported")
 
 
+def _gateway_descriptor_count(gateway_input: Path) -> int:
+    freeze = _load_json(gateway_input / "g3b-freeze.json")
+    if freeze.get("schema") == _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA:
+        return 3
+    return _gateway_call_count(gateway_input)
+
+
 def _gateway_qualification_binding_field(gateway_input: Path) -> str | None:
     freeze = _load_json(gateway_input / "g3b-freeze.json")
     schema = freeze.get("schema")
@@ -1601,12 +1612,13 @@ def _run_one(
     socket_root.mkdir(mode=0o700)
     gateway_socket = socket_root / "gateway.sock"
     gateway_call_count = _gateway_call_count(gateway_input)
+    gateway_descriptor_count = _gateway_descriptor_count(gateway_input)
     connected_with_receipts = tuple(
         _provision_provider_socket(
             provider_address,
             provider_type=provider_type,
         )
-        for _ in range(gateway_call_count)
+        for _ in range(gateway_descriptor_count)
     )
     connections = tuple(item[0] for item in connected_with_receipts)
     provisionings = tuple(item[1] for item in connected_with_receipts)
@@ -1623,10 +1635,10 @@ def _run_one(
     try:
         provisioning_document = (
             provisionings[0]
-            if gateway_call_count == 1
+            if gateway_descriptor_count == 1
             else {
                 "schema": "SWM-PROVIDER-CONNECTION-SET@1",
-                "connection_count": gateway_call_count,
+                "connection_count": gateway_descriptor_count,
                 "connections": provisionings,
                 "production_activation": "NOT_EXECUTED",
             }
@@ -1928,7 +1940,7 @@ def _run_one(
         "failure_stage": failure_stage,
         "attempt_count": 1,
         "selective_retry_count": 0,
-        "provider_connection_handoff_count": gateway_call_count,
+        "provider_connection_handoff_count": gateway_descriptor_count,
         "provider_type": provider_type,
         "gateway_listener_handoff_count": 1,
         "gateway_listener_provisioning": _file_reference(
@@ -2765,17 +2777,54 @@ def _verify_answer_gateway(
         or (
             bounded
             and (
-                gateway.get("provider_descriptor_provisioned_count") != 6
-                or gateway.get("provider_descriptor_consumed_count")
-                != expected_calls
+                gateway.get("provider_connection_policy")
+                != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                or gateway.get("maximum_pre_dispatch_tls_handshake_attempts")
+                != 3
+                or gateway.get("provider_descriptor_provisioned_count") != 3
+                or type(gateway.get("provider_descriptor_consumed_count"))
+                is not int
+                or not 1
+                <= gateway["provider_descriptor_consumed_count"]
+                <= 3
                 or gateway.get("provider_descriptor_unused_closed_count")
-                != 6 - expected_calls
+                != 3 - gateway["provider_descriptor_consumed_count"]
+                or gateway.get("tls_handshake_attempt_count")
+                != gateway["provider_descriptor_consumed_count"]
+                or type(gateway.get("tls_handshake_success_count")) is not int
+                or not 1
+                <= gateway["tls_handshake_success_count"]
+                <= gateway["tls_handshake_attempt_count"]
+                or gateway.get("pre_dispatch_tls_handshake_failure_count")
+                != gateway["tls_handshake_attempt_count"]
+                - gateway["tls_handshake_success_count"]
+                or gateway.get("connection_reuse_count")
+                != expected_calls - gateway["tls_handshake_success_count"]
+                or gateway.get("request_retry_count") != 0
+                or gateway.get("credential_resolution_count")
+                != expected_calls
+                or gateway.get("credential_resolution_success_count")
+                != expected_calls
+                or not isinstance(
+                    gateway.get("pre_dispatch_tls_failure_codes"), list
+                )
+                or len(gateway["pre_dispatch_tls_failure_codes"])
+                != gateway["pre_dispatch_tls_handshake_failure_count"]
+                or not isinstance(
+                    gateway.get("verified_peer_certificate_sha256s"), list
+                )
+                or len(gateway["verified_peer_certificate_sha256s"])
+                != gateway["tls_handshake_success_count"]
             )
         )
         or gateway.get("dns_operation_count_in_dispatch_process") != 0
         or gateway.get("credential_value_recorded") is not False
         or gateway.get("provider_connection_capability")
-        != "INHERITED_EXACT_CONNECTED_SOCKET"
+        != (
+            "INHERITED_EXACT_CONNECTED_SOCKET_SET"
+            if bounded
+            else "INHERITED_EXACT_CONNECTED_SOCKET"
+        )
         or gateway.get("gateway_listener_capability")
         != "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER"
         or gateway.get("new_socket_syscall_capability") != "DENIED_BY_SEATBELT"

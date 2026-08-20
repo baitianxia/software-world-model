@@ -1486,6 +1486,22 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-023.md"
   },
   {
+    "id": "FINDING-008-024",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "architecture",
+      "ai",
+      "engineering",
+      "quality",
+      "security",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-024.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3431,7 +3447,9 @@
       "ai",
       "quality"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-008-024"
+    ],
     "path": "docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md"
   },
   {
@@ -3501,7 +3519,9 @@
       "architecture",
       "application"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-008-024"
+    ],
     "path": "docs/system/architecture/runtime-flows.md"
   },
   {
@@ -3571,7 +3591,8 @@
       "ai"
     ],
     "derived_from": [
-      "DD-AI-MODEL-GATEWAY"
+      "DD-AI-MODEL-GATEWAY",
+      "FINDING-008-024"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -4103,7 +4124,9 @@
       "security",
       "architecture"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-008-024"
+    ],
     "path": "docs/system/quality/security-boundaries.md"
   }
 ]

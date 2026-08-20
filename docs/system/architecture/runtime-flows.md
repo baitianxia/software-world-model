@@ -5,6 +5,7 @@ status: current
 authority: normative
 owners: [architecture, application]
 depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015]
+derived_from: [FINDING-008-024]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -76,9 +77,13 @@ candidate 或其他没有合法 evidence-reducing transition 的 Result 可在 1
 Limitation，并保持 Source/Update/Direct fallback 为 0。查询、表示与业务发现三层完整性只由平台通过 progress receipt 投影；没有
 同时证明时不得给 bounded absence，评测 Oracle identity 不进入 Answer。
 
-该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway supervisor 可以预建上限 6 个独立 Provider
-connection；Gateway 按实际角色顺序消费，未使用 descriptor 在 terminal 后销毁并审计。旧固定三调用资格和 connection receipt 不得
-复用。其他已接受 Profile 保持原调用协议。
+该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway connection policy 是资格身份，不能从调用
+上限推导 descriptor 数。当前 DeepSeek bounded route 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1`：supervisor 预建恰好 3 个
+exact connected descriptor 候选；Gateway 在读取 credential 或发送 HTTP 前最多顺序尝试 3 次 verified TLS，并在同一授权 run 内复用
+成功 session 承载仍然彼此独立的 stateless request。服务端完整响应后明确关闭时，下一逻辑 request 可以消费剩余 descriptor；任何
+HTTP bytes 可能已发送后的失败都立即 `OUTCOME_UNKNOWN` 且不重发。terminal 后关闭未使用 descriptor，审计分别闭合 TLS attempts、
+successes、reuse、Provider calls 与 `provisioned = attempts + unused_closed`。旧固定三调用资格、旧一请求一连接资格和 connection
+receipt 均不得复用；其他已接受 Profile 保持各自已资格的调用与连接协议。
 
 若候选配置声明多个 Provider 偏好，Application 必须在 product freeze 和任何 socket、credential 或 request dispatch 之前，按顺序
 选择第一个同时拥有 current exact Conformance、同 Strategy/Configuration Capability Qualification 与完整隔离 transport 的 route。

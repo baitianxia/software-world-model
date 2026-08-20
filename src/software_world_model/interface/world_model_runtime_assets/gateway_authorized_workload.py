@@ -28,7 +28,7 @@ _JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256 = (
     "2ca2f8f2e9b8ff3d352bdbb8f673f559723221b1f2d42bcbc7edf4d9372c6900"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256 = (
-    "b7cbe5312c480119b6f8c82f37dedbbb7e8d1b55ba6b6d3ffdc30d8fb9635464"
+    "40146d71768edb5386cefbd164e3df5c32239e8ada140db4425e529ec5b6ab6d"
 )
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 
@@ -106,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline_schema = baseline_summary.get("schema")
     bounded = (
         baseline_schema
-        == "swm.iter-008.bounded-java-source-semantics-gateway-workload@1"
+        == "swm.iter-008.bounded-java-source-semantics-gateway-workload@2"
     )
     expected_calls = baseline_summary.get("provider_call_count") if bounded else (
         3
@@ -123,11 +123,50 @@ def main(argv: list[str] | None = None) -> int:
         or (
             bounded
             and (
-                baseline_summary.get("provider_descriptor_provisioned_count") != 6
-                or baseline_summary.get("provider_descriptor_consumed_count")
-                != expected_calls
+                baseline_summary.get("provider_connection_policy")
+                != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                or baseline_summary.get(
+                    "maximum_pre_dispatch_tls_handshake_attempts"
+                )
+                != 3
+                or baseline_summary.get("provider_descriptor_provisioned_count")
+                != 3
+                or type(
+                    baseline_summary.get("provider_descriptor_consumed_count")
+                )
+                is not int
+                or not 1
+                <= baseline_summary["provider_descriptor_consumed_count"]
+                <= 3
                 or baseline_summary.get("provider_descriptor_unused_closed_count")
-                != 6 - expected_calls
+                != 3 - baseline_summary["provider_descriptor_consumed_count"]
+                or baseline_summary.get("tls_handshake_attempt_count")
+                != baseline_summary["provider_descriptor_consumed_count"]
+                or type(baseline_summary.get("tls_handshake_success_count"))
+                is not int
+                or not 1
+                <= baseline_summary["tls_handshake_success_count"]
+                <= baseline_summary["tls_handshake_attempt_count"]
+                or baseline_summary.get("connection_reuse_count")
+                != expected_calls
+                - baseline_summary["tls_handshake_success_count"]
+                or baseline_summary.get("request_retry_count") != 0
+                or baseline_summary.get("credential_resolution_count")
+                != expected_calls
+                or baseline_summary.get("credential_resolution_success_count")
+                != expected_calls
+                or not isinstance(
+                    baseline_summary.get("pre_dispatch_tls_failure_codes"),
+                    list,
+                )
+                or len(baseline_summary["pre_dispatch_tls_failure_codes"])
+                != baseline_summary["pre_dispatch_tls_handshake_failure_count"]
+                or not isinstance(
+                    baseline_summary.get("verified_peer_certificate_sha256s"),
+                    list,
+                )
+                or len(baseline_summary["verified_peer_certificate_sha256s"])
+                != baseline_summary["tls_handshake_success_count"]
             )
         )
     ):

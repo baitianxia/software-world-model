@@ -14,6 +14,9 @@ from typing import Mapping
 
 from software_world_model.ai_infrastructure import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT,
+    DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+    DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY,
+    DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES,
     DeepSeekChatConformanceQualification,
     DeepSeekModelConfiguration,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -443,6 +446,7 @@ def _model_diagnostic_scope(
             configuration.actual_model_fingerprint
         ),
         "configuration_fingerprint": configuration.fingerprint.value,
+        **_deepseek_transport_scope(),
         "deepseek_implementation_digest": deepseek_implementation[
             "aggregate_digest"
         ],
@@ -472,6 +476,7 @@ def _conformance_scope(
             configuration.actual_model_fingerprint
         ),
         "configuration_fingerprint": configuration.fingerprint.value,
+        **_deepseek_transport_scope(),
         "conformance_fixture_id": DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID,
         "conformance_fixture_version": (
             DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION
@@ -505,6 +510,7 @@ def _capability_scope(
             configuration.actual_model_fingerprint
         ),
         "configuration_fingerprint": configuration.fingerprint.value,
+        **_deepseek_transport_scope(),
         "conformance_result_ref": conformance.result_ref,
         "conformance_result_digest": conformance.result_digest.value,
         "suite_ref": PINNED_SUITE_REF,
@@ -517,6 +523,22 @@ def _capability_scope(
             "FORTY_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
             "EIGHTEEN_CASES_NO_PRODUCT_QUESTION_SOURCE_EVIDENCE_OR_"
             "HIDDEN_CANARY"
+        ),
+    }
+
+
+def _deepseek_transport_scope() -> dict[str, object]:
+    return {
+        "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
+        "maximum_pre_dispatch_tls_handshake_attempts": (
+            DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+        ),
+        "credential_resolution_policy": (
+            DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
+        ),
+        "request_retry_allowed": False,
+        "transport_session_audit_schema": (
+            "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
         ),
     }
 

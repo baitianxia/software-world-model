@@ -27,7 +27,10 @@ from .model_egress_gateway import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF,
     QualifiedJavaSourceSemanticsModelEgressGatewayPolicy,
 )
-from .deepseek_chat_adapter import DeepSeekModelConfiguration
+from .deepseek_chat_adapter import (
+    DeepSeekModelConfiguration,
+    verify_deepseek_transport_session_audit,
+)
 from .versioned_world_model_answer_strategy import (
     JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -38,7 +41,7 @@ from .versioned_world_model_answer_strategy import (
 
 
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_CLOSED_RESULT_SCHEMA = (
-    "swm.iter-008.bounded-java-source-semantics-ce-closed-result@1"
+    "swm.iter-008.bounded-java-source-semantics-ce-closed-result@2"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_QUALIFICATION_DOCUMENT_SCHEMA = (
     "swm.capability-qualification-proof@1"
@@ -53,6 +56,9 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT = {
     "failure_count": 0,
     "unknown_count": 0,
     "per_call_trace_evidence_required": True,
+    "transport_session_evidence_required": True,
+    "maximum_pre_dispatch_tls_handshake_attempts": 3,
+    "request_retry_count": 0,
 }
 BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
     ("WM-JSS-I8-FIRST-CANDIDATES-001", 1),
@@ -86,15 +92,15 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:5fb965eaa1bd6cd485231a638a8390a47d804fcaf2e980aa5f4446ddbe4072fd"
+    "sha256:9613fb5e02c0b0f104acd851faa4000808382a2e22e7f7ceb613d9a4b1b460c4"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@2",
+    "adapter_version": "deepseek-chat-completions-no-tools@3",
     "model_ref": "deepseek-v4-pro",
     "provider_configuration_fingerprint": (
-        "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+        "sha256:71b77c37c5549d78804c535ee6ed2640c7d9f427b8d6447e6190144283014d1b"
     ),
     "model_egress_policy_ref": (
         BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
@@ -107,6 +113,12 @@ _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "classification": "INTERNAL",
     "required_case_count": 18,
     "provider_request_count": 40,
+    "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+    "maximum_pre_dispatch_tls_handshake_attempts": 3,
+    "credential_resolution_after_verified_tls": True,
+    "transport_session_audit_schema": (
+        "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+    ),
     "retries_allowed": False,
 }
 BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF = (
@@ -194,6 +206,15 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
     )
     expected_provider_requests = sum(expected_call_counts.values())
+    try:
+        transport_session = verify_deepseek_transport_session_audit(
+            closed.get("transport_session")
+        )
+    except DomainError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "bounded source-semantics transport session evidence is invalid",
+        ) from exc
     if (
         closed.get("schema")
         != BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_CLOSED_RESULT_SCHEMA
@@ -203,6 +224,19 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         or closed.get("unknown_count") != 0
         or closed.get("required_case_count") != len(expected_cases)
         or closed.get("provider_request_count") != expected_provider_requests
+        or transport_session["http_dispatch_count"]
+        != expected_provider_requests
+        or not 1 <= transport_session["tls_handshake_success_count"] <= 3
+        or transport_session["connection_reuse_count"]
+        != (
+            expected_provider_requests
+            - transport_session["tls_handshake_success_count"]
+        )
+        or transport_session["post_dispatch_outcome_unknown_count"] != 0
+        or transport_session["credential_resolution_count"]
+        != expected_provider_requests
+        or transport_session["credential_resolution_success_count"]
+        != expected_provider_requests
         or closed.get("production_activation") != "NOT_EXECUTED"
         or closed.get("suite_digest")
         != BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST.value
@@ -236,9 +270,9 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         or definition.get("strategy_version") != contract.strategy_version
         or definition.get("model_ref") != "deepseek-v4-pro"
         or definition.get("adapter_version")
-        != "deepseek-chat-completions-no-tools@2"
+        != "deepseek-chat-completions-no-tools@3"
         or definition.get("provider_configuration_fingerprint")
-        != "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+        != "sha256:71b77c37c5549d78804c535ee6ed2640c7d9f427b8d6447e6190144283014d1b"
         or not str(definition.get("conformance_result_ref", "")).startswith(
             "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
         )
@@ -418,6 +452,12 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
     contract_value = policy.get("proposal_contract")
     requirements = policy.get("qualification_requirements")
     provider = policy.get("provider")
+    roles = policy.get("roles")
+    gateway_role = (
+        roles.get("model_egress_gateway")
+        if isinstance(roles, Mapping)
+        else None
+    )
     call_protocol = (
         contract_value.get("call_protocol")
         if isinstance(contract_value, Mapping)
@@ -439,14 +479,19 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or provider.get("selected_provider_type") != "DEEPSEEK"
         or provider.get("provider_type") != "DEEPSEEK"
         or provider.get("adapter_version")
-        != "deepseek-chat-completions-no-tools@2"
+        != "deepseek-chat-completions-no-tools@3"
         or provider.get("requested_model_ref") != "deepseek-v4-pro"
         or provider.get("actual_model_fingerprint") != "deepseek-v4-pro"
         or provider.get("configuration_fingerprint")
-        != "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+        != "sha256:71b77c37c5549d78804c535ee6ed2640c7d9f427b8d6447e6190144283014d1b"
         or provider.get("endpoint")
         != "https://api.deepseek.com/chat/completions"
         or provider.get("credential_reference") != "env:DEEPSEEK_API_KEY"
+        or provider.get("connection_policy")
+        != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+        or provider.get("maximum_pre_dispatch_tls_handshake_attempts") != 3
+        or provider.get("credential_resolution_after_verified_tls") is not True
+        or provider.get("request_retry_allowed") is not False
         or provider.get("fallback_after_dispatch") is not False
         or not isinstance(contract_value, Mapping)
         or contract_value.get("capability_contract_version")
@@ -478,7 +523,20 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or requirements.get("qualification_kind") != "CAPABILITY_EVALUATION"
         or requirements.get("validity_status") != "VALID"
         or requirements.get("step_evidence_required") is not True
+        or requirements.get("transport_session_evidence_required") is not True
         or requirements.get("policy_drift_invalidates_qualification") is not True
+        or not isinstance(gateway_role, Mapping)
+        or gateway_role.get("credential_visibility")
+        != "GATEWAY_ONLY_AT_FINAL_HTTPS_DISPATCH"
+        or gateway_role.get("allowed_outbound")
+        != "EXACT_INHERITED_CONNECTED_TLS_SOCKET_ONLY"
+        or gateway_role.get("descriptor_policy")
+        != "PROVISION_THREE_CONSUME_ONE_TO_THREE_CLOSE_UNUSED"
+        or gateway_role.get("connection_policy")
+        != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+        or gateway_role.get("pre_dispatch_tls_policy")
+        != "MAXIMUM_THREE_BEFORE_CREDENTIAL_OR_HTTP_ONLY"
+        or gateway_role.get("other_outbound") != "DENY"
     ):
         _invalid("bounded source-semantics egress policy content drifted")
 

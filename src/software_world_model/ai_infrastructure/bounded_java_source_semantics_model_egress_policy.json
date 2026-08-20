@@ -1,6 +1,6 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-model-egress-gateway-policy@1",
-  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.3.0",
+  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.0",
   "default_action": "DENY",
   "environment": "EVALUATION_ONLY",
   "provider": {
@@ -8,12 +8,16 @@
     "preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
     "selected_provider_type": "DEEPSEEK",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@2",
+    "adapter_version": "deepseek-chat-completions-no-tools@3",
     "requested_model_ref": "deepseek-v4-pro",
     "actual_model_fingerprint": "deepseek-v4-pro",
-    "configuration_fingerprint": "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954",
+    "configuration_fingerprint": "sha256:71b77c37c5549d78804c535ee6ed2640c7d9f427b8d6447e6190144283014d1b",
     "endpoint": "https://api.deepseek.com/chat/completions",
     "credential_reference": "env:DEEPSEEK_API_KEY",
+    "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+    "maximum_pre_dispatch_tls_handshake_attempts": 3,
+    "credential_resolution_after_verified_tls": true,
+    "request_retry_allowed": false,
     "fallback_after_dispatch": false
   },
   "proposal_contract": {
@@ -53,6 +57,7 @@
     "qualification_kind": "CAPABILITY_EVALUATION",
     "validity_status": "VALID",
     "step_evidence_required": true,
+    "transport_session_evidence_required": true,
     "policy_drift_invalidates_qualification": true
   },
   "roles": {
@@ -68,7 +73,9 @@
       "allowed_inbound": "EXACT_PREBOUND_AF_UNIX_ANSWER_ONLY",
       "allowed_outbound": "EXACT_INHERITED_CONNECTED_TLS_SOCKET_ONLY",
       "endpoint_validation": "EXACT_SCHEME_HOST_PORT_PATH_NO_USERINFO_QUERY_OR_FRAGMENT",
-      "descriptor_policy": "PROVISION_SIX_CONSUME_FOUR_TO_SIX_CLOSE_UNUSED",
+      "descriptor_policy": "PROVISION_THREE_CONSUME_ONE_TO_THREE_CLOSE_UNUSED",
+      "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+      "pre_dispatch_tls_policy": "MAXIMUM_THREE_BEFORE_CREDENTIAL_OR_HTTP_ONLY",
       "other_outbound": "DENY"
     }
   },

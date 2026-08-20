@@ -19,6 +19,31 @@ from validation.structure_world_model_iteration_008.capability import (
 )
 
 
+def _session_audit(calls: int, *, unknown: int = 0):
+    return {
+        "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+        "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+        "maximum_pre_dispatch_tls_handshake_attempts": 3,
+        "tls_handshake_attempt_count": 1 if calls else 0,
+        "tls_handshake_success_count": 1 if calls else 0,
+        "pre_dispatch_tls_handshake_failure_count": 0,
+        "pre_dispatch_tls_failure_codes": [],
+        "http_dispatch_count": calls,
+        "connection_reuse_count": max(0, calls - 1),
+        "verified_peer_certificate_sha256s": (
+            ["sha256:" + "d" * 64] if calls else []
+        ),
+        "post_dispatch_outcome_unknown_count": unknown,
+        "post_dispatch_failure_codes": ["TIMEOUT"] * unknown,
+        "request_retry_count": 0,
+        "credential_resolution_count": calls,
+        "credential_resolution_success_count": calls,
+        "credential_resolution_policy": (
+            "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+        ),
+    }
+
+
 class _PassingDiagnosticTransport:
     def __init__(self) -> None:
         self.calls = 0
@@ -52,6 +77,9 @@ class _PassingDiagnosticTransport:
             ).encode("utf-8"),
         )
 
+    def session_audit(self):
+        return _session_audit(self.calls)
+
 
 class _UnknownDiagnosticTransport:
     def __init__(self) -> None:
@@ -62,6 +90,9 @@ class _UnknownDiagnosticTransport:
         raise ProviderOutcomeUnknown(
             "fixture diagnostic outcome unknown", reason_code="TIMEOUT"
         )
+
+    def session_audit(self):
+        return _session_audit(self.calls, unknown=self.calls)
 
 
 class Iteration008DeepSeekDiagnosticTests(unittest.TestCase):
@@ -106,6 +137,23 @@ class Iteration008DeepSeekDiagnosticTests(unittest.TestCase):
             self.assertEqual(
                 request["authorization_scope"]["planned_provider_call_count"],
                 1,
+            )
+            self.assertEqual(
+                request["authorization_scope"]["connection_policy"],
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+            )
+            self.assertEqual(
+                request["authorization_scope"][
+                    "maximum_pre_dispatch_tls_handshake_attempts"
+                ],
+                3,
+            )
+            self.assertEqual(
+                request["authorization_scope"]["credential_resolution_policy"],
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH",
+            )
+            self.assertFalse(
+                request["authorization_scope"]["request_retry_allowed"]
             )
             self.assertEqual(
                 frozen["dispatch_contract"]["credential_read_before_authorization"],

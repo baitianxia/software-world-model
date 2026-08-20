@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-deepseek-product-egress-integrated-new-exact-qualification-required-before-product-freeze`
+- Worktree status: `iteration-008-deepseek-persistent-tls-session-candidate-locally-verified-awaiting-clean-commit`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-deepseek-v4-pro-run-013-strategy-capability-pass-current-product-egress-policy-requalification-not-executed`
+- Live model path: `iteration-008-deepseek-v4-pro-run-014-015-network-failures-preserved-new-persistent-session-requalification-not-executed`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

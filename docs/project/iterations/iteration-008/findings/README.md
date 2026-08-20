@@ -12,7 +12,8 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十三条 Finding，均已处置或被后续决定取代；Finding 处置不豁免当前资格、完整回归、正式 Web、canary、
+本 Slice 当前登记二十四条 Finding；二十四条均已处置或被后续决定取代。`FINDING-008-024` 已闭合 DeepSeek TLS session 的
+代码、System Owner 与本地验证，但不豁免当前资格、完整回归、正式 Web、canary、
 SLICE-002 与 Production Activation gate：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
@@ -84,6 +85,11 @@ SLICE-002 与 Production Activation gate：
   DeepSeek Result 错配给 Ark。Provider fallback 被定义为 product dispatch 前的 exact qualification route selection；本轮选择
   DeepSeek，任何已分派或 outcome-unknown request 均不得跨 Provider 重试，Ark 只有取得同 Contract 新资格后才能恢复优先级；
   system/code/test 处置已闭合，旧 run-013 因未绑定新 resource policy 被拒绝，全新资格链仍 blocking。
+- [FINDING-008-024](FINDING-008-024.md)：新 route 的 run-014/015 分别在第 4、10 次请求前遭遇相同 TLS EOF；此前请求与 evaluator
+  均 PASS。当前 TUN 对大量独立 TLS session 间歇失败，而 endpoint 明确支持同一 verified connection 的 HTTP/1.1 keep-alive。
+  处置把 bounded credential-free TLS acquisition 与 HTTP request dispatch 分开：只允许发送凭据/HTTP 前最多三次握手，已发送后
+  仍绝不 retry，并在一个授权运行内复用 verified TLS session。direct/pinned transport、freeze、资格 loader、runtime 与文档 Owner
+  已闭合；完整回归 1010/1015，唯一五项仍是 `FINDING-008-020` 的历史 runtime drift，新 live qualification 继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

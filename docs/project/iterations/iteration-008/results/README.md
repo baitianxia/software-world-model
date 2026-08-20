@@ -293,6 +293,28 @@ socket、TLS/SNI/certificate、response cap、4—6 call 与 unused descriptor �
 只保留为 Strategy 能力与 Finding 证据，不能授权新 product candidate。新 Conformance/Capability Result、正式 product freeze、Web、
 canary、Agent 对照、Reflection 与 Activation 均尚未执行。
 
+route candidate `5ffb6ef1def72be56c3343d2fc97a4398208fd16` 的 run-014 Conformance preflight/result digest 为
+`sha256:7ad47dcd17262fc1f79610b79e4e5b16756d4749ea0b0d1a3204040d131dc104` /
+`sha256:58881d22757b91d31422e55705c32ea76eed6659840db29b94e63cffd58a839a`；2 requests / 12/12 PASS、唯一 identity
+`deepseek-v4-pro`、temperature 0、thinking disabled、usage 完整。随后 Capability freeze
+`sha256:e3424e6515a72d61a97f5b015ef6bf3814c523b23743b0eb9831d1fa253a998c` 在前 3 Case / 3 requests PASS 后，第 4 个
+独立 TLS session 于 certificate verification 前失败，以 `PROVIDER_OUTCOME_UNKNOWN` 密封。该授权已消费且没有 retry。
+
+网络恢复对照后形成的独立 Capability run-015 freeze
+`sha256:157a4dfc61cd5e0d9cc3f1e57450e55bdef3f627954f4882075d1e7bf465c6e4` 复用仍 current 的同候选 Conformance，并在前
+5 Case / 9 requests PASS 后，于第 10 个独立 TLS session 发生相同失败。第二份授权同样已消费、没有 retry，不能与 run-014
+拼接为 closed qualification。credential-free TLS 对照首组 4/5、后续带间隔 12/12 verified TLS 1.3 PASS，成功连接 certificate
+digest 一致；一个 verified TLS connection 上的两次无凭据 HTTP request 均得到预期 401、`Connection: keep-alive` 且
+`will_close=false`。这些对照不是模型调用或 Capability 证据，但把重复故障定位为当前 TUN 对大量独立 TLS session 的间歇 EOF。
+
+`FINDING-008-024` 将 direct 与 pinned DeepSeek transport 改为同一授权 run 内的 persistent verified TLS：最多 3 次
+credential-free acquisition，成功后才解析 credential；HTTP dispatch 后仍绝不 retry。正式资格 Result 新增 TLS attempts/successes、
+certificate、HTTP dispatch、reuse、credential resolution、post-dispatch unknown 与零 retry 证据；product Gateway 预置 3 个
+descriptor 并分列 consumed/unused-close。Adapter/fixture/Result/egress policy 分别升级为 `@3` / `1.1.0` / `@2` / `@1.4.0`。
+旧 run-014/015 永久保留为失败证据。当前实现的核心 50/50、跨模块 89/89、Gateway 13/13、`compileall` 与 diff check PASS；完整
+执行面 1010/1015，唯一五项是 `FINDING-008-020` 的历史 exact runtime drift，因此不冒充 full-suite PASS。新 exact clean candidate
+与 live Conformance/Capability 尚未完成，正式 product freeze、Web、canary、Agent 对照、Reflection 与 Activation 继续阻断。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

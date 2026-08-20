@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
 tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
@@ -34,9 +34,14 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    authorization ref、payload boundary 与 `Production Activation=NOT_EXECUTED`。历史 permission 字段只能标为 baseline-only。
 8. 有界可变调用协议必须同时冻结最小/最大调用数、合法角色序列和 terminal 条件。每个实际调用拥有唯一 Authorized Input
    Manifest、workload/role/step identity、model call ID、receipt 和 transport audit；不能用一个 Plan receipt 代表多个调查回合。
-   supervisor 可以提供上限数量的 exact connected descriptor，但 Gateway 只能顺序消费，不能创建、交换或复用连接。Answer terminal
-   后未消费 descriptor 必须关闭并记录 `UNUSED_CLOSED`，且 `provisioned = consumed + unused_closed`；少于最小、超过最大、缺 receipt、
-   跨题/跨 session 使用或计数未知均失败关闭。
+   supervisor 只能按已资格且版本化的 connection policy 提供有界 exact connected descriptor set；Gateway 不能自行创建、交换或
+   跨题/跨 session 使用连接。默认的独立连接 policy 仍是一请求一 descriptor。显式取得资格的 persistent verified TLS policy 可以在
+   **同一授权 Gateway run** 内为多个 stateless HTTP request 复用已验证 TLS session，但不能合并 Manifest、model call、request ID、
+   body/result digest 或 transport audit。该 policy 只允许在读取 credential、构造 Authorization 或发送 HTTP bytes 前，顺序消费下一
+   descriptor 进行有界 credential-free TLS acquisition；任一 request 的 bytes 可能已经发送后，连接失败必须立即记为
+   `OUTCOME_UNKNOWN`，不得重发该 request。Answer terminal 后未消费 descriptor 必须关闭并记录 `UNUSED_CLOSED`；审计分别满足
+   `provisioned = TLS attempts + unused_closed`、实际 Provider call 落在调用区间和 `request_retry_count=0`。少于最小、超过最大、缺
+   receipt、计数未知或未取得资格的连接复用均失败关闭。
 9. 若 Capability 使用 Application-owned constrained transition，Gateway 输入必须同时绑定完整版本化 operation universe 与当前 sealed
    state 的非空受限子集。子集只能由 Application 从冻结 evidence ledger、前序 Result 和预算派生，并按 contract canonical order
    表达；Gateway 拒绝 universe 外 operation、空子集、乱序/重复项或调用方自行扩张。模型 response 中越出子集的 operation 仍作为
@@ -49,7 +54,7 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 
 ## Security and compatibility
 
-Secret 只在分派前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider preference 是资格 route 的确定性选择输入，不是 request-level failover 或绕过资格的可用性探测。
+Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatch 前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider preference 是资格 route 的确定性选择输入，不是 request-level failover 或绕过资格的可用性探测。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 request retry 都属于 Provider Configuration 与 Capability Qualification 身份；live Result 必须证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution 和 post-dispatch unknown 计数，而不只声明配置。
 
 ## Verification ownership
 

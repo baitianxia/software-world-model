@@ -5,7 +5,7 @@ import http.client
 import json
 import unittest
 from types import SimpleNamespace
-from urllib import error as urllib_error
+from unittest.mock import patch
 
 from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
@@ -15,8 +15,9 @@ from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DEFAULT_DEEPSEEK_TEMPERATURE,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekModelConfiguration,
+    PersistentDeepSeekChatTransport,
     RecordingDeepSeekChatCompletionsTransport,
-    UrllibDeepSeekChatTransport,
+    verify_deepseek_transport_session_audit,
 )
 from software_world_model.ai_infrastructure.model_gateway import (
     AdapterConformanceLevel,
@@ -43,14 +44,53 @@ class StubTransport:
         return self.response
 
 
-class FailingOpener:
-    def open(self, request, timeout):
-        raise urllib_error.URLError(ConnectionRefusedError("fixture refusal"))
+class _Connection:
+    def __init__(self, *, response=None) -> None:
+        self.timeout = None
+        self.response = response or _ConnectionResponse()
+        self.sent = b""
+        self.closed = False
+
+    def settimeout(self, value) -> None:
+        self.timeout = value
+
+    def getpeercert(self, *, binary_form=False):
+        return b"fixture-certificate" if binary_form else {}
+
+    def sendall(self, value: bytes) -> None:
+        self.sent += value
+
+    def close(self) -> None:
+        self.closed = True
 
 
-class RemoteDisconnectingOpener:
-    def open(self, request, timeout):
-        raise http.client.RemoteDisconnected("fixture remote disconnect")
+class _ConnectionResponse:
+    status = 200
+    will_close = False
+
+    def __init__(
+        self,
+        *,
+        body=b"{}",
+        headers=None,
+        begin_error=None,
+        will_close=False,
+    ) -> None:
+        self._body = body
+        self._headers = dict(headers or {"Connection": "keep-alive"})
+        self._begin_error = begin_error
+        self.will_close = will_close
+
+    def begin(self) -> None:
+        if self._begin_error is not None:
+            raise self._begin_error
+
+    def read(self, maximum) -> bytes:
+        self.maximum = maximum
+        return self._body
+
+    def getheaders(self):
+        return list(self._headers.items())
 
 
 def success_response(
@@ -167,8 +207,18 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(missing["temperature"], DEFAULT_DEEPSEEK_TEMPERATURE)
         self.assertEqual(
             configuration.adapter_version,
-            "deepseek-chat-completions-no-tools@2",
+            "deepseek-chat-completions-no-tools@3",
         )
+        self.assertEqual(
+            missing["connection_policy"],
+            "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+        )
+        self.assertEqual(missing["maximum_pre_dispatch_tls_handshakes"], 3)
+        self.assertEqual(
+            missing["credential_resolution_policy"],
+            "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH",
+        )
+        self.assertFalse(missing["request_retry_allowed"])
         self.assertFalse(missing["credential_configured"])
         self.assertTrue(present["credential_configured"])
         self.assertNotIn("do-not-expose", json.dumps(present))
@@ -341,24 +391,148 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
                 DeepSeekModelConfiguration(temperature=temperature)  # type: ignore[arg-type]
             self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
 
-    def test_transport_classifies_network_failures(self) -> None:
-        cases = (
-            (FailingOpener(), "CONNECTION_REFUSED"),
-            (RemoteDisconnectingOpener(), "REMOTE_DISCONNECTED"),
+    def test_transport_retries_only_credential_free_tls_acquisition(self) -> None:
+        failures = [ConnectionRefusedError("fixture refusal") for _ in range(3)]
+        credential_reads = 0
+
+        def resolve() -> str:
+            nonlocal credential_reads
+            credential_reads += 1
+            return "fixture-key"
+
+        transport = PersistentDeepSeekChatTransport(
+            api_key_resolver=resolve,
+            connection_factory=lambda _: (_ for _ in ()).throw(failures.pop(0)),
         )
-        for opener, expected in cases:
-            transport = UrllibDeepSeekChatTransport(
-                api_key_resolver=lambda: "fixture-key",
-                opener=opener,
+        with self.assertRaises(DomainError) as raised:
+            transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="fixture-request",
+                timeout_milliseconds=1000,
             )
-            with self.subTest(expected=expected), self.assertRaises(ProviderOutcomeUnknown) as raised:
+
+        self.assertEqual(raised.exception.code, ErrorCode.LIVE_INTEGRATION_HELD)
+        self.assertEqual(credential_reads, 0)
+        self.assertEqual(transport.tls_handshake_attempt_count, 3)
+        self.assertEqual(transport.http_dispatch_count, 0)
+        self.assertEqual(
+            transport.pre_dispatch_tls_failure_codes,
+            ("CONNECTION_REFUSED",) * 3,
+        )
+
+    def test_transport_reuses_tls_but_never_retries_http_dispatch(self) -> None:
+        connection = _Connection()
+        factory_calls = 0
+
+        def factory(_):
+            nonlocal factory_calls
+            factory_calls += 1
+            return connection
+
+        transport = PersistentDeepSeekChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=factory,
+        )
+        with patch(
+            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            for ordinal in range(2):
                 transport.post_json(
                     endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
                     body=b"{}",
-                    client_request_id="fixture-request",
+                    client_request_id=f"fixture-request-{ordinal}",
                     timeout_milliseconds=1000,
                 )
-            self.assertEqual(raised.exception.reason_code, expected)
+
+        self.assertEqual(factory_calls, 1)
+        self.assertEqual(transport.tls_handshake_attempt_count, 1)
+        self.assertEqual(transport.tls_handshake_success_count, 1)
+        self.assertEqual(transport.connection_reuse_count, 1)
+        self.assertEqual(transport.http_dispatch_count, 2)
+        self.assertEqual(connection.sent.count(b"Connection: keep-alive\r\n"), 2)
+        self.assertEqual(
+            transport.session_audit()["connection_reuse_count"], 1
+        )
+
+        failing = _Connection(
+            response=_ConnectionResponse(
+                begin_error=http.client.RemoteDisconnected("fixture disconnect")
+            )
+        )
+        failed_transport = PersistentDeepSeekChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=lambda _: failing,
+        )
+        with (
+            patch(
+                "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
+                side_effect=lambda active: active.response,
+            ),
+            self.assertRaises(ProviderOutcomeUnknown) as raised,
+        ):
+            failed_transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="fixture-unknown",
+                timeout_milliseconds=1000,
+            )
+        self.assertEqual(raised.exception.reason_code, "REMOTE_DISCONNECTED")
+        self.assertEqual(failed_transport.tls_handshake_attempt_count, 1)
+        self.assertEqual(failed_transport.http_dispatch_count, 1)
+        self.assertEqual(
+            failed_transport.session_audit()[
+                "post_dispatch_outcome_unknown_count"
+            ],
+            1,
+        )
+
+    def test_transport_reacquires_only_for_a_later_request_after_clean_close(self) -> None:
+        connections = [
+            _Connection(
+                response=_ConnectionResponse(
+                    headers={"Connection": "close"},
+                    will_close=True,
+                )
+            ),
+            _Connection(),
+        ]
+        transport = PersistentDeepSeekChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=lambda _: connections.pop(0),
+        )
+        with patch(
+            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            for ordinal in range(2):
+                transport.post_json(
+                    endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                    body=b"{}",
+                    client_request_id=f"fixture-clean-close-{ordinal}",
+                    timeout_milliseconds=1000,
+                )
+
+        audit = transport.session_audit()
+        self.assertEqual(audit["tls_handshake_attempt_count"], 2)
+        self.assertEqual(audit["tls_handshake_success_count"], 2)
+        self.assertEqual(audit["http_dispatch_count"], 2)
+        self.assertEqual(audit["connection_reuse_count"], 0)
+
+    def test_transport_session_audit_rejects_dispatch_without_verified_tls(self) -> None:
+        audit = PersistentDeepSeekChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=lambda _: _Connection(),
+        ).session_audit()
+        audit["http_dispatch_count"] = 1
+        audit["credential_resolution_count"] = 1
+        audit["credential_resolution_success_count"] = 1
+
+        with self.assertRaises(DomainError) as raised:
+            verify_deepseek_transport_session_audit(audit)
+
+        self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
 
     def test_safe_http_error_fields_are_projected_without_message(self) -> None:
         response = ProviderHTTPResponse(
