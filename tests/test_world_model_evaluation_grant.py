@@ -52,6 +52,56 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
             reference["document_digest"] = document_digest
         return reference
 
+    @staticmethod
+    def _v2_preserved_hold_qualification() -> dict[str, object]:
+        preserved_tests = [
+            {"outcome": outcome, "test_id": test_id}
+            for outcome, test_id in (
+                world_model_runtime._FULL_REGRESSION_PRESERVED_HOLD_TESTS
+            )
+        ]
+        return {
+            "schema": (
+                world_model_runtime._DETERMINISTIC_QUALIFICATION_SCHEMA_V2
+            ),
+            "full_regression_pass": False,
+            "full_regression_gate_pass": True,
+            "full_regression_gate_status": (
+                world_model_runtime._FULL_REGRESSION_EXACT_PRESERVED_HOLD
+            ),
+            "full_regression_preserved_hold_ref": (
+                world_model_runtime._FULL_REGRESSION_PRESERVED_HOLD_REF
+            ),
+            "full_regression_test_result": {
+                "argv": [
+                    "/usr/bin/python3",
+                    "-B",
+                    "-m",
+                    "unittest",
+                    "discover",
+                    "-s",
+                    "tests",
+                    "-v",
+                ],
+                "pass": False,
+                "gate_pass": True,
+                "gate_status": (
+                    world_model_runtime._FULL_REGRESSION_EXACT_PRESERVED_HOLD
+                ),
+                "return_code": 1,
+                "test_count": 1018,
+                "passed_test_count": 1013,
+                "failure_count": 4,
+                "error_count": 1,
+                "preserved_hold_ref": (
+                    world_model_runtime._FULL_REGRESSION_PRESERVED_HOLD_REF
+                ),
+                "preserved_hold_tests": preserved_tests,
+                "stdout_sha256": "sha256:" + "a" * 64,
+                "stderr_sha256": "sha256:" + "b" * 64,
+            },
+        }
+
     def _grant(self) -> tuple[Path, Path]:
         commit = "a" * 40
         tree = "b" * 40
@@ -226,6 +276,76 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
         self.assertEqual(
             grant.authorization_ref,
             "unit-test-explicit-authorization",
+        )
+
+    def test_v2_exact_preserved_hold_is_bounded_to_iteration_008_route(
+        self,
+    ) -> None:
+        qualification = self._v2_preserved_hold_qualification()
+
+        self.assertTrue(
+            world_model_runtime._deterministic_regression_gate_is_valid(
+                qualification,
+                qualification_binding_field=(
+                    "bounded_java_source_semantics_capability_qualification"
+                ),
+            )
+        )
+        self.assertFalse(
+            world_model_runtime._deterministic_regression_gate_is_valid(
+                qualification,
+                qualification_binding_field=None,
+            )
+        )
+
+    def test_v2_preserved_hold_rejects_any_test_identity_tamper(self) -> None:
+        qualification = self._v2_preserved_hold_qualification()
+        result = qualification["full_regression_test_result"]
+        assert isinstance(result, dict)
+        holds = result["preserved_hold_tests"]
+        assert isinstance(holds, list)
+        first = holds[0]
+        assert isinstance(first, dict)
+        first["test_id"] = "test_unrelated.NewTests.test_regression"
+
+        self.assertFalse(
+            world_model_runtime._deterministic_regression_gate_is_valid(
+                qualification,
+                qualification_binding_field=(
+                    "bounded_java_source_semantics_capability_qualification"
+                ),
+            )
+        )
+
+    def test_v2_raw_full_regression_pass_remains_valid(self) -> None:
+        qualification = self._v2_preserved_hold_qualification()
+        qualification["full_regression_pass"] = True
+        qualification["full_regression_gate_status"] = (
+            world_model_runtime._FULL_REGRESSION_PASS
+        )
+        qualification["full_regression_preserved_hold_ref"] = None
+        result = qualification["full_regression_test_result"]
+        assert isinstance(result, dict)
+        result.update(
+            {
+                "pass": True,
+                "gate_status": world_model_runtime._FULL_REGRESSION_PASS,
+                "return_code": 0,
+                "passed_test_count": result["test_count"],
+                "failure_count": 0,
+                "error_count": 0,
+                "preserved_hold_ref": None,
+                "preserved_hold_tests": [],
+            }
+        )
+
+        self.assertTrue(
+            world_model_runtime._deterministic_regression_gate_is_valid(
+                qualification,
+                qualification_binding_field=(
+                    "bounded_java_source_semantics_capability_qualification"
+                ),
+            )
         )
 
     def test_runtime_exposes_only_the_preselected_provider_credential(self) -> None:

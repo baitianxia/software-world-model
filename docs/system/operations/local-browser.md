@@ -6,7 +6,7 @@ authority: operational
 owners: [operations, interface]
 depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py]
-tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_world_model_product.py]
+tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py]
 ---
 
 # 本机浏览器体验
@@ -64,6 +64,15 @@ preflight。服务没有认证，固定只绑定 `127.0.0.1`。
 候选冻结在签发 authorized browser grant 前，必须用 runtime exact `-I -S -B` flags 和 role package root 导入真实 Answer/Gateway/
 Projector entrypoint，且证明 Answer 不依赖未封入 role package 的 `site-packages`。OS capability probe 只证明允许/拒绝操作，不能替代
 真实产品入口的 import/dependency closure；任一 entrypoint 不能导入时，页面不得进入可体验候选状态。
+
+确定性资格必须区分 raw full regression 与允许继续的 regression gate。历史 `SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@1`
+仍只接受 raw full regression PASS。ITER-008 bounded route 可使用 `@2`：raw suite PASS 时按普通 `PASS`；若当前环境只能精确复现
+`FINDING-008-020` 已密封的 ITER-003 prepared Codex binary drift，则只能记录
+`PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。后者必须证明五个历史测试各执行一次、结果精确为 4 `FAIL` + 1 `ERROR`、测试 ID 和
+V-009/prepared-binary 原因 marker 全部相等、其余当前测试全部通过；任何新增、缺失、改名、skip、结果类型或原因漂移都阻断 freeze。
+资格文档必须同时保留 raw `full_regression_pass: false`、通过数/总数、完整 held test identity 和 stdout/stderr digest，不能写成
+full-suite PASS。该 versioned gate 只允许继续当前 `EVALUATION_ONLY` public Web 验证；它不能形成 Slice Acceptance、hidden canary
+豁免、Direct/Production Activation，也不能改写或跳过 ITER-003 的历史 freeze 和断言。
 
 历史 `validation.structure_world_model_iteration_004.interactive_browser` 只保留为已接受证据和回归输入，不再是当前产品
 启动入口。

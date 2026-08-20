@@ -123,6 +123,48 @@ _SOURCE_SEMANTICS_DISPATCH_POLICY = (
 _BOUNDED_SOURCE_SEMANTICS_DISPATCH_POLICY = (
     "FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY"
 )
+_DETERMINISTIC_QUALIFICATION_SCHEMA_V1 = (
+    "SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@1"
+)
+_DETERMINISTIC_QUALIFICATION_SCHEMA_V2 = (
+    "SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@2"
+)
+_FULL_REGRESSION_PASS = "PASS"
+_FULL_REGRESSION_EXACT_PRESERVED_HOLD = (
+    "PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD"
+)
+_FULL_REGRESSION_PRESERVED_HOLD_REF = "FINDING-008-020"
+_FULL_REGRESSION_PRESERVED_HOLD_TESTS = (
+    (
+        "ERROR",
+        "test_iteration_003_v009.Iteration003V009Tests."
+        "test_input_freeze_and_evaluator_are_mechanically_closed",
+    ),
+    (
+        "FAIL",
+        "test_iteration_003_v009.Iteration003V009Tests."
+        "test_closed_evaluation_rejects_semantically_tampered_"
+        "conformance_binding",
+    ),
+    (
+        "FAIL",
+        "test_iteration_003_v009.Iteration003V009Tests."
+        "test_closed_live_harness_seals_all_seven_cases_and_valid_"
+        "qualification",
+    ),
+    (
+        "FAIL",
+        "test_iteration_003_v009.Iteration003V009Tests."
+        "test_conformance_unknown_seals_pre_dispatch_intent_and_stays_"
+        "blocking",
+    ),
+    (
+        "FAIL",
+        "test_iteration_003_validation_assets."
+        "Iteration003FrozenAssetTests."
+        "test_agent_baseline_protocols_and_prepared_mature_cli_are_exact",
+    ),
+)
 _ROLE_ENTRYPOINTS = {
     "answer": ".g3b/answer_workload.py",
     "gateway": ".g3b/gateway_authorized_workload.py",
@@ -652,6 +694,123 @@ class SealedWorldModelExecutor:
         return result, record
 
 
+def _deterministic_regression_gate_is_valid(
+    qualification: Mapping[str, object],
+    *,
+    qualification_binding_field: str | None,
+) -> bool:
+    schema = qualification.get("schema")
+    if schema == _DETERMINISTIC_QUALIFICATION_SCHEMA_V1:
+        return qualification.get("full_regression_pass") is True
+    if (
+        schema != _DETERMINISTIC_QUALIFICATION_SCHEMA_V2
+        or qualification_binding_field
+        != "bounded_java_source_semantics_capability_qualification"
+    ):
+        return False
+
+    required_top_level = {
+        "full_regression_pass",
+        "full_regression_gate_pass",
+        "full_regression_gate_status",
+        "full_regression_preserved_hold_ref",
+        "full_regression_test_result",
+    }
+    if not required_top_level.issubset(qualification):
+        return False
+    result = qualification.get("full_regression_test_result")
+    expected_result_fields = {
+        "argv",
+        "pass",
+        "gate_pass",
+        "gate_status",
+        "return_code",
+        "test_count",
+        "passed_test_count",
+        "failure_count",
+        "error_count",
+        "preserved_hold_ref",
+        "preserved_hold_tests",
+        "stdout_sha256",
+        "stderr_sha256",
+    }
+    if not isinstance(result, Mapping) or set(result) != expected_result_fields:
+        return False
+    argv = result.get("argv")
+    if (
+        not isinstance(argv, list)
+        or not argv
+        or not all(isinstance(item, str) and item for item in argv)
+        or argv[1:]
+        != [
+            "-B",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v",
+        ]
+    ):
+        return False
+    test_count = result.get("test_count")
+    passed_test_count = result.get("passed_test_count")
+    return_code = result.get("return_code")
+    failure_count = result.get("failure_count")
+    error_count = result.get("error_count")
+    if (
+        type(test_count) is not int
+        or test_count < len(_FULL_REGRESSION_PRESERVED_HOLD_TESTS)
+        or type(passed_test_count) is not int
+        or passed_test_count < 0
+        or type(return_code) is not int
+        or type(failure_count) is not int
+        or type(error_count) is not int
+        or not isinstance(result.get("stdout_sha256"), str)
+        or not _DIGEST.fullmatch(str(result.get("stdout_sha256")))
+        or not isinstance(result.get("stderr_sha256"), str)
+        or not _DIGEST.fullmatch(str(result.get("stderr_sha256")))
+        or qualification.get("full_regression_gate_pass") is not True
+        or result.get("gate_pass") is not True
+    ):
+        return False
+
+    gate_status = qualification.get("full_regression_gate_status")
+    if gate_status != result.get("gate_status"):
+        return False
+    if gate_status == _FULL_REGRESSION_PASS:
+        return (
+            qualification.get("full_regression_pass") is True
+            and qualification.get("full_regression_preserved_hold_ref") is None
+            and result.get("pass") is True
+            and return_code == 0
+            and passed_test_count == test_count
+            and failure_count == 0
+            and error_count == 0
+            and result.get("preserved_hold_ref") is None
+            and result.get("preserved_hold_tests") == []
+        )
+    expected_holds = [
+        {"outcome": outcome, "test_id": test_id}
+        for outcome, test_id in _FULL_REGRESSION_PRESERVED_HOLD_TESTS
+    ]
+    return (
+        gate_status == _FULL_REGRESSION_EXACT_PRESERVED_HOLD
+        and qualification.get("full_regression_pass") is False
+        and qualification.get("full_regression_preserved_hold_ref")
+        == _FULL_REGRESSION_PRESERVED_HOLD_REF
+        and result.get("pass") is False
+        and return_code == 1
+        and passed_test_count
+        == test_count - len(_FULL_REGRESSION_PRESERVED_HOLD_TESTS)
+        and failure_count == 4
+        and error_count == 1
+        and result.get("preserved_hold_ref")
+        == _FULL_REGRESSION_PRESERVED_HOLD_REF
+        and result.get("preserved_hold_tests") == expected_holds
+    )
+
+
 def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
     grant_path = _canonical_file(path, "evaluation grant")
     document = _load_json(grant_path)
@@ -836,9 +995,7 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
 
     evaluator_digest = _sha256_file(evaluator_ref.path)
     if (
-        qualification.get("schema")
-        != "SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@1"
-        or qualification.get("status") != "PASS"
+        qualification.get("status") != "PASS"
         or qualification.get("evaluation_subject_status") != "CANDIDATE"
         or qualification.get("implementation_commit") != commit
         or qualification.get("implementation_tree") != tree
@@ -859,7 +1016,10 @@ def _load_evaluation_grant(path: Path) -> _EvaluationGrant:
         or not _DIGEST.fullmatch(
             str(qualification.get("deterministic_product_probe_digest"))
         )
-        or qualification.get("full_regression_pass") is not True
+        or not _deterministic_regression_gate_is_valid(
+            qualification,
+            qualification_binding_field=qualification_binding_field,
+        )
         or qualification.get("docs_check_pass") is not True
         or qualification.get("external_model_called") is not False
         or qualification.get("production_activation") != "NOT_EXECUTED"

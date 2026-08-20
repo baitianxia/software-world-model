@@ -1391,6 +1391,19 @@
       "tests/test_iteration_008_capability_qualification.py"
     ]
   },
+  "FINDING-008-028": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-028.md",
+    "code": [
+      "src/software_world_model/interface/world_model_runtime.py",
+      "validation/structure_world_model_iteration_008/slice1_freeze.py",
+      "validation/structure_world_model_iteration_008/slice1_live_authorize.py"
+    ],
+    "tests": [
+      "tests/test_iteration_008_slice1_freeze.py",
+      "tests/test_iteration_008_slice1_live_authorize.py",
+      "tests/test_world_model_evaluation_grant.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -3096,6 +3109,8 @@
       "tests/test_world_model_evaluation_grant.py",
       "tests/test_world_model_gateway_authorization.py",
       "tests/test_iteration_007_slice1_freeze.py",
+      "tests/test_iteration_008_slice1_freeze.py",
+      "tests/test_iteration_008_slice1_live_authorize.py",
       "tests/test_world_model_product.py"
     ]
   },

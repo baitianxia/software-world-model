@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-019-capability-qualified-evidence-writeback-awaiting-clean-commit
+worktree_status: iteration-008-exact-historical-hold-product-freeze-gate-pass-awaiting-clean-commit
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-019-conformance-and-capability-pass-formal-product-freeze-next
+live_model_path: iteration-008-run-019-qualified-clean-formal-product-freeze-next
 ---
 
 # 当前工作上下文
@@ -419,6 +419,14 @@ qualification proof/document/terminal digest 为 `sha256:16e9e6bc…5020b` / `sh
 operation、typed projection 和 Ref provenance 全部 PASS。全部证据文件为 0600，credential-shaped secret scan 无命中；授权均已消费，
 hidden canary 与 Production Activation 均未执行。V-002 对当前 exact Contract 已 PASS；下一步是写回后以 current qualification 生成
 SLICE-001 正式 product freeze，不直接进入 canary 或 Activation。
+
+正式 freeze 审查随后暴露 `FINDING-008-028`：旧 producer 既要求完整 suite exit 0，又必须原样保留 `FINDING-008-020` 的五项
+historical exact-runtime hold，形成机械死锁。当前 deterministic qualification 升级为 bounded-route-only `@2`，raw suite 仍如实为
+FAIL；只有五个测试各执行一次、精确 4 FAIL + 1 ERROR、原因 marker 相等且其余测试全部 PASS 时，gate 才记录
+`PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。任何新增/不同失败继续阻断，旧 `@1`、历史断言、canary/Acceptance/Activation 边界均
+不变。System fileset 已重算为 ITER-008 `sha256:80b5393b…b311` / ITER-007 `sha256:3f25570e…4819`；首次 full 验证在 digest 写回前
+正确拒绝了第六项 readiness failure。重算后的定向门禁 22/22、完整执行面 1021/1026；raw exit 1，唯一五项精确 hold，结构化
+gate PASS。下一步形成 clean candidate 并生成正式 product freeze。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

@@ -59,6 +59,12 @@ class Iteration008Slice1LiveAuthorizationTests(unittest.TestCase):
             "pending_evaluation_grant_digest": grant["document_digest"],
             "external_model_dispatch_during_freeze": "NOT_EXECUTED",
             "live_question_status": "AWAITING_USER_AFTER_CODE_FREEZE",
+            "full_regression_pass": False,
+            "full_regression_gate_pass": True,
+            "full_regression_gate_status": (
+                "PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD"
+            ),
+            "full_regression_preserved_hold_ref": "FINDING-008-020",
             "production_activation": "NOT_EXECUTED",
         }
         report = self._document(slice1_freeze.REPORT_SCHEMA, report_core)
@@ -86,6 +92,34 @@ class Iteration008Slice1LiveAuthorizationTests(unittest.TestCase):
             "forbidden_inputs",
         ):
             self.assertEqual(value[field], pending[field])
+
+    def test_authorization_rejects_an_inconsistent_regression_gate(self) -> None:
+        report_path, pending_path = self._pending_documents()
+        report = json.loads(report_path.read_bytes())
+        core = {
+            key: value
+            for key, value in report.items()
+            if key != "document_digest"
+        }
+        core["full_regression_pass"] = True
+        report_path.write_bytes(
+            canonical_json_bytes(
+                self._document(slice1_freeze.REPORT_SCHEMA, core)
+            )
+        )
+
+        with self.assertRaisesRegex(
+            slice1_live_authorize.LiveAuthorizationError,
+            "not authorizable",
+        ):
+            slice1_live_authorize.authorize_grant(
+                freeze_report_path=report_path,
+                pending_grant_path=pending_path,
+                output_path=self.root / "evaluation-grant.AUTHORIZED.json",
+                authorized_at="2026-08-20T16:01:00+08:00",
+                authorization_ref=self.message_ref,
+                authorization_message_digest=self.message_digest,
+            )
 
     def test_boundary_verdict_is_bound_to_exact_result_and_question(self) -> None:
         question = "这个不存在的流程能否被完整证明？"

@@ -7,7 +7,9 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shutil
+import subprocess
 import sys
 from typing import Mapping, Sequence
 
@@ -27,16 +29,49 @@ from validation.structure_world_model_iteration_007 import (
 from . import slice1_live_evaluator
 
 
-QUALIFICATION_SCHEMA = "SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@1"
+QUALIFICATION_SCHEMA = "SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@2"
 SUITE_SCHEMA = "SWM-WORLD-MODEL-HELD-OUT-SUITE@2"
 GRANT_SCHEMA = "SWM-WORLD-MODEL-EVALUATION-GRANT@2"
 DISCLOSURE_SCHEMA = "SWM-WORLD-MODEL-DISCLOSURE-AUTHORIZATION@1"
-REPORT_SCHEMA = "SWM-ITER-008-SLICE-001-CANDIDATE-FREEZE@1"
+REPORT_SCHEMA = "SWM-ITER-008-SLICE-001-CANDIDATE-FREEZE@2"
 GATEWAY_FREEZE_SCHEMA = (
     "SWM-ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-GATEWAY-FREEZE@1"
 )
 ACCEPTED_BASELINE_STAGE_DIGEST = _shared.ACCEPTED_BASELINE_STAGE_DIGEST
 _FIXED_GIT_DATE = "2026-08-20T08:30:00+00:00"
+_TEST_COUNT = re.compile(r"^Ran ([0-9]+) tests? in ", re.MULTILINE)
+_FAILURE_HEADER = re.compile(
+    r"^(ERROR|FAIL): [^\n]+ \(([^)\n]+)\)$",
+    re.MULTILINE,
+)
+_FAILED_SUMMARY = re.compile(r"^FAILED \(([^)]+)\)$", re.MULTILINE)
+_OK_SUMMARY = re.compile(r"^OK$", re.MULTILINE)
+_PRESERVED_HOLD_TESTS = (
+    world_model_runtime._FULL_REGRESSION_PRESERVED_HOLD_TESTS
+)
+_PRESERVED_HOLD_REF = (
+    world_model_runtime._FULL_REGRESSION_PRESERVED_HOLD_REF
+)
+_PRESERVED_HOLD_STATUS = (
+    world_model_runtime._FULL_REGRESSION_EXACT_PRESERVED_HOLD
+)
+_RAW_PASS_STATUS = world_model_runtime._FULL_REGRESSION_PASS
+_PRESERVED_HOLD_MARKERS = {
+    _PRESERVED_HOLD_TESTS[0][1]: (
+        "QUALIFICATION_INVALID: V-009 Adapter Conformance implementation "
+        "drifted",
+    ),
+    _PRESERVED_HOLD_TESTS[1][1]: (
+        '"message": "V-009 Adapter Conformance implementation drifted"',
+    ),
+    _PRESERVED_HOLD_TESTS[2][1]: (
+        '"message": "V-009 Adapter Conformance implementation drifted"',
+    ),
+    _PRESERVED_HOLD_TESTS[3][1]: ("AssertionError: 2 != 3",),
+    _PRESERVED_HOLD_TESTS[4][1]: (
+        "9f6748b4ab10ffc92c28b9ccedae89e61a302bbc011df7d276ee38f55906e481",
+    ),
+}
 
 
 class SliceFreezeError(RuntimeError):
@@ -307,6 +342,144 @@ def _user_held_suite(
     return path
 
 
+def _full_regression_result(
+    command: Sequence[str],
+    *,
+    return_code: int,
+    stdout: str,
+    stderr: str,
+) -> dict[str, object]:
+    combined = stdout + stderr
+    count_matches = _TEST_COUNT.findall(combined)
+    if len(count_matches) != 1:
+        raise SliceFreezeError("full regression test count is not exact")
+    test_count = int(count_matches[0])
+    headers = list(_FAILURE_HEADER.finditer(combined))
+    observed_failures = [(item.group(1), item.group(2)) for item in headers]
+
+    verbose_statuses: dict[str, str] = {}
+    for outcome, test_id in _PRESERVED_HOLD_TESTS:
+        method = test_id.rsplit(".", 1)[-1]
+        status_pattern = re.compile(
+            rf"^{re.escape(method)} \({re.escape(test_id)}\) "
+            rf"\.\.\. (ok|FAIL|ERROR)$",
+            re.MULTILINE,
+        )
+        statuses = status_pattern.findall(combined)
+        if len(statuses) != 1:
+            raise SliceFreezeError(
+                "preserved historical regression test was not executed exactly once"
+            )
+        verbose_statuses[test_id] = statuses[0]
+
+    preserved_tests: list[dict[str, str]] = []
+    preserved_ref: str | None = None
+    if return_code == 0:
+        if (
+            headers
+            or _FAILED_SUMMARY.search(combined)
+            or len(_OK_SUMMARY.findall(combined)) != 1
+            or any(status != "ok" for status in verbose_statuses.values())
+        ):
+            raise SliceFreezeError(
+                "successful full regression output is internally inconsistent"
+            )
+        raw_pass = True
+        gate_status = _RAW_PASS_STATUS
+        failure_count = 0
+        error_count = 0
+    elif return_code == 1:
+        expected = set(_PRESERVED_HOLD_TESTS)
+        if (
+            len(observed_failures) != len(expected)
+            or set(observed_failures) != expected
+            or len(_FAILED_SUMMARY.findall(combined)) != 1
+            or _FAILED_SUMMARY.findall(combined)[0]
+            != "failures=4, errors=1"
+            or _OK_SUMMARY.search(combined)
+            or any(
+                verbose_statuses[test_id] != outcome
+                for outcome, test_id in _PRESERVED_HOLD_TESTS
+            )
+        ):
+            raise SliceFreezeError(
+                "full regression differs from the exact preserved historical hold"
+            )
+        blocks = {
+            header.group(2): combined[
+                header.start() : (
+                    headers[index + 1].start()
+                    if index + 1 < len(headers)
+                    else len(combined)
+                )
+            ]
+            for index, header in enumerate(headers)
+        }
+        if any(
+            marker not in blocks[test_id]
+            for test_id, markers in _PRESERVED_HOLD_MARKERS.items()
+            for marker in markers
+        ):
+            raise SliceFreezeError(
+                "preserved historical hold reason marker drifted"
+            )
+        raw_pass = False
+        gate_status = _PRESERVED_HOLD_STATUS
+        failure_count = 4
+        error_count = 1
+        preserved_ref = _PRESERVED_HOLD_REF
+        preserved_tests = [
+            {"outcome": outcome, "test_id": test_id}
+            for outcome, test_id in _PRESERVED_HOLD_TESTS
+        ]
+    else:
+        raise SliceFreezeError(
+            "full regression command returned an unsupported status"
+        )
+
+    held_count = failure_count + error_count
+    if test_count < held_count:
+        raise SliceFreezeError("full regression counts are inconsistent")
+    return {
+        "argv": list(command),
+        "pass": raw_pass,
+        "gate_pass": True,
+        "gate_status": gate_status,
+        "return_code": return_code,
+        "test_count": test_count,
+        "passed_test_count": test_count - held_count,
+        "failure_count": failure_count,
+        "error_count": error_count,
+        "preserved_hold_ref": preserved_ref,
+        "preserved_hold_tests": preserved_tests,
+        "stdout_sha256": digest_of(stdout).value,
+        "stderr_sha256": digest_of(stderr).value,
+    }
+
+
+def _run_full_regression(
+    command: Sequence[str],
+    *,
+    workspace: Path,
+    environment: Mapping[str, str],
+) -> dict[str, object]:
+    completed = subprocess.run(
+        tuple(command),
+        cwd=workspace,
+        env=dict(environment),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    return _full_regression_result(
+        command,
+        return_code=completed.returncode,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -402,7 +575,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         workspace=workspace,
         environment=candidate_environment,
     )
-    full = _test_result(
+    full = _run_full_regression(
         (
             sys.executable,
             "-B",
@@ -411,7 +584,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "discover",
             "-s",
             "tests",
-            "-q",
+            "-v",
         ),
         workspace=workspace,
         environment=environment,
@@ -448,7 +621,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "deterministic_product_probe_digest": fixture[
             "deterministic_product_probe_digest"
         ],
-        "full_regression_pass": True,
+        "full_regression_pass": full["pass"],
+        "full_regression_gate_pass": full["gate_pass"],
+        "full_regression_gate_status": full["gate_status"],
+        "full_regression_preserved_hold_ref": full[
+            "preserved_hold_ref"
+        ],
         "docs_check_pass": True,
         "focused_test_result": focused,
         "candidate_answer_package_test_result": candidate,
@@ -607,6 +785,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "focused_test_count": focused["test_count"],
         "candidate_answer_package_test_count": candidate["test_count"],
         "full_regression_test_count": full["test_count"],
+        "full_regression_pass": full["pass"],
+        "full_regression_gate_pass": full["gate_pass"],
+        "full_regression_gate_status": full["gate_status"],
+        "full_regression_preserved_hold_ref": full[
+            "preserved_hold_ref"
+        ],
         "docs_check": "PASS",
         "unauthorized_prelisten_gate": "PASS",
         "external_model_dispatch_during_freeze": "NOT_EXECUTED",

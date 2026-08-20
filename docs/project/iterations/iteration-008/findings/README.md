@@ -12,9 +12,9 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十七条 Finding；二十七条均已处置或被后续决定取代。`FINDING-008-027` 已把 search-term 资格约束收敛到
-question-owned、产品真实的 concept，同时强化模型侧的语义来源检查；run-019 已完成当前 live 资格，但不豁免正式 Web、canary、
-SLICE-002 与 Production Activation gate：
+本 Slice 当前登记二十八条 Finding；二十八条均已处置或被后续决定取代。`FINDING-008-027` 已把 search-term 资格约束收敛到
+question-owned、产品真实的 concept，run-019 已完成当前 live 资格；`FINDING-008-028` 进一步以 versioned exact historical-hold gate
+解除正式 product freeze 的机械死锁，但不把 raw suite 写成 PASS，也不豁免 Web、canary、SLICE-002 与 Production Activation gate：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -108,6 +108,10 @@ SLICE-002 与 Production Activation gate：
   operation Oracle、18 Case / 40 calls、18/18、Adapter `@4`、compiler `@6` 和 no-retry 不变。run-018 永久 FAIL；exact
   candidate `6dc7a9e4…` 的 run-019 Conformance 12/12、Capability 40 calls / 18/18 PASS，V-002 对当前 Contract 已闭合，formal
   product freeze/Web 仍是下一 blocking Gate。
+- [FINDING-008-028](FINDING-008-028.md)：旧 product freeze 同时要求 raw full-suite PASS 和保留 `FINDING-008-020` 的五项
+  exact-runtime FAIL，形成永久死锁。确定性 qualification 升级为 bounded-route-only `@2`：只有五个测试各执行一次、精确 4 FAIL +
+  1 ERROR、原因 marker 相等且其余测试全 PASS 时，才以 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD` 继续 evaluation-only Web；
+  任何新增/不同失败仍阻断，历史断言、raw FAIL、canary/Acceptance/Activation 边界不变。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

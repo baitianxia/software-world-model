@@ -367,6 +367,17 @@ RESULT-DRIVEN-BATCH 与 REF-PROVENANCE 均按 question-origin rule PASS；后者
 下一步从写回后的 clean producer 生成一份绑定该 qualification chain 的 SLICE-001 formal product freeze，再按正式 Web 协议执行公开
 登录/下单回归；hidden canary 仍必须保持未披露，Production Activation 保持 `NOT_EXECUTED`。
 
+正式 freeze 的首次代码审查随后暴露 `FINDING-008-028`：旧 producer 要求完整 suite exit 0 并固定写入
+`full_regression_pass: true`，与 `FINDING-008-020` 必须原样保留的五项 historical exact-runtime hold 构成永久死锁。当前设计使用
+`SWM-WORLD-MODEL-DETERMINISTIC-QUALIFICATION@2`，只允许 bounded ITER-008 route 将 raw regression 与 gate outcome 分开记录。
+raw PASS 仍是普通 `PASS`；raw FAIL 只有五个历史测试各执行一次、精确 4 FAIL + 1 ERROR、V-009/prepared-binary 原因 marker 相等且
+其余测试全 PASS 时，才能形成 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。任何新增、缺失、改名、skip 或原因漂移立即阻断。
+旧 `@1`、ITER-003 freeze/断言和 raw full-suite FAIL 保持不变；该 gate 只允许继续 `EVALUATION_ONLY` public Web，不能形成 canary
+豁免、Slice Acceptance、SLICE-002 或 Production Activation。
+
+该门禁定向 parser/runtime/authorize 22/22 PASS；最终完整执行面 1021/1026，raw exit 1，唯一 4 FAIL + 1 ERROR 精确匹配
+`FINDING-008-020`，结构化 gate PASS。正式 product freeze 仍必须从包含该实现与文档闭包的 clean exact candidate 重新运行全部 gate。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

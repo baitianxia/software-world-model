@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 import json
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -18,6 +19,49 @@ class Iteration008Slice1FreezeTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
         self.workspace = Path(__file__).resolve().parents[1]
+
+    @staticmethod
+    def _full_regression_command() -> tuple[str, ...]:
+        return (
+            sys.executable,
+            "-B",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v",
+        )
+
+    @staticmethod
+    def _preserved_hold_output() -> str:
+        lines: list[str] = []
+        for outcome, test_id in slice1_freeze._PRESERVED_HOLD_TESTS:
+            method = test_id.rsplit(".", 1)[-1]
+            lines.append(f"{method} ({test_id}) ... {outcome}")
+        for outcome, test_id in slice1_freeze._PRESERVED_HOLD_TESTS:
+            method = test_id.rsplit(".", 1)[-1]
+            marker = slice1_freeze._PRESERVED_HOLD_MARKERS[test_id][0]
+            lines.extend(
+                [
+                    "=" * 70,
+                    f"{outcome}: {method} ({test_id})",
+                    "-" * 70,
+                    "Traceback (most recent call last):",
+                    marker,
+                    "",
+                ]
+            )
+        lines.extend(
+            [
+                "-" * 70,
+                "Ran 100 tests in 1.000s",
+                "",
+                "FAILED (failures=4, errors=1)",
+                "",
+            ]
+        )
+        return "\n".join(lines)
 
     def test_launcher_file_closure_matches_the_bounded_runtime(self) -> None:
         frozen = slice1_freeze._launcher_files(self.workspace)
@@ -141,6 +185,96 @@ class Iteration008Slice1FreezeTests(unittest.TestCase):
             protocol["question_visibility_at_seal"],
             "NOT_DISCLOSED",
         )
+
+    def test_full_regression_gate_accepts_only_the_exact_preserved_hold(
+        self,
+    ) -> None:
+        value = slice1_freeze._full_regression_result(
+            self._full_regression_command(),
+            return_code=1,
+            stdout="",
+            stderr=self._preserved_hold_output(),
+        )
+
+        self.assertFalse(value["pass"])
+        self.assertTrue(value["gate_pass"])
+        self.assertEqual(
+            value["gate_status"],
+            "PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD",
+        )
+        self.assertEqual(value["test_count"], 100)
+        self.assertEqual(value["passed_test_count"], 95)
+
+    def test_full_regression_gate_accepts_a_raw_full_pass(self) -> None:
+        output = "\n".join(
+            [
+                *(
+                    f"{test_id.rsplit('.', 1)[-1]} ({test_id}) ... ok"
+                    for _, test_id in slice1_freeze._PRESERVED_HOLD_TESTS
+                ),
+                "-" * 70,
+                "Ran 100 tests in 1.000s",
+                "",
+                "OK",
+                "",
+            ]
+        )
+
+        value = slice1_freeze._full_regression_result(
+            self._full_regression_command(),
+            return_code=0,
+            stdout="",
+            stderr=output,
+        )
+
+        self.assertTrue(value["pass"])
+        self.assertEqual(value["gate_status"], "PASS")
+        self.assertEqual(value["passed_test_count"], 100)
+        self.assertEqual(value["preserved_hold_tests"], [])
+
+    def test_full_regression_gate_rejects_any_additional_failure(self) -> None:
+        output = self._preserved_hold_output().replace(
+            "Ran 100 tests in 1.000s",
+            "=" * 70
+            + "\nFAIL: test_new_regression "
+            "(test_new.NewTests.test_new_regression)\n"
+            + "-" * 70
+            + "\nAssertionError: new regression\n\n"
+            "Ran 100 tests in 1.000s",
+        ).replace(
+            "FAILED (failures=4, errors=1)",
+            "FAILED (failures=5, errors=1)",
+        )
+
+        with self.assertRaisesRegex(
+            slice1_freeze.SliceFreezeError,
+            "differs from the exact preserved historical hold",
+        ):
+            slice1_freeze._full_regression_result(
+                self._full_regression_command(),
+                return_code=1,
+                stdout="",
+                stderr=output,
+            )
+
+    def test_full_regression_gate_rejects_a_hold_reason_drift(self) -> None:
+        output = self._preserved_hold_output().replace(
+            "QUALIFICATION_INVALID: V-009 Adapter Conformance "
+            "implementation drifted",
+            "QUALIFICATION_INVALID: unrelated failure",
+            1,
+        )
+
+        with self.assertRaisesRegex(
+            slice1_freeze.SliceFreezeError,
+            "reason marker drifted",
+        ):
+            slice1_freeze._full_regression_result(
+                self._full_regression_command(),
+                return_code=1,
+                stdout="",
+                stderr=output,
+            )
 
 
 if __name__ == "__main__":

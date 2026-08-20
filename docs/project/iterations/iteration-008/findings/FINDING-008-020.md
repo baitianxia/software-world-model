@@ -61,3 +61,10 @@ runtime 建立独立、前瞻性冻结和对照；两者都不能改写历史 Re
 
 在 DeepSeek persistent-TLS route 适配 candidate 上重跑完整执行面得到 1010/1015；新增测试全部通过，唯一四项 failure 与一项 error
 仍精确是上述 historical freeze drift。该最新计数同样不得写成 full-suite PASS。
+
+## Subsequent gate refinement
+
+后续 `FINDING-008-028` 不改变本 Finding 的历史 freeze、五项失败事实或 raw full-suite FAIL 裁决；它只取代“该已知 hold 永久阻断
+formal Web freeze”这一产品门禁后果。ITER-008 现在只能通过 versioned `@2` qualification 机械证明五个测试 ID、4 failure + 1 error、
+原因 marker 和其余全部测试精确闭合后，继续 `EVALUATION_ONLY` public Web。任何新增或不同失败仍阻断，且该 gate 不能推导
+Acceptance、hidden canary 豁免或 Production Activation。

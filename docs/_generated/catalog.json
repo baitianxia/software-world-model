@@ -1547,6 +1547,19 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-027.md"
   },
   {
+    "id": "FINDING-008-028",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-028.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

@@ -395,6 +395,18 @@ run-018 两个失败 Case 在 run-019 均 PASS：RESULT-DRIVEN-BATCH 只返回 q
 授权均已消费，没有 hidden canary、Web 或 Activation。该证据形成 current Capability Qualification，不是 Product Result；下一步只能
 生成新的 formal product freeze 并执行公开 Web Gate。
 
+正式 freeze producer 审查随后形成 [FINDING-008-028](../findings/FINDING-008-028.md)：旧 `@1` 资格只能表达 raw full-suite PASS，
+与 `FINDING-008-020` 必须保留的五项 historical exact-runtime hold 构成永久死锁。当前 bounded route 已升级为 deterministic
+qualification `@2`，精确复核五个测试各执行一次、4 FAIL + 1 ERROR、V-009/prepared-binary marker 和“其余全部 PASS”；通过时仍
+记录 raw `full_regression_pass: false`，gate status 为 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。任何新增/不同失败继续阻断，且
+该状态不能推导 canary、Acceptance 或 Activation。parser/runtime/authorize 定向 19/19 PASS；首次 full 1023 项执行在 System Contract
+刚写回而 manifest digest 尚未重算时得到 1017 PASS / 5 FAIL / 1 ERROR，其中新增的 ITER-007 readiness digest failure 被 gate 正确拒绝。
+ITER-008/ITER-007 fileset 随后重算为 `sha256:80b5393b…b311` / `sha256:3f25570e…4819`，正式 full gate 尚须重跑。
+最终定向 parser/runtime/authorize 22/22 PASS；完整执行面重跑 1026 项，1021 项通过，raw exit 1，唯一 4 FAIL + 1 ERROR 精确为
+五项 preserved hold。结构化 gate status 为 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`，stdout/stderr digest 为
+`sha256:f9b8e964…73e0` / `sha256:76a79e6d…5e27`；该结果仍不冒充 raw full-suite PASS，下一步是 clean commit 后生成正式 product
+freeze。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

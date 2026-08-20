@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-run-019-capability-qualified-evidence-writeback-awaiting-clean-commit`
+- Worktree status: `iteration-008-exact-historical-hold-product-freeze-gate-pass-awaiting-clean-commit`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-run-019-conformance-and-capability-pass-formal-product-freeze-next`
+- Live model path: `iteration-008-run-019-qualified-clean-formal-product-freeze-next`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

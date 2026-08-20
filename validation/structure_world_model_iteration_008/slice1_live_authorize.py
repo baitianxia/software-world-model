@@ -22,13 +22,18 @@ from .slice1_live_evaluator import VERDICT_SCHEMA
 
 DISCLOSURE_SCHEMA = "SWM-WORLD-MODEL-DISCLOSURE-AUTHORIZATION@1"
 GRANT_SCHEMA = "SWM-WORLD-MODEL-EVALUATION-GRANT@2"
-FREEZE_REPORT_SCHEMA = "SWM-ITER-008-SLICE-001-CANDIDATE-FREEZE@1"
+FREEZE_REPORT_SCHEMA = "SWM-ITER-008-SLICE-001-CANDIDATE-FREEZE@2"
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 _AUTHORIZATION_REF = re.compile(r"^codex-user-message:sha256:[0-9a-f]{64}$")
 _PAYLOAD_BOUNDARY = "ORIGINAL_QUESTION_AND_NO_PAYLOAD_PUBLISHED_STRUCTURE"
 _EXPECTED_OUTCOMES = frozenset(
     {"SUPPORTED", "BOUNDED_ABSENCE", "LIMITATION"}
 )
+_FULL_REGRESSION_PASS = "PASS"
+_FULL_REGRESSION_EXACT_PRESERVED_HOLD = (
+    "PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD"
+)
+_FULL_REGRESSION_PRESERVED_HOLD_REF = "FINDING-008-020"
 
 
 class LiveAuthorizationError(RuntimeError):
@@ -46,6 +51,7 @@ def authorize_grant(
 ) -> dict[str, object]:
     report, _ = _load_document(freeze_report_path, FREEZE_REPORT_SCHEMA)
     pending, _ = _load_document(pending_grant_path, GRANT_SCHEMA)
+    full_regression_gate_status = report.get("full_regression_gate_status")
     if (
         report.get("status") != "PASS"
         or report.get("evaluation_subject_status") != "CANDIDATE"
@@ -55,6 +61,28 @@ def authorize_grant(
         != "NOT_EXECUTED"
         or report.get("live_question_status")
         != "AWAITING_USER_AFTER_CODE_FREEZE"
+        or report.get("full_regression_gate_pass") is not True
+        or full_regression_gate_status
+        not in {
+            _FULL_REGRESSION_PASS,
+            _FULL_REGRESSION_EXACT_PRESERVED_HOLD,
+        }
+        or (
+            full_regression_gate_status == _FULL_REGRESSION_PASS
+            and (
+                report.get("full_regression_pass") is not True
+                or report.get("full_regression_preserved_hold_ref") is not None
+            )
+        )
+        or (
+            full_regression_gate_status
+            == _FULL_REGRESSION_EXACT_PRESERVED_HOLD
+            and (
+                report.get("full_regression_pass") is not False
+                or report.get("full_regression_preserved_hold_ref")
+                != _FULL_REGRESSION_PRESERVED_HOLD_REF
+            )
+        )
         or report.get("production_activation") != "NOT_EXECUTED"
         or pending.get("environment") != "EVALUATION_ONLY"
         or pending.get("live_dispatch_authorized") is not False

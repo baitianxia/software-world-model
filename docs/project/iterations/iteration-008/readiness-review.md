@@ -164,6 +164,16 @@ proof/document digest 为 `sha256:16e9e6bc…5020b` / `sha256:7e460107…224fc` 
 `2026-08-27T09:09:31.851862Z`。因此当前 exact Contract 的 V-002 资格阻断已关闭；Readiness 仍要求下一步先形成绑定该 authority chain
 的 formal product freeze，公开 Web PASS 后才讨论 early canary/Reflection，且不得执行 Production Activation。
 
+`FINDING-008-028` 已关闭该 formal freeze 自身的门禁表达死锁。ITER-008 bounded route 的确定性 qualification 升级为 `@2`，同时
+记录 raw `full_regression_pass` 和独立 gate outcome；只有 `FINDING-008-020` 的五个测试各执行一次、精确 4 FAIL + 1 ERROR、原因
+marker 相等且其余当前测试全 PASS，才允许 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。任一新增/不同失败、skip 或缺失测试仍阻断。
+旧 `@1` 继续要求 raw suite PASS；历史断言、1013/1018 的 raw FAIL 事实和 canary/Acceptance/Activation 阻断都未被放宽。
+System Owner 写回后的 ITER-008 fileset digest 为 `sha256:80b5393bd767cbc7be60f67ca0bbefbd308e1c7e84b8a522aab8bb016c26b311`；
+共享 `local-browser` Contract 使 ITER-007 fileset 同步重算为
+`sha256:3f25570e48caa265feb3a3d95cf0441628f36890744c9902a35b1ecac3844819`。
+定向 gate/runtime/authorize 22/22 PASS；允许 AF_UNIX 的最终完整执行面为 1021/1026，raw exit 1，唯一 4 FAIL + 1 ERROR 精确匹配
+preserved hold，结构化 gate PASS。该证据只关闭 deterministic product-freeze readiness，不替代正式 freeze 或 Web Result。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：
