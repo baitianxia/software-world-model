@@ -48,8 +48,10 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
    threshold、Ref provenance、budget 或完整性规则。
 10. 当产品正式接受与 source identifier 不同 writing system 的问题时，Result-driven Definition 必须至少包含一个真实 cross-script
     首轮 Case：model-visible input 保留该产品语言，Oracle 要求每个 material concept 的 common source-identifier translation，且仍禁止
-    project dictionary、symbol hint 或 evaluator-only synonym。只用英文资格问题不能证明中文产品检索可用；平台 Unicode parser PASS
-    也不能替代 semantic translation Case。
+    project dictionary、symbol hint 或 evaluator-only synonym。同一原文概念存在多个通用 English identifier translation 时，Oracle 应在
+    新运行前冻结一个有界的 question-derived equivalence group，不能把单一 surface form 当成唯一正确翻译；看到旧运行结果后的修订只能
+    形成新版本 Definition，旧 verdict 与证据保持不变。只用英文资格问题不能证明中文产品检索可用；平台 Unicode parser PASS 也不能
+    替代 semantic translation Case。
 
 ## Failure and evidence boundary
 

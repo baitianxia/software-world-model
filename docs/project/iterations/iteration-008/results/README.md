@@ -424,6 +424,25 @@ run-019 qualification、run-001 freeze/grant 和失败 session 均被新 `1.5.6`
 本地处置随后以相关 128/128、fake 40 calls / 18/18、docs 333/333 和完整执行面 1022/1027 闭合；完整回归唯一五项仍精确属于
 `FINDING-008-020`。这些是新 identity 的 deterministic candidate evidence，不是 live Qualification 或产品重试结果。
 
+`1.5.6/@15` 的 exact clean candidate `5bdf83b3931f2aa9f3065f23593c4e0bf3da7030` / tree
+`b7f69fbff52d54216050c73157a865d5d57b8b13` 随后执行 run-020。Conformance preflight/result digest 为
+`sha256:3afe56e2ce253b30f81494d1cafea2b1a2fe43c42a4696ea4b9b899cc70cddba` /
+`sha256:e20eef6cad6267fc9ef203c7cfc136f4f8537ef6b0c74a652b5ed1ecaa00c0eb`；2/2 calls PASS，TLS 1/1、reuse 1、
+HTTP/credential 2/2、unknown/retry 0，valid until `2026-09-19T10:17:22.817950Z`。Capability freeze/authorization digest 为
+`sha256:07982a4e689f3eeac7ddd5cb5eb7828b60200428019dba530d397fae3f6c02f4` /
+`sha256:49925d394f7c35391d048fd151d08d82a020e1e8c4baf377e3807c9712d32722`。
+
+Capability 前 13 Case / 32 calls 已完成，第 33 次 Provider request 也已成功返回，但第 14 Case 在本地 evidence obligation exactness
+校验以 `QUALIFICATION_INVALID` 停止。failure/terminal digest 为
+`sha256:b227f51378b7d5cfb94f13853d662949fce19a47a27b1b61a3b890d5dc2ed445` /
+`sha256:011425a39a26d9bbdcde4c1cf03d1660af2765337bd9444208aae652b5682a1d`；TLS 1/1、reuse 32、HTTP/credential
+33/33、unknown/retry 0。中文 Case 已给出 `invalid/credential/authentication/exception/log/success/return/session`，旧 evaluator
+却只接受 `record|audit`；Case 007/012/013 省略被 operation/topic 覆盖的显式 term，第 14 Case 则把 implementation existence 错选为
+`path_exists`。按 [FINDING-008-030](../findings/FINDING-008-030.md)，活动 identity 已升级为
+`1.5.7/@16/@1.4.5` 与 suite/oracle `@1.5.7`。run-020 永久 FAIL、授权不可 retry，没有 Qualification、formal product、canary 或
+Activation；新 live qualification 仍 blocking。本地相关 115/115、fake 40 calls / 18/18、docs 334/334 与完整执行面
+1022/1027 已闭合；唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

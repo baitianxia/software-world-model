@@ -73,7 +73,7 @@ _LEGACY_FIXED_SEMANTICS_STRATEGY_REF = (
     "model-snapshot-first-world-model-answer@1.2.2"
 )
 _BOUNDED_SEMANTICS_STRATEGY_REF = (
-    "model-snapshot-first-world-model-answer@1.5.6"
+    "model-snapshot-first-world-model-answer@1.5.7"
 )
 
 

@@ -12,9 +12,10 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十九条 Finding；二十九条均已处置或被后续决定取代。`FINDING-008-029` 记录 run-019 资格未覆盖的正式中文
-Web 边界：合法 Unicode search term 被 ASCII-only Query parser 拒绝，且英文-only suite 没有证明 cross-script source-identifier
-translation；本地处置已闭合，新资格仍 blocking。`FINDING-008-027` 已把旧 search-term 约束收敛到 question-owned concept，`FINDING-008-028`
+本 Slice 当前登记三十条 Finding；三十条均已处置或被后续决定取代。`FINDING-008-030` 记录 `1.5.6/@15` 的 run-020 已证明
+DeepSeek/Conformance 可用，却暴露 cross-script semantic group 假阴性、显式 Latin concept 被 operation/topic 替代，以及一般疑问词
+`Does` 被误分类为 reachability；本地处置已闭合，新资格仍 blocking。`FINDING-008-029` 记录 run-019 资格未覆盖的正式中文 Web
+边界，`FINDING-008-027` 已把旧 search-term 约束收敛到 question-owned concept，`FINDING-008-028`
 则以 versioned exact historical-hold gate 解除正式 product freeze 的机械死锁，但两者都不能替代新的产品失败处置，也不豁免 Web、
 canary、SLICE-002 与 Production Activation gate：
 
@@ -119,6 +120,11 @@ canary、SLICE-002 与 Production Activation gate：
   资格又只有英文问题；活动处置将 Query 对齐 Unicode Contract，并把一个既有首轮 Case 改为中文等价输入、要求 common English
   source-identifier translation。活动 identity 升级为 `1.5.6/@15/@1.4.4` 与 suite/oracle `@1.5.6`；新 Conformance/Capability 与
   产品 Web PASS 前仍保持产品 Gate blocking，但 Finding 的 System/code/test 处置已完成。
+- [FINDING-008-030](FINDING-008-030.md)：exact candidate `5bdf83b…` 的 run-020 Conformance 2/2 PASS；Capability 在第
+  33 次已完成 request 后因 evidence obligation 不匹配停止，13 个 Case / 32 calls 已闭合。中文 Case 实际给出完整 common English
+  translations，但 evaluator 只接受 `record|audit` 而拒绝 `log`；三个英文 Case 还暴露 operation/topic 不能替代显式 material term，
+  第 14 Case 则把 `Does X implement Y` 误作 reachability。活动 identity 升级为 `1.5.7/@16/@1.4.5` 与 suite/oracle `@1.5.7`，
+  仍保持 18 Case / 40 calls / 18/18 / no-retry；run-020 永久 FAIL，新 clean qualification 前 V-002 继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

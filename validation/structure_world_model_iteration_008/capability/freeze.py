@@ -68,8 +68,8 @@ PACKAGE_FILE_NAMES = (
     "freeze.py",
     "live_runner.py",
     "manifest.py",
-    "oracle-1.5.6.json",
-    "suite-1.5.6.json",
+    "oracle-1.5.7.json",
+    "suite-1.5.7.json",
 )
 
 

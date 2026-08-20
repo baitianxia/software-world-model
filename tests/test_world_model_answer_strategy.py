@@ -238,7 +238,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.6")
+        self.assertEqual(contract.strategy_version, "1.5.7")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@6",
@@ -341,7 +341,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             investigation_prompt,
         )
         self.assertIn(
-            "Use path_exists only for an explicitly binary reachability answer",
+            "Use path_exists only when the question explicitly names reachability",
             investigation_prompt,
         )
         self.assertIn(
@@ -399,6 +399,14 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         )
         self.assertIn(
             "common English source-identifier translation",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "a broader topic synonym or the selected evidence operation never substitutes",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "A generic interrogative such as whether, can, or does is not sufficient",
             investigation_prompt,
         )
         self.assertNotIn("IMPLEMENTATION_ANSWER_DRAFTING:", investigation_prompt)

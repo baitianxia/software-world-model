@@ -185,6 +185,15 @@ run-019 只保留为旧 identity 的历史证据，V-002/V-003/V-WEB-001 继续�
 本地相关 128/128、fake transport 40 calls / 18/18、docs 333/333 与完整执行面 1022/1027 已闭合；完整回归唯一五项仍是
 `FINDING-008-020` 的 exact historical hold。该证据允许形成 clean qualification candidate，但不构成 live PASS。
 
+该 candidate 的 run-020 preflight `sha256:3afe56e2…cddba` 与 Conformance `sha256:e20eef6c…c0eb` 已 PASS，证明
+DeepSeek `deepseek-v4-pro`、Adapter `@4` 与 persistent TLS 当前可用。Capability freeze `sha256:07982a4e…02f4` 在第 33 个已完成
+request 后以 `QUALIFICATION_INVALID` 停止：13 Case / 32 calls 已闭合，无 network unknown/retry；旧 cross-script semantic group
+错误拒绝 `log`，Prompt 又允许 evidence operation/topic 替代显式 material term，并把一般疑问 `Does X implement Y` 误判为
+reachability。`FINDING-008-030` 已将活动 identity 升级为 `1.5.7/@16/@1.4.5`、suite/oracle `@1.5.7`，不改变 18/40/18/18、
+Provider、Adapter、预算或 no-retry。run-020 授权已消费且旧 verdict 保持 FAIL；新 clean Conformance/Capability PASS 前
+V-002/V-003/V-WEB-001 继续阻断。本地相关 115/115、fake 40 calls / 18/18、docs 334/334 与完整执行面 1022/1027 已闭合；
+完整回归唯一五项仍为 `FINDING-008-020` 的 exact historical hold。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

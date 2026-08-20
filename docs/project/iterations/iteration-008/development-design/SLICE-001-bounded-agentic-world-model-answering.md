@@ -393,6 +393,19 @@ question-owned English concept groups。活动 identity 升级为 `1.5.6/@15/@1.
 当前本地闭包为相关 128/128、fake transport 40 calls / 18/18、docs 333/333、compileall/diff PASS；完整执行面 1022/1027，唯一
 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。这些结果处置 `FINDING-008-029`，但不替代新的 live Qualification。
 
+exact candidate `5bdf83b…` 的 run-020 随后证明 DeepSeek Adapter/transport 可用：Conformance 2/2 PASS；Capability 以前 13 Case /
+32 calls 完成、第 33 个 request 已取得结果后，在本地 evidence-obligation 校验停止。中文 Case 已正确输出 English identifier terms，
+但旧 evaluator 把 `log` 排除在“记录”的等价集合外；另三个英文 Case 以 operation/topic 替代显式 `reach/method/implementation`，
+第 14 Case 又因句首 `Does` 被误判为 reachability 而选择 `path_exists`。详见
+[FINDING-008-030](../findings/FINDING-008-030.md)。
+
+活动设计升级为 `1.5.7/@16/@1.4.5` 与 suite/oracle `@1.5.7`：Latin-script 显式 material term 不能被 operation/topic 替代；
+`path_exists` 只接受问题显式命名的 reachability/call-path connectivity，一般疑问形式不构成 reachability；中文“记录”在新运行前
+冻结 question-derived `record|audit|log|logging` equivalence group。18 Case / 40 calls / 18/18、Adapter `@4`、compiler `@6`、
+persistent TLS、no-retry 与 typed operation Oracle 保持不变。run-020 永久 FAIL 且授权不可复用，新 clean candidate 的完整资格仍是
+下一 Gate。本地相关回归 115/115、fake 40 calls / 18/18、docs 334/334、compileall/diff/secret scan PASS；完整执行面
+1022/1027，唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

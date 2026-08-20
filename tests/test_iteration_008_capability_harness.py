@@ -442,6 +442,9 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
         self.assertTrue(
             all(term.isascii() for group in cross_script_groups for term in group)
         )
+        self.assertIn(
+            ["record", "audit", "log", "logging"], cross_script_groups
+        )
         self.assertEqual(
             flow_groups,
             [["authentication", "auth"], ["failure", "invalid"], ["success"]],
@@ -467,7 +470,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.6")
+        self.assertEqual(definition.strategy_version, "1.5.7")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),
