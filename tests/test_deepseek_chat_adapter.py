@@ -207,7 +207,7 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(missing["temperature"], DEFAULT_DEEPSEEK_TEMPERATURE)
         self.assertEqual(
             configuration.adapter_version,
-            "deepseek-chat-completions-no-tools@4",
+            "deepseek-chat-completions-no-tools@5",
         )
         self.assertEqual(
             missing["connection_policy"],
@@ -273,6 +273,10 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertIn('"additionalProperties":false', payload["messages"][0]["content"])
         self.assertIn("TASK AND SEMANTIC AUTHORITY", payload["messages"][0]["content"])
         self.assertIn("Return JSON.", payload["messages"][0]["content"])
+        self.assertNotIn(
+            "PROVIDER EXECUTION ADAPTATION",
+            payload["messages"][0]["content"],
+        )
         self.assertEqual(payload["messages"][1]["content"], "Authorized facts only.")
         self.assertFalse(payload["stream"])
         self.assertEqual(payload["thinking"], {"type": "disabled"})
@@ -310,6 +314,37 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertIn("closed JSON Schema", messages[0]["content"])
         self.assertNotIn("TASK AND SEMANTIC AUTHORITY", messages[0]["content"])
         self.assertEqual(messages[1]["content"], user.content)
+
+    def test_investigation_schema_adds_lossless_lexical_coverage_adaptation(self) -> None:
+        adapter, _, recording = self.adapter(
+            success_response(content='{"search_terms":["authentication","methods"]}'),
+            output_schemas={
+                "investigation@1": OutputSchemaDefinition(
+                    "java_bounded_implementation_investigation_intent",
+                    {
+                        "type": "object",
+                        "properties": {
+                            "search_terms": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            }
+                        },
+                        "required": ["search_terms"],
+                        "additionalProperties": False,
+                    },
+                )
+            },
+        )
+
+        adapter.invoke(self.request(output_schema_ref="investigation@1"))
+
+        messages = json.loads(recording.requests[0].body)["messages"]
+        self.assertEqual([message["role"] for message in messages], ["system", "user"])
+        authority = messages[0]["content"]
+        self.assertEqual(authority.count("PROVIDER EXECUTION ADAPTATION"), 1)
+        self.assertIn("independent lexical-coverage list", authority)
+        self.assertIn("Do not count operation or evidence_requests", authority)
+        self.assertIn("Never add a concept absent from original_question", authority)
 
     def test_reasoning_tool_and_incomplete_outputs_fail_closed(self) -> None:
         cases = (

@@ -194,6 +194,14 @@ Provider、Adapter、预算或 no-retry。run-020 授权已消费且旧 verdict 
 V-002/V-003/V-WEB-001 继续阻断。本地相关 115/115、fake 40 calls / 18/18、docs 334/334 与完整执行面 1022/1027 已闭合；
 完整回归唯一五项仍为 `FINDING-008-020` 的 exact historical hold。
 
+同一 `1.5.7/@16` candidate 的 run-021 Conformance 2/2 PASS；Capability 完成 40 calls / 18 Case，15/18 PASS，TLS 1/1、reuse
+39、HTTP/credential 40/40、unknown/retry 0。此前中文 equivalence 与 implementation-existence intent 已 PASS；剩余三个失败只是在
+首轮把显式 `reach/method/implementation` 当作已被 operation/evidence request 表达的冗余 search term。按
+`FINDING-008-031`，Readiness 保持 Provider-independent `1.5.7/@16` 与 suite/oracle `@1.5.7`，将 DeepSeek Adapter 重冻结为
+`@5`，只为 active Investigation schema 增加无损 lexical-coverage wire adaptation；bounded policy 升级为 `@1.4.6`。该适配不包含
+题目/Case/工程/具体词例，不改写 response，也不进入 Draft/Review。run-021 永久 FAIL；新 Adapter identity 的 Conformance 与完整
+Capability PASS 前 V-002/V-003/V-WEB-001 继续阻断。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

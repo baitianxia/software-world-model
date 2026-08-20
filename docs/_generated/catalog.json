@@ -1590,6 +1590,21 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-030.md"
   },
   {
+    "id": "FINDING-008-031",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "architecture",
+      "engineering",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-031.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3682,7 +3697,8 @@
       "DD-AI-MODEL-GATEWAY",
       "FINDING-008-024",
       "FINDING-008-025",
-      "FINDING-008-026"
+      "FINDING-008-026",
+      "FINDING-008-031"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },

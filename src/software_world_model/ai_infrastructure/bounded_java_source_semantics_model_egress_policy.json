@@ -1,6 +1,6 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-model-egress-gateway-policy@1",
-  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.5",
+  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.6",
   "default_action": "DENY",
   "environment": "EVALUATION_ONLY",
   "provider": {
@@ -8,10 +8,10 @@
     "preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
     "selected_provider_type": "DEEPSEEK",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@4",
+    "adapter_version": "deepseek-chat-completions-no-tools@5",
     "requested_model_ref": "deepseek-v4-pro",
     "actual_model_fingerprint": "deepseek-v4-pro",
-    "configuration_fingerprint": "sha256:cf85faed9ef5c314abc6967e86ecbc0d9362cfbe4b4a0ead4303cd8f279a586d",
+    "configuration_fingerprint": "sha256:31dc8d9bd143ab4c5aee94a5e9cdafdbd19103a645ad40e30893348ab3c2640d",
     "endpoint": "https://api.deepseek.com/chat/completions",
     "credential_reference": "env:DEEPSEEK_API_KEY",
     "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",

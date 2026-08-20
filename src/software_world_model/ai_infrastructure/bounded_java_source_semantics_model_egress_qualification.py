@@ -92,15 +92,15 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:cb9cea5f56b294fcdfb66aeb346c2e0a09c3e19e77fe6b7a647c6c99eaf2de27"
+    "sha256:889afd1845f573ee0a9565d3fd2f6e69b6c824b72c20138c12cde93da7c407d0"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@4",
+    "adapter_version": "deepseek-chat-completions-no-tools@5",
     "model_ref": "deepseek-v4-pro",
     "provider_configuration_fingerprint": (
-        "sha256:cf85faed9ef5c314abc6967e86ecbc0d9362cfbe4b4a0ead4303cd8f279a586d"
+        "sha256:31dc8d9bd143ab4c5aee94a5e9cdafdbd19103a645ad40e30893348ab3c2640d"
     ),
     "model_egress_policy_ref": (
         BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
@@ -270,9 +270,9 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         or definition.get("strategy_version") != contract.strategy_version
         or definition.get("model_ref") != "deepseek-v4-pro"
         or definition.get("adapter_version")
-        != "deepseek-chat-completions-no-tools@4"
+        != "deepseek-chat-completions-no-tools@5"
         or definition.get("provider_configuration_fingerprint")
-        != "sha256:cf85faed9ef5c314abc6967e86ecbc0d9362cfbe4b4a0ead4303cd8f279a586d"
+        != "sha256:31dc8d9bd143ab4c5aee94a5e9cdafdbd19103a645ad40e30893348ab3c2640d"
         or not str(definition.get("conformance_result_ref", "")).startswith(
             "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
         )
@@ -479,11 +479,11 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or provider.get("selected_provider_type") != "DEEPSEEK"
         or provider.get("provider_type") != "DEEPSEEK"
         or provider.get("adapter_version")
-        != "deepseek-chat-completions-no-tools@4"
+        != "deepseek-chat-completions-no-tools@5"
         or provider.get("requested_model_ref") != "deepseek-v4-pro"
         or provider.get("actual_model_fingerprint") != "deepseek-v4-pro"
         or provider.get("configuration_fingerprint")
-        != "sha256:cf85faed9ef5c314abc6967e86ecbc0d9362cfbe4b4a0ead4303cd8f279a586d"
+        != "sha256:31dc8d9bd143ab4c5aee94a5e9cdafdbd19103a645ad40e30893348ab3c2640d"
         or provider.get("endpoint")
         != "https://api.deepseek.com/chat/completions"
         or provider.get("credential_reference") != "env:DEEPSEEK_API_KEY"

@@ -443,6 +443,26 @@ Capability 前 13 Case / 32 calls 已完成，第 33 次 Provider request 也已
 Activation；新 live qualification 仍 blocking。本地相关 115/115、fake 40 calls / 18/18、docs 334/334 与完整执行面
 1022/1027 已闭合；唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。
 
+`1.5.7/@16/@1.4.5` 的 exact candidate `0e6b60f166e37e1397c483260ee70b6ad9f91cb8` / tree
+`9c24a0eb2ae552131a26b651296f791ebe27daba` 随后执行 run-021。preflight/Conformance authorization/result digest 为
+`sha256:4b1675d55c1e387876cf512258c99978527cf53079acc373e936c5656491bfd4` /
+`sha256:23bda2528122855768b0c0045d3f4f9fa1420ac7457feb9ec9e451a2faee106f` /
+`sha256:bc28d3d358bcff18487a098480a8a94fcae1827d2ae539ad0d284ea8b2126813`，2 calls PASS。Capability
+freeze/authorization digest 为 `sha256:732fbdc3e75b951cc1397fc68334ac40e7ff1b7f4cfe616ccdbd6deeedb29158` /
+`sha256:ce4ee5b4b8678318c401292ac1a0936ebc79e400f48b46e1b08ee52c94fd635e`。
+
+Capability 无 retry 完成 40 calls / 18 Case，15 PASS、3 FAIL、unknown 0；result/document digest 为
+`sha256:4757153bab4b9ce1b5bd7c616cdbc5934686539ae70723f376e6ca7247d7d60e` /
+`sha256:6096b6b3be57d4dd3083c65d3408b655eb11415a5f4047485ff3e2bfb862437e`。两阶段 transport 均为 TLS 1/1，Capability
+reuse 39、HTTP/credential 40/40、unknown/retry 0。此前中文 Case、014—016 和全部 later-step typed transition 已 PASS；三个失败只
+来自首轮 lexical coverage，模型分别把 `reach/method/implementation` 交给 operation/evidence request 表达而没有保留在
+`search_terms`。
+
+按 [FINDING-008-031](../findings/FINDING-008-031.md)，上游 `1.5.7/@16` 与 suite/oracle 不再调整；DeepSeek Adapter 升级为
+`@5`，以 schema-scoped、无题目/Case/具体词例、无 response post-processing 的 wire adaptation 保持该字段自己的语义，policy
+升级为 `@1.4.6`。run-021 及其授权永久 FAIL/consumed，没有 Qualification、formal product、canary 或 Activation；新 clean
+Conformance/Capability 仍 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

@@ -64,6 +64,23 @@ _MARKDOWN_JSON_FENCE = re.compile(
     r"\A(?P<prefix>[\s\S]*?)```json[ \t]*\r?\n(?P<body>[\s\S]*?)\r?\n```\Z"
 )
 _MAX_MARKDOWN_JSON_PREFIX_BYTES = 512
+_INVESTIGATION_SCHEMA_NAME = (
+    "java_bounded_implementation_investigation_intent"
+)
+_INVESTIGATION_WIRE_ADAPTATION = (
+    "PROVIDER EXECUTION ADAPTATION:\n"
+    "On the first investigation step, treat search_terms as an independent "
+    "lexical-coverage list, not as a semantic summary. Reread only "
+    "original_question and preserve the representation required by the task "
+    "authority for every material retrieval concept. Question-written "
+    "code-artifact nouns, relation verbs, and returned-set nouns remain "
+    "independent concepts even when they look redundant. Do not count "
+    "operation or evidence_requests as search_terms coverage. Perform this "
+    "coverage check after choosing those fields and before returning JSON. "
+    "On later investigation steps, keep search_terms empty exactly as the "
+    "task authority requires. Never add a concept absent from "
+    "original_question."
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -675,7 +692,7 @@ UrllibDeepSeekChatTransport = PersistentDeepSeekChatTransport
 
 class DeepSeekChatCompletionsNoToolsAdapter:
     provider_type = "DEEPSEEK"
-    adapter_version = "deepseek-chat-completions-no-tools@4"
+    adapter_version = "deepseek-chat-completions-no-tools@5"
 
     def __init__(
         self,
@@ -752,6 +769,7 @@ class DeepSeekChatCompletionsNoToolsAdapter:
             "messages": _deepseek_wire_messages(
                 request.messages,
                 schema_instruction=schema_instruction,
+                schema_name=definition.name,
             ),
             "stream": False,
             "max_tokens": request.max_output_tokens,
@@ -876,6 +894,7 @@ def _deepseek_wire_messages(
     messages: tuple[RenderedMessage, ...],
     *,
     schema_instruction: str,
+    schema_name: str,
 ) -> list[dict[str, str]]:
     """Render one leading DeepSeek system authority for JSON-mode calls.
 
@@ -886,12 +905,13 @@ def _deepseek_wire_messages(
     """
 
     if messages and messages[0].role == "system":
-        combined_system = (
-            "TASK AND SEMANTIC AUTHORITY:\n"
-            f"{messages[0].content}\n\n"
-            "OUTPUT CONTRACT:\n"
-            f"{schema_instruction}"
-        )
+        sections = [
+            "TASK AND SEMANTIC AUTHORITY:\n" + messages[0].content,
+            "OUTPUT CONTRACT:\n" + schema_instruction,
+        ]
+        if schema_name == _INVESTIGATION_SCHEMA_NAME:
+            sections.append(_INVESTIGATION_WIRE_ADAPTATION)
+        combined_system = "\n\n".join(sections)
         return [
             {"role": "system", "content": combined_system},
             *(

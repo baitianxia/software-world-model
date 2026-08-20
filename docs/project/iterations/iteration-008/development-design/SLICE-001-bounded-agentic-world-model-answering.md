@@ -406,6 +406,17 @@ persistent TLS、no-retry 与 typed operation Oracle 保持不变。run-020 永�
 下一 Gate。本地相关回归 115/115、fake 40 calls / 18/18、docs 334/334、compileall/diff/secret scan PASS；完整执行面
 1022/1027，唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。
 
+exact candidate `0e6b60f…` 的 run-021 已完成完整 40-call Capability，并证明 `1.5.7/@16` 修复了中文 equivalence、一般疑问
+evidence intent 与 014—016 negative Case；15/18 Case PASS，transport 为 TLS 1/1、reuse 39、HTTP/credential 40/40、
+unknown/retry 0。剩余 PATH-EXISTS、CYCLE-PROGRESS、REF-PROVENANCE 都只在首轮遗漏被 operation/evidence request 视为冗余的
+`reach/method/implementation` 词形，详见 [FINDING-008-031](../findings/FINDING-008-031.md)。
+
+活动设计不再改写 Provider-independent Prompt 或 Oracle。DeepSeek Adapter 升级为 `@5`，仅对 active bounded Investigation schema
+在同一 leading system authority 末尾追加无损 lexical-coverage adaptation；不含题目、Case、工程、symbol 或具体词例，不处理
+Provider response，也不影响 Draft/Review。Strategy/Prompt/compiler/suite/oracle 保持 `1.5.7/@16/@6/@1.5.7`，policy 升级为
+`@1.4.6`；18 Case / 40 calls / 18/18、persistent TLS 和 no-retry 不变。run-021 永久 FAIL、授权不可复用；Adapter `@5` 的新 clean
+candidate 必须重新完成 Conformance 与完整 Capability，PASS 前产品 Gate 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

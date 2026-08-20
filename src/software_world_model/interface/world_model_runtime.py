@@ -88,7 +88,7 @@ _EXPECTED_PROVIDER = {
 }
 _BOUNDED_DEEPSEEK_PROVIDER = {
     "provider_type": "DEEPSEEK",
-    "adapter": "deepseek-chat-completions-no-tools@4",
+    "adapter": "deepseek-chat-completions-no-tools@5",
     "requested_model": "deepseek-v4-pro",
     "observed_model": "deepseek-v4-pro",
     "endpoint": "https://api.deepseek.com/chat/completions",

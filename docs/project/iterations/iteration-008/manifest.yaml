@@ -229,7 +229,7 @@ answer_protocol:
   provider_preference_order: VOLCENGINE_ARK,DEEPSEEK
   selected_provider_type: DEEPSEEK
   provider_fallback_after_dispatch: false
-  selected_provider_adapter: deepseek-chat-completions-no-tools@4
+  selected_provider_adapter: deepseek-chat-completions-no-tools@5
   selected_provider_model: deepseek-v4-pro
   provider_connection_policy: PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1
   provider_connected_descriptor_count: 3
@@ -268,7 +268,7 @@ readiness_inputs:
     - docs/system/contracts/knowledge/java-source-semantics.md
     - docs/system/operations/local-browser.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:5d0f8c9a3c5b06e81e3c5729f7b50242044e28b8c0f8ef54dbcdbc67f0eed0b9
+  system_contract_set_digest: sha256:a7ea2772fee6d5e7aeb3e0ad7233afb0f9f9d77ce5a6f34e3db26ce448066440
   exact_baseline_status: clean-exact-git-baseline-verified
   investigation_budget_status: frozen-iter-008-bounded-investigation-1.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
