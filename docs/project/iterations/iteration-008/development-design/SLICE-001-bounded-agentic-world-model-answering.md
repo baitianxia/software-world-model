@@ -523,6 +523,13 @@ clean candidate `ec2201abb96c8b2badb27835fe4508906681538d` 的 run-026 Conforman
 `THREE_LAYER_REVIEW` 且保留三层。原 sealed Trace/raw output/audit 不变。Contract/Strategy、Prompt/Vocabulary、policy 与
 suite/oracle 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；18 Case / 40 calls 与其余边界不变。新完整资格 PASS 前正式 Web 继续阻断。
 
+上述设计形成 clean candidate `be9ab1e56dcd62bf3e3151bd5f1beb427f25203b` / tree
+`25489f35236b00402effb8f036f393130906eb84`。run-027 Conformance 2/2 / 12/12 PASS；Capability 40 calls / 18 Case /
+18/18 PASS，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`。同一 `REVIEW-018` 的 negative/positive
+分别为 `REJECT / QUERY_INCOMPLETE` 与 `APPROVE`，证明 Application-owned scope 编译器对 DeepSeek 的 wire 适配成立且没有削弱
+negative Gate。Qualification digest 为 `sha256:2b1141f3…b634`，有效至 `2026-08-27T14:34:15.238182+00:00`；V-002
+PASS。下一步从证据写回后的 clean producer 生成全新 formal product freeze，再执行公开 Web；hidden canary 与 Activation 不执行。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

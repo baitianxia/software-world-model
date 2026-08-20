@@ -84,5 +84,27 @@ preserved hold，没有新增失败。活动 prompt program / Strategy implement
 `sha256:7dd77458c08539b07f4f3fafccdd46854234cfd5aa39dacd08f6b57e43a01b4c` /
 `sha256:9c2f3505c87d677d416c277ea853649f3bf865ffd7dfcaeaea6bc708e080e775`；suite/oracle/policy raw digest 与 pin 一致。
 
-本地实现处置已闭合；下一步从 clean candidate 执行新的 2-call live Conformance 与完整 40-call Capability。取得 Qualification 前
-V-002、V-003 与 V-WEB-001 继续 blocking。
+本地实现处置形成 clean candidate `be9ab1e56dcd62bf3e3151bd5f1beb427f25203b` / tree
+`25489f35236b00402effb8f036f393130906eb84`。run-027 Conformance preflight/result/terminal digest 为
+`sha256:c5101a8b3a4f507dd085ab64417496b5dd6fd64b1f8558534bb785cfea1281c7` /
+`sha256:eb8f728be9eba72646be7efe49900f3a3e1823a5f9be3709c5891865517c010a` /
+`sha256:651d6a93f5a7e89ed3a135a462d206f84c64a073404b32353018e262baa742a7`，2/2 requests / 12/12 PASS；TLS
+`1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`。
+
+Capability freeze/authorization digest 为 `sha256:68c2a1181be63a3c6b7d1fa5c2db9f1f2c8d50d9e66b4bf90662328389a3841a` /
+`sha256:da6fca879983994bfbf8ab70195d1b2c1d6fa4dd41da5550f082032833c99c63`。运行完整执行 40 calls / 18 Case /
+18/18 PASS，tokens `83,527/2,461`；TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`。
+Capability result/closed/qualification-proof/qualification-document/terminal digest 为
+`sha256:af60335e995eb90d8c68183a67657a2c212c84e33b670f1715506b29bab90a46` /
+`sha256:cb31bbbf8d60984210243d4630685b23b2c7cd65d1c9c90ae80b97ffde8683ec` /
+`sha256:2b1141f35b5e241b32990702b969c96a9ac4d816cfc0b7d16f0f7489a9f9b634` /
+`sha256:4111846f806fc9e8b1f9847689d28217e506b42ba756fd8aedebeb6ab4a88138` /
+`sha256:8ca137b4c67c6e8d41714d0bfc4a9720571450f0ab3f51465ca128ae975669af`；Qualification 有效至
+`2026-08-27T14:34:15.238182+00:00`。
+
+`REVIEW-018` 的 negative/positive normalized digest 分别为 `sha256:7415d3a4…8b7c` / `sha256:ffbcbb29…69a8`，精确得到
+`REJECT / QUERY_INCOMPLETE` 与 `APPROVE`；case evidence / independent review digest 为 `sha256:1456feed…0ec6` /
+`sha256:9328cb2d…d952`。positive exact manifest 已删除三个第三层字段，只保留 Query/knowledge COMPLETE，并显式携带
+`POSITIVE_SUPPORTED_ONLY / NOT_APPLICABLE / REJECT` scope；negative manifest 仍完整保留三层。两份授权均已消费且不可
+retry；核心 JSON 权限为 `0600`，result 目录 credential-shaped secret scan 无命中。V-002 对 current identity PASS；下一 Gate
+为证据写回后的全新 formal product freeze/Web，V-003 与 V-WEB-001 继续 blocking。hidden canary 与 Activation 未执行。

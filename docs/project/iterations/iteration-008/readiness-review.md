@@ -273,6 +273,14 @@ Contract 冲突，不是网络或模型不可用；详见 `FINDING-008-038`。ru
 `1.5.10/@19/@1.4.11/@1.5.10`，18/40、Adapter/transport/Investigation compiler/budget/no-retry 不变。新 clean
 Conformance/Capability PASS 前不得生成 formal product freeze。
 
+clean candidate `be9ab1e56dcd62bf3e3151bd5f1beb427f25203b` / tree
+`25489f35236b00402effb8f036f393130906eb84` 的 run-027 已关闭该资格 Gate。Conformance 2/2 / 12/12 PASS；Capability
+40 calls / 18 Case / 18/18 PASS，tokens `83,527/2,461`，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、
+unknown/retry `0`。`REVIEW-018` 精确得到 bounded-negative REJECT 与 supported-positive APPROVE；positive manifest 证明
+Application scope 投影删除了不适用第三层字段。Qualification digest `sha256:2b1141f3…b634`，有效至
+`2026-08-27T14:34:15.238182+00:00`。V-002 对 current identity PASS；Readiness 的下一阻断变为证据写回后的全新 formal
+product freeze/Web。该资格不授权 hidden canary、SLICE-002 或 Production Activation。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

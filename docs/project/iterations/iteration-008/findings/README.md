@@ -15,7 +15,9 @@ iteration: ITER-008
 本 Slice 当前登记三十八条 Finding；三十八条均已处置或被后续决定取代。`FINDING-008-038` 记录 run-026 Conformance 2/2 PASS、
 Capability 40 calls / 18 Case 完成且 transport 零 unknown/retry，但 positive Review 与 negative Review 返回同一个 REJECT，结果
 17/18。根因是 model-visible wire 仍把不适用的 recall 缺失码送给 SATISFIED Need；terminal compiler `@2` 现编译不可伪造的
-positive/three-layer scope，活动 identity 为 `1.5.10/@19/@1.4.11/@1.5.10`，新 live qualification 继续 blocking。
+positive/three-layer scope。clean candidate `be9ab1e…` 的 run-027 随后完成 Conformance 2/2 / 12/12 与 Capability 40 calls /
+18 Case / 18/18 PASS，`REVIEW-018` 精确得到 negative REJECT 与 positive APPROVE；V-002 PASS，formal product refreeze/Web
+成为下一 Gate。
 `FINDING-008-037` 记录 formal run-007 的公开登录题已
 完成 5/5 DeepSeek HTTP 200、完整 Investigation 与正确 Draft，却因旧 Review 把 UNKNOWN business-discovery recall 错用于正向
 行为答案而返回 `QUERY_INCOMPLETE`。活动 Contract/Prompt/policy/suite-oracle 升级为 `1.5.9/@18/@1.4.10/@1.5.9`，同一
@@ -191,7 +193,9 @@ canary、SLICE-002 与 Production Activation gate：
   18 Case 完成、TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，但 positive `REVIEW-018` 与 negative
   输入返回相同 `REJECT / QUERY_INCOMPLETE`，结果 17/18。Application terminal compiler `@2` 现从 sealed Need outcome 编译
   `POSITIVE_SUPPORTED_ONLY` 或 `THREE_LAYER_REVIEW` scope；前者删除不适用的 recall 缺失字段并禁止 negative claim，后者保留
-  三层。活动 identity 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；新资格继续 blocking。
+  三层。活动 identity 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；clean candidate `be9ab1e…` 的 run-027 Conformance 2/2 /
+  12/12、Capability 40 calls / 18 Case / 18/18 PASS，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，
+  `REVIEW-018` 的 negative/positive 分别为 REJECT/APPROVE。V-002 PASS，下一 Gate 为 formal product refreeze/Web。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

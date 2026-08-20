@@ -93,6 +93,22 @@ HTTP/credential `40/40`、unknown/retry `0`。唯一失败为 positive `REVIEW-0
 positive scope 删除不适用的三项 recall 字段；原 sealed authority 与 negative Gate 不变。活动 identity 升级为
 `1.5.10/@19/@1.4.11` 与 suite/oracle `@1.5.10`；新 Conformance/Capability PASS 前没有 Product Result。
 
+clean candidate `be9ab1e56dcd62bf3e3151bd5f1beb427f25203b` / tree
+`25489f35236b00402effb8f036f393130906eb84` 随后完成 run-027。Conformance preflight/result/terminal digest 为
+`sha256:c5101a8b…81c7` / `sha256:eb8f728b…010a` / `sha256:651d6a93…42a7`，2/2 requests / 12/12 PASS；TLS
+`1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`。Capability freeze/authorization digest 为
+`sha256:68c2a118…841a` / `sha256:da6fca87…9c63`。
+
+Capability 完整执行 40 calls / 18 Case / 18/18 PASS，tokens `83,527/2,461`；TLS `2/2`、reuse `38`、
+HTTP/credential `40/40`、unknown/retry `0`。`REVIEW-018` 得到预期的 bounded-negative `REJECT / QUERY_INCOMPLETE` 与
+supported-positive `APPROVE`；exact positive manifest 的 completeness 只含 Query/knowledge COMPLETE，并携带
+`POSITIVE_SUPPORTED_ONLY / NOT_APPLICABLE / REJECT` scope。Capability result/closed/qualification-proof/
+qualification-document/terminal digest 为 `sha256:af60335e…0a46` / `sha256:cb31bbbf…83ec` /
+`sha256:2b1141f3…b634` / `sha256:4111846f…8138` / `sha256:8ca137b4…69af`；Qualification ref 为
+`capability-evaluation:evaluation_result_012e7e5dd9b84a1f890c823094480c64`，有效至
+`2026-08-27T14:34:15.238182+00:00`。两份授权均已消费且不可 retry；V-002 PASS，下一步是证据写回后的全新 formal
+product freeze/Web。尚无 Product Result，hidden canary 与 Production Activation 均未执行。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

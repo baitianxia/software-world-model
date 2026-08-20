@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-026-review-wire-conflict-fixed-requalification-next
+worktree_status: iteration-008-run-027-qualified-formal-product-refreeze-next
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-026-review-wire-conflict-fixed-requalification-next
+live_model_path: iteration-008-run-027-qualified-formal-product-refreeze-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-026 17/18 / Review scope compiler requalification next** | run-026 Conformance 2/2 / 12/12 PASS，Capability 40 calls / 18 Case 完成、transport 零 unknown/retry，但 positive `REVIEW-018` 仍被 REJECT，结果 17/18。exact manifest 证明 `@18` Prompt 虽已说明规则，wire 仍把不适用的 `BUSINESS_DISCOVERY_RECALL_UNPROVEN` 暴露给正向 SATISFIED Need。`FINDING-008-038` 将适用性收回 Application terminal compiler `@2`，活动 identity 为 `1.5.10/@19/@1.4.11`；新 Conformance/Capability PASS 前 V-002/V-003/V-WEB 继续 blocking；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-027 18/18 qualified / formal refreeze next** | clean candidate `be9ab1e…` 的 run-027 Conformance 2/2 / 12/12、Capability 40 calls / 18 Case / 18/18 PASS；TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`。`REVIEW-018` 精确得到 negative REJECT 与 positive APPROVE，证明 Application terminal compiler `@2` 的 `review_completeness_scope` 适配有效；活动 identity 为 `1.5.10/@19/@1.4.11`，V-002 PASS。下一 Gate 是证据写回后的全新 formal product freeze/Web；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -555,6 +555,16 @@ missing limitation。Application terminal compiler `@2` 现从 sealed Need outco
 偷带 bounded-negative claim；其他 outcome 使用 `THREE_LAYER_REVIEW` 并保留三层。原 sealed Trace/raw output/audit 不改写。
 活动 identity 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；18/40、Adapter/transport、Investigation compiler、no-retry 与 budget
 不变。run-026 与此前资格/产品运行不可继承，新 clean 2-call Conformance 和 40-call Capability 仍是下一 Gate。
+
+上述处置形成 clean candidate `be9ab1e56dcd62bf3e3151bd5f1beb427f25203b` / tree
+`25489f35236b00402effb8f036f393130906eb84`，run-027 已完成 Conformance 2/2 / 12/12 与 Capability 40 calls / 18 Case /
+18/18 PASS。Conformance result/terminal digest 为 `sha256:eb8f728b…010a` / `sha256:651d6a93…42a7`；Capability
+result/closed/qualification/qualification-document/terminal digest 为 `sha256:af60335e…0a46` / `sha256:cb31bbbf…83ec` /
+`sha256:2b1141f3…b634` / `sha256:4111846f…8138` / `sha256:8ca137b4…69af`，有效至
+`2026-08-27T14:34:15.238182+00:00`。完整运行 tokens 为 `83,527/2,461`，TLS `2/2`、reuse `38`、HTTP/credential
+`40/40`、unknown/retry `0`。`REVIEW-018` 的第一项仍为 `REJECT / QUERY_INCOMPLETE`，第二项准确变为 `APPROVE`；exact
+positive manifest 只保留 Query/knowledge COMPLETE 并显示 `POSITIVE_SUPPORTED_ONLY / NOT_APPLICABLE / REJECT` scope。
+两份授权均已消费且不可 retry；V-002 对当前 identity 已 PASS，下一 Gate 是证据写回后的全新 formal product freeze/Web。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。
