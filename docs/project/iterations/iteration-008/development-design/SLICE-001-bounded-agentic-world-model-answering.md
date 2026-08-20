@@ -512,6 +512,17 @@ claim。正向 `SUPPORTED` 答案在 Query/knowledge 为 COMPLETE、Need 为 SAT
 18 Case / 40 calls 与其余 Adapter、compiler、transport、budget、no-retry 边界不变。run-025 Qualification 与 run-007
 freeze/grant/session 均不可用于新 identity；新 2-call Conformance 和完整 Capability PASS 前 V-002 与正式 Web 再次 blocking。
 
+clean candidate `ec2201abb96c8b2badb27835fe4508906681538d` 的 run-026 Conformance 2/2 / 12/12 PASS；Capability 完整执行
+40 calls / 18 Case，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，但 positive `REVIEW-018` 与 negative
+输入返回相同 output digest `sha256:2c0317e0…c7e7`，结果 17/18。exact manifest 显示正向 SATISFIED Need 仍携带名为
+`BUSINESS_DISCOVERY_RECALL_UNPROVEN` 的 missing limitation；Prompt 要求忽略它不能形成无冲突 wire Contract。详见
+[FINDING-008-038](../findings/FINDING-008-038.md)。run-026 授权已消费且没有 Qualification。
+
+活动 terminal compiler `@2` 从 sealed Need outcome 编译不可伪造的 `review_completeness_scope`。全部 SATISFIED 时投影
+`POSITIVE_SUPPORTED_ONLY`、删除 model-visible business recall 三字段并禁止 negative claim；其他 outcome 投影
+`THREE_LAYER_REVIEW` 且保留三层。原 sealed Trace/raw output/audit 不变。Contract/Strategy、Prompt/Vocabulary、policy 与
+suite/oracle 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；18 Case / 40 calls 与其余边界不变。新完整资格 PASS 前正式 Web 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

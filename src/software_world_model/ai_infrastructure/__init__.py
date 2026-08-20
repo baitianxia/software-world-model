@@ -283,6 +283,7 @@ from .versioned_world_model_answer_strategy import (
     world_model_answer_output_schemas,
     world_model_answer_prompt_program_digest,
     world_model_answer_strategy_implementation_digest,
+    compile_java_source_semantics_terminal_model_input,
 )
 from .world_model_capability_evaluation import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_WORLD_MODEL_EVALUATION_ID,
@@ -384,6 +385,7 @@ __all__ = [
     "world_model_answer_output_schemas",
     "world_model_answer_prompt_program_digest",
     "world_model_answer_strategy_implementation_digest",
+    "compile_java_source_semantics_terminal_model_input",
     "WORLD_MODEL_EVALUATION_ID",
     "WORLD_MODEL_EVALUATION_METRIC_CONTRACT",
     "WORLD_MODEL_EVALUATION_OUTPUT_CONTRACT_REF",

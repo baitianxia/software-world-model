@@ -216,7 +216,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:3dc42aa19d5825c6a9dae96f0eaa598660d1670ccb94367755080f16eb05647b"
+                "sha256:04d27a73533ce51a5eb37d472423b80b11b62340d2d4722310055b9bea2d0212"
             ),
             provider_type="DEEPSEEK",
             adapter_version="deepseek-chat-completions-no-tools@7",

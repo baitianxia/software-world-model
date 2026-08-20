@@ -78,6 +78,21 @@ suite/oracle `@1.5.9`，`REVIEW-018` 同时覆盖 UNKNOWN recall 下的 negative
 其余 transport/compiler/budget/no-retry 边界不变。run-025 Qualification 和 run-007 freeze/grant/session 都不能复用；新 live
 Conformance/Capability PASS 前没有 Product Result，也不得重试公开 Web。
 
+`FINDING-008-037` candidate `ec2201abb96c8b2badb27835fe4508906681538d` 随后执行 run-026。Conformance 2/2 / 12/12
+PASS；preflight/result/terminal digest 为 `sha256:a40590ba…b719` / `sha256:9542e5d5…f939` /
+`sha256:2d36a4ba…9507`，TLS `1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`。Capability freeze/authorization
+digest 为 `sha256:20ffd6ed…2b13` / `sha256:ad6d3b26…0eb4`。
+
+Capability 完整执行 40 calls / 18 Case，17 PASS、1 FAIL，tokens `83,190/2,478`；TLS `2/2`、reuse `38`、
+HTTP/credential `40/40`、unknown/retry `0`。唯一失败为 positive `REVIEW-018`，其输出与 negative call 同为
+`sha256:2c0317e0…c7e7`、同样 REJECT。result/closed/terminal digest 为 `sha256:5c03b738…a55b` /
+`sha256:b5da8910…6fde` / `sha256:a7fbdfb5…ef3f`；授权已消费、没有 Qualification。
+
+[FINDING-008-038](../findings/FINDING-008-038.md) 将根因定位为 model-visible wire 冲突：SATISFIED 正向 Need 仍携带
+`BUSINESS_DISCOVERY_RECALL_UNPROVEN`。Application terminal compiler `@2` 现编译不可伪造的 positive/three-layer scope，并只在
+positive scope 删除不适用的三项 recall 字段；原 sealed authority 与 negative Gate 不变。活动 identity 升级为
+`1.5.10/@19/@1.4.11` 与 suite/oracle `@1.5.10`；新 Conformance/Capability PASS 前没有 Product Result。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

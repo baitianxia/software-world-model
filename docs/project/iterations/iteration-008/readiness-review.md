@@ -263,6 +263,16 @@ policy 与 suite/oracle 升级为 `1.5.9/@18/@1.4.10/@1.5.9`，`REVIEW-018` 同�
 18 Case / 40 calls、Adapter/transport/compiler/budget/no-retry 不变。run-025 Qualification 与 run-007 freeze/grant/session 不适用于
 新 identity。Readiness 的当前阻断重新变为新 clean candidate 的 Conformance/Capability；PASS 前不得再次生成 formal product freeze。
 
+`ec2201a…` 的 run-026 已证明 Prompt-only 处置不足。Conformance 2/2 / 12/12 PASS；Capability 完成 40 calls / 18 Case，
+TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，但 positive `REVIEW-018` 仍与 negative 输入返回相同
+`REJECT / QUERY_INCOMPLETE`，结果 17/18。manifest 中仍出现不适用的 `BUSINESS_DISCOVERY_RECALL_UNPROVEN`，所以这是 wire
+Contract 冲突，不是网络或模型不可用；详见 `FINDING-008-038`。run-026 授权已消费且无 Qualification。
+
+当前 Readiness 由 Application terminal compiler `@2` 根据 sealed Need outcome 编译 `review_completeness_scope`：纯 SATISFIED
+正向回答删除 model-visible 第三层缺失字段并禁止 negative claim；其余保留三层。活动 identity 为
+`1.5.10/@19/@1.4.11/@1.5.10`，18/40、Adapter/transport/Investigation compiler/budget/no-retry 不变。新 clean
+Conformance/Capability PASS 前不得生成 formal product freeze。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

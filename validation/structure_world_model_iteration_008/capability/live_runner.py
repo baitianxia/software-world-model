@@ -16,6 +16,7 @@ from software_world_model.ai_infrastructure import (
     WorldModelEvaluationOutput,
     WorldModelEvaluationReview,
     WorldModelStrategyConfiguration,
+    compile_java_source_semantics_terminal_model_input,
     world_model_answer_strategy_implementation_digest,
 )
 from software_world_model.cross_cutting import (
@@ -480,11 +481,15 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "bounded sealed model input is invalid",
                 ) from exc
-            expected_input = dict(sealed_input)
-            for field in _APPLICATION_OWNED_TERMINAL_INPUT_FIELDS.get(
-                capability, ()
-            ):
-                expected_input.pop(field)
+            if capability in _APPLICATION_OWNED_TERMINAL_INPUT_FIELDS:
+                expected_input = (
+                    compile_java_source_semantics_terminal_model_input(
+                        capability=capability,
+                        sealed_input=sealed_input,
+                    )
+                )
+            else:
+                expected_input = dict(sealed_input)
             expected: dict[str, object] = {
                 "case_id": call_id,
                 "capability": capability,

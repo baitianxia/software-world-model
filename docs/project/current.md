@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-007-review-false-negative-fixed-requalification-next
+worktree_status: iteration-008-run-026-review-wire-conflict-fixed-requalification-next
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-007-review-false-negative-fixed-requalification-next
+live_model_path: iteration-008-run-026-review-wire-conflict-fixed-requalification-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-007 Reviewer false-negative fixed / requalification next** | run-007 formal freeze PASS；公开登录题完成 5/5 DeepSeek HTTP 200，Investigation 与正确 Draft 均完成，但旧 `@17` Review 把只约束 bounded-negative claim 的 business-discovery recall 错用于正向行为答案并 REJECT。`FINDING-008-037` 已将活动 identity 升级为 `1.5.9/@18/@1.4.10` 并补双向 Review corpus；run-025 Qualification 与 run-007 freeze/grant/session 只作历史证据。新 identity 的 Conformance/Capability 重新 PASS 前 V-002/V-003/V-WEB 继续 blocking；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-026 17/18 / Review scope compiler requalification next** | run-026 Conformance 2/2 / 12/12 PASS，Capability 40 calls / 18 Case 完成、transport 零 unknown/retry，但 positive `REVIEW-018` 仍被 REJECT，结果 17/18。exact manifest 证明 `@18` Prompt 虽已说明规则，wire 仍把不适用的 `BUSINESS_DISCOVERY_RECALL_UNPROVEN` 暴露给正向 SATISFIED Need。`FINDING-008-038` 将适用性收回 Application terminal compiler `@2`，活动 identity 为 `1.5.10/@19/@1.4.11`；新 Conformance/Capability PASS 前 V-002/V-003/V-WEB 继续 blocking；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -52,8 +52,8 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.9`、prompt/vocabulary `@18`、semantic-intent
-compiler `@7`、terminal authority compiler `@1`、Gateway policy `@1.4.10`、suite/oracle `@1.5.9`。18 个 Case、18/18 threshold、
+ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.10`、prompt/vocabulary `@19`、semantic-intent
+compiler `@7`、terminal authority compiler `@2`、Gateway policy `@1.4.11`、suite/oracle `@1.5.10`。18 个 Case、18/18 threshold、
 40 次调用、temperature 0、no-request-retry
 与三层完整性不变。首轮模型提交通用 search terms 和注册 operation/relation evidence requests；Application 做依赖收敛和预算可达性
 校验后冻结 ledger；强制 candidate discovery 的同名 raw evidence alias 保守向上归一为 method evidence，不能让非零候选只凭存在性
@@ -63,7 +63,7 @@ text 均不取得查询、终态或完整性解释权力；evaluator 的 indepen
 对完全 ASCII 的原问题，Application compiler 以 closed tokenizer 排除 function/discourse/authority/budget 与 negated presentation
 clause，将 direct question term 置于 model normalization 之前，casefold 去重并共同受 12 项上限约束；raw model output/digest 不变，
 non-ASCII translation 仍由模型负责。
-活动 bounded model-egress policy 为 `@1.4.10`：Provider preference 是 `VOLCENGINE_ARK → DEEPSEEK`，但只从 dispatch 前完整且
+活动 bounded model-egress policy 为 `@1.4.11`：Provider preference 是 `VOLCENGINE_ARK → DEEPSEEK`，但只从 dispatch 前完整且
 current 的 exact qualification route 中选择；本轮 Ark 不合格，因此 product candidate 密封 DeepSeek。选择后只允许 DeepSeek 的
 host/model/credential/TLS/socket route，任何 request 已分派或 outcome unknown 后都不切换 Provider。DeepSeek Adapter 为
 `deepseek-chat-completions-no-tools@7`、Conformance fixture `1.2.0` / Result `@2`；Adapter 只把 closed schema 与 Gateway semantic prompt
@@ -541,6 +541,20 @@ Prompt/Vocabulary、policy 与 suite/oracle 升级为 `1.5.9/@18/@1.4.10/@1.5.9`
 下 negative REJECT 与 positive APPROVE。18 Case / 40 calls、Adapter `@7`、connection/audit `@2/@2`、两个 compiler、no-retry
 和 1000-token budget 不变。run-025 Qualification 与 run-007 freeze/grant/session 不适用于新 identity；必须从 clean candidate
 重新执行 2-call Conformance 与完整 Capability，PASS 前不得再生成 formal product freeze 或提交公开题。
+
+clean candidate `ec2201abb96c8b2badb27835fe4508906681538d` / tree `1eded0e1526c5a920b951c5f6df43a5da7e7bd67`
+的 run-026 随后完成 Conformance 2/2 / 12/12 PASS；Capability 也完整执行 40 calls / 18 Case，TLS `2/2`、reuse `38`、
+HTTP/credential `40/40`、unknown/retry `0`，但只有 17/18。唯一失败是 positive `REVIEW-018`：两次 Review 输出 digest 都为
+`sha256:2c0317e0…c7e7`，模型把 SATISFIED 正向输入与 bounded-negative 输入同样返回 `REJECT / QUERY_INCOMPLETE`。Capability
+result/closed/terminal digest 为 `sha256:5c03b738…a55b` / `sha256:b5da8910…6fde` / `sha256:a7fbdfb5…ef3f`；授权已消费且
+不得 retry，没有 Qualification。
+
+`FINDING-008-038` 证明问题不再是语义规则缺失，而是 wire 仍把 `BUSINESS_DISCOVERY_RECALL_UNPROVEN` 标成 positive Review 的
+missing limitation。Application terminal compiler `@2` 现从 sealed Need outcome 编译不可伪造的 `review_completeness_scope`：全部
+`SATISFIED` 时使用 `POSITIVE_SUPPORTED_ONLY`，从 model-visible Trace 删除仅对负向主张适用的三项 recall 字段，并明确禁止 Draft
+偷带 bounded-negative claim；其他 outcome 使用 `THREE_LAYER_REVIEW` 并保留三层。原 sealed Trace/raw output/audit 不改写。
+活动 identity 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；18/40、Adapter/transport、Investigation compiler、no-retry 与 budget
+不变。run-026 与此前资格/产品运行不可继承，新 clean 2-call Conformance 和 40-call Capability 仍是下一 Gate。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

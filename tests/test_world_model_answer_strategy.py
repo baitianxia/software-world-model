@@ -239,14 +239,14 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.9")
+        self.assertEqual(contract.strategy_version, "1.5.10")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@7",
         )
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_TERMINAL_AUTHORITY_COMPILER_REF,
-            "java-source-semantics-terminal-authority-compiler@1",
+            "java-source-semantics-terminal-authority-compiler@2",
         )
         self.assertEqual(
             contract.capabilities,
@@ -382,15 +382,15 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             investigation_prompt,
         )
         self.assertIn(
-            "Business-discovery recall is required only for an absence",
+            "First obey the Application-owned review_completeness_scope",
             review_prompt,
         )
         self.assertIn(
-            "does not make a positive SUPPORTED behavior answer incomplete",
+            "Do not reconstruct an omitted third-layer state",
             review_prompt,
         )
         self.assertIn(
-            "APPROVE remains forbidden when a Draft makes a bounded-negative claim",
+            "THREE_LAYER_REVIEW preserves the sealed third-layer fields",
             review_prompt,
         )
         self.assertIn(
@@ -398,7 +398,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             investigation_prompt,
         )
         self.assertIn(
-            "REJECT with QUERY_INCOMPLETE whenever any query-result completeness",
+            "REJECT with QUERY_INCOMPLETE whenever a needed query-result",
             review_prompt,
         )
         self.assertIn(
@@ -548,7 +548,28 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             case_id="product:semantic:review-authority",
             capability=IMPLEMENTATION_ANSWER_REVIEW,
             sealed_input={
+                "assessment": {
+                    "needs": [
+                        {
+                            "need_id": "implementation-answer",
+                            "outcome": "LIMITATION",
+                        }
+                    ]
+                },
                 "draft": {"answer": "Bounded absence."},
+                "query_plan": {
+                    "investigation_trace": {
+                        "completeness": {
+                            "query_result": "COMPLETE",
+                            "knowledge_representation": "COMPLETE",
+                            "business_discovery_recall": "UNKNOWN",
+                            "bounded_absence_allowed": False,
+                            "missing_limitation_codes": [
+                                "BUSINESS_DISCOVERY_RECALL_UNPROVEN"
+                            ],
+                        }
+                    }
+                },
                 "required_checked_need_ids": ("implementation-answer",),
                 "required_checked_step_result_ids": (step_result_id,),
                 "required_checked_support_digests": (support_digest,),
@@ -569,8 +590,113 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         )
         model_state = json.loads(gateway.contexts[0].manifest.items[1].content)
         self.assertEqual(
-            model_state["input"],
-            {"draft": {"answer": "Bounded absence."}},
+            model_state["input"]["review_completeness_scope"],
+            {
+                "compiler_ref": (
+                    "java-source-semantics-terminal-authority-compiler@2"
+                ),
+                "mode": "THREE_LAYER_REVIEW",
+                "need_outcomes": [
+                    {
+                        "need_id": "implementation-answer",
+                        "outcome": "LIMITATION",
+                    }
+                ],
+                "business_discovery_recall_applicability": (
+                    "PRESERVED_FROM_SEALED_TRACE"
+                ),
+                "bounded_negative_claim_policy": (
+                    "REQUIRE_COMPLETE_THREE_LAYER_AUTHORITY"
+                ),
+            },
+        )
+        self.assertEqual(
+            model_state["input"]["query_plan"]["investigation_trace"][
+                "completeness"
+            ]["business_discovery_recall"],
+            "UNKNOWN",
+        )
+
+    def test_active_terminal_compiler_removes_irrelevant_positive_recall(self):
+        step_result_id = "world_model_step_result_" + "8" * 32
+        support_digest = "sha256:" + "9" * 64
+        gateway = SequencedGateway(
+            [
+                {
+                    "decision": "APPROVE",
+                    "finding_codes": [],
+                    "checked_need_ids": [],
+                    "checked_step_result_ids": [],
+                    "checked_support_digests": [],
+                }
+            ]
+        )
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        proposal = strategy.propose(
+            case_id="product:semantic:review-positive-scope",
+            capability=IMPLEMENTATION_ANSWER_REVIEW,
+            sealed_input={
+                "assessment": {
+                    "needs": [
+                        {
+                            "need_id": "implementation-answer",
+                            "outcome": "SATISFIED",
+                        }
+                    ]
+                },
+                "draft": {"answer": "Failure is recorded before success."},
+                "query_plan": {
+                    "investigation_trace": {
+                        "completeness": {
+                            "query_result": "COMPLETE",
+                            "knowledge_representation": "COMPLETE",
+                            "business_discovery_recall": "UNKNOWN",
+                            "bounded_absence_allowed": False,
+                            "missing_limitation_codes": [
+                                "BUSINESS_DISCOVERY_RECALL_UNPROVEN"
+                            ],
+                        }
+                    }
+                },
+                "required_checked_need_ids": ("implementation-answer",),
+                "required_checked_step_result_ids": (step_result_id,),
+                "required_checked_support_digests": (support_digest,),
+            },
+        )
+
+        self.assertEqual(proposal.normalized_result["decision"], "APPROVE")
+        model_state = json.loads(gateway.contexts[0].manifest.items[1].content)
+        model_input = model_state["input"]
+        self.assertEqual(
+            model_input["review_completeness_scope"]["mode"],
+            "POSITIVE_SUPPORTED_ONLY",
+        )
+        self.assertEqual(
+            model_input["review_completeness_scope"][
+                "business_discovery_recall_applicability"
+            ],
+            "NOT_APPLICABLE",
+        )
+        self.assertEqual(
+            model_input["review_completeness_scope"][
+                "bounded_negative_claim_policy"
+            ],
+            "REJECT",
+        )
+        projected = model_input["query_plan"]["investigation_trace"][
+            "completeness"
+        ]
+        self.assertEqual(
+            projected,
+            {
+                "query_result": "COMPLETE",
+                "knowledge_representation": "COMPLETE",
+            },
         )
 
     def test_active_terminal_compiler_rejects_model_owned_authority(self):
@@ -655,12 +781,80 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
                 case_id="product:semantic:review-invalid-code",
                 capability=IMPLEMENTATION_ANSWER_REVIEW,
                 sealed_input={
+                    "assessment": {
+                        "needs": [
+                            {
+                                "need_id": "implementation-answer",
+                                "outcome": "SATISFIED",
+                            }
+                        ]
+                    },
                     "draft": {"body": "incomplete"},
+                    "query_plan": {
+                        "investigation_trace": {
+                            "completeness": {
+                                "query_result": "COMPLETE",
+                                "knowledge_representation": "COMPLETE",
+                                "business_discovery_recall": "UNKNOWN",
+                                "bounded_absence_allowed": False,
+                                "missing_limitation_codes": [
+                                    "BUSINESS_DISCOVERY_RECALL_UNPROVEN"
+                                ],
+                            }
+                        }
+                    },
                     "required_checked_need_ids": ("implementation-answer",),
                     "required_checked_step_result_ids": (),
                     "required_checked_support_digests": (),
                 },
             )
+
+    def test_active_terminal_compiler_rejects_caller_owned_review_scope(self):
+        gateway = SequencedGateway([])
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        with self.assertRaisesRegex(
+            DomainError,
+            "review completeness scope is application-owned",
+        ):
+            strategy.propose(
+                case_id="product:semantic:review-caller-scope",
+                capability=IMPLEMENTATION_ANSWER_REVIEW,
+                sealed_input={
+                    "assessment": {
+                        "needs": [
+                            {
+                                "need_id": "implementation-answer",
+                                "outcome": "SATISFIED",
+                            }
+                        ]
+                    },
+                    "draft": {"body": "supported"},
+                    "query_plan": {
+                        "investigation_trace": {
+                            "completeness": {
+                                "query_result": "COMPLETE",
+                                "knowledge_representation": "COMPLETE",
+                                "business_discovery_recall": "UNKNOWN",
+                                "bounded_absence_allowed": False,
+                                "missing_limitation_codes": [
+                                    "BUSINESS_DISCOVERY_RECALL_UNPROVEN"
+                                ],
+                            }
+                        }
+                    },
+                    "review_completeness_scope": {"mode": "FORGED"},
+                    "required_checked_need_ids": ("implementation-answer",),
+                    "required_checked_step_result_ids": (),
+                    "required_checked_support_digests": (),
+                },
+            )
+
+        self.assertEqual(gateway.contexts, [])
 
     def test_all_closed_roles_use_one_oracle_free_no_tools_manifest(self):
         suite = load_capability_suite()

@@ -36,16 +36,16 @@ from software_world_model.application_services.bounded_world_model_investigation
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.9"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.10"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.9"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.10"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:033c6d210d4c6d148f7db44fa92c89b7240b6826bb84370fac438c07366e746c"
+    "sha256:afc27f4fdabb6631b21aeb0507044fb53b93b96e0567bf1e8a63764cfee19eae"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:8be44d13e5f4f712f358c7a4574a0de4f6f8e089abd98d679a411851953445cb"
+    "sha256:162579cd3904845a766a9cc2429b96111d3eea8baff250e658e4481b019f1eca"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -60,8 +60,8 @@ PINNED_RESOURCE_POLICY_REF = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.5.9.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.9.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.5.10.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.10.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -729,7 +729,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.5.9",
+            case_version="1.5.10",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -740,7 +740,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.5.9",
+        evaluation_version="1.5.10",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,
