@@ -65,6 +65,9 @@ Query 不得根据已知题目替换答案。问题措辞改变只允许改变 v
   其他方法标为不存在。
 - 同一个 candidate result 对同一 method Ref 的重复 batch 是 cycle；扩大、缩小或换序必须由上一轮 typed result 支持且仍计入
   progress/budget，不能靠重复调用等待不同模型答案。
+- 每个 item 固定返回 `legacy_calls_direction: OUTGOING`、exact `legacy_calls`、CALLS Coverage 与逐关系 Support。因此 standalone
+  `direct_neighborhood(OUTGOING_CALLS)` evidence 与 method evidence 在当前 Profile 中由后者满足；CALLS Coverage 不完整时必须保留
+  Limitation。该规则不证明 incoming/both neighborhood，也不替代 path existence/enumeration。
 
 ### 声明与图操作
 
@@ -92,7 +95,8 @@ neighborhood、path 或 ordered diff 组合。首轮 evidence request 只能由�
 对 method batch 的依赖、inventory 对 declaring-type lookup 的依赖和预算内顺序收敛为冻结 ledger，不得新增题型、问题关键词或工程
 分支。`implementation_candidates` 是强制 discovery transition 而不是可终止 canonical obligation；同名 raw evidence alias 无条件向上
 归一为 `method_implementations`。该保守规则不读取问题或未来 Result：非零候选继续读取 method evidence，零候选/截断候选则因没有合法
-method transition 按 completeness 结束。当前 bounded contract 的 later step 只消费 immediately preceding sealed Result，不能重启 candidate search，也不能按回合序号对
+method transition 按 completeness 结束。standalone raw `direct_neighborhood(OUTGOING_CALLS)` 同样归一为 method；当它与 path evidence
+组合时保持独立，incoming/both 也保持 direct。当前 bounded contract 的 later step 只消费 immediately preceding sealed Result，不能重启 candidate search，也不能按回合序号对
 同一 previous Result 期待不同 authority transition；下一 operation 必须来自 ledger 在该 Result 上的确定性合法 transition，未完成义务
 时模型 FINISH 不获得终态权力。每个 Requirement Need 必须保存其 evidence ledger、operation inputs/result digest；跨域答案必须在同一
 Need/Support chain 中同时引用旧 `CALLS` 与实现事实，不能仅在正文拼接两段互不约束的结果。

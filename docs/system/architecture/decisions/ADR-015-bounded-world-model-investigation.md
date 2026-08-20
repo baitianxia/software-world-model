@@ -48,6 +48,9 @@ candidate discovery 是所有功能调查的强制首 transition，不是一个�
 `implementation_candidates` evidence alias 时，Application 必须无条件向上归一为 `method_implementations`，再执行既有 graph/inventory
 依赖收敛。该规则不读取问题关键词或未来 Result，并保证非零候选不能只凭排名或存在性提前结束；零候选和截断候选仍按 typed
 completeness 形成 Gap/Limitation，不执行伪 method query。
+`method_implementation` 的正式 Result 已密封该方法的 exact supported outgoing `CALLS` 与方向/Coverage，因此 standalone raw
+`direct_neighborhood(OUTGOING_CALLS)` evidence alias 也由 Application 收敛为 `method_implementations`，避免对同一关系重复查询。
+该 subsumption 只读注册 operation/relation；与 path obligation 组合时 direct 保持独立，`INCOMING_CALLS`、`BOTH_CALLS` 也不折叠。
 平台而不是 Agent 拥有逐状态 operation allowlist、typed Ref、Result binding、Snapshot fence、direction/predicate expansion、graph bounds、
 查询执行、Support、预算、cycle/progress、trace seal、evidence fulfillment、FINISH reason 和终态；Application 必须从冻结 ledger 与 sealed input
 deterministic 编译这些 authority 参数，不能要求模型复制、重建或猜测 opaque identifier，也不能让一次模型 `FINISH` 缩小未完成义务。

@@ -34,7 +34,8 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
    Task Control/Application 按该 ledger、exact trace prefix、立即前序 Result、Snapshot、Ref provenance、progress 和剩余预算计算
    受限 transition allowlist；模型 proposal 不能扩大 allowlist、删除 obligation 或提前 `FINISH`。结果必须先密封才能进入下一轮，
    Agent 不能执行查询、批量展开 Bundle、改变 Need 或把历史模型记忆当输入。强制 candidate discovery 不是可终止 canonical
-   obligation；raw candidate evidence alias 由 Application 向上归一为 method evidence，避免非零候选仅凭存在性结束。
+   obligation；raw candidate evidence alias 由 Application 向上归一为 method evidence，避免非零候选仅凭存在性结束。method Result
+   已正式承载的 standalone outgoing `CALLS` obligation 同样收敛到 method；path/incoming/both 不折叠。
 9. Investigation、Draft 与 Review 是隔离角色。调查角色不能看到 Source/Repository/raw Evidence/Update/Direct/Citation
    observation；Draft 只消费 sealed trace；Reviewer 从原问题和同一 trace 独立重建检查项。任何角色失败、结果未知或预算耗尽都
    终止本题，不 retry 或降级。

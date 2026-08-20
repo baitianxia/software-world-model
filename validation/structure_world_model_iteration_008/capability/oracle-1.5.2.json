@@ -1,7 +1,7 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-capability-oracle@1",
-  "oracle_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.1",
-  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.1",
+  "oracle_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.2",
+  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.2",
   "forbidden_event_sets": {
     "investigation": [
       "SOURCE_ACCESS",
@@ -80,7 +80,7 @@
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
         {"operation": "method_implementations", "arguments": {"candidate_result_id": "world_model_step_result_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "candidate_result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "method_refs_ref": "three_candidates"}, "forbidden_events_ref": "investigation"},
-        {"operation": "direct_neighborhood", "arguments": {"entity_refs_ref": "method_batch:first", "direction": "OUTGOING", "predicate": "CALLS"}, "forbidden_events_ref": "investigation"}
+        {"operation": "FINISH", "arguments": {}, "forbidden_events_ref": "investigation"}
       ]
     },
     {
@@ -112,7 +112,6 @@
       "steps": [
         {"operation": "implementation_candidates", "arguments": {"snapshot_id": "structure_snapshot_11111111111111111111111111111111", "limit": 5}, "forbidden_events_ref": "investigation"},
         {"operation": "method_implementations", "arguments": {"candidate_result_id": "world_model_step_result_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "candidate_result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "method_refs_ref": "three_candidates"}, "forbidden_events_ref": "investigation"},
-        {"operation": "direct_neighborhood", "arguments": {"entity_refs_ref": "method_batch:first", "direction": "OUTGOING", "predicate": "CALLS"}, "forbidden_events_ref": "investigation"},
         {"operation": "FINISH", "arguments": {}, "forbidden_events_ref": "investigation"}
       ]
     },

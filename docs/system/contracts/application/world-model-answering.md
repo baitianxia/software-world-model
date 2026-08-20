@@ -37,7 +37,8 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       描述原问题需要的方法、声明清单、直接关系或路径证据，不是题型 enum，也不含 Ref、bound 或隐藏答案。Application 做
       operation-discriminated normalization、去重、依赖收敛和预算可达性校验后将它冻结。candidate discovery 是强制首 transition，
       不单独构成 canonical terminal evidence；raw `implementation_candidates` evidence alias 一律向上归一为 `method_implementations`，
-      从而不允许非零候选仅凭存在性结束，同时不对零候选/截断结果执行伪查询。之后每回合只增加前一轮 sealed typed result、
+      从而不允许非零候选仅凭存在性结束，同时不对零候选/截断结果执行伪查询。method Result 已密封 exact supported outgoing
+      `CALLS`，所以 standalone raw `direct_neighborhood(OUTGOING_CALLS)` 也收敛为 method；path 组合、incoming/both 不折叠。之后每回合只增加前一轮 sealed typed result、
       冻结 evidence ledger、progress/budget receipt、平台计算的三层 completeness projection、当前受限 `available_operations` 与完整
       trace digest。模型不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
       对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；

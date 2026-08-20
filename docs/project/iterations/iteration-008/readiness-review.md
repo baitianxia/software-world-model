@@ -78,6 +78,14 @@ run-011 又形成 `FINDING-008-021`：强制 candidate discovery 同时充当 te
 `ITER-008-SYSTEM-CONTRACT-SET@1` exact digest 为
 `sha256:11b8b2d56386451802bc64214547abe253d54f26855a1ba7f9428acb43511a54`，并由 Manifest 与 docs gate 共同约束。
 
+run-012 又形成 `FINDING-008-022`：正式 method Result 已承载同方法带 Support/Coverage 的 exact outgoing `CALLS`，因此在没有 path
+obligation 时再要求 standalone `direct_neighborhood(OUTGOING_CALLS)` 是重复证据，不是产品能力增量。Application 只按已注册
+operation/relation 将该 raw alias 收敛为 method；incoming、both 和与 path 组合的 outgoing direct 继续独立，且不读取问题、工程、
+Case、Oracle 或未来 Result。预算上限、三层完整性、Source-off、no-retry 和所有产品阻断不变。写回后的当前
+`ITER-008-SYSTEM-CONTRACT-SET@1` exact digest 为
+`sha256:1542f20e7b946ee9a5a597ad4f5a2206f8e59ad58ac60ccdb2b2803b913d6987`；共享文档使历史 ITER-007 当前 fileset digest 同步重算为
+`sha256:6f470e7cfc7c0812474219a3530e8ad23817fcfddb192647bafedb4fde72d349`，两者均由 Manifest 与 docs gate 机械约束。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

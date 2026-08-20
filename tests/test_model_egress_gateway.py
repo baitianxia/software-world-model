@@ -198,7 +198,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:630593d1f7fbef8d0e2366d3c2db9c2a4fb81311f3a0f5a44ac9bedd4f5a8415"
+                "sha256:3f7a7e2c42868c1da05a1d1c1f1154af0f9b3272e9ea106a56bf99c574d51a49"
             ),
             provider_type="VOLCENGINE_ARK",
             adapter_version="openai-chat-completions-no-tools@8",

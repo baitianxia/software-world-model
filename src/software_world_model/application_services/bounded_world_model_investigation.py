@@ -311,10 +311,21 @@ def _normalized_evidence_requests(
                 )
             direct_relations.add(relation)
 
-    graph_operations = {
-        InvestigationOperation.DIRECT_NEIGHBORHOOD,
+    path_operations = {
         InvestigationOperation.PATH_EXISTS,
         InvestigationOperation.ALL_SIMPLE_PATHS,
+    }
+    if (
+        InvestigationOperation.DIRECT_NEIGHBORHOOD in operations
+        and direct_relations == {"OUTGOING_CALLS"}
+        and not operations & path_operations
+    ):
+        operations.discard(InvestigationOperation.DIRECT_NEIGHBORHOOD)
+        operations.add(InvestigationOperation.METHOD_IMPLEMENTATIONS)
+
+    graph_operations = {
+        InvestigationOperation.DIRECT_NEIGHBORHOOD,
+        *path_operations,
     }
     if operations & graph_operations:
         operations.discard(InvestigationOperation.METHOD_IMPLEMENTATIONS)

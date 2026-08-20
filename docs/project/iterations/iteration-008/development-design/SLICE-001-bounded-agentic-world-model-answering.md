@@ -241,6 +241,19 @@ canonical evidence obligation。Application 将同名 raw alias 保守向上归�
 18/18、current documents 325/325 PASS；完整回归 980/985，唯一五项仍是 `FINDING-008-020` 的 ITER-003 frozen CLI drift。
 compileall、diff check 与路径级 secret scan 通过，`FINDING-008-021` 已处置；clean candidate 和全新 live requalification 待完成。
 
+该 candidate 随后完成 run-012。Conformance 恰好 2 calls / 12/12 PASS；Capability 前 9 Case / 21 accepted calls 全部 independent
+PASS，第 22 次 Provider request 在 `MAX-FOUR-010:call-1` 完成后因 frozen ledger exactness 失败关闭。模型为 outgoing trace 选择
+method evidence，suite 选择 standalone outgoing direct；输出 operation、terms、identity、usage、shape 与 transport 均正常，无 retry、
+Qualification 或 Activation。
+
+按 [FINDING-008-022](../findings/FINDING-008-022.md)，method Result 已按正式 Contract 携带 exact supported outgoing `CALLS`、direction
+与 Coverage，因此额外 outgoing direct query 是重复证据。Application 将该 standalone formal alias 收敛为 method；path 组合、incoming/
+both 保持独立，且不读取问题、terms 或 evaluator。活动版本升级为 `1.5.2`、`@11`、`@6`、`@1.2.2`、suite/oracle `@1.5.2` 与
+closed evaluation `@1.0.2`；18 Case / 40 calls、18/18、temperature 0、no-retry。相关回归 169/169、fake transport 40 calls /
+18/18、current documents 326/326 PASS；完整回归 980/985，唯一五项是 `FINDING-008-020` 已隔离的 ITER-003 frozen CLI drift。
+compileall、diff check、路径级 secret scan 与 System Contract fileset 重算通过，`FINDING-008-022` 已处置；clean candidate 和全新
+run-013 live requalification 待完成。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

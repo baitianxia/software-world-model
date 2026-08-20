@@ -384,7 +384,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             PINNED_ORACLE_FILE_DIGEST,
         )
         self.assertEqual(len(PINNED_REQUIRED_CASE_CALLS), 18)
-        self.assertEqual(PINNED_PROVIDER_REQUEST_COUNT, 41)
+        self.assertEqual(PINNED_PROVIDER_REQUEST_COUNT, 40)
         self.assertEqual(
             tuple(case["case_id"] for case in _SUITE["cases"]),
             PINNED_REQUIRED_CASE_IDS,
@@ -403,10 +403,10 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             exact_candidate_checkpoint_ref="git:" + "3" * 40,
             environment_ref="iter-008-bounded-capability@1",
             reference_strategy_ref="standalone-evaluator@1",
-            resource_policy_ref="forty-one-no-retry@1",
+            resource_policy_ref="forty-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.1")
+        self.assertEqual(definition.strategy_version, "1.5.2")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),
@@ -843,7 +843,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertFalse(failure["raw_prompt_persisted"])
             self.assertFalse(failure["raw_response_persisted"])
 
-    def test_full_fake_transport_flow_closes_forty_one_call_result(self) -> None:
+    def test_full_fake_transport_flow_closes_forty_call_result(self) -> None:
         fake_identity = {
             "commit": "1" * 40,
             "tree": "2" * 40,
@@ -892,10 +892,10 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             scope = capability_freeze["dispatch_contract"][
                 "authorization_scope"
             ]
-            self.assertEqual(scope["planned_provider_call_count"], 41)
+            self.assertEqual(scope["planned_provider_call_count"], 40)
             self.assertEqual(
                 scope["payload_boundary"],
-                "FORTY_ONE_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
+                "FORTY_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
                 "EIGHTEEN_CASES_NO_PRODUCT_QUESTION_SOURCE_EVIDENCE_OR_"
                 "HIDDEN_CANARY",
             )
@@ -984,8 +984,8 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(payload["status"], "CAPABILITY_EVALUATION_PASS")
             self.assertEqual(payload["case_count"], 18)
-            self.assertEqual(payload["provider_request_count"], 41)
-            self.assertEqual(transport.calls, 41)
+            self.assertEqual(payload["provider_request_count"], 40)
+            self.assertEqual(transport.calls, 40)
             binding = load_bounded_java_source_semantics_gateway_qualification_binding(
                 qualification_path=payload["qualification_path"],
                 closed_result_path=payload["result_path"],

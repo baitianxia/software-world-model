@@ -393,7 +393,31 @@ class BoundedWorldModelInvestigationTests(TestCase):
                     _evidence("direct_neighborhood", "OUTGOING_CALLS"),
                 ]
             ),
-            (_evidence("direct_neighborhood", "OUTGOING_CALLS"),),
+            (_evidence("method_implementations"),),
+        )
+        self.assertEqual(
+            normalize_investigation_evidence_requests(
+                [_evidence("direct_neighborhood", "OUTGOING_CALLS")]
+            ),
+            (_evidence("method_implementations"),),
+        )
+        self.assertEqual(
+            normalize_investigation_evidence_requests(
+                [_evidence("direct_neighborhood", "INCOMING_CALLS")]
+            ),
+            (_evidence("direct_neighborhood", "INCOMING_CALLS"),),
+        )
+        self.assertEqual(
+            normalize_investigation_evidence_requests(
+                [
+                    _evidence("direct_neighborhood", "OUTGOING_CALLS"),
+                    _evidence("path_exists"),
+                ]
+            ),
+            (
+                _evidence("direct_neighborhood", "OUTGOING_CALLS"),
+                _evidence("path_exists"),
+            ),
         )
         session = self._session()
         compiled = compile_investigation_intent(
@@ -410,6 +434,25 @@ class BoundedWorldModelInvestigationTests(TestCase):
         )
         self.assertEqual(
             compiled["evidence_requests"],
+            [_evidence("method_implementations")],
+        )
+        outgoing_session = self._session()
+        compiled_outgoing = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["authentication", "direct", "calls"],
+                evidence_requests=[
+                    _evidence("direct_neighborhood", "OUTGOING_CALLS")
+                ],
+            ),
+            sealed_input=_sealed_input(
+                outgoing_session,
+                snapshot_id=self.snapshot_id,
+            ),
+            available_operations=("implementation_candidates",),
+        )
+        self.assertEqual(
+            compiled_outgoing["evidence_requests"],
             [_evidence("method_implementations")],
         )
         candidate_step = session.submit(
@@ -454,7 +497,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
         session = self._session()
         sealed_input = _sealed_input(session, snapshot_id=self.snapshot_id)
         direct_evidence = [
-            _evidence("direct_neighborhood", "OUTGOING_CALLS")
+            _evidence("direct_neighborhood", "BOTH_CALLS")
         ]
         canonical_candidate = compile_investigation_intent(
             _intent(
@@ -521,7 +564,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
         canonical_direct = compile_investigation_intent(
             _intent(
                 "direct_neighborhood",
-                relation_intent="OUTGOING_CALLS",
+                relation_intent="BOTH_CALLS",
             ),
             sealed_input=method_input,
         )

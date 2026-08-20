@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-candidate-evidence-upward-normalization-at-1.5.1-local-validation-complete-clean-candidate-pending
+worktree_status: iteration-008-outgoing-call-evidence-subsumption-at-1.5.2-local-validation-complete-clean-candidate-pending
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-deepseek-v4-pro-run-011-conformance-pass-capability-failed-after-14-pass-cases-candidate-evidence-normalization-in-progress-production-not-activated
+live_model_path: iteration-008-deepseek-v4-pro-run-012-conformance-pass-capability-failed-after-9-pass-cases-outgoing-call-evidence-subsumption-locally-qualified-run-013-pending-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,7 +40,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / third protocol redirect locally closed** | run-011 Conformance 12/12 PASS；Capability 前 14 Case / 35 calls 全 PASS，第 36 次 completed request 因 candidate evidence 与 method ledger 不一致而失败关闭。按 `FINDING-008-021`，强制 candidate discovery 不再是可终止 obligation，raw alias 由 Application 向上归一；活动 contract `1.5.1` 已完成本地闭包，正式 runtime 仍保持 Ark |
+| Iteration 008 | **SLICE-001 authorized / fourth protocol redirect in local validation** | run-012 Conformance 12/12 PASS；Capability 前 9 Case / 21 calls 全 PASS，第 22 次 completed request 暴露 method result 与 standalone outgoing-direct evidence 重复。按 `FINDING-008-022`，Application 将该 formal alias 收敛为 method；活动 contract `1.5.2` 正在本地闭包，正式 runtime 仍保持 Ark |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -51,11 +51,12 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.1`、prompt/vocabulary `@10`、semantic-intent
-compiler `@5`、Gateway policy `@1.2.1`、suite/oracle `@1.5.1`。18 个 Case、18/18 threshold、41 次调用、temperature 0、no-retry
+ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.2`、prompt/vocabulary `@11`、semantic-intent
+compiler `@6`、Gateway policy `@1.2.2`、suite/oracle `@1.5.2`。18 个 Case、18/18 threshold、40 次调用、temperature 0、no-retry
 与三层完整性不变。首轮模型提交通用 search terms 和注册 operation/relation evidence requests；Application 做依赖收敛和预算可达性
 校验后冻结 ledger；强制 candidate discovery 的同名 raw evidence alias 保守向上归一为 method evidence，不能让非零候选只凭存在性
-结束。Application 再从 ledger、立即前序 typed Result 和预算推导每轮唯一合法 transition。raw operation、premature FINISH 与 terminal
+结束。method Result 已包含 exact supported outgoing `CALLS`，因此 standalone raw outgoing-direct alias 也收敛为 method；path 组合、
+incoming/both 不折叠。Application 再从 ledger、立即前序 typed Result 和预算推导每轮唯一合法 transition。raw operation、premature FINISH 与 terminal
 text 均不取得查询、终态或完整性解释权力；evaluator 的 independent later-state Case 使用另一个预冻结、产品可达 ledger fixture。
 本机现存 15 份 Ark Conformance Result 全部属于 Adapter `@1`—`@7`，对当前
 `openai-chat-completions-no-tools@8` 均以 `QUALIFICATION_INVALID` 失败关闭。
@@ -267,6 +268,26 @@ inventory 依赖收敛和零/截断候选 Limitation 不变。活动版本升级
 回归 116/116、其中 Gateway AF_UNIX 12/12，fake transport 41 calls / 18/18，current documents 325/325 PASS；完整回归仍为
 980/985，唯一五项是 `FINDING-008-020` 已隔离的 ITER-003 Codex CLI exact-binary drift。compileall、diff check 与路径级 secret scan
 也已通过。`FINDING-008-021` 已处置；clean candidate 与全新 live requalification 仍待闭合，所有后续产品 Gate 继续阻断。
+
+上述版本形成 clean candidate `5ef09d4f29f538fc40985613c963d9c29bd2ee15`（tree
+`f912744582d4864c26697295668a9560a07f21d1`）并执行 run-012。Conformance preflight/authorization/result digest 为
+`sha256:51d892770d777073e3337e074122b22acc6954610a1d5e357e73894a9442ecec` /
+`sha256:15dca55301643f148755998f609ea3a66427d74f04eb4712338754c320edbbca` /
+`sha256:f50ea41a6ec5502df6a7cc90e840d52e3474b5f78b3c593e0f58672f8b69715c`，恰好 2 requests / 12/12 PASS，唯一
+identity `deepseek-v4-pro`，tokens 376/86，temperature 0、thinking disabled、usage 完整。Capability freeze/authorization 为
+`sha256:4964298813d036ee59e2ffec7fd9013a88e4d16ac557c1703c4ca4ec5bd61d93` /
+`sha256:4f7758ff216cec47be4bfdd7d1f0eecfe36c000bef26f4938718d9a35e573ed8`；前 9 Case / 21 calls 全部 independent
+PASS，第 22 次 request 完成后 `MAX-FOUR-010:call-1` 因 raw method evidence 与 frozen outgoing-direct ledger 不一致失败关闭。
+failure/terminal digest 为 `sha256:58c1a33c3fb458db0dd592c1871072dac6a6ec815f7aaba5ca57350ed8d9382a` /
+`sha256:fabb08a4731f4d2d6d5b8f1890f203e887048229c57e9edec29f149dd7b03f4c`；无 retry、Qualification 或 Activation。
+
+按 `FINDING-008-022`，正式 method Result 已密封同方法的 outgoing `CALLS`、direction、Coverage 与 Support，追加 standalone
+`direct_neighborhood(OUTGOING_CALLS)` 是重复查询。Application 仅按 formal operation/relation 将该 alias 收敛为 method，不读取问题、
+terms、工程、Case、Oracle 或未来 Result；path/incoming/both 继续保留。活动版本为 `1.5.2/@11/@6/@1.2.2` 与 suite/oracle
+`@1.5.2`，closed evaluation `@1.0.2` 固定 18 Case / 40 calls。相关 DeepSeek/Gateway/runtime/product 回归 169/169、fake transport
+40 calls / 18/18、current documents 326/326 PASS；完整回归为 980/985，唯一五项仍是 `FINDING-008-020` 已隔离的 ITER-003 frozen
+Codex CLI drift。compileall、diff check、路径级 secret scan 与两套 System Contract fileset digest 重算均通过，`FINDING-008-022`
+已处置；clean candidate 与全新 run-013 live qualification 待完成，产品 Gate 继续阻断。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

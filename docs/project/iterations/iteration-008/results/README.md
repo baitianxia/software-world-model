@@ -246,6 +246,23 @@ ledger 不一致在本地失败关闭。failure/terminal document digest 为 `sh
 唯一五项仍是 `FINDING-008-020` 的 ITER-003 frozen CLI drift；compileall、diff check 与路径级 secret scan 通过。
 `FINDING-008-021` 已处置，clean candidate 与全新 live qualification 待完成，V-002 继续 blocking。
 
+上述实现以 clean candidate `5ef09d4f29f538fc40985613c963d9c29bd2ee15` / tree
+`f912744582d4864c26697295668a9560a07f21d1` 进入 run-012。Conformance preflight/result digest 为
+`sha256:51d892770d777073e3337e074122b22acc6954610a1d5e357e73894a9442ecec` /
+`sha256:f50ea41a6ec5502df6a7cc90e840d52e3474b5f78b3c593e0f58672f8b69715c`，2 requests / 12/12 PASS，唯一 identity
+`deepseek-v4-pro`，tokens 376/86，temperature 0、thinking disabled、usage 完整。Capability freeze
+`sha256:4964298813d036ee59e2ffec7fd9013a88e4d16ac557c1703c4ca4ec5bd61d93` 的前 9 Case / 21 calls 全部 independent
+PASS；第 22 次 request 完成后，`MAX-FOUR-010:call-1` 因 raw method evidence 与 frozen outgoing-direct ledger 不一致失败关闭。
+failure/terminal digest 为 `sha256:58c1a33c3fb458db0dd592c1871072dac6a6ec815f7aaba5ca57350ed8d9382a` /
+`sha256:fabb08a4731f4d2d6d5b8f1890f203e887048229c57e9edec29f149dd7b03f4c`；无 retry、Qualification、Web、canary 或 Activation。
+
+[FINDING-008-022](../findings/FINDING-008-022.md) 证明 method Result 已包含带 Support/Coverage 的 exact outgoing `CALLS`；standalone
+outgoing direct 是重复 evidence alias。Application 现按 formal relation 收敛到 method，path/incoming/both 不变，不加入题目或 evaluator
+特判。活动协议为 `1.5.2/@11/@6/@1.2.2`、suite/oracle `@1.5.2`、closed evaluation `@1.0.2` 与 18 Case / 40 calls；
+相关回归 169/169、fake transport 40 calls / 18/18、current documents 326/326 PASS；完整回归 980/985，唯一五项是
+`FINDING-008-020` 已隔离的 ITER-003 frozen CLI drift。compileall、diff check、路径级 secret scan 与 System Contract fileset 重算
+通过，`FINDING-008-022` 已处置；clean candidate 与全新 run-013 live qualification 待完成，V-002 继续 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

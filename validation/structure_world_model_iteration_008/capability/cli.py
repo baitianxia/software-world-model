@@ -855,7 +855,7 @@ def _run_authorized_capability(
             f"{freeze['closed_inputs']['evaluator_digest']}"
         ),
         resource_policy_ref=(
-            "forty-one-calls-across-eighteen-cases-no-retry:"
+            "forty-calls-across-eighteen-cases-no-retry:"
             f"{strategy_configuration.digest.value}"
         ),
         valid_for_seconds=604800,
@@ -1103,7 +1103,7 @@ def _verify_capability_freeze(
             f"standalone-stdlib-evaluator:{evaluator_digest}"
         ),
         resource_policy_ref=(
-            "forty-one-calls-across-eighteen-cases-no-retry:"
+            "forty-calls-across-eighteen-cases-no-retry:"
             f"{strategy_configuration.digest.value}"
         ),
         valid_for_seconds=604800,

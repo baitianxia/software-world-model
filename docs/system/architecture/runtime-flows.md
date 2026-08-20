@@ -66,7 +66,8 @@ immutable Requirement
 
 首轮 Agent 只用注册 operation/relation vocabulary 提出 bounded evidence obligations 与 search terms；Application 对其归一、去重、
 收敛依赖并冻结。candidate discovery 已是强制首 transition，因此 raw `implementation_candidates` evidence alias 被保守向上归一为
-`method_implementations`，不能在非零候选后单独关闭 ledger。每个后续状态由 Application 从 ledger 和 sealed input 推导受限 operation allowlist，再编译 exact Snapshot、前序 Result
+`method_implementations`，不能在非零候选后单独关闭 ledger。由于 method Result 已携带 exact supported outgoing `CALLS`，standalone
+raw `direct_neighborhood(OUTGOING_CALLS)` 也收敛为 method evidence；path 组合、incoming 与 both directions 保持图义务。每个后续状态由 Application 从 ledger 和 sealed input 推导受限 operation allowlist，再编译 exact Snapshot、前序 Result
 binding、Entity Ref、direction/predicate 与 bounds，并校验 obligation、bytes、Support、progress 和剩余预算后执行。模型固定 envelope
 中的越权 operation 或过早 FINISH 不改变平台 transition。候选搜索可以返回 0/N；方法
 实现查询可在同一 candidate result 内选择最多 3 个 exact method Ref，不取排名第一也不无界展开。至少一个 Result 执行后可以显式
