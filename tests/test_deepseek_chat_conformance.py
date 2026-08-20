@@ -80,9 +80,10 @@ class EchoingDeepSeekTransport:
 
     def session_audit(self):
         return {
-            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
-            "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2",
+            "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
             "maximum_pre_dispatch_tls_handshake_attempts": 3,
+            "maximum_http_dispatches_per_tls_session": 20,
             "tls_handshake_attempt_count": 1 if self.calls else 0,
             "tls_handshake_success_count": 1 if self.calls else 0,
             "pre_dispatch_tls_handshake_failure_count": 0,

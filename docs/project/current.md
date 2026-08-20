@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-gateway-integrity-pin-repair-awaiting-formal-refreeze
+worktree_status: iteration-008-deepseek-bounded-session-rotation-awaiting-requalification
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-023-qualified-formal-product-refreeze-next
+live_model_path: iteration-008-adapter-7-conformance-capability-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-023 capability PASS / formal product refreeze next** | run-023 Conformance 2/2 / 12/12 与 Capability 40 calls / 18 Case / 18/18 PASS。`FINDING-008-033` 修复 run-004 的旧三调用 Web 假设后，run-005 refreeze/startup PASS；首个登录题又在 Provider 前暴露 Gateway wrapper 的 stale bounded workload pin，credential/TLS/HTTP/model call 均为 0。`FINDING-008-034` 已以 `54bc8c8…` 同步 pin 并新增直接 hash 回归；旧 run-005 freeze/grant/session 不可继续使用，必须全新 refreeze。Qualification 有效至 `2026-08-27T11:28:37.309517+00:00`；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / Adapter @7 requalification next** | `FINDING-008-035` 的 terminal Owner 修复已在 run-024 Draft 以 104 tokens、raw 空 authority collection 跨过旧截断点；该轮 Conformance 2/2 PASS、Capability 前 39 responses / 17 Case PASS，但第 40 次 Review request 在唯一 TLS session 约 120 秒后 `REMOTE_DISCONNECTED`。`FINDING-008-036` 将每条 session 限为 20 dispatch，升级 Adapter/policy/connection/audit 为 `@7/@1.4.9/@2/@2`；旧授权已消费，新 identity 尚未资格化。canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -52,8 +52,9 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.7`、prompt/vocabulary `@16`、semantic-intent
-compiler `@7`、Gateway policy `@1.4.7`、suite/oracle `@1.5.7`。18 个 Case、18/18 threshold、40 次调用、temperature 0、no-retry
+ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.8`、prompt/vocabulary `@17`、semantic-intent
+compiler `@7`、terminal authority compiler `@1`、Gateway policy `@1.4.9`、suite/oracle `@1.5.8`。18 个 Case、18/18 threshold、
+40 次调用、temperature 0、no-request-retry
 与三层完整性不变。首轮模型提交通用 search terms 和注册 operation/relation evidence requests；Application 做依赖收敛和预算可达性
 校验后冻结 ledger；强制 candidate discovery 的同名 raw evidence alias 保守向上归一为 method evidence，不能让非零候选只凭存在性
 结束。method Result 已包含 exact supported outgoing `CALLS`，因此 standalone raw outgoing-direct alias 也收敛为 method；path 组合、
@@ -62,13 +63,14 @@ text 均不取得查询、终态或完整性解释权力；evaluator 的 indepen
 对完全 ASCII 的原问题，Application compiler 以 closed tokenizer 排除 function/discourse/authority/budget 与 negated presentation
 clause，将 direct question term 置于 model normalization 之前，casefold 去重并共同受 12 项上限约束；raw model output/digest 不变，
 non-ASCII translation 仍由模型负责。
-活动 bounded model-egress policy 为 `@1.4.7`：Provider preference 是 `VOLCENGINE_ARK → DEEPSEEK`，但只从 dispatch 前完整且
+活动 bounded model-egress policy 为 `@1.4.9`：Provider preference 是 `VOLCENGINE_ARK → DEEPSEEK`，但只从 dispatch 前完整且
 current 的 exact qualification route 中选择；本轮 Ark 不合格，因此 product candidate 密封 DeepSeek。选择后只允许 DeepSeek 的
 host/model/credential/TLS/socket route，任何 request 已分派或 outcome unknown 后都不切换 Provider。DeepSeek Adapter 为
-`deepseek-chat-completions-no-tools@6`、Conformance fixture `1.2.0` / Result `@2`；Adapter 只把 closed schema 与 Gateway semantic prompt
+`deepseek-chat-completions-no-tools@7`、Conformance fixture `1.2.0` / Result `@2`；Adapter 只把 closed schema 与 Gateway semantic prompt
 合并为恰好一个 leading system message，不再承担领域 lexical-coverage 编译；connection policy 为
-`PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1`，一次授权运行最多 3 次 credential-free TLS acquisition，成功 session 承载彼此独立的
-stateless request，任何 HTTP bytes 可能发送后的失败均不重发。
+`PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 verified session 最多 20 次 HTTP dispatch，一次授权运行最多 3 次
+credential-free TLS acquisition；轮换发生在下一次 credential/HTTP 前，成功 session 承载彼此独立的 stateless request，任何
+HTTP bytes 可能发送后的失败均不重发。
 本机现存 15 份 Ark Conformance Result 全部属于 Adapter `@1`—`@7`，对当前
 `openai-chat-completions-no-tools@8` 均以 `QUALIFICATION_INVALID` 失败关闭。
 
@@ -491,6 +493,25 @@ credential、TLS、HTTP 与模型调用均为 0；Source/Update/Direct/Evidence 
 回归，gateway/freeze 14/14、扩展 focused 110/110 PASS。System exact-integrity contract 未改变。旧 run-005 request 不 retry，且其
 freeze/grant/session 因 launcher identity 改变不得复用；下一步仍是全新 formal refreeze，再从登录题开始。hidden canary 未披露，
 Production Activation 为 `NOT_EXECUTED`。
+
+formal run-006 随后完成 3 个 Investigation 与第 4 个 DeepSeek Draft HTTP 200；Draft 语义正确，却因旧契约要求复制 4 个 Result ID
+和 35 个 support digest 在 1000 tokens 截断。`FINDING-008-035` 把 Draft/Review exact authority collection 收回 Application：模型
+raw envelope 必须为空，terminal compiler `@1` 注入 sealed exact 值；上游 identity 升级为 `1.5.8/@17` 与 suite/oracle `@1.5.8`。
+
+exact candidate `1725b44e8c92382eaa7c288919a25139934d0d80` / tree
+`79a748a9a2e72215a6199899f1b12816b75ffe72` 的 run-024 Conformance 2/2 / 12/12 PASS。Capability freeze/authorization digest 为
+`sha256:fa119ba7903863391d2c2edecaf9e897bb409a326bbbd75a5fb9238ff9a90acf` /
+`sha256:490a1c6a32c64b653829ea95724ac1d0cbb42c525066513b8e5107195d0779a0`；前 39 responses / 17 Case 完成，Draft 以
+104 tokens、raw 空 authority collection PASS。第 40 次 Review request 在唯一 TLS session 复用 39 次、运行约 120 秒后收到
+`REMOTE_DISCONNECTED`；HTTP/credential 40/40、retry 0，failure/terminal digest 为 `sha256:4f13c0e2…a771a` /
+`sha256:3cf8ccd7…573f8`。授权已消费且不能 retry；没有 Qualification、hidden canary 或 Activation。
+
+`FINDING-008-036` 将长运行 transport 改为 Adapter `@7`、connection policy/audit `@2`：每条 verified session 最多 20 次 HTTP
+dispatch，第 21 次 logical request 在 credential/Authorization/HTTP 前主动轮换；一次运行仍最多 3 次 acquisition，任何已 dispatch
+request 仍绝不重发。bounded policy 升级为 `@1.4.9`，configuration fingerprint 为
+`sha256:c3d8ee6932e8b3bb63dcdf9c8fd001ee03315a34c5fb48dbdf397082577b508b`。上游 `1.5.8/@17`、suite/oracle、18/40 与
+18/18 threshold 不变。新 clean candidate 必须重新完成 Conformance 与 Capability；PASS 前不得生成 formal product freeze、继续
+Web 或披露 canary，Production Activation 保持 `NOT_EXECUTED`。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

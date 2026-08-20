@@ -278,7 +278,7 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
                 "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
                 "selected_provider_type": "DEEPSEEK",
                 "provider_type": "DEEPSEEK",
-                "adapter_version": "deepseek-chat-completions-no-tools@6",
+                "adapter_version": "deepseek-chat-completions-no-tools@7",
                 "requested_model_ref": "deepseek-v4-pro",
                 "expected_actual_model_fingerprint": "deepseek-v4-pro",
                 "credential_reference": "env:DEEPSEEK_API_KEY",
@@ -287,8 +287,9 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
                 "https_dispatch_count": 5,
                 "server_statuses": ["RESULT"] * 5,
                 "provider_connection_policy": (
-                    "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                    "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
                 ),
+                "maximum_http_dispatches_per_tls_session": 20,
                 "maximum_pre_dispatch_tls_handshake_attempts": 3,
                 "provider_descriptor_provisioned_count": 3,
                 "provider_descriptor_consumed_count": 1,

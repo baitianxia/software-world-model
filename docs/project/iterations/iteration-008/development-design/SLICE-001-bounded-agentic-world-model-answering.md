@@ -473,6 +473,18 @@ compiler `@7`、1000-token output budget、18 Case / 40 calls、no-retry、三�
 run-006 freeze/grant/session 不可复用；新 clean candidate 必须先完成 2-call Conformance，再执行完整 Capability，PASS 前 formal
 product Web 继续阻断。
 
+该 terminal-owner candidate 的 run-024 Conformance 2/2 / 12/12 PASS；Capability 前 39 responses / 17 Case 完成，Draft 以 104
+tokens、raw 空 authority collection 正常 PASS，证明 terminal compiler 已跨过旧截断点。第 40 次 Review request 已 dispatch 后，
+复用 39 次的唯一 TLS session 在运行约 120 秒处返回 `REMOTE_DISCONNECTED`；HTTP/credential 为 40/40、retry 0，结果按 unknown
+失败关闭。证据不能区分 EOF 来自 Provider edge、TUN 或其间链路，但证明 40-call 资格运行不应依赖一条连接无限存活。详见
+[FINDING-008-036](../findings/FINDING-008-036.md)。
+
+DeepSeek transport 因而升级为 Adapter `@7`、connection policy
+`PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` 与 session audit `@2`：每条 verified session 最多 20 次 HTTP dispatch，第 21 次
+logical request 在 credential/Authorization/HTTP 前主动轮换；一次运行仍最多 3 次 acquisition，任何已 dispatch request 仍绝不重发。
+bounded policy 升级为 `@1.4.9`，freeze/authorization/closed Result 均显式绑定 20-call 上限。上游 `1.5.8/@17`、两个 compiler、
+suite/oracle、18/40、1000-token output 与 18/18 threshold 不变；新 Adapter identity 完整资格化前 formal product Web 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

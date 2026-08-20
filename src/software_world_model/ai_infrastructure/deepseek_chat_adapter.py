@@ -46,12 +46,13 @@ DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT = "deepseek-v4-pro"
 DEFAULT_DEEPSEEK_API_KEY_ENV = "DEEPSEEK_API_KEY"
 DEFAULT_DEEPSEEK_TEMPERATURE = 0
 DEFAULT_DEEPSEEK_CONNECTION_POLICY = (
-    "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+    "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
 )
 DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY = (
     "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
 )
 DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES = 3
+DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION = 20
 SUPPORTED_DEEPSEEK_MODELS = frozenset(
     {"deepseek-v4-pro", "deepseek-v4-flash"}
 )
@@ -144,6 +145,9 @@ class DeepSeekModelConfiguration:
                 "maximum_pre_dispatch_tls_handshakes": (
                     DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
                 ),
+                "maximum_http_dispatches_per_tls_session": (
+                    DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+                ),
                 "credential_resolution_policy": (
                     DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
                 ),
@@ -180,6 +184,9 @@ class DeepSeekModelConfiguration:
             "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
             "maximum_pre_dispatch_tls_handshakes": (
                 DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+            ),
+            "maximum_http_dispatches_per_tls_session": (
+                DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
             ),
             "credential_resolution_policy": (
                 DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
@@ -262,12 +269,14 @@ class _VerifiedTLSSocket(Protocol):
 
 
 class PersistentDeepSeekChatTransport:
-    """Direct exact-host HTTPS with one bounded persistent TLS session.
+    """Direct exact-host HTTPS with bounded persistent TLS sessions.
 
     Up to three credential-free TLS handshakes may be attempted across the
-    transport lifetime.  The credential is resolved only after a verified
-    connection exists.  Once HTTP dispatch begins, a network failure is never
-    retried and is conservatively reported as outcome unknown.
+    transport lifetime.  Each verified session carries at most twenty HTTP
+    dispatches so a long bounded run does not depend on an intermediary keeping
+    one connection alive indefinitely.  The credential is resolved only after
+    a verified connection exists.  Once HTTP dispatch begins, a network failure
+    is never retried and is conservatively reported as outcome unknown.
     """
 
     def __init__(
@@ -298,6 +307,7 @@ class PersistentDeepSeekChatTransport:
         self._tls_handshake_success_count = 0
         self._connection_reuse_count = 0
         self._http_dispatch_count = 0
+        self._active_tls_dispatch_count = 0
         self._pre_dispatch_tls_failure_codes: list[str] = []
         self._peer_certificate_sha256s: list[str] = []
         self._post_dispatch_failure_codes: list[str] = []
@@ -350,10 +360,13 @@ class PersistentDeepSeekChatTransport:
 
     def session_audit(self) -> dict[str, object]:
         return {
-            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2",
             "connection_policy": DEFAULT_DEEPSEEK_CONNECTION_POLICY,
             "maximum_pre_dispatch_tls_handshake_attempts": (
                 self._maximum_tls_handshakes
+            ),
+            "maximum_http_dispatches_per_tls_session": (
+                DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
             ),
             "tls_handshake_attempt_count": self._tls_handshake_attempt_count,
             "tls_handshake_success_count": self._tls_handshake_success_count,
@@ -387,6 +400,7 @@ class PersistentDeepSeekChatTransport:
     def close(self) -> None:
         tls_socket = self._tls_socket
         self._tls_socket = None
+        self._active_tls_dispatch_count = 0
         if tls_socket is not None:
             tls_socket.close()
 
@@ -419,6 +433,12 @@ class PersistentDeepSeekChatTransport:
                 ErrorCode.INVALID_ARGUMENT,
                 "DeepSeek timeout must be positive",
             )
+        if (
+            self._tls_socket is not None
+            and self._active_tls_dispatch_count
+            >= DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+        ):
+            self.close()
         reused = self._tls_socket is not None
         tls_socket = self._ensure_tls_socket(timeout_milliseconds / 1000)
         self._credential_resolution_count += 1
@@ -451,6 +471,7 @@ class PersistentDeepSeekChatTransport:
         if reused:
             self._connection_reuse_count += 1
         self._http_dispatch_count += 1
+        self._active_tls_dispatch_count += 1
         try:
             request_headers = (
                 f"POST {_DEEPSEEK_PATH} HTTP/1.1\r\n".encode("ascii")
@@ -579,6 +600,7 @@ def verify_deepseek_transport_session_audit(
         "schema",
         "connection_policy",
         "maximum_pre_dispatch_tls_handshake_attempts",
+        "maximum_http_dispatches_per_tls_session",
         "tls_handshake_attempt_count",
         "tls_handshake_success_count",
         "pre_dispatch_tls_handshake_failure_count",
@@ -600,6 +622,7 @@ def verify_deepseek_transport_session_audit(
         )
     integers = (
         "maximum_pre_dispatch_tls_handshake_attempts",
+        "maximum_http_dispatches_per_tls_session",
         "tls_handshake_attempt_count",
         "tls_handshake_success_count",
         "pre_dispatch_tls_handshake_failure_count",
@@ -621,6 +644,9 @@ def verify_deepseek_transport_session_audit(
         value["pre_dispatch_tls_handshake_failure_count"]
     )
     dispatches = int(value["http_dispatch_count"])
+    maximum_dispatches_per_session = int(
+        value["maximum_http_dispatches_per_tls_session"]
+    )
     reuse = int(value["connection_reuse_count"])
     unknown = int(value["post_dispatch_outcome_unknown_count"])
     credential_reads = int(value["credential_resolution_count"])
@@ -629,10 +655,12 @@ def verify_deepseek_transport_session_audit(
     post_dispatch_codes = value["post_dispatch_failure_codes"]
     certificate_digests = value["verified_peer_certificate_sha256s"]
     if (
-        value.get("schema") != "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+        value.get("schema") != "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2"
         or value.get("connection_policy") != DEFAULT_DEEPSEEK_CONNECTION_POLICY
         or value.get("maximum_pre_dispatch_tls_handshake_attempts")
         != DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+        or maximum_dispatches_per_session
+        != DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
         or value.get("credential_resolution_policy")
         != DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
         or value.get("request_retry_count") != 0
@@ -643,6 +671,7 @@ def verify_deepseek_transport_session_audit(
         or credential_successes != dispatches
         or successes > credential_reads
         or dispatches - reuse > successes
+        or dispatches > successes * maximum_dispatches_per_session
         or not isinstance(pre_dispatch_codes, list)
         or len(pre_dispatch_codes) != pre_dispatch_failures
         or not isinstance(post_dispatch_codes, list)
@@ -675,7 +704,7 @@ UrllibDeepSeekChatTransport = PersistentDeepSeekChatTransport
 
 class DeepSeekChatCompletionsNoToolsAdapter:
     provider_type = "DEEPSEEK"
-    adapter_version = "deepseek-chat-completions-no-tools@6"
+    adapter_version = "deepseek-chat-completions-no-tools@7"
 
     def __init__(
         self,
@@ -1054,6 +1083,7 @@ __all__ = [
     "DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT",
     "DEFAULT_DEEPSEEK_CONNECTION_POLICY",
     "DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY",
+    "DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION",
     "DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES",
     "DEFAULT_DEEPSEEK_MODEL",
     "DEFAULT_DEEPSEEK_OPENAI_BASE_URL",

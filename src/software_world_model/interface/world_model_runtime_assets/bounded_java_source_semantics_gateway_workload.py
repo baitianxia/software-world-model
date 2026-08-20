@@ -282,9 +282,10 @@ def main(argv: list[str] | None = None) -> int:
         ),
         "provider_connection_capability": "INHERITED_EXACT_CONNECTED_SOCKET_SET",
         "provider_connection_policy": (
-            "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+            "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
         ),
         "maximum_pre_dispatch_tls_handshake_attempts": 3,
+        "maximum_http_dispatches_per_tls_session": 20,
         "gateway_listener_capability": "INHERITED_EXACT_BOUND_AF_UNIX_LISTENER",
         "new_socket_syscall_capability": "DENIED_BY_SEATBELT",
         "provider_descriptor_provisioned_count": 3,

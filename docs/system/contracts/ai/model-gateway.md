@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
 tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
@@ -39,7 +39,11 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    **同一授权 Gateway run** 内为多个 stateless HTTP request 复用已验证 TLS session，但不能合并 Manifest、model call、request ID、
    body/result digest 或 transport audit。该 policy 只允许在读取 credential、构造 Authorization 或发送 HTTP bytes 前，顺序消费下一
    descriptor 进行有界 credential-free TLS acquisition；任一 request 的 bytes 可能已经发送后，连接失败必须立即记为
-   `OUTCOME_UNKNOWN`，不得重发该 request。Answer terminal 后未消费 descriptor 必须关闭并记录 `UNUSED_CLOSED`；审计分别满足
+   `OUTCOME_UNKNOWN`，不得重发该 request。persistent policy 还必须版本化并冻结每条 verified TLS session 的最大 HTTP dispatch
+   数，不能把长运行的全部可用性依赖于一条连接无限存活；达到上限后的轮换必须发生在下一次 credential resolution 和 HTTP byte
+   之前。当前 DeepSeek `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` 每条 session 最多 20 次 dispatch，最多 3 次 acquisition；
+   session audit 必须证明 `dispatches <= successful_sessions * 20`。Answer terminal 后未消费 descriptor 必须关闭并记录
+   `UNUSED_CLOSED`；审计分别满足
    `provisioned = TLS attempts + unused_closed`、实际 Provider call 落在调用区间和 `request_retry_count=0`。少于最小、超过最大、缺
    receipt、计数未知或未取得资格的连接复用均失败关闭。
 9. 若 Capability 使用 Application-owned constrained transition，Gateway 输入必须同时绑定完整版本化 operation universe 与当前 sealed

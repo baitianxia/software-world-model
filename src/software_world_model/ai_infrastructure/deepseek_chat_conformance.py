@@ -559,7 +559,7 @@ def deepseek_chat_conformance_fixture_digest() -> Digest:
             ),
             "request_retry_allowed": False,
             "transport_session_audit_schema": (
-                "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+                "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2"
             ),
             "result_schema": DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA,
         }

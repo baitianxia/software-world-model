@@ -16,6 +16,7 @@ from software_world_model.ai_infrastructure import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT,
     DEFAULT_DEEPSEEK_CONNECTION_POLICY,
     DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY,
+    DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION,
     DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES,
     DeepSeekChatConformanceQualification,
     DeepSeekModelConfiguration,
@@ -536,12 +537,15 @@ def _deepseek_transport_scope() -> dict[str, object]:
         "maximum_pre_dispatch_tls_handshake_attempts": (
             DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
         ),
+        "maximum_http_dispatches_per_tls_session": (
+            DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+        ),
         "credential_resolution_policy": (
             DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY
         ),
         "request_retry_allowed": False,
         "transport_session_audit_schema": (
-            "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+            "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2"
         ),
     }
 

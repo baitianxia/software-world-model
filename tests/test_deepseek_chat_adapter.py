@@ -10,6 +10,7 @@ from unittest.mock import patch
 from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
     DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+    DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION,
     DEFAULT_DEEPSEEK_MODEL,
     DEFAULT_DEEPSEEK_OPENAI_BASE_URL,
     DEFAULT_DEEPSEEK_TEMPERATURE,
@@ -207,13 +208,17 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(missing["temperature"], DEFAULT_DEEPSEEK_TEMPERATURE)
         self.assertEqual(
             configuration.adapter_version,
-            "deepseek-chat-completions-no-tools@6",
+            "deepseek-chat-completions-no-tools@7",
         )
         self.assertEqual(
             missing["connection_policy"],
-            "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+            "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
         )
         self.assertEqual(missing["maximum_pre_dispatch_tls_handshakes"], 3)
+        self.assertEqual(
+            missing["maximum_http_dispatches_per_tls_session"],
+            DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION,
+        )
         self.assertEqual(
             missing["credential_resolution_policy"],
             "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH",
@@ -579,6 +584,46 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(audit["tls_handshake_success_count"], 2)
         self.assertEqual(audit["http_dispatch_count"], 2)
         self.assertEqual(audit["connection_reuse_count"], 0)
+
+    def test_transport_rotates_before_twenty_first_dispatch_on_one_session(self) -> None:
+        connections = [_Connection(), _Connection()]
+        factory_calls = 0
+
+        def factory(_):
+            nonlocal factory_calls
+            connection = connections[factory_calls]
+            factory_calls += 1
+            return connection
+
+        transport = PersistentDeepSeekChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=factory,
+        )
+        with patch(
+            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            for ordinal in range(21):
+                transport.post_json(
+                    endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                    body=b"{}",
+                    client_request_id=f"fixture-rotated-{ordinal}",
+                    timeout_milliseconds=1000,
+                )
+
+        audit = verify_deepseek_transport_session_audit(
+            transport.session_audit()
+        )
+        self.assertEqual(factory_calls, 2)
+        self.assertTrue(connections[0].closed)
+        self.assertFalse(connections[1].closed)
+        self.assertEqual(audit["schema"], "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2")
+        self.assertEqual(audit["tls_handshake_success_count"], 2)
+        self.assertEqual(audit["http_dispatch_count"], 21)
+        self.assertEqual(audit["connection_reuse_count"], 19)
+        self.assertEqual(
+            audit["maximum_http_dispatches_per_tls_session"], 20
+        )
 
     def test_transport_session_audit_rejects_dispatch_without_verified_tls(self) -> None:
         audit = PersistentDeepSeekChatTransport(

@@ -28,7 +28,7 @@ _JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256 = (
     "2ca2f8f2e9b8ff3d352bdbb8f673f559723221b1f2d42bcbc7edf4d9372c6900"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256 = (
-    "14a1d869bd2333d1f08318ced59f21a2de488af738e5fe174dd84911ba5dbb65"
+    "e3de5d3ea8f7adee737964fc71e716dd93225f2847ccff1b8d646a4d315fc500"
 )
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 
@@ -124,11 +124,15 @@ def main(argv: list[str] | None = None) -> int:
             bounded
             and (
                 baseline_summary.get("provider_connection_policy")
-                != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
                 or baseline_summary.get(
                     "maximum_pre_dispatch_tls_handshake_attempts"
                 )
                 != 3
+                or baseline_summary.get(
+                    "maximum_http_dispatches_per_tls_session"
+                )
+                != 20
                 or baseline_summary.get("provider_descriptor_provisioned_count")
                 != 3
                 or type(

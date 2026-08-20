@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture, application]
 depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015]
-derived_from: [FINDING-008-024]
+derived_from: [FINDING-008-024, FINDING-008-036]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -78,11 +78,13 @@ Limitation，并保持 Source/Update/Direct fallback 为 0。查询、表示与�
 同时证明时不得给 bounded absence，评测 Oracle identity 不进入 Answer。
 
 该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway connection policy 是资格身份，不能从调用
-上限推导 descriptor 数。当前 DeepSeek bounded route 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1`：supervisor 预建恰好 3 个
+上限推导 descriptor 数。当前 DeepSeek bounded route 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`：supervisor 预建恰好 3 个
 exact connected descriptor 候选；Gateway 在读取 credential 或发送 HTTP 前最多顺序尝试 3 次 verified TLS，并在同一授权 run 内复用
-成功 session 承载仍然彼此独立的 stateless request。服务端完整响应后明确关闭时，下一逻辑 request 可以消费剩余 descriptor；任何
-HTTP bytes 可能已发送后的失败都立即 `OUTCOME_UNKNOWN` 且不重发。terminal 后关闭未使用 descriptor，审计分别闭合 TLS attempts、
-successes、reuse、Provider calls 与 `provisioned = attempts + unused_closed`。旧固定三调用资格、旧一请求一连接资格和 connection
+成功 session 承载仍然彼此独立的 stateless request。每条 session 最多 20 次 HTTP dispatch；达到上限或服务端在完整响应后明确关闭
+时，下一 logical request 必须在读取 credential 前消费剩余 descriptor。40-call Capability qualification 正常使用 2 条 session 并
+保留第 3 次 acquisition 余量；正式产品单题 4—6 calls 通常只使用第一条。任何 HTTP bytes 可能已发送后的失败都立即
+`OUTCOME_UNKNOWN` 且不重发。terminal 后关闭未使用 descriptor，审计分别闭合 TLS attempts、successes、reuse、Provider calls、
+per-session dispatch bound 与 `provisioned = attempts + unused_closed`。旧 `@1`、旧固定三调用资格、旧一请求一连接资格和 connection
 receipt 均不得复用；其他已接受 Profile 保持各自已资格的调用与连接协议。
 
 若候选配置声明多个 Provider 偏好，Application 必须在 product freeze 和任何 socket、credential 或 request dispatch 之前，按顺序

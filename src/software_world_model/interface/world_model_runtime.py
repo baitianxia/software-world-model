@@ -88,7 +88,7 @@ _EXPECTED_PROVIDER = {
 }
 _BOUNDED_DEEPSEEK_PROVIDER = {
     "provider_type": "DEEPSEEK",
-    "adapter": "deepseek-chat-completions-no-tools@6",
+    "adapter": "deepseek-chat-completions-no-tools@7",
     "requested_model": "deepseek-v4-pro",
     "observed_model": "deepseek-v4-pro",
     "endpoint": "https://api.deepseek.com/chat/completions",
@@ -2938,9 +2938,11 @@ def _verify_answer_gateway(
             bounded
             and (
                 gateway.get("provider_connection_policy")
-                != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
                 or gateway.get("maximum_pre_dispatch_tls_handshake_attempts")
                 != 3
+                or gateway.get("maximum_http_dispatches_per_tls_session")
+                != 20
                 or gateway.get("provider_descriptor_provisioned_count") != 3
                 or type(gateway.get("provider_descriptor_consumed_count"))
                 is not int

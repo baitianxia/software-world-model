@@ -233,6 +233,13 @@ formal run-004/run-005 的 pre-dispatch 实现漂移修复后，run-006 登录�
 Conformance 与完整 Capability，才能重新生成 formal product freeze。run-006 不得 retry；hidden canary 和 Production Activation
 仍未执行。
 
+run-024 随后完成新 Contract 的 Conformance 2/2 / 12/12，并在 Capability 中完成 39 responses / 17 Case；Draft 以 104 tokens、
+raw 空 terminal authority collection PASS，直接验证 `FINDING-008-035` 的 Owner 修复。第 40 次 Review request 在唯一 TLS session
+复用 39 次、运行约 120 秒后收到 `REMOTE_DISCONNECTED`；HTTP/credential 40/40、retry 0，按 outcome unknown 密封。
+`FINDING-008-036` 将 connection policy 升级为 `@2`：每条 session 最多 20 dispatch、一次运行最多 3 次 acquisition，轮换发生在
+下一次 credential/HTTP 前；Adapter/policy/audit 升级为 `@7/@1.4.9/@2`。上游 `1.5.8/@17`、suite/oracle 与 threshold 不变。
+run-024 授权已消费且不能 retry；新 transport identity 的 Conformance/Capability 仍是当前 Readiness blocking Gate。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

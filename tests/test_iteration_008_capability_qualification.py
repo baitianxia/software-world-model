@@ -165,19 +165,21 @@ def _documents() -> tuple[dict[str, object], dict[str, object]]:
             for _, count in BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
         ),
         "transport_session": {
-            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
+            "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2",
             "connection_policy": (
-                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
             ),
             "maximum_pre_dispatch_tls_handshake_attempts": 3,
-            "tls_handshake_attempt_count": 1,
-            "tls_handshake_success_count": 1,
+            "maximum_http_dispatches_per_tls_session": 20,
+            "tls_handshake_attempt_count": 2,
+            "tls_handshake_success_count": 2,
             "pre_dispatch_tls_handshake_failure_count": 0,
             "pre_dispatch_tls_failure_codes": [],
             "http_dispatch_count": 40,
-            "connection_reuse_count": 39,
+            "connection_reuse_count": 38,
             "verified_peer_certificate_sha256s": [
-                "sha256:" + "c" * 64
+                "sha256:" + "c" * 64,
+                "sha256:" + "d" * 64,
             ],
             "post_dispatch_outcome_unknown_count": 0,
             "post_dispatch_failure_codes": [],
@@ -223,7 +225,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(policy.max_provider_calls, 6)
         self.assertEqual(
             policy.policy_ref,
-            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.8",
+            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.9",
         )
 
     def test_evaluation_definition_and_registry_bind_active_contract(self) -> None:
@@ -255,7 +257,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                     DeepSeekModelConfiguration().fingerprint
                 ),
                 model_ref="deepseek-v4-pro",
-                adapter_version="deepseek-chat-completions-no-tools@6",
+                adapter_version="deepseek-chat-completions-no-tools@7",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -293,7 +295,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                     DeepSeekModelConfiguration().fingerprint
                 ),
                 model_ref="deepseek-v4-pro",
-                adapter_version="deepseek-chat-completions-no-tools@6",
+                adapter_version="deepseek-chat-completions-no-tools@7",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -413,7 +415,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "baseline_result_read_count": 0,
             "credential_visible": False,
             "provider_type": "DEEPSEEK",
-            "adapter_version": "deepseek-chat-completions-no-tools@6",
+            "adapter_version": "deepseek-chat-completions-no-tools@7",
             "requested_model_ref": "deepseek-v4-pro",
             "conformance_result_ref": (
                 "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64
@@ -441,14 +443,15 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
             "selected_provider_type": "DEEPSEEK",
             "provider_type": "DEEPSEEK",
-            "adapter_version": "deepseek-chat-completions-no-tools@6",
+            "adapter_version": "deepseek-chat-completions-no-tools@7",
             "requested_model_ref": "deepseek-v4-pro",
             "expected_actual_model_fingerprint": "deepseek-v4-pro",
             "credential_reference": "env:DEEPSEEK_API_KEY",
             "fallback_after_dispatch": False,
             "provider_connection_policy": (
-                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
             ),
+            "maximum_http_dispatches_per_tls_session": 20,
             "maximum_pre_dispatch_tls_handshake_attempts": 3,
             "provider_descriptor_provisioned_count": 3,
             "provider_descriptor_consumed_count": 1,

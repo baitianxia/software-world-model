@@ -59,6 +59,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT = {
     "per_call_trace_evidence_required": True,
     "transport_session_evidence_required": True,
     "maximum_pre_dispatch_tls_handshake_attempts": 3,
+    "maximum_http_dispatches_per_tls_session": 20,
     "request_retry_count": 0,
 }
 BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
@@ -93,15 +94,15 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:c1875accefed1e8706c2a82d297764fb5e56c6415939861cf0904c89ed2d912b"
+    "sha256:bd444a802b108aa875421912de6b969514c3729143b9ae79d84eb31cbed6a858"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@6",
+    "adapter_version": "deepseek-chat-completions-no-tools@7",
     "model_ref": "deepseek-v4-pro",
     "provider_configuration_fingerprint": (
-        "sha256:70c3839f13d68434e6853afa994b8b83d85860a5037ab0371e112cd542716ae7"
+        "sha256:c3d8ee6932e8b3bb63dcdf9c8fd001ee03315a34c5fb48dbdf397082577b508b"
     ),
     "model_egress_policy_ref": (
         BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
@@ -114,11 +115,12 @@ _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "classification": "INTERNAL",
     "required_case_count": 18,
     "provider_request_count": 40,
-    "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+    "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
     "maximum_pre_dispatch_tls_handshake_attempts": 3,
+    "maximum_http_dispatches_per_tls_session": 20,
     "credential_resolution_after_verified_tls": True,
     "transport_session_audit_schema": (
-        "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1"
+        "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2"
     ),
     "retries_allowed": False,
 }
@@ -271,9 +273,9 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         or definition.get("strategy_version") != contract.strategy_version
         or definition.get("model_ref") != "deepseek-v4-pro"
         or definition.get("adapter_version")
-        != "deepseek-chat-completions-no-tools@6"
+        != "deepseek-chat-completions-no-tools@7"
         or definition.get("provider_configuration_fingerprint")
-        != "sha256:70c3839f13d68434e6853afa994b8b83d85860a5037ab0371e112cd542716ae7"
+        != "sha256:c3d8ee6932e8b3bb63dcdf9c8fd001ee03315a34c5fb48dbdf397082577b508b"
         or not str(definition.get("conformance_result_ref", "")).startswith(
             "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
         )
@@ -480,16 +482,17 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or provider.get("selected_provider_type") != "DEEPSEEK"
         or provider.get("provider_type") != "DEEPSEEK"
         or provider.get("adapter_version")
-        != "deepseek-chat-completions-no-tools@6"
+        != "deepseek-chat-completions-no-tools@7"
         or provider.get("requested_model_ref") != "deepseek-v4-pro"
         or provider.get("actual_model_fingerprint") != "deepseek-v4-pro"
         or provider.get("configuration_fingerprint")
-        != "sha256:70c3839f13d68434e6853afa994b8b83d85860a5037ab0371e112cd542716ae7"
+        != "sha256:c3d8ee6932e8b3bb63dcdf9c8fd001ee03315a34c5fb48dbdf397082577b508b"
         or provider.get("endpoint")
         != "https://api.deepseek.com/chat/completions"
         or provider.get("credential_reference") != "env:DEEPSEEK_API_KEY"
         or provider.get("connection_policy")
-        != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+        != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
+        or provider.get("maximum_http_dispatches_per_tls_session") != 20
         or provider.get("maximum_pre_dispatch_tls_handshake_attempts") != 3
         or provider.get("credential_resolution_after_verified_tls") is not True
         or provider.get("request_retry_allowed") is not False
@@ -538,7 +541,8 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or gateway_role.get("descriptor_policy")
         != "PROVISION_THREE_CONSUME_ONE_TO_THREE_CLOSE_UNUSED"
         or gateway_role.get("connection_policy")
-        != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1"
+        != "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2"
+        or gateway_role.get("maximum_http_dispatches_per_tls_session") != 20
         or gateway_role.get("pre_dispatch_tls_policy")
         != "MAXIMUM_THREE_BEFORE_CREDENTIAL_OR_HTTP_ONLY"
         or gateway_role.get("other_outbound") != "DENY"

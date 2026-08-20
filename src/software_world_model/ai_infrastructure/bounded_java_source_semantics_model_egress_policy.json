@@ -1,6 +1,6 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-model-egress-gateway-policy@1",
-  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.8",
+  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.9",
   "default_action": "DENY",
   "environment": "EVALUATION_ONLY",
   "provider": {
@@ -8,14 +8,15 @@
     "preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
     "selected_provider_type": "DEEPSEEK",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@6",
+    "adapter_version": "deepseek-chat-completions-no-tools@7",
     "requested_model_ref": "deepseek-v4-pro",
     "actual_model_fingerprint": "deepseek-v4-pro",
-    "configuration_fingerprint": "sha256:70c3839f13d68434e6853afa994b8b83d85860a5037ab0371e112cd542716ae7",
+    "configuration_fingerprint": "sha256:c3d8ee6932e8b3bb63dcdf9c8fd001ee03315a34c5fb48dbdf397082577b508b",
     "endpoint": "https://api.deepseek.com/chat/completions",
     "credential_reference": "env:DEEPSEEK_API_KEY",
-    "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+    "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
     "maximum_pre_dispatch_tls_handshake_attempts": 3,
+    "maximum_http_dispatches_per_tls_session": 20,
     "credential_resolution_after_verified_tls": true,
     "request_retry_allowed": false,
     "fallback_after_dispatch": false
@@ -76,7 +77,8 @@
       "allowed_outbound": "EXACT_INHERITED_CONNECTED_TLS_SOCKET_ONLY",
       "endpoint_validation": "EXACT_SCHEME_HOST_PORT_PATH_NO_USERINFO_QUERY_OR_FRAGMENT",
       "descriptor_policy": "PROVISION_THREE_CONSUME_ONE_TO_THREE_CLOSE_UNUSED",
-      "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+      "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
+      "maximum_http_dispatches_per_tls_session": 20,
       "pre_dispatch_tls_policy": "MAXIMUM_THREE_BEFORE_CREDENTIAL_OR_HTTP_ONLY",
       "other_outbound": "DENY"
     }

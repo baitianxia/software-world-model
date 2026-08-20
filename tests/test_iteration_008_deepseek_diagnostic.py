@@ -21,9 +21,10 @@ from validation.structure_world_model_iteration_008.capability import (
 
 def _session_audit(calls: int, *, unknown: int = 0):
     return {
-        "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
-        "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+        "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2",
+        "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
         "maximum_pre_dispatch_tls_handshake_attempts": 3,
+        "maximum_http_dispatches_per_tls_session": 20,
         "tls_handshake_attempt_count": 1 if calls else 0,
         "tls_handshake_success_count": 1 if calls else 0,
         "pre_dispatch_tls_handshake_failure_count": 0,
@@ -140,7 +141,7 @@ class Iteration008DeepSeekDiagnosticTests(unittest.TestCase):
             )
             self.assertEqual(
                 request["authorization_scope"]["connection_policy"],
-                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
             )
             self.assertEqual(
                 request["authorization_scope"][

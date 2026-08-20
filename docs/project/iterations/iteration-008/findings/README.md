@@ -12,10 +12,13 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十五条 Finding；三十五条均已处置或被后续决定取代。`FINDING-008-035` 记录 run-006 已成功完成四次
-DeepSeek HTTP request，但 Draft 在 1000-token 上限内复制 4 个 step Result ID 与 35 个 support digest 时被截断；活动处置把 terminal
-authority collection 收回 Application，以 raw-empty / normalized-exact compiler 绑定，升级为 `1.5.8/@17/@1.4.8` 与 suite/oracle
-`@1.5.8`，旧 run-023 Qualification 和 run-006 freeze/grant 不可复用。`FINDING-008-034` 记录 run-005 正式登录题在 Provider
+本 Slice 当前登记三十六条 Finding；三十六条均已处置或被后续决定取代。`FINDING-008-036` 记录 terminal-owner candidate 的
+run-024 已完成 Conformance 2/2、Capability 前 39 responses / 17 Case 与 Draft raw-empty PASS，却在唯一 TLS session 运行约 120 秒、
+第 40 次 Review request dispatch 后收到 `REMOTE_DISCONNECTED`。活动 transport 处置把每条 verified session 限为 20 dispatch，
+升级 Adapter/policy/connection/audit 为 `@7/@1.4.9/@2/@2`，request retry 仍为 0；新 identity 的完整资格继续 blocking。
+`FINDING-008-035` 记录 run-006 的旧 Draft authority 回显截断，并把 terminal authority collection 收回 Application，以 raw-empty /
+normalized-exact compiler 绑定，升级上游为 `1.5.8/@17` 与 suite/oracle `@1.5.8`；run-024 Draft 已直接证明该 Owner 调整有效。
+`FINDING-008-034` 记录 run-005 正式登录题在 Provider
 调用前暴露的 stale Gateway self-integrity pin；实际 packaged bounded entrypoint 为 `af5059…`，wrapper 仍校验旧 `ac0cf3…`，
 现已同步 pin 并新增真实 file/hash 回归，旧 freeze/grant/session 不可继续使用。`FINDING-008-033` 记录 run-004 formal Web 在任何问题
 POST 前暴露的旧三调用 UI/validator 假设；现已由 startup `dispatch_policy` 统一驱动页面披露与 1/3/4—6 call 结果校验，旧 freeze/
@@ -23,7 +26,7 @@ grant 因 product identity 改变不得继续使用，新的 formal product free
 执行 40 calls / 18 Case，却仍遗漏 `methods/implementations`；活动处置把问题直接 ASCII 词项的机械保留放回 Application compiler
 `@7`，移除 Provider-specific semantic wire adaptation，并升级 Adapter `@6`、policy `@1.4.7`。exact candidate `837171e…` 的
 run-023 已完成 Conformance 2/2 / 12/12 PASS 与 Capability 40 calls / 18 Case / 18/18 PASS，证明该 Owner 调整对当前
-Contract 有效；V-002 已闭合，下一 Gate 是 formal product freeze/Web。`FINDING-008-031` 的 run-021 事实
+Contract 有效；后续 identity 漂移使该旧资格不能继承。`FINDING-008-031` 的 run-021 事实
 保留，但其 Adapter-owned 处置已被取代。`FINDING-008-030` 记录 `1.5.6/@15` 的 run-020 已证明
 DeepSeek/Conformance 可用，却暴露 cross-script semantic group 假阴性、显式 Latin concept 被 operation/topic 替代，以及一般疑问词
 `Does` 被误分类为 reachability；本地处置已闭合，新资格仍 blocking。`FINDING-008-029` 记录 run-019 资格未覆盖的正式中文 Web
@@ -162,6 +165,11 @@ canary、SLICE-002 与 Production Activation gate：
   collection：顶层 collection 不进入 model-visible input，raw 必须为空，terminal compiler `@1` 注入 sealed exact 值并绑定 digest；
   模型自填失败关闭。活动 identity 升级为 `1.5.8/@17/@1.4.8`、suite/oracle `@1.5.8`，Adapter `@6`、Investigation compiler `@7`、
   1000 tokens、18/40、no-retry 不变。旧 qualification/freeze/grant 不可复用，新 2-call Conformance 与 40-call Capability 继续 blocking。
+- [FINDING-008-036](FINDING-008-036.md)：exact candidate `1725b44…` 的 run-024 Conformance 2/2 / 12/12 PASS；Capability
+  完成 39 responses / 17 Case，Draft 以 104 tokens、raw 空 authority collection PASS，第 40 次 Review request 却在唯一 TLS
+  session 约 120 秒处 `REMOTE_DISCONNECTED`。活动 Adapter `@7` / connection policy `@2` / audit `@2` 将每条 session 限为
+  20 dispatch，40-call 正常轮换一次并保留第 3 次 acquisition 余量；bounded policy 升级为 `@1.4.9`，任何已 dispatch request
+  仍 outcome unknown 且不重发。上游 `1.5.8/@17`、suite/oracle 与 threshold 不变；新 live qualification 继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

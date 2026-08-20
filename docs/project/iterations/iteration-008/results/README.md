@@ -35,6 +35,16 @@ ID 与 35 个 support digest，输出在 1000 tokens 时截断并以 `STRUCTURED
 compiler 绑定，模型只返回语义字段和空 authority envelope。活动 identity 已升级为 `1.5.8/@17/@1.4.8`、suite/oracle `@1.5.8`；
 旧 run-023 Qualification 与 run-006 freeze/grant/session 不可复用，新 Conformance/Capability 继续 blocking。
 
+terminal-owner candidate `1725b44…` 的 run-024 Conformance 已 2/2 / 12/12 PASS。Capability freeze/authorization digest 为
+`sha256:fa119ba7…90acf` / `sha256:490a1c6a…779a0`；前 39 responses / 17 Case 完成，Draft 以 104 tokens、raw 空 authority
+collection PASS。第 40 次 Review request 在唯一 TLS session 复用 39 次、运行约 120 秒后以 `REMOTE_DISCONNECTED` outcome
+unknown 关闭；HTTP/credential 40/40、retry 0，failure/terminal digest 为 `sha256:4f13c0e2…a771a` /
+`sha256:3cf8ccd7…573f8`。这不是 Capability FAIL verdict，也没有形成 Qualification；授权已消费且不得 retry。
+
+[FINDING-008-036](../findings/FINDING-008-036.md) 将 transport version 化为 Adapter `@7`、connection policy `@2`、audit `@2`
+与 policy `@1.4.9`，每条 verified session 最多 20 dispatch，轮换在 credential/HTTP 前，request retry 仍为 0。上游
+`1.5.8/@17` 与 suite/oracle 不变；新 identity 完整资格化前 formal product freeze/Web 继续 blocking。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

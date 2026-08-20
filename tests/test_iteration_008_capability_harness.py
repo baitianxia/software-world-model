@@ -249,18 +249,20 @@ _SUITE, _ORACLE = load_capability_inputs()
 
 
 def _transport_session_audit(calls: int, *, unknown: int = 0):
+    successful_sessions = (calls + 19) // 20
     return {
-        "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@1",
-        "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+        "schema": "SWM-DEEPSEEK-TRANSPORT-SESSION-AUDIT@2",
+        "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
         "maximum_pre_dispatch_tls_handshake_attempts": 3,
-        "tls_handshake_attempt_count": 1 if calls else 0,
-        "tls_handshake_success_count": 1 if calls else 0,
+        "maximum_http_dispatches_per_tls_session": 20,
+        "tls_handshake_attempt_count": successful_sessions,
+        "tls_handshake_success_count": successful_sessions,
         "pre_dispatch_tls_handshake_failure_count": 0,
         "pre_dispatch_tls_failure_codes": [],
         "http_dispatch_count": calls,
-        "connection_reuse_count": max(0, calls - 1),
+        "connection_reuse_count": calls - successful_sessions,
         "verified_peer_certificate_sha256s": (
-            ["sha256:" + "c" * 64] if calls else []
+            ["sha256:" + "c" * 64] * successful_sessions
         ),
         "post_dispatch_outcome_unknown_count": unknown,
         "post_dispatch_failure_codes": ["TIMEOUT"] * unknown,
@@ -475,7 +477,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             ),
             provider_configuration_fingerprint=Digest("sha256:" + "2" * 64),
             actual_model_fingerprint="deepseek-v4-pro",
-            adapter_version="deepseek-chat-completions-no-tools@6",
+            adapter_version="deepseek-chat-completions-no-tools@7",
             exact_candidate_checkpoint_ref="git:" + "3" * 40,
             environment_ref="iter-008-bounded-capability@1",
             reference_strategy_ref="standalone-evaluator@1",
@@ -646,11 +648,11 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(request["phase"], "DEEPSEEK_CONFORMANCE")
             self.assertEqual(
                 request["authorization_scope"]["adapter_version"],
-                "deepseek-chat-completions-no-tools@6",
+                "deepseek-chat-completions-no-tools@7",
             )
             self.assertEqual(
                 request["authorization_scope"]["connection_policy"],
-                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
             )
             self.assertEqual(
                 request["authorization_scope"][
@@ -988,7 +990,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(scope["planned_provider_call_count"], 40)
             self.assertEqual(
                 scope["connection_policy"],
-                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
+                "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
             )
             self.assertEqual(
                 scope["maximum_pre_dispatch_tls_handshake_attempts"], 3
