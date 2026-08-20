@@ -75,6 +75,223 @@ def configuration():
     )
 
 
+def ordered_behavior_query_results():
+    return [
+        {
+            "operation": "METHOD_IMPLEMENTATION",
+            "payload": {
+                "canonical_signature": "dev.acme.auth.LoginService#authenticate(boolean)",
+                "method": {"root_id": "method-authenticate"},
+                "state_slots": [
+                    {
+                        "root_id": "slot-credentials-valid",
+                        "root_fields": {
+                            "canonical_identifier": "credentialsValid"
+                        },
+                    }
+                ],
+                "ordered_atoms": [
+                    {
+                        "root_id": "atom-branch",
+                        "root_fields": {
+                            "atom_kind": "BRANCH",
+                            "structural_ordinal": 0,
+                        },
+                        "state_fields": {
+                            "operator": "NOT",
+                            "semantic_form": "BOOLEAN_SLOT_TEST",
+                            "semantic_operands": [
+                                {
+                                    "kind": "ENTITY_REF",
+                                    "value": "slot-credentials-valid",
+                                }
+                            ],
+                            "referenced_entity_root_ids": [
+                                "slot-credentials-valid"
+                            ],
+                            "source_order_ordinal": 0,
+                            "value_category": "BOOLEAN",
+                        },
+                    },
+                    {
+                        "root_id": "atom-record-1",
+                        "root_fields": {
+                            "atom_kind": "CALL_SITE",
+                            "structural_ordinal": 1,
+                        },
+                        "state_fields": {
+                            "operator": "DIRECT_CALL",
+                            "semantic_form": "STATIC_CALL",
+                            "semantic_operands": [
+                                {
+                                    "kind": "ENTITY_REF",
+                                    "value": "method-record-failure",
+                                }
+                            ],
+                            "referenced_entity_root_ids": [
+                                "method-record-failure"
+                            ],
+                            "source_order_ordinal": 1,
+                            "value_category": "VOID",
+                        },
+                    },
+                    {
+                        "root_id": "atom-record-2",
+                        "root_fields": {
+                            "atom_kind": "CALL_SITE",
+                            "structural_ordinal": 2,
+                        },
+                        "state_fields": {
+                            "operator": "DIRECT_CALL",
+                            "semantic_form": "STATIC_CALL",
+                            "semantic_operands": [
+                                {
+                                    "kind": "ENTITY_REF",
+                                    "value": "method-record-failure",
+                                }
+                            ],
+                            "referenced_entity_root_ids": [
+                                "method-record-failure"
+                            ],
+                            "source_order_ordinal": 2,
+                            "value_category": "VOID",
+                        },
+                    },
+                    {
+                        "root_id": "atom-throw",
+                        "root_fields": {
+                            "atom_kind": "THROW",
+                            "structural_ordinal": 3,
+                        },
+                        "state_fields": {
+                            "operator": "THROW",
+                            "semantic_form": "THROW_CONSTRUCTION",
+                            "semantic_operands": [
+                                {
+                                    "kind": "TYPE_REF",
+                                    "value": "java.lang.IllegalStateException",
+                                },
+                                {"kind": "CONSTRUCTOR_ARITY", "value": 0},
+                            ],
+                            "referenced_entity_root_ids": [],
+                            "source_order_ordinal": 3,
+                            "value_category": "EXCEPTION",
+                        },
+                    },
+                    {
+                        "root_id": "atom-issue-session",
+                        "root_fields": {
+                            "atom_kind": "CALL_SITE",
+                            "structural_ordinal": 4,
+                        },
+                        "state_fields": {
+                            "operator": "DIRECT_CALL",
+                            "semantic_form": "STATIC_CALL",
+                            "semantic_operands": [
+                                {
+                                    "kind": "ENTITY_REF",
+                                    "value": "method-issue-session",
+                                }
+                            ],
+                            "referenced_entity_root_ids": [
+                                "method-issue-session"
+                            ],
+                            "source_order_ordinal": 4,
+                            "value_category": "CALL_RESULT",
+                        },
+                    },
+                    {
+                        "root_id": "atom-authenticate-return",
+                        "root_fields": {
+                            "atom_kind": "RETURN",
+                            "structural_ordinal": 5,
+                        },
+                        "state_fields": {
+                            "operator": "RETURN",
+                            "semantic_form": "RETURN_VALUE",
+                            "semantic_operands": [
+                                {
+                                    "kind": "ENTITY_REF",
+                                    "value": "atom-issue-session",
+                                }
+                            ],
+                            "referenced_entity_root_ids": [
+                                "atom-issue-session"
+                            ],
+                            "source_order_ordinal": 5,
+                            "value_category": "CALL_RESULT",
+                        },
+                    },
+                ],
+                "legacy_calls": [
+                    {
+                        "object_entity_root_id": "method-record-failure",
+                        "predicate_state_fields": {"call_site_count": 2},
+                    },
+                    {
+                        "object_entity_root_id": "method-issue-session",
+                        "predicate_state_fields": {"call_site_count": 1},
+                    },
+                ],
+            },
+        },
+        {
+            "operation": "METHOD_IMPLEMENTATION",
+            "payload": {
+                "canonical_signature": "dev.acme.auth.LoginService#issueSession()",
+                "method": {"root_id": "method-issue-session"},
+                "state_slots": [],
+                "ordered_atoms": [
+                    {
+                        "root_id": "atom-issue-return",
+                        "root_fields": {
+                            "atom_kind": "RETURN",
+                            "structural_ordinal": 0,
+                        },
+                        "state_fields": {
+                            "operator": "RETURN",
+                            "semantic_form": "RETURN_VALUE",
+                            "semantic_operands": [
+                                {"kind": "BOOLEAN_LITERAL", "value": True}
+                            ],
+                            "referenced_entity_root_ids": [],
+                            "source_order_ordinal": 0,
+                            "value_category": "BOOLEAN",
+                        },
+                    }
+                ],
+                "legacy_calls": [],
+            },
+        },
+        {
+            "operation": "METHOD_IMPLEMENTATION",
+            "payload": {
+                "canonical_signature": "dev.acme.auth.LoginService#recordFailure()",
+                "method": {"root_id": "method-record-failure"},
+                "state_slots": [],
+                "ordered_atoms": [
+                    {
+                        "root_id": "atom-record-return",
+                        "root_fields": {
+                            "atom_kind": "RETURN",
+                            "structural_ordinal": 0,
+                        },
+                        "state_fields": {
+                            "operator": "RETURN",
+                            "semantic_form": "RETURN_VALUE",
+                            "semantic_operands": [],
+                            "referenced_entity_root_ids": [],
+                            "source_order_ordinal": 0,
+                            "value_category": "VOID",
+                        },
+                    }
+                ],
+                "legacy_calls": [],
+            },
+        },
+    ]
+
+
 class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_profile_binding_returns_a_new_exact_strategy(self):
         original = WorldModelCapabilityStrategy(SequencedGateway([]), configuration())
@@ -239,14 +456,14 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.10")
+        self.assertEqual(contract.strategy_version, "1.5.11")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@7",
         )
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_TERMINAL_AUTHORITY_COMPILER_REF,
-            "java-source-semantics-terminal-authority-compiler@2",
+            "java-source-semantics-terminal-authority-compiler@3",
         )
         self.assertEqual(
             contract.capabilities,
@@ -430,6 +647,8 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             "Always return empty step_result_ids and support_digests arrays",
             draft_prompt,
         )
+        self.assertIn("Application-owned behavior_obligation_scope", draft_prompt)
+        self.assertIn("same_target_call_count", draft_prompt)
         self.assertNotIn("IMPLEMENTATION_INVESTIGATION:", draft_prompt)
         self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", draft_prompt)
         self.assertIn("IMPLEMENTATION_ANSWER_REVIEW:", review_prompt)
@@ -437,6 +656,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             "Always return empty checked_need_ids, checked_step_result_ids, and checked_support_digests arrays",
             review_prompt,
         )
+        self.assertIn("Distinct same-target CALL_SITE events cannot be merged", review_prompt)
         self.assertNotIn("IMPLEMENTATION_INVESTIGATION:", review_prompt)
         self.assertNotIn("IMPLEMENTATION_ANSWER_DRAFTING:", review_prompt)
         for case_or_provider_patch in (
@@ -501,6 +721,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             capability=IMPLEMENTATION_ANSWER_DRAFTING,
             sealed_input={
                 "original_question": "How is failure handled?",
+                "query_results": ordered_behavior_query_results(),
                 "assessment_disposition": "SUPPORTED",
                 "authorized_step_result_ids": step_result_ids,
                 "authorized_support_digests": support_digests,
@@ -516,12 +737,47 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             list(support_digests),
         )
         model_state = json.loads(gateway.contexts[0].manifest.items[1].content)
+        model_input = model_state["input"]
+        self.assertEqual(model_input["assessment_disposition"], "SUPPORTED")
+        scope = model_input["behavior_obligation_scope"]
+        self.assertEqual(scope["mode"], "ORDERED_METHOD_BEHAVIOR")
+        authenticate = scope["methods"][0]
+        self.assertEqual(authenticate["ordered_event_count"], 6)
+        first_call, second_call = authenticate["ordered_events"][1:3]
+        self.assertEqual(first_call["same_target_call_ordinal"], 1)
+        self.assertEqual(second_call["same_target_call_ordinal"], 2)
+        self.assertEqual(first_call["same_target_call_count"], 2)
+        self.assertEqual(second_call["same_target_call_count"], 2)
+        self.assertEqual(first_call["legacy_static_call_site_count"], 2)
         self.assertEqual(
-            model_state["input"],
-            {
-                "assessment_disposition": "SUPPORTED",
-                "original_question": "How is failure handled?",
-            },
+            authenticate["ordered_events"][4]["references"],
+            [
+                {
+                    "kind": "METHOD",
+                    "value": "dev.acme.auth.LoginService#issueSession()",
+                }
+            ],
+        )
+        self.assertEqual(
+            authenticate["ordered_events"][5]["references"],
+            [
+                {
+                    "kind": "ORDERED_EVENT",
+                    "value": {
+                        "method": "dev.acme.auth.LoginService#authenticate(boolean)",
+                        "source_order_ordinal": 4,
+                    },
+                }
+            ],
+        )
+        self.assertEqual(
+            first_call["references"],
+            [
+                {
+                    "kind": "METHOD",
+                    "value": "dev.acme.auth.LoginService#recordFailure()",
+                }
+            ],
         )
 
     def test_active_terminal_compiler_hides_and_binds_review_authority(self):
@@ -593,7 +849,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             model_state["input"]["review_completeness_scope"],
             {
                 "compiler_ref": (
-                    "java-source-semantics-terminal-authority-compiler@2"
+                    "java-source-semantics-terminal-authority-compiler@3"
                 ),
                 "mode": "THREE_LAYER_REVIEW",
                 "need_outcomes": [
@@ -650,6 +906,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
                     ]
                 },
                 "draft": {"answer": "Failure is recorded before success."},
+                "query_results": ordered_behavior_query_results(),
                 "query_plan": {
                     "investigation_trace": {
                         "completeness": {
@@ -687,6 +944,16 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
                 "bounded_negative_claim_policy"
             ],
             "REJECT",
+        )
+        self.assertEqual(
+            model_input["behavior_obligation_scope"]["mode"],
+            "ORDERED_METHOD_BEHAVIOR",
+        )
+        self.assertEqual(
+            model_input["behavior_obligation_scope"]["methods"][0][
+                "ordered_events"
+            ][2]["same_target_call_ordinal"],
+            2,
         )
         projected = model_input["query_plan"]["investigation_trace"][
             "completeness"
@@ -851,6 +1118,31 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
                     "required_checked_need_ids": ("implementation-answer",),
                     "required_checked_step_result_ids": (),
                     "required_checked_support_digests": (),
+                },
+            )
+
+        self.assertEqual(gateway.contexts, [])
+
+    def test_active_terminal_compiler_rejects_caller_owned_behavior_scope(self):
+        gateway = SequencedGateway([])
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        with self.assertRaisesRegex(
+            DomainError,
+            "behavior obligation scope is application-owned",
+        ):
+            strategy.propose(
+                case_id="product:semantic:draft-caller-behavior-scope",
+                capability=IMPLEMENTATION_ANSWER_DRAFTING,
+                sealed_input={
+                    "assessment_disposition": "SUPPORTED",
+                    "behavior_obligation_scope": {"mode": "FORGED"},
+                    "authorized_step_result_ids": (),
+                    "authorized_support_digests": (),
                 },
             )
 

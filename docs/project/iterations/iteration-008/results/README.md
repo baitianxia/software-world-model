@@ -133,6 +133,24 @@ pending evaluation grant digest 为 `sha256:e3c9bed5…b082`，仍为 `live_disp
 `AWAITING_USER_AFTER_CODE_FREEZE`。因此尚无 Product Result，下一 Gate 是晚于该 exact freeze 的用户公开 Web 授权；hidden canary
 仍未披露，Production Activation 未执行。
 
+用户随后以 `codex-user-message:sha256:2f9d8871…84de` 授权 formal run-010 公开 Web，授权对象仍严格绑定上述 report/pending grant；
+authorized grant digest 为 `sha256:56b457ce…91dc`。首个公开登录题 request
+`wm-472a3dba-cd7d-46d1-b8b3-8f37a7d57292` 以 3 Investigation + Draft + Review 完成 5/5 DeepSeek request，TLS `1/1`、
+reuse `4`、credential `5/5`、unknown/retry `0`；Source/Evidence payload/authority DB、Update、Direct、product Oracle/suite read 均为
+0。页面、四个 Citation projection 与 console 正常，page/terminal digest 为 `sha256:f796b10d…7c49` /
+`sha256:bbba266d…aa1dc`，Production Activation 仍为 `NOT_EXECUTED`。
+
+技术 terminal `SUCCESS` 不是产品 PASS。答案把 Source 与 typed Result 中连续两次的 `recordFailure()` 写成一次，旧 Reviewer 仍
+`APPROVE`，因此 V-003 客观 FAIL；Source→Snapshot→typed Query→trace 均 PASS，首次偏差在 Draft，Review 是二次偏差，Web 忠实交付。
+当前没有用户质量 verdict receipt，故不密封或代填 user verdict。下单/跨域题未执行；详见
+[FINDING-008-041](../findings/FINDING-008-041.md)。
+
+处置后的活动 identity 为 `1.5.11/@20/@1.4.12/@1.5.11`、terminal compiler `@3`：Application 编译 ordered behavior
+obligation 与 same-target occurrence/count；资格保留 18 Case / 18/18，增加 omitted-duplicate Review 后为 41 calls。旧 run-027
+Qualification 与 run-010 freeze/grant/session 不可复用。当前 expanded focused 106/106、fake 18/18、compileall/diff PASS；full
+1039 中 1034 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。还没有新的
+live Qualification、formal Product Result、hidden canary、SLICE-002、Reflection 或 Activation。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

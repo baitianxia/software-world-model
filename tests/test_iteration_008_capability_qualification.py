@@ -171,21 +171,22 @@ def _documents() -> tuple[dict[str, object], dict[str, object]]:
             ),
             "maximum_pre_dispatch_tls_handshake_attempts": 3,
             "maximum_http_dispatches_per_tls_session": 20,
-            "tls_handshake_attempt_count": 2,
-            "tls_handshake_success_count": 2,
+            "tls_handshake_attempt_count": 3,
+            "tls_handshake_success_count": 3,
             "pre_dispatch_tls_handshake_failure_count": 0,
             "pre_dispatch_tls_failure_codes": [],
-            "http_dispatch_count": 40,
+            "http_dispatch_count": 41,
             "connection_reuse_count": 38,
             "verified_peer_certificate_sha256s": [
                 "sha256:" + "c" * 64,
                 "sha256:" + "d" * 64,
+                "sha256:" + "e" * 64,
             ],
             "post_dispatch_outcome_unknown_count": 0,
             "post_dispatch_failure_codes": [],
             "request_retry_count": 0,
-            "credential_resolution_count": 40,
-            "credential_resolution_success_count": 40,
+            "credential_resolution_count": 41,
+            "credential_resolution_success_count": 41,
             "credential_resolution_policy": (
                 "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
             ),
@@ -225,7 +226,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(policy.max_provider_calls, 6)
         self.assertEqual(
             policy.policy_ref,
-            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.11",
+            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.12",
         )
 
     def test_evaluation_definition_and_registry_bind_active_contract(self) -> None:
@@ -268,7 +269,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         )
 
         self.assertEqual(len(definition.cases), 18)
-        self.assertEqual(definition.strategy_version, "1.5.10")
+        self.assertEqual(definition.strategy_version, "1.5.11")
         self.assertEqual(
             definition.output_schema_digest,
             java_source_semantics_world_model_output_contract_digest(

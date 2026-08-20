@@ -297,6 +297,19 @@ inputs 是两层独立边界；后者不进入 source snapshot/candidate package
 deterministic qualification digest 为 `sha256:42281ade…361a` / `sha256:96a96370…7876`，freeze 外部模型 dispatch 为 0；
 pending grant `sha256:e3c9bed5…b082` 仍未授权。Readiness 下一 Gate 是绑定该 exact freeze 的公开 Web 授权与执行。
 
+用户随后以 `codex-user-message:sha256:2f9d8871…84de` 授权 run-010 正式公开 Web；authorized grant digest 为
+`sha256:56b457ce…91dc`。首个登录题完成 5/5 DeepSeek request、TLS `1/1`、reuse `4`、credential `5/5`、unknown/retry `0`，
+页面/Citation/console 与 Source-off audit 均正常。但 Draft 把 typed Result 中 ordinal 1/2 的两个 `recordFailure()` call site 合并为
+一次，Reviewer 仍 APPROVE，故违反 V-003 的 exact two-call Oracle。首次偏差是 Draft，Review 为第二处，Provider/Query/Web 不是根因；
+下单与跨域题未执行，且当前没有用户质量 verdict receipt。详见 `FINDING-008-041`。
+
+Readiness 的活动 contract 现为 `1.5.11/@20/@1.4.12/@1.5.11` 与 terminal compiler `@3`。Application 从 sealed typed Result
+编译 caller 不可伪造的 ordered behavior obligation，Draft 明确 same-target exact multiplicity，Review 对遗漏返回
+`MATERIAL_OMISSION`。18 Case / 18/18 threshold 不变，独立 omitted-duplicate Review 使资格调用为 41；产品 4—6 call budget 不变。
+run-027 Qualification 与 run-010 freeze/grant/session 不适用于新 identity。下一 Readiness Gate 重新变为 clean exact candidate 的
+Conformance + 41-call Capability PASS；本地 expanded focused 106/106、fake 18/18、docs 345/345 PASS，full 1039 只保留 exact
+4 FAIL + 1 ERROR historical hold。此前不得生成新 formal Web freeze，hidden canary、SLICE-002 与 Activation 保持阻断。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

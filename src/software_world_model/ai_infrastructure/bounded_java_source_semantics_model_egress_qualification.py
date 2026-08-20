@@ -80,13 +80,13 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
     ("WM-JSS-I8-NEGATIVE-QUERY-UNKNOWN-015", 2),
     ("WM-JSS-I8-NEGATIVE-REPRESENTATION-UNKNOWN-016", 2),
     ("WM-JSS-I8-DRAFT-017", 1),
-    ("WM-JSS-I8-REVIEW-018", 2),
+    ("WM-JSS-I8-REVIEW-018", 3),
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST = Digest(
-    "sha256:afc27f4fdabb6631b21aeb0507044fb53b93b96e0567bf1e8a63764cfee19eae"
+    "sha256:fc4cccafcd84d5cf46a3ebe6ce3d8e583a5e0b4d4f6a6b069a692b7d9720f172"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_ORACLE_DIGEST = Digest(
-    "sha256:162579cd3904845a766a9cc2429b96111d3eea8baff250e658e4481b019f1eca"
+    "sha256:f761b4a9af67d6f52b4d3c2962ed833dfda569b5f6367ffc9f78a8ca95b3b4cc"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     Path(__file__).resolve().with_name(
@@ -94,7 +94,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:04d27a73533ce51a5eb37d472423b80b11b62340d2d4722310055b9bea2d0212"
+    "sha256:472484f9f7ba24529ce26748d9629ef45e6b31b9a905e7eec233d88f7d4bbf93"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
@@ -114,7 +114,7 @@ _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "timeout_milliseconds": 180_000,
     "classification": "INTERNAL",
     "required_case_count": 18,
-    "provider_request_count": 40,
+    "provider_request_count": 41,
     "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
     "maximum_pre_dispatch_tls_handshake_attempts": 3,
     "maximum_http_dispatches_per_tls_session": 20,

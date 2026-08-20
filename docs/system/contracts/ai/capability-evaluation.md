@@ -5,9 +5,9 @@ status: current
 authority: normative
 owners: [application]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-X-CAPABILITY-EXECUTION]
-derived_from: [DD-MGT-CAPABILITY-EVALUATION]
-code: [src/software_world_model/application_services/evaluation.py, src/software_world_model/application_services/activation.py, src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py, src/software_world_model/ai_infrastructure/world_model_capability_evaluation.py]
-tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, tests/test_evaluation_runner.py]
+derived_from: [DD-MGT-CAPABILITY-EVALUATION, FINDING-008-041]
+code: [src/software_world_model/application_services/evaluation.py, src/software_world_model/application_services/activation.py, src/software_world_model/ai_infrastructure/agentic_capability_evaluation.py, src/software_world_model/ai_infrastructure/world_model_capability_evaluation.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py]
+tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, tests/test_evaluation_runner.py, tests/test_world_model_answer_strategy.py, tests/test_iteration_008_capability_harness.py, tests/test_iteration_008_capability_qualification.py]
 ---
 
 # Capability Evaluation 与 Activation
@@ -33,7 +33,11 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
    最大步数、budget/cycle/progress、Ref provenance、Draft、独立 Review 与三层负向证明。模型只输出 semantic intent 时，Definition
    还必须经同一个 production argument compiler 验证 exact typed proposal；Draft/Review 的 exact result/support/check collection 由
    Application 拥有时，Definition 还必须执行同一个 production terminal-authority compiler，证明 model-visible input 不含顶层 exact
-   collection、raw collection 为空、normalized Result 注入原 sealed authority，且模型自填 authority 会失败关闭。synthetic previous Result、progress completeness 与 operation
+   collection、raw collection 为空、normalized Result 注入原 sealed authority，且模型自填 authority 会失败关闭。当 production
+   terminal compiler 从 typed method Result 编译 ordered behavior obligation 时，Definition 必须使用同一 compiler，并至少覆盖一个
+   产品可达的 distinct same-target `CALL_SITE` fixture：Draft 明确表达 exact multiplicity，独立 Reviewer 批准完整 Draft，并对把多个
+   occurrence 合并为一次的 Draft 返回 `REJECT / MATERIAL_OMISSION`。该 fixture 的成功/失败路径只能要求其 sealed Result 实际拥有的
+   行为，不能让 Oracle 强迫模型补充未授权事实。synthetic previous Result、progress completeness 与 operation
    transition 必须是正式产品可达状态。一个 Case 包含首轮时，后续 ledger/allowlist 必须与该轮实际 normalized obligation exact 一致；
    独立抽样 later state 时，必须绑定另一个预冻结且产品可达的 ledger fixture，而不是把该 Case 的 Oracle 期望注入 model-visible input。
    资格不能为满足 Oracle 伪造 scope Ref 或按回合序号改变同一 Result 的语义。固定三调用或单方法

@@ -36,16 +36,16 @@ from software_world_model.application_services.bounded_world_model_investigation
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.10"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.11"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.10"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.11"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:afc27f4fdabb6631b21aeb0507044fb53b93b96e0567bf1e8a63764cfee19eae"
+    "sha256:fc4cccafcd84d5cf46a3ebe6ce3d8e583a5e0b4d4f6a6b069a692b7d9720f172"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:162579cd3904845a766a9cc2429b96111d3eea8baff250e658e4481b019f1eca"
+    "sha256:f761b4a9af67d6f52b4d3c2962ed833dfda569b5f6367ffc9f78a8ca95b3b4cc"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -60,8 +60,8 @@ PINNED_RESOURCE_POLICY_REF = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.5.10.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.10.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.5.11.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.11.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -166,7 +166,7 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
     required_calls = protocol.get("required_case_calls")
     if (
         protocol.get("protocol_ref")
-        != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.2"
+        != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CE-CLOSED@1.0.3"
         or protocol.get("hidden_retry_count") != 0
         or protocol.get("planned_provider_call_count")
         != PINNED_PROVIDER_REQUEST_COUNT
@@ -188,7 +188,7 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         != (
             "CLOSED_PASS_IFF_ALL_EIGHTEEN_REQUIRED_CASES_PASS_AND_"
             "FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO_AND_PROVIDER_"
-            "REQUEST_COUNT_FORTY"
+            "REQUEST_COUNT_FORTY_ONE"
         )
     ):
         _invalid("bounded closed evaluation protocol drifted")
@@ -729,7 +729,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.5.10",
+            case_version="1.5.11",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -740,7 +740,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.5.10",
+        evaluation_version="1.5.11",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,

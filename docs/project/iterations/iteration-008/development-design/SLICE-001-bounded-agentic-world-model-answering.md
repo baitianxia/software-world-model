@@ -546,6 +546,25 @@ qualification/stage digest 为 `sha256:42281ade…361a` / `sha256:96a96370…787
 与 Activation 均未执行。formal freeze 已闭合；下一步只允许取得晚于 exact freeze 的公开 Web 授权并执行登录/下单/跨域题，
 hidden canary 仍不执行。
 
+用户随后以 `codex-user-message:sha256:2f9d8871…84de` 授权该 exact freeze 的正式公开 Web；authorized evaluation grant digest 为
+`sha256:56b457ce…91dc`，且继续明确禁止 hidden canary、SLICE-002 与 Production Activation。页面首先提交“登录流程是怎样的？”，
+request `wm-472a3dba-cd7d-46d1-b8b3-8f37a7d57292` 完成 3 Investigation + Draft + Review；5/5 DeepSeek HTTP、TLS `1/1`、
+reuse `4`、credential `5/5`、unknown/retry `0`，Source/Evidence payload access、Update、Direct fallback 均为 0。页面、4 个 Citation
+projection 与 console 正常，page/terminal digest 为 `sha256:f796b10d…7c49` / `sha256:bbba266d…aa1dc`。
+
+该回答仍构成 `V-003` objective FAIL：Source 与 typed `METHOD_IMPLEMENTATION` Result 都有 ordinal 1/2 两个 distinct
+`recordFailure()` call site，legacy count 为 2；Draft 却只写一次，Reviewer 仍 `APPROVE`。逐层诊断把首次偏差精确定位到 Draft，
+Review 是第二处偏差，Web 只是忠实交付。详见 [FINDING-008-041](../findings/FINDING-008-041.md)。当前没有用户质量 verdict receipt，
+项目文档只记录冻结 Oracle 的客观不匹配；下单/跨域题未继续执行，旧 freeze/grant/session 因产品 identity 变化不可复用。
+
+活动设计把模型适配放回 Application Owner：terminal compiler `@3` 从 sealed typed Result 编译 caller 不可伪造的 ordered
+`behavior_obligation_scope`，逐 event 保存 source order、可读 reference 与 same-target occurrence/count；Draft 必须表达 exact
+multiplicity，Reviewer 对合并 occurrence 返回 `MATERIAL_OMISSION`。Contract/Strategy、Prompt/Vocabulary、Gateway policy 与
+suite/oracle 升级为 `1.5.11/@20/@1.4.12/@1.5.11`；18 Case / 18/18 不变，增加一条 independent omitted-duplicate Review，资格由
+40 调整为 41 calls，产品 4—6 calls/question 不变。新 clean candidate 必须先完成 Conformance 与 41-call Capability；PASS 前
+不得再生成 formal Web freeze。本地 expanded focused 106/106、fake 18/18、docs 345/345 PASS；full 1039 中 1034 PASS，只保留
+`FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。hidden canary、SLICE-002、Reflection 与 Activation 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

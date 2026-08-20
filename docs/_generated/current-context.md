@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-run-010-formal-freeze-pass-live-authorization-next`
+- Worktree status: `iteration-008-run-010-public-web-v003-fail-ordered-behavior-remediation`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-run-010-formal-freeze-pass-live-authorization-next`
+- Live model path: `iteration-008-1.5.11-local-pass-requalification-next`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

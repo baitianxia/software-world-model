@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, quality]
 depends_on: [SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
-derived_from: [FINDING-008-032, FINDING-008-035, FINDING-008-037, FINDING-008-038]
+derived_from: [FINDING-008-032, FINDING-008-035, FINDING-008-037, FINDING-008-038, FINDING-008-041]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/interface]
 tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_world_model_answer_strategy.py, tests/test_iteration_003_g3a_integration.py, tests/test_iteration_006_capability_qualification.py, tests/test_iteration_007_capability_qualification.py, tests/test_java_source_semantics.py, tests/test_world_model_gateway_authorization.py]
 ---
@@ -66,7 +66,12 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       Draft；它不读取 Source、调查角色私有输出、Citation observation 或 Reviewer。`step_result_ids` 与 `support_digests` 是
       Application-owned terminal authority，不是模型生成任务：exact 顶层 authority collection 不进入 model-visible input，模型 raw
       envelope 必须返回空 collection；schema validation 后，versioned terminal-authority compiler 从原 sealed assessment
-      deterministic 注入 exact collection。模型自行填充、复制或重建任一 authority 值必须失败关闭；
+      deterministic 注入 exact collection。模型自行填充、复制或重建任一 authority 值必须失败关闭。对每个 sealed
+      `METHOD_IMPLEMENTATION` Result，Application 还必须从 `ordered_atoms` 编译不可由调用方提供的
+      `behavior_obligation_scope`：按方法保留每个事件的 source order、kind/operator/semantic form、可读 method/state/event 引用，
+      并为指向同一方法的 distinct `CALL_SITE` 标明 occurrence ordinal、exact occurrence count 与正式 legacy `CALLS.call_site_count`。
+      原 Query Result 仍是唯一 authority，投影只把 Application 已拥有的有序行为义务确定化；不得加入 Source、题目、工程、Case、
+      Oracle 或隐藏答案。Draft 对问题请求的物质行为必须保留每个适用事件，不能把同目标的多个调用合并成一次泛化调用；
    4. Review Call 在全新上下文中读取原问题、同一 Requirement/trace/assessment 和 Draft，独立核对 fidelity、候选与查询完整性、
       grounding、方向、三层负向证明、语言与可读性。模型只拥有 decision 与 versioned finding-code 语义；exact
       `checked_need_ids`、`checked_step_result_ids`、`checked_support_digests` 同样由 terminal-authority compiler 从原 sealed review
@@ -76,7 +81,9 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       `bounded_absence_allowed=false` 或 `BUSINESS_DISCOVERY_RECALL_UNPROVEN` 而判 `QUERY_INCOMPLETE`。Application 必须从 sealed
       Need outcome 编译不可伪造的 model-visible `review_completeness_scope`：全部为 `SATISFIED` 时标记
       `POSITIVE_SUPPORTED_ONLY`，删除仅对负向主张有意义的三项 business-recall 字段，并禁止 Draft 偷带 bounded-negative claim；
-      其他 outcome 标记 `THREE_LAYER_REVIEW` 并保留原三层字段。原 sealed Trace 与审计证据不得改写；
+      其他 outcome 标记 `THREE_LAYER_REVIEW` 并保留原三层字段。Reviewer 同时读取与 Draft 相同、由 Application 编译的
+      `behavior_obligation_scope`；当问题要求的 distinct same-target call sites 被合并、遗漏 exact multiplicity 或打乱 source order 时，
+      必须以 `MATERIAL_OMISSION` 拒绝，不能因正文大致流畅而批准。原 sealed Trace、Query Result 与审计证据不得改写；
    completeness projection 只能来自同一正式 Read Authority 的平台判定，不得把评测 Oracle identity 或隐藏期望送入 Answer。
    Review finding code 必须来自版本化 vocabulary；遗漏候选/方法、查询未穷尽、无依据负向结论、静态事实不支持的运行时断言与
    Source/Evidence payload 展开使用不同稳定 code。Schema 和 Application 同时拒绝未注册、重复或乱序 code。terminal compiler

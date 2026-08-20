@@ -590,10 +590,10 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
                 "GATEWAY-CANDIDATE@1"
             ),
             "environment": "EVALUATION_ONLY",
-            "strategy_ref": "model-snapshot-first-world-model-answer@1.5.10",
-            "prompt_ref": "java-source-semantics-world-model-prompt@19",
+            "strategy_ref": "model-snapshot-first-world-model-answer@1.5.11",
+            "prompt_ref": "java-source-semantics-world-model-prompt@20",
             "proposal_vocabulary_ref": (
-                "java-source-semantics-world-model-vocabulary@19"
+                "java-source-semantics-world-model-vocabulary@20"
             ),
             "capability_qualification_document_digest": (
                 qualification_document_digest.value

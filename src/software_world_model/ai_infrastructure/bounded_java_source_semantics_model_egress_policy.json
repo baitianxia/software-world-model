@@ -1,6 +1,6 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-model-egress-gateway-policy@1",
-  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.11",
+  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.12",
   "default_action": "DENY",
   "environment": "EVALUATION_ONLY",
   "provider": {
@@ -23,13 +23,13 @@
   },
   "proposal_contract": {
     "capability_id": "world-model-authority-proposal",
-    "capability_contract_version": "1.5.10",
-    "strategy_ref": "model-snapshot-first-world-model-answer@1.5.10",
-    "prompt_ref": "java-source-semantics-world-model-prompt@19",
-    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@19",
+    "capability_contract_version": "1.5.11",
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.5.11",
+    "prompt_ref": "java-source-semantics-world-model-prompt@20",
+    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@20",
     "instruction_transformation_ref": "capability-prompt-selection@1",
     "argument_compiler_ref": "java-source-semantics-investigation-argument-compiler@7",
-    "terminal_authority_compiler_ref": "java-source-semantics-terminal-authority-compiler@2",
+    "terminal_authority_compiler_ref": "java-source-semantics-terminal-authority-compiler@3",
     "available_operations": [
       "implementation_candidates",
       "method_implementations",
