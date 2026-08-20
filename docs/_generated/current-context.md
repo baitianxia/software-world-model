@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-operation-discriminated-compiler-at-3-local-validation-complete-awaiting-clean-commit-and-requalification`
+- Worktree status: `iteration-008-application-owned-evidence-ledger-at-1.5.0-local-validation-in-progress`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-deepseek-v4-pro-adapter-at-2-run-009-failure-preserved-compiler-at-3-requalification-pending-production-not-activated`
+- Live model path: `iteration-008-deepseek-v4-pro-run-010-conformance-pass-capability-16-of-18-fail-evidence-ledger-redirect-in-progress-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

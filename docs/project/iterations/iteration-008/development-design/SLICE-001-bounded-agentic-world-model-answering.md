@@ -212,6 +212,22 @@ requalification，未 PASS 前正式 Web、early canary 与 V-REFLECT-001 继续
 connection `ResourceWarning`；current documents 322/322、`git diff --check` 与 credential-shaped secret scan PASS。这些仍不是 live
 Qualification；新 Conformance/Capability 只能从写回后的 clean exact candidate 重新冻结。
 
+compiler `@3` clean candidate `4e79a126faf8c6992c1649ad8f82150d69cd414d` 的 run-010 Conformance 恰好 2 calls / 12 Case PASS；
+同候选 Capability 无 retry 地完成 41/41 requests 与全部 18 Case、`unknown_count=0`，但为 16/18 FAIL。run-009 的
+operation-discriminated slot 反例已 PASS；仅 `MAX-FOUR-010` 在 method batch 后和 `BUDGET-EXHAUSTION-011` 在 direct CALLS 后提前
+FINISH，分别遗漏 direct CALLS 与 all-simple-paths。`LEGAL-FINISH-009` 同时 PASS，因此不能把固定最小步数或总是追加 query 当修复。
+
+按 [FINDING-008-019](../findings/FINDING-008-019.md)，活动控制面改为 Application-owned evidence-obligation transition machine。
+首轮模型仍拥有通用 search terms 和原问题的语义 evidence requests；Application 以注册 operation/relation vocabulary 做去重、依赖
+收敛与预算可达性校验后冻结 ledger。后续唯一合法 operation、typed arguments、FINISH eligibility 和 terminal reason 均由 ledger、
+立即前序 sealed Result、completeness 与预算派生；raw premature FINISH 不获得终态权力。该设计没有题型 enum、问题/工程/符号词典、
+Oracle 输入或 evaluator-only 产品分支。活动 capability/Strategy、prompt/vocabulary、compiler、Gateway policy 与 suite/oracle 分别为
+`1.5.0`、`@9`、`@4`、`@1.2.0` 与 `@1.5.0`；18 Case、41 calls、18/18、temperature 0、no-retry 与正式 Ark runtime 不变。
+当前 targeted 96/96、fake transport 41 calls / 18/18 与 current documents 324/324 PASS。允许 AF_UNIX listener 的 full discovery
+为 980/985；剩余五项均是当前桌面 Codex CLI 与 ITER-003 frozen mature-agent binary 的 exact drift，按
+[FINDING-008-020](../findings/FINDING-008-020.md) 保留 fail-closed，不改历史 freeze，也不声明 full-suite PASS。该独立环境 hold 不
+阻断 active DeepSeek 资格链；clean candidate 与新 live 18/18 qualification 尚待完成，全部后续产品 Gate 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

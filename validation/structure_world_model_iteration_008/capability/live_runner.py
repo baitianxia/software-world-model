@@ -33,6 +33,7 @@ from .manifest import (
     PINNED_ORACLE_REF,
     PINNED_SUITE_FILE_DIGEST,
     PINNED_SUITE_REF,
+    available_operations_for_step,
     case_fixture_digest,
     case_oracle_digest,
     expected_step_projections,
@@ -95,6 +96,7 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
             )
         normalized_results: list[dict[str, object]] = []
         sealed_inputs: list[dict[str, object]] = []
+        available_operation_sets: list[tuple[str, ...]] = []
         case_call_ids: list[str] = []
         for call_index, step in enumerate(steps, start=1):
             if not isinstance(step, Mapping):
@@ -103,18 +105,27 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                     "bounded capability step is invalid",
                 )
             sealed_input = sealed_step_input(suite, case, step)
+            available_operations = available_operations_for_step(
+                suite, case, step
+            )
             call_id = f"{case_id}:call-{call_index}"
             proposal = self._strategy.propose(
                 case_id=call_id,
                 capability=capability,
                 sealed_input=sealed_input,
-                available_operations=(
-                    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
-                    if capability == "IMPLEMENTATION_INVESTIGATION"
-                    else ()
-                ),
+                available_operations=available_operations,
             )
+            if (
+                capability == "IMPLEMENTATION_INVESTIGATION"
+                and proposal.normalized_result.get("evidence_requests")
+                != case.get("evidence_requests")
+            ):
+                raise DomainError(
+                    ErrorCode.QUALIFICATION_INVALID,
+                    "bounded capability call did not preserve the frozen evidence obligations",
+                )
             sealed_inputs.append(sealed_input)
+            available_operation_sets.append(available_operations)
             case_call_ids.append(call_id)
             normalized_results.append(dict(proposal.normalized_result))
 
@@ -124,6 +135,7 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
             capability=capability,
             case_call_ids=case_call_ids,
             sealed_inputs=sealed_inputs,
+            available_operation_sets=available_operation_sets,
             qualification_ref=self._configuration.qualification_ref,
         )
         if usage["actual_model_fingerprint"] != self._expected_model_fingerprint:
@@ -374,6 +386,7 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
         capability: str,
         case_call_ids: list[str],
         sealed_inputs: list[dict[str, object]],
+        available_operation_sets: list[tuple[str, ...]],
         qualification_ref: str,
     ) -> None:
         manifests = usage.get("authorized_manifests")
@@ -395,8 +408,11 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                 "bounded capability case must use its exact model call count",
             )
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
-        for manifest, call_id, sealed_input in zip(
-            manifests, case_call_ids, sealed_inputs
+        for manifest, call_id, sealed_input, available_operations in zip(
+            manifests,
+            case_call_ids,
+            sealed_inputs,
+            available_operation_sets,
         ):
             if not isinstance(manifest, Mapping):
                 raise DomainError(
@@ -457,9 +473,7 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                 "input": sealed_input,
             }
             if capability == "IMPLEMENTATION_INVESTIGATION":
-                expected["available_operations"] = list(
-                    contract.available_operations
-                )
+                expected["available_operations"] = list(available_operations)
             serialized = json.dumps(state, ensure_ascii=False, sort_keys=True)
             if (
                 state_item.get("content_digest")

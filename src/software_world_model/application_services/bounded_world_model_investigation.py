@@ -61,6 +61,20 @@ class InvestigationCompletenessVerdict(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+@dataclass(frozen=True, slots=True)
+class InvestigationEvidenceRequest:
+    """One model-owned semantic evidence obligation, never query authority."""
+
+    operation: InvestigationOperation
+    relation_intent: str | None
+
+    def canonical_value(self) -> dict[str, str | None]:
+        return {
+            "operation": self.operation.value,
+            "relation_intent": self.relation_intent,
+        }
+
+
 _PROPOSAL_FIELDS = frozenset(
     {
         "step_index",
@@ -79,6 +93,7 @@ _PROPOSAL_FIELDS = frozenset(
         "max_paths",
         "max_expansions",
         "finish_reason",
+        "evidence_requests",
     }
 )
 
@@ -88,6 +103,7 @@ _INTENT_FIELDS = frozenset(
         "search_terms",
         "relation_intent",
         "finish_reason",
+        "evidence_requests",
     }
 )
 
@@ -124,6 +140,24 @@ _RELATION_INTENT_ARGUMENTS = {
         RelationPredicate.DECLARES_METHOD,
     ),
 }
+
+_EVIDENCE_OPERATION_ORDER = {
+    operation: index
+    for index, operation in enumerate(
+        (
+            InvestigationOperation.IMPLEMENTATION_CANDIDATES,
+            InvestigationOperation.METHOD_IMPLEMENTATIONS,
+            InvestigationOperation.DECLARED_METHOD_INVENTORY,
+            InvestigationOperation.DIRECT_NEIGHBORHOOD,
+            InvestigationOperation.PATH_EXISTS,
+            InvestigationOperation.ALL_SIMPLE_PATHS,
+        )
+    )
+}
+
+_DIRECT_EVIDENCE_RELATIONS = frozenset(
+    {"OUTGOING_CALLS", "INCOMING_CALLS", "BOTH_CALLS"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,10 +262,276 @@ class InvestigationEntityRef:
         }
 
 
+def _normalized_evidence_requests(
+    value: object,
+) -> tuple[InvestigationEvidenceRequest, ...]:
+    if (
+        isinstance(value, (str, bytes))
+        or not isinstance(value, Sequence)
+        or not 1 <= len(value) <= 3
+    ):
+        raise _invalid(
+            "INVESTIGATION_EVIDENCE_REQUESTS_INVALID",
+            "evidence requests must contain one through three bounded semantic requests",
+        )
+    operations: set[InvestigationOperation] = set()
+    direct_relations: set[str] = set()
+    for raw in value:
+        if not isinstance(raw, Mapping) or set(raw) != {
+            "operation",
+            "relation_intent",
+        }:
+            raise _invalid(
+                "INVESTIGATION_EVIDENCE_REQUEST_SHAPE_INVALID",
+                "evidence request has an open or incomplete shape",
+            )
+        try:
+            operation = InvestigationOperation(raw.get("operation"))
+        except (TypeError, ValueError) as exc:
+            raise _invalid(
+                "INVESTIGATION_EVIDENCE_OPERATION_INVALID",
+                "evidence request uses an unregistered operation",
+            ) from exc
+        if operation not in _EVIDENCE_OPERATION_ORDER:
+            raise _invalid(
+                "INVESTIGATION_EVIDENCE_OPERATION_INVALID",
+                "FINISH cannot be an evidence obligation",
+            )
+        operations.add(operation)
+        if operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+            relation = raw.get("relation_intent")
+            if not isinstance(relation, str) or relation not in _DIRECT_EVIDENCE_RELATIONS:
+                raise _invalid(
+                    "INVESTIGATION_EVIDENCE_RELATION_INVALID",
+                    "direct-neighborhood evidence requires a registered CALLS relation intent",
+                )
+            direct_relations.add(relation)
+
+    if len(operations) > 1:
+        operations.discard(InvestigationOperation.IMPLEMENTATION_CANDIDATES)
+    graph_operations = {
+        InvestigationOperation.DIRECT_NEIGHBORHOOD,
+        InvestigationOperation.PATH_EXISTS,
+        InvestigationOperation.ALL_SIMPLE_PATHS,
+    }
+    if operations & graph_operations:
+        operations.discard(InvestigationOperation.METHOD_IMPLEMENTATIONS)
+    if InvestigationOperation.ALL_SIMPLE_PATHS in operations:
+        operations.discard(InvestigationOperation.PATH_EXISTS)
+    if InvestigationOperation.DECLARED_METHOD_INVENTORY in operations and len(
+        operations
+    ) != 1:
+        raise _invalid(
+            "INVESTIGATION_EVIDENCE_BUDGET_UNREACHABLE",
+            "declared inventory cannot be combined with another evidence obligation in the frozen budget",
+        )
+    if not operations or len(operations) > 2:
+        raise _invalid(
+            "INVESTIGATION_EVIDENCE_BUDGET_UNREACHABLE",
+            "normalized evidence obligations exceed the frozen transition budget",
+        )
+
+    normalized: list[InvestigationEvidenceRequest] = []
+    for operation in sorted(operations, key=_EVIDENCE_OPERATION_ORDER.__getitem__):
+        relation: str | None = None
+        if operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+            if not direct_relations:
+                raise _invalid(
+                    "INVESTIGATION_EVIDENCE_RELATION_INVALID",
+                    "direct-neighborhood evidence lacks a CALLS relation intent",
+                )
+            relation = (
+                next(iter(direct_relations))
+                if len(direct_relations) == 1
+                else "BOTH_CALLS"
+            )
+        normalized.append(
+            InvestigationEvidenceRequest(
+                operation=operation,
+                relation_intent=relation,
+            )
+        )
+    return tuple(normalized)
+
+
+def normalize_investigation_evidence_requests(
+    value: object,
+) -> tuple[dict[str, str | None], ...]:
+    """Return the canonical, dependency-reduced evidence obligation value."""
+
+    return tuple(
+        item.canonical_value() for item in _normalized_evidence_requests(value)
+    )
+
+
+def _evidence_requests_from_previous_result(
+    previous_result: Mapping[object, object],
+) -> tuple[InvestigationEvidenceRequest, ...]:
+    requests = _normalized_evidence_requests(
+        previous_result.get("evidence_requests")
+    )
+    if [item.canonical_value() for item in requests] != previous_result.get(
+        "evidence_requests"
+    ):
+        raise _invalid(
+            "INVESTIGATION_EVIDENCE_LEDGER_NON_CANONICAL",
+            "sealed evidence ledger is not in canonical dependency order",
+        )
+    return requests
+
+
+def _candidate_result_allows_method_batch(
+    previous_result: Mapping[object, object],
+) -> bool:
+    results = previous_result.get("results")
+    if (
+        isinstance(results, (str, bytes))
+        or not isinstance(results, Sequence)
+        or len(results) != 1
+        or not isinstance(results[0], Mapping)
+    ):
+        return False
+    result = results[0]
+    if result.get("truncated") is not False:
+        return False
+    payload = result.get("payload")
+    if not isinstance(payload, Mapping):
+        return False
+    if {"total", "returned", "candidate_count", "next_cursor"}.issubset(
+        payload
+    ):
+        return (
+            payload.get("total") == payload.get("returned")
+            and payload.get("returned") == payload.get("candidate_count")
+            and payload.get("next_cursor") is None
+        )
+    return (
+        result.get("completeness")
+        == InvestigationCompletenessVerdict.COMPLETE.value
+        and type(payload.get("candidate_count")) is int
+    )
+
+
+def _scheduled_investigation_transition(
+    *,
+    step_index: int,
+    previous_result: object,
+) -> tuple[InvestigationOperation, str | None, tuple[InvestigationEvidenceRequest, ...]]:
+    if step_index == 1:
+        return InvestigationOperation.IMPLEMENTATION_CANDIDATES, None, ()
+    if not isinstance(previous_result, Mapping):
+        raise _invalid(
+            "INVESTIGATION_INTENT_PREFIX_INVALID",
+            "later investigation transition requires one sealed previous Result",
+        )
+    requests = _evidence_requests_from_previous_result(previous_result)
+    try:
+        previous_operation = InvestigationOperation(previous_result.get("operation"))
+    except (TypeError, ValueError) as exc:
+        raise _invalid(
+            "INVESTIGATION_INTENT_RESULT_INVALID",
+            "previous Result uses an unregistered operation",
+        ) from exc
+    refs = _compiled_previous_result_refs(previous_result)
+    method_ref_count = sum(1 for _, kind in refs if kind == "JAVA_METHOD")
+    type_ref_count = sum(1 for _, kind in refs if kind == "JAVA_TYPE")
+    requested = {item.operation: item for item in requests}
+
+    operation = InvestigationOperation.FINISH
+    relation: str | None = None
+    if previous_operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES:
+        if (
+            not refs
+            or not _candidate_result_allows_method_batch(previous_result)
+            or set(requested)
+            == {InvestigationOperation.IMPLEMENTATION_CANDIDATES}
+        ):
+            operation = InvestigationOperation.FINISH
+        elif InvestigationOperation.DECLARED_METHOD_INVENTORY in requested:
+            operation = InvestigationOperation.DIRECT_NEIGHBORHOOD
+            relation = "DECLARING_TYPE"
+        elif method_ref_count:
+            operation = InvestigationOperation.METHOD_IMPLEMENTATIONS
+    elif previous_operation is InvestigationOperation.METHOD_IMPLEMENTATIONS:
+        direct = requested.get(InvestigationOperation.DIRECT_NEIGHBORHOOD)
+        if direct is not None and method_ref_count:
+            operation = InvestigationOperation.DIRECT_NEIGHBORHOOD
+            relation = direct.relation_intent
+        elif InvestigationOperation.PATH_EXISTS in requested and method_ref_count >= 2:
+            operation = InvestigationOperation.PATH_EXISTS
+        elif (
+            InvestigationOperation.ALL_SIMPLE_PATHS in requested
+            and method_ref_count >= 2
+        ):
+            operation = InvestigationOperation.ALL_SIMPLE_PATHS
+    elif previous_operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+        if InvestigationOperation.DECLARED_METHOD_INVENTORY in requested and type_ref_count:
+            operation = InvestigationOperation.DECLARED_METHOD_INVENTORY
+        elif InvestigationOperation.PATH_EXISTS in requested and method_ref_count >= 2:
+            operation = InvestigationOperation.PATH_EXISTS
+        elif (
+            InvestigationOperation.ALL_SIMPLE_PATHS in requested
+            and method_ref_count >= 2
+        ):
+            operation = InvestigationOperation.ALL_SIMPLE_PATHS
+    return operation, relation, requests
+
+
+def constrained_investigation_operations(
+    *,
+    sealed_input: object,
+) -> tuple[str, ...]:
+    """Return the one platform-authorized transition for a sealed prefix."""
+
+    if not isinstance(sealed_input, Mapping):
+        raise _invalid(
+            "INVESTIGATION_INTENT_AUTHORITY_INVALID",
+            "investigation transition lacks a sealed input",
+        )
+    step_index = sealed_input.get("step_index")
+    if type(step_index) is not int or not 1 <= step_index <= 4:
+        raise _invalid(
+            "INVESTIGATION_STEP_INDEX_INVALID",
+            "investigation step index must be from 1 through 4",
+        )
+    operation, _, _ = _scheduled_investigation_transition(
+        step_index=step_index,
+        previous_result=sealed_input.get("previous_result"),
+    )
+    return (operation.value,)
+
+
+def _platform_finish_reason(
+    *,
+    previous_result: Mapping[object, object],
+    progress_receipt: Mapping[object, object],
+) -> str:
+    completeness = progress_receipt.get("completeness")
+    if isinstance(completeness, Mapping):
+        query = completeness.get("query_result")
+        representation = completeness.get("knowledge_representation")
+        discovery = completeness.get("business_discovery_recall")
+        if query != InvestigationCompletenessVerdict.COMPLETE.value:
+            return "Limitation: query completeness is unknown or incomplete."
+        if representation != InvestigationCompletenessVerdict.COMPLETE.value:
+            return "Limitation: representation coverage is unknown or incomplete."
+        if (
+            previous_result.get("operation")
+            != InvestigationOperation.IMPLEMENTATION_CANDIDATES.value
+            or _compiled_previous_result_refs(previous_result)
+        ):
+            return "Platform evidence obligations are complete and typed support is sufficient."
+        if discovery != InvestigationCompletenessVerdict.COMPLETE.value:
+            return "Limitation: absence cannot be established because discovery recall is unknown or incomplete."
+        return "Bounded authorized absence is complete for the sealed authority."
+    return "Limitation: the sealed completeness receipt is unavailable."
+
+
 def compile_investigation_intent(
     value: object,
     *,
     sealed_input: object,
+    available_operations: Sequence[str] | None = None,
 ) -> dict[str, object]:
     """Compile model-owned semantic intent into one exact platform proposal.
 
@@ -265,37 +565,52 @@ def compile_investigation_intent(
         )
     trace_digest = _digest(sealed_input.get("trace_digest"), "trace digest")
     try:
-        operation = InvestigationOperation(value.get("operation"))
+        InvestigationOperation(value.get("operation"))
     except (TypeError, ValueError) as exc:
         raise _invalid(
             "INVESTIGATION_OPERATION_INVALID",
             "investigation intent uses an unregistered operation",
         ) from exc
+    previous_result = sealed_input.get("previous_result")
+    progress_receipt = sealed_input.get("progress_receipt")
+    if step_index == 1:
+        evidence_requests = _normalized_evidence_requests(
+            value.get("evidence_requests")
+        )
+    elif isinstance(previous_result, Mapping):
+        evidence_requests = _evidence_requests_from_previous_result(
+            previous_result
+        )
+    else:
+        evidence_requests = ()
+    operation, scheduled_relation_intent, scheduled_requests = (
+        _scheduled_investigation_transition(
+            step_index=step_index,
+            previous_result=previous_result,
+        )
+    )
+    if step_index > 1 and evidence_requests != scheduled_requests:
+        raise _invalid(
+            "INVESTIGATION_EVIDENCE_LEDGER_MISMATCH",
+            "scheduled transition does not bind the sealed evidence ledger",
+        )
+    expected_available_operations = (operation.value,)
+    if (
+        available_operations is not None
+        and tuple(available_operations) != expected_available_operations
+    ):
+        raise _invalid(
+            "INVESTIGATION_TRANSITION_ALLOWLIST_INVALID",
+            "investigation available operations do not match the platform transition",
+        )
+
     search_terms: tuple[str, ...] = ()
-    raw_relation_intent: str | None = None
-    finish_reason: str | None = None
     if operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES:
         search_terms = _deduplicated_text_sequence(
             value.get("search_terms"),
             "investigation search terms",
             maximum=12,
         )
-    elif operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
-        candidate_relation_intent = value.get("relation_intent")
-        if (
-            not isinstance(candidate_relation_intent, str)
-            or candidate_relation_intent not in _RELATION_INTENT_ARGUMENTS
-        ):
-            raise _invalid(
-                "INVESTIGATION_RELATION_INTENT_INVALID",
-                "investigation relation intent is not registered",
-            )
-        raw_relation_intent = candidate_relation_intent
-    elif operation is InvestigationOperation.FINISH:
-        if value.get("finish_reason") is not None:
-            finish_reason = _text(value.get("finish_reason"), "finish reason")
-    previous_result = sealed_input.get("previous_result")
-    progress_receipt = sealed_input.get("progress_receipt")
     if step_index == 1:
         if previous_result is not None or progress_receipt is not None:
             raise _invalid(
@@ -327,6 +642,9 @@ def compile_investigation_intent(
         "max_paths": None,
         "max_expansions": None,
         "finish_reason": None,
+        "evidence_requests": [
+            item.canonical_value() for item in evidence_requests
+        ],
     }
     if operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES:
         read_authority = sealed_input.get("read_authority")
@@ -364,12 +682,11 @@ def compile_investigation_intent(
         )
     assert isinstance(previous_result, Mapping)
     if operation is InvestigationOperation.FINISH:
-        if finish_reason is None:
-            raise _invalid(
-                "INVESTIGATION_INTENT_OPERATION_INVALID",
-                "FINISH intent requires one terminal explanation",
-            )
-        proposal["finish_reason"] = finish_reason
+        assert isinstance(progress_receipt, Mapping)
+        proposal["finish_reason"] = _platform_finish_reason(
+            previous_result=previous_result,
+            progress_receipt=progress_receipt,
+        )
         return proposal
 
     refs = _compiled_previous_result_refs(previous_result)
@@ -419,14 +736,16 @@ def compile_investigation_intent(
     if operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
         method_refs = tuple(item for item in refs if item[1] == "JAVA_METHOD")
         if (
-            raw_relation_intent not in _RELATION_INTENT_ARGUMENTS
+            scheduled_relation_intent not in _RELATION_INTENT_ARGUMENTS
             or not method_refs
         ):
             raise _invalid(
                 "INVESTIGATION_INTENT_RESULT_INVALID",
                 "direct-neighborhood intent lacks a relation purpose or exact Ref",
             )
-        direction, predicate = _RELATION_INTENT_ARGUMENTS[raw_relation_intent]
+        direction, predicate = _RELATION_INTENT_ARGUMENTS[
+            scheduled_relation_intent
+        ]
         proposal.update(
             {
                 "entity_refs": [method_refs[0][0]],
@@ -681,6 +1000,7 @@ class InvestigationProposal:
     max_paths: int | None
     max_expansions: int | None
     finish_reason: str | None
+    evidence_requests: tuple[InvestigationEvidenceRequest, ...]
     model_proposal_digest: Digest
     digest: Digest
 
@@ -742,6 +1062,9 @@ class InvestigationProposal:
                 if value["finish_reason"] is not None
                 else None
             ),
+            evidence_requests=_normalized_evidence_requests(
+                value["evidence_requests"]
+            ),
             model_proposal_digest=model_proposal_digest,
             digest=Digest("sha256:" + "0" * 64),
         )
@@ -782,6 +1105,9 @@ class InvestigationProposal:
             "max_paths": self.max_paths,
             "max_expansions": self.max_expansions,
             "finish_reason": self.finish_reason,
+            "evidence_requests": tuple(
+                item.canonical_value() for item in self.evidence_requests
+            ),
             "model_proposal_digest": self.model_proposal_digest.value,
         }
 
@@ -799,6 +1125,11 @@ class InvestigationProposal:
             )
 
     def _require_closed_operation_shape(self) -> None:
+        if not self.evidence_requests:
+            raise _invalid(
+                "INVESTIGATION_EVIDENCE_REQUESTS_INVALID",
+                "investigation proposal must bind a non-empty evidence ledger",
+            )
         empty_refs = not self.method_refs and not self.entity_refs
         no_graph = (
             self.direction is None
@@ -1118,12 +1449,75 @@ class BoundedInvestigationTrace:
                     "INVESTIGATION_TRACE_PREFIX_INVALID",
                     "investigation proposal does not bind its exact preceding trace prefix",
                 )
+            previous_result: object = None
+            if index > 1:
+                prior = self.steps[index - 2]
+                previous_result = {
+                    "operation": prior.proposal.operation.value,
+                    "results": tuple(
+                        item.canonical_value() for item in prior.results
+                    ),
+                    "evidence_requests": [
+                        item.canonical_value()
+                        for item in prior.proposal.evidence_requests
+                    ],
+                }
+            scheduled_operation, scheduled_relation, scheduled_requests = (
+                _scheduled_investigation_transition(
+                    step_index=index,
+                    previous_result=previous_result,
+                )
+            )
+            if index == 1:
+                scheduled_requests = step.proposal.evidence_requests
+            if (
+                step.proposal.operation is not scheduled_operation
+                or step.proposal.evidence_requests != scheduled_requests
+            ):
+                raise _invalid(
+                    "INVESTIGATION_TRACE_TRANSITION_INVALID",
+                    "investigation trace violates its frozen evidence transition",
+                )
+            if scheduled_operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+                expected_direction, expected_predicate = _RELATION_INTENT_ARGUMENTS[
+                    scheduled_relation
+                ]
+                if (
+                    step.proposal.direction is not expected_direction
+                    or step.proposal.predicate is not expected_predicate
+                ):
+                    raise _invalid(
+                        "INVESTIGATION_TRACE_TRANSITION_INVALID",
+                        "investigation trace relation does not match its evidence ledger",
+                    )
         if self.terminal_proposal is not None:
             self.terminal_proposal.require_valid()
         if self.terminal_status is InvestigationTerminalStatus.FINISHED:
+            scheduled_terminal: InvestigationOperation | None = None
+            scheduled_requests: tuple[InvestigationEvidenceRequest, ...] = ()
+            if self.steps:
+                prior = self.steps[-1]
+                terminal_previous_result = {
+                    "operation": prior.proposal.operation.value,
+                    "results": tuple(
+                        item.canonical_value() for item in prior.results
+                    ),
+                    "evidence_requests": [
+                        item.canonical_value()
+                        for item in prior.proposal.evidence_requests
+                    ],
+                }
+                scheduled_terminal, _, scheduled_requests = (
+                    _scheduled_investigation_transition(
+                        step_index=self.model_call_count,
+                        previous_result=terminal_previous_result,
+                    )
+                )
             if (
                 self.terminal_proposal is None
                 or self.terminal_proposal.operation is not InvestigationOperation.FINISH
+                or scheduled_terminal is not InvestigationOperation.FINISH
+                or self.terminal_proposal.evidence_requests != scheduled_requests
                 or len(self.steps) < 1
                 or self.model_call_count != len(self.steps) + 1
                 or self.terminal_proposal.step_index != self.model_call_count
@@ -1293,6 +1687,47 @@ class BoundedWorldModelInvestigationSession:
                     "INVESTIGATION_PROPOSAL_PREFIX_MISMATCH",
                     "investigation proposal does not bind the current exact trace prefix",
                 )
+            previous_result: object = None
+            if self._steps:
+                prior = self._steps[-1]
+                previous_result = {
+                    "operation": prior.proposal.operation.value,
+                    "results": tuple(
+                        item.canonical_value() for item in prior.results
+                    ),
+                    "evidence_requests": [
+                        item.canonical_value()
+                        for item in prior.proposal.evidence_requests
+                    ],
+                }
+            scheduled_operation, scheduled_relation, scheduled_requests = (
+                _scheduled_investigation_transition(
+                    step_index=expected_index,
+                    previous_result=previous_result,
+                )
+            )
+            if expected_index == 1:
+                scheduled_requests = proposal.evidence_requests
+            if (
+                proposal.operation is not scheduled_operation
+                or proposal.evidence_requests != scheduled_requests
+            ):
+                raise _invalid(
+                    "INVESTIGATION_TRANSITION_NOT_AUTHORIZED",
+                    "investigation proposal is outside the frozen evidence transition",
+                )
+            if scheduled_operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
+                expected_direction, expected_predicate = _RELATION_INTENT_ARGUMENTS[
+                    scheduled_relation
+                ]
+                if (
+                    proposal.direction is not expected_direction
+                    or proposal.predicate is not expected_predicate
+                ):
+                    raise _invalid(
+                        "INVESTIGATION_TRANSITION_NOT_AUTHORIZED",
+                        "direct-neighborhood proposal does not match the frozen relation obligation",
+                    )
             if expected_index > self._budget.maximum_model_calls:
                 raise _invalid(
                     "INVESTIGATION_CALL_BUDGET_EXHAUSTED",

@@ -1233,6 +1233,31 @@
       "tests/test_iteration_008_capability_harness.py"
     ]
   },
+  "FINDING-008-019": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-019.md",
+    "code": [
+      "src/software_world_model/application_services/bounded_world_model_investigation.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/interface/world_model_product.py",
+      "validation/structure_world_model_iteration_008/capability"
+    ],
+    "tests": [
+      "tests/test_bounded_world_model_investigation.py",
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_008_capability_qualification.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_iteration_008_capability_harness.py"
+    ]
+  },
+  "FINDING-008-020": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-020.md",
+    "code": [],
+    "tests": [
+      "tests/test_iteration_003_v009.py",
+      "tests/test_iteration_003_validation_assets.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

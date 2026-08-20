@@ -42,6 +42,11 @@ from software_world_model.cross_cutting import (
     StableId,
     digest_of,
 )
+from validation.structure_world_model_iteration_008.capability.manifest import (
+    available_operations_for_step,
+    load_capability_inputs,
+    sealed_step_input,
+)
 
 
 _CONFORMANCE_REF = (
@@ -193,7 +198,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:5403a7314b81a2eb48d1fa6529b730cdc16ffe9c06bdbeaafaa7007bb01667d7"
+                "sha256:f8b1e9e01410d8a60b3b471f0cbd8d1f411e6060603b6ffd531cda78d6bd21a0"
             ),
             provider_type="VOLCENGINE_ARK",
             adapter_version="openai-chat-completions-no-tools@8",
@@ -379,6 +384,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
         capability: str,
         *,
         investigation_ordinal: int = 1,
+        available_operations_override: tuple[str, ...] | None = None,
     ) -> ModelExecutionContext:
         class Capture:
             context: ModelExecutionContext | None = None
@@ -402,28 +408,27 @@ class ModelEgressGatewayTests(unittest.TestCase):
             ),
         )
         if capability == "IMPLEMENTATION_INVESTIGATION":
-            sealed_input = {
-                "original_question": "How is authentication implemented?",
-                "response_language": "en",
-                "need_key": "implementation-answer",
-                "read_authority": {"snapshot_ids": ["snapshot"]},
-                "profile_ref": "JAVA_SOURCE_SEMANTICS@1",
-                "step_index": investigation_ordinal,
-                "trace_digest": "sha256:" + str(investigation_ordinal) * 64,
-                "previous_result": (
-                    None if investigation_ordinal == 1 else {"result": "sealed"}
-                ),
-                "progress_receipt": (
-                    None if investigation_ordinal == 1 else {"progress": "sealed"}
-                ),
-                "remaining_budget": {
-                    "model_calls": 5 - investigation_ordinal,
-                    "execution_steps": 5 - investigation_ordinal,
-                },
-            }
-            available_operations = (
-                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            suite, _ = load_capability_inputs()
+            case = next(
+                item
+                for item in suite["cases"]
+                if item["case_id"].endswith("BUDGET-EXHAUSTION-011")
             )
+            step = case["steps"][min(investigation_ordinal, 4) - 1]
+            sealed_input = sealed_step_input(suite, case, step)
+            if investigation_ordinal <= 4:
+                available_operations = available_operations_for_step(
+                    suite, case, step
+                )
+            else:
+                sealed_input["step_index"] = investigation_ordinal
+                sealed_input["remaining_budget"] = {
+                    "model_calls": 0,
+                    "execution_steps": 0,
+                }
+                available_operations = ("FINISH",)
+            if available_operations_override is not None:
+                available_operations = available_operations_override
         else:
             sealed_input = {"role": capability}
             available_operations = ()
@@ -532,6 +537,20 @@ class ModelEgressGatewayTests(unittest.TestCase):
             fifth_investigation.exception.code,
             ErrorCode.QUALIFICATION_INVALID,
         )
+
+    def test_bounded_semantics_policy_rejects_transition_expansion(self) -> None:
+        context = self.bounded_semantic_context(
+            "IMPLEMENTATION_INVESTIGATION",
+            investigation_ordinal=1,
+            available_operations_override=(
+                JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
+            ),
+        )
+
+        with self.assertRaises(DomainError) as raised:
+            self.bounded_semantic_policy().validate_context(context)
+
+        self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
 
     def test_round_trip_binds_request_result_and_audits(self) -> None:
         fixture_gateway = _FixtureGateway()

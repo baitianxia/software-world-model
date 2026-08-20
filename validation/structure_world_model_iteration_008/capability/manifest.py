@@ -24,21 +24,25 @@ from software_world_model.cross_cutting import (
     canonical_json_bytes,
     digest_of,
 )
+from software_world_model.application_services.bounded_world_model_investigation import (
+    constrained_investigation_operations,
+    normalize_investigation_evidence_requests,
+)
 
 
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.4.1"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.0"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.4.1"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.0"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:e7a4a08d9969759d86e7024f4107314f8934b2cb885779488c9ac5fdf36c4b20"
+    "sha256:12a0b9c77d350293e6e69ca0c08d863df38657f78fe22fb85e3b2e59e159a3c1"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:f6c1ff74dc9ba73a94060dc11fcfa09d56f0b960609609623489f5534dba3576"
+    "sha256:41ed1c144208f92f956f459cc5db1b69f8ef8cae33b113d6fc554c5664d167e5"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -50,8 +54,8 @@ PINNED_PROVIDER_REQUEST_COUNT = sum(
     count for _, count in PINNED_REQUIRED_CASE_CALLS
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.4.1.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.4.1.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.5.0.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.0.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -70,6 +74,7 @@ _INVESTIGATION_FIELDS = (
     "max_paths",
     "max_expansions",
     "finish_reason",
+    "evidence_requests",
 )
 _INVESTIGATION_STEP_FIELDS = {
     "step_index",
@@ -231,12 +236,25 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         ):
             _invalid("bounded case identity or capability is invalid")
         expected_fields = (
-            {"case_id", "capability", "original_question", "response_language", "steps"}
+            {
+                "case_id",
+                "capability",
+                "original_question",
+                "response_language",
+                "evidence_requests",
+                "steps",
+            }
             if capability == "IMPLEMENTATION_INVESTIGATION"
             else {"case_id", "capability", "steps"}
         )
         if set(case) != expected_fields:
             _invalid("bounded capability case shape is invalid")
+        if capability == "IMPLEMENTATION_INVESTIGATION":
+            normalized_evidence = normalize_investigation_evidence_requests(
+                case.get("evidence_requests")
+            )
+            if list(normalized_evidence) != case.get("evidence_requests"):
+                _invalid("bounded capability evidence requests are not canonical")
         steps = case.get("steps")
         if not isinstance(steps, list) or len(steps) != expected_counts[case_id]:
             _invalid("bounded capability case call count is invalid")
@@ -363,6 +381,14 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
                 not accepted
                 or any(set(projection) != set(fields) for projection in accepted)
                 or len({digest_of(item).value for item in accepted}) != len(accepted)
+                or (
+                    case["capability"] == "IMPLEMENTATION_INVESTIGATION"
+                    and any(
+                        projection.get("operation")
+                        not in available_operations_for_step(suite, case, step)
+                        for projection in accepted
+                    )
+                )
             ):
                 _invalid("bounded oracle projection is not exact")
 
@@ -385,6 +411,10 @@ def sealed_step_input(
     previous = (
         None if fixture is None else _model_visible_previous_result(fixture)
     )
+    if previous is not None:
+        previous["evidence_requests"] = copy.deepcopy(
+            case["evidence_requests"]
+        )
     progress = copy.deepcopy(step["progress_receipt"])
     if fixture is not None:
         if not isinstance(progress, dict):
@@ -402,6 +432,18 @@ def sealed_step_input(
         "progress_receipt": progress,
         "remaining_budget": copy.deepcopy(step["remaining_budget"]),
     }
+
+
+def available_operations_for_step(
+    suite: Mapping[str, object],
+    case: Mapping[str, object],
+    step: Mapping[str, object],
+) -> tuple[str, ...]:
+    if case.get("capability") != "IMPLEMENTATION_INVESTIGATION":
+        return ()
+    return constrained_investigation_operations(
+        sealed_input=sealed_step_input(suite, case, step)
+    )
 
 
 def _model_visible_previous_result(value: object) -> dict[str, object]:
@@ -555,6 +597,7 @@ def expected_step_projection(
         "max_depth": None,
         "max_paths": None,
         "max_expansions": None,
+        "evidence_requests": copy.deepcopy(case["evidence_requests"]),
     }
     resolved = _resolved_arguments(suite, arguments)
     allowed = set(value) - {"step_index", "trace_digest", "operation"}
@@ -671,7 +714,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.4.1",
+            case_version="1.5.0",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -682,7 +725,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.4.1",
+        evaluation_version="1.5.0",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,
@@ -915,6 +958,7 @@ __all__ = [
     "PINNED_SUITE_FILE_DIGEST",
     "PINNED_SUITE_REF",
     "build_evaluation_definition",
+    "available_operations_for_step",
     "case_fixture_digest",
     "case_oracle_digest",
     "case_pairs",

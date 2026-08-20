@@ -88,8 +88,11 @@ Coverage/facet disposition、Support、serialized byte count 和 progress token�
 ## Composition and sufficiency
 
 一个功能问题可以先执行 candidate search，再对选中的 typed candidates 执行单项或有界批量实现查询，并与 method inventory、direct
-neighborhood、path 或 ordered diff 组合。当前 bounded contract 的 later step 只消费 immediately preceding sealed Result，不能重启
-candidate search，也不能按回合序号对同一 previous Result 期待不同 authority transition。每个 Requirement Need 必须保存其 operation inputs/result digest；跨域答案必须在同一
+neighborhood、path 或 ordered diff 组合。首轮 evidence request 只能由这些注册 operation/relation 表达；Application 将 graph request
+对 method batch 的依赖、inventory 对 declaring-type lookup 的依赖和预算内顺序收敛为冻结 ledger，不得新增题型、问题关键词或工程
+分支。当前 bounded contract 的 later step 只消费 immediately preceding sealed Result，不能重启 candidate search，也不能按回合序号对
+同一 previous Result 期待不同 authority transition；下一 operation 必须来自 ledger 在该 Result 上的确定性合法 transition，未完成义务
+时模型 FINISH 不获得终态权力。每个 Requirement Need 必须保存其 evidence ledger、operation inputs/result digest；跨域答案必须在同一
 Need/Support chain 中同时引用旧 `CALLS` 与实现事实，不能仅在正文拼接两段互不约束的结果。
 
 Query Result 必须区分 `SUPPORTED`、`KNOWLEDGE_GAP`、`ENTITY_RESOLUTION_LIMITATION`、`METHOD_SEMANTICS_LIMITATION` 与

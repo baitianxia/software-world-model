@@ -29,9 +29,11 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
 5. Task Control 与 Response Control 不互写私有状态。Task-owned Outcome Assertion 只绑定 exact Task Revision、Invocation、Delegated Grant、Application Outcome 与自身 Digest；Response Control 以 exact Reference 消费该 Assertion，并在自己的 Review Attempt 中绑定 Reviewer output digest 与 model eligibility。
 6. 没有新权威或复杂依赖证据时，不引入通用 DAG、插件注册中心或全局 Workflow Store。
 7. Evidence Answering 的 Checklist、Packet、Draft 与 Review 使用稳定 Digest 和执行引用；同包重写不是新的来源动作，补证则形成新的 Packet Revision。Task Control 不得把模型提议当成审核或最终授权。
-8. `WORLD_MODEL` bounded investigation 是 Task 内的只读子协议，不是通用自治工作流。Agent 每轮只能提出一个注册 typed query 或
-   `FINISH`；Task Control/Application 按 exact trace prefix、Snapshot、Ref provenance、progress 和剩余预算授权。结果必须先密封
-   才能进入下一轮，Agent 不能执行查询、批量展开 Bundle、改变 Need 或把历史模型记忆当输入。
+8. `WORLD_MODEL` bounded investigation 是 Task 内的只读子协议，不是通用自治工作流。Agent 首轮只能用注册 operation/relation
+   vocabulary 声明 bounded evidence obligations 和通用 search terms；Application 将其冻结为 Task-owned ledger。以后每轮
+   Task Control/Application 按该 ledger、exact trace prefix、立即前序 Result、Snapshot、Ref provenance、progress 和剩余预算计算
+   受限 transition allowlist；模型 proposal 不能扩大 allowlist、删除 obligation 或提前 `FINISH`。结果必须先密封才能进入下一轮，
+   Agent 不能执行查询、批量展开 Bundle、改变 Need 或把历史模型记忆当输入。
 9. Investigation、Draft 与 Review 是隔离角色。调查角色不能看到 Source/Repository/raw Evidence/Update/Direct/Citation
    observation；Draft 只消费 sealed trace；Reviewer 从原问题和同一 trace 独立重建检查项。任何角色失败、结果未知或预算耗尽都
    终止本题，不 retry 或降级。

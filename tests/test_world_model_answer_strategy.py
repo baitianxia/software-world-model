@@ -238,10 +238,10 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.4.1")
+        self.assertEqual(contract.strategy_version, "1.5.0")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
-            "java-source-semantics-investigation-argument-compiler@3",
+            "java-source-semantics-investigation-argument-compiler@4",
         )
         self.assertEqual(
             contract.capabilities,
@@ -292,27 +292,27 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
-            "The platform, not you, owns step_index, trace_digest",
+            "The platform, not you, owns the evidence ledger after step 1",
             contract.prompt,
         )
         self.assertIn(
-            "On later steps search_terms must be empty and implementation_candidates is forbidden",
+            "On later steps evidence_requests and search_terms must be empty",
             contract.prompt,
         )
         self.assertIn(
-            "the platform binds the first two canonical refs and fixed bounds",
+            "available_operations contains only the platform transition",
             contract.prompt,
         )
         self.assertIn(
-            "Never send a method Ref directly to declared_method_inventory",
+            "Graph evidence already includes the method-result prerequisite",
             contract.prompt,
         )
         self.assertIn(
-            "DECLARING_TYPE is the only valid path from an exact method Ref",
+            "declaring-type prerequisites",
             contract.prompt,
         )
         self.assertIn(
-            "a value of 1 still permits one final required query",
+            "a value of 1 still permits the final scheduled query",
             contract.prompt,
         )
         self.assertIn(
@@ -320,11 +320,11 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
-            "An UNKNOWN completeness layer prohibits an absence claim but does not by itself require FINISH",
+            "derives the terminal reason from typed support and the completeness receipt",
             contract.prompt,
         )
         self.assertIn(
-            "An explicit request for the declaring type's declared methods",
+            "declared_method_inventory only for a complete declaring-type method inventory",
             contract.prompt,
         )
         self.assertIn(
@@ -332,15 +332,15 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             contract.prompt,
         )
         self.assertIn(
-            "Return only operation, search_terms, relation_intent, and finish_reason",
+            "return one closed transition hint plus the semantic evidence obligations",
             contract.prompt,
         )
         self.assertIn(
-            "business_discovery_recall all COMPLETE",
+            "business-discovery recall layer needed by the Draft is not COMPLETE",
             contract.prompt,
         )
         self.assertIn(
-            "FINISH is allowed after at least one executed Result",
+            "FINISH is available only when the platform ledger says every evidence obligation is covered",
             contract.prompt,
         )
         self.assertIn(
@@ -364,11 +364,17 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         )
         self.assertTrue(finding_schema["uniqueItems"])
         intent_schema = schemas[
-            "java-bounded-implementation-investigation-intent@1"
+            "java-bounded-implementation-investigation-intent@2"
         ].schema
         self.assertEqual(
             set(intent_schema["properties"]),
-            {"operation", "search_terms", "relation_intent", "finish_reason"},
+            {
+                "operation",
+                "search_terms",
+                "relation_intent",
+                "finish_reason",
+                "evidence_requests",
+            },
         )
         self.assertTrue(
             intent_schema["properties"]["search_terms"]["uniqueItems"]

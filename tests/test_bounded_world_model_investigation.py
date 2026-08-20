@@ -10,6 +10,8 @@ from software_world_model.application_services.bounded_world_model_investigation
     InvestigationProposal,
     InvestigationTerminalStatus,
     compile_investigation_intent,
+    constrained_investigation_operations,
+    normalize_investigation_evidence_requests,
     validate_bounded_investigation_trace,
 )
 from software_world_model.application_services.structure_read_bundle import (
@@ -34,6 +36,21 @@ def _proposal(
     operation: str,
     **changes: object,
 ) -> InvestigationProposal:
+    evidence_requests = changes.pop("evidence_requests", None)
+    if evidence_requests is None:
+        evidence_requests = (
+            [
+                item.canonical_value()
+                for item in session.steps[0].proposal.evidence_requests
+            ]
+            if session.steps
+            else [
+                {
+                    "operation": "method_implementations",
+                    "relation_intent": None,
+                }
+            ]
+        )
     value: dict[str, object] = {
         "step_index": session.model_call_count + 1,
         "trace_digest": session.trace_digest.value,
@@ -51,6 +68,7 @@ def _proposal(
         "max_paths": None,
         "max_expansions": None,
         "finish_reason": None,
+        "evidence_requests": evidence_requests,
     }
     value.update(changes)
     return InvestigationProposal.from_mapping(
@@ -84,6 +102,10 @@ def _sealed_input(
             "results": tuple(
                 item.canonical_value() for item in previous_step.results
             ),
+            "evidence_requests": [
+                item.canonical_value()
+                for item in previous_step.proposal.evidence_requests
+            ],
         }
         previous_progress = {
             "progress_token": previous_step.progress_token.value,
@@ -106,6 +128,33 @@ def _sealed_input(
             "model_calls": 4 - session.model_call_count,
             "execution_steps": 4 - len(session.steps),
         },
+    }
+
+
+def _intent(
+    operation: str,
+    *,
+    search_terms: list[str] | None = None,
+    relation_intent: str | None = None,
+    finish_reason: str | None = None,
+    evidence_requests: list[dict[str, str | None]] | None = None,
+) -> dict[str, object]:
+    return {
+        "operation": operation,
+        "search_terms": search_terms or [],
+        "relation_intent": relation_intent,
+        "finish_reason": finish_reason,
+        "evidence_requests": evidence_requests or [],
+    }
+
+
+def _evidence(
+    operation: str,
+    relation_intent: str | None = None,
+) -> dict[str, str | None]:
+    return {
+        "operation": operation,
+        "relation_intent": relation_intent,
     }
 
 
@@ -210,13 +259,13 @@ class BoundedWorldModelInvestigationTests(TestCase):
 
     def test_platform_compiles_opaque_arguments_and_valid_inventory_transition(self) -> None:
         session = self._session()
+        inventory_evidence = [_evidence("declared_method_inventory")]
         candidate_mapping = compile_investigation_intent(
-            {
-                "operation": "implementation_candidates",
-                "search_terms": ["credentials", "failure", "session"],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent(
+                "implementation_candidates",
+                search_terms=["credentials", "failure", "session"],
+                evidence_requests=inventory_evidence,
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -231,12 +280,10 @@ class BoundedWorldModelInvestigationTests(TestCase):
         assert candidate_step is not None
 
         declaring_mapping = compile_investigation_intent(
-            {
-                "operation": "direct_neighborhood",
-                "search_terms": [],
-                "relation_intent": "DECLARING_TYPE",
-                "finish_reason": None,
-            },
+            _intent(
+                "direct_neighborhood",
+                relation_intent="DECLARING_TYPE",
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -258,12 +305,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
         assert declaring_step is not None
 
         inventory_mapping = compile_investigation_intent(
-            {
-                "operation": "declared_method_inventory",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent("declared_method_inventory"),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -280,12 +322,10 @@ class BoundedWorldModelInvestigationTests(TestCase):
         self.assertEqual(inventory_step.results[0].payload["method_count"], 3)
 
         finish_mapping = compile_investigation_intent(
-            {
-                "operation": "FINISH",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": "typed support is complete",
-            },
+            _intent(
+                "FINISH",
+                finish_reason="typed support is complete",
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -308,12 +348,11 @@ class BoundedWorldModelInvestigationTests(TestCase):
         session = self._session()
 
         mapping = compile_investigation_intent(
-            {
-                "operation": "implementation_candidates",
-                "search_terms": ["account", "order", "ORDER", "locking"],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent(
+                "implementation_candidates",
+                search_terms=["account", "order", "ORDER", "locking"],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -328,37 +367,70 @@ class BoundedWorldModelInvestigationTests(TestCase):
 
         with self.assertRaisesRegex(DomainError, "outside its closed bound"):
             compile_investigation_intent(
-                {
-                    "operation": "implementation_candidates",
-                    "search_terms": [f"term-{index}" for index in range(13)],
-                    "relation_intent": None,
-                    "finish_reason": None,
-                },
+                _intent(
+                    "implementation_candidates",
+                    search_terms=[f"term-{index}" for index in range(13)],
+                    evidence_requests=[_evidence("method_implementations")],
+                ),
                 sealed_input=_sealed_input(
                     session,
                     snapshot_id=self.snapshot_id,
                 ),
             )
 
+    def test_platform_normalizes_evidence_dependencies_and_budget(self) -> None:
+        self.assertEqual(
+            normalize_investigation_evidence_requests(
+                [
+                    _evidence("implementation_candidates"),
+                    _evidence("method_implementations"),
+                    _evidence("direct_neighborhood", "OUTGOING_CALLS"),
+                ]
+            ),
+            (_evidence("direct_neighborhood", "OUTGOING_CALLS"),),
+        )
+        self.assertEqual(
+            normalize_investigation_evidence_requests(
+                [
+                    _evidence("direct_neighborhood", "OUTGOING_CALLS"),
+                    _evidence("direct_neighborhood", "INCOMING_CALLS"),
+                ]
+            ),
+            (_evidence("direct_neighborhood", "BOTH_CALLS"),),
+        )
+        with self.assertRaisesRegex(DomainError, "cannot be combined"):
+            normalize_investigation_evidence_requests(
+                [
+                    _evidence("declared_method_inventory"),
+                    _evidence("direct_neighborhood", "BOTH_CALLS"),
+                ]
+            )
+
     def test_platform_projects_only_the_selected_operation_semantic_slots(self) -> None:
         session = self._session()
         sealed_input = _sealed_input(session, snapshot_id=self.snapshot_id)
+        direct_evidence = [
+            _evidence("direct_neighborhood", "OUTGOING_CALLS")
+        ]
         canonical_candidate = compile_investigation_intent(
-            {
-                "operation": "implementation_candidates",
-                "search_terms": ["credentials", "failure", "session"],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent(
+                "implementation_candidates",
+                search_terms=["credentials", "failure", "session"],
+                evidence_requests=direct_evidence,
+            ),
             sealed_input=sealed_input,
+            available_operations=constrained_investigation_operations(
+                sealed_input=sealed_input
+            ),
         )
         projected_candidate = compile_investigation_intent(
-            {
-                "operation": "implementation_candidates",
-                "search_terms": ["credentials", "failure", "session"],
-                "relation_intent": "BOTH_CALLS",
-                "finish_reason": "irrelevant fixed-envelope residue",
-            },
+            _intent(
+                "implementation_candidates",
+                search_terms=["credentials", "failure", "session"],
+                relation_intent="BOTH_CALLS",
+                finish_reason="irrelevant fixed-envelope residue",
+                evidence_requests=direct_evidence,
+            ),
             sealed_input=sealed_input,
         )
         self.assertEqual(projected_candidate, canonical_candidate)
@@ -376,99 +448,145 @@ class BoundedWorldModelInvestigationTests(TestCase):
             previous_step=candidate_step,
         )
         canonical_method_batch = compile_investigation_intent(
-            {
-                "operation": "method_implementations",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent("method_implementations"),
             sealed_input=later_input,
         )
         projected_method_batch = compile_investigation_intent(
-            {
-                "operation": "method_implementations",
-                "search_terms": ["irrelevant"],
-                "relation_intent": "INCOMING_CALLS",
-                "finish_reason": "irrelevant fixed-envelope residue",
-            },
+            _intent(
+                "FINISH",
+                search_terms=["irrelevant"],
+                relation_intent="INCOMING_CALLS",
+                finish_reason="premature terminal intent",
+            ),
             sealed_input=later_input,
         )
         self.assertEqual(projected_method_batch, canonical_method_batch)
+        method_step = session.submit(
+            InvestigationProposal.from_mapping(
+                projected_method_batch,
+                model_proposal_digest=digest_of("projected-method-intent"),
+            )
+        )
+        assert method_step is not None
 
+        method_input = _sealed_input(
+            session,
+            snapshot_id=self.snapshot_id,
+            previous_step=method_step,
+        )
         canonical_direct = compile_investigation_intent(
-            {
-                "operation": "direct_neighborhood",
-                "search_terms": [],
-                "relation_intent": "OUTGOING_CALLS",
-                "finish_reason": None,
-            },
-            sealed_input=later_input,
+            _intent(
+                "direct_neighborhood",
+                relation_intent="OUTGOING_CALLS",
+            ),
+            sealed_input=method_input,
         )
         projected_direct = compile_investigation_intent(
-            {
-                "operation": "direct_neighborhood",
-                "search_terms": ["irrelevant"],
-                "relation_intent": "OUTGOING_CALLS",
-                "finish_reason": "irrelevant fixed-envelope residue",
-            },
-            sealed_input=later_input,
+            _intent(
+                "FINISH",
+                search_terms=["irrelevant"],
+                relation_intent="BOTH_CALLS",
+                finish_reason="premature terminal intent",
+            ),
+            sealed_input=method_input,
         )
         self.assertEqual(projected_direct, canonical_direct)
+        direct_step = session.submit(
+            InvestigationProposal.from_mapping(
+                projected_direct,
+                model_proposal_digest=digest_of("projected-direct-intent"),
+            )
+        )
+        assert direct_step is not None
 
+        direct_input = _sealed_input(
+            session,
+            snapshot_id=self.snapshot_id,
+            previous_step=direct_step,
+        )
         canonical_finish = compile_investigation_intent(
-            {
-                "operation": "FINISH",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": "typed support is complete",
-            },
-            sealed_input=later_input,
+            _intent(
+                "FINISH",
+                finish_reason="typed support is complete",
+            ),
+            sealed_input=direct_input,
         )
         projected_finish = compile_investigation_intent(
-            {
-                "operation": "FINISH",
-                "search_terms": ["irrelevant"],
-                "relation_intent": "BOTH_CALLS",
-                "finish_reason": "typed support is complete",
-            },
-            sealed_input=later_input,
+            _intent(
+                "FINISH",
+                search_terms=["irrelevant"],
+                relation_intent="BOTH_CALLS",
+                finish_reason="untrusted model terminal text",
+            ),
+            sealed_input=direct_input,
         )
         self.assertEqual(projected_finish, canonical_finish)
 
-        with self.assertRaisesRegex(
-            DomainError, "relation intent is not registered"
-        ):
+        with self.assertRaisesRegex(DomainError, "available operations"):
             compile_investigation_intent(
-                {
-                    "operation": "direct_neighborhood",
-                    "search_terms": [],
-                    "relation_intent": None,
-                    "finish_reason": None,
-                },
-                sealed_input=later_input,
+                _intent("FINISH", finish_reason="done"),
+                sealed_input=direct_input,
+                available_operations=("method_implementations",),
             )
-        with self.assertRaisesRegex(
-            DomainError, "requires one terminal explanation"
-        ):
-            compile_investigation_intent(
-                {
-                    "operation": "FINISH",
-                    "search_terms": [],
-                    "relation_intent": None,
-                    "finish_reason": None,
-                },
-                sealed_input=later_input,
+
+    def test_truncated_candidate_has_no_illegal_method_batch_transition(self) -> None:
+        session = self._session()
+        candidate_mapping = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["credentials"],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+            ),
+            available_operations=("implementation_candidates",),
+        )
+        candidate_step = session.submit(
+            InvestigationProposal.from_mapping(
+                candidate_mapping,
+                model_proposal_digest=digest_of("candidate-intent"),
             )
+        )
+        assert candidate_step is not None
+        sealed_input = _sealed_input(
+            session,
+            snapshot_id=self.snapshot_id,
+            previous_step=candidate_step,
+        )
+        previous_result = dict(sealed_input["previous_result"])
+        result = dict(previous_result["results"][0])
+        result["truncated"] = True
+        previous_result["results"] = (result,)
+        sealed_input["previous_result"] = previous_result
+        progress = dict(sealed_input["progress_receipt"])
+        completeness = dict(progress["completeness"])
+        completeness["query_result"] = "UNKNOWN"
+        progress["completeness"] = completeness
+        sealed_input["progress_receipt"] = progress
+
+        self.assertEqual(
+            constrained_investigation_operations(sealed_input=sealed_input),
+            ("FINISH",),
+        )
+        compiled = compile_investigation_intent(
+            _intent("method_implementations"),
+            sealed_input=sealed_input,
+            available_operations=("FINISH",),
+        )
+        self.assertEqual(compiled["operation"], "FINISH")
+        self.assertIn("query completeness", compiled["finish_reason"])
 
     def test_path_intent_selects_method_endpoints_from_real_batch_results(self) -> None:
         session = self._session()
+        path_evidence = [_evidence("path_exists")]
         candidate_mapping = compile_investigation_intent(
-            {
-                "operation": "implementation_candidates",
-                "search_terms": ["credentials", "failure", "session"],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent(
+                "implementation_candidates",
+                search_terms=["credentials", "failure", "session"],
+                evidence_requests=path_evidence,
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -482,12 +600,10 @@ class BoundedWorldModelInvestigationTests(TestCase):
         )
         assert candidate_step is not None
         candidate_direct_mapping = compile_investigation_intent(
-            {
-                "operation": "direct_neighborhood",
-                "search_terms": [],
-                "relation_intent": "OUTGOING_CALLS",
-                "finish_reason": None,
-            },
+            _intent(
+                "direct_neighborhood",
+                relation_intent="OUTGOING_CALLS",
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -495,35 +611,20 @@ class BoundedWorldModelInvestigationTests(TestCase):
             ),
         )
         self.assertEqual(
-            candidate_direct_mapping["entity_refs"],
-            [
-                _ref(
-                    candidate_step.results[0],
-                    candidate_step.results[0].payload["candidates"][0]["method"],
-                )
-            ],
+            candidate_direct_mapping["operation"],
+            "method_implementations",
         )
         candidate_path_mapping = compile_investigation_intent(
-            {
-                "operation": "path_exists",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent("path_exists"),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
                 previous_step=candidate_step,
             ),
         )
-        self.assertEqual(len(candidate_path_mapping["entity_refs"]), 2)
+        self.assertEqual(candidate_path_mapping, candidate_direct_mapping)
         method_mapping = compile_investigation_intent(
-            {
-                "operation": "method_implementations",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent("method_implementations"),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -540,12 +641,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
         self.assertEqual(len(method_step.results), 3)
 
         path_mapping = compile_investigation_intent(
-            {
-                "operation": "path_exists",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent("path_exists"),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -560,12 +656,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
             ),
         )
         canonical_all_paths_mapping = compile_investigation_intent(
-            {
-                "operation": "all_simple_paths",
-                "search_terms": [],
-                "relation_intent": None,
-                "finish_reason": None,
-            },
+            _intent("all_simple_paths"),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -573,12 +664,12 @@ class BoundedWorldModelInvestigationTests(TestCase):
             ),
         )
         projected_all_paths_mapping = compile_investigation_intent(
-            {
-                "operation": "all_simple_paths",
-                "search_terms": ["irrelevant"],
-                "relation_intent": "BOTH_CALLS",
-                "finish_reason": "irrelevant fixed-envelope residue",
-            },
+            _intent(
+                "FINISH",
+                search_terms=["irrelevant"],
+                relation_intent="BOTH_CALLS",
+                finish_reason="premature terminal intent",
+            ),
             sealed_input=_sealed_input(
                 session,
                 snapshot_id=self.snapshot_id,
@@ -586,6 +677,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
             ),
         )
         self.assertEqual(projected_all_paths_mapping, canonical_all_paths_mapping)
+        self.assertEqual(projected_all_paths_mapping, path_mapping)
         executed = session.submit(
             InvestigationProposal.from_mapping(
                 path_mapping,
@@ -596,18 +688,21 @@ class BoundedWorldModelInvestigationTests(TestCase):
 
     def test_zero_candidates_are_limitation_without_discovery_oracle(self) -> None:
         session = self._session()
-        for term in ("definitelyAbsentFeature", "unrepresentedBusinessEntry"):
-            step = session.submit(
-                _proposal(
-                    session,
-                    "implementation_candidates",
-                    snapshot_id=self.snapshot_id.value,
-                    search_terms=[term],
-                    limit=10,
-                )
+        step = session.submit(
+            _proposal(
+                session,
+                "implementation_candidates",
+                snapshot_id=self.snapshot_id.value,
+                search_terms=[
+                    "definitelyAbsentFeature",
+                    "unrepresentedBusinessEntry",
+                ],
+                limit=10,
+                evidence_requests=[_evidence("implementation_candidates")],
             )
-            assert step is not None
-            self.assertEqual(step.results[0].payload["candidate_count"], 0)
+        )
+        assert step is not None
+        self.assertEqual(step.results[0].payload["candidate_count"], 0)
         session.submit(_proposal(session, "FINISH", finish_reason="no-candidates"))
 
         completeness = session.seal().completeness
@@ -620,16 +715,19 @@ class BoundedWorldModelInvestigationTests(TestCase):
     def test_three_independent_complete_verdicts_allow_bounded_absence(self) -> None:
         bound_view = self._view_with_complete_discovery_recall()
         session = self._session(view=bound_view)
-        for term in ("definitelyAbsentFeature", "unrepresentedBusinessEntry"):
-            session.submit(
-                _proposal(
-                    session,
-                    "implementation_candidates",
-                    snapshot_id=self.snapshot_id.value,
-                    search_terms=[term],
-                    limit=10,
-                )
+        session.submit(
+            _proposal(
+                session,
+                "implementation_candidates",
+                snapshot_id=self.snapshot_id.value,
+                search_terms=[
+                    "definitelyAbsentFeature",
+                    "unrepresentedBusinessEntry",
+                ],
+                limit=10,
+                evidence_requests=[_evidence("implementation_candidates")],
             )
+        )
         session.submit(_proposal(session, "FINISH", finish_reason="bounded-absence"))
 
         trace = session.seal()
@@ -704,9 +802,9 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 )
             )
 
-    def test_cycle_and_finish_without_result_fail_closed(self) -> None:
+    def test_transition_and_terminal_fences_fail_closed(self) -> None:
         empty = self._session()
-        with self.assertRaisesRegex(DomainError, "at least one executed"):
+        with self.assertRaisesRegex(DomainError, "frozen evidence transition"):
             empty.submit(_proposal(empty, "FINISH", finish_reason="too-early"))
         with self.assertRaisesRegex(DomainError, "terminal investigation"):
             empty.submit(
@@ -725,8 +823,9 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 session,
                 "implementation_candidates",
                 snapshot_id=self.snapshot_id.value,
-                search_terms=["credentials"],
+                search_terms=["definitelyAbsentFeature"],
                 limit=10,
+                evidence_requests=[_evidence("implementation_candidates")],
             )
         )
         session.submit(_proposal(session, "FINISH", finish_reason="complete"))
@@ -745,20 +844,27 @@ class BoundedWorldModelInvestigationTests(TestCase):
             InvestigationTerminalStatus.FINISHED,
         )
 
-        cycle = self._session()
-        for _ in range(2):
-            proposal = _proposal(
-                cycle,
+        transition = self._session()
+        transition.submit(
+            _proposal(
+                transition,
                 "implementation_candidates",
                 snapshot_id=self.snapshot_id.value,
                 search_terms=["credentials"],
                 limit=10,
+                evidence_requests=[_evidence("declared_method_inventory")],
             )
-            if cycle.model_call_count == 0:
-                cycle.submit(proposal)
-            else:
-                with self.assertRaisesRegex(DomainError, "no-progress"):
-                    cycle.submit(proposal)
+        )
+        with self.assertRaisesRegex(DomainError, "frozen evidence transition"):
+            transition.submit(
+                _proposal(
+                    transition,
+                    "implementation_candidates",
+                    snapshot_id=self.snapshot_id.value,
+                    search_terms=["credentials"],
+                    limit=10,
+                )
+            )
 
     def test_result_provenance_supports_neighborhood_inventory_and_path(self) -> None:
         inventory_session = self._session()
@@ -769,6 +875,7 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 snapshot_id=self.snapshot_id.value,
                 search_terms=["credentials"],
                 limit=10,
+                evidence_requests=[_evidence("declared_method_inventory")],
             )
         )
         assert first is not None
@@ -812,18 +919,32 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 snapshot_id=self.snapshot_id.value,
                 search_terms=["credentials", "failure", "session"],
                 limit=10,
+                evidence_requests=[_evidence("path_exists")],
             )
         )
         assert candidate_step is not None
         candidate_result = candidate_step.results[0]
         values = candidate_result.payload["candidates"]
+        method_step = path_session.submit(
+            _proposal(
+                path_session,
+                "method_implementations",
+                candidate_result_id=candidate_result.result_id.value,
+                candidate_result_digest=candidate_result.digest.value,
+                method_refs=[
+                    _ref(candidate_result, item["method"])
+                    for item in values
+                ],
+            )
+        )
+        assert method_step is not None
         path = path_session.submit(
             _proposal(
                 path_session,
                 "path_exists",
                 entity_refs=[
-                    _ref(candidate_result, values[0]["method"]),
-                    _ref(candidate_result, values[1]["method"]),
+                    _ref(method_step.results[0], method_step.results[0].payload["method"]),
+                    _ref(method_step.results[1], method_step.results[1].payload["method"]),
                 ],
                 predicate="CALLS",
                 max_depth=4,
@@ -918,19 +1039,64 @@ class BoundedWorldModelInvestigationTests(TestCase):
 
     def test_fourth_model_call_seals_budget_limitation_without_retry(self) -> None:
         session = self._session()
-        last_proposal = None
-        for ordinal in range(4):
-            last_proposal = _proposal(
+        plan = [
+            _evidence("direct_neighborhood", "BOTH_CALLS"),
+            _evidence("all_simple_paths"),
+        ]
+        candidate = session.submit(
+            _proposal(
                 session,
                 "implementation_candidates",
                 snapshot_id=self.snapshot_id.value,
-                search_terms=[f"absent-feature-{ordinal}"],
+                search_terms=["credentials", "failure", "session"],
                 limit=10,
+                evidence_requests=plan,
             )
-            step = session.submit(
-                last_proposal
+        )
+        assert candidate is not None
+        candidate_result = candidate.results[0]
+        method = session.submit(
+            _proposal(
+                session,
+                "method_implementations",
+                candidate_result_id=candidate_result.result_id.value,
+                candidate_result_digest=candidate_result.digest.value,
+                method_refs=[
+                    _ref(candidate_result, item["method"])
+                    for item in candidate_result.payload["candidates"]
+                ],
             )
-            self.assertIsNotNone(step)
+        )
+        assert method is not None
+        direct = session.submit(
+            _proposal(
+                session,
+                "direct_neighborhood",
+                entity_refs=[
+                    _ref(method.results[0], method.results[0].payload["method"])
+                ],
+                direction="BOTH",
+                predicate="CALLS",
+            )
+        )
+        assert direct is not None
+        last_mapping = compile_investigation_intent(
+            _intent(
+                "FINISH",
+                finish_reason="premature terminal intent",
+            ),
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+                previous_step=direct,
+            ),
+        )
+        self.assertEqual(last_mapping["operation"], "all_simple_paths")
+        last_proposal = InvestigationProposal.from_mapping(
+            last_mapping,
+            model_proposal_digest=digest_of("projected-all-paths-intent"),
+        )
+        self.assertIsNotNone(session.submit(last_proposal))
 
         trace = session.seal()
         self.assertEqual(trace.model_call_count, 4)
@@ -939,7 +1105,6 @@ class BoundedWorldModelInvestigationTests(TestCase):
             InvestigationTerminalStatus.LIMITATION,
         )
         self.assertEqual(trace.terminal_reason, "INVESTIGATION_BUDGET_EXHAUSTED")
-        assert last_proposal is not None
         with self.assertRaisesRegex(DomainError, "terminal investigation"):
             session.submit(last_proposal)
 
@@ -964,16 +1129,16 @@ class BoundedWorldModelInvestigationTests(TestCase):
         self.assertEqual(timed.steps, ())
 
         session = self._session()
-        for term in ("credentials", "session"):
-            session.submit(
-                _proposal(
-                    session,
-                    "implementation_candidates",
-                    snapshot_id=self.snapshot_id.value,
-                    search_terms=[term],
-                    limit=10,
-                )
+        session.submit(
+            _proposal(
+                session,
+                "implementation_candidates",
+                snapshot_id=self.snapshot_id.value,
+                search_terms=["definitelyAbsentFeature", "missingEntry"],
+                limit=10,
+                evidence_requests=[_evidence("implementation_candidates")],
             )
+        )
         session.submit(_proposal(session, "FINISH", finish_reason="done"))
         trace = session.seal()
         with self.assertRaisesRegex(DomainError, "another Question"):

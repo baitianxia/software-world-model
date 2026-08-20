@@ -27,30 +27,38 @@ Bundle。ITER-007 的固定 `Plan → 单方法选择 → Draft → Review` 却�
 
 ```text
 immutable Question / Needs / exact Read Authority
-  → Agent proposes one semantic investigation intent
-  → Application compiles exact authority arguments and validates provenance/budget
+  → Agent proposes generic search terms and a bounded evidence-obligation set
+  → Application normalizes and freezes the obligation ledger
+  → Application derives the legal transition set from the ledger and sealed Result prefix
+  → Agent proposes within that constrained set
+  → Application compiles exact authority arguments and validates provenance/budget/terminal eligibility
   → Knowledge Use executes against the exact no-payload Bundle
   → Application seals the typed result and progress receipt
-  → Agent receives only the sealed trace prefix/completeness projection and proposes the next intent or FINISH
+  → repeat only while a frozen obligation has a legal evidence-reducing transition
   → sealed investigation trace
   → one Draft
   → independent Review
   → deterministic Authorization / Delivery
 ```
 
-Agent 只拥有 operation、通用 search terms、closed relation intent 与 FINISH explanation。平台而不是 Agent 拥有 operation allowlist、
-typed Ref、Result binding、Snapshot fence、direction/predicate expansion、graph bounds、查询执行、Support、预算、cycle/progress、trace seal
-和终态；Application 必须从 sealed input deterministic 编译这些 authority 参数，不能要求模型复制、重建或猜测 opaque identifier。
+Agent 只拥有原问题的语义解释、通用 search terms、由注册 operation/relation vocabulary 表达的 evidence request，以及当前受限
+transition 内的 proposal hint。evidence request 是需要哪类正式证据，不是题型 enum、查询参数或执行授权；首轮经 Application
+做 operation-discriminated normalization、去重、依赖收敛和预算可达性校验后即成为不可变 ledger，后续模型输出不能删改。
+平台而不是 Agent 拥有逐状态 operation allowlist、typed Ref、Result binding、Snapshot fence、direction/predicate expansion、graph bounds、
+查询执行、Support、预算、cycle/progress、trace seal、evidence fulfillment、FINISH reason 和终态；Application 必须从冻结 ledger 与 sealed input
+deterministic 编译这些 authority 参数，不能要求模型复制、重建或猜测 opaque identifier，也不能让一次模型 `FINISH` 缩小未完成义务。
 Agent 看不到 Repository、Source file、Artifact/Evidence payload、完整 AST、Knowledge Update、Citation observation、Direct
 Investigation、评测 Oracle 或其他角色私有输出。每轮 proposal 只在验证后执行；模型输出本身不是查询结果或授权。
 
-首个受权闭包允许每题 2—4 次调查模型调用，随后恰好 1 次 Draft 和 1 次独立 Review，总调用上限为 6，不重试。一个已执行 Result
-之后即可显式 `FINISH`，且 `FINISH` 自身计作一次调用，因此 1 query + FINISH 构成合法 2-call investigation；零 Result 的 FINISH
-仍失败关闭。每轮只提交一个 semantic intent，Application 只编译一个 typed operation；批量 `method_implementation` 仍是一个查询，
+首个受权闭包允许每题 2—4 次调查模型调用，随后恰好 1 次 Draft 和 1 次独立 Review，总调用上限为 6，不重试。首轮始终编译为
+candidate discovery 并冻结 evidence ledger；以后每轮只披露由 ledger、立即前序 Result 和剩余预算推导的受限 operation 子集。
+只有全部 evidence obligation 已由 sealed Result 覆盖，或 typed Result 证明没有合法 evidence-reducing transition 时，Application 才
+允许显式 `FINISH`。`FINISH` 自身计作一次调用，因此 candidate Result 已关闭全部义务时，1 query + FINISH 仍是合法 2-call
+investigation；零 Result 的 FINISH 仍失败关闭。每轮 Application 只编译一个 typed operation；批量 `method_implementation` 仍是一个查询，
 最多携带 3 个来自同一已密封 candidate result 的 exact method Ref。
 调用、query/result bytes、Support、trace 和 wall time 均由当前 Contract 固定。预算耗尽、无进展、重复 proposal、Ref 越界或结果
 未知都失败关闭为具体 Limitation，不取消 Review，也不转入 Source/Direct。
-`remaining_budget=1` 时 Agent 可以选择最后一个有证据增益的 query；Application 执行并密封 Result 后立即以
+`remaining_budget=1` 时 Application 仍可授权 ledger 中最后一个有证据增益的 query；执行并密封 Result 后立即以
 `INVESTIGATION_BUDGET_EXHAUSTED` 终止 Session，不需要超出上限的额外 `FINISH`。无进展/cycle 依据是同一 Session 中已执行的
 exact query 和 Result progress token，而不是脱离 sealed state 单独比较 operation 名称。
 

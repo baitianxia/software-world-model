@@ -218,6 +218,18 @@ class _QualifiedSemanticsFixtureModel:
         self.sealed_inputs.append(sealed_input)
         if capability == IMPLEMENTATION_INVESTIGATION:
             step_index = sealed_input["step_index"]
+            evidence_requests = (
+                [
+                    {
+                        "operation": "method_implementations",
+                        "relation_intent": None,
+                    }
+                ]
+                if step_index == 1
+                else list(
+                    sealed_input["previous_result"]["evidence_requests"]
+                )
+            )
             base = {
                 "step_index": step_index,
                 "trace_digest": sealed_input["trace_digest"],
@@ -235,6 +247,7 @@ class _QualifiedSemanticsFixtureModel:
                 "max_paths": None,
                 "max_expansions": None,
                 "finish_reason": "typed-support-or-boundary-complete",
+                "evidence_requests": evidence_requests,
             }
             if step_index == 1:
                 return SimpleNamespace(
@@ -251,6 +264,8 @@ class _QualifiedSemanticsFixtureModel:
                 )
             previous = sealed_input["previous_result"]
             if step_index == 2:
+                if available_operations == ("FINISH",):
+                    return SimpleNamespace(normalized_result=base)
                 candidate_result = previous["results"][0]
                 candidates = candidate_result["payload"]["candidates"]
                 if candidates:
@@ -276,18 +291,7 @@ class _QualifiedSemanticsFixtureModel:
                             "finish_reason": None,
                         }
                     )
-                return SimpleNamespace(
-                    normalized_result={
-                        **base,
-                        "operation": "implementation_candidates",
-                        "snapshot_id": sealed_input["read_authority"][
-                            "snapshot_ids"
-                        ][-1],
-                        "search_terms": ["alternateDiscoveryEntry"],
-                        "limit": 5,
-                        "finish_reason": None,
-                    }
-                )
+                raise AssertionError("zero candidates must schedule FINISH")
             return SimpleNamespace(
                 normalized_result=base
             )
@@ -1011,20 +1015,19 @@ class JavaImplementationViewTests(TestCase):
 
             self.assertEqual(code, 0)
             summary = json.loads(summary_path.read_text(encoding="utf-8"))
-            self.assertEqual(summary["provider_call_count"], 5)
-            self.assertEqual(summary["network_operation_count"], 5)
+            self.assertEqual(summary["provider_call_count"], 4)
+            self.assertEqual(summary["network_operation_count"], 4)
             self.assertEqual(
                 summary["model_capabilities"],
                 [
-                    IMPLEMENTATION_INVESTIGATION,
                     IMPLEMENTATION_INVESTIGATION,
                     IMPLEMENTATION_INVESTIGATION,
                     IMPLEMENTATION_ANSWER_DRAFTING,
                     IMPLEMENTATION_ANSWER_REVIEW,
                 ],
             )
-            self.assertEqual(len(summary["model_call_ids"]), 5)
-            self.assertEqual(len(summary["gateway_audits"]), 5)
+            self.assertEqual(len(summary["model_call_ids"]), 4)
+            self.assertEqual(len(summary["gateway_audits"]), 4)
             self.assertEqual(summary["product_oracle_read_count"], 0)
             model_input = json.dumps(
                 model.sealed_inputs,
@@ -1049,16 +1052,23 @@ class JavaImplementationViewTests(TestCase):
 
     def test_zero_candidate_is_limited_and_multiple_candidates_are_investigated(self) -> None:
         cases = (
-            (("definitelyAbsentFeature",), "LIMITATION", 2, self.service),
+            (("definitelyAbsentFeature",), "LIMITATION", 1, 4, self.service),
             (
                 ("definitelyAbsentFeature",),
                 "KNOWLEDGE_GAP",
-                2,
+                1,
+                4,
                 self._view_with_complete_discovery_recall(),
             ),
-            (("login",), "SUPPORTED", 4, self.service),
+            (("login",), "SUPPORTED", 4, 5, self.service),
         )
-        for terms, expected_disposition, expected_result_count, view in cases:
+        for (
+            terms,
+            expected_disposition,
+            expected_result_count,
+            expected_call_count,
+            view,
+        ) in cases:
             with self.subTest(terms=terms, disposition=expected_disposition):
                 model = _QualifiedSemanticsFixtureModel(search_terms=terms)
                 execution = WorldModelProductAnswerService(
@@ -1076,9 +1086,9 @@ class JavaImplementationViewTests(TestCase):
                     ),
                 )
 
-                self.assertEqual(model.provider_call_count, 5)
+                self.assertEqual(model.provider_call_count, expected_call_count)
                 self.assertEqual(
-                    model.sealed_inputs[3]["assessment_disposition"],
+                    model.sealed_inputs[-2]["assessment_disposition"],
                     expected_disposition,
                 )
                 self.assertEqual(
@@ -1089,27 +1099,23 @@ class JavaImplementationViewTests(TestCase):
                     all(item.state.value == "READY" for item in execution.chain.plan.steps)
                 )
 
-    def test_bounded_absence_rejects_an_ignored_positive_candidate_result(self) -> None:
+    def test_post_compiler_candidate_restart_is_rejected(self) -> None:
         view = self._view_with_complete_discovery_recall()
         model = _MixedPositiveAndZeroCandidateFixtureModel()
 
-        execution = WorldModelProductAnswerService(
-            view=view,
-            snapshot_bundles=(self.bundle,),
-            model_strategy=model,
-            gateway_counters=model,
-        ).execute(
-            request_ref="ITER-008-MIXED-CANDIDATE-NEGATIVE",
-            original_question="请解释凭据处理功能是否存在。",
-            response_language="zh-CN",
-            classification="INTERNAL",
-            permission_digest=digest_of("iter-008-mixed-candidate"),
-        )
-
-        assessment = execution.chain.assessment.needs[0]
-        self.assertEqual(assessment.outcome.value, "LIMITATION")
-        self.assertIsNone(assessment.gap_code)
-        self.assertNotEqual(
-            execution.chain.draft.claims[0].kind.value,
-            "KNOWLEDGE_GAP",
-        )
+        with self.assertRaisesRegex(
+            DomainError,
+            "frozen evidence transition",
+        ):
+            WorldModelProductAnswerService(
+                view=view,
+                snapshot_bundles=(self.bundle,),
+                model_strategy=model,
+                gateway_counters=model,
+            ).execute(
+                request_ref="ITER-008-MIXED-CANDIDATE-NEGATIVE",
+                original_question="请解释凭据处理功能是否存在。",
+                response_language="zh-CN",
+                classification="INTERNAL",
+                permission_digest=digest_of("iter-008-mixed-candidate"),
+            )

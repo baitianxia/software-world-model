@@ -37,6 +37,10 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    supervisor 可以提供上限数量的 exact connected descriptor，但 Gateway 只能顺序消费，不能创建、交换或复用连接。Answer terminal
    后未消费 descriptor 必须关闭并记录 `UNUSED_CLOSED`，且 `provisioned = consumed + unused_closed`；少于最小、超过最大、缺 receipt、
    跨题/跨 session 使用或计数未知均失败关闭。
+9. 若 Capability 使用 Application-owned constrained transition，Gateway 输入必须同时绑定完整版本化 operation universe 与当前 sealed
+   state 的非空受限子集。子集只能由 Application 从冻结 evidence ledger、前序 Result 和预算派生，并按 contract canonical order
+   表达；Gateway 拒绝 universe 外 operation、空子集、乱序/重复项或调用方自行扩张。模型 response 中越出子集的 operation 仍作为
+   untrusted raw output 记录，但不能由 Gateway 或 Adapter 获得查询/FINISH 权力。
 
 ## Security and compatibility
 

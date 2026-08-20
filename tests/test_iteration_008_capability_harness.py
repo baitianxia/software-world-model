@@ -78,6 +78,7 @@ def _passing_normalized(
             "max_paths": projection["max_paths"],
             "max_expansions": projection["max_expansions"],
             "finish_reason": None,
+            "evidence_requests": projection["evidence_requests"],
         }
         search_groups = constraints.get("search_term_concept_groups", [])
         if search_groups:
@@ -125,6 +126,11 @@ def _passing_model_output(
             " ".join(group[0] for group in finish_groups)
             if finish_groups
             else None
+        ),
+        "evidence_requests": (
+            copy.deepcopy(case["evidence_requests"])
+            if step["step_index"] == 1
+            else []
         ),
     }
 
@@ -291,6 +297,17 @@ class _PassingCapabilityTransport:
         self._outputs[
             "WM-JSS-I8-ALL-SIMPLE-PATHS-008:call-3"
         ]["relation_intent"] = "BOTH_CALLS"
+        for call_id in (
+            "WM-JSS-I8-MAX-FOUR-010:call-3",
+            "WM-JSS-I8-BUDGET-EXHAUSTION-011:call-4",
+        ):
+            self._outputs[call_id].update(
+                {
+                    "operation": "FINISH",
+                    "relation_intent": None,
+                    "finish_reason": "typed support is sufficient",
+                }
+            )
 
     def post_json(self, **arguments):
         self.calls += 1
@@ -389,7 +406,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-one-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.4.1")
+        self.assertEqual(definition.strategy_version, "1.5.0")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),
@@ -450,7 +467,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             request_count += review["model_call_count"]
         self.assertEqual(request_count, PINNED_PROVIDER_REQUEST_COUNT)
 
-    def test_frozen_alternative_projection_is_exact_without_cross_sample_cycle(self) -> None:
+    def test_frozen_transition_projection_is_singleton_and_exact(self) -> None:
         case, oracle_case = case_pairs(_SUITE, _ORACLE)[5]
         packet, result = _case_documents(dict(case), dict(oracle_case))
         accepted = expected_step_projections(
@@ -459,9 +476,9 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             case["steps"][1],
             oracle_case["steps"][1],
         )
-        self.assertEqual(len(accepted), 2)
+        self.assertEqual(len(accepted), 1)
         normalized = result["step_results"][1]["normalized_result"]
-        normalized.update(accepted[1])
+        normalized["operation"] = "FINISH"
         normalized_digest = digest_of(normalized).value
         result["step_results"][1]["normalized_result_digest"] = normalized_digest
         result["step_results"][1]["evidence_trace_digest"] = (
@@ -479,8 +496,8 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
 
         review = evaluator.evaluate(packet, result)
 
-        self.assertEqual(review["conclusion"], "PASS")
-        self.assertNotIn("QUERY_REPEATED", review["derived_events"])
+        self.assertEqual(review["conclusion"], "FAIL")
+        self.assertIn("CALL_2:CONTRACT_PROJECTION_NOT_EXACT", review["findings"])
 
     def test_tampered_ref_fails_exact_oracle(self) -> None:
         case, oracle_case = case_pairs(_SUITE, _ORACLE)[2]

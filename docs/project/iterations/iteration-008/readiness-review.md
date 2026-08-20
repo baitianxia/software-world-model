@@ -61,9 +61,16 @@ Gap 与 Citation，并逐题不低于成熟源码 Agent。
 9. 冻结 Proposal A1—A8 三列表的 exact 摘要、最早反证、`V-DIAG-001` 逐层归因、SLICE-001 最小 bounded-absence/Limitation 双反例、每个 Slice 的
    `V-REFLECT` 结构化模板、独立决策 Owner 与语义；复盘 PASS 只代表审查完成，`CONTINUE/ACCEPT` 才代表方案可继续或可接受。
 
-闭合证据为 `SYS-ADR-015`、Manifest 的 `ITER-008-SYSTEM-CONTRACT-SET@1` fileset digest
-`sha256:a01bca5d…a305`、budget digest `sha256:edb492b7…1012`、成熟 Agent/rubric/value protocol raw digest，以及
+闭合证据为 `SYS-ADR-015`、Manifest 的 `ITER-008-SYSTEM-CONTRACT-SET@1` fileset digest、budget digest
+`sha256:edb492b7…1012`、成熟 Agent/rubric/value protocol raw digest，以及
 `V-PRE-001`—`V-PRE-007` 的 readiness PASS。任何这些文件或 digest 变化都会使本 Readiness stale，不能静默继承授权。
+
+实现证据随后按治理规则形成 `FINDING-008-019`：run-010 证明原 Owner 允许模型提前 FINISH，用户既有显式 protocol redirect 又要求
+集成层适配模型。该 system-contract Finding 已在同一已授权 SLICE-001 范围内写回原 12 份 System 输入；预算、Source-off、三层
+完整性、18/18、no-retry、Web/canary/Activation 阻断与 Slice 范围均未扩大。重冻结后的
+`ITER-008-SYSTEM-CONTRACT-SET@1` exact digest 为
+`sha256:206d0b2ecc1dbd82b632b825f2284f7d6971b886840f903b1d6368f29c28331b`；它取代旧 fileset 作为当前实现输入，且必须由最终 docs gate
+重算一致后才可形成 clean candidate。这是显式 Finding/redirect revalidation，不是静默继承原 digest。
 
 ## Slice, dependency and risk closure
 

@@ -205,6 +205,30 @@ run-009 Result 不改写、不 retry；新 clean candidate 必须以全新 Confo
 该 redirect 的本地证据为定向 54/54、含原反例的 fake transport 41 calls / 18/18、full discovery 982/982、current documents
 322/322、diff 与 secret scan PASS；这些不替代 live Qualification。
 
+compiler `@3` clean candidate `4e79a126faf8c6992c1649ad8f82150d69cd414d` 随后完成 run-010。Conformance preflight/result/
+terminal digest 为 `sha256:60ac01be1f28d5766256fa1eb5c2996500683bb90e90dcfd90d48e7acd822a9a` /
+`sha256:a145a64ba15f49a14825f95c13accb58424f6ffe2b388f2b9b82663bef82075b` /
+`sha256:326bd75035792d20634f8a1ad3db550dc920532b131cbd9230c96ed5719ac056`，恰好 2 requests / 12 Case PASS。
+同候选 Capability freeze `sha256:9e425d2fec706658d6574305730ff20cc37ee45a1824f0b1ac2e6eca6ec8fcfb` 无 retry 地完成
+41/41 requests 和全部 18 Case，唯一 response identity 为 `deepseek-v4-pro`，usage 完整，tokens 为 105,890/2,680，
+`unknown_count=0`。closed Result 只有 16/18 PASS；result/document/terminal digest 为
+`sha256:47436f2f24eb39cf359dba08c1437a35c93aebe67daedd0447daf235f3d1a193` /
+`sha256:341777308d364d2732c528c1d705cd9b823702c960119f4bf0980bdf65bab9dd` /
+`sha256:3937818ae9f39677945592dbb6a68a685b0fc68fd1b24c1f66711779e74135ff`。没有 Qualification、正式 Web、canary 或 Activation。
+
+run-009 的 all-simple-paths slot 反例在 run-010 已 PASS。仅剩 `MAX-FOUR-010` 第 3 回合和 `BUDGET-EXHAUSTION-011` 第 4 回合
+premature FINISH，分别遗漏 direct CALLS 与 all-simple-paths；method-only `LEGAL-FINISH-009` 正确结束。按
+[FINDING-008-019](../findings/FINDING-008-019.md)，这证明 Application 缺少跨回合不可变 evidence obligation 和 FINISH Owner，
+不是模型 transport/identity/shape/Ref 问题，也不能用“总是多查一步”修复。
+
+活动协议现为 capability/Strategy `1.5.0`、prompt/vocabulary `@9`、compiler `@4`、Gateway policy `@1.2.0`、suite/oracle
+`@1.5.0`。Application 首轮冻结通用 operation/relation evidence ledger，后续从 ledger、立即前序 Result 和预算推导唯一 transition；
+raw operation、premature FINISH 和 terminal text 均不获得 authority。当前 targeted 96/96、Gateway AF_UNIX、fake transport
+41 calls / 18/18 与 current documents 324/324 PASS。允许 AF_UNIX listener 的完整测试执行面为 980/985；剩余五项均由当前桌面
+Codex CLI 与 ITER-003 frozen mature-agent binary 的 exact drift 触发，已由
+[FINDING-008-020](../findings/FINDING-008-020.md) 保留 fail-closed。历史 freeze/断言未改，full suite 未声明 PASS；该环境 hold 与
+DeepSeek 资格链相互独立。clean candidate 和全新 live qualification 尚待完成，因此 V-002 继续 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

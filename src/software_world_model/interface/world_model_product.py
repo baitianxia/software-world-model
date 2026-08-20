@@ -47,6 +47,7 @@ from software_world_model.application_services.bounded_world_model_investigation
     InvestigationEntityRef,
     InvestigationOperation,
     InvestigationProposal,
+    constrained_investigation_operations,
 )
 from software_world_model.application_services.structure_view import (
     NeighborhoodDirection,
@@ -1126,29 +1127,31 @@ class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
         previous_progress: object = None
         while not session.terminal:
             step_index = session.model_call_count + 1
+            sealed_input = {
+                "original_question": question.original_question,
+                "response_language": question.response_language,
+                "need_key": need_ids[0],
+                "read_authority": question.read_authority.canonical_value(),
+                "profile_ref": JAVA_SOURCE_SEMANTICS_PROFILE_REF,
+                "step_index": step_index,
+                "trace_digest": session.trace_digest.value,
+                "previous_result": previous_result,
+                "progress_receipt": previous_progress,
+                "remaining_budget": {
+                    "model_calls": 4 - session.model_call_count,
+                    "execution_steps": 4 - len(session.steps),
+                },
+            }
+            available_operations = constrained_investigation_operations(
+                sealed_input=sealed_input
+            )
             model_proposal = self._model.propose(
                 case_id=(
                     f"product:{question.request_ref}:investigation:{step_index}"
                 ),
                 capability=IMPLEMENTATION_INVESTIGATION,
-                sealed_input={
-                    "original_question": question.original_question,
-                    "response_language": question.response_language,
-                    "need_key": need_ids[0],
-                    "read_authority": question.read_authority.canonical_value(),
-                    "profile_ref": JAVA_SOURCE_SEMANTICS_PROFILE_REF,
-                    "step_index": step_index,
-                    "trace_digest": session.trace_digest.value,
-                    "previous_result": previous_result,
-                    "progress_receipt": previous_progress,
-                    "remaining_budget": {
-                        "model_calls": 4 - session.model_call_count,
-                        "execution_steps": 4 - len(session.steps),
-                    },
-                },
-                available_operations=(
-                    JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT.available_operations
-                ),
+                sealed_input=sealed_input,
+                available_operations=available_operations,
             )
             self._recorder.append(model_proposal)
             normalized = getattr(model_proposal, "normalized_result", None)
@@ -1178,6 +1181,10 @@ class JavaSourceSemanticsQueryPlanner(WorldModelQueryPlanner):
                         _plain_canonical(item.canonical_value())
                         for item in executed.results
                     ),
+                    "evidence_requests": [
+                        item.canonical_value()
+                        for item in executed.proposal.evidence_requests
+                    ],
                 }
                 previous_progress = {
                     "progress_token": executed.progress_token.value,

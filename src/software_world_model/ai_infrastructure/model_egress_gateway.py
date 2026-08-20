@@ -27,6 +27,9 @@ from software_world_model.cross_cutting import (
     canonical_json_bytes,
     digest_of,
 )
+from software_world_model.application_services.bounded_world_model_investigation import (
+    constrained_investigation_operations,
+)
 
 from .model_gateway import (
     AdapterResponse,
@@ -60,7 +63,7 @@ JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.1.2"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.2.0"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
@@ -111,7 +114,7 @@ _EXACT_SCHEMA_BY_STAGE = {
     "ENTITY_CANDIDATE_RESOLUTION": "world-model-entity-resolution@1",
     "IMPLEMENTATION_QUERY_PLANNING": "java-implementation-query-plan@1",
     "IMPLEMENTATION_INVESTIGATION": (
-        "java-bounded-implementation-investigation-intent@1"
+        "java-bounded-implementation-investigation-intent@2"
     ),
     "IMPLEMENTATION_ANSWER_DRAFTING": "java-implementation-answer-draft@1",
     "IMPLEMENTATION_ANSWER_REVIEW": "java-implementation-answer-review@2",
@@ -123,7 +126,7 @@ _JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
     "sha256:9e4e3dcbb0584b2574bfa71c5e31275e5496255e0ce41cdc5fc8f05e18e243b5"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
-    "sha256:5403a7314b81a2eb48d1fa6529b730cdc16ffe9c06bdbeaafaa7007bb01667d7"
+    "sha256:f8b1e9e01410d8a60b3b471f0cbd8d1f411e6060603b6ffd531cda78d6bd21a0"
 )
 _FORBIDDEN_MODEL_INPUT_KEYS = {
     "expected",
@@ -734,11 +737,7 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
             or sealed_value.get("capability") != expected_stage
             or _contains_forbidden_model_key(sealed_value)
             or (
-                expected_stage
-                in {
-                    "IMPLEMENTATION_QUERY_PLANNING",
-                    "IMPLEMENTATION_INVESTIGATION",
-                }
+                expected_stage == "IMPLEMENTATION_QUERY_PLANNING"
                 and sealed_value.get("available_operations")
                 != list(contract.available_operations)
             )
@@ -793,6 +792,12 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
                     "model_calls": 4 - previous_count,
                     "execution_steps": 4 - previous_count,
                 }
+                or sealed_value.get("available_operations")
+                != list(
+                    constrained_investigation_operations(
+                        sealed_input=investigation_input
+                    )
+                )
             ):
                 raise DomainError(
                     ErrorCode.QUALIFICATION_INVALID,

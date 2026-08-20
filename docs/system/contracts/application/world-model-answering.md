@@ -33,16 +33,22 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
 8. Product Validation 必须包含措辞变化、不同 Entity 标识、同名歧义、负向/无路径和不受支持问题；同一核心实现不得按工程、commit 或冻结题目硬编码答案。
 9. `JAVA_SOURCE_SEMANTICS@1` 的 bounded-investigation Strategy 每个成功 Delivery 使用隔离角色且不重试：
    1. Investigation 执行 2—4 个模型回合。第一个回合只读取原问题、语言、exact Read Authority、Profile/capability schema 与
-      operation vocabulary；之后每回合只增加前一轮 sealed typed result、progress/budget receipt、平台计算的三层 completeness
-      projection 与完整 trace digest。每次模型只提出一个 operation、通用 search terms、closed relation intent 或 FINISH explanation；
-      不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
+      operation vocabulary，并提出通用 search terms 与一个由注册 operation/relation 表达的 bounded evidence-request 集合；该集合
+      描述原问题需要的方法、声明清单、直接关系或路径证据，不是题型 enum，也不含 Ref、bound 或隐藏答案。Application 做
+      operation-discriminated normalization、去重、依赖收敛和预算可达性校验后将它冻结。之后每回合只增加前一轮 sealed typed result、
+      冻结 evidence ledger、progress/budget receipt、平台计算的三层 completeness projection、当前受限 `available_operations` 与完整
+      trace digest。模型不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
       对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；
       平台在最多 12 个 raw term 的输入上按 Unicode casefold 去重并保留首次拼写/顺序，该无损规范化不得改变权限、
       Snapshot、operation 或 query bound；Ref 和其他 authority collection 仍严格拒绝重复；
-   2. Application 从 sealed input deterministic 编译一个完整 typed proposal，并在每轮前后校验 operation shape、Snapshot/Bundle、
-      Ref provenance、query/result bytes、Support、progress/cycle、trace bytes、wall time 和调用预算。Result 未密封不得进入下一回合；
-      `FINISH` 至少发生在一个已执行调查 Result 之后且自身占用一个回合，因此 1 query + FINISH 是合法的 2-call investigation；
-      `remaining_budget=1` 仍允许最后一个能减少明确证据缺口的 query；该 query 执行后由 Session 自动密封
+   2. Application 从冻结 evidence ledger、sealed Result 和剩余预算 deterministic 推导当前合法 transition 子集，并编译一个完整 typed
+      proposal；固定模型 envelope 中越出该子集的 operation/FINISH/terminal reason 只作为不可信 raw output 审计，不获得查询、终态或
+      完整性解释权力。Application
+      在每轮前后校验 operation shape、Snapshot/Bundle、Ref provenance、query/result bytes、Support、progress/cycle、trace bytes、
+      wall time、调用预算与 obligation fulfillment。Result 未密封不得进入下一回合；只有义务已覆盖或没有合法 evidence-reducing
+      transition 才允许 `FINISH`，且至少发生在一个已执行调查 Result 之后并占用一个回合，因此 candidate Result 已关闭全部义务时
+      1 query + FINISH 是合法的 2-call investigation；`remaining_budget=1` 仍允许 ledger 中最后一个能减少明确证据缺口的 query；该
+      query 执行后由 Session 自动密封
       `LIMITATION / INVESTIGATION_BUDGET_EXHAUSTED`，不再要求第五个 `FINISH` 回合。cycle 以已执行 operation 与 exact Result progress
       token 判定，不能仅因两个不同 sealed state 选择同名 operation 而推导；
    3. Draft Call 只读取原问题、不可变 Requirement、完整 sealed trace、Need Assessment 和允许的 Support/Gap，生成逐 Claim 绑定的
