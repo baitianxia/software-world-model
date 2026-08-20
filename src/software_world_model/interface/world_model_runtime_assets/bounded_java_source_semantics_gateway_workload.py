@@ -8,12 +8,12 @@ import socket
 from typing import Mapping
 
 from software_world_model.ai_infrastructure import (
+    DeepSeekChatCompletionsNoToolsAdapter,
+    DeepSeekModelConfiguration,
     ModelEgressGatewayServer,
     ModelGateway,
-    PinnedIPVolcengineArkChatTransport,
-    VolcengineArkChatCompletionsNoToolsAdapter,
-    VolcengineArkModelConfiguration,
-    load_ark_chat_conformance_qualification,
+    PinnedIPDeepSeekChatTransport,
+    load_deepseek_chat_conformance_qualification,
     world_model_answer_output_schemas,
 )
 from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_egress_qualification import (
@@ -82,8 +82,8 @@ def main(argv: list[str] | None = None) -> int:
             "bounded source-semantics Gateway freeze uses another qualification",
         )
 
-    configuration = VolcengineArkModelConfiguration()
-    conformance = load_ark_chat_conformance_qualification(
+    configuration = DeepSeekModelConfiguration()
+    conformance = load_deepseek_chat_conformance_qualification(
         arguments.conformance_result,
         configuration,
     )
@@ -112,14 +112,14 @@ def main(argv: list[str] | None = None) -> int:
         transport_audits.append(frozen)
         _append_document(transport_audit_path, frozen)
 
-    transport = PinnedIPVolcengineArkChatTransport(
+    transport = PinnedIPDeepSeekChatTransport(
         numeric_address=arguments.numeric_provider_address,
         api_key_resolver=configuration.resolve_api_key,
         connected_socket_fds=descriptors,
         audit_writer=record_transport,
         maximum_calls=6,
     )
-    adapter = VolcengineArkChatCompletionsNoToolsAdapter(
+    adapter = DeepSeekChatCompletionsNoToolsAdapter(
         transport=transport,
         configuration=configuration,
         output_schemas=world_model_answer_output_schemas(
@@ -193,6 +193,18 @@ def main(argv: list[str] | None = None) -> int:
         ),
         "qualification_valid_until": binding.qualification_valid_until.isoformat(),
         "conformance_result_ref": conformance.result_ref,
+        "provider_selection_policy": (
+            "PRE_DISPATCH_FIRST_CURRENTLY_QUALIFIED_NO_REQUEST_RETRY"
+        ),
+        "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
+        "selected_provider_type": configuration.provider_type,
+        "provider_type": configuration.provider_type,
+        "adapter_version": configuration.adapter_version,
+        "requested_model_ref": configuration.model_ref,
+        "expected_actual_model_fingerprint": (
+            configuration.actual_model_fingerprint
+        ),
+        "fallback_after_dispatch": False,
         "numeric_provider_address": arguments.numeric_provider_address,
         "numeric_provider_address_scope": (
             dispatch_audits[0].get("address_scope")

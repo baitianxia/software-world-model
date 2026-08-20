@@ -17,7 +17,6 @@ from software_world_model.ai_infrastructure import (
     DeepSeekChatConformanceQualification,
     DeepSeekModelConfiguration,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
-    WorldModelStrategyConfiguration,
     java_source_semantics_world_model_output_contract_digest,
     load_deepseek_chat_conformance_qualification,
     world_model_answer_prompt_program_digest,
@@ -40,6 +39,7 @@ from .manifest import (
     PINNED_ORACLE_REF,
     PINNED_PROVIDER_REQUEST_COUNT,
     PINNED_REQUIRED_CASE_CALLS,
+    PINNED_RESOURCE_POLICY_REF,
     PINNED_SUITE_FILE_DIGEST,
     PINNED_SUITE_REF,
     build_evaluation_definition,
@@ -236,16 +236,6 @@ def create_capability_freeze(
         configuration,
     )
     suite, oracle = load_capability_inputs()
-    strategy_configuration = WorldModelStrategyConfiguration(
-        provider_type=configuration.provider_type,
-        adapter_version=configuration.adapter_version,
-        model_ref=configuration.model_ref,
-        provider_configuration_fingerprint=configuration.fingerprint,
-        qualification_ref=f"evaluation-only:{conformance.result_ref}",
-        max_output_tokens=1000,
-        timeout_milliseconds=180_000,
-        classification="INTERNAL",
-    )
     evaluator_digest = _raw_sha(EVALUATOR_PATH)
     identity = preflight["candidate_identity"]
     assert isinstance(identity, Mapping)
@@ -262,10 +252,7 @@ def create_capability_freeze(
             f"git:{identity['commit']}"
         ),
         reference_strategy_ref=f"standalone-stdlib-evaluator:{evaluator_digest}",
-        resource_policy_ref=(
-            "forty-calls-across-eighteen-cases-no-retry:"
-            f"{strategy_configuration.digest.value}"
-        ),
+        resource_policy_ref=PINNED_RESOURCE_POLICY_REF,
         valid_for_seconds=604800,
     )
     timestamp = _aware(created_at or datetime.now(timezone.utc))

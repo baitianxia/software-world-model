@@ -238,6 +238,77 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
             },
         )
 
+    def test_bounded_baseline_preserves_selected_provider_and_unused_closure(self) -> None:
+        output = self.root / "summary.json"
+
+        def baseline_main(arguments):
+            index = arguments.index("--summary-output")
+            baseline_output = Path(arguments[index + 1])
+            baseline_core = {
+                "schema": (
+                    "swm.iter-008.bounded-java-source-semantics-"
+                    "gateway-workload@1"
+                ),
+                "status": "PASS",
+                "provider_selection_policy": (
+                    "PRE_DISPATCH_FIRST_CURRENTLY_QUALIFIED_NO_REQUEST_RETRY"
+                ),
+                "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
+                "selected_provider_type": "DEEPSEEK",
+                "provider_type": "DEEPSEEK",
+                "adapter_version": "deepseek-chat-completions-no-tools@2",
+                "requested_model_ref": "deepseek-v4-pro",
+                "expected_actual_model_fingerprint": "deepseek-v4-pro",
+                "credential_reference": "env:DEEPSEEK_API_KEY",
+                "fallback_after_dispatch": False,
+                "provider_call_count": 5,
+                "https_dispatch_count": 5,
+                "server_statuses": ["RESULT"] * 5,
+                "provider_descriptor_provisioned_count": 6,
+                "provider_descriptor_consumed_count": 5,
+                "provider_descriptor_unused_closed_count": 1,
+                "bounded_java_source_semantics_gateway_freeze_ref": "bounded",
+                "bounded_java_source_semantics_gateway_freeze_digest": _DIGEST_A,
+                "permission_digest": _DIGEST_B,
+                "production_activation": "NOT_EXECUTED",
+            }
+            baseline_output.write_bytes(
+                canonical_json_bytes(
+                    {
+                        **baseline_core,
+                        "document_digest": digest_of(baseline_core).value,
+                    }
+                )
+            )
+            return 0
+
+        with patch.object(
+            gateway_authorized_workload,
+            "_load_qualified_baseline",
+            return_value=SimpleNamespace(main=baseline_main),
+        ):
+            with redirect_stdout(StringIO()):
+                code = gateway_authorized_workload.main(
+                    self._arguments(self._receipt(), output)
+                )
+
+        self.assertEqual(code, 0)
+        value = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(value["provider_type"], "DEEPSEEK")
+        self.assertEqual(value["provider_call_count"], 5)
+        self.assertEqual(value["provider_descriptor_unused_closed_count"], 1)
+        self.assertEqual(
+            value["qualified_gateway_baseline"],
+            {
+                "entrypoint_sha256": (
+                    gateway_authorized_workload.
+                    _BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256
+                ),
+                "bounded_source_semantics_capability_freeze_digest": _DIGEST_A,
+                "role": "QUALIFIED_CAPABILITY_BASELINE_ONLY",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

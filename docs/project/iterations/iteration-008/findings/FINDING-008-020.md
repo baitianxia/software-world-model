@@ -39,6 +39,11 @@ ITER-003 冻结的 prepared runtime 则是 `codex-cli 0.147.0-alpha.1.2` 和
 通过，只剩上述五项。因此 AF_UNIX sandbox 限制和 CLI drift 是两个已分离的环境事实。常见本地 App、plugin 与 cache 位置没有找到
 prepared `0.147.0-alpha.1.2` binary，当前环境不能真实重放该 exact runtime。
 
+后续取证确认公开 npm package 存在精确版本 `@openai/codex@0.147.0-alpha.1.2-darwin-arm64`；其归档完整性与 registry metadata
+一致，解包 binary 能报告 `codex-cli 0.147.0-alpha.1.2`，但实际 SHA-256 为
+`c579255e7cacc6706175c709f3f5b350ab2d9a916ec53d38adb9434eb36448ca`，仍不等于 prepared App build 的 `9f67…e481`。版本字符串
+相同不构成 binary identity；该可得 npm artifact 不能解除 hold，也不能替换或覆盖当前桌面 App binary。
+
 根因分类为 verification/environment drift，而不是 active implementation regression。历史 freeze 的价值正是拒绝把不同 binary 冒充
 已冻结 mature-agent baseline；让测试 skip、把 expected digest 改成当前 App，或伪造旧 executable 都会破坏已接受证据。
 
@@ -53,3 +58,6 @@ SLICE-002 或 Production Activation。以后若需要重放 ITER-003 mature base
 runtime 建立独立、前瞻性冻结和对照；两者都不能改写历史 Result。
 
 主处置写入 `ITER-008-VERIFICATION`；Finding 本身已完成根因隔离和验证规则回写，状态为 `dispositioned`。
+
+在 DeepSeek route 适配 candidate 上重跑完整执行面得到 1001/1006；新增测试全部通过，唯一四项 failure 与一项 error 仍精确是上述
+historical freeze drift。该最新计数同样不得写成 full-suite PASS。

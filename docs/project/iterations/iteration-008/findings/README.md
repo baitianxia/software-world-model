@@ -1,7 +1,7 @@
 ---
 id: ITER-008-FINDINGS
 kind: iteration-findings-index
-status: dispositioned
+status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
 depends_on: [ITER-008-PROPOSAL]
@@ -12,7 +12,8 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十二条已处置或被后续决定取代的 Finding：
+本 Slice 当前登记二十三条 Finding，均已处置或被后续决定取代；Finding 处置不豁免当前资格、完整回归、正式 Web、canary、
+SLICE-002 与 Production Activation gate：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -79,6 +80,10 @@ iteration: ITER-008
   result 已包含带 Support 的 exact outgoing CALLS；Application 将 standalone outgoing-direct alias 收敛到 method，path/incoming/both
   不变，活动协议升级为 `1.5.2/@11/@6/@1.2.2`、suite/oracle `@1.5.2` 与 18 Case / 40 calls；相关 169/169、fake transport
   18/18、docs 326/326 与本地完整门禁均已闭合。随后 run-013 Conformance 12/12、Capability 40 calls / 18/18 PASS，Finding 已处置。
+- [FINDING-008-023](FINDING-008-023.md)：run-013 已资格化 DeepSeek，但正式 bounded policy/Gateway/runtime 仍只接受 Ark，不能把
+  DeepSeek Result 错配给 Ark。Provider fallback 被定义为 product dispatch 前的 exact qualification route selection；本轮选择
+  DeepSeek，任何已分派或 outcome-unknown request 均不得跨 Provider 重试，Ark 只有取得同 Contract 新资格后才能恢复优先级；
+  system/code/test 处置已闭合，旧 run-013 因未绑定新 resource policy 被拒绝，全新资格链仍 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

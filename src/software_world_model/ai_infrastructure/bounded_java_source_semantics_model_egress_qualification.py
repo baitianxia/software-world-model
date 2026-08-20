@@ -27,7 +27,7 @@ from .model_egress_gateway import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF,
     QualifiedJavaSourceSemanticsModelEgressGatewayPolicy,
 )
-from .volcengine_ark_chat_adapter import VolcengineArkModelConfiguration
+from .deepseek_chat_adapter import DeepSeekModelConfiguration
 from .versioned_world_model_answer_strategy import (
     JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -86,7 +86,32 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:3f7a7e2c42868c1da05a1d1c1f1154af0f9b3272e9ea106a56bf99c574d51a49"
+    "sha256:5fb965eaa1bd6cd485231a638a8390a47d804fcaf2e980aa5f4446ddbe4072fd"
+)
+_BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
+    "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
+    "provider_type": "DEEPSEEK",
+    "adapter_version": "deepseek-chat-completions-no-tools@2",
+    "model_ref": "deepseek-v4-pro",
+    "provider_configuration_fingerprint": (
+        "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+    ),
+    "model_egress_policy_ref": (
+        BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
+    ),
+    "model_egress_policy_digest": (
+        BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
+    ),
+    "maximum_output_tokens": 1000,
+    "timeout_milliseconds": 180_000,
+    "classification": "INTERNAL",
+    "required_case_count": 18,
+    "provider_request_count": 40,
+    "retries_allowed": False,
+}
+BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF = (
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-QUALIFICATION-RESOURCE-POLICY@1:"
+    f"{digest_of(_BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY).value}"
 )
 
 
@@ -97,13 +122,19 @@ class BoundedJavaSourceSemanticsGatewayQualificationBinding:
     qualification_document_digest: Digest
     closed_capability_result_digest: Digest
     qualification_valid_until: datetime
+    conformance_result_ref: str
 
     def create_policy(
         self,
         *,
-        configuration: VolcengineArkModelConfiguration,
+        configuration: DeepSeekModelConfiguration,
         conformance_result_ref: str,
     ) -> QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
+        if conformance_result_ref != self.conformance_result_ref:
+            raise DomainError(
+                ErrorCode.QUALIFICATION_INVALID,
+                "bounded capability and Conformance authorities differ",
+            )
         return QualifiedJavaSourceSemanticsModelEgressGatewayPolicy(
             policy_ref=(
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
@@ -115,10 +146,7 @@ class BoundedJavaSourceSemanticsGatewayQualificationBinding:
             adapter_version=configuration.adapter_version,
             model_ref=configuration.model_ref,
             provider_configuration_fingerprint=configuration.fingerprint,
-            endpoint=(
-                "https://ark.cn-beijing.volces.com:443/"
-                "api/coding/v3/chat/completions"
-            ),
+            endpoint=configuration.endpoint,
             credential_reference=configuration.secret_reference,
             conformance_result_ref=conformance_result_ref,
             capability_qualification_ref=self.capability_qualification_ref,
@@ -206,6 +234,14 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         or definition.get("strategy_id")
         != "model-snapshot-first-world-model-answer"
         or definition.get("strategy_version") != contract.strategy_version
+        or definition.get("model_ref") != "deepseek-v4-pro"
+        or definition.get("adapter_version")
+        != "deepseek-chat-completions-no-tools@2"
+        or definition.get("provider_configuration_fingerprint")
+        != "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+        or not str(definition.get("conformance_result_ref", "")).startswith(
+            "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
+        )
         or definition.get("implementation_digest")
         != world_model_answer_strategy_implementation_digest(contract).value
         or definition.get("prompt_program_digest")
@@ -218,11 +254,16 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         ).value
         or definition.get("threshold_ref")
         != BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_THRESHOLD_REF
+        or definition.get("resource_policy_ref")
+        != BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF
+        or definition.get("tool_policy_ref")
+        != "model-no-tools-no-source-no-evidence@1"
         or not isinstance(definition_cases, list)
         or tuple(item.get("case_id") for item in definition_cases if isinstance(item, Mapping))
         != expected_cases
         or len(definition_cases) != len(expected_cases)
         or result.get("conclusion") != "PASS"
+        or result.get("actual_model_fingerprints") != ["deepseek-v4-pro"]
         or not isinstance(result.get("passed_case_ids"), list)
         or len(result["passed_case_ids"]) != len(expected_cases)
         or any(
@@ -277,6 +318,7 @@ def load_bounded_java_source_semantics_gateway_qualification_binding(
         ),
         closed_capability_result_digest=Digest(str(closed["document_digest"])),
         qualification_valid_until=valid_until,
+        conformance_result_ref=str(definition["conformance_result_ref"]),
     )
 
 
@@ -375,6 +417,7 @@ def _qualification_proof(document: Mapping[str, object]) -> QualificationProof:
 def _verify_policy(policy: Mapping[str, object]) -> None:
     contract_value = policy.get("proposal_contract")
     requirements = policy.get("qualification_requirements")
+    provider = policy.get("provider")
     call_protocol = (
         contract_value.get("call_protocol")
         if isinstance(contract_value, Mapping)
@@ -389,6 +432,22 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or policy.get("default_action") != "DENY"
         or policy.get("environment") != "EVALUATION_ONLY"
         or policy.get("production_activation") != "NOT_EXECUTED"
+        or not isinstance(provider, Mapping)
+        or provider.get("selection_policy")
+        != "PRE_DISPATCH_FIRST_CURRENTLY_QUALIFIED_NO_REQUEST_RETRY"
+        or provider.get("preference_order") != ["VOLCENGINE_ARK", "DEEPSEEK"]
+        or provider.get("selected_provider_type") != "DEEPSEEK"
+        or provider.get("provider_type") != "DEEPSEEK"
+        or provider.get("adapter_version")
+        != "deepseek-chat-completions-no-tools@2"
+        or provider.get("requested_model_ref") != "deepseek-v4-pro"
+        or provider.get("actual_model_fingerprint") != "deepseek-v4-pro"
+        or provider.get("configuration_fingerprint")
+        != "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+        or provider.get("endpoint")
+        != "https://api.deepseek.com/chat/completions"
+        or provider.get("credential_reference") != "env:DEEPSEEK_API_KEY"
+        or provider.get("fallback_after_dispatch") is not False
         or not isinstance(contract_value, Mapping)
         or contract_value.get("capability_contract_version")
         != contract.capability_contract_version
@@ -416,7 +475,10 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         != len(BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS)
         or requirements.get("failure_count") != 0
         or requirements.get("unknown_count") != 0
+        or requirements.get("qualification_kind") != "CAPABILITY_EVALUATION"
+        or requirements.get("validity_status") != "VALID"
         or requirements.get("step_evidence_required") is not True
+        or requirements.get("policy_drift_invalidates_qualification") is not True
     ):
         _invalid("bounded source-semantics egress policy content drifted")
 
@@ -457,6 +519,7 @@ __all__ = [
     "BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST",
     "BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH",
     "BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS",
+    "BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF",
     "BoundedJavaSourceSemanticsGatewayQualificationBinding",
     "load_bounded_java_source_semantics_gateway_qualification_binding",
 ]

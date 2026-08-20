@@ -15,8 +15,12 @@ import sys
 from typing import Callable, Sequence
 
 
-SCHEMA = "swm.iter-003.g3b-os-probe@1"
+SCHEMA = "swm.world-model-os-probe@2"
 _DENIED_ERRNOS = {errno.EACCES, errno.EPERM}
+_PROVIDERS = {
+    "VOLCENGINE_ARK": ("ark.cn-beijing.volces.com", "ARK_API_KEY"),
+    "DEEPSEEK": ("api.deepseek.com", "DEEPSEEK_API_KEY"),
+}
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -31,6 +35,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--gateway-socket", required=True)
     parser.add_argument("--other-unix-socket", required=True)
     parser.add_argument("--provider-address", required=True)
+    parser.add_argument(
+        "--provider-type",
+        choices=tuple(_PROVIDERS),
+        default="VOLCENGINE_ARK",
+    )
     parser.add_argument("--connected-provider-socket-fd", type=int, default=-1)
     parser.add_argument("--gateway-listener-socket-fd", type=int, default=-1)
     parser.add_argument("--local-tcp-port", type=int, required=True)
@@ -41,6 +50,7 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     role = arguments.role
+    provider_host, credential_name = _PROVIDERS[arguments.provider_type]
     results: list[dict[str, object]] = []
     results.append(
         _expect_allowed(
@@ -120,6 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 lambda: _inherited_tls(
                     arguments.connected_provider_socket_fd,
                     arguments.provider_address,
+                    provider_host,
                 ),
             )
         )
@@ -160,7 +171,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         _expect_denied(
             "denied_dns_resolution",
             lambda: socket.getaddrinfo(
-                "ark.cn-beijing.volces.com",
+                provider_host,
                 443,
                 type=socket.SOCK_STREAM,
             ),
@@ -169,7 +180,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     results.append(_expect_denied("denied_process_fork", _fork_once))
 
-    credential_visible = os.environ.get("ARK_API_KEY") is not None
+    credential_visible = os.environ.get(credential_name) is not None
+    other_credentials_absent = all(
+        os.environ.get(name) is None
+        for name in {item[1] for item in _PROVIDERS.values()} - {credential_name}
+    )
     credential_expected = role == "gateway"
     results.append(
         {
@@ -179,10 +194,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             "status": "PASS" if credential_visible == credential_expected else "FAIL",
         }
     )
+    results.append(
+        {
+            "name": "other_provider_credential_boundary",
+            "expected": "ABSENT",
+            "observed": "ABSENT" if other_credentials_absent else "VISIBLE",
+            "status": "PASS" if other_credentials_absent else "FAIL",
+        }
+    )
     status = "PASS" if all(item["status"] == "PASS" for item in results) else "FAIL"
     payload = {
         "schema": SCHEMA,
         "role": role,
+        "provider_type": arguments.provider_type,
         "nonce": arguments.nonce,
         "pid": os.getpid(),
         "status": status,
@@ -349,7 +373,11 @@ def _tcp_connect(host: str, port: int) -> None:
         connection.connect(address)
 
 
-def _inherited_tls(descriptor: int, expected_address: str) -> None:
+def _inherited_tls(
+    descriptor: int,
+    expected_address: str,
+    provider_hostname: str,
+) -> None:
     if descriptor < 0:
         raise ValueError("inherited Provider descriptor is missing")
     family = socket.AF_INET6 if ":" in expected_address else socket.AF_INET
@@ -364,7 +392,7 @@ def _inherited_tls(descriptor: int, expected_address: str) -> None:
         context.load_verify_locations(cafile="/private/etc/ssl/cert.pem")
     with context.wrap_socket(
         raw,
-        server_hostname="ark.cn-beijing.volces.com",
+        server_hostname=provider_hostname,
     ) as secured:
         if not secured.getpeercert(binary_form=True):
             raise RuntimeError("inherited Provider TLS peer has no certificate")

@@ -73,6 +73,11 @@ Gateway 可以在 Answer 启动前预建调用上限数量的 exact Provider con
 Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题、跨角色或跨 session 复用。每个实际调用仍拥有唯一 workload、manifest、
 receipt 和 transport audit。
 
+当候选声明 Provider preference 时，偏好只用于 product freeze 前的资格 route 选择。每条 route 必须独立持有 current Adapter
+Conformance、同一 Strategy/Configuration 的 Capability Qualification、exact endpoint/secret reference 与隔离 transport；Application
+按偏好选择第一个完整 route，并把该单一 Provider subject 密封进 policy、grant、session 和连接审计。不得为判断“可用性”先调用
+资格不完整的首选 Provider；一旦任一 request 已分派或结果未知，也不得改向第二 Provider 重试。改选需要新的 product freeze 与授权。
+
 progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle identity、评测期望或隐藏输入。负向结论必须分别拥有三个独立证明：
 
 1. **Query result completeness**：所有授权页已读，`total/truncated/cursor` 闭合；
@@ -94,6 +99,9 @@ progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle
 `JAVA_SOURCE_SEMANTICS@1` 三调用资格不能继承。调查 trace 增加实现复杂度和时延，因此产品 Gate 必须与成熟源码 Agent 逐题比较，
 并在编码前冻结可重放的正向价值阈值。若最小闭包仍低于成熟 Agent、必须读 Source、或不能在预算内组合多个方法，本方案应停止并
 记录为架构反证，而不是继续扩张语法或预算。
+
+Provider preference 因此增加的是可审计的部署选择，不是一次请求内的高可用 failover；每次候选仍只有一个已资格 Provider，且
+Conformance、Capability、Product 与 Activation 证据不能跨 Provider 继承。
 
 ## Supersedes / migration
 

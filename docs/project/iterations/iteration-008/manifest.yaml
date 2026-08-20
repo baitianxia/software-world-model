@@ -224,6 +224,11 @@ answer_protocol:
   deterministic_schema_grounding_and_authorization_checks: true
   retries_allowed: false
   total_model_call_upper_bound_per_question: 6
+  provider_selection_phase: product-freeze-before-any-socket-credential-or-request-dispatch
+  provider_selection_policy: PRE_DISPATCH_FIRST_CURRENTLY_QUALIFIED_NO_REQUEST_RETRY
+  provider_preference_order: VOLCENGINE_ARK,DEEPSEEK
+  selected_provider_type: DEEPSEEK
+  provider_fallback_after_dispatch: false
   status: frozen
 
 readiness_inputs:
@@ -255,7 +260,7 @@ readiness_inputs:
     - docs/system/contracts/knowledge/java-source-semantics.md
     - docs/system/operations/local-browser.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:1542f20e7b946ee9a5a597ad4f5a2206f8e59ad58ac60ccdb2b2803b913d6987
+  system_contract_set_digest: sha256:52cca0748aa399d62b32e34ae1812bb945b6bdd4bda26e12c7d7ee50589ca710
   exact_baseline_status: clean-exact-git-baseline-verified
   investigation_budget_status: frozen-iter-008-bounded-investigation-1.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

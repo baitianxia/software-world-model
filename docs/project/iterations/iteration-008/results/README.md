@@ -283,6 +283,16 @@ independent PASS、failure/unknown 为 0，唯一 identity `deepseek-v4-pro`，t
 为 false，hidden canary、正式 Web 与 Production Activation 均未执行。资格有效至 `2026-08-27T05:19:50.677774+00:00`；V-002
 转为 PASS，后续 product/runtime、Source-off、security、公开 Web 与 early canary Gate 仍 blocking。
 
+run-013 后的产品接入审查形成 `FINDING-008-023`：其 DeepSeek Capability 不能喂给仍固定 Ark 的 bounded Gateway。活动实现按
+`VOLCENGINE_ARK → DEEPSEEK` 在 dispatch 前选择 current exact qualification route；本轮密封 DeepSeek，且任何 request dispatch 或
+outcome unknown 后都禁止跨 Provider retry。DeepSeek 获得与历史 Ark 相同等级的 exact endpoint、selected credential、preconnected
+socket、TLS/SNI/certificate、response cap、4—6 call 与 unused descriptor 审计；未选择的 Ark credential/socket 不进入角色环境。
+
+该 product egress policy 变化属于 Capability Contract 明列的 Gateway connection policy 变化。资格加载器现要求 Definition 绑定
+`ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.3.0` 的 exact digest 和 DeepSeek Adapter `@2`，因此 run-013
+只保留为 Strategy 能力与 Finding 证据，不能授权新 product candidate。新 Conformance/Capability Result、正式 product freeze、Web、
+canary、Agent 对照、Reflection 与 Activation 均尚未执行。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

@@ -86,6 +86,18 @@ Case、Oracle 或未来 Result。预算上限、三层完整性、Source-off、n
 `sha256:1542f20e7b946ee9a5a597ad4f5a2206f8e59ad58ac60ccdb2b2803b913d6987`；共享文档使历史 ITER-007 当前 fileset digest 同步重算为
 `sha256:6f470e7cfc7c0812474219a3530e8ad23817fcfddb192647bafedb4fde72d349`，两者均由 Manifest 与 docs gate 机械约束。
 
+run-013 资格 PASS 后形成 `FINDING-008-023`：Capability 使用 DeepSeek，但正式 bounded product policy/runtime 仍固定 Ark，二者不能
+跨 Provider 借用资格。用户的 Ark-first/DeepSeek-fallback 要求被收敛为 product dispatch 前的 qualification route selection：按
+`VOLCENGINE_ARK → DEEPSEEK` 选择第一个 current exact route，本轮 Ark 没有同 `1.5.2` Contract 资格，因此密封 DeepSeek；任何
+request 已分派或 outcome unknown 后不得切换 Provider。该 Finding 把 Model Gateway、runtime flow、安全边界和 ADR 写回同一
+System fileset；当前 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
+`sha256:52cca0748aa399d62b32e34ae1812bb945b6bdd4bda26e12c7d7ee50589ca710`，共享文档使 ITER-007 fileset 同步重算为
+`sha256:87fc4011bc86ac11e1660e4b9e29762f1da0c44dac823a28a32c23d1dbfa6769`。
+
+该变更没有扩大 Slice、调用预算或外部授权。它会改变 Gateway connection policy，因此 run-013 继续证明 `1.5.2` Strategy 的
+Capability，但其旧 resource policy 不能授权新 product route。新 clean candidate 必须把 exact model-egress policy ref/digest 写入
+Capability Definition，并形成全新 Conformance + closed Capability Result；随后才可形成正式 product freeze。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

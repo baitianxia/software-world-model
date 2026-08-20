@@ -268,6 +268,19 @@ independent PASS、failure/unknown 为 0。两阶段唯一 identity 均为 `deep
 无 retry、hidden canary disclosure、正式 Web 或 Production Activation。V-002 已闭合；后续进入公开 product/runtime、Source-off、
 security 与正式 Web Gate，不能直接跳到 hidden canary 或 Reflection。
 
+run-013 随后暴露的不是模型能力失败，而是正式 Provider subject 错配：Capability Result 的 exact Provider 是 DeepSeek，bounded
+product egress/runtime 却仍只接受 Ark。按 [FINDING-008-023](../findings/FINDING-008-023.md)，Provider preference 只在 product
+freeze 与任何 socket/credential/request 之前从 current qualified route 中选择；顺序为 `VOLCENGINE_ARK → DEEPSEEK`，本轮 Ark
+没有同 `1.5.2` Contract 的完整资格，因此活动 product candidate 密封 DeepSeek。任何 dispatch 或 outcome unknown 后都不允许
+跨 Provider retry/fallback。
+
+实现把 model-egress policy 升级为 `ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.3.0`，并将 exact
+DeepSeek adapter/model/configuration/endpoint/credential reference、selected-provider-only environment、内部 host registry、六个
+inherited connected descriptor、verified TLS SNI/certificate、exact path、late credential resolution、unused close 与公开 Result
+审计贯穿 Answer/Gateway/runtime。旧 fixed Profile 继续固定 Ark。Capability Definition 的 resource policy 现在还必须绑定该 exact
+policy ref/digest，资格 loader 同时验证 DeepSeek Adapter `@2`；因此 run-013 不会被复用为新 route 的授权。新 clean candidate 需执行
+全新 Conformance 与 18-case / 40-call Capability qualification，通过后才进入确定性 product freeze、公开 Web 和 early canary。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import socket
@@ -57,6 +58,13 @@ _QUALIFICATION_REF = f"evaluation-only:{_CONFORMANCE_REF}"
 _PROVIDER_FINGERPRINT = Digest(
     "sha256:420f553a3ce0075818550e08cb1351ce69eaf9871c5a0257aecf88b7b32b88fd"
 )
+_DEEPSEEK_CONFORMANCE_REF = (
+    "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64
+)
+_DEEPSEEK_QUALIFICATION_REF = f"evaluation-only:{_DEEPSEEK_CONFORMANCE_REF}"
+_DEEPSEEK_PROVIDER_FINGERPRINT = Digest(
+    "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+)
 _CAPABILITY_QUALIFICATION_REF = (
     "capability-evaluation:evaluation_result_916b9000db544e92921ec1bdc02a3bc2"
 )
@@ -66,7 +74,7 @@ _CAPABILITY_QUALIFICATION_DIGEST = Digest(
 
 
 class _FixtureGateway:
-    def __init__(self, *, conformance_result_ref: str = _CONFORMANCE_REF) -> None:
+    def __init__(self, *, conformance_result_ref: str | None = None) -> None:
         self.contexts: list[ModelExecutionContext] = []
         self._conformance_result_ref = conformance_result_ref
 
@@ -77,9 +85,19 @@ class _FixtureGateway:
         request_digest = digest_of(
             {"manifest_digest": context.manifest.digest.value, "ordinal": ordinal}
         )
+        actual_model_fingerprint = (
+            "deepseek-v4-pro"
+            if context.provider_type == "DEEPSEEK"
+            else "glm-5.2"
+        )
+        conformance_result_ref = self._conformance_result_ref or (
+            _DEEPSEEK_CONFORMANCE_REF
+            if context.provider_type == "DEEPSEEK"
+            else _CONFORMANCE_REF
+        )
         response = AdapterResponse.create(
             provider_request_id=f"provider-request-{ordinal}",
-            actual_model_fingerprint="glm-5.2",
+            actual_model_fingerprint=actual_model_fingerprint,
             replay_classification=ReplayClassification.PINNED,
             output_text='{"answer":"fixture"}',
             input_tokens=10,
@@ -99,7 +117,7 @@ class _FixtureGateway:
             ),
             "runtime_access_mode": context.runtime_access_mode.value,
             "platform_proposal_mode": context.platform_proposal_mode.value,
-            "conformance_result_ref": self._conformance_result_ref,
+            "conformance_result_ref": conformance_result_ref,
             "issued_at": now,
         }
         receipt = IsolationReceipt(
@@ -113,7 +131,7 @@ class _FixtureGateway:
             ),
             runtime_access_mode=context.runtime_access_mode,
             platform_proposal_mode=context.platform_proposal_mode,
-            conformance_result_ref=self._conformance_result_ref,
+            conformance_result_ref=conformance_result_ref,
             issued_at=now,
             digest=digest_of(receipt_core),
         )
@@ -198,18 +216,15 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:3f7a7e2c42868c1da05a1d1c1f1154af0f9b3272e9ea106a56bf99c574d51a49"
+                "sha256:5fb965eaa1bd6cd485231a638a8390a47d804fcaf2e980aa5f4446ddbe4072fd"
             ),
-            provider_type="VOLCENGINE_ARK",
-            adapter_version="openai-chat-completions-no-tools@8",
-            model_ref="glm-5-2-260617",
-            provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
-            endpoint=(
-                "https://ark.cn-beijing.volces.com:443/"
-                "api/coding/v3/chat/completions"
-            ),
-            credential_reference="env:ARK_API_KEY",
-            conformance_result_ref=_CONFORMANCE_REF,
+            provider_type="DEEPSEEK",
+            adapter_version="deepseek-chat-completions-no-tools@2",
+            model_ref="deepseek-v4-pro",
+            provider_configuration_fingerprint=_DEEPSEEK_PROVIDER_FINGERPRINT,
+            endpoint="https://api.deepseek.com/chat/completions",
+            credential_reference="env:DEEPSEEK_API_KEY",
+            conformance_result_ref=_DEEPSEEK_CONFORMANCE_REF,
             capability_qualification_ref=(
                 "capability-evaluation:evaluation_result_"
                 "88888888888888888888888888888888"
@@ -397,11 +412,13 @@ class ModelEgressGatewayTests(unittest.TestCase):
         strategy = WorldModelCapabilityStrategy(
             capture,
             WorldModelStrategyConfiguration(
-                provider_type="VOLCENGINE_ARK",
-                adapter_version="openai-chat-completions-no-tools@8",
-                model_ref="glm-5-2-260617",
-                provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
-                qualification_ref=_QUALIFICATION_REF,
+                provider_type="DEEPSEEK",
+                adapter_version="deepseek-chat-completions-no-tools@2",
+                model_ref="deepseek-v4-pro",
+                provider_configuration_fingerprint=(
+                    _DEEPSEEK_PROVIDER_FINGERPRINT
+                ),
+                qualification_ref=_DEEPSEEK_QUALIFICATION_REF,
             ),
             proposal_contract=(
                 JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
@@ -549,6 +566,26 @@ class ModelEgressGatewayTests(unittest.TestCase):
 
         with self.assertRaises(DomainError) as raised:
             self.bounded_semantic_policy().validate_context(context)
+
+        self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
+
+    def test_bounded_policy_rejects_cross_provider_substitution(self) -> None:
+        policy = self.bounded_semantic_policy()
+
+        with self.assertRaises(DomainError) as raised:
+            replace(
+                policy,
+                provider_type="VOLCENGINE_ARK",
+                adapter_version="openai-chat-completions-no-tools@8",
+                model_ref="glm-5-2-260617",
+                provider_configuration_fingerprint=_PROVIDER_FINGERPRINT,
+                endpoint=(
+                    "https://ark.cn-beijing.volces.com:443/"
+                    "api/coding/v3/chat/completions"
+                ),
+                credential_reference="env:ARK_API_KEY",
+                conformance_result_ref=_CONFORMANCE_REF,
+            )
 
         self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
 

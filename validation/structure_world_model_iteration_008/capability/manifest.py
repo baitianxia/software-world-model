@@ -16,6 +16,7 @@ from software_world_model.ai_infrastructure import (
 )
 from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_egress_qualification import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS,
+    BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -52,6 +53,9 @@ PINNED_REQUIRED_CASE_IDS = tuple(
 )
 PINNED_PROVIDER_REQUEST_COUNT = sum(
     count for _, count in PINNED_REQUIRED_CASE_CALLS
+)
+PINNED_RESOURCE_POLICY_REF = (
+    BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF
 )
 ROOT = Path(__file__).resolve().parent
 DEFAULT_SUITE_PATH = ROOT / "suite-1.5.2.json"

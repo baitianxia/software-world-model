@@ -7,6 +7,7 @@ import os
 import time
 
 from software_world_model.ai_infrastructure import (
+    DeepSeekModelConfiguration,
     IMPLEMENTATION_ANSWER_DRAFTING,
     IMPLEMENTATION_ANSWER_REVIEW,
     IMPLEMENTATION_INVESTIGATION,
@@ -19,6 +20,7 @@ from software_world_model.application_services.structure_view import (
     StructureViewService,
 )
 from software_world_model.cross_cutting import (
+    Digest,
     DomainError,
     ErrorCode,
     StableId,
@@ -48,11 +50,32 @@ def main(argv: list[str] | None = None) -> int:
     process_started_ns = time.monotonic_ns()
     arguments = _shared._parser().parse_args(argv)
     request_received_ns = time.monotonic_ns()
-    if os.environ.get("ARK_API_KEY") is not None:
+    if any(
+        os.environ.get(name) is not None
+        for name in ("ARK_API_KEY", "DEEPSEEK_API_KEY")
+    ):
         raise DomainError(
             ErrorCode.CONTROL_STATE_DENIED,
-            "Answer worker must not receive the Ark credential",
+            "Answer worker must not receive a Provider credential",
         )
+    conformance_result_ref = arguments.conformance_result_ref
+    prefix = "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
+    if (
+        not isinstance(conformance_result_ref, str)
+        or not conformance_result_ref.startswith(prefix)
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Answer worker requires the exact frozen DeepSeek Conformance reference",
+        )
+    try:
+        Digest("sha256:" + conformance_result_ref.removeprefix(prefix))
+    except (TypeError, ValueError) as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Answer worker DeepSeek Conformance digest is invalid",
+        ) from exc
+    configuration = DeepSeekModelConfiguration()
     payload = _shared._decode_payload(arguments.product_payload_base64)
     payload_digest = digest_of(payload)
     implementation_commit = _shared._commit(arguments.implementation_commit)
@@ -92,11 +115,11 @@ def main(argv: list[str] | None = None) -> int:
     strategy = WorldModelCapabilityStrategy(
         client,
         WorldModelStrategyConfiguration(
-            provider_type="VOLCENGINE_ARK",
-            adapter_version="openai-chat-completions-no-tools@8",
-            model_ref="glm-5-2-260617",
-            provider_configuration_fingerprint=_shared._PROVIDER_FINGERPRINT,
-            qualification_ref=_shared._QUALIFICATION_REF,
+            provider_type=configuration.provider_type,
+            adapter_version=configuration.adapter_version,
+            model_ref=configuration.model_ref,
+            provider_configuration_fingerprint=configuration.fingerprint,
+            qualification_ref=f"evaluation-only:{conformance_result_ref}",
             max_output_tokens=1000,
             timeout_milliseconds=180_000,
             classification="INTERNAL",
@@ -187,6 +210,10 @@ def main(argv: list[str] | None = None) -> int:
         "model_actual_fingerprints": [
             item.gateway_result.call.actual_model_fingerprint for item in proposals
         ],
+        "provider_type": configuration.provider_type,
+        "adapter_version": configuration.adapter_version,
+        "requested_model_ref": configuration.model_ref,
+        "conformance_result_ref": conformance_result_ref,
         "model_eligibility_digests": [
             item.gateway_result.eligibility.digest.value for item in proposals
         ],

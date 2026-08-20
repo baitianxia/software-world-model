@@ -176,6 +176,12 @@ Need/Claim 评分表、重大错误定义、独立裁决人、争议/同分/失�
 
 ## Authorization decision
 
+实现期 `FINDING-008-023` 将用户指定的 Ark-first/DeepSeek-fallback 收敛为 dispatch 前的 exact qualification route selection：只有
+current Conformance、同活动 Strategy/Configuration Capability Result、endpoint/secret 与隔离 transport 都闭合的 route 才参与
+排序；选择后以一个 Provider subject 冻结，任何已分派或 outcome-unknown request 都不跨 Provider retry。该 System Contract
+write-back 不扩大本 Proposal 的产品范围、预算、隐藏输入或授权，只使正式 runtime 能消费本轮实际资格 Provider；policy 变化仍要求
+新的 closed qualification 和 product freeze。
+
 **ACCEPTED。** `SYS-ADR-015`、相关 System Contract、exact baseline、调查预算、隐藏评测协议、成熟源码 Agent/rubric 与正向价值
 阈值已经冻结。用户消息 `codex-user-message:sha256:eb381cfd…7221` 接受 Readiness 并只授权 `ITER-008-SLICE-001`；
 `SLICE-002` 仍需前段 PASS、`V-REFLECT-001: CONTINUE` 与新的用户消息，不能由本次授权推导。

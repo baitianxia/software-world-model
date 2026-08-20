@@ -24,13 +24,13 @@ from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_
     BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_METRIC_CONTRACT,
     BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_THRESHOLD_REF,
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS,
+    BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF,
     load_bounded_java_source_semantics_gateway_qualification_binding,
 )
-from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
-    VolcengineArkModelConfiguration,
+from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
+    DeepSeekModelConfiguration,
 )
 from software_world_model.cross_cutting import (
-    Digest,
     DomainError,
     canonical_json_bytes,
     digest_of,
@@ -40,6 +40,10 @@ from software_world_model.interface import world_model_runtime
 
 def _documents() -> tuple[dict[str, object], dict[str, object]]:
     contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+    configuration = DeepSeekModelConfiguration()
+    conformance_result_ref = (
+        "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64
+    )
     result_id = "evaluation_result_" + "1" * 32
     proof_core = {
         "proof_ref": f"capability-evaluation:{result_id}",
@@ -101,6 +105,12 @@ def _documents() -> tuple[dict[str, object], dict[str, object]]:
             "capability_contract_version": contract.capability_contract_version,
             "strategy_id": "model-snapshot-first-world-model-answer",
             "strategy_version": contract.strategy_version,
+            "model_ref": configuration.model_ref,
+            "adapter_version": configuration.adapter_version,
+            "provider_configuration_fingerprint": (
+                configuration.fingerprint.value
+            ),
+            "conformance_result_ref": conformance_result_ref,
             "implementation_digest": (
                 world_model_answer_strategy_implementation_digest(contract).value
             ),
@@ -118,11 +128,18 @@ def _documents() -> tuple[dict[str, object], dict[str, object]]:
             "threshold_ref": (
                 BOUNDED_JAVA_SOURCE_SEMANTICS_EVALUATION_THRESHOLD_REF
             ),
+            "resource_policy_ref": (
+                BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF
+            ),
+            "tool_policy_ref": "model-no-tools-no-source-no-evidence@1",
             "cases": cases,
         },
         "result": {
             "result_id": result_id,
             "conclusion": "PASS",
+            "actual_model_fingerprints": [
+                configuration.actual_model_fingerprint
+            ],
             "passed_case_ids": case_ids,
             "failed_case_ids": [],
             "inconclusive_case_ids": [],
@@ -171,17 +188,14 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
 
         binding = self._load(qualification, closed)
         policy = binding.create_policy(
-            configuration=VolcengineArkModelConfiguration(),
-            conformance_result_ref=(
-                "CC-ARK-CHAT-NO-TOOLS-001:"
-                "sha256:c86aad995802b8dcf687fafcbaf36bccb02768ba55b40151ec9aa4704518cade"
-            ),
+            configuration=DeepSeekModelConfiguration(),
+            conformance_result_ref=binding.conformance_result_ref,
         )
 
         self.assertEqual(policy.max_provider_calls, 6)
         self.assertEqual(
             policy.policy_ref,
-            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.2.2",
+            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.3.0",
         )
 
     def test_evaluation_definition_and_registry_bind_active_contract(self) -> None:
@@ -207,13 +221,13 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             create_bounded_java_source_semantics_world_model_evaluation_definition(
                 evaluation_version="1.0.0",
                 conformance_result_ref=(
-                    "CC-ARK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64
+                    "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64
                 ),
-                provider_configuration_fingerprint=Digest(
-                    "sha256:" + "2" * 64
+                provider_configuration_fingerprint=(
+                    DeepSeekModelConfiguration().fingerprint
                 ),
-                model_ref="glm-5.2",
-                adapter_version="openai-chat-completions-no-tools@8",
+                model_ref="deepseek-v4-pro",
+                adapter_version="deepseek-chat-completions-no-tools@2",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -245,13 +259,13 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             create_bounded_java_source_semantics_world_model_evaluation_definition(
                 evaluation_version="1.0.0",
                 conformance_result_ref=(
-                    "CC-ARK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64
+                    "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64
                 ),
-                provider_configuration_fingerprint=Digest(
-                    "sha256:" + "2" * 64
+                provider_configuration_fingerprint=(
+                    DeepSeekModelConfiguration().fingerprint
                 ),
-                model_ref="glm-5.2",
-                adapter_version="openai-chat-completions-no-tools@8",
+                model_ref="deepseek-v4-pro",
+                adapter_version="deepseek-chat-completions-no-tools@2",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -283,6 +297,28 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
 
         with self.assertRaises(DomainError):
             self._load(qualification, incomplete)
+
+    def test_old_provider_resource_policy_or_adapter_cannot_be_reused(self) -> None:
+        qualification, closed = _documents()
+        for field, value in (
+            (
+                "resource_policy_ref",
+                "forty-calls-across-eighteen-cases-no-retry:"
+                "sha256:2c238c532213e1b4c90e7d0ec7aad3f32a07d1d75f475cc3947353f5d622a6f5",
+            ),
+            ("adapter_version", "openai-chat-completions-no-tools@8"),
+        ):
+            drifted = copy.deepcopy(closed)
+            drifted["definition"][field] = value
+            drifted_core = {
+                key: item
+                for key, item in drifted.items()
+                if key != "document_digest"
+            }
+            drifted["document_digest"] = digest_of(drifted_core).value
+
+            with self.assertRaises(DomainError):
+                self._load(qualification, drifted)
 
     def test_runtime_provisions_six_but_accepts_four_to_six_consumed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -320,6 +356,12 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "product_oracle_read_count": 0,
             "baseline_result_read_count": 0,
             "credential_visible": False,
+            "provider_type": "DEEPSEEK",
+            "adapter_version": "deepseek-chat-completions-no-tools@2",
+            "requested_model_ref": "deepseek-v4-pro",
+            "conformance_result_ref": (
+                "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64
+            ),
             "resolved_snapshot_ids": ["structure_snapshot_" + "6" * 32],
         }
         gateway_core = {
@@ -337,6 +379,17 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "provider_call_count": 5,
             "https_dispatch_count": 5,
             "server_statuses": ["RESULT"] * 5,
+            "provider_selection_policy": (
+                "PRE_DISPATCH_FIRST_CURRENTLY_QUALIFIED_NO_REQUEST_RETRY"
+            ),
+            "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
+            "selected_provider_type": "DEEPSEEK",
+            "provider_type": "DEEPSEEK",
+            "adapter_version": "deepseek-chat-completions-no-tools@2",
+            "requested_model_ref": "deepseek-v4-pro",
+            "expected_actual_model_fingerprint": "deepseek-v4-pro",
+            "credential_reference": "env:DEEPSEEK_API_KEY",
+            "fallback_after_dispatch": False,
             "provider_descriptor_provisioned_count": 6,
             "provider_descriptor_consumed_count": 5,
             "provider_descriptor_unused_closed_count": 1,
@@ -367,6 +420,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             evaluation_grant_digest=grant_digest,
             disclosure_authorization_digest=disclosure_digest,
             authorization_receipt_digest=receipt_digest,
+            provider_type="DEEPSEEK",
         )
 
     def test_bounded_launcher_extension_preserves_historical_closure(self) -> None:

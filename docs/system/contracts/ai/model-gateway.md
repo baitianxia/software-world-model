@@ -6,8 +6,8 @@ authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
 derived_from: [DD-AI-MODEL-GATEWAY]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
-tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
+tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
 
 # Model Gateway
@@ -41,10 +41,15 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    state 的非空受限子集。子集只能由 Application 从冻结 evidence ledger、前序 Result 和预算派生，并按 contract canonical order
    表达；Gateway 拒绝 universe 外 operation、空子集、乱序/重复项或调用方自行扩张。模型 response 中越出子集的 operation 仍作为
    untrusted raw output 记录，但不能由 Gateway 或 Adapter 获得查询/FINISH 权力。
+10. 多 Provider 偏好只能在 product freeze 与任何 request dispatch 之前，从分别持有 current Adapter Conformance、同一活动
+    Strategy/Configuration Capability Qualification、exact endpoint、secret reference 和隔离 transport 的 route 中选择。选择结果必须
+    作为单一 exact Provider subject 密封到 policy、grant、session、socket/TLS 与调用审计；未选择或资格不完整的 route 不能获得
+    credential、socket 或试探性调用。一旦任何 request 已分派或 outcome unknown，不得换 Provider 重试；新的 route 选择需要新的
+    product freeze 和外部披露授权。
 
 ## Security and compatibility
 
-Secret 只在分派前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。
+Secret 只在分派前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider preference 是资格 route 的确定性选择输入，不是 request-level failover 或绕过资格的可用性探测。
 
 ## Verification ownership
 

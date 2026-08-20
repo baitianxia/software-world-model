@@ -12,6 +12,9 @@ from software_world_model.ai_infrastructure.java_model_egress_qualification impo
 from software_world_model.ai_infrastructure.java_source_semantics_model_egress_qualification import (
     JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST,
 )
+from software_world_model.ai_infrastructure.bounded_java_source_semantics_model_egress_qualification import (
+    BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST,
+)
 from software_world_model.cross_cutting import Digest, canonical_json_bytes, digest_of
 from software_world_model.interface import world_model_runtime
 
@@ -225,6 +228,43 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
             "unit-test-explicit-authorization",
         )
 
+    def test_runtime_exposes_only_the_preselected_provider_credential(self) -> None:
+        with mock.patch.dict(
+            world_model_runtime.os.environ,
+            {
+                "ARK_API_KEY": "ark-secret",
+                "DEEPSEEK_API_KEY": "deepseek-secret",
+            },
+            clear=True,
+        ):
+            credential = world_model_runtime._required_credential("DEEPSEEK")
+        environment = world_model_runtime._role_environment(
+            self.root,
+            credential=credential,
+            provider_type="DEEPSEEK",
+        )
+
+        self.assertEqual(environment["DEEPSEEK_API_KEY"], "deepseek-secret")
+        self.assertNotIn("ARK_API_KEY", environment)
+        self.assertEqual(
+            world_model_runtime._provider_type(
+                {
+                    "provider_type": "DEEPSEEK",
+                    "credential_reference": "env:DEEPSEEK_API_KEY",
+                }
+            ),
+            "DEEPSEEK",
+        )
+        with self.assertRaises(ValueError):
+            world_model_runtime._provider_type(
+                {
+                    "provider_type": "DEEPSEEK",
+                    "credential_reference": "env:ARK_API_KEY",
+                }
+            )
+        with self.assertRaises(ValueError):
+            world_model_runtime._provider_route("REQUEST_SUPPLIED_PROVIDER")
+
     def test_candidate_grant_rejects_qualification_tamper(self) -> None:
         grant_path, qualification_path = self._grant()
         qualification_path.write_bytes(
@@ -387,6 +427,106 @@ class WorldModelEvaluationGrantTests(unittest.TestCase):
         self.assertEqual(
             world_model_runtime._dispatch_policy(3),
             "THREE_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY",
+        )
+
+    def test_bounded_provider_is_derived_from_the_same_deepseek_authority_chain(self) -> None:
+        gateway_input = self.root / "bounded-gateway-input"
+        gateway_input.mkdir()
+        for name in (
+            "qualification.json",
+            "closed-result.json",
+            "egress-policy.json",
+            "conformance.json",
+        ):
+            (gateway_input / name).write_bytes(b"sealed by mocked loader")
+        conformance_ref = (
+            "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "1" * 64
+        )
+        conformance_digest = Digest("sha256:" + "1" * 64)
+        qualification_digest = Digest("sha256:" + "2" * 64)
+        qualification_document_digest = Digest("sha256:" + "3" * 64)
+        closed_result_digest = Digest("sha256:" + "4" * 64)
+        binding = SimpleNamespace(
+            capability_qualification_ref=(
+                "capability-evaluation:evaluation_result_" + "5" * 32
+            ),
+            capability_qualification_digest=qualification_digest,
+            qualification_document_digest=qualification_document_digest,
+            closed_capability_result_digest=closed_result_digest,
+            conformance_result_ref=conformance_ref,
+        )
+        conformance = SimpleNamespace(
+            result_ref=conformance_ref,
+            result_digest=conformance_digest,
+        )
+        permission_digest = "sha256:" + "6" * 64
+        schema = (
+            world_model_runtime._BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA
+        )
+        core = {
+            "schema": schema,
+            "freeze_ref": (
+                "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-PRODUCT-"
+                "GATEWAY-CANDIDATE@1"
+            ),
+            "environment": "EVALUATION_ONLY",
+            "strategy_ref": "model-snapshot-first-world-model-answer@1.5.2",
+            "prompt_ref": "java-source-semantics-world-model-prompt@11",
+            "proposal_vocabulary_ref": (
+                "java-source-semantics-world-model-vocabulary@11"
+            ),
+            "capability_qualification_document_digest": (
+                qualification_document_digest.value
+            ),
+            "closed_capability_result_digest": closed_result_digest.value,
+            "egress_policy_digest": (
+                BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
+            ),
+            "conformance_result_ref": conformance_ref,
+            "conformance_result_digest": conformance_digest.value,
+            "permission_digest": permission_digest,
+            "production_activation": "NOT_EXECUTED",
+        }
+        freeze = {
+            **core,
+            "document_digest": digest_of([schema, core]).value,
+        }
+        (gateway_input / "g3b-freeze.json").write_bytes(
+            canonical_json_bytes(freeze)
+        )
+
+        with (
+            mock.patch(
+                "software_world_model.ai_infrastructure."
+                "bounded_java_source_semantics_model_egress_qualification."
+                "load_bounded_java_source_semantics_gateway_qualification_binding",
+                return_value=binding,
+            ),
+            mock.patch(
+                "software_world_model.ai_infrastructure.deepseek_chat_conformance."
+                "load_deepseek_chat_conformance_qualification",
+                return_value=conformance,
+            ),
+        ):
+            provider, qualification = (
+                world_model_runtime._provider_binding_for_gateway_input(
+                    gateway_input
+                )
+            )
+
+        self.assertEqual(provider["provider_type"], "DEEPSEEK")
+        self.assertEqual(
+            provider["credential_reference"],
+            "env:DEEPSEEK_API_KEY",
+        )
+        self.assertEqual(
+            provider["conformance_digest"], conformance_digest.value
+        )
+        self.assertEqual(
+            provider["qualification_digest"], qualification_digest.value
+        )
+        self.assertEqual(
+            qualification["conformance_result_ref"], conformance_ref
         )
 
     def test_source_semantics_answer_gateway_postcondition_requires_three_calls(self) -> None:

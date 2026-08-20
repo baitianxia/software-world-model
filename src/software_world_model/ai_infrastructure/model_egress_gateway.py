@@ -63,7 +63,7 @@ JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.2.2"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.3.0"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
@@ -126,7 +126,19 @@ _JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
     "sha256:9e4e3dcbb0584b2574bfa71c5e31275e5496255e0ce41cdc5fc8f05e18e243b5"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
-    "sha256:3f7a7e2c42868c1da05a1d1c1f1154af0f9b3272e9ea106a56bf99c574d51a49"
+    "sha256:5fb965eaa1bd6cd485231a638a8390a47d804fcaf2e980aa5f4446ddbe4072fd"
+)
+_DEEPSEEK_PROVIDER_TYPE = "DEEPSEEK"
+_DEEPSEEK_ADAPTER_VERSION = "deepseek-chat-completions-no-tools@2"
+_DEEPSEEK_MODEL_REF = "deepseek-v4-pro"
+_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT = "deepseek-v4-pro"
+_DEEPSEEK_PROVIDER_FINGERPRINT = Digest(
+    "sha256:4bfa86c372fe53f12ca64443064b58fc9e670f7343ed3cf424672473ecf05954"
+)
+_DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
+_DEEPSEEK_CREDENTIAL_REFERENCE = "env:DEEPSEEK_API_KEY"
+_DEEPSEEK_CONFORMANCE_RESULT_PREFIX = (
+    "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
 )
 _FORBIDDEN_MODEL_INPUT_KEYS = {
     "expected",
@@ -556,6 +568,36 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
             self.policy_digest,
             self.max_provider_calls,
         )
+        bounded = (
+            self.policy_ref
+            == BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
+        )
+        if bounded:
+            provider_binding_is_exact = (
+                self.provider_type == _DEEPSEEK_PROVIDER_TYPE
+                and self.adapter_version == _DEEPSEEK_ADAPTER_VERSION
+                and self.model_ref == _DEEPSEEK_MODEL_REF
+                and self.provider_configuration_fingerprint
+                == _DEEPSEEK_PROVIDER_FINGERPRINT
+                and self.endpoint == _DEEPSEEK_ENDPOINT
+                and self.credential_reference
+                == _DEEPSEEK_CREDENTIAL_REFERENCE
+                and _deepseek_conformance_ref_is_exact(
+                    self.conformance_result_ref
+                )
+            )
+        else:
+            provider_binding_is_exact = (
+                self.provider_type == _EXACT_PROVIDER_TYPE
+                and self.adapter_version == _EXACT_ADAPTER_VERSION
+                and self.model_ref == _EXACT_MODEL_REF
+                and self.provider_configuration_fingerprint
+                == _EXACT_PROVIDER_FINGERPRINT
+                and self.endpoint == _EXACT_ENDPOINT
+                and self.credential_reference == _EXACT_CREDENTIAL_REFERENCE
+                and self.conformance_result_ref
+                == _EXACT_CONFORMANCE_RESULT_REF
+            )
         if (
             exact_policy
             not in {
@@ -570,14 +612,7 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
                     6,
                 ),
             }
-            or self.provider_type != _EXACT_PROVIDER_TYPE
-            or self.adapter_version != _EXACT_ADAPTER_VERSION
-            or self.model_ref != _EXACT_MODEL_REF
-            or self.provider_configuration_fingerprint
-            != _EXACT_PROVIDER_FINGERPRINT
-            or self.endpoint != _EXACT_ENDPOINT
-            or self.credential_reference != _EXACT_CREDENTIAL_REFERENCE
-            or self.conformance_result_ref != _EXACT_CONFORMANCE_RESULT_REF
+            or not provider_binding_is_exact
             or not self.capability_qualification_ref.startswith(
                 "capability-evaluation:evaluation_result_"
             )
@@ -806,6 +841,12 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
         self._validated_stages.append(expected_stage)
 
     def validate_result(self, result: ModelGatewayResult) -> None:
+        expected_actual_model = (
+            _DEEPSEEK_ACTUAL_MODEL_FINGERPRINT
+            if self.policy_ref
+            == BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
+            else "glm-5.2"
+        )
         if (
             result.call.provider_type != self.provider_type
             or result.call.adapter_version != self.adapter_version
@@ -817,19 +858,29 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
             or result.isolation_receipt.conformance_result_ref
             != self.conformance_result_ref
             or result.call.state is not ModelCallState.COMPLETED
-            or result.call.actual_model_fingerprint != "glm-5.2"
+            or result.call.actual_model_fingerprint != expected_actual_model
             or result.call.failure_code is not None
             or result.response is None
-            or result.response.actual_model_fingerprint != "glm-5.2"
+            or result.response.actual_model_fingerprint != expected_actual_model
             or result.response.usage_complete is not True
             or result.eligibility.eligible_for_production_domain_output is not True
             or result.eligibility.reason != "ELIGIBLE"
-            or result.eligibility.actual_model_fingerprint != "glm-5.2"
+            or result.eligibility.actual_model_fingerprint != expected_actual_model
         ):
             raise DomainError(
                 ErrorCode.QUALIFICATION_INVALID,
                 "model result is outside the exact Java source-semantics policy",
             )
+
+
+def _deepseek_conformance_ref_is_exact(value: str) -> bool:
+    if not value.startswith(_DEEPSEEK_CONFORMANCE_RESULT_PREFIX):
+        return False
+    try:
+        Digest("sha256:" + value.removeprefix(_DEEPSEEK_CONFORMANCE_RESULT_PREFIX))
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 @dataclass(frozen=True, slots=True)

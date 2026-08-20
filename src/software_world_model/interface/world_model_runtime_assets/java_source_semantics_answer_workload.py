@@ -72,6 +72,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--ordered-bundle", required=True)
     parser.add_argument("--snapshot-bundle", action="append", required=True)
     parser.add_argument("--gateway-socket", required=True)
+    parser.add_argument("--conformance-result-ref")
     parser.add_argument("--run-ref", required=True)
     parser.add_argument("--implementation-commit", required=True)
     parser.add_argument("--authority-page-output", required=True)

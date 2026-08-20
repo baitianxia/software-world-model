@@ -95,6 +95,13 @@ from .pinned_ark_https import (
     PinnedIPVolcengineArkChatTransport,
     resolve_ark_provider_addresses,
 )
+from .pinned_deepseek_https import (
+    DEEPSEEK_PROVIDER_HOST,
+    DEEPSEEK_PROVIDER_PATH,
+    DEEPSEEK_PROVIDER_PORT,
+    PinnedDeepSeekDispatchAudit,
+    PinnedIPDeepSeekChatTransport,
+)
 from .openai_responses_adapter import (
     DEFAULT_RESPONSES_ENDPOINT,
     OpenAIResponsesNoToolsAdapter,
@@ -528,6 +535,11 @@ __all__ = [
     "ARK_PROVIDER_PORT",
     "PinnedArkDispatchAudit",
     "PinnedIPVolcengineArkChatTransport",
+    "PinnedDeepSeekDispatchAudit",
+    "PinnedIPDeepSeekChatTransport",
+    "DEEPSEEK_PROVIDER_HOST",
+    "DEEPSEEK_PROVIDER_PATH",
+    "DEEPSEEK_PROVIDER_PORT",
     "resolve_ark_provider_addresses",
     "ModelReviewedKnowledgeBuilder",
     "ModelReviewedFactGroundingVerifier",

@@ -77,6 +77,7 @@ from .manifest import (
     PINNED_ORACLE_REF,
     PINNED_PROVIDER_REQUEST_COUNT,
     PINNED_REQUIRED_CASE_IDS,
+    PINNED_RESOURCE_POLICY_REF,
     PINNED_SUITE_FILE_DIGEST,
     PINNED_SUITE_REF,
     build_evaluation_definition,
@@ -707,6 +708,16 @@ def _run_authorized_capability(
     conformance = load_deepseek_chat_conformance_qualification(
         conformance_result_path.resolve(strict=True), configuration
     )
+    strategy_configuration = WorldModelStrategyConfiguration(
+        provider_type=configuration.provider_type,
+        adapter_version=configuration.adapter_version,
+        model_ref=configuration.model_ref,
+        provider_configuration_fingerprint=configuration.fingerprint,
+        qualification_ref=f"evaluation-only:{conformance.result_ref}",
+        max_output_tokens=1000,
+        timeout_milliseconds=180_000,
+        classification="INTERNAL",
+    )
     active_transport = transport or UrllibDeepSeekChatTransport(
         api_key_resolver=lambda: configuration.resolve_api_key(environment)
     )
@@ -718,16 +729,6 @@ def _run_authorized_capability(
             include_java_source_semantics=True
         ),
         live_qualification=conformance,
-    )
-    strategy_configuration = WorldModelStrategyConfiguration(
-        provider_type=configuration.provider_type,
-        adapter_version=configuration.adapter_version,
-        model_ref=configuration.model_ref,
-        provider_configuration_fingerprint=configuration.fingerprint,
-        qualification_ref=f"evaluation-only:{conformance.result_ref}",
-        max_output_tokens=1000,
-        timeout_milliseconds=180_000,
-        classification="INTERNAL",
     )
     suite, oracle = load_capability_inputs()
     outputs = {}
@@ -854,10 +855,7 @@ def _run_authorized_capability(
             "standalone-stdlib-evaluator:"
             f"{freeze['closed_inputs']['evaluator_digest']}"
         ),
-        resource_policy_ref=(
-            "forty-calls-across-eighteen-cases-no-retry:"
-            f"{strategy_configuration.digest.value}"
-        ),
+        resource_policy_ref=PINNED_RESOURCE_POLICY_REF,
         valid_for_seconds=604800,
     )
     if definition.digest.value != freeze["evaluation_definition"]["definition_digest"]:
@@ -1074,16 +1072,6 @@ def _verify_capability_freeze(
         conformance_result_path.resolve(strict=True), configuration
     )
     suite, oracle = load_capability_inputs()
-    strategy_configuration = WorldModelStrategyConfiguration(
-        provider_type=configuration.provider_type,
-        adapter_version=configuration.adapter_version,
-        model_ref=configuration.model_ref,
-        provider_configuration_fingerprint=configuration.fingerprint,
-        qualification_ref=f"evaluation-only:{conformance.result_ref}",
-        max_output_tokens=1000,
-        timeout_milliseconds=180_000,
-        classification="INTERNAL",
-    )
     evaluator_digest = (
         "sha256:" + hashlib.sha256(EVALUATOR_PATH.read_bytes()).hexdigest()
     )
@@ -1102,10 +1090,7 @@ def _verify_capability_freeze(
         reference_strategy_ref=(
             f"standalone-stdlib-evaluator:{evaluator_digest}"
         ),
-        resource_policy_ref=(
-            "forty-calls-across-eighteen-cases-no-retry:"
-            f"{strategy_configuration.digest.value}"
-        ),
+        resource_policy_ref=PINNED_RESOURCE_POLICY_REF,
         valid_for_seconds=604800,
     )
     scope = _capability_scope(configuration, conformance)

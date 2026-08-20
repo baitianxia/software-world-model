@@ -80,6 +80,12 @@ Limitation，并保持 Source/Update/Direct fallback 为 0。查询、表示与�
 connection；Gateway 按实际角色顺序消费，未使用 descriptor 在 terminal 后销毁并审计。旧固定三调用资格和 connection receipt 不得
 复用。其他已接受 Profile 保持原调用协议。
 
+若候选配置声明多个 Provider 偏好，Application 必须在 product freeze 和任何 socket、credential 或 request dispatch 之前，按顺序
+选择第一个同时拥有 current exact Conformance、同 Strategy/Configuration Capability Qualification 与完整隔离 transport 的 route。
+选择结果作为单一 Provider subject 贯穿 evaluation grant、session receipt、supervisor DNS/TCP provisioning、Gateway TLS/SNI/path、
+Answer/Gateway role environment 和公开 Result；运行时只注入所选 Provider 的 credential。资格不完整的首选项只会被跳过，不会被
+试调用；任何 request 已分派或 outcome unknown 后都禁止切换 Provider，同一问题若要选择新 route 必须重新 freeze 并取得新授权。
+
 ## 直接源码调查
 
 ```text
@@ -102,4 +108,4 @@ Original Question
 
 ## 模型资格
 
-Provider Contract Conformance 证明 Adapter 接口成立；Capability Evaluation 证明精确 Strategy 适合业务能力；Product Validation 证明端到端用户价值；显式 Activation 决定可用范围。四者独立且按精确实现、模型、配置和有效期绑定。
+Provider Contract Conformance 证明 Adapter 接口成立；Capability Evaluation 证明精确 Strategy 适合业务能力；Product Validation 证明端到端用户价值；显式 Activation 决定可用范围。四者独立且按精确实现、模型、配置和有效期绑定。某一 Provider 的资格不能借给另一 Provider；偏好顺序也不能替代当前资格。

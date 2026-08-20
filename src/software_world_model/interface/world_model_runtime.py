@@ -32,7 +32,12 @@ from typing import Iterable, Mapping, Sequence
 from urllib.parse import quote
 
 from software_world_model.ai_infrastructure.pinned_ark_https import (
+    ARK_PROVIDER_HOST,
     ARK_PROVIDER_PORT,
+)
+from software_world_model.ai_infrastructure.pinned_deepseek_https import (
+    DEEPSEEK_PROVIDER_HOST,
+    DEEPSEEK_PROVIDER_PORT,
 )
 from software_world_model.cross_cutting import canonical_json_bytes, digest_of
 from software_world_model.interface.world_model_browser import PublicRunnerError
@@ -80,6 +85,28 @@ _EXPECTED_PROVIDER = {
     "qualification_digest": (
         "sha256:005b1bf43c76a64d123b0184cdac1a9e844331896e7ede6279875881d9bcc62c"
     ),
+}
+_BOUNDED_DEEPSEEK_PROVIDER = {
+    "provider_type": "DEEPSEEK",
+    "adapter": "deepseek-chat-completions-no-tools@2",
+    "requested_model": "deepseek-v4-pro",
+    "observed_model": "deepseek-v4-pro",
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "credential_reference": "env:DEEPSEEK_API_KEY",
+}
+_PROVIDER_ROUTES = {
+    "VOLCENGINE_ARK": {
+        "hostname": ARK_PROVIDER_HOST,
+        "port": ARK_PROVIDER_PORT,
+        "credential_reference": "env:ARK_API_KEY",
+        "credential_environment_variable": "ARK_API_KEY",
+    },
+    "DEEPSEEK": {
+        "hostname": DEEPSEEK_PROVIDER_HOST,
+        "port": DEEPSEEK_PROVIDER_PORT,
+        "credential_reference": "env:DEEPSEEK_API_KEY",
+        "credential_environment_variable": "DEEPSEEK_API_KEY",
+    },
 }
 _JAVA_GATEWAY_FREEZE_SCHEMA = "SWM-ITER-006-JAVA-GATEWAY-FREEZE@1"
 _JAVA_SOURCE_SEMANTICS_GATEWAY_FREEZE_SCHEMA = (
@@ -208,7 +235,10 @@ class SealedWorldModelExecutor:
             self._authorization_receipt_digest,
         ) = _prepare_gateway_input(grant, startup_root / "gateway-input")
         self._provider_call_count = _gateway_call_count(self._gateway_input)
-        bootstrap_connection, bootstrap = _provision_provider_socket()
+        self._provider_type = _provider_type(grant.provider)
+        bootstrap_connection, bootstrap = _provision_provider_socket(
+            provider_type=self._provider_type
+        )
         bootstrap_connection.close()
         self._provider_address = _text(
             bootstrap.get("selected_address"), "selected Provider address"
@@ -226,6 +256,7 @@ class SealedWorldModelExecutor:
             forbidden=self._forbidden,
             runtime=self._runtime,
             provider_address=self._provider_address,
+            provider_type=self._provider_type,
         )
         stage_digest = digest_of(_tree_manifest(grant.stage_root)).value
         if (
@@ -248,6 +279,7 @@ class SealedWorldModelExecutor:
             "stage_manifest_digest": stage_digest,
             "launcher_manifest_digest": grant.launcher_manifest_digest,
             "provider_subject_digest": grant.provider_subject_digest,
+            "provider_type": self._provider_type,
             "disclosure_authorization_digest": grant.disclosure_digest,
             "gateway_authorization_receipt_digest": (
                 self._authorization_receipt_digest
@@ -308,6 +340,7 @@ class SealedWorldModelExecutor:
             "stage_manifest_digest": self._grant.stage_manifest_digest,
             "launcher_manifest_digest": self._grant.launcher_manifest_digest,
             "provider_subject_digest": self._grant.provider_subject_digest,
+            "provider_type": self._provider_type,
             "gateway_authorization_receipt_digest": (
                 self._authorization_receipt_digest
             ),
@@ -354,6 +387,7 @@ class SealedWorldModelExecutor:
                 forbidden=self._forbidden,
                 runtime=self._runtime,
                 provider_address=self._provider_address,
+                provider_type=self._provider_type,
                 implementation_commit=self._grant.product_commit,
                 evaluation_grant_digest=self._grant.document_digest,
                 disclosure_authorization_digest=self._grant.disclosure_digest,
@@ -589,6 +623,7 @@ class SealedWorldModelExecutor:
                 "provider_call_count": expected_calls,
                 "network_operation_count": expected_calls,
                 "selective_retry_count": 0,
+                "provider_type": self._provider_type,
                 "source_access_count": 0,
                 "evidence_payload_access_count": 0,
                 "model_call_id": summary.get("model_call_id"),
@@ -1116,11 +1151,22 @@ def _bounded_java_source_semantics_provider_binding(
         BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST,
         load_bounded_java_source_semantics_gateway_qualification_binding,
     )
+    from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
+        DeepSeekModelConfiguration,
+    )
+    from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
+        load_deepseek_chat_conformance_qualification,
+    )
 
     binding = load_bounded_java_source_semantics_gateway_qualification_binding(
         qualification_path=gateway_input / "qualification.json",
         closed_result_path=gateway_input / "closed-result.json",
         policy_path=gateway_input / "egress-policy.json",
+    )
+    configuration = DeepSeekModelConfiguration()
+    conformance = load_deepseek_chat_conformance_qualification(
+        gateway_input / "conformance.json",
+        configuration,
     )
     expected_freeze_keys = {
         "schema",
@@ -1163,7 +1209,9 @@ def _bounded_java_source_semantics_provider_binding(
         or freeze.get("egress_policy_digest")
         != BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST
         or freeze.get("conformance_result_digest")
-        != _EXPECTED_PROVIDER["conformance_digest"]
+        != conformance.result_digest.value
+        or freeze.get("conformance_result_ref") != conformance.result_ref
+        or binding.conformance_result_ref != conformance.result_ref
         or freeze.get("production_activation") != "NOT_EXECUTED"
         or freeze.get("document_digest")
         != digest_of(
@@ -1177,10 +1225,11 @@ def _bounded_java_source_semantics_provider_binding(
         freeze.get("permission_digest"),
         "bounded source-semantics Gateway permission digest",
     )
-    expected_provider = dict(_EXPECTED_PROVIDER)
-    expected_provider["qualification_digest"] = (
-        binding.capability_qualification_digest.value
-    )
+    expected_provider = {
+        **_BOUNDED_DEEPSEEK_PROVIDER,
+        "conformance_digest": conformance.result_digest.value,
+        "qualification_digest": binding.capability_qualification_digest.value,
+    }
     qualification = {
         "capability_qualification_ref": binding.capability_qualification_ref,
         "capability_qualification_digest": (
@@ -1508,6 +1557,7 @@ def _run_one(
     forbidden: Mapping[str, Path],
     runtime: Mapping[str, object],
     provider_address: str,
+    provider_type: str,
     implementation_commit: str,
     evaluation_grant_digest: str,
     disclosure_authorization_digest: str,
@@ -1552,7 +1602,10 @@ def _run_one(
     gateway_socket = socket_root / "gateway.sock"
     gateway_call_count = _gateway_call_count(gateway_input)
     connected_with_receipts = tuple(
-        _provision_provider_socket(provider_address)
+        _provision_provider_socket(
+            provider_address,
+            provider_type=provider_type,
+        )
         for _ in range(gateway_call_count)
     )
     connections = tuple(item[0] for item in connected_with_receipts)
@@ -1587,7 +1640,9 @@ def _run_one(
             canonical_json_bytes(listener_provisioning),
         )
         gateway_environment = _role_environment(
-            gateway_output, credential=_required_credential()
+            gateway_output,
+            credential=_required_credential(provider_type),
+            provider_type=provider_type,
         )
     except BaseException:
         for connection in connections:
@@ -1699,6 +1754,18 @@ def _run_one(
             "--product-payload-base64", _encode(payload),
             "--ordered-bundle", str(ordered),
         ]
+        if gateway_call_count == 6:
+            answer_argv.extend(
+                (
+                    "--conformance-result-ref",
+                    _text(
+                        _load_json(gateway_input / "g3b-freeze.json").get(
+                            "conformance_result_ref"
+                        ),
+                        "bounded Answer Conformance result reference",
+                    ),
+                )
+            )
         for snapshot in snapshots:
             answer_argv.extend(("--snapshot-bundle", str(snapshot)))
         answer_argv.extend(
@@ -1824,6 +1891,7 @@ def _run_one(
                     disclosure_authorization_digest
                 ),
                 authorization_receipt_digest=authorization_receipt_digest,
+                provider_type=provider_type,
             )
             postcondition_phase = "CITATION_PROJECTION"
             projections = _project_all_citations(
@@ -1861,6 +1929,7 @@ def _run_one(
         "attempt_count": 1,
         "selective_retry_count": 0,
         "provider_connection_handoff_count": gateway_call_count,
+        "provider_type": provider_type,
         "gateway_listener_handoff_count": 1,
         "gateway_listener_provisioning": _file_reference(
             evaluator_root / "gateway-listener-provisioning.json"
@@ -2068,6 +2137,7 @@ def _run_preflight(
     forbidden: Mapping[str, Path],
     runtime: Mapping[str, object],
     provider_address: str,
+    provider_type: str,
 ) -> dict[str, object]:
     preflight_root = evidence_root / "preflight"
     preflight_root.mkdir(mode=0o700)
@@ -2105,7 +2175,8 @@ def _run_preflight(
         try:
             if role == "gateway":
                 inherited_connection, provisioning = _provision_provider_socket(
-                    provider_address
+                    provider_address,
+                    provider_type=provider_type,
                 )
                 _write_new(
                     role_root / "connection-provisioning.json",
@@ -2140,6 +2211,7 @@ def _run_preflight(
                 "--gateway-socket", str(gateway_socket),
                 "--other-unix-socket", str(other_socket),
                 "--provider-address", provider_address,
+                "--provider-type", provider_type,
                 "--connected-provider-socket-fd", str(inherited_fd),
                 "--gateway-listener-socket-fd", str(gateway_listener_fd),
                 "--local-tcp-port", str(local_listener.port),
@@ -2178,6 +2250,7 @@ def _run_preflight(
                         if role == "gateway"
                         else None
                     ),
+                    provider_type=provider_type,
                 ),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -2243,6 +2316,7 @@ def _run_preflight(
         "status": status_value,
         "provider_address": provider_address,
         "provider_address_scope": _provider_address_scope(provider_address),
+        "provider_type": provider_type,
         "roles": records,
         "protected_stage_manifest_before": protected_stage_manifest_before,
         "protected_stage_manifest_after": protected_stage_manifest_after,
@@ -2529,7 +2603,10 @@ def _run_evaluator_entrypoint(
 
 
 def _role_environment(
-    output_root: Path, *, credential: str | None = None
+    output_root: Path,
+    *,
+    credential: str | None = None,
+    provider_type: str = "VOLCENGINE_ARK",
 ) -> dict[str, str]:
     value = {
         "TMPDIR": str(output_root),
@@ -2542,7 +2619,8 @@ def _role_environment(
         "PYTHONNOUSERSITE": "1",
     }
     if credential is not None:
-        value["ARK_API_KEY"] = credential
+        route = _provider_route(provider_type)
+        value[str(route["credential_environment_variable"])] = credential
     return value
 
 
@@ -2602,6 +2680,7 @@ def _verify_answer_gateway(
     evaluation_grant_digest: str,
     disclosure_authorization_digest: str,
     authorization_receipt_digest: str,
+    provider_type: str = "VOLCENGINE_ARK",
 ) -> None:
     gateway_core = {
         key: value for key, value in gateway.items() if key != "document_digest"
@@ -2632,6 +2711,19 @@ def _verify_answer_gateway(
         or answer.get("product_oracle_read_count") != 0
         or answer.get("baseline_result_read_count") != 0
         or answer.get("credential_visible") is not False
+        or (
+            bounded
+            and (
+                answer.get("provider_type") != provider_type
+                or answer.get("adapter_version")
+                != _BOUNDED_DEEPSEEK_PROVIDER["adapter"]
+                or answer.get("requested_model_ref")
+                != _BOUNDED_DEEPSEEK_PROVIDER["requested_model"]
+                or not str(answer.get("conformance_result_ref", "")).startswith(
+                    "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:"
+                )
+            )
+        )
         or answer.get("resolved_snapshot_ids") != payload["resolved_snapshot_ids"]
         or gateway.get("schema")
         != "SWM-WORLD-MODEL-AUTHORIZED-GATEWAY@1"
@@ -2650,6 +2742,26 @@ def _verify_answer_gateway(
         or gateway.get("provider_call_count") != expected_calls
         or gateway.get("https_dispatch_count") != expected_calls
         or gateway.get("server_statuses") != expected_statuses
+        or (
+            bounded
+            and (
+                gateway.get("provider_selection_policy")
+                != "PRE_DISPATCH_FIRST_CURRENTLY_QUALIFIED_NO_REQUEST_RETRY"
+                or gateway.get("provider_preference_order")
+                != ["VOLCENGINE_ARK", "DEEPSEEK"]
+                or gateway.get("selected_provider_type") != provider_type
+                or gateway.get("provider_type") != provider_type
+                or gateway.get("adapter_version")
+                != _BOUNDED_DEEPSEEK_PROVIDER["adapter"]
+                or gateway.get("requested_model_ref")
+                != _BOUNDED_DEEPSEEK_PROVIDER["requested_model"]
+                or gateway.get("expected_actual_model_fingerprint")
+                != _BOUNDED_DEEPSEEK_PROVIDER["observed_model"]
+                or gateway.get("credential_reference")
+                != _provider_route(provider_type)["credential_reference"]
+                or gateway.get("fallback_after_dispatch") is not False
+            )
+        )
         or (
             bounded
             and (
@@ -2675,7 +2787,12 @@ def _verify_answer_gateway(
 
 def _provision_provider_socket(
     numeric_address: str | None = None,
+    *,
+    provider_type: str = "VOLCENGINE_ARK",
 ) -> tuple[socket.socket, dict[str, object]]:
+    route = _provider_route(provider_type)
+    provider_hostname = str(route["hostname"])
+    provider_port = int(route["port"])
     if numeric_address is not None:
         parsed = ipaddress.ip_address(numeric_address)
         _provider_address_scope(str(parsed))
@@ -2689,6 +2806,7 @@ def _provision_provider_socket(
         *SANDBOXED_PYTHON_FLAGS,
         str(worker),
         "--control-fd", str(child.fileno()),
+        "--provider-type", provider_type,
         "--timeout-seconds", "20",
     ]
     if numeric_address is not None:
@@ -2738,7 +2856,7 @@ def _provision_provider_socket(
             not isinstance(value, dict)
             or canonical_json_bytes(value) != payload
             or value.get("schema")
-            != "swm.iter-003.g3b-provider-socket-provisioning@1"
+            != "swm.world-model-provider-socket-provisioning@2"
         ):
             raise RuntimeError("Provider socket supervisor receipt is invalid")
         worker_core = {
@@ -2749,8 +2867,9 @@ def _provision_provider_socket(
         resolved_scopes = value.get("resolved_address_scopes")
         if (
             value.get("document_digest") != digest_of(worker_core).value
-            or value.get("provider_hostname") != "ark.cn-beijing.volces.com"
-            or value.get("provider_port") != ARK_PROVIDER_PORT
+            or value.get("provider_type") != provider_type
+            or value.get("provider_hostname") != provider_hostname
+            or value.get("provider_port") != provider_port
             or not isinstance(resolved, list)
             or not resolved
             or any(
@@ -2768,7 +2887,7 @@ def _provision_provider_socket(
             or value.get("selected_address_scope")
             != _provider_address_scope(selected)
             or value.get("connected_peer_address") != selected
-            or value.get("connected_peer_port") != ARK_PROVIDER_PORT
+            or value.get("connected_peer_port") != provider_port
             or value.get("tcp_connect_count") != 1
             or value.get("descriptor_transfer_count") != 1
             or value.get("credential_visible") is not False
@@ -2793,7 +2912,7 @@ def _provision_provider_socket(
         peer = connection.getpeername()
         if (
             str(ipaddress.ip_address(peer[0])) != selected
-            or peer[1] != ARK_PROVIDER_PORT
+            or peer[1] != provider_port
         ):
             connection.close()
             raise RuntimeError("received Provider descriptor peer is not exact")
@@ -2851,15 +2970,33 @@ def _provider_address_scope(value: object) -> str:
     raise ValueError("Provider address is not an accepted external egress peer")
 
 
-def _required_credential() -> str:
-    credential = os.environ.get("ARK_API_KEY")
+def _provider_route(provider_type: object) -> Mapping[str, object]:
+    if not isinstance(provider_type, str) or provider_type not in _PROVIDER_ROUTES:
+        raise ValueError("Provider type is not in the exact runtime route registry")
+    return _PROVIDER_ROUTES[provider_type]
+
+
+def _provider_type(provider: Mapping[str, object]) -> str:
+    provider_type = _text(provider.get("provider_type"), "Provider type")
+    route = _provider_route(provider_type)
+    if provider.get("credential_reference") != route["credential_reference"]:
+        raise ValueError("Provider credential reference differs from its route")
+    return provider_type
+
+
+def _required_credential(provider_type: str = "VOLCENGINE_ARK") -> str:
+    route = _provider_route(provider_type)
+    environment_variable = str(route["credential_environment_variable"])
+    credential = os.environ.get(environment_variable)
     if (
         not isinstance(credential, str)
         or not credential
         or "\r" in credential
         or "\n" in credential
     ):
-        raise RuntimeError("ARK_API_KEY is required for authorized evaluation")
+        raise RuntimeError(
+            f"{environment_variable} is required for authorized evaluation"
+        )
     return credential
 
 

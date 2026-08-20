@@ -979,6 +979,8 @@ class JavaImplementationViewTests(TestCase):
                 stored_snapshot.locator,
                 "--gateway-socket",
                 str(root / "unopened-gateway.sock"),
+                "--conformance-result-ref",
+                "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64,
                 "--run-ref",
                 "formal-asset-test",
                 "--implementation-commit",
