@@ -1342,6 +1342,26 @@
       "tests/test_world_model_product.py"
     ]
   },
+  "FINDING-008-025": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-025.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/deepseek_chat_conformance.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_policy.json",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_qualification.py",
+      "validation/structure_world_model_iteration_008/capability"
+    ],
+    "tests": [
+      "tests/test_deepseek_chat_adapter.py",
+      "tests/test_deepseek_chat_conformance.py",
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_008_capability_harness.py",
+      "tests/test_iteration_008_capability_qualification.py",
+      "tests/test_model_egress_gateway.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

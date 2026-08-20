@@ -223,7 +223,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         self.assertEqual(policy.max_provider_calls, 6)
         self.assertEqual(
             policy.policy_ref,
-            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.0",
+            "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.1",
         )
 
     def test_evaluation_definition_and_registry_bind_active_contract(self) -> None:
@@ -255,7 +255,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                     DeepSeekModelConfiguration().fingerprint
                 ),
                 model_ref="deepseek-v4-pro",
-                adapter_version="deepseek-chat-completions-no-tools@3",
+                adapter_version="deepseek-chat-completions-no-tools@4",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -266,7 +266,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
         )
 
         self.assertEqual(len(definition.cases), 18)
-        self.assertEqual(definition.strategy_version, "1.5.2")
+        self.assertEqual(definition.strategy_version, "1.5.3")
         self.assertEqual(
             definition.output_schema_digest,
             java_source_semantics_world_model_output_contract_digest(
@@ -293,7 +293,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
                     DeepSeekModelConfiguration().fingerprint
                 ),
                 model_ref="deepseek-v4-pro",
-                adapter_version="deepseek-chat-completions-no-tools@3",
+                adapter_version="deepseek-chat-completions-no-tools@4",
                 exact_candidate_checkpoint_ref="git:" + "3" * 40,
                 environment_ref="iter-008-bounded-capability-evaluation@1",
                 reference_strategy_ref="standalone-evaluator@1",
@@ -413,7 +413,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "baseline_result_read_count": 0,
             "credential_visible": False,
             "provider_type": "DEEPSEEK",
-            "adapter_version": "deepseek-chat-completions-no-tools@3",
+            "adapter_version": "deepseek-chat-completions-no-tools@4",
             "requested_model_ref": "deepseek-v4-pro",
             "conformance_result_ref": (
                 "CC-DEEPSEEK-CHAT-NO-TOOLS-001:sha256:" + "a" * 64
@@ -441,7 +441,7 @@ class Iteration008CapabilityQualificationTests(unittest.TestCase):
             "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
             "selected_provider_type": "DEEPSEEK",
             "provider_type": "DEEPSEEK",
-            "adapter_version": "deepseek-chat-completions-no-tools@3",
+            "adapter_version": "deepseek-chat-completions-no-tools@4",
             "requested_model_ref": "deepseek-v4-pro",
             "expected_actual_model_fingerprint": "deepseek-v4-pro",
             "credential_reference": "env:DEEPSEEK_API_KEY",

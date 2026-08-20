@@ -44,7 +44,7 @@ from .openai_responses_adapter import OutputSchemaDefinition, ProviderHTTPRespon
 
 
 DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-DEEPSEEK-CHAT-NO-TOOLS-001"
-DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.1.0"
+DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.2.0"
 DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.deepseek-chat-conformance-result@2"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "deepseek-conformance-live"
@@ -658,8 +658,16 @@ def _evaluate_cases(
         and isinstance(body.get("messages"), list)
         and len(body["messages"]) >= 2
         and body["messages"][0].get("role") == "system"
+        and sum(
+            message.get("role") == "system"
+            for message in body["messages"]
+            if isinstance(message, dict)
+        )
+        == 1
         and "closed JSON Schema" in body["messages"][0].get("content", "")
         and '"additionalProperties":false' in body["messages"][0].get("content", "")
+        and "Return exactly one JSON object matching the supplied strict schema."
+        in body["messages"][0].get("content", "")
         and body.get("thinking") == {"type": "disabled"}
         and body.get("temperature") == configuration.temperature
         for body in bodies

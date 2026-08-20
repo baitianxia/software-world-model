@@ -315,6 +315,29 @@ descriptor 并分列 consumed/unused-close。Adapter/fixture/Result/egress polic
 执行面 1010/1015，唯一五项是 `FINDING-008-020` 的历史 exact runtime drift，因此不冒充 full-suite PASS。新 exact clean candidate
 与 live Conformance/Capability 尚未完成，正式 product freeze、Web、canary、Agent 对照、Reflection 与 Activation 继续阻断。
 
+上述 persistent 实现随后形成 clean candidate `139e61c94f218a6076022f1863cf871b2d3104f2` / tree
+`efb2cd48b6fb02365ab2a2544f3a5e9adec890cf` 并执行 run-016。Conformance preflight/authorization/result digest 为
+`sha256:6af24a38abc6292787f7abc2f714669827877b2c6ddf85150d0a1480fbaba63a` /
+`sha256:be4747138d0a3c46e65c0e645db22ea1d4d60156c7e346ef810d2dc52d7e84ee` /
+`sha256:9e035d75899140ecb02f5513666b16ff09f72f5490ff8c259201353aa8c1d83b`；2 requests / 12/12 PASS，唯一 identity
+`deepseek-v4-pro`，tokens 373/75、usage 完整。transport 只取得 1 个 verified TLS session 并复用 1 次，HTTP/credential 各 2 次，
+unknown/retry 为 0。
+
+Capability freeze/authorization 为 `sha256:63151e87fc13d241b1586429276dfd8269af8c9f59f10f9b09e67e263c13f43d` /
+`sha256:886488fabd2d88a3492544e1c6e44fb4e1f7cebb2febab318166fef57506d514`。前 6 Case / 12 calls 全部 PASS；第 13 次已完成
+request 在 `WM-JSS-I8-PATH-EXISTS-007:call-1` 选择 `method_implementations(OUTGOING_CALLS)`，与 frozen `path_exists` obligation
+不一致，runner 以 `QUALIFICATION_INVALID` 失败关闭。failure/terminal digest 为
+`sha256:b698c9820a8f4770d7b49b158038e01378ca263afc83ac660732c9977ad95f64` /
+`sha256:e85fb34aca3ee21cedc3486d78c270c749fa4923c355026de017f74b98761d42`。失败时 transport 仍为 TLS 1/1、reuse 12、HTTP/credential
+13/13、unknown/retry 0；因此不是网络回归。授权已消费，没有 Qualification、Web、canary 或 Activation。
+
+[FINDING-008-025](../findings/FINDING-008-025.md) 保留 exact 输出证据：模型识别 `reach/path`，却选择 method evidence，并把 prompt
+示例中的 `direct/all/method/implementation/candidate` 当作 search terms。旧 DeepSeek wire 将 Adapter schema 与 Gateway semantic
+prompt 分成两个 system turns。当前候选不放宽 ledger/evaluator、不读取问题/Case/Oracle，而是将两项 authority 合并为一个 leading
+system message，并以通用 prompt 明确 capability section isolation、example-only terms 与 reachability precedence。活动身份升级为
+Adapter `@4`、Conformance fixture `1.2.0` / Result `@2`、capability/Strategy `1.5.3`、prompt/vocabulary `@12`、policy `@1.4.1`、
+suite/oracle `@1.5.3`；本地门禁与全新 live qualification 尚待闭合。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

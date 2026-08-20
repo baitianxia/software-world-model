@@ -11,6 +11,8 @@ import unittest
 from software_world_model.ai_infrastructure import (
     AdapterConformanceLevel,
     DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
+    DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION,
+    DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekModelConfiguration,
     ProviderHTTPResponse,
@@ -155,6 +157,12 @@ class DeepSeekChatConformanceTests(unittest.TestCase):
         result = self.run_result()
 
         self.assertEqual(result["outcome"], "PASS")
+        self.assertEqual(DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_VERSION, "1.2.0")
+        self.assertEqual(
+            DEEPSEEK_CHAT_CONFORMANCE_RESULT_SCHEMA,
+            "swm.deepseek-chat-conformance-result@2",
+        )
+        self.assertEqual(result["fixture_version"], "1.2.0")
         self.assertEqual(result["provider"]["provider_type"], "DEEPSEEK")
         self.assertEqual(len(result["cases"]), 12)
         self.assertTrue(all(case["outcome"] == "PASS" for case in result["cases"]))

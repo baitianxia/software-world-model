@@ -12,8 +12,8 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十四条 Finding；二十四条均已处置或被后续决定取代。`FINDING-008-024` 已闭合 DeepSeek TLS session 的
-代码、System Owner 与本地验证，但不豁免当前资格、完整回归、正式 Web、canary、
+本 Slice 当前登记二十五条 Finding；二十五条均已处置或被后续决定取代。`FINDING-008-025` 已闭合 DeepSeek 单一 system
+authority、通用 reachability 语义、新资格身份和本地验证，但不豁免当前 live 资格、正式 Web、canary、
 SLICE-002 与 Production Activation gate：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
@@ -90,6 +90,12 @@ SLICE-002 与 Production Activation gate：
   处置把 bounded credential-free TLS acquisition 与 HTTP request dispatch 分开：只允许发送凭据/HTTP 前最多三次握手，已发送后
   仍绝不 retry，并在一个授权运行内复用 verified TLS session。direct/pinned transport、freeze、资格 loader、runtime 与文档 Owner
   已闭合；完整回归 1010/1015，唯一五项仍是 `FINDING-008-020` 的历史 runtime drift，新 live qualification 继续 blocking。
+- [FINDING-008-025](FINDING-008-025.md)：persistent candidate 的 run-016 Conformance 12/12、transport 健康，但 Capability 前
+  6 Case / 12 calls PASS 后，模型在 reachability Case 选择 method evidence，并复制 prompt 示例词。旧 Adapter 把 schema 与任务语义
+  分成两个 system turns；活动适配改为单一 leading system authority，并以通用 reachability precedence 和 example-only term 规则
+  升级为 Adapter `@4`、Contract `1.5.3/@12`、Conformance fixture `1.2.0`、policy `@1.4.1`、suite/oracle `@1.5.3`。不放宽
+  Application/evaluator、不加入题目或 Oracle 特判；相关 128/128、fake 18/18、docs 329/329 PASS，完整执行面 1011/1016，唯一
+  五项仍是 `FINDING-008-020` 的历史 drift。Finding 已处置，新 live 资格继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

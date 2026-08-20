@@ -31,6 +31,7 @@ from .model_gateway import (
     ProviderOutputRejected,
     ProviderOutcomeUnknown,
     ProviderRequest,
+    RenderedMessage,
     ReplayClassification,
 )
 from .openai_responses_adapter import OutputSchemaDefinition, ProviderHTTPResponse
@@ -674,7 +675,7 @@ UrllibDeepSeekChatTransport = PersistentDeepSeekChatTransport
 
 class DeepSeekChatCompletionsNoToolsAdapter:
     provider_type = "DEEPSEEK"
-    adapter_version = "deepseek-chat-completions-no-tools@3"
+    adapter_version = "deepseek-chat-completions-no-tools@4"
 
     def __init__(
         self,
@@ -748,10 +749,10 @@ class DeepSeekChatCompletionsNoToolsAdapter:
         schema_instruction = _json_object_schema_instruction(definition)
         payload: dict[str, object] = {
             "model": request.model_ref,
-            "messages": [{"role": "system", "content": schema_instruction}] + [
-                {"role": message.role, "content": message.content}
-                for message in request.messages
-            ],
+            "messages": _deepseek_wire_messages(
+                request.messages,
+                schema_instruction=schema_instruction,
+            ),
             "stream": False,
             "max_tokens": request.max_output_tokens,
             "thinking": {"type": "disabled"},
@@ -869,6 +870,42 @@ def _json_object_schema_instruction(definition: OutputSchemaDefinition) -> str:
         "Do not emit Markdown fences or text outside the object. Schema name: "
         f"{definition.name}. Schema: {schema}"
     )
+
+
+def _deepseek_wire_messages(
+    messages: tuple[RenderedMessage, ...],
+    *,
+    schema_instruction: str,
+) -> list[dict[str, str]]:
+    """Render one leading DeepSeek system authority for JSON-mode calls.
+
+    The gateway contract emits at most one leading system instruction.  DeepSeek
+    JSON mode is more reliable when that semantic instruction and the closed
+    output contract share one system message instead of competing system turns.
+    User/assistant message order is otherwise preserved.
+    """
+
+    if messages and messages[0].role == "system":
+        combined_system = (
+            "TASK AND SEMANTIC AUTHORITY:\n"
+            f"{messages[0].content}\n\n"
+            "OUTPUT CONTRACT:\n"
+            f"{schema_instruction}"
+        )
+        return [
+            {"role": "system", "content": combined_system},
+            *(
+                {"role": message.role, "content": message.content}
+                for message in messages[1:]
+            ),
+        ]
+    return [
+        {"role": "system", "content": schema_instruction},
+        *(
+            {"role": message.role, "content": message.content}
+            for message in messages
+        ),
+    ]
 
 
 def _validate_json_object_text(output_text: str) -> None:

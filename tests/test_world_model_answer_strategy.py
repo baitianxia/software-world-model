@@ -238,7 +238,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.2")
+        self.assertEqual(contract.strategy_version, "1.5.3")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@6",
@@ -325,6 +325,18 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         )
         self.assertIn(
             "declared_method_inventory only for a complete declaring-type method inventory",
+            contract.prompt,
+        )
+        self.assertIn(
+            "all other capability sections are inactive for this call",
+            contract.prompt,
+        )
+        self.assertIn(
+            "method_implementations does not fulfill reachability",
+            contract.prompt,
+        )
+        self.assertIn(
+            "never copy an example word from these instructions into search_terms",
             contract.prompt,
         )
         self.assertIn(

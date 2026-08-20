@@ -113,6 +113,20 @@ exact connected descriptor，并闭合 `provisioned = TLS attempts + unused_clos
 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
 `sha256:b1193e2a97f8c4c8db26dd2d3cbe98ff0b8fb7d6e8414fb15b71d1e0536b5df7`。
 
+该 persistent candidate 的 run-016 已消除网络不确定性：Conformance 2 calls / 12/12 PASS，Capability 第 13 次已完成 request 时仍只有
+1 次 verified TLS acquisition、12 次 reuse、13 次 HTTP/credential resolution，unknown/retry 为 0。前 6 Case / 12 calls 全 PASS；
+第 7 个 reachability Case 的首轮模型输出包含 `reach/path`，却选择 method evidence，并复制 prompt 示例词，因而被 frozen ledger
+正确拒绝。该结果形成 `FINDING-008-025`，证明下一缺口是 DeepSeek semantic instruction rendering，不是 transport、Application
+transition 或 evaluator exactness。
+
+Readiness wire contract 再重冻结为 Adapter `deepseek-chat-completions-no-tools@4`、Conformance fixture `1.2.0` / Result `@2`、
+capability/Strategy `1.5.3`、prompt/vocabulary `@12`、suite/oracle `@1.5.3` 与 bounded egress policy `@1.4.1`。DeepSeek Adapter 必须把
+Gateway semantic prompt 与 closed schema 合并为恰好一个 leading system message；prompt 只应用 sealed capability 对应 section，示例词
+不得进入原问题未请求的 search terms，显式 reachability 优先选择 `path_exists`。Application/compiler、18 Case、40 calls、18/18、
+persistent TLS 和 no-retry 不变；不得通过问题/Case/Oracle 特判或 evaluator 放宽处置。run-016 授权已消费，新身份必须重新完成本地门禁、
+Conformance 与完整 Capability，PASS 前产品 Gate 继续阻断。重冻结后的 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
+`sha256:c9992a431726a48274355d1075187311471c40bea6efbb51de1c7b3ff9e14968`。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

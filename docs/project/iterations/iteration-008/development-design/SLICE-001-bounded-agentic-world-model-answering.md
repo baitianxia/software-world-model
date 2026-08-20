@@ -299,6 +299,17 @@ descriptor consumed/unused-close，并验证 `3 = TLS attempts + unused_closed`�
 model call、request ID、body/result digest 与 role sequence 保持独立。该变化重新失效 run-014/015 与之前全部 qualification；新的 clean
 candidate 必须重新完成 2-call Conformance 和 18-case / 40-call closed Capability，PASS 前不得生成正式 product freeze。
 
+该候选在 run-016 的 persistent transport 已按设计工作：Conformance 12/12，Capability 前 6 Case / 12 calls PASS，失败时 13 次 HTTP
+只使用 1 个 verified TLS session 且零 retry。首次偏差是 `PATH-EXISTS-007:call-1`：模型识别了 reach/path，却选择 method evidence，
+同时复制 prompt 中与原问题无关的示例词。按 [FINDING-008-025](../findings/FINDING-008-025.md)，这属于 Provider integration 的
+instruction rendering 缺口；不能用 Application 关键词映射、Case/Oracle 注入或放宽 exact ledger 修复。
+
+活动设计升级为 DeepSeek Adapter `@4`、Conformance fixture `1.2.0` / Result `@2`、capability/Strategy `1.5.3`、prompt/vocabulary
+`@12`、policy `@1.4.1`、suite/oracle `@1.5.3`。Adapter 将 Gateway semantic instruction 与 closed schema 合并为一个 leading
+system message；prompt 对所有 Provider 通用地规定 capability section isolation、example-only terms 和 reachability/path/outgoing-trace
+precedence。compiler `@6`、Application ledger/subsumption、18 Case、40 calls、18/18、temperature 0、persistent TLS 与 no-retry 不变。
+旧 run-016 已失败关闭，新 clean candidate 必须重新完成同候选 Conformance 与完整 Capability，之后才可进入 product freeze。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

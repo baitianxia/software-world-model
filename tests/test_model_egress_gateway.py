@@ -63,7 +63,7 @@ _DEEPSEEK_CONFORMANCE_REF = (
 )
 _DEEPSEEK_QUALIFICATION_REF = f"evaluation-only:{_DEEPSEEK_CONFORMANCE_REF}"
 _DEEPSEEK_PROVIDER_FINGERPRINT = Digest(
-    "sha256:71b77c37c5549d78804c535ee6ed2640c7d9f427b8d6447e6190144283014d1b"
+    "sha256:cf85faed9ef5c314abc6967e86ecbc0d9362cfbe4b4a0ead4303cd8f279a586d"
 )
 _CAPABILITY_QUALIFICATION_REF = (
     "capability-evaluation:evaluation_result_916b9000db544e92921ec1bdc02a3bc2"
@@ -216,10 +216,10 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:9613fb5e02c0b0f104acd851faa4000808382a2e22e7f7ceb613d9a4b1b460c4"
+                "sha256:58d3879008fcca9b290e2f522cdd6e91cb26394f027d15f4129257c0460f485d"
             ),
             provider_type="DEEPSEEK",
-            adapter_version="deepseek-chat-completions-no-tools@3",
+            adapter_version="deepseek-chat-completions-no-tools@4",
             model_ref="deepseek-v4-pro",
             provider_configuration_fingerprint=_DEEPSEEK_PROVIDER_FINGERPRINT,
             endpoint="https://api.deepseek.com/chat/completions",
@@ -413,7 +413,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
             capture,
             WorldModelStrategyConfiguration(
                 provider_type="DEEPSEEK",
-                adapter_version="deepseek-chat-completions-no-tools@3",
+                adapter_version="deepseek-chat-completions-no-tools@4",
                 model_ref="deepseek-v4-pro",
                 provider_configuration_fingerprint=(
                     _DEEPSEEK_PROVIDER_FINGERPRINT

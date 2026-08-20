@@ -207,7 +207,7 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(missing["temperature"], DEFAULT_DEEPSEEK_TEMPERATURE)
         self.assertEqual(
             configuration.adapter_version,
-            "deepseek-chat-completions-no-tools@3",
+            "deepseek-chat-completions-no-tools@4",
         )
         self.assertEqual(
             missing["connection_policy"],
@@ -264,8 +264,16 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
             },
         )
         self.assertEqual(payload["model"], DEFAULT_DEEPSEEK_MODEL)
+        self.assertEqual(len(payload["messages"]), 2)
+        self.assertEqual(
+            [message["role"] for message in payload["messages"]],
+            ["system", "user"],
+        )
         self.assertIn("closed JSON Schema", payload["messages"][0]["content"])
         self.assertIn('"additionalProperties":false', payload["messages"][0]["content"])
+        self.assertIn("TASK AND SEMANTIC AUTHORITY", payload["messages"][0]["content"])
+        self.assertIn("Return JSON.", payload["messages"][0]["content"])
+        self.assertEqual(payload["messages"][1]["content"], "Authorized facts only.")
         self.assertFalse(payload["stream"])
         self.assertEqual(payload["thinking"], {"type": "disabled"})
         self.assertEqual(payload["temperature"], 0)
@@ -285,6 +293,23 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
         self.assertEqual(stub.calls, 0)
+
+    def test_user_only_request_gets_one_schema_system_without_reordering(self) -> None:
+        adapter, _, recording = self.adapter(success_response())
+        user = RenderedMessage(
+            "user",
+            "Authorized facts only.",
+            "facts",
+            digest_of("Authorized facts only."),
+        )
+
+        adapter.invoke(self.request(messages=(user,)))
+
+        messages = json.loads(recording.requests[0].body)["messages"]
+        self.assertEqual([message["role"] for message in messages], ["system", "user"])
+        self.assertIn("closed JSON Schema", messages[0]["content"])
+        self.assertNotIn("TASK AND SEMANTIC AUTHORITY", messages[0]["content"])
+        self.assertEqual(messages[1]["content"], user.content)
 
     def test_reasoning_tool_and_incomplete_outputs_fail_closed(self) -> None:
         cases = (
