@@ -1524,6 +1524,25 @@
       "tests/test_iteration_008_slice1_freeze.py"
     ]
   },
+  "FINDING-008-037": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-037.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_policy.json",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_qualification.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "validation/structure_world_model_iteration_008/capability/manifest.py",
+      "validation/structure_world_model_iteration_008/capability/suite-1.5.9.json",
+      "validation/structure_world_model_iteration_008/capability/oracle-1.5.9.json"
+    ],
+    "tests": [
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_008_capability_harness.py",
+      "tests/test_iteration_008_capability_qualification.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_world_model_evaluation_grant.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

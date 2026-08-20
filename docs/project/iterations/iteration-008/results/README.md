@@ -59,6 +59,25 @@ qualification-proof/qualification-document/terminal digest 为
 `2026-08-27T13:19:05.298209+00:00`。两份授权均已消费且不可 retry；V-002 PASS，下一步是全新 formal product freeze/Web，
 hidden canary 与 Production Activation 仍未执行。
 
+该证据写回后的 formal `run-007-freeze` 通过 deterministic Gate：report/deterministic qualification digest 为
+`sha256:515a88b8dd73e3144479c8d3880ce025404d3ccce6008ce5ca8b97b0059492b0` /
+`sha256:4995715615e23719ebc1a64a10c7fdefd09bbef601b370f1b86a9033dd81120d`；focused 89/89、candidate package 37/37、docs PASS，
+full 1036 项只保留 exact historical 4 FAIL + 1 ERROR，freeze model dispatch 为 0。authorized grant/startup receipt digest 为
+`sha256:6c433a11ede56cb37824e23e1eb02423eb3c4f03a39b88edf74560323b609594` /
+`sha256:79b38f2c6da4ca7df25155d01361cf72ec25682d46a5b854625944035c6f9564`。
+
+公开浏览器随后只提交 `登录流程是怎样的？`。Gateway 完成 5/5 DeepSeek HTTP 200，TLS `1/1`、reuse `4`、credential `5/5`、
+unknown/retry `0`；Investigation、四份 COMPLETE Query Result、COMPLETE knowledge representation、SATISFIED Need 与覆盖失败记录、
+异常和成功 session 的正确 Draft 均完成。旧 `@17` Review 仍只因 `business_discovery_recall=UNKNOWN` 返回 `QUERY_INCOMPLETE`；
+terminal/Gateway summary digest 为 `sha256:2182903afd811555ed23a81609424684d6b07d8bb3877aa68540fc4554490399` /
+`sha256:7349affd6d87133c46ec9bb941229c7c9190649f11c74ef2c124e1ca64f14e98`。页面失败关闭，第二题、hidden canary 与 Activation 未执行。
+
+[FINDING-008-037](../findings/FINDING-008-037.md) 将根因归为 Review Contract 假阴性：business-discovery recall 只约束
+bounded-negative claim，不能阻断由 COMPLETE 正向事实支持的行为答案。活动 identity 升级为 `1.5.9/@18/@1.4.10` 与
+suite/oracle `@1.5.9`，`REVIEW-018` 同时覆盖 UNKNOWN recall 下的 negative REJECT 和 positive APPROVE；18 Case / 40 calls 与
+其余 transport/compiler/budget/no-retry 边界不变。run-025 Qualification 和 run-007 freeze/grant/session 都不能复用；新 live
+Conformance/Capability PASS 前没有 Product Result，也不得重试公开 Web。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

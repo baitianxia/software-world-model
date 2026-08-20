@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, quality]
 depends_on: [SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
-derived_from: [FINDING-008-032, FINDING-008-035]
+derived_from: [FINDING-008-032, FINDING-008-035, FINDING-008-037]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/interface]
 tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_world_model_answer_strategy.py, tests/test_iteration_003_g3a_integration.py, tests/test_iteration_006_capability_qualification.py, tests/test_iteration_007_capability_qualification.py, tests/test_java_source_semantics.py, tests/test_world_model_gateway_authorization.py]
 ---
@@ -70,7 +70,10 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
    4. Review Call 在全新上下文中读取原问题、同一 Requirement/trace/assessment 和 Draft，独立核对 fidelity、候选与查询完整性、
       grounding、方向、三层负向证明、语言与可读性。模型只拥有 decision 与 versioned finding-code 语义；exact
       `checked_need_ids`、`checked_step_result_ids`、`checked_support_digests` 同样由 terminal-authority compiler 从原 sealed review
-      authority 注入，model-visible 顶层 collection 被移除且 raw envelope 必须为空；
+      authority 注入，model-visible 顶层 collection 被移除且 raw envelope 必须为空。Business discovery recall 只约束 absence、
+      non-existence、total inventory、exhaustive recall 或其他 bounded-negative claim；正向 `SUPPORTED` 行为答案在相关 Query Result
+      与 Knowledge representation 均 `COMPLETE`、Need Assessment 为 `SATISFIED` 时，不得仅因 recall `UNKNOWN`、
+      `bounded_absence_allowed=false` 或 `BUSINESS_DISCOVERY_RECALL_UNPROVEN` 而判 `QUERY_INCOMPLETE`；
    completeness projection 只能来自同一正式 Read Authority 的平台判定，不得把评测 Oracle identity 或隐藏期望送入 Answer。
    Review finding code 必须来自版本化 vocabulary；遗漏候选/方法、查询未穷尽、无依据负向结论、静态事实不支持的运行时断言与
    Source/Evidence payload 展开使用不同稳定 code。Schema 和 Application 同时拒绝未注册、重复或乱序 code。terminal compiler

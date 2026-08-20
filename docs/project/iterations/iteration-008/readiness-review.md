@@ -252,6 +252,17 @@ preflight/result digest 为 `sha256:b5590984ae031142c8fa61da043a25b53defc4b80890
 `2026-08-27T13:19:05.298209+00:00`。V-002 对 current exact identity PASS；Readiness 的下一阻断是从证据写回后的 clean
 producer 生成全新 formal product freeze 并执行公开 Web。该资格不授权 hidden canary、SLICE-002 或 Production Activation。
 
+run-025 证据写回后的 formal `run-007-freeze` 已 PASS；公开登录题完成 5/5 DeepSeek HTTP 200，TLS `1/1`、reuse `4`、
+credential `5/5`、unknown/retry `0`。Investigation、COMPLETE Query/knowledge、SATISFIED Need 与正确 Draft 全部完成，旧 `@17`
+Review 却仅因 business-discovery recall 为 UNKNOWN 返回 `QUERY_INCOMPLETE`。这不是网络或模型不可用，而是 Contract 未把第三层
+recall 明确限定到 bounded-negative claim；详见 `FINDING-008-037`。
+
+活动 Readiness 已把正向 supported behavior 与 absence/non-existence/total/exhaustive claim 分开：前者不得仅因 UNKNOWN recall、
+`bounded_absence_allowed=false` 或缺少 business recall Oracle 而被拒，后者仍要求三层完整。Contract/Strategy、Prompt/Vocabulary、
+policy 与 suite/oracle 升级为 `1.5.9/@18/@1.4.10/@1.5.9`，`REVIEW-018` 同时冻结 negative REJECT 与 positive APPROVE；
+18 Case / 40 calls、Adapter/transport/compiler/budget/no-retry 不变。run-025 Qualification 与 run-007 freeze/grant/session 不适用于
+新 identity。Readiness 的当前阻断重新变为新 clean candidate 的 Conformance/Capability；PASS 前不得再次生成 formal product freeze。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

@@ -12,7 +12,11 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十六条 Finding；三十六条均已处置或被后续决定取代。`FINDING-008-036` 记录 terminal-owner candidate 的
+本 Slice 当前登记三十七条 Finding；三十七条均已处置或被后续决定取代。`FINDING-008-037` 记录 formal run-007 的公开登录题已
+完成 5/5 DeepSeek HTTP 200、完整 Investigation 与正确 Draft，却因旧 Review 把 UNKNOWN business-discovery recall 错用于正向
+行为答案而返回 `QUERY_INCOMPLETE`。活动 Contract/Prompt/policy/suite-oracle 升级为 `1.5.9/@18/@1.4.10/@1.5.9`，同一
+`REVIEW-018` 同时冻结 bounded-negative REJECT 与 supported-positive APPROVE；run-025 Qualification 和 run-007 运行不可复用，
+新 live qualification 继续 blocking。`FINDING-008-036` 记录 terminal-owner candidate 的
 run-024 已完成 Conformance 2/2、Capability 前 39 responses / 17 Case 与 Draft raw-empty PASS，却在唯一 TLS session 运行约 120 秒、
 第 40 次 Review request dispatch 后收到 `REMOTE_DISCONNECTED`。活动 transport 处置把每条 verified session 限为 20 dispatch，
 升级 Adapter/policy/connection/audit 为 `@7/@1.4.9/@2/@2`，request retry 仍为 0。clean candidate `34048ae…` 的 run-025
@@ -174,6 +178,11 @@ canary、SLICE-002 与 Production Activation gate：
   仍 outcome unknown 且不重发。上游 `1.5.8/@17`、suite/oracle 与 threshold 不变。clean candidate `34048ae…` 的 run-025
   Conformance 2/2 / 12/12、Capability 40/18/18 全部 PASS，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry
   `0`，直接验证 20 dispatch/session 轮换；V-002 已闭合，formal product freeze/Web 为下一阻断。
+- [FINDING-008-037](FINDING-008-037.md)：run-007 formal freeze PASS，公开登录题完成 5/5 DeepSeek HTTP 200、完整 Investigation、
+  COMPLETE Query/knowledge、SATISFIED Need 与语义正确 Draft；旧 `@17` Review 却仅因 business-discovery recall UNKNOWN
+  返回 `QUERY_INCOMPLETE`。System Contract 现将该 recall 限定为 absence/non-existence/total/exhaustive 等 bounded-negative
+  claim；完整正向事实答案不得因此自动 REJECT。活动 identity 升级为 `1.5.9/@18/@1.4.10` 与 suite/oracle `@1.5.9`，
+  `REVIEW-018` 同时覆盖 negative REJECT 与 positive APPROVE；新 2-call Conformance/40-call Capability 继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

@@ -239,7 +239,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.8")
+        self.assertEqual(contract.strategy_version, "1.5.9")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@7",
@@ -382,7 +382,15 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             investigation_prompt,
         )
         self.assertIn(
-            "business-discovery recall layer needed by the Draft is not COMPLETE",
+            "Business-discovery recall is required only for an absence",
+            review_prompt,
+        )
+        self.assertIn(
+            "does not make a positive SUPPORTED behavior answer incomplete",
+            review_prompt,
+        )
+        self.assertIn(
+            "APPROVE remains forbidden when a Draft makes a bounded-negative claim",
             review_prompt,
         )
         self.assertIn(

@@ -499,6 +499,19 @@ result/closed/qualification-proof/qualification-document/terminal digest 为
 `2026-08-27T13:19:05.298209+00:00`。V-002 因而对 current exact identity PASS；下一步只能从证据写回后的 clean producer
 生成全新 formal product freeze，再执行公开 Web，不能据此进入 hidden canary 或 Production Activation。
 
+证据写回后的 formal `run-007-freeze` 已通过 deterministic Gate，但公开登录题随后暴露 [FINDING-008-037](../findings/FINDING-008-037.md)。
+Gateway 完成 5/5 DeepSeek HTTP 200，TLS `1/1`、reuse `4`、credential `5/5`、unknown/retry `0`；所有 Investigation、Query
+completeness、knowledge representation、Need 与正确 Draft 均完成。旧 `@17` Review 却把只为 bounded-negative conclusion 服务的
+`business_discovery_recall=UNKNOWN` 解释为正向行为答案也不完整，返回唯一 `QUERY_INCOMPLETE` 并失败关闭。terminal/Gateway
+summary digest 为 `sha256:2182903a…0399` / `sha256:7349affd…e98`；第二题、hidden canary 与 Activation 未执行。
+
+活动设计明确：business-discovery recall 只约束 absence、non-existence、total inventory、exhaustive recall 或其他 bounded-negative
+claim。正向 `SUPPORTED` 答案在 Query/knowledge 为 COMPLETE、Need 为 SATISFIED 时，不因 recall UNKNOWN、
+`bounded_absence_allowed=false` 或缺少第三层 Oracle 自动 REJECT。Contract/Strategy、Prompt/Vocabulary、policy 与 suite/oracle
+升级为 `1.5.9/@18/@1.4.10/@1.5.9`；`REVIEW-018` 同时覆盖 UNKNOWN recall 的 negative REJECT 与 positive APPROVE。
+18 Case / 40 calls 与其余 Adapter、compiler、transport、budget、no-retry 边界不变。run-025 Qualification 与 run-007
+freeze/grant/session 均不可用于新 identity；新 2-call Conformance 和完整 Capability PASS 前 V-002 与正式 Web 再次 blocking。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；
