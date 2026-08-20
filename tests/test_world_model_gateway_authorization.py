@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stdout
+from hashlib import sha256
 from io import StringIO
 import json
 from pathlib import Path
@@ -61,6 +62,27 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
             "--g3b-freeze",
             str(self.root / "legacy-freeze.json"),
         ]
+
+    def test_qualified_baseline_hashes_match_packaged_entrypoints(self) -> None:
+        module = gateway_authorized_workload
+        root = Path(module.__file__).resolve().parent
+        expected = {
+            "java_gateway_workload.py": module._JAVA_GATEWAY_SHA256,
+            "java_source_semantics_gateway_workload.py": (
+                module._JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256
+            ),
+            "bounded_java_source_semantics_gateway_workload.py": (
+                module._BOUNDED_JAVA_SOURCE_SEMANTICS_GATEWAY_SHA256
+            ),
+        }
+
+        self.assertEqual(
+            {
+                name: sha256((root / name).read_bytes()).hexdigest()
+                for name in expected
+            },
+            expected,
+        )
 
     def test_invalid_current_receipt_stops_before_qualified_baseline(self) -> None:
         output = self.root / "summary.json"
