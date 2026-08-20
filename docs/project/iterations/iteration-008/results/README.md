@@ -229,6 +229,23 @@ Codex CLI 与 ITER-003 frozen mature-agent binary 的 exact drift 触发，已�
 [FINDING-008-020](../findings/FINDING-008-020.md) 保留 fail-closed。历史 freeze/断言未改，full suite 未声明 PASS；该环境 hold 与
 DeepSeek 资格链相互独立。clean candidate 和全新 live qualification 尚待完成，因此 V-002 继续 blocking。
 
+上述实现以 clean candidate `ab87c442218a06292829c0508963508d88d54119` / tree
+`190b186656fe3cd29c55d04cb8987cdeb06d5821` 进入 run-011。Conformance preflight/result digest 为
+`sha256:5661c28fde972b366f89aeb92093acac703a2dbdd83dc6180325df6c4f8c43ee` /
+`sha256:32ff8a4a3a45b55a229c60bfe28486937e6eb24aca3cdb587289a7db4bc1d464`，恰好 2 requests / 12/12 PASS，唯一
+identity `deepseek-v4-pro`，tokens 381/79，usage 完整。Capability freeze
+`sha256:f708e49f453a14959b588be3c91424dccb6f20d5320f4ab10fc6b65a4b7407f8` 的前 14 Case / 35 accepted calls 全部
+independent PASS；第 36 次 Provider request 完成后，`NEGATIVE-QUERY-UNKNOWN-015:call-1` 因 raw candidate evidence 与 frozen method
+ledger 不一致在本地失败关闭。failure/terminal document digest 为 `sha256:5e9d8a7199bafb8dd46deba170faf2c1f0fe0d4fd59905debc78d2f9f7bc7a6b` /
+`sha256:c2847e3fc0597ae503cfc69f3353530099ef341246a1034103cb0c7c6842dbfc`；无 retry、Qualification、Web、canary 或 Activation。
+
+[FINDING-008-021](../findings/FINDING-008-021.md) 将根因定位为 candidate discovery 的双重角色。它本来是强制首 transition，不能又是
+非零候选可终止 evidence class；Application 现把 raw `implementation_candidates` evidence alias 无条件向上归一为
+`method_implementations`，不加入问题/工程/Case/Oracle 特判。活动协议为 `1.5.1/@10/@5/@1.2.1` 与 suite/oracle `@1.5.1`；相关
+回归 116/116（含 Gateway AF_UNIX 12/12）、fake transport 41 calls / 18/18、current documents 325/325 PASS。完整回归 980/985，
+唯一五项仍是 `FINDING-008-020` 的 ITER-003 frozen CLI drift；compileall、diff check 与路径级 secret scan 通过。
+`FINDING-008-021` 已处置，clean candidate 与全新 live qualification 待完成，V-002 继续 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

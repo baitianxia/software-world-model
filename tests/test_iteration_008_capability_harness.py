@@ -406,7 +406,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-one-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.0")
+        self.assertEqual(definition.strategy_version, "1.5.1")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),

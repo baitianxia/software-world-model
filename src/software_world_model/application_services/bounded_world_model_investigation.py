@@ -297,7 +297,11 @@ def _normalized_evidence_requests(
                 "INVESTIGATION_EVIDENCE_OPERATION_INVALID",
                 "FINISH cannot be an evidence obligation",
             )
-        operations.add(operation)
+        operations.add(
+            InvestigationOperation.METHOD_IMPLEMENTATIONS
+            if operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES
+            else operation
+        )
         if operation is InvestigationOperation.DIRECT_NEIGHBORHOOD:
             relation = raw.get("relation_intent")
             if not isinstance(relation, str) or relation not in _DIRECT_EVIDENCE_RELATIONS:
@@ -307,8 +311,6 @@ def _normalized_evidence_requests(
                 )
             direct_relations.add(relation)
 
-    if len(operations) > 1:
-        operations.discard(InvestigationOperation.IMPLEMENTATION_CANDIDATES)
     graph_operations = {
         InvestigationOperation.DIRECT_NEIGHBORHOOD,
         InvestigationOperation.PATH_EXISTS,

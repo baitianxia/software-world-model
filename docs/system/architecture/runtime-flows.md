@@ -65,12 +65,13 @@ immutable Requirement
 ```
 
 首轮 Agent 只用注册 operation/relation vocabulary 提出 bounded evidence obligations 与 search terms；Application 对其归一、去重、
-收敛依赖并冻结。每个后续状态由 Application 从 ledger 和 sealed input 推导受限 operation allowlist，再编译 exact Snapshot、前序 Result
+收敛依赖并冻结。candidate discovery 已是强制首 transition，因此 raw `implementation_candidates` evidence alias 被保守向上归一为
+`method_implementations`，不能在非零候选后单独关闭 ledger。每个后续状态由 Application 从 ledger 和 sealed input 推导受限 operation allowlist，再编译 exact Snapshot、前序 Result
 binding、Entity Ref、direction/predicate 与 bounds，并校验 obligation、bytes、Support、progress 和剩余预算后执行。模型固定 envelope
 中的越权 operation 或过早 FINISH 不改变平台 transition。候选搜索可以返回 0/N；方法
 实现查询可在同一 candidate result 内选择最多 3 个 exact method Ref，不取排名第一也不无界展开。至少一个 Result 执行后可以显式
-FINISH，但只有 ledger 已关闭或没有合法 evidence-reducing transition 时才获得终态权力；FINISH 本身计作调用，所以 candidate
-Result 关闭全部义务时 1 query + FINISH 是合法 2-call investigation。重复 query、无进展、越界或预算耗尽返回具体
+FINISH，但只有 ledger 已关闭或没有合法 evidence-reducing transition 时才获得终态权力；FINISH 本身计作调用，所以零候选、截断
+candidate 或其他没有合法 evidence-reducing transition 的 Result 可在 1 query + FINISH 后形成对应 Gap/Limitation。重复 query、无进展、越界或预算耗尽返回具体
 Limitation，并保持 Source/Update/Direct fallback 为 0。查询、表示与业务发现三层完整性只由平台通过 progress receipt 投影；没有
 同时证明时不得给 bounded absence，评测 Oracle identity 不进入 Answer。
 

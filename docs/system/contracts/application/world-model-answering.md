@@ -35,7 +35,9 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
    1. Investigation 执行 2—4 个模型回合。第一个回合只读取原问题、语言、exact Read Authority、Profile/capability schema 与
       operation vocabulary，并提出通用 search terms 与一个由注册 operation/relation 表达的 bounded evidence-request 集合；该集合
       描述原问题需要的方法、声明清单、直接关系或路径证据，不是题型 enum，也不含 Ref、bound 或隐藏答案。Application 做
-      operation-discriminated normalization、去重、依赖收敛和预算可达性校验后将它冻结。之后每回合只增加前一轮 sealed typed result、
+      operation-discriminated normalization、去重、依赖收敛和预算可达性校验后将它冻结。candidate discovery 是强制首 transition，
+      不单独构成 canonical terminal evidence；raw `implementation_candidates` evidence alias 一律向上归一为 `method_implementations`，
+      从而不允许非零候选仅凭存在性结束，同时不对零候选/截断结果执行伪查询。之后每回合只增加前一轮 sealed typed result、
       冻结 evidence ledger、progress/budget receipt、平台计算的三层 completeness projection、当前受限 `available_operations` 与完整
       trace digest。模型不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
       对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；

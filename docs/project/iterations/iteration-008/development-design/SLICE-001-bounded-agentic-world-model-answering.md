@@ -228,6 +228,19 @@ Oracle 输入或 evaluator-only 产品分支。活动 capability/Strategy、prom
 [FINDING-008-020](../findings/FINDING-008-020.md) 保留 fail-closed，不改历史 freeze，也不声明 full-suite PASS。该独立环境 hold 不
 阻断 active DeepSeek 资格链；clean candidate 与新 live 18/18 qualification 尚待完成，全部后续产品 Gate 继续阻断。
 
+该 candidate 随后完成 run-011。Conformance 恰好 2 calls / 12/12 PASS；Capability 前 14 Case / 35 accepted calls 全部 independent
+PASS，第 36 次 Provider request 也已完成，但 `NEGATIVE-QUERY-UNKNOWN-015:call-1` 在本地 frozen-ledger 校验失败。模型把“是否实现某
+功能”解释为 `implementation_candidates` evidence，而 suite 要求 `method_implementations`；transport、identity、usage、JSON shape、
+operation 和 terms 均正常。failure/terminal document digest 为 `sha256:5e9d8a71…7bc7a6b` / `sha256:c2847e3f…42dbfc`，无 retry、
+Qualification 或 Activation。
+
+按 [FINDING-008-021](../findings/FINDING-008-021.md)，candidate discovery 是强制首 transition，不是可单独关闭非零候选调查的
+canonical evidence obligation。Application 将同名 raw alias 保守向上归一为 method evidence，再执行 graph/inventory 依赖收敛；
+该规则不读取问题、未来 Result 或 evaluator。活动 capability/Strategy、prompt/vocabulary、compiler、Gateway policy、suite/oracle
+升级为 `1.5.1`、`@10`、`@5`、`@1.2.1`、`@1.5.1`。相关回归 116/116（含 Gateway AF_UNIX 12/12）、fake transport 41 calls /
+18/18、current documents 325/325 PASS；完整回归 980/985，唯一五项仍是 `FINDING-008-020` 的 ITER-003 frozen CLI drift。
+compileall、diff check 与路径级 secret scan 通过，`FINDING-008-021` 已处置；clean candidate 和全新 live requalification 待完成。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

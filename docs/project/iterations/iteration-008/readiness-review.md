@@ -72,6 +72,12 @@ Gap 与 Citation，并逐题不低于成熟源码 Agent。
 `sha256:206d0b2ecc1dbd82b632b825f2284f7d6971b886840f903b1d6368f29c28331b`；它取代旧 fileset 作为当前实现输入，且必须由最终 docs gate
 重算一致后才可形成 clean candidate。这是显式 Finding/redirect revalidation，不是静默继承原 digest。
 
+run-011 又形成 `FINDING-008-021`：强制 candidate discovery 同时充当 terminal evidence class，会让可理解的模型语义选择与平台
+保守证据责任冲突，并在非零候选时留下过早结束风险。该 Finding 将 raw candidate evidence alias 无条件向上归一为 method evidence，
+不读取问题、工程、Case、Oracle 或未来 Result；预算、三层完整性、Source-off、no-retry 与所有产品阻断不变。写回后的当前
+`ITER-008-SYSTEM-CONTRACT-SET@1` exact digest 为
+`sha256:11b8b2d56386451802bc64214547abe253d54f26855a1ba7f9428acb43511a54`，并由 Manifest 与 docs gate 共同约束。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

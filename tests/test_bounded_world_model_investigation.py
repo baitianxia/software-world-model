@@ -381,6 +381,12 @@ class BoundedWorldModelInvestigationTests(TestCase):
     def test_platform_normalizes_evidence_dependencies_and_budget(self) -> None:
         self.assertEqual(
             normalize_investigation_evidence_requests(
+                [_evidence("implementation_candidates")]
+            ),
+            (_evidence("method_implementations"),),
+        )
+        self.assertEqual(
+            normalize_investigation_evidence_requests(
                 [
                     _evidence("implementation_candidates"),
                     _evidence("method_implementations"),
@@ -388,6 +394,44 @@ class BoundedWorldModelInvestigationTests(TestCase):
                 ]
             ),
             (_evidence("direct_neighborhood", "OUTGOING_CALLS"),),
+        )
+        session = self._session()
+        compiled = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["credentials", "failure", "session"],
+                evidence_requests=[_evidence("implementation_candidates")],
+            ),
+            sealed_input=_sealed_input(
+                session,
+                snapshot_id=self.snapshot_id,
+            ),
+            available_operations=("implementation_candidates",),
+        )
+        self.assertEqual(
+            compiled["evidence_requests"],
+            [_evidence("method_implementations")],
+        )
+        candidate_step = session.submit(
+            InvestigationProposal.from_mapping(
+                compiled,
+                model_proposal_digest=digest_of("candidate-evidence-alias"),
+            )
+        )
+        assert candidate_step is not None
+        self.assertGreater(
+            candidate_step.results[0].payload["candidate_count"],
+            0,
+        )
+        self.assertEqual(
+            constrained_investigation_operations(
+                sealed_input=_sealed_input(
+                    session,
+                    snapshot_id=self.snapshot_id,
+                    previous_step=candidate_step,
+                )
+            ),
+            ("method_implementations",),
         )
         self.assertEqual(
             normalize_investigation_evidence_requests(

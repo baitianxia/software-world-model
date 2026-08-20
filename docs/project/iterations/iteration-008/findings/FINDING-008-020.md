@@ -48,7 +48,7 @@ prepared `0.147.0-alpha.1.2` binary，当前环境不能真实重放该 exact ru
 `980/985`，不得写成 PASS；V-REGRESSION-001 和 Slice Acceptance 也不能从该结果推导为通过。
 
 该 hold 不阻断 active DeepSeek Conformance/Capability requalification：那条资格链不执行成熟源码 Agent、不读取该 Codex binary，且只
-验证当前 `1.5.0/@9/@4/@1.2.0` 模型协议。允许它产生新的失败或 PASS 证据不等于豁免完整回归，也不允许进入正式 Web、canary、
+验证当前活动模型协议。允许它产生新的失败或 PASS 证据不等于豁免完整回归，也不允许进入正式 Web、canary、
 SLICE-002 或 Production Activation。以后若需要重放 ITER-003 mature baseline，只能取得 digest 精确相等的 prepared binary，或为新
 runtime 建立独立、前瞻性冻结和对照；两者都不能改写历史 Result。
 

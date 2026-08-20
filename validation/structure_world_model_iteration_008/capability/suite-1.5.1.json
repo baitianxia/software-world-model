@@ -1,12 +1,12 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-capability-suite@1",
-  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.0",
+  "suite_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.1",
   "purpose": "Qualify the exact bounded result-driven Investigation, Draft, and independent Review proposal contract without product questions, source, evidence payload, or evaluator oracle exposure.",
   "proposal_contract": {
-    "capability_contract_version": "1.5.0",
-    "strategy_ref": "model-snapshot-first-world-model-answer@1.5.0",
-    "prompt_ref": "java-source-semantics-world-model-prompt@9",
-    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@9",
+    "capability_contract_version": "1.5.1",
+    "strategy_ref": "model-snapshot-first-world-model-answer@1.5.1",
+    "prompt_ref": "java-source-semantics-world-model-prompt@10",
+    "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@10",
     "available_operations": [
       "implementation_candidates",
       "method_implementations",

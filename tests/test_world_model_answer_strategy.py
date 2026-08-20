@@ -238,10 +238,10 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.0")
+        self.assertEqual(contract.strategy_version, "1.5.1")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
-            "java-source-semantics-investigation-argument-compiler@4",
+            "java-source-semantics-investigation-argument-compiler@5",
         )
         self.assertEqual(
             contract.capabilities,

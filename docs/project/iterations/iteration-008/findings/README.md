@@ -12,7 +12,7 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十条已处置或被后续决定取代的 Finding：
+本 Slice 当前登记二十一条已处置或被后续决定取代的 Finding：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
   `1.3.0` 的 Strategy、Schema、operation、policy 和 closed Result identity 保持不可互换。
@@ -68,7 +68,12 @@ iteration: ITER-008
   与 terminal reason；活动协议升级为 `1.5.0/@9/@4/@1.2.0` 和 suite/oracle `@1.5.0`，不加入题型、问题、工程或 evaluator 特判。
 - [FINDING-008-020](FINDING-008-020.md)：完整 985 项回归中 980 项通过；剩余五项全部是 ITER-003 frozen mature Codex CLI 与当前
   桌面 App binary 漂移后按设计失败关闭。历史 freeze 和断言保持不变；该 environment hold 不冒充产品 regression，也不被写成
-  full-suite PASS，且不阻断相互独立的 DeepSeek `1.5.0` 资格链。
+  full-suite PASS，且不阻断相互独立的活动 DeepSeek 资格链。
+- [FINDING-008-021](FINDING-008-021.md)：run-011 Conformance 12/12 PASS；Capability 前 14 Case / 35 calls 全 PASS，但第 36 次
+  completed request 因模型把“是否实现”解释为 candidate evidence 而非 method evidence，在本地 ledger exactness 校验失败。candidate
+  discovery 是强制 prerequisite，不再是可终止 canonical obligation；raw candidate request 由 Application 保守向上归一为 method，
+  活动协议升级为 `1.5.1/@10/@5/@1.2.1` 和 suite/oracle `@1.5.1`；相关回归 116/116、fake transport 18/18、docs 325/325
+  PASS，full 仅保留 `FINDING-008-020` 的五项外部 CLI drift，Finding 已处置，新 live qualification 仍 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

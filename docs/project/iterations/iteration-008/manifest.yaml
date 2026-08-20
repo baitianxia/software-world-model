@@ -255,7 +255,7 @@ readiness_inputs:
     - docs/system/contracts/knowledge/java-source-semantics.md
     - docs/system/operations/local-browser.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:206d0b2ecc1dbd82b632b825f2284f7d6971b886840f903b1d6368f29c28331b
+  system_contract_set_digest: sha256:11b8b2d56386451802bc64214547abe253d54f26855a1ba7f9428acb43511a54
   exact_baseline_status: clean-exact-git-baseline-verified
   investigation_budget_status: frozen-iter-008-bounded-investigation-1.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

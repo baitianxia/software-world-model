@@ -44,6 +44,10 @@ immutable Question / Needs / exact Read Authority
 Agent 只拥有原问题的语义解释、通用 search terms、由注册 operation/relation vocabulary 表达的 evidence request，以及当前受限
 transition 内的 proposal hint。evidence request 是需要哪类正式证据，不是题型 enum、查询参数或执行授权；首轮经 Application
 做 operation-discriminated normalization、去重、依赖收敛和预算可达性校验后即成为不可变 ledger，后续模型输出不能删改。
+candidate discovery 是所有功能调查的强制首 transition，不是一个可单独关闭非空候选调查的 canonical evidence obligation；模型输出
+`implementation_candidates` evidence alias 时，Application 必须无条件向上归一为 `method_implementations`，再执行既有 graph/inventory
+依赖收敛。该规则不读取问题关键词或未来 Result，并保证非零候选不能只凭排名或存在性提前结束；零候选和截断候选仍按 typed
+completeness 形成 Gap/Limitation，不执行伪 method query。
 平台而不是 Agent 拥有逐状态 operation allowlist、typed Ref、Result binding、Snapshot fence、direction/predicate expansion、graph bounds、
 查询执行、Support、预算、cycle/progress、trace seal、evidence fulfillment、FINISH reason 和终态；Application 必须从冻结 ledger 与 sealed input
 deterministic 编译这些 authority 参数，不能要求模型复制、重建或猜测 opaque identifier，也不能让一次模型 `FINISH` 缩小未完成义务。
@@ -51,10 +55,10 @@ Agent 看不到 Repository、Source file、Artifact/Evidence payload、完整 AS
 Investigation、评测 Oracle 或其他角色私有输出。每轮 proposal 只在验证后执行；模型输出本身不是查询结果或授权。
 
 首个受权闭包允许每题 2—4 次调查模型调用，随后恰好 1 次 Draft 和 1 次独立 Review，总调用上限为 6，不重试。首轮始终编译为
-candidate discovery 并冻结 evidence ledger；以后每轮只披露由 ledger、立即前序 Result 和剩余预算推导的受限 operation 子集。
+candidate discovery 并冻结向上归一后的 evidence ledger；以后每轮只披露由 ledger、立即前序 Result 和剩余预算推导的受限 operation 子集。
 只有全部 evidence obligation 已由 sealed Result 覆盖，或 typed Result 证明没有合法 evidence-reducing transition 时，Application 才
 允许显式 `FINISH`。`FINISH` 自身计作一次调用，因此 candidate Result 已关闭全部义务时，1 query + FINISH 仍是合法 2-call
-investigation；零 Result 的 FINISH 仍失败关闭。每轮 Application 只编译一个 typed operation；批量 `method_implementation` 仍是一个查询，
+investigation；尚无任何 Result 时的 FINISH 仍失败关闭。每轮 Application 只编译一个 typed operation；批量 `method_implementation` 仍是一个查询，
 最多携带 3 个来自同一已密封 candidate result 的 exact method Ref。
 调用、query/result bytes、Support、trace 和 wall time 均由当前 Contract 固定。预算耗尽、无进展、重复 proposal、Ref 越界或结果
 未知都失败关闭为具体 Limitation，不取消 Review，也不转入 Source/Direct。

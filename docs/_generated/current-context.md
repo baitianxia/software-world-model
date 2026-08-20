@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-application-owned-evidence-ledger-at-1.5.0-local-validation-in-progress`
+- Worktree status: `iteration-008-candidate-evidence-upward-normalization-at-1.5.1-local-validation-complete-clean-candidate-pending`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-deepseek-v4-pro-run-010-conformance-pass-capability-16-of-18-fail-evidence-ledger-redirect-in-progress-production-not-activated`
+- Live model path: `iteration-008-deepseek-v4-pro-run-011-conformance-pass-capability-failed-after-14-pass-cases-candidate-evidence-normalization-in-progress-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
