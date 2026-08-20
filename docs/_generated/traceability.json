@@ -1563,6 +1563,13 @@
       "tests/test_world_model_evaluation_grant.py"
     ]
   },
+  "FINDING-008-039": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-039.md",
+    "code": [],
+    "tests": [
+      "tests/test_iteration_008_slice1_freeze.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

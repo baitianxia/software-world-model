@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from software_world_model.cross_cutting import Digest
+from software_world_model.cross_cutting import Digest, digest_of
 from software_world_model.interface import world_model_runtime
 from validation.structure_world_model_iteration_008 import slice1_freeze
 
@@ -74,15 +74,23 @@ class Iteration008Slice1FreezeTests(unittest.TestCase):
         )
 
     def test_candidate_stage_uses_the_bounded_answer_and_gateway(self) -> None:
+        baseline = self.root / "accepted-baseline-stage"
+        for role in ("answer", "broker", "gateway", "projector"):
+            (baseline / "packages" / role / "software_world_model").mkdir(
+                parents=True
+            )
+            (baseline / "packages" / role / ".g3b").mkdir()
         destination = self.root / "candidate-stage"
-        slice1_freeze._candidate_stage(
-            baseline=(
-                self.workspace
-                / "var/iteration-006/live/run-008/candidate-stage"
-            ),
-            producer=self.workspace,
-            destination=destination,
-        )
+        with mock.patch.object(
+            slice1_freeze,
+            "ACCEPTED_BASELINE_STAGE_DIGEST",
+            digest_of(slice1_freeze._tree_manifest(baseline)).value,
+        ):
+            slice1_freeze._candidate_stage(
+                baseline=baseline,
+                producer=self.workspace,
+                destination=destination,
+            )
 
         assets = (
             self.workspace

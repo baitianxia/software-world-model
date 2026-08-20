@@ -109,6 +109,13 @@ qualification-document/terminal digest 为 `sha256:af60335e…0a46` / `sha256:cb
 `2026-08-27T14:34:15.238182+00:00`。两份授权均已消费且不可 retry；V-002 PASS，下一步是证据写回后的全新 formal
 product freeze/Web。尚无 Product Result，hidden canary 与 Production Activation 均未执行。
 
+资格证据写回提交 `173da886b6a9bf16065130837a4e85350478948f` 后的 formal `run-008-freeze` 未形成 report。它在外部模型
+调用为 0 的 focused 阶段以 88 PASS / 1 ERROR 停止；唯一错误是 freeze unit test 仍从 producer-relative 未跟踪 `var/` 读取
+ITER-006 baseline。实际 CLI 显式提供的 accepted baseline 已先成功完成 staging，故这不是 baseline drift。按
+[FINDING-008-039](../findings/FINDING-008-039.md)，测试改用 hermetic temporary fixture，formal CLI 的 exact baseline digest Gate
+不变；无历史 `var/` 的 clean producer 中单项 1/1、focused 89/89 PASS。run-008 失败目录保留且不得复用；下一尝试必须使用
+`run-009-freeze` 未来路径。尚无 Product Result，hidden canary 与 Activation 未执行。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

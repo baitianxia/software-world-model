@@ -281,6 +281,12 @@ Application scope 投影删除了不适用第三层字段。Qualification digest
 `2026-08-27T14:34:15.238182+00:00`。V-002 对 current identity PASS；Readiness 的下一阻断变为证据写回后的全新 formal
 product freeze/Web。该资格不授权 hidden canary、SLICE-002 或 Production Activation。
 
+证据写回后的 formal run-008 在模型调用为 0 的 focused 阶段暴露 `FINDING-008-039`：unit test 虽然测试同一
+`_candidate_stage`，却忽略 CLI 显式 `--baseline-stage`，另从 clean producer 中不存在的未跟踪 workspace `var/` 读取 baseline，
+结果 88 PASS / 1 ERROR。实际 accepted baseline staging 已在测试前成功，因此不是 digest drift。测试现使用 hermetic temporary
+fixture，formal CLI 的真实 exact baseline Gate 不变；不含历史 `var/` 的 clean producer focused 89/89 PASS。run-008 不形成或
+复用 freeze，Readiness 下一 Gate 是全新 run-009 formal freeze。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

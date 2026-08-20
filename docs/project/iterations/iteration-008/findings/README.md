@@ -12,7 +12,10 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十八条 Finding；三十八条均已处置或被后续决定取代。`FINDING-008-038` 记录 run-026 Conformance 2/2 PASS、
+本 Slice 当前登记三十九条 Finding；三十九条均已处置或被后续决定取代。`FINDING-008-039` 记录证据写回后的 formal run-008
+在零模型调用的 focused 阶段因 unit test 隐式依赖 clean producer 不含的未跟踪 workspace `var/` 而 88 PASS / 1 ERROR；实际
+CLI baseline 已先成功 staging，不是 digest drift。测试现使用 hermetic temporary fixture，formal exact baseline Gate 不变；
+无历史 `var/` 的 clean producer focused 89/89 PASS，run-009 formal freeze 为下一 Gate。`FINDING-008-038` 记录 run-026 Conformance 2/2 PASS、
 Capability 40 calls / 18 Case 完成且 transport 零 unknown/retry，但 positive Review 与 negative Review 返回同一个 REJECT，结果
 17/18。根因是 model-visible wire 仍把不适用的 recall 缺失码送给 SATISFIED Need；terminal compiler `@2` 现编译不可伪造的
 positive/three-layer scope。clean candidate `be9ab1e…` 的 run-027 随后完成 Conformance 2/2 / 12/12 与 Capability 40 calls /
@@ -196,6 +199,10 @@ canary、SLICE-002 与 Production Activation gate：
   三层。活动 identity 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；clean candidate `be9ab1e…` 的 run-027 Conformance 2/2 /
   12/12、Capability 40 calls / 18 Case / 18/18 PASS，TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`，
   `REVIEW-018` 的 negative/positive 分别为 REJECT/APPROVE。V-002 PASS，下一 Gate 为 formal product refreeze/Web。
+- [FINDING-008-039](FINDING-008-039.md)：证据提交后的 formal run-008 在模型调用 0 的 focused 阶段因 freeze unit test
+  硬编码未跟踪 workspace `var/iteration-006` 而 88 PASS / 1 ERROR；CLI 显式 accepted baseline 已先成功 staging。测试改为
+  hermetic temporary baseline fixture，formal exact baseline digest Gate 不变；无历史 `var/` 的 clean producer 单项 1/1、
+  focused 89/89 PASS。run-008 不复用，下一尝试为全新 run-009 formal freeze。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

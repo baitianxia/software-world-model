@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-027-qualified-formal-product-refreeze-next
+worktree_status: iteration-008-run-008-freeze-test-dependency-fixed-run-009-next
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-027-qualified-formal-product-refreeze-next
+live_model_path: iteration-008-run-008-freeze-test-dependency-fixed-run-009-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-027 18/18 qualified / formal refreeze next** | clean candidate `be9ab1e…` 的 run-027 Conformance 2/2 / 12/12、Capability 40 calls / 18 Case / 18/18 PASS；TLS `2/2`、reuse `38`、HTTP/credential `40/40`、unknown/retry `0`。`REVIEW-018` 精确得到 negative REJECT 与 positive APPROVE，证明 Application terminal compiler `@2` 的 `review_completeness_scope` 适配有效；活动 identity 为 `1.5.10/@19/@1.4.11`，V-002 PASS。下一 Gate 是证据写回后的全新 formal product freeze/Web；canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-027 18/18 qualified / run-009 formal freeze next** | clean candidate `be9ab1e…` 的 run-027 Conformance 2/2 / 12/12、Capability 40 calls / 18 Case / 18/18 PASS，V-002 PASS。证据提交后的 formal run-008 在零模型调用的 focused 阶段因 unit test 隐式依赖未跟踪 workspace `var/` 而 88 PASS / 1 ERROR；accepted baseline 本身未漂移。`FINDING-008-039` 已用 hermetic temporary fixture 修复，clean producer focused 89/89 PASS；run-008 不复用，下一 Gate 为全新 run-009 formal freeze/Web。canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -565,6 +565,14 @@ result/closed/qualification/qualification-document/terminal digest 为 `sha256:a
 `40/40`、unknown/retry `0`。`REVIEW-018` 的第一项仍为 `REJECT / QUERY_INCOMPLETE`，第二项准确变为 `APPROVE`；exact
 positive manifest 只保留 Query/knowledge COMPLETE 并显示 `POSITIVE_SUPPORTED_ONLY / NOT_APPLICABLE / REJECT` scope。
 两份授权均已消费且不可 retry；V-002 对当前 identity 已 PASS，下一 Gate 是证据写回后的全新 formal product freeze/Web。
+
+资格证据写回提交 `173da886b6a9bf16065130837a4e85350478948f` 后启动的 formal `run-008-freeze` 在 focused 阶段停止：
+88 项 PASS，`test_candidate_stage_uses_the_bounded_answer_and_gateway` 因 clean producer 没有未跟踪的 workspace-relative
+`var/iteration-006/live/run-008/candidate-stage` 而 ERROR。CLI 显式传入的 accepted baseline 已在该测试前成功完成真实 candidate
+staging，所以 baseline 没有漂移；失败来自 unit test 的隐式本机 evidence 依赖。run-008 未形成 report，外部模型调用为 0。
+`FINDING-008-039` 已将该 unit test 改为自包含 temporary baseline fixture，实际 formal CLI 的显式 exact baseline digest Gate 不变；
+无 `var/iteration-006` 的 clean producer 中单项 1/1、focused 89/89 PASS。run-008 永久保留且不复用，下一尝试为全新
+`run-009-freeze`。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

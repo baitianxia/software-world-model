@@ -530,6 +530,11 @@ suite/oracle 升级为 `1.5.10/@19/@1.4.11/@1.5.10`；18 Case / 40 calls 与其�
 negative Gate。Qualification digest 为 `sha256:2b1141f3…b634`，有效至 `2026-08-27T14:34:15.238182+00:00`；V-002
 PASS。下一步从证据写回后的 clean producer 生成全新 formal product freeze，再执行公开 Web；hidden canary 与 Activation 不执行。
 
+第一次证据写回后的 formal `run-008-freeze` 在模型调用为 0 的 focused 阶段停止。唯一 ERROR 不是产品或 baseline drift，而是
+unit test 自行读取 clean producer 中不存在的未跟踪 workspace `var/iteration-006`；实际 CLI 显式 baseline 已先成功 staging。
+[FINDING-008-039](../findings/FINDING-008-039.md) 将测试改为 hermetic temporary fixture，保留 formal CLI 的真实 exact baseline
+digest Gate；不含历史 `var/` 的 clean producer 单项 1/1、focused 89/89 PASS。run-008 不得复用，下一 formal 尝试为 run-009。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；
