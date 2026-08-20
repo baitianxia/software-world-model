@@ -63,7 +63,7 @@ JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.1"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.2"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
@@ -126,7 +126,7 @@ _JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
     "sha256:9e4e3dcbb0584b2574bfa71c5e31275e5496255e0ce41cdc5fc8f05e18e243b5"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_EXACT_POLICY_DIGEST = Digest(
-    "sha256:58d3879008fcca9b290e2f522cdd6e91cb26394f027d15f4129257c0460f485d"
+    "sha256:7baffe44a9e8d7146953036fc934675fa317cc5164d4e8c0b838875ea10fdb4d"
 )
 _DEEPSEEK_PROVIDER_TYPE = "DEEPSEEK"
 _DEEPSEEK_ADAPTER_VERSION = "deepseek-chat-completions-no-tools@4"
@@ -728,14 +728,16 @@ class QualifiedJavaSourceSemanticsModelEgressGatewayPolicy:
                 "model request is outside the exact Java source-semantics policy",
             )
         instruction, sealed, qualification = items
+        expected_instruction = contract.prompt_for(expected_stage)
         if (
             instruction.schema_ref != "text@1"
             or instruction.classification != "INTERNAL"
             or instruction.purpose != "world-model authority proposal rules"
             or instruction.authority_reference != contract.prompt_ref
             or instruction.disposition is not InputDisposition.PROVIDED
-            or instruction.transformation_ref != "identity@1"
-            or instruction.content_digest != digest_of(contract.prompt)
+            or instruction.transformation_ref
+            != contract.instruction_transformation_ref
+            or instruction.content_digest != digest_of(expected_instruction)
             or sealed.schema_ref != "world-model-capability-case-input@1"
             or sealed.classification != "INTERNAL"
             or sealed.purpose

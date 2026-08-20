@@ -1201,11 +1201,11 @@ def _bounded_java_source_semantics_provider_binding(
         != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-PRODUCT-GATEWAY-CANDIDATE@1"
         or freeze.get("environment") != "EVALUATION_ONLY"
         or freeze.get("strategy_ref")
-        != "model-snapshot-first-world-model-answer@1.5.3"
+        != "model-snapshot-first-world-model-answer@1.5.4"
         or freeze.get("prompt_ref")
-        != "java-source-semantics-world-model-prompt@12"
+        != "java-source-semantics-world-model-prompt@13"
         or freeze.get("proposal_vocabulary_ref")
-        != "java-source-semantics-world-model-vocabulary@12"
+        != "java-source-semantics-world-model-vocabulary@13"
         or freeze.get("capability_qualification_document_digest")
         != binding.qualification_document_digest.value
         or freeze.get("closed_capability_result_digest")

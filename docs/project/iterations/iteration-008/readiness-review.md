@@ -127,6 +127,21 @@ persistent TLS 和 no-retry 不变；不得通过问题/Case/Oracle 特判或 ev
 Conformance 与完整 Capability，PASS 前产品 Gate 继续阻断。重冻结后的 `ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
 `sha256:c9992a431726a48274355d1075187311471c40bea6efbb51de1c7b3ff9e14968`。
 
+该身份的 run-017 证明单一 DeepSeek system authority 已修复原 PATH-EXISTS 失败，但同时暴露更窄的 Gateway 输入隔离缺口：虽然
+prompt 声明其他 section inactive，实际每次仍发送 legacy Query Planning、Draft、Review 和 Investigation 的完整 monolithic 文本。
+`MAX-FOUR-010` 的第 22 次 completed request 因而把 workflow trace 误选为 binary `path_exists`，并复制非当前 section 的
+`order/return/throw/audit`；此前 9 Case / 21 calls PASS，transport 为 TLS 1/1、reuse 21、HTTP/credential 22/22、unknown/retry 0。
+该 run 已按 `FINDING-008-026` 失败关闭，不能重试或拼接。
+
+Readiness semantic-authority contract 再重冻结为 capability/Strategy `1.5.4`、prompt/vocabulary `@13`、suite/oracle `@1.5.4` 与
+bounded egress policy `@1.4.2`。一个 prompt program 为三个 capability 分别冻结 entry；Manifest 前按 sealed stage 唯一选择并绑定
+`capability-prompt-selection@1`，Gateway 必须校验所选 content digest，不能把自然语言 “inactive” 当作隔离。DeepSeek Adapter `@4`、
+Conformance `1.2.0/@2`、compiler `@6`、18 Case / 40 calls、18/18、persistent TLS 与 no-retry 不变；新身份仍须从 clean candidate
+重新通过 Conformance 和完整 Capability。相关 121/121、fake 18/18、完整执行面 1012/1017（唯一五项仍为
+`FINDING-008-020` 的历史 drift）、docs 330/330、compileall/diff/secret scan 已闭合。更新后的
+`ITER-008-SYSTEM-CONTRACT-SET@1` digest 为
+`sha256:0143229ee22d1db3962e6bc6fedf7982fea96642fe84d1f116667f3b144219a5`。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

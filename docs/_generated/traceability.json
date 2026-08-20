@@ -1362,6 +1362,22 @@
       "tests/test_model_egress_gateway.py"
     ]
   },
+  "FINDING-008-026": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-026.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_policy.json",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_qualification.py",
+      "validation/structure_world_model_iteration_008/capability"
+    ],
+    "tests": [
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_iteration_008_capability_harness.py",
+      "tests/test_iteration_008_capability_qualification.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -2513,6 +2529,7 @@
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
       "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
       "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
       "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
       "src/software_world_model/ai_infrastructure/pinned_deepseek_https.py",
       "src/software_world_model/interface/world_model_runtime.py",

@@ -238,7 +238,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.3")
+        self.assertEqual(contract.strategy_version, "1.5.4")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@6",
@@ -276,6 +276,10 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
 
     def test_java_source_semantics_prompt_and_review_vocabulary_are_closed(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
+        capability_prompts = dict(contract.capability_prompts)
+        investigation_prompt = contract.prompt_for(IMPLEMENTATION_INVESTIGATION)
+        draft_prompt = contract.prompt_for(IMPLEMENTATION_ANSWER_DRAFTING)
+        review_prompt = contract.prompt_for(IMPLEMENTATION_ANSWER_REVIEW)
         schemas = world_model_answer_output_schemas(
             include_java_source_semantics=True
         )
@@ -283,93 +287,113 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             "java-implementation-answer-review@2"
         ].schema["properties"]["finding_codes"]
 
-        self.assertIn(
+        self.assertEqual(tuple(capability_prompts), contract.capabilities)
+        self.assertEqual(
+            contract.instruction_transformation_ref,
+            "capability-prompt-selection@1",
+        )
+        self.assertNotIn(
             "return/returns/returned/returning or 返回 maps to the exact term return",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "an omission fault marker maps to MATERIAL_OMISSION",
-            contract.prompt,
+            review_prompt,
         )
         self.assertIn(
             "The platform, not you, owns the evidence ledger after step 1",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "On later steps evidence_requests and search_terms must be empty",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "available_operations contains only the platform transition",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "Graph evidence already includes the method-result prerequisite",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "declaring-type prerequisites",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "a value of 1 still permits the final scheduled query",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
-            "return each case-insensitively normalized term at most once",
-            contract.prompt,
+            "Return each case-insensitively normalized term at most once",
+            investigation_prompt,
         )
         self.assertIn(
             "derives the terminal reason from typed support and the completeness receipt",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "declared_method_inventory only for a complete declaring-type method inventory",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "all other capability sections are inactive for this call",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
-            "method_implementations does not fulfill reachability",
-            contract.prompt,
+            "Use path_exists only for an explicitly binary reachability answer",
+            investigation_prompt,
         )
         self.assertIn(
-            "never copy an example word from these instructions into search_terms",
-            contract.prompt,
+            "the word through alone is not reachability",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "delete every term introduced only by these instructions",
+            investigation_prompt,
         )
         self.assertIn(
             "Never copy, reconstruct, abbreviate, or invent those authority values",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "return one closed transition hint plus the semantic evidence obligations",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "business-discovery recall layer needed by the Draft is not COMPLETE",
-            contract.prompt,
+            review_prompt,
         )
         self.assertIn(
             "FINISH is available only when the platform ledger says every evidence obligation is covered",
-            contract.prompt,
+            investigation_prompt,
         )
         self.assertIn(
             "REJECT with QUERY_INCOMPLETE whenever any query-result completeness",
-            contract.prompt,
+            review_prompt,
         )
         self.assertIn(
             "is one QUERY_INCOMPLETE fault, not an UNSUPPORTED_RUNTIME_CLAIM",
-            contract.prompt,
+            review_prompt,
         )
+        self.assertIn("IMPLEMENTATION_INVESTIGATION:", investigation_prompt)
+        self.assertNotIn("IMPLEMENTATION_ANSWER_DRAFTING:", investigation_prompt)
+        self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", investigation_prompt)
+        self.assertNotIn("UNAVAILABLE_LEGACY", investigation_prompt)
+        self.assertIn("IMPLEMENTATION_ANSWER_DRAFTING:", draft_prompt)
+        self.assertNotIn("IMPLEMENTATION_INVESTIGATION:", draft_prompt)
+        self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", draft_prompt)
+        self.assertIn("IMPLEMENTATION_ANSWER_REVIEW:", review_prompt)
+        self.assertNotIn("IMPLEMENTATION_INVESTIGATION:", review_prompt)
+        self.assertNotIn("IMPLEMENTATION_ANSWER_DRAFTING:", review_prompt)
         for case_or_provider_patch in (
             "DeepSeek",
             "WM-JSS-I8-",
             "LoginService",
             "purchase-order",
         ):
-            self.assertNotIn(case_or_provider_patch, contract.prompt)
+            for prompt in capability_prompts.values():
+                self.assertNotIn(case_or_provider_patch, prompt)
         self.assertEqual(
             finding_schema["items"]["enum"],
             list(JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES),

@@ -338,6 +338,30 @@ system message，并以通用 prompt 明确 capability section isolation、examp
 Adapter `@4`、Conformance fixture `1.2.0` / Result `@2`、capability/Strategy `1.5.3`、prompt/vocabulary `@12`、policy `@1.4.1`、
 suite/oracle `@1.5.3`；本地门禁与全新 live qualification 尚待闭合。
 
+上述候选随后形成 clean commit `e3cc34fdd830498414480684151944139ca9489c` / tree
+`0d83e59ed273c2f6c01dba977f2089576eda2da2` 并执行 run-017。Conformance preflight/authorization/result digest 为
+`sha256:7dbff2868c58e8582e44e3fd989282430dc762d13c529607ab6f4a0a3c2a9dad` /
+`sha256:901b6a9158beae9fab35f921e6617939859908d5349c67a2d62fbaba7ea96875` /
+`sha256:f17c58dd13ece22e3bf7da216119fb2e00d552fed7bd31e9bec23accb98d02f4`；2 requests / 12/12 PASS，唯一
+identity `deepseek-v4-pro`、tokens 407/68、usage 完整。transport 为 TLS 1/1、reuse 1、HTTP/credential 2/2、unknown/retry 0。
+
+Capability freeze/authorization 为 `sha256:38d07801b13fa581fc7d82120cc1bd319202862b76a79b044895b2a96fb86deb` /
+`sha256:d4f9518043a0c6c030e3a74b60267f50216f43efb5ebd4d69dd35216f41dad2f`。run-016 失败的 PATH-EXISTS Case 已完整
+PASS；前 9 Case / 21 calls 后，第 22 次 completed request 在 `MAX-FOUR-010:call-1` 把 workflow trace 选为 binary
+`path_exists`，并在原问题之外复制 `order/return/throw/audit`。failure/terminal digest 为
+`sha256:9877b420f138743bb948c2f9e02f5d7095863ab86678a3acf3b191994364793d` /
+`sha256:c1c50229d3dbc5b6e5f5803532aa68c67c53b1d7fc69689ad24b64e709705a59`。失败时 TLS 1/1、reuse 21、
+HTTP/credential 22/22、unknown/retry 0；授权已消费，没有 Qualification、Web、canary 或 Activation。
+
+[FINDING-008-026](../findings/FINDING-008-026.md) 将首次偏差定位为 capability 输入隔离：`@12` 每次实际发送完整 monolithic
+prompt，非 Investigation section 虽被声明 inactive，仍与当前指令共享一个 system authority。活动 Contract `1.5.4/@13` 为三个
+capability 冻结独立 prompt entry，并在 Manifest 前按 sealed stage 选择、绑定 `capability-prompt-selection@1`；Gateway/live runner
+校验所选 digest。只有显式 binary reachability 使用 `path_exists`，workflow trace 使用 method evidence。policy/suite/oracle 升级为
+`@1.4.2/@1.5.4`；Adapter `@4`、fixture `1.2.0`、compiler `@6`、18 Case / 40 calls、Oracle、18/18、persistent TLS 与
+no-retry 不变。相关回归 121/121、fake 40-call / 18/18、docs 330/330、compileall/diff/secret scan PASS；完整执行面
+1012/1017，唯一五项仍为 `FINDING-008-020` 的历史 drift。System fileset digest 为
+`sha256:0143229ee22d1db3962e6bc6fedf7982fea96642fe84d1f116667f3b144219a5`；新 live qualification 尚待闭合。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

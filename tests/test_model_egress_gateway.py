@@ -216,7 +216,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:58d3879008fcca9b290e2f522cdd6e91cb26394f027d15f4129257c0460f485d"
+                "sha256:7baffe44a9e8d7146953036fc934675fa317cc5164d4e8c0b838875ea10fdb4d"
             ),
             provider_type="DEEPSEEK",
             adapter_version="deepseek-chat-completions-no-tools@4",
@@ -566,6 +566,36 @@ class ModelEgressGatewayTests(unittest.TestCase):
 
         with self.assertRaises(DomainError) as raised:
             self.bounded_semantic_policy().validate_context(context)
+
+        self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
+
+    def test_bounded_semantics_policy_binds_capability_selected_prompt(self) -> None:
+        context = self.bounded_semantic_context(
+            "IMPLEMENTATION_INVESTIGATION",
+            investigation_ordinal=1,
+        )
+        instruction = context.manifest.items[0]
+        self.assertEqual(
+            instruction.transformation_ref,
+            "capability-prompt-selection@1",
+        )
+        self.assertIn("IMPLEMENTATION_INVESTIGATION:", instruction.content)
+        self.assertNotIn(
+            "IMPLEMENTATION_ANSWER_DRAFTING:", instruction.content
+        )
+        self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", instruction.content)
+
+        tampered_manifest = replace(
+            context.manifest,
+            items=(
+                replace(instruction, transformation_ref="identity@1"),
+                *context.manifest.items[1:],
+            ),
+        )
+        with self.assertRaises(DomainError) as raised:
+            self.bounded_semantic_policy().validate_context(
+                replace(context, manifest=tampered_manifest)
+            )
 
         self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
 

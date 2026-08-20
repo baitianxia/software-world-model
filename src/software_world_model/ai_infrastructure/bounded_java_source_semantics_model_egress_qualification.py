@@ -81,10 +81,10 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
     ("WM-JSS-I8-REVIEW-018", 1),
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST = Digest(
-    "sha256:3cf0e75407e5a3f565756367537b5b574e8e7cda953447f24cebbbbbea0aa7ca"
+    "sha256:835318bdca4a8a8b30c79825dec16db4517d8365bf19575faea55e5099124cf1"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_ORACLE_DIGEST = Digest(
-    "sha256:39dfdad5f193a1e65694eb49891ba26d996f14c54e89a149b3da2fea998bf783"
+    "sha256:2bf8d87f9562d68ab74aafeeba217bc2e4dde8f33c50b242762557f126912ba2"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     Path(__file__).resolve().with_name(
@@ -92,7 +92,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:58d3879008fcca9b290e2f522cdd6e91cb26394f027d15f4129257c0460f485d"
+    "sha256:7baffe44a9e8d7146953036fc934675fa317cc5164d4e8c0b838875ea10fdb4d"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
@@ -500,6 +500,8 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         or contract_value.get("prompt_ref") != contract.prompt_ref
         or contract_value.get("proposal_vocabulary_ref")
         != contract.proposal_vocabulary_ref
+        or contract_value.get("instruction_transformation_ref")
+        != contract.instruction_transformation_ref
         or contract_value.get("argument_compiler_ref")
         != JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF
         or contract_value.get("available_operations")

@@ -438,8 +438,10 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
             qualification = items[2]
             if (
                 instruction.get("authority_reference") != contract.prompt_ref
+                or instruction.get("transformation_ref")
+                != contract.instruction_transformation_ref
                 or instruction.get("content_digest")
-                != digest_of(contract.prompt).value
+                != digest_of(contract.prompt_for(capability)).value
             ):
                 raise DomainError(
                     ErrorCode.QUALIFICATION_INVALID,

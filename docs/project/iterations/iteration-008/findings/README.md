@@ -12,8 +12,8 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记二十五条 Finding；二十五条均已处置或被后续决定取代。`FINDING-008-025` 已闭合 DeepSeek 单一 system
-authority、通用 reachability 语义、新资格身份和本地验证，但不豁免当前 live 资格、正式 Web、canary、
+本 Slice 当前登记二十六条 Finding；二十六条均已处置或被后续决定取代。`FINDING-008-026` 已把 monolithic prompt 的自然语言
+section 声明升级为 Gateway 可校验的 capability-selected semantic authority，但不豁免当前 live 资格、正式 Web、canary、
 SLICE-002 与 Production Activation gate：
 
 - [FINDING-008-001](FINDING-008-001.md)：活动 contract alias 会使 ITER-007 资格被错误解释为新协议；历史 `1.2.2` 与有界
@@ -96,6 +96,11 @@ SLICE-002 与 Production Activation gate：
   升级为 Adapter `@4`、Contract `1.5.3/@12`、Conformance fixture `1.2.0`、policy `@1.4.1`、suite/oracle `@1.5.3`。不放宽
   Application/evaluator、不加入题目或 Oracle 特判；相关 128/128、fake 18/18、docs 329/329 PASS，完整执行面 1011/1016，唯一
   五项仍是 `FINDING-008-020` 的历史 drift。Finding 已处置，新 live 资格继续 blocking。
+- [FINDING-008-026](FINDING-008-026.md)：`1.5.3/@12` 的 run-017 已修复旧 PATH-EXISTS Case，但第 22 次 request 把要求解释
+  authentication workflow 的问题误选为 binary `path_exists`，并复制非 Investigation section 的 `order/return/throw/audit`。
+  Gateway 现于 Manifest 前按 sealed capability 选择唯一 prompt entry，并绑定 `capability-prompt-selection@1`；活动身份升级为
+  `1.5.4/@13/@1.4.2` 与 suite/oracle `@1.5.4`，Adapter `@4`、compiler `@6`、18/40、Oracle、18/18 和 no-retry 不变。
+  run-017 永久失败关闭，新 live 资格仍 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

@@ -310,6 +310,25 @@ system message；prompt 对所有 Provider 通用地规定 capability section is
 precedence。compiler `@6`、Application ledger/subsumption、18 Case、40 calls、18/18、temperature 0、persistent TLS 与 no-retry 不变。
 旧 run-016 已失败关闭，新 clean candidate 必须重新完成同候选 Conformance 与完整 Capability，之后才可进入 product freeze。
 
+`1.5.3/@12` candidate `e3cc34f…` 的 run-017 Conformance 2 calls / 12/12 PASS；Capability 也完整通过了 run-016 的
+PATH-EXISTS Case，但在前 9 Case / 21 calls PASS 后，第 22 次 completed request 把 “Trace authentication through failure
+recording and successful session issuance” 误选为 binary `path_exists`，并复制同一 monolithic system prompt 的非 Investigation
+section 中 `order/return/throw/audit`。transport 仍为 TLS 1/1、reuse 21、HTTP/credential 22/22、unknown/retry 0，因此不是网络、
+模型 availability、Adapter envelope、compiler 或 evaluator 回归。详见 [FINDING-008-026](../findings/FINDING-008-026.md)。
+
+活动设计升级为 capability/Strategy `1.5.4`、prompt/vocabulary `@13`、policy `@1.4.2` 与 suite/oracle `@1.5.4`。prompt program
+为 Investigation、Draft、Review 分别冻结 exact entry；Strategy 在 Manifest 前按 sealed capability 选择唯一 entry，并记录
+`capability-prompt-selection@1`，Gateway 和 capability runner 校验 stage/transformation/content digest。Investigation wire 不再包含
+legacy Query Planning、Draft 或 Review 指令；只有显式 whether/can/does/reachable 的二元问题选择 `path_exists`，要求 trace/explain/
+describe workflow through actions/outcomes 时选择 method evidence，`through` 本身不是 reachability。Adapter `@4`、fixture `1.2.0`、
+compiler `@6`、Application ledger、18 Case、40 calls、18/18、temperature 0、persistent TLS 和 no-retry 不变。run-017 永久失败关闭，
+新 clean candidate 必须重新完成 Conformance 与完整 Capability，之后才可进入 product freeze。
+
+该设计的相关回归 121/121 PASS；fake transport 仍恰好执行 40 calls / 18 Case 并由 independent evaluator 18/18 PASS。完整
+执行面 1012/1017，唯一 4 failure + 1 error 仍是 `FINDING-008-020` 的历史 ITER-003 Codex CLI/runtime drift；current documents
+330/330、compileall、diff check 与路径级 secret scan PASS。当前 System fileset digest 为
+`sha256:0143229ee22d1db3962e6bc6fedf7982fea96642fe84d1f116667f3b144219a5`；这些确定性结果不替代新的 live qualification。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

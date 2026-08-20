@@ -68,8 +68,8 @@ PACKAGE_FILE_NAMES = (
     "freeze.py",
     "live_runner.py",
     "manifest.py",
-    "oracle-1.5.3.json",
-    "suite-1.5.3.json",
+    "oracle-1.5.4.json",
+    "suite-1.5.4.json",
 )
 
 
@@ -410,6 +410,9 @@ def _proposal_contract() -> dict[str, object]:
             ).value
         ),
         "proposal_vocabulary_ref": contract.proposal_vocabulary_ref,
+        "instruction_transformation_ref": (
+            contract.instruction_transformation_ref
+        ),
         "available_operations": list(contract.available_operations),
         "capabilities": list(contract.capabilities),
         "tool_policy_ref": "model-no-tools-no-source-no-evidence@1",
