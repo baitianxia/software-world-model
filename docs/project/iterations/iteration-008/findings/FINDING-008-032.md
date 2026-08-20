@@ -94,5 +94,32 @@ failure/error；该事实不冒充 raw full-suite PASS。
 - System fileset digest：ITER-008 `sha256:5432e30f42c2c821c2e05c916e299b290e0aaf84f1f922a8471c0207cf82cfdf`，
   ITER-007 `sha256:221b193b6b6c7e5b041ce46a3b41992290527952efb583c714311604893c407e`。
 
-System/code/local-test 处置已闭合；V-002 仍为 NOT-RUN/blocking，直至新 clean candidate 重新完成 2-call Conformance 与完整
-40-call Capability。通过前不得生成 formal product PASS、继续 Web、执行 hidden canary 或 Production Activation。
+System/code/local-test 处置闭合后形成 clean exact candidate
+`837171e611ae6e1dd3a0939e446e0658b1d08d6c` / tree `11b4a2a083d1e1c0f239e0a132e61cd125cd12ec`。run-023 Conformance
+preflight/authorization/result/terminal digest 为
+`sha256:c7c730f556e994c7b3278a35104c47a631e46dd84997122f95c1133783813703` /
+`sha256:fbc6a8c70f7d3b6bd19f17e636591459bc10c0ac700b1450838b3ee94264b93c` /
+`sha256:16e947ad1aaf698227ae59f06db3ec53caca04eb9f1c46375adf6ae1bd960522` /
+`sha256:5eb114c04f745b46137c4408ed16788be92d7979f0e4c1630a9b33ac342077fb`；恰好 2 requests / 12/12 PASS，TLS 1/1、
+reuse 1、HTTP/credential 2/2、unknown/retry 0。
+
+同候选 Capability freeze/authorization digest 为
+`sha256:7bfd08c6307314a15b7f0d41e666d559154f7906c9818f4296ac5937fb724cae` /
+`sha256:fdf3e0e23cc7010225e9d3e952dbc6390e051e7cc63578744d25bbb37ec0b43d`。它无 retry 完成 40 calls / 18 Case / 18/18
+PASS，input/output tokens 84,396/2,560；TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0。result/closed-document/
+qualification-proof/qualification-document/terminal digest 为
+`sha256:9306f487e79b4594154dd60e8dd55854cc9289b2ce057ed5fea0851baf03ba6d` /
+`sha256:d17e6d67aa1ad8eeb0ac320d227faa4003094fc7ff098d72658758c19a62d977` /
+`sha256:0c78cb15260a57ceac7d61c9cdcb9301c16854240d52b2186a5d77c4932f0c31` /
+`sha256:15f4d4f19bd7acf6183e44db6b5cfa0721ae2b4888bc31718528a8fe4aa148ba` /
+`sha256:c2175a9b2d200cf559f855267b8b3a438aa8eaf5472658c141426e2acd525563`。Qualification ref 为
+`capability-evaluation:evaluation_result_8f299a82dbdc4d67bda87c77bde013b1`，valid until
+`2026-08-27T11:28:37.309517+00:00`。
+
+CYCLE-PROGRESS 首轮 terms 为 `methods/contribute/authentication/authenticate/auth`，REF-PROVENANCE 为
+`implementations/returned/authentication/candidate`，PATH-EXISTS 为
+`authentication/reach/session/issuance/static/calls`；三者 semantic constraints、typed operation 与 projection 均 PASS。两份
+authorization 文件权限为 0600，run-023 证据无 credential-shaped secret 命中；授权均已消费且不可 retry。
+hidden canary 未披露，Production Activation 为 `NOT_EXECUTED`。因此本 Finding 的 live qualification 验证也已闭合，
+V-002 对当前 exact Contract 为 PASS；下一 Gate 是绑定该 authority chain 的 formal product freeze/Web，不直接执行
+hidden canary 或 Production Activation。

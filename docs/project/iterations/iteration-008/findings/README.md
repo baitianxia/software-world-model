@@ -14,7 +14,9 @@ iteration: ITER-008
 
 本 Slice 当前登记三十二条 Finding；三十二条均已处置或被后续决定取代。`FINDING-008-032` 记录 Adapter `@5` 的 run-022 已完整
 执行 40 calls / 18 Case，却仍遗漏 `methods/implementations`；活动处置把问题直接 ASCII 词项的机械保留放回 Application compiler
-`@7`，移除 Provider-specific semantic wire adaptation，并升级 Adapter `@6`、policy `@1.4.7`。`FINDING-008-031` 的 run-021 事实
+`@7`，移除 Provider-specific semantic wire adaptation，并升级 Adapter `@6`、policy `@1.4.7`。exact candidate `837171e…` 的
+run-023 已完成 Conformance 2/2 / 12/12 PASS 与 Capability 40 calls / 18 Case / 18/18 PASS，证明该 Owner 调整对当前
+Contract 有效；V-002 已闭合，下一 Gate 是 formal product freeze/Web。`FINDING-008-031` 的 run-021 事实
 保留，但其 Adapter-owned 处置已被取代。`FINDING-008-030` 记录 `1.5.6/@15` 的 run-020 已证明
 DeepSeek/Conformance 可用，却暴露 cross-script semantic group 假阴性、显式 Latin concept 被 operation/topic 替代，以及一般疑问词
 `Does` 被误分类为 reachability；本地处置已闭合，新资格仍 blocking。`FINDING-008-029` 记录 run-019 资格未覆盖的正式中文 Web
@@ -137,7 +139,8 @@ canary、SLICE-002 与 Production Activation gate：
   Capability 40 calls / 18 Case，transport 零 unknown/retry，但只有 16/18；CYCLE-PROGRESS 与 REF-PROVENANCE 仍分别遗漏问题
   直接写出的 `methods/implementations`。活动处置将 direct ASCII question term 的 closed、deterministic 合并放入 Application
   compiler `@7`，raw model output/digest 保持审计，cross-script translation 仍由模型负责；Adapter 移除领域 adaptation 并升级
-  `@6`，policy 升级 `@1.4.7`，上游 `1.5.7/@16` 与 suite/oracle 不变。新 clean qualification 前 V-002 继续 blocking。
+  `@6`，policy 升级 `@1.4.7`，上游 `1.5.7/@16` 与 suite/oracle 不变。exact candidate `837171e…` 的 run-023
+  Conformance 2/2 / 12/12 与 Capability 40/18/18 全部 PASS，关键 direct terms 和 projection 已闭合；V-002 转为 PASS。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

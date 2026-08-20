@@ -211,6 +211,20 @@ Provider-independent `1.5.7/@16`、suite/oracle `@1.5.7`、18/40/18/18 与 no-re
 identity 的 Conformance/Capability PASS 前 V-002/V-003/V-WEB-001 继续阻断。本地相关 127/127、fake 40-call / 18/18、docs
 336/336 PASS；完整执行面 1024/1029 的唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`，没有新增失败。
 
+新 exact candidate `837171e611ae6e1dd3a0939e446e0658b1d08d6c` / tree
+`11b4a2a083d1e1c0f239e0a132e61cd125cd12ec` 的 run-023 已完成新资格链。Conformance preflight/result digest 为
+`sha256:c7c730f556e994c7b3278a35104c47a631e46dd84997122f95c1133783813703` /
+`sha256:16e947ad1aaf698227ae59f06db3ec53caca04eb9f1c46375adf6ae1bd960522`，2 calls / 12/12 PASS；Capability freeze/result digest 为
+`sha256:7bfd08c6307314a15b7f0d41e666d559154f7906c9818f4296ac5937fb724cae` /
+`sha256:9306f487e79b4594154dd60e8dd55854cc9289b2ce057ed5fea0851baf03ba6d`，40 calls / 18 Case / 18/18 PASS。两阶段 TLS 1/1，
+reuse 1/39，HTTP/credential 2/2 与 40/40，unknown/retry 均为 0；Qualification 有效至
+`2026-08-27T11:28:37.309517+00:00`。关键 CYCLE/REF/PATH Case 的 direct terms、semantic constraints 与 projection 全部 PASS。
+
+因此 V-002 对当前 `1.5.7/@16/@7/@1.4.7` + Adapter `@6` exact Contract 的资格阻断已关闭。Readiness 仍要求
+下一步先从证据写回后的 clean producer 形成绑定该 authority chain 的 formal product freeze，然后执行 V-003/V-004/
+V-XD-001/V-SEC-001/V-SOURCEOFF-001/V-WEB-001。公开 Web PASS 前不得披露 early canary 或进入 Reflection，
+Production Activation 仍不得执行。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

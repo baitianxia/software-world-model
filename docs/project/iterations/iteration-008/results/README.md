@@ -485,6 +485,36 @@ translation 仍由模型负责；DeepSeek Adapter 移除领域 adaptation 并升
 `1.5.7/@16`、suite/oracle `@1.5.7`、18/40/18/18 与 no-retry 不变。本地相关 127/127、fake 40-call / 18/18、docs 336/336
 PASS；完整执行面 1024/1029 的唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。新 clean Conformance/Capability 仍 blocking。
 
+上述处置形成 clean exact candidate `837171e611ae6e1dd3a0939e446e0658b1d08d6c` / tree
+`11b4a2a083d1e1c0f239e0a132e61cd125cd12ec`，并执行 run-023。preflight/Conformance authorization/result/terminal digest 为
+`sha256:c7c730f556e994c7b3278a35104c47a631e46dd84997122f95c1133783813703` /
+`sha256:fbc6a8c70f7d3b6bd19f17e636591459bc10c0ac700b1450838b3ee94264b93c` /
+`sha256:16e947ad1aaf698227ae59f06db3ec53caca04eb9f1c46375adf6ae1bd960522` /
+`sha256:5eb114c04f745b46137c4408ed16788be92d7979f0e4c1630a9b33ac342077fb`。Conformance 恰好 2 calls / 12/12 PASS；
+requested/actual model 均为 `deepseek-v4-pro`，temperature 0、thinking disabled，input/output tokens 398/64；TLS 1/1、
+reuse 1、HTTP/credential 2/2、unknown/retry 0。
+
+Capability freeze/authorization digest 为
+`sha256:7bfd08c6307314a15b7f0d41e666d559154f7906c9818f4296ac5937fb724cae` /
+`sha256:fdf3e0e23cc7010225e9d3e952dbc6390e051e7cc63578744d25bbb37ec0b43d`。无 retry 地完成 40 calls / 18 Case / 18/18
+PASS，input/output tokens 84,396/2,560；TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0。result/closed-document/
+qualification-proof/qualification-document/terminal digest 为
+`sha256:9306f487e79b4594154dd60e8dd55854cc9289b2ce057ed5fea0851baf03ba6d` /
+`sha256:d17e6d67aa1ad8eeb0ac320d227faa4003094fc7ff098d72658758c19a62d977` /
+`sha256:0c78cb15260a57ceac7d61c9cdcb9301c16854240d52b2186a5d77c4932f0c31` /
+`sha256:15f4d4f19bd7acf6183e44db6b5cfa0721ae2b4888bc31718528a8fe4aa148ba` /
+`sha256:c2175a9b2d200cf559f855267b8b3a438aa8eaf5472658c141426e2acd525563`。Qualification ref 为
+`capability-evaluation:evaluation_result_8f299a82dbdc4d67bda87c77bde013b1`，validity ref/digest 为
+`evaluation_validity_626049896a934beab53cad3737f40509@1` /
+`sha256:dceb274443a5a415adee1baa39759208dd3930a3afc45c30fec2bca04c825fc7`，valid until
+`2026-08-27T11:28:37.309517+00:00`。
+
+全部 18 Case 均 PASS。其中 CYCLE-PROGRESS 首轮保留 `methods`，REF-PROVENANCE 保留 `implementations`，
+PATH-EXISTS 保留 `authentication/reach/session/issuance/static/calls`；这些 Case 的 semantic constraints、typed operation 与
+projection 均 PASS。authorization 权限为 0600，credential-shaped secret scan 无命中，两份授权均已消费且不可 retry。
+hidden canary 未披露，Production Activation 为 `NOT_EXECUTED`。run-023 因而关闭 V-002，但不是 Product Result；
+下一步是从证据写回后的 clean producer 生成绑定该 qualification chain 的 SLICE-001 formal product freeze。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

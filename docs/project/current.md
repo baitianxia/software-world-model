@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-20
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-022-failed-application-compiler-redirect-awaiting-clean-candidate
+worktree_status: iteration-008-run-023-qualified-awaiting-formal-product-freeze
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-022-failed-run-023-requalification-next
+live_model_path: iteration-008-run-023-qualified-formal-product-freeze-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-022 capability FAIL / new qualification next** | Adapter `@5` 的 exact candidate `c925496…` 完成 run-022 Conformance 2/2 PASS 与 Capability 40 calls / 18 Case，transport 零 unknown/retry，但只有 16/18；`methods/implementations` direct-term coverage 仍失败。活动处置为 Application compiler `@7`、Adapter `@6`、policy `@1.4.7`；新 Conformance/Capability、formal Web、early canary、Agent 对照、Reflection 与 Activation 尚未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-023 capability PASS / formal product freeze next** | Application compiler `@7` / Adapter `@6` 的 exact candidate `837171e…` 完成 run-023 Conformance 2/2 / 12/12 PASS 与 Capability 40 calls / 18 Case / 18/18 PASS；TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0。Qualification 有效至 `2026-08-27T11:28:37.309517+00:00`；V-002 已 PASS，formal product freeze/Web、early canary、Agent 对照、Reflection 与 Activation 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -448,6 +448,25 @@ raw response 保持审计，cross-script translation 仍由模型负责；Adapte
 本地相关 127/127、fake 40-call / 18/18、current documents 336/336 与 compile/diff/secret scan 已 PASS；完整执行面
 1024/1029，raw exit 1，唯一 4 FAIL + 1 ERROR 精确属于 `FINDING-008-020`，没有新增失败。下一步只能从新 clean exact
 candidate 执行 run-023 Conformance 与 Capability；PASS 前不得生成 formal product freeze、继续 Web、披露 canary 或执行 Activation。
+
+新 clean exact candidate `837171e611ae6e1dd3a0939e446e0658b1d08d6c` / tree
+`11b4a2a083d1e1c0f239e0a132e61cd125cd12ec` 已完成 run-023。Conformance preflight/authorization/result/terminal digest 为
+`sha256:c7c730f556e994c7b3278a35104c47a631e46dd84997122f95c1133783813703` /
+`sha256:fbc6a8c70f7d3b6bd19f17e636591459bc10c0ac700b1450838b3ee94264b93c` /
+`sha256:16e947ad1aaf698227ae59f06db3ec53caca04eb9f1c46375adf6ae1bd960522` /
+`sha256:5eb114c04f745b46137c4408ed16788be92d7979f0e4c1630a9b33ac342077fb`，恰好 2 requests / 12/12 PASS；TLS 1/1、
+reuse 1、HTTP/credential 2/2、unknown/retry 0。
+
+同候选 Capability freeze/authorization digest 为
+`sha256:7bfd08c6307314a15b7f0d41e666d559154f7906c9818f4296ac5937fb724cae` /
+`sha256:fdf3e0e23cc7010225e9d3e952dbc6390e051e7cc63578744d25bbb37ec0b43d`。它无 retry 完成 40 calls / 18 Case / 18/18
+PASS，input/output tokens 84,396/2,560；TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0。result/closed/
+qualification proof/document/terminal digest 为 `sha256:9306f487…ba6d` / `sha256:d17e6d67…d977` /
+`sha256:0c78cb15…0c31` / `sha256:15f4d4f1…148ba` / `sha256:c2175a9b…563`，valid until
+`2026-08-27T11:28:37.309517+00:00`。CYCLE-PROGRESS、REF-PROVENANCE 与 PATH-EXISTS 分别保留
+`methods`、`implementations` 与路径直接词项，semantic constraint/projection 全部 PASS。授权均已消费且不可 retry；
+hidden canary 未披露，Production Activation 仍为 `NOT_EXECUTED`。V-002 因而已 PASS；下一步从证据写回后的 clean
+producer 生成绑定该 qualification chain 的 SLICE-001 formal product freeze，不直接进入 canary 或 Activation。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

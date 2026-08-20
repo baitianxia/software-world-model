@@ -430,6 +430,21 @@ Strategy/Prompt/suite/oracle 保持 `1.5.7/@16/@1.5.7`，18 Case / 40 calls / 18
 复用；本地相关 127/127、fake 40-call / 18/18、docs 336/336 PASS，完整执行面 1024/1029 的唯一 4 FAIL + 1 ERROR 仍精确属于
 `FINDING-008-020`。新 clean candidate 必须重新完成 Conformance 与完整 Capability，PASS 前产品 Gate 继续阻断。
 
+上述处置形成 clean exact candidate `837171e611ae6e1dd3a0939e446e0658b1d08d6c` / tree
+`11b4a2a083d1e1c0f239e0a132e61cd125cd12ec`，并完成 run-023。Conformance 绑定 preflight/result
+`sha256:c7c730f556e994c7b3278a35104c47a631e46dd84997122f95c1133783813703` /
+`sha256:16e947ad1aaf698227ae59f06db3ec53caca04eb9f1c46375adf6ae1bd960522`，恰好 2 calls / 12/12 PASS；Capability 绑定
+freeze/result `sha256:7bfd08c6307314a15b7f0d41e666d559154f7906c9818f4296ac5937fb724cae` /
+`sha256:9306f487e79b4594154dd60e8dd55854cc9289b2ce057ed5fea0851baf03ba6d`，无 retry 地完成 40 calls / 18 Case / 18/18 PASS。两阶段 TLS
+均为 1/1，reuse 1/39，HTTP/credential 2/2 与 40/40，unknown/retry 0；Qualification proof/document digest 为
+`sha256:0c78cb15…0c31` / `sha256:15f4d4f1…148ba`，valid until `2026-08-27T11:28:37.309517+00:00`。
+
+CYCLE-PROGRESS 保留 `methods`，REF-PROVENANCE 保留 `implementations`，PATH-EXISTS 保留直接路径词项；它们的
+semantic constraint、typed operation 与 projection 全部 PASS。run-023 因而闭合当前 V-002 Capability Gate，但不自动
+构成产品 Result、Web、canary、Reflection 或 Activation。下一步从证据写回后的 clean producer 生成绑定该 qualification
+chain 的 SLICE-001 formal product freeze，再按已冻结协议重新执行公开登录/下单 Web；hidden canary 仍保持未披露，
+Production Activation 保持 `NOT_EXECUTED`。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；
