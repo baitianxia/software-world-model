@@ -1,7 +1,8 @@
 ---
 id: FINDING-008-031
 kind: implementation-finding
-status: dispositioned
+status: superseded
+superseded_by: FINDING-008-032
 authority: development-evidence
 owners: [ai, architecture, engineering, quality, project]
 depends_on: [ITER-008-SLICE-001, FINDING-008-030, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING]
@@ -90,3 +91,9 @@ digest FAIL。没有新增 failure/error；该事实不冒充 raw full-suite PAS
 Finding 的 System/code/local-test 处置已闭合；V-002 仍为 NOT-RUN/blocking，直到新 clean candidate 的 live
 Conformance/Capability 形成 PASS。通过前不得生成 formal product PASS、继续 Web 第二题、执行 hidden canary 或 Production
 Activation。
+
+## Supersession
+
+后续 exact run-022 证明 Adapter `@5` 的显著性重述仍不能稳定保留 `methods/implementations`，因此本 Finding 的
+Adapter-owned disposition 已由 `FINDING-008-032` 取代。该 Finding 的 run-021 证据、`@5` 历史实现身份和失败 verdict 不变；活动
+处置改为 Application-owned deterministic question-term compilation，且必须以新 identity 重新资格。

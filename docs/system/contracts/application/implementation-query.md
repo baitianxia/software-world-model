@@ -5,6 +5,7 @@ status: current
 authority: normative
 owners: [application]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-ADR-005]
+derived_from: [FINDING-008-032]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -33,15 +34,20 @@ Query search term 使用同一 normalization，不做隐藏 stemming、embedding
 
 ### `implementation_candidates(search_terms, limit)`
 
-- `search_terms` 是 Planner 从原问题提出、平台验证的 1—12 个非空通用检索词；不得包含 Scope 外部 Ref 或隐藏 operation。
-  平台在 raw list 的 12 项上限内以 Unicode casefold 归一去重，保留首次拼写和顺序；规范化后仍必须至少有一项。
+- `search_terms` 是 Planner 从原问题提出、Application 编译的 1—12 个非空通用检索词；不得包含 Scope 外部 Ref 或隐藏 operation。
+  raw model list 先独立执行 12 项上限、非空和 Unicode casefold 去重校验，保留首次拼写和顺序；raw output 与 digest 保持独立审计。
+- 对完全 ASCII 的原问题，Application 用版本化 closed tokenizer 机械提取 question-owned identifier-shaped content token 和 camel
+  part，排除 function/discourse/authority/budget 词以及 closed negated-presentation clause（如 `without naming ...` 或
+  `do not name ...`）。直接问题词优先、模型给出的
+  common inflection/identifier normalization 随后合并，共同按 Unicode casefold 去重并截断到 12 项；不得读取 Source、工程词典、
+  Case、Oracle 或已知 symbol。该编译只形成正式 Query argument，不改写 raw Provider response。
 - term provenance 按原问题中的语义来源判断，而不是把 Prompt 中也出现的词当成禁用词；原问题明确包含的 material retrieval
   concept 仍须保留。Planner 可以做常见词形、翻译或 identifier-like normalization，但不得仅从抽象 outcome 推断问题没有请求的
   具体执行机制，例如不能把未说明实现方式的 success/failure 自动改写为 return/throw。
 - Query 必须接受 Contract 声明的 Unicode identifier token；不能在下游再以 ASCII-only parser 拒绝已通过 Proposal Contract 的
   non-Latin term。若用户问题使用 non-Latin writing system，首轮 Planner 必须为每个 material retrieval concept 同时给出至少一个
   常见 English source-identifier translation；原文 term 可以保留，但不能作为跨 script 检索的唯一表达。该翻译仍须来自问题概念，
-  不得引入工程词典、具体 symbol 或问题未要求的实现机制。
+  不得引入工程词典、具体 symbol 或问题未要求的实现机制；Application 不自行翻译 non-ASCII 问题。
 - `limit` 为 1—20；查询必须扫描 exact index，而不是按工程、commit、问题文本或枚举题型分支。
 - 结果按 `matched unique normalized term count`、`matched field-class count`、`SEMANTICS_COMPLETE` 优先级降序，再按 canonical
   method signature 与 Root ID 升序稳定排序。排名只能组织候选，不能把高分候选变成已证明的唯一答案。

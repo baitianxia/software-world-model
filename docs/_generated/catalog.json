@@ -1592,7 +1592,7 @@
   {
     "id": "FINDING-008-031",
     "kind": "implementation-finding",
-    "status": "dispositioned",
+    "status": "superseded",
     "authority": "development-evidence",
     "owners": [
       "ai",
@@ -1603,6 +1603,21 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-031.md"
+  },
+  {
+    "id": "FINDING-008-032",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "ai",
+      "engineering",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-032.md"
   },
   {
     "id": "ITER-001-DECISIONS",
@@ -3698,7 +3713,7 @@
       "FINDING-008-024",
       "FINDING-008-025",
       "FINDING-008-026",
-      "FINDING-008-031"
+      "FINDING-008-032"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -3746,7 +3761,9 @@
     "owners": [
       "application"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-008-032"
+    ],
     "path": "docs/system/contracts/application/implementation-query.md"
   },
   {
@@ -3832,7 +3849,9 @@
       "application",
       "quality"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-008-032"
+    ],
     "path": "docs/system/contracts/application/world-model-answering.md"
   },
   {

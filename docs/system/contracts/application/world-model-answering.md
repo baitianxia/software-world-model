@@ -5,6 +5,7 @@ status: current
 authority: normative
 owners: [application, quality]
 depends_on: [SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
+derived_from: [FINDING-008-032]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/interface]
 tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_world_model_answer_strategy.py, tests/test_iteration_003_g3a_integration.py, tests/test_iteration_006_capability_qualification.py, tests/test_iteration_007_capability_qualification.py, tests/test_java_source_semantics.py, tests/test_world_model_gateway_authorization.py]
 ---
@@ -41,12 +42,15 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       `CALLS`，所以 standalone raw `direct_neighborhood(OUTGOING_CALLS)` 也收敛为 method；path 组合、incoming/both 不折叠。之后每回合只增加前一轮 sealed typed result、
       冻结 evidence ledger、progress/budget receipt、平台计算的三层 completeness projection、当前受限 `available_operations` 与完整
       trace digest。模型不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
-      对象、顺序/审计、分支、return/throw 等物质概念；对 Latin-script 问题，每个显式 material retrieval concept 至少保留一个直接
-      词形，不能以更宽泛 topic synonym 或已选择的 evidence operation 替代；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；
+      对象、顺序/审计、分支、return/throw 等物质概念；对完全 ASCII 的问题，Application 以 closed、versioned tokenizer 从原问题
+      机械保留 identifier-shaped content term，排除 function/discourse/authority/budget vocabulary 与 closed negated-presentation
+      clause（如 `without naming ...` / `do not name ...`），并将直接问题词置于模型 normalization 之前；共同 casefold 去重并受 12 项上限约束。该编译不读取 Source、
+      工程、Case、Oracle 或 symbol，不改写 raw model output/digest。每个显式 material retrieval concept 至少保留一个直接词形，不能以
+      更宽泛 topic synonym 或已选择的 evidence operation 替代；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；
       non-Latin 问题的每个 material retrieval concept 还必须至少包含一个 common English source-identifier translation，原文 term
-      可以并存但不能是跨 script 检索的唯一表达；`path_exists` 只用于问题显式要求 reachability 或 call-path connectivity，
+      可以并存但不能是跨 script 检索的唯一表达；该翻译保持模型所有，Application 不自行跨 script 猜测；`path_exists` 只用于问题显式要求 reachability 或 call-path connectivity，
       `whether/can/does` 等一般疑问形式本身不构成 reachability，implementation existence 仍收敛到 `method_implementations`。
-      平台在最多 12 个 raw term 的输入上按 Unicode casefold 去重并保留首次拼写/顺序，该无损规范化不得改变权限、
+      平台仍先对最多 12 个 raw model term 独立校验并保留首次拼写/顺序；编译后的正式 term 同样不超过 12 项，且不得改变权限、
       Snapshot、operation 或 query bound；Ref 和其他 authority collection 仍严格拒绝重复；
    2. Application 从冻结 evidence ledger、sealed Result 和剩余预算 deterministic 推导当前合法 transition 子集，并编译一个完整 typed
       proposal；固定模型 envelope 中越出该子集的 operation/FINISH/terminal reason 只作为不可信 raw output 审计，不获得查询、终态或

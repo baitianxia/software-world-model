@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+import re
 from time import monotonic_ns
 from typing import Callable
 
@@ -157,6 +158,92 @@ _EVIDENCE_OPERATION_ORDER = {
 
 _DIRECT_EVIDENCE_RELATIONS = frozenset(
     {"OUTGOING_CALLS", "INCOMING_CALLS", "BOTH_CALLS"}
+)
+
+_LATIN_QUESTION_WORD = re.compile(r"[A-Za-z][A-Za-z0-9]*")
+_LATIN_IDENTIFIER_PART = re.compile(
+    r"[A-Z]+(?=[A-Z][a-z]|[0-9]|\Z)|[A-Z]?[a-z]+|[0-9]+"
+)
+_NON_RETRIEVAL_LATIN_QUESTION_WORDS = frozenset(
+    {
+        "a",
+        "across",
+        "all",
+        "an",
+        "and",
+        "are",
+        "around",
+        "as",
+        "at",
+        "authorized",
+        "be",
+        "been",
+        "being",
+        "bounded",
+        "budget",
+        "by",
+        "can",
+        "complete",
+        "could",
+        "describe",
+        "did",
+        "do",
+        "does",
+        "every",
+        "exceeding",
+        "explain",
+        "find",
+        "for",
+        "from",
+        "frozen",
+        "has",
+        "have",
+        "how",
+        "in",
+        "inspect",
+        "investigate",
+        "is",
+        "it",
+        "its",
+        "list",
+        "may",
+        "might",
+        "must",
+        "of",
+        "on",
+        "or",
+        "please",
+        "relevant",
+        "scope",
+        "should",
+        "show",
+        "tell",
+        "that",
+        "the",
+        "these",
+        "this",
+        "those",
+        "through",
+        "to",
+        "trace",
+        "was",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "who",
+        "why",
+        "will",
+        "with",
+        "would",
+    }
+)
+_NEGATED_PRESENTATION_CLAUSE = re.compile(
+    r"\b(?:without\s+(?:naming|listing|mentioning|showing|revealing)"
+    r"|(?:do\s+not|don't)\s+(?:name|list|mention|show|reveal))\b"
+    r"[^,;.!?]*(?:[,;.!?]|\Z)",
+    re.IGNORECASE,
 )
 
 
@@ -619,10 +706,14 @@ def compile_investigation_intent(
 
     search_terms: tuple[str, ...] = ()
     if operation is InvestigationOperation.IMPLEMENTATION_CANDIDATES:
-        search_terms = _deduplicated_text_sequence(
+        model_search_terms = _deduplicated_text_sequence(
             value.get("search_terms"),
             "investigation search terms",
             maximum=12,
+        )
+        search_terms = _compile_candidate_search_terms(
+            original_question=sealed_input.get("original_question"),
+            model_search_terms=model_search_terms,
         )
     if step_index == 1:
         if previous_result is not None or progress_receipt is not None:
@@ -2280,6 +2371,48 @@ def _deduplicated_text_sequence(
         seen.add(key)
         normalized.append(item)
     return tuple(normalized)
+
+
+def _compile_candidate_search_terms(
+    *,
+    original_question: object,
+    model_search_terms: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Merge direct Latin question vocabulary ahead of model normalizations.
+
+    Cross-script identifier translation remains model-owned. For an ASCII
+    question, the platform can mechanically preserve its own identifier-like
+    content words without guessing a synonym or reading Source. Function,
+    discourse, authority, budget, and negated-presentation words are excluded
+    by one versioned closed vocabulary. Direct words take priority inside the
+    twelve-term bound; the raw model output and its digest remain unchanged.
+    """
+
+    question = _text(original_question, "original question")
+    if not question.isascii():
+        return model_search_terms
+    retrieval_question = _NEGATED_PRESENTATION_CLAUSE.sub(" ", question)
+    question_terms: list[str] = []
+    seen: set[str] = set()
+    for word in _LATIN_QUESTION_WORD.findall(retrieval_question):
+        for part in _LATIN_IDENTIFIER_PART.findall(word):
+            term = part.casefold()
+            if term in _NON_RETRIEVAL_LATIN_QUESTION_WORDS or term in seen:
+                continue
+            seen.add(term)
+            question_terms.append(term)
+    if not question_terms:
+        return model_search_terms
+    merged = question_terms[:12]
+    for term in model_search_terms:
+        key = term.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        if len(merged) == 12:
+            break
+        merged.append(term)
+    return tuple(merged)
 
 
 def _text(value: object, label: str) -> str:

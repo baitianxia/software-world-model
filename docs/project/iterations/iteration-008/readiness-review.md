@@ -202,6 +202,15 @@ V-002/V-003/V-WEB-001 继续阻断。本地相关 115/115、fake 40 calls / 18/1
 题目/Case/工程/具体词例，不改写 response，也不进入 Draft/Review。run-021 永久 FAIL；新 Adapter identity 的 Conformance 与完整
 Capability PASS 前 V-002/V-003/V-WEB-001 继续阻断。
 
+Adapter `@5` 的 exact candidate `c925496…` 随后执行 run-022。Conformance 2/2 PASS；Capability 无 retry 完成 40 calls / 18 Case，
+transport 为 TLS 1/1、reuse 39、HTTP/credential 40/40、unknown 0，但结果为 16/18。PATH-EXISTS 已 PASS；CYCLE-PROGRESS 与
+REF-PROVENANCE 仍分别遗漏 direct `methods/implementations`，证明 schema-scoped Provider 重述不是稳定 Owner。按
+`FINDING-008-032`，Readiness 将问题直接 ASCII 词项的 closed deterministic merge 固定到 Application compiler `@7`，raw output/digest
+保持审计，cross-script translation 保持模型所有；Adapter 移除该领域 adaptation 并重冻结为 `@6`，bounded policy 升级 `@1.4.7`。
+Provider-independent `1.5.7/@16`、suite/oracle `@1.5.7`、18/40/18/18 与 no-retry 不变。run-022 永久 FAIL、授权不可 retry；新 exact
+identity 的 Conformance/Capability PASS 前 V-002/V-003/V-WEB-001 继续阻断。本地相关 127/127、fake 40-call / 18/18、docs
+336/336 PASS；完整执行面 1024/1029 的唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`，没有新增失败。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

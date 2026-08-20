@@ -241,7 +241,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         self.assertEqual(contract.strategy_version, "1.5.7")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
-            "java-source-semantics-investigation-argument-compiler@6",
+            "java-source-semantics-investigation-argument-compiler@7",
         )
         self.assertEqual(
             contract.capabilities,

@@ -115,7 +115,7 @@ def _sealed_input(
             "completeness": session.current_completeness.canonical_value(),
         }
     return {
-        "original_question": "Explain all relevant methods and direct calls.",
+        "original_question": "Explain.",
         "response_language": "en",
         "need_key": "implementation-answer",
         "read_authority": {"snapshot_ids": [snapshot_id.value]},
@@ -377,6 +377,107 @@ class BoundedWorldModelInvestigationTests(TestCase):
                     snapshot_id=self.snapshot_id,
                 ),
             )
+
+    def test_platform_prioritizes_question_owned_latin_terms_without_cross_script_guessing(self) -> None:
+        session = self._session()
+        sealed = _sealed_input(session, snapshot_id=self.snapshot_id)
+        sealed["original_question"] = (
+            "Explain all methods that contribute to authentication."
+        )
+        mapping = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=[
+                    "authentication",
+                    "authenticate",
+                    "auth",
+                    "login",
+                    "credential",
+                    "token",
+                    "session",
+                    "password",
+                    "user",
+                    "identity",
+                    "verify",
+                    "validate",
+                ],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
+            sealed_input=sealed,
+        )
+
+        self.assertEqual(
+            mapping["search_terms"][:3],
+            ["methods", "contribute", "authentication"],
+        )
+        self.assertEqual(len(mapping["search_terms"]), 12)
+
+        provenance = dict(sealed)
+        provenance["original_question"] = (
+            "Inspect the complete implementations of every returned "
+            "authentication candidate."
+        )
+        provenance_mapping = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["authentication", "candidate"],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
+            sealed_input=provenance,
+        )
+        self.assertEqual(
+            provenance_mapping["search_terms"][:4],
+            ["implementations", "returned", "authentication", "candidate"],
+        )
+
+        negated = dict(sealed)
+        negated["original_question"] = (
+            "Explain authentication failure without naming classes or methods."
+        )
+        negated_mapping = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["authentication", "failure"],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
+            sealed_input=negated,
+        )
+        self.assertEqual(
+            negated_mapping["search_terms"],
+            ["authentication", "failure"],
+        )
+
+        prefixed_constraint = dict(sealed)
+        prefixed_constraint["original_question"] = (
+            "Without naming classes, explain authentication failure."
+        )
+        prefixed_mapping = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["authentication", "failure"],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
+            sealed_input=prefixed_constraint,
+        )
+        self.assertEqual(
+            prefixed_mapping["search_terms"],
+            ["authentication", "failure"],
+        )
+
+        cross_script = dict(sealed)
+        cross_script["original_question"] = "身份验证失败后如何返回会话？"
+        cross_script_mapping = compile_investigation_intent(
+            _intent(
+                "implementation_candidates",
+                search_terms=["authentication", "failure", "return", "session"],
+                evidence_requests=[_evidence("method_implementations")],
+            ),
+            sealed_input=cross_script,
+        )
+        self.assertEqual(
+            cross_script_mapping["search_terms"],
+            ["authentication", "failure", "return", "session"],
+        )
 
     def test_platform_normalizes_evidence_dependencies_and_budget(self) -> None:
         self.assertEqual(

@@ -1,6 +1,6 @@
 {
   "schema": "swm.iter-008.bounded-java-source-semantics-model-egress-gateway-policy@1",
-  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.6",
+  "policy_ref": "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-MODEL-EGRESS-GATEWAY@1.4.7",
   "default_action": "DENY",
   "environment": "EVALUATION_ONLY",
   "provider": {
@@ -8,10 +8,10 @@
     "preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
     "selected_provider_type": "DEEPSEEK",
     "provider_type": "DEEPSEEK",
-    "adapter_version": "deepseek-chat-completions-no-tools@5",
+    "adapter_version": "deepseek-chat-completions-no-tools@6",
     "requested_model_ref": "deepseek-v4-pro",
     "actual_model_fingerprint": "deepseek-v4-pro",
-    "configuration_fingerprint": "sha256:31dc8d9bd143ab4c5aee94a5e9cdafdbd19103a645ad40e30893348ab3c2640d",
+    "configuration_fingerprint": "sha256:70c3839f13d68434e6853afa994b8b83d85860a5037ab0371e112cd542716ae7",
     "endpoint": "https://api.deepseek.com/chat/completions",
     "credential_reference": "env:DEEPSEEK_API_KEY",
     "connection_policy": "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@1",
@@ -27,7 +27,7 @@
     "prompt_ref": "java-source-semantics-world-model-prompt@16",
     "proposal_vocabulary_ref": "java-source-semantics-world-model-vocabulary@16",
     "instruction_transformation_ref": "capability-prompt-selection@1",
-    "argument_compiler_ref": "java-source-semantics-investigation-argument-compiler@6",
+    "argument_compiler_ref": "java-source-semantics-investigation-argument-compiler@7",
     "available_operations": [
       "implementation_candidates",
       "method_implementations",

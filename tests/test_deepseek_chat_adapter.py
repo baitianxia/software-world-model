@@ -207,7 +207,7 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(missing["temperature"], DEFAULT_DEEPSEEK_TEMPERATURE)
         self.assertEqual(
             configuration.adapter_version,
-            "deepseek-chat-completions-no-tools@5",
+            "deepseek-chat-completions-no-tools@6",
         )
         self.assertEqual(
             missing["connection_policy"],
@@ -315,7 +315,7 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertNotIn("TASK AND SEMANTIC AUTHORITY", messages[0]["content"])
         self.assertEqual(messages[1]["content"], user.content)
 
-    def test_investigation_schema_adds_lossless_lexical_coverage_adaptation(self) -> None:
+    def test_investigation_schema_does_not_add_provider_semantic_authority(self) -> None:
         adapter, _, recording = self.adapter(
             success_response(content='{"search_terms":["authentication","methods"]}'),
             output_schemas={
@@ -341,10 +341,10 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         messages = json.loads(recording.requests[0].body)["messages"]
         self.assertEqual([message["role"] for message in messages], ["system", "user"])
         authority = messages[0]["content"]
-        self.assertEqual(authority.count("PROVIDER EXECUTION ADAPTATION"), 1)
-        self.assertIn("independent lexical-coverage list", authority)
-        self.assertIn("Do not count operation or evidence_requests", authority)
-        self.assertIn("Never add a concept absent from original_question", authority)
+        self.assertEqual(authority.count("TASK AND SEMANTIC AUTHORITY"), 1)
+        self.assertEqual(authority.count("OUTPUT CONTRACT"), 1)
+        self.assertNotIn("PROVIDER EXECUTION ADAPTATION", authority)
+        self.assertNotIn("lexical-coverage", authority)
 
     def test_reasoning_tool_and_incomplete_outputs_fail_closed(self) -> None:
         cases = (

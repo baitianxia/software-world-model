@@ -256,7 +256,7 @@ class GatewayAuthorizationWorkloadTests(unittest.TestCase):
                 "provider_preference_order": ["VOLCENGINE_ARK", "DEEPSEEK"],
                 "selected_provider_type": "DEEPSEEK",
                 "provider_type": "DEEPSEEK",
-                "adapter_version": "deepseek-chat-completions-no-tools@5",
+                "adapter_version": "deepseek-chat-completions-no-tools@6",
                 "requested_model_ref": "deepseek-v4-pro",
                 "expected_actual_model_fingerprint": "deepseek-v4-pro",
                 "credential_reference": "env:DEEPSEEK_API_KEY",

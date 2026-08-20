@@ -417,6 +417,19 @@ Provider response，也不影响 Draft/Review。Strategy/Prompt/compiler/suite/o
 `@1.4.6`；18 Case / 40 calls / 18/18、persistent TLS 和 no-retry 不变。run-021 永久 FAIL、授权不可复用；Adapter `@5` 的新 clean
 candidate 必须重新完成 Conformance 与完整 Capability，PASS 前产品 Gate 继续阻断。
 
+exact candidate `c925496…` 的 run-022 随后再次证明 transport/Adapter shape 可用：Conformance 2/2 PASS，Capability 完成全部
+40 calls / 18 Case，TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0；但结果仅 16/18。PATH-EXISTS 已保留 `reach`，
+CYCLE-PROGRESS 与 REF-PROVENANCE 却仍分别遗漏问题直接写出的 `methods/implementations`。这推翻了 `FINDING-008-031` 的
+Adapter-owned disposition：领域 Adapter 显著性重述不能稳定承担 query argument 完整性。
+
+按 [FINDING-008-032](../findings/FINDING-008-032.md)，活动设计把 direct ASCII question term 的机械保留放入 Application-owned
+argument compiler `@7`：closed tokenizer 排除 function/discourse/authority/budget 与 negated presentation clause，问题原词
+优先于模型 normalization，并共同 casefold 去重、受 12 项上限约束；raw model output/digest 保持独立审计，non-ASCII translation
+仍由模型负责。DeepSeek Adapter 移除 schema-specific semantic adaptation 并升级为 `@6`，policy 升级为 `@1.4.7`；
+Strategy/Prompt/suite/oracle 保持 `1.5.7/@16/@1.5.7`，18 Case / 40 calls / 18/18 与 no-retry 不变。run-022 永久 FAIL、授权不可
+复用；本地相关 127/127、fake 40-call / 18/18、docs 336/336 PASS，完整执行面 1024/1029 的唯一 4 FAIL + 1 ERROR 仍精确属于
+`FINDING-008-020`。新 clean candidate 必须重新完成 Conformance 与完整 Capability，PASS 前产品 Gate 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

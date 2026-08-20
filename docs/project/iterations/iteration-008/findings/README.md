@@ -12,9 +12,10 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十一条 Finding；三十一条均已处置或被后续决定取代。`FINDING-008-031` 记录 `1.5.7/@16` 的 run-021 已完整
-执行 40 calls，但 DeepSeek 仍把三个 question-written lexical concept 视为可由其他 output field 替代；活动处置将无损显著性重述放入
-schema-scoped Adapter `@5`，而不降低上游 Contract/Oracle。`FINDING-008-030` 记录 `1.5.6/@15` 的 run-020 已证明
+本 Slice 当前登记三十二条 Finding；三十二条均已处置或被后续决定取代。`FINDING-008-032` 记录 Adapter `@5` 的 run-022 已完整
+执行 40 calls / 18 Case，却仍遗漏 `methods/implementations`；活动处置把问题直接 ASCII 词项的机械保留放回 Application compiler
+`@7`，移除 Provider-specific semantic wire adaptation，并升级 Adapter `@6`、policy `@1.4.7`。`FINDING-008-031` 的 run-021 事实
+保留，但其 Adapter-owned 处置已被取代。`FINDING-008-030` 记录 `1.5.6/@15` 的 run-020 已证明
 DeepSeek/Conformance 可用，却暴露 cross-script semantic group 假阴性、显式 Latin concept 被 operation/topic 替代，以及一般疑问词
 `Does` 被误分类为 reachability；本地处置已闭合，新资格仍 blocking。`FINDING-008-029` 记录 run-019 资格未覆盖的正式中文 Web
 边界，`FINDING-008-027` 已把旧 search-term 约束收敛到 question-owned concept，`FINDING-008-028`
@@ -131,7 +132,12 @@ canary、SLICE-002 与 Production Activation gate：
   40 calls / 18 Case 并取得 15/18；三个失败均为 DeepSeek 把 `reach/method/implementation` 交给 operation/evidence request
   表达后从 `search_terms` 省略。活动处置保持 `1.5.7/@16` 与 suite/oracle 不变，将 Provider-specific 无损 lexical-coverage
   重述限定在 active Investigation schema，升级 Adapter `@5`、policy `@1.4.6`；不含题目/Case/具体词例、不修改 response，旧
-  run-021 永久 FAIL，新 clean qualification 前 V-002 继续 blocking。
+  run-021 永久 FAIL。run-022 随后证明该处置仍不稳定，本 Finding 已由 `FINDING-008-032` 取代。
+- [FINDING-008-032](FINDING-008-032.md)：Adapter `@5` 的 exact candidate `c925496…` 完成 run-022 Conformance 2/2 PASS 与
+  Capability 40 calls / 18 Case，transport 零 unknown/retry，但只有 16/18；CYCLE-PROGRESS 与 REF-PROVENANCE 仍分别遗漏问题
+  直接写出的 `methods/implementations`。活动处置将 direct ASCII question term 的 closed、deterministic 合并放入 Application
+  compiler `@7`，raw model output/digest 保持审计，cross-script translation 仍由模型负责；Adapter 移除领域 adaptation 并升级
+  `@6`，policy 升级 `@1.4.7`，上游 `1.5.7/@16` 与 suite/oracle 不变。新 clean qualification 前 V-002 继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

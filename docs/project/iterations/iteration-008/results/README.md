@@ -463,6 +463,28 @@ reuse 39、HTTP/credential 40/40、unknown/retry 0。此前中文 Case、014—0
 升级为 `@1.4.6`。run-021 及其授权永久 FAIL/consumed，没有 Qualification、formal product、canary 或 Activation；新 clean
 Conformance/Capability 仍 blocking。
 
+`deepseek-chat-completions-no-tools@5` 的 exact candidate `c925496f5ae752f93c92f49e4aeae0bc0ac7be8a` / tree
+`e82ad3c809e027f8b94a9f1430216fc6025e3d1b` 随后执行 run-022。preflight/Conformance authorization/result/terminal digest 为
+`sha256:0799476577f8fb40b95a351cedeeec045972c942959f6e3d34336478df9ff67a` /
+`sha256:24fb1890502de9eae4061eeb0b8012afb86ea769eb47eefbf9c0ff3d6c7bcac0` /
+`sha256:f1ca95cad091efef15960e29a0ce7f196540b70ae318c7906a48254a6afc31bb` /
+`sha256:ddced0061202015a2246833755a36cbe790e510d767691aa816b0aa5e242b18e`，2 calls / 12/12 PASS；TLS 1/1、reuse 1、
+HTTP/credential 2/2、unknown/retry 0，valid until `2026-09-19T10:54:56.247888Z`。
+
+Capability freeze/authorization digest 为 `sha256:b1003abf30ae9a7a13c3bbe54b16df76fdd7c34843aa47dbf710a52c7dfd73ef` /
+`sha256:722fc1064e0200f602fd5d6b9685767cfb079319986d86c6d9b1e95bc0f1ca5a`。运行完成 40 calls / 18 Case，16 PASS、2 FAIL；
+result/closed-document/terminal digest 为 `sha256:e47b0ade3ce8571c29f263c41e70fbf8711ad3fcfd3a34ceb6b9bfd1562dfc1c` /
+`sha256:49a22c816f9ae074fb517e1dbeef2cd5bd651bfa7bea753558a27d07fb2d339d` /
+`sha256:1de7e3870666df154f012324bfbfec5404d32c983e510567dcded5e09ef636ad`；TLS 1/1、reuse 39、HTTP/credential 40/40、
+unknown/retry 0。PATH-EXISTS 已 PASS；CYCLE-PROGRESS 的 12 个认证 normalization 仍遗漏 `methods`，REF-PROVENANCE 仍遗漏
+`implementations`。没有 Qualification、formal product、canary 或 Activation；授权已消费且不可 retry。
+
+按 [FINDING-008-032](../findings/FINDING-008-032.md)，`FINDING-008-031` 的 Adapter-owned disposition 已被取代。活动 Application
+compiler 升级为 `@7`，以 closed deterministic merge 优先保留 direct ASCII question terms，raw model output/digest 不变，cross-script
+translation 仍由模型负责；DeepSeek Adapter 移除领域 adaptation 并升级为 `@6`，policy 升级为 `@1.4.7`。上游
+`1.5.7/@16`、suite/oracle `@1.5.7`、18/40/18/18 与 no-retry 不变。本地相关 127/127、fake 40-call / 18/18、docs 336/336
+PASS；完整执行面 1024/1029 的唯一 4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。新 clean Conformance/Capability 仍 blocking。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

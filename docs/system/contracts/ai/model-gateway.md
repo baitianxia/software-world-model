@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-031]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
 tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
@@ -59,13 +59,6 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 ## Security and compatibility
 
 Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatch 前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider-specific JSON mode 若要求 Adapter 注入 closed schema，schema authority 与 Gateway 的 leading semantic authority 必须按该 Adapter 已资格的 message rendering contract 组合，不能形成未经资格的相互竞争 system turns。当前 DeepSeek contract 将两者合并为恰好一个 leading system message，保持其余消息顺序，并由 live Conformance 同时验证单一 system、任务语义和 closed schema；该结论不自动适用于 Ark 或其他 OpenAI-format Provider。Provider preference 是资格 route 的确定性选择输入，不是 request-level failover 或绕过资格的可用性探测。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 request retry 都属于 Provider Configuration 与 Capability Qualification 身份；live Result 必须证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution 和 post-dispatch unknown 计数，而不只声明配置。
-
-Provider-specific rendering 还可以在已选择的 active stage 内追加版本化、语义等价的显著性重述，以适配该 Provider 对长指令或
-closed-schema 字段的解释差异；它不得引入题目、工程、symbol、operation、其他 Capability 指令或上游没有的语义，也不得在响应后
-静默改写模型输出。该分支必须由 exact schema identity 选择，并同时进入 Adapter version、configuration fingerprint、implementation
-digest 和 policy；通用 wire compatibility 由 Conformance 证明，schema-specific semantic behavior 还必须由同一活动 Contract 的
-Capability Qualification 证明。当前 DeepSeek bounded Investigation rendering 只重申 `search_terms` 是独立 lexical-coverage
-字段、不能由其他 output field 替代；Draft、Review 与其他 schema 不继承该重述。
 
 ## Verification ownership
 
