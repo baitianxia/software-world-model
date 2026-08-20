@@ -407,6 +407,23 @@ ITER-008/ITER-007 fileset 随后重算为 `sha256:80b5393b…b311` / `sha256:3f2
 `sha256:f9b8e964…73e0` / `sha256:76a79e6d…5e27`；该结果仍不冒充 raw full-suite PASS，下一步是 clean commit 后生成正式 product
 freeze。
 
+formal product `run-001-freeze` 随后以 `SWM-ITER-008-SLICE-001-CANDIDATE-FREEZE@2` PASS；report document/raw digest 为
+`sha256:dd8839fa2df177b048dbec2828249437810226d3b0d26baa8ccf65ef761fb7fd` /
+`sha256:2597dd156ddeaf1e60860fb3ae7d12e79cb5697e1a832985426dc78abcf0fdd3`，deterministic qualification digest 为
+`sha256:71c1ecb83aa481b218ab3fd865565132b0f3e220584a2b5d2ab9105204678c83`。raw full regression 仍为 false，exact historical-hold
+gate、87 focused、36 package、1026 full、docs、unauthorized-prelisten 均 PASS；freeze 阶段模型 dispatch、hidden canary 与
+Production Activation 均为 `NOT_EXECUTED`。post-freeze evaluation grant digest 为
+`sha256:483257f4e97228601bdc98180695525b1bdd196d691eb2c26a39cd2147f6df24`，只授权 DeepSeek EVALUATION_ONLY route。
+
+该 freeze 的第一次正式 Web 请求 `登录流程是怎样的？` 没有形成产品答案。唯一模型 call 成功完成 TLS/HTTP/JSON，并返回
+`implementation_candidates`、search terms `登录/流程` 与 `method_implementations` evidence；Answer 随后失败，Web 返回 502，terminal
+document digest 为 `sha256:1cca15fad283152f9594565bf432bea110bfd2d4472529e078ee0cef32c14f0f`。运行只消费 1 Provider call，
+selective retry 0、Source/Update/Direct/Citation/Activation 0。exact sealed replay 将首次偏差定位为 ASCII-only Query tokenizer，
+不是 DeepSeek availability 或 shape failure；详见 [FINDING-008-029](../findings/FINDING-008-029.md)。因此该正式 Web Result 为 FAIL，
+run-019 qualification、run-001 freeze/grant 和失败 session 均被新 `1.5.6` identity 永久失效，不能继续下单题或 hidden canary。
+本地处置随后以相关 128/128、fake 40 calls / 18/18、docs 333/333 和完整执行面 1022/1027 闭合；完整回归唯一五项仍精确属于
+`FINDING-008-020`。这些是新 identity 的 deterministic candidate evidence，不是 live Qualification 或产品重试结果。
+
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
 前一段的证据或失败。

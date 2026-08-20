@@ -40,6 +40,7 @@ from software_world_model.application_services.structure_view import (
     StructureEntityArgument,
     StructureViewOperation,
     StructureViewService,
+    _feature_tokens,
 )
 from software_world_model.ai_infrastructure.model_egress_gateway import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE,
@@ -746,6 +747,25 @@ class JavaImplementationViewTests(TestCase):
                 search_terms=("credentials", "failure", "session"),
                 limit=10,
             ),
+        )
+
+    def test_feature_search_tokenization_accepts_unicode_identifiers(self) -> None:
+        self.assertEqual(
+            _feature_tokens("登录Flow2FA"),
+            ("2", "fa", "flow", "登录"),
+        )
+
+        result = self.service.implementation_candidates(
+            snapshot_id=self.snapshot_id,
+            search_terms=("登录", "流程"),
+            limit=10,
+        )
+
+        self.assertEqual(result.payload["query_status"], "KNOWLEDGE_GAP")
+        self.assertEqual(result.payload["normalized_terms"], ("流程", "登录"))
+        self.assertEqual(
+            result.limitations,
+            ("IMPLEMENTATION_CANDIDATES_ZERO",),
         )
 
     def test_unique_candidate_proof_reads_ordered_method_implementation(self) -> None:

@@ -135,11 +135,6 @@ _PUBLIC_ENTITY_STATE_FIELDS: dict[EntityType, tuple[str, ...]] = {
     EntityType.JAVA_STATE_SLOT: ("declared_type",),
 }
 
-_FEATURE_TOKEN_PART = re.compile(
-    r"[A-Z]+(?=[A-Z][a-z]|\d|$)|[A-Z]?[a-z]+|[A-Z]+|\d+"
-)
-
-
 @dataclass(frozen=True, slots=True)
 class StructureEntityCandidate:
     entity_root_id: StableId
@@ -2490,13 +2485,68 @@ def _feature_query_terms(
 def _feature_tokens(value: str) -> tuple[str, ...]:
     normalized = unicodedata.normalize("NFC", value)
     tokens: set[str] = set()
-    for segment in re.split(r"[^0-9A-Za-z]+", normalized):
-        if not segment:
+    current: list[str] = []
+
+    def flush() -> None:
+        if current:
+            token = "".join(current).casefold()
+            if token:
+                tokens.add(token)
+            current.clear()
+
+    def kind(character: str) -> str:
+        category = unicodedata.category(character)
+        if category.startswith("M"):
+            return "MARK"
+        if character.isdecimal():
+            return "DIGIT"
+        if category.startswith("L"):
+            if character.isupper():
+                return "UPPER"
+            if character.islower():
+                return "LOWER"
+            return "UNCASED"
+        return "SEPARATOR"
+
+    characters = tuple(normalized)
+    previous_kind = "SEPARATOR"
+    for index, character in enumerate(characters):
+        character_kind = kind(character)
+        if character_kind == "SEPARATOR":
+            flush()
+            previous_kind = character_kind
             continue
-        parts = _FEATURE_TOKEN_PART.findall(segment)
-        if not parts:
-            parts = [segment]
-        tokens.update(part.casefold() for part in parts if part)
+        if character_kind == "MARK":
+            if current:
+                current.append(character)
+            continue
+        next_kind = (
+            kind(characters[index + 1])
+            if index + 1 < len(characters)
+            else "SEPARATOR"
+        )
+        boundary = bool(current) and (
+            (character_kind == "DIGIT") != (previous_kind == "DIGIT")
+            or previous_kind == "LOWER" and character_kind == "UPPER"
+            or (
+                previous_kind == "UPPER"
+                and character_kind == "UPPER"
+                and next_kind == "LOWER"
+            )
+            or (
+                previous_kind == "UNCASED"
+                and character_kind in {"UPPER", "LOWER"}
+            )
+            or (
+                previous_kind in {"UPPER", "LOWER"}
+                and character_kind == "UNCASED"
+            )
+        )
+        if boundary:
+            flush()
+        current.append(character)
+        previous_kind = character_kind
+    flush()
     return tuple(sorted(token for token in tokens if token))
 
 

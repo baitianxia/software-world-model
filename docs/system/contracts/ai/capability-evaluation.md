@@ -46,6 +46,10 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
    对通用 search term 的评估可以要求覆盖原问题 material concept 及其已声明 normalization，但不能因为抽象 success/failure flow
    额外要求原问题未请求的 return/throw；这种 evaluator 假阴性必须版本化修正并保留旧结果，不能据此降低 operation Oracle、Case、
    threshold、Ref provenance、budget 或完整性规则。
+10. 当产品正式接受与 source identifier 不同 writing system 的问题时，Result-driven Definition 必须至少包含一个真实 cross-script
+    首轮 Case：model-visible input 保留该产品语言，Oracle 要求每个 material concept 的 common source-identifier translation，且仍禁止
+    project dictionary、symbol hint 或 evaluator-only synonym。只用英文资格问题不能证明中文产品检索可用；平台 Unicode parser PASS
+    也不能替代 semantic translation Case。
 
 ## Failure and evidence boundary
 

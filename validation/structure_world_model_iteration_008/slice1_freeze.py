@@ -241,10 +241,10 @@ def _install_gateway_input(
             "GATEWAY-CANDIDATE@1"
         ),
         "environment": "EVALUATION_ONLY",
-        "strategy_ref": "model-snapshot-first-world-model-answer@1.5.5",
-        "prompt_ref": "java-source-semantics-world-model-prompt@14",
+        "strategy_ref": "model-snapshot-first-world-model-answer@1.5.6",
+        "prompt_ref": "java-source-semantics-world-model-prompt@15",
         "proposal_vocabulary_ref": (
-            "java-source-semantics-world-model-vocabulary@14"
+            "java-source-semantics-world-model-vocabulary@15"
         ),
         "capability_qualification_document_digest": (
             binding.qualification_document_digest.value

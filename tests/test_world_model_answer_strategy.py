@@ -238,7 +238,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.5")
+        self.assertEqual(contract.strategy_version, "1.5.6")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@6",
@@ -393,6 +393,14 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             review_prompt,
         )
         self.assertIn("IMPLEMENTATION_INVESTIGATION:", investigation_prompt)
+        self.assertIn(
+            "When the question uses a non-Latin writing system",
+            investigation_prompt,
+        )
+        self.assertIn(
+            "common English source-identifier translation",
+            investigation_prompt,
+        )
         self.assertNotIn("IMPLEMENTATION_ANSWER_DRAFTING:", investigation_prompt)
         self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", investigation_prompt)
         self.assertNotIn("UNAVAILABLE_LEGACY", investigation_prompt)

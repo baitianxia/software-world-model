@@ -38,6 +38,10 @@ Query search term 使用同一 normalization，不做隐藏 stemming、embedding
 - term provenance 按原问题中的语义来源判断，而不是把 Prompt 中也出现的词当成禁用词；原问题明确包含的 material retrieval
   concept 仍须保留。Planner 可以做常见词形、翻译或 identifier-like normalization，但不得仅从抽象 outcome 推断问题没有请求的
   具体执行机制，例如不能把未说明实现方式的 success/failure 自动改写为 return/throw。
+- Query 必须接受 Contract 声明的 Unicode identifier token；不能在下游再以 ASCII-only parser 拒绝已通过 Proposal Contract 的
+  non-Latin term。若用户问题使用 non-Latin writing system，首轮 Planner 必须为每个 material retrieval concept 同时给出至少一个
+  常见 English source-identifier translation；原文 term 可以保留，但不能作为跨 script 检索的唯一表达。该翻译仍须来自问题概念，
+  不得引入工程词典、具体 symbol 或问题未要求的实现机制。
 - `limit` 为 1—20；查询必须扫描 exact index，而不是按工程、commit、问题文本或枚举题型分支。
 - 结果按 `matched unique normalized term count`、`matched field-class count`、`SEMANTICS_COMPLETE` 优先级降序，再按 canonical
   method signature 与 Root ID 升序稳定排序。排名只能组织候选，不能把高分候选变成已证明的唯一答案。

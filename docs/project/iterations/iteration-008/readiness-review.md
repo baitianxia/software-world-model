@@ -174,6 +174,17 @@ System Owner 写回后的 ITER-008 fileset digest 为 `sha256:80b5393bd767cbc7be
 定向 gate/runtime/authorize 22/22 PASS；允许 AF_UNIX 的最终完整执行面为 1021/1026，raw exit 1，唯一 4 FAIL + 1 ERROR 精确匹配
 preserved hold，结构化 gate PASS。该证据只关闭 deterministic product-freeze readiness，不替代正式 freeze 或 Web Result。
 
+该 formal freeze 随后实际 PASS，但正式 Web 的 `登录流程是怎样的？` 在一次 DeepSeek call 后以 Answer `DomainError` 失败关闭。
+exact sealed input/output 本地重放证明 Proposal/compiler 均有效，首次偏差是 `StructureView` 仍使用 ASCII-only tokenization 拒绝
+`登录/流程`；run-019 的英文-only Capability suite 也未证明 cross-script source-identifier translation。按
+`FINDING-008-029`，Readiness 再冻结为 Unicode Query normalization + non-Latin material concept 的 common English identifier
+translation，并以一个既有首轮 Case 的中文等价 input 做真实模型资格。活动 identity 为 `1.5.6/@15/@1.4.4`、suite/oracle
+`@1.5.6`；18 Case / 40 calls / 18/18、Adapter `@4`、compiler `@6`、persistent TLS 和 no-retry 不变。当前
+ITER-008/ITER-007 System fileset digest 为 `sha256:58288f15…19a0` / `sha256:6a68490e…e760`；新资格与产品 freeze/Web PASS 前，
+run-019 只保留为旧 identity 的历史证据，V-002/V-003/V-WEB-001 继续阻断。
+本地相关 128/128、fake transport 40 calls / 18/18、docs 333/333 与完整执行面 1022/1027 已闭合；完整回归唯一五项仍是
+`FINDING-008-020` 的 exact historical hold。该证据允许形成 clean qualification candidate，但不构成 live PASS。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

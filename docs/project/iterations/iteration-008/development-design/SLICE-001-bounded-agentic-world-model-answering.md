@@ -378,6 +378,21 @@ raw PASS 仍是普通 `PASS`；raw FAIL 只有五个历史测试各执行一次�
 该门禁定向 parser/runtime/authorize 22/22 PASS；最终完整执行面 1021/1026，raw exit 1，唯一 4 FAIL + 1 ERROR 精确匹配
 `FINDING-008-020`，结构化 gate PASS。正式 product freeze 仍必须从包含该实现与文档闭包的 clean exact candidate 重新运行全部 gate。
 
+上述 formal freeze 随后 PASS，但第一次正式 Web 登录问题在唯一一次 DeepSeek request 后失败关闭。模型返回合法
+`implementation_candidates`、`登录/流程` search terms 和 method evidence；零网络 exact-input replay 将首次偏差定位到
+`StructureView` 的 ASCII-only token parser。它违反当前 Implementation Query 已规定的 Unicode normalization；同时 run-019 的
+18 Case 全为英文，未证明中文产品输入到 English Java identifier 的 cross-script translation。详见
+[FINDING-008-029](../findings/FINDING-008-029.md)。
+
+活动设计据此对齐现有 Owner，而不增加工程或问题特判：Query index/search 共用 Unicode-aware camel/snake/digit tokenizer；
+non-Latin 问题的每个 material concept 由 Investigation role 同时给出 common English source-identifier translation，原文可并存但
+不能是唯一检索表达。资格保持 18 Case / 40 calls / 18/18，把一个既有首轮英文 Case 换为语义等价中文 input，并继续要求原有
+question-owned English concept groups。活动 identity 升级为 `1.5.6/@15/@1.4.4` 与 suite/oracle `@1.5.6`；Adapter `@4`、compiler
+`@6`、Provider、temperature、persistent TLS、no-retry 和全部 operation Oracle 不变。run-019、旧 formal freeze 和失败 Web 证据均
+不可复用；新 Conformance/Capability、deterministic freeze 与公开登录/下单 Web 必须从 clean candidate 重新执行。
+当前本地闭包为相关 128/128、fake transport 40 calls / 18/18、docs 333/333、compileall/diff PASS；完整执行面 1022/1027，唯一
+4 FAIL + 1 ERROR 仍精确属于 `FINDING-008-020`。这些结果处置 `FINDING-008-029`，但不替代新的 live Qualification。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

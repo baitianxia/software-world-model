@@ -426,6 +426,10 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
 
     def test_search_term_constraints_follow_question_owned_concepts(self) -> None:
         cases = {case["case_id"]: case for case in _SUITE["cases"]}
+        cross_script = cases["WM-JSS-I8-FIRST-CANDIDATES-001"]
+        cross_script_groups = cross_script["steps"][0]["semantic_constraints"][
+            "search_term_concept_groups"
+        ]
         flow_groups = cases["WM-JSS-I8-RESULT-DRIVEN-BATCH-004"]["steps"][0][
             "semantic_constraints"
         ]["search_term_concept_groups"]
@@ -433,6 +437,11 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             "semantic_constraints"
         ]["search_term_concept_groups"]
 
+        self.assertEqual(cross_script["response_language"], "zh-CN")
+        self.assertFalse(cross_script["original_question"].isascii())
+        self.assertTrue(
+            all(term.isascii() for group in cross_script_groups for term in group)
+        )
         self.assertEqual(
             flow_groups,
             [["authentication", "auth"], ["failure", "invalid"], ["success"]],
@@ -458,7 +467,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.5")
+        self.assertEqual(definition.strategy_version, "1.5.6")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),

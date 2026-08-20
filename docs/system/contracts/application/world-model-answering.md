@@ -42,6 +42,8 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       冻结 evidence ledger、progress/budget receipt、平台计算的三层 completeness projection、当前受限 `available_operations` 与完整
       trace digest。模型不输出 step/trace/Snapshot、Result binding、Entity Ref、direction/predicate 或 graph bounds。search terms 必须覆盖问题中的动作、
       对象、顺序/审计、分支、return/throw 等物质概念；通用 canonical term 可以归一语言/词形，但不得加入工程、题目或符号专用词典；
+      non-Latin 问题的每个 material retrieval concept 还必须至少包含一个 common English source-identifier translation，原文 term
+      可以并存但不能是跨 script 检索的唯一表达；
       平台在最多 12 个 raw term 的输入上按 Unicode casefold 去重并保留首次拼写/顺序，该无损规范化不得改变权限、
       Snapshot、operation 或 query bound；Ref 和其他 authority collection 仍严格拒绝重复；
    2. Application 从冻结 evidence ledger、sealed Result 和剩余预算 deterministic 推导当前合法 transition 子集，并编译一个完整 typed
