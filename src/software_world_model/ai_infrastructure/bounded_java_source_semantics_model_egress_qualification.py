@@ -33,6 +33,7 @@ from .deepseek_chat_adapter import (
 )
 from .versioned_world_model_answer_strategy import (
     JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
+    JAVA_SOURCE_SEMANTICS_TERMINAL_AUTHORITY_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     java_source_semantics_world_model_output_contract_digest,
     world_model_answer_prompt_program_digest,
@@ -81,10 +82,10 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS = (
     ("WM-JSS-I8-REVIEW-018", 1),
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_SUITE_DIGEST = Digest(
-    "sha256:68900e343fb04076ad9ceab99aea29eaa11cbdb254b28c28298169d791d8e6de"
+    "sha256:87b256f9f40f508b38bd731192df9730f303a71e3e8202a66d75ed443258afeb"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_CAPABILITY_ORACLE_DIGEST = Digest(
-    "sha256:3c20ce70181fd6c9e974d34b7ff597afbf5cc0f149a1efe0541f6ff10ae669e7"
+    "sha256:bcafb47b965419dbd76432d554b2433e4d9f0c7e4c52f06f41f817287aa3ed21"
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     Path(__file__).resolve().with_name(
@@ -92,7 +93,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_PATH = (
     )
 )
 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_POLICY_FILE_DIGEST = (
-    "sha256:93fe9ff283edfd157b3b686f60d8cd604e3ce44fea19e9bb169537e7fd29ee16"
+    "sha256:c1875accefed1e8706c2a82d297764fb5e56c6415939861cf0904c89ed2d912b"
 )
 _BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY = {
     "schema": "swm.iter-008.bounded-qualification-resource-policy@1",
@@ -504,6 +505,8 @@ def _verify_policy(policy: Mapping[str, object]) -> None:
         != contract.instruction_transformation_ref
         or contract_value.get("argument_compiler_ref")
         != JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF
+        or contract_value.get("terminal_authority_compiler_ref")
+        != JAVA_SOURCE_SEMANTICS_TERMINAL_AUTHORITY_COMPILER_REF
         or contract_value.get("available_operations")
         != list(contract.available_operations)
         or not isinstance(call_protocol, Mapping)

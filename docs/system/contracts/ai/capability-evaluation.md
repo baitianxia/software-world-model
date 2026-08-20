@@ -31,11 +31,13 @@ tests: [tests/test_capability_evaluation.py, tests/test_strategy_activation.py, 
 7. Result-driven Strategy 的 Definition 必须覆盖首轮 evidence-obligation freeze、每个调查阶段、0/N candidate、obligation 已关闭或
    无合法缩小缺口 transition 时的 FINISH、多 Result 转换、
    最大步数、budget/cycle/progress、Ref provenance、Draft、独立 Review 与三层负向证明。模型只输出 semantic intent 时，Definition
-   还必须经同一个 production argument compiler 验证 exact typed proposal；synthetic previous Result、progress completeness 与 operation
+   还必须经同一个 production argument compiler 验证 exact typed proposal；Draft/Review 的 exact result/support/check collection 由
+   Application 拥有时，Definition 还必须执行同一个 production terminal-authority compiler，证明 model-visible input 不含顶层 exact
+   collection、raw collection 为空、normalized Result 注入原 sealed authority，且模型自填 authority 会失败关闭。synthetic previous Result、progress completeness 与 operation
    transition 必须是正式产品可达状态。一个 Case 包含首轮时，后续 ledger/allowlist 必须与该轮实际 normalized obligation exact 一致；
    独立抽样 later state 时，必须绑定另一个预冻结且产品可达的 ledger fixture，而不是把该 Case 的 Oracle 期望注入 model-visible input。
    资格不能为满足 Oracle 伪造 scope Ref 或按回合序号改变同一 Result 的语义。固定三调用或单方法
-   Qualification 不能授权 bounded investigation；operation set、Prompt/schema、argument compiler、预算、role sequence、Gateway
+   Qualification 不能授权 bounded investigation；operation set、Prompt/schema、argument compiler、terminal-authority compiler、预算、role sequence、Gateway
    connection policy 或 trace contract 任一变化均需新 closed Result。Qualification 必须保存每个 step 的 exact input/result/trace digest
    与真实调用计数，汇总 PASS 不能替代逐 Case 证据。
 8. Oracle 可以在运行前为一个 sealed state 冻结有限、唯一且同等合法的 exact typed projection 集合；实际输出必须

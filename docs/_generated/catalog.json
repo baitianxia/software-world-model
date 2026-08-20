@@ -1648,6 +1648,21 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-034.md"
   },
   {
+    "id": "FINDING-008-035",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "ai",
+      "interface",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-035.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3878,7 +3893,8 @@
       "quality"
     ],
     "derived_from": [
-      "FINDING-008-032"
+      "FINDING-008-032",
+      "FINDING-008-035"
     ],
     "path": "docs/system/contracts/application/world-model-answering.md"
   },

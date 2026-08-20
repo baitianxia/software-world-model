@@ -27,6 +27,14 @@ Source/Update/Direct/Evidence payload access 为 0，browser console clean；后
 [FINDING-008-034](../findings/FINDING-008-034.md) 以 `54bc8c8…` 修复；旧 run-005 freeze/grant/session 不可复用，新的 formal
 refreeze/Web 继续 blocking。
 
+再次修复后的 formal `run-006-freeze` 与 authorized startup PASS。登录题完成 4 个 DeepSeek HTTP 200；TLS 1、reuse 3、credential
+4/4、retry 0，前三个 Investigation Result 均完成。第四个 Draft 已生成语义正确的中文答案，但旧契约随后要求复制 4 个 step Result
+ID 与 35 个 support digest，输出在 1000 tokens 时截断并以 `STRUCTURED_OUTPUT_INVALID` 失败关闭；terminal digest 为
+`sha256:bff896e44ab3ef05180946ce5b9230ba1133858259b65022b68305d2e98db01c`，browser console clean，后续题未执行。该 Owner
+缺陷按 [FINDING-008-035](../findings/FINDING-008-035.md) 处置：Draft/Review exact authority collection 由 Application terminal
+compiler 绑定，模型只返回语义字段和空 authority envelope。活动 identity 已升级为 `1.5.8/@17/@1.4.8`、suite/oracle `@1.5.8`；
+旧 run-023 Qualification 与 run-006 freeze/grant/session 不可复用，新 Conformance/Capability 继续 blocking。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

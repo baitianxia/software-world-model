@@ -46,6 +46,17 @@ CASE_EVIDENCE_SCHEMA = (
     "swm.iter-008.bounded-java-source-semantics-ce-case-evidence@1"
 )
 EVALUATOR_SCRIPT = Path(evaluator.__file__).resolve(strict=True)
+_APPLICATION_OWNED_TERMINAL_INPUT_FIELDS = {
+    "IMPLEMENTATION_ANSWER_DRAFTING": (
+        "authorized_step_result_ids",
+        "authorized_support_digests",
+    ),
+    "IMPLEMENTATION_ANSWER_REVIEW": (
+        "required_checked_need_ids",
+        "required_checked_step_result_ids",
+        "required_checked_support_digests",
+    ),
+}
 
 
 class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
@@ -469,10 +480,15 @@ class LiveBoundedJavaSourceSemanticsCapabilityCaseRunner:
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "bounded sealed model input is invalid",
                 ) from exc
+            expected_input = dict(sealed_input)
+            for field in _APPLICATION_OWNED_TERMINAL_INPUT_FIELDS.get(
+                capability, ()
+            ):
+                expected_input.pop(field)
             expected: dict[str, object] = {
                 "case_id": call_id,
                 "capability": capability,
-                "input": sealed_input,
+                "input": expected_input,
             }
             if capability == "IMPLEMENTATION_INVESTIGATION":
                 expected["available_operations"] = list(available_operations)

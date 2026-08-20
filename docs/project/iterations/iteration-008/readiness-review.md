@@ -225,6 +225,14 @@ reuse 1/39，HTTP/credential 2/2 与 40/40，unknown/retry 均为 0；Qualificat
 V-XD-001/V-SEC-001/V-SOURCEOFF-001/V-WEB-001。公开 Web PASS 前不得披露 early canary 或进入 Reflection，
 Production Activation 仍不得执行。
 
+formal run-004/run-005 的 pre-dispatch 实现漂移修复后，run-006 登录题已完成 4 个 DeepSeek HTTP 200、TLS 1/reuse 3、credential
+4/4、retry 0；前三个 Investigation PASS，第四个 Draft 已生成正确语义，却在按旧契约复制 4 个 Result ID 与 35 个 support digest
+时耗尽 1000-token output 并结构化失败。`FINDING-008-035` 将 terminal exact collection Owner 收回 Application，活动 Contract
+升级为 `1.5.8/@17/@1.4.8`、suite/oracle `@1.5.8`，Adapter `@6`、Investigation compiler `@7`、18/40、no-retry 与 output budget
+不变。该变化使 run-023 资格不再适用于 current identity；Readiness 的 V-002 再次转为 blocking，必须先完成新 clean candidate 的
+Conformance 与完整 Capability，才能重新生成 formal product freeze。run-006 不得 retry；hidden canary 和 Production Activation
+仍未执行。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

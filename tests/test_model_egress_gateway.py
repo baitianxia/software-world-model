@@ -216,7 +216,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF
             ),
             policy_digest=Digest(
-                "sha256:93fe9ff283edfd157b3b686f60d8cd604e3ce44fea19e9bb169537e7fd29ee16"
+                "sha256:c1875accefed1e8706c2a82d297764fb5e56c6415939861cf0904c89ed2d912b"
             ),
             provider_type="DEEPSEEK",
             adapter_version="deepseek-chat-completions-no-tools@6",
@@ -447,7 +447,18 @@ class ModelEgressGatewayTests(unittest.TestCase):
             if available_operations_override is not None:
                 available_operations = available_operations_override
         else:
-            sealed_input = {"role": capability}
+            suite, _ = load_capability_inputs()
+            case_suffix = (
+                "DRAFT-017"
+                if capability == "IMPLEMENTATION_ANSWER_DRAFTING"
+                else "REVIEW-018"
+            )
+            case = next(
+                item
+                for item in suite["cases"]
+                if item["case_id"].endswith(case_suffix)
+            )
+            sealed_input = sealed_step_input(suite, case, case["steps"][0])
             available_operations = ()
         with self.assertRaisesRegex(RuntimeError, "captured"):
             strategy.propose(

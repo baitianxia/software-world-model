@@ -104,7 +104,19 @@ def _passing_model_output(
     expected: dict[str, object],
 ) -> dict[str, object]:
     if case["capability"] != "IMPLEMENTATION_INVESTIGATION":
-        return _passing_normalized(case, step, expected)
+        result = _passing_normalized(case, step, expected)
+        authority_fields = (
+            ("step_result_ids", "support_digests")
+            if case["capability"] == "IMPLEMENTATION_ANSWER_DRAFTING"
+            else (
+                "checked_need_ids",
+                "checked_step_result_ids",
+                "checked_support_digests",
+            )
+        )
+        for field in authority_fields:
+            result[field] = []
+        return result
     projection = expected_step_projection(_SUITE, case, step, expected)
     constraints = step["semantic_constraints"]
     assert isinstance(constraints, dict)
@@ -470,7 +482,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.7")
+        self.assertEqual(definition.strategy_version, "1.5.8")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),

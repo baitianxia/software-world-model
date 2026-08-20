@@ -459,6 +459,20 @@ run-005 refreeze/startup 与正确的 4—6 call 页面随后 PASS，但首个�
 gateway/freeze 14/14、扩展 focused 110/110 PASS。System integrity contract 未改变。run-005 freeze/grant/session 永久保留但不可
 复用，必须再次全新 formal refreeze。
 
+run-006 refreeze/startup 后，登录题完成四次 DeepSeek HTTP 200；TLS 1 次、reuse 3 次、credential 4/4、retry 0。前三个
+Investigation Result 均完成，第四个 Draft 也生成了语义正确的中文答案，但旧 Prompt 要求继续复制 4 个 step Result ID 和 35 个
+support digest，最终在 `output_tokens=1000` 时截断并以 `STRUCTURED_OUTPUT_INVALID` 失败关闭。当前 support budget 最多 512 项，
+因此提高少量 token 不能系统性修复这个 Owner 错位。详见
+[FINDING-008-035](../findings/FINDING-008-035.md)。
+
+活动设计将 Draft/Review exact authority collection 收回 Application：调用前从 model-visible 顶层 input 移除，模型 closed raw
+envelope 必须返回空数组；schema validation 后由 `java-source-semantics-terminal-authority-compiler@1` 从原 sealed authority
+deterministic 注入，模型自行填充则失败关闭。raw model output/digest 不改写，binding digest 进入 normalized Proposal identity。
+Contract/Strategy、Prompt/Vocabulary、policy 与 suite/oracle 分别升级为 `1.5.8/@17/@1.4.8/@1.5.8`；Adapter `@6`、Investigation
+compiler `@7`、1000-token output budget、18 Case / 40 calls、no-retry、三层完整性与 isolation 均不变。run-023 Qualification 和
+run-006 freeze/grant/session 不可复用；新 clean candidate 必须先完成 2-call Conformance，再执行完整 Capability，PASS 前 formal
+product Web 继续阻断。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

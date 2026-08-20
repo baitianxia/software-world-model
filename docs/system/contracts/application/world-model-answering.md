@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, quality]
 depends_on: [SYS-ADR-014, SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-STRUCTURE-VIEW, SYS-CONTRACT-APPLICATION-BEHAVIOR-VIEW, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
-derived_from: [FINDING-008-032]
+derived_from: [FINDING-008-032, FINDING-008-035]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/interface]
 tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests/test_world_model_answering.py, tests/test_world_model_evaluation.py, tests/test_world_model_answer_strategy.py, tests/test_iteration_003_g3a_integration.py, tests/test_iteration_006_capability_qualification.py, tests/test_iteration_007_capability_qualification.py, tests/test_java_source_semantics.py, tests/test_world_model_gateway_authorization.py]
 ---
@@ -63,12 +63,19 @@ Authorization 与 Delivery。模型只能提出 Requirement、Query Plan、Draft
       `LIMITATION / INVESTIGATION_BUDGET_EXHAUSTED`，不再要求第五个 `FINISH` 回合。cycle 以已执行 operation 与 exact Result progress
       token 判定，不能仅因两个不同 sealed state 选择同名 operation 而推导；
    3. Draft Call 只读取原问题、不可变 Requirement、完整 sealed trace、Need Assessment 和允许的 Support/Gap，生成逐 Claim 绑定的
-      Draft；它不读取 Source、调查角色私有输出、Citation observation 或 Reviewer；
+      Draft；它不读取 Source、调查角色私有输出、Citation observation 或 Reviewer。`step_result_ids` 与 `support_digests` 是
+      Application-owned terminal authority，不是模型生成任务：exact 顶层 authority collection 不进入 model-visible input，模型 raw
+      envelope 必须返回空 collection；schema validation 后，versioned terminal-authority compiler 从原 sealed assessment
+      deterministic 注入 exact collection。模型自行填充、复制或重建任一 authority 值必须失败关闭；
    4. Review Call 在全新上下文中读取原问题、同一 Requirement/trace/assessment 和 Draft，独立核对 fidelity、候选与查询完整性、
-      grounding、方向、三层负向证明、语言与可读性。
+      grounding、方向、三层负向证明、语言与可读性。模型只拥有 decision 与 versioned finding-code 语义；exact
+      `checked_need_ids`、`checked_step_result_ids`、`checked_support_digests` 同样由 terminal-authority compiler 从原 sealed review
+      authority 注入，model-visible 顶层 collection 被移除且 raw envelope 必须为空；
    completeness projection 只能来自同一正式 Read Authority 的平台判定，不得把评测 Oracle identity 或隐藏期望送入 Answer。
    Review finding code 必须来自版本化 vocabulary；遗漏候选/方法、查询未穷尽、无依据负向结论、静态事实不支持的运行时断言与
-   Source/Evidence payload 展开使用不同稳定 code。Schema 和 Application 同时拒绝未注册、重复或乱序 code。平台在每次 Call 前后
+   Source/Evidence payload 展开使用不同稳定 code。Schema 和 Application 同时拒绝未注册、重复或乱序 code。terminal compiler
+   不改写 raw model output/digest，并把 exact authority binding digest 纳入 normalized Proposal identity；因此审计可同时重放模型语义与
+   Application binding。平台在每次 Call 前后
    重验 role package、input/output schema、Snapshot/Bundle/result/trace digest、operation/Support allowlist 和 grant。实际 Provider
    调用数为 4—6（Investigation 2—4、Draft 1、Review 1），每次有唯一 receipt；supervisor 预建的上限 6 个 connected descriptor
    只能按角色顺序消费，未用 descriptor 必须销毁并审计。任一 Call/validation 未完成即停止后续角色，不 retry、不降级为

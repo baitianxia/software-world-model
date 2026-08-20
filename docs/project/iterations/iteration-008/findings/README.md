@@ -12,7 +12,10 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十四条 Finding；三十四条均已处置或被后续决定取代。`FINDING-008-034` 记录 run-005 正式登录题在 Provider
+本 Slice 当前登记三十五条 Finding；三十五条均已处置或被后续决定取代。`FINDING-008-035` 记录 run-006 已成功完成四次
+DeepSeek HTTP request，但 Draft 在 1000-token 上限内复制 4 个 step Result ID 与 35 个 support digest 时被截断；活动处置把 terminal
+authority collection 收回 Application，以 raw-empty / normalized-exact compiler 绑定，升级为 `1.5.8/@17/@1.4.8` 与 suite/oracle
+`@1.5.8`，旧 run-023 Qualification 和 run-006 freeze/grant 不可复用。`FINDING-008-034` 记录 run-005 正式登录题在 Provider
 调用前暴露的 stale Gateway self-integrity pin；实际 packaged bounded entrypoint 为 `af5059…`，wrapper 仍校验旧 `ac0cf3…`，
 现已同步 pin 并新增真实 file/hash 回归，旧 freeze/grant/session 不可继续使用。`FINDING-008-033` 记录 run-004 formal Web 在任何问题
 POST 前暴露的旧三调用 UI/validator 假设；现已由 startup `dispatch_policy` 统一驱动页面披露与 1/3/4—6 call 结果校验，旧 freeze/
@@ -153,6 +156,12 @@ canary、SLICE-002 与 Production Activation gate：
   失败：Gateway packaged bounded workload raw SHA-256 为 `af5059…`，authorized wrapper 仍 pin 旧 `ac0cf3…`，所以 listener accept、
   credential、TLS、HTTP 与模型调用均为 0。修复提交 `54bc8c8…` 同步 pin，并新增三份 current packaged entrypoint 的直接 hash
   回归；扩展 focused 110/110 PASS。旧 run-005 freeze/grant/session 保留且不可复用，必须全新 refreeze。
+- [FINDING-008-035](FINDING-008-035.md)：run-006 登录题完成 4 个 DeepSeek HTTP 200、TLS 1/reuse 3、credential 4/4，前三个
+  Investigation PASS；Draft 已生成语义正确的中文答案，却因旧契约要求复制 4 个 step Result ID 与 35 个 support digest，在
+  `output_tokens=1000` 时截断并以 `STRUCTURED_OUTPUT_INVALID` 失败关闭。Application 现拥有 Draft/Review exact authority
+  collection：顶层 collection 不进入 model-visible input，raw 必须为空，terminal compiler `@1` 注入 sealed exact 值并绑定 digest；
+  模型自填失败关闭。活动 identity 升级为 `1.5.8/@17/@1.4.8`、suite/oracle `@1.5.8`，Adapter `@6`、Investigation compiler `@7`、
+  1000 tokens、18/40、no-retry 不变。旧 qualification/freeze/grant 不可复用，新 2-call Conformance 与 40-call Capability 继续 blocking。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

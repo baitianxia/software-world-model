@@ -13,6 +13,7 @@ from software_world_model.ai_infrastructure import (
     JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_FIXED_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_SOURCE_SEMANTICS_REVIEW_FINDING_CODES,
+    JAVA_SOURCE_SEMANTICS_TERMINAL_AUTHORITY_COMPILER_REF,
     JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
     JAVA_WORLD_MODEL_ANSWER_PROMPT_REF,
     JAVA_WORLD_MODEL_PROPOSAL_CONTRACT,
@@ -238,10 +239,14 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.7")
+        self.assertEqual(contract.strategy_version, "1.5.8")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@7",
+        )
+        self.assertEqual(
+            JAVA_SOURCE_SEMANTICS_TERMINAL_AUTHORITY_COMPILER_REF,
+            "java-source-semantics-terminal-authority-compiler@1",
         )
         self.assertEqual(
             contract.capabilities,
@@ -413,9 +418,17 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", investigation_prompt)
         self.assertNotIn("UNAVAILABLE_LEGACY", investigation_prompt)
         self.assertIn("IMPLEMENTATION_ANSWER_DRAFTING:", draft_prompt)
+        self.assertIn(
+            "Always return empty step_result_ids and support_digests arrays",
+            draft_prompt,
+        )
         self.assertNotIn("IMPLEMENTATION_INVESTIGATION:", draft_prompt)
         self.assertNotIn("IMPLEMENTATION_ANSWER_REVIEW:", draft_prompt)
         self.assertIn("IMPLEMENTATION_ANSWER_REVIEW:", review_prompt)
+        self.assertIn(
+            "Always return empty checked_need_ids, checked_step_result_ids, and checked_support_digests arrays",
+            review_prompt,
+        )
         self.assertNotIn("IMPLEMENTATION_INVESTIGATION:", review_prompt)
         self.assertNotIn("IMPLEMENTATION_ANSWER_DRAFTING:", review_prompt)
         for case_or_provider_patch in (
@@ -448,6 +461,167 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             intent_schema["properties"]["search_terms"]["uniqueItems"]
         )
 
+    def test_active_terminal_compiler_hides_and_binds_draft_authority(self):
+        step_result_ids = (
+            "world_model_step_result_" + "1" * 32,
+            "world_model_step_result_" + "2" * 32,
+        )
+        support_digests = (
+            "sha256:" + "3" * 64,
+            "sha256:" + "4" * 64,
+        )
+        gateway = SequencedGateway(
+            [
+                {
+                    "disposition": "SUPPORTED",
+                    "answer": "Failure is recorded before the exception is thrown.",
+                    "step_result_ids": [],
+                    "support_digests": [],
+                    "gap_code": None,
+                    "limitation_codes": [],
+                }
+            ]
+        )
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        proposal = strategy.propose(
+            case_id="product:semantic:draft-authority",
+            capability=IMPLEMENTATION_ANSWER_DRAFTING,
+            sealed_input={
+                "original_question": "How is failure handled?",
+                "assessment_disposition": "SUPPORTED",
+                "authorized_step_result_ids": step_result_ids,
+                "authorized_support_digests": support_digests,
+            },
+        )
+
+        self.assertEqual(
+            proposal.normalized_result["step_result_ids"],
+            list(step_result_ids),
+        )
+        self.assertEqual(
+            proposal.normalized_result["support_digests"],
+            list(support_digests),
+        )
+        model_state = json.loads(gateway.contexts[0].manifest.items[1].content)
+        self.assertEqual(
+            model_state["input"],
+            {
+                "assessment_disposition": "SUPPORTED",
+                "original_question": "How is failure handled?",
+            },
+        )
+
+    def test_active_terminal_compiler_hides_and_binds_review_authority(self):
+        step_result_id = "world_model_step_result_" + "5" * 32
+        support_digest = "sha256:" + "6" * 64
+        gateway = SequencedGateway(
+            [
+                {
+                    "decision": "REJECT",
+                    "finding_codes": ["QUERY_INCOMPLETE"],
+                    "checked_need_ids": [],
+                    "checked_step_result_ids": [],
+                    "checked_support_digests": [],
+                }
+            ]
+        )
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        proposal = strategy.propose(
+            case_id="product:semantic:review-authority",
+            capability=IMPLEMENTATION_ANSWER_REVIEW,
+            sealed_input={
+                "draft": {"answer": "Bounded absence."},
+                "required_checked_need_ids": ("implementation-answer",),
+                "required_checked_step_result_ids": (step_result_id,),
+                "required_checked_support_digests": (support_digest,),
+            },
+        )
+
+        self.assertEqual(
+            proposal.normalized_result["checked_need_ids"],
+            ["implementation-answer"],
+        )
+        self.assertEqual(
+            proposal.normalized_result["checked_step_result_ids"],
+            [step_result_id],
+        )
+        self.assertEqual(
+            proposal.normalized_result["checked_support_digests"],
+            [support_digest],
+        )
+        model_state = json.loads(gateway.contexts[0].manifest.items[1].content)
+        self.assertEqual(
+            model_state["input"],
+            {"draft": {"answer": "Bounded absence."}},
+        )
+
+    def test_active_terminal_compiler_rejects_model_owned_authority(self):
+        gateway = SequencedGateway(
+            [
+                {
+                    "disposition": "SUPPORTED",
+                    "answer": "Failure is recorded.",
+                    "step_result_ids": [
+                        "world_model_step_result_" + "7" * 32
+                    ],
+                    "support_digests": [],
+                    "gap_code": None,
+                    "limitation_codes": [],
+                }
+            ]
+        )
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        with self.assertRaises(DomainError) as raised:
+            strategy.propose(
+                case_id="product:semantic:draft-model-authority",
+                capability=IMPLEMENTATION_ANSWER_DRAFTING,
+                sealed_input={
+                    "assessment_disposition": "SUPPORTED",
+                    "authorized_step_result_ids": (
+                        "world_model_step_result_" + "7" * 32,
+                    ),
+                    "authorized_support_digests": (),
+                },
+            )
+
+        self.assertEqual(
+            raised.exception.details["reason_code"],
+            "TERMINAL_AUTHORITY_MODEL_OUTPUT_INVALID",
+        )
+        self.assertEqual(len(gateway.contexts), 1)
+
+    def test_active_terminal_authority_is_required_before_gateway(self):
+        gateway = SequencedGateway([])
+        strategy = WorldModelCapabilityStrategy(
+            gateway,
+            configuration(),
+            proposal_contract=JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT,
+        )
+
+        with self.assertRaises(DomainError):
+            strategy.propose(
+                case_id="product:semantic:draft-missing-authority",
+                capability=IMPLEMENTATION_ANSWER_DRAFTING,
+                sealed_input={"assessment_disposition": "SUPPORTED"},
+            )
+
+        self.assertEqual(gateway.contexts, [])
+
     def test_java_source_semantics_review_rejects_unregistered_finding_code(self):
         gateway = SequencedGateway(
             [
@@ -472,7 +646,12 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             strategy.propose(
                 case_id="product:semantic:review-invalid-code",
                 capability=IMPLEMENTATION_ANSWER_REVIEW,
-                sealed_input={"draft": {"body": "incomplete"}},
+                sealed_input={
+                    "draft": {"body": "incomplete"},
+                    "required_checked_need_ids": ("implementation-answer",),
+                    "required_checked_step_result_ids": (),
+                    "required_checked_support_digests": (),
+                },
             )
 
     def test_all_closed_roles_use_one_oracle_free_no_tools_manifest(self):
