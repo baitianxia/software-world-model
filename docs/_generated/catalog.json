@@ -1620,6 +1620,20 @@
     "path": "docs/project/iterations/iteration-008/findings/FINDING-008-032.md"
   },
   {
+    "id": "FINDING-008-033",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "interface",
+      "application",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-033.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

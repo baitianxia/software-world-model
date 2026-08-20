@@ -12,7 +12,9 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记三十二条 Finding；三十二条均已处置或被后续决定取代。`FINDING-008-032` 记录 Adapter `@5` 的 run-022 已完整
+本 Slice 当前登记三十三条 Finding；三十三条均已处置或被后续决定取代。`FINDING-008-033` 记录 run-004 formal Web 在任何问题
+POST 前暴露的旧三调用 UI/validator 假设；现已由 startup `dispatch_policy` 统一驱动页面披露与 1/3/4—6 call 结果校验，旧 freeze/
+grant 因 product identity 改变不得继续使用，新的 formal product freeze 仍是 blocking Gate。`FINDING-008-032` 记录 Adapter `@5` 的 run-022 已完整
 执行 40 calls / 18 Case，却仍遗漏 `methods/implementations`；活动处置把问题直接 ASCII 词项的机械保留放回 Application compiler
 `@7`，移除 Provider-specific semantic wire adaptation，并升级 Adapter `@6`、policy `@1.4.7`。exact candidate `837171e…` 的
 run-023 已完成 Conformance 2/2 / 12/12 PASS 与 Capability 40 calls / 18 Case / 18/18 PASS，证明该 Owner 调整对当前
@@ -141,6 +143,10 @@ canary、SLICE-002 与 Production Activation gate：
   compiler `@7`，raw model output/digest 保持审计，cross-script translation 仍由模型负责；Adapter 移除领域 adaptation 并升级
   `@6`，policy 升级 `@1.4.7`，上游 `1.5.7/@16` 与 suite/oracle 不变。exact candidate `837171e…` 的 run-023
   Conformance 2/2 / 12/12 与 Capability 40/18/18 全部 PASS，关键 direct terms 和 projection 已闭合；V-002 转为 PASS。
+- [FINDING-008-033](FINDING-008-033.md)：run-004 product freeze 与 authorized startup 已 PASS，但正式页面在问题 POST 前仍披露
+  旧三调用文案，HTTP public validator 也会拒绝合法 4—6 call Result；会话 request count 和模型调用均为 0。实现现以已校验 startup
+  `dispatch_policy` 统一驱动 UI 与结果调用数边界，bounded 4/5/6 接受、3 拒绝；System Contract 未改变。修复提交
+  `41b766a…` 后旧 freeze/grant 不得继续使用，必须全新 formal product freeze。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

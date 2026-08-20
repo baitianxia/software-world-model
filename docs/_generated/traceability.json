@@ -1466,6 +1466,17 @@
       "tests/test_iteration_008_capability_qualification.py"
     ]
   },
+  "FINDING-008-033": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-033.md",
+    "code": [
+      "src/software_world_model/interface/world_model_http.py",
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_world_model_http.py",
+      "tests/test_world_model_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

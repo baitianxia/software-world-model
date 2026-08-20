@@ -445,6 +445,13 @@ semantic constraint、typed operation 与 projection 全部 PASS。run-023 因�
 chain 的 SLICE-001 formal product freeze，再按已冻结协议重新执行公开登录/下单 Web；hidden canary 仍保持未披露，
 Production Activation 保持 `NOT_EXECUTED`。
 
+该 formal `run-004-freeze` 随后通过 deterministic Gate 并取得 post-freeze live grant，但浏览器在问题 POST 前即暴露
+`FINDING-008-033`：启动收据声明 bounded 4—6 call policy，页面仍硬编码旧 3-call 文案，public HTTP validator 也从 Profile 推导
+3 calls。会话没有创建问题 request，模型调用为 0；因此没有消耗一轮后再把可预见的 adapter failure 误作模型失败。修复提交
+`41b766a179bcc1bf78aed3278f6687a5e1c15abd` 以 startup `dispatch_policy` 统一驱动 UI 和 public result boundary，4/5/6
+接受、3 拒绝，相关 21/21 与扩展 focused 109/109 PASS。System 4—6 call 规范未改变。旧 run-004 freeze/grant 因 candidate source
+变化不得继续使用；必须从新 clean producer 全新 formal refreeze 后才能执行公开登录/下单问题。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

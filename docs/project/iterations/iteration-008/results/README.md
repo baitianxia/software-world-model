@@ -14,6 +14,12 @@ iteration: ITER-008
 
 尚无 Product Result。Proposal、Readiness 说明、开发者自拟问题或测试数量都不是 Product Result。
 
+run-023 后的 formal product `run-004-freeze` 已通过 deterministic Gate 并形成 authorized evaluation grant，但正式 Web 在任何问题
+POST 前显示旧三调用边界；同一 public validator 也会拒绝 bounded 4—6 call Result。startup request count 与模型调用均为 0，因此
+没有形成或消费一份问题 Result。该实现漂移按 [FINDING-008-033](../findings/FINDING-008-033.md) 以 candidate `41b766a…`
+修复；旧 freeze/grant 因 source identity 改变不可继续使用，新的 formal refreeze/Web 仍 blocking。hidden canary 未披露，Production
+Activation 为 `NOT_EXECUTED`。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、
