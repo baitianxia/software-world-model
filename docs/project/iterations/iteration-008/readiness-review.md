@@ -158,6 +158,12 @@ run-018 永久 FAIL，新身份必须从 clean candidate 完成全新 Conformanc
 完整执行面 1013/1018，唯一四个 failure 与一个 error 的名称和原因仍完全属于 `FINDING-008-020` 的 ITER-003 frozen runtime drift。
 这些结果不替代 live run-019。
 
+exact candidate `6dc7a9e4…` 的 run-019 随后完成 live Gate：Conformance 2 calls / 12/12 PASS，Capability 40 calls / 18 Case、
+18/18 PASS；两阶段 TLS 均 1/1，reuse 1/39，HTTP/credential 2/2 与 40/40，unknown/retry 均为 0。Capability result/qualification
+proof/document digest 为 `sha256:16e9e6bc…5020b` / `sha256:7e460107…224fc` / `sha256:b0ec3ad1…e556`，有效期到
+`2026-08-27T09:09:31.851862Z`。因此当前 exact Contract 的 V-002 资格阻断已关闭；Readiness 仍要求下一步先形成绑定该 authority chain
+的 formal product freeze，公开 Web PASS 后才讨论 early canary/Reflection，且不得执行 Production Activation。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

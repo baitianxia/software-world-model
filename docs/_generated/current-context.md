@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-008-INDEX`
 - Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-question-owned-search-term-adaptation-locally-verified-awaiting-clean-commit`
+- Worktree status: `iteration-008-run-019-capability-qualified-evidence-writeback-awaiting-clean-commit`
 - Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-run-018-sixteen-of-eighteen-preserved-question-owned-search-term-requalification-not-executed`
+- Live model path: `iteration-008-run-019-conformance-and-capability-pass-formal-product-freeze-next`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

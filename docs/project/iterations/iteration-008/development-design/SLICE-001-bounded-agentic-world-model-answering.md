@@ -355,6 +355,18 @@ Strategy implementation `sha256:4aa70b9275802cd3a2cec459c6a5af1407141e95dce56c87
 `sha256:1eaa8bbab9b6d7123e8c2953b0310ae3edd7cbdcffdb38c5657ca531c9525aab`。相关回归 117/117、fake 40-call / 18/18、
 docs 331/331、compileall/diff/secret scan PASS；完整执行面 1013/1018，唯一五项仍属于 `FINDING-008-020`。
 
+上述闭包形成 exact candidate `6dc7a9e4c9e24dc901c95088c549441fc1b8497c` / tree
+`229d11d186e986c8b1746d901f81f574e808b59a`。run-019 Conformance 绑定 preflight/result
+`sha256:18cc7ea9…4d3` / `sha256:c3ce9386…120c`，恰好 2 calls / 12/12 PASS；Capability 绑定 freeze/result
+`sha256:a7e99c16…386e` / `sha256:16e9e6bc…5020b`，无 retry 地完成 40 calls / 18 Case 并 18/18 PASS。两阶段
+transport 分别为 TLS 1/1、reuse 1/39、HTTP/credential 2/2 与 40/40、unknown/retry 0；qualification proof/document digest 为
+`sha256:7e460107…224fc` / `sha256:b0ec3ad1…e556`，valid until `2026-08-27T09:09:31.851862Z`。
+
+RESULT-DRIVEN-BATCH 与 REF-PROVENANCE 均按 question-origin rule PASS；后者保留 explicit `implementations/candidate`，前者没有凭空
+加入 `return/throw`。run-019 因而关闭当前 V-002 Capability Gate，但不自动构成产品结果、Web、canary、Reflection 或 Activation。
+下一步从写回后的 clean producer 生成一份绑定该 qualification chain 的 SLICE-001 formal product freeze，再按正式 Web 协议执行公开
+登录/下单回归；hidden canary 仍必须保持未披露，Production Activation 保持 `NOT_EXECUTED`。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

@@ -379,7 +379,21 @@ check，System Capability Evaluation 禁止把一种可能执行机制当成唯�
 `@1.5.5`。operation Oracle、18 Case / 40 calls、18/18、Adapter `@4`、compiler `@6`、persistent TLS 与 no-retry 不变。
 System fileset digest 为 `sha256:948647ad…7aaa4`。run-018 不重评、不 retry，也没有 Qualification、Web、canary 或 Activation；
 相关 117/117、fake 40-call / 18/18、docs 331/331、compileall/diff/secret scan PASS；完整执行面 1013/1018，唯一五项仍为
-`FINDING-008-020` 的历史 drift。新 live qualification 仍 blocking。
+`FINDING-008-020` 的历史 drift。当时新 live qualification 仍 blocking。
+
+新 identity 的 exact candidate `6dc7a9e4…` / tree `229d11d1…` 已完成 run-019。Conformance
+preflight/authorization/result/terminal digest 为 `sha256:18cc7ea9…4d3` / `sha256:c36214d5…6ebb` /
+`sha256:c3ce9386…120c` / `sha256:507ef676…dc6a`，2 calls / 12/12 PASS。Capability freeze/authorization/result/closed/
+qualification proof/document/terminal digest 为 `sha256:a7e99c16…386e` / `sha256:e2a11233…93ee` /
+`sha256:16e9e6bc…5020b` / `sha256:17422796…42528` / `sha256:7e460107…224fc` /
+`sha256:b0ec3ad1…e556` / `sha256:a1cd6fb6…981f`，40 calls / 18/18 PASS。两阶段 transport 分别为 TLS 1/1、reuse 1/39、
+HTTP/credential 2/2 与 40/40、unknown/retry 0；Capability tokens 为 78,618/2,602，有效期到
+`2026-08-27T09:09:31.851862Z`。
+
+run-018 两个失败 Case 在 run-019 均 PASS：RESULT-DRIVEN-BATCH 只返回 question-owned flow concepts，REF-PROVENANCE 保留 explicit
+`implementations/candidate` 并继续 exact 绑定第二步 Result/Refs。全部 freeze/authorization/result 核心文件为 0600，secret scan 无命中；
+授权均已消费，没有 hidden canary、Web 或 Activation。该证据形成 current Capability Qualification，不是 Product Result；下一步只能
+生成新的 formal product freeze 并执行公开 Web Gate。
 
 未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
 `reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖

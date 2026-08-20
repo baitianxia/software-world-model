@@ -100,3 +100,25 @@ implementation `sha256:4aa70b9275802cd3a2cec459c6a5af1407141e95dce56c879df389521
 ITER-003 Adapter/Codex binary drift，本轮没有新失败。current documents 331/331、`compileall`、`git diff --check` 与路径级
 credential-shaped secret scan PASS。Finding 已处置到 Capability Evaluation/Implementation Query Contract、活动设计、代码和测试；
 live run-019 仍是独立 blocking Gate。
+
+exact candidate `6dc7a9e4c9e24dc901c95088c549441fc1b8497c` / tree `229d11d186e986c8b1746d901f81f574e808b59a`
+随后完成 run-019。Conformance preflight/authorization/result/terminal digest 为
+`sha256:18cc7ea9e470d1dc983805090f43cc789a7f94dbef1bc6223ca0b32c5c34d4d3` /
+`sha256:c36214d5c7418a4e0a0f3b6c507f889125f1ba0dcba4673f5230e5412cc06ebb` /
+`sha256:c3ce93867fcc180573fd0c3a7391fb64c866e48839cc31ad5687b76380e1120c` /
+`sha256:507ef67670c0ac2c783eac20c0e664671e20c937001c4324975e0dab05a0dc6a`，恰好 2 calls / 12/12 PASS。
+Capability freeze/authorization/result/closed-document/qualification-proof/qualification-document/terminal digest 为
+`sha256:a7e99c16730c60cd977cec3cee8da0ca330e1b1d437b6f03c0d464540aba386e` /
+`sha256:e2a112334c8e2352b5859ceb0134841a1e02a76706da7eadcf00ec2f5ef393ee` /
+`sha256:16e9e6bcf5f99ea6b72aff7fb34022d4a02edc4db8660da2a26f66dd4ae5020b` /
+`sha256:1742279628348c3ee1be704eb5800763d744d05db8a759358c44d6449c042528` /
+`sha256:7e4601073b60602eb4f306f284825677b10c1dfa0db29cb1fd3cee974ad224fc` /
+`sha256:b0ec3ad12c343371dd8389d86b37db35039c526e92e2ec880ac106ef8423e556` /
+`sha256:a1cd6fb656011a0f8e5ef2ef20d92604cb273035c1b8738685ae02af7216981f`。运行无 retry 地完成 40 calls / 18 Case 并
+18/18 PASS；TLS 1/1、reuse 39、HTTP/credential 40/40、unknown/retry 0，有效期到 `2026-08-27T09:09:31.851862Z`。
+
+RESULT-DRIVEN-BATCH 返回 `authentication/failure/success/flow`；REF-PROVENANCE 返回
+`authentication/candidate/returned/complete/implementations/inspect`。两者 semantic constraint、operation、typed projection、第二步
+Result/Ref provenance 全部 PASS，直接验证了本 Finding 的两项处置。核心 evidence 文件权限 0600，credential-shaped secret scan
+无命中；授权均已消费，hidden canary、formal Web 与 Production Activation 均未执行。Finding 的 live closure 完成；V-002 对当前
+exact Contract 为 PASS，下一 Gate 是独立 formal product freeze/Web。
