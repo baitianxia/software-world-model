@@ -21,7 +21,8 @@ Roadmap 按产品或系统结果组织方向，不按组件列任务。它用于
 
 ## Candidates
 
-- [受限 Agent 驱动的 World Model 调查](candidates/bounded-agentic-world-model-investigation.md) — ITER-008 proposed；仍未通过 Readiness 或授权。
+- [本机 Web 方向体验恢复](candidates/local-web-direction-preview-recovery.md) — 当前优先候选；先复用 ITER-008 已跑通的 Web 资产做方向体验，再决定是否夯实。
+- [受限 Agent 驱动的 World Model 调查](candidates/bounded-agentic-world-model-investigation.md) — ITER-008 已执行；当前结果是正向 Web 已跑通、边界交付仍失败，等待 continuation decision。
 - [显式限定范围的生产启用](candidates/production-activation.md)
 - [Schema Evolution](candidates/schema-evolution.md)
 - [Semantic View](candidates/semantic-view.md)

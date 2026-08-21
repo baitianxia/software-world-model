@@ -51,6 +51,10 @@
 顺序是正式 Web/隐藏输入验证、形成 Result、完成方案复盘、作出 `CONTINUE / ACCEPT / REDIRECT / REJECT`。缺少复盘，或中间段
 决定不是 `CONTINUE` 时，不得授权下一 Slice；机械测试 PASS 不能替代方案判断。
 
+产品计划还必须把“方向体验”和“工程夯实”分开。第一个 Slice 先用真实入口和少量代表性问题形成明确标注的非验收体验版，取得
+`CONTINUE / REDIRECT / REJECT` 方向结论；只有 `CONTINUE` 后的 Slice 才安排全面契约、回归、性能、能力资格、hidden canary 和
+正式验收。安全、权限、Secret 与失败真实性不能延后，但不得把完备证明材料误作首次体验的前置目标。
+
 Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、成熟源码 Agent protocol 和授权软件来源范围的 exact
 digest，以及前后支持题数。完成时 `V-000` Evidence 必须引用本轮一个带完整 `product_goal_*` 元数据的 PASS Result，不能填写
 普通文字、机械测试 Result 或风险实验 Result 代替。

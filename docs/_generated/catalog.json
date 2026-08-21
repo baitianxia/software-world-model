@@ -3371,6 +3371,21 @@
     "path": "docs/project/roadmap/candidates/bounded-agentic-world-model-investigation.md"
   },
   {
+    "id": "ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY",
+    "kind": "roadmap-candidate",
+    "status": "candidate",
+    "authority": "planning-only",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/candidates/local-web-direction-preview-recovery.md"
+  },
+  {
     "id": "ROADMAP-CANDIDATE-PRODUCTION-ACTIVATION",
     "kind": "roadmap-candidate",
     "status": "candidate",

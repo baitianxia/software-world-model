@@ -26,6 +26,8 @@ coding_input: false
 - Evaluator/user-owned hidden held-out before/target counts: <measurable-delta-and-isolation>
 - Cross-domain questions combining old and new knowledge: <cross-domain-cases>
 - Earliest product-owned Web checkpoint and live ad-hoc questions: <slice-and-gate>
+- Minimum direction-preview checkpoint, representative tasks and explicit non-goals: <preview-slice-entry-and-cases>
+- Direction decision owner and allowed outcomes before hardening: <owner-and-CONTINUE-REDIRECT-REJECT>
 - End-of-iteration user-visible Web capability: <exact-capability-if-accepted>
 - Next blocking gap after success: <next-earliest-unproved-capability>
 - Stop / redirect conditions: <falsifiable-conditions>
@@ -51,6 +53,9 @@ coding_input: false
 ## Adopted system IDs
 
 ## Development slices and dependencies
+
+至少明确区分：先形成非验收方向体验版的最小 Slice，以及方向 `CONTINUE` 后才执行的工程夯实/正式验收 Slice。首次体验前只安排安全
+运行和判断核心价值所需工作，不把全面加固作为体验前置。
 
 ## Risks and unknowns
 

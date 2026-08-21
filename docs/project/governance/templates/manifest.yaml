@@ -63,6 +63,16 @@ product_goal_alignment:
       accepted_capability_ref: <prior-acceptance-id>
       new_slice_ref: <current-slice-id>
   first_product_web_checkpoint: <verification-case-id>
+  direction_preview_checkpoint: <V-PREVIEW-NNN>
+  direction_preview_binding:
+    case_id: <V-PREVIEW-NNN>
+    new_slice_ref: <direction-preview-slice-id>
+    real_product_entry: <entrypoint>
+    representative_task_count: <small-positive-integer>
+    status_label: non-acceptance-non-production
+    decision_owner: <user-or-product-owner>
+    allowed_decisions: CONTINUE,REDIRECT,REJECT
+    hardening_requires_continue: true
   web_checkpoint_binding:
     case_id: <V-WEB-NNN>
     new_slice_ref: <current-slice-id>

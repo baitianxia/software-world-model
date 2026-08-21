@@ -31,6 +31,7 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 - Accepted/new capability integration and cross-domain path: <exact-reference-and-verdict>
 - Hidden held-out ownership, before/target counts and live Web questions: <exact-reference-and-verdict>
 - Stop / redirect decision: <exact-reference-and-verdict>
+- Direction preview can precede hardening: <real-entry-minimum-cases-deferred-hardening-and-owner>
 
 ## Architecture reflection gate readiness
 
@@ -46,6 +47,9 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 ## System contracts and unresolved decisions
 
 ## Slice, dependency and risk closure
+
+核对第一个用户可感知 Slice 会先形成明确标注的非验收方向体验版，并把全面契约、回归、性能、资格和正式验收留到方向
+`CONTINUE` 之后。体验前仍需闭合安全、权限、Secret、外部披露和失败真实性；除此之外的加固不得被误列为首次体验阻断。
 
 ## Verification readiness
 

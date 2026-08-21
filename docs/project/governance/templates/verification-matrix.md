@@ -19,6 +19,7 @@ product_goal_result_id: pending
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合 | product / comparison | 未参与实现的真实工程；独立评测方/用户持有且实现阶段不可见的 held-out 自由问题；验收现场临时问题；旧+新知识跨域问题；成熟源码 Agent protocol；预提交差异化价值阈值 | 支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证 | pending | not-run / blocking |
+| V-PREVIEW-001 | 在全面加固前通过真实入口形成最小方向体验并取得方向结论 | product / directional-preview | <real-entry-and-small-representative-visible-cases> | 明确标记非验收/非生产；核心交互可体验；限制可见；用户/产品 Owner 给出 CONTINUE、REDIRECT 或 REJECT | pending | not-run / blocks hardening, not acceptance evidence |
 | V-XD-001 | `<prior-acceptance-id>` 与 `<current-slice-id>` 在同一问题中组合 | product / integration | <hidden-cross-domain-case> | <evidence-bound-answer-or-honest-gap> | pending | not-run / blocking |
 | V-WEB-001 | `<current-slice-id>` 通过正式 Web 执行 `V-XD-001` | product / browser | <exact-web-subject> | <manual-user-visible-result> | pending | not-run / blocking |
 | V-ADHOC-001 | `<current-slice-id>` 通过正式 Web 接受现场临时问题并覆盖 `V-XD-001` | product / browser | <user-owned-live-question-protocol> | <manual-user-visible-result> | pending | not-run / blocking |

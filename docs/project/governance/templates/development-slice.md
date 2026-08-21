@@ -13,6 +13,7 @@ product_goal_gate: V-000
 product_goal_accepted_capability_refs: []
 product_goal_cross_domain_case_ids: []
 product_goal_web_checkpoint_id: pending
+product_goal_direction_preview_checkpoint_id: V-PREVIEW-NNN
 product_goal_live_ad_hoc_checkpoint_id: pending
 product_goal_reflection_gate_case_id: V-REFLECT-NNN
 product_goal_slice_gate_case_ids: []
@@ -38,6 +39,12 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 - Slice stop / redirect signal: <falsifiable-signal>
 - Critical assumptions tested: <assumption-ids-and-evidence>
 - Reflection gate and success decision: <V-REFLECT-NNN-and-CONTINUE-or-ACCEPT>
+
+## Direction preview checkpoint
+
+若本 Slice 是方向体验段，列出真实产品入口、最少代表性任务、仅为运行所必需的门禁、用户可见限制，以及体验后由谁作出
+`CONTINUE / REDIRECT / REJECT`。不得安排与方向判断无关的全面加固。若本 Slice 属于工程夯实或正式验收，必须引用前一方向体验的
+`CONTINUE` 结果。
 
 ## Current vs expected behavior
 
