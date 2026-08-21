@@ -13,8 +13,8 @@ tests: [tests]
 
 | 属性 | 系统级要求 |
 |---|---|
-| 正确性 | 用户可见结论由正式知识蕴含，逐 Need 完整且不过度推断 |
-| 可追溯性 | 结论可回到 exact Snapshot、知识成员、Evidence、Artifact 和来源 Context |
+| 正确性 | 用户可见结论由当前模式的密封权威输入支持，逐 Need/Checklist 完整且不过度推断 |
+| 可追溯性 | 结论可回到 exact Snapshot/Read Set 或 Question/Evidence Packet，再回到知识成员、Evidence、Artifact 和来源 Context |
 | 可靠性 | 幂等恢复不重复副作用；未知结果保持未知；部分成功如实披露 |
 | 一致性 | 单 Scope 原子发布，CURRENT 不指向部分状态，跨 Scope 无隐式原子性 |
 | 安全性 | 默认拒绝外部能力；Secrets、内容和思维链不进入日志或 Telemetry |

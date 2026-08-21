@@ -21,9 +21,8 @@ product_goal_slice_gate_case_ids: [V-ANSWER-002, V-REWRITE-002, V-HARDEN-002, V-
 
 ## Status and dependencies
 
-`PROPOSED / NOT AUTHORIZED`。只有 `SLICE-001` 的全部阻断 Case 完成、Reflection Result 决定 `CONTINUE`，且用户以新的消息明确授权
-后，本 Slice 才能改为 current development。授权时必须把前一 Slice Result 加入 `depends_on`，并让 Manifest
-`reflection_prerequisite_result` 指向同一 Result；当前不存在该证据，不能预填。
+`PROPOSED / NOT AUTHORIZED / NOT EXECUTED`。`SLICE-001` 的 Reflection 决定为 `REDIRECT` 而不是 `CONTINUE`，ITER-009 已拒绝；
+因此本 Slice 在本轮中不可再授权。原设计只作为历史方案保留，后续 Iteration 不得把它当成编码输入或自动继承其假设。
 
 ## Product-goal contribution and cumulative integration
 

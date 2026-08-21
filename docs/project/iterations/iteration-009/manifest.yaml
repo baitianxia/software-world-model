@@ -1,7 +1,7 @@
 schema_version: 1
 iteration:
   id: ITER-009
-  status: authorized
+  status: rejected
   outcome_scope: local-web-direction-preview-then-general-evidence-answer-review-hardening-and-formal-acceptance
 
 baseline:
@@ -319,12 +319,19 @@ readiness_inputs:
 development:
   slices:
     ITER-009-SLICE-001:
-      status: authorized
-      coding_input: true
-      result: not-executed
-      reflection_decision: not-executed
+      status: blocked
+      coding_input: false
+      result: ITER-009-RESULT-SLICE-001-STOP-REDIRECT
+      reflection_decision: REDIRECT
+      reflection_decision_ref: codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: not-executed
+      product_code_freeze_digest: sha256:545da50e01221906621f2cb65b2b0460daf841d324e93883f98371d875fc7007
+      product_code_freeze_status: preserved-real-web-direction-failure
+      candidate_stage_manifest_digest: sha256:96d6de102af16a7fe285e2e501d7701b6c71f1dc7ed8c7f2e9252c39f4aa63e4
+      qualification_candidate_commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
+      frozen_producer_commit: aa4660873d30a1ad2424f408adff9d03743402fe
+      frozen_producer_tree: 3ba96b88a54f585536de05b678872034757dd107
+      live_question_status: three-real-web-results-preserved-user-redirect
       authorized_by: user
       authorized_at: 2026-08-21T03:19:16Z
       authorization_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
@@ -358,4 +365,8 @@ authorization:
   authorized_by: user
   authorized_at: 2026-08-21T03:19:16Z
   authorization_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
-  active_slice: ITER-009-SLICE-001
+  active_slice: none
+  final_decision: REDIRECT
+  final_decision_at: 2026-08-21T06:54:47Z
+  final_decision_ref: codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4
+  result_ref: ITER-009-RESULT-SLICE-001-STOP-REDIRECT

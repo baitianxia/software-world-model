@@ -42,5 +42,6 @@ ITER-007 已证明相关 Java 方法和实现事实进入 World Model，但固�
 `ITER-008` 已执行第一段并以 `REDIRECT` 结束。run-012 的正式冻结 PASS，正向登录流程已经从真实 Web 给出自然答案和 Citation；边界问题的
 Draft 已形成 Limitation，但在 Review 交付处失败关闭。用户另报告 Codex/OpenAI 客户端的提示词准入阻断，本地尚无对应产品运行
 receipt，不能把它归因于产品 Provider 或本 Candidate 架构。`ITER-009-SLICE-001` 已按
-`ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY` 获得开发授权，用最小 Web 方向反馈决定 `CONTINUE / REDIRECT / REJECT`；
-本 Candidate 本身仍不构成编码授权。
+`ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY` 完成最小 Web 方向体验。结果证明 Snapshot-only 技术链能够交付答案和
+Limitation，却也证明固定 `implementation-answer`、逐代码事件 Draft/Review 与实验台 UI 会把自由问题变成代码走读。ITER-009 因而
+`REDIRECT`，后续由 `ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST` 继续同一产品目标；本 Candidate 不再构成活动编码授权。

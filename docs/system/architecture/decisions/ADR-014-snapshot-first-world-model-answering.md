@@ -19,12 +19,14 @@ tests: [tests]
 
 ## Decision
 
-系统公开区分两个不可混淆的模式：
+在本 ADR 拥有的 Snapshot-only 与 Direct 边界内，系统公开区分两个不可混淆的模式：
 
 - `WORLD_MODEL`：入口把每个 `CURRENT` 至多解析一次，随后固定一个 exact Snapshot，或为比较任务固定同一 Scope 下的有序 exact Snapshot Read Set。回答只读取该 Read Set 中的正式知识、Coverage、View Limitation/Knowledge Gap 和 Support Map；模型如参与生成或审核，也只能读取这些固定结果。
 - `DIRECT_INVESTIGATION`：按 ADR-013 调查 exact 授权来源并使用密封 Evidence Packet。它是独立的直接源码调查能力、诊断手段和产品对照，不是世界模型命中。
 
 `WORLD_MODEL` 不得访问 Source Integration、创建新 Artifact/Evidence Packet、触发 Knowledge Update，或因 Read Set 不足而静默进入 `DIRECT_INVESTIGATION`。不足时返回明确 Knowledge Gap；更新由人工命令、计划任务或来源事件通过独立 Knowledge Update 发起，成功后由新的请求选择新 Snapshot。提问次数为零不能阻止已配置更新机制运行。
+
+ADR-016 新增的 `ENGINEERING_QA` 是第三个独立请求身份。它在执行前就显式声明 World Model Result/Gap 与 exact-revision 受控源读取的组合边界；因此既不是本契约中 `WORLD_MODEL` 的回源，也不是 Knowledge Gap 后的静默 Direct fallback。
 
 Interface 必须展示实际模式、Scope、source revision、Snapshot、View、Coverage、View Limitation/Knowledge Gap 和引用。任何直接调查切换都需要新的显式用户动作和独立结果身份，不能替换原世界模型回答记录。
 
@@ -42,4 +44,4 @@ Interface 必须展示实际模式、Scope、source revision、Snapshot、View�
 
 ## Supersedes / migration
 
-本决定收窄 ADR-013 中“所有同步软件问答统一走 Evidence-first”的部分；ADR-013 继续拥有显式直接源码调查模式。现有 Evidence-first 实现可保留兼容，但在世界模型模式上线前不得继续作为默认世界模型入口。
+本决定收窄 ADR-013 中“所有同步软件问答统一走 Evidence-first”的部分；ADR-013 继续拥有显式直接源码调查模式。ADR-016 取代了“产品公开只有上述两种模式”和“普通工程聊天默认进入 `WORLD_MODEL`”的解释，但不取代本 ADR 对严格 `WORLD_MODEL` 的 Snapshot-only、Source-off、no-update 和 no-fallback 边界。

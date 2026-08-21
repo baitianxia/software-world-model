@@ -159,6 +159,7 @@ Activation。
 
 ## Selection requirements
 
-选择条件已经闭合：ITER-008 的 stop Result 为 `REDIRECT`，ITER-009 Proposal/Readiness 已接受，且只授权对应 Stage 0—2 的
-`SLICE-001` 开发。Stage 3 必须等待方向体验后的新 `CONTINUE` 消息。ITER-009 不继承 ITER-008 的 Acceptance，任何代码 identity
-变化也不得继承旧资格裁决。
+本 Candidate 已执行并形成方向结论：ITER-009 的 Web、安全、Limitation 和 Citation 技术链可运行，但答案默认表现为方法、分支、
+调用顺序和返回值的代码走读，Reviewer 也未识别抽象层级与用户目标不匹配。用户要求转入 ITER-010，因此结果为 `REDIRECT`，Stage 3
+不再执行。后续由 `ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST` 重新定义同步检索、答案和审核职责；任何代码 identity
+变化仍不得继承旧资格裁决。

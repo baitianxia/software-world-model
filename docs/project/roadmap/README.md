@@ -17,11 +17,12 @@ Roadmap 按产品或系统结果组织方向，不按组件列任务。它用于
 ## Milestones
 
 - [M-001：正式知识单路径的本机体验基线](milestones/M-001-formal-knowledge-single-path.md) — achieved。
-- [M-002：通用软件工程问答 MVP 能力路径](milestones/M-002-general-software-qa-capability-path.md) — planned；当前最早未证明的是 Step 1 的 Java 结果驱动世界模型调查。
+- [M-002：通用软件工程问答 MVP 能力路径](milestones/M-002-general-software-qa-capability-path.md) — planned；当前最早未证明的是 Step 1 的工程问题答案主线。
 
 ## Candidates
 
-- [本机 Web 方向体验恢复](candidates/local-web-direction-preview-recovery.md) — 已由 ITER-009 选择；SLICE-001 已授权先开发方向体验版，体验后的 `CONTINUE / REDIRECT / REJECT` 决定后续。
+- [工程问题答案优先](candidates/engineering-question-answer-first.md) — 已由 ITER-010 选择；先验证受控源码检索、证据包、自然答案、独立审核和聊天体验方向，再决定是否夯实。
+- [本机 Web 方向体验恢复](candidates/local-web-direction-preview-recovery.md) — ITER-009 已执行真实方向体验并以 `REDIRECT` 结束；Web、安全、Limitation 与 Citation 资产保留，代码走读式答案方向被拒绝。
 - [受限 Agent 驱动的 World Model 调查](candidates/bounded-agentic-world-model-investigation.md) — ITER-008 已以 `REDIRECT` 结束；正向 Web 与边界失败证据保留为 ITER-009 输入，不再作为活动开发授权。
 - [显式限定范围的生产启用](candidates/production-activation.md)
 - [Schema Evolution](candidates/schema-evolution.md)

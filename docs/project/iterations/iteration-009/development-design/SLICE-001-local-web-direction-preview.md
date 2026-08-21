@@ -1,14 +1,14 @@
 ---
 id: ITER-009-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: blocked
+authority: development-evidence
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-009-PROPOSAL, ITER-009-READINESS, ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE, ITER-008-INDEX]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests, validation]
 iteration: ITER-009
-coding_input: true
+coding_input: false
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
@@ -22,13 +22,13 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-001, V-SOURCEOFF-001, V-SEC
 
 ## Status and dependencies
 
-`AUTHORIZED / CURRENT DEVELOPMENT`。授权收据为
-`codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed`，时间为
-`2026-08-21T03:19:16Z`。本 Slice 是唯一编码输入；`SLICE-002/003` 保持 proposed。
+`BLOCKED / FAILED-PRESERVED / NO LONGER CODING INPUT`。原开发授权收据为
+`codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed`。实现和 live 运行另经
+exact freeze/grant 完成；run-001 在 candidate `aa4660873d30a1ad2424f408adff9d03743402fe` 上保留三条真实 Web 结果。
 
-本授权允许在 product baseline `2cd743b2ba74c5a79cd4d38433830786de09e753` 上开发和执行本地确定性测试，不授权读取真实
-credential、建立 Provider socket、发起模型请求、启动正式 Web 运行、提交浏览器问题或披露隐藏 canary。每个 live 动作仍需单独的
-exact freeze 和用户授权，且不得把本消息复用为 dispatch grant。
+用户随后以 `codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4`
+决定 `REDIRECT`：回答整体仍像代码走读或代码实现说明，未通过方向 Gate。`ITER-009-RESULT-SLICE-001-STOP-REDIRECT` 已保存 exact
+证据和复盘。本 Slice 不得继续修补，后续方案只能在新 Iteration 重新授权。
 
 ## Product-goal contribution and cumulative integration
 
@@ -119,11 +119,9 @@ live Case 只有取得后续 run-specific 授权并实际执行才可 PASS；当
 
 ## Architecture reflection checkpoint
 
-产品 Gate 后必须形成独立 Slice Result，比较预期与实际 Web、首次偏差层、复杂度与 Findings，并明确记录成熟源码 Agent 对照和
-价值指标尚未执行、不得推导质量结论。
-`V-REFLECT-001 PASS` 只表示复盘完整；用户必须另给 `CONTINUE` 才能授权下一段。A1—A3 任一 `FALSIFIED/UNRESOLVED`，或 A4/A5
-提前反证 Case FAIL 时，只能 `REDIRECT/REJECT`，不得继续堆叠工程夯实。隐藏 canary、成熟源码 Agent 对照和逐层诊断在本段明确
-deferred，不能反过来阻塞最早方向体验。
+产品 Gate 已由 `ITER-009-RESULT-SLICE-001-STOP-REDIRECT` 复盘：`V-REFLECT-001` 为 PASS 仅表示复盘完整，实际方向决定为
+`REDIRECT`。A1/A3 为 SUPPORTED，A2 为 FALSIFIED，A4/A5 为 UNRESOLVED；隐藏 canary、成熟源码 Agent 对照、价值指标与正式验收均未
+执行，不得推导质量持平、差异化价值或 Acceptance。
 
 ## Findings
 

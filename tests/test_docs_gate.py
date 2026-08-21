@@ -564,6 +564,43 @@ product_goal_alignment:
             docs_gate.validate_product_goal_v000(verification, "ITER-008"), []
         )
 
+    def test_iter010_v000_uses_engineering_qa_source_isolation_contract(self) -> None:
+        path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/verification-matrix.md"
+        )
+        metadata = {
+            "id": "ITER-010-VERIFICATION",
+            "kind": "iteration-verification",
+            "status": "not-run",
+            "iteration": "ITER-010",
+            **docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA,
+            "product_goal_result_id": "not-executed",
+        }
+        body = (
+            "| Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |\n"
+            "|---|---|---|---|---|---|---|\n"
+            f"| V-000 | {docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_CLAIM} | "
+            f"{docs_gate.PRODUCT_GOAL_V000_LEVEL} | "
+            f"{docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_FROZEN_INPUT} | "
+            f"{docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_EXPECTED} | "
+            "not-executed | NOT-RUN / blocking |\n"
+        )
+        verification = docs_gate.Document(path, metadata, body)
+        self.assertEqual(
+            docs_gate.validate_product_goal_v000(verification, "ITER-010"), []
+        )
+
+        stale_source_off = docs_gate.Document(
+            path,
+            {**metadata, **docs_gate.PRODUCT_GOAL_V000_METADATA},
+            body,
+        )
+        errors = docs_gate.validate_product_goal_v000(
+            stale_source_off, "ITER-010"
+        )
+        self.assertTrue(any("product_goal_outcome" in error for error in errors), errors)
+
     def test_v000_rejects_nonblocking_and_requires_pass_at_completion(self) -> None:
         path = (
             docs_gate.REPOSITORY
@@ -1712,6 +1749,24 @@ class ProductGoalSliceSequenceTests(unittest.TestCase):
                         for error in contract_digest_errors
                     ),
                     contract_digest_errors,
+                )
+                historical_digest_errors = (
+                    docs_gate.validate_product_goal_execution_readiness(
+                        manifest,
+                        "manifest.yaml",
+                        "ITER-007",
+                        by_id,
+                        new_refs,
+                        verification,
+                        verify_current_contract_fileset=False,
+                    )
+                )
+                self.assertFalse(
+                    any(
+                        "system_contract_set_digest does not match" in error
+                        for error in historical_digest_errors
+                    ),
+                    historical_digest_errors,
                 )
                 readiness_inputs["system_contract_set_digest"] = (
                     original_contract_digest
@@ -2994,6 +3049,280 @@ class ReflectionGateTests(unittest.TestCase):
         }
         return alignment, new_refs, blocking
 
+    def valid_engineering_qa_sections(
+        self,
+    ) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+        source_scope: dict[str, object] = {
+            "provider": "LOCAL_GIT",
+            "content_kind": (
+                "exact-revision-java-source-repository-documents-build-configuration-"
+                "tests-plus-prebuilt-world-model"
+            ),
+            "contract_ref": "SYS-CONTRACT-SOURCE-ARTIFACT",
+            "question_or_suite_driven_update_allowed": False,
+            "question_time_read_only_retrieval_allowed": True,
+            "repository_write_allowed": False,
+        }
+        hybrid_evidence_path: dict[str, object] = {
+            "mode": "ENGINEERING_QA",
+            "strict_world_model_mode_preserved": True,
+            "direct_investigation_mode_preserved": True,
+            "silent_mode_fallback_allowed": False,
+            "world_model_role": "reusable-engineering-map-manual-and-retrieval-entry",
+            "world_model_retrieval_hint_or_candidate_reduction_only": True,
+            "world_model_as_question-time-source-recall_gate_allowed": False,
+            "world_model_required_as_source_retrieval_gate": False,
+            "retrieval_plan_inputs": (
+                "immutable-original-question-checklist-and-snapshot-hints"
+            ),
+            "zero-irrelevant-or-insufficient-snapshot_blocks_exact-revision-retrieval": False,
+            "snapshot_source_revision_compatibility": (
+                "exact-match-or-explicit-partitioned-version-comparison-otherwise-"
+                "unaligned-navigation-only"
+            ),
+            "model_role": (
+                "question-understanding-investigation-control-answer-synthesis-and-"
+                "independent-review-not-fact-authority"
+            ),
+            "fact_authority": "sealed-evidence-package",
+            "retrieval_worker_sources": (
+                "exact-revision-source-repository-documents-build-configuration-tests"
+            ),
+            "retrieval_worker_access": "read-only-allowlisted-audited",
+            "source_trust": "untrusted-input",
+            "live_provider_source-fragment-disclosure": (
+                "separately-authorized-exact-provider-model-role-and-allowlist-only"
+            ),
+            "answer_repository_access": "denied",
+            "reviewer_repository_access": "denied",
+            "answer_input": "sealed-evidence-package-only",
+            "reviewer_input": (
+                "original-question-question-understanding-sealed-evidence-package-and-draft-only"
+            ),
+            "knowledge_persistence": (
+                "asynchronous-after-delivery-through-normal-admission-and-publication"
+            ),
+            "status": "frozen",
+        }
+        answer_protocol: dict[str, object] = {
+            "schema": "ENGINEERING_QA_HYBRID_EVIDENCE@1",
+            "contract_ref": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
+            "mode": "upfront-engineering-qa-hybrid-evidence",
+            "question_understanding_required_fields": (
+                "user-goal,audience,requested-abstraction-level,"
+                "material-conclusion-checklist,evidence-needs,response-language-and-constraints"
+            ),
+            "question_understanding_model_call_upper_bound": 1,
+            "initial_retrieval_rounds": 1,
+            "targeted_reretrieval_round_upper_bound": 1,
+            "max_retrieval_steps_per_round": 12,
+            "max_source_files_per_question": 64,
+            "max_source_bytes_per_question": 2097152,
+            "max_repository_document_bytes_per_question": 1048576,
+            "max_build_configuration_bytes_per_question": 524288,
+            "max_test_bytes_per_question": 1048576,
+            "max_world_model_result_bytes_per_question": 1048576,
+            "max_sealed_evidence_package_bytes_per_question": 4194304,
+            "max_support_items_per_question": 1024,
+            "max_trace_bytes_per_question": 2097152,
+            "max_wall_time_milliseconds_per_question": 900000,
+            "initial_answer_model_calls": 1,
+            "independent_review_model_calls_per_attempt": 1,
+            "same_package_targeted_rewrite_upper_bound": 1,
+            "answer_attempt_upper_bound": 3,
+            "review_attempt_upper_bound": 3,
+            "provider_output_complete-replacement_upper_bound_per_stage": 2,
+            "hard_safety_model_call_upper_bound_per_question": 12,
+            "quality_checklist_reduction_due_to_remaining_calls_allowed": False,
+            "evidence_requirement_reduction_due_to_remaining_calls_allowed": False,
+            "review_skipping_due_to_remaining_calls_allowed": False,
+            "targeted_reretrieval_requires_specific_reviewer_evidence_gap": True,
+            "same_package_rewrite_requires_specific_reviewer_finding": True,
+            "reseal_after_targeted_reretrieval_required": True,
+            "independent_rereview_after_any_rewrite_or_reseal_required": True,
+            "resource_exhaustion_behavior": (
+                "fail-closed-with-audited-user-visible-limitation-only-if-independently-approved"
+            ),
+            "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks": True,
+            "provider_request_retries_allowed": False,
+            "provider_switch_after_dispatch_allowed": False,
+            "status": "frozen",
+        }
+        return source_scope, hybrid_evidence_path, answer_protocol
+
+    def test_iter010_engineering_qa_hybrid_evidence_protocol_is_exact(self) -> None:
+        source_scope, hybrid_evidence_path, answer_protocol = (
+            self.valid_engineering_qa_sections()
+        )
+        self.assertEqual(
+            docs_gate.validate_engineering_qa_hybrid_evidence_execution_readiness(
+                source_scope,
+                hybrid_evidence_path,
+                answer_protocol,
+                "manifest.yaml",
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_answer_protocol_execution_readiness(
+                answer_protocol, "manifest.yaml", "ITER-010"
+            ),
+            [],
+        )
+
+        invalid_cases = (
+            ("source_scope", "provider", "REMOTE_GIT"),
+            ("source_scope", "contract_ref", "SYS-CONTRACT-SOURCE-OTHER"),
+            ("source_scope", "content_kind", "prebuilt-world-model-only"),
+            ("source_scope", "question_or_suite_driven_update_allowed", True),
+            ("source_scope", "question_time_read_only_retrieval_allowed", False),
+            ("source_scope", "repository_write_allowed", True),
+            ("hybrid_evidence_path", "mode", "WORLD_MODEL"),
+            ("hybrid_evidence_path", "strict_world_model_mode_preserved", False),
+            ("hybrid_evidence_path", "direct_investigation_mode_preserved", False),
+            ("hybrid_evidence_path", "silent_mode_fallback_allowed", True),
+            ("hybrid_evidence_path", "world_model_role", "fact-authority"),
+            (
+                "hybrid_evidence_path",
+                "world_model_required_as_source_retrieval_gate",
+                True,
+            ),
+            (
+                "hybrid_evidence_path",
+                "world_model_retrieval_hint_or_candidate_reduction_only",
+                False,
+            ),
+            (
+                "hybrid_evidence_path",
+                "world_model_as_question-time-source-recall_gate_allowed",
+                True,
+            ),
+            (
+                "hybrid_evidence_path",
+                "retrieval_plan_inputs",
+                "snapshot-hints-only",
+            ),
+            (
+                "hybrid_evidence_path",
+                "zero-irrelevant-or-insufficient-snapshot_blocks_exact-revision-retrieval",
+                True,
+            ),
+            (
+                "hybrid_evidence_path",
+                "snapshot_source_revision_compatibility",
+                "unchecked",
+            ),
+            ("hybrid_evidence_path", "model_role", "fact-authority"),
+            ("hybrid_evidence_path", "fact_authority", "model"),
+            ("hybrid_evidence_path", "retrieval_worker_sources", "world-model-only"),
+            ("hybrid_evidence_path", "retrieval_worker_access", "read-only"),
+            ("hybrid_evidence_path", "source_trust", "trusted-instruction"),
+            (
+                "hybrid_evidence_path",
+                "live_provider_source-fragment-disclosure",
+                "implicitly-allowed",
+            ),
+            ("hybrid_evidence_path", "answer_repository_access", "allowed"),
+            ("hybrid_evidence_path", "reviewer_repository_access", "allowed"),
+            ("hybrid_evidence_path", "answer_input", "repository-and-package"),
+            ("hybrid_evidence_path", "reviewer_input", "repository-and-draft"),
+            ("hybrid_evidence_path", "knowledge_persistence", "synchronous"),
+            ("answer_protocol", "schema", "ENGINEERING_QA_HYBRID_EVIDENCE@2"),
+            ("answer_protocol", "contract_ref", "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING"),
+            (
+                "answer_protocol",
+                "question_understanding_required_fields",
+                "user-goal,audience,evidence-needs",
+            ),
+            ("answer_protocol", "targeted_reretrieval_round_upper_bound", 2),
+            ("answer_protocol", "same_package_targeted_rewrite_upper_bound", 2),
+            ("answer_protocol", "answer_attempt_upper_bound", 2),
+            ("answer_protocol", "review_attempt_upper_bound", 2),
+            ("answer_protocol", "max_source_files_per_question", 0),
+            (
+                "answer_protocol",
+                "provider_output_complete-replacement_upper_bound_per_stage",
+                0,
+            ),
+            (
+                "answer_protocol",
+                "hard_safety_model_call_upper_bound_per_question",
+                1,
+            ),
+            (
+                "answer_protocol",
+                "quality_checklist_reduction_due_to_remaining_calls_allowed",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "evidence_requirement_reduction_due_to_remaining_calls_allowed",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "review_skipping_due_to_remaining_calls_allowed",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "targeted_reretrieval_requires_specific_reviewer_evidence_gap",
+                False,
+            ),
+            (
+                "answer_protocol",
+                "same_package_rewrite_requires_specific_reviewer_finding",
+                False,
+            ),
+            ("answer_protocol", "reseal_after_targeted_reretrieval_required", False),
+            (
+                "answer_protocol",
+                "independent_rereview_after_any_rewrite_or_reseal_required",
+                False,
+            ),
+            ("answer_protocol", "resource_exhaustion_behavior", "best-effort"),
+            (
+                "answer_protocol",
+                "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks",
+                False,
+            ),
+            ("answer_protocol", "provider_request_retries_allowed", True),
+            ("answer_protocol", "provider_switch_after_dispatch_allowed", True),
+        )
+        original_sections = {
+            "source_scope": source_scope,
+            "hybrid_evidence_path": hybrid_evidence_path,
+            "answer_protocol": answer_protocol,
+        }
+        for section_name, field, invalid_value in invalid_cases:
+            with self.subTest(section=section_name, field=field):
+                sections = copy.deepcopy(original_sections)
+                sections[section_name][field] = invalid_value
+                errors = (
+                    docs_gate.validate_engineering_qa_hybrid_evidence_execution_readiness(
+                        sections["source_scope"],
+                        sections["hybrid_evidence_path"],
+                        sections["answer_protocol"],
+                        "manifest.yaml",
+                    )
+                )
+                self.assertTrue(
+                    any(f"{section_name}.{field}" in error for error in errors),
+                    errors,
+                )
+
+    def test_pre_iter010_cannot_replace_world_model_protocol_with_hybrid_fields(
+        self,
+    ) -> None:
+        _, _, answer_protocol = self.valid_engineering_qa_sections()
+        errors = docs_gate.validate_answer_protocol_execution_readiness(
+            answer_protocol, "manifest.yaml", "ITER-009"
+        )
+        self.assertTrue(
+            any("supported only from ITER-010" in error for error in errors),
+            errors,
+        )
+
     def test_iter008_answer_protocol_uses_bounded_variable_investigation(
         self,
     ) -> None:
@@ -3022,6 +3351,13 @@ class ReflectionGateTests(unittest.TestCase):
                 protocol, "manifest.yaml", "ITER-008"
             ),
             [],
+        )
+        self.assertEqual(
+            docs_gate.validate_answer_protocol_execution_readiness(
+                protocol, "manifest.yaml", "ITER-011"
+            ),
+            [],
+            "later iterations may explicitly retain the strict WORLD_MODEL protocol",
         )
 
         legacy = {
@@ -3509,6 +3845,37 @@ class ReflectionGateTests(unittest.TestCase):
             [],
         )
 
+        engineering_qa_entry = copy.deepcopy(alignment)
+        engineering_qa_entry["direction_preview_binding"][  # type: ignore[index]
+            "real_product_entry"
+        ] = "loopback-product-owned-engineering-qa-web"
+        self.assertEqual(
+            docs_gate.validate_direction_preview_binding(
+                engineering_qa_entry, new_refs, blocking, "manifest.yaml"
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.resolved_direction_preview_slice_ref(
+                engineering_qa_entry, new_refs
+            ),
+            new_refs[0],
+        )
+        _, _, engineering_protocol = self.valid_engineering_qa_sections()
+        self.assertEqual(
+            docs_gate.validate_direction_preview_answer_entry(
+                engineering_qa_entry, engineering_protocol, "manifest.yaml"
+            ),
+            [],
+        )
+        mismatched_mode_errors = docs_gate.validate_direction_preview_answer_entry(
+            alignment, engineering_protocol, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("must match answer_protocol.mode" in error for error in mismatched_mode_errors),
+            mismatched_mode_errors,
+        )
+
         wrong_entry = copy.deepcopy(alignment)
         wrong_entry["direction_preview_binding"]["real_product_entry"] = (
             "https://public.example.test/"
@@ -3518,6 +3885,21 @@ class ReflectionGateTests(unittest.TestCase):
                 "real_product_entry" in error
                 for error in docs_gate.validate_direction_preview_binding(
                     wrong_entry, new_refs, blocking, "manifest.yaml"
+                )
+            )
+        )
+        arbitrary_loopback_entry = copy.deepcopy(alignment)
+        arbitrary_loopback_entry["direction_preview_binding"][  # type: ignore[index]
+            "real_product_entry"
+        ] = "loopback-product-owned-engineering-qa-web-preview"
+        self.assertTrue(
+            any(
+                "real_product_entry" in error
+                for error in docs_gate.validate_direction_preview_binding(
+                    arbitrary_loopback_entry,
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
                 )
             )
         )

@@ -1,10 +1,10 @@
 ---
 id: ITER-009-RESULTS
 kind: results-index
-status: draft
+status: completed
 authority: project-evidence
 owners: [quality, project]
-depends_on: [ITER-009-VERIFICATION]
+depends_on: [ITER-009-VERIFICATION, ITER-009-RESULT-SLICE-001-STOP-REDIRECT]
 code: []
 tests: []
 iteration: ITER-009
@@ -12,6 +12,9 @@ iteration: ITER-009
 
 # ITER-009 Results
 
-尚无执行 Result。ITER-008 run-012 只作为技术基线与方向证据，不是 ITER-009 Result。后续每个 Slice 必须分别记录 exact subject、
-运行授权、模型调用、Web/Citation、安全计数、限制、Verification Case、关键假设 Verdict 和用户的
-`CONTINUE / ACCEPT / REDIRECT / REJECT` 收据；静态回放、测试数量或旧资格不能替代。
+本轮形成一项 `failed-preserved` 的停止/转向 Product Result：
+
+- [SLICE-001 Stop and Redirect Result](slice-001-stop-redirect.md)
+
+run-001 在 exact candidate 上保留三条真实 Web 结果。技术交付、Citation、独立 Review 与 Source-off 执行可运行，但用户判断答案整体
+像代码走读或代码实现说明，方向决定为 `REDIRECT`。`SLICE-002/003` 未授权、未执行；本轮没有 Acceptance 或 Production Activation。

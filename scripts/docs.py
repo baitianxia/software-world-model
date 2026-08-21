@@ -63,6 +63,13 @@ MANIFEST_PENDING_RE = re.compile(
 PRODUCT_GOAL_ALIGNMENT_START_ITERATION = 7
 REFLECTION_GATE_START_ITERATION = 8
 DIRECTION_PREVIEW_START_ITERATION = 9
+ENGINEERING_QA_HYBRID_START_ITERATION = 10
+DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
+    {
+        "loopback-product-owned-world-model-web",
+        "loopback-product-owned-engineering-qa-web",
+    }
+)
 ACTIVE_REQUIRED_SECTIONS = {
     "iteration-index": ("Status and authorization", "Required inputs"),
     "iteration-proposal": (
@@ -216,6 +223,21 @@ PRODUCT_GOAL_V000_EXPECTED = (
 PRODUCT_GOAL_V000_METADATA = {
     "product_goal_gate": "V-000",
     "product_goal_outcome": "user-visible-general-source-qa-delta",
+    "product_goal_evaluation": "independent-hidden-plus-live-ad-hoc",
+}
+ENGINEERING_QA_PRODUCT_GOAL_V000_CLAIM = (
+    "本轮相对 rejected baseline 可测缩短通用工程问答差距并累计复用既有 World Model 能力"
+)
+ENGINEERING_QA_PRODUCT_GOAL_V000_FROZEN_INPUT = (
+    "三个唯一 Slice Result；最终隐藏 10+2；现场题；成熟源码 Agent；预提交 reuse-value protocol"
+)
+ENGINEERING_QA_PRODUCT_GOAL_V000_EXPECTED = (
+    "重大错误 0；逐结论不退步；价值阈值 PASS；同一 Web 直接回答、层级匹配、Citation 正确；"
+    "Source 只在 retrieval worker"
+)
+ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA = {
+    "product_goal_gate": "V-000",
+    "product_goal_outcome": "user-visible-general-engineering-qa-delta",
     "product_goal_evaluation": "independent-hidden-plus-live-ad-hoc",
 }
 PRODUCT_GOAL_RESULT_DIGEST_FIELDS = (
@@ -557,6 +579,37 @@ def requires_reflection_gate(identifier: object) -> bool:
 def requires_direction_preview(identifier: object) -> bool:
     number = iteration_number(identifier)
     return number is not None and number >= DIRECTION_PREVIEW_START_ITERATION
+
+
+def supports_engineering_qa_hybrid(identifier: object) -> bool:
+    number = iteration_number(identifier)
+    return number is not None and number >= ENGINEERING_QA_HYBRID_START_ITERATION
+
+
+def requires_engineering_qa_hybrid(identifier: object) -> bool:
+    """Bind the accepted ITER-010 plan without constraining later iterations."""
+
+    return iteration_number(identifier) == ENGINEERING_QA_HYBRID_START_ITERATION
+
+
+def product_goal_v000_contract(
+    iteration: object,
+) -> tuple[dict[str, str], str, str, str]:
+    """Return the exact user-visible product gate for the selected architecture."""
+
+    if requires_engineering_qa_hybrid(iteration):
+        return (
+            ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA,
+            ENGINEERING_QA_PRODUCT_GOAL_V000_CLAIM,
+            ENGINEERING_QA_PRODUCT_GOAL_V000_FROZEN_INPUT,
+            ENGINEERING_QA_PRODUCT_GOAL_V000_EXPECTED,
+        )
+    return (
+        PRODUCT_GOAL_V000_METADATA,
+        PRODUCT_GOAL_V000_CLAIM,
+        PRODUCT_GOAL_V000_FROZEN_INPUT,
+        PRODUCT_GOAL_V000_EXPECTED,
+    )
 
 
 def active_required_sections(document: Document) -> tuple[str, ...]:
@@ -1027,7 +1080,7 @@ def resolved_direction_preview_slice_ref(
         or alignment.get("direction_preview_checkpoint") != case_id
         or new_slice_ref != new_refs[0]
         or binding.get("real_product_entry")
-        != "loopback-product-owned-world-model-web"
+        not in DIRECTION_PREVIEW_PRODUCT_ENTRIES
         or isinstance(representative_task_count, bool)
         or not isinstance(representative_task_count, int)
         or representative_task_count < 1
@@ -1077,9 +1130,11 @@ def validate_direction_preview_binding(
             f"{label}: direction_preview_binding.new_slice_ref must equal the first new capability Slice"
         )
     real_product_entry = binding.get("real_product_entry")
-    if real_product_entry != "loopback-product-owned-world-model-web":
+    if real_product_entry not in DIRECTION_PREVIEW_PRODUCT_ENTRIES:
         errors.append(
-            f"{label}: direction_preview_binding.real_product_entry must equal loopback-product-owned-world-model-web"
+            f"{label}: direction_preview_binding.real_product_entry must equal "
+            "loopback-product-owned-world-model-web or "
+            "loopback-product-owned-engineering-qa-web"
         )
     representative_task_count = binding.get("representative_task_count")
     if (
@@ -1108,6 +1163,29 @@ def validate_direction_preview_binding(
             f"{label}: direction preview must require CONTINUE before hardening"
         )
     return errors
+
+
+def validate_direction_preview_answer_entry(
+    alignment: dict[str, object],
+    answer_protocol: dict[str, object],
+    label: str,
+) -> list[str]:
+    """Keep the visible product identity aligned with the selected answer mode."""
+
+    binding = alignment.get("direction_preview_binding")
+    if not isinstance(binding, dict):
+        return []
+    expected = (
+        "loopback-product-owned-engineering-qa-web"
+        if answer_protocol.get("mode")
+        == "upfront-engineering-qa-hybrid-evidence"
+        else "loopback-product-owned-world-model-web"
+    )
+    if binding.get("real_product_entry") != expected:
+        return [
+            f"{label}: direction preview product entry must match answer_protocol.mode as {expected}"
+        ]
+    return []
 
 
 def required_early_evaluation_slice_refs(
@@ -2313,8 +2391,36 @@ def validate_product_goal_result(
     if not isinstance(owners, list) or "quality" not in owners:
         errors.append(f"{label}: product-goal PASS Result must be owned by quality")
 
+    if requires_engineering_qa_hybrid(iteration):
+        for field in (
+            "authorized_source_retrieval_count",
+            "authorized_source_retrieval_bytes",
+        ):
+            value = non_negative_metadata_integer(result.metadata.get(field))
+            if value is None or value < 1:
+                errors.append(f"{label}: {field} must be a positive integer")
+        for field in (
+            "answer_direct_source_access_count",
+            "reviewer_direct_source_access_count",
+            "repository_write_count",
+            "silent_mode_fallback_count",
+        ):
+            value = non_negative_metadata_integer(result.metadata.get(field))
+            if value != 0:
+                errors.append(f"{label}: {field} must equal zero")
+        package_digest = result.metadata.get(
+            "question_evidence_package_manifest_digest"
+        )
+        if not isinstance(package_digest, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", package_digest
+        ) is None:
+            errors.append(
+                f"{label}: question_evidence_package_manifest_digest must be an exact sha256 digest"
+            )
+
+    product_goal_metadata, _, _, _ = product_goal_v000_contract(iteration)
     for field, expected in {
-        **PRODUCT_GOAL_V000_METADATA,
+        **product_goal_metadata,
         "product_goal_verdict": "PASS",
     }.items():
         if result.metadata.get(field) != expected:
@@ -2556,7 +2662,13 @@ def validate_product_goal_v000(
         return [f"{iteration}: selected iteration is missing verification-matrix.md"]
 
     label = verification.relative_path
-    for field, expected in PRODUCT_GOAL_V000_METADATA.items():
+    (
+        product_goal_metadata,
+        product_goal_claim,
+        product_goal_frozen_input,
+        product_goal_expected,
+    ) = product_goal_v000_contract(iteration)
+    for field, expected in product_goal_metadata.items():
         if verification.metadata.get(field) != expected:
             errors = [
                 f"{label}: {field} must equal {expected} for the V-000 product gate"
@@ -2570,16 +2682,19 @@ def validate_product_goal_v000(
         return [f"{label}: V-000 must use the exact seven-column verification schema"]
 
     errors: list[str] = []
-    frozen_input = PRODUCT_GOAL_V000_FROZEN_INPUT
-    expected_outcome = PRODUCT_GOAL_V000_EXPECTED
-    if requires_reflection_gate(iteration):
+    frozen_input = product_goal_frozen_input
+    expected_outcome = product_goal_expected
+    if (
+        requires_reflection_gate(iteration)
+        and not requires_engineering_qa_hybrid(iteration)
+    ):
         frozen_input += "；预提交差异化价值阈值"
         expected_outcome = (
             "支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；"
             "提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证"
         )
     expected_contract = (
-        PRODUCT_GOAL_V000_CLAIM,
+        product_goal_claim,
         PRODUCT_GOAL_V000_LEVEL,
         frozen_input,
         expected_outcome,
@@ -2648,7 +2763,7 @@ def validate_product_goal_v000(
                 or str(result.metadata.get("iteration", "")) != iteration
                 or result.metadata.get("product_goal_gate") != "V-000"
                 or result.metadata.get("product_goal_outcome")
-                != "user-visible-general-source-qa-delta"
+                != product_goal_metadata["product_goal_outcome"]
                 or result.metadata.get("product_goal_evaluation")
                 != "independent-hidden-plus-live-ad-hoc"
                 or result.metadata.get("product_goal_verdict") != "PASS"
@@ -2868,10 +2983,325 @@ def canonical_raw_component_set_digest(
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
+def canonical_mapping_digest(
+    schema: str, field: str, value: dict[str, object]
+) -> str:
+    """Bind a frozen manifest mapping without relying on YAML presentation."""
+
+    encoded = json.dumps(
+        {"schema": schema, field: value},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def validate_engineering_qa_answer_protocol_execution_readiness(
+    answer_protocol: dict[str, object], label: str
+) -> list[str]:
+    """Freeze the ITER-010+ answer/review path and all of its quality bounds."""
+
+    errors: list[str] = []
+    if (
+        answer_protocol.get("schema")
+        != "ENGINEERING_QA_HYBRID_EVIDENCE@1"
+    ):
+        errors.append(
+            f"{label}: answer_protocol.schema must equal "
+            "ENGINEERING_QA_HYBRID_EVIDENCE@1"
+        )
+    if (
+        answer_protocol.get("contract_ref")
+        != "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING"
+    ):
+        errors.append(
+            f"{label}: answer_protocol.contract_ref must equal "
+            "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING"
+        )
+    if answer_protocol.get("mode") != "upfront-engineering-qa-hybrid-evidence":
+        errors.append(
+            f"{label}: answer_protocol.mode must equal upfront-engineering-qa-hybrid-evidence"
+        )
+
+    required_question_fields = (
+        "user-goal,audience,requested-abstraction-level,"
+        "material-conclusion-checklist,evidence-needs,response-language-and-constraints"
+    )
+    if (
+        answer_protocol.get("question_understanding_required_fields")
+        != required_question_fields
+    ):
+        errors.append(
+            f"{label}: answer_protocol.question_understanding_required_fields must "
+            "freeze the user goal, audience, abstraction level, material-conclusion "
+            "checklist, evidence needs, response language and constraints"
+        )
+
+    positive_integer_fields = (
+        "question_understanding_model_call_upper_bound",
+        "initial_retrieval_rounds",
+        "targeted_reretrieval_round_upper_bound",
+        "max_retrieval_steps_per_round",
+        "max_source_files_per_question",
+        "max_source_bytes_per_question",
+        "max_repository_document_bytes_per_question",
+        "max_build_configuration_bytes_per_question",
+        "max_test_bytes_per_question",
+        "max_world_model_result_bytes_per_question",
+        "max_sealed_evidence_package_bytes_per_question",
+        "max_support_items_per_question",
+        "max_trace_bytes_per_question",
+        "max_wall_time_milliseconds_per_question",
+        "initial_answer_model_calls",
+        "independent_review_model_calls_per_attempt",
+        "same_package_targeted_rewrite_upper_bound",
+        "answer_attempt_upper_bound",
+        "review_attempt_upper_bound",
+        "provider_output_complete-replacement_upper_bound_per_stage",
+        "hard_safety_model_call_upper_bound_per_question",
+    )
+    numeric_fields: dict[str, int] = {}
+    for field in positive_integer_fields:
+        value = answer_protocol.get(field)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            errors.append(
+                f"{label}: answer_protocol.{field} must be a positive frozen integer upper bound"
+            )
+        else:
+            numeric_fields[field] = value
+
+    exact_numeric_values = {
+        "question_understanding_model_call_upper_bound": 1,
+        "initial_retrieval_rounds": 1,
+        "targeted_reretrieval_round_upper_bound": 1,
+        "initial_answer_model_calls": 1,
+        "independent_review_model_calls_per_attempt": 1,
+        "same_package_targeted_rewrite_upper_bound": 1,
+        "answer_attempt_upper_bound": 3,
+        "review_attempt_upper_bound": 3,
+    }
+    for field, expected in exact_numeric_values.items():
+        value = numeric_fields.get(field)
+        if value is not None and value != expected:
+            errors.append(
+                f"{label}: answer_protocol.{field} must equal {expected}"
+            )
+
+    answer_attempts = numeric_fields.get("answer_attempt_upper_bound")
+    rewrite_bound = numeric_fields.get("same_package_targeted_rewrite_upper_bound")
+    reretrieval_bound = numeric_fields.get("targeted_reretrieval_round_upper_bound")
+    initial_answer_calls = numeric_fields.get("initial_answer_model_calls")
+    if (
+        answer_attempts is not None
+        and rewrite_bound is not None
+        and reretrieval_bound is not None
+        and initial_answer_calls is not None
+        and answer_attempts
+        != initial_answer_calls + rewrite_bound + reretrieval_bound
+    ):
+        errors.append(
+            f"{label}: answer_protocol.answer_attempt_upper_bound must cover the "
+            "initial answer, the allowed same-package targeted rewrite and the "
+            "post-reretrieval answer"
+        )
+    review_attempts = numeric_fields.get("review_attempt_upper_bound")
+    if (
+        review_attempts is not None
+        and answer_attempts is not None
+        and review_attempts != answer_attempts
+    ):
+        errors.append(
+            f"{label}: answer_protocol.review_attempt_upper_bound must equal "
+            "answer_attempt_upper_bound so every answer attempt is independently reviewed"
+        )
+    hard_call_bound = numeric_fields.get(
+        "hard_safety_model_call_upper_bound_per_question"
+    )
+    question_calls = numeric_fields.get(
+        "question_understanding_model_call_upper_bound"
+    )
+    calls_per_review = numeric_fields.get(
+        "independent_review_model_calls_per_attempt"
+    )
+    if all(
+        value is not None
+        for value in (
+            hard_call_bound,
+            question_calls,
+            answer_attempts,
+            review_attempts,
+            calls_per_review,
+        )
+    ):
+        minimum_core_calls = (
+            question_calls
+            + answer_attempts
+            + review_attempts * calls_per_review
+        )
+        if hard_call_bound < minimum_core_calls:
+            errors.append(
+                f"{label}: answer_protocol.hard_safety_model_call_upper_bound_per_question "
+                "must cover question understanding, every answer attempt and every "
+                "independent review"
+            )
+
+    for field in (
+        "quality_checklist_reduction_due_to_remaining_calls_allowed",
+        "evidence_requirement_reduction_due_to_remaining_calls_allowed",
+        "review_skipping_due_to_remaining_calls_allowed",
+        "provider_request_retries_allowed",
+        "provider_switch_after_dispatch_allowed",
+    ):
+        if answer_protocol.get(field) is not False:
+            errors.append(f"{label}: answer_protocol.{field} must be false")
+    for field in (
+        "targeted_reretrieval_requires_specific_reviewer_evidence_gap",
+        "same_package_rewrite_requires_specific_reviewer_finding",
+        "reseal_after_targeted_reretrieval_required",
+        "independent_rereview_after_any_rewrite_or_reseal_required",
+        "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks",
+    ):
+        if answer_protocol.get(field) is not True:
+            errors.append(f"{label}: answer_protocol.{field} must be true")
+    if (
+        answer_protocol.get("resource_exhaustion_behavior")
+        != "fail-closed-with-audited-user-visible-limitation-only-if-independently-approved"
+    ):
+        errors.append(
+            f"{label}: answer_protocol.resource_exhaustion_behavior must equal "
+            "fail-closed-with-audited-user-visible-limitation-only-if-independently-approved"
+        )
+
+    legacy_fields = (
+        "planner_model_calls",
+        "draft_model_calls",
+        "independent_reviewer_model_calls",
+        "exact_total_model_calls_per_question",
+        "max_investigation_steps",
+        "max_investigation_model_calls",
+        "planner_model_call_upper_bound",
+        "total_model_call_upper_bound_per_question",
+        "max_query_bytes_per_step",
+        "max_result_bytes_per_step",
+        "max_total_query_bytes_per_question",
+        "max_total_result_bytes_per_question",
+        "budget_exhaustion_behavior",
+        "deterministic_schema_grounding_and_authorization_checks",
+        "retries_allowed",
+    )
+    for field in legacy_fields:
+        if field in answer_protocol:
+            errors.append(
+                f"{label}: engineering QA answer_protocol must not mix legacy field {field}"
+            )
+    if answer_protocol.get("status") != "frozen":
+        errors.append(f"{label}: answer_protocol.status must equal frozen")
+    return errors
+
+
+def validate_engineering_qa_hybrid_evidence_execution_readiness(
+    source_scope: dict[str, object],
+    hybrid_evidence_path: dict[str, object],
+    answer_protocol: dict[str, object],
+    label: str,
+) -> list[str]:
+    """Keep source retrieval isolated while allowing evidence-backed engineering QA."""
+
+    errors: list[str] = []
+    expected_source_values: dict[str, object] = {
+        "provider": "LOCAL_GIT",
+        "content_kind": (
+            "exact-revision-java-source-repository-documents-build-configuration-"
+            "tests-plus-prebuilt-world-model"
+        ),
+        "contract_ref": "SYS-CONTRACT-SOURCE-ARTIFACT",
+        "question_or_suite_driven_update_allowed": False,
+        "question_time_read_only_retrieval_allowed": True,
+        "repository_write_allowed": False,
+    }
+    for field, expected in expected_source_values.items():
+        if source_scope.get(field) != expected:
+            errors.append(
+                f"{label}: source_scope.{field} must equal {expected} for ENGINEERING_QA"
+            )
+
+    expected_hybrid_values: dict[str, object] = {
+        "mode": "ENGINEERING_QA",
+        "strict_world_model_mode_preserved": True,
+        "direct_investigation_mode_preserved": True,
+        "silent_mode_fallback_allowed": False,
+        "world_model_role": "reusable-engineering-map-manual-and-retrieval-entry",
+        "world_model_retrieval_hint_or_candidate_reduction_only": True,
+        "world_model_as_question-time-source-recall_gate_allowed": False,
+        "world_model_required_as_source_retrieval_gate": False,
+        "retrieval_plan_inputs": (
+            "immutable-original-question-checklist-and-snapshot-hints"
+        ),
+        "zero-irrelevant-or-insufficient-snapshot_blocks_exact-revision-retrieval": False,
+        "snapshot_source_revision_compatibility": (
+            "exact-match-or-explicit-partitioned-version-comparison-otherwise-"
+            "unaligned-navigation-only"
+        ),
+        "model_role": (
+            "question-understanding-investigation-control-answer-synthesis-and-"
+            "independent-review-not-fact-authority"
+        ),
+        "fact_authority": "sealed-evidence-package",
+        "retrieval_worker_sources": (
+            "exact-revision-source-repository-documents-build-configuration-tests"
+        ),
+        "retrieval_worker_access": "read-only-allowlisted-audited",
+        "source_trust": "untrusted-input",
+        "live_provider_source-fragment-disclosure": (
+            "separately-authorized-exact-provider-model-role-and-allowlist-only"
+        ),
+        "answer_repository_access": "denied",
+        "reviewer_repository_access": "denied",
+        "answer_input": "sealed-evidence-package-only",
+        "reviewer_input": (
+            "original-question-question-understanding-sealed-evidence-package-and-draft-only"
+        ),
+        "knowledge_persistence": (
+            "asynchronous-after-delivery-through-normal-admission-and-publication"
+        ),
+        "status": "frozen",
+    }
+    for field, expected in expected_hybrid_values.items():
+        if hybrid_evidence_path.get(field) != expected:
+            errors.append(
+                f"{label}: hybrid_evidence_path.{field} must equal {expected}"
+            )
+
+    errors.extend(
+        validate_engineering_qa_answer_protocol_execution_readiness(
+            answer_protocol, label
+        )
+    )
+    return errors
+
+
 def validate_answer_protocol_execution_readiness(
     answer_protocol: dict[str, object], label: str, iteration: str
 ) -> list[str]:
     """Validate the frozen answer protocol without reviving an earlier pipeline."""
+
+    engineering_qa_mode = (
+        answer_protocol.get("mode") == "upfront-engineering-qa-hybrid-evidence"
+    )
+    if requires_engineering_qa_hybrid(iteration) and not engineering_qa_mode:
+        return [
+            f"{label}: ITER-010 answer_protocol.mode must equal "
+            "upfront-engineering-qa-hybrid-evidence"
+        ]
+    if engineering_qa_mode:
+        if not supports_engineering_qa_hybrid(iteration):
+            return [
+                f"{label}: engineering QA answer_protocol is supported only from ITER-010"
+            ]
+        return validate_engineering_qa_answer_protocol_execution_readiness(
+            answer_protocol, label
+        )
 
     errors: list[str] = []
     if requires_reflection_gate(iteration):
@@ -3067,6 +3497,7 @@ def validate_product_goal_execution_readiness(
     verification: Document | None,
     *,
     manifest_text: str | None = None,
+    verify_current_contract_fileset: bool = True,
 ) -> list[str]:
     """Validate inputs that must be frozen before the first product Slice runs."""
 
@@ -3191,16 +3622,79 @@ def validate_product_goal_execution_readiness(
     if not isinstance(answer_protocol, dict):
         errors.append(f"{label}: answer_protocol must be a mapping before Slice execution")
         answer_protocol = {}
-    errors.extend(
-        validate_answer_protocol_execution_readiness(
-            answer_protocol, label, iteration
-        )
+    engineering_qa_mode = (
+        answer_protocol.get("mode") == "upfront-engineering-qa-hybrid-evidence"
     )
+    if requires_engineering_qa_hybrid(iteration) or engineering_qa_mode:
+        hybrid_evidence_path = manifest.get("hybrid_evidence_path")
+        if not isinstance(hybrid_evidence_path, dict):
+            errors.append(
+                f"{label}: hybrid_evidence_path must be a mapping before ENGINEERING_QA Slice execution"
+            )
+            hybrid_evidence_path = {}
+        errors.extend(
+            validate_engineering_qa_hybrid_evidence_execution_readiness(
+                source_scope,
+                hybrid_evidence_path,
+                answer_protocol,
+                label,
+            )
+        )
+        if engineering_qa_mode and not supports_engineering_qa_hybrid(iteration):
+            errors.append(
+                f"{label}: engineering QA hybrid evidence is supported only from ITER-010"
+            )
+    else:
+        errors.extend(
+            validate_answer_protocol_execution_readiness(
+                answer_protocol, label, iteration
+            )
+        )
+    if requires_direction_preview(iteration):
+        errors.extend(
+            validate_direction_preview_answer_entry(
+                alignment, answer_protocol, label
+            )
+        )
 
     readiness_inputs = manifest.get("readiness_inputs")
     if not isinstance(readiness_inputs, dict):
         errors.append(f"{label}: readiness_inputs must be a mapping before Slice execution")
         readiness_inputs = {}
+    if engineering_qa_mode:
+        architecture_decision = readiness_inputs.get(
+            "required_architecture_decision"
+        )
+        if architecture_decision != "SYS-ADR-016":
+            errors.append(
+                f"{label}: ENGINEERING_QA required_architecture_decision must equal SYS-ADR-016"
+            )
+        target_decision = (
+            by_id.get(architecture_decision)
+            if isinstance(architecture_decision, str)
+            else None
+        )
+        if (
+            target_decision is None
+            or target_decision.metadata.get("kind") != "system-decision"
+            or target_decision.metadata.get("status") != "accepted"
+            or target_decision.metadata.get("authority") != "normative"
+        ):
+            errors.append(
+                f"{label}: ENGINEERING_QA architecture decision must resolve to an accepted normative system-decision"
+            )
+        protocol_schema = answer_protocol.get("schema")
+        supplied_budget_digest = readiness_inputs.get(
+            "investigation_budget_digest"
+        )
+        if isinstance(protocol_schema, str):
+            actual_budget_digest = canonical_mapping_digest(
+                protocol_schema, "answer_protocol", answer_protocol
+            )
+            if supplied_budget_digest != actual_budget_digest:
+                errors.append(
+                    f"{label}: investigation_budget_digest must bind the exact ENGINEERING_QA answer_protocol"
+                )
     contract_ids = _execution_manifest_sequence(
         manifest=manifest,
         manifest_text=manifest_text,
@@ -3285,7 +3779,11 @@ def validate_product_goal_execution_readiness(
     supplied_contract_set_digest = readiness_inputs.get(
         "system_contract_set_digest"
     )
-    if contract_set_paths_valid and contract_set_schema == expected_contract_set_schema:
+    if (
+        verify_current_contract_fileset
+        and contract_set_paths_valid
+        and contract_set_schema == expected_contract_set_schema
+    ):
         actual_contract_set_digest = canonical_fileset_digest(
             expected_contract_set_schema,
             contract_set_paths,
@@ -3294,6 +3792,12 @@ def validate_product_goal_execution_readiness(
             errors.append(
                 f"{label}: system_contract_set_digest does not match the exact fileset"
             )
+    elif not isinstance(supplied_contract_set_digest, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", supplied_contract_set_digest
+    ) is None:
+        errors.append(
+            f"{label}: historical system_contract_set_digest must remain an exact sha256 digest"
+        )
 
     for reference in contract_ids:
         target = by_id.get(reference)
@@ -3693,6 +4197,10 @@ def validate_product_goal_reference_targets(
                 new_refs,
                 verification,
                 manifest_text=text,
+                verify_current_contract_fileset=not (
+                    require_completed_slice_sequence
+                    or require_rejected_slice_sequence
+                ),
             )
         )
     cross_cases = manifest_resolved_sequence_items(

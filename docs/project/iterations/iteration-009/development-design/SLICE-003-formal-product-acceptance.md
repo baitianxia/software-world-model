@@ -22,8 +22,8 @@ product_goal_slice_gate_case_ids: [V-HIDDEN-003, V-COMP-001, V-SEC-003, V-XD-003
 
 ## Status and dependencies
 
-`PROPOSED / NOT AUTHORIZED`。本 Slice 必须等待 `SLICE-002` exact Result、`V-REFLECT-002: CONTINUE` 和新的用户授权。授权时把该
-Result 加入 `depends_on` 并同步 Manifest；不能用本轮初始授权或第一段方向决定复用授权。
+`PROPOSED / NOT AUTHORIZED / NOT EXECUTED`。`SLICE-001` 已决定 `REDIRECT`，`SLICE-002` 从未授权，因此本 Slice 的进入条件没有成立，
+且在已拒绝的 ITER-009 中不可再授权。隐藏评测、正式 Acceptance 与 Production Activation 均未执行。
 
 ## Product-goal contribution and cumulative integration
 

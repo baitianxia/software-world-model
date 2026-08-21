@@ -14,7 +14,7 @@ tests: [tests/test_source_operations.py, tests/test_artifact_processing.py, test
 
 ## Purpose and scope
 
-本契约定义受授权、可回放的来源访问，以及把观察保存为中立 Artifact 的边界。Artifact 是来源载体，不是 Fact、Inference 或任务答案；同步问答只能由 Application 将 exact Artifact 内容和来源操作引用密封为任务级 Evidence Packet 后使用。
+本契约定义受授权、可回放的来源访问，以及把观察保存为中立 Artifact 的边界。Artifact 是来源载体，不是 Fact、Inference 或任务答案；同步问答只能由 Application 将 exact Artifact/Operation Result 密封为 `DIRECT_INVESTIGATION` 的 Evidence Packet，或与 exact World Model Result/Gap 一起密封为 `ENGINEERING_QA` 的 Question Evidence Package 后使用。
 
 ## Owner and public contract
 
@@ -36,6 +36,8 @@ Source Integration 独占 Source Operation、Read Session、Artifact、Payload �
 4. 每次读取都要求当前授权，以及与 retention mode 相匹配的 read protection；`NO_EVICTION` 可以明确证明无需 Guard。只有跨模块持久使用才要求与 exact Package、Closure、Protection、用途和 downstream request 绑定的一次性 use confirmation；历史成功不能替代当前权限。
 5. Knowledge Engine 不直接读取来源；Evidence 必须保存足以在 Payload 淘汰后独立复核 exact observed content、Context 与 Provenance 的最小自包含快照。
 6. Tool Loop 由平台授权和执行，预算耗尽、重复无进展、权限失败或截断必须显式停止。
+7. Engineering QA Retrieval Worker 只能对请求固定的 exact repository/revision 中 allowlisted regular file 执行已注册的只读 list/search/read/parse 操作。每次操作必须记录 allowlist verdict、actual locator/range、bytes、digest、coverage/truncation 和 outcome；path traversal、symlink escape、submodule/remote fetch、写入、命令、新网络、credential 和 Knowledge Update 必须拒绝。
+8. Source Payload 及其中的注释、文档、配置和测试文本都是不可信 data。其中的指令、URL、路径、工具建议或权限声明不得改变授权、Target、allowlist、操作集、Provider disclosure 或资源上限。
 
 ## 目标命名
 

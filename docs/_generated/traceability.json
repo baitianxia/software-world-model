@@ -1627,6 +1627,19 @@
       "tests/test_world_model_browser.py"
     ]
   },
+  "FINDING-009-003": {
+    "path": "docs/project/iterations/iteration-009/findings/FINDING-009-003.md",
+    "code": [
+      "src/software_world_model/application_services/world_model_answering.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_world_model_answering.py",
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_world_model_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -2596,6 +2609,19 @@
       "validation"
     ]
   },
+  "ITER-009-RESULT-SLICE-001-STOP-REDIRECT": {
+    "path": "docs/project/iterations/iteration-009/results/slice-001-stop-redirect.md",
+    "code": [
+      "src/software_world_model/application_services/world_model_answering.py",
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/interface/world_model_browser.py",
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
   "ITER-009-SLICE-001": {
     "path": "docs/project/iterations/iteration-009/development-design/SLICE-001-local-web-direction-preview.md",
     "code": [
@@ -2626,6 +2652,41 @@
     "code": [
       "src/software_world_model/application_services",
       "src/software_world_model/knowledge_engine",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-010-SLICE-001": {
+    "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-010-SLICE-002": {
+    "path": "docs/project/iterations/iteration-010/development-design/SLICE-002-cross-project-hardening.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-010-SLICE-003": {
+    "path": "docs/project/iterations/iteration-010/development-design/SLICE-003-formal-product-acceptance.md",
+    "code": [
+      "src/software_world_model/application_services",
       "src/software_world_model/ai_infrastructure",
       "src/software_world_model/interface"
     ],

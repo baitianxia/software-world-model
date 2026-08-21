@@ -21,5 +21,6 @@ Application Services 拥有用例编排和可恢复结果，但不复制 Source 
 - [Java Implementation Query](implementation-query.md)
 - [World Model Answering](world-model-answering.md)
 - [Direct Evidence Answering](evidence-answering.md)
+- [Engineering Question Answering](engineering-question-answering.md)
 - [Agentic Task](agentic-task.md)
 - [Response Control](response-control.md)

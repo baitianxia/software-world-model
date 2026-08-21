@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [application, quality]
-depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-ADR-013]
+depends_on: [SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-ADR-013, SYS-ADR-016]
 code: [src/software_world_model/application_services/evidence_answer.py, src/software_world_model/ai_infrastructure/evidence_answer_strategy.py, src/software_world_model/interface/runtime.py]
 tests: [tests/test_evidence_answer.py, tests/test_evidence_answer_strategy.py, tests/test_browser_chat_interface.py]
 ---
@@ -14,6 +14,8 @@ tests: [tests/test_evidence_answer.py, tests/test_evidence_answer_strategy.py, t
 ## Purpose and scope
 
 本契约定义显式 `DIRECT_INVESTIGATION`：保持原问题、调查 exact 授权源码、密封任务级证据、生成自然答案并独立复核。它不负责把证据发布为跨任务正式知识，也不得被标记为 `WORLD_MODEL` 回答。
+
+ADR-016 的 `ENGINEERING_QA` 会复用受控来源操作、密封和独立审核原则，但它同时绑定 World Model Result/Gap，并使用独立 Question Evidence Package 与 Request/Result/Qualification 身份。它不是调用本服务的静默 fallback；本契约的余下规则仍只适用于显式 `DIRECT_INVESTIGATION`。
 
 ## Ownership
 

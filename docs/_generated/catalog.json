@@ -1804,6 +1804,34 @@
     "path": "docs/project/iterations/iteration-009/findings/FINDING-009-002.md"
   },
   {
+    "id": "FINDING-009-003",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-009/findings/FINDING-009-003.md"
+  },
+  {
+    "id": "FINDING-010-001",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-001.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3285,8 +3313,8 @@
   {
     "id": "ITER-009-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "current",
-    "authority": "current-development",
+    "status": "rejected",
+    "authority": "development-evidence",
     "owners": [
       "engineering",
       "architecture"
@@ -3310,8 +3338,8 @@
   {
     "id": "ITER-009-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "rejected",
+    "authority": "project-decision",
     "owners": [
       "product",
       "project",
@@ -3351,9 +3379,23 @@
     "path": "docs/project/iterations/iteration-009/readiness-review.md"
   },
   {
+    "id": "ITER-009-RESULT-SLICE-001-STOP-REDIRECT",
+    "kind": "iteration-result",
+    "status": "failed-preserved",
+    "authority": "execution-evidence",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-009/results/slice-001-stop-redirect.md"
+  },
+  {
     "id": "ITER-009-RESULTS",
     "kind": "results-index",
-    "status": "draft",
+    "status": "completed",
     "authority": "project-evidence",
     "owners": [
       "quality",
@@ -3365,8 +3407,8 @@
   {
     "id": "ITER-009-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "blocked",
+    "authority": "development-evidence",
     "owners": [
       "engineering",
       "architecture",
@@ -3407,13 +3449,150 @@
   {
     "id": "ITER-009-VERIFICATION",
     "kind": "iteration-verification",
+    "status": "failed",
+    "authority": "execution-evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-009/verification-matrix.md"
+  },
+  {
+    "id": "ITER-010-DEVELOPMENT-DESIGN",
+    "kind": "development-design-index",
+    "status": "current",
+    "authority": "project-plan",
+    "owners": [
+      "engineering",
+      "architecture",
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/development-design/README.md"
+  },
+  {
+    "id": "ITER-010-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "open",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/README.md"
+  },
+  {
+    "id": "ITER-010-INDEX",
+    "kind": "iteration-index",
+    "status": "authorized",
+    "authority": "current-development",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/README.md"
+  },
+  {
+    "id": "ITER-010-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "accepted",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/proposal.md"
+  },
+  {
+    "id": "ITER-010-READINESS",
+    "kind": "iteration-readiness",
+    "status": "accepted",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/readiness-review.md"
+  },
+  {
+    "id": "ITER-010-RESULTS",
+    "kind": "results-index",
+    "status": "draft",
+    "authority": "project-evidence",
+    "owners": [
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/README.md"
+  },
+  {
+    "id": "ITER-010-SLICE-001",
+    "kind": "development-slice",
+    "status": "authorized",
+    "authority": "current-development",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md"
+  },
+  {
+    "id": "ITER-010-SLICE-002",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/development-design/SLICE-002-cross-project-hardening.md"
+  },
+  {
+    "id": "ITER-010-SLICE-003",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "quality",
+      "product",
+      "project",
+      "architecture",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/development-design/SLICE-003-formal-product-acceptance.md"
+  },
+  {
+    "id": "ITER-010-VERIFICATION",
+    "kind": "iteration-verification",
     "status": "not-run",
     "authority": "planned-verification",
     "owners": [
       "quality"
     ],
     "derived_from": [],
-    "path": "docs/project/iterations/iteration-009/verification-matrix.md"
+    "path": "docs/project/iterations/iteration-010/verification-matrix.md"
   },
   {
     "id": "ITERATION-INDEX",
@@ -3555,6 +3734,21 @@
     ],
     "derived_from": [],
     "path": "docs/project/roadmap/candidates/bounded-agentic-world-model-investigation.md"
+  },
+  {
+    "id": "ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST",
+    "kind": "roadmap-candidate",
+    "status": "candidate",
+    "authority": "planning-only",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/candidates/engineering-question-answer-first.md"
   },
   {
     "id": "ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY",
@@ -3917,6 +4111,24 @@
     "path": "docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md"
   },
   {
+    "id": "SYS-ADR-016",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "product",
+      "application",
+      "source",
+      "quality",
+      "security"
+    ],
+    "derived_from": [
+      "FINDING-010-001"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
+  },
+  {
     "id": "SYS-ADR-INDEX",
     "kind": "system-decision-index",
     "status": "current",
@@ -4089,6 +4301,20 @@
     ],
     "derived_from": [],
     "path": "docs/system/contracts/application/behavior-view.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application",
+      "source",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/engineering-question-answering.md"
   },
   {
     "id": "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING",

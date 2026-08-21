@@ -25,7 +25,7 @@ Evidence Packet 是绑定 exact 来源目标、来源操作、Artifact 内容和
 
 Knowledge Update、Admission、Publication 和 Knowledge Use 保留为显式或后台知识沉淀能力。直接调查回答通过审核后可以异步提议沉淀，但回答成功不依赖该异步结果，Evidence Packet 也不能绕过正式知识准入。
 
-`WORLD_MODEL` 模式不适用本决定：它只能读取 exact Snapshot 与其派生只读 View，不得读取 Source、创建 Evidence Packet、触发 Knowledge Update 或在知识不足时静默回退到本模式。模式边界由 ADR-014 拥有。
+`WORLD_MODEL` 模式不适用本决定：它只能读取 exact Snapshot 与其派生只读 View，不得读取 Source、创建 Evidence Packet、触发 Knowledge Update 或在知识不足时静默回退到本模式。`WORLD_MODEL` 的精确边界由 ADR-014 拥有；ADR-016 另行定义事先声明 World Model + Source 组合证据的 `ENGINEERING_QA`，不改变本模式语义。
 
 ## Alternatives
 

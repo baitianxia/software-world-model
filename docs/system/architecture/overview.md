@@ -21,9 +21,9 @@ flowchart LR
     IF -->|"explicit answer mode"| TC["Conversational Task Control"]
     IF -->|"CLI / Scheduler command"| A["Application Use-case Services"]
     TC -->|"authorized query / command"| A
-    A -->|"update or direct investigation only"| S["Source Integration"]
+    A -->|"update, direct investigation, or ENGINEERING_QA retrieval"| S["Source Integration"]
     S -->|"Operation Result + Artifact reference"| A
-    A -->|"sealed Evidence Packet"| R
+    A -->|"sealed Evidence / Question Evidence Package"| R
     A -->|"neutral Artifact contract"| K["Knowledge Engine"]
     K --> N["Formal Snapshot"]
     A --> M["Model Gateway"]
@@ -44,9 +44,9 @@ flowchart LR
 - 软件来源、模型 Provider、交付 Adapter 和 Telemetry Backend 都是不可信外部边界。
 - 来源访问必须由 Source Integration 执行；模型不能直接执行来源或平台工具，只能提交由平台重新授权的结构化 Proposal。
 - Provider 响应只能形成 Proposal 或评测输入，必须由领域所有者校验。
-- Direct Investigation 的 Evidence Packet 是任务级固定输入，不是正式知识；World Model Query 的答案 worker 只读取 exact Snapshot/Read Set 的 no-payload Read Bundle 和只读 View。Citation Projector 在结果密封后以独立进程展示 Evidence observation，不得回流。两种回答结果必须显式区分，不能静默回退。
+- Direct Investigation 的 Evidence Packet 是任务级固定输入，不是正式知识；World Model Query 的答案 worker 只读取 exact Snapshot/Read Set 的 no-payload Read Bundle 和只读 View；Engineering Question Answering 由隔离 Retrieval Worker 在 exact revision 只读源文件，再把 World Model Result/Gap 与来源证据同时密封为 Question Evidence Package。它们的 Answer/Reviewer 都只读各自固定输入。Citation 展示不得回流答案链。三种回答结果必须显式区分，不能静默切换。
 - 当前系统规范不等于部署授权；任何环境启用都需要与 exact subject 匹配的独立证据和显式授权。
 
 ## 演进方式
 
-扩展优先沿现有 Owner、Port 和 Contract 增加 Strategy。Direct Investigation 与 World Model Query 是 Application 内两个显式用例；Semantic View 是可重建的只读组织层，不新增知识权威。正式知识由独立 Knowledge Update 构建，不能依赖提问触发。只有出现新的权威状态、事务边界或安全边界时，才新增顶层组件。
+扩展优先沿现有 Owner、Port 和 Contract 增加 Strategy。Direct Investigation、World Model Query 与 Engineering Question Answering 是 Application 内三个显式用例；Semantic View 是可重建的只读组织层，隔离 Retrieval Worker 是受限执行边界，两者都不新增知识权威。正式知识由独立 Knowledge Update 构建，不能依赖提问触发；Engineering QA 后的知识沉淀只能在 Delivery 之后异步提议。只有出现新的权威状态、事务边界或安全边界时，才新增顶层组件。

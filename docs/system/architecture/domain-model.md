@@ -21,6 +21,14 @@ flowchart TD
     DA --> RV
     EP --> RV
     RV --> AA["Authorized synchronous answer"]
+    EQ["Engineering Question + Understanding / Checklist"] --> QEP["Sealed Question Evidence Package"]
+    SN -. "map / known evidence / hints" .-> QEP
+    AR -. "exact-revision read-only observation" .-> QEP
+    QEP --> EQA["Cited conclusion-first Draft"]
+    EQ --> EQR["Independent Engineering Answer Review"]
+    EQA --> EQR
+    QEP --> EQR
+    EQR --> EQD["Authorized engineering answer"]
     AR --> EV["Evidence"]
     EV --> CC["Entity / Fact / Inference Candidate Closure"]
     PS["Exact published premises / base Snapshot"] -.-> CC
@@ -45,13 +53,14 @@ flowchart TD
     AS --> KA["Reviewed formal-knowledge query result"]
 ```
 
-该图表达三条不同边界：Direct Investigation 把 Artifact 内容密封为只对当前问题有效的 Evidence Packet；Knowledge Update 把受审核 Candidate 原子发布为 Snapshot；World Model Query 只读 exact Snapshot/View 并返回受支持答案或 Knowledge Gap。三者不能静默互换。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
+该图表达四条不同边界：Direct Investigation 把 Artifact 内容密封为只对当前问题有效的 Evidence Packet；Knowledge Update 把受审核 Candidate 原子发布为 Snapshot；World Model Query 只读 exact Snapshot/View 并返回受支持答案或 Knowledge Gap；Engineering Question Answering 把 World Model 地图/结果与提问期 exact-revision 只读观察密封为 Question Evidence Package。四者不能静默互换。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
 
 ## 概念边界
 
 - **Artifact** 是来源的中立、可追溯观察载体，不是知识结论。
 - **Evidence** 是 Artifact 中有界且可定位的观察，不表达全局真假。
 - **Evidence Packet** 是绑定原问题、检查清单、exact Target、来源操作和 Artifact 内容的不可变任务输入；它没有跨任务正式知识资格。
+- **Question Evidence Package** 是 `ENGINEERING_QA` 的本题事实权威输入；它同时绑定原问题/Question Understanding、exact World Model Result/Gap、exact-revision 只读来源观察、Coverage、Conflict、locator 和收据，但不因此取得 Fact/Snapshot 资格。
 - **Answer Draft / Review Finding** 分别是可引用自然答案和独立审核意见；只有空 Finding 的 APPROVED Draft 可被授权。
 - **Entity** 提供稳定身份；属性和关系由 Fact 或 Inference 表达。
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。

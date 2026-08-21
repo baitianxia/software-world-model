@@ -4,7 +4,7 @@ kind: system-architecture
 status: current
 authority: normative
 owners: [architecture, application]
-depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015]
+depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
 derived_from: [FINDING-008-024, FINDING-008-036]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
@@ -106,6 +106,24 @@ Original Question
 ```
 
 生成角色和审核角色都不能访问来源工具。审核发现表达、遗漏或组织问题时，Response Control 把具体 Finding 和同一 Packet Digest 交给生成角色重写，不重新运行调查；审核证明现有包缺少物质性依据时，Application 才执行针对性来源调查并密封新 Packet。未通过、未知或达到安全熔断均不授权用户答案。调用次数限制只能触发失败关闭，不能取消检查项、引用或独立审核。
+
+## 工程问答
+
+```text
+Explicit ENGINEERING_QA request
+  → immutable original question + Question Understanding / Checklist
+  → exact World Model query as map, known evidence and retrieval hints
+  → checklist + Snapshot hints form one bounded Retrieval Plan
+  → isolated read-only retrieval over authorized exact source/docs/config/tests
+  → seal one Question Evidence Package with provenance, coverage and conflicts
+  → isolated conclusion-first Answer with claim citations
+  → independent Review against the original question and the same package
+  → APPROVED Delivery, one fixed-package rewrite/re-review, or one specific-gap supplemental retrieval/reseal/re-review
+```
+
+该流程的模式在任何读取和模型调用前已固定。World Model 结果缺失、无关或 Coverage 不足只是 Package 的显式状态，不阻断原 Checklist 在同一授权 exact revision 中驱动只读检索；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。只有 Retrieval Worker 读取来源，并把来源内容当作不可信 data；Answer/Reviewer 没有 Repository、Source/World Model Tool、shell 或网络，只读密封包。
+
+重写只能使用同一 Package Digest 并最多一次；Reviewer 必须指出可验证的具体证据缺口，Application 才可重新编译一次受权补充检索，密封新 Package Revision 并执行全新生成/复核。文件、字节、操作、时间和模型调用上限只能失败关闭，不得降低检索、Citation 或审核质量。已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走准入和发布，不阻塞本题。
 
 ## 正式知识使用
 

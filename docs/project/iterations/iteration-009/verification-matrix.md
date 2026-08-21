@@ -1,8 +1,8 @@
 ---
 id: ITER-009-VERIFICATION
 kind: iteration-verification
-status: not-run
-authority: planned-verification
+status: failed
+authority: execution-evidence
 owners: [quality]
 depends_on: [ITER-009-PROPOSAL]
 code: []
@@ -11,30 +11,30 @@ iteration: ITER-009
 product_goal_gate: V-000
 product_goal_outcome: user-visible-general-source-qa-delta
 product_goal_evaluation: independent-hidden-plus-live-ad-hoc
-product_goal_result_id: not-executed
+product_goal_result_id: ITER-009-RESULT-SLICE-001-STOP-REDIRECT
 ---
 
 # ITER-009 Verification Matrix
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合 | product / comparison | 未参与实现的真实工程；独立评测方/用户持有且实现阶段不可见的 held-out 自由问题；验收现场临时问题；旧+新知识跨域问题；成熟源码 Agent protocol；预提交差异化价值阈值 | 支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证 | not-executed | NOT-RUN / blocking |
+| V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合 | product / comparison | 未参与实现的真实工程；独立评测方/用户持有且实现阶段不可见的 held-out 自由问题；验收现场临时问题；旧+新知识跨域问题；成熟源码 Agent protocol；预提交差异化价值阈值 | 支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证 | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-000 | FAIL / blocking |
 | V-PRE-001 | product baseline、planning commit 和未验收实验被精确分离 | readiness / baseline | product `2cd743b2ba74c5a79cd4d38433830786de09e753`、planning `967e41bcaa25112ea6b18620d0ac8e0aa5a4a42a`、archive `c4ed92ea44383557dd25e6d327569cff13bb6d65` | 新分支只继承 product baseline 和规划；归档 `1.5.12` 不在 ancestry/worktree；dirty worktree 禁止 | Git object/tree/branch inspection；Proposal、Manifest 与 Slice 一致 | PASS / readiness blocking |
 | V-PRE-002 | 当前产品证据被正确分类，不把 ITER-008 技术结果误写成 Acceptance | readiness / evidence | run-012 formal report file `sha256:776a3afd5dca957a0bc2bd2b29a36bbea4b943ac2f7caa3d54f836f79fa84e6c`、positive browser result file `sha256:d1a8a9760ecd3673504d1bdd0dc5f4e1dbb6c233f5f2c509888fc6cb40175c91`、boundary terminal file `sha256:c4812a82b576ce79cc8b4be871a10cd038b60f2ccc91c7c34b06068c75abb4eb` | 正向 Web 可用和 Review/Limitation 缺口作为 baseline 事实；不继承 Product Acceptance、旧 grant 或资格 | Proposal Trigger、Readiness evidence classification 与 Results index 一致 | PASS / readiness blocking |
 | V-PRE-003 | 方向体验优先的三个 Slice 顺序、授权边界和停止规则已冻结 | readiness / governance | development policy、iteration lifecycle、Proposal、三个 Slice、Manifest reflection bindings | 先真实 Web；用户 CONTINUE 后才夯实；再次 CONTINUE 后才正式验收；每段独立 Result/新授权；REDIRECT/REJECT 停止 | `ITER-009-PROPOSAL`、`ITER-009-SLICE-001/002/003`、Manifest | PASS / readiness blocking |
 | V-PRE-004 | 安全、权限、Secret、Provider dispatch 与 Web 运行没有被初始开发授权扩大 | readiness / security | user authorization receipt `sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed`、System Contract fileset、Slice1 boundary | 只授权编码和本地确定性测试；live Provider、credential、正式 Web、browser question、hidden disclosure 与 Production 均需后续 exact grant | Readiness、Manifest authorization 和 SLICE-001 明确相同禁止面 | PASS / readiness blocking |
 | V-PRE-005 | 成熟源码 Agent 对照、价值阈值、隐藏披露和 burn 规则在编码前冻结 | readiness / comparison | Agent `sha256:66078a61f7c5f25fc72c0c36c004819c99ae01c8465d01229149efc1e5809e1d`、rubric `sha256:6fe156f6f68cdaf572102f9e76feb8953e7e0838ee10ae57b0f11900bc9d2c1b`、cache `sha256:d3b10942f2b9a98f2b9da22bf04dbf2a1a150299a07f33f292da69c875698ff8`、value `sha256:5f79ff127574f2bce75cd31b0e217444ac3c15318bb4c9e435f615dad150a6d4` | ratio-ppm at-most 250000、reuse horizon 12；early/final hidden 输入互不复用；披露后产品变化烧毁 evidence | Proposal 与 Manifest exact frozen values | PASS / readiness blocking |
 | V-PRE-006 | 关键假设、最早反证、System Contract set 和回答预算全部可机械验证 | readiness / architecture | Proposal A1—A5 catalog `sha256:3ca13e4768159698cd69092946d820b7e04059fa6292b316c75b5c07cb0a659a`、Manifest reflection/conditional falsifier、`ITER-009-SYSTEM-CONTRACT-SET@1`、2—4 investigation + Draft/Review budget | 每段假设覆盖单调增加且最终全覆盖；每个 deferred assumption 有 owned early blocker；Contract set digest 与文件一致；无 fixed-call 降质 | Proposal、Manifest、Readiness 与 docs gate | PASS / readiness blocking |
-| V-BASELINE-001 | Slice1 实际开发 subject 仍从精确 product baseline 开始且不含归档实验 | development / baseline | Git ancestry/tree、worktree status、archive commit diff | product baseline 与 planning-only delta 可复现；无 `1.5.12` 批量继承；任何选择性吸收留到 Slice2 Finding | not-executed | NOT-RUN / blocking |
-| V-001 | Snapshot 在问题前由零问题更新形成，提问不改变知识 identity | update / isolation | exact repository revision、Build Objective、before/after authority state | question/suite 不进入 Update；CURRENT/Snapshot/Bundle identity 前后相同 | not-executed | NOT-RUN / blocking |
-| V-SOURCEOFF-001 | 回答进程只能读取 no-payload World Model，不读源码或触发更新 | isolation / security | Repository、Source、raw Evidence、Update、Direct denied probes与 operation audit | supported answer 或 Limitation 可完成；Source/Update/Direct/raw Evidence attempt 均为 0 | not-executed | NOT-RUN / blocking |
-| V-SEC-001 | 方向体验保持 loopback、授权、Secret、预算、独立审核、零隐藏重试与失败关闭 | security / integration | stale identity、unauthorized operation、oversize/budget、review tamper、outcome unknown、non-loopback probes | 全部失败关闭且无 fallback/retry/secret exposure；合法路径完成；页面只监听 127.0.0.1 | not-executed | NOT-RUN / blocking |
-| V-ANSWER-001 | Slice1 supported 多步骤题及无符号改述形成自然、完整、可引用答案 | product / regression | 代码冻结后的正式 Web、同一业务语义的两种自然语言表达、exact evidence package | 重要行为无重大遗漏；答案不平铺内部证明；每项关键结论绑定真实 Citation | not-executed | NOT-RUN / blocking |
-| V-LIMIT-001 | Slice1 boundary 形成具体 typed Limitation 而不是内部失败或伪造结论 | product / boundary | evidence insufficient 的真实问题、Draft/Review typed contract、无关证据反例 | 明确说明证据缺口和可支持范围；Reviewer 按 Limitation 语义裁决；无无关登录证据或绝对否定 | not-executed | NOT-RUN / blocking |
-| V-XD-001 | `ITER-006-RESULT-ACCEPTANCE` 与 `ITER-009-SLICE-001` 在同一答案链组合 | product / integration | accepted declaration/`CALLS`、Slice1 evidence organization/review delivery、无符号多步骤题 | 同一回答同时依赖 accepted static-call 事实和本轮交付能力，不是正文拼接 | not-executed | NOT-RUN / blocking |
-| V-WEB-001 | Slice1 从真实 product-owned Web 执行 `V-XD-001` | product / browser | loopback 页面、普通用户无认证、run-specific grant、全新问题提交 | 用户看到答案或具体限制和可打开 Citation；console clean；不是回放、CLI 或 validation-only launcher | not-executed | NOT-RUN / blocking |
-| V-PREVIEW-001 | 在全面夯实前完成最小真实方向体验并取得用户方向结论 | product / directional-preview | `V-WEB-001` 入口、supported 多步骤题、无符号改述、boundary、非验收/非生产标识 | 核心交互、答案组织、引用与限制均可体验；用户决定 CONTINUE、REDIRECT 或 REJECT | not-executed | NOT-RUN / blocking |
-| V-REFLECT-001 | Slice1 复盘方向体验、公开基线和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、全部 owned Case、Findings、用户新决策收据 | A1—A3 exact Verdict；A4/A5 early FAIL 时追加结构化反证；Reflection 完整且决定为 CONTINUE、REDIRECT 或 REJECT | not-executed | NOT-RUN / blocking |
+| V-BASELINE-001 | Slice1 实际开发 subject 仍从精确 product baseline 开始且不含归档实验 | development / baseline | Git ancestry/tree、worktree status、archive commit diff | product baseline 与 planning-only delta 可复现；无 `1.5.12` 批量继承；任何选择性吸收留到 Slice2 Finding | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-BASELINE-001 | PASS / blocking |
+| V-001 | Snapshot 在问题前由零问题更新形成，提问不改变知识 identity | update / isolation | exact repository revision、Build Objective、before/after authority state | question/suite 不进入 Update；CURRENT/Snapshot/Bundle identity 前后相同 | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-001 | PASS / blocking |
+| V-SOURCEOFF-001 | 回答进程只能读取 no-payload World Model，不读源码或触发更新 | isolation / security | Repository、Source、raw Evidence、Update、Direct denied probes与 operation audit | supported answer 或 Limitation 可完成；Source/Update/Direct/raw Evidence attempt 均为 0 | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-SOURCEOFF-001 | PASS / blocking |
+| V-SEC-001 | 方向体验保持 loopback、授权、Secret、预算、独立审核、零隐藏重试与失败关闭 | security / integration | stale identity、unauthorized operation、oversize/budget、review tamper、outcome unknown、non-loopback probes | 全部失败关闭且无 fallback/retry/secret exposure；合法路径完成；页面只监听 127.0.0.1 | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-SEC-001 | PASS / blocking |
+| V-ANSWER-001 | Slice1 supported 多步骤题及无符号改述形成自然、完整、可引用答案 | product / regression | 代码冻结后的正式 Web、同一业务语义的两种自然语言表达、exact evidence package | 重要行为无重大遗漏；答案不平铺内部证明；每项关键结论绑定真实 Citation | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-ANSWER-001 | FAIL / blocking |
+| V-LIMIT-001 | Slice1 boundary 形成具体 typed Limitation 而不是内部失败或伪造结论 | product / boundary | evidence insufficient 的真实问题、Draft/Review typed contract、无关证据反例 | 明确说明证据缺口和可支持范围；Reviewer 按 Limitation 语义裁决；无无关登录证据或绝对否定 | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-LIMIT-001 | FAIL / blocking |
+| V-XD-001 | `ITER-006-RESULT-ACCEPTANCE` 与 `ITER-009-SLICE-001` 在同一答案链组合 | product / integration | accepted declaration/`CALLS`、Slice1 evidence organization/review delivery、无符号多步骤题 | 同一回答同时依赖 accepted static-call 事实和本轮交付能力，不是正文拼接 | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-XD-001 | PASS / blocking |
+| V-WEB-001 | Slice1 从真实 product-owned Web 执行 `V-XD-001` | product / browser | loopback 页面、普通用户无认证、run-specific grant、全新问题提交 | 用户看到答案或具体限制和可打开 Citation；console clean；不是回放、CLI 或 validation-only launcher | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-WEB-001 | PASS / blocking |
+| V-PREVIEW-001 | 在全面夯实前完成最小真实方向体验并取得用户方向结论 | product / directional-preview | `V-WEB-001` 入口、supported 多步骤题、无符号改述、boundary、非验收/非生产标识 | 核心交互、答案组织、引用与限制均可体验；用户决定 CONTINUE、REDIRECT 或 REJECT | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-PREVIEW-001 | FAIL / blocking |
+| V-REFLECT-001 | Slice1 复盘方向体验、公开基线和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、全部 owned Case、Findings、用户新决策收据 | A1—A3 exact Verdict；A4/A5 early FAIL 时追加结构化反证；Reflection 完整且决定为 CONTINUE、REDIRECT 或 REJECT | ITER-009-RESULT-SLICE-001-STOP-REDIRECT#V-REFLECT-001 | PASS / blocking |
 | V-ANSWER-002 | Slice2 统一交付 supported answer、bounded negative 与 insufficient coverage | contract / product | 通用 typed fixtures、第二真实工程、sealed evidence package | 三类结果按 evidence state 交付，无题目/工程/关键词/符号特判 | not-executed | NOT-RUN / blocking |
 | V-REWRITE-002 | Slice2 独立 Reviewer 的具体 finding 可以驱动一次有界 targeted rewrite | application / contract | material omission、unsupported inference、citation gap、unfixable cases | 同一 evidence package 最多一次 rewrite 且重新 Review；不可修复失败关闭；不是隐藏 retry | not-executed | NOT-RUN / blocking |
 | V-HARDEN-002 | Slice2 的 coverage、预算、schema、Ref provenance 与 terminal 语义机械闭合 | application / security | pagination、truncation、oversize、cycle、budget、stale Ref、invalid terminal matrix | 无漏页、越权、无界循环或伪完整；超限返回具体 Limitation 或失败关闭 | not-executed | NOT-RUN / blocking |
@@ -67,3 +67,7 @@ product_goal_result_id: not-executed
   目标削减。
 - 每个 `V-REFLECT` PASS 只表示复盘完整。`SLICE-001/002` 需要新的 `CONTINUE` 才能授权下一段；最终需要新的 `ACCEPT` 才能接受迭代。
 - 最终 Product Result 必须逐 Case 绑定三个唯一 Slice Result；测试数量、模型调用成功、静态回放或旧资格不能替代。
+
+本 Matrix 已由 `ITER-009-RESULT-SLICE-001-STOP-REDIRECT` 终止：run-001 的三条真实 Web 结果证明技术交付、只读隔离、独立 Review 与
+Citation 可运行，但 `V-ANSWER-001`、`V-LIMIT-001` 和方向 Gate 失败。用户决定 `REDIRECT`；`SLICE-002/003`、hidden、成熟源码
+Agent 对照、差异化价值、Acceptance 与 Production Activation 均未执行。

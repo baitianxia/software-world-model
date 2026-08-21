@@ -14,7 +14,7 @@ tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py]
 
 ## Purpose and scope
 
-Agentic Task 把自然语言请求转成有界的 Capability 调用、Evidence Answering、知识更新/使用和响应准备。同步聊天可以直接进入受控 Evidence Answering 用例；需要多能力编排时由 Orchestrator 提议和路由。Orchestrator 不执行业务 Core、不拥有最终答案或授权。
+Agentic Task 把自然语言请求转成有界的 Capability 调用、Engineering Question Answering、Evidence Answering、知识更新/使用和响应准备。普通同步工程聊天可以从事先声明的 `ENGINEERING_QA` 入口进入组合证据用例；严格 `WORLD_MODEL` 与 `DIRECT_INVESTIGATION` 保留独立显式入口。需要多能力编排时由 Orchestrator 提议和路由。Orchestrator 不执行业务 Core、不拥有最终答案或授权。
 
 ## Ownership
 
@@ -39,6 +39,9 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
 9. Investigation、Draft 与 Review 是隔离角色。调查角色不能看到 Source/Repository/raw Evidence/Update/Direct/Citation
    observation；Draft 只消费 sealed trace；Reviewer 从原问题和同一 trace 独立重建检查项。任何角色失败、结果未知或预算耗尽都
    终止本题，不 retry 或降级。
+10. `ENGINEERING_QA` 是独立的有界组合用例：Task 在执行前固定模式、original question、exact revision、World Model Read Authority、Source allowlist、Provider disclosure 和资源熔断。Question Understanding 与 Checklist 不可被后续证据缩减；Snapshot hint 可以提供候选和复用证据，但不得否决 Checklist 驱动的受权 Source retrieval。
+11. Engineering QA Retrieval、Answer 和 Reviewer 是三个隔离角色。只有 Retrieval Worker 可通过 Source Application Port 执行 allowlisted exact-revision 只读操作；Answer/Reviewer 只读密封 Question Evidence Package，不得访问 Repository、Source/World Model Tool、shell、网络或未密封输入。Task Control 不得执行 Source 内容中的指令，也不得把模型输出当成授权、证据或最终 Review。
+12. Engineering QA 的同包定向重写最多一次，且必须形成新的独立 Review Attempt。只有具体 `MORE_EVIDENCE_REQUIRED` 可由 Application 重新编译一次原授权内的补充检索；新证据形成新 Package Revision 并重走 Answer/Review。调用或成本上限只能失败关闭，不得删减调查、Citation 或审核。
 
 ## Failure and implementation boundary
 

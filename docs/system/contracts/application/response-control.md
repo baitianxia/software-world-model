@@ -18,11 +18,11 @@ Response Control 审核、授权并唯一交付用户可见响应。它同时处
 
 ## Ownership
 
-Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Claim Binding、Review、Authorization、Dispatch 与 Delivery 的唯一写者。Reviewer 只能提交 Proposal；Task Control、Direct Evidence Answering、World Model Query 与 Delivery Adapter 不能自行放行候选正文。
+Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Claim Binding、Review、Authorization、Dispatch 与 Delivery 的唯一写者。Reviewer 只能提交 Proposal；Task Control、Engineering Question Answering、Direct Evidence Answering、World Model Query 与 Delivery Adapter 不能自行放行候选正文。
 
 ## Invariants
 
-1. Direct Evidence Answer 的每个实质 Section 绑定密封 Packet 中的实际 Evidence 或明确 UNKNOWN；World Model Answer 的 Claim 绑定同一 exact Read Session 的正式知识、Structure View/Query Result、Knowledge Gap 或 Limitation。Answer Text 不能成为自身证据。
+1. Direct Evidence Answer 的每个实质 Section 绑定密封 Packet 中的实际 Evidence 或明确 UNKNOWN；World Model Answer 的 Claim 绑定同一 exact Read Session 的正式知识、Structure View/Query Result、Knowledge Gap 或 Limitation；Engineering QA 的每个实质结论绑定同一 Question Evidence Package 中的实际 entry 或明确 unknown/limitation。Answer Text 不能成为自身证据。
 2. 完整/部分/Gap 结论绑定 exact Requirement Revision、Session、Use Epoch 和全部 Need Assessment。
 3. Reviewer Assessment Proposal 只有在其 exact Task-owned Outcome Assertion、Invocation 与 Grant 匹配，且 Response-owned Review Attempt 绑定的 reviewer output digest 与 model eligibility 都有效时才可接收；Task Control 不拥有 Review Attempt 或 Review Decision。
 4. Review 使用当前权威重新读取 Claim、引用、Context 和 Coverage；UNKNOWN、遗漏或语义扩张均失败关闭。
@@ -34,6 +34,9 @@ Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Clai
 10. 已满足 Need 仍可携带必须披露的 Application Limitation；该 Claim 绑定同一 Sufficiency Proof，但不是正式知识或 Knowledge Gap，不得获得 Formal Reference，也不得把 Need 改写为未满足。投影可以改善可读性，但不能改变这三类权威来源。
 11. Evidence Answer 重写必须绑定同一 Checklist、Packet Digest、prior Draft 和 exact Review Findings；Review 要求补证时必须返回 Application 形成新 Packet，Response Control 不能访问 Source Tool 或自行扩充证据。
 12. World Model Answer 的生成、审核和重写固定同一 Snapshot、View/Query Result、Coverage 与 Support Map；Response Control 不得访问 Source、启动 Knowledge Update 或切换 Direct Investigation。输入变化必须形成新的 Candidate，而不是改写旧授权。
+13. Engineering QA Reviewer 必须从 original question 独立检查直接回答、抽象层级、正确性、完整性、相关性、可用性、Citation 和 unknown 边界；任一失败必须有具体 Finding，不得因正文流畅或其他项通过而抵消。代码事件的机械完整不等于直接回答了用户问题。
+14. Engineering QA 在同一 Package Digest 上最多定向重写一次，并必须再次独立 Review。Response Control 不得读 Source 或自行扩充包；只有绑定具体证据缺口的 `MORE_EVIDENCE_REQUIRED` 可返回 Application 形成一个新 Package Revision，旧 Review 不能放行新包。
+15. 调用次数、成本和其他资源上限不得使 Response Control 删除 Checklist item、Claim Citation、Review dimension 或独立复核。熔断耗尽使候选失败关闭，不使未通过正文取得授权。
 
 ## Failure and implementation boundary
 

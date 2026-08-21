@@ -4,14 +4,14 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-SLICE-001]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001]
 code: []
 tests: []
 as_of: 2026-08-21
-active_iteration: ITER-009-INDEX
-active_slice: ITER-009-SLICE-001
-worktree_status: iteration-009-slice-001-authorized-direction-preview-development-ready
-strategy_relation: direction-preview-first-reuses-iteration-008-clean-technical-baseline-after-redirect
+active_iteration: ITER-010-INDEX
+active_slice: ITER-010-SLICE-001
+worktree_status: iteration-010-slice-001-authorized-engineering-qa-development-ready
+strategy_relation: explicit-engineering-qa-uses-world-model-as-map-and-exact-source-as-controlled-evidence
 live_model_path: not-authorized-development-only-no-live-dispatch
 ---
 
@@ -19,14 +19,15 @@ live_model_path: not-authorized-development-only-no-live-dispatch
 
 ## 开发授权
 
-当前活动 Iteration 为 `ITER-009`，唯一活动 Slice 为 `ITER-009-SLICE-001`。用户消息
-`codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed` 接受本轮
-Readiness，并授权“方向体验优先”的第一段开发。该授权只覆盖产品代码修改和本地确定性验证；不授权读取 Provider credential、
-发起模型调用、启动正式 Web/live 会话、披露隐藏题、进入 `SLICE-002/003` 或执行 Production Activation。
+当前活动 Iteration 为 `ITER-010`，唯一活动 Slice 为 `ITER-010-SLICE-001`。用户先以
+`codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4` 要求把环境准备到新迭代可开发，
+再以 `codex-user-message:sha256:5cdb7000ba36328f5caa27727c6b689ad4e98e7ad13eca72837fa020d0c270c9` 接受新的混合证据架构。
+本轮 Readiness 与第一段开发授权只覆盖 System 文档、治理门禁、产品代码和本地确定性验证；不授权读取 Provider credential、发起模型
+调用、启动正式 Web/live 会话、披露隐藏题、进入 `SLICE-002/003` 或执行 Production Activation。
 
-`ITER-008` 已依据实际 Web 证据以 `REDIRECT` 结束：已完成的技术代码和运行证据均保留，但没有形成 Acceptance。`ITER-009` 的产品
-代码从 clean commit `2cd743b2ba74c5a79cd4d38433830786de09e753` 继续；未验收的 `1.5.12` 实验保存在归档提交
-`c4ed92ea44383557dd25e6d327569cff13bb6d65`，不属于当前开发基线。
+`ITER-009` 已依据三条真实 Web 体验以 `REDIRECT` 结束：技术代码和运行证据完整保留，但代码走读式回答方向未获接受。
+`ITER-010` 从 clean commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
+`1369ce932c778c57a118123e8257ede476229d73` 继续，不废弃已经验证的 Web、Citation、Limitation、隔离和审核资产。
 
 用户此前于 `2026-08-13T11:45:33+08:00` 接受 ITER-006 的 exact run-008 窄范围 Result：
 在新的 SYSTEM Scope 上以 `JAVA_STATIC_CALL_GRAPH@1` 构建 Java 声明与可静态唯一解析的直接调用，发布 no-payload Snapshot/
@@ -45,7 +46,8 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
-| Iteration 009 | **SLICE-001 authorized / development ready** | 从 clean 产品基线 `2cd743b…753` 开始，先完成真实本机 Web 方向体验所需的最小通用修复和确定性验证。当前只授权开发，不授权 Provider、模型或正式 Web 外部分派；方向体验运行仍需 exact freeze 后的独立授权 |
+| Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
+| Iteration 010 | **SLICE-001 authorized / development ready** | 新增显式 `ENGINEERING_QA`：World Model 提供工程地图、已知证据和检索入口，隔离 Worker 按需只读 exact revision，LLM 以高级工程师角色综合答案；先闭合 ADR/Contract/治理，再实现真实方向体验 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -56,8 +58,9 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-当前只推进 `ITER-009-SLICE-001`：先重建 clean baseline，确认现有 Web 主线的最小阻断，实施不含问题、工程或关键词特判的最小
-通用修复，并完成本地确定性验证。达到可冻结状态后另行形成运行授权；本轮不得读取凭据、调用模型或启动正式体验会话。
+当前只推进 `ITER-010-SLICE-001`：先以 Finding、ADR、System Contract 和治理测试正式建立 `ENGINEERING_QA` 边界，再实现最小混合
+证据问答链和 chat-first Web。World Model 只作为工程手册、可复用证据和检索提示，不能成为提问期 Source 检索的召回硬门禁；
+Answer 与 Reviewer 只能读取密封 Evidence Package。达到可冻结状态后另行形成 live 授权；本轮不得读取凭据、调用模型或启动正式体验会话。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 
@@ -673,7 +676,6 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-Agent 只能按 `ITER-009-SLICE-001` 修改其列明的本机 Web 方向体验、通用 Answer/Review 边界、运行时与验证资产，并以产品基线
-`2cd743b2ba74c5a79cd4d38433830786de09e753` 为起点。不得整包继承归档的 `1.5.12` 实验，不得执行
-`ITER-009-SLICE-002/003`，不得读取 Provider credential、发起模型/live Web 调用、披露或收集隐藏题、复用已消费的外部分派
-grant，也不得执行 Production Activation。
+Agent 只能按 `ITER-010-SLICE-001` 修改其列明的架构文档、治理门禁、混合证据问答产品代码、chat-first Web 与本地确定性验证资产，
+并以产品基线 `1fb997bab6444523f82ebf1a514a1abbf79656c7` 为起点。不得执行 `ITER-010-SLICE-002/003`，不得读取 Provider
+credential、发起模型/live Web 调用、披露或收集隐藏题、复用已消费的外部分派 grant，也不得执行 Production Activation。
