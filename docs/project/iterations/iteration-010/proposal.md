@@ -1,7 +1,7 @@
 ---
 id: ITER-010-PROPOSAL
 kind: iteration-proposal
-status: proposed
+status: accepted
 authority: project-proposal
 owners: [product, project, architecture, engineering, quality]
 depends_on: [SYS-PRODUCT-SUCCESS, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-SECURITY, SYS-OPS-LOCAL-BROWSER]
@@ -137,8 +137,11 @@ Investigation/Verification Investigation/Answer/Reviewer 直接 Source/FS/Shell/
 
 ## Authorization decision
 
-**PROPOSED / REPLANNED / NOT AUTHORIZED FOR PRODUCT CODING。** 新收据 `d3b60bda…` 只授权重新制定计划和更新文档。此前
-`1b327024… + 5cdb7000…` 绑定的是一次性检索/先封包设计，不能自动扩展为模型主导的自适应调查和 Reviewer 独立补证。Proposal、
-Readiness、Manifest 和三个 Slice 因此均不构成 coding input；当前无活动开发 Slice。后续明确开发请求可直接基于本计划完成授权，
-无需重新确认已经明确的世界模型概念。新三臂消融的 exact protocol、阈值和 digest 仍须在 Slice2 前由新的用户收据冻结；本规划收据不
-授权或伪造该冻结。
+**ACCEPTED / SLICE-001 AUTHORIZED FOR PRODUCT DEVELOPMENT。** 收据 `d3b60bda…` 仍只记录重制计划和文档；用户随后以
+`codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
+接受本 Proposal 与 Readiness，并只授权 `ITER-010-SLICE-001` 成为产品编码输入。授权基于已冻结的 planning commit
+`01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。
+
+此授权允许产品代码开发和本地确定性验证；不授权 credential、Provider/model call、live Web/browser、源码片段外发、hidden
+disclosure、`SLICE-002/003` 或 Production Activation。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的一次性检索/先封包设计。
+新三臂消融的 exact protocol、阈值和 digest 仍须在 Slice2 前由新的用户收据冻结。

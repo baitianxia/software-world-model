@@ -1,12 +1,14 @@
 schema_version: 1
 iteration:
   id: ITER-010
-  status: proposed
+  status: authorized
   outcome_scope: world-model-cognition-guided-adaptive-engineering-investigation-direction-preview-generalization-and-formal-acceptance
 
 baseline:
   commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
   tree: 1369ce932c778c57a118123e8257ede476229d73
+  planning_commit: 01dcfe2233625dfaa021495850fb18ae1323063b
+  planning_tree: 8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f
   dirty_worktree_allowed: false
   relation: exact-iteration-009-slice-001-technical-subject-with-rejected-product-direction-preserved-as-predecessor-evidence
 
@@ -499,15 +501,15 @@ readiness_inputs:
 development:
   slices:
     ITER-010-SLICE-001:
-      status: proposed
-      coding_input: false
+      status: authorized
+      coding_input: true
       result: not-executed
       reflection_decision: not-executed
       reflection_prerequisite_result: none-first-slice
       product_code_freeze_digest: not-executed
-      authorized_by: not-authorized
-      authorized_at: not-authorized
-      authorization_ref: not-authorized
+      authorized_by: user
+      authorized_at: 2026-08-21T09:18:34Z
+      authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
     ITER-010-SLICE-002:
       status: proposed
       coding_input: false
@@ -535,10 +537,10 @@ verification:
 
 authorization:
   readiness_review_id: ITER-010-READINESS
-  active_slice: none
-  authorized_by: not-authorized
-  authorized_at: not-authorized
-  authorization_ref: not-authorized
+  active_slice: ITER-010-SLICE-001
+  authorized_by: user
+  authorized_at: 2026-08-21T09:18:34Z
+  authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   prior_design_authorization_refs:
     - codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4

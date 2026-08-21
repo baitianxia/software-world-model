@@ -1,18 +1,18 @@
 ---
 id: ITER-010-READINESS
 kind: iteration-readiness
-status: proposed
-authority: project-readiness
+status: accepted
+authority: project-authorization
 owners: [project, architecture, quality, product]
 depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT]
 code: []
 tests: []
 iteration: ITER-010
-authorized_by: not-authorized
-authorized_at: not-authorized
-product_goal_alignment_verdict: proposed
-product_goal_alignment_reviewed_by: not-authorized
-product_goal_alignment_review_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
+authorized_by: user
+authorized_at: 2026-08-21T09:18:34Z
+product_goal_alignment_verdict: accepted
+product_goal_alignment_reviewed_by: user
+product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
 critical_assumption_catalog_digest: sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82
 coding_input: false
 ---
@@ -21,12 +21,15 @@ coding_input: false
 
 ## Reviewed exact inputs
 
-产品 baseline 仍固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
-`1369ce932c778c57a118123e8257ede476229d73`；ITER-009 技术资产保留，但产品方向仍为 rejected/redirect。已复核重制后的 Candidate、
-Proposal、Manifest、Verification Matrix、三个 Slice 和 `FINDING-010-002`，并把 World Model 定义与提问期调查职责明确分开。
+产品 baseline 固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
+`1369ce932c778c57a118123e8257ede476229d73`；本次授权复核的 planning commit 为
+`01dcfe2233625dfaa021495850fb18ae1323063b`、tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。ITER-009 技术资产保留，
+但产品方向仍为 rejected/redirect。已复核重制后的 Candidate、Proposal、Manifest、Verification Matrix、三个 Slice 和
+`FINDING-010-002`，并把 World Model 定义与提问期调查职责明确分开。
 
-用户收据 `d3b60bda…`（`2026-08-21T08:23:25Z`）确认重新制定计划并更新文档，未要求开发产品代码。此前授权链绑定的是修正前设计，
-不自动覆盖自适应调查、Source Broker、Evidence Ledger 和 Reviewer 独立补证。因此本文是待授权 Readiness，不是已接受开发授权。
+用户收据 `d3b60bda…`（`2026-08-21T08:23:25Z`）确认重新制定计划并更新文档；新收据
+`codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
+接受本 Readiness，并只授权 `ITER-010-SLICE-001` 开发。修正前设计的旧授权不会被当作本设计的授权。
 
 ## Product-goal alignment gate
 
@@ -40,7 +43,7 @@ Proposal、Manifest、Verification Matrix、三个 Slice 和 `FINDING-010-002`�
   两个工程 10+2 与两条现场题复验。新消融 protocol/阈值/digest 当前未授权，Slice2 前须新用户收据。
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
-结论：Outcome 仍直接服务通用工程问答 MVP，且首版体验早于大规模夯实；方向对齐材料完整，但尚未取得产品开发授权。
+结论：Outcome 直接服务通用工程问答 MVP，且首版体验早于大规模夯实；方向对齐材料完整并已由用户接受。
 
 ## Architecture reflection gate readiness
 
@@ -65,8 +68,8 @@ Package、Answer、Review，不回初始 Investigation。
 
 ## System contracts and unresolved decisions
 
-系统 Owner 沿用 `SYS-ADR-016` 与 Engineering Question Answering Contract。正式开发授权前必须确认 current System docs 与 Manifest 的
-`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1` 完全一致，并重算 system fileset digest 和 investigation budget digest。
+系统 Owner 沿用 `SYS-ADR-016` 与 Engineering Question Answering Contract。planning commit 中的 current System docs 与 Manifest
+共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1`，system fileset digest 和 investigation budget digest 已按该输入冻结。
 
 DTO、Broker port、抽象 read operation、Ledger storage 和 UI 折叠是实现细节；以下不是实现选择：World Model 不得缩窄为手册；调查必须
 由先前结果驱动；模型无直接 FS/Shell/network/credential/source authority；Ledger append-only；调查后才 seal；Package seal 不等于真值；
@@ -75,7 +78,7 @@ Reviewer 补证必须由独立新上下文调查生成后继 Package 并重答�
 
 ## Slice, dependency and risk closure
 
-三个 Slice 当前均为 `proposed / coding_input=false`。后续明确开发请求只可授权 Slice1，顺序为：架构/门禁一致性 → 最小协议 → 最小真实
+当前只有 Slice1 为 `authorized / coding_input=true`，顺序为：架构/门禁一致性 → 最小协议 → 最小真实
 纵切 → deterministic freeze → 独立 live grant → 一题 Web 微检查点 → 4 条跨维度问题和现场题 → Reflection。Slice2/3 继续分别需要前序
 exact Result 的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
 
@@ -97,8 +100,8 @@ Investigation。
 
 ## Authorization decision
 
-**REPLANNED AND READY FOR A FUTURE AUTHORIZATION REVIEW / NOT AUTHORIZED FOR PRODUCT CODING。** 本轮只修改计划与文档。Readiness 的
-产品目标、架构边界、快速首版和验证输入已重制，但 `authorized_by/authorized_at` 保持 `not-authorized`，`PROJECT-CURRENT` 的 active
-iteration/slice 为 `none`。收到后续明确开发请求时，再原子切换 Index、Readiness、Manifest 和唯一 Slice1；无需重新确认世界模型概念。
+**ACCEPTED / SLICE-001 AUTHORIZED / DEVELOPMENT READY。** Readiness 的产品目标、架构边界、快速首版和验证输入已由收据
+`585f02c4…` 接受；`PROJECT-CURRENT` 只指向 `ITER-010-SLICE-001`。本授权覆盖产品代码修改和本地确定性测试，不覆盖
+credential、Provider/model call、live Web/browser、hidden disclosure 或 Production Activation。
 Slice2 的三臂消融与 hardening 高安全上限仍是 `proposed / not authorized / not frozen`，必须另取新用户收据，不能复用旧 positive-value
 收据。

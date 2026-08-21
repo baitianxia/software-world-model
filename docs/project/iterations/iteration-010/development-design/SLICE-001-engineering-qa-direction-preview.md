@@ -1,14 +1,14 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: proposed
-authority: proposed-development
+status: authorized
+authority: current-development
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-001, FINDING-010-002, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
-coding_input: false
+coding_input: true
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
@@ -23,13 +23,14 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, 
 
 ## Status and dependencies
 
-`PROPOSED / NOT AUTHORIZED / NOT CODING INPUT`。收据 `d3b60bda…` 只授权重制计划与文档。此前授权绑定修正前的一次性检索/先封包设计，
-不能自动扩展到本 Slice 的自适应 Investigation 与 Reviewer 独立补证。后续明确开发请求才可把本文件、Readiness、Manifest 和
-`PROJECT-CURRENT` 原子切换为唯一活动 Slice；Slice2/3 不随之授权。
+`AUTHORIZED / CURRENT DEVELOPMENT / CODING INPUT`。用户以
+`codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
+接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
 
 开发 baseline 仍候选绑定 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
-`1369ce932c778c57a118123e8257ede476229d73`。未来开发授权也不自动允许 credential、Provider/model call、live Web/browser、源码片段外发、
-hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
+`1369ce932c778c57a118123e8257ede476229d73`；冻结的 planning commit/tree 为
+`01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。本开发授权不允许
+credential、Provider/model call、live Web/browser、源码片段外发、hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
 
 ## Product-goal contribution and cumulative integration
 
@@ -108,7 +109,7 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 
 ## Interfaces and affected code
 
-未来授权允许修改 Application orchestration、Investigation/Verification Investigation role、Source Broker port/policy、Retrieval Worker adapter、Evidence Ledger/Package、
+本 Slice 授权允许修改 Application orchestration、Investigation/Verification Investigation role、Source Broker port/policy、Retrieval Worker adapter、Evidence Ledger/Package、
 Response Control、Answer/Review Strategy、role-specific Gateway input、product-owned HTTP/Web 及对应 tests。优先复用现有 World Model Query、
 Evidence Answering、Citation 和 Web 组件，不复制 ITER-009 pipeline。
 

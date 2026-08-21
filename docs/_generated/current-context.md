@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `none`
-- Active slice: `none`
-- Worktree status: `iteration-010-replanned-all-slices-proposed-no-product-coding-authorized`
+- Active iteration: `ITER-010-INDEX`
+- Active slice: `ITER-010-SLICE-001`
+- Worktree status: `iteration-010-slice-001-authorized-development-ready`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
-- Live model path: `not-authorized-no-product-development-or-live-dispatch`
+- Live model path: `not-authorized-development-only-no-live-dispatch`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

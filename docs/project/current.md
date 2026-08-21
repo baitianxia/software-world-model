@@ -8,24 +8,25 @@ depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-IND
 code: []
 tests: []
 as_of: 2026-08-21
-active_iteration: none
-active_slice: none
-worktree_status: iteration-010-replanned-all-slices-proposed-no-product-coding-authorized
+active_iteration: ITER-010-INDEX
+active_slice: ITER-010-SLICE-001
+worktree_status: iteration-010-slice-001-authorized-development-ready
 strategy_relation: world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation
-live_model_path: not-authorized-no-product-development-or-live-dispatch
+live_model_path: not-authorized-development-only-no-live-dispatch
 ---
 
 # 当前工作上下文
 
 ## 当前规划与授权
 
-当前没有活动开发 Iteration 或 Slice。`ITER-010` 保持为已重制但未授权的下一轮计划。用户以
+当前活动 Iteration 为 `ITER-010`，唯一活动开发 Slice 为 `ITER-010-SLICE-001`。用户以
 `codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc` 于
 `2026-08-21T08:23:25Z` 要求按最新讨论重新制定计划并更新文档；该收据只授权规划/docs，不授权产品编码。
 
-此前 `1b327024… + 5cdb7000…` 绑定的是修正前“一次性检索后先封包”的 Slice1 设计，不能自动扩展为 LLM 自适应调查和 Reviewer 独立
-补证。因此 ITER-010 Index、Readiness、Manifest 和三个 Slice 当前均不构成 coding input；产品代码、credential、Provider/model call、
-正式 Web/live、隐藏题和 Production Activation 都未获新授权。
+用户随后以 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e` 于
+`2026-08-21T09:18:34Z` 接受 Readiness，并只授权 Slice1 产品代码开发与本地确定性验证。授权审核的 planning commit/tree 为
+`01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。Slice2/3、credential、Provider/model call、
+正式 Web/live、hidden disclosure 和 Production Activation 仍未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
 
 `ITER-009` 已依据三条真实 Web 体验以 `REDIRECT` 结束：技术代码和运行证据完整保留，但代码走读式回答方向未获接受。
 `ITER-010` 从 clean commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
@@ -49,7 +50,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Replanned / all Slices proposed / no coding authorization** | World Model 保持为持久、版本化、可验证、可更新的外部软件认知；Investigation LLM 根据 prior Result 自适应提议，Broker/Worker 受控读取，调查后 seal，Answer 包内生成，Reviewer 可独立要求补证；Slice1 先做最小真实纵切和 4 题+现场题 |
+| Iteration 010 | **SLICE-001 authorized / development ready** | World Model 保持为持久、版本化、可验证、可更新的外部软件认知；Investigation LLM 根据 prior Result 自适应提议，Broker/Worker 受控读取，调查后 seal，Answer 包内生成，Reviewer 可独立要求补证；当前只授权 Slice1 代码与本地确定性验证 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -60,7 +61,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-当前只允许维护 ITER-010 计划、System 语义与治理一致性，不允许产品编码。下一次明确开发授权后，唯一可进入的 Slice1 将按
+当前只推进 `ITER-010-SLICE-001`：先以 `V-ARCH-001` 复核设计与门禁一致性，再按
 `World Model Cognition Context → Investigation LLM → Source Broker → Retrieval Worker → append-only Evidence Ledger → 调查后 seal
 Question Evidence Package → Answer → independent Reviewer` 实现最小真实纵切。Reviewer 只提出具体 gap；全新上下文的独立
 Verification Investigation 读取 current Package/Ledger 并经 Application/Broker/Worker 多步形成后继 Ledger/Package/Answer/Review；任何
@@ -685,6 +686,6 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-当前没有 coding Slice。Agent 只能依据本轮收据维护重制计划、相关 System 文档和治理门禁的一致性；不得修改产品代码或产品测试，
-不得执行任一 ITER-010 Slice，不得读取 Provider credential、发起模型/live Web 调用、披露或收集隐藏题、复用已消费 grant，亦不得
-执行 Production Activation。后续明确开发请求必须先把 Readiness、Manifest、Index、Current 和唯一 Slice1 原子切换为 authorized。
+Slice1 是唯一 coding input。Agent 可按本 Slice 修改其 `code/tests` 范围内的产品代码并执行本地确定性测试；不得进入 Slice2/3，
+不得读取 Provider credential、发起模型/live Web 调用、披露或收集隐藏题、复用已消费 grant，亦不得执行 Production Activation。任何 live 动作仍须在产品
+freeze 后取得独立 exact grant。

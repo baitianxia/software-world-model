@@ -1,14 +1,14 @@
 ---
 id: ITER-010-INDEX
 kind: iteration-index
-status: proposed
-authority: project-plan
+status: authorized
+authority: current-development
 owners: [product, project, architecture, engineering, quality]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003]
 code: []
 tests: []
 iteration: ITER-010
-coding_input: false
+coding_input: true
 ---
 
 # ITER-010：世界模型认知引导的自适应工程问答
@@ -32,17 +32,20 @@ coding_input: false
 
 ## Status and authorization
 
-`REPLANNED / ALL SLICES PROPOSED / NO PRODUCT CODING AUTHORIZED`。
+`AUTHORIZED / SLICE-001 CURRENT DEVELOPMENT / SLICE-002 AND SLICE-003 NOT AUTHORIZED`。
 
 用户消息 `codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc` 于
 `2026-08-21T08:23:25Z` 要求按最新讨论重新制定计划并更新文档。它确认：World Model 仍是真正的软件外部认知；提问期由 LLM 主导
 自适应调查，Broker/Worker 控制实际读取，调查后 seal，Reviewer 可独立要求补证。
 
-本收据只授权重制计划和文档。此前 `1b327024… + 5cdb7000…` 绑定修正前的一次性检索设计，不能自动扩展为新职责，因此当前没有活动
-开发 Slice。产品代码、credential、Provider/model 调用、live Web/browser、隐藏输入、任何 Slice 和 Production Activation 均未获新授权。
+该收据只授权重制计划和文档。用户随后以
+`codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
+接受 Readiness，并只授权 `ITER-010-SLICE-001` 产品代码开发与本地确定性验证。`SLICE-002/003`、credential、Provider/model 调用、
+live Web/browser、hidden disclosure 和 Production Activation 仍未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
 
 本轮产品基线固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
-`1369ce932c778c57a118123e8257ede476229d73`。ITER-009 的体验代码保留为技术资产，但其代码走读式产品方向已由
+`1369ce932c778c57a118123e8257ede476229d73`；授权审核的 planning commit/tree 为
+`01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。ITER-009 的体验代码保留为技术资产，但其代码走读式产品方向已由
 `ITER-009-RESULT-SLICE-001-STOP-REDIRECT` 否决，不能被写成 Acceptance。
 
 ## Required inputs
