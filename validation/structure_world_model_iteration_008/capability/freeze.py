@@ -69,8 +69,8 @@ PACKAGE_FILE_NAMES = (
     "freeze.py",
     "live_runner.py",
     "manifest.py",
-    "oracle-1.5.11.json",
-    "suite-1.5.11.json",
+    "oracle-1.5.13.json",
+    "suite-1.5.13.json",
 )
 
 
@@ -524,7 +524,7 @@ def _capability_scope(
         "planned_provider_call_count": PINNED_PROVIDER_REQUEST_COUNT,
         "hidden_retry_count": 0,
         "payload_boundary": (
-            "FORTY_ONE_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
+            "FORTY_TWO_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
             "EIGHTEEN_CASES_NO_PRODUCT_QUESTION_SOURCE_EVIDENCE_OR_"
             "HIDDEN_CANARY"
         ),

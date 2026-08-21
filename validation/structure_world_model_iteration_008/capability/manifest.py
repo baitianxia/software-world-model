@@ -36,16 +36,16 @@ from software_world_model.application_services.bounded_world_model_investigation
 SUITE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-suite@1"
 ORACLE_SCHEMA = "swm.iter-008.bounded-java-source-semantics-capability-oracle@1"
 PINNED_SUITE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.11"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-SUITE@1.5.13"
 )
 PINNED_ORACLE_REF = (
-    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.11"
+    "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-CAPABILITY-ORACLE@1.5.13"
 )
 PINNED_SUITE_FILE_DIGEST = (
-    "sha256:fc4cccafcd84d5cf46a3ebe6ce3d8e583a5e0b4d4f6a6b069a692b7d9720f172"
+    "sha256:5e8798c00c5841c860090b1f111f49e7d5df71fac95433be69f77709519296ab"
 )
 PINNED_ORACLE_FILE_DIGEST = (
-    "sha256:f761b4a9af67d6f52b4d3c2962ed833dfda569b5f6367ffc9f78a8ca95b3b4cc"
+    "sha256:054e69ae9446fa88dd41dd80cc712d098df53452699284d0c6c3e760d63290b3"
 )
 PINNED_REQUIRED_CASE_CALLS = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_CASE_CALLS
@@ -60,8 +60,8 @@ PINNED_RESOURCE_POLICY_REF = (
     BOUNDED_JAVA_SOURCE_SEMANTICS_QUALIFICATION_RESOURCE_POLICY_REF
 )
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SUITE_PATH = ROOT / "suite-1.5.11.json"
-DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.11.json"
+DEFAULT_SUITE_PATH = ROOT / "suite-1.5.13.json"
+DEFAULT_ORACLE_PATH = ROOT / "oracle-1.5.13.json"
 
 _INVESTIGATION_FIELDS = (
     "step_index",
@@ -188,7 +188,7 @@ def verify_capability_inputs(suite: object, oracle: object) -> None:
         != (
             "CLOSED_PASS_IFF_ALL_EIGHTEEN_REQUIRED_CASES_PASS_AND_"
             "FAILURE_COUNT_ZERO_AND_UNKNOWN_COUNT_ZERO_AND_PROVIDER_"
-            "REQUEST_COUNT_FORTY_ONE"
+            "REQUEST_COUNT_FORTY_TWO"
         )
     ):
         _invalid("bounded closed evaluation protocol drifted")
@@ -729,7 +729,7 @@ def build_evaluation_definition(
                 case["capability"]
             ),
             case_id=str(case["case_id"]),
-            case_version="1.5.11",
+            case_version="1.5.13",
             fixture_ref=f"{PINNED_SUITE_REF}:fixture:{case['case_id']}",
             fixture_digest=case_fixture_digest(suite, case),
             oracle_ref=f"{PINNED_ORACLE_REF}:case:{case['case_id']}",
@@ -740,7 +740,7 @@ def build_evaluation_definition(
         for case, oracle_case in case_pairs(suite, oracle)
     )
     return create_bounded_java_source_semantics_world_model_evaluation_definition(
-        evaluation_version="1.5.11",
+        evaluation_version="1.5.13",
         conformance_result_ref=conformance_result_ref,
         provider_configuration_fingerprint=provider_configuration_fingerprint,
         model_ref=actual_model_fingerprint,

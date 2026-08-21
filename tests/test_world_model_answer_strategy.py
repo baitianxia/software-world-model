@@ -456,7 +456,7 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
     def test_active_java_source_semantics_contract_is_bounded_investigation(self):
         contract = JAVA_SOURCE_SEMANTICS_WORLD_MODEL_PROPOSAL_CONTRACT
 
-        self.assertEqual(contract.strategy_version, "1.5.11")
+        self.assertEqual(contract.strategy_version, "1.5.13")
         self.assertEqual(
             JAVA_SOURCE_SEMANTICS_INVESTIGATION_ARGUMENT_COMPILER_REF,
             "java-source-semantics-investigation-argument-compiler@7",
@@ -608,6 +608,15 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         )
         self.assertIn(
             "THREE_LAYER_REVIEW preserves the sealed third-layer fields",
+            review_prompt,
+        )
+        self.assertIn("typed non-supported delivery", review_prompt)
+        self.assertIn(
+            "must not by itself cause QUERY_INCOMPLETE",
+            review_prompt,
+        )
+        self.assertIn(
+            "does not prohibit approval of the typed disclosure itself",
             review_prompt,
         )
         self.assertIn(
@@ -786,8 +795,8 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
         gateway = SequencedGateway(
             [
                 {
-                    "decision": "REJECT",
-                    "finding_codes": ["QUERY_INCOMPLETE"],
+                    "decision": "APPROVE",
+                    "finding_codes": [],
                     "checked_need_ids": [],
                     "checked_step_result_ids": [],
                     "checked_support_digests": [],
@@ -812,7 +821,21 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
                         }
                     ]
                 },
-                "draft": {"answer": "Bounded absence."},
+                "draft": {
+                    "claims": [
+                        {
+                            "kind": "APPLICATION_LIMITATION",
+                            "text": (
+                                "No matching candidates were found, but existence "
+                                "cannot be determined because business-discovery "
+                                "recall is unproven."
+                            ),
+                            "limitation_codes": [
+                                "BUSINESS_DISCOVERY_RECALL_UNPROVEN"
+                            ],
+                        }
+                    ]
+                },
                 "query_plan": {
                     "investigation_trace": {
                         "completeness": {
@@ -832,6 +855,14 @@ class WorldModelAnswerStrategyTests(unittest.TestCase):
             },
         )
 
+        self.assertEqual(
+            proposal.normalized_result["decision"],
+            "APPROVE",
+        )
+        self.assertEqual(
+            proposal.normalized_result["finding_codes"],
+            [],
+        )
         self.assertEqual(
             proposal.normalized_result["checked_need_ids"],
             ["implementation-answer"],

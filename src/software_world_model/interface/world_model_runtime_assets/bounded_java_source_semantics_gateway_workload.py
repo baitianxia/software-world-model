@@ -358,9 +358,9 @@ def _verify_freeze(value: Mapping[str, object]) -> str:
         != "ITER-008-BOUNDED-JAVA-SOURCE-SEMANTICS-PRODUCT-GATEWAY-CANDIDATE@1"
         or value.get("environment") != "EVALUATION_ONLY"
         or value.get("strategy_ref")
-        != "model-snapshot-first-world-model-answer@1.5.11"
+        != "model-snapshot-first-world-model-answer@1.5.13"
         or value.get("prompt_ref")
-        != "java-source-semantics-world-model-prompt@20"
+        != "java-source-semantics-world-model-prompt@22"
         or value.get("proposal_vocabulary_ref")
         != "java-source-semantics-world-model-vocabulary@20"
         or value.get("egress_policy_digest")

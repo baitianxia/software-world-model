@@ -432,7 +432,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             PINNED_ORACLE_FILE_DIGEST,
         )
         self.assertEqual(len(PINNED_REQUIRED_CASE_CALLS), 18)
-        self.assertEqual(PINNED_PROVIDER_REQUEST_COUNT, 41)
+        self.assertEqual(PINNED_PROVIDER_REQUEST_COUNT, 42)
         self.assertEqual(
             tuple(case["case_id"] for case in _SUITE["cases"]),
             PINNED_REQUIRED_CASE_IDS,
@@ -468,6 +468,50 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
         self.assertIn(["implementation", "implementations"], provenance_groups)
         self.assertIn(["candidate", "candidates"], provenance_groups)
 
+    def test_review_fixture_separates_overclaim_from_typed_limitation(self) -> None:
+        suite_case = next(
+            case
+            for case in _SUITE["cases"]
+            if case["case_id"] == "WM-JSS-I8-REVIEW-018"
+        )
+        oracle_case = next(
+            case
+            for case in _ORACLE["cases"]
+            if case["case_id"] == "WM-JSS-I8-REVIEW-018"
+        )
+
+        self.assertEqual(len(suite_case["steps"]), 4)
+        self.assertEqual(
+            oracle_case["steps"][0]["expected_projection"],
+            {
+                "decision": "REJECT",
+                "finding_codes": ["QUERY_INCOMPLETE"],
+                "checked_need_ids": ["implementation-answer"],
+                "checked_step_result_ids": [
+                    "world_model_step_result_33333333333333333333333333333333"
+                ],
+                "checked_support_digests": [],
+            },
+        )
+        limitation_claim = suite_case["steps"][1]["sealed_input"]["draft"][
+            "claims"
+        ][0]
+        self.assertEqual(limitation_claim["kind"], "APPLICATION_LIMITATION")
+        self.assertEqual(
+            limitation_claim["limitation_codes"],
+            ["BUSINESS_DISCOVERY_RECALL_UNPROVEN"],
+        )
+        self.assertEqual(limitation_claim["step_result_ids"], [])
+        self.assertIn("cannot be determined", limitation_claim["text"])
+        self.assertEqual(
+            oracle_case["steps"][1]["expected_projection"]["decision"],
+            "APPROVE",
+        )
+        self.assertEqual(
+            oracle_case["steps"][1]["expected_projection"]["finding_codes"],
+            [],
+        )
+
     def test_definition_binds_exact_eighteen_case_contract(self) -> None:
         definition = build_evaluation_definition(
             _SUITE,
@@ -484,7 +528,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             resource_policy_ref="forty-no-retry@1",
             valid_for_seconds=3600,
         )
-        self.assertEqual(definition.strategy_version, "1.5.11")
+        self.assertEqual(definition.strategy_version, "1.5.13")
         self.assertEqual(len(definition.cases), 18)
         self.assertEqual(
             tuple(item.case_id for item in definition.cases),
@@ -987,7 +1031,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             scope = capability_freeze["dispatch_contract"][
                 "authorization_scope"
             ]
-            self.assertEqual(scope["planned_provider_call_count"], 41)
+            self.assertEqual(scope["planned_provider_call_count"], 42)
             self.assertEqual(
                 scope["connection_policy"],
                 "PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2",
@@ -1002,7 +1046,7 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertFalse(scope["request_retry_allowed"])
             self.assertEqual(
                 scope["payload_boundary"],
-                "FORTY_ONE_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
+                "FORTY_TWO_SYNTHETIC_BOUNDED_PROPOSAL_CALLS_ACROSS_"
                 "EIGHTEEN_CASES_NO_PRODUCT_QUESTION_SOURCE_EVIDENCE_OR_"
                 "HIDDEN_CANARY",
             )
@@ -1091,8 +1135,8 @@ class Iteration008CapabilityHarnessTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(payload["status"], "CAPABILITY_EVALUATION_PASS")
             self.assertEqual(payload["case_count"], 18)
-            self.assertEqual(payload["provider_request_count"], 41)
-            self.assertEqual(transport.calls, 41)
+            self.assertEqual(payload["provider_request_count"], 42)
+            self.assertEqual(transport.calls, 42)
             binding = load_bounded_java_source_semantics_gateway_qualification_binding(
                 qualification_path=payload["qualification_path"],
                 closed_result_path=payload["result_path"],

@@ -1605,6 +1605,28 @@
       "tests/test_iteration_008_slice1_freeze.py"
     ]
   },
+  "FINDING-009-001": {
+    "path": "docs/project/iterations/iteration-009/findings/FINDING-009-001.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
+      "src/software_world_model/application_services/world_model_answering.py",
+      "src/software_world_model/ai_infrastructure/bounded_java_source_semantics_model_egress_policy.json"
+    ],
+    "tests": [
+      "tests/test_world_model_answer_strategy.py",
+      "tests/test_iteration_008_capability_harness.py",
+      "tests/test_iteration_008_capability_qualification.py"
+    ]
+  },
+  "FINDING-009-002": {
+    "path": "docs/project/iterations/iteration-009/findings/FINDING-009-002.md",
+    "code": [
+      "src/software_world_model/interface/world_model_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_world_model_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

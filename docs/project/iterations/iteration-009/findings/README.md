@@ -12,5 +12,5 @@ iteration: ITER-009
 
 # ITER-009 Findings
 
-尚无 Finding。实现中发现影响系统边界、Answer/Review Owner、证据协议、质量规则、迭代决定或未来路线的事实时，立即创建独立
-按顺序编号的 Finding 文档，保存 exact evidence，并按实现发现回写规则处置。空索引不证明本轮可接受。
+- [FINDING-009-001](FINDING-009-001.md)：Review 的三层完整性提示错误拒绝如实的 typed Limitation；已按现有系统契约在代码与测试中处置。
+- [FINDING-009-002](FINDING-009-002.md)：浏览器把无 Gap 的 Limitation 标成 `SUPPORTED`；已在展示层和回归测试中处置。

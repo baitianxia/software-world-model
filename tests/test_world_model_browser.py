@@ -131,14 +131,20 @@ class WorldModelBrowserTests(unittest.TestCase):
         self.assertIn("default-src 'self'", headers["Content-Security-Policy"])
         self.assertIn("WORLD_MODEL", html)
         self.assertIn("EVALUATION_ONLY", html)
+        self.assertIn("方向体验 / 非验收 / 非生产", html)
+        self.assertIn("mode-preview", html)
         self.assertIn("自由提问", html)
         self.assertIn('id="provider-call-boundary"', html)
         self.assertIn("正在校验 Dispatch Policy", html)
         self.assertIn(
             'FOUR_TO_SIX_ORDERED_CALLS_PER_QUESTION_NO_HIDDEN_RETRY:'
-            '"Plan → Draft → Review · 4–6 次模型调用"',
+            '"Investigation 2–4 → Draft → Review · 4–6 次模型调用"',
             javascript,
         )
+        self.assertIn("function claimStatus(claim)", javascript)
+        self.assertIn("claim.limitation_codes", javascript)
+        self.assertIn("claimStatus(claim)", javascript)
+        self.assertNotIn('claim.gap_code||"SUPPORTED"', javascript)
         self.assertIn("dispatchLabels[health.dispatch_policy]", javascript)
         self.assertNotIn("repository_path", html)
         self.assertIn("/v1/world-model/questions", javascript)
