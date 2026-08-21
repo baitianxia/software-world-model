@@ -166,6 +166,23 @@ qualification-document/terminal digest 为 `sha256:4dbfa35d…4443` / `sha256:4a
 `2026-08-28T00:28:17.345205+00:00`。两份授权均已消费且不可 retry；V-002 PASS，下一步是证据写回后的全新 formal
 product freeze/Web。尚无新的 Product Result，hidden canary、SLICE-002、Reflection 与 Production Activation 均未执行。
 
+run-028 证据提交 `b0f8ce835d8cbfbe5330513115e651691da7621b` 后的 formal run-011 没有形成 report。五个 nested
+validation repository 以 symlink 装配，canonical path 解析到 clean workspace 外；full 1039 除既有 exact hold 外新增
+`test_local_validation_checkouts_match_the_sealed_suite` ERROR 与 `test_verify_inputs_command_is_offline_and_reports_sealed_counts`
+FAIL。产品 source/focused/candidate 与 run-028 authority chain 均未漂移，外部模型调用为 0。详见
+[FINDING-008-042](../findings/FINDING-008-042.md)。
+
+producer 在 workspace 内真实 materialize 五个 exact nested checkout 并恢复 canonical remote 后，定向新增两项 2/2 PASS；全新
+formal run-012 完成 focused 89/89、candidate-package 37/37、docs/prelisten PASS。full 1039 中 1034 PASS，只保留
+`FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report/deterministic qualification/stage digest 为
+`sha256:aada406e…4a5a` / `sha256:0dbb2e8e…fce6` / `sha256:7484be1b…0a97`；source snapshot commit/tree/manifest 为
+`03fa8603…146d` / `7098432f…9a83` / `sha256:37daf84d…2a3c`。Gateway freeze/permission digest 为
+`sha256:13e4f761…582a` / `sha256:ae6317a9…62ef`，external model dispatch 为 0。
+
+pending grant `sha256:5cb18436…9370` 仍为 `live_dispatch_authorized=false / AWAITING_USER_AFTER_CODE_FREEZE`。因此这仍不是
+Product Result；下一步必须取得晚于 exact run-012 report 的公开 Web 授权。hidden canary、SLICE-002、Reflection 与 Production
+Activation 均未执行。
+
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按
 [FINDING-008-007](../findings/FINDING-008-007.md) 保留，不得重试或解释为 Capability/Product 证据。39-call Capability、正式 Web、

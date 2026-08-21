@@ -1596,6 +1596,15 @@
       "tests/test_world_model_gateway_authorization.py"
     ]
   },
+  "FINDING-008-042": {
+    "path": "docs/project/iterations/iteration-008/findings/FINDING-008-042.md",
+    "code": [],
+    "tests": [
+      "tests/test_product_holdout_manifest.py",
+      "tests/test_product_holdout_cli.py",
+      "tests/test_iteration_008_slice1_freeze.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

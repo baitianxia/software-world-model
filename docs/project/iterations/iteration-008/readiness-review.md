@@ -317,6 +317,17 @@ APPROVE 与 omitted-duplicate `REJECT / MATERIAL_OMISSION`。Qualification diges
 `2026-08-28T00:28:17.345205+00:00`。V-002 对 current identity PASS；Readiness 的下一阻断变为证据写回后的全新 formal
 product freeze/Web。该资格不授权 hidden canary、SLICE-002、Reflection 或 Production Activation。
 
+run-028 证据写回后的 formal run-011 进一步暴露 `FINDING-008-042`：五个 nested validation checkout 以 symlink 挂载后，
+canonical path 解析到 clean producer 外，full 1039 在既有 exact hold 外新增 ProductHoldout 1 FAIL + 1 ERROR，未形成 report；
+外部模型调用 0。把五个 repository 在 workspace 内真实 materialize，并恢复 exact revision/canonical remote 后，新增两项定向
+2/2 PASS。
+
+全新 run-012 随后关闭 formal Gate：focused 89/89、candidate 37/37、docs/prelisten PASS，full 1039 中 1034 PASS，只保留
+`FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report/deterministic qualification/stage digest 为
+`sha256:aada406e…4a5a` / `sha256:0dbb2e8e…fce6` / `sha256:7484be1b…0a97`，外部模型 dispatch 为 0；pending grant
+`sha256:5cb18436…9370` 仍未授权。Readiness 下一 Gate 是绑定 exact run-012 的公开 Web 授权与执行；hidden canary、SLICE-002、
+Reflection 与 Production Activation 保持阻断。
+
 ## Slice, dependency and risk closure
 
 本轮有两个依次单独授权的纵向 Slice，不能拆成 Planner、工具、Web、评测等内部组件完成项：

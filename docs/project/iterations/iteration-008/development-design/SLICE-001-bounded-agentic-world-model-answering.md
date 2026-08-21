@@ -574,6 +574,17 @@ Qualification digest 为 `sha256:0880bb0d…eb6`，有效至 `2026-08-28T00:28:1
 下一步从证据写回后的 clean producer 生成全新 formal product freeze，再执行另行授权的公开 Web；hidden canary、SLICE-002、
 Reflection 与 Activation 不执行。
 
+run-028 证据写回后的 formal run-011 因验证 corpus 装配失败关闭：五个 nested repository 虽 revision 正确，但 symlink
+canonical path 落在 clean producer 外，full regression 新增 ProductHoldout 1 FAIL + 1 ERROR，未形成 report，模型调用 0。
+[FINDING-008-042](../findings/FINDING-008-042.md) 要求在 producer 的 ignored `validation-projects/` 内真实 materialize exact
+revision，并恢复 sealed remote identity；新增两项定向 2/2 PASS。
+
+全新 `run-012-freeze` 随后通过 formal Gate：focused 89/89、candidate-package 37/37、docs/prelisten PASS；full 1039 中
+1034 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report/deterministic qualification/stage digest 为
+`sha256:aada406e…4a5a` / `sha256:0dbb2e8e…fce6` / `sha256:7484be1b…0a97`，freeze 外部模型 dispatch 为 0；pending
+grant `sha256:5cb18436…9370` 尚未授权。下一步只允许申请绑定该 exact freeze 的公开 Web 授权；hidden canary、SLICE-002、
+Reflection 与 Activation 不执行。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

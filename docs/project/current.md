@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-21
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-028-qualified-formal-product-refreeze-next
+worktree_status: iteration-008-run-012-formal-frozen-public-web-authorization-next
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-028-qualified-formal-product-refreeze-next
+live_model_path: iteration-008-run-012-formal-frozen-public-web-authorization-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-028 18/18 qualified / formal refreeze next** | run-010 公开登录题的 V-003 two-call omission 保持 FAIL；`FINDING-008-041` 将 ordered behavior multiplicity 收回 Application terminal compiler `@3`。clean candidate `6d5f2de…` 的 run-028 已完成 Conformance 2/2 / 12/12 与 Capability 41 calls / 18 Case / 18/18 PASS；完整 Draft 明确两次调用，Reviewer 对完整答案 APPROVE、对遗漏一次的答案以 `MATERIAL_OMISSION` REJECT。V-002 对 current `1.5.11/@20/@1.4.12` identity PASS；下一 Gate 是证据写回后的全新 formal product freeze/Web。下单/跨域、canary、Agent 对照、Reflection 与 Activation 未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-012 formal freeze PASS / public Web authorization next** | run-010 公开登录题的 V-003 two-call omission 保持 FAIL；`FINDING-008-041` 的 current identity 已由 run-028 完成 41 calls / 18/18。run-011 因 nested validation symlink 解析到 clean workspace 外而失败关闭；`FINDING-008-042` 改用 workspace 内 exact revision/remote 的真实 clone 后，run-012 以 focused 89/89、candidate 37/37、full 1039 exact hold、docs/prelisten PASS，模型调用 0。report/pending grant 为 `sha256:aada406e…4a5a` / `sha256:5cb18436…9370`；下一 Gate 是 post-freeze 公开 Web 授权。下单/跨域、canary、Agent 对照、Reflection 与 Activation 未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -615,6 +615,18 @@ Capability result/closed/qualification-proof/qualification-document/terminal dig
 bounded-negative `REJECT / QUERY_INCOMPLETE`、完整答案 `APPROVE`、遗漏重复调用 `REJECT / MATERIAL_OMISSION`。两份授权均已
 消费且不可 retry。V-002 对 current identity PASS；下一步从证据提交后的 clean producer 生成全新 formal product freeze。
 V-003/V-WEB-001 保持 blocking，hidden canary、SLICE-002、Reflection 与 Production Activation 继续阻断。
+
+run-028 证据提交 `b0f8ce835d8cbfbe5330513115e651691da7621b` 后的 formal run-011 使用 symlink 挂载五个 nested
+validation repository；sealed checkout 的 canonical path 因而落在 clean producer 外，full 1039 除既有 exact hold 外新增
+ProductHoldout 1 FAIL + 1 ERROR，未形成 report，模型调用 0。`FINDING-008-042` 要求这些 checkout 在 producer 内真实
+materialize，并同时保持 exact revision、canonical remote 与 clean status；定向新增两项随后 2/2 PASS。
+
+正确装配的 formal `run-012-freeze` 使用同一 tracked commit/tree 并 PASS：focused 89/89、candidate 37/37、docs/prelisten
+PASS；full 1039 中 1034 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。report/deterministic qualification/stage
+digest 为 `sha256:aada406e…4a5a` / `sha256:0dbb2e8e…fce6` / `sha256:7484be1b…0a97`；source snapshot
+commit/tree/manifest 为 `03fa8603…146d` / `7098432f…9a83` / `sha256:37daf84d…2a3c`。freeze 外部模型 dispatch 为 0，
+pending grant `sha256:5cb18436…9370` 仍为 `live_dispatch_authorized=false`。下一 Gate 是晚于 exact run-012 freeze 的公开 Web
+授权；hidden canary、SLICE-002、Reflection 与 Production Activation 继续阻断。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。

@@ -12,7 +12,12 @@ iteration: ITER-008
 
 # ITER-008 Findings
 
-本 Slice 当前登记四十一条 Finding；四十一条均已处置或被后续决定取代。`FINDING-008-041` 记录 run-010 公开 Web
+本 Slice 当前登记四十二条 Finding；四十二条均已处置或被后续决定取代。`FINDING-008-042` 记录 run-011 formal producer
+把五个 nested validation checkout 作为 symlink 挂载，canonical path 因而落在 clean workspace 外，full 1039 在既有 exact hold
+之外新增 ProductHoldout 1 FAIL + 1 ERROR，未形成 report。producer 改为在 workspace 内真实 materialize exact revision，并恢复
+sealed remote identity；定向新增两项 2/2 PASS，全新 run-012 以 focused 89/89、candidate 37/37、full 1039 exact hold、
+docs/prelisten PASS，模型调用 0。report/pending grant 为 `sha256:aada406e…4a5a` / `sha256:5cb18436…9370`，公开 Web
+post-freeze 授权为下一阻断。`FINDING-008-041` 记录 run-010 公开 Web
 登录答案把两个 distinct `recordFailure()` call site 合并为一次，旧 Reviewer 仍错误 APPROVE；首次偏差在 Draft，Source、Snapshot、
 typed Query、trace、Citation、Provider transport 与 Web delivery 均正常。Application terminal compiler `@3` 现从 sealed typed
 Result 编译 caller 不可伪造的 ordered `behavior_obligation_scope`，Draft 必须说明 exact multiplicity，Reviewer 必须以
@@ -227,6 +232,11 @@ canary、SLICE-002 与 Production Activation gate：
   的 run-028 Conformance 2/2 / 12/12、Capability 41 calls / 18 Case / 18/18 PASS，TLS `3/3`、reuse `38`、
   HTTP/credential `41/41`、unknown/retry `0`；Draft 明确两次调用，Review 对完整答案 APPROVE、对遗漏一次的答案以
   `MATERIAL_OMISSION` REJECT。V-002 PASS，下一 Gate 为 formal product refreeze/Web。
+- [FINDING-008-042](FINDING-008-042.md)：run-011 用 symlink 装配五个 sealed validation checkout，canonical path 位于 clean
+  workspace 外，full regression 因新增 ProductHoldout 1 FAIL + 1 ERROR 失败关闭且未形成 report；既有 exact 4 FAIL + 1 ERROR
+  未漂移，模型调用 0。producer 改为在 workspace 内真实 clone exact revision，并恢复 canonical remote；定向 2/2 PASS。
+  全新 run-012 的 focused 89/89、candidate 37/37、full 1039 exact hold、docs/prelisten 均 PASS，report/pending grant 为
+  `sha256:aada406e…4a5a` / `sha256:5cb18436…9370`；下一 Gate 为 post-freeze 公开 Web 授权。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。
