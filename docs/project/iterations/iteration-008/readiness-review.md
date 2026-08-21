@@ -306,9 +306,16 @@ pending grant `sha256:e3c9bed5…b082` 仍未授权。Readiness 下一 Gate 是�
 Readiness 的活动 contract 现为 `1.5.11/@20/@1.4.12/@1.5.11` 与 terminal compiler `@3`。Application 从 sealed typed Result
 编译 caller 不可伪造的 ordered behavior obligation，Draft 明确 same-target exact multiplicity，Review 对遗漏返回
 `MATERIAL_OMISSION`。18 Case / 18/18 threshold 不变，独立 omitted-duplicate Review 使资格调用为 41；产品 4—6 call budget 不变。
-run-027 Qualification 与 run-010 freeze/grant/session 不适用于新 identity。下一 Readiness Gate 重新变为 clean exact candidate 的
-Conformance + 41-call Capability PASS；本地 expanded focused 106/106、fake 18/18、docs 345/345 PASS，full 1039 只保留 exact
-4 FAIL + 1 ERROR historical hold。此前不得生成新 formal Web freeze，hidden canary、SLICE-002 与 Activation 保持阻断。
+run-027 Qualification 与 run-010 freeze/grant/session 不适用于新 identity。本地 expanded focused 106/106、fake 18/18、docs
+345/345 PASS，full 1039 只保留 exact 4 FAIL + 1 ERROR historical hold。
+
+clean candidate `6d5f2de66338942787aa0465f540f732dbdb3626` / tree
+`f31c82ed57e4509b169900c38cd720e624d41915` 的 run-028 已关闭新资格 Gate。Conformance 2/2 / 12/12 PASS；Capability
+41 calls / 18 Case / 18/18 PASS，tokens `89,014/2,568`，TLS `3/3`、reuse `38`、HTTP/credential `41/41`、
+unknown/retry `0`。`DRAFT-017` 明确两次 `recordFailure()`；`REVIEW-018` 精确得到 bounded-negative REJECT、完整 positive
+APPROVE 与 omitted-duplicate `REJECT / MATERIAL_OMISSION`。Qualification digest `sha256:0880bb0d…eb6`，有效至
+`2026-08-28T00:28:17.345205+00:00`。V-002 对 current identity PASS；Readiness 的下一阻断变为证据写回后的全新 formal
+product freeze/Web。该资格不授权 hidden canary、SLICE-002、Reflection 或 Production Activation。
 
 ## Slice, dependency and risk closure
 

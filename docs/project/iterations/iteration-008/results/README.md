@@ -148,8 +148,23 @@ reuse `4`、credential `5/5`、unknown/retry `0`；Source/Evidence payload/autho
 处置后的活动 identity 为 `1.5.11/@20/@1.4.12/@1.5.11`、terminal compiler `@3`：Application 编译 ordered behavior
 obligation 与 same-target occurrence/count；资格保留 18 Case / 18/18，增加 omitted-duplicate Review 后为 41 calls。旧 run-027
 Qualification 与 run-010 freeze/grant/session 不可复用。当前 expanded focused 106/106、fake 18/18、compileall/diff PASS；full
-1039 中 1034 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。还没有新的
-live Qualification、formal Product Result、hidden canary、SLICE-002、Reflection 或 Activation。
+1039 中 1034 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。
+
+clean candidate `6d5f2de66338942787aa0465f540f732dbdb3626` / tree
+`f31c82ed57e4509b169900c38cd720e624d41915` 随后完成 run-028。Conformance preflight/result/terminal digest 为
+`sha256:59ffbaf1…198e` / `sha256:5dffdf36…b5dd7` / `sha256:3ecdd7cf…1893`，2/2 requests / 12/12 PASS；TLS
+`1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`。Capability freeze/authorization digest 为
+`sha256:d7d13acc…9bf9` / `sha256:3e129b30…3cfe`。
+
+Capability 完整执行 41 calls / 18 Case / 18/18 PASS，tokens `89,014/2,568`；TLS `3/3`、reuse `38`、
+HTTP/credential `41/41`、unknown/retry `0`。`DRAFT-017` 明确 invalid branch 的两个 distinct direct call site，
+`recordFailure()` exactly twice；`REVIEW-018` 得到预期的 bounded-negative `REJECT / QUERY_INCOMPLETE`、完整 positive
+`APPROVE` 与 omitted-duplicate `REJECT / MATERIAL_OMISSION`。Capability result/closed/qualification-proof/
+qualification-document/terminal digest 为 `sha256:4dbfa35d…4443` / `sha256:4aa86b5c…db4b` /
+`sha256:0880bb0d…eb6` / `sha256:50fc40ff…77d0` / `sha256:e341bc7b…45eb`；Qualification ref 为
+`capability-evaluation:evaluation_result_35ed2527ae504c2f9887ae10eed37f81`，有效至
+`2026-08-28T00:28:17.345205+00:00`。两份授权均已消费且不可 retry；V-002 PASS，下一步是证据写回后的全新 formal
+product freeze/Web。尚无新的 Product Result，hidden canary、SLICE-002、Reflection 与 Production Activation 均未执行。
 
 前置 Conformance Gate 的 run-001 已消费其单次授权，但返回 `PROVIDER_OUTCOME_UNKNOWN`，没有形成当前 Adapter `@8` 的 PASS Result；旧
 runner 仅保留 invocation，实际调用只能界定为 1—2 次且原因码不可恢复。该失败按

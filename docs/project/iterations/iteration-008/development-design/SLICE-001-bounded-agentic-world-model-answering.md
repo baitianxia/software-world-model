@@ -565,6 +565,15 @@ suite/oracle 升级为 `1.5.11/@20/@1.4.12/@1.5.11`；18 Case / 18/18 不变，�
 不得再生成 formal Web freeze。本地 expanded focused 106/106、fake 18/18、docs 345/345 PASS；full 1039 中 1034 PASS，只保留
 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。hidden canary、SLICE-002、Reflection 与 Activation 继续阻断。
 
+上述设计形成 clean candidate `6d5f2de66338942787aa0465f540f732dbdb3626` / tree
+`f31c82ed57e4509b169900c38cd720e624d41915`。run-028 Conformance 2/2 / 12/12 PASS；Capability 41 calls / 18 Case /
+18/18 PASS，TLS `3/3`、reuse `38`、HTTP/credential `41/41`、unknown/retry `0`。`DRAFT-017` 明确 invalid branch 调用
+`recordFailure()` exactly twice；同一 `REVIEW-018` 的 bounded-negative、完整 positive 与 omitted-duplicate 三项分别得到
+`REJECT / QUERY_INCOMPLETE`、`APPROVE`、`REJECT / MATERIAL_OMISSION`，直接验证 terminal compiler `@3` 的模型适配。
+Qualification digest 为 `sha256:0880bb0d…eb6`，有效至 `2026-08-28T00:28:17.345205+00:00`；V-002 PASS。
+下一步从证据写回后的 clean producer 生成全新 formal product freeze，再执行另行授权的公开 Web；hidden canary、SLICE-002、
+Reflection 与 Activation 不执行。
+
 ## Open questions and implementation risks
 
 - 固定三调用门禁需要在 Readiness 前重写，否则实现与规范冲突；

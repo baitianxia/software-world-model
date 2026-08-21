@@ -86,6 +86,32 @@ Provider dispatch 前失败关闭。fake qualification 完整执行 18 Case / 41
 synthetic qualification fixture；原 raw model input/output 与 evidence 均未改写。
 
 AF_UNIX 相关 20/20 在允许本机 listener 的既有验证面 PASS；current documents 345/345 PASS。完整执行面现为 1039 项，其中
-1034 PASS，只保留 `FINDING-008-020` 已冻结的 exact 4 FAIL + 1 ERROR，identity/reason 未新增或漂移。以上是本地确定性证据，
-不是 live Provider Qualification 或新的 Product Result。新 exact candidate、formal freeze Gate、
-Conformance/Capability freeze 与 live 结果将在后续证据闭合后记录；当前 V-003/V-WEB-001 继续 blocking。
+1034 PASS，只保留 `FINDING-008-020` 已冻结的 exact 4 FAIL + 1 ERROR，identity/reason 未新增或漂移。
+
+本地处置形成 clean candidate `6d5f2de66338942787aa0465f540f732dbdb3626` / tree
+`f31c82ed57e4509b169900c38cd720e624d41915`。run-028 Conformance preflight/result/terminal digest 为
+`sha256:59ffbaf164ed71030d83848ffd984b7bdb7efeeb5006cba3f3035523daa9198e` /
+`sha256:5dffdf364d528a97a70b7c0d82c0fa5ea6d642dfa6c9c9a07ad7db90115b5dd7` /
+`sha256:3ecdd7cf700e6f42a2bfac742f1b0890d92f44745d84db73b3cd8958d2ee1893`。用户授权 ref
+`codex-user-message:sha256:5618f6040f4fc58cefe687c03e6567dcda03c0327437e5c3a385134e28d7b633` 密封为
+`sha256:237d6165ffd399dd372a06591ad20e4c87ea71914272e95985f3f55897b74329`；2/2 requests / 12/12 PASS，TLS
+`1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`。
+
+Capability freeze/authorization digest 为 `sha256:d7d13acc74e623cb1572cc2836e79d35430770a950c62d091f935b958a0d9bf9` /
+`sha256:3e129b30a267de72c1d5ea10b2f19787f1bb10f3eac74bec2211d550062a3cfe`，授权 ref 为
+`codex-user-message:sha256:b806cb4023c2f70528b3ddd36e629e437491a05e7536fa8e1f95d6314b8c58ea`。完整执行 41 calls /
+18 Case / 18/18 PASS，tokens `89,014/2,568`；TLS `3/3`、reuse `38`、HTTP/credential `41/41`、unknown/retry `0`。
+Capability result/closed/qualification-proof/qualification-document/terminal digest 为
+`sha256:4dbfa35d3b9be0efffcdba931e66f2503ec8d5df914754f8e8c993e3e2034443` /
+`sha256:4aa86b5c16adaae432ea9d0c4e3c5c2c2349d02d6efc2d5f2c40458b2bebdb4b` /
+`sha256:0880bb0d960667bb2555b83ad37a2021a58229d6235b6d714462fbd81e46eeb6` /
+`sha256:50fc40ff791cd79342f070dff4a9082b12ecab4fbcb9cf64c54294b5636777d0` /
+`sha256:e341bc7b6de3787ccb003c4937196c647dfbd9d182df7a11fde8d0a268c345eb`；Qualification 有效至
+`2026-08-28T00:28:17.345205+00:00`。
+
+`DRAFT-017` 明确两个 distinct direct call site 且 `recordFailure()` exactly twice。`REVIEW-018` 三个 normalized result digest
+`sha256:7415d3a4…b7c` / `sha256:42067ddf…4a10` / `sha256:86b6eb8c…1095` 依次得到 bounded-negative
+`REJECT / QUERY_INCOMPLETE`、完整 positive `APPROVE`、omitted-duplicate `REJECT / MATERIAL_OMISSION`。独立 loader 接受
+Qualification/closed result/Conformance 的单一 authority chain；核心 JSON 为 `0600`，credential-shaped secret scan 无命中。
+两份授权均已消费且不可 retry。V-002 对 current identity PASS；下一 Gate 是证据写回后的全新 formal product freeze/Web。
+这不是新的 Product Result，V-003/V-WEB-001 继续 blocking；hidden canary、SLICE-002、Reflection 与 Activation 未执行。

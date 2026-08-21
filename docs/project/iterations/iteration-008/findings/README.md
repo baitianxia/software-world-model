@@ -17,7 +17,9 @@ iteration: ITER-008
 typed Query、trace、Citation、Provider transport 与 Web delivery 均正常。Application terminal compiler `@3` 现从 sealed typed
 Result 编译 caller 不可伪造的 ordered `behavior_obligation_scope`，Draft 必须说明 exact multiplicity，Reviewer 必须以
 `MATERIAL_OMISSION` 拒绝合并 occurrence。活动 identity 为 `1.5.11/@20/@1.4.12/@1.5.11`，18 Case / 41 calls；旧 run-027
-Qualification 与 run-010 grant/session 不可复用，新完整资格为下一阻断。`FINDING-008-040` 记录 run-009 虽通过 focused 89/89 与
+Qualification 与 run-010 grant/session 不可复用。clean candidate `6d5f2de…` 的 run-028 随后完成 Conformance 2/2 / 12/12 与
+Capability 41 calls / 18 Case / 18/18 PASS；Draft 明确两次调用，Review 对完整答案 APPROVE、对遗漏一次的答案以
+`MATERIAL_OMISSION` REJECT。V-002 PASS，formal product refreeze/Web 成为下一 Gate。`FINDING-008-040` 记录 run-009 虽通过 focused 89/89 与
 candidate 37/37，却因纯 Git checkout 缺少 full-suite 必需的 protected `validation-projects/` 与历史 `var/` 输入而只发现 1020 项、
 8 FAIL / 25 ERROR / 1 skip。formal producer 现明确分层 clean tracked product source 与 ignored validation corpus；正确装配的
 run-010 以 focused 89/89、candidate 37/37、full 1038 exact hold、docs/prelisten PASS，模型调用 0，正式 freeze Gate 已闭合，
@@ -221,7 +223,10 @@ canary、SLICE-002 与 Production Activation gate：
   页面与 console 均正常，但 Draft 只写一次 `recordFailure()`，Reviewer 错误 APPROVE，违反 exact Source/typed Result/V-003 的两次
   调用要求。Application terminal compiler `@3` 编译 ordered event 与 same-target occurrence/count，caller 不可伪造；Draft/Review
   contract 明确 exact multiplicity，资格增加 omitted-duplicate Review。活动 identity 为 `1.5.11/@20/@1.4.12/@1.5.11`、
-  18 Case / 41 calls；expanded focused 106/106、fake 18/18、full 1039 exact historical hold PASS，live requalification 尚未执行。
+  18 Case / 41 calls；expanded focused 106/106、fake 18/18、full 1039 exact historical hold PASS。clean candidate `6d5f2de…`
+  的 run-028 Conformance 2/2 / 12/12、Capability 41 calls / 18 Case / 18/18 PASS，TLS `3/3`、reuse `38`、
+  HTTP/credential `41/41`、unknown/retry `0`；Draft 明确两次调用，Review 对完整答案 APPROVE、对遗漏一次的答案以
+  `MATERIAL_OMISSION` REJECT。V-002 PASS，下一 Gate 为 formal product refreeze/Web。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

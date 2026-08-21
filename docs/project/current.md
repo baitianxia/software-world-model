@@ -10,9 +10,9 @@ tests: []
 as_of: 2026-08-21
 active_iteration: ITER-008-INDEX
 active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-010-public-web-v003-fail-ordered-behavior-remediation
+worktree_status: iteration-008-run-028-qualified-formal-product-refreeze-next
 strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-1.5.11-local-pass-requalification-next
+live_model_path: iteration-008-run-028-qualified-formal-product-refreeze-next
 ---
 
 # 当前工作上下文
@@ -41,7 +41,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-010 public V-003 FAIL / remediation local** | run-027 对旧 `1.5.10` identity 完成 18/18；run-010 formal freeze PASS 后取得 exact Web 授权。首个登录题完成 5/5 DeepSeek request、Source-off/Citation/Web technical PASS，却把两个 `recordFailure()` call site 合并为一次且 Reviewer 错误 APPROVE，V-003 objective FAIL。`FINDING-008-041` 将活动 identity 升级为 `1.5.11/@20/@1.4.12`、terminal compiler `@3` 与 18 Case / 41 calls；expanded focused 106/106、fake 18/18 PASS，live requalification 尚未执行。下单/跨域、canary、Agent 对照、Reflection 与 Activation 未执行 |
+| Iteration 008 | **SLICE-001 authorized / run-028 18/18 qualified / formal refreeze next** | run-010 公开登录题的 V-003 two-call omission 保持 FAIL；`FINDING-008-041` 将 ordered behavior multiplicity 收回 Application terminal compiler `@3`。clean candidate `6d5f2de…` 的 run-028 已完成 Conformance 2/2 / 12/12 与 Capability 41 calls / 18 Case / 18/18 PASS；完整 Draft 明确两次调用，Reviewer 对完整答案 APPROVE、对遗漏一次的答案以 `MATERIAL_OMISSION` REJECT。V-002 对 current `1.5.11/@20/@1.4.12` identity PASS；下一 Gate 是证据写回后的全新 formal product freeze/Web。下单/跨域、canary、Agent 对照、Reflection 与 Activation 未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -601,8 +601,20 @@ same-target multiplicity，caller 不可伪造；Draft 必须保留，Reviewer �
 `1.5.11/@20/@1.4.12/@1.5.11`；18 Case / 18/18 不变，新增独立 omitted-duplicate Review 后为 41 calls，产品每题 4—6 calls
 不变。expanded focused 106/106、fake 18/18、compileall/diff PASS；full 1039 中 1034 PASS，只保留
 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR。旧 run-027 Qualification 与 run-010 freeze/grant/session 不可复用。
-下一步是完整 current-doc/full Gate、clean exact candidate 与新 Conformance/Capability freeze；没有新 live Qualification 前不得再次
-formal Web。hidden canary、SLICE-002、Reflection 与 Production Activation 继续阻断。
+
+该处置形成 clean candidate `6d5f2de66338942787aa0465f540f732dbdb3626` / tree
+`f31c82ed57e4509b169900c38cd720e624d41915`。run-028 Conformance preflight/result/terminal digest 为
+`sha256:59ffbaf1…198e` / `sha256:5dffdf36…b5dd7` / `sha256:3ecdd7cf…1893`，2/2 requests / 12/12 PASS；TLS
+`1/1`、reuse `1`、HTTP/credential `2/2`、unknown/retry `0`。Capability freeze/authorization digest 为
+`sha256:d7d13acc…9bf9` / `sha256:3e129b30…3cfe`；完整执行 41 calls / 18 Case / 18/18 PASS，tokens
+`89,014/2,568`，TLS `3/3`、reuse `38`、HTTP/credential `41/41`、unknown/retry `0`。
+
+Capability result/closed/qualification-proof/qualification-document/terminal digest 为 `sha256:4dbfa35d…4443` /
+`sha256:4aa86b5c…db4b` / `sha256:0880bb0d…eb6` / `sha256:50fc40ff…77d0` / `sha256:e341bc7b…45eb`，有效至
+`2026-08-28T00:28:17.345205+00:00`。`DRAFT-017` 明确 `recordFailure()` exactly twice；`REVIEW-018` 依次得到
+bounded-negative `REJECT / QUERY_INCOMPLETE`、完整答案 `APPROVE`、遗漏重复调用 `REJECT / MATERIAL_OMISSION`。两份授权均已
+消费且不可 retry。V-002 对 current identity PASS；下一步从证据提交后的 clean producer 生成全新 formal product freeze。
+V-003/V-WEB-001 保持 blocking，hidden canary、SLICE-002、Reflection 与 Production Activation 继续阻断。
 
 ITER-006 已完成窄范围 Acceptance。ITER-007 的 SLICE-001 已按计划先走正式 Web，并在大量 Java 语义加固前暴露产品架构问题；
 该失败已由 `ITER-007-RESULT-SLICE-001-STOP-DECISION` 保留，因此不进入 SLICE-002/003。
