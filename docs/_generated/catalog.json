@@ -1846,6 +1846,152 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-002.md"
   },
   {
+    "id": "FINDING-010-003",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-003.md"
+  },
+  {
+    "id": "FINDING-010-004",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-004.md"
+  },
+  {
+    "id": "FINDING-010-005",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "source",
+      "architecture",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-005.md"
+  },
+  {
+    "id": "FINDING-010-006",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-006.md"
+  },
+  {
+    "id": "FINDING-010-007",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-007.md"
+  },
+  {
+    "id": "FINDING-010-008",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-008.md"
+  },
+  {
+    "id": "FINDING-010-009",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "interface",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-009.md"
+  },
+  {
+    "id": "FINDING-010-010",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-010.md"
+  },
+  {
+    "id": "FINDING-010-011",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai-infrastructure",
+      "application",
+      "interface",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-011.md"
+  },
+  {
+    "id": "FINDING-010-012",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "interface",
+      "operations",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-012.md"
+  },
+  {
+    "id": "FINDING-010-013",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-013.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -4139,7 +4285,9 @@
     ],
     "derived_from": [
       "FINDING-010-001",
-      "FINDING-010-002"
+      "FINDING-010-002",
+      "FINDING-010-005",
+      "FINDING-010-011"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },
@@ -4845,7 +4993,11 @@
     ],
     "derived_from": [
       "FINDING-008-024",
-      "FINDING-008-036"
+      "FINDING-008-036",
+      "FINDING-010-008",
+      "FINDING-010-009",
+      "FINDING-010-011",
+      "FINDING-010-012"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

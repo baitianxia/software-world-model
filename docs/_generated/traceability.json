@@ -1640,6 +1640,127 @@
       "tests/test_world_model_browser.py"
     ]
   },
+  "FINDING-010-003": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-003.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_strategy.py"
+    ]
+  },
+  "FINDING-010-004": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-004.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py"
+    ]
+  },
+  "FINDING-010-005": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-005.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/interface/engineering_qa_source.py",
+      "src/software_world_model/interface/engineering_qa_browser.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
+  "FINDING-010-006": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-006.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/interface/engineering_qa_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_qa_source.py"
+    ]
+  },
+  "FINDING-010-007": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-007.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py"
+    ]
+  },
+  "FINDING-010-008": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-008.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py"
+    ]
+  },
+  "FINDING-010-009": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-009.md",
+    "code": [
+      "src/software_world_model/interface/engineering_qa_browser.py"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
+  "FINDING-010-010": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-010.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_cognition.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_cognition.py"
+    ]
+  },
+  "FINDING-010-011": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-011.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/interface/engineering_qa_live.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
+  "FINDING-010-012": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-012.md",
+    "code": [
+      "src/software_world_model/interface/engineering_qa_preview_cli.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/__init__.py",
+      "pyproject.toml"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
+  "FINDING-010-013": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-013.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -2747,6 +2868,28 @@
       "tests"
     ]
   },
+  "SYS-ADR-016": {
+    "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/interface/engineering_qa_source.py",
+      "src/software_world_model/interface/engineering_qa_live.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
   "SYS-ARCH-COMPONENTS": {
     "path": "docs/system/architecture/components.md",
     "code": [
@@ -2936,6 +3079,30 @@
       "tests/test_behavior_view.py",
       "tests/test_world_model_product.py",
       "tests/test_citation_projector.py"
+    ]
+  },
+  "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING": {
+    "path": "docs/system/contracts/application/engineering-question-answering.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/interface/engineering_qa_source.py",
+      "src/software_world_model/interface/engineering_qa_live.py",
+      "src/software_world_model/interface/engineering_qa_preview_cli.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_browser.py"
     ]
   },
   "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING": {
@@ -3438,7 +3605,11 @@
       "src/software_world_model/interface/world_model_browser_ui.py",
       "src/software_world_model/interface/world_model_http.py",
       "src/software_world_model/interface/world_model_runtime.py",
-      "src/software_world_model/interface/world_model_product.py"
+      "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py",
+      "src/software_world_model/interface/engineering_qa_live.py",
+      "src/software_world_model/interface/engineering_qa_preview_cli.py"
     ],
     "tests": [
       "tests/test_browser_chat_interface.py",
@@ -3450,7 +3621,11 @@
       "tests/test_iteration_007_slice1_freeze.py",
       "tests/test_iteration_008_slice1_freeze.py",
       "tests/test_iteration_008_slice1_live_authorize.py",
-      "tests/test_world_model_product.py"
+      "tests/test_world_model_product.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_browser.py"
     ]
   },
   "SYS-PRODUCT-CAPABILITIES": {
@@ -3484,6 +3659,7 @@
       "src/software_world_model/ai_infrastructure",
       "src/software_world_model/source_integration",
       "src/software_world_model/application_services/citation_projection.py",
+      "src/software_world_model/application_services/engineering_question_answering.py",
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface",
@@ -3510,7 +3686,15 @@
       "tests/test_iteration_007_slice1_freeze.py",
       "tests/test_iteration_007_slice1_live_evaluator.py",
       "tests/test_iteration_008_slice1_freeze.py",
-      "tests/test_iteration_008_slice1_live_evaluator.py"
+      "tests/test_iteration_008_slice1_live_evaluator.py",
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_browser.py"
     ]
   }
 }

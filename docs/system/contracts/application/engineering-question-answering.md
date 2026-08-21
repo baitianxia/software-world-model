@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-016, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
-code: []
-tests: []
+code: [src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/engineering_question_strategy.py, src/software_world_model/ai_infrastructure/engineering_question_model_source.py, src/software_world_model/interface/engineering_qa_source.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py]
+tests: [tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_browser.py]
 ---
 
 # Engineering Question Answering
@@ -29,20 +29,20 @@ tests: []
 
 ## Request and role boundary
 
-1. Request 在任何 World Model 查询、来源读取或模型调用前固定 `ENGINEERING_QA`、protocol identity、original question、response language、exact repository/Binding/revision、source path/content allowlist、World Model Snapshot/Read Set selector、registered operation set、访问权限、高安全资源熔断、Provider disclosure policy 和不可变请求摘要。`CURRENT`/`latest` 只能在入口解析一次；开始后不得切换模式、revision、Scope 或 Source Target。
+1. Request 在任何 World Model 查询、来源读取或模型调用前固定 `ENGINEERING_QA`、protocol identity、original question、response language、exact repository/Binding/revision、source path/content allowlist、Binding-scoped versioned Source Profile ref/digest、World Model Snapshot/Read Set selector、registered operation set、访问权限、高安全资源熔断、Provider disclosure policy 和不可变请求摘要。Source Profile 由受信配置拥有 evidence class → path capability；模型、问题和来源内容不能创建或修改分类。`CURRENT`/`latest` 只能在入口解析一次；开始后不得切换模式、revision、Scope、Source Profile 或 Source Target。
 2. Question Understanding 必须保留原问题全文以及全部条件、比较、关系和输出约束，并记录 goal、audience、期望抽象层级、material conclusion checklist、evidence needs 和响应语言。模型不得把问题改写为更容易回答的问题；Application 校验完整性，不以当前证据删除尚未解决的 Need。
 3. World Model Cognition Context 必须来自固定 Read Authority，至少绑定 exact Scope、Context、Schema、Snapshot/Read Set、source revision、typed Result、Entity/Relation/Behavior/Constraint/State、Coverage、Support、Conflict、Unknown、locator 与 digest。它是世界模型对当前任务的只读认知投影，不是另一个事实库。
 4. World Model source revision 与 Request repository revision 必须 exact 相等。显式版本比较问题可以使用分区的 exact Read Set，但每个分区必须独立绑定对应 Source revision。未对齐或无法证明相等的 Result 只能标记 `UNALIGNED_REVISION` 并作为候选导航，不能直接支持当前 revision 的 Claim；相关内容必须在 Request revision 上重新核实。
-5. Question Understanding、Investigation、Answer 和 Review 是分离角色。每个模型步骤使用精确输入 allowlist、schema、Strategy/Prompt 身份和独立收据；Provider 会话记忆、隐藏 rationale、未密封工具结果或上一角色私有输出不得成为正式输入。
-6. 在任何真实 Provider dispatch 前，Application/Gateway 必须验证 current exact Provider、model、endpoint、configuration、role、secret reference、允许外发的 Cognition Context/Ledger/Package 字段或片段、redaction 和完整 input digest 已单独密封并授权。历史开发、Conformance、Capability、Product 或浏览器授权不能推导这次来源内容披露。
+5. Question Understanding、Investigation、Answer 和 Review 是分离角色。每个模型步骤使用精确输入 allowlist、closed output schema、Strategy/Prompt 身份和独立收据；输出收据必须绑定当前 role、fresh role context、input Manifest digest 与 output schema ref/digest。模型只提交 schema 允许的语义字段，request/package/draft digest、attempt、Ledger ID/generation/revision/prefix 等权威坐标由可信适配层从当前状态补入并由 Application 重验，不能由模型回显取得权威。Provider 会话记忆、隐藏 rationale、未密封工具结果或上一角色私有输出不得成为正式输入。
+6. 在任何真实 Provider dispatch 前，Application/Gateway 必须验证 current exact Provider、model、endpoint、configuration、role、secret reference、允许外发的 Cognition Context/Ledger/Package 字段或片段、redaction 和完整 input digest 已单独密封并授权。用户级 run grant 必须绑定 exact immutable Request、evaluation subject、Provider binding、Prompt/output contract、角色集合、总调用上限和授权消息；它本身不能直接 dispatch。每个运行时动态形成的角色输入还必须密封完整 Gateway Manifest、所有 model-visible 字段路径与片段摘要、payload bytes、schema/Prompt 和 full input digest，并由受信边界把 run grant 收窄为恰好一次 dispatch 的 role disclosure authorization。Gateway 在 credential resolution/HTTP 前独立重验同一 run grant、root Request、完整 role payload、Provider/qualification 和由前一结构化 Result 决定的角色顺序。真实 Web launcher 还必须在 listener 前证明自身从 clean exact product candidate 加载，绑定 published Bundle semantic/file digest、exact Source/Profile/Request/run authority，并先密封零分派 launch receipt；退出时密封逐角色、Gateway 与 transport terminal audit。任一授权、输入或 Result 只能消费一次；dispatch 后异常、outcome unknown、identity drift 或 replay 不 retry、不切 Provider。Secret value、secret reference 和授权 receipt 都不得进入模型消息。历史开发、Conformance、Capability、Product 或浏览器授权不能推导这次来源内容披露。
 
 ## Adaptive investigation and Evidence Ledger
 
 1. 初始 Investigation Step 只读 immutable original question、已接受的 Question Understanding/Checklist、受信 Request 控制字段和 World Model Cognition Context。后续 Step 还可读取 Application 密封的当前 Evidence Ledger prefix。世界模型为 Investigation LLM 提供系统认知起点；零结果、无关内容或 Coverage 不足是显式认知状态，不得阻断原问题驱动的受权调查。
 2. Investigation LLM 每一步只能提出一个版本化 schema 中注册的 `search`、`read`、`parse` 或 `FINISH` Proposal，并说明它对应的 Checklist/evidence need、预期消除的未知及与当前 Ledger 的关系。Proposal 可以根据前一步 Result 改变后续方向，实现真正的自适应多步调查；它没有直接工具句柄，不能执行操作、修改 allowlist/revision/预算、删除 Need 或把 `FINISH` 变成平台事实。
-3. Source Broker 必须把 Proposal 当作不可信建议，重新解析 locator、拒绝模型命令和 URL、验证 exact Binding/revision/regular-file/allowlist/registered operation/参数/remaining fuse，并编译 caller 不可伪造的 Source Operation。非法、无进展、重复或越界 Proposal 形成明确 Decision/Failure，不获得 Worker dispatch。
-4. Retrieval Worker 只能执行 Broker 已批准的 list/search/read/parse 等只读 Source Operation。源码、仓库文档、构建/运行配置和测试是同一受控来源面的不同 evidence class；平台按显式注册、版本化的文件/Profile 能力解析，不按题目、工程或关键词分支。Worker 必须拒绝 path traversal、symlink escape、submodule/remote fetch、二进制/超限输入、写操作、任意命令、新网络、credential、Knowledge Update 和答案生成。
-5. 每个操作必须记录 Proposal、Broker Decision、exact target/revision、allowlist verdict、compiled operation/parameters、actual locator/range、bytes、content digest、Coverage/truncation、outcome 和稳定 reference。失败、partial、truncation、无法解析和结果未知不得伪装为空命中或不存在证明。
+3. Source Broker 必须把 Proposal 和其中的 evidence class 当作不可信建议，重新解析 locator、拒绝模型命令和 URL、验证 exact Binding/revision/regular-file/global allowlist/Source Profile identity/class-specific allowlist/registered operation/参数/remaining fuse，并编译 caller 不可伪造的 Source Operation。read/parse locator 必须由当前 Ledger 签发且属于相同 class capability；非法、无进展、重复或越界 Proposal 形成明确 Decision/Failure，不获得 Worker dispatch。
+4. Retrieval Worker 只能执行 Broker 已批准的 list/search/read/parse 等只读 Source Operation。源码、仓库文档、构建/运行配置和测试是同一受控来源面的不同 evidence class；平台按显式注册、版本化的 Source/Profile capability 解析，不按题目、工程、关键词或模型声明分类。每个 operation 必须绑定 exact Profile ref/digest、完整 class-specific allowlist 和 expected Result modality，Worker 重验 Binding/Profile 后只读取 global allowlist 和 class allowlist 的交集，并只能产生 Profile 为该 class + operation 注册的 modality。Local Git Profile `@1` 使用非空且跨 class 不重叠的保守路径映射；其他 Profile 若允许同一路径具有多种 modality，必须以新的显式、可资格版本定义确定性歧义规则。Worker 必须拒绝 path traversal、symlink escape、submodule/remote fetch、二进制/超限输入、class/modality 重标、写操作、任意命令、新网络、credential、Knowledge Update 和答案生成。
+5. 每个操作必须记录 Proposal、Broker Decision、exact target/revision、Source Profile ref/digest、global/class allowlist verdict、expected/actual modality、compiled operation/parameters、actual locator/range、evidence class、bytes、content digest、Coverage/truncation、outcome 和稳定 reference。Application 必须独立重验 Result 的 operation identity、class、modality、global/class path membership，且 read/parse 只能返回编译的 exact path；失败、partial、truncation、无法解析和结果未知不得伪装为空命中或不存在证明。
 6. Application 把 World Model Cognition Context reference、每个 Proposal/Decision/Operation/Result、Conflict、Gap 和资源收据按确定性顺序追加到 Evidence Ledger。Ledger 是 append-only：已确认 prefix 不得覆盖、删除、重排或改写；每个 Step 消费前缀 digest 并产生新的 ledger revision/digest，未密封模型记忆不得影响下一步。
 7. 所有来源内容及世界模型的自然语言投影都是 data，不是 instruction。仓库或认知投影中的 prompt、命令、URL、路径、工具建议、权限、预算或外发声明不获得执行权，不得修改受信 Request、Broker Policy、操作集、allowlist、revision、Provider disclosure 或系统 Prompt。
 8. `FINISH` 只是一项调查 Proposal。Application 只有在 Proposal 绑定当前完整 Ledger、所有 Checklist item 均有 supported/unknown/conflict/failed disposition、没有未记录操作且 Ledger 结构有效时才可结束调查；语义证据是否足够仍由 Answer/Reviewer 检查。无合法下一步但仍有缺口时可以密封 limitation-bearing Package，不能伪造完整性。
@@ -56,7 +56,7 @@ tests: []
 3. 每个 Package 至少绑定：
    - Package/Revision ID、protocol identity 与 digest；
    - immutable Request、original question、Question Understanding 和 Checklist digest；
-   - exact repository/Binding/revision、World Model Read Authority/Bundle digest 和 source-revision alignment verdict；
+   - exact repository/Binding/revision、Source Profile ref/digest、World Model Read Authority/Bundle digest 和 source-revision alignment verdict；
    - Evidence Ledger ID/revision/final prefix digest 及有序 Proposal/Decision/Operation/Result references；
    - 每个 entry 的 origin class、modality、Context、locator、content/result digest、Coverage/truncation、Support、Conflict/Unknown 和 disclosure class；
    - 未满足 Checklist item、失败/partial/unknown outcome、资源收据、package manifest 与 seal digest。
@@ -87,6 +87,6 @@ Question Understanding、World Model Cognition Context、Investigation Proposal�
 
 ## Failure and implementation state
 
-未授权模式或外发、revision/allowlist 漂移、越界文件、Source instruction 注入、Ledger 覆盖或缺口、未密封输入、无依据结论、无关 Citation、Package seal 被误当真值、冲突静默消解、任一模型直接取得来源权限、静默模式切换、审核未通过或资源耗尽均失败关闭。具体 DTO、注册操作目录、高安全数值上限和 UI 投影由代码与测试定义，但不得改变本契约的认知定义、权威、角色、Ledger/Package 边界和失败语义。
+未授权模式或外发、revision/allowlist/Source Profile 漂移、越界文件、evidence class 重标、Source instruction 注入、Ledger 覆盖或缺口、未密封输入、无依据结论、无关 Citation、Package seal 被误当真值、冲突静默消解、任一模型直接取得来源权限、静默模式切换、审核未通过或资源耗尽均失败关闭。具体 DTO、注册操作目录、高安全数值上限和 UI 投影由代码与测试定义，但不得改变本契约的认知定义、权威、角色、Ledger/Package 边界和失败语义。
 
-本契约是已接受的 current 规范目标；产品实现与验证须由后续明确获授权的开发 Slice 承担。在实现、Capability Qualification、Product Validation 和对应环境 Activation 分别形成真实证据之前，不得宣称现有入口已满足本契约或已可验收。
+`ITER-010 / SLICE-001` 已提供本地确定性的 Request、持久 Structure Read Bundle → bounded Cognition Adapter、Profile-bound Broker/Worker、append-only Ledger、双分区 Package、Answer/Review、一次独立 Verification Investigation、五类 closed role-input/output contract、input/schema-bound output receipt、可信坐标补入、exact run → one-use role disclosure narrowing、Gateway-side role/config/qualification policy、current DeepSeek composition 与不监听端口的 loopback WSGI 组件。确定性 fake transport 已验证这些组合不读取 credential、不建立网络且不把 secret/authorization ref 放入 wire。它们只构成方向预览的开发实现，不构成真实 Provider dispatch、外发执行证据、listener/browser 运行、Capability Qualification、Product Validation、Slice Result、Acceptance 或 Activation 证据；在这些边界分别形成真实证据之前，不得宣称现有入口已满足本契约或已可验收。

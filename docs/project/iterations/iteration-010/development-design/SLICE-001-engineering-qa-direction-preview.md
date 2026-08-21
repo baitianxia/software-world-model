@@ -32,6 +32,11 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, 
 `01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。本开发授权不允许
 credential、Provider/model call、live Web/browser、源码片段外发、hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
 
+用户随后以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 授权完成当前开发所需权限；
+该消息现在是本 Slice product freeze、exact Provider/credential-reference、逐输入 disclosure、真实调用和 loopback Web/browser 的 root
+authority，不是可直接 dispatch 的模糊 grant。实现和 deterministic gate 闭合后仍须先密封 exact candidate/Request/Provider/role/
+fragments/full input，再逐调用收窄为一次性授权。Slice2/3、hidden 与 Production Activation 不属于本 Slice 所需权限，仍不授权。
+
 ## Product-goal contribution and cumulative integration
 
 - Product delta：把“固定调查后代码走读”推进为“世界模型认知引导、模型自适应读源码、答案优先”的真实纵切。
@@ -79,14 +84,15 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 
 ### Phase 1：最小真实协议
 
-- Request 固定 immutable original question、exact repository/revision、World Model Context/Scope/Schema/Snapshot、source allowlist、Provider
-  disclosure policy 和资源上限；问题或运行状态不能改变这些身份。
+- Request 固定 immutable original question、exact repository/revision、World Model Context/Scope/Schema/Snapshot、source allowlist、
+  Binding-scoped versioned Source Profile ref/digest、Provider disclosure policy 和资源上限；问题或运行状态不能改变这些身份。
 - World Model Cognition Context 提供实体、关系、行为、约束、状态、证据、coverage 和 unknown boundary。手册/地图只是投影；Snapshot
   为零或不足不能阻断授权 Source 调查。
 - Investigation LLM 是独立角色，只能读取原问题、认知上下文和当前 append-only Ledger；每次只能提出注册的抽象 search/read/parse/
   finish 意图。下一步必须引用 prior Result/progress，不能一次性预写固定列表，也不能按题目/工程/关键词/符号路由。
-- Source Broker 验证并编译提议的操作、版本、路径、allowlist、bytes、disclosure 和安全上限。Retrieval Worker 只执行 Broker 批准的
-  exact-revision、read-only 操作。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority。
+- Source Broker 把提议的 evidence class 也视为不可信，按 exact Source Profile 验证并编译操作、版本、路径、global/class
+  allowlist、bytes、disclosure 和安全上限。Retrieval Worker 重验 Profile 后只执行 Broker 批准的 exact-revision、read-only 操作，
+  Application 再验证 Result class/path。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority 或来源分类权。
 - 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
   只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
 - Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
@@ -113,13 +119,15 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 Response Control、Answer/Review Strategy、role-specific Gateway input、product-owned HTTP/Web 及对应 tests。优先复用现有 World Model Query、
 Evidence Answering、Citation 和 Web 组件，不复制 ITER-009 pipeline。
 
-源码路径不能直接传给模型后依赖 prompt 自律；模型只能提出 Broker 能验证的抽象意图。所有自然问题进入同一协议，UI 不按问题维度切换
-后端。禁止工程、题目、关键词、符号、类、方法、fixture 或 Oracle 特判。
+源码路径不能直接传给模型后依赖 prompt 自律；模型只能提出 Broker 能验证的抽象意图，且其 evidence class 声明不能把一个 Profile
+未登记的路径重标为源码、仓库文档、配置或测试。所有自然问题进入同一协议，UI 不按问题维度切换后端。禁止工程、题目、关键词、
+符号、类、方法、约定文件名、fixture 或 Oracle 特判；来源类型由显式 versioned Profile capability 决定。
 
 ## Compatibility, data and security boundaries
 
 严格 `WORLD_MODEL` no-payload/Source-off、Citation 和历史 accepted 测试继续成立；新协议使用独立 identity。源码、README、注释、配置、
-测试均视为不可信输入；拒绝 symlink escape、submodule/remote 自动获取、binary、oversize、path traversal、写、执行和网络。
+测试均视为不可信输入，其内容或模型声明不能获得 evidence class 权威；拒绝 Source Profile 漂移/类型重标、symlink escape、
+submodule/remote 自动获取、binary、oversize、path traversal、写、执行和网络。
 
 每个 original question、Cognition Context、Ledger Revision、Package、Draft、Review、补证请求和独立 Verification Investigation 保存稳定
 ID/digest。Slice1 的 request-scoped Ledger 必须只追加且能形成完整 Result；跨进程持久恢复与复杂幂等 replay 明确后移到 Slice2。live
@@ -141,7 +149,8 @@ Provider/model/role、fragment allowlist、redaction、configuration、secret re
 3. `V-COGNITION-001`：World Model 以 exact、持久、版本化外部认知供模型使用，不退化为手册/缓存/keyword hints。
 4. `V-QINTENT-001`：原问题目标、受众、层级、结论、语言和约束不丢失；无特判路由。
 5. `V-INVESTIGATE-001`：至少两步由 prior Result 驱动；partial/zero cognition 不阻断必要 Source；FINISH 有证据与 progress 支持。
-6. `V-BROKER-001`：Broker 编译并审计抽象提议，Worker 仅执行 allowlisted read-only exact-revision 操作；模型直接权限为 0。
+6. `V-BROKER-001`：Broker 以 exact Source Profile 编译并审计抽象提议与 evidence class，Worker 仅执行 global/class allowlisted
+   read-only exact-revision 操作，Application 重验 Result class/path；模型直接权限和分类权均为 0。
 7. `V-LEDGER-001`：Ledger append-only，调查后 seal；Package 的 support/citation 仅 admissible，boundary/audit 必须保留且不能支持肯定 Claim，
    seal 不等于真值，revision 身份不可混用。
 8. `V-ANSWER-001`：4 题至少 3 supported、至少 2 个非实现维度、重大错误 0、直接答案且逐结论 Citation。
@@ -160,5 +169,25 @@ Slice Result 必须复核世界模型概念、调查自适应性、Broker/Worker
 
 ## Findings
 
-`FINDING-010-001` 保留默认工程问答需要受控回源的根因；`FINDING-010-002` 修正世界模型定义表达和提问期职责。后续发现按
-[Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。
+`FINDING-010-001` 保留默认工程问答需要受控回源的根因；`FINDING-010-002` 修正世界模型定义表达和提问期职责；
+`FINDING-010-003` 将首轮实现遗漏的五角色结构化输出闭包处置为 exact input/schema receipt binding、可信坐标补入和失败关闭解码。
+`FINDING-010-004` 将补证角色输入收紧为 current Package/Ledger 与 current gap 后新增 Result 的精确闭包，禁止旧调查 raw Result 绕过包分区。
+`FINDING-010-005` 将 evidence class 从不可信模型声明收回受信 Source Profile：Request/Operation/Worker/Package 绑定 exact Profile，
+Broker/Worker/Application 逐层验证 class-specific path capability 和 class + operation Result modality，禁止类型或静态观察模态重标。
+`FINDING-010-006` 分离 Result 审计 identity 与 semantic progress identity，使重复相同 observation 触发 deterministic no-progress
+熔断，而不是因新 operation digest 被误判为进展。
+`FINDING-010-007` 把 parent Ledger seal 与 prior Package digest 一起写入 successor gap，并在 Verification Input、后继 Package seal 和
+最终 Result chain 重验，禁止 gap、Ledger Revision 与 Package predecessor 混用。
+`FINDING-010-008` 将 wall-time 从“调用前许可”改为每个角色/Projector/Worker 返回后、状态转换前也重验；达到上限的 `FINISH` 或
+`APPROVED` 不取得 Package/Authorization 权威。
+`FINDING-010-009` 收紧 WSGI ingress 为 unique-key JSON 与 exact `CONTENT_LENGTH` 完整读取，重复 key 或短读在产品路由前失败关闭。
+`FINDING-010-010` 用真实持久 Structure Read Bundle 实现 bounded Cognition Projector，固定 Binding/revision/read authority、typed dimension、
+Coverage 与显式截断 Unknown，不按问题裁剪或读取 Source。
+`FINDING-010-011` 把 exact user run grant 收窄为每个动态 full-input/fragment digest 的一次性 role disclosure authorization，并由
+Gateway 独立重验 root Request、Prompt/schema、Provider/configuration/qualification、角色顺序和 Result；DeepSeek 与 prepared Web 组合已
+确定性闭合。`FINDING-010-012` 再补齐可信 loopback launcher：运行模块必须来自 clean exact candidate，并在 listener 前绑定 Bundle、
+Source Profile、Request/run grant 和 0600 launch receipt，退出时密封逐角色/Gateway/TLS terminal audit；真实 Provider/browser 仍等待
+product freeze 后形成执行证据。
+`FINDING-010-013` 记录冻结前验证：focused 58/58、docs 389/389、compile/diff PASS；full 1108 中 1103 PASS，唯一 4 FAIL + 1 ERROR
+精确属于 `FINDING-008-020` 的历史 runtime drift。raw suite 不写成 PASS，只允许 exact preserved historical hold gate 继续 clean freeze。
+后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

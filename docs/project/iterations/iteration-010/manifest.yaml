@@ -472,7 +472,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:8311751683d8ca7a16c417f0b354a98714c71f105179081b16ae77d7e9425b5f
+  system_contract_set_digest: sha256:b2f55c66d0dbe679544d88a49fdb2a9975487f262e47186937e1977c4bc02a98
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-1.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -542,6 +542,13 @@ authorization:
   authorized_at: 2026-08-21T09:18:34Z
   authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
+  slice1_needed_rights_root_authorization:
+    status: authorized-root-exact-derived-grants-required
+    authorized_by: user
+    authorization_ref: codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7
+    scope: slice1-exact-product-freeze-current-provider-credential-reference-per-input-disclosure-live-model-and-loopback-web-browser-verification
+    excludes: slice2-slice3-hidden-and-production-activation
+    dispatch_rule: no-dispatch-before-exact-candidate-request-provider-role-fragment-and-full-input-subgrant
   prior_design_authorization_refs:
     - codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4
     - codex-user-message:sha256:5cdb7000ba36328f5caa27727c6b689ad4e98e7ad13eca72837fa020d0c270c9

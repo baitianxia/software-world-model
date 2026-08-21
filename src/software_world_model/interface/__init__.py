@@ -10,6 +10,24 @@ from typing import TYPE_CHECKING, Any
 
 
 _EXPORT_MODULES = {
+    "EngineeringQuestionBrowserApplication": ".engineering_qa_browser",
+    "EngineeringQuestionRequestFactory": ".engineering_qa_browser",
+    "EngineeringQuestionWebRuntimeStatus": ".engineering_qa_browser",
+    "EngineeringQuestionWebProduct": ".engineering_qa_browser",
+    "ExactAuthorizedEngineeringQuestionRequestFactory": ".engineering_qa_browser",
+    "FixedEngineeringQuestionRequestFactory": ".engineering_qa_browser",
+    "InMemoryEngineeringQuestionWebProduct": ".engineering_qa_browser",
+    "DeepSeekEngineeringQuestionRoleRuntime": ".engineering_qa_live",
+    "DeepSeekEngineeringQuestionBrowserAssembly": ".engineering_qa_live",
+    "create_deepseek_engineering_question_browser_assembly": ".engineering_qa_live",
+    "create_deepseek_engineering_question_role_runtime": ".engineering_qa_live",
+    "engineering_question_deepseek_configuration": ".engineering_qa_live",
+    "ENGINEERING_QA_PREVIEW_SUBJECT_SCHEMA": ".engineering_qa_preview_cli",
+    "PreparedEngineeringQuestionPreview": ".engineering_qa_preview_cli",
+    "engineering_question_preview_subject_digest": ".engineering_qa_preview_cli",
+    "prepare_engineering_question_preview": ".engineering_qa_preview_cli",
+    "LocalGitEvidenceClassProfile": ".engineering_qa_source",
+    "LocalGitRetrievalWorker": ".engineering_qa_source",
     "ActivatedApplicationAssembly": ".agentic_runtime",
     "AgenticTaskServiceAssembly": ".agentic_runtime",
     "BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT": ".world_model_evaluation",
@@ -46,6 +64,32 @@ def __dir__() -> list[str]:
 
 
 if TYPE_CHECKING:
+    from .engineering_qa_browser import (
+        EngineeringQuestionBrowserApplication,
+        EngineeringQuestionRequestFactory,
+        EngineeringQuestionWebRuntimeStatus,
+        EngineeringQuestionWebProduct,
+        ExactAuthorizedEngineeringQuestionRequestFactory,
+        FixedEngineeringQuestionRequestFactory,
+        InMemoryEngineeringQuestionWebProduct,
+    )
+    from .engineering_qa_source import (
+        LocalGitEvidenceClassProfile,
+        LocalGitRetrievalWorker,
+    )
+    from .engineering_qa_live import (
+        DeepSeekEngineeringQuestionRoleRuntime,
+        DeepSeekEngineeringQuestionBrowserAssembly,
+        create_deepseek_engineering_question_browser_assembly,
+        create_deepseek_engineering_question_role_runtime,
+        engineering_question_deepseek_configuration,
+    )
+    from .engineering_qa_preview_cli import (
+        ENGINEERING_QA_PREVIEW_SUBJECT_SCHEMA,
+        PreparedEngineeringQuestionPreview,
+        engineering_question_preview_subject_digest,
+        prepare_engineering_question_preview,
+    )
     from .agentic_runtime import (
         ActivatedApplicationAssembly,
         AgenticTaskServiceAssembly,
@@ -71,6 +115,24 @@ if TYPE_CHECKING:
     )
 
 __all__ = [
+    "EngineeringQuestionBrowserApplication",
+    "EngineeringQuestionRequestFactory",
+    "EngineeringQuestionWebRuntimeStatus",
+    "EngineeringQuestionWebProduct",
+    "ExactAuthorizedEngineeringQuestionRequestFactory",
+    "FixedEngineeringQuestionRequestFactory",
+    "InMemoryEngineeringQuestionWebProduct",
+    "DeepSeekEngineeringQuestionRoleRuntime",
+    "DeepSeekEngineeringQuestionBrowserAssembly",
+    "create_deepseek_engineering_question_browser_assembly",
+    "create_deepseek_engineering_question_role_runtime",
+    "engineering_question_deepseek_configuration",
+    "ENGINEERING_QA_PREVIEW_SUBJECT_SCHEMA",
+    "PreparedEngineeringQuestionPreview",
+    "engineering_question_preview_subject_digest",
+    "prepare_engineering_question_preview",
+    "LocalGitEvidenceClassProfile",
+    "LocalGitRetrievalWorker",
     "ActivatedApplicationAssembly",
     "AgenticTaskServiceAssembly",
     "BOUNDED_WORLD_MODEL_EVALUATION_PAGE_FORMAT",

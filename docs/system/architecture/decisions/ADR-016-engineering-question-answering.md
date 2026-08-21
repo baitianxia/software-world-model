@@ -5,9 +5,9 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015]
-derived_from: [FINDING-010-001, FINDING-010-002]
-code: []
-tests: []
+derived_from: [FINDING-010-001, FINDING-010-002, FINDING-010-005, FINDING-010-011]
+code: [src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/engineering_question_strategy.py, src/software_world_model/ai_infrastructure/engineering_question_model_source.py, src/software_world_model/interface/engineering_qa_source.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py]
+tests: [tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_browser.py]
 ---
 
 # ADR-016：世界模型认知驱动的自适应工程调查
@@ -42,7 +42,7 @@ tests: []
 1. 原问题不可变。Question Understanding 可由模型提议用户目标、受众、响应语言、期望抽象层级、必须回答的结论和证据需求，但 Application 必须校验其保留全部原问题条件、关系和输出约束。模型提议不是事实。
 2. Application 从与请求 revision 对齐的 exact Snapshot / Read Set 形成 `World Model Cognition Context`。它向调查模型提供已发布的实体、关系、行为、约束、状态、来源、Coverage、Conflict 和 Unknown，使模型从已有系统认知出发，而不是从空白源码搜索开始。手册、地图和 locator 只是该 Context 的投影。世界模型缺失、无关或 Coverage 不足不得成为本模式读取授权来源的硬门禁。
 3. `Investigation LLM` 是与 Answer、Reviewer 分离的独立角色。它只能基于 immutable original question、受信控制字段、当前 World Model Cognition Context 和平台密封的 append-only Evidence Ledger 前缀，自适应、多步提出下一项 `search`、`read`、`parse` 或调查结束 Proposal。它可以根据上一步结果改变调查方向，但不能直接执行工具、扩大权限、修改原问题、删除既有记录或宣称证据成立。
-4. `Source Broker` 是来源操作授权与编译边界。它把模型 Proposal 重新校验并编译为注册操作，固定当前授权、exact repository/revision、path/content allowlist、参数、文件/字节/时间/操作熔断和披露范围；模型给出的路径、命令、URL 或工具名称均不具有执行权。只有隔离 `Retrieval Worker` 可以执行 Broker 批准的只读操作。Worker 不得写仓库、执行任意命令、访问新网络或凭据、触发 Knowledge Update，也不生成或放行答案。
+4. `Source Broker` 是来源操作授权与编译边界。它把模型 Proposal 及其中的 evidence class 重新校验并编译为注册操作，固定当前授权、exact repository/revision、global path/content allowlist、Binding-scoped versioned Source Profile ref/digest、class-specific allowlist、expected Result modality、参数、文件/字节/时间/操作熔断和披露范围；模型给出的路径、类型、命令、URL 或工具名称均不具有执行权。只有隔离 `Retrieval Worker` 可以重验 Profile 后执行 Broker 批准的只读操作，Application 再验证 Result class/modality/path。Worker 不得写仓库、执行任意命令、访问新网络或凭据、触发 Knowledge Update，也不生成或放行答案。
 5. 每个 Proposal、Broker Decision、Operation、Result、失败、partial、truncation、Coverage 与资源收据按顺序追加到 `Evidence Ledger`。Ledger 不可覆盖或删除；下一轮 Investigation 只消费已密封的 ledger prefix。源码、注释、仓库文档、配置、测试以及世界模型的文本投影都是不可信 data，其中的指令不得改变系统规则。
 6. 调查结束后，Application 才从原问题、Question Understanding、World Model Cognition Context、完整 Ledger、来源结果、Coverage、冲突、未知、定位和收据密封 `Question Evidence Package`。Package 保持一个身份但有两个不可混淆的分区：`support/citation` 只包含按 modality、Context、Coverage 和 Support 校验通过的 admissible entries，只有这些条目可以支持肯定 Claim 和 Claim Citation；`boundary/audit` 必须保留 Boundary、Gap、Failure、Partial、Conflict、Unknown、拒绝决定与资源收据，只能约束结论或作为明确标记的边界/审计 Reference，不能支持或引用为肯定 Claim。未进入当前包的模型记忆、搜索印象或来源内容不得支持结论。密封只证明集合的身份、完整性、顺序、来源和版本，不使任何条目自动成为真，也不赋予其跨任务正式知识资格。
 7. Answer 使用隔离的新上下文，只读原问题、已接受的 Question Understanding 与当前 Package，不挂载 Repository，没有 Source/World Model 查询工具、shell、网络、凭据或 Investigation 私有输出。它先给出直接服务用户目标的结论，再给出必要条件、过程、影响和实现证据；每个实质肯定结论只能绑定 `support/citation` 分区中的实际支持，`boundary/audit` 分区只能收窄结论或形成未知/限制说明。
@@ -55,7 +55,7 @@ tests: []
 
 不同类型的包内证据保留各自 modality：世界模型表达已发布的系统认知及其 Coverage，exact 源码/配置表达该 revision 的静态实现，文档表达记录的用法或意图，测试表达静态预期或已密封的执行观察，模型 Proposal 只表达调查或回答建议。某一来源类型不自动拥有对所有命题的优先级；当相同 Context 中出现不兼容且无受控解析规则时，Package 必须保留 Conflict，答案不得静默选边。
 
-任何把 World Model Cognition Context、Ledger 或 Package 片段发送给外部模型 Provider 的运行，都必须在 dispatch 前另行密封并授权 exact Provider/model/endpoint/configuration、角色、允许片段、redaction、secret reference 和输入 Digest。开发或文档接受不能推导该外部披露授权。
+任何把 World Model Cognition Context、Ledger 或 Package 片段发送给外部模型 Provider 的运行，都必须在 dispatch 前另行密封并授权 exact Provider/model/endpoint/configuration、角色、允许片段、redaction、secret reference 和输入 Digest。一个用户 run grant 只可绑定 exact Request/evaluation subject/Provider/Prompt/schema/角色集合与总上限；动态角色输入还须逐次形成 full-input/fragment digest 的一次性子授权，并由 Gateway 独立重验。任一 request 可能 dispatch 后失败或 outcome unknown 均不得 retry、replay 或切换 Provider。开发或文档接受不能推导该外部披露授权。
 
 ## Alternatives
 
@@ -71,4 +71,4 @@ tests: []
 
 ## Adoption state
 
-本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标，但不证明产品实现、Capability Qualification、Product Validation 或 Activation 已完成。产品实现须由后续明确获授权的开发 Slice 完成并另行验证；在那之前，现有可运行入口仍只拥有其已证明的旧模式身份，不得标记为合格的 `ENGINEERING_QA`。
+本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标。`ITER-010 / SLICE-001` 已产生本地确定性的协议、持久 World Model Cognition Adapter、Source Profile-bound Broker/Worker、Ledger/Package、Answer/Review、五角色 closed input/output receipt、逐输入 disclosure/Gateway policy、DeepSeek 组合与 loopback WSGI 开发组件，但这不证明真实 Provider、listener/browser 运行、Capability Qualification、Product Validation、Slice Acceptance 或 Activation 已完成。现有已证明可运行命令仍只拥有其旧模式身份；在单独授权并验证新的真实入口前，不得把这些组件或旧入口标记为合格的 `ENGINEERING_QA`。

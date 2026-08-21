@@ -16,5 +16,28 @@ iteration: ITER-010
   问答；已处置到 `SYS-ADR-016` 和同变更 owning System Contract/治理边界。
 - [FINDING-010-002](FINDING-010-002.md)：世界模型仍是持久、版本化的软件外部认知；修正提问期流程为模型主导自适应调查、
   Broker/Worker 受控读取、调查后密封和 Reviewer 独立补证。已处置到同一 ADR/Engineering QA Contract 与重制后的 ITER-010 计划。
+- [FINDING-010-003](FINDING-010-003.md)：首轮实现封闭了五类角色输入，却没有统一机械化结构化输出边界；已在本地实现中处置为
+  五个 closed output schema、exact input/schema receipt binding、可信坐标补入和失败关闭解码，并以完整补证状态机验证。
+- [FINDING-010-004](FINDING-010-004.md)：补证编排曾把旧调查的全部 raw Result 与 current Package 一并传给新角色；已收紧为
+  current gap 后 Ledger `SOURCE_RESULT` 与 `new_typed_retrieval_results` 的精确有序闭包，旧内容只能经密封 Package 进入补证上下文。
+- [FINDING-010-005](FINDING-010-005.md)：全局 source allowlist 无法证明模型声明的 evidence class 对该路径成立；已用 Binding-scoped、
+  versioned Source Profile 把 class-specific path capability 贯穿 Request、Broker operation、Worker/Application validation 和 Package，
+  同时固定 class + operation 的 Result modality，禁止来源类型或静态观察模态重标。
+- [FINDING-010-006](FINDING-010-006.md)：完整 Result digest 会因每次 operation identity 改变，不能判断是否获得新观察；已新增与
+  operation identity 解耦的 semantic progress digest，使重复相同调查按 deterministic no-progress fuse 失败关闭。
+- [FINDING-010-007](FINDING-010-007.md)：successor Ledger 原先只绑定 parent Ledger seal，未直接绑定 Reviewer gap 所属的 prior
+  Package；现已把 Ledger/gap/current Package/successor Package 的 predecessor identity 贯穿并在角色调用前重验。
+- [FINDING-010-008](FINDING-010-008.md)：wall-time 原先主要在外部调用前检查，角色可在 deadline 返回 `FINISH/APPROVED` 后仍被接受；
+  现已在 Understanding、Cognition、Investigation、Worker、Answer、Review 返回后、状态转换前重验，达到上限即失败关闭。
+- [FINDING-010-009](FINDING-010-009.md)：WSGI ingress 原先会静默接受重复 JSON key 和短于 `CONTENT_LENGTH` 的 body；现于产品路由前
+  要求 unique-key JSON 与 exact byte count，否则返回 `INVALID_JSON`。
+- [FINDING-010-010](FINDING-010-010.md)：首轮只有 Cognition Projector port/fixture，没有把持久化 Structure Read Bundle 装载到新用例的
+  产品 Adapter；现已实现 exact Binding/revision/authority 校验、typed projection、确定性 byte bound 和显式截断 Unknown。
+- [FINDING-010-011](FINDING-010-011.md)：closed role output receipt 不能授权 Cognition/Ledger/Package 外发；现已形成 exact user run grant
+  → 每个动态完整输入的一次性 disclosure grant → Gateway 双重校验 → no-retry audit，并提供 current DeepSeek 与 exact prepared Web 组合。
+- [FINDING-010-012](FINDING-010-012.md)：可组合 WSGI 对象不等于可执行产品入口；现已新增通用 trusted launcher，在 listener 前验证
+  clean exact product origin、Source revision、published Bundle/Profile/Request/run grant，并密封 0600 launch/terminal audit receipts。
+- [FINDING-010-013](FINDING-010-013.md)：冻结前 focused 58/58、docs 389/389 PASS；允许 AF_UNIX 的 full 1108 中 1103 PASS，唯一
+  4 FAIL + 1 ERROR 精确属于 `FINDING-008-020`。raw suite 保持 FAIL，只以 exact preserved historical hold gate 继续候选冻结。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

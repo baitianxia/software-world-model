@@ -1,0 +1,324 @@
+from __future__ import annotations
+
+from dataclasses import replace
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+
+from software_world_model.application_services.engineering_question_answering import (
+    ENGINEERING_QA_BROKER_POLICY,
+    CompiledSourceOperation,
+    EngineeringEvidenceClass,
+    EngineeringQuestionAnsweringService,
+    EngineeringQuestionRequest,
+    EngineeringQuestionResultStatus,
+    RetrievalStatus,
+    SourceBroker,
+    SourceReadOperation,
+)
+from software_world_model.cross_cutting import (
+    Digest,
+    DomainError,
+    ErrorCode,
+    StableId,
+    digest_of,
+)
+from software_world_model.interface.engineering_qa_source import (
+    LocalGitEvidenceClassProfile,
+    LocalGitRetrievalWorker,
+)
+from tests import test_engineering_question_answering as fixtures
+
+
+def sid(kind: str, digit: str) -> StableId:
+    return StableId(f"{kind}_{digit * 32}")
+
+
+class LocalGitRetrievalWorkerTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.repository = Path(self.temporary.name) / "repository"
+        self.repository.mkdir()
+        self.git("init", "-q")
+        self.git("config", "user.email", "test@example.com")
+        self.git("config", "user.name", "Test")
+        (self.repository / "README.md").write_text(
+            "Use ./run-service to start the service.\nrequest timeout is configurable.\n",
+            encoding="utf-8",
+        )
+        (self.repository / "large.txt").write_text("x" * 128, encoding="utf-8")
+        (self.repository / "binary.dat").write_bytes(b"value\x00binary")
+        (self.repository / "link.txt").symlink_to("README.md")
+        self.git("add", ".")
+        self.git("commit", "-q", "-m", "fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.repository_id = sid("repository", "3")
+        self.binding_id = sid("binding", "4")
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-local-git-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: (
+                    "large.txt",
+                    "binary.dat",
+                    "link.txt",
+                ),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def git(self, *arguments: str) -> str:
+        result = subprocess.run(
+            ("git", "-C", str(self.repository), *arguments),
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        return result.stdout
+
+    def operation(
+        self,
+        *,
+        operation: SourceReadOperation,
+        allowlist=(".",),
+        query=None,
+        path=None,
+        maximum_source_bytes=4096,
+        evidence_class=EngineeringEvidenceClass.SOURCE,
+    ):
+        request_digest = Digest("sha256:" + "1" * 64)
+        proposal_digest = Digest("sha256:" + "2" * 64)
+        source_allowlist = tuple(allowlist)
+        locator_reference = (
+            None
+            if operation is SourceReadOperation.SEARCH
+            else sid("source_locator", "5")
+        )
+        core = {
+            "broker_policy": ENGINEERING_QA_BROKER_POLICY,
+            "request_digest": request_digest.value,
+            "proposal_digest": proposal_digest.value,
+            "repository_id": self.repository_id.value,
+            "binding_id": self.binding_id.value,
+            "repository_revision": self.revision,
+            "source_profile_ref": self.source_profile.profile_ref,
+            "source_profile_digest": self.source_profile.profile_digest.value,
+            "operation": operation.value,
+            "source_allowlist": source_allowlist,
+            "evidence_class_allowlist": self.source_profile.paths_for(
+                evidence_class
+            ),
+            "evidence_class": evidence_class.value,
+            "result_modality": self.source_profile.modality_for(
+                evidence_class=evidence_class,
+                operation=operation,
+            ),
+            "query": query,
+            "path": path,
+            "locator_reference": (
+                locator_reference.value if locator_reference else None
+            ),
+            "maximum_files": 16,
+            "maximum_source_bytes": maximum_source_bytes,
+            "maximum_result_items": 32,
+        }
+        return CompiledSourceOperation(
+            operation_id=StableId(
+                "source_operation_"
+                + digest_of(["source_operation", core])
+                .value.removeprefix("sha256:")[:32]
+            ),
+            broker_policy=ENGINEERING_QA_BROKER_POLICY,
+            request_digest=request_digest,
+            proposal_digest=proposal_digest,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.source_profile.profile_ref,
+            source_profile_digest=self.source_profile.profile_digest,
+            operation=operation,
+            source_allowlist=source_allowlist,
+            evidence_class_allowlist=self.source_profile.paths_for(
+                evidence_class
+            ),
+            evidence_class=evidence_class,
+            result_modality=self.source_profile.modality_for(
+                evidence_class=evidence_class,
+                operation=operation,
+            ),
+            query=query,
+            path=path,
+            locator_reference=locator_reference,
+            maximum_files=16,
+            maximum_source_bytes=maximum_source_bytes,
+            maximum_result_items=32,
+            digest=digest_of(["COMPILED_SOURCE_OPERATION@1", core]),
+        )
+
+    def test_search_and_read_use_exact_committed_bytes(self):
+        search = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("README.md",),
+                query="timeout",
+                evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            )
+        )
+        self.assertEqual(search.status, RetrievalStatus.COMPLETE)
+        self.assertEqual(len(search.items), 1)
+        self.assertEqual(search.items[0].path, "README.md")
+
+        (self.repository / "README.md").write_text(
+            "uncommitted replacement", encoding="utf-8"
+        )
+        read = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.READ,
+                allowlist=("README.md",),
+                path="README.md",
+                evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            )
+        )
+        self.assertEqual(read.status, RetrievalStatus.COMPLETE)
+        self.assertEqual(
+            read.items[0].modality,
+            "EXACT_REPOSITORY_DOCUMENT_TEXT",
+        )
+        self.assertIn("run-service", read.items[0].content)
+        self.assertNotIn("uncommitted", read.items[0].content)
+
+    def test_symlink_and_binary_are_rejected(self):
+        link = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.READ,
+                allowlist=("link.txt",),
+                path="link.txt",
+            )
+        )
+        self.assertEqual(link.status, RetrievalStatus.FAILED)
+        self.assertEqual(link.failure_code, "UNSAFE_SOURCE_ENTRY_KIND")
+
+        binary = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.READ,
+                allowlist=("binary.dat",),
+                path="binary.dat",
+            )
+        )
+        self.assertEqual(binary.status, RetrievalStatus.FAILED)
+        self.assertEqual(binary.failure_code, "BINARY_SOURCE_REJECTED")
+
+    def test_oversize_blob_is_not_read_past_fuse(self):
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.READ,
+                allowlist=("large.txt",),
+                path="large.txt",
+                maximum_source_bytes=16,
+            )
+        )
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertTrue(result.truncated)
+        self.assertEqual(result.bytes_read, 0)
+        self.assertEqual(result.files_read, 0)
+        self.assertEqual(
+            result.failure_code, "SOURCE_BYTE_FUSE_WOULD_BE_EXCEEDED"
+        )
+
+    def test_search_reports_unsupported_entries_as_partial(self):
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                query="value",
+            )
+        )
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(result.failure_code, "UNSUPPORTED_SOURCE_ENTRY")
+        self.assertTrue(result.truncated)
+
+    def test_worker_rejects_another_repository_identity(self):
+        operation = replace(
+            self.operation(
+                operation=SourceReadOperation.READ,
+                allowlist=("README.md",),
+                path="README.md",
+            ),
+            repository_id=sid("repository", "9"),
+        )
+        with self.assertRaises(DomainError):
+            self.worker.execute(operation)
+
+    def test_source_profile_rejects_overlapping_evidence_classes(self):
+        with self.assertRaises(DomainError):
+            LocalGitEvidenceClassProfile.create(
+                profile_ref="overlapping-source-profile:1",
+                binding_id=self.binding_id,
+                evidence_class_paths={
+                    EngineeringEvidenceClass.SOURCE: ("src",),
+                    EngineeringEvidenceClass.TEST: ("src/test",),
+                },
+            )
+
+    def test_worker_rejects_model_relabeling_a_document_as_configuration(self):
+        operation = self.operation(
+            operation=SourceReadOperation.PARSE,
+            allowlist=("README.md",),
+            path="README.md",
+            evidence_class=EngineeringEvidenceClass.BUILD_CONFIGURATION,
+        )
+        with self.assertRaises(DomainError) as caught:
+            self.worker.execute(operation)
+        self.assertEqual(
+            caught.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+        )
+
+    def test_broker_and_local_git_worker_complete_the_application_chain(self):
+        request = EngineeringQuestionRequest.create(
+            request_ref="local-git-chain",
+            original_question=fixtures.request().original_question,
+            response_language="en",
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.source_profile.profile_ref,
+            source_profile_digest=self.source_profile.profile_digest,
+            world_model_read_authority_digest=Digest("sha256:" + "3" * 64),
+            source_allowlist=(".",),
+        )
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=fixtures.UnderstandingRole(),
+            cognition_projector=fixtures.CognitionProjector(),
+            initial_investigation_role=fixtures.InitialInvestigator(),
+            verification_investigation_role=fixtures.VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=self.source_profile),
+            retrieval_worker=self.worker,
+            answer_role=fixtures.AnswerRole(),
+            reviewer_role=fixtures.ReviewerRole(request_more_evidence=False),
+        )
+        result = service.answer(request)
+        self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
+        self.assertEqual(result.usage.source_operations, 2)
+        self.assertTrue(
+            any(
+                item.locator == "README.md"
+                for item in result.current_package.support_citation
+            )
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

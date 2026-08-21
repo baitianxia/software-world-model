@@ -7,12 +7,12 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001]
 code: []
 tests: []
-as_of: 2026-08-21
+as_of: 2026-08-22
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-authorized-development-ready
+worktree_status: iteration-010-slice-001-implementation-verified-product-freeze-pending
 strategy_relation: world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation
-live_model_path: not-authorized-development-only-no-live-dispatch
+live_model_path: slice1-needed-rights-root-authorized-exact-product-freeze-and-per-dispatch-grants-pending
 ---
 
 # 当前工作上下文
@@ -27,6 +27,13 @@ live_model_path: not-authorized-development-only-no-live-dispatch
 `2026-08-21T09:18:34Z` 接受 Readiness，并只授权 Slice1 产品代码开发与本地确定性验证。授权审核的 planning commit/tree 为
 `01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。Slice2/3、credential、Provider/model call、
 正式 Web/live、hidden disclosure 和 Production Activation 仍未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
+
+用户最新以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 明确表示同时授权完成当前
+开发所需的权限。该消息作为 Slice1 needed-rights 的 root authorization，允许在产品代码和 deterministic gate 闭合后，为本 Slice 生成并
+执行 exact product freeze、current Provider/credential-reference 检查、逐输入 Source/Cognition/Package disclosure、真实模型调用、
+loopback listener/Web/browser 验证及其审计；它不把未知的动态输入提前视为已授权。每次 dispatch 仍须从该 root 收窄并密封 exact
+Provider/model/endpoint/configuration/role/secret reference/fragment/full-input digest 的一次性 grant，产品 freeze 或输入变化即失效。
+`SLICE-002/003`、hidden suite 和 Production Activation 不是完成当前 Slice1 所需权限，继续保持未授权。
 
 `ITER-009` 已依据三条真实 Web 体验以 `REDIRECT` 结束：技术代码和运行证据完整保留，但代码走读式回答方向未获接受。
 `ITER-010` 从 clean commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
@@ -50,7 +57,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **SLICE-001 authorized / development ready** | World Model 保持为持久、版本化、可验证、可更新的外部软件认知；Investigation LLM 根据 prior Result 自适应提议，Broker/Worker 受控读取，调查后 seal，Answer 包内生成，Reviewer 可独立要求补证；当前只授权 Slice1 代码与本地确定性验证 |
+| Iteration 010 | **SLICE-001 implementation verified / product freeze pending** | 自适应 Cognition→Investigation→Broker/Worker→Ledger/Package→Answer/Review、exact role disclosure/Gateway、Local Git、prepared Web 和 trusted loopback launcher 已实现；focused 58/58、docs 389/389，full 1108 中 1103 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR；真实 Provider/Web 尚未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -70,7 +77,8 @@ Verification Investigation 读取 current Package/Ledger 并经 Application/Brok
 首版最小纵切成立后，先从同一 Web 用一条 World Model + query-time Source 代表问题做微检查，再用一个工程 4 条跨维度问题和至少一条
 现场题确认方向。exact revision、只读、不可信 Source、双分区 Package、Citation 和独立 Review 在微检查点不可延后；持久恢复、复杂冲突/
 去重、完整异常矩阵、第二工程和三臂消融只在 `CONTINUE` 后进行。新消融与补证 hardening protocol 须在 Slice2 前取得新用户冻结收据；
-真实模型/Web 仍须产品 freeze 后另取独立授权。
+真实模型/Web 必须先完成 clean product freeze，再从用户 `b8b6931f…e7c7` 的 Slice1 root authorization 收窄为绑定 exact
+candidate/Request/Provider/role/full-input 的一次性 grant；不能把 root message 直接当 dispatch grant。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 
@@ -686,6 +694,7 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-Slice1 是唯一 coding input。Agent 可按本 Slice 修改其 `code/tests` 范围内的产品代码并执行本地确定性测试；不得进入 Slice2/3，
-不得读取 Provider credential、发起模型/live Web 调用、披露或收集隐藏题、复用已消费 grant，亦不得执行 Production Activation。任何 live 动作仍须在产品
-freeze 后取得独立 exact grant。
+Slice1 是唯一 coding input。Agent 可按本 Slice 修改其 `code/tests` 范围内的产品代码并执行本地确定性测试；不得进入 Slice2/3、披露或
+收集 hidden 输入、复用已消费 grant，亦不得执行 Production Activation。用户 `b8b6931f…e7c7` 已授权完成 Slice1 所需的 exact product
+freeze、credential-reference presence check、逐输入 disclosure、真实 Provider 和 loopback Web/browser 验证；这些动作只能在 clean freeze
+后从 root authorization 收窄为 exact candidate/Request/Provider/role/fragment/full-input 一次性 grant，范围或输入漂移即失效。

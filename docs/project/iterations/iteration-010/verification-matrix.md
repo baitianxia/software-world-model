@@ -16,6 +16,15 @@ product_goal_result_id: not-executed
 
 # ITER-010 Verification Matrix
 
+## Pre-freeze implementation evidence
+
+截至 `2026-08-22`，以下证据只证明 Slice1 实现可进入 clean product freeze，不提前给真实产品 Case 下 PASS：ITER-010 focused 58/58、
+docs 389/389、`py_compile`、`git diff --check` 均 PASS；允许 AF_UNIX 的 full discovery 共 1108 项，其中 1103 PASS，唯一 4 FAIL + 1 ERROR
+的测试 identity、结果类型和 marker 精确等于 `FINDING-008-020`。因此 raw full suite 仍为 FAIL，deterministic gate 仅为
+`PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。V-BASELINE/V-ARCH/V-QINTENT/V-COGNITION/V-INVESTIGATE/V-BROKER/V-LEDGER/
+V-ISOLATION/V-REVIEW/V-LIMIT/V-SEC 的确定性子断言已有测试证据，但它们的 Case verdict 仍等待 clean freeze 或所要求的真实链；
+V-XD-001、V-WEB-000/001、V-PREVIEW-001 和 V-REFLECT-001 未运行。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-000 | 本轮相对 rejected baseline 可测缩短通用工程问答差距并证明完整 World Model Cognition 的独立价值 | product / comparison | 三个唯一 Slice Result；最终隐藏 10+2；现场题；完整认知、locator-only/empty 同链、成熟源码 Agent 三臂；新收据预提交 protocol | 完整认知与成熟 Agent 先过零重大错误/boundary/逐结论质量门；完整认知再相对 locator control 达到预提交质量或非 locator 调查成本增益；计建模成本/复用周期；同一 Web/Citation/Source 隔离成立 | not-executed | NOT-RUN / blocking |

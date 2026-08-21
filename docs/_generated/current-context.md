@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-authorized-development-ready`
+- Worktree status: `iteration-010-slice-001-implementation-verified-product-freeze-pending`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
-- Live model path: `not-authorized-development-only-no-live-dispatch`
+- Live model path: `slice1-needed-rights-root-authorized-exact-product-freeze-and-per-dispatch-grants-pending`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
