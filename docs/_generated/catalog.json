@@ -1832,6 +1832,20 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-001.md"
   },
   {
+    "id": "FINDING-010-002",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-002.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3487,8 +3501,8 @@
   {
     "id": "ITER-010-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "proposed",
+    "authority": "project-plan",
     "owners": [
       "product",
       "project",
@@ -3502,7 +3516,7 @@
   {
     "id": "ITER-010-PROPOSAL",
     "kind": "iteration-proposal",
-    "status": "accepted",
+    "status": "proposed",
     "authority": "project-proposal",
     "owners": [
       "product",
@@ -3517,8 +3531,8 @@
   {
     "id": "ITER-010-READINESS",
     "kind": "iteration-readiness",
-    "status": "accepted",
-    "authority": "project-authorization",
+    "status": "proposed",
+    "authority": "project-readiness",
     "owners": [
       "project",
       "architecture",
@@ -3543,8 +3557,8 @@
   {
     "id": "ITER-010-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "proposed",
+    "authority": "proposed-development",
     "owners": [
       "engineering",
       "architecture",
@@ -4124,7 +4138,8 @@
       "security"
     ],
     "derived_from": [
-      "FINDING-010-001"
+      "FINDING-010-001",
+      "FINDING-010-002"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },

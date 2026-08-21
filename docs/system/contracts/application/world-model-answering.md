@@ -16,7 +16,7 @@ tests: [tests/test_knowledge_use.py, tests/test_browser_chat_interface.py, tests
 
 本契约定义 `WORLD_MODEL` 自然语言回答：从原问题形成不可变 Requirement/Needs，在一个 exact Snapshot 或有序 exact Snapshot Read Set 的已验证 Snapshot Read Bundle 上执行受控正式查询/View，综合可读答案并独立复核。它不调查 Source、不形成知识，也不触发更新。
 
-ADR-016 新增的 `ENGINEERING_QA` 是独立复合用例：它可以把本契约形成的 typed Result/Gap 作为工程地图、已知证据和检索 hint，再由另一隔离 Worker 执行其事先授权的源读取。这不改变 `WORLD_MODEL` 的 Source-off、no Update 和 no fallback 语义；两者使用不同 Request/Result/Qualification 身份。
+ADR-016 新增的 `ENGINEERING_QA` 是独立复合用例：它从本契约的 exact Snapshot / Read Set 形成包含实体、关系、行为、约束、状态、Coverage、Conflict 和 Unknown 的 World Model Cognition Context；独立 Investigation LLM 再依据原问题、该认知和 append-only Ledger 自适应提议来源调查，由 Source Broker/Worker 受控执行。手册、地图和 hint 只是认知投影。这不改变 `WORLD_MODEL` 的 Source-off、no Update 和 no fallback 语义；两者使用不同 Request/Result/Qualification 身份。
 
 ## Ownership
 

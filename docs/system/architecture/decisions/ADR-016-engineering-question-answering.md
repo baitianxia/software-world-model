@@ -5,65 +5,70 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015]
-derived_from: [FINDING-010-001]
+derived_from: [FINDING-010-001, FINDING-010-002]
 code: []
 tests: []
 ---
 
-# ADR-016：工程问答组合世界模型地图与受控源码证据
+# ADR-016：世界模型认知驱动的自适应工程调查
 
 ## Context
 
-严格 `WORLD_MODEL` 证明已发布知识能在 Source-off 环境中跨任务复用，`DIRECT_INVESTIGATION` 则证明一个独立的直接源码调查可以形成受审核答案。两者都是必要能力，但都不应被冒充为普通用户的通用工程问答：
+软件世界模型的核心概念从未改变：它是软件系统在精确 Scope、Context、Schema 和 Snapshot 上持久、版本化、可验证、可更新的外部认知模型，独立于任何 LLM 会话或隐藏状态，为 AI 提供稳定的系统认知基础。工程手册、结构地图、摘要、检索提示和面向人的说明都只是这份认知的任务或展示投影，不是世界模型本身，也不能把世界模型降格为文字缓存。
 
-- 只使用已建模知识会把未覆盖的用途、运行、配置、故障和变更影响问题过早关闭为 Knowledge Gap；
-- 只把方法、分支和调用顺序平铺为答案，会产生代码走读而不是用户请求的工程结论；
-- 知识不足时静默切换到直接调查，会让模式、权限、证据来源和验收结果失真。
+严格 `WORLD_MODEL` 已证明已发布认知可以在 Source-off 环境中跨任务复用；`DIRECT_INVESTIGATION` 则证明独立的直接源码调查可以形成受审核答案。两者都是必要能力，但单独作为普通用户默认问答均有边界：
 
-因此，世界模型应在普通工程问答中充当可复用的工程地图、手册、已知证据与调查入口；受权 exact revision 中的源码、仓库内文档、构建/运行配置和测试则是按问题补充和核实答案的手段。
+- 只使用已建模认知会把尚未覆盖的用途、运行、配置、故障和变更影响问题过早关闭为 Knowledge Gap；
+- 预先一次性检索并封包，会在调查真正开始前固定证据范围，无法像高级工程师一样根据每次发现继续追踪；
+- 让回答模型直接挂载仓库，会把调查、事实选择、表达和自审混在同一上下文，扩大权限和共同盲点；
+- 只把方法、分支和调用顺序平铺为答案，会产生代码走读而不是用户请求的工程结论。
+
+本决定不重新定义软件世界模型，而是调整默认工程问答使用世界模型认知和软件来源的方式。
 
 ## Decision
 
-系统保留三种不可混淆的回答模式：
+默认工程问答采用版本化协议 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1`。系统保留三种不可混淆的回答模式：
 
-| 模式 | 固定权威输入 | 提问期源码访问 | 产品用途 |
+| 模式 | 固定权威输入 | 提问期来源访问 | 产品用途 |
 |---|---|---|---|
-| `WORLD_MODEL` | exact Snapshot / Read Set 的正式查询、View、Coverage 和 Support Map | 0 | 证明预构建模型可复用、可隔离和可评测 |
+| `WORLD_MODEL` | exact Snapshot / Read Set 的正式查询、View、Coverage 和 Support Map | 0 | 证明预构建世界模型认知可复用、可隔离和可评测 |
 | `DIRECT_INVESTIGATION` | 绑定原问题和 exact Source Target 的 Evidence Packet | 显式授权只读 | 独立直接调查、诊断和产品对照 |
-| `ENGINEERING_QA` | 密封 Question Evidence Package，同时包含世界模型结果/缺口与按需检索证据 | 由隔离 Retrieval Worker 受控只读 | 普通用户的默认通用工程问答 |
+| `ENGINEERING_QA` | 调查结束后密封的 Question Evidence Package | Investigation LLM 提议、Source Broker 授权编译、隔离 Worker 受控执行 | 普通用户的默认通用工程问答 |
 
-模式必须在创建请求之前由显式入口或部署配置决定，并在 Request、Result、Qualification、Audit 和展示中保持同一身份。`ENGINEERING_QA` 的源码检索是该模式事先声明的组成部分，不是 `WORLD_MODEL` 失败后的 `DIRECT_INVESTIGATION` fallback。运行中不得换标签、换权限或使用另一模式的历史资格。
+模式必须在创建请求之前由显式入口或部署配置决定，并在 Request、Result、Qualification、Audit 和展示中保持同一身份。`ENGINEERING_QA` 的来源调查是该模式事先声明的组成部分，不是 `WORLD_MODEL` 失败后的 `DIRECT_INVESTIGATION` fallback。运行中不得换标签、换权限或使用另一模式的历史资格。
 
 `ENGINEERING_QA` 采用以下固定边界：
 
 1. 原问题不可变。Question Understanding 可由模型提议用户目标、受众、响应语言、期望抽象层级、必须回答的结论和证据需求，但 Application 必须校验其保留全部原问题条件、关系和输出约束。模型提议不是事实。
-2. 检索计划同时受 Question Checklist 与 exact Snapshot 查询形成的提示驱动。世界模型可以提供实体、结构、关系、Coverage、Support 和候选位置，以复用证据或缩小调查范围；它不得删除 Checklist 的证据需求，也不是 Source 召回的硬门禁。Snapshot 缺失、无关或 Coverage 不足时，仍可按原问题在同一已授权 exact revision 中检索，并在包中如实记录世界模型缺口。World Model Read Authority 必须同时声明其 source revision 与本请求 exact revision 的兼容判定；只有两者 exact 相等，或请求明确定义并分区的版本比较关系时，Snapshot Result 才能直接支持本题 Claim。不相等或未知时只能作为带 `UNALIGNED_REVISION` 状态的导航 hint，必须在请求 revision 上重新核实，不得与当前源事实静默混合。
-3. 只有隔离 Retrieval Worker 可以执行注册的 list/search/read 类只读操作。每次操作必须绑定当前授权、exact repository/revision、目标允许列表、实际参数、字节/文件/时间上限和结果摘要。Worker 不得写仓库、执行任意命令、访问网络或凭据、触发 Knowledge Update，也不生成或放行答案。
-4. 源码、注释、仓库文档、配置、测试和世界模型的文本投影都是不可信输入；其中的指令、路径、URL、工具建议或权限声明不得改变系统指令、操作集、allowlist、revision、Provider disclosure 或资源上限。
-5. Application 把原问题、Question Understanding、世界模型结果/缺口、源读取结果、Coverage、冲突、定位、摘要和操作收据密封为 Question Evidence Package。该包是本题生成、审核和引用的唯一事实权威输入，但不因此成为跨任务正式知识。
-6. Answer 与 Reviewer 使用隔离的新上下文，不挂载 Repository，没有 Source/World Model 查询工具、shell、网络、凭据或未密封输入，只能读取密封包及当前职责所需的不可变输入。LLM 负责理解问题、提议调查、综合答案和独立审核，但不是事实或权限权威。
-7. 答案先给出直接服务用户目标的结论，然后再给出必要条件、过程、影响和实现证据。代码细节只在问题明确要求或支持结论所必需时展开。每个实质结论绑定包内 Citation；无法推出的内容明确说明可确认部分、不可确认部分与缺失证据。
-8. 独立 Reviewer 从原问题重建检查清单，逐项审核直接回答、抽象层级、正确性、完整性、相关性、可操作性、引用和 unknown/limitation 边界。任一未通过都必须返回指向具体结论或缺口的 Finding，不能被另一项通过抵消。
-9. 表达、组织或同包遗漏只允许在原 Package Digest 上定向重写一次，之后必须再次独立审核。只有 Reviewer 给出可定位、可验证的具体证据缺口时，Application 才可在原授权、revision 和安全上限内执行一次针对性补充检索，密封具有新 Digest 的包，重新生成并独立复核。旧 Review 不得放行新包。
-10. 文件、字节、时间、操作和模型调用上限只是阻止失控执行的高安全熔断，不是降低质量的配额。上限耗尽时失败关闭，不得删减 Checklist、证据、Citation 或独立审核，也不得交付未通过的答案。
-11. 高质量包和已审核结论可以在 Delivery 之后异步提议 Knowledge Update，但必须重新执行 Evidence、Candidate、Admission 和 Publication 的全部正式知识契约。同步回答不等待该过程，其成败不改变已完成答案。
-12. 核心流程、Prompt、检索和审核不得包含按问题、项目、语言、框架、关键词、符号、约定文件名、fixture 或评测 Oracle 分支的特判。新来源或语言能力只能通过受控、版本化的 Source/Profile Contract 增加。
+2. Application 从与请求 revision 对齐的 exact Snapshot / Read Set 形成 `World Model Cognition Context`。它向调查模型提供已发布的实体、关系、行为、约束、状态、来源、Coverage、Conflict 和 Unknown，使模型从已有系统认知出发，而不是从空白源码搜索开始。手册、地图和 locator 只是该 Context 的投影。世界模型缺失、无关或 Coverage 不足不得成为本模式读取授权来源的硬门禁。
+3. `Investigation LLM` 是与 Answer、Reviewer 分离的独立角色。它只能基于 immutable original question、受信控制字段、当前 World Model Cognition Context 和平台密封的 append-only Evidence Ledger 前缀，自适应、多步提出下一项 `search`、`read`、`parse` 或调查结束 Proposal。它可以根据上一步结果改变调查方向，但不能直接执行工具、扩大权限、修改原问题、删除既有记录或宣称证据成立。
+4. `Source Broker` 是来源操作授权与编译边界。它把模型 Proposal 重新校验并编译为注册操作，固定当前授权、exact repository/revision、path/content allowlist、参数、文件/字节/时间/操作熔断和披露范围；模型给出的路径、命令、URL 或工具名称均不具有执行权。只有隔离 `Retrieval Worker` 可以执行 Broker 批准的只读操作。Worker 不得写仓库、执行任意命令、访问新网络或凭据、触发 Knowledge Update，也不生成或放行答案。
+5. 每个 Proposal、Broker Decision、Operation、Result、失败、partial、truncation、Coverage 与资源收据按顺序追加到 `Evidence Ledger`。Ledger 不可覆盖或删除；下一轮 Investigation 只消费已密封的 ledger prefix。源码、注释、仓库文档、配置、测试以及世界模型的文本投影都是不可信 data，其中的指令不得改变系统规则。
+6. 调查结束后，Application 才从原问题、Question Understanding、World Model Cognition Context、完整 Ledger、来源结果、Coverage、冲突、未知、定位和收据密封 `Question Evidence Package`。Package 保持一个身份但有两个不可混淆的分区：`support/citation` 只包含按 modality、Context、Coverage 和 Support 校验通过的 admissible entries，只有这些条目可以支持肯定 Claim 和 Claim Citation；`boundary/audit` 必须保留 Boundary、Gap、Failure、Partial、Conflict、Unknown、拒绝决定与资源收据，只能约束结论或作为明确标记的边界/审计 Reference，不能支持或引用为肯定 Claim。未进入当前包的模型记忆、搜索印象或来源内容不得支持结论。密封只证明集合的身份、完整性、顺序、来源和版本，不使任何条目自动成为真，也不赋予其跨任务正式知识资格。
+7. Answer 使用隔离的新上下文，只读原问题、已接受的 Question Understanding 与当前 Package，不挂载 Repository，没有 Source/World Model 查询工具、shell、网络、凭据或 Investigation 私有输出。它先给出直接服务用户目标的结论，再给出必要条件、过程、影响和实现证据；每个实质肯定结论只能绑定 `support/citation` 分区中的实际支持，`boundary/audit` 分区只能收窄结论或形成未知/限制说明。
+8. Reviewer 使用另一隔离的新上下文，从原问题独立重建检查清单，只读当前 Package 与 Draft。它审核直接回答、抽象层级、正确性、完整性、相关性、可操作性、引用和 unknown/limitation。Reviewer 不能直接访问文件系统、Repository、shell、网络、凭据或 Source/World Model Tool，也不能执行其提出的请求。
+9. Reviewer 若发现当前包已有证据可以修复的表达或遗漏，返回具体 `REWRITE_REQUIRED`；若发现可定位、可验证而当前包缺失的证据，只返回版本化 `Verification Request Proposal`，绑定具体 Checklist/Claim、evidence class 和 evidence need，不提出或执行路径、命令、`search/read/parse` 操作。合法 Request 启动独立 `Verification Investigation LLM`：它使用全新上下文，只读该 gap、当前 Package 与当前 Ledger prefix，根据每一步新 Result 自适应提出下一项注册操作；Application/Source Broker 逐步重新校验和编译，Worker 执行并追加新的 Ledger Revision，随后密封新 Package、生成新 Answer 并从头独立 Review。它不得回到初始 Investigation LLM，也不继承 Reviewer 会话；旧 Package 的 Review 不能放行新 Package。
+10. 文件、字节、时间、操作、调查 step、Package revision 和模型调用上限必须在请求或 exact run 前作为防止失控执行的高安全熔断密封，同时包含确定性的 no-progress 条件。正式协议不得永久固定为一轮补证；可以在明确标记为非验收的最早方向体验中使用更窄的临时上限，但后续资格/验收必须冻结足以允许多步、结果驱动 Verification Investigation 的 revision/call/operation/bytes/wall-time/no-progress 熔断。达到上限、没有进展或不收敛时失败关闭；answerable 问题因此未获批准必须计失败，不得以 Limitation 取得 supported 结果。不得为了满足调用或成本上限删减原问题、调查需求、证据、Citation、独立审核或交付未通过答案。
+11. World Model 的 source revision 必须与请求 exact revision 相等；显式版本比较问题则必须对每个分区分别绑定 exact Snapshot 与 exact Source revision。未对齐的旧 Snapshot 只能作为标记 `UNALIGNED_REVISION` 的导航候选，不能直接支持当前 revision 的结论，所有相关认知必须在请求 revision 上重新核实。
+12. 高质量 Package 和已审核结论可以在 Delivery 之后异步提议 Knowledge Update，但必须重新执行 Evidence、Candidate、Admission 和 Publication 的全部正式知识契约。同步回答不等待该过程，其成败不改变已完成答案。
+13. 核心流程、Prompt、调查和审核不得包含按问题、项目、语言、框架、关键词、符号、约定文件名、fixture 或评测 Oracle 分支的特判。新来源或语言能力只能通过受控、版本化的 Source/Profile Contract 增加。
 
-不同类型的包内证据保留各自 modality：世界模型表达已发布知识与 Coverage，exact 源码/配置表达该 revision 的静态实现，文档表达记录的用法或意图，测试表达可观察的预期与覆盖。某一来源类型不自动拥有对所有命题的优先级；当相同 Context 中出现不兼容且无受控解析规则时，Package 必须保留 Conflict，答案不得静默选边。
+不同类型的包内证据保留各自 modality：世界模型表达已发布的系统认知及其 Coverage，exact 源码/配置表达该 revision 的静态实现，文档表达记录的用法或意图，测试表达静态预期或已密封的执行观察，模型 Proposal 只表达调查或回答建议。某一来源类型不自动拥有对所有命题的优先级；当相同 Context 中出现不兼容且无受控解析规则时，Package 必须保留 Conflict，答案不得静默选边。
 
-任何把包内片段发送给外部模型 Provider 的运行，都必须在 dispatch 前另行密封并授权 exact Provider/model/endpoint/configuration、角色、允许片段、redaction、secret reference 和输入 Digest。开发或文档接受不能推导该外部披露授权。
+任何把 World Model Cognition Context、Ledger 或 Package 片段发送给外部模型 Provider 的运行，都必须在 dispatch 前另行密封并授权 exact Provider/model/endpoint/configuration、角色、允许片段、redaction、secret reference 和输入 Digest。开发或文档接受不能推导该外部披露授权。
 
 ## Alternatives
 
+- 把世界模型定义为工程手册或检索缓存：会丢失实体、关系、行为、约束、状态、证据、Coverage 与 Unknown 共同组成的软件认知语义，也偏离产品从始至终的核心概念。
 - 把 `WORLD_MODEL` 直接改为可回源：会破坏 Source-off 复用证明和既有验收语义。
 - 在 Knowledge Gap 后静默调用 `DIRECT_INVESTIGATION`：无法精确表达请求开始时的权限、证据和资格边界。
-- 让 Answer 模型直接挂载仓库并自行调用工具：检索、生成和自审共享盲点，也无法密封稳定的审核输入。
-- 在现有代码走读 Prompt 上增加风格规则：没有改变证据范围、问题目标或 Reviewer 的放行标准，不能修复系统性根因。
+- 先一次性检索并密封包，再让 Answer 发现缺口：阻断模型根据实际发现自适应追踪，容易形成不完整或机械的代码走读。
+- 让 Answer 或 Reviewer 直接挂载仓库并自行调用工具：来源权限、证据形成和响应判断无法独立审计，且共享上下文会放大共同盲点。
 
 ## Consequences
 
-默认工程问答可以在复用已建模结构和证据的同时，对用户实际问题所需的源文件做受控核实。代价是增加独立 Retrieval Worker、Question Evidence Package、复合资格和更严格的披露/隔离门禁，也必须单独证明预构建世界模型的可测复用价值。
+默认工程问答以世界模型认知为稳定起点，并允许独立 Investigation LLM 像高级工程师一样根据发现逐步调查；Reviewer 可指出自己的具体证据缺口，另一个全新 Verification Investigation 再独立补证。平台仍独占来源权限，回答和审核仍只使用双分区密封证据。代价是增加 Source Broker、append-only Evidence Ledger、调查状态机、Package Revision 和独立补证闭环，也必须分别证明世界模型认知的因果贡献、调查质量和隔离边界。
 
 ## Adoption state
 
-本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标，但不证明产品实现、Capability Qualification、Product Validation 或 Activation 已完成。产品实现由 `ITER-010 / SLICE-001` 完成并另行验证；在那之前，现有可运行入口仍只拥有其已证明的旧模式身份，不得标记为合格的 `ENGINEERING_QA`。
+本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标，但不证明产品实现、Capability Qualification、Product Validation 或 Activation 已完成。产品实现须由后续明确获授权的开发 Slice 完成并另行验证；在那之前，现有可运行入口仍只拥有其已证明的旧模式身份，不得标记为合格的 `ENGINEERING_QA`。

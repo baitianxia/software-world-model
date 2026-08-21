@@ -1,172 +1,163 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: proposed
+authority: proposed-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-001, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-001, FINDING-010-002, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
-coding_input: true
+coding_input: false
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
-product_goal_web_checkpoint_id: V-WEB-001
+product_goal_web_checkpoint_id: V-WEB-000
+direction_preview_web_checkpoint_id: V-WEB-001
 product_goal_direction_preview_checkpoint_id: V-PREVIEW-001
 product_goal_reflection_gate_case_id: V-REFLECT-001
-product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-QINTENT-001, V-HYBRID-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-001, V-PREVIEW-001, V-REFLECT-001]
+product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, V-QINTENT-001, V-INVESTIGATE-001, V-BROKER-001, V-LEDGER-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-000, V-WEB-001, V-PREVIEW-001, V-REFLECT-001]
 ---
 
-# SLICE-001：架构闭合与 ENGINEERING_QA 真实方向体验
+# SLICE-001：最小自适应调查纵切与真实方向体验
 
 ## Status and dependencies
 
-`AUTHORIZED / CURRENT DEVELOPMENT`。开发意图收据
-`codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4` 与后续架构接受收据
-`codex-user-message:sha256:5cdb7000ba36328f5caa27727c6b689ad4e98e7ad13eca72837fa020d0c270c9` 共同构成授权链；后者时间为
-`2026-08-21T07:10:28Z`，并作为 Manifest 的终结引用。本 Slice 是唯一编码输入；Slice2/3 均未授权。
+`PROPOSED / NOT AUTHORIZED / NOT CODING INPUT`。收据 `d3b60bda…` 只授权重制计划与文档。此前授权绑定修正前的一次性检索/先封包设计，
+不能自动扩展到本 Slice 的自适应 Investigation 与 Reviewer 独立补证。后续明确开发请求才可把本文件、Readiness、Manifest 和
+`PROJECT-CURRENT` 原子切换为唯一活动 Slice；Slice2/3 不随之授权。
 
-授权允许在 exact baseline `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
-`1369ce932c778c57a118123e8257ede476229d73` 上修改 System/ADR/治理文档、产品代码和本地确定性测试。不授权真实 credential、Provider
-socket/model request、正式 Web listener/browser question、源码片段外发、hidden disclosure 或 Production。live 体验必须在 freeze 后另取授权。
+开发 baseline 仍候选绑定 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
+`1369ce932c778c57a118123e8257ede476229d73`。未来开发授权也不自动允许 credential、Provider/model call、live Web/browser、源码片段外发、
+hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
 
 ## Product-goal contribution and cumulative integration
 
-- Product gap shortened：把“能展示代码行为”推进为“先回答工程问题，代码按需成为证据”，并允许在提问期对 exact revision 做受控核实。
-- Capability-path step advanced：仍是 `ROADMAP-M-002` 最早未证明的通用工程问答，不跳到新语言或新入口。
-- Existing capabilities combined：ITER-006 exact Snapshot、declaration/`CALLS`、Citation 和 loopback Web，与本轮只读检索、Evidence Package、
-  结论优先 Answer 和层级 Reviewer 在同一主链组合。
-- User-visible checkpoint：一个真实工程 4 条覆盖不同维度的自然问题，加至少一条用户现场题；先确认方向，再扩大验证面。
-- Stop signal：System/代码模式不一致；默认仍是方法/分支走读；需要任何特判；Snapshot 变成 Source recall 硬门禁；意图丢失；越权访问；
-  无关 Citation；无界补检索；重大错误；审核因调用预算削减；或用户 REDIRECT/REJECT。
-- Critical assumptions：本段正式验证 A1—A3；`V-XD-001`、`V-SEC-001` 提前反证 A4/A5。
-- Reflection：`V-REFLECT-001`；只有到期假设全部 `SUPPORTED`、产品 Case PASS 且用户另给 `CONTINUE`，才可申请 Slice2。
+- Product delta：把“固定调查后代码走读”推进为“世界模型认知引导、模型自适应读源码、答案优先”的真实纵切。
+- Existing capability：复用 ITER-006 exact Snapshot、declaration/`CALLS`、Citation、只读来源和 loopback Web，不复制 validation-only 入口。
+- New chain：World Model Cognition Context → Investigation LLM → Source Broker → Retrieval Worker → append-only Ledger → 双分区 Package →
+  Answer → Reviewer；审核给出具体 gap 后，新的 Verification Investigation 在新上下文中自适应补证，再形成后继 Package、重答、重审。
+- Earliest Web micro-checkpoint：最小链一旦完成，立即用一条需要 World Model 认知与 query-time Source 共同支持的代表问题跑真实 Web；
+  exact revision、只读、不可信来源、support/citation 分区、Citation 和独立 Review 在该检查点不可延后。
+- Fast checkpoint：一个真实工程 4 条不同维度自然问题，加至少一条现场题；至少 3 supported、至少 2 个非实现维度。
+- Deferred hardening：持久恢复、复杂冲突、跨轮去重、完整异常矩阵、第二工程、全面性能、完整回归、hidden 和三臂对照留到方向
+  `CONTINUE` 后。Slice1 仍须保留实际发生的 Conflict/Gap/Failure/Partial/Unknown，不得静默消解。
+- Stop：世界模型被手册化；调查一次性固定；模型直接 Source；任何特判；Ledger/Package/Review 身份错配；答案仍是代码走读；错误、安全
+  或审核降级；用户 REDIRECT/REJECT。
 
 ## Direction preview checkpoint
 
-方向体验入口必须是同一个 product-owned loopback Web，只监听 `127.0.0.1`、普通用户无需认证，并持续显示“方向体验 / 非验收 / 非生产”。
-默认页面只展示问题、结论优先答案、unknown/limitation 和可打开的结论级 Citation；World Model/Snapshot、检索操作、Package、调用数、
-Review Finding、Trace 和授权诊断折叠到开发者详情，不能污染普通答案。
+在 4 题方向体验之前先执行 `V-WEB-000`：同一 product-owned 页面、一个真实工程、一条代表问题、完整最小后端链。它只回答“真实用户能否
+尽早摸到正确方向”，不要求先完成持久恢复、复杂冲突处理、跨轮去重或完整异常矩阵。微检查点失败立即修正主链，不以扩大 fixture 数量
+掩盖；通过也不代表方向或 Slice 验收。
 
-候选代表维度包括：系统用途、整体架构、基本使用/启动、业务流程、故障定位、配置影响、变更影响、测试意图、实现机制和证据边界。
-这些是验证覆盖维度，不是产品题型或路由 enum。首次体验从中选择 4 个不同维度；至少 3 题必须为 supported，且至少覆盖 2 个非实现
-维度；其余只能是准确、具体且用户
-可理解的 unknown/limitation。另由用户现场提出至少一题。用户裁决它是否开始像工程问答助手、是否直接有用、代码细节是否按需、
-Citation 与未知表达是否可信。
+方向体验必须使用同一个 product-owned loopback Web，只监听 `127.0.0.1`，普通用户无需认证，持续显示“方向体验 / 非验收 / 非生产”。
+默认只展示问题、直接答案或 Limitation 和可打开 Citation；World Model Cognition、Ledger、Broker 操作、Package、调用数、Review Finding
+和授权诊断折叠到开发者详情。
 
-完整 hidden、Agent 对照、第二工程、全面性能和正式资格留到用户 `CONTINUE` 后；System ownership、只读、授权、Secret、revision、
-Evidence seal、role isolation、Citation、独立 Review 和失败真实性不能延后。
+4 条代表问题从系统用途、整体架构、基本使用/启动、业务流程、故障定位、配置影响、变更影响、测试意图、实现机制和证据边界中选择不同
+维度。这些只是验证覆盖，不是题型 enum 或路由。用户判断答案是否像工程问答、是否直接有用、代码细节是否按需、Citation 与未知是否
+可信，并决定 `CONTINUE / REDIRECT / REJECT`。
 
 ## Current vs expected behavior
 
-当前 Web 主链依赖严格 `WORLD_MODEL`：问题理解和 Reviewer 以实现细节完整性为中心，提问时 Answer 流程不读 Source；源码、文档或配置
-未预先建模时只能 Gap，已有知识则容易机械展开方法和调用顺序。
+当前产品能在 World Model 上做有界调查并给出代码行为，但默认正文常机械展开方法、分支和调用顺序。初版 ITER-010 的一次性 upfront
+retrieval 又会在模型充分调查前封包。
 
-预期是显式 `ENGINEERING_QA` 从原问题形成不可变 Question Understanding：用户目标、受众、期望抽象层级、物质结论清单、证据需求、
-响应语言和约束。调查计划同时从该 checklist 与 Snapshot hints 产生；World Model 提供地图、候选缩小和可复用证据，但不是 Source
-recall Gate。Snapshot 为零、无关或 Coverage 不足时，仍须允许同一授权 exact revision 下由 checklist 驱动的只读检索。
-
-检索 worker 密封包含 World Model Result 与源码/仓库文档/构建配置/测试证据的 Package。Answer 先给用户需要的结论，再给条件、流程、
-影响和必要解释；只有问题明确询问实现或结论确需代码支撑时才展开代码细节。Reviewer 从原问题重建清单，阻断未直接回答、层级不匹配、
-错误、遗漏、无关、不可用、无依据或 unknown 越界。
+预期行为是：World Model 先提供 exact 系统认知；Investigation LLM 保留原问题全部约束，根据每一步 Ledger Result 自适应决定下一项
+抽象读操作或结束；Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读包、先回答目标；Reviewer 在
+独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。
 
 ## System contracts and invariants
 
-### Phase 0：复核已闭合的正式架构边界
+### Phase 0：复核正式边界
 
-本次环境准备已完成以下架构输入；在任何 `ENGINEERING_QA` 产品行为修改前，开发者必须复核它们仍精确成立：
+开发前必须确认 `FINDING-010-002`、`SYS-ADR-016`、Engineering Question Answering Contract、Product Success、runtime/Agentic/Evidence/
+World Model/Response/Source/Security/Browser 文档和治理门禁共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1`。严格 `WORLD_MODEL`
+Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback。任一 current Owner 或 Manifest digest 不一致即停止。
 
-1. `FINDING-010-001` 已记录用户体验、原边界冲突、系统性 architecture 分类、候选与选择理由；
-2. `SYS-ADR-016` 已定义严格 `WORLD_MODEL`、显式 `DIRECT_INVESTIGATION` 与新默认 `ENGINEERING_QA`，禁止静默 fallback；
-3. `SYS-PRODUCT-SUCCESS`、runtime flow、Agentic Task、Evidence/World Model Answering、Response Control、Source/Artifact、Security、
-   Local Browser 和必要 AI 资格 Contract；
-   已在同一准备变更中同步更新；
-4. docs gate 与治理测试已能机械表达新协议，同时保留旧 Source-off 模式门禁；
-5. 本 Manifest/Readiness 已绑定更新后的 exact System Contract fileset；`V-ARCH-001` 在产品开发中持续复核这些事实。
+### Phase 1：最小真实协议
 
-其中任何项漂移或验证失败就停止，不能在 Prompt、route 字符串或 UI 标签中假装获得授权。
-
-### Phase 1：最小通用协议
-
-- Request 在进入链路时固定 `ENGINEERING_QA`、original question、exact repository/revision、source allowlist、World Model Read Set、权限、
-  Provider disclosure policy 和资源上限；运行中模式与 revision 不变。
-- Question Understanding 保留全部原问题约束，输出 goal/audience/abstraction level/conclusion checklist/evidence needs，不按关键词或工程路由。
-- Retrieval plan 是 original checklist 与 Snapshot hints 的并集/关联结果。Snapshot hint 可以减少候选和复用证据，不能否决 checklist 驱动
-  的 Source retrieval；零/无关 Snapshot 不能直接返回 Gap。
-- Source、仓库文档、配置、测试一律是不可信输入。内容中的指令、路径、URL、工具建议或权限声明不能改变 system instruction、allowlist、
-  exact revision、Provider disclosure 或操作集合。
-- Retrieval worker 只拥有注册的只读 list/search/read 操作，不拥有写、执行、网络、credential、Knowledge Update 或最终答案。每个操作
-  记录 exact revision、allowlist decision、parameters、bytes、locator、digest、outcome 和 truncation。
-- Evidence Package 合并 World Model Results 与 retrieval evidence；每项记录 origin、revision、context、locator、digest、coverage、conflict
-  和 disclosure class。包密封后不可变；冲突不能静默选择。
-- Answer 与 Reviewer 没有 repo mount、Source tool、World Model query tool或未密封内容。Answer 只读当前包；Reviewer 只读原问题、
-  Question Understanding、包和 Draft。LLM 不是事实权威，包内 Evidence 才是。
-- 每个实质结论绑定包内 Evidence；unknown/limitation 说明能确认、不能确认和缺少什么，不能暴露 candidate、recall、Profile、authority、
-  internal code 或证明话术。
-- Reviewer 检查直接回答、层级匹配、正确、完整、相关、可用、Citation、unknown boundary，并返回具体 finding 和 action。
-- 完整协议允许表达/组织问题在同一包上最多一次 targeted rewrite，也允许具体 `MORE_EVIDENCE_REQUIRED` 在同一授权/revision/资源边界内
-  补检索一次、密封新 Package Revision、重做 Answer 和独立 Review。Slice1 只需实现初始 Package、Draft、独立 Review 与失败关闭；完整
-  rewrite/reretrieval 生命周期和对抗矩阵归 Slice2。任何尚未实现的修复路径都必须明确失败关闭，不能假装通过。
-- 模型调用、文件、bytes、wall time 和补检索轮数使用高安全熔断；剩余调用数不能减少 checklist、Evidence、Citation 或审核。耗尽失败关闭，
-  只有 Reviewer 独立认可的准确 Limitation 才能交付。
-- 高质量 Package/结论的知识沉淀在 Delivery 后异步进入 Knowledge Update/Admission/Publication；不能影响本题已完成答案。
+- Request 固定 immutable original question、exact repository/revision、World Model Context/Scope/Schema/Snapshot、source allowlist、Provider
+  disclosure policy 和资源上限；问题或运行状态不能改变这些身份。
+- World Model Cognition Context 提供实体、关系、行为、约束、状态、证据、coverage 和 unknown boundary。手册/地图只是投影；Snapshot
+  为零或不足不能阻断授权 Source 调查。
+- Investigation LLM 是独立角色，只能读取原问题、认知上下文和当前 append-only Ledger；每次只能提出注册的抽象 search/read/parse/
+  finish 意图。下一步必须引用 prior Result/progress，不能一次性预写固定列表，也不能按题目/工程/关键词/符号路由。
+- Source Broker 验证并编译提议的操作、版本、路径、allowlist、bytes、disclosure 和安全上限。Retrieval Worker 只执行 Broker 批准的
+  exact-revision、read-only 操作。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority。
+- 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
+  只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
+- Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
+  校验通过的可采信条目，只有它们能支持肯定 Claim 与 Citation；`boundary/audit` 必须保留 Gap、Failure、Partial、Conflict、Unknown、
+  拒绝决定和资源收据，只能约束结论或形成标记清楚的边界说明，不能支持肯定 Claim。seal 不把任何条目或模型推断变成真。
+- Answer 在全新上下文中只读当前 sealed Package。每个实质结论绑定包内证据；代码只在问题要求或支持结论确有必要时展开。
+- Reviewer 在另一个新上下文中读取原问题、理解记录、当前 Package 和 Draft，无 repo/Source/World Model tool、FS、Shell、network 或
+  credential。表达缺陷可请求同包针对性重写；证据缺口只能输出绑定 Checklist/Claim/evidence class/need 的 versioned Verification
+  Request，不能提出可执行 path/command/operation。
+- 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
+  Result 自适应提出 search/read/parse/finish；每一步仍由 Application/Broker 校验编译、Worker 执行。它不回初始 Investigation LLM，
+  不继承 Reviewer 会话，也无直接来源权限。完成后追加新 Ledger Revision、密封新 Package、完整生成新 Answer 并独立 Review；旧 Review
+  不得批准新包。
+- 为尽快验证方向，Slice1 每个问题最多冻结一次 Verification Investigation；这是 preview 的临时安全边界，不是永久协议。Slice2/3
+  禁止固定一轮上限，改为在各自 exact freeze 前预密封 Package Revision、model call、Broker operation、source bytes、wall time 与
+  no-progress 高安全熔断。answerable 因任一熔断耗尽而未回答必须计 `FAIL`，不能用 Limitation 取得 supported 分数。
+- 调用、步骤、文件、bytes 和 wall time 是高安全上限。达到上限失败关闭；只有预先分类的真实 boundary 才能交付独立审核认可的准确
+  Limitation，answerable 因上限耗尽未回答必须计 FAIL。不能删减调查、checklist、Evidence、Citation 或 Review。
+- 交付后的高质量证据/结论可异步提议 Knowledge Update，不能阻塞或追认本题答案。
 
 ## Interfaces and affected code
 
-允许修改 Application question understanding/orchestration、只读 retrieval port/adapter、Evidence Package/Response Control、Answer/Review
-Strategy、Model Gateway role input policy、product-owned local HTTP/Web projection及对应 tests。应优先复用现有 Evidence Answering、World
-Model Query、Citation 和 Web 组件，不整包复制 ITER-009 pipeline，也不建立 validation-only 产品入口。
+未来授权允许修改 Application orchestration、Investigation/Verification Investigation role、Source Broker port/policy、Retrieval Worker adapter、Evidence Ledger/Package、
+Response Control、Answer/Review Strategy、role-specific Gateway input、product-owned HTTP/Web 及对应 tests。优先复用现有 World Model Query、
+Evidence Answering、Citation 和 Web 组件，不复制 ITER-009 pipeline。
 
-源访问必须通过新显式 port 和 capability grant，不能把仓库路径传给 Answer/Reviewer 后依赖 prompt 自律。UI 不根据题目类别切换后端；
-所有自然问题进入同一 `ENGINEERING_QA` 协议。
+源码路径不能直接传给模型后依赖 prompt 自律；模型只能提出 Broker 能验证的抽象意图。所有自然问题进入同一协议，UI 不按问题维度切换
+后端。禁止工程、题目、关键词、符号、类、方法、fixture 或 Oracle 特判。
 
 ## Compatibility, data and security boundaries
 
-严格 `WORLD_MODEL` 的 Source-off、no-payload Bundle、Citation Projector 和历史 accepted 测试继续成立；显式 `DIRECT_INVESTIGATION`
-身份继续成立。新默认模式拥有新的 request/result/qualification identity，旧 Capability、Provider grant、Prompt、Browser result 和 Activation
-均不可继承。
+严格 `WORLD_MODEL` no-payload/Source-off、Citation 和历史 accepted 测试继续成立；新协议使用独立 identity。源码、README、注释、配置、
+测试均视为不可信输入；拒绝 symlink escape、submodule/remote 自动获取、binary、oversize、path traversal、写、执行和网络。
 
-源码读取只对 exact LOCAL_GIT revision 与 allowlisted regular files开放；拒绝 symlink escape、submodule/remote 自动获取、binary、oversize、
-path traversal、写操作和命令执行。Source 是不可信输入。live 前必须另行冻结：哪些 package 片段可发送给哪个 Provider/model/role、哪些
-必须本地保留、secret reference、endpoint、configuration、redaction 和 audit；当前授权不允许任何外发。
-
-Evidence Package、Question Understanding、Draft、Review、rewrite 和 reretrieval 都保存稳定 ID/digest；旧包 Review 不能批准新包。
-页面不展示 secret、raw system prompt、hidden suite、Provider credential、绝对私有路径或未授权源码全文。
+每个 original question、Cognition Context、Ledger Revision、Package、Draft、Review、补证请求和独立 Verification Investigation 保存稳定
+ID/digest。Slice1 的 request-scoped Ledger 必须只追加且能形成完整 Result；跨进程持久恢复与复杂幂等 replay 明确后移到 Slice2。live
+前另行冻结 exact
+Provider/model/role、fragment allowlist、redaction、configuration、secret reference 和 audit；计划与开发授权都不允许自动外发。
 
 ## Open questions and implementation risks
 
-- 当前 World Model Result 与 live Source 冲突时的 modality/precedence 必须由 ADR/Contract 决定；不能默认“较新”或“源码永远胜出”。
-- 代码注释、README 和测试也可能包含错误或 prompt injection；Evidence type 影响权重但不能替代逐结论 grounding。
-- 目标抽象层级可能多义；默认应选择直接服务用户目标的最高可证实层级，并允许用户追问，而不是默认最低代码层。
-- 一轮补检索可能仍不足；安全上限后应诚实失败/limitation，不能重复搜索或取消 Review。
-- Preview corpus 公开，不能证明泛化；本段只决定方向，第二段 hidden 和跨工程才决定是否夯实成立。
-- 新协议可能需要更多模型调用；先保证质量与安全，再测量成本和 World Model 复用价值，不能用调用数目标删减工作。
+- 调查模型可能循环或过早 FINISH；最小版保留基本 progress/no-progress 安全关闭与 Application FINISH 检查，完整循环/异常矩阵后移。
+- World Model 和 Source 冲突时必须把两者作为 `boundary/audit` 条目保留，不能默认源码或较新时间自动获胜；复杂冲突裁决留到 Slice2。
+- 独立补证可能重复初始调查；Slice1 只证明一轮全新上下文、结果驱动和后继 identity，复杂多轮、dedup/recovery 留到 Slice2。
+- 公开 4 题不能证明跨工程泛化；它只判断方向，不能替代 Slice2/3。
+- 更多模型调用可能增加成本；首版先证明正确职责和答案质量，随后测量，不因调用数目标删减工作。
 
 ## Acceptance scenarios
 
-1. `V-BASELINE-001`：exact baseline/tree、ITER-009 rejected Result 和工作树边界一致。
-2. `V-ARCH-001`：Finding、ADR-016、owning System docs、Manifest digest、docs gate/tests 原子闭合；严格 WORLD_MODEL 回归仍 PASS。
-3. `V-QINTENT-001`：不同措辞/受众/抽象层级/多约束问题得到忠实通用 schema，无 enum/关键词/工程路由。
-4. `V-HYBRID-001`：原 checklist 与 Snapshot hints 联合驱动检索；零/无关 Snapshot 不阻断 exact-revision Source；World Model 与检索证据密封
-   为同一可审计 Package。
-5. `V-ISOLATION-001`：retrieval worker 只读 allowlist；Answer/Reviewer repo/source access=0；Source injection、路径/写/网络越权失败关闭。
-6. `V-ANSWER-001`：4 题中至少 3 个 supported、覆盖至少 2 个非实现维度，先给直接结论，代码细节按需，每个重要结论有 Citation。
-7. `V-REVIEW-001`：层级错误、未直接回答、遗漏、无关、错误、无依据和 Citation gap 均返回具体 Finding；Slice1 未实现自动修复时失败关闭。
-8. `V-LIMIT-001`：证据不足时交付准确 Limitation 或失败关闭；完整补检索、重封、重做 Answer 与重审生命周期由 Slice2 验证。
-9. `V-XD-001`、`V-WEB-001`、`V-PREVIEW-001`：同一真实 Web 组合 accepted Snapshot 能力与新检索证据，完成 4 题+现场题和用户决定。
-10. `V-SEC-001`：exact revision/allowlist、Source untrusted、role disclosure、Secret、Provider、budget、no retry、loopback 和 audit 全部符合边界。
-11. `V-REFLECT-001`：A1—A3 逐项 exact Verdict，A4/A5 early signal，Finding 处置和用户新决定收据完整。
-
-任何 live Case 只有在独立运行授权后实际执行才可 PASS；本开发授权不构成运行证据。
+1. `V-BASELINE-001`：exact baseline/tree 与 ITER-009 rejected 结论一致。
+2. `V-ARCH-001`：Finding、ADR/Contract、Manifest、docs gate 一致；严格 WORLD_MODEL/DIRECT 回归边界不变。
+3. `V-COGNITION-001`：World Model 以 exact、持久、版本化外部认知供模型使用，不退化为手册/缓存/keyword hints。
+4. `V-QINTENT-001`：原问题目标、受众、层级、结论、语言和约束不丢失；无特判路由。
+5. `V-INVESTIGATE-001`：至少两步由 prior Result 驱动；partial/zero cognition 不阻断必要 Source；FINISH 有证据与 progress 支持。
+6. `V-BROKER-001`：Broker 编译并审计抽象提议，Worker 仅执行 allowlisted read-only exact-revision 操作；模型直接权限为 0。
+7. `V-LEDGER-001`：Ledger append-only，调查后 seal；Package 的 support/citation 仅 admissible，boundary/audit 必须保留且不能支持肯定 Claim，
+   seal 不等于真值，revision 身份不可混用。
+8. `V-ANSWER-001`：4 题至少 3 supported、至少 2 个非实现维度、重大错误 0、直接答案且逐结论 Citation。
+9. `V-REVIEW-001`：Reviewer 只给具体 gap；独立 Verification Investigation 在新上下文中多步自适应补证，经 Broker/Worker 形成新
+   Ledger/Package/Answer/Review；不回初始 Investigation 且无直接 Source。
+10. `V-LIMIT-001`：证据或安全上限不足时准确 Limitation 或失败关闭，不伪造 absence/coverage；answerable 因上限耗尽计 FAIL。
+11. `V-XD-001`、`V-WEB-000`：最小纵切一成立，同一真实 Web 立即完成一条 World Model + query-time Source 代表问题。
+12. `V-WEB-001`、`V-PREVIEW-001`：微检查点之后在同一真实 Web 完成 4 题+现场题和用户方向决定。
+13. `V-SEC-001`：Source injection、path/write/exec/network/secret/disclosure、budget、no retry、loopback 全部符合边界。
+14. `V-REFLECT-001`：A1—A3 exact Verdict，A4/A5 early signal，全部 Finding 和用户新决定完整。
 
 ## Architecture reflection checkpoint
 
-Slice Result 必须逐项复核 A1—A3、A4/A5 early falsifier、系统边界变更、源码不可信输入、安全、用户 4 题+现场题反馈、默认答案层级、
-成熟源码 Agent 尚未完成的对照、成本/复杂度和全部 Finding。`V-REFLECT-001 PASS` 只表示复盘完整；用户必须用本 Slice 授权之后的新消息
-决定 `CONTINUE / REDIRECT / REJECT`。A1—A3 任一 `FALSIFIED/UNRESOLVED`，或提前反证 Case FAIL，只能停止。
+Slice Result 必须复核世界模型概念、调查自适应性、Broker/Worker 权限、Ledger/Package identity、补证独立性、4 题+现场题体验、安全、
+成本/复杂度和全部 Finding。只有 A1—A3 全部 `SUPPORTED`、Case PASS 且用户后续决定 `CONTINUE`，才可申请 Slice2。
 
 ## Findings
 
-首个强制 Finding `FINDING-010-001` 已处置原 Source-off 产品边界与新模式的架构变化。后续发现按
-[Findings](../findings/README.md) 和[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置；不得用 Result 静默重定义系统。
+`FINDING-010-001` 保留默认工程问答需要受控回源的根因；`FINDING-010-002` 修正世界模型定义表达和提问期职责。后续发现按
+[Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

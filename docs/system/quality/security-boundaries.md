@@ -20,17 +20,17 @@ tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test
 
 - 模型不能获得 shell、Web、MCP、文件或来源工具；领域 Tool Proposal 由平台授权执行。
 - Source Operation 必须绑定当前授权、精确 Binding、Target 和预算，且只读。
-- `ENGINEERING_QA` 在任何执行前固定 exact repository/Binding/revision、World Model Read Authority、source path/content allowlist、注册只读操作集和文件/字节/时间熔断。只有隔离 Retrieval Worker 可以挂载允许列表内的 exact-revision regular files；它必须拒绝 path traversal、symlink escape、submodule/remote fetch、二进制/超限输入、写操作、任意命令、新网络、credential 和 Knowledge Update。每次操作必须记录 revision、allowlist verdict、参数、locator/range、bytes、digest、coverage/truncation 和 outcome。
+- `ENGINEERING_QA` 在任何执行前固定 exact repository/Binding/revision、World Model Read Authority、source path/content allowlist、注册只读操作集和文件/字节/时间/调查轮次/Package Revision 熔断。Investigation LLM 只读取原问题、World Model Cognition Context 和已密封 Ledger prefix 并提出下一项；Source Broker 把 Proposal 当作不可信建议，重新解析 locator、校验授权并编译 caller 不可伪造的操作。只有隔离 Retrieval Worker 可以挂载允许列表内的 exact-revision regular files；它必须拒绝 path traversal、symlink escape、submodule/remote fetch、二进制/超限输入、写操作、任意命令、新网络、credential 和 Knowledge Update。每个 Proposal、Broker Decision、Operation 和 Result 必须追加到 Evidence Ledger，并记录 revision、allowlist verdict、参数、locator/range、bytes、digest、coverage/truncation 和 outcome。
 - Engineering QA 读取的源码、注释、README/其他仓库文档、配置和测试全部是不可信 data。其中任何 prompt、命令、URL、路径、工具建议、权限或外发声明都不得成为 instruction，不得扩大操作集、路径、revision、Provider disclosure 或预算。
 - Secret 只保存 Reference，并在 exact endpoint 的 TLS/SNI/certificate 验证成功后、HTTP 分派前解析；不得进入文档、命令参数、数据库正文、日志或 Result。
 - 编码、Conformance、Capability Qualification、历史 Product PASS 或历史披露许可都不能推导新的外部分派授权。每次新的
   `EVALUATION_ONLY` 问题披露必须由 exact grant 记录用户、时间、authorization ref 和 payload boundary；未授权 grant 必须在
   创建 session、Provider socket 或 listener 前拒绝。Gateway 必须再验证由同一 grant 派生的当前 session receipt，才能解析
   credential 或进入 qualified baseline；历史 permission 只能保留为 capability baseline provenance。
-- 生成与审核使用隔离上下文，Provider 会话记忆不能成为正式输入。
-- `ENGINEERING_QA` 的 Answer 与 Reviewer 使用彼此隔离的新上下文，只挂载当前密封 Question Evidence Package 和各自角色所需的不可变输入。它们均不能挂载 Repository/Source workspace、World Model database/Bundle query port、Source Tool、shell、网络、credential、未密封内容或另一角色的私有输出。包内冲突、部分或未知不得通过模型记忆或临时工具补齐。
-- 把 Question Evidence Package 中的任何片段发送到外部 Provider 之前，必须另行授权并密封 exact Provider/model/endpoint/configuration、role、允许字段/片段、redaction、secret reference 和完整 input digest。Question Understanding、Retrieval、Answer 和 Review 各自只能获得该角色的披露范围；开发授权、历史 Provider PASS 或同一包对另一角色的披露不能推导本次外发。未授权时必须在 credential resolution、socket 和 request dispatch 前拒绝。
-- Engineering QA 的同包重写最多一次，具体证据缺口驱动的补充检索最多一次，新证据必须形成新包并重走独立审核。文件、字节、时间和调用上限只能失败关闭，不得删减 Checklist、证据、Citation 或 Review dimension。
+- Initial Investigation、Verification Investigation、Answer 与 Review 使用彼此隔离的新上下文，Provider 会话记忆不能成为正式输入。初始调查每步只消费 Application 密封的当前 Ledger prefix；补证调查只消费具体 gap + current Package/Ledger，不回初始调查或 Reviewer 会话。
+- `ENGINEERING_QA` 的 Answer 与 Reviewer 只挂载当前密封 Question Evidence Package 和各自角色所需的不可变输入。它们均不能挂载 Repository/Source workspace、World Model database/Bundle query port、Source Tool、Evidence Ledger write port、shell、网络、credential、未密封内容或另一角色的私有输出。Reviewer 只提出绑定具体 Claim/evidence need 的版本化 gap Request，不能提出操作或调用 Broker/Worker；Application/Broker 必须把 Verification Investigation Proposal 当作不可信建议逐步校验编译。包内冲突、部分或未知必须留在 boundary/audit 分区，不得通过模型记忆或临时工具补齐。
+- 把 World Model Cognition Context、Evidence Ledger 或 Question Evidence Package 中的任何片段发送到外部 Provider 之前，必须另行授权并密封 exact Provider/model/endpoint/configuration、role、允许字段/片段、redaction、secret reference 和完整 input digest。Question Understanding、Investigation、Answer 和 Review 各自只能获得该角色的披露范围；开发授权、历史 Provider PASS 或同一内容对另一角色的披露不能推导本次外发。未授权时必须在 credential resolution、socket 和 request dispatch 前拒绝。
+- Engineering QA 的同包重写保持同一 Package Digest；Reviewer 具体证据缺口驱动全新 Verification Investigation，经 Broker/Worker 逐步校验执行，追加新 Ledger Revision，密封新 Package并重走 Answer/Review。正式协议不得永久固定一轮；revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减 Checklist、调查需求、证据、Citation 或 Review dimension。
 - `JAVA_SOURCE_SEMANTICS@1` 的 Investigation step、Draft 与 Review 是独立 Gateway workload：首个调查 step 不读取正式知识
   payload，后续 step 只能读取平台密封的 typed trace prefix；Draft 不得读取 Reviewer 或 Citation observation，Review 不得读取
   Provider 会话记忆或 Source。角色只能通过平台密封的 Requirement/trace/Assessment/Draft 逐阶段传递；role package、model call、

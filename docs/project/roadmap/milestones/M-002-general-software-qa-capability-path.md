@@ -14,24 +14,24 @@ coding_input: false
 
 ## Final outcome
 
-本路径只服务 `SYS-PRODUCT-SUCCESS`：系统在提问前将授权软件来源构建为版本固定、可更新、可复用的软件世界模型，
-然后从同一个正式 Web 入口接受自由软件工程问题。“通用”不表示每题必须有答案，而是不依赖预编题型、工程名、
-问题文本或关键词补丁；授权来源不足时必须返回有边界的 Gap。
+本路径只服务 `SYS-PRODUCT-SUCCESS`：系统在提问前将授权软件来源构建为版本固定、可验证、可更新、可复用的软件世界模型，作为大模型
+对软件系统的持久外部认知；然后从同一个正式 Web 接受自由软件工程问题。“通用”不表示每题必须有答案，而是不依赖预编题型、工程名、
+问题文本、关键词、符号、fixture 或 Oracle 补丁；授权证据不足时必须返回有边界的 Limitation。
 
 ## Ordered capability path
 
 | Step ID | User-visible capability | Entry evidence | Completion evidence | Current state |
 |---|---|---|---|---|
 | `step-0-version-fixed-baseline` | 用户选择本地项目，系统在无问题状态更新 Snapshot，并从正式 Web 查询窄范围结构和静态调用 | ITER-005/006 Acceptance | 已接受的 Workspace、Update、Snapshot、Web、Citation 与窄范围 `CALLS` | **achieved / narrow** |
-| `step-1-java-result-driven-world-model-investigation` | 用户用自由语言询问 Java 工程；系统结合预构建 World Model 与同 revision 受控只读源码检索，先回答用户目标，代码只作为证据或按需细节；不足时给具体 Limitation | `ITER-007-RESULT-SLICE-001-STOP-DECISION`、`ITER-009-RESULT-SLICE-001-STOP-REDIRECT` | 一个真实工程的跨类型自然问题和现场题通过同一 Web，答案层级匹配且非默认代码走读，重要结论可引用 | **in progress；ITER-009 证明代码走读方向不成立，ITER-010 SLICE-001 转向工程问题答案优先** |
+| `step-1-java-result-driven-world-model-investigation` | 用户用自由语言询问 Java 工程；World Model 提供 exact 持久系统认知，Investigation LLM 根据 prior Result 自适应决定下一步，Broker/Worker 受控只读源码，调查后密封证据并先回答用户目标 | `ITER-007-RESULT-SLICE-001-STOP-DECISION`、`ITER-009-RESULT-SLICE-001-STOP-REDIRECT` | 一个真实工程的跨类型自然问题和现场题通过同一 Web；世界模型概念不降级，模型无直接 Source 权限，答案非默认代码走读且重要结论可引用 | **replanned；ITER-010 等待 Slice1 开发授权** |
 | `step-2-common-java-real-project-breadth` | 同一问答链在未参与实现的常见 Java 工程上处理跨类、多文件、常见语法与框架边界 | Step 1 Product Result | 独立 held-out 工程与源码 Agent 对照，不因换工程而回到固定题型或 Gap | planned after Step 1 |
 | `step-3-revision-driven-update-and-reuse` | 项目从 R1 变为 R2 时无需先提问，系统能发现变更、更新或标记受影响知识，后续问答不把 R1 当当前事实 | Step 2 Product Result | 跨会话复用、R1→R2 失效/更新和无来源访问重建通过真实 Web 问题验证 | planned after Step 2 |
-| `step-4-repository-multi-source-composition` | 把 Step 1 按题检索的源码/文档/配置/测试证据沉淀为可版本更新、可跨题复用的正式 World Model 多源知识，并继续加入 API、数据结构、部署、运行观察及跨模块语义 | Step 3 Product Result | 扩展来源的正式多源知识可更新、可复用；隐藏跨源题在同一 Web、Evidence Package 与 Citation chain 通过，不退回按文件类型分叉入口 | planned after Step 3 |
+| `step-4-repository-multi-source-composition` | 扩展 World Model 对 API、数据结构、部署、运行观察、跨模块语义及多来源冲突的正式认知；把已接受的调查证据按正常 Admission/Publication 形成可版本更新、跨题复用的认知，而不是简单保存答案 | Step 3 Product Result | 扩展认知可验证、更新、失效和复用；隐藏跨源题在同一 Web、Ledger/Package/Citation chain 通过，不按文件类型分叉入口 | planned after Step 3 |
 | `step-5-second-language-ecosystem` | 用户选择不同语言/构建生态的项目，仍获得同一问答、更新、证据和 Gap 体验 | Step 4 Product Result | 至少第二个语言/生态的未见项目通过同一产品 Gate，不复制独立问答入口 | planned after Step 4 |
 
-无问题建模、exact revision、Support/Citation、Answer/Reviewer 不直接访问 Source/Update/Direct tool 和正式 Web 人工验证是每一步的
-累积不变量。ITER-010 可以在请求开始前明确选择的混合主路径中，由隔离检索 Worker 对 exact revision 执行受控只读 Source 操作；
-它必须生成可审计 Evidence Package，不能成为失败后的静默 Direct fallback。
+无问题建模、exact revision、Support/Citation、模型无直接 Source/Update/Direct tool、Broker/Worker 操作审计和正式 Web 人工验证是
+每一步的累积不变量。ITER-010 计划在请求开始前明确选择 `ENGINEERING_QA`：Investigation LLM 只提出抽象操作，Broker/Worker 执行
+受控只读 Source，Evidence Ledger 只追加并在调查结束后密封 Package；它不能成为失败后的静默 Direct fallback。
 
 ## Iteration selection rule
 

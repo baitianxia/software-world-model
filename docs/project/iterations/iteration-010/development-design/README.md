@@ -15,9 +15,10 @@ coding_input: false
 
 | Slice | 状态 | 目的 | 进入条件 |
 |---|---|---|---|
-| [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `authorized / current-development` | 从已闭合的新架构边界实现并快速形成真实 Web 混合证据方向体验 | 本轮 Readiness 与用户授权已接受 |
-| [SLICE-002](SLICE-002-cross-project-hardening.md) | `proposed` | 跨工程、受控补检索、异步沉淀、安全、资格、对照与回归夯实 | Slice1 exact Result=`CONTINUE`，再取得新授权 |
-| [SLICE-003](SLICE-003-formal-product-acceptance.md) | `proposed` | 最终隐藏工程、现场题、价值/质量对照与验收 | Slice2 exact Result=`CONTINUE`，再取得新授权 |
+| [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `proposed / not authorized` | 一题真实 Web 微纵切，再做 4 题+现场题方向体验；不可延后 exact/read-only/untrusted/Citation/独立审核 | 后续明确开发请求并原子接受 Readiness |
+| [SLICE-002](SLICE-002-cross-project-hardening.md) | `proposed` | 持久恢复、复杂冲突/去重/异常、独立多步补证、跨工程与三臂认知消融 | Slice1=`CONTINUE`；再取开发授权及消融/hardening 新冻结收据 |
+| [SLICE-003](SLICE-003-formal-product-acceptance.md) | `proposed` | 未见工程、现场题、三臂消融、安全和最终验收 | Slice2 exact Result=`CONTINUE`，再取得新授权 |
 
-`FINDING-010-001 + SYS-ADR-016 + Engineering QA Contract/owning docs gate` 已由本次环境准备闭合作为 Slice1 输入；
-`V-ARCH-001` 在实现前后持续复核其一致性。真实 Web 必须晚于 deterministic freeze 与独立运行授权。
+`FINDING-010-002` 已把世界模型概念与提问期调查职责分开；`V-ARCH-001` 在未来开发前复核 ADR-016、Engineering QA Contract、
+Manifest 和治理门禁一致。当前三个 Slice 都不是 coding input，真实 Web 必须晚于产品 freeze 与独立运行授权；新三臂消融与补证
+hardening protocol 还必须在 Slice2 前由新用户收据冻结，不能复用旧 positive-value 收据。

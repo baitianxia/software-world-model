@@ -39,9 +39,9 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
 9. Investigation、Draft 与 Review 是隔离角色。调查角色不能看到 Source/Repository/raw Evidence/Update/Direct/Citation
    observation；Draft 只消费 sealed trace；Reviewer 从原问题和同一 trace 独立重建检查项。任何角色失败、结果未知或预算耗尽都
    终止本题，不 retry 或降级。
-10. `ENGINEERING_QA` 是独立的有界组合用例：Task 在执行前固定模式、original question、exact revision、World Model Read Authority、Source allowlist、Provider disclosure 和资源熔断。Question Understanding 与 Checklist 不可被后续证据缩减；Snapshot hint 可以提供候选和复用证据，但不得否决 Checklist 驱动的受权 Source retrieval。
-11. Engineering QA Retrieval、Answer 和 Reviewer 是三个隔离角色。只有 Retrieval Worker 可通过 Source Application Port 执行 allowlisted exact-revision 只读操作；Answer/Reviewer 只读密封 Question Evidence Package，不得访问 Repository、Source/World Model Tool、shell、网络或未密封输入。Task Control 不得执行 Source 内容中的指令，也不得把模型输出当成授权、证据或最终 Review。
-12. Engineering QA 的同包定向重写最多一次，且必须形成新的独立 Review Attempt。只有具体 `MORE_EVIDENCE_REQUIRED` 可由 Application 重新编译一次原授权内的补充检索；新证据形成新 Package Revision 并重走 Answer/Review。调用或成本上限只能失败关闭，不得删减调查、Citation 或审核。
+10. `ENGINEERING_QA` 是独立的有界组合用例：Task 在执行前固定模式、protocol identity、original question、exact revision、World Model Read Authority、Source allowlist、Provider disclosure 和资源熔断。Question Understanding 与 Checklist 不可被后续证据缩减；World Model Cognition Context 提供持久的系统认知，但其缺失或 Coverage 不足不得否决 Checklist 驱动的受权 Source investigation。
+11. Engineering QA 的 Initial Investigation、Verification Investigation、Source Broker/Worker、Answer 和 Reviewer 是分离角色。初始调查根据原问题、Cognition Context 和已密封 Ledger prefix 自适应提议；补证调查在全新上下文根据具体 gap、current Package/Ledger 和每步新 Result 自适应提议，不回初始调查。Broker 逐步重新校验并编译，只有 Retrieval Worker 可执行 allowlisted exact-revision 只读操作，全部 Proposal/Decision/Result 追加到 Ledger。Answer/Reviewer 只读双分区 Package，不得访问 Repository、Source/World Model Tool、Ledger write port、shell、网络、credential 或未密封输入。
+12. Reviewer 可返回同包 `REWRITE_REQUIRED`，或绑定具体 Checklist/Claim 和 evidence need 的 `MORE_EVIDENCE_REQUIRED`，但不能形成操作 Proposal。正式协议不得永久固定一轮补证；预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减调查、Citation 或审核。
 
 ## Failure and implementation boundary
 

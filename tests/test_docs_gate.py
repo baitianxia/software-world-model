@@ -3068,23 +3068,34 @@ class ReflectionGateTests(unittest.TestCase):
             "strict_world_model_mode_preserved": True,
             "direct_investigation_mode_preserved": True,
             "silent_mode_fallback_allowed": False,
-            "world_model_role": "reusable-engineering-map-manual-and-retrieval-entry",
-            "world_model_retrieval_hint_or_candidate_reduction_only": True,
+            "world_model_role": (
+                "persistent-versioned-verifiable-updatable-external-software-cognition"
+            ),
+            "world_model_cognition_dimensions": (
+                "context-entities-relations-behavior-constraints-state-evidence-"
+                "coverage-and-unknown-boundaries"
+            ),
+            "world_model_is_only_manual_map_cache_or_retrieval_hints": False,
             "world_model_as_question-time-source-recall_gate_allowed": False,
             "world_model_required_as_source_retrieval_gate": False,
-            "retrieval_plan_inputs": (
-                "immutable-original-question-checklist-and-snapshot-hints"
+            "investigation_inputs": (
+                "immutable-original-question-exact-world-model-cognition-and-prior-"
+                "ledger-results"
             ),
             "zero-irrelevant-or-insufficient-snapshot_blocks_exact-revision-retrieval": False,
             "snapshot_source_revision_compatibility": (
                 "exact-match-or-explicit-partitioned-version-comparison-otherwise-"
                 "unaligned-navigation-only"
             ),
-            "model_role": (
-                "question-understanding-investigation-control-answer-synthesis-and-"
-                "independent-review-not-fact-authority"
+            "investigation_model_role": (
+                "independent-adaptive-result-driven-read-operation-proposal"
             ),
-            "fact_authority": "sealed-evidence-package",
+            "investigation_model_direct_source_access": "denied",
+            "source_broker_role": (
+                "policy-compile-and-authorize-allowlisted-read-only-exact-revision-"
+                "operations"
+            ),
+            "retrieval_worker_role": "isolated-execution-only",
             "retrieval_worker_sources": (
                 "exact-revision-source-repository-documents-build-configuration-tests"
             ),
@@ -3093,29 +3104,56 @@ class ReflectionGateTests(unittest.TestCase):
             "live_provider_source-fragment-disclosure": (
                 "separately-authorized-exact-provider-model-role-and-allowlist-only"
             ),
-            "answer_repository_access": "denied",
-            "reviewer_repository_access": "denied",
-            "answer_input": "sealed-evidence-package-only",
-            "reviewer_input": (
-                "original-question-question-understanding-sealed-evidence-package-and-draft-only"
+            "evidence_ledger": "append-only-per-question-until-seal",
+            "evidence_ledger_seal_trigger": (
+                "investigation-finish-or-fail-closed-stop"
             ),
+            "question_evidence_package_role": (
+                "sealed-two-partition-support-citation-and-boundary-audit-set-not-"
+                "truth-authority"
+            ),
+            "package_seal_confers_truth": False,
+            "sealed_package_mutation_allowed": False,
+            "answer_repository_access": "denied",
+            "answer_direct_source_authority": "denied",
+            "reviewer_repository_access": "denied",
+            "reviewer_direct_source_authority": "denied",
+            "reviewer_direct_shell_network_credential_or_tool_access": "denied",
+            "answer_input": (
+                "immutable-original-question-question-understanding-and-sealed-"
+                "question-evidence-package-only"
+            ),
+            "reviewer_input": (
+                "immutable-original-question-question-understanding-sealed-question-"
+                "evidence-package-and-draft-only"
+            ),
+            "reviewer_more_evidence_route": (
+                "specific-verifiable-gap-through-independent-verification-"
+                "investigation-application-source-broker-worker-new-ledger-revision-"
+                "new-package-new-answer-new-review"
+            ),
+            "reviewer_verification_request_role": (
+                "versioned-gap-proposal-binding-checklist-claim-evidence-class-and-need"
+            ),
+            "reviewer_verification_returns_to_initial_investigation_model": False,
             "knowledge_persistence": (
                 "asynchronous-after-delivery-through-normal-admission-and-publication"
             ),
             "status": "frozen",
         }
         answer_protocol: dict[str, object] = {
-            "schema": "ENGINEERING_QA_HYBRID_EVIDENCE@1",
+            "schema": "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1",
             "contract_ref": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
-            "mode": "upfront-engineering-qa-hybrid-evidence",
+            "mode": "adaptive-cognition-guided-engineering-investigation",
             "question_understanding_required_fields": (
                 "user-goal,audience,requested-abstraction-level,"
                 "material-conclusion-checklist,evidence-needs,response-language-and-constraints"
             ),
             "question_understanding_model_call_upper_bound": 1,
-            "initial_retrieval_rounds": 1,
-            "targeted_reretrieval_round_upper_bound": 1,
-            "max_retrieval_steps_per_round": 12,
+            "investigation_model_call_upper_bound": 12,
+            "max_investigation_steps_per_question": 24,
+            "slice_001_reviewer_verification_investigation_upper_bound": 1,
+            "max_source_broker_operations_per_question": 128,
             "max_source_files_per_question": 64,
             "max_source_bytes_per_question": 2097152,
             "max_repository_document_bytes_per_question": 1048576,
@@ -3124,7 +3162,7 @@ class ReflectionGateTests(unittest.TestCase):
             "max_world_model_result_bytes_per_question": 1048576,
             "max_sealed_evidence_package_bytes_per_question": 4194304,
             "max_support_items_per_question": 1024,
-            "max_trace_bytes_per_question": 2097152,
+            "max_evidence_ledger_bytes_per_question": 2097152,
             "max_wall_time_milliseconds_per_question": 900000,
             "initial_answer_model_calls": 1,
             "independent_review_model_calls_per_attempt": 1,
@@ -3132,16 +3170,31 @@ class ReflectionGateTests(unittest.TestCase):
             "answer_attempt_upper_bound": 3,
             "review_attempt_upper_bound": 3,
             "provider_output_complete-replacement_upper_bound_per_stage": 2,
-            "hard_safety_model_call_upper_bound_per_question": 12,
+            "hard_safety_model_call_upper_bound_per_question": 24,
+            "upfront_complete_retrieval_plan_required": False,
+            "investigation_proposal_must_consider_prior_results": True,
+            "source_broker_policy_compilation_required": True,
+            "evidence_ledger_append_only": True,
+            "question_evidence_package_sealed_after_investigation": True,
+            "sealed_package_mutation_allowed": False,
+            "safety_budget_reserves_independent_review": True,
             "quality_checklist_reduction_due_to_remaining_calls_allowed": False,
             "evidence_requirement_reduction_due_to_remaining_calls_allowed": False,
             "review_skipping_due_to_remaining_calls_allowed": False,
-            "targeted_reretrieval_requires_specific_reviewer_evidence_gap": True,
+            "reviewer_more_evidence_requires_specific_verifiable_gap": True,
+            "reviewer_verification_request_requires_application_and_source_broker_revalidation": True,
+            "reviewer_verification_uses_independent_fresh_context_adaptive_investigation": True,
+            "reviewer_verification_returns_to_initial_investigation_model": False,
+            "reviewer_verification_fixed_round_cap_after_slice_001_allowed": False,
+            "reviewer_verification_creates_new_ledger_revision": True,
+            "reviewer_verification_creates_new_package": True,
+            "new_answer_after_new_package_required": True,
             "same_package_rewrite_requires_specific_reviewer_finding": True,
-            "reseal_after_targeted_reretrieval_required": True,
-            "independent_rereview_after_any_rewrite_or_reseal_required": True,
+            "independent_rereview_after_any_answer_or_package_change_required": True,
+            "question_or_project_keyword_symbol_class_method_fixture_or_oracle_special_routing_allowed": False,
             "resource_exhaustion_behavior": (
-                "fail-closed-with-audited-user-visible-limitation-only-if-independently-approved"
+                "answerable-fail-boundary-limitation-only-if-independently-approved-"
+                "otherwise-fail-closed"
             ),
             "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks": True,
             "provider_request_retries_allowed": False,
@@ -3149,6 +3202,337 @@ class ReflectionGateTests(unittest.TestCase):
             "status": "frozen",
         }
         return source_scope, hybrid_evidence_path, answer_protocol
+
+    def valid_engineering_qa_adaptive_gate_manifest(self) -> dict[str, object]:
+        _, hybrid_evidence_path, answer_protocol = (
+            self.valid_engineering_qa_sections()
+        )
+        proposed_fuse = (
+            "must-be-presealed-positive-high-safety-bound-before-slice-002-"
+            "authorization"
+        )
+        return {
+            "product_goal_alignment": {
+                "positive_value_freeze_receipt_ref": (
+                    "codex-user-message:sha256:" + "1" * 64
+                ),
+                "direction_preview_binding": {
+                    "new_slice_ref": "ITER-010-SLICE-001"
+                },
+            },
+            "development": {
+                "slices": {
+                    "ITER-010-SLICE-001": {"status": "proposed"},
+                    "ITER-010-SLICE-002": {"status": "proposed"},
+                    "ITER-010-SLICE-003": {"status": "proposed"},
+                }
+            },
+            "hybrid_evidence_path": hybrid_evidence_path,
+            "answer_protocol": answer_protocol,
+            "question_evidence_package_classes": {
+                "support_and_citation": {
+                    "admission": "modality-context-coverage-and-support-validated-only",
+                    "affirmative_claim_support_allowed": True,
+                    "claim_citation_allowed": True,
+                },
+                "retained_non_support": {
+                    "required_entry_kinds": (
+                        "boundary,audit-gap,failure,partial,conflict,unknown,"
+                        "rejected-decision-and-resource-receipt"
+                    ),
+                    "retention": "mandatory-in-ledger-and-current-sealed-package",
+                    "affirmative_claim_support_allowed": False,
+                    "affirmative_claim_citation_allowed": False,
+                    "labeled_boundary_or_audit_reference_allowed": True,
+                },
+                "single_package_identity": True,
+                "seal_confers_truth": False,
+                "status": "frozen",
+            },
+            "reviewer_verification_investigation": {
+                "role": "independent-verification-investigation-llm",
+                "context": "fresh-context-without-initial-investigation-answer-or-review-session-state",
+                "inputs": "immutable-specific-review-gap-current-package-and-current-ledger-prefix",
+                "reviewer_operation_proposal_allowed": False,
+                "adaptive_multi_step_required": True,
+                "prior_verification_result_must_drive_next_step": True,
+                "application_source_broker_worker_route_required": True,
+                "direct_source_filesystem_shell_network_credential_or_tool_access": "denied",
+                "returns_to_initial_investigation_model": False,
+                "creates_new_ledger_revision_package_answer_and_review": True,
+                "slice_001_preview_upper_bound": 1,
+                "slice_001_bound_scope": "direction-preview-only-not-a-permanent-protocol-round-cap",
+                "hardening_fixed_round_upper_bound_allowed": False,
+                "hardening_package_revision_fuse": proposed_fuse,
+                "hardening_model_call_fuse": proposed_fuse,
+                "hardening_source_broker_operation_fuse": proposed_fuse,
+                "hardening_source_byte_fuse": proposed_fuse,
+                "hardening_wall_time_fuse": proposed_fuse,
+                "hardening_no_progress_fuse": proposed_fuse,
+                "answerable_fuse_exhaustion_outcome": "fail",
+                "boundary_fuse_exhaustion_outcome": "independently-reviewed-honest-limitation-or-fail",
+                "hardening_protocol_status": "proposed-not-frozen-requires-new-user-receipt-before-slice-002",
+                "hardening_authorization_status": "not-authorized",
+                "hardening_protocol_digest": "not-authorized",
+                "hardening_freeze_receipt_ref": "not-authorized",
+                "status": "frozen-slice-001-preview-boundary",
+            },
+            "engineering_qa_ablation": {
+                "status": "proposed-not-authorized",
+                "authorization_required_before": "ITER-010-SLICE-002-coding-or-execution",
+                "authorization_ref": "not-authorized",
+                "frozen_protocol_digest": "not-authorized",
+                "full_cognition_arm": {
+                    "cognition_input": "full-exact-world-model-cognition-context",
+                    "investigation_chain": "shared-adaptive-investigation-source-broker-worker-ledger-package-answer-review",
+                },
+                "locator_only_or_empty_arm": {
+                    "cognition_input": "predeclared-locator-only-projection-or-canonical-empty-when-no-locator-exists",
+                    "investigation_chain": "same-as-full-cognition-arm",
+                },
+                "mature_source_agent_arm": {
+                    "protocol_ref": "mature_source_agent_protocol_digest",
+                    "cognition_input": "none",
+                    "investigation_chain": "frozen-mature-source-agent",
+                },
+                "controlled_inputs": "same-exact-revision-model-questions-model-call-and-resource-budget-cache-policy-and-state-rubric-and-evaluator",
+                "quality_gate": "full-cognition-and-mature-source-agent-zero-major-error-boundary-correct-and-full-cognition-no-material-claim-regression-versus-mature-source-agent",
+                "locator_control_quality_failure_effect": "may-prove-quality-gain-but-cannot-lower-full-cognition-acceptance-threshold",
+                "gain_gate": "full-cognition-must-have-precommitted-quality-gain-or-precommitted-normalized-non-locator-investigation-cost-gain-versus-locator-only-or-empty-arm",
+                "proposed_quality_gain_threshold": "at-least-one-predeclared-material-checklist-gain-with-no-regression",
+                "proposed_non_locator_cost_ratio_threshold_ppm": 900000,
+                "cost_dimensions": "source-bytes-source-broker-operations-model-tokens-wall-time-provider-cost-and-world-model-build-update-storage-cost",
+                "modeling_cost_accounting": "exact-world-model-build-update-storage-and-provider-cost-amortized-over-frozen-reuse-horizon",
+                "proposed_reuse_horizon_questions": 12,
+                "slice_001_required": False,
+                "slice_002_case_id": "V-COMP-EARLY-002",
+                "slice_003_case_id": "V-COMP-001",
+            },
+        }
+
+    def test_engineering_qa_adaptive_gate_accepts_only_the_two_package_classes(
+        self,
+    ) -> None:
+        manifest = self.valid_engineering_qa_adaptive_gate_manifest()
+        self.assertEqual(
+            docs_gate.validate_engineering_qa_adaptive_gate(
+                manifest, "manifest.yaml"
+            ),
+            [],
+        )
+        package = manifest["question_evidence_package_classes"]
+        self.assertIsInstance(package, dict)
+        assert isinstance(package, dict)
+        invalid_cases = (
+            ("support_and_citation", "affirmative_claim_support_allowed", False),
+            ("support_and_citation", "claim_citation_allowed", False),
+            (
+                "retained_non_support",
+                "required_entry_kinds",
+                "failure,partial,conflict,unknown",
+            ),
+            ("retained_non_support", "retention", "drop-after-seal"),
+            ("retained_non_support", "affirmative_claim_support_allowed", True),
+            ("retained_non_support", "affirmative_claim_citation_allowed", True),
+            (
+                "retained_non_support",
+                "labeled_boundary_or_audit_reference_allowed",
+                False,
+            ),
+        )
+        for partition, field, invalid_value in invalid_cases:
+            with self.subTest(partition=partition, field=field):
+                invalid = copy.deepcopy(manifest)
+                invalid_partition = invalid[
+                    "question_evidence_package_classes"
+                ][partition]
+                invalid_partition[field] = invalid_value
+                errors = docs_gate.validate_engineering_qa_adaptive_gate(
+                    invalid, "manifest.yaml"
+                )
+                self.assertTrue(any(field in error for error in errors), errors)
+
+        unexpected = copy.deepcopy(manifest)
+        unexpected["question_evidence_package_classes"][
+            "promoted_gap_support"
+        ] = {}
+        errors = docs_gate.validate_engineering_qa_adaptive_gate(
+            unexpected, "manifest.yaml"
+        )
+        self.assertTrue(any("unexpected fields" in error for error in errors), errors)
+
+    def test_engineering_qa_reviewer_verification_is_independent_and_adaptive(
+        self,
+    ) -> None:
+        manifest = self.valid_engineering_qa_adaptive_gate_manifest()
+        preview = copy.deepcopy(manifest)
+        preview["development"]["slices"]["ITER-010-SLICE-001"][
+            "status"
+        ] = "authorized"
+        self.assertEqual(
+            docs_gate.validate_engineering_qa_adaptive_gate(
+                preview, "manifest.yaml"
+            ),
+            [],
+            "Slice 001's one verification-investigation bound is preview-only",
+        )
+
+        invalid_cases = (
+            ("context", "shared-initial-investigation-context"),
+            ("inputs", "review-gap-only"),
+            ("reviewer_operation_proposal_allowed", True),
+            ("adaptive_multi_step_required", False),
+            ("prior_verification_result_must_drive_next_step", False),
+            ("application_source_broker_worker_route_required", False),
+            (
+                "direct_source_filesystem_shell_network_credential_or_tool_access",
+                "allowed",
+            ),
+            ("returns_to_initial_investigation_model", True),
+            ("creates_new_ledger_revision_package_answer_and_review", False),
+            ("slice_001_preview_upper_bound", 2),
+            ("slice_001_bound_scope", "permanent-round-cap"),
+            ("hardening_fixed_round_upper_bound_allowed", True),
+            ("answerable_fuse_exhaustion_outcome", "limitation"),
+        )
+        for field, invalid_value in invalid_cases:
+            with self.subTest(field=field):
+                invalid = copy.deepcopy(manifest)
+                invalid["reviewer_verification_investigation"][field] = invalid_value
+                errors = docs_gate.validate_engineering_qa_adaptive_gate(
+                    invalid, "manifest.yaml"
+                )
+                self.assertTrue(any(field in error for error in errors), errors)
+
+    def test_engineering_qa_hardening_requires_frozen_fuses_and_ablation(
+        self,
+    ) -> None:
+        manifest = self.valid_engineering_qa_adaptive_gate_manifest()
+        receipt = "codex-user-message:sha256:" + "2" * 64
+        slice_002 = manifest["development"]["slices"]["ITER-010-SLICE-002"]
+        slice_002["status"] = "authorized"
+        slice_002["authorization_ref"] = receipt
+
+        proposed_errors = docs_gate.validate_engineering_qa_adaptive_gate(
+            manifest, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("hardening_protocol_status" in error for error in proposed_errors),
+            proposed_errors,
+        )
+        self.assertTrue(
+            any("engineering_qa_ablation.status" in error for error in proposed_errors),
+            proposed_errors,
+        )
+
+        verification = manifest["reviewer_verification_investigation"]
+        frozen_fuses = {
+            "hardening_package_revision_fuse": 3,
+            "hardening_model_call_fuse": 4,
+            "hardening_source_broker_operation_fuse": 128,
+            "hardening_source_byte_fuse": 2097152,
+            "hardening_wall_time_fuse": 900000,
+            "hardening_no_progress_fuse": 2,
+        }
+        verification.update(frozen_fuses)
+        verification.update(
+            {
+                "hardening_protocol_status": "frozen",
+                "hardening_authorization_status": "user-authorized",
+                "hardening_freeze_receipt_ref": receipt,
+                "hardening_protocol_digest": docs_gate.canonical_mapping_digest(
+                    docs_gate.ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA,
+                    "hardening_fuses",
+                    frozen_fuses,
+                ),
+            }
+        )
+        answer_protocol = manifest["answer_protocol"]
+        answer_protocol["answer_attempt_upper_bound"] = 5
+        answer_protocol["review_attempt_upper_bound"] = 5
+        answer_protocol["hard_safety_model_call_upper_bound_per_question"] = 40
+
+        ablation = manifest["engineering_qa_ablation"]
+        ablation["status"] = "frozen"
+        ablation["authorization_ref"] = receipt
+        frozen_ablation = {
+            field: value
+            for field, value in ablation.items()
+            if field not in {"status", "authorization_ref", "frozen_protocol_digest"}
+        }
+        ablation["frozen_protocol_digest"] = docs_gate.canonical_mapping_digest(
+            docs_gate.ENGINEERING_QA_ABLATION_SCHEMA,
+            "engineering_qa_ablation",
+            frozen_ablation,
+        )
+        self.assertEqual(
+            docs_gate.validate_engineering_qa_adaptive_gate(
+                manifest, "manifest.yaml"
+            ),
+            [],
+        )
+
+        one_round = copy.deepcopy(manifest)
+        one_round["reviewer_verification_investigation"][
+            "hardening_package_revision_fuse"
+        ] = 1
+        errors = docs_gate.validate_engineering_qa_adaptive_gate(
+            one_round, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("must be at least 2" in error for error in errors), errors
+        )
+
+        reused_planning_receipt = copy.deepcopy(manifest)
+        reused_planning_receipt["reviewer_verification_investigation"][
+            "hardening_freeze_receipt_ref"
+        ] = "codex-user-message:sha256:" + "3" * 64
+        errors = docs_gate.validate_engineering_qa_adaptive_gate(
+            reused_planning_receipt, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("current Slice 002 authorization_ref" in error for error in errors),
+            errors,
+        )
+
+    def test_engineering_qa_ablation_freezes_fairness_quality_and_value(
+        self,
+    ) -> None:
+        manifest = self.valid_engineering_qa_adaptive_gate_manifest()
+        invalid_cases = (
+            ("authorization_required_before", "after-slice-002"),
+            ("controlled_inputs", "same-revision-only"),
+            ("quality_gate", "average-score-only"),
+            (
+                "locator_control_quality_failure_effect",
+                "lower-full-cognition-threshold",
+            ),
+            ("gain_gate", "locator-hit-rate-only"),
+            ("proposed_non_locator_cost_ratio_threshold_ppm", 1000000),
+            ("cost_dimensions", "model-tokens-only"),
+            ("modeling_cost_accounting", "ignore-modeling-cost"),
+            ("proposed_reuse_horizon_questions", 0),
+        )
+        for field, invalid_value in invalid_cases:
+            with self.subTest(field=field):
+                invalid = copy.deepcopy(manifest)
+                invalid["engineering_qa_ablation"][field] = invalid_value
+                errors = docs_gate.validate_engineering_qa_adaptive_gate(
+                    invalid, "manifest.yaml"
+                )
+                self.assertTrue(any(field in error for error in errors), errors)
+
+        wrong_arm = copy.deepcopy(manifest)
+        wrong_arm["engineering_qa_ablation"]["locator_only_or_empty_arm"][
+            "investigation_chain"
+        ] = "shortcut-pipeline"
+        errors = docs_gate.validate_engineering_qa_adaptive_gate(
+            wrong_arm, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("locator_only_or_empty_arm.investigation_chain" in error for error in errors),
+            errors,
+        )
 
     def test_iter010_engineering_qa_hybrid_evidence_protocol_is_exact(self) -> None:
         source_scope, hybrid_evidence_path, answer_protocol = (
@@ -3181,16 +3565,26 @@ class ReflectionGateTests(unittest.TestCase):
             ("hybrid_evidence_path", "strict_world_model_mode_preserved", False),
             ("hybrid_evidence_path", "direct_investigation_mode_preserved", False),
             ("hybrid_evidence_path", "silent_mode_fallback_allowed", True),
-            ("hybrid_evidence_path", "world_model_role", "fact-authority"),
+            ("hybrid_evidence_path", "world_model_role", "plain-text-manual"),
             (
                 "hybrid_evidence_path",
-                "world_model_required_as_source_retrieval_gate",
+                "world_model_cognition_dimensions",
+                "files-and-symbols-only",
+            ),
+            (
+                "hybrid_evidence_path",
+                "world_model_is_only_manual_map_cache_or_retrieval_hints",
                 True,
             ),
             (
                 "hybrid_evidence_path",
                 "world_model_retrieval_hint_or_candidate_reduction_only",
-                False,
+                True,
+            ),
+            (
+                "hybrid_evidence_path",
+                "world_model_required_as_source_retrieval_gate",
+                True,
             ),
             (
                 "hybrid_evidence_path",
@@ -3199,8 +3593,13 @@ class ReflectionGateTests(unittest.TestCase):
             ),
             (
                 "hybrid_evidence_path",
-                "retrieval_plan_inputs",
+                "investigation_inputs",
                 "snapshot-hints-only",
+            ),
+            (
+                "hybrid_evidence_path",
+                "retrieval_plan_inputs",
+                "immutable-original-question-and-snapshot-hints",
             ),
             (
                 "hybrid_evidence_path",
@@ -3212,8 +3611,24 @@ class ReflectionGateTests(unittest.TestCase):
                 "snapshot_source_revision_compatibility",
                 "unchecked",
             ),
-            ("hybrid_evidence_path", "model_role", "fact-authority"),
-            ("hybrid_evidence_path", "fact_authority", "model"),
+            (
+                "hybrid_evidence_path",
+                "investigation_model_role",
+                "single-upfront-query-plan",
+            ),
+            ("hybrid_evidence_path", "model_role", "combined-model"),
+            ("hybrid_evidence_path", "fact_authority", "sealed-package"),
+            (
+                "hybrid_evidence_path",
+                "investigation_model_direct_source_access",
+                "allowed",
+            ),
+            (
+                "hybrid_evidence_path",
+                "source_broker_role",
+                "optional-pass-through",
+            ),
+            ("hybrid_evidence_path", "retrieval_worker_role", "model-controlled"),
             ("hybrid_evidence_path", "retrieval_worker_sources", "world-model-only"),
             ("hybrid_evidence_path", "retrieval_worker_access", "read-only"),
             ("hybrid_evidence_path", "source_trust", "trusted-instruction"),
@@ -3222,19 +3637,71 @@ class ReflectionGateTests(unittest.TestCase):
                 "live_provider_source-fragment-disclosure",
                 "implicitly-allowed",
             ),
+            ("hybrid_evidence_path", "evidence_ledger", "mutable-buffer"),
+            (
+                "hybrid_evidence_path",
+                "evidence_ledger_seal_trigger",
+                "before-investigation",
+            ),
+            (
+                "hybrid_evidence_path",
+                "question_evidence_package_role",
+                "fact-authority",
+            ),
+            ("hybrid_evidence_path", "package_seal_confers_truth", True),
+            ("hybrid_evidence_path", "sealed_package_mutation_allowed", True),
             ("hybrid_evidence_path", "answer_repository_access", "allowed"),
+            (
+                "hybrid_evidence_path",
+                "answer_direct_source_authority",
+                "allowed",
+            ),
             ("hybrid_evidence_path", "reviewer_repository_access", "allowed"),
+            (
+                "hybrid_evidence_path",
+                "reviewer_direct_source_authority",
+                "allowed",
+            ),
+            (
+                "hybrid_evidence_path",
+                "reviewer_direct_shell_network_credential_or_tool_access",
+                "allowed",
+            ),
             ("hybrid_evidence_path", "answer_input", "repository-and-package"),
             ("hybrid_evidence_path", "reviewer_input", "repository-and-draft"),
+            (
+                "hybrid_evidence_path",
+                "reviewer_more_evidence_route",
+                "reviewer-direct-repository-read",
+            ),
+            (
+                "hybrid_evidence_path",
+                "reviewer_verification_request_role",
+                "executable-tool-command",
+            ),
+            (
+                "hybrid_evidence_path",
+                "reviewer_verification_returns_to_initial_investigation_model",
+                True,
+            ),
             ("hybrid_evidence_path", "knowledge_persistence", "synchronous"),
-            ("answer_protocol", "schema", "ENGINEERING_QA_HYBRID_EVIDENCE@2"),
+            ("answer_protocol", "schema", "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2"),
+            ("answer_protocol", "mode", "upfront-engineering-qa-hybrid-evidence"),
             ("answer_protocol", "contract_ref", "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING"),
             (
                 "answer_protocol",
                 "question_understanding_required_fields",
                 "user-goal,audience,evidence-needs",
             ),
-            ("answer_protocol", "targeted_reretrieval_round_upper_bound", 2),
+            ("answer_protocol", "investigation_model_call_upper_bound", 1),
+            ("answer_protocol", "max_investigation_steps_per_question", 1),
+            ("answer_protocol", "max_investigation_steps_per_question", 2),
+            (
+                "answer_protocol",
+                "slice_001_reviewer_verification_investigation_upper_bound",
+                2,
+            ),
+            ("answer_protocol", "max_source_broker_operations_per_question", 0),
             ("answer_protocol", "same_package_targeted_rewrite_upper_bound", 2),
             ("answer_protocol", "answer_attempt_upper_bound", 2),
             ("answer_protocol", "review_attempt_upper_bound", 2),
@@ -3248,6 +3715,29 @@ class ReflectionGateTests(unittest.TestCase):
                 "answer_protocol",
                 "hard_safety_model_call_upper_bound_per_question",
                 1,
+            ),
+            ("answer_protocol", "upfront_complete_retrieval_plan_required", True),
+            (
+                "answer_protocol",
+                "investigation_proposal_must_consider_prior_results",
+                False,
+            ),
+            (
+                "answer_protocol",
+                "source_broker_policy_compilation_required",
+                False,
+            ),
+            ("answer_protocol", "evidence_ledger_append_only", False),
+            (
+                "answer_protocol",
+                "question_evidence_package_sealed_after_investigation",
+                False,
+            ),
+            ("answer_protocol", "sealed_package_mutation_allowed", True),
+            (
+                "answer_protocol",
+                "safety_budget_reserves_independent_review",
+                False,
             ),
             (
                 "answer_protocol",
@@ -3266,19 +3756,60 @@ class ReflectionGateTests(unittest.TestCase):
             ),
             (
                 "answer_protocol",
-                "targeted_reretrieval_requires_specific_reviewer_evidence_gap",
+                "reviewer_more_evidence_requires_specific_verifiable_gap",
                 False,
             ),
+            (
+                "answer_protocol",
+                "reviewer_verification_request_requires_application_and_source_broker_revalidation",
+                False,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_verification_uses_independent_fresh_context_adaptive_investigation",
+                False,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_verification_returns_to_initial_investigation_model",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_verification_fixed_round_cap_after_slice_001_allowed",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_verification_request_round_upper_bound",
+                1,
+            ),
+            ("answer_protocol", "reviewer_verification_uses_source_broker", True),
+            (
+                "answer_protocol",
+                "reviewer_verification_creates_new_ledger_revision",
+                False,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_verification_creates_new_package",
+                False,
+            ),
+            ("answer_protocol", "new_answer_after_new_package_required", False),
             (
                 "answer_protocol",
                 "same_package_rewrite_requires_specific_reviewer_finding",
                 False,
             ),
-            ("answer_protocol", "reseal_after_targeted_reretrieval_required", False),
             (
                 "answer_protocol",
-                "independent_rereview_after_any_rewrite_or_reseal_required",
+                "independent_rereview_after_any_answer_or_package_change_required",
                 False,
+            ),
+            (
+                "answer_protocol",
+                "question_or_project_keyword_symbol_class_method_fixture_or_oracle_special_routing_allowed",
+                True,
             ),
             ("answer_protocol", "resource_exhaustion_behavior", "best-effort"),
             (
@@ -3320,6 +3851,20 @@ class ReflectionGateTests(unittest.TestCase):
         )
         self.assertTrue(
             any("supported only from ITER-010" in error for error in errors),
+            errors,
+        )
+
+    def test_iter010_rejects_the_replaced_upfront_package_protocol(self) -> None:
+        _, _, answer_protocol = self.valid_engineering_qa_sections()
+        answer_protocol["mode"] = "upfront-engineering-qa-hybrid-evidence"
+        errors = docs_gate.validate_answer_protocol_execution_readiness(
+            answer_protocol, "manifest.yaml", "ITER-010"
+        )
+        self.assertTrue(
+            any(
+                "adaptive-cognition-guided-engineering-investigation" in error
+                for error in errors
+            ),
             errors,
         )
 
@@ -3765,6 +4310,36 @@ class ReflectionGateTests(unittest.TestCase):
                 alignment, new_refs, blocking, "manifest.yaml"
             ),
             [],
+        )
+
+        adaptive_alignment = copy.deepcopy(alignment)
+        adaptive_alignment["early_diagnostic_binding"][  # type: ignore[index]
+            "layer_chain"
+        ] = (
+            "source-observation-world-model-cognition-question-understanding-"
+            "investigation-source-broker-retrieval-worker-evidence-ledger-"
+            "question-evidence-package-answer-review-web"
+        )
+        self.assertEqual(
+            docs_gate.validate_early_evaluation_bindings(
+                adaptive_alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                adaptive_engineering_qa=True,
+            ),
+            [],
+        )
+        self.assertTrue(
+            any(
+                "layer_chain" in error
+                for error in docs_gate.validate_early_evaluation_bindings(
+                    adaptive_alignment,
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
+                )
+            )
         )
 
         missing_comparison = copy.deepcopy(alignment)

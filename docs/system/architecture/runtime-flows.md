@@ -112,18 +112,29 @@ Original Question
 ```text
 Explicit ENGINEERING_QA request
   → immutable original question + Question Understanding / Checklist
-  → exact World Model query as map, known evidence and retrieval hints
-  → checklist + Snapshot hints form one bounded Retrieval Plan
-  → isolated read-only retrieval over authorized exact source/docs/config/tests
-  → seal one Question Evidence Package with provenance, coverage and conflicts
-  → isolated conclusion-first Answer with claim citations
-  → independent Review against the original question and the same package
-  → APPROVED Delivery, one fixed-package rewrite/re-review, or one specific-gap supplemental retrieval/reseal/re-review
+  → exact World Model Cognition Context
+  → independent Investigation LLM proposes next search/read/parse from question + cognition + sealed ledger prefix
+  → Source Broker validates and compiles one registered exact-revision read-only operation
+  → isolated Retrieval Worker executes; Application appends Proposal/Decision/Result to Evidence Ledger
+  → repeat adaptive investigation until a valid FINISH disposition or fail-closed fuse
+  → seal one Question Evidence Package with admissible support/citation and retained boundary/audit partitions
+  → fresh isolated conclusion-first Answer with claim citations
+  → independent Review against original question and current package
+  → APPROVED Delivery, same-package rewrite/re-review, or Reviewer-specific Verification gap Request
+  → fresh independent Verification Investigation reads gap + current Package/Ledger and adaptively proposes through Broker/Worker
+  → on supplemental evidence: new Ledger Revision → new Package → new Answer → new Review
 ```
 
-该流程的模式在任何读取和模型调用前已固定。World Model 结果缺失、无关或 Coverage 不足只是 Package 的显式状态，不阻断原 Checklist 在同一授权 exact revision 中驱动只读检索；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。只有 Retrieval Worker 读取来源，并把来源内容当作不可信 data；Answer/Reviewer 没有 Repository、Source/World Model Tool、shell 或网络，只读密封包。
+该流程的模式在任何读取和模型调用前已固定。软件世界模型为 Investigation LLM 提供持久的系统认知，不是手册、地图或 locator 缓存；这些都只是 World Model Cognition Context 的投影。认知缺失、无关或 Coverage 不足是 Ledger/Package 的显式状态，不阻断原 Checklist 在同一授权 exact revision 中驱动只读调查；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。
 
-重写只能使用同一 Package Digest 并最多一次；Reviewer 必须指出可验证的具体证据缺口，Application 才可重新编译一次受权补充检索，密封新 Package Revision 并执行全新生成/复核。文件、字节、操作、时间和模型调用上限只能失败关闭，不得降低检索、Citation 或审核质量。已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走准入和发布，不阻塞本题。
+Investigation LLM 根据每次已密封 Result 自适应决定下一步，但不直接拥有任何 Tool。Source Broker 把其 Proposal 重新校验、绑定 exact revision/allowlist/remaining fuse 并编译；只有 Retrieval Worker 读取来源。每一步只追加到 Evidence Ledger，已确认 prefix 不可改写。来源内容是不可信 data，不能成为权限或操作指令。
+
+Question Evidence Package 只有一个 seal/identity，但 `support/citation` 仅收可采信条目，`boundary/audit` 必须保留 Gap、Failure、Partial、
+Conflict、Unknown、拒绝和资源记录；后者不能支持肯定 Claim。Reviewer 不规划补证操作，只返回具体 gap；补证由另一个全新上下文的
+Verification Investigation 多步推进，不回到初始调查。非验收方向体验可以临时限制最多一次补证调查；正式 hardening/验收不得固定一轮，
+必须预密封 revision/call/operation/bytes/wall-time/no-progress 熔断，answerable 因熔断未获批准计失败。
+
+已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞本题。
 
 ## 正式知识使用
 

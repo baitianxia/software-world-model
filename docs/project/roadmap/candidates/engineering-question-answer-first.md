@@ -10,81 +10,81 @@ tests: []
 coding_input: false
 ---
 
-# Candidate：工程问题答案优先
+# Candidate：世界模型认知引导的自适应工程问答
 
 ## Trigger and evidence
 
-ITER-009 已证明真实本机 Web、Snapshot-only 调查、独立 Review、Limitation 与 Citation 可以运行，但三条现场答案都被方法、分支、
-静态调用、源顺序和返回值主导。无符号问题仍得到代码走读式正文，Reviewer 把这种正文的相关性与可读性判为通过；边界回答虽然没有
-编造不存在的功能，用户仍看到候选数、召回能力和内部限制代码。用户方向反馈是系统像代码走读或代码实现说明，而不是工程问答助手。
+ITER-009 已证明本机 Web、World Model 调查、独立 Review、Limitation 和 Citation 可以运行，但真实答案被方法、分支、调用顺序和内部诊断
+主导，整体体验像代码走读。后续讨论又发现，初版 ITER-010 虽允许提问期回源，却把 World Model 缩写成“手册/地图”，并在 Answer 前
+一次性生成 Evidence Package，仍不能让模型像高级工程师一样根据已读内容决定下一步调查。
 
-这不是单一 Prompt 文风问题。当前 Question Need、查询操作、typed Result、Draft 完整性、Review obligation 和页面信息架构共同把自由
-问题收敛为 `implementation-answer`。继续按原 SLICE-002 加固只会提高这一路径的稳定性，不能证明产品目标。
+这包含两个必须分开的判断：
+
+- 软件世界模型的概念没有改变。它仍是软件在 exact Context、Scope、Schema、Snapshot 上持久、版本化、可验证、可更新的外部认知，
+  包含实体、关系、行为、约束、状态、证据、覆盖和未知边界；手册、地图只是投影；
+- 需要改变的是提问期职责：大模型主导自适应调查，平台控制实际读取，调查结束后才形成回答证据包。
 
 ## Outcome
 
-普通用户通过同一个本机 Web 提出自然工程问题后，首先得到针对其目标和抽象层级的直接答案、关键解释、证据边界和可核对 Citation；
-代码实现只在问题明确要求或支撑结论确有必要时展开。系统不能回答时，应使用用户能理解的语言说明目前能确认什么、不能确认什么以及
-缺少哪类知识，不能暴露内部候选、召回、Profile、authority 或限制代码。
+普通用户通过同一个本机 Web 提出自然工程问题。系统先向独立 Investigation LLM 提供不可变原问题与 exact World Model Cognition
+Context；模型根据每次调查结果决定下一步需要搜索、读取、解析还是结束。Source Broker 校验并编译提议，隔离 Retrieval Worker 只执行
+授权 exact revision 上 allowlisted、read-only、audited 的操作。所有结果进入 append-only Evidence Ledger，调查结束后才密封 Question
+Evidence Package。
 
-本 Candidate 继续服务 `ROADMAP-M-002` 的长期目标，但明确挑战 `SYS-PRODUCT-SUCCESS` 与现行 WORLD_MODEL Contract 的“提问期完全
-Source-off”实现边界。问题前仍构建 exact World Model；提问时由隔离检索 Worker 对同一授权 exact revision 的源码、仓库文档、构建
-和配置执行只读检索，并与 Snapshot typed Result 一起密封当前问题的 Evidence Package。该模式必须在请求开始前显式固定，不能在失败后
-静默切换到旧 Direct Investigation。Answer 与 Reviewer 都不能直接访问 Repository、Source 或检索工具，只能读取密封 Package。
-
-这样仍保留版本固定、授权、复用和审计，同时避免“知识没有预先建模就只能拒答”。同步答案通过后，可把高质量证据和结论异步提议为
-正式知识；知识沉淀成功与否不阻塞当前回答。采用前必须先形成 Finding，并更新拥有该边界的产品标准、ADR 和 Application Contract，
-不能只在 Prompt 中绕开现行规范。
+Answer 在全新上下文中只读取密封 Package，先回答用户目标，再按需解释代码。独立 Reviewer 从原问题重新检查答案；它没有文件系统、
+Shell、网络、credential 或直接 Source 工具，但可以指出具体、可验证的证据缺口。Application/Broker 获准补证后形成新 Ledger Revision、
+新 Package、新 Answer 和新 Review。Package 是 Answer/Reviewer 唯一允许采信和引用的事实支持集合；seal 证明完整性、来源和版本，不使
+内容自动成为真。
 
 ## General protocol
 
-1. 问题理解形成用户目标、受众、期望抽象层级、待回答结论清单和证据需求；它们是原问题的通用语义投影，不是按关键词选择的题型枚举。
-2. 受控检索先利用 exact Snapshot/Read Set 缩小范围，再由隔离 Worker 读取 allowlist 内同 revision 的必要 Source 片段；两类证据共同
-   密封 Evidence Package。检索计划同时受原问题检查清单和 World Model 提示驱动；World Model 没有候选或候选无关时，不能阻断
-   仍在授权与预算内的独立 Source 检索。Package 固定来源、操作、内容 digest、locator 和问题清单，不取得正式知识身份。
-3. Draft 先回答结论，再组织必要解释、条件、影响与 unknown/limitation；代码细节放在确有需要的层级。每个重要结论绑定对应 Result。
-4. 独立 Reviewer 从原问题重建检查清单，检查直接回答、抽象层级、正确性、完整性、相关性、可用性、证据和未知边界，并返回具体 finding
-   与 rewrite instruction，而不只返回笼统 code。
-5. 仅当现有 Evidence Package 足够时，允许在 digest 不变的同一 Package 上最多一次针对性重写并重新 Review。Reviewer 证明证据缺口
-   时，Application 可以授权针对性补检索并密封新 Package；新旧 digest 和原因必须可见，不能伪装成同包重试。资源或安全上限耗尽时
-   交付具体 Limitation 或失败关闭，不切换 Provider，也不因固定调用次数牺牲正确性或审核质量。
-6. 页面以答案为主，结论级 Citation 可直接核对；Read Set、调用数、Authority、Trace、内部 Claim 和诊断默认折叠到开发者详情。
+1. 固定原问题、用户目标、受众、期望抽象层级、物质结论、exact repository/revision、World Model Cognition Context、allowlist、
+   disclosure policy 和安全上限。
+2. Investigation LLM 基于原问题、认知上下文和当前 Ledger 自适应提出下一项抽象读操作；它不能提交 shell、网络请求或扩大权限。
+3. Source Broker 验证语义、路径、版本、操作、大小和 disclosure，编译为唯一合法的只读操作；Retrieval Worker 只执行已批准操作并把
+   locator、digest、bytes、结果和截断状态追加到 Ledger。
+4. 只有 Investigation `FINISH` 经 Application 校验，或达到安全上限失败关闭时，Ledger 才结束；随后密封本题 Package。不能预先用
+   World Model 命中决定是否允许读 Source，也不能先封包再让调查模型受限猜测。
+5. Answer 只读当前 Package；每个物质结论绑定包内证据，未知和限制说明已确认、未确认及缺少什么。
+6. Reviewer 独立检查直接回答、抽象层级、正确性、完整性、相关性、可用性、Citation 和未知边界。表达问题可在同包针对性重写；具体
+   证据缺口形成绑定 Checklist/Claim/evidence class/need 的 versioned Verification Request Proposal，不回初始 Investigation LLM；
+   Application/Broker 重新校验编译后必须生成后继 Ledger/Package 并完整重答重审。
+7. 高质量 Ledger/Package/结论可在回答完成后异步提议进入正常 Knowledge Update/Admission/Publication；同步回答不等待知识沉淀。
 
-任何实现不得包含工程名、题目文本、关键词、类名、方法名、fixture 或 Oracle 特判。用途、架构、使用运行、故障定位、变更影响、业务
-流程和实现细节只是验证覆盖维度，不是产品路由规则。
+任何实现不得包含工程名、题目文本、关键词、符号、类名、方法名、fixture 或 Oracle 特判。用途、架构、运行、故障、影响、流程和实现
+只是验证覆盖维度，不是产品路由。资源和调用上限只用于安全熔断；达到上限必须失败关闭或给出经审核的准确 Limitation，不能删除调查、
+证据、Citation 或审核要求。
 
 ## Staged validation
 
-### Stage 1：快速真实 Web 方向体验
+### Stage 1：最小真实纵切与方向体验
 
-在一个真实工程和同一 product-owned loopback Web 上，先用 4 条跨不同覆盖维度的自然问题及至少一条用户现场问题验证答案层级。
-允许当前知识尚不支持的问题形成具体 Limitation，但至少 3 条应形成非“逐方法走读”的 supported answer。页面必须继续标记方向体验、
-非验收、非生产，并保持 Source 只由隔离检索 Worker 读取、Secret 隔离、独立审核、Citation、零隐藏重试和失败关闭。
+先实现一条真实闭环：World Model Cognition Context → 自适应 Investigation LLM → Source Broker → Retrieval Worker → append-only Ledger →
+调查后密封 Package → Answer → independent Review；至少包含一条 Reviewer 具体补证后生成后继 Package、重答、重审的路径。然后在一个
+真实工程和同一 product-owned loopback Web 上，用 4 条不同维度的自然问题及至少一条用户现场问题验证方向；至少 3 条 supported，
+至少覆盖 2 个非实现维度。
 
-用户只裁决：它是否开始像工程问答助手、答案是否直接有用、代码细节是否按需出现、Citation/未知表达是否可接受。决定为
-`CONTINUE / REDIRECT / REJECT`；没有 `CONTINUE` 不进入下一阶段。
+首版只需要足以判断职责分工、答案层级和真实可用性的最小安全边界，不提前完成第二工程、大规模性能、异常穷举、完整 hidden、成熟
+源码 Agent 对照和正式验收。用户决定 `CONTINUE / REDIRECT / REJECT`；没有 `CONTINUE` 不进入夯实。
 
-### Stage 2：知识范围与跨工程夯实
+### Stage 2：跨工程和工程化夯实
 
-方向确认后，再按真实问题缺口把仓库内文档、构建与运行配置、测试、API/数据结构等授权来源纳入预构建 World Model 和同步检索的统一
-证据协议，并用第二个未参与实现的工程验证。每个新增知识域必须能与已有声明、调用和行为证据在同一答案中组合，不能形成平行入口或
-题型专用实现。
-
-同时完成 current identity 的资格、完整回归、安全、早期 hidden canary、成熟源码 Agent 对照、逐层偏差诊断、成本和正向价值测量。
+方向确认后验证第二工程、来源冲突、Ledger/Package 生命周期、复杂补证、资格、Provider disclosure、安全、性能、完整回归、early hidden
+canary、成熟源码 Agent 对照和 World Model 复用价值。修复必须落在通用表示、Broker policy、调查或审核合同，不能落在问题/工程分支。
 
 ### Stage 3：正式验收
 
-产品代码冻结后才执行最终未见工程、跨类型自由问题、现场问题和独立对照。重大错误为零、逐题完整性不低于成熟源码 Agent、Citation
-支持重要结论；Source 读取只发生在授权检索 Worker 且与 exact Evidence Package 对账，Answer/Reviewer 的 Source/Update/Direct tool
-访问为零，并由用户作出 `ACCEPT / REDIRECT / REJECT`。本机 PASS 不产生 Production Activation。
+产品代码冻结后执行最终未见工程 10 answerable + 2 boundary、两条现场题和独立对照。重大错误为零、逐结论完整性不低于成熟源码 Agent、
+Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直接 Source/写/网络权限为零，用户最终决定是否接受。
 
 ## Stop conditions
 
-- 默认答案仍以方法、分支、调用顺序、内部对象或诊断术语为中心；
-- 只有通过问题、工程、关键词或符号特判才能改变回答层级；
-- Reviewer 仍批准未直接回答、抽象层级错误、关键结果含糊或无关 Citation；
-- 为获得自然答案必须让 Answer/Reviewer 直接访问 Source、开放未授权路径、静默 Direct fallback、Secret、公网监听或取消独立审核；
-- supported 结论有重大错误，或 Limitation 暗示了证据无法支持的不存在/完整性结论；
-- 用户决定 `REDIRECT` 或 `REJECT`。
+- 世界模型被降级为文档缓存、手册或关键词索引，或被用作 query-time Source recall 硬门禁；
+- 调查不是由先前结果驱动，仍是一次性固定检索或固定调用链；
+- Investigation/Answer/Reviewer 获得直接文件系统、Shell、网络、credential、仓库写或未审计工具权限；
+- 默认答案仍是代码走读，或只有题目、工程、关键词、符号、fixture/Oracle 特判才能改善；
+- Ledger 可被回写、包在调查完成前密封、旧 Review 批准新 Package，或 seal 被误当作内容真实性；
+- Reviewer 无法独立指出并触发具体补证，或调用上限被用于跳过调查、Citation 或审核；
+- supported 结论有重大错误，或用户决定 `REDIRECT / REJECT`。
 
-本 Candidate 是规划输入，不是编码、Provider 调用、Web 运行、隐藏披露或 Production Activation 授权。
+本 Candidate 和本轮重制计划只属于规划输入，不授权产品代码、Provider/model 调用、Web 运行、隐藏披露或 Production Activation。

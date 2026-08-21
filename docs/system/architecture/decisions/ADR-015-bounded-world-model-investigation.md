@@ -95,7 +95,7 @@ progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle
 
 - 直接取最高排名候选：简单，但把排名误当成正确性和完整性证明，已被 ITER-007 产品失败反证。
 - 一次展开所有候选与实现：可能覆盖公开题，却没有稳定 query/result/Support/时延上界，并扩大 prompt 注入和泄露面。
-- 回答 Agent 读取源码或自动触发更新：可能提高单题命中，但违反 ADR-014，无法证明预构建 World Model 的复用价值。
+- 让严格 `WORLD_MODEL` 的回答 Agent 读取源码或自动触发更新：可能提高单题命中，但违反 ADR-014，无法证明预构建 World Model 的复用价值。默认 `ENGINEERING_QA` 的自适应源码调查由 ADR-016 作为独立模式定义，不属于本替代项。
 - 继续固定一次 Plan 并增加更多关键词：仍不能根据结果改变调查路径，也会形成题目/工程补丁。
 
 ## Consequences

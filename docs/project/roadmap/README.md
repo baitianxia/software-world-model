@@ -21,7 +21,8 @@ Roadmap 按产品或系统结果组织方向，不按组件列任务。它用于
 
 ## Candidates
 
-- [工程问题答案优先](candidates/engineering-question-answer-first.md) — 已由 ITER-010 选择；先验证受控源码检索、证据包、自然答案、独立审核和聊天体验方向，再决定是否夯实。
+- [世界模型认知引导的自适应工程问答](candidates/engineering-question-answer-first.md) — ITER-010 已按新职责重制但尚未授权开发；先验证
+  Investigation LLM、Broker/Worker、调查后 Ledger/Package、自然答案和 Reviewer 独立补证，再决定是否跨工程夯实。
 - [本机 Web 方向体验恢复](candidates/local-web-direction-preview-recovery.md) — ITER-009 已执行真实方向体验并以 `REDIRECT` 结束；Web、安全、Limitation 与 Citation 资产保留，代码走读式答案方向被拒绝。
 - [受限 Agent 驱动的 World Model 调查](candidates/bounded-agentic-world-model-investigation.md) — ITER-008 已以 `REDIRECT` 结束；正向 Web 与边界失败证据保留为 ITER-009 输入，不再作为活动开发授权。
 - [显式限定范围的生产启用](candidates/production-activation.md)

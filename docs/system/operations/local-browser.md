@@ -19,8 +19,8 @@ ADR-016 接受了第三个、面向普通用户的默认目标入口 `ENGINEERIN
 
 - `WORLD_MODEL` 显示 source revision、exact Snapshot、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact 与 Evidence 引用；问题请求只读不含 Evidence payload 的 exact Snapshot Read Bundle，不得触发更新或访问 Source、权威数据库或 Evidence Store。点击引用由浏览器另行访问密封结果后的 Citation Projector，不把正文发送回问答进程。
 - `DIRECT_INVESTIGATION` 显示 exact Source Target 与 Evidence Packet；它按 ADR-013 调查源码，但不能标成世界模型回答。
-- `ENGINEERING_QA` 目标页面在请求开始前已固定该模式、exact repository/revision、World Model Read Authority 和 Source allowlist。默认主视图只展示原问题、结论优先答案、结论级 Citation 与用户可理解的 unknown/limitation；Snapshot/Bundle、Retrieval Operation、Package/Trace digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。
-- Engineering QA 页面不根据问题、项目、关键词、符号、fixture 或 Oracle 切换后端。World Model 缺失/无关不会切换为 Direct；受控源检索是同一 `ENGINEERING_QA` Request 预先声明的部分，实际模式和证据来源必须可审计。
+- `ENGINEERING_QA` 目标页面在请求开始前已固定该模式、protocol identity、exact repository/revision、World Model Read Authority 和 Source allowlist。默认主视图只展示原问题、结论优先答案、结论级 Citation 与用户可理解的 unknown/limitation；World Model Cognition Context、Investigation Step、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
+- Engineering QA 页面不根据问题、项目、关键词、符号、fixture 或 Oracle 切换后端。World Model Cognition Context 缺失/无关不会切换为 Direct；Investigation LLM 的自适应源码调查是同一 `ENGINEERING_QA` Request 预先声明的部分，每个 Proposal 必须由 Broker 编译、Worker 只读执行并追加 Ledger，实际模式和证据来源必须可审计。
 
 人工更新是独立操作：即使从未提问也能构建新 Snapshot；计划或来源事件自动更新需要独立启用和运维证明。
 
@@ -36,10 +36,10 @@ held-out suite、independent evaluator、Provider subject 和确定性资格。�
 4—6 次调用顺序消费且不能复用，未消费 connection 在 terminal 后关闭并审计。页面必须展示 investigation step count、budget、
 Coverage/完整性 verdict、trace digest、实际 Provider 调用数和具体 Gap/Limitation，不能只显示最终正文。
 
-当前服务没有认证，所有现有入口与未来 Engineering QA 方向体验都必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一证明缺失、过期或漂移都拒绝该路径。Engineering QA 的真实模型运行还必须在 dispatch 前另行密封并授权“哪些 Question Evidence Package 字段/片段可发给哪个 exact Provider/model/role”及 redaction/input digest；开发或浏览器启动授权不能代替内容披露授权。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
+当前服务没有认证，所有现有入口与未来 Engineering QA 方向体验都必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一证明缺失、过期或漂移都拒绝该路径。Engineering QA 的真实模型运行还必须在 dispatch 前按 Question Understanding、Investigation、Answer、Review 分别密封并授权“哪些 World Model Cognition Context、Evidence Ledger 或 Question Evidence Package 字段/片段可发给哪个 exact Provider/model/role”及 redaction/input digest；开发或浏览器启动授权不能代替内容披露授权。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
 
 Capability Evaluation、Product Validation 和本机交互体验只允许在显式 `EVALUATION_ONLY` browser sink 中运行。
-页面必须持续显示不可关闭的评测标识，禁止生产 Delivery、用户会话复用和正式 Activation；输出只进入隔离验证目录。对现有 `WORLD_MODEL / EVALUATION_ONLY` 入口，自由文本只在用户选择的 exact、单一 Profile Read Set 与 Coverage 内求解：覆盖外问题应返回 Knowledge Gap；无法形成已验证 Result 时必须显示失败关闭，不能切换 Direct 或回源。未来 `ENGINEERING_QA / EVALUATION_ONLY` 入口则按其事先声明的 World Model + exact-revision 只读 Retrieval 边界密封 Question Evidence Package；它不受本段 World Model-only Coverage 规则限制，但仍必须失败关闭且不得切换模式。
+页面必须持续显示不可关闭的评测标识，禁止生产 Delivery、用户会话复用和正式 Activation；输出只进入隔离验证目录。对现有 `WORLD_MODEL / EVALUATION_ONLY` 入口，自由文本只在用户选择的 exact、单一 Profile Read Set 与 Coverage 内求解：覆盖外问题应返回 Knowledge Gap；无法形成已验证 Result 时必须显示失败关闭，不能切换 Direct 或回源。未来 `ENGINEERING_QA / EVALUATION_ONLY` 入口则按其事先声明的 World Model Cognition Context + adaptive exact-revision investigation 边界，经 Broker/Worker 形成 append-only Ledger，并只在调查结束后密封 Question Evidence Package；它不受本段 World Model-only Coverage 规则限制，但仍必须失败关闭且不得切换模式。
 
 启动本机 World Model 候选评测入口：
 

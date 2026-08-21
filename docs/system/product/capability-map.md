@@ -14,9 +14,9 @@ tests: [tests]
 | 能力域 | 用户结果 | 系统责任 |
 |---|---|---|
 | 来源管理 | 连接并固定可授权的软件来源 | 管理 Data Source、Binding、精确 Revision 与只读操作 |
-| 知识形成 | 把来源观察转成可审核知识 | 构建 Evidence、Entity、Fact、Inference Candidate，并完成准入与发布 |
-| 知识使用 | 判断固定 Snapshot 是否足够回答任务 | 固定 Requirement、逐 Need 建立 Support Proof，形成 Gap 或 Sufficiency |
-| 工程问答 | 用自然问题获得层级匹配、有引用的工程结论 | 以 World Model 为地图，受控只读 exact revision，密封本题证据包并独立审核 |
+| 世界模型构建 | 为人和 AI 建立持久的软件系统认知 | 把来源观察构建为有版本、证据、Coverage 与 Unknown 的 Entity、Fact、Inference，并完成准入和原子发布 |
+| 世界模型使用 | 在固定版本上读取和投影系统认知 | 从 exact Snapshot 形成可验证的查询、结构、行为、约束、Support 和面向人/任务的手册或地图投影 |
+| 工程问答 | 用自然问题获得层级匹配、有引用的工程结论 | Investigation LLM 基于世界模型认知自适应提议调查，Broker/Worker 受控取证，Ledger 结束后封包并由独立 Answer/Reviewer 处理 |
 | Agentic 任务 | 从自然语言任务组织受控调用 | 只经 Application Services 分派，保持授权、预算、幂等和恢复 |
 | 响应控制 | 交付有依据且不过度推断的答案 | 对 Claim、引用、限制和当前权威重新审核并唯一发送 |
 | AI 能力治理 | 选择经过验证的模型 Strategy | 隔离输入，区分符合性、能力评估、产品验收和激活 |

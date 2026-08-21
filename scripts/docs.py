@@ -64,6 +64,17 @@ PRODUCT_GOAL_ALIGNMENT_START_ITERATION = 7
 REFLECTION_GATE_START_ITERATION = 8
 DIRECTION_PREVIEW_START_ITERATION = 9
 ENGINEERING_QA_HYBRID_START_ITERATION = 10
+ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA = (
+    "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1"
+)
+ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE = (
+    "adaptive-cognition-guided-engineering-investigation"
+)
+ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA = (
+    "ENGINEERING_QA_REVIEWER_VERIFICATION_INVESTIGATION@1"
+)
+ENGINEERING_QA_ABLATION_SCHEMA = "ENGINEERING_QA_COGNITION_ABLATION@1"
+ENGINEERING_QA_NOT_AUTHORIZED = "not-authorized"
 DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
     {
         "loopback-product-owned-world-model-web",
@@ -226,14 +237,14 @@ PRODUCT_GOAL_V000_METADATA = {
     "product_goal_evaluation": "independent-hidden-plus-live-ad-hoc",
 }
 ENGINEERING_QA_PRODUCT_GOAL_V000_CLAIM = (
-    "本轮相对 rejected baseline 可测缩短通用工程问答差距并累计复用既有 World Model 能力"
+    "本轮相对 rejected baseline 可测缩短通用工程问答差距并证明完整 World Model Cognition 的独立价值"
 )
 ENGINEERING_QA_PRODUCT_GOAL_V000_FROZEN_INPUT = (
-    "三个唯一 Slice Result；最终隐藏 10+2；现场题；成熟源码 Agent；预提交 reuse-value protocol"
+    "三个唯一 Slice Result；最终隐藏 10+2；现场题；完整认知、locator-only/empty 同链、成熟源码 Agent 三臂；新收据预提交 protocol"
 )
 ENGINEERING_QA_PRODUCT_GOAL_V000_EXPECTED = (
-    "重大错误 0；逐结论不退步；价值阈值 PASS；同一 Web 直接回答、层级匹配、Citation 正确；"
-    "Source 只在 retrieval worker"
+    "完整认知与成熟 Agent 先过零重大错误/boundary/逐结论质量门；完整认知再相对 locator control 达到预提交质量或非 locator 调查成本增益；"
+    "计建模成本/复用周期；同一 Web/Citation/Source 隔离成立"
 )
 ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA = {
     "product_goal_gate": "V-000",
@@ -590,6 +601,17 @@ def requires_engineering_qa_hybrid(identifier: object) -> bool:
     """Bind the accepted ITER-010 plan without constraining later iterations."""
 
     return iteration_number(identifier) == ENGINEERING_QA_HYBRID_START_ITERATION
+
+
+def is_engineering_qa_adaptive_protocol(
+    answer_protocol: dict[str, object],
+) -> bool:
+    """Identify the explicit adaptive engineering-QA protocol only."""
+
+    return (
+        answer_protocol.get("mode")
+        == ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE
+    )
 
 
 def product_goal_v000_contract(
@@ -1177,8 +1199,7 @@ def validate_direction_preview_answer_entry(
         return []
     expected = (
         "loopback-product-owned-engineering-qa-web"
-        if answer_protocol.get("mode")
-        == "upfront-engineering-qa-hybrid-evidence"
+        if is_engineering_qa_adaptive_protocol(answer_protocol)
         else "loopback-product-owned-world-model-web"
     )
     if binding.get("real_product_entry") != expected:
@@ -1237,6 +1258,7 @@ def validate_early_evaluation_bindings(
     *,
     defer_until_post_preview: bool = False,
     direction_preview_enabled: bool = False,
+    adaptive_engineering_qa: bool = False,
 ) -> list[str]:
     """Freeze the first real falsification checkpoint before coding starts."""
 
@@ -1492,7 +1514,14 @@ def validate_early_evaluation_bindings(
             errors.append(
                 f"{label}: early diagnostic, comparison and canary must bind the same Slice"
             )
-        if diagnostic.get("layer_chain") != "source-snapshot-query-trace-draft-review-web":
+        expected_layer_chain = (
+            "source-observation-world-model-cognition-question-understanding-"
+            "investigation-source-broker-retrieval-worker-evidence-ledger-"
+            "question-evidence-package-answer-review-web"
+            if adaptive_engineering_qa
+            else "source-snapshot-query-trace-draft-review-web"
+        )
+        if diagnostic.get("layer_chain") != expected_layer_chain:
             errors.append(f"{label}: early diagnostic layer_chain is invalid")
     return errors
 
@@ -1985,8 +2014,21 @@ def validate_product_goal_alignment_manifest(
                     direction_preview_enabled=requires_direction_preview(iteration),
                 ),
                 direction_preview_enabled=requires_direction_preview(iteration),
+                adaptive_engineering_qa=(
+                    isinstance(manifest.get("answer_protocol"), dict)
+                    and is_engineering_qa_adaptive_protocol(
+                        manifest["answer_protocol"]
+                    )
+                ),
             )
         )
+    answer_protocol = manifest.get("answer_protocol")
+    if (
+        supports_engineering_qa_hybrid(iteration)
+        and isinstance(answer_protocol, dict)
+        and is_engineering_qa_adaptive_protocol(answer_protocol)
+    ):
+        errors.extend(validate_engineering_qa_adaptive_gate(manifest, label))
     errors.extend(validate_product_goal_structured_bindings(alignment, sequences, label))
     return errors
 
@@ -2997,19 +3039,619 @@ def canonical_mapping_digest(
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
+def validate_exact_mapping_keys(
+    value: dict[str, object], expected: set[str], label: str
+) -> list[str]:
+    """Fail closed when a frozen protocol silently drops or invents fields."""
+
+    errors: list[str] = []
+    missing = sorted(expected.difference(value))
+    extra = sorted(set(value).difference(expected))
+    if missing:
+        errors.append(f"{label}: missing exact fields: {', '.join(missing)}")
+    if extra:
+        errors.append(f"{label}: unexpected fields: {', '.join(extra)}")
+    return errors
+
+
+def validate_engineering_qa_question_evidence_package_classes(
+    package_classes: dict[str, object], label: str
+) -> list[str]:
+    """Separate affirmative support from retained boundary and audit evidence."""
+
+    section_label = f"{label}: question_evidence_package_classes"
+    errors = validate_exact_mapping_keys(
+        package_classes,
+        {
+            "support_and_citation",
+            "retained_non_support",
+            "single_package_identity",
+            "seal_confers_truth",
+            "status",
+        },
+        section_label,
+    )
+    support = package_classes.get("support_and_citation")
+    retained = package_classes.get("retained_non_support")
+    if not isinstance(support, dict):
+        errors.append(f"{section_label}.support_and_citation must be a mapping")
+    else:
+        errors.extend(
+            validate_exact_mapping_keys(
+                support,
+                {
+                    "admission",
+                    "affirmative_claim_support_allowed",
+                    "claim_citation_allowed",
+                },
+                f"{section_label}.support_and_citation",
+            )
+        )
+        expected_support: dict[str, object] = {
+            "admission": "modality-context-coverage-and-support-validated-only",
+            "affirmative_claim_support_allowed": True,
+            "claim_citation_allowed": True,
+        }
+        for field, expected in expected_support.items():
+            if support.get(field) != expected:
+                errors.append(
+                    f"{section_label}.support_and_citation.{field} must equal {expected}"
+                )
+    if not isinstance(retained, dict):
+        errors.append(f"{section_label}.retained_non_support must be a mapping")
+    else:
+        errors.extend(
+            validate_exact_mapping_keys(
+                retained,
+                {
+                    "required_entry_kinds",
+                    "retention",
+                    "affirmative_claim_support_allowed",
+                    "affirmative_claim_citation_allowed",
+                    "labeled_boundary_or_audit_reference_allowed",
+                },
+                f"{section_label}.retained_non_support",
+            )
+        )
+        expected_retained: dict[str, object] = {
+            "required_entry_kinds": (
+                "boundary,audit-gap,failure,partial,conflict,unknown,"
+                "rejected-decision-and-resource-receipt"
+            ),
+            "retention": "mandatory-in-ledger-and-current-sealed-package",
+            "affirmative_claim_support_allowed": False,
+            "affirmative_claim_citation_allowed": False,
+            "labeled_boundary_or_audit_reference_allowed": True,
+        }
+        for field, expected in expected_retained.items():
+            if retained.get(field) != expected:
+                errors.append(
+                    f"{section_label}.retained_non_support.{field} must equal {expected}"
+                )
+    for field, expected in (
+        ("single_package_identity", True),
+        ("seal_confers_truth", False),
+        ("status", "frozen"),
+    ):
+        if package_classes.get(field) != expected:
+            errors.append(f"{section_label}.{field} must equal {expected}")
+    return errors
+
+
+def engineering_qa_hardening_has_started(manifest: dict[str, object]) -> bool:
+    """Return true once any post-preview Slice is no longer merely proposed."""
+
+    development = manifest.get("development")
+    slices = development.get("slices") if isinstance(development, dict) else None
+    alignment = manifest.get("product_goal_alignment")
+    preview_binding = (
+        alignment.get("direction_preview_binding")
+        if isinstance(alignment, dict)
+        else None
+    )
+    preview_ref = (
+        preview_binding.get("new_slice_ref")
+        if isinstance(preview_binding, dict)
+        else None
+    )
+    if (
+        not isinstance(slices, dict)
+        or len(slices) < 2
+        or not isinstance(preview_ref, str)
+        or preview_ref not in slices
+    ):
+        return True
+    post_preview = [
+        item for reference, item in slices.items() if reference != preview_ref
+    ]
+    return any(
+        not isinstance(item, dict) or item.get("status") != "proposed"
+        for item in post_preview
+    )
+
+
+def _engineering_qa_new_freeze_receipt_errors(
+    value: object,
+    alignment: dict[str, object],
+    field_label: str,
+    *,
+    hardening_authorization_ref: object,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", value
+    ) is None:
+        errors.append(f"{field_label} must bind an exact new user freeze receipt")
+    elif value == alignment.get("positive_value_freeze_receipt_ref"):
+        errors.append(
+            f"{field_label} must not reuse positive_value_freeze_receipt_ref"
+        )
+    if value != hardening_authorization_ref:
+        errors.append(
+            f"{field_label} must equal the current Slice 002 authorization_ref"
+        )
+    return errors
+
+
+def validate_engineering_qa_reviewer_verification_investigation(
+    verification: dict[str, object],
+    answer_protocol: dict[str, object],
+    alignment: dict[str, object],
+    label: str,
+    *,
+    hardening_started: bool,
+    hardening_authorization_ref: object,
+) -> list[str]:
+    """Freeze an independent multi-step reviewer verification investigation."""
+
+    section_label = f"{label}: reviewer_verification_investigation"
+    expected_keys = {
+        "role",
+        "context",
+        "inputs",
+        "reviewer_operation_proposal_allowed",
+        "adaptive_multi_step_required",
+        "prior_verification_result_must_drive_next_step",
+        "application_source_broker_worker_route_required",
+        "direct_source_filesystem_shell_network_credential_or_tool_access",
+        "returns_to_initial_investigation_model",
+        "creates_new_ledger_revision_package_answer_and_review",
+        "slice_001_preview_upper_bound",
+        "slice_001_bound_scope",
+        "hardening_fixed_round_upper_bound_allowed",
+        "hardening_package_revision_fuse",
+        "hardening_model_call_fuse",
+        "hardening_source_broker_operation_fuse",
+        "hardening_source_byte_fuse",
+        "hardening_wall_time_fuse",
+        "hardening_no_progress_fuse",
+        "answerable_fuse_exhaustion_outcome",
+        "boundary_fuse_exhaustion_outcome",
+        "hardening_protocol_status",
+        "hardening_authorization_status",
+        "hardening_protocol_digest",
+        "hardening_freeze_receipt_ref",
+        "status",
+    }
+    errors = validate_exact_mapping_keys(verification, expected_keys, section_label)
+    expected_values: dict[str, object] = {
+        "role": "independent-verification-investigation-llm",
+        "context": "fresh-context-without-initial-investigation-answer-or-review-session-state",
+        "inputs": "immutable-specific-review-gap-current-package-and-current-ledger-prefix",
+        "reviewer_operation_proposal_allowed": False,
+        "adaptive_multi_step_required": True,
+        "prior_verification_result_must_drive_next_step": True,
+        "application_source_broker_worker_route_required": True,
+        "direct_source_filesystem_shell_network_credential_or_tool_access": "denied",
+        "returns_to_initial_investigation_model": False,
+        "creates_new_ledger_revision_package_answer_and_review": True,
+        "slice_001_preview_upper_bound": 1,
+        "slice_001_bound_scope": (
+            "direction-preview-only-not-a-permanent-protocol-round-cap"
+        ),
+        "hardening_fixed_round_upper_bound_allowed": False,
+        "answerable_fuse_exhaustion_outcome": "fail",
+        "boundary_fuse_exhaustion_outcome": (
+            "independently-reviewed-honest-limitation-or-fail"
+        ),
+        "status": "frozen-slice-001-preview-boundary",
+    }
+    for field, expected in expected_values.items():
+        if verification.get(field) != expected:
+            errors.append(f"{section_label}.{field} must equal {expected}")
+
+    preview_bound = answer_protocol.get(
+        "slice_001_reviewer_verification_investigation_upper_bound"
+    )
+    if preview_bound != verification.get("slice_001_preview_upper_bound"):
+        errors.append(
+            f"{section_label}.slice_001_preview_upper_bound must match "
+            "answer_protocol.slice_001_reviewer_verification_investigation_upper_bound"
+        )
+
+    fuse_fields = (
+        "hardening_package_revision_fuse",
+        "hardening_model_call_fuse",
+        "hardening_source_broker_operation_fuse",
+        "hardening_source_byte_fuse",
+        "hardening_wall_time_fuse",
+        "hardening_no_progress_fuse",
+    )
+    proposed_fuse = (
+        "must-be-presealed-positive-high-safety-bound-before-slice-002-authorization"
+    )
+    if not hardening_started:
+        for field in fuse_fields:
+            if verification.get(field) != proposed_fuse:
+                errors.append(
+                    f"{section_label}.{field} must remain the explicit proposed fuse marker before hardening authorization"
+                )
+        for field, expected in (
+            (
+                "hardening_protocol_status",
+                "proposed-not-frozen-requires-new-user-receipt-before-slice-002",
+            ),
+            ("hardening_authorization_status", ENGINEERING_QA_NOT_AUTHORIZED),
+            ("hardening_protocol_digest", ENGINEERING_QA_NOT_AUTHORIZED),
+            ("hardening_freeze_receipt_ref", ENGINEERING_QA_NOT_AUTHORIZED),
+        ):
+            if verification.get(field) != expected:
+                errors.append(f"{section_label}.{field} must equal {expected}")
+        return errors
+
+    numeric_fuses: dict[str, int] = {}
+    for field in fuse_fields:
+        value = verification.get(field)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            errors.append(
+                f"{section_label}.{field} must be an exact positive integer before hardening authorization"
+            )
+        else:
+            numeric_fuses[field] = value
+    model_calls = numeric_fuses.get("hardening_model_call_fuse")
+    if model_calls is not None and model_calls < 2:
+        errors.append(
+            f"{section_label}.hardening_model_call_fuse must be at least 2 for multi-step verification"
+        )
+    revisions = numeric_fuses.get("hardening_package_revision_fuse")
+    if revisions is not None and revisions < 2:
+        errors.append(
+            f"{section_label}.hardening_package_revision_fuse must be at least 2 so hardening is not a permanent one-round protocol"
+        )
+    if verification.get("hardening_protocol_status") != "frozen":
+        errors.append(f"{section_label}.hardening_protocol_status must equal frozen")
+    if verification.get("hardening_authorization_status") != "user-authorized":
+        errors.append(
+            f"{section_label}.hardening_authorization_status must equal user-authorized"
+        )
+    errors.extend(
+        _engineering_qa_new_freeze_receipt_errors(
+            verification.get("hardening_freeze_receipt_ref"),
+            alignment,
+            f"{section_label}.hardening_freeze_receipt_ref",
+            hardening_authorization_ref=hardening_authorization_ref,
+        )
+    )
+    frozen_protocol = {
+        field: verification.get(field) for field in fuse_fields
+    }
+    actual_digest = canonical_mapping_digest(
+        ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA,
+        "hardening_fuses",
+        frozen_protocol,
+    )
+    if verification.get("hardening_protocol_digest") != actual_digest:
+        errors.append(
+            f"{section_label}.hardening_protocol_digest must bind the exact hardening fuses"
+        )
+
+    answer_attempts = answer_protocol.get("answer_attempt_upper_bound")
+    rewrite_bound = answer_protocol.get("same_package_targeted_rewrite_upper_bound")
+    if (
+        isinstance(answer_attempts, int)
+        and not isinstance(answer_attempts, bool)
+        and isinstance(rewrite_bound, int)
+        and not isinstance(rewrite_bound, bool)
+        and revisions is not None
+        and answer_attempts < 1 + rewrite_bound + revisions
+    ):
+        errors.append(
+            f"{section_label}: answer_attempt_upper_bound must cover one new answer per allowed package revision"
+        )
+    hard_call_bound = answer_protocol.get(
+        "hard_safety_model_call_upper_bound_per_question"
+    )
+    initial_investigation = answer_protocol.get("investigation_model_call_upper_bound")
+    review_attempts = answer_protocol.get("review_attempt_upper_bound")
+    review_calls = answer_protocol.get("independent_review_model_calls_per_attempt")
+    question_calls = answer_protocol.get("question_understanding_model_call_upper_bound")
+    if all(
+        isinstance(value, int) and not isinstance(value, bool)
+        for value in (
+            hard_call_bound,
+            initial_investigation,
+            model_calls,
+            answer_attempts,
+            review_attempts,
+            review_calls,
+            question_calls,
+        )
+    ):
+        minimum_calls = (
+            question_calls
+            + initial_investigation
+            + model_calls
+            + answer_attempts
+            + review_attempts * review_calls
+        )
+        if hard_call_bound < minimum_calls:
+            errors.append(
+                f"{section_label}: hard_safety_model_call_upper_bound_per_question must reserve every verification investigation call, answer and review"
+            )
+    return errors
+
+
+def validate_engineering_qa_ablation(
+    ablation: dict[str, object],
+    alignment: dict[str, object],
+    label: str,
+    *,
+    hardening_started: bool,
+    hardening_authorization_ref: object,
+) -> list[str]:
+    """Freeze a fair three-arm cognition ablation before hardening starts."""
+
+    section_label = f"{label}: engineering_qa_ablation"
+    expected_keys = {
+        "status",
+        "authorization_required_before",
+        "authorization_ref",
+        "frozen_protocol_digest",
+        "full_cognition_arm",
+        "locator_only_or_empty_arm",
+        "mature_source_agent_arm",
+        "controlled_inputs",
+        "quality_gate",
+        "locator_control_quality_failure_effect",
+        "gain_gate",
+        "proposed_quality_gain_threshold",
+        "proposed_non_locator_cost_ratio_threshold_ppm",
+        "cost_dimensions",
+        "modeling_cost_accounting",
+        "proposed_reuse_horizon_questions",
+        "slice_001_required",
+        "slice_002_case_id",
+        "slice_003_case_id",
+    }
+    errors = validate_exact_mapping_keys(ablation, expected_keys, section_label)
+    arm_expectations: dict[str, dict[str, object]] = {
+        "full_cognition_arm": {
+            "cognition_input": "full-exact-world-model-cognition-context",
+            "investigation_chain": (
+                "shared-adaptive-investigation-source-broker-worker-ledger-package-answer-review"
+            ),
+        },
+        "locator_only_or_empty_arm": {
+            "cognition_input": (
+                "predeclared-locator-only-projection-or-canonical-empty-when-no-locator-exists"
+            ),
+            "investigation_chain": "same-as-full-cognition-arm",
+        },
+        "mature_source_agent_arm": {
+            "protocol_ref": "mature_source_agent_protocol_digest",
+            "cognition_input": "none",
+            "investigation_chain": "frozen-mature-source-agent",
+        },
+    }
+    for arm, expected in arm_expectations.items():
+        value = ablation.get(arm)
+        if not isinstance(value, dict):
+            errors.append(f"{section_label}.{arm} must be a mapping")
+            continue
+        errors.extend(
+            validate_exact_mapping_keys(value, set(expected), f"{section_label}.{arm}")
+        )
+        for field, expected_value in expected.items():
+            if value.get(field) != expected_value:
+                errors.append(
+                    f"{section_label}.{arm}.{field} must equal {expected_value}"
+                )
+
+    expected_scalars: dict[str, object] = {
+        "authorization_required_before": "ITER-010-SLICE-002-coding-or-execution",
+        "controlled_inputs": (
+            "same-exact-revision-model-questions-model-call-and-resource-budget-"
+            "cache-policy-and-state-rubric-and-evaluator"
+        ),
+        "quality_gate": (
+            "full-cognition-and-mature-source-agent-zero-major-error-boundary-correct-"
+            "and-full-cognition-no-material-claim-regression-versus-mature-source-agent"
+        ),
+        "locator_control_quality_failure_effect": (
+            "may-prove-quality-gain-but-cannot-lower-full-cognition-acceptance-threshold"
+        ),
+        "gain_gate": (
+            "full-cognition-must-have-precommitted-quality-gain-or-precommitted-"
+            "normalized-non-locator-investigation-cost-gain-versus-locator-only-or-empty-arm"
+        ),
+        "proposed_quality_gain_threshold": (
+            "at-least-one-predeclared-material-checklist-gain-with-no-regression"
+        ),
+        "cost_dimensions": (
+            "source-bytes-source-broker-operations-model-tokens-wall-time-provider-cost-"
+            "and-world-model-build-update-storage-cost"
+        ),
+        "modeling_cost_accounting": (
+            "exact-world-model-build-update-storage-and-provider-cost-amortized-over-"
+            "frozen-reuse-horizon"
+        ),
+        "slice_001_required": False,
+    }
+    for field, expected in expected_scalars.items():
+        if ablation.get(field) != expected:
+            errors.append(f"{section_label}.{field} must equal {expected}")
+    cost_ratio = ablation.get("proposed_non_locator_cost_ratio_threshold_ppm")
+    if (
+        isinstance(cost_ratio, bool)
+        or not isinstance(cost_ratio, int)
+        or not 1 <= cost_ratio < 1_000_000
+    ):
+        errors.append(
+            f"{section_label}.proposed_non_locator_cost_ratio_threshold_ppm must be between 1 and 999999"
+        )
+    reuse_horizon = ablation.get("proposed_reuse_horizon_questions")
+    if (
+        isinstance(reuse_horizon, bool)
+        or not isinstance(reuse_horizon, int)
+        or reuse_horizon < 1
+    ):
+        errors.append(
+            f"{section_label}.proposed_reuse_horizon_questions must be a positive integer"
+        )
+    for field, pattern in (
+        ("slice_002_case_id", r"V-COMP-EARLY-[0-9]{3,}"),
+        ("slice_003_case_id", r"V-COMP-[0-9]{3,}"),
+    ):
+        value = ablation.get(field)
+        if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
+            errors.append(f"{section_label}.{field} must match {pattern}")
+
+    if not hardening_started:
+        for field, expected in (
+            ("status", "proposed-not-authorized"),
+            ("authorization_ref", ENGINEERING_QA_NOT_AUTHORIZED),
+            ("frozen_protocol_digest", ENGINEERING_QA_NOT_AUTHORIZED),
+        ):
+            if ablation.get(field) != expected:
+                errors.append(f"{section_label}.{field} must equal {expected}")
+        return errors
+
+    if ablation.get("status") != "frozen":
+        errors.append(f"{section_label}.status must equal frozen before hardening")
+    errors.extend(
+        _engineering_qa_new_freeze_receipt_errors(
+            ablation.get("authorization_ref"),
+            alignment,
+            f"{section_label}.authorization_ref",
+            hardening_authorization_ref=hardening_authorization_ref,
+        )
+    )
+    frozen_protocol = {
+        field: value
+        for field, value in ablation.items()
+        if field not in {"status", "authorization_ref", "frozen_protocol_digest"}
+    }
+    actual_digest = canonical_mapping_digest(
+        ENGINEERING_QA_ABLATION_SCHEMA,
+        "engineering_qa_ablation",
+        frozen_protocol,
+    )
+    if ablation.get("frozen_protocol_digest") != actual_digest:
+        errors.append(
+            f"{section_label}.frozen_protocol_digest must bind the exact three-arm protocol"
+        )
+    return errors
+
+
+def validate_engineering_qa_adaptive_gate(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Validate the three adaptive engineering-QA planning and hardening gates."""
+
+    errors: list[str] = []
+    alignment = manifest.get("product_goal_alignment")
+    answer_protocol = manifest.get("answer_protocol")
+    hybrid = manifest.get("hybrid_evidence_path")
+    alignment = alignment if isinstance(alignment, dict) else {}
+    answer_protocol = answer_protocol if isinstance(answer_protocol, dict) else {}
+    hardening_started = engineering_qa_hardening_has_started(manifest)
+    hardening_authorization_ref: object = None
+    development = manifest.get("development")
+    slices = development.get("slices") if isinstance(development, dict) else None
+    preview_binding = alignment.get("direction_preview_binding")
+    preview_ref = (
+        preview_binding.get("new_slice_ref")
+        if isinstance(preview_binding, dict)
+        else None
+    )
+    if isinstance(slices, dict) and isinstance(preview_ref, str):
+        post_preview_refs = sorted(
+            str(reference) for reference in slices if reference != preview_ref
+        )
+        if post_preview_refs:
+            hardening_slice = slices.get(post_preview_refs[0])
+            if isinstance(hardening_slice, dict):
+                hardening_authorization_ref = hardening_slice.get(
+                    "authorization_ref"
+                )
+
+    package_classes = manifest.get("question_evidence_package_classes")
+    if not isinstance(package_classes, dict):
+        errors.append(
+            f"{label}: question_evidence_package_classes must be a mapping"
+        )
+    else:
+        errors.extend(
+            validate_engineering_qa_question_evidence_package_classes(
+                package_classes, label
+            )
+        )
+        if isinstance(hybrid, dict):
+            if (
+                hybrid.get("question_evidence_package_role")
+                != "sealed-two-partition-support-citation-and-boundary-audit-set-not-truth-authority"
+            ):
+                errors.append(
+                    f"{label}: hybrid_evidence_path.question_evidence_package_role must bind the two-partition package"
+                )
+            if hybrid.get("package_seal_confers_truth") is not False:
+                errors.append(
+                    f"{label}: hybrid_evidence_path.package_seal_confers_truth must remain false"
+                )
+
+    reviewer_verification = manifest.get("reviewer_verification_investigation")
+    if not isinstance(reviewer_verification, dict):
+        errors.append(
+            f"{label}: reviewer_verification_investigation must be a mapping"
+        )
+    else:
+        errors.extend(
+            validate_engineering_qa_reviewer_verification_investigation(
+                reviewer_verification,
+                answer_protocol,
+                alignment,
+                label,
+                hardening_started=hardening_started,
+                hardening_authorization_ref=hardening_authorization_ref,
+            )
+        )
+
+    ablation = manifest.get("engineering_qa_ablation")
+    if not isinstance(ablation, dict):
+        errors.append(f"{label}: engineering_qa_ablation must be a mapping")
+    else:
+        errors.extend(
+            validate_engineering_qa_ablation(
+                ablation,
+                alignment,
+                label,
+                hardening_started=hardening_started,
+                hardening_authorization_ref=hardening_authorization_ref,
+            )
+        )
+    return errors
+
+
 def validate_engineering_qa_answer_protocol_execution_readiness(
     answer_protocol: dict[str, object], label: str
 ) -> list[str]:
-    """Freeze the ITER-010+ answer/review path and all of its quality bounds."""
+    """Freeze adaptive investigation, evidence sealing, answer and review bounds."""
 
     errors: list[str] = []
-    if (
-        answer_protocol.get("schema")
-        != "ENGINEERING_QA_HYBRID_EVIDENCE@1"
-    ):
+    if answer_protocol.get("schema") != ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA:
         errors.append(
             f"{label}: answer_protocol.schema must equal "
-            "ENGINEERING_QA_HYBRID_EVIDENCE@1"
+            f"{ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA}"
         )
     if (
         answer_protocol.get("contract_ref")
@@ -3019,9 +3661,10 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
             f"{label}: answer_protocol.contract_ref must equal "
             "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING"
         )
-    if answer_protocol.get("mode") != "upfront-engineering-qa-hybrid-evidence":
+    if not is_engineering_qa_adaptive_protocol(answer_protocol):
         errors.append(
-            f"{label}: answer_protocol.mode must equal upfront-engineering-qa-hybrid-evidence"
+            f"{label}: answer_protocol.mode must equal "
+            f"{ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE}"
         )
 
     required_question_fields = (
@@ -3040,9 +3683,10 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
 
     positive_integer_fields = (
         "question_understanding_model_call_upper_bound",
-        "initial_retrieval_rounds",
-        "targeted_reretrieval_round_upper_bound",
-        "max_retrieval_steps_per_round",
+        "investigation_model_call_upper_bound",
+        "max_investigation_steps_per_question",
+        "slice_001_reviewer_verification_investigation_upper_bound",
+        "max_source_broker_operations_per_question",
         "max_source_files_per_question",
         "max_source_bytes_per_question",
         "max_repository_document_bytes_per_question",
@@ -3051,7 +3695,7 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "max_world_model_result_bytes_per_question",
         "max_sealed_evidence_package_bytes_per_question",
         "max_support_items_per_question",
-        "max_trace_bytes_per_question",
+        "max_evidence_ledger_bytes_per_question",
         "max_wall_time_milliseconds_per_question",
         "initial_answer_model_calls",
         "independent_review_model_calls_per_attempt",
@@ -3073,13 +3717,10 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
 
     exact_numeric_values = {
         "question_understanding_model_call_upper_bound": 1,
-        "initial_retrieval_rounds": 1,
-        "targeted_reretrieval_round_upper_bound": 1,
+        "slice_001_reviewer_verification_investigation_upper_bound": 1,
         "initial_answer_model_calls": 1,
         "independent_review_model_calls_per_attempt": 1,
         "same_package_targeted_rewrite_upper_bound": 1,
-        "answer_attempt_upper_bound": 3,
-        "review_attempt_upper_bound": 3,
     }
     for field, expected in exact_numeric_values.items():
         value = numeric_fields.get(field)
@@ -3087,23 +3728,48 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
             errors.append(
                 f"{label}: answer_protocol.{field} must equal {expected}"
             )
+    for field in (
+        "investigation_model_call_upper_bound",
+        "max_investigation_steps_per_question",
+    ):
+        value = numeric_fields.get(field)
+        if value is not None and value < 2:
+            errors.append(
+                f"{label}: answer_protocol.{field} must be at least 2 for adaptive result-driven investigation"
+            )
+    investigation_calls_bound = numeric_fields.get(
+        "investigation_model_call_upper_bound"
+    )
+    investigation_steps_bound = numeric_fields.get(
+        "max_investigation_steps_per_question"
+    )
+    if (
+        investigation_calls_bound is not None
+        and investigation_steps_bound is not None
+        and investigation_steps_bound < investigation_calls_bound
+    ):
+        errors.append(
+            f"{label}: answer_protocol.max_investigation_steps_per_question must cover every allowed investigation model call"
+        )
 
     answer_attempts = numeric_fields.get("answer_attempt_upper_bound")
     rewrite_bound = numeric_fields.get("same_package_targeted_rewrite_upper_bound")
-    reretrieval_bound = numeric_fields.get("targeted_reretrieval_round_upper_bound")
+    verification_bound = numeric_fields.get(
+        "slice_001_reviewer_verification_investigation_upper_bound"
+    )
     initial_answer_calls = numeric_fields.get("initial_answer_model_calls")
     if (
         answer_attempts is not None
         and rewrite_bound is not None
-        and reretrieval_bound is not None
+        and verification_bound is not None
         and initial_answer_calls is not None
         and answer_attempts
-        != initial_answer_calls + rewrite_bound + reretrieval_bound
+        < initial_answer_calls + rewrite_bound + verification_bound
     ):
         errors.append(
-            f"{label}: answer_protocol.answer_attempt_upper_bound must cover the "
-            "initial answer, the allowed same-package targeted rewrite and the "
-            "post-reretrieval answer"
+            f"{label}: answer_protocol.answer_attempt_upper_bound must cover at least "
+            "the initial answer, the allowed same-package targeted rewrite and the "
+            "Slice 001 new answer after reviewer verification investigation"
         )
     review_attempts = numeric_fields.get("review_attempt_upper_bound")
     if (
@@ -3121,6 +3787,9 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
     question_calls = numeric_fields.get(
         "question_understanding_model_call_upper_bound"
     )
+    investigation_calls = numeric_fields.get(
+        "investigation_model_call_upper_bound"
+    )
     calls_per_review = numeric_fields.get(
         "independent_review_model_calls_per_attempt"
     )
@@ -3129,6 +3798,7 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         for value in (
             hard_call_bound,
             question_calls,
+            investigation_calls,
             answer_attempts,
             review_attempts,
             calls_per_review,
@@ -3136,41 +3806,56 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
     ):
         minimum_core_calls = (
             question_calls
+            + investigation_calls
             + answer_attempts
             + review_attempts * calls_per_review
         )
         if hard_call_bound < minimum_core_calls:
             errors.append(
                 f"{label}: answer_protocol.hard_safety_model_call_upper_bound_per_question "
-                "must cover question understanding, every answer attempt and every "
-                "independent review"
+                "must cover question understanding, adaptive investigation, every "
+                "answer attempt and every independent review"
             )
 
     for field in (
+        "upfront_complete_retrieval_plan_required",
+        "sealed_package_mutation_allowed",
         "quality_checklist_reduction_due_to_remaining_calls_allowed",
         "evidence_requirement_reduction_due_to_remaining_calls_allowed",
         "review_skipping_due_to_remaining_calls_allowed",
+        "reviewer_verification_returns_to_initial_investigation_model",
+        "reviewer_verification_fixed_round_cap_after_slice_001_allowed",
+        "question_or_project_keyword_symbol_class_method_fixture_or_oracle_special_routing_allowed",
         "provider_request_retries_allowed",
         "provider_switch_after_dispatch_allowed",
     ):
         if answer_protocol.get(field) is not False:
             errors.append(f"{label}: answer_protocol.{field} must be false")
     for field in (
-        "targeted_reretrieval_requires_specific_reviewer_evidence_gap",
+        "investigation_proposal_must_consider_prior_results",
+        "source_broker_policy_compilation_required",
+        "evidence_ledger_append_only",
+        "question_evidence_package_sealed_after_investigation",
+        "safety_budget_reserves_independent_review",
+        "reviewer_more_evidence_requires_specific_verifiable_gap",
+        "reviewer_verification_request_requires_application_and_source_broker_revalidation",
+        "reviewer_verification_uses_independent_fresh_context_adaptive_investigation",
+        "reviewer_verification_creates_new_ledger_revision",
+        "reviewer_verification_creates_new_package",
+        "new_answer_after_new_package_required",
         "same_package_rewrite_requires_specific_reviewer_finding",
-        "reseal_after_targeted_reretrieval_required",
-        "independent_rereview_after_any_rewrite_or_reseal_required",
+        "independent_rereview_after_any_answer_or_package_change_required",
         "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks",
     ):
         if answer_protocol.get(field) is not True:
             errors.append(f"{label}: answer_protocol.{field} must be true")
     if (
         answer_protocol.get("resource_exhaustion_behavior")
-        != "fail-closed-with-audited-user-visible-limitation-only-if-independently-approved"
+        != "answerable-fail-boundary-limitation-only-if-independently-approved-otherwise-fail-closed"
     ):
         errors.append(
             f"{label}: answer_protocol.resource_exhaustion_behavior must equal "
-            "fail-closed-with-audited-user-visible-limitation-only-if-independently-approved"
+            "answerable-fail-boundary-limitation-only-if-independently-approved-otherwise-fail-closed"
         )
 
     legacy_fields = (
@@ -3178,6 +3863,10 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "draft_model_calls",
         "independent_reviewer_model_calls",
         "exact_total_model_calls_per_question",
+        "initial_retrieval_rounds",
+        "targeted_reretrieval_round_upper_bound",
+        "reviewer_verification_request_round_upper_bound",
+        "max_retrieval_steps_per_round",
         "max_investigation_steps",
         "max_investigation_model_calls",
         "planner_model_call_upper_bound",
@@ -3186,6 +3875,11 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "max_result_bytes_per_step",
         "max_total_query_bytes_per_question",
         "max_total_result_bytes_per_question",
+        "max_trace_bytes_per_question",
+        "targeted_reretrieval_requires_specific_reviewer_evidence_gap",
+        "reseal_after_targeted_reretrieval_required",
+        "independent_rereview_after_any_rewrite_or_reseal_required",
+        "reviewer_verification_uses_source_broker",
         "budget_exhaustion_behavior",
         "deterministic_schema_grounding_and_authorization_checks",
         "retries_allowed",
@@ -3193,7 +3887,7 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
     for field in legacy_fields:
         if field in answer_protocol:
             errors.append(
-                f"{label}: engineering QA answer_protocol must not mix legacy field {field}"
+                f"{label}: engineering QA answer_protocol.{field} is a legacy field"
             )
     if answer_protocol.get("status") != "frozen":
         errors.append(f"{label}: answer_protocol.status must equal frozen")
@@ -3206,7 +3900,7 @@ def validate_engineering_qa_hybrid_evidence_execution_readiness(
     answer_protocol: dict[str, object],
     label: str,
 ) -> list[str]:
-    """Keep source retrieval isolated while allowing evidence-backed engineering QA."""
+    """Keep adaptive source investigation isolated and evidence-backed."""
 
     errors: list[str] = []
     expected_source_values: dict[str, object] = {
@@ -3231,23 +3925,34 @@ def validate_engineering_qa_hybrid_evidence_execution_readiness(
         "strict_world_model_mode_preserved": True,
         "direct_investigation_mode_preserved": True,
         "silent_mode_fallback_allowed": False,
-        "world_model_role": "reusable-engineering-map-manual-and-retrieval-entry",
-        "world_model_retrieval_hint_or_candidate_reduction_only": True,
+        "world_model_role": (
+            "persistent-versioned-verifiable-updatable-external-software-cognition"
+        ),
+        "world_model_cognition_dimensions": (
+            "context-entities-relations-behavior-constraints-state-evidence-"
+            "coverage-and-unknown-boundaries"
+        ),
+        "world_model_is_only_manual_map_cache_or_retrieval_hints": False,
         "world_model_as_question-time-source-recall_gate_allowed": False,
         "world_model_required_as_source_retrieval_gate": False,
-        "retrieval_plan_inputs": (
-            "immutable-original-question-checklist-and-snapshot-hints"
+        "investigation_inputs": (
+            "immutable-original-question-exact-world-model-cognition-and-prior-"
+            "ledger-results"
         ),
         "zero-irrelevant-or-insufficient-snapshot_blocks_exact-revision-retrieval": False,
         "snapshot_source_revision_compatibility": (
             "exact-match-or-explicit-partitioned-version-comparison-otherwise-"
             "unaligned-navigation-only"
         ),
-        "model_role": (
-            "question-understanding-investigation-control-answer-synthesis-and-"
-            "independent-review-not-fact-authority"
+        "investigation_model_role": (
+            "independent-adaptive-result-driven-read-operation-proposal"
         ),
-        "fact_authority": "sealed-evidence-package",
+        "investigation_model_direct_source_access": "denied",
+        "source_broker_role": (
+            "policy-compile-and-authorize-allowlisted-read-only-exact-revision-"
+            "operations"
+        ),
+        "retrieval_worker_role": "isolated-execution-only",
         "retrieval_worker_sources": (
             "exact-revision-source-repository-documents-build-configuration-tests"
         ),
@@ -3256,12 +3961,38 @@ def validate_engineering_qa_hybrid_evidence_execution_readiness(
         "live_provider_source-fragment-disclosure": (
             "separately-authorized-exact-provider-model-role-and-allowlist-only"
         ),
-        "answer_repository_access": "denied",
-        "reviewer_repository_access": "denied",
-        "answer_input": "sealed-evidence-package-only",
-        "reviewer_input": (
-            "original-question-question-understanding-sealed-evidence-package-and-draft-only"
+        "evidence_ledger": "append-only-per-question-until-seal",
+        "evidence_ledger_seal_trigger": (
+            "investigation-finish-or-fail-closed-stop"
         ),
+        "question_evidence_package_role": (
+            "sealed-two-partition-support-citation-and-boundary-audit-set-not-"
+            "truth-authority"
+        ),
+        "package_seal_confers_truth": False,
+        "sealed_package_mutation_allowed": False,
+        "answer_repository_access": "denied",
+        "answer_direct_source_authority": "denied",
+        "reviewer_repository_access": "denied",
+        "reviewer_direct_source_authority": "denied",
+        "reviewer_direct_shell_network_credential_or_tool_access": "denied",
+        "answer_input": (
+            "immutable-original-question-question-understanding-and-sealed-"
+            "question-evidence-package-only"
+        ),
+        "reviewer_input": (
+            "immutable-original-question-question-understanding-sealed-question-"
+            "evidence-package-and-draft-only"
+        ),
+        "reviewer_more_evidence_route": (
+            "specific-verifiable-gap-through-independent-verification-"
+            "investigation-application-source-broker-worker-new-ledger-revision-"
+            "new-package-new-answer-new-review"
+        ),
+        "reviewer_verification_request_role": (
+            "versioned-gap-proposal-binding-checklist-claim-evidence-class-and-need"
+        ),
+        "reviewer_verification_returns_to_initial_investigation_model": False,
         "knowledge_persistence": (
             "asynchronous-after-delivery-through-normal-admission-and-publication"
         ),
@@ -3271,6 +4002,16 @@ def validate_engineering_qa_hybrid_evidence_execution_readiness(
         if hybrid_evidence_path.get(field) != expected:
             errors.append(
                 f"{label}: hybrid_evidence_path.{field} must equal {expected}"
+            )
+    for field in (
+        "world_model_retrieval_hint_or_candidate_reduction_only",
+        "retrieval_plan_inputs",
+        "model_role",
+        "fact_authority",
+    ):
+        if field in hybrid_evidence_path:
+            errors.append(
+                f"{label}: adaptive hybrid_evidence_path.{field} is a replaced field"
             )
 
     errors.extend(
@@ -3286,13 +4027,11 @@ def validate_answer_protocol_execution_readiness(
 ) -> list[str]:
     """Validate the frozen answer protocol without reviving an earlier pipeline."""
 
-    engineering_qa_mode = (
-        answer_protocol.get("mode") == "upfront-engineering-qa-hybrid-evidence"
-    )
+    engineering_qa_mode = is_engineering_qa_adaptive_protocol(answer_protocol)
     if requires_engineering_qa_hybrid(iteration) and not engineering_qa_mode:
         return [
             f"{label}: ITER-010 answer_protocol.mode must equal "
-            "upfront-engineering-qa-hybrid-evidence"
+            f"{ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE}"
         ]
     if engineering_qa_mode:
         if not supports_engineering_qa_hybrid(iteration):
@@ -3622,9 +4361,7 @@ def validate_product_goal_execution_readiness(
     if not isinstance(answer_protocol, dict):
         errors.append(f"{label}: answer_protocol must be a mapping before Slice execution")
         answer_protocol = {}
-    engineering_qa_mode = (
-        answer_protocol.get("mode") == "upfront-engineering-qa-hybrid-evidence"
-    )
+    engineering_qa_mode = is_engineering_qa_adaptive_protocol(answer_protocol)
     if requires_engineering_qa_hybrid(iteration) or engineering_qa_mode:
         hybrid_evidence_path = manifest.get("hybrid_evidence_path")
         if not isinstance(hybrid_evidence_path, dict):

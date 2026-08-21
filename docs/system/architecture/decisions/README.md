@@ -30,6 +30,6 @@ ADR 解释为什么选择当前架构；规范正文仍由 Architecture、Invari
 | [ADR-013](ADR-013-evidence-first-synchronous-answering.md) | 直接源码调查采用证据优先路径 |
 | [ADR-014](ADR-014-snapshot-first-world-model-answering.md) | 软件世界模型回答只读 exact Snapshot，禁止静默源码回退 |
 | [ADR-015](ADR-015-bounded-world-model-investigation.md) | Agent 只通过有界 typed 查询调查 exact World Model |
-| [ADR-016](ADR-016-engineering-question-answering.md) | 默认工程问答组合 World Model 地图与受控 exact-revision 源证据 |
+| [ADR-016](ADR-016-engineering-question-answering.md) | 默认工程问答由世界模型认知驱动自适应、受控的 exact-revision 调查 |
 
 交付范围、暂停、某次 Provider 选择和环境激活不改变长期架构选择，因此不进入当前 ADR 集合。
