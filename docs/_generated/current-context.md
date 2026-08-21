@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `ITER-008-INDEX`
-- Active slice: `ITER-008-SLICE-001`
-- Worktree status: `iteration-008-run-012-formal-frozen-public-web-authorization-next`
-- Strategy relation: `bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering`
-- Live model path: `iteration-008-run-012-formal-frozen-public-web-authorization-next`
+- Active iteration: `ITER-009-INDEX`
+- Active slice: `ITER-009-SLICE-001`
+- Worktree status: `iteration-009-slice-001-authorized-direction-preview-development-ready`
+- Strategy relation: `direction-preview-first-reuses-iteration-008-clean-technical-baseline-after-redirect`
+- Live model path: `not-authorized-development-only-no-live-dispatch`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

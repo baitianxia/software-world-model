@@ -1,0 +1,361 @@
+schema_version: 1
+iteration:
+  id: ITER-009
+  status: authorized
+  outcome_scope: local-web-direction-preview-then-general-evidence-answer-review-hardening-and-formal-acceptance
+
+baseline:
+  commit: 2cd743b2ba74c5a79cd4d38433830786de09e753
+  tree: 1769f7d0aa84b7445a942eb90c280ac796d82fa4
+  planning_commit: 967e41bcaa25112ea6b18620d0ac8e0aa5a4a42a
+  planning_tree: c8e9ce06becc9c1b72e3da60c654c9ba8bff2e16
+  dirty_worktree_allowed: false
+  relation: exact-iteration-008-product-code-plus-planning-only-iteration-009-delta-excluding-archived-unaccepted-1-5-12
+  excluded_archive_commit: c4ed92ea44383557dd25e6d327569cff13bb6d65
+
+product_goal_alignment:
+  target_ref: SYS-PRODUCT-SUCCESS
+  capability_path_ref: ROADMAP-M-002
+  capability_path_step: step-1-java-result-driven-world-model-investigation
+  critical_assumption_ids: A1,A2,A3,A4,A5
+  critical_assumption_catalog_digest: sha256:3ca13e4768159698cd69092946d820b7e04059fa6292b316c75b5c07cb0a659a
+  predecessor_result_refs:
+    - ITER-005-RESULT-ACCEPTANCE
+    - ITER-006-RESULT-ACCEPTANCE
+    - ITER-007-RESULT-SLICE-001-STOP-DECISION
+  end_of_iteration_web_capability: unauthenticated-loopback-java-source-qa-with-natural-supported-answer-or-specific-limitation-independent-review-and-verifiable-citations
+  next_blocking_gap: step-2-common-java-cross-class-real-framework-project-breadth
+  baseline_gap: supported-web-answer-exists-but-boundary-limitation-fails-at-answer-review-delivery-and-direction-is-not-user-confirmed
+  accepted_capability_refs:
+    - ITER-005-RESULT-ACCEPTANCE
+    - ITER-006-RESULT-ACCEPTANCE
+  new_capability_slice_refs:
+    - ITER-009-SLICE-001
+    - ITER-009-SLICE-002
+    - ITER-009-SLICE-003
+  evaluation_input_mode: user-held-live-after-product-code-freeze
+  held_out_free_question_delta: final-two-real-java-projects-with-four-answerable-and-two-boundary-plus-two-live-ad-hoc-questions
+  held_out_evaluation_owner: user
+  implementation_question_visibility: hidden
+  implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
+  visible_development_corpus_digest: sha256:601849dae8d3e48479f0d9127e23dd2cad27d283e09562550f22443b7868b0aa
+  evaluation_project_manifest_digest: user-held-not-disclosed
+  held_out_suite_digest: user-held-not-disclosed
+  baseline_result_digest: user-held-not-disclosed
+  mature_source_agent_protocol_digest: sha256:66078a61f7c5f25fc72c0c36c004819c99ae01c8465d01229149efc1e5809e1d
+  mature_source_agent_rubric_digest: sha256:6fe156f6f68cdaf572102f9e76feb8953e7e0838ee10ae57b0f11900bc9d2c1b
+  positive_value_metric: source-exposure-bytes-per-correct-outcome-ratio-at-frozen-reuse-horizon
+  positive_value_unit: ratio-ppm
+  positive_value_comparison: at-most
+  positive_value_threshold: 250000
+  positive_value_reuse_horizon_questions: 12
+  mature_source_agent_cache_policy_digest: sha256:d3b10942f2b9a98f2b9da22bf04dbf2a1a150299a07f33f292da69c875698ff8
+  positive_value_protocol_digest: sha256:5f79ff127574f2bce75cd31b0e217444ac3c15318bb4c9e435f615dad150a6d4
+  positive_value_freeze_receipt_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
+  positive_value_adjudication_owner: user
+  authorized_software_sources_digest: user-held-not-disclosed
+  held_out_question_count: 6
+  held_out_answerable_question_count: 4
+  held_out_boundary_question_count: 2
+  held_out_answerable_without_symbol_count_minimum: 3
+  held_out_answerable_without_symbol_per_project_minimum: 1
+  held_out_baseline_supported_count: measured-after-product-code-freeze
+  held_out_target_supported_count: measured-after-product-code-freeze
+  supported_count_denominator: answerable-only
+  boundary_gap_counted_as_supported: false
+  cross_domain_cases:
+    - V-XD-001
+    - V-XD-002
+    - V-XD-003
+  blocking_case_ids:
+    - V-BASELINE-001
+    - V-001
+    - V-SOURCEOFF-001
+    - V-SEC-001
+    - V-ANSWER-001
+    - V-LIMIT-001
+    - V-XD-001
+    - V-WEB-001
+    - V-PREVIEW-001
+    - V-REFLECT-001
+    - V-ANSWER-002
+    - V-REWRITE-002
+    - V-HARDEN-002
+    - V-SEC-002
+    - V-XD-002
+    - V-WEB-002
+    - V-CANARY-002
+    - V-NEG-EARLY-002
+    - V-COMP-EARLY-002
+    - V-DIAG-002
+    - V-REGRESSION-002
+    - V-REFLECT-002
+    - V-HIDDEN-003
+    - V-COMP-001
+    - V-SEC-003
+    - V-XD-003
+    - V-WEB-003
+    - V-ADHOC-001
+    - V-REGRESSION-003
+    - V-009
+    - V-REFLECT-003
+  readiness_blocking_case_ids:
+    - V-PRE-001
+    - V-PRE-002
+    - V-PRE-003
+    - V-PRE-004
+    - V-PRE-005
+    - V-PRE-006
+  cross_domain_case_count: 3
+  cross_domain_bindings:
+    binding_001:
+      case_id: V-XD-001
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-009-SLICE-001
+    binding_002:
+      case_id: V-XD-002
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-009-SLICE-002
+    binding_003:
+      case_id: V-XD-003
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-009-SLICE-003
+  first_product_web_checkpoint: V-WEB-001
+  direction_preview_checkpoint: V-PREVIEW-001
+  direction_preview_binding:
+    case_id: V-PREVIEW-001
+    new_slice_ref: ITER-009-SLICE-001
+    real_product_entry: loopback-product-owned-world-model-web
+    representative_task_count: 3
+    status_label: non-acceptance-non-production
+    decision_owner: user
+    allowed_decisions: CONTINUE,REDIRECT,REJECT
+    hardening_requires_continue: true
+  web_checkpoint_binding:
+    case_id: V-WEB-001
+    new_slice_ref: ITER-009-SLICE-001
+    executes_cross_domain_case_id: V-XD-001
+  additional_web_checkpoint_bindings:
+    hardening_web:
+      case_id: V-WEB-002
+      new_slice_ref: ITER-009-SLICE-002
+      executes_cross_domain_case_id: V-XD-002
+    final_web:
+      case_id: V-WEB-003
+      new_slice_ref: ITER-009-SLICE-003
+      executes_cross_domain_case_id: V-XD-003
+  early_hidden_canary_bindings:
+    slice_002:
+      case_id: V-CANARY-002
+      new_slice_ref: ITER-009-SLICE-002
+      project_manifest_digest: user-held-not-disclosed
+      suite_digest: user-held-not-disclosed
+      question_count: 3
+      answerable_question_count: 1
+      boundary_question_count: 2
+      bounded_absence_question_count: 1
+      coverage_limitation_question_count: 1
+      negative_case_id: V-NEG-EARLY-002
+      evaluation_owner: user
+      implementation_visibility: hidden-until-slice-code-freeze
+      burn_rule: product-change-between-disclosure-and-slice-result-seal-burns-canary-and-preserves-result
+  early_comparison_binding:
+    case_id: V-COMP-EARLY-002
+    canary_case_id: V-CANARY-002
+    new_slice_ref: ITER-009-SLICE-002
+    protocol_digest_ref: mature_source_agent_protocol_digest
+    quality_rule: zero-major-error-and-no-need-claim-regression
+    positive_value_rule: precommitted-measurable-world-model-advantage-must-pass
+    positive_value_metric_ref: positive_value_metric
+    positive_value_unit_ref: positive_value_unit
+    positive_value_comparison_ref: positive_value_comparison
+    positive_value_threshold_ref: positive_value_threshold
+    positive_value_reuse_horizon_ref: positive_value_reuse_horizon_questions
+    baseline_cache_policy_digest_ref: mature_source_agent_cache_policy_digest
+    positive_value_protocol_digest_ref: positive_value_protocol_digest
+    positive_value_adjudication_owner_ref: positive_value_adjudication_owner
+  early_diagnostic_binding:
+    case_id: V-DIAG-002
+    canary_case_id: V-CANARY-002
+    new_slice_ref: ITER-009-SLICE-002
+    layer_chain: source-snapshot-query-trace-draft-review-web
+  reflection_gate_bindings:
+    slice_001:
+      case_id: V-REFLECT-001
+      new_slice_ref: ITER-009-SLICE-001
+      assumption_ids: A1,A2,A3
+      conditional_falsifier_bindings:
+        cross_project_generalization:
+          assumption_id: A4
+          case_id: V-XD-001
+        quality_and_safety:
+          assumption_id: A5
+          case_id: V-SEC-001
+      success_decision: CONTINUE
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+    slice_002:
+      case_id: V-REFLECT-002
+      new_slice_ref: ITER-009-SLICE-002
+      assumption_ids: A1,A2,A3,A4
+      conditional_falsifier_bindings:
+        final_quality_and_safety:
+          assumption_id: A5
+          case_id: V-SEC-002
+      success_decision: CONTINUE
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+    slice_003:
+      case_id: V-REFLECT-003
+      new_slice_ref: ITER-009-SLICE-003
+      assumption_ids: A1,A2,A3,A4,A5
+      success_decision: ACCEPT
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+  live_ad_hoc_question_checkpoint: V-ADHOC-001
+  live_ad_hoc_checkpoint_binding:
+    case_id: V-ADHOC-001
+    new_slice_ref: ITER-009-SLICE-003
+    executes_cross_domain_case_id: V-XD-003
+  live_ad_hoc_question_count: 2
+  live_ad_hoc_without_symbol_count_minimum: 1
+  stop_or_redirect_conditions:
+    - no-new-interactive-web-result-within-direction-preview-timebox
+    - implementation-requires-question-project-keyword-symbol-fixture-or-oracle-special-case
+    - supported-answer-has-major-error-or-material-omission
+    - citation-does-not-support-material-claim
+    - boundary-answer-fabricates-absence-or-uses-unrelated-evidence
+    - source-update-direct-fallback-secret-exposure-or-non-loopback-listener-is-required
+    - independent-review-must-be-removed-or-weakened
+    - minimum-normal-development-task-remains-policy-blocked-without-supported-auditable-execution-surface
+    - user-decides-redirect-or-reject
+
+source_scope:
+  provider: LOCAL_GIT
+  content_kind: java-source
+  contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+  authorized_software_sources_digest: user-held-not-disclosed
+  question_or_suite_driven_update_allowed: false
+  verification_case_ids:
+    - V-001
+    - V-SOURCEOFF-001
+
+answer_protocol:
+  contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+  mode: bounded-result-driven-world-model-investigation
+  max_investigation_steps: 4
+  max_investigation_model_calls: 4
+  planner_model_call_upper_bound: 4
+  max_query_bytes_per_step: 8192
+  max_result_bytes_per_step: 262144
+  max_total_query_bytes_per_question: 32768
+  max_total_result_bytes_per_question: 786432
+  max_wall_time_milliseconds_per_question: 900000
+  max_support_items_per_question: 512
+  max_trace_bytes_per_question: 1048576
+  budget_exhaustion_behavior: fail-closed-with-explicit-limitation
+  draft_model_calls: 1
+  independent_reviewer_model_calls: 1
+  deterministic_schema_grounding_and_authorization_checks: true
+  retries_allowed: false
+  total_model_call_upper_bound_per_question: 6
+  status: frozen
+
+readiness_inputs:
+  required_architecture_decision: SYS-ADR-015
+  required_system_contract_refs:
+    - SYS-CONTRACT-AI-CAPABILITY-EVALUATION
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-CONTRACT-APPLICATION-AGENTIC-TASK
+    - SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
+    - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+    - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+    - SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+  source_semantics_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+  implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
+  no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
+  answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
+  system_contract_set_schema: ITER-009-SYSTEM-CONTRACT-SET@1
+  system_contract_set_paths:
+    - docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md
+    - docs/system/architecture/runtime-flows.md
+    - docs/system/contracts/ai/capability-evaluation.md
+    - docs/system/contracts/ai/model-gateway.md
+    - docs/system/contracts/application/agentic-task.md
+    - docs/system/contracts/application/implementation-query.md
+    - docs/system/contracts/application/knowledge-update.md
+    - docs/system/contracts/application/knowledge-use.md
+    - docs/system/contracts/application/world-model-answering.md
+    - docs/system/contracts/knowledge/java-source-semantics.md
+    - docs/system/operations/local-browser.md
+    - docs/system/quality/security-boundaries.md
+  system_contract_set_digest: sha256:a33e9013e0da891235f12c4f2052dbdd3661e3471dc2d2ebbec754a1bc4201f9
+  exact_baseline_status: clean-exact-product-baseline-plus-planning-only-commit-verified
+  investigation_budget_status: frozen-iteration-009-bounded-investigation-1.0.0
+  mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
+  hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
+  hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
+  investigation_budget_digest: sha256:edb492b7613d9acf30b65344b29be4975a0716462a9ef88d9409833f9b511012
+  java_frontend:
+    artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
+    version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
+    runtime_version: tree-sitter==0.25.2
+    grammar_version: tree-sitter-java==0.23.5
+    language_abi: 14
+    license_ref: MIT
+    runtime_license_digest: sha256:1af0790543fffac99dd3bd290bf83ca963f4f8029065eb6f35638f4df863ae8e
+    grammar_license_digest: sha256:52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7
+    runtime_fileset_digest: sha256:86952fb273226021793f76c972d782b66c308d3ef8d20a4df4dd5ad6d31ec45c
+    grammar_fileset_digest: sha256:33106942ffed3b3df935320ac8ac9499e453ce66730a2130ba81b2dffef7c9dc
+    offline_artifact_digest: sha256:45b49edd3dbaaec472533c13a4a6d1e3e0eab6a3be2d1529685bdca5560e65b3
+    canonicalization_oracle_digest: sha256:edfb7ead08c137a9f47e37571de0d9b8f3ee7417278c84ed186a043c271122ff
+    information_preservation_oracle_digest: sha256:1751646fcdebd64798495a2b29811acc8bf058c37cf41e549201e876e498f67c
+    information_boundary_oracle_digest: sha256:5699efa859e716e208279675bb452a133c8ae87d6742cfc19b66f1626762b6a4
+    legacy_calls_consistency_oracle_digest: sha256:f1242a198afdf4d3cec425f1c715c094578cfaa9a70ed7798094afaf26b240f3
+    readiness_oracle_result_digest: sha256:0c946655de2b6daadf670d7c0a9f5f57b11f7a0ba04fde53a1f8940338f09f2f
+    readiness_oracle_result_path: var/iteration-007/readiness/oracle-result.json
+
+development:
+  slices:
+    ITER-009-SLICE-001:
+      status: authorized
+      coding_input: true
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: none-first-slice
+      product_code_freeze_digest: not-executed
+      authorized_by: user
+      authorized_at: 2026-08-21T03:19:16Z
+      authorization_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
+    ITER-009-SLICE-002:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+    ITER-009-SLICE-003:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+
+verification:
+  matrix_id: ITER-009-VERIFICATION
+  evidence_location: var/iteration-009
+
+authorization:
+  readiness_review_id: ITER-009-READINESS
+  authorized_by: user
+  authorized_at: 2026-08-21T03:19:16Z
+  authorization_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
+  active_slice: ITER-009-SLICE-001

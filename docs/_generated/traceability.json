@@ -2535,6 +2535,19 @@
       "validation"
     ]
   },
+  "ITER-008-RESULT-SLICE-001-STOP-REDIRECT": {
+    "path": "docs/project/iterations/iteration-008/results/slice-001-stop-redirect.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
   "ITER-008-SLICE-001": {
     "path": "docs/project/iterations/iteration-008/development-design/SLICE-001-bounded-agentic-world-model-answering.md",
     "code": [
@@ -2550,6 +2563,44 @@
   },
   "ITER-008-SLICE-002": {
     "path": "docs/project/iterations/iteration-008/development-design/SLICE-002-investigation-hardening-and-product-validation.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-009-SLICE-001": {
+    "path": "docs/project/iterations/iteration-009/development-design/SLICE-001-local-web-direction-preview.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-009-SLICE-002": {
+    "path": "docs/project/iterations/iteration-009/development-design/SLICE-002-evidence-answer-review-hardening.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-009-SLICE-003": {
+    "path": "docs/project/iterations/iteration-009/development-design/SLICE-003-formal-product-acceptance.md",
     "code": [
       "src/software_world_model/application_services",
       "src/software_world_model/knowledge_engine",

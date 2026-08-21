@@ -237,6 +237,10 @@ canary、SLICE-002 与 Production Activation gate：
   未漂移，模型调用 0。producer 改为在 workspace 内真实 clone exact revision，并恢复 canonical remote；定向 2/2 PASS。
   全新 run-012 的 focused 89/89、candidate 37/37、full 1039 exact hold、docs/prelisten 均 PASS，report/pending grant 为
   `sha256:aada406e…4a5a` / `sha256:5cb18436…9370`；下一 Gate 为 post-freeze 公开 Web 授权。
+- [FINDING-008-043](FINDING-008-043.md)：用户报告 Codex/OpenAI 客户端的 prompt admission 检查阻断后续开发，但本机
+  iteration/var 证据没有对应产品 stage、Provider、request 或 dispatch receipt。该问题归为当前开发路径的外部环境/配置阻断，
+  不冒充产品根因，也不通过重试或提示词混淆规避。它已处置到下一 Iteration 的 Web 方向体验恢复规划；ITER-008 的产品裁决仍由
+  run-012 正向 Web 成功、边界 Answer/Review 失败和未执行 Gate 决定。
 
 后续 Finding 仍须区分：查询架构缺口、World Model 表示缺口、实现缺陷、环境/配置问题和评测问题；尤其不得把隐藏工程暴露后的
 表示缺口用题目、工程、关键词或符号补丁掩盖。

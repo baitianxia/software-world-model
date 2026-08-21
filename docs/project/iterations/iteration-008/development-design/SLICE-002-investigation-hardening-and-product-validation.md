@@ -22,10 +22,9 @@ product_goal_slice_gate_case_ids: [V-NEG-001, V-HARDEN-001, V-XD-002, V-WEB-002,
 
 ## Status and dependencies
 
-`PROPOSED / BLOCKED BY SLICE-001 PASS RESULT AND SEPARATE USER AUTHORIZATION`。即使 Readiness 通过，也只先授权 SLICE-001。
-本段只有在 early Web/canary、最小 absence、逐层诊断、Agent 对照与 Reflection 全部 PASS、形成 `CONTINUE` 的 exact Slice Result，
-并由用户再次明确授权后才能成为编码输入。授权时必须把该 Result 加入本文件 `depends_on`，并让 Manifest
-`reflection_prerequisite_result` 指向同一 ID；当前 proposed 状态不能预填尚不存在的 Result。
+`HISTORICAL PROPOSAL / NOT EXECUTED / PERMANENTLY NOT AUTHORIZABLE IN REJECTED ITER-008`。SLICE-001 的 Result 决定
+`REDIRECT` 而不是 `CONTINUE`，用户也从未授权本段。frontmatter 保留 `proposed` 只表示原计划未执行；以后若需要其中任何内容，
+必须在新 Iteration 重新提案、冻结和授权。
 
 ## Product-goal contribution and cumulative integration
 

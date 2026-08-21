@@ -4,26 +4,29 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-SLICE-001]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-SLICE-001]
 code: []
 tests: []
 as_of: 2026-08-21
-active_iteration: ITER-008-INDEX
-active_slice: ITER-008-SLICE-001
-worktree_status: iteration-008-run-012-formal-frozen-public-web-authorization-next
-strategy_relation: bounded-result-driven-world-model-investigation-replaces-rejected-fixed-single-method-answering
-live_model_path: iteration-008-run-012-formal-frozen-public-web-authorization-next
+active_iteration: ITER-009-INDEX
+active_slice: ITER-009-SLICE-001
+worktree_status: iteration-009-slice-001-authorized-direction-preview-development-ready
+strategy_relation: direction-preview-first-reuses-iteration-008-clean-technical-baseline-after-redirect
+live_model_path: not-authorized-development-only-no-live-dispatch
 ---
 
 # 当前工作上下文
 
 ## 开发授权
 
-当前活动 Iteration 为 `ITER-008`，唯一活动 Slice 为 `ITER-008-SLICE-001`。ITER-007 已按其早期 stop/redirect 规则终止为
-`rejected`；SLICE-002/003 从未授权。用户消息 `codex-user-message:sha256:eb381cfd…7221` 接受 ITER-008 Readiness，并只授权最小
-bounded investigation 闭环、正式 Web 早期 Gate 和代码冻结前的确定性验证。`SLICE-002`、live Provider 披露与 Production
-Activation 不在该原始授权内；用户随后已分别授权资格调用，并明确后续当前任务无需重复询问授权。每次外部分派仍必须先形成并
-机械绑定 exact freeze，且该持续授权不扩大到 hidden canary、SLICE-002 或 Production Activation。
+当前活动 Iteration 为 `ITER-009`，唯一活动 Slice 为 `ITER-009-SLICE-001`。用户消息
+`codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed` 接受本轮
+Readiness，并授权“方向体验优先”的第一段开发。该授权只覆盖产品代码修改和本地确定性验证；不授权读取 Provider credential、
+发起模型调用、启动正式 Web/live 会话、披露隐藏题、进入 `SLICE-002/003` 或执行 Production Activation。
+
+`ITER-008` 已依据实际 Web 证据以 `REDIRECT` 结束：已完成的技术代码和运行证据均保留，但没有形成 Acceptance。`ITER-009` 的产品
+代码从 clean commit `2cd743b2ba74c5a79cd4d38433830786de09e753` 继续；未验收的 `1.5.12` 实验保存在归档提交
+`c4ed92ea44383557dd25e6d327569cff13bb6d65`，不属于当前开发基线。
 
 用户此前于 `2026-08-13T11:45:33+08:00` 接受 ITER-006 的 exact run-008 窄范围 Result：
 在新的 SYSTEM Scope 上以 `JAVA_STATIC_CALL_GRAPH@1` 构建 Java 声明与可静态唯一解析的直接调用，发布 no-payload Snapshot/
@@ -41,7 +44,8 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 005 | **Completed / narrow acceptance** | implementation `956f31d6…`；用户指定 Maven Workspace、零问题显式更新、动态 Read Set 与正式 Web 问答完成；`run-006` 失败保留，`run-007` 三路各 9/9、comparison 与真实浏览器 PASS |
 | Iteration 006 | **Completed / narrow acceptance** | 接受 exact run-008 已证明的 Java declaration/static-call `EVALUATION_ONLY` 闭环；run-003/run-007 FAIL、交互体验限制永久保留；不接受当前页面为最终通用 Web Chat |
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
-| Iteration 008 | **SLICE-001 authorized / run-012 formal freeze PASS / public Web authorization next** | run-010 公开登录题的 V-003 two-call omission 保持 FAIL；`FINDING-008-041` 的 current identity 已由 run-028 完成 41 calls / 18/18。run-011 因 nested validation symlink 解析到 clean workspace 外而失败关闭；`FINDING-008-042` 改用 workspace 内 exact revision/remote 的真实 clone 后，run-012 以 focused 89/89、candidate 37/37、full 1039 exact hold、docs/prelisten PASS，模型调用 0。report/pending grant 为 `sha256:aada406e…4a5a` / `sha256:5cb18436…9370`；下一 Gate 是 post-freeze 公开 Web 授权。下单/跨域、canary、Agent 对照、Reflection 与 Activation 未执行 |
+| Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
+| Iteration 009 | **SLICE-001 authorized / development ready** | 从 clean 产品基线 `2cd743b…753` 开始，先完成真实本机 Web 方向体验所需的最小通用修复和确定性验证。当前只授权开发，不授权 Provider、模型或正式 Web 外部分派；方向体验运行仍需 exact freeze 后的独立授权 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -52,7 +56,14 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-ITER-008 当前只推进已授权的 SLICE-001。活动 bounded capability/Strategy 为 `1.5.11`、prompt/vocabulary `@20`、semantic-intent
+当前只推进 `ITER-009-SLICE-001`：先重建 clean baseline，确认现有 Web 主线的最小阻断，实施不含问题、工程或关键词特判的最小
+通用修复，并完成本地确定性验证。达到可冻结状态后另行形成运行授权；本轮不得读取凭据、调用模型或启动正式体验会话。
+
+以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
+
+### ITER-008 已终止的历史执行记录
+
+ITER-008 活动 bounded capability/Strategy 为 `1.5.11`、prompt/vocabulary `@20`、semantic-intent
 compiler `@7`、terminal authority compiler `@3`、Gateway policy `@1.4.12`、suite/oracle `@1.5.11`。18 个 Case、18/18 threshold、
 41 次资格调用、temperature 0、no-request-retry
 与三层完整性不变。首轮模型提交通用 search terms 和注册 operation/relation evidence requests；Application 做依赖收敛和预算可达性
@@ -662,6 +673,7 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-Agent 只能按 `ITER-008-SLICE-001` 修改其列明的 bounded investigation、Query、Strategy、Gateway/runtime、正式 Web 与验证资产，
-并以 baseline `38ebed20c5fa7bb603b8bc91981ad25da57f5877` 为起点。不得执行 ITER-007 SLICE-002/003、ITER-008 SLICE-002、
-不得披露/收集早期 canary 或最终隐藏题，不得复用已消费的外部分派 grant，也不得执行 Production Activation。
+Agent 只能按 `ITER-009-SLICE-001` 修改其列明的本机 Web 方向体验、通用 Answer/Review 边界、运行时与验证资产，并以产品基线
+`2cd743b2ba74c5a79cd4d38433830786de09e753` 为起点。不得整包继承归档的 `1.5.12` 实验，不得执行
+`ITER-009-SLICE-002/003`，不得读取 Provider credential、发起模型/live Web 调用、披露或收集隐藏题、复用已消费的外部分派
+grant，也不得执行 Production Activation。

@@ -1,10 +1,10 @@
 ---
 id: ITER-008-RESULTS
 kind: results-index
-status: draft
+status: completed
 authority: project-evidence
 owners: [quality, project]
-depends_on: [ITER-008-VERIFICATION]
+depends_on: [ITER-008-VERIFICATION, ITER-008-RESULT-SLICE-001-STOP-REDIRECT]
 code: []
 tests: []
 iteration: ITER-008
@@ -12,7 +12,8 @@ iteration: ITER-008
 
 # ITER-008 Results
 
-尚无 Product Result。Proposal、Readiness 说明、开发者自拟问题或测试数量都不是 Product Result。
+本轮最终形成一项 `failed-preserved` 的停止/转向 Product Result。Proposal、Readiness、资格 PASS 或测试数量本身都不是
+Acceptance；下面的执行历史保留为该 Result 的证据链。
 
 run-023 后的 formal product `run-004-freeze` 已通过 deterministic Gate 并形成 authorized evaluation grant，但正式 Web 在任何问题
 POST 前显示旧三调用边界；同一 public validator 也会拒绝 bounded 4—6 call Result。startup request count 与模型调用均为 0，因此
@@ -684,17 +685,13 @@ projection 均 PASS。authorization 权限为 0600，credential-shaped secret sc
 hidden canary 未披露，Production Activation 为 `NOT_EXECUTED`。run-023 因而关闭 V-002，但不是 Product Result；
 下一步是从证据写回后的 clean producer 生成绑定该 qualification chain 的 SLICE-001 formal product freeze。
 
-未来必须先为 SLICE-001 形成绑定 early canary、early Agent 对照和 `V-REFLECT-001` 的独立 Result；只有产品 Case PASS、复盘完整、
-`reflection_decision: CONTINUE` 且用户另行授权，才允许执行 SLICE-002。最终 Product Result 再聚合两个 Slice Result，不能覆盖
-前一段的证据或失败。
+run-012 随后形成最终保留证据：formal freeze document digest `sha256:aada406e…4a5a`；正式 Web 登录题以 5 次模型调用和 4 个
+Citation 正确交付；下单边界题完成 4 次 Provider HTTP 200，Draft 正确形成
+`LIMITATION / BUSINESS_DISCOVERY_RECALL_UNPROVEN`，但 Review 以 `QUERY_INCOMPLETE` 拒绝，Answer 失败关闭。用户决定
+`REDIRECT`，没有继续 early canary、成熟源码 Agent 对照、差异化价值或 SLICE-002。
 
-每个 Result 必须绑定 exact product code freeze、Snapshot/Bundle、对应隐藏 project/suite、成熟源码 Agent baseline（若适用）、
-正式 Web 现场题、逐 Case verdict、模型/工具预算和 Source/Update/Direct audit；若产品失败，按 `failed-preserved` 保留，不得创建
-Acceptance。
+- [SLICE-001 Stop and Redirect Result](slice-001-stop-redirect.md) — 聚合 run-012 freeze PASS、真实 Web 正向成功、边界
+  Answer/Review 失败、A1—A8 复盘与用户 `REDIRECT` 决定；SLICE-001 blocked，SLICE-002 proposed/not-executed，Production
+  Activation `NOT_EXECUTED`。
 
-每个 Slice Result 还必须包含 `Architecture reflection and continuation decision`，记录假设/实际、问题分类、四层架构复核、成熟
-方案对照、Finding 去向和下一风险。每个当前 Slice 已到期的假设都必须有 Expected、exact Evidence、Verdict 与 Impact；最终
-Result 覆盖 A1—A8，并分别填写偏差分类、
-Source→Snapshot→Query→Trace→Draft/Review→Web 诊断、替代方案/下一风险和决策理由。`reflection_gate_status: PASS` 只说明复盘完成；
-是否继续由独立的 `reflection_decision` 决定，并必须绑定 `reflection_decision_ref` 的 exact 用户消息。最终 Product Result 还必须
-报告正向价值 actual/unit/direction/threshold 与 exact replay report digest；只写 `PASS` 无效。
+结果索引已闭合，但 ITER-008 没有 Acceptance。其代码、测试和运行证据只作为以后 Iteration 可重新验收的候选技术资产保留。

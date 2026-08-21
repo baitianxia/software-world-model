@@ -39,8 +39,8 @@ ITER-007 已证明相关 Java 方法和实现事实进入 World Model，但固�
 
 ## Active validation
 
-`ITER-008` 已授权并执行第一段。run-012 的正式冻结 PASS，正向登录流程已经从真实 Web 给出自然答案和 Citation；边界问题的
+`ITER-008` 已执行第一段并以 `REDIRECT` 结束。run-012 的正式冻结 PASS，正向登录流程已经从真实 Web 给出自然答案和 Citation；边界问题的
 Draft 已形成 Limitation，但在 Review 交付处失败关闭。用户另报告 Codex/OpenAI 客户端的提示词准入阻断，本地尚无对应产品运行
-receipt，不能把它归因于产品 Provider 或本 Candidate 架构。下一步先按
-`ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY` 取得最小 Web 方向反馈，再决定 `CONTINUE / REDIRECT / REJECT`；
-本 Candidate 和恢复计划均不构成新的编码授权。
+receipt，不能把它归因于产品 Provider 或本 Candidate 架构。`ITER-009-SLICE-001` 已按
+`ROADMAP-CANDIDATE-LOCAL-WEB-DIRECTION-PREVIEW-RECOVERY` 获得开发授权，用最小 Web 方向反馈决定 `CONTINUE / REDIRECT / REJECT`；
+本 Candidate 本身仍不构成编码授权。

@@ -1,7 +1,7 @@
 schema_version: 1
 iteration:
   id: ITER-008
-  status: authorized
+  status: rejected
   outcome_scope: bounded-agentic-world-model-investigation-for-general-java-source-qa
 
 baseline:
@@ -302,12 +302,18 @@ readiness_inputs:
 development:
   slices:
     ITER-008-SLICE-001:
-      status: authorized
-      coding_input: true
-      result: not-executed
-      reflection_decision: not-executed
+      status: blocked
+      coding_input: false
+      result: ITER-008-RESULT-SLICE-001-STOP-REDIRECT
+      reflection_decision: REDIRECT
+      reflection_decision_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: not-executed
+      product_code_freeze_digest: sha256:aada406ea647980993515a6a2f2c77c34efe63b4bdd21b636f1597018b294a5a
+      product_code_freeze_status: preserved-positive-web-and-boundary-answer-review-failure
+      candidate_stage_manifest_digest: sha256:7484be1bf2e4f0023991a4e058e3c9ae1cf61e69bda205d55864e5c9b2400a97
+      frozen_producer_commit: 03fa8603c0693ab7b22be12ad4abbbc0e40b146d
+      frozen_producer_tree: 7098432f53d0baed12ff8a91cfb88853ddcc9a83
+      live_question_status: one-positive-success-one-boundary-answer-review-failure-stop-redirect
       authorized_by: user
       authorized_at: 2026-08-14T14:50:51+08:00
       authorization_ref: codex-user-message:sha256:eb381cfd1532dec61ec5dba26456c52ffa3c7b92e5a9588f40e98a971c797221
@@ -331,4 +337,7 @@ authorization:
   authorized_by: user
   authorized_at: 2026-08-14T14:50:51+08:00
   authorization_ref: codex-user-message:sha256:eb381cfd1532dec61ec5dba26456c52ffa3c7b92e5a9588f40e98a971c797221
-  active_slice: ITER-008-SLICE-001
+  active_slice: none
+  final_decision: REDIRECT
+  final_decision_ref: codex-user-message:sha256:6ca47f7daa8bff61fa53e99d1c19b16098207d45fbf210427c3af19e5c9999ed
+  result_ref: ITER-008-RESULT-SLICE-001-STOP-REDIRECT

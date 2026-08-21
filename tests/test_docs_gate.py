@@ -3463,6 +3463,281 @@ class ReflectionGateTests(unittest.TestCase):
             any("layer_chain" in error for error in layer_errors), layer_errors
         )
 
+    def test_direction_preview_defers_early_gates_to_the_following_slice(
+        self,
+    ) -> None:
+        new_refs = ["ITER-009-SLICE-001", "ITER-009-SLICE-002"]
+        preview_case = "V-PREVIEW-001"
+        later_cases = [
+            "V-CANARY-001",
+            "V-NEG-EARLY-001",
+            "V-COMP-EARLY-001",
+            "V-DIAG-001",
+        ]
+        blocking = [preview_case, *later_cases]
+        alignment: dict[str, object] = {
+            "direction_preview_checkpoint": preview_case,
+            "direction_preview_binding": {
+                "case_id": preview_case,
+                "new_slice_ref": new_refs[0],
+                "real_product_entry": "loopback-product-owned-world-model-web",
+                "representative_task_count": 2,
+                "status_label": "non-acceptance-non-production",
+                "decision_owner": "user",
+                "allowed_decisions": "CONTINUE,REDIRECT,REJECT",
+                "hardening_requires_continue": True,
+            },
+            "evaluation_input_mode": "user-held-live-after-product-code-freeze",
+            "mature_source_agent_protocol_digest": "user-held-not-disclosed",
+            "mature_source_agent_rubric_digest": "sha256:" + "2" * 64,
+            "positive_value_metric": "normalized-reuse-cost",
+            "positive_value_unit": "basis-points",
+            "positive_value_comparison": "at-most",
+            "positive_value_threshold": 8000,
+            "positive_value_reuse_horizon_questions": 3,
+            "mature_source_agent_cache_policy_digest": "sha256:" + "3" * 64,
+            "positive_value_protocol_digest": "sha256:" + "4" * 64,
+            "positive_value_freeze_receipt_ref": "codex-user-message:sha256:"
+            + "5" * 64,
+            "positive_value_adjudication_owner": "user",
+        }
+
+        self.assertEqual(
+            docs_gate.validate_direction_preview_binding(
+                alignment, new_refs, blocking, "manifest.yaml"
+            ),
+            [],
+        )
+
+        wrong_entry = copy.deepcopy(alignment)
+        wrong_entry["direction_preview_binding"]["real_product_entry"] = (
+            "https://public.example.test/"
+        )
+        self.assertTrue(
+            any(
+                "real_product_entry" in error
+                for error in docs_gate.validate_direction_preview_binding(
+                    wrong_entry, new_refs, blocking, "manifest.yaml"
+                )
+            )
+        )
+        wrong_owner = copy.deepcopy(alignment)
+        wrong_owner["direction_preview_binding"]["decision_owner"] = "automation"
+        self.assertTrue(
+            any(
+                "decision_owner" in error
+                for error in docs_gate.validate_direction_preview_binding(
+                    wrong_owner, new_refs, blocking, "manifest.yaml"
+                )
+            )
+        )
+        self.assertEqual(
+            docs_gate.required_early_evaluation_slice_refs(
+                alignment, new_refs, direction_preview_enabled=True
+            ),
+            {new_refs[1]},
+        )
+        self.assertEqual(
+            docs_gate.validate_early_evaluation_bindings(
+                alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                defer_until_post_preview=True,
+                direction_preview_enabled=True,
+            ),
+            [],
+        )
+
+        preview_owns_comparison = copy.deepcopy(alignment)
+        preview_owns_comparison["early_comparison_binding"] = {
+            "case_id": "V-COMP-EARLY-001",
+            "new_slice_ref": new_refs[0],
+        }
+        preview_errors = docs_gate.validate_early_evaluation_bindings(
+            preview_owns_comparison,
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            defer_until_post_preview=True,
+            direction_preview_enabled=True,
+        )
+        self.assertTrue(
+            any("direction preview Slice must not own" in error for error in preview_errors),
+            preview_errors,
+        )
+
+        missing_later_errors = docs_gate.validate_early_evaluation_bindings(
+            alignment,
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            defer_until_post_preview=False,
+            direction_preview_enabled=True,
+        )
+        self.assertTrue(
+            any("early_hidden_canary_bindings" in error for error in missing_later_errors),
+            missing_later_errors,
+        )
+
+        hardened = copy.deepcopy(alignment)
+        hardened["early_hidden_canary_bindings"] = {
+            "slice_002": {
+                "case_id": "V-CANARY-001",
+                "new_slice_ref": new_refs[1],
+                "project_manifest_digest": "user-held-not-disclosed",
+                "suite_digest": "user-held-not-disclosed",
+                "question_count": 3,
+                "answerable_question_count": 1,
+                "boundary_question_count": 2,
+                "bounded_absence_question_count": 1,
+                "coverage_limitation_question_count": 1,
+                "negative_case_id": "V-NEG-EARLY-001",
+                "evaluation_owner": "user",
+                "implementation_visibility": "hidden-until-slice-code-freeze",
+                "burn_rule": "product-change-between-disclosure-and-slice-result-seal-burns-canary-and-preserves-result",
+            }
+        }
+        hardened["early_comparison_binding"] = {
+            "case_id": "V-COMP-EARLY-001",
+            "canary_case_id": "V-CANARY-001",
+            "new_slice_ref": new_refs[1],
+            "protocol_digest_ref": "mature_source_agent_protocol_digest",
+            "quality_rule": "zero-major-error-and-no-need-claim-regression",
+            "positive_value_rule": "precommitted-measurable-world-model-advantage-must-pass",
+            "positive_value_metric_ref": "positive_value_metric",
+            "positive_value_unit_ref": "positive_value_unit",
+            "positive_value_comparison_ref": "positive_value_comparison",
+            "positive_value_threshold_ref": "positive_value_threshold",
+            "positive_value_reuse_horizon_ref": "positive_value_reuse_horizon_questions",
+            "baseline_cache_policy_digest_ref": "mature_source_agent_cache_policy_digest",
+            "positive_value_protocol_digest_ref": "positive_value_protocol_digest",
+            "positive_value_adjudication_owner_ref": "positive_value_adjudication_owner",
+        }
+        hardened["early_diagnostic_binding"] = {
+            "case_id": "V-DIAG-001",
+            "canary_case_id": "V-CANARY-001",
+            "new_slice_ref": new_refs[1],
+            "layer_chain": "source-snapshot-query-trace-draft-review-web",
+        }
+        self.assertEqual(
+            docs_gate.validate_early_evaluation_bindings(
+                hardened,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                defer_until_post_preview=False,
+                direction_preview_enabled=True,
+            ),
+            [],
+        )
+
+        legacy_manifest = {
+            "development": {
+                "slices": {
+                    new_refs[0]: {"status": "authorized"},
+                    new_refs[1]: {"status": "proposed"},
+                }
+            }
+        }
+        self.assertEqual(
+            docs_gate.required_early_evaluation_slice_refs(
+                alignment, new_refs, direction_preview_enabled=False
+            ),
+            {new_refs[0]},
+        )
+        self.assertFalse(
+            docs_gate.direction_preview_hardening_is_deferred(
+                legacy_manifest,
+                alignment,
+                new_refs,
+                direction_preview_enabled=False,
+            )
+        )
+        legacy_errors = docs_gate.validate_early_evaluation_bindings(
+            alignment,
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            defer_until_post_preview=True,
+            direction_preview_enabled=False,
+        )
+        self.assertTrue(
+            any("early_hidden_canary_bindings" in error for error in legacy_errors),
+            legacy_errors,
+        )
+
+    def test_direction_preview_does_not_exempt_contract_and_safety_readiness(
+        self,
+    ) -> None:
+        new_refs = ["ITER-009-SLICE-001", "ITER-009-SLICE-002"]
+        alignment: dict[str, object] = {
+            "direction_preview_checkpoint": "V-PREVIEW-001",
+            "direction_preview_binding": {
+                "case_id": "V-PREVIEW-001",
+                "new_slice_ref": new_refs[0],
+                "real_product_entry": "loopback-product-owned-world-model-web",
+                "representative_task_count": 2,
+                "status_label": "non-acceptance-non-production",
+                "decision_owner": "user",
+                "allowed_decisions": "CONTINUE,REDIRECT,REJECT",
+                "hardening_requires_continue": True,
+            },
+            "critical_assumption_ids": "A1",
+            "critical_assumption_catalog_digest": "sha256:" + "1" * 64,
+            "readiness_blocking_case_ids": [],
+            "blocking_case_ids": ["V-PREVIEW-001"],
+            "authorized_software_sources_digest": "sha256:" + "2" * 64,
+        }
+        manifest = {
+            "product_goal_alignment": alignment,
+            "development": {
+                "slices": {
+                    new_refs[0]: {"status": "authorized"},
+                    new_refs[1]: {"status": "proposed"},
+                }
+            },
+        }
+        errors = docs_gate.validate_product_goal_execution_readiness(
+            manifest,
+            "manifest.yaml",
+            "ITER-009",
+            {},
+            new_refs,
+            None,
+        )
+        self.assertFalse(
+            any("early_hidden_canary_bindings" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(any("source_scope must be a mapping" in error for error in errors))
+        self.assertTrue(any("answer_protocol must be a mapping" in error for error in errors))
+        self.assertTrue(any("readiness_inputs must be a mapping" in error for error in errors))
+
+        hardened_manifest = copy.deepcopy(manifest)
+        hardened_manifest["development"]["slices"][new_refs[0]]["status"] = (
+            "completed"
+        )
+        hardened_manifest["development"]["slices"][new_refs[1]]["status"] = (
+            "authorized"
+        )
+        hardened_errors = docs_gate.validate_product_goal_execution_readiness(
+            hardened_manifest,
+            "manifest.yaml",
+            "ITER-009",
+            {},
+            new_refs,
+            None,
+        )
+        self.assertTrue(
+            any("positive_value_" in error for error in hardened_errors),
+            hardened_errors,
+        )
+        self.assertTrue(
+            any("early_hidden_canary_bindings" in error for error in hardened_errors),
+            hardened_errors,
+        )
+
     def test_reflection_bindings_cover_each_slice_and_distinguish_success_decisions(
         self,
     ) -> None:

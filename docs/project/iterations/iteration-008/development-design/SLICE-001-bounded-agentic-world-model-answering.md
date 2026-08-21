@@ -1,14 +1,14 @@
 ---
 id: ITER-008-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: blocked
+authority: development-evidence
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-008-PROPOSAL, ITER-008-READINESS, ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE, ITER-007-RESULT-SLICE-001-STOP-DECISION]
 code: [src/software_world_model/application_services, src/software_world_model/knowledge_engine, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests, validation]
 iteration: ITER-008
-coding_input: true
+coding_input: false
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-005-RESULT-ACCEPTANCE, ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
@@ -21,9 +21,9 @@ product_goal_slice_gate_case_ids: [V-001, V-002, V-003, V-004, V-XD-001, V-SEC-0
 
 ## Status and dependencies
 
-`AUTHORIZED / CURRENT DEVELOPMENT`。用户消息 `codex-user-message:sha256:eb381cfd…7221` 接受 ITER-008 Readiness 并只授权本 Slice。
-Manifest 已冻结 baseline `38ebed2…`、`SYS-ADR-015`/System Contract fileset、2—4 次调查 + Draft/Review 的预算、隐藏评测协议、
-成熟源码 Agent/rubric 与正向价值阈值。本 Slice 是唯一活动编码输入；live disclosure 和 SLICE-002 仍需后续独立授权。
+`BLOCKED / STOPPED / NO LONGER CODING INPUT`。run-012 正式 Web 的登录题成功，边界题的正确 Limitation Draft 被 Review 拒绝而未
+交付。`ITER-008-RESULT-SLICE-001-STOP-REDIRECT` 已保留 exact 证据并记录用户 `REDIRECT` 决定。本 Slice 不得继续修补；任何候选
+代码只能在新 Iteration 重新授权和验收。
 
 ## Product-goal contribution and cumulative integration
 

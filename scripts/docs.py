@@ -62,6 +62,7 @@ MANIFEST_PENDING_RE = re.compile(
 )
 PRODUCT_GOAL_ALIGNMENT_START_ITERATION = 7
 REFLECTION_GATE_START_ITERATION = 8
+DIRECTION_PREVIEW_START_ITERATION = 9
 ACTIVE_REQUIRED_SECTIONS = {
     "iteration-index": ("Status and authorization", "Required inputs"),
     "iteration-proposal": (
@@ -553,6 +554,11 @@ def requires_reflection_gate(identifier: object) -> bool:
     return number is not None and number >= REFLECTION_GATE_START_ITERATION
 
 
+def requires_direction_preview(identifier: object) -> bool:
+    number = iteration_number(identifier)
+    return number is not None and number >= DIRECTION_PREVIEW_START_ITERATION
+
+
 def active_required_sections(document: Document) -> tuple[str, ...]:
     kind = str(document.metadata.get("kind", ""))
     required = ACTIVE_REQUIRED_SECTIONS.get(kind, ())
@@ -1003,26 +1009,208 @@ def validate_planned_assumption_catalog(
     return errors
 
 
-def validate_early_evaluation_bindings(
+def resolved_direction_preview_slice_ref(
+    alignment: dict[str, object], new_refs: list[str]
+) -> str | None:
+    """Resolve only a fully formed first-Slice direction preview binding."""
+
+    binding = alignment.get("direction_preview_binding")
+    if not isinstance(binding, dict) or len(new_refs) < 2:
+        return None
+    case_id = binding.get("case_id")
+    new_slice_ref = binding.get("new_slice_ref")
+    representative_task_count = binding.get("representative_task_count")
+    decision_owner = binding.get("decision_owner")
+    if (
+        not isinstance(case_id, str)
+        or re.fullmatch(r"V-PREVIEW-[0-9]{3,}", case_id) is None
+        or alignment.get("direction_preview_checkpoint") != case_id
+        or new_slice_ref != new_refs[0]
+        or binding.get("real_product_entry")
+        != "loopback-product-owned-world-model-web"
+        or isinstance(representative_task_count, bool)
+        or not isinstance(representative_task_count, int)
+        or representative_task_count < 1
+        or binding.get("status_label") != "non-acceptance-non-production"
+        or decision_owner != "user"
+        or binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT"
+        or binding.get("hardening_requires_continue") is not True
+    ):
+        return None
+    return str(new_slice_ref)
+
+
+def validate_direction_preview_binding(
     alignment: dict[str, object],
     new_refs: list[str],
     blocking_case_ids: list[str],
     label: str,
 ) -> list[str]:
+    """Require an auditable, non-acceptance preview before hardening."""
+
+    errors: list[str] = []
+    binding = alignment.get("direction_preview_binding")
+    if not isinstance(binding, dict):
+        return [f"{label}: direction_preview_binding must be a mapping"]
+    if len(new_refs) < 2:
+        errors.append(
+            f"{label}: direction preview requires a later hardening or final Slice"
+        )
+    case_id = binding.get("case_id")
+    if (
+        not isinstance(case_id, str)
+        or re.fullmatch(r"V-PREVIEW-[0-9]{3,}", case_id) is None
+    ):
+        errors.append(
+            f"{label}: direction_preview_binding.case_id must match V-PREVIEW-NNN"
+        )
+    else:
+        if alignment.get("direction_preview_checkpoint") != case_id:
+            errors.append(
+                f"{label}: direction_preview_checkpoint must match direction_preview_binding.case_id"
+            )
+        if case_id not in blocking_case_ids:
+            errors.append(f"{label}: direction preview Case must be blocking")
+    new_slice_ref = binding.get("new_slice_ref")
+    if not new_refs or new_slice_ref != new_refs[0]:
+        errors.append(
+            f"{label}: direction_preview_binding.new_slice_ref must equal the first new capability Slice"
+        )
+    real_product_entry = binding.get("real_product_entry")
+    if real_product_entry != "loopback-product-owned-world-model-web":
+        errors.append(
+            f"{label}: direction_preview_binding.real_product_entry must equal loopback-product-owned-world-model-web"
+        )
+    representative_task_count = binding.get("representative_task_count")
+    if (
+        isinstance(representative_task_count, bool)
+        or not isinstance(representative_task_count, int)
+        or representative_task_count < 1
+    ):
+        errors.append(
+            f"{label}: direction preview representative_task_count must be positive"
+        )
+    if binding.get("status_label") != "non-acceptance-non-production":
+        errors.append(
+            f"{label}: direction preview status_label must equal non-acceptance-non-production"
+        )
+    decision_owner = binding.get("decision_owner")
+    if decision_owner != "user":
+        errors.append(
+            f"{label}: direction preview decision_owner must equal user"
+        )
+    if binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT":
+        errors.append(
+            f"{label}: direction preview allowed_decisions must equal CONTINUE,REDIRECT,REJECT"
+        )
+    if binding.get("hardening_requires_continue") is not True:
+        errors.append(
+            f"{label}: direction preview must require CONTINUE before hardening"
+        )
+    return errors
+
+
+def required_early_evaluation_slice_refs(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    *,
+    direction_preview_enabled: bool = False,
+) -> set[str]:
+    """Place early hardening gates after, never on, a direction preview."""
+
+    if not direction_preview_enabled:
+        return set(new_refs[:-1])
+    preview_ref = resolved_direction_preview_slice_ref(alignment, new_refs)
+    if preview_ref is None:
+        return set(new_refs[:-1])
+    post_preview_refs = new_refs[1:]
+    if len(post_preview_refs) == 1:
+        # A combined hardening/final Slice still owns the deferred early gates.
+        return set(post_preview_refs)
+    return set(post_preview_refs[:-1])
+
+
+def direction_preview_hardening_is_deferred(
+    manifest: dict[str, object],
+    alignment: dict[str, object],
+    new_refs: list[str],
+    *,
+    direction_preview_enabled: bool = False,
+) -> bool:
+    """Return whether the explicit preview Slice has not completed yet."""
+
+    if not direction_preview_enabled:
+        return False
+    preview_ref = resolved_direction_preview_slice_ref(alignment, new_refs)
+    if preview_ref is None:
+        return False
+    development = manifest.get("development")
+    slices = development.get("slices") if isinstance(development, dict) else None
+    preview = slices.get(preview_ref) if isinstance(slices, dict) else None
+    preview_status = preview.get("status") if isinstance(preview, dict) else None
+    return preview_status in {"proposed", "authorized", "in-progress", "blocked"}
+
+
+def validate_early_evaluation_bindings(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+    *,
+    defer_until_post_preview: bool = False,
+    direction_preview_enabled: bool = False,
+) -> list[str]:
     """Freeze the first real falsification checkpoint before coding starts."""
 
     errors: list[str] = []
-    expected_refs = set(new_refs[:-1])
+    expected_refs = required_early_evaluation_slice_refs(
+        alignment,
+        new_refs,
+        direction_preview_enabled=direction_preview_enabled,
+    )
     if not expected_refs:
         return errors
+    preview_ref = (
+        resolved_direction_preview_slice_ref(alignment, new_refs)
+        if direction_preview_enabled
+        else None
+    )
+    if defer_until_post_preview and preview_ref is not None:
+        preview_owned_fields: list[str] = []
+        canary_bindings = alignment.get("early_hidden_canary_bindings")
+        if isinstance(canary_bindings, dict):
+            for binding_name, binding in canary_bindings.items():
+                if isinstance(binding, dict) and binding.get("new_slice_ref") == preview_ref:
+                    preview_owned_fields.append(
+                        f"early_hidden_canary_bindings.{binding_name}"
+                    )
+        for field in ("early_comparison_binding", "early_diagnostic_binding"):
+            binding = alignment.get(field)
+            if isinstance(binding, dict) and binding.get("new_slice_ref") == preview_ref:
+                preview_owned_fields.append(field)
+        if preview_owned_fields:
+            errors.append(
+                f"{label}: direction preview Slice must not own deferred early hidden canary, comparison or diagnostic Gates: "
+                + ", ".join(preview_owned_fields)
+            )
+        if not any(
+            field in alignment
+            for field in (
+                "early_hidden_canary_bindings",
+                "early_comparison_binding",
+                "early_diagnostic_binding",
+            )
+        ):
+            return errors
     user_held_live = (
         alignment.get("evaluation_input_mode") == USER_HELD_LIVE_EVALUATION_MODE
     )
     bindings = alignment.get("early_hidden_canary_bindings")
     if not isinstance(bindings, dict) or not bindings:
-        return [
+        errors.append(
             f"{label}: early_hidden_canary_bindings must cover every pre-final Slice"
-        ]
+        )
+        return errors
 
     canary_by_case: dict[str, tuple[str, dict[str, object]]] = {}
     seen_refs: list[str] = []
@@ -1655,6 +1843,10 @@ def validate_product_goal_alignment_manifest(
         value = alignment.get(field)
         if isinstance(value, str):
             required_blocking_cases.add(value)
+    if requires_direction_preview(iteration):
+        direction_preview_checkpoint = alignment.get("direction_preview_checkpoint")
+        if isinstance(direction_preview_checkpoint, str):
+            required_blocking_cases.add(direction_preview_checkpoint)
     additional_web_bindings = alignment.get("additional_web_checkpoint_bindings")
     if isinstance(additional_web_bindings, dict):
         for binding in additional_web_bindings.values():
@@ -1669,20 +1861,35 @@ def validate_product_goal_alignment_manifest(
             errors.append(
                 f"{label}: blocking_case_ids item is not a valid verification case ID: {case_id}"
             )
-    for field, pattern in (
+    checkpoint_fields = [
         ("first_product_web_checkpoint", r"V-WEB-[0-9]{3,}"),
         ("live_ad_hoc_question_checkpoint", r"V-ADHOC-[0-9]{3,}"),
-    ):
+    ]
+    if requires_direction_preview(iteration):
+        checkpoint_fields.append(
+            ("direction_preview_checkpoint", r"V-PREVIEW-[0-9]{3,}")
+        )
+    for field, pattern in checkpoint_fields:
         value = alignment.get(field)
         if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
             errors.append(
                 f"{label}: product_goal_alignment.{field} must be a verification case ID"
             )
+    new_refs = sequences.get("new_capability_slice_refs", [])
+    if requires_direction_preview(iteration):
+        errors.extend(
+            validate_direction_preview_binding(
+                alignment,
+                new_refs,
+                blocking_case_ids,
+                label,
+            )
+        )
     if requires_reflection_gate(iteration):
         errors.extend(
             validate_reflection_gate_bindings(
                 alignment,
-                sequences.get("new_capability_slice_refs", []),
+                new_refs,
                 blocking_case_ids,
                 label,
             )
@@ -1690,9 +1897,16 @@ def validate_product_goal_alignment_manifest(
         errors.extend(
             validate_early_evaluation_bindings(
                 alignment,
-                sequences.get("new_capability_slice_refs", []),
+                new_refs,
                 blocking_case_ids,
                 label,
+                defer_until_post_preview=direction_preview_hardening_is_deferred(
+                    manifest,
+                    alignment,
+                    new_refs,
+                    direction_preview_enabled=requires_direction_preview(iteration),
+                ),
+                direction_preview_enabled=requires_direction_preview(iteration),
             )
         )
     errors.extend(validate_product_goal_structured_bindings(alignment, sequences, label))
@@ -2920,7 +3134,17 @@ def validate_product_goal_execution_readiness(
                 )
             )
 
-    if requires_reflection_gate(iteration) and len(new_refs) > 1:
+    defer_early_evaluation = direction_preview_hardening_is_deferred(
+        manifest,
+        alignment,
+        new_refs,
+        direction_preview_enabled=requires_direction_preview(iteration),
+    )
+    if (
+        requires_reflection_gate(iteration)
+        and len(new_refs) > 1
+        and not defer_early_evaluation
+    ):
         errors.extend(validate_positive_value_execution_readiness(alignment, label))
 
     source_scope = manifest.get("source_scope")
@@ -3241,14 +3465,20 @@ def validate_product_goal_execution_readiness(
             )
 
     canary_bindings = alignment.get("early_hidden_canary_bindings")
-    expected_canary_refs = set(new_refs[:-1])
+    expected_canary_refs = required_early_evaluation_slice_refs(
+        alignment,
+        new_refs,
+        direction_preview_enabled=requires_direction_preview(iteration),
+    )
     canary_refs: list[str] = []
     canary_cases: list[str] = []
+    if defer_early_evaluation:
+        expected_canary_refs = set()
     if expected_canary_refs and not isinstance(canary_bindings, dict):
         errors.append(
             f"{label}: early_hidden_canary_bindings must cover every pre-final Slice"
         )
-    elif isinstance(canary_bindings, dict):
+    elif not defer_early_evaluation and isinstance(canary_bindings, dict):
         for binding_name, binding in canary_bindings.items():
             if not isinstance(binding, dict):
                 errors.append(
@@ -3560,6 +3790,23 @@ def validate_product_goal_reference_targets(
             continue
         owned = set(slice_gate_cases_by_ref.get(reference, []))
         required_owned = set(cases_by_new_ref.get(reference, []))
+        direction_preview_binding = alignment.get("direction_preview_binding")
+        if (
+            isinstance(direction_preview_binding, dict)
+            and direction_preview_binding.get("new_slice_ref") == reference
+        ):
+            direction_preview_case = direction_preview_binding.get("case_id")
+            if isinstance(direction_preview_case, str):
+                required_owned.add(direction_preview_case)
+                if (
+                    target.metadata.get(
+                        "product_goal_direction_preview_checkpoint_id"
+                    )
+                    != direction_preview_case
+                ):
+                    errors.append(
+                        f"{target.relative_path}: product_goal_direction_preview_checkpoint_id must match the owned Manifest binding"
+                    )
         if requires_reflection_gate(iteration):
             reflection_binding = reflection_by_slice.get(reference)
             reflection_case = (
@@ -3631,6 +3878,10 @@ def validate_product_goal_reference_targets(
 
     checkpoint_bindings: list[tuple[str, dict[str, object]]] = []
     for metadata_field, binding_field in (
+        (
+            "product_goal_direction_preview_checkpoint_id",
+            "direction_preview_binding",
+        ),
         ("product_goal_web_checkpoint_id", "web_checkpoint_binding"),
         ("product_goal_live_ad_hoc_checkpoint_id", "live_ad_hoc_checkpoint_binding"),
     ):

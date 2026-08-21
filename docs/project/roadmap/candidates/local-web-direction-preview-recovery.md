@@ -38,9 +38,8 @@ usage policy`，当前开发对话无法继续。该错误在 ITER-008 的项目
 尽快交付一个普通用户可从浏览器操作的本机方向体验版：无需认证，输入自然语言问题后能看到自然答案或诚实限制，并能打开实际
 Citation。首次体验只验证产品主线是否值得继续，不承担完整泛化、性能、生产可用性或最终验收。
 
-本 Candidate 若被选择，仍推进 `ROADMAP-M-002` 的 Step 1，不新建另一条产品目标。由于 ITER-008 已发生正式执行，任何换路都应先
-按其 Result 证据形成 `REDIRECT` 或 `REJECT`，再建立并授权新的 Iteration；不得在本规划文档中静默重启 ITER-008，也不得把本
-Candidate 当作编码授权。
+本 Candidate 已由 `ITER-009` 选择，仍推进 `ROADMAP-M-002` 的 Step 1，不新建另一条产品目标。`ITER-008` 已按实际 Web Result
+形成 `REDIRECT`；`ITER-009-SLICE-001` 已获得开发授权，但本规划文档自身仍不构成编码或运行授权。
 
 ## Non-goals before direction confirmation
 
@@ -160,6 +159,6 @@ Activation。
 
 ## Selection requirements
 
-选择本 Candidate 前，Product/Project Owner 必须先对 ITER-008 形成基于现有 Web 证据的 continuation decision，并明确授权新 Proposal。
-新 Proposal 应只授权 Stage 0—2；Stage 3 必须等待方向体验后的新 `CONTINUE` 消息。新 Iteration 不继承 ITER-008 的 Acceptance，
-且任何代码 identity 变化均不得继承旧资格裁决。
+选择条件已经闭合：ITER-008 的 stop Result 为 `REDIRECT`，ITER-009 Proposal/Readiness 已接受，且只授权对应 Stage 0—2 的
+`SLICE-001` 开发。Stage 3 必须等待方向体验后的新 `CONTINUE` 消息。ITER-009 不继承 ITER-008 的 Acceptance，任何代码 identity
+变化也不得继承旧资格裁决。

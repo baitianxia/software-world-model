@@ -1,28 +1,32 @@
 ---
 id: ITER-008-INDEX
 kind: iteration-index
-status: authorized
-authority: current-development
+status: rejected
+authority: project-decision
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-PROPOSAL, ITER-008-READINESS, ITER-008-VERIFICATION, ITER-008-SLICE-001, ITER-008-SLICE-002]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-PROPOSAL, ITER-008-READINESS, ITER-008-VERIFICATION, ITER-008-SLICE-001, ITER-008-SLICE-002, FINDING-008-043, ITER-008-RESULT-SLICE-001-STOP-REDIRECT]
 code: []
 tests: []
 iteration: ITER-008
-coding_input: true
+coding_input: false
 ---
 
 # ITER-008：受限 Agent 驱动的 World Model 调查问答
 
 ## Status and authorization
 
-`AUTHORIZED / SLICE-001 IN PROGRESS / SLICE-002 NOT AUTHORIZED`。
+`REJECTED / SLICE-001 BLOCKED / SLICE-002 PROPOSED AND NOT EXECUTED / REDIRECTED WITHOUT ACCEPTANCE`。
 
 本轮不改变“软件世界模型”目标。回答所依据的事实仍必须在提问前进入版本固定、可复用的 World Model；Agent 只负责根据查询结果
 决定下一步查什么，不能读取源码、触发更新或转入 Direct 回答。
 
-`SYS-ADR-015`、System Contract fileset、baseline `38ebed2…`、调查预算、Agent/rubric、正向价值阈值与用户持有的隐藏披露协议已
-冻结。用户以 `codex-user-message:sha256:eb381cfd…7221` 接受 Readiness 并单独授权 `SLICE-001`。本授权不包含 `SLICE-002`、
-任何 live Provider 问题披露、Production Activation、提交后的隐藏题修补或 Direct fallback。
+run-012 formal freeze 已 PASS；同一 frozen candidate 的正式 Web 已正确回答登录流程并给出 4 个 Citation，但下单边界题的正确
+Limitation Draft 被 Review 以 `QUERY_INCOMPLETE` 拒绝，未能交付给用户。hidden canary、成熟源码 Agent 对照和差异化价值验证均未
+执行。用户以 `codex-user-message:sha256:6ca47f7d…999ed` 决定转入 ITER-009，因此
+`ITER-008-RESULT-SLICE-001-STOP-REDIRECT` 将本轮失败保留；不存在 ITER-008 Acceptance 或后续编码授权。
+
+用户报告的 Codex/OpenAI 客户端 prompt admission 阻断按 `FINDING-008-043` 单独归为外部开发工具的环境/配置问题。由于没有本机
+产品 receipt，不把它写成产品 Provider、runtime 或架构的已证实根因。
 
 ## Required inputs
 
@@ -36,12 +40,10 @@ ITER-007 的 Java Source Semantics 实现只能作为待重新验收的技术资
 
 ## Iteration content
 
-全轮有两个依次单独授权的纵向 Slice。每个 Slice 都固定执行“实现 → 同一正式 Web/隐藏输入体验 → 成熟基线对照 → 方案复盘 →
-继续/接受/转向/拒绝”：
+全轮原计划有两个依次单独授权的纵向 Slice。实际执行到第一个 Slice 后终止：
 
-1. `SLICE-001` 先完成最小结果驱动调查闭环，并用公开回归、一组代码冻结后才披露的早期 canary 和成熟源码 Agent 同题对照尽快
-   证伪架构；只有复盘决定 `CONTINUE` 才可申请下一段授权；
-2. `SLICE-002` 只在前一段 PASS 后加固分页、三层完整性、安全和预算，再执行两个最终隐藏工程与成熟源码 Agent 逐题比较。
+1. `SLICE-001` 形成 formal freeze 和一条正式 Web 正向成功，但边界交付失败；Reflection 完成并决定 `REDIRECT`，状态为 blocked；
+2. `SLICE-002` 从未授权，保持 historical proposal / not-executed，在 rejected ITER-008 中不可再授权。
 
 两段都必须形成独立 `V-REFLECT` Result。Reflection PASS 只表示复盘做完；没有中间 `CONTINUE` 或最终 `ACCEPT`，不能继续开发或
 接受本轮。
@@ -53,5 +55,5 @@ Agent 仅调用 typed World Model 查询，跨多个候选与方法继续调查�
 
 ## Exit meaning
 
-若本轮通过，`ROADMAP-M-002` Step 1 才完成：系统证明“预构建 World Model 可以支持结果驱动的通用 Java 调查”，下一步才是
-真实 Java 工程与语法广度。若失败，保留 Result 并继续停留在 Step 1，不得跳去 README、配置、多语言或生产启用。
+本轮没有通过，`ROADMAP-M-002` Step 1 仍未完成。run-012 的代码、测试和正向 Web 证据可由 ITER-009 作为候选技术资产继承并重新
+验收；hidden/canary/comparison/Acceptance 与 Production Activation 均不得从本轮推导。

@@ -1,8 +1,8 @@
 ---
 id: ITER-008-VERIFICATION
 kind: iteration-verification
-status: not-run
-authority: planned-verification
+status: failed
+authority: execution-evidence
 owners: [quality]
 depends_on: [ITER-008-PROPOSAL]
 code: []
@@ -11,14 +11,14 @@ iteration: ITER-008
 product_goal_gate: V-000
 product_goal_outcome: user-visible-general-source-qa-delta
 product_goal_evaluation: independent-hidden-plus-live-ad-hoc
-product_goal_result_id: not-executed
+product_goal_result_id: ITER-008-RESULT-SLICE-001-STOP-REDIRECT
 ---
 
 # Iteration 008 Verification Matrix
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合 | product / comparison | 未参与实现的真实工程；独立评测方/用户持有且实现阶段不可见的 held-out 自由问题；验收现场临时问题；旧+新知识跨域问题；成熟源码 Agent protocol；预提交差异化价值阈值 | 支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证 | not-executed | **NOT-RUN / blocking** |
+| V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合 | product / comparison | 未参与实现的真实工程；独立评测方/用户持有且实现阶段不可见的 held-out 自由问题；验收现场临时问题；旧+新知识跨域问题；成熟源码 Agent protocol；预提交差异化价值阈值 | 支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证 | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-000 | **FAIL / blocking** |
 | V-PRE-001 | 新架构决定仍以 World Model 为知识权威，Agent 只负责受限调查 | readiness / architecture | `SYS-ADR-015`；raw `sha256:ed325cc4…a9e` | 拒绝单方法固定选择、无界展开和源码 Direct；明确 Snapshot、Agent、平台、Reviewer Owner | ADR accepted；Owner/data flow/alternatives/supersession 均闭合 | **PASS / readiness blocking** |
 | V-PRE-002 | 所有相关 System Contract 与机械门禁在编码前一致 | readiness / contract | Manifest `ITER-008-SYSTEM-CONTRACT-SET@1` 12-file digest；后续 System 变化只允许由 implementation Finding 和显式 redirect 重冻结 | 有界可变调查、三层完整性、负向结论、Draft/Review 和失败语义无冲突；docs gate PASS | 原 readiness fileset PASS；`FINDING-008-019/021/022/023/024/025/026/027/028/029/030/031/032/035/036/037/038/041` 分别按实现证据重冻结 Owner、evidence subsumption、dispatch 前 Provider route selection、persistent verified TLS/零 request retry、DeepSeek 单一 system authority、capability-selected semantic authority、question-owned/cross-script search-term constraint、精确 historical-hold freeze gate、evidence intent、direct question term compiler、terminal authority compiler、per-session dispatch bound、bounded-negative Review recall scope、Application-owned Review applicability 与 ordered behavior multiplicity projection；`FINDING-008-031` 的 Adapter-owned 处置已被 032 取代；current digest `sha256:4be12d3b35e9ccbd2795ad24f545da5a5aa5d0e671850a0c8d4ac5dcd6baf433` | **PASS / readiness blocking** |
 | V-PRE-003 | exact baseline 与 ITER-007 待复用技术资产被诚实冻结 | readiness / baseline | commit `38ebed20…5877`；tree `28ad8091…44ac`；baseline report `sha256:8cf4faa5…1e83` | 只把 ITER-005/006 Acceptance 列为 accepted；ITER-007 资产重新验收；工作树与输入可重建 | 916 sandbox PASS + affected AF_UNIX 7/7 authorized-surface PASS + demo 121/121；ITER-007 保持 unaccepted | **PASS / readiness blocking** |
@@ -29,17 +29,17 @@ product_goal_result_id: not-executed
 | V-PRE-008 | 正式产品 freeze 如实区分 raw regression 与已处置的历史环境 hold | readiness / verification | deterministic qualification `@2`；`FINDING-008-020/028/039/040/042`；五个 exact test ID、V-009 reason 与 prepared digest | raw PASS 正常通过；raw FAIL 仅在 4 FAIL + 1 ERROR、五项各执行一次、原因精确且其余测试全 PASS 时形成 preserved-hold gate PASS；任何漂移阻断且不能推导 Acceptance/Activation；sealed nested checkout 必须真实位于 clean workspace 且匹配 exact revision/remote | run-011 的 symlink checkout 因 canonical path 越界新增 ProductHoldout 1 FAIL + 1 ERROR，未形成 report。run-012 在 workspace 内 materialize 五个 exact checkout 后，focused 89/89、candidate 37/37、docs/prelisten PASS；full 1039 中 1034 PASS，只保留 exact 4 FAIL + 1 ERROR。report/deterministic digest `sha256:aada406e…4a5a` / `sha256:0dbb2e8e…fce6`，freeze model dispatch 0 | **PASS / formal freeze gate closed** |
 | V-001 | Snapshot 在问题前由零问题更新形成，提问不改变知识状态 | update / isolation | exact revision、Build Objective、Snapshot/Bundle digest、before/after authority state | 问题和 suite 不进入 Update；问答前后 CURRENT/Snapshot/Bundle identity 不变 | not-executed | **NOT-RUN / blocking** |
 | V-002 | Agent 根据结果执行多个 typed World Model 查询而非固定单方法消歧 | application / capability | 多候选、0 候选、最小预算和非法操作 corpus | 每一步由前一步 typed result 支持；可跨候选和方法继续；非法/超限失败关闭；trace 完整 | clean candidate `6d5f2de…` 的 run-028 对 current `1.5.11/@20/@1.4.12` identity 完成 Conformance 2/2 / 12/12 与 Capability 41 calls / 18 Case / 18/18 PASS；TLS `3/3`、reuse `38`、HTTP/credential `41/41`、unknown/retry `0`。Draft 明确两次调用；Reviewer 对完整答案 APPROVE、对 omitted duplicate 以 `MATERIAL_OMISSION` REJECT。Qualification `sha256:0880bb0d…eb6` 有效至 `2026-08-28T00:28:17.345205+00:00` | **PASS / blocking** |
-| V-003 | 公开登录流程回归形成多方法 supported answer | product / regression | frozen LoginService Snapshot；“登录流程”及等价释义 | 组合 `authenticate`、两次 `recordFailure()`、异常与 `issueSession()` 成功路径；有 Support/Citation | 用户授权的 run-010 公开 Web 首题完成 5/5 DeepSeek request、完整 Query/trace/Citation 与技术 terminal SUCCESS；但 Draft 只写一次 `recordFailure()`，Reviewer 错误 APPROVE，而 exact Source/typed Result/legacy count 均为 2。page/terminal digest `sha256:f796b10d…7c49` / `sha256:bbba266d…aa1dc`；首次偏差为 Draft。当前没有 user quality-verdict receipt；下单/跨域题未执行 | **FAIL / blocking** |
-| V-004 | 公开下单流程回归不产生无关登录支持 | product / regression | 同一 frozen LoginService Snapshot；“下单流程”及等价释义 | 三层完整性足够才给 bounded absence；否则给具体 Limitation；任何情况都不得引用登录方法作支持 | not-executed | **NOT-RUN / blocking** |
-| V-XD-001 | `ITER-006-RESULT-ACCEPTANCE` 与 `ITER-008-SLICE-001` 在同一答案链组合 | product / integration | 无符号多方法问题；accepted declaration/`CALLS` 与 implementation semantics | 同一 Need/Support chain 同时引用 accepted `CALLS` 和重新验收的 branch/return/throw，不是正文拼接 | not-executed | **NOT-RUN / blocking** |
+| V-003 | 公开登录流程回归形成多方法 supported answer | product / regression | frozen LoginService Snapshot；“登录流程”及等价释义 | 组合 `authenticate`、两次 `recordFailure()`、异常与 `issueSession()` 成功路径；有 Support/Citation | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-003 | **PASS / blocking** |
+| V-004 | 公开下单流程回归不产生无关登录支持 | product / regression | 同一 frozen LoginService Snapshot；“下单流程”及等价释义 | 三层完整性足够才给 bounded absence；否则给具体 Limitation；任何情况都不得引用登录方法作支持 | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-004 | **FAIL / blocking** |
+| V-XD-001 | `ITER-006-RESULT-ACCEPTANCE` 与 `ITER-008-SLICE-001` 在同一答案链组合 | product / integration | 无符号多方法问题；accepted declaration/`CALLS` 与 implementation semantics | 同一 Need/Support chain 同时引用 accepted `CALLS` 和重新验收的 branch/return/throw，不是正文拼接 | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-XD-001 | **PASS / blocking** |
 | V-SEC-001 | 有界调查的授权、预算、Snapshot fence 与 Reviewer 隔离失败关闭 | security / integration | unauthorized operations、stale Snapshot、oversize result、budget exhaustion、review tamper probes | 全部拒绝且无 fallback；合法多步 trace 可完成；Reviewer 独立审查漏查和无依据结论 | not-executed | **NOT-RUN / blocking** |
 | V-SOURCEOFF-001 | 回答进程只能查询 World Model，不能读源码或触发更新 | isolation / security | Repository、Source、Artifact/Evidence、authority DB denied；operation audit | answerable/Gap 正常；Source/Update/Direct/raw Evidence attempt 均为 0 | not-executed | **NOT-RUN / blocking** |
-| V-WEB-001 | 完整调查链从正式产品 Web 可人工体验 | product / browser | product-owned Web、真实资格模型、登录/下单和一条跨域题 | 页面显示答案/Gap、Coverage、Citation；console clean；与内部测试同一链；无 validation-only launcher | run-010 已使用 post-freeze user grant 从正式页面执行首个登录题；页面/Citation/console、Source-off 与 5-call Gateway 链均正常，但答案漏掉第二次失败记录，故产品 Gate FAIL。按首个产品偏差停止，同一旧 identity 的下单/跨域题未执行。current identity 已由 run-028 资格化为 18/18，formal run-012 report `sha256:aada406e…4a5a` 也已 PASS；pending grant 尚未授权，必须取得新的 post-freeze Web 授权 | **FAIL / blocking** |
+| V-WEB-001 | 完整调查链从正式产品 Web 可人工体验 | product / browser | product-owned Web、真实资格模型、登录/下单和一条跨域题 | 页面显示答案/Gap、Coverage、Citation；console clean；与内部测试同一链；无 validation-only launcher | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-WEB-001 | **FAIL / blocking** |
 | V-CANARY-001 | SLICE-001 在继续加固前通过真正隐藏的早期产品 Gate | product / independent-hidden | 代码冻结后才披露、且不复用为最终评测的一份小型真实 Java 工程；至少 1 条无符号多方法 answerable 与 2 条互补 boundary | 同一正式 Web 给出 supported answer、一个可证明 bounded absence 和一个 Coverage 不足的具体 Limitation；Source/Update/Direct=0；披露后产品变更 0 | not-executed | **NOT-RUN / blocking** |
 | V-NEG-EARLY-001 | 在大量加固前验证三层完整性在最小闭包上至少可成立，而不是统一返回 Limitation | product / early falsification | hidden complete-coverage absence + incomplete-coverage limitation；命名/同义词/不同入口反例 | 完整最小闭包由三层独立 Oracle 给 bounded absence；不完整闭包只能 Limitation；任一不成立立即 REDIRECT | not-executed | **NOT-RUN / blocking** |
 | V-DIAG-001 | 对同一问题逐层定位首次偏差，避免把表示、Query、Agent 或 Web 问题混为一谈 | architecture / diagnostic | Source ground truth、Snapshot atom/Coverage、typed-query result、trace、Draft/Review、Web delivery exact refs | 每层有独立 verdict；首次偏差决定问题分类；不得仅从最终答案失败反推根因 | run-010 公开登录题已完成一条同型诊断：Source/Snapshot/typed Query/trace PASS，Draft 首次 FAIL，Review 二次 FAIL，Web delivery PASS；但本 Case 仍绑定未披露 early canary，不能用公开回归替代正式 canary evidence | **NOT-RUN / blocking** |
 | V-COMP-EARLY-001 | 在大量加固前确认最小 World Model 方案既不低于成熟源码 Agent，又达到预提交正向价值阈值 | product / early comparison | early canary 同 revision、同 1+2 问题、同冻结 rubric/资源/时延成本阈值；预提交 value metric/threshold/reuse horizon/cache policy；Agent 先运行并密封 | 重大错误为 0、逐 Need/Claim 不退步、boundary 无无关证据且价值阈值 PASS；Slice Result 的 exact JSON report/digest/input digest/独立裁决收据可重放；任一失败立即停止 | not-executed | **NOT-RUN / blocking** |
-| V-REFLECT-001 | SLICE-001 根据 Web、canary、逐层诊断和 early Agent 对照复盘架构，而不是因技术链 PASS 自动继续 | architecture / reflection | Proposal A1—A8；SLICE-001 exact Result、Finding 与成本/质量/价值证据 | A1—A6 逐项记录 exact Evidence/verdict；A7/A8 early FAIL 时追加结构化行；Reflection PASS 只表示复盘完整；全部到期假设 SUPPORTED、用户 decision receipt 与 CONTINUE 同时成立才可申请下一段授权 | not-executed | **NOT-RUN / blocking** |
+| V-REFLECT-001 | SLICE-001 根据 Web、canary、逐层诊断和 early Agent 对照复盘架构，而不是因技术链 PASS 自动继续 | architecture / reflection | Proposal A1—A8；SLICE-001 exact Result、Finding 与成本/质量/价值证据 | A1—A6 逐项记录 exact Evidence/verdict；A7/A8 early FAIL 时追加结构化行；Reflection PASS 只表示复盘完整；全部到期假设 SUPPORTED、用户 decision receipt 与 CONTINUE 同时成立才可申请下一段授权 | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-REFLECT-001 | **PASS / blocking** |
 | V-NEG-001 | 负向结论分别证明查询、表示和业务发现三层完整性 | knowledge / correctness | full/truncated pages、complete/incomplete disposition、同义词/不同命名/不同入口反例 | 三层 Oracle 全 PASS 才允许 bounded absence；任一层不足只能 Limitation；分页结束不得冒充业务召回完整 | not-executed | **NOT-RUN / blocking** |
 | V-HARDEN-001 | 分页、progress/cycle、预算和 Reviewer 在多步调查中稳定失败关闭 | application / security | multi-page、repeated query、oversize result、budget exhaustion、review omission/tamper matrix | 无漏页、死循环、无界展开或 fallback；超限有具体 Limitation；Reviewer 能拒绝漏查和错误否定 | not-executed | **NOT-RUN / blocking** |
 | V-XD-002 | `ITER-006-RESULT-ACCEPTANCE` 与 `ITER-008-SLICE-002` 在最终问题中组合 | product / integration | 最终无符号多方法问题；accepted declaration/`CALLS` 与重新验收的 implementation semantics | 同一 Need/Support chain 同时引用两类知识，并由最终 Web 与现场题共同执行 | not-executed | **NOT-RUN / blocking** |
@@ -48,7 +48,7 @@ product_goal_result_id: not-executed
 | V-COMP-001 | World Model 回答逐题不低于成熟源码 Agent，并证明预提交的差异化价值 | product / comparison | 同 revision、同问题、等价资源与 cache policy；sealed Agent baseline；frozen Need/Claim rubric、value metric/unit/direction/numeric threshold/reuse horizon/protocol 与 independent adjudicator | 逐 Need/Claim 不退步；重大错误 0；Agent 可答而 World Model Gap/遗漏直接 FAIL；actual 按冻结方向达到阈值且 exact report 可重放；争议按冻结规则裁决 | not-executed | **NOT-RUN / blocking** |
 | V-ADHOC-001 | 用户从正式 Web 现场提出 2 条未披露问题并执行 `V-XD-002` | product / browser | SLICE-002 product code freeze 后用户临时题；至少 1 条无符号名且跨域 | answerable 给 supported 跨域答案，真实 boundary 给正确 Gap/Limitation；无 fallback | not-executed | **NOT-RUN / blocking** |
 | V-REGRESSION-001 | ITER-003—006 已接受能力不因新协议退步 | regression / product | accepted Result Oracles 与 current full suite | Workspace/Update/Snapshot/View/Web/Citation/Java static call accepted scope 保持；无旧 Direct 路径兜底 | not-executed | **NOT-RUN / blocking** |
-| V-009 | 本机 PASS 不产生 Production Activation | activation | exact Iteration Result | `NOT_EXECUTED` | not-executed | **NOT-RUN / blocking** |
+| V-009 | 本机 PASS 不产生 Production Activation | activation | exact Iteration Result | `NOT_EXECUTED` | ITER-008-RESULT-SLICE-001-STOP-REDIRECT#V-009 | **PASS / blocking** |
 | V-REFLECT-002 | 最终验证后复盘方案价值并决定接受、转向或拒绝 | architecture / reflection | 两段 exact Result、最终 4+2、现场题、成熟源码 Agent 对照、可重放正向价值报告、四类成本、全部 Finding | 复核 A1—A8 与复杂度/收益；质量仅持平但数值价值阈值未达时禁止 ACCEPT；必须有用户 decision receipt；回写能力路径和下一阻断 | not-executed | **NOT-RUN / blocking** |
 
 ## Freeze and scoring rules
@@ -66,3 +66,7 @@ product_goal_result_id: not-executed
 - 每个 Reflection Case 的 PASS 只表示复盘资料和决策完整，不替代所属 Slice 的产品 Case PASS。中间 Slice 还必须决定
   `CONTINUE`，最终 Slice 必须决定 `ACCEPT`；否则分别转入 `REDIRECT/REJECT`。
 - 最终 Product Result 必须逐项绑定本 Matrix，不能用测试总数或模型调用成功替代产品正确性。
+
+本 Matrix 已由 `ITER-008-RESULT-SLICE-001-STOP-REDIRECT` 终止：公开正向题、部分技术 Case 与 Reflection 有真实证据，但边界 Web
+交付失败；early canary、Agent comparison、差异化价值和全部 SLICE-002 Case 均未执行。未执行项不得推导为 PASS，ITER-008 没有
+Acceptance，Production Activation 未执行。
