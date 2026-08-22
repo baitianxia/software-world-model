@@ -14,6 +14,7 @@ from software_world_model.ai_infrastructure.engineering_question_model_source im
 )
 from software_world_model.ai_infrastructure.engineering_question_strategy import (
     ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF,
+    EngineeringQuestionModelRole,
     EngineeringQuestionRoleInputBuilder,
     engineering_question_output_schemas,
 )
@@ -27,6 +28,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
 )
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionRequest,
+    InvestigationOperation,
 )
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, StableId, digest_of
 from software_world_model.infrastructure import SqliteDatabase, SqliteModelGatewayRepository
@@ -222,6 +224,29 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertNotIn(self.configuration.secret_reference, wire_text)
         self.assertNotIn(authorization.authorization_ref, wire_text)
         self.assertEqual(source.audits[0].outcome, "COMPLETED")
+
+    def test_gateway_role_progress_accepts_investigation_schema_enum_values(self) -> None:
+        for role in (
+            EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
+            EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION,
+        ):
+            for operation in (
+                InvestigationOperation.SEARCH,
+                InvestigationOperation.READ,
+                InvestigationOperation.PARSE,
+            ):
+                self.assertEqual(
+                    EngineeringQuestionModelEgressPolicy._next_roles(
+                        role, {"operation": operation.value}
+                    ),
+                    {role},
+                )
+            self.assertEqual(
+                EngineeringQuestionModelEgressPolicy._next_roles(
+                    role, {"operation": InvestigationOperation.FINISH.value}
+                ),
+                {EngineeringQuestionModelRole.ANSWER},
+            )
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:

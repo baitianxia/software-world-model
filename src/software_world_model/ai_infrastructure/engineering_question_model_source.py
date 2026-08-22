@@ -27,6 +27,7 @@ from software_world_model.cross_cutting import (
 )
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionRequest,
+    InvestigationOperation,
 )
 
 from .engineering_question_strategy import (
@@ -1233,9 +1234,13 @@ class EngineeringQuestionModelEgressPolicy:
             EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION,
         }:
             operation = value.get("operation")
-            if operation == "FINISH":
+            if operation == InvestigationOperation.FINISH.value:
                 return {EngineeringQuestionModelRole.ANSWER}
-            if operation in {"SEARCH", "READ", "PARSE"}:
+            if operation in {
+                InvestigationOperation.SEARCH.value,
+                InvestigationOperation.READ.value,
+                InvestigationOperation.PARSE.value,
+            }:
                 return {role}
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,

@@ -1761,6 +1761,22 @@
       "tests"
     ]
   },
+  "FINDING-010-014": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-014.md",
+    "code": [
+      "src/software_world_model/application_services/java_static_call.py"
+    ],
+    "tests": []
+  },
+  "FINDING-010-015": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-015.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_model_source.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

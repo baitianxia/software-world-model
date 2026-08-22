@@ -39,5 +39,9 @@ iteration: ITER-010
   clean exact product origin、Source revision、published Bundle/Profile/Request/run grant，并密封 0600 launch/terminal audit receipts。
 - [FINDING-010-013](FINDING-010-013.md)：冻结前 focused 58/58、docs 389/389 PASS；允许 AF_UNIX 的 full 1108 中 1103 PASS，唯一
   4 FAIL + 1 ERROR 精确属于 `FINDING-008-020`。raw suite 保持 FAIL，只以 exact preserved historical hold gate 继续候选冻结。
+- [FINDING-010-014](FINDING-010-014.md)：`mall` 的现代 Java 源码超出已接受 `JAVA_STATIC_CALL_GRAPH@1` 语法子集；exact Maven
+  Snapshot 可继续最早 Web，但不能替代 `V-XD-001` 要求的 declaration/`CALLS`，该 Gate 保持 blocking。
+- [FINDING-010-015](FINDING-010-015.md)：首次真实 Web 暴露 live role-progress policy 把合法小写 `search/read/parse` 与错误大写常量
+  比较，系统性拒绝所有非 FINISH 调查；已改为 authoritative enum values 并补 initial/verification 回归，旧 candidate/run 保持 FAIL。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
