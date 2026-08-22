@@ -68,8 +68,12 @@ World Model Citation 全部实际打开且绑定同一 Package/Result，console 
 复用 8 次、Production Activation `NOT_EXECUTED`；全部 manifest 对 `src/main/resources` 匹配数为 0。九次 Web run 共 47 次 role
 dispatch，另有 2 次 current qualification call；详见 `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`。因此 `V-WEB-000` 由当前 exact run
 获得 PASS；旧失败不改写。`V-XD-001` 仍因 `mall` 未形成 declaration/`CALLS` Result 保持独立 blocking，见 `FINDING-010-014`。
-`V-WEB-001`、
-`V-PREVIEW-001` 和 `V-REFLECT-001` 未运行。
+随后冻结 4 条不同覆盖维度的公开方向题，suite digest 为
+`sha256:f75f2e7881b8b57b4e9dd1b7ff01da9ac322bb4c853ed1853f881db9ca74f100`；现场题仍由用户持有。第一题绑定 clean candidate
+`aa14234…`，在 5 次 dispatch 后因调查角色重复 `SOURCE / search("mall-security")` 触发 `NO_PROGRESS_FUSE_EXHAUSTED`，retry/switch 0、
+Production Activation `NOT_EXECUTED`。`FINDING-010-026` 已把此前未投影的 attempt-scoped query/locator intent 加入 Ledger/角色输入，并由
+Broker 在 Worker 前拒绝重复工作；Prompt 升级为 `@8`。该题与 candidate 永久失败，不重放。`V-WEB-001` 尚待剩余 3 条冻结题和一条用户
+现场题；`V-PREVIEW-001` 和 `V-REFLECT-001` 未运行。
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|

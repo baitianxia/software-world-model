@@ -253,7 +253,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@7",
+            "engineering-qa-adaptive-investigation-prompt@8",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -273,9 +273,14 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("eligible_locator_references", prompt)
             self.assertIn("never use", prompt)
             self.assertIn("a human locator/path, or an allowlisted path", prompt)
-            self.assertIn("Never repeat an earlier query or locator intent", prompt)
+            self.assertIn(
+                "Never repeat the same SEARCH evidence_class plus query pair",
+                prompt,
+            )
             self.assertIn("consumed_full_content_paths", prompt)
+            self.assertIn("prior_action_intents", prompt)
             self.assertIn("progress_digest", prompt)
+            self.assertIn("the newest action made no progress", prompt)
             self.assertIn("SEARCH requires a non-null evidence_class and query", prompt)
             self.assertIn("READ or PARSE requires a non-null evidence_class", prompt)
             self.assertIn(

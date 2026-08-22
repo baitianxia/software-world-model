@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@7"
+    "engineering-qa-adaptive-investigation-prompt@8"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -133,9 +133,11 @@ never use an ID found only inside a typed result, a human locator/path, or an
 allowlisted path. If eligible_locator_references is empty, choose search or
 FINISH. Explain the unknown this one step reduces. Locator references are
 single-use investigation inputs, and consumed_full_content_paths MUST NOT be
-read or parsed again. Never repeat an earlier query or locator intent. Compare
-progress_digest values in the typed results; after repeated progress, choose a
-different query, locator, or evidence class, or FINISH.
+read or parsed again. prior_action_intents contains every earlier action in this
+attempt. Never repeat the same SEARCH evidence_class plus query pair, and never
+reuse a READ/PARSE locator reference. If the newest progress_digest already
+appears in an earlier typed result, the newest action made no progress; choose a
+different evidence class, query, or eligible locator, or FINISH immediately.
 Obey the exact field combination for the chosen operation: SEARCH requires a
 non-null evidence_class and query, a null locator_reference, and an empty
 finish_dispositions array; READ or PARSE requires a non-null evidence_class and
@@ -167,8 +169,11 @@ from eligible_locator_references; never use an ID found only inside a typed
 result, a human locator/path, or an allowlisted path. If
 eligible_locator_references is empty, choose search or FINISH. Never repeat an
 earlier query or locator intent, and never read/parse any
-consumed_full_content_paths. Compare progress_digest values and change the query,
-locator, or evidence class, or FINISH after repeated progress. FINISH must
+consumed_full_content_paths. prior_action_intents contains every earlier action
+in this attempt. Never repeat the same SEARCH evidence_class plus query pair,
+and never reuse a READ/PARSE locator reference. If the newest progress_digest
+already appears in an earlier typed result, the newest action made no progress;
+change the evidence class, query, or eligible locator, or FINISH immediately. FINISH must
 disposition every requested checklist item honestly. Every disposition must
 return a non-empty evidence_references array. SUPPORTED may copy only exact
 opaque values from admissible_support_references; UNKNOWN, CONFLICT, or FAILED

@@ -64,5 +64,8 @@ iteration: ITER-010
   正确失败关闭；Prompt `@6` 现逐操作冻结 evidence class/query/locator/disposition 的合法字段组合，不放宽或静默归一化领域契约。
 - [FINDING-010-025](FINDING-010-025.md)：第八次 Web run 的合法 FINISH 把 latest Ledger Result 当成 Package support/boundary reference；
   现从 authoritative Package 分类投影 exact support/boundary eligibility，并在模型前后机械拒绝集合外 disposition 引用，Prompt 升级为 `@7`。
+- [FINDING-010-026](FINDING-010-026.md)：首条公开方向题重复执行同一 SOURCE query 并触发 no-progress；根因是 Prompt 要求避免重复，
+  角色输入却没有投影先前 query/locator intent。现将 attempt-scoped action intent 追加到 Ledger 并投影给角色，Broker 在 Worker 前机械拒绝
+  重复 intent，Prompt 升级为 `@8`；旧题永久失败且不重试。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -296,6 +296,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(manifest.body["prior_action_intents"], ())
         self.assertEqual(
             manifest.body["admissible_support_references"],
             (self.result.cognition.items[0].item_id.value,),
@@ -397,6 +398,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "required_basis_entry_id",
                 "eligible_locator_references",
                 "consumed_full_content_paths",
+                "prior_action_intents",
                 "admissible_support_references",
                 "admissible_boundary_references",
                 "verification_request",
@@ -413,6 +415,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(manifest.body["prior_action_intents"], ())
         self.assertEqual(
             set(manifest.body["admissible_support_references"]),
             {item.source_reference for item in package.support_citation},
@@ -532,6 +535,20 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(
             len(initial_manifests[1].body["eligible_locator_references"]),
             1,
+        )
+        self.assertEqual(
+            initial_manifests[1].body["prior_action_intents"][0]["operation"],
+            "search",
+        )
+        self.assertEqual(
+            initial_manifests[1].body["prior_action_intents"][0]["query"],
+            "start",
+        )
+        self.assertEqual(
+            initial_manifests[1].body["prior_action_intents"][0][
+                "evidence_class"
+            ],
+            "REPOSITORY_DOCUMENT",
         )
         self.assertEqual(initial_manifests[2].body["eligible_locator_references"], ())
         self.assertEqual(

@@ -592,6 +592,75 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             compilation.decision.reason_code, "EVIDENCE_CLASS_NOT_RETRIEVABLE"
         )
 
+    def test_broker_rejects_duplicate_search_intent_before_worker_execution(self):
+        req = request()
+        cognition = CognitionProjector().project(request=req)
+        ledger = EvidenceLedger.start(request=req, cognition=cognition)
+        attempt_id = sid("investigation_attempt", "c")
+        first_input = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": attempt_id,
+                "role_context_id": sid("role_context", "d"),
+                "step_index": 1,
+                "request": req,
+            },
+        )()
+        first = step_proposal(
+            first_input,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            query="mall-security",
+        )
+        ledger = ledger.append(
+            kind=LedgerEntryKind.INVESTIGATION_PROPOSAL,
+            subject_id=first.proposal_id.value,
+            subject_digest=first.digest,
+            references=tuple(item.value for item in first.basis_entry_ids),
+            details={
+                "investigation_kind": InvestigationKind.INITIAL.value,
+                "attempt_id": attempt_id.value,
+                "operation": first.operation.value,
+                "step_index": "1",
+                "evidence_class": first.evidence_class.value,
+                "query": first.query,
+            },
+        )
+        second_input = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": attempt_id,
+                "role_context_id": sid("role_context", "e"),
+                "step_index": 2,
+                "request": req,
+            },
+        )()
+        duplicate = step_proposal(
+            second_input,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            query="mall-security",
+        )
+
+        compilation = SourceBroker(source_profile=source_profile()).compile(
+            request=req,
+            proposal=duplicate,
+            ledger=ledger,
+            locator_catalog={},
+            usage=EngineeringQuestionResourceUsage(),
+        )
+
+        self.assertEqual(compilation.decision.status.value, "REJECTED")
+        self.assertEqual(
+            compilation.decision.reason_code,
+            "DUPLICATE_ACTION_INTENT",
+        )
+        self.assertIsNone(compilation.operation)
+
     def test_package_requires_the_complete_ledger_result_set(self):
         result = self.service(request_more_evidence=False).answer(request())
         with self.assertRaises(DomainError):
@@ -621,7 +690,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         self.assertFalse(result.drafts)
         self.assertFalse(result.reviews)
 
-    def test_repeated_identical_observation_trips_no_progress_fuse(self):
+    def test_repeated_identical_intent_is_rejected_before_repeated_worker_reads(self):
         class RepeatingInvestigator:
             def propose(self, investigation_input):
                 return step_proposal(
@@ -647,7 +716,12 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             EngineeringQuestionResultStatus.FAILED_CLOSED,
         )
         self.assertEqual(result.terminal_reason, "NO_PROGRESS_FUSE_EXHAUSTED")
-        self.assertEqual(result.usage.source_operations, 3)
+        self.assertEqual(result.usage.source_operations, 1)
+        self.assertEqual(len(result.broker_decisions), 3)
+        self.assertEqual(
+            [item.reason_code for item in result.broker_decisions[1:]],
+            ["DUPLICATE_ACTION_INTENT", "DUPLICATE_ACTION_INTENT"],
+        )
         self.assertEqual(
             len({item.progress_digest for item in result.retrieval_results}),
             1,

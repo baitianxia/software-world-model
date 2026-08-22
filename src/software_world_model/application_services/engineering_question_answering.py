@@ -2037,6 +2037,13 @@ class SourceBroker:
                 ledger=ledger,
                 reason="OPERATION_NOT_REGISTERED",
             )
+        if _duplicates_prior_action_intent(proposal=proposal, ledger=ledger):
+            return self._reject(
+                request=request,
+                proposal=proposal,
+                ledger=ledger,
+                reason="DUPLICATE_ACTION_INTENT",
+            )
         if usage.source_operations >= request.limits.maximum_source_operations:
             return self._reject(
                 request=request,
@@ -2248,6 +2255,76 @@ def _consumed_full_content_paths(
     )
 
 
+def _prior_action_intents(
+    *,
+    ledger: EvidenceLedger,
+    attempt_id: StableId,
+) -> tuple[dict[str, object], ...]:
+    intents: list[dict[str, object]] = []
+    for entry in ledger.entries:
+        if entry.kind is not LedgerEntryKind.INVESTIGATION_PROPOSAL:
+            continue
+        details = dict(entry.details)
+        if details.get("attempt_id") != attempt_id.value:
+            continue
+        try:
+            step_index = int(details["step_index"])
+            operation = details["operation"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "investigation Proposal Ledger entry lacks its action intent",
+            ) from exc
+        intents.append(
+            {
+                "proposal_id": entry.subject_id,
+                "step_index": step_index,
+                "operation": operation,
+                "evidence_class": details.get("evidence_class"),
+                "query": details.get("query"),
+                "locator_reference": details.get("locator_reference"),
+            }
+        )
+    return tuple(intents)
+
+
+def _duplicates_prior_action_intent(
+    *,
+    proposal: InvestigationStepProposal,
+    ledger: EvidenceLedger,
+) -> bool:
+    for intent in _prior_action_intents(
+        ledger=ledger,
+        attempt_id=proposal.attempt_id,
+    ):
+        prior_operation = intent["operation"]
+        if (
+            proposal.operation is InvestigationOperation.SEARCH
+            and prior_operation == InvestigationOperation.SEARCH.value
+            and intent["evidence_class"]
+            == (proposal.evidence_class.value if proposal.evidence_class else None)
+            and intent["query"] == proposal.query
+        ):
+            return True
+        if (
+            proposal.operation
+            in {InvestigationOperation.READ, InvestigationOperation.PARSE}
+            and prior_operation
+            in {
+                InvestigationOperation.READ.value,
+                InvestigationOperation.PARSE.value,
+            }
+            and intent["locator_reference"]
+            == (
+                proposal.locator_reference.value
+                if proposal.locator_reference
+                else None
+            )
+        ):
+            return True
+    return False
+
+
 def _eligible_locator_references(
     retrieval_results: Sequence[RetrievalResult],
 ) -> tuple[StableId, ...]:
@@ -2408,6 +2485,13 @@ class InitialInvestigationInput:
     def consumed_full_content_paths(self) -> tuple[str, ...]:
         return _consumed_full_content_paths(self.retrieval_results)
 
+    @property
+    def prior_action_intents(self) -> tuple[dict[str, object], ...]:
+        return _prior_action_intents(
+            ledger=self.ledger,
+            attempt_id=self.attempt_id,
+        )
+
     def model_view(self) -> dict[str, object]:
         return {
             "role": "INITIAL_INVESTIGATION",
@@ -2419,6 +2503,7 @@ class InitialInvestigationInput:
                 item.value for item in self.eligible_locator_references
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
+            "prior_action_intents": list(self.prior_action_intents),
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
             ),
@@ -3338,6 +3423,13 @@ class VerificationInvestigationInput:
     def consumed_full_content_paths(self) -> tuple[str, ...]:
         return _consumed_full_content_paths(self.retrieval_results)
 
+    @property
+    def prior_action_intents(self) -> tuple[dict[str, object], ...]:
+        return _prior_action_intents(
+            ledger=self.ledger,
+            attempt_id=self.attempt_id,
+        )
+
     def validate_new_result_closure(self) -> None:
         verification_positions = tuple(
             index
@@ -3399,6 +3491,7 @@ class VerificationInvestigationInput:
                 item.value for item in self.eligible_locator_references
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
+            "prior_action_intents": list(self.prior_action_intents),
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
             ),
@@ -4754,16 +4847,26 @@ class EngineeringQuestionAnsweringService:
                 disposition_reference_eligibility=disposition_reference_eligibility,
             )
             pre_proposal_ledger = ledger
+            proposal_details = {
+                "investigation_kind": investigation_kind.value,
+                "attempt_id": proposal.attempt_id.value,
+                "operation": proposal.operation.value,
+                "step_index": str(step_index),
+            }
+            if proposal.evidence_class is not None:
+                proposal_details["evidence_class"] = proposal.evidence_class.value
+            if proposal.query is not None:
+                proposal_details["query"] = proposal.query
+            if proposal.locator_reference is not None:
+                proposal_details["locator_reference"] = (
+                    proposal.locator_reference.value
+                )
             ledger = ledger.append(
                 kind=LedgerEntryKind.INVESTIGATION_PROPOSAL,
                 subject_id=proposal.proposal_id.value,
                 subject_digest=proposal.digest,
                 references=tuple(item.value for item in proposal.basis_entry_ids),
-                details={
-                    "investigation_kind": investigation_kind.value,
-                    "operation": proposal.operation.value,
-                    "step_index": str(step_index),
-                },
+                details=proposal_details,
                 maximum_bytes=request.limits.maximum_ledger_bytes,
             )
             if proposal.operation is InvestigationOperation.FINISH:
