@@ -253,7 +253,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_finish_boundary_references(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@4",
+            "engineering-qa-adaptive-investigation-prompt@5",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -268,11 +268,13 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 "short literal token likely to occur verbatim",
                 prompt,
             )
-            self.assertIn("exact opaque locator_reference ID", prompt)
+            self.assertIn("required_basis_entry_id", prompt)
+            self.assertIn("basis_entry_ids MUST include", prompt)
+            self.assertIn("eligible_locator_references", prompt)
             self.assertIn("never use", prompt)
-            self.assertIn("locator/path or an allowlisted path", prompt)
+            self.assertIn("a human locator/path, or an allowlisted path", prompt)
             self.assertIn("Never repeat an earlier query or locator intent", prompt)
-            self.assertIn("path already returned as exact full content", prompt)
+            self.assertIn("consumed_full_content_paths", prompt)
             self.assertIn("progress_digest", prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:

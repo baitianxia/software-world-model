@@ -2233,6 +2233,33 @@ class SourceBroker:
         )
 
 
+def _consumed_full_content_paths(
+    retrieval_results: Sequence[RetrievalResult],
+) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                item.path
+                for result in retrieval_results
+                for item in result.items
+                if item.line_start is None
+            }
+        )
+    )
+
+
+def _eligible_locator_references(
+    retrieval_results: Sequence[RetrievalResult],
+) -> tuple[StableId, ...]:
+    consumed_paths = set(_consumed_full_content_paths(retrieval_results))
+    return tuple(
+        item.locator_reference
+        for result in retrieval_results
+        for item in result.items
+        if item.line_start is not None and item.path not in consumed_paths
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class InitialInvestigationInput:
     attempt_id: StableId
@@ -2244,12 +2271,29 @@ class InitialInvestigationInput:
     ledger: EvidenceLedger
     retrieval_results: tuple[RetrievalResult, ...]
 
+    @property
+    def required_basis_entry_id(self) -> StableId:
+        return self.ledger.entries[-1].entry_id
+
+    @property
+    def eligible_locator_references(self) -> tuple[StableId, ...]:
+        return _eligible_locator_references(self.retrieval_results)
+
+    @property
+    def consumed_full_content_paths(self) -> tuple[str, ...]:
+        return _consumed_full_content_paths(self.retrieval_results)
+
     def model_view(self) -> dict[str, object]:
         return {
             "role": "INITIAL_INVESTIGATION",
             "attempt_id": self.attempt_id.value,
             "role_context_id": self.role_context_id.value,
             "step_index": self.step_index,
+            "required_basis_entry_id": self.required_basis_entry_id.value,
+            "eligible_locator_references": [
+                item.value for item in self.eligible_locator_references
+            ],
+            "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "request": self.request.investigation_control_view(),
             "question_understanding": self.understanding.model_view(),
             "world_model_cognition_context": self.cognition.model_view(),
@@ -3130,6 +3174,18 @@ class VerificationInvestigationInput:
     ledger: EvidenceLedger
     retrieval_results: tuple[RetrievalResult, ...]
 
+    @property
+    def required_basis_entry_id(self) -> StableId:
+        return self.ledger.entries[-1].entry_id
+
+    @property
+    def eligible_locator_references(self) -> tuple[StableId, ...]:
+        return _eligible_locator_references(self.retrieval_results)
+
+    @property
+    def consumed_full_content_paths(self) -> tuple[str, ...]:
+        return _consumed_full_content_paths(self.retrieval_results)
+
     def validate_new_result_closure(self) -> None:
         verification_positions = tuple(
             index
@@ -3186,6 +3242,11 @@ class VerificationInvestigationInput:
             "attempt_id": self.attempt_id.value,
             "role_context_id": self.role_context_id.value,
             "step_index": self.step_index,
+            "required_basis_entry_id": self.required_basis_entry_id.value,
+            "eligible_locator_references": [
+                item.value for item in self.eligible_locator_references
+            ],
+            "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "verification_request": self.verification_request.model_view(),
             "current_question_evidence_package": self.current_package.model_view(),
             "current_evidence_ledger": self.ledger.model_view(),
@@ -4461,17 +4522,18 @@ class EngineeringQuestionAnsweringService:
                 used_contexts=used_contexts,
             )
             if investigation_kind is InvestigationKind.INITIAL:
+                investigation_input = InitialInvestigationInput(
+                    attempt_id=attempt_id,
+                    role_context_id=role_context,
+                    step_index=step_index,
+                    request=request,
+                    understanding=understanding,
+                    cognition=cognition,
+                    ledger=ledger,
+                    retrieval_results=tuple(results),
+                )
                 proposal = self._initial_investigation_role.propose(
-                    InitialInvestigationInput(
-                        attempt_id=attempt_id,
-                        role_context_id=role_context,
-                        step_index=step_index,
-                        request=request,
-                        understanding=understanding,
-                        cognition=cognition,
-                        ledger=ledger,
-                        retrieval_results=tuple(results),
-                    )
+                    investigation_input
                 )
             else:
                 if current_package is None or verification_request is None:
@@ -4492,6 +4554,7 @@ class EngineeringQuestionAnsweringService:
                 proposal = self._verification_investigation_role.propose(
                     verification_input
                 )
+                investigation_input = verification_input
             usage = replace(
                 usage,
                 total_role_calls=usage.total_role_calls + 1,
@@ -4516,6 +4579,9 @@ class EngineeringQuestionAnsweringService:
                 expected_attempt_id=attempt_id,
                 expected_role_context_id=role_context,
                 expected_step_index=step_index,
+                eligible_locator_references=(
+                    investigation_input.eligible_locator_references
+                ),
             )
             pre_proposal_ledger = ledger
             ledger = ledger.append(
@@ -4890,6 +4956,7 @@ class EngineeringQuestionAnsweringService:
         expected_attempt_id: StableId,
         expected_role_context_id: StableId,
         expected_step_index: int,
+        eligible_locator_references: tuple[StableId, ...],
     ) -> None:
         expected_dispositions = tuple(
             ChecklistDisposition.create(
@@ -4960,6 +5027,15 @@ class EngineeringQuestionAnsweringService:
             raise DomainError(
                 ErrorCode.PROVIDER_RESPONSE_INVALID,
                 "investigation proposal must explicitly consume the immediately prior Ledger result",
+            )
+        if (
+            proposal.operation
+            in {InvestigationOperation.READ, InvestigationOperation.PARSE}
+            and proposal.locator_reference not in eligible_locator_references
+        ):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "investigation proposal must use a currently eligible single-use locator reference",
             )
         if proposal.operation is InvestigationOperation.FINISH:
             disposition_ids = {

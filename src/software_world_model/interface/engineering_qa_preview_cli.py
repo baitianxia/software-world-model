@@ -34,6 +34,7 @@ from software_world_model.ai_infrastructure.engineering_question_model_source im
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringEvidenceClass,
     EngineeringQuestionRequest,
+    EngineeringQuestionResourceLimits,
     SourceBroker,
 )
 from software_world_model.application_services.engineering_question_cognition import (
@@ -293,6 +294,9 @@ def prepare_engineering_question_preview(
             for path in paths
         ),
         provider_disclosure_policy=ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF,
+        limits=EngineeringQuestionResourceLimits(
+            maximum_total_model_role_calls=arguments.maximum_dispatches,
+        ),
     )
     evaluation_subject = engineering_question_preview_subject_digest(
         product_commit=product_commit,

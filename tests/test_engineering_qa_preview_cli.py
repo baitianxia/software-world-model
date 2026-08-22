@@ -225,6 +225,10 @@ class EngineeringQuestionPreviewCliTests(unittest.TestCase):
             preview.run_authorization.request_digest,
             preview.request.digest,
         )
+        self.assertEqual(
+            preview.request.limits.maximum_total_model_role_calls,
+            arguments.maximum_dispatches,
+        )
         receipt = preview.launch_receipt(port=55120)
         self.assertEqual(receipt["provider_dispatch_count_at_seal"], 0)
         self.assertEqual(

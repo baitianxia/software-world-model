@@ -653,6 +653,41 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             1,
         )
 
+    def test_full_content_locator_cannot_be_reused_for_another_read(self):
+        class FullContentReusingInvestigator:
+            def propose(self, investigation_input):
+                if investigation_input.step_index == 1:
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.SEARCH,
+                        evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                        query="start",
+                    )
+                locator = investigation_input.retrieval_results[-1].items[0]
+                return step_proposal(
+                    investigation_input,
+                    operation=InvestigationOperation.READ,
+                    evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                    locator_reference=locator.locator_reference,
+                )
+
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=UnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=FullContentReusingInvestigator(),
+            verification_investigation_role=VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=source_profile()),
+            retrieval_worker=ScriptedWorker(),
+            answer_role=AnswerRole(),
+            reviewer_role=ReviewerRole(request_more_evidence=False),
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            service.answer(request())
+
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+        self.assertIn("single-use locator", str(caught.exception))
+
     def test_wall_time_fuse_rejects_finish_returned_at_the_deadline(self):
         clock = ManualClock()
 

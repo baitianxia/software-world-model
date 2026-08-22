@@ -52,5 +52,9 @@ iteration: ITER-010
   又把 allowlisted path 当成 opaque locator reference；Prompt `@3` 现明确短 literal token、exact typed-result ID 与 path 禁止语义。
 - [FINDING-010-019](FINDING-010-019.md)：第四次真实 Web 已正确使用 literal query 与 opaque locator，却重复读取已返回完整内容的同一路径；
   no-progress fuse 正确失败关闭，Prompt `@4` 现要求 query/locator single-use、禁止重复 full-content path 并比较 progress digest。
+- [FINDING-010-020](FINDING-010-020.md)：第五次真实 Web 证明 Prompt-only 仍不能可靠约束 latest Ledger basis 与 full-content locator
+  单次使用；现把 required basis、eligible locator 和 consumed path 提升为动态角色控制，并由 Application 机械拒绝集合外 locator。
+- [FINDING-010-021](FINDING-010-021.md)：Preview Request 的 24-call 默认熔断未与更小的 exact run dispatch grant 对齐；现由同一
+  `maximum_dispatches` 绑定 Request、Provider configuration 与 run grant，使 Application 在真实上限内预留 Answer/Review。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

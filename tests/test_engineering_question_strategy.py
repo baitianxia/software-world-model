@@ -279,6 +279,12 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertIn("evidence_ledger", manifest.body)
         self.assertNotIn("question_evidence_package", manifest.body)
         self.assertEqual(
+            manifest.body["required_basis_entry_id"],
+            ledger.entries[-1].entry_id.value,
+        )
+        self.assertEqual(manifest.body["eligible_locator_references"], ())
+        self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(
             manifest.body["request"]["source_profile_digest"],
             self.result.request.source_profile_digest.value,
         )
@@ -357,6 +363,9 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "attempt_id",
                 "role_context_id",
                 "step_index",
+                "required_basis_entry_id",
+                "eligible_locator_references",
+                "consumed_full_content_paths",
                 "verification_request",
                 "current_question_evidence_package",
                 "current_evidence_ledger",
@@ -365,6 +374,12 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertNotIn("world_model_cognition_context", manifest.body)
         self.assertEqual(manifest.body["new_typed_retrieval_results"], ())
+        self.assertEqual(
+            manifest.body["required_basis_entry_id"],
+            ledger.entries[-1].entry_id.value,
+        )
+        self.assertEqual(manifest.body["eligible_locator_references"], ())
+        self.assertEqual(manifest.body["consumed_full_content_paths"], ())
 
         with self.assertRaises(DomainError) as caught:
             EngineeringQuestionRoleInputBuilder.verification_investigation(
@@ -466,6 +481,21 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 manifest.external_disclosure_status == "NOT_AUTHORIZED"
                 for manifest in output_source.manifests
             )
+        )
+        initial_manifests = [
+            manifest
+            for manifest in output_source.manifests
+            if manifest.role is EngineeringQuestionModelRole.INITIAL_INVESTIGATION
+        ]
+        self.assertEqual(initial_manifests[0].body["eligible_locator_references"], ())
+        self.assertEqual(
+            len(initial_manifests[1].body["eligible_locator_references"]),
+            1,
+        )
+        self.assertEqual(initial_manifests[2].body["eligible_locator_references"], ())
+        self.assertEqual(
+            initial_manifests[2].body["consumed_full_content_paths"],
+            ("README.md",),
         )
         verification_manifests = [
             manifest

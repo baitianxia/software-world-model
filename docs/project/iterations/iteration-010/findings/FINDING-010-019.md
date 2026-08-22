@@ -59,5 +59,6 @@ Prompt regression 同时冻结 Initial/Verification 的 `@4` identity、single-u
 Prompt 文件不属于 DeepSeek implementation manifest，现有 current qualification 保持 implementation-compatible，但新的 live run 必须使用
 新的 Prompt-bound authorization。
 
-用户授权的 20-call 总上限当前已消费 16 次，只剩 4 次；这不足以从新 Request 完成最少的 Understanding、Investigation、Answer、Review
-链。因此本 Finding 的 live 重验不得在原授权下继续，必须等待新的明确调用额度，不能把剩余额度当成 retry 或越界使用。
+当时用户授权的 20-call 总上限已消费 16 次，只剩 4 次，因此没有越界重验。用户随后把总上限提高到 28，Prompt `@4` 的 clean candidate
+完成了新的 live run；该 run 没有重现连续相同 progress digest，但暴露 Prompt-only 仍不能可靠约束 latest Ledger basis 和 full-content
+locator 单次使用，已作为独立证据处置到 `FINDING-010-020`。本 Finding 的原始失败证据和 no-progress 结论保持不变。
