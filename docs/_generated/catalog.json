@@ -3858,6 +3858,20 @@
     "path": "docs/project/iterations/iteration-010/results/v-web-000-live-run-009.md"
   },
   {
+    "id": "ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS",
+    "kind": "iteration-result",
+    "status": "executed-awaiting-user-onsite-question",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "security",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-web-001-public-direction-questions.md"
+  },
+  {
     "id": "ITER-010-RESULTS",
     "kind": "results-index",
     "status": "draft",

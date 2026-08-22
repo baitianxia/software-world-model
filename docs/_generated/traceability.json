@@ -2913,6 +2913,27 @@
       "tests/test_engineering_qa_preview_cli.py"
     ]
   },
+  "ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS": {
+    "path": "docs/project/iterations/iteration-010/results/v-web-001-public-direction-questions.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py",
+      "src/software_world_model/interface/engineering_qa_preview_cli.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests"
+    ]
+  },
   "ITER-010-SLICE-001": {
     "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
     "code": [

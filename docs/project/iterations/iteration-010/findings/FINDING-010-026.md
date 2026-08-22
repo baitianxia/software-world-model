@@ -58,5 +58,6 @@ target: src/software_world_model/application_services/engineering_question_answe
 `prior_action_intents`；Engineering QA focused 64/64、docs 403/403、`py_compile` 与 `git diff --check` PASS。full discovery 与新 clean
 discovery 共 1116 项，其中 1111 PASS；唯一 4 FAIL + 1 ERROR 的 test identity、`QUALIFICATION_INVALID: V-009 Adapter Conformance
 implementation drifted` marker 与 Codex actual/frozen digest `7645c3ca… / 9f6748b4…` 精确保持 `FINDING-008-020` 历史 hold，没有新增
-失败。raw full suite 仍为 FAIL，只以 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD` gate 继续。新 clean candidate 的剩余公开方向题仍须
-在提交后执行；本题和 candidate 永久保持失败，不能重放或追认。
+失败。raw full suite 仍为 FAIL，只以 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD` gate 继续。修复提交后的新 clean candidate
+`17cff661dc0f3fd51fcbce0721b801ccd2fbb8e3` 执行未消费的 Q2—Q4，三题分别以 0 no-progress 到达独立 Review `APPROVED`；详见
+`ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS`。本题和旧 candidate 永久保持失败，没有重放或追认。

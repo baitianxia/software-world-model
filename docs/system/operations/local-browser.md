@@ -24,7 +24,7 @@ exact Source revision/Profile、prepared Request/run grant，并先写 0600 laun
 非生产”；live health/developer details 必须显示 exact Provider/configuration/qualification/run digest 和预备 Request，local health 则明确
 `external_provider_dispatch=false`。
 
-截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 9 个永久保留的 `V-WEB-000` 方向体验 run，共 47 次
+截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 13 个永久保留的方向体验 run，共 77 次
 Engineering QA role dispatch；另有 2 次 current DeepSeek qualification call。全部 run 都绑定 exact candidate/Request/Source Profile/Maven
 Bundle/grant，retry/provider switch 为 0，Production Activation `NOT_EXECUTED`，并排除 `src/main/resources`。前 8 个 run 依次暴露并关闭
 role-progress、Schema/cardinality、Source Profile、literal/locator、no-progress、fresh Ledger/eligible locator、call-reserve、FINISH 字段组合和
@@ -35,6 +35,14 @@ Investigation、密封 Package、Answer 与独立 Review，Browser 返回 `APPRO
 in-app Browser 实际打开并绑定同一 Package/Result，console 为空；terminal audit 为一次 verified TLS handshake、8 次 reuse、retry/switch
 0、Production Activation `NOT_EXECUTED`，全部 model manifest 对 `src/main/resources` 匹配数为 0。因此 `V-WEB-000` 最早微检查点为
 PASS；它仍是 `DIRECTION_PREVIEW / NOT_ACCEPTANCE / NOT_PRODUCTION`，不能替代 `V-XD-001`、完整方向体验、Reflection 或 Slice Acceptance。
+
+随后 4 个 `V-WEB-001` 公开方向题 run 绑定预提交 suite。第一题在 5 次 dispatch 后因重复相同 SOURCE query 触发 no-progress，永久
+失败关闭；`FINDING-010-026` 将此前未投影的 attempt-scoped query/locator intent 加入 Ledger/角色输入，并由 Broker 在 Worker 前拒绝
+重复工作。剩余三题在新 clean candidate `17cff66…` 上分别以 8/8/9 次 dispatch、0 no-progress 完成，Review 全部 `APPROVED`；公开题计数
+为 3 supported / 1 fail，覆盖启动/配置、故障定位、变更影响/测试边界等非单一实现维度。11 个 Citation 全部实际打开，来源为 exact
+Build/Source 或 World Model Cognition，同题内绑定 exact Package/Result，suite 结束后 Browser developer log 为 `[]`。四题合计 30 次
+dispatch，retry/switch/outcome-unknown 0，全部 model manifest 对 `src/main/resources` 匹配数为 0，Production Activation
+`NOT_EXECUTED`。用户现场题仍未提供，因此 `V-WEB-001` 与方向裁决保持 blocking，不能把公开题子集写成完整方向体验。
 
 clean product freeze 和本次 exact question/run authorization 完成后，Engineering QA 入口使用：
 
