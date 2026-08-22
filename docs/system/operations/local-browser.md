@@ -24,7 +24,7 @@ exact Source revision/Profile、prepared Request/run grant，并先写 0600 laun
 非生产”；live health/developer details 必须显示 exact Provider/configuration/qualification/run digest 和预备 Request，local health 则明确
 `external_provider_dispatch=false`。
 
-截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 13 个永久保留的方向体验 run，共 77 次
+截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 14 个永久保留的方向体验 run，共 87 次
 Engineering QA role dispatch；另有 2 次 current DeepSeek qualification call。全部 run 都绑定 exact candidate/Request/Source Profile/Maven
 Bundle/grant，retry/provider switch 为 0，Production Activation `NOT_EXECUTED`，并排除 `src/main/resources`。前 8 个 run 依次暴露并关闭
 role-progress、Schema/cardinality、Source Profile、literal/locator、no-progress、fresh Ledger/eligible locator、call-reserve、FINISH 字段组合和
@@ -42,7 +42,14 @@ PASS；它仍是 `DIRECTION_PREVIEW / NOT_ACCEPTANCE / NOT_PRODUCTION`，不能�
 为 3 supported / 1 fail，覆盖启动/配置、故障定位、变更影响/测试边界等非单一实现维度。11 个 Citation 全部实际打开，来源为 exact
 Build/Source 或 World Model Cognition，同题内绑定 exact Package/Result，suite 结束后 Browser developer log 为 `[]`。四题合计 30 次
 dispatch，retry/switch/outcome-unknown 0，全部 model manifest 对 `src/main/resources` 匹配数为 0，Production Activation
-`NOT_EXECUTED`。用户现场题仍未提供，因此 `V-WEB-001` 与方向裁决保持 blocking，不能把公开题子集写成完整方向体验。
+`NOT_EXECUTED`。
+
+用户随后从同一 Web 现场提出“登录流程是怎样的？”。exact candidate `8632904…` 的新 run 完成 10 次 dispatch、6 个 Broker-authorized
+只读 operation、0 no-progress，Answer/Review 到达且 Review `APPROVED`；3 个 exact Source Citation 全部打开，console `[]`。terminal
+audit 为 TLS handshake 1、reuse 9、HTTP/credential 10/10、retry/switch/outcome-unknown 0，30 个 manifest item 对
+`src/main/resources` 匹配数为 0，Production Activation `NOT_EXECUTED`。因此公开 4 题与现场题合并后 `V-WEB-001` PASS。现场正文仍
+主要按 Controller/Service/Filter 方法调用顺序展开，并省略 exact Source 中的 `insertLoginLog` 副作用；`FINDING-010-027` 将其保留为
+用户方向裁决输入。`V-PREVIEW-001` 在用户给出 `CONTINUE / REDIRECT / REJECT` 前继续 blocking，技术 Web PASS 不能替代该决定。
 
 clean product freeze 和本次 exact question/run authorization 完成后，Engineering QA 入口使用：
 

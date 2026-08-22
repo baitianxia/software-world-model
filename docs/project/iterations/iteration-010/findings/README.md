@@ -67,5 +67,8 @@ iteration: ITER-010
 - [FINDING-010-026](FINDING-010-026.md)：首条公开方向题重复执行同一 SOURCE query 并触发 no-progress；根因是 Prompt 要求避免重复，
   角色输入却没有投影先前 query/locator intent。现将 attempt-scoped action intent 追加到 Ledger 并投影给角色，Broker 在 Worker 前机械拒绝
   重复 intent，Prompt 升级为 `@8`；旧题永久失败且不重试。
+- [FINDING-010-027](FINDING-010-027.md)：用户现场登录题的主链、3 个 Citation 和独立 Review 均成立，但正文仍主要按 Controller/Service/
+  Filter 方法调用顺序展开，并省略 `insertLoginLog` 副作用。它不是重大事实错误，而是必须由用户在 `V-PREVIEW-001` 判断的方向敏感质量信号；
+  不在裁决前重试或修改产品。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

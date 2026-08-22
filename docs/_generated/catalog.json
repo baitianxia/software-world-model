@@ -2148,6 +2148,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-026.md"
   },
   {
+    "id": "FINDING-010-027",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-027.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3860,7 +3873,7 @@
   {
     "id": "ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS",
     "kind": "iteration-result",
-    "status": "executed-awaiting-user-onsite-question",
+    "status": "executed-public-subset-complete",
     "authority": "execution-evidence",
     "owners": [
       "engineering",
@@ -3870,6 +3883,20 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/results/v-web-001-public-direction-questions.md"
+  },
+  {
+    "id": "ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION",
+    "kind": "iteration-result",
+    "status": "passed-browser-checkpoint-awaiting-user-direction-decision",
+    "authority": "execution-evidence",
+    "owners": [
+      "product",
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-web-001-user-onsite-question.md"
   },
   {
     "id": "ITER-010-RESULTS",

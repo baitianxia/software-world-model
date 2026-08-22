@@ -72,8 +72,15 @@ dispatch，另有 2 次 current qualification call；详见 `ITER-010-RESULT-V-W
 `sha256:f75f2e7881b8b57b4e9dd1b7ff01da9ac322bb4c853ed1853f881db9ca74f100`；现场题仍由用户持有。第一题绑定 clean candidate
 `aa14234…`，在 5 次 dispatch 后因调查角色重复 `SOURCE / search("mall-security")` 触发 `NO_PROGRESS_FUSE_EXHAUSTED`，retry/switch 0、
 Production Activation `NOT_EXECUTED`。`FINDING-010-026` 已把此前未投影的 attempt-scoped query/locator intent 加入 Ledger/角色输入，并由
-Broker 在 Worker 前拒绝重复工作；Prompt 升级为 `@8`。该题与 candidate 永久失败，不重放。`V-WEB-001` 尚待剩余 3 条冻结题和一条用户
-现场题；`V-PREVIEW-001` 和 `V-REFLECT-001` 未运行。
+Broker 在 Worker 前拒绝重复工作；Prompt 升级为 `@8`。该题与 candidate 永久失败，不重放。
+
+修复后的 clean candidate `17cff66…` 只消费 successor freeze 中的 Q2—Q4，三题分别以 8/8/9 dispatch、0 no-progress 到达独立 Review
+`APPROVED`；11 个 Citation 全部打开，公开题总分为 3 supported / 1 fail，达到两个非实现维度阈值。用户随后以 exact message digest
+`sha256:684849e3…e9c9` 现场提出“登录流程是怎样的？”。clean candidate `8632904…` 的全新 onsite run 以 10 dispatch、6 个只读 Broker
+operation、0 no-progress 形成 Result `engineering_result_e5f3c335944de0f2f57e8f9fdd48b419` 和 Review `APPROVED`；3 个 exact Source
+Citation 全部打开、console `[]`、retry/switch/outcome-unknown 0、resources match 0、Production Activation `NOT_EXECUTED`。因此公开 4 题
+与现场题合并后 `V-WEB-001` PASS。`FINDING-010-027` 同时保留正文仍以 Controller/Service/Filter 方法调用序列为主且省略
+`insertLoginLog` 副作用的方向敏感信号；`V-PREVIEW-001` 仍等待用户 `CONTINUE / REDIRECT / REJECT`，不能由技术 PASS 推导。
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
@@ -98,8 +105,8 @@ Broker 在 Worker 前拒绝重复工作；Prompt 升级为 `@8`。该题与 cand
 | V-SEC-001 | Slice1 exact revision、allowlist、untrusted Source、Provider disclosure、Secret、预算与 Web 安全成立 | security / integration | drift、oversize、injection、unauthorized fragment/provider、review tamper、outcome unknown、non-loopback probes | 全部失败关闭；request retry/provider switch/source write/update/silent fallback=0；合法本地确定性路径完成 | not-executed | NOT-RUN / blocking |
 | V-XD-001 | 同一 ENGINEERING_QA 答案组合 ITER-006 accepted World Model 认知与 query-time 新来源 Evidence | product / integration | declaration/`CALLS` Result + repository document/config/test/source conclusion；无符号自然问题 | 同一 Ledger/Package/Answer/Review；结论分别绑定正确来源；不是两个正文或模式拼接 | `FINDING-010-014`：mall Maven Snapshot 已发布，但 Java Profile 对真实源码失败关闭；Maven relation 不替代 declaration/`CALLS` | NOT-RUN / blocking |
 | V-WEB-000 | Slice1 在完整夯实前交付最早可体验的真实 Web 微纵切 | product / browser | exact freeze/live grant、普通用户无认证、一条 World Model + query-time Source 代表问题 | 最小真实链可用；exact revision/read-only/untrusted Source/support-citation 分区/Citation/独立 Review 全部成立；非回放/CLI | `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`；candidate `f38f6cc…` / exact mall `0504e86…` / Result `engineering_result_2025ba4a523a363c6a8f463e670dfc31` / 9 dispatch / 6 opened Citation / Review APPROVED / retry 0 / switch 0 / Production Activation NOT_EXECUTED；前 8 run 永久失败保留 | PASS / blocking |
-| V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | `ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS`：公开 4 题完成，3 approved / 1 fail，console `[]`；用户现场题 pending | NOT-RUN / blocking |
-| V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |
+| V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | `ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS` + `ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION`：公开 3 approved / 1 fail；现场题 APPROVED；14 Citation 全部打开；console `[]` | PASS / blocking |
+| V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | 真实结果已齐；`FINDING-010-027` 保留现场答案的方法序列主导与登录日志遗漏；用户 decision pending | NOT-RUN / blocking |
 | V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |
 | V-GENERAL-002 | 同一协议跨第二工程、不同命名/结构/来源仍不依赖特判 | product / generalization | 第二真实工程、改述、不同目录/框架、source/doc/config/test mixes | 问题层级正确；无 project/question/keyword/symbol/class/method/fixture/oracle branch | not-executed | NOT-RUN / blocking |
 | V-RERETRIEVE-002 | 独立补证调查在复杂 gap、冲突、重复和 no-progress 上机械夯实 | application / contract | omission、unsupported inference、citation gap、specific/duplicate/conflicting gap、持久恢复、no-progress cases | 新上下文读 gap+Package/Ledger 并多步结果驱动；不回初始调查；同包 rewrite/新包严格区分；去重恢复正确；不可修复关闭 | not-executed | NOT-RUN / blocking |

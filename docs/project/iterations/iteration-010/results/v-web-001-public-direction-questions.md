@@ -1,7 +1,7 @@
 ---
 id: ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS
 kind: iteration-result
-status: executed-awaiting-user-onsite-question
+status: executed-public-subset-complete
 authority: execution-evidence
 owners: [engineering, quality, security, product]
 depends_on: [ITER-010-SLICE-001, ITER-010-VERIFICATION, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, FINDING-010-026]
@@ -19,9 +19,9 @@ iteration: ITER-010
 3/4 supported、至少两个非实现维度、未观察到重大事实错误，且 3 个获批答案的物质肯定结论都绑定可打开 Citation。失败题没有重试、
 替换或追认。
 
-这不是 `V-WEB-001` PASS。该 Case 还要求至少一条用户现场题；`V-PREVIEW-001` 还要求用户看过真实结果后作出
-`CONTINUE / REDIRECT / REJECT`。两项目前都没有用户收据，因此 Slice/Iteration 仍未接受，Production Activation 仍为
-`NOT_EXECUTED`。
+本 Result 本身只拥有公开 4 题证据，不单独给 `V-WEB-001` 下 PASS。用户随后提供并执行现场题，见
+`ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION`；两份 Result 合并后 `V-WEB-001` PASS。`V-PREVIEW-001` 仍要求用户看过真实结果后
+作出 `CONTINUE / REDIRECT / REJECT`，因此 Slice/Iteration 尚未接受，Production Activation 仍为 `NOT_EXECUTED`。
 
 ## Exact freeze and authorization
 
@@ -87,12 +87,12 @@ item，对 `src/main/resources` 的 exact 匹配数为 0；所有模型角色 di
 Activation 均为 `NOT_EXECUTED`。
 
 原始收据永久保存在 `var/iteration-010/slice-001/run-004-direction-preview/` 下四个独立 run 目录。launch/terminal/Gateway SHA-256、exact
-Request/evaluation-subject/run-authorization digest 和逐 dispatch audit 都已核对；任何后续现场题都必须使用全新目录、exact question grant 和
-当前 clean candidate，不能覆盖这些文件。
+Request/evaluation-subject/run-authorization digest 和逐 dispatch audit 都已核对。后续现场题确实使用全新目录、exact question grant 和
+clean candidate 执行，没有覆盖这些文件。
 
 ## Remaining blocking work
 
-- 用户提供至少一条现场题后，才可完成 `V-WEB-001`；
+- 用户现场题已由 `ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION` 完成，公开题与该 Result 合并后 `V-WEB-001` PASS；
 - 用户实际判断这些 Web 结果并给出 `CONTINUE / REDIRECT / REJECT` 后，才可执行 `V-PREVIEW-001` 与 Slice Reflection；
 - `V-XD-001` 仍因当前 Maven Cognition 不含 accepted declaration/`CALLS` 保持独立 blocking；本结果没有把 Maven relation 冒充 Java
   call behavior；

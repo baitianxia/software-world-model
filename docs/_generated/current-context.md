@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-public-direction-questions-complete-user-onsite-question-pending`
+- Worktree status: `iteration-010-slice-001-v-web-001-pass-user-direction-decision-pending`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
-- Live model path: `slice1-public-direction-questions-complete-user-onsite-question-and-direction-decision-pending`
+- Live model path: `slice1-v-web-001-pass-user-direction-decision-pending`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
