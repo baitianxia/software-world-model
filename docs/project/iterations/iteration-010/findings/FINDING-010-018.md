@@ -55,4 +55,5 @@ Prompt regression 同时覆盖 Initial/Verification，冻结 `@3` identity、lit
 扩展 focused 69/69、docs 394/394、`py_compile` 与 `git diff --check` PASS。允许 AF_UNIX 的 full discovery 共 1112 项，其中 1107
 PASS；唯一 4 FAIL + 1 ERROR 的 exact identity、类型和 marker 与 `FINDING-008-020` 历史 hold 相同，没有新增失败。由于 DeepSeek
 implementation manifest 不包含该 role-specific Prompt source，现有 qualification 的 implementation digest 不因本修正改变；新 clean
-candidate run 仍须绑定新的 Prompt digest。
+candidate `91dffec…` 的后续 run 已绑定 `@3` 并证明 literal `JwtTokenUtil` query 与 opaque locator reference 均按预期工作，但又暴露独立的
+重复 full-read/no-progress 问题，见 `FINDING-010-019`；这不追溯改变本 Finding 的处置。

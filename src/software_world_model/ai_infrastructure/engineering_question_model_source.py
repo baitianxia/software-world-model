@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@3"
+    "engineering-qa-adaptive-investigation-prompt@4"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -130,7 +130,12 @@ a semantic description or command. For read/parse, locator_reference must copy
 the exact opaque locator_reference ID from a typed retrieval item in the current
 input; never use that item's locator/path or an allowlisted path. If the current
 input has no locator_reference ID, choose search or FINISH. Explain the unknown
-this one step reduces.
+this one step reduces. Treat locator references and their human locator/path as
+single-use investigation inputs: never read or parse a path already returned as
+exact full content, even when that read issued a new locator_reference. Never
+repeat an earlier query or locator intent. Compare progress_digest values in the
+typed results; after repeated progress, choose a different query, locator, or
+evidence class, or FINISH.
 FINISH must disposition every checklist item against the current evidence;
 unknown, conflict, or failure is preferable to invented support. Every FINISH
 disposition, including UNKNOWN, CONFLICT, or FAILURE, must cite one or more
@@ -147,10 +152,13 @@ commands, semantic search descriptions, or broaden the gap. A search query must
 be a short literal token likely to occur verbatim. For read/parse,
 locator_reference must copy an exact opaque locator_reference ID from a new typed
 retrieval item; never use its locator/path or an allowlisted path. If no such ID
-exists, choose search or FINISH. FINISH must disposition every requested
-checklist item honestly. Every disposition must cite one or more exact evidence
-or boundary entry IDs from the current input; never return an empty
-evidence_references array.
+exists, choose search or FINISH. Never repeat an earlier query or locator intent,
+and never read/parse a path already returned as exact full content, including
+through a new locator_reference. Compare progress_digest values and change the
+query, locator, or evidence class, or FINISH after repeated progress. FINISH must
+disposition every requested checklist item honestly. Every disposition must cite
+one or more exact evidence or boundary entry IDs from the current input; never
+return an empty evidence_references array.
 """,
     EngineeringQuestionModelRole.ANSWER: """
 Answer from the sealed Question Evidence Package only. Lead with the direct

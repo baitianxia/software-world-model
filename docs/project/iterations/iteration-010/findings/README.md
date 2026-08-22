@@ -50,5 +50,7 @@ iteration: ITER-010
   question fuse；下一次只登记登录/JWT 相关 exact 文件，不提高上限、不纳入 `src/main/resources`。
 - [FINDING-010-018](FINDING-010-018.md)：第三次真实 Web 证明精确文件 Profile 已不触发 fuse，但模型用自然语言语义描述做 literal search，
   又把 allowlisted path 当成 opaque locator reference；Prompt `@3` 现明确短 literal token、exact typed-result ID 与 path 禁止语义。
+- [FINDING-010-019](FINDING-010-019.md)：第四次真实 Web 已正确使用 literal query 与 opaque locator，却重复读取已返回完整内容的同一路径；
+  no-progress fuse 正确失败关闭，Prompt `@4` 现要求 query/locator single-use、禁止重复 full-content path 并比较 progress digest。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
