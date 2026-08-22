@@ -1,14 +1,14 @@
 ---
 id: ITER-010-INDEX
 kind: iteration-index
-status: authorized
-authority: current-development
+status: rejected
+authority: project-decision
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, ITER-010-RESULT-SLICE-001-STOP-REDIRECT]
 code: []
 tests: []
 iteration: ITER-010
-coding_input: true
+coding_input: false
 ---
 
 # ITER-010：世界模型认知引导的自适应工程问答
@@ -32,16 +32,24 @@ coding_input: true
 
 ## Status and authorization
 
-`AUTHORIZED / SLICE-001 CURRENT DEVELOPMENT / SLICE-002 AND SLICE-003 NOT AUTHORIZED`。
+`REJECTED / SLICE-001 BLOCKED / SLICE-002 AND SLICE-003 PROPOSED BUT NOT AUTHORIZED / REDIRECTED WITHOUT ACCEPTANCE`。
+
+Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
+能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。
+
+用户以 `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0`
+作出 `REDIRECT`。`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 保留 exact 证据与架构反思；`FINDING-010-028` 将根因定位到自由文本抽象
+层级、扁平 Answer Claim 和不可执行的 Review 方向质量 Gate。本轮不再是编码输入；Slice2/3 从未授权，不能在 ITER-010 中继续。
 
 用户消息 `codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc` 于
 `2026-08-21T08:23:25Z` 要求按最新讨论重新制定计划并更新文档。它确认：World Model 仍是真正的软件外部认知；提问期由 LLM 主导
 自适应调查，Broker/Worker 控制实际读取，调查后 seal，Reviewer 可独立要求补证。
 
-该收据只授权重制计划和文档。用户随后以
+该收据曾只授权重制计划和文档。用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
-接受 Readiness，并只授权 `ITER-010-SLICE-001` 产品代码开发与本地确定性验证。`SLICE-002/003`、credential、Provider/model 调用、
-live Web/browser、hidden disclosure 和 Production Activation 仍未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
+接受 Readiness，并只授权 `ITER-010-SLICE-001` 产品代码开发与本地确定性验证。后续 exact grants 已完成本 Slice 所需 Provider/model 与
+loopback Web/browser 验证；`SLICE-002/003`、hidden disclosure 和 Production Activation 从未授权。所有 live grants 均已消费或停止，
+不得跨新 Iteration 复用。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
 
 本轮产品基线固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
 `1369ce932c778c57a118123e8257ede476229d73`；授权审核的 planning commit/tree 为
@@ -58,6 +66,6 @@ live Web/browser、hidden disclosure 和 Production Activation 仍未授权。�
 - [Findings](findings/README.md)
 - [Results](results/README.md)
 
-计划顺序固定为：Slice1 先让一条代表问题跑通最小认知—自适应调查—来源代理/隔离读取—调查记录—证据包—回答/审核真实 Web 纵切，
-再用 4 条跨维度问题和现场题确认方向；用户 `CONTINUE` 后才进入跨工程、持久恢复、复杂边界、性能、安全和完整夯实；再次
-`CONTINUE` 后才正式验收。三臂消融的新协议、阈值和 digest 尚未获授权，必须在 Slice2 前以新的用户收据冻结。
+原计划在 Slice1 的方向 Gate 停止：技术链完成，但答案/审核方向失败。A3 FALSIFIED，A1/A4/A5 UNRESOLVED；Slice2/3、三臂消融、
+hidden、正式验收和 Production 均未执行。若继续最终目标，必须从新的 Iteration Proposal/Readiness 和逐 Slice 用户授权重新开始，不能
+重新激活本 rejected Iteration。

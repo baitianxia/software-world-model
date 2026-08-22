@@ -1,7 +1,7 @@
 schema_version: 1
 iteration:
   id: ITER-010
-  status: authorized
+  status: rejected
   outcome_scope: world-model-cognition-guided-adaptive-engineering-investigation-direction-preview-generalization-and-formal-acceptance
 
 baseline:
@@ -472,7 +472,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:e80aa26a68f3c521004f98d6667b288e9b629c275a40fb160b24788c568c573a
+  system_contract_set_digest: sha256:fd02998712188c7497b4ba647b309a0a29d8ff8627a768dd991674278eb51de2
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-1.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -501,12 +501,17 @@ readiness_inputs:
 development:
   slices:
     ITER-010-SLICE-001:
-      status: authorized
-      coding_input: true
-      result: not-executed
-      reflection_decision: not-executed
+      status: blocked
+      coding_input: false
+      result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+      reflection_decision: REDIRECT
+      reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: not-executed
+      product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
+      product_code_freeze_status: preserved-real-web-direction-failure
+      frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
+      frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
+      live_question_status: public-and-onsite-web-results-preserved-user-redirect
       authorized_by: user
       authorized_at: 2026-08-21T09:18:34Z
       authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
@@ -537,11 +542,15 @@ verification:
 
 authorization:
   readiness_review_id: ITER-010-READINESS
-  active_slice: ITER-010-SLICE-001
+  active_slice: none
   authorized_by: user
   authorized_at: 2026-08-21T09:18:34Z
   authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
+  final_decision: REDIRECT
+  final_decision_at: 2026-08-22T06:26:02Z
+  final_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
+  result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   slice1_needed_rights_root_authorization:
     status: authorized-root-exact-derived-grants-required
     authorized_by: user

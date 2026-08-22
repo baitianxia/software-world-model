@@ -20,8 +20,9 @@ iteration: ITER-010
 替换或追认。
 
 本 Result 本身只拥有公开 4 题证据，不单独给 `V-WEB-001` 下 PASS。用户随后提供并执行现场题，见
-`ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION`；两份 Result 合并后 `V-WEB-001` PASS。`V-PREVIEW-001` 仍要求用户看过真实结果后
-作出 `CONTINUE / REDIRECT / REJECT`，因此 Slice/Iteration 尚未接受，Production Activation 仍为 `NOT_EXECUTED`。
+`ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION`；两份 Result 合并后 `V-WEB-001` 技术 PASS。用户随后以
+`codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 作出 `REDIRECT`；
+`V-PREVIEW-001` 方向 FAIL，Slice/Iteration 没有 Acceptance，Production Activation 仍为 `NOT_EXECUTED`。
 
 ## Exact freeze and authorization
 

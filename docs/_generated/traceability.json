@@ -1886,6 +1886,21 @@
       "tests/test_engineering_qa_browser.py"
     ]
   },
+  "FINDING-010-028": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-028.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -2904,6 +2919,23 @@
     "tests": [
       "tests",
       "validation"
+    ]
+  },
+  "ITER-010-RESULT-SLICE-001-STOP-REDIRECT": {
+    "path": "docs/project/iterations/iteration-010/results/slice-001-stop-redirect.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests"
     ]
   },
   "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009": {

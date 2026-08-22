@@ -4,22 +4,25 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, FINDING-010-027]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028]
 code: []
 tests: []
 as_of: 2026-08-22
-active_iteration: ITER-010-INDEX
-active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-v-web-001-pass-user-direction-decision-pending
+active_iteration: none
+active_slice: none
+worktree_status: iteration-010-rejected-redirect-next-iteration-not-authorized
 strategy_relation: world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation
-live_model_path: slice1-v-web-001-pass-user-direction-decision-pending
+live_model_path: stopped-direction-failure-production-not-activated
 ---
 
 # 当前工作上下文
 
 ## 当前规划与授权
 
-当前活动 Iteration 为 `ITER-010`，唯一活动开发 Slice 为 `ITER-010-SLICE-001`。用户以
+当前没有活动 Iteration 或 coding Slice。`ITER-010` 已由用户方向决定 `REDIRECT` 封存为 rejected，Slice1 blocked，Slice2/3
+proposed 但从未授权。任何继续实现都必须先形成新的 Iteration Proposal、Readiness 和逐 Slice 用户授权，不能重新激活 ITER-010。
+
+ITER-010 原规划由用户以
 `codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc` 于
 `2026-08-21T08:23:25Z` 要求按最新讨论重新制定计划并更新文档；该收据只授权规划/docs，不授权产品编码。
 
@@ -28,7 +31,7 @@ live_model_path: slice1-v-web-001-pass-user-direction-decision-pending
 `01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。Slice2/3、credential、Provider/model call、
 正式 Web/live、hidden disclosure 和 Production Activation 仍未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
 
-用户最新以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 明确表示同时授权完成当前
+用户随后以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 明确表示同时授权完成当时
 开发所需的权限。该消息作为 Slice1 needed-rights 的 root authorization，允许在产品代码和 deterministic gate 闭合后，为本 Slice 生成并
 执行 exact product freeze、current Provider/credential-reference 检查、逐输入 Source/Cognition/Package disclosure、真实模型调用、
 loopback listener/Web/browser 验证及其审计；它不把未知的动态输入提前视为已授权。每次 dispatch 仍须从该 root 收窄并密封 exact
@@ -44,6 +47,10 @@ Provider/model/endpoint/configuration/role/secret reference/fragment/full-input 
 用户随后以 `codex-user-message:sha256:684849e3116168fb6dd67fbc9f9f70df0e5d1b8385b5f72f711cd75d62f1e9c9` 提供现场题
 “登录流程是怎样的？”。该 exact question receipt 收窄前述 root authorization；现场 run 已完成并优雅停止，不能复用。它不等于用户对答案
 方向的接受收据。
+
+用户最后以 `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 指出实现者
+已经知道回答有问题，不应再把客观停止条件退回用户重复确认。结合持续修正最终目标的要求，该消息构成 `REDIRECT` 而不是 `REJECT`。
+`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 与 `FINDING-010-028` 已保存方向失败、系统性根因和下一路线边界。
 
 `ITER-009` 已依据三条真实 Web 体验以 `REDIRECT` 结束：技术代码和运行证据完整保留，但代码走读式回答方向未获接受。
 `ITER-010` 从 clean commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
@@ -67,7 +74,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **SLICE-001 V-WEB-001 PASS / user direction decision pending** | `V-WEB-000` PASS；公开 4 题为 3 APPROVED / 1 fail-closed，现场题再形成 1 个 APPROVED Result；14 个 Citation 全部打开、console clean，因此 `V-ANSWER-001` 与 `V-WEB-001` PASS。`FINDING-010-027` 保留现场答案仍由方法序列主导且省略登录日志副作用的方向信号。focused 64/64、docs 406/406，full 1116 中 1111 PASS，只保留 `FINDING-008-020` 的 exact 4 FAIL + 1 ERROR；`V-PREVIEW-001` 等待用户 `CONTINUE/REDIRECT/REJECT`，`V-XD-001` 仍因 Maven Cognition 没有 accepted declaration/`CALLS` blocking |
+| Iteration 010 | **Rejected / REDIRECT / evidence preserved** | `V-WEB-000/V-WEB-001` 技术 PASS；公开 4 题为 3 APPROVED / 1 fail-closed，现场题再形成 1 个 APPROVED Result，14 个 Citation 全部打开、console clean。但现场正文仍由方法序列主导并省略登录日志副作用，Reviewer 错误批准；`V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001`、`V-PREVIEW-001` FAIL，用户决定 `REDIRECT`。Slice2/3、hidden、三臂对照、Acceptance 与 Production 未执行 |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
 | `local-browser` | Two explicit local evaluation surfaces | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面是带强制评测标识的本机验证入口，不是最终 Chat，二者不互相兜底 |
@@ -78,16 +85,13 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-当前只推进 `ITER-010-SLICE-001`。自适应
+当前没有执行中的开发。ITER-010 的自适应
 `World Model Cognition Context → Investigation LLM → Source Broker → Retrieval Worker → append-only Evidence Ledger → 调查后 seal
-Question Evidence Package → Answer → independent Reviewer` 最小真实纵切、`V-WEB-000` 微检查点和 4 条公开方向题都已执行。公开题结果为
-3 supported / 1 fail，达到 `V-ANSWER-001` 阈值；用户现场题也已从同一 Web 形成 `APPROVED` Result，3 个 Citation 全部打开。因此
-`V-WEB-001` 已 PASS。
+Question Evidence Package → Answer → independent Reviewer` 技术纵切、公开题和现场题证据均已封存；方向 Gate 已作出 `REDIRECT`。
 
-下一步只等待用户看过现场答案后给出 `CONTINUE / REDIRECT / REJECT`，才能完成 `V-PREVIEW-001` 与 Slice Reflection。裁决输入必须包含
-`FINDING-010-027`：答案主链正确且引用成立，但仍明显按 Controller/Service/Filter 方法顺序展开，并省略 `insertLoginLog` 副作用。
-持久恢复、复杂冲突/去重、完整异常矩阵、第二工程和三臂消融只在 `CONTINUE` 后进行；新消融与补证 hardening protocol 须在 Slice2 前取得
-新用户冻结收据。不能复用已消费授权或旧 run。
+下一条合法执行路径是 planning-only Candidate 先吸收 `FINDING-010-028`，再由新的 Iteration 冻结 typed Answer Hierarchy、Application
+acceptance 和 Reviewer 方向质量 Gate。未出现新 Proposal/Readiness/用户逐 Slice授权前，不修改产品代码、不发 Provider call、不启动
+live Web，不执行 hidden、三臂消融或 Production Activation。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

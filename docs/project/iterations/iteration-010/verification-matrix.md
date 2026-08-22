@@ -1,8 +1,8 @@
 ---
 id: ITER-010-VERIFICATION
 kind: iteration-verification
-status: not-run
-authority: planned-verification
+status: failed
+authority: execution-evidence
 owners: [quality]
 depends_on: [ITER-010-PROPOSAL]
 code: []
@@ -11,7 +11,7 @@ iteration: ITER-010
 product_goal_gate: V-000
 product_goal_outcome: user-visible-general-engineering-qa-delta
 product_goal_evaluation: independent-hidden-plus-live-ad-hoc
-product_goal_result_id: not-executed
+product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 ---
 
 # ITER-010 Verification Matrix
@@ -79,12 +79,15 @@ Broker 在 Worker 前拒绝重复工作；Prompt 升级为 `@8`。该题与 cand
 `sha256:684849e3…e9c9` 现场提出“登录流程是怎样的？”。clean candidate `8632904…` 的全新 onsite run 以 10 dispatch、6 个只读 Broker
 operation、0 no-progress 形成 Result `engineering_result_e5f3c335944de0f2f57e8f9fdd48b419` 和 Review `APPROVED`；3 个 exact Source
 Citation 全部打开、console `[]`、retry/switch/outcome-unknown 0、resources match 0、Production Activation `NOT_EXECUTED`。因此公开 4 题
-与现场题合并后 `V-WEB-001` PASS。`FINDING-010-027` 同时保留正文仍以 Controller/Service/Filter 方法调用序列为主且省略
-`insertLoginLog` 副作用的方向敏感信号；`V-PREVIEW-001` 仍等待用户 `CONTINUE / REDIRECT / REJECT`，不能由技术 PASS 推导。
+与现场题合并后 `V-WEB-001` 技术 PASS。`FINDING-010-027` 同时保留正文仍以 Controller/Service/Filter 方法调用序列为主且省略
+`insertLoginLog` 副作用的方向信号；用户随后以
+`codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 作出 `REDIRECT`。
+`FINDING-010-028` 将共同根因定位到自由文本抽象层级、扁平 Answer Claim 和不可执行的 Review 方向质量 Gate。因此 `V-ANSWER-001`、
+`V-REVIEW-001`、`V-XD-001` 与 `V-PREVIEW-001` FAIL；`V-REFLECT-001` PASS 只表示失败复盘完整。
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-000 | 本轮相对 rejected baseline 可测缩短通用工程问答差距并证明完整 World Model Cognition 的独立价值 | product / comparison | 三个唯一 Slice Result；最终隐藏 10+2；现场题；完整认知、locator-only/empty 同链、成熟源码 Agent 三臂；新收据预提交 protocol | 完整认知与成熟 Agent 先过零重大错误/boundary/逐结论质量门；完整认知再相对 locator control 达到预提交质量或非 locator 调查成本增益；计建模成本/复用周期；同一 Web/Citation/Source 隔离成立 | not-executed | NOT-RUN / blocking |
+| V-000 | 本轮相对 rejected baseline 可测缩短通用工程问答差距并证明完整 World Model Cognition 的独立价值 | product / comparison | 三个唯一 Slice Result；最终隐藏 10+2；现场题；完整认知、locator-only/empty 同链、成熟源码 Agent 三臂；新收据预提交 protocol | 完整认知与成熟 Agent 先过零重大错误/boundary/逐结论质量门；完整认知再相对 locator control 达到预提交质量或非 locator 调查成本增益；计建模成本/复用周期；同一 Web/Citation/Source 隔离成立 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-000 | FAIL / blocking |
 | V-PRE-001 | exact product baseline、planning input 与 ITER-009 rejected 产品结论被准确分离 | readiness / baseline | product commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree `1369ce932c778c57a118123e8257ede476229d73`；planning commit `01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`；predecessor Result | 技术资产复用；不继承 Acceptance/live grant/qualification；授权只基于 exact planning input；dirty baseline 禁止 | Git object/tree/branch inspection；Proposal/Manifest/Readiness | PASS / readiness blocking |
 | V-PRE-002 | ITER-009 用户反馈被判为系统性架构/产品方向证据而非单题文风 | readiness / evidence | `ITER-009-RESULT-SLICE-001-STOP-REDIRECT`、ROADMAP Candidate、现场答案与用户裁决 | baseline gap 是默认实现走读、Reviewer 层级 Gate 缺失和 Source-off 通用问答边界，不按个别问题修 Prompt | Proposal Trigger、Result、Candidate | PASS / readiness blocking |
 | V-PRE-003 | ENGINEERING_QA、严格 WORLD_MODEL 和显式 DIRECT 三种模式及新自适应调查职责已冻结 | readiness / architecture | FINDING-010-002、ADR-013/014/015/016、owning Contract list、V-ARCH-001 | World Model 概念不变；ENGINEERING_QA 使用 Investigation→Broker/Worker→Ledger→seal→Answer/Review；无 silent fallback | Proposal、Readiness、Slice1 Phase0 | PASS / readiness blocking |
@@ -99,15 +102,15 @@ Citation 全部打开、console `[]`、retry/switch/outcome-unknown 0、resource
 | V-BROKER-001 | Source Broker/Worker 在模型无直接 Source 权限下编译并执行受控读操作 | security / integration | 合法抽象 proposal、path/symlink/write/exec/network/secret/disclosure probes、exact revision drift | Broker policy 决定唯一合法操作；Worker execution only；所有模型 direct FS/Shell/network/credential/source=0；完整操作/bytes/outcome audit | not-executed | NOT-RUN / blocking |
 | V-LEDGER-001 | Evidence Ledger 只追加，调查结束后才密封双分区 Package，identity 与 seal 语义正确 | application / evidence | append/overwrite、finish/stop、admissible/rejected、gap/failure/partial/conflict/unknown、old/new revision fixtures | 历史不可改；未 finish 不 seal；support/citation 仅 admissible；boundary/audit 强制保留且不得支持肯定 Claim；seal 非 truth；旧 Review 不批新包 | not-executed | NOT-RUN / blocking |
 | V-ISOLATION-001 | Investigation、Answer、Reviewer 与实际 Source 权限物理/应用隔离 | security / isolation | source injection、path/write/exec/network/secret probes；role package/import/mount audit | 只有 Broker/Worker 受控读；Source untrusted；Investigation/Answer/Reviewer 直接 repo/source/tool access=0；非法动作失败关闭 | not-executed | NOT-RUN / blocking |
-| V-ANSWER-001 | Preview 跨类型问题先给直接、层级匹配的答案，代码细节按需 | product / answer | 一个真实工程 4 条不同覆盖维度问题、exact Package、结论级 rubric | 至少 3 supported 且覆盖至少 2 个非实现维度；重大错误 0；每个物质结论 Citation；无内部诊断平铺 | `ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS`：3 APPROVED / 1 fail-closed；Q2/Q4 为两个非实现维度；11 Citation 全部打开 | PASS / blocking |
-| V-REVIEW-001 | Reviewer 阻断缺陷并以具体 gap 启动独立 Verification Investigation | application / review | 对抗 Draft、current Package/Ledger、specific/invalid gap、两步结果驱动补证 fixture | Reviewer 不提可执行操作；新调查用新上下文读 gap+current Package/Ledger，经 Application/Broker/Worker 多步适应；不回初始调查；新包重答重审 | not-executed | NOT-RUN / blocking |
+| V-ANSWER-001 | Preview 跨类型问题先给直接、层级匹配的答案，代码细节按需 | product / answer | 一个真实工程 4 条不同覆盖维度问题、exact Package、结论级 rubric | 至少 3 supported 且覆盖至少 2 个非实现维度；重大错误 0；每个物质结论 Citation；无内部诊断平铺 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-ANSWER-001 | FAIL / blocking |
+| V-REVIEW-001 | Reviewer 阻断缺陷并以具体 gap 启动独立 Verification Investigation | application / review | 对抗 Draft、current Package/Ledger、specific/invalid gap、两步结果驱动补证 fixture | Reviewer 不提可执行操作；新调查用新上下文读 gap+current Package/Ledger，经 Application/Broker/Worker 多步适应；不回初始调查；新包重答重审 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-REVIEW-001 | FAIL / blocking |
 | V-LIMIT-001 | Preview 在调查或证据不足、安全熔断耗尽时保持诚实 | application / boundary | 可回答、证据不足、合法补证、无进展、上限耗尽、answerable/boundary fixture | 不伪造、不把未查到写成不存在；Slice1 最多一次补证；answerable 因熔断未回答计 FAIL；boundary 仅可独立审核 Limitation 或 fail closed | not-executed | NOT-RUN / blocking |
 | V-SEC-001 | Slice1 exact revision、allowlist、untrusted Source、Provider disclosure、Secret、预算与 Web 安全成立 | security / integration | drift、oversize、injection、unauthorized fragment/provider、review tamper、outcome unknown、non-loopback probes | 全部失败关闭；request retry/provider switch/source write/update/silent fallback=0；合法本地确定性路径完成 | not-executed | NOT-RUN / blocking |
-| V-XD-001 | 同一 ENGINEERING_QA 答案组合 ITER-006 accepted World Model 认知与 query-time 新来源 Evidence | product / integration | declaration/`CALLS` Result + repository document/config/test/source conclusion；无符号自然问题 | 同一 Ledger/Package/Answer/Review；结论分别绑定正确来源；不是两个正文或模式拼接 | `FINDING-010-014`：mall Maven Snapshot 已发布，但 Java Profile 对真实源码失败关闭；Maven relation 不替代 declaration/`CALLS` | NOT-RUN / blocking |
+| V-XD-001 | 同一 ENGINEERING_QA 答案组合 ITER-006 accepted World Model 认知与 query-time 新来源 Evidence | product / integration | declaration/`CALLS` Result + repository document/config/test/source conclusion；无符号自然问题 | 同一 Ledger/Package/Answer/Review；结论分别绑定正确来源；不是两个正文或模式拼接 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-XD-001 | FAIL / blocking |
 | V-WEB-000 | Slice1 在完整夯实前交付最早可体验的真实 Web 微纵切 | product / browser | exact freeze/live grant、普通用户无认证、一条 World Model + query-time Source 代表问题 | 最小真实链可用；exact revision/read-only/untrusted Source/support-citation 分区/Citation/独立 Review 全部成立；非回放/CLI | `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`；candidate `f38f6cc…` / exact mall `0504e86…` / Result `engineering_result_2025ba4a523a363c6a8f463e670dfc31` / 9 dispatch / 6 opened Citation / Review APPROVED / retry 0 / switch 0 / Production Activation NOT_EXECUTED；前 8 run 永久失败保留 | PASS / blocking |
-| V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | `ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS` + `ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION`：公开 3 approved / 1 fail；现场题 APPROVED；14 Citation 全部打开；console `[]` | PASS / blocking |
-| V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | 真实结果已齐；`FINDING-010-027` 保留现场答案的方法序列主导与登录日志遗漏；用户 decision pending | NOT-RUN / blocking |
-| V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |
+| V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-WEB-001 | PASS / blocking |
+| V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-PREVIEW-001 | FAIL / blocking |
+| V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-REFLECT-001 | PASS / blocking |
 | V-GENERAL-002 | 同一协议跨第二工程、不同命名/结构/来源仍不依赖特判 | product / generalization | 第二真实工程、改述、不同目录/框架、source/doc/config/test mixes | 问题层级正确；无 project/question/keyword/symbol/class/method/fixture/oracle branch | not-executed | NOT-RUN / blocking |
 | V-RERETRIEVE-002 | 独立补证调查在复杂 gap、冲突、重复和 no-progress 上机械夯实 | application / contract | omission、unsupported inference、citation gap、specific/duplicate/conflicting gap、持久恢复、no-progress cases | 新上下文读 gap+Package/Ledger 并多步结果驱动；不回初始调查；同包 rewrite/新包严格区分；去重恢复正确；不可修复关闭 | not-executed | NOT-RUN / blocking |
 | V-ASYNC-002 | 知识沉淀不阻塞或改写当前问答 | application / knowledge | approved Package/Answer、async proposal success/reject/failure | Delivery 独立完成；异步路径重新走 Update/Admission/Publication；任何结果不追认/撤销原答案 | not-executed | NOT-RUN / blocking |

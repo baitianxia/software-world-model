@@ -18,11 +18,27 @@ ITER-009 已证明本机 Web、World Model 调查、独立 Review、Limitation �
 主导，整体体验像代码走读。后续讨论又发现，初版 ITER-010 虽允许提问期回源，却把 World Model 缩写成“手册/地图”，并在 Answer 前
 一次性生成 Evidence Package，仍不能让模型像高级工程师一样根据已读内容决定下一步调查。
 
+ITER-010 随后真正实现了持久 World Model Cognition → 结果驱动 Investigation → Broker/Worker → append-only Ledger → 调查后 Package →
+Answer/Review，并从同一 loopback Web 完成公开题和现场题。调查、隔离、Citation 与失败关闭技术资产成立，但现场登录答案仍由
+Controller/Service/Filter 方法顺序主导，独立 Reviewer 无 Finding 批准；用户方向决定为 `REDIRECT`。`FINDING-010-028` 证明最早共同
+偏差不是回源或页面，而是自由文本抽象层级、扁平 Claim Answer 和没有可执行方向质量 invariant 的 Review 合同。
+
 这包含两个必须分开的判断：
 
 - 软件世界模型的概念没有改变。它仍是软件在 exact Context、Scope、Schema、Snapshot 上持久、版本化、可验证、可更新的外部认知，
   包含实体、关系、行为、约束、状态、证据、覆盖和未知边界；手册、地图只是投影；
 - 需要改变的是提问期职责：大模型主导自适应调查，平台控制实际读取，调查结束后才形成回答证据包。
+
+ITER-010 后还必须增加第三个判断：调查协议正确不等于答案协议正确。后续不能继续把“答案优先”只写在 Prompt 中；新的 Iteration 必须
+先冻结通用 typed Answer Hierarchy，并让 Understanding、Answer、Application acceptance、Reviewer 和页面投影共同消费。至少要区分：
+
+- 直接回答用户目标；
+- 用户可见流程、影响、条件或建议；
+- 诚实未知与限制；
+- 只在用户明确询问或为理解不可缺少时展开的实现证据。
+
+每一层需要稳定角色、顺序与展开条件；Citation 仍绑定物质结论。Reviewer 必须能针对“没有先回答”“默认正文被实现步骤主导”或“关键
+流程副作用遗漏”生成绑定 Answer 层/Claim 的 rewrite/reject Finding。不得用类名隐藏、字符占比、题目关键词或登录流程特判冒充结构。
 
 ## Outcome
 
@@ -59,10 +75,11 @@ Shell、网络、credential 或直接 Source 工具，但可以指出具体、�
 
 ### Stage 1：最小真实纵切与方向体验
 
-先实现一条真实闭环：World Model Cognition Context → 自适应 Investigation LLM → Source Broker → Retrieval Worker → append-only Ledger →
-调查后密封 Package → Answer → independent Review；至少包含一条 Reviewer 具体补证后生成后继 Package、重答、重审的路径。然后在一个
-真实工程和同一 product-owned loopback Web 上，用 4 条不同维度的自然问题及至少一条用户现场问题验证方向；至少 3 条 supported，
-至少覆盖 2 个非实现维度。
+复用但重新冻结 ITER-010 的 World Model Cognition → 自适应 Investigation → Broker/Worker → Ledger → Package 技术资产；新增最小 typed
+Answer Hierarchy、Application acceptance 和同结构 Reviewer Gate。先用确定性对抗 Draft 证明 Reviewer/Application 会拒绝实现细节主导、
+未先回答和关键流程副作用遗漏，再从同一 product-owned loopback Web 在一个真实工程运行 4 条不同维度自然问题及至少一条用户现场问题；
+至少 3 条 supported、至少覆盖 2 个非实现维度，且每条获批正文都必须通过独立的 answer-hierarchy 方向检查。需要补证时仍生成后继
+Package、完整重答和重审。
 
 首版只需要足以判断职责分工、答案层级和真实可用性的最小安全边界，不提前完成第二工程、大规模性能、异常穷举、完整 hidden、成熟
 源码 Agent 对照和正式验收。用户决定 `CONTINUE / REDIRECT / REJECT`；没有 `CONTINUE` 不进入夯实。
@@ -83,6 +100,7 @@ Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直�
 - 调查不是由先前结果驱动，仍是一次性固定检索或固定调用链；
 - Investigation/Answer/Reviewer 获得直接文件系统、Shell、网络、credential、仓库写或未审计工具权限；
 - 默认答案仍是代码走读，或只有题目、工程、关键词、符号、fixture/Oracle 特判才能改善；
+- Answer 仍只有无法区分直接答案、用户可见解释、限制和可选实现证据的扁平 Claim，或 Reviewer/Application 无法拒绝实现细节主导；
 - Ledger 可被回写、包在调查完成前密封、旧 Review 批准新 Package，或 seal 被误当作内容真实性；
 - Reviewer 无法独立指出并触发具体补证，或调用上限被用于跳过调查、Citation 或审核；
 - supported 结论有重大错误，或用户决定 `REDIRECT / REJECT`。

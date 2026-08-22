@@ -2,11 +2,11 @@
 
 > Derived from current document front matter. Do not edit manually or treat as normative.
 
-- Active iteration: `ITER-010-INDEX`
-- Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-v-web-001-pass-user-direction-decision-pending`
+- Active iteration: `none`
+- Active slice: `none`
+- Worktree status: `iteration-010-rejected-redirect-next-iteration-not-authorized`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
-- Live model path: `slice1-v-web-001-pass-user-direction-decision-pending`
+- Live model path: `stopped-direction-failure-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

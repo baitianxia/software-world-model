@@ -49,7 +49,9 @@ dispatch，retry/switch/outcome-unknown 0，全部 model manifest 对 `src/main/
 audit 为 TLS handshake 1、reuse 9、HTTP/credential 10/10、retry/switch/outcome-unknown 0，30 个 manifest item 对
 `src/main/resources` 匹配数为 0，Production Activation `NOT_EXECUTED`。因此公开 4 题与现场题合并后 `V-WEB-001` PASS。现场正文仍
 主要按 Controller/Service/Filter 方法调用顺序展开，并省略 exact Source 中的 `insertLoginLog` 副作用；`FINDING-010-027` 将其保留为
-用户方向裁决输入。`V-PREVIEW-001` 在用户给出 `CONTINUE / REDIRECT / REJECT` 前继续 blocking，技术 Web PASS 不能替代该决定。
+用户方向裁决输入。用户随后决定 `REDIRECT`：`V-PREVIEW-001` FAIL，ITER-010 rejected，技术 Web PASS 不构成 Acceptance 或继续编码
+授权。`FINDING-010-028` 将最早共同偏差定位为自由文本抽象层级、扁平 Answer Claim 和不可执行的 Reviewer 方向质量 Gate；现有 launcher
+与运行资产保留为失败证据，下一产品变化必须来自新的 Iteration，不能复用旧 question/run grant。
 
 clean product freeze 和本次 exact question/run authorization 完成后，Engineering QA 入口使用：
 

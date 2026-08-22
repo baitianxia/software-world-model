@@ -42,14 +42,13 @@ affirmative claim 都有同一 sealed Package 中的 exact Source support，3 �
   Production Activation `NOT_EXECUTED`。
 
 该观察不是 Source、Citation、隔离或实现正确性缺陷，也不足以把获批答案改写成重大错误；它是
-`verification / individual-direction-sensitive` 的真实产品质量信号。它直接对应 ITER-010 stop condition“默认答案仍为方法、分支、调用顺序或
-内部诊断走读”，必须由方向体验的用户而不是实现者代为裁决。
+  `verification / individual-direction-sensitive` 的真实产品质量信号。它直接对应 ITER-010 stop condition“默认答案仍为方法、分支、调用顺序或
+内部诊断走读”。实现者不应在已经识别该客观条件后要求用户重复确认问题是否存在；用户后续消息已按 `REDIRECT` 消费该信号。
 
 ## Decision and disposition
 
-- 不重试、不改写现场题、不在用户裁决前调整 Prompt/代码，也不以独立 Review `APPROVED` 掩盖层级与完整性信号；
+- 不重试、不改写现场题，也不以独立 Review `APPROVED` 掩盖层级与完整性信号；
 - `V-WEB-001` 只按真实 Web、Citation、console、授权与安全交付事实取得技术 PASS；
-- 本观察处置到 `ITER-010-VERIFICATION` 的 `V-PREVIEW-001` evidence，由用户在看过原答案后给出
-  `CONTINUE / REDIRECT / REJECT`；
-- 用户决定前不生成 Slice Result，不进入 Slice2，不执行 Production Activation。若用户 `CONTINUE`，Reflection 必须明确说明为什么该
-  代码走读信号仍可接受或在后续哪个 Gate 改善；若 `REDIRECT/REJECT`，本运行作为方向证据永久保留。
+- 本观察已处置到 `ITER-010-VERIFICATION` 的 `V-PREVIEW-001` evidence；用户决定收据
+  `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 构成 `REDIRECT`；
+- 根因由 `FINDING-010-028` 处置到 Roadmap Candidate。本运行作为方向失败证据永久保留，不进入 Slice2，不执行 Production Activation。

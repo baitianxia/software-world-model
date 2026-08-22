@@ -2161,6 +2161,20 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-027.md"
   },
   {
+    "id": "FINDING-010-028",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "architecture",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-028.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3789,8 +3803,8 @@
   {
     "id": "ITER-010-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "current",
-    "authority": "project-plan",
+    "status": "rejected",
+    "authority": "development-evidence",
     "owners": [
       "engineering",
       "architecture",
@@ -3816,8 +3830,8 @@
   {
     "id": "ITER-010-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "rejected",
+    "authority": "project-decision",
     "owners": [
       "product",
       "project",
@@ -3858,6 +3872,20 @@
     "path": "docs/project/iterations/iteration-010/readiness-review.md"
   },
   {
+    "id": "ITER-010-RESULT-SLICE-001-STOP-REDIRECT",
+    "kind": "iteration-result",
+    "status": "failed-preserved",
+    "authority": "execution-evidence",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/slice-001-stop-redirect.md"
+  },
+  {
     "id": "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009",
     "kind": "iteration-result",
     "status": "passed-micro-checkpoint",
@@ -3887,7 +3915,7 @@
   {
     "id": "ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION",
     "kind": "iteration-result",
-    "status": "passed-browser-checkpoint-awaiting-user-direction-decision",
+    "status": "failed-direction-preserved-browser-checkpoint-pass",
     "authority": "execution-evidence",
     "owners": [
       "product",
@@ -3901,7 +3929,7 @@
   {
     "id": "ITER-010-RESULTS",
     "kind": "results-index",
-    "status": "draft",
+    "status": "completed",
     "authority": "project-evidence",
     "owners": [
       "quality",
@@ -3913,8 +3941,8 @@
   {
     "id": "ITER-010-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "blocked",
+    "authority": "development-evidence",
     "owners": [
       "engineering",
       "architecture",
@@ -3956,8 +3984,8 @@
   {
     "id": "ITER-010-VERIFICATION",
     "kind": "iteration-verification",
-    "status": "not-run",
-    "authority": "planned-verification",
+    "status": "failed",
+    "authority": "execution-evidence",
     "owners": [
       "quality"
     ],

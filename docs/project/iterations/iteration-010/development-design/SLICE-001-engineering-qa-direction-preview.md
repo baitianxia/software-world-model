@@ -1,14 +1,14 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: blocked
+authority: development-evidence
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-001, FINDING-010-002, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
-coding_input: true
+coding_input: false
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
@@ -23,19 +23,23 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, 
 
 ## Status and dependencies
 
-`AUTHORIZED / CURRENT DEVELOPMENT / CODING INPUT`。用户以
+`BLOCKED / FAILED-PRESERVED / NO LONGER CODING INPUT`。用户曾以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
+
+公开题和现场题执行后，用户以
+`codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 决定
+`REDIRECT`：默认正文仍被类、方法和调用顺序主导，Reviewer 没有识别该方向失败。`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 保存 exact
+证据和反思；本 Slice 不得继续修补，后续方案只能在新 Iteration 重新授权。
 
 开发 baseline 仍候选绑定 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
 `1369ce932c778c57a118123e8257ede476229d73`；冻结的 planning commit/tree 为
 `01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。本开发授权不允许
 credential、Provider/model call、live Web/browser、源码片段外发、hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
 
-用户随后以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 授权完成当前开发所需权限；
-该消息现在是本 Slice product freeze、exact Provider/credential-reference、逐输入 disclosure、真实调用和 loopback Web/browser 的 root
-authority，不是可直接 dispatch 的模糊 grant。实现和 deterministic gate 闭合后仍须先密封 exact candidate/Request/Provider/role/
-fragments/full input，再逐调用收窄为一次性授权。Slice2/3、hidden 与 Production Activation 不属于本 Slice 所需权限，仍不授权。
+用户随后以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 授权完成本 Slice 所需权限；
+该 root authority 已通过 exact product/request/Provider/role/input grants 收窄并消费。Listener 已停止，所有旧 grant 不得复用。Slice2/3、
+hidden 与 Production Activation 从未授权。
 
 ## Product-goal contribution and cumulative integration
 

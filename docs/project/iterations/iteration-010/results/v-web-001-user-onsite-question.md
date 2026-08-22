@@ -1,7 +1,7 @@
 ---
 id: ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION
 kind: iteration-result
-status: passed-browser-checkpoint-awaiting-user-direction-decision
+status: failed-direction-preserved-browser-checkpoint-pass
 authority: execution-evidence
 owners: [product, engineering, quality, security]
 depends_on: [ITER-010-SLICE-001, ITER-010-VERIFICATION, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, FINDING-010-027]
@@ -24,8 +24,9 @@ Ledger/Question Evidence Package、Answer 与独立 Review `APPROVED`。页面�
 实际打开，developer console 为 `[]`。
 
 结合 `ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS`，`V-WEB-001` 所需 4 条不同覆盖维度公开题与至少一条用户现场题都已真实
-执行，Browser checkpoint 为 `PASS`。这仍不是 `V-PREVIEW-001`、Slice Result 或 Acceptance：现场正文仍显著按方法调用顺序展开并省略登录
-日志副作用，已由 `FINDING-010-027` 原样保留，必须由用户给出 `CONTINUE / REDIRECT / REJECT`，实现者不能代为判断。
+执行，Browser checkpoint 为技术 `PASS`。现场正文仍显著按方法调用顺序展开并省略登录日志副作用，已由 `FINDING-010-027` 原样保留。
+用户随后以 `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0`
+作出 `REDIRECT`；该答案不能取得 `V-PREVIEW-001`、Slice Result PASS 或 Acceptance。
 
 ## Exact freeze and authorization
 
@@ -104,11 +105,11 @@ console 为 `[]`。
   `var/iteration-010/slice-001/run-004-direction-preview/web-v-web-001-onsite-001/`；listener 已优雅停止，terminal receipt 已密封；
   Production Activation `NOT_EXECUTED`。
 
-## Verdict and remaining gate
+## Verdict and direction decision
 
 `V-WEB-001: PASS`：公开 4 题与用户现场题均从同一真实 Web 执行，答案/失败关闭、可打开 Citation、折叠诊断、console、安全与非生产边界
 有真实证据。
 
-仍 blocking：`V-PREVIEW-001` 等待用户看过本现场答案后给出 `CONTINUE / REDIRECT / REJECT`；`V-REFLECT-001` 必须消费该新决定和
-`FINDING-010-027`；`V-XD-001` 仍因 Maven Cognition 不含 accepted declaration/`CALLS` 独立 blocking。没有 Slice Result、Acceptance、
-hidden、跨工程、三臂 comparison、持久恢复或 Production evidence。
+`V-PREVIEW-001: FAIL / REDIRECT`：用户指出实现者已经知道回答存在方向问题，不应再把客观停止条件退回用户重复确认。该决定由
+`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 消费；`V-XD-001` 也因 Maven Cognition 不含 accepted declaration/`CALLS` 记为 FAIL。
+没有 Acceptance、hidden、跨工程、三臂 comparison、持久恢复或 Production evidence。
