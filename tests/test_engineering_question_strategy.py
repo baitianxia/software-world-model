@@ -21,6 +21,7 @@ from software_world_model.ai_infrastructure.engineering_question_strategy import
     engineering_question_output_schemas,
 )
 from software_world_model.application_services.engineering_question_answering import (
+    ChecklistDispositionReferenceEligibility,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionResultStatus,
     EvidenceLedger,
@@ -191,6 +192,9 @@ class AdaptiveStructuredOutputSource:
                 "unknown_to_reduce": "Read the issued exact-revision locator.",
                 "finish_dispositions": [],
             }
+        evidence_reference = results[-1]["items"][0]["item_id"]
+        if evidence_reference not in body["admissible_support_references"]:
+            raise AssertionError("full-content item must be admissible support")
         return {
             "operation": "FINISH",
             "checklist_item_ids": ["check-1"],
@@ -203,7 +207,7 @@ class AdaptiveStructuredOutputSource:
                 {
                     "checklist_item_id": "check-1",
                     "outcome": "SUPPORTED",
-                    "evidence_references": [results[-1]["items"][0]["item_id"]],
+                    "evidence_references": [evidence_reference],
                     "explanation": "The exact package contains the required evidence.",
                 }
             ],
@@ -268,6 +272,14 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             cognition=self.result.cognition,
             ledger=ledger,
             retrieval_results=(),
+            disposition_reference_eligibility=(
+                ChecklistDispositionReferenceEligibility.create(
+                    support_references=(
+                        self.result.cognition.items[0].item_id.value,
+                    ),
+                    boundary_references=("cognition-unknown-1",),
+                )
+            ),
         )
         manifest = EngineeringQuestionRoleInputBuilder.initial_investigation(
             investigation_input
@@ -284,6 +296,14 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(
+            manifest.body["admissible_support_references"],
+            (self.result.cognition.items[0].item_id.value,),
+        )
+        self.assertEqual(
+            manifest.body["admissible_boundary_references"],
+            ("cognition-unknown-1",),
+        )
         self.assertEqual(
             manifest.body["request"]["source_profile_digest"],
             self.result.request.source_profile_digest.value,
@@ -348,6 +368,17 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             current_package=package,
             ledger=ledger,
             retrieval_results=(),
+            disposition_reference_eligibility=(
+                ChecklistDispositionReferenceEligibility.create(
+                    support_references=tuple(
+                        item.source_reference for item in package.support_citation
+                    ),
+                    boundary_references=tuple(
+                        item.source_reference for item in package.boundary_audit
+                    )
+                    + (ledger.entries[-1].entry_id.value,),
+                )
+            ),
         )
         manifest = EngineeringQuestionRoleInputBuilder.verification_investigation(
             investigation_input
@@ -366,6 +397,8 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "required_basis_entry_id",
                 "eligible_locator_references",
                 "consumed_full_content_paths",
+                "admissible_support_references",
+                "admissible_boundary_references",
                 "verification_request",
                 "current_question_evidence_package",
                 "current_evidence_ledger",
@@ -380,6 +413,14 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(
+            set(manifest.body["admissible_support_references"]),
+            {item.source_reference for item in package.support_citation},
+        )
+        self.assertIn(
+            ledger.entries[-1].entry_id.value,
+            manifest.body["admissible_boundary_references"],
+        )
 
         with self.assertRaises(DomainError) as caught:
             EngineeringQuestionRoleInputBuilder.verification_investigation(
@@ -496,6 +537,17 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(
             initial_manifests[2].body["consumed_full_content_paths"],
             ("README.md",),
+        )
+        initial_support = set(
+            initial_manifests[2].body["admissible_support_references"]
+        )
+        full_content_item_id = initial_manifests[2].body[
+            "typed_retrieval_results"
+        ][-1]["items"][0]["item_id"]
+        self.assertIn(full_content_item_id, initial_support)
+        self.assertNotIn(
+            initial_manifests[2].body["required_basis_entry_id"],
+            initial_support,
         )
         verification_manifests = [
             manifest

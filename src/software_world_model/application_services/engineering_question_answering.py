@@ -2261,6 +2261,130 @@ def _eligible_locator_references(
 
 
 @dataclass(frozen=True, slots=True)
+class ChecklistDispositionReferenceEligibility:
+    support_references: tuple[str, ...]
+    boundary_references: tuple[str, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        support_references: Sequence[str],
+        boundary_references: Sequence[str],
+    ) -> "ChecklistDispositionReferenceEligibility":
+        support = tuple(
+            sorted(
+                {
+                    _reference(value, "admissible support disposition reference")
+                    for value in support_references
+                }
+            )
+        )
+        boundary = tuple(
+            sorted(
+                {
+                    _reference(value, "admissible boundary disposition reference")
+                    for value in boundary_references
+                }
+            )
+        )
+        if set(support) & set(boundary):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "a disposition reference cannot be both support and boundary evidence",
+            )
+        core = {
+            "support_references": support,
+            "boundary_references": boundary,
+        }
+        return cls(
+            support_references=support,
+            boundary_references=boundary,
+            digest=digest_of(
+                ["CHECKLIST_DISPOSITION_REFERENCE_ELIGIBILITY@1", core]
+            ),
+        )
+
+
+def _disposition_reference_eligibility(
+    *,
+    cognition: WorldModelCognitionContext,
+    ledger: EvidenceLedger,
+    retrieval_results: Sequence[RetrievalResult],
+    broker_decisions: Sequence[SourceBrokerDecision],
+) -> ChecklistDispositionReferenceEligibility:
+    support: list[str] = []
+    boundary: list[str] = []
+
+    for item in cognition.items:
+        if (
+            cognition.alignment is RevisionAlignment.ALIGNED
+            and item.dimension
+            not in {CognitionDimension.COVERAGE, CognitionDimension.UNKNOWN}
+            and item.support_references
+        ):
+            support.append(item.item_id.value)
+        else:
+            boundary.append(item.item_id.value)
+    boundary.extend(
+        f"cognition-conflict-{index}"
+        for index, _ in enumerate(cognition.conflicts, 1)
+    )
+    boundary.extend(
+        f"cognition-unknown-{index}"
+        for index, _ in enumerate(cognition.unknowns, 1)
+    )
+
+    operation_names = {
+        entry.subject_id: dict(entry.details).get("operation")
+        for entry in ledger.entries
+        if entry.kind is LedgerEntryKind.SOURCE_OPERATION
+    }
+    for result in retrieval_results:
+        operation_name = operation_names.get(result.operation_id.value)
+        can_support = (
+            result.status is RetrievalStatus.COMPLETE
+            and not result.truncated
+            and operation_name
+            in {SourceReadOperation.READ.value, SourceReadOperation.PARSE.value}
+        )
+        if can_support:
+            if result.items:
+                for item in result.items:
+                    (support if item.coverage_complete else boundary).append(
+                        item.item_id.value
+                    )
+            else:
+                boundary.append(result.result_id.value)
+        elif result.items:
+            boundary.extend(item.item_id.value for item in result.items)
+        else:
+            boundary.append(result.result_id.value)
+
+    boundary.extend(
+        decision.decision_id.value
+        for decision in broker_decisions
+        if decision.status is BrokerDecisionStatus.REJECTED
+    )
+    boundary.extend(
+        entry.entry_id.value
+        for entry in ledger.entries
+        if entry.kind
+        in {
+            LedgerEntryKind.GAP,
+            LedgerEntryKind.VERIFICATION_REQUEST,
+            LedgerEntryKind.RESOURCE_RECEIPT,
+            LedgerEntryKind.FAIL_CLOSED_STOP,
+        }
+    )
+    return ChecklistDispositionReferenceEligibility.create(
+        support_references=support,
+        boundary_references=boundary,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class InitialInvestigationInput:
     attempt_id: StableId
     role_context_id: StableId
@@ -2270,6 +2394,7 @@ class InitialInvestigationInput:
     cognition: WorldModelCognitionContext
     ledger: EvidenceLedger
     retrieval_results: tuple[RetrievalResult, ...]
+    disposition_reference_eligibility: ChecklistDispositionReferenceEligibility
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -2294,6 +2419,12 @@ class InitialInvestigationInput:
                 item.value for item in self.eligible_locator_references
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
+            "admissible_support_references": list(
+                self.disposition_reference_eligibility.support_references
+            ),
+            "admissible_boundary_references": list(
+                self.disposition_reference_eligibility.boundary_references
+            ),
             "request": self.request.investigation_control_view(),
             "question_understanding": self.understanding.model_view(),
             "world_model_cognition_context": self.cognition.model_view(),
@@ -2941,13 +3072,33 @@ class QuestionEvidencePackage:
                     )
                 )
 
+        disposition_reference_eligibility = _disposition_reference_eligibility(
+            cognition=cognition,
+            ledger=ledger,
+            retrieval_results=results,
+            broker_decisions=decisions,
+        )
+        if (
+            {item.source_reference for item in support}
+            != set(disposition_reference_eligibility.support_references)
+            or {item.source_reference for item in boundary}
+            != set(disposition_reference_eligibility.boundary_references)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "package evidence partitions disagree with disposition eligibility",
+            )
         if len(support) > request.limits.maximum_support_items:
             raise DomainError(
                 ErrorCode.BUDGET_EXHAUSTED,
                 "Question Evidence Package support item fuse is exhausted",
             )
-        support_by_source = {item.source_reference: item for item in support}
-        boundary_by_source = {item.source_reference: item for item in boundary}
+        support_references = set(
+            disposition_reference_eligibility.support_references
+        )
+        boundary_references = set(
+            disposition_reference_eligibility.boundary_references
+        )
         dispositions = tuple(checklist_dispositions)
         expected_checklist = {item.item_id for item in understanding.checklist}
         if {item.checklist_item_id for item in dispositions} != expected_checklist:
@@ -2963,12 +3114,12 @@ class QuestionEvidencePackage:
         for disposition in dispositions:
             references = set(disposition.evidence_references)
             if disposition.outcome is ChecklistOutcome.SUPPORTED:
-                if not references or not references.issubset(support_by_source):
+                if not references or not references.issubset(support_references):
                     raise DomainError(
                         ErrorCode.CONTROL_STATE_DENIED,
                         "SUPPORTED checklist disposition requires admissible support/citation evidence",
                     )
-            elif not references.issubset(boundary_by_source):
+            elif not references.issubset(boundary_references):
                 raise DomainError(
                     ErrorCode.CONTROL_STATE_DENIED,
                     "non-supported checklist disposition requires retained boundary/audit evidence",
@@ -3173,6 +3324,7 @@ class VerificationInvestigationInput:
     current_package: QuestionEvidencePackage
     ledger: EvidenceLedger
     retrieval_results: tuple[RetrievalResult, ...]
+    disposition_reference_eligibility: ChecklistDispositionReferenceEligibility
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -3247,6 +3399,12 @@ class VerificationInvestigationInput:
                 item.value for item in self.eligible_locator_references
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
+            "admissible_support_references": list(
+                self.disposition_reference_eligibility.support_references
+            ),
+            "admissible_boundary_references": list(
+                self.disposition_reference_eligibility.boundary_references
+            ),
             "verification_request": self.verification_request.model_view(),
             "current_question_evidence_package": self.current_package.model_view(),
             "current_evidence_ledger": self.ledger.model_view(),
@@ -4524,6 +4682,12 @@ class EngineeringQuestionAnsweringService:
                 ordinal=usage.investigation_role_calls + 1,
                 used_contexts=used_contexts,
             )
+            disposition_reference_eligibility = _disposition_reference_eligibility(
+                cognition=cognition,
+                ledger=ledger,
+                retrieval_results=tuple(results),
+                broker_decisions=tuple(decisions),
+            )
             if investigation_kind is InvestigationKind.INITIAL:
                 investigation_input = InitialInvestigationInput(
                     attempt_id=attempt_id,
@@ -4534,6 +4698,7 @@ class EngineeringQuestionAnsweringService:
                     cognition=cognition,
                     ledger=ledger,
                     retrieval_results=tuple(results),
+                    disposition_reference_eligibility=disposition_reference_eligibility,
                 )
                 proposal = self._initial_investigation_role.propose(
                     investigation_input
@@ -4552,6 +4717,7 @@ class EngineeringQuestionAnsweringService:
                     current_package=current_package,
                     ledger=ledger,
                     retrieval_results=tuple(results[attempt_result_start:]),
+                    disposition_reference_eligibility=disposition_reference_eligibility,
                 )
                 verification_input.validate_new_result_closure()
                 proposal = self._verification_investigation_role.propose(
@@ -4585,6 +4751,7 @@ class EngineeringQuestionAnsweringService:
                 eligible_locator_references=(
                     investigation_input.eligible_locator_references
                 ),
+                disposition_reference_eligibility=disposition_reference_eligibility,
             )
             pre_proposal_ledger = ledger
             ledger = ledger.append(
@@ -4960,7 +5127,17 @@ class EngineeringQuestionAnsweringService:
         expected_role_context_id: StableId,
         expected_step_index: int,
         eligible_locator_references: tuple[StableId, ...],
+        disposition_reference_eligibility: ChecklistDispositionReferenceEligibility,
     ) -> None:
+        expected_reference_eligibility = ChecklistDispositionReferenceEligibility.create(
+            support_references=disposition_reference_eligibility.support_references,
+            boundary_references=disposition_reference_eligibility.boundary_references,
+        )
+        if expected_reference_eligibility != disposition_reference_eligibility:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "investigation disposition reference eligibility is invalid",
+            )
         expected_dispositions = tuple(
             ChecklistDisposition.create(
                 checklist_item_id=item.checklist_item_id,
@@ -5052,6 +5229,29 @@ class EngineeringQuestionAnsweringService:
                     ErrorCode.PROVIDER_RESPONSE_INVALID,
                     "FINISH must disposition every Checklist item exactly once",
                 )
+            support_references = set(
+                disposition_reference_eligibility.support_references
+            )
+            boundary_references = set(
+                disposition_reference_eligibility.boundary_references
+            )
+            for disposition in proposal.finish_dispositions:
+                references = set(disposition.evidence_references)
+                admissible = (
+                    support_references
+                    if disposition.outcome is ChecklistOutcome.SUPPORTED
+                    else boundary_references
+                )
+                if not references.issubset(admissible):
+                    category = (
+                        "support/citation"
+                        if disposition.outcome is ChecklistOutcome.SUPPORTED
+                        else "boundary/audit"
+                    )
+                    raise DomainError(
+                        ErrorCode.PROVIDER_RESPONSE_INVALID,
+                        f"FINISH disposition requires an admissible {category} reference",
+                    )
 
     @staticmethod
     def _validate_retrieval_result(

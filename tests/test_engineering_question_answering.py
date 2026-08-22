@@ -688,6 +688,40 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
         self.assertIn("single-use locator", str(caught.exception))
 
+    def test_finish_cannot_cite_latest_ledger_result_as_support(self):
+        class LedgerResultCitingInvestigator:
+            def __init__(self):
+                self.delegate = InitialInvestigator()
+
+            def propose(self, investigation_input):
+                proposal = self.delegate.propose(investigation_input)
+                if proposal.operation is not InvestigationOperation.FINISH:
+                    return proposal
+                return step_proposal(
+                    investigation_input,
+                    operation=InvestigationOperation.FINISH,
+                    evidence_reference=(
+                        investigation_input.ledger.entries[-1].entry_id.value
+                    ),
+                )
+
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=UnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=LedgerResultCitingInvestigator(),
+            verification_investigation_role=VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=source_profile()),
+            retrieval_worker=ScriptedWorker(),
+            answer_role=AnswerRole(),
+            reviewer_role=ReviewerRole(request_more_evidence=False),
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            service.answer(request())
+
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+        self.assertIn("admissible support/citation", str(caught.exception))
+
     def test_wall_time_fuse_rejects_finish_returned_at_the_deadline(self):
         clock = ManualClock()
 

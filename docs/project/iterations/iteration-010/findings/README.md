@@ -62,5 +62,7 @@ iteration: ITER-010
   `REVIEWED RESULT`/`FAIL CLOSED`，显示用户可理解的预算 limitation，并在开发者详情保留 exact terminal reason 与阶段到达状态。
 - [FINDING-010-024](FINDING-010-024.md)：第七次 Web run 的 FINISH 沿用了前一个 action 的 SOURCE evidence class，既有领域 invariant
   正确失败关闭；Prompt `@6` 现逐操作冻结 evidence class/query/locator/disposition 的合法字段组合，不放宽或静默归一化领域契约。
+- [FINDING-010-025](FINDING-010-025.md)：第八次 Web run 的合法 FINISH 把 latest Ledger Result 当成 Package support/boundary reference；
+  现从 authoritative Package 分类投影 exact support/boundary eligibility，并在模型前后机械拒绝集合外 disposition 引用，Prompt 升级为 `@7`。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

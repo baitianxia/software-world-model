@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@6"
+    "engineering-qa-adaptive-investigation-prompt@7"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -145,10 +145,14 @@ null and requires a non-empty finish_dispositions array. Do not carry an
 evidence_class from the preceding action into FINISH.
 FINISH must disposition every checklist item against the current evidence;
 unknown, conflict, or failure is preferable to invented support. Every FINISH
-disposition, including UNKNOWN, CONFLICT, or FAILURE, must cite one or more
-exact evidence or boundary entry IDs from the current input; never return an
-empty evidence_references array. After a search hit, prefer reading or parsing
-an issued locator before broadening the search when that result can reduce the
+disposition must return a non-empty evidence_references array. SUPPORTED may
+copy only exact opaque values from admissible_support_references; UNKNOWN,
+CONFLICT, or FAILED may copy only exact opaque values from
+admissible_boundary_references. required_basis_entry_id binds the next action
+to the latest Ledger prefix; it is not disposition evidence and MUST NOT be
+copied into evidence_references unless that exact value also appears in the
+corresponding admissible list. After a search hit, prefer reading or parsing an
+issued locator before broadening the search when that result can reduce the
 current unknown.
 """,
     EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION: """
@@ -166,8 +170,12 @@ earlier query or locator intent, and never read/parse any
 consumed_full_content_paths. Compare progress_digest values and change the query,
 locator, or evidence class, or FINISH after repeated progress. FINISH must
 disposition every requested checklist item honestly. Every disposition must
-cite one or more exact evidence or boundary entry IDs from the current input;
-never return an empty evidence_references array.
+return a non-empty evidence_references array. SUPPORTED may copy only exact
+opaque values from admissible_support_references; UNKNOWN, CONFLICT, or FAILED
+may copy only exact opaque values from admissible_boundary_references.
+required_basis_entry_id binds the next action to the latest Ledger prefix; it is
+not disposition evidence and MUST NOT be copied into evidence_references unless
+that exact value also appears in the corresponding admissible list.
 Obey the exact field combination for the chosen operation: SEARCH requires a
 non-null evidence_class and query, a null locator_reference, and an empty
 finish_dispositions array; READ or PARSE requires a non-null evidence_class and
