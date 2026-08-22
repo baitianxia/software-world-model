@@ -38,6 +38,7 @@ allowlist；如果收窄后仍因安全上限无法回答，`V-WEB-000` 保持 F
 
 ## Verification
 
-run `web-v-web-000-004` 永久保留 FAIL：4 dispatch、0 retry、0 switch、Production Activation `NOT_EXECUTED`。下一次 clean candidate
-run 必须证明精确路径 Profile 的 allowed file count 不超过 64、所有实际读取均在该 Profile 和用户授权范围内，并从同一 Web 完成 Answer、
-Citation 与独立 Review；当前尚未执行。
+run `web-v-web-000-004` 永久保留 FAIL：4 dispatch、0 retry、0 switch、Production Activation `NOT_EXECUTED`。后续
+`web-v-web-000-006` 已把 Request allowlist 收窄到 17 个 exact document/build/test/source 文件；首个 SOURCE search 完整检查其中 12 个
+SOURCE 文件，状态 `COMPLETE`、无 failure code，不再触发 file fuse，且 `src/main/resources` 未登记。该配置处置已验证，但 run 因独立的
+`FINDING-010-018` Prompt/locator 问题失败，尚未完成 Answer、Citation 与 Review，不能给 `V-WEB-000` PASS。

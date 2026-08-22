@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@2"
+    "engineering-qa-adaptive-investigation-prompt@3"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -124,9 +124,13 @@ the question based on currently available evidence.
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: """
 Choose exactly one next investigation action from the registered vocabulary or
 FINISH. Base it on the immutable question, accepted understanding, exact World
-Model cognition, current Ledger prefix, and typed results. A query is a literal
-search expression, not a command. A locator may only reuse an exact locator
-already issued in the current Ledger. Explain the unknown this one step reduces.
+Model cognition, current Ledger prefix, and typed results. A search query must
+be a short literal token likely to occur verbatim in the selected evidence, not
+a semantic description or command. For read/parse, locator_reference must copy
+the exact opaque locator_reference ID from a typed retrieval item in the current
+input; never use that item's locator/path or an allowlisted path. If the current
+input has no locator_reference ID, choose search or FINISH. Explain the unknown
+this one step reduces.
 FINISH must disposition every checklist item against the current evidence;
 unknown, conflict, or failure is preferable to invented support. Every FINISH
 disposition, including UNKNOWN, CONFLICT, or FAILURE, must cite one or more
@@ -139,9 +143,13 @@ current unknown.
 Investigate only the concrete Reviewer gap using the current Package, successor
 Ledger, and results created after that gap. Choose exactly one registered action
 or FINISH and adapt to the newest result. Do not reuse old raw results, propose
-commands, or broaden the gap. FINISH must disposition every requested checklist
-item honestly. Every disposition must cite one or more exact evidence or
-boundary entry IDs from the current input; never return an empty
+commands, semantic search descriptions, or broaden the gap. A search query must
+be a short literal token likely to occur verbatim. For read/parse,
+locator_reference must copy an exact opaque locator_reference ID from a new typed
+retrieval item; never use its locator/path or an allowlisted path. If no such ID
+exists, choose search or FINISH. FINISH must disposition every requested
+checklist item honestly. Every disposition must cite one or more exact evidence
+or boundary entry IDs from the current input; never return an empty
 evidence_references array.
 """,
     EngineeringQuestionModelRole.ANSWER: """

@@ -48,5 +48,7 @@ iteration: ITER-010
   因 implementation digest 变化须重新取得。
 - [FINDING-010-017](FINDING-010-017.md)：第二次代表题的目录级 SOURCE capability 含 167 个 entry，首个搜索即耗尽规范的 64 文件
   question fuse；下一次只登记登录/JWT 相关 exact 文件，不提高上限、不纳入 `src/main/resources`。
+- [FINDING-010-018](FINDING-010-018.md)：第三次真实 Web 证明精确文件 Profile 已不触发 fuse，但模型用自然语言语义描述做 literal search，
+  又把 allowlisted path 当成 opaque locator reference；Prompt `@3` 现明确短 literal token、exact typed-result ID 与 path 禁止语义。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
