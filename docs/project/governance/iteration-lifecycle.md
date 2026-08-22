@@ -52,7 +52,8 @@ tests: []
 5. **最早体验点：** 在大量实现前，哪个最小 Slice 会接入同一个正式 Web 入口供人工自由提问；
 6. **停止或转向条件：** 若上游知识不足、只能依赖题型/关键词补丁、不能跨域组合或效果低于成熟源码 Agent，何时停止扩张
    并重新审视建模或查询架构。
-7. **差异化价值：** 若当前方案比成熟替代方案更复杂，编码前冻结哪项可测的正向价值、PASS 阈值、测量周期和基线复用政策；
+7. **差异化价值：** 若当前方案比成熟替代方案更复杂，在首个拥有正式对照的 hardening Slice 授权前冻结哪项可测的正向价值、PASS 阈值、
+   测量周期和基线复用政策；Probe/Alpha 只记录 stage-applicable early signal；
    “答案不退步”或只披露成本不足以证明值得继续。
 8. **能力路径位置：** 本轮属于哪一个 Roadmap 能力步骤，哪些前置已被 Acceptance 证明，本轮正式 Web 验证会前进什么，
    以及成功后下一个阻断差距是什么。
@@ -71,31 +72,35 @@ binding；正文中仅仅出现相关 ID 不算绑定证据。
 
 ```text
 冻结关键方案假设与反证
-  → 实现最小方向体验版
+  → 实现最小方向探针
   → 用户/产品 Owner：CONTINUE / REDIRECT / REJECT
-  → CONTINUE 后工程夯实
+  → CONTINUE 后形成小型可用 Alpha 并再次判向
+  → 第二次 CONTINUE 后工程夯实
   → 正式 Web / hidden canary / 对照验收
   → ACCEPT / REDIRECT / REJECT
 ```
 
-方向体验必须早于大规模加固和全面资格评估。它通过真实产品入口和少量代表性问题验证核心价值、交互与答案方向，明确标记为非验收、
-非生产；安全、只读、Secret、授权和失败真实性边界始终生效。完整能力矩阵、全量回归、性能和异常穷举属于方向确认后的夯实阶段，
-除非它们是运行体验版或判断核心方向不可缺少的最小条件。
+方向探针和可用 Alpha 必须早于大规模加固和全面资格评估。探针通过真实产品入口和极少量代表性输入尽早暴露核心方向；Alpha 只根据
+探针证据做最小通用修正，再用小而多样的输入和新的现场输入确认方向不是单题偶然。两者都明确标记为非验收、非生产；安全、只读、
+Secret、授权和失败真实性边界始终生效。完整能力矩阵、全量回归、性能和异常穷举属于 Alpha `CONTINUE` 后的夯实阶段，除非它们是
+运行早期真实版本或判断核心方向不可缺少的最小条件。
 
-项目不得连续进行多轮 Prompt、Schema、Contract 或评测优化，却一直没有可供用户操作的真实体验。方向体验发现核心假设错误时，
+项目不得连续进行多轮 Prompt、Schema、Contract 或评测优化，却一直没有可供用户操作的真实体验。探针或 Alpha 发现核心假设错误时，
 必须先 `REDIRECT` 或 `REJECT`；正式 Gate 不能成为延迟方向反馈的理由，方向体验的认可也不能替代最终正式 Gate。
 
 本门禁从 `ITER-008` 开始强制执行。Proposal 必须在编码前写明少量决定方案能否成立的关键假设、每项假设的最早反证方式、
 反证后停止或换路的动作，以及被认真比较过的替代方案。第一个 Slice 必须优先验证风险最高、最可能导致整条路线无效的假设，
-不能只实现“基础组件”并把真实产品效果或与成熟方案的差距留到最后一段。
+不能只实现“基础组件”并把真实产品效果留到最后一段。方向探针与 Alpha 可以只记录相对成熟方案的可观察 early signal 和暂不正式比较的
+理由；正式对照与正向价值阈值必须在拥有该对照的首个 hardening Slice 授权前冻结，而不是在首次体验前冻结。
 
-每个 Slice 必须恰好拥有一个 `V-REFLECT-NNN` 阻断 Case。正式 Web、hidden canary、对照和机械 Gate 形成 exact Result 后，
-Result 必须新增“Architecture reflection and continuation decision”，至少回答：
+每个 Slice 必须恰好拥有一个 `V-REFLECT-NNN` 阻断 Case。本 Slice 适用的真实 Web、机械 Gate，以及仅对 hardening/验收适用的 hidden
+canary 与对照形成 exact Result 后，Result 必须新增“Architecture reflection and continuation decision”，至少回答：
 
 1. 原方案假设是什么，实际证据与预期哪里一致、哪里不一致；
 2. 问题属于架构、实现、配置/环境、需求/使用还是验证设计，影响是个案还是系统性；
 3. 知识表示、查询/编排、产品 Web 链和验证方案各自是否仍成立；
-4. 与成熟直接源码 Agent 相比，正确性、完整性、无关证据、时延、成本和复杂度是否仍值得继续；
+4. 若本 Slice 已拥有成熟直接源码 Agent 对照，比较正确性、完整性、无关证据、时延、成本和复杂度；Probe/Alpha 则记录 early signal、
+   未正式比较的原因与明确后置阶段；
 5. 本 Slice Finding 如何处置，当前最早未证明的风险是什么；
 6. 明确作出 `CONTINUE`、`ACCEPT`、`REDIRECT` 或 `REJECT` 决策并说明理由。
 
@@ -154,9 +159,10 @@ Roadmap 只提供候选。只有 Proposal 被明确接受、Manifest 闭合并�
 `authorized/in-progress` + 零个或多个 `proposed`”。每个后续 Slice 必须直接依赖前一个；前一个 Slice 的人工 Web/停止 Gate 完成
 并形成 Result，且方案复盘 Gate 为 PASS、决定为 `CONTINUE` 后，用户再明确授权下一个 Slice，随后才移动
 `project/current.md.active_slice`。后续 Slice 获得授权时，其 `depends_on` 与 Manifest `reflection_prerequisite_result` 还必须绑定
-前一 Slice 的 exact Reflection Result，不能先授权再补复盘证据。在最终 held-out 验证前，每个 Slice
-还必须在本 Slice 产品代码冻结后通过独立持有的隐藏 canary；曝光后修改产品会烧毁 canary 并保留原失败。不得为了通过 Readiness 一次性授权
-全部 Slice，也不得跳过失败 Slice。完成的 Slice 使用 `historical-development / coding_input: false`，当前 Slice 使用
+前一 Slice 的 exact Reflection Result，不能先授权再补复盘证据。方向探针和可用 Alpha 以真实可见问题与现场输入尽早判向，不要求
+hidden canary；从 Alpha `CONTINUE` 后的工程夯实 Slice 开始，最终 held-out 验证前的每个适用 Slice 必须在本 Slice 产品代码冻结后
+通过独立持有的隐藏 canary，曝光后修改产品会烧毁 canary并保留原失败。不得为了通过 Readiness 一次性授权全部 Slice，也不得跳过失败
+Slice。完成的 Slice 使用 `historical-development / coding_input: false`，当前 Slice 使用
 `current-development / coding_input: true`，后续 Slice继续保持 proposed。
 
 若某个 Slice 的停止 Gate 触发，Iteration 必须进入 `rejected`：失败 Slice 为 `blocked`，后续仍显示为 `proposed` 的 Slice 只用于
@@ -186,8 +192,8 @@ roadmap candidate
 - Proposal 已通过产品目标对齐门禁，目标差距、累积路径、独立持有且对实现隐藏的可测增量、跨域问题、最早 Web 体验点、
   现场临时问题和停止条件均已冻结；
 - Proposal 已绑定 planning-only Roadmap 中的精确能力步骤，前置接受证据、本轮结束时的 Web 用户能力和成功后的下一阻断差距均已明确；
-- Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；第一段会尽早对照正式 Web、隐藏输入和成熟基线，
-  而不是把架构与价值判断推迟到最终验收；
+- Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；方向探针与 Alpha 会尽早使用正式 Web 和现场输入判断架构
+  与用户价值，hidden 输入和成熟基线对照则在 Alpha `CONTINUE` 后的首个夯实 Slice 执行，不推迟到最终验收；
 - 一个明确 Outcome 和非目标；
 - 所引用 System 文档均 current，或先完成所需 System 设计；
 - 每个 Slice 有可验证退出条件和风险边界；

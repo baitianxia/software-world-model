@@ -4,7 +4,7 @@
 
 - Active iteration: `none`
 - Active slice: `none`
-- Worktree status: `iteration-010-rejected-redirect-next-iteration-not-authorized`
+- Worktree status: `iteration-011-plan-proposed-no-coding-input`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
 - Live model path: `stopped-direction-failure-production-not-activated`
 - Normative source: `docs/system/`

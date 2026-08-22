@@ -73,6 +73,7 @@ ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE = (
 ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA = (
     "ENGINEERING_QA_REVIEWER_VERIFICATION_INVESTIGATION@1"
 )
+ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA = "ENGINEERING_QA_ANSWER_HIERARCHY@1"
 ENGINEERING_QA_ABLATION_SCHEMA = "ENGINEERING_QA_COGNITION_ABLATION@1"
 ENGINEERING_QA_NOT_AUTHORIZED = "not-authorized"
 DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
@@ -1096,6 +1097,15 @@ def resolved_direction_preview_slice_ref(
     new_slice_ref = binding.get("new_slice_ref")
     representative_task_count = binding.get("representative_task_count")
     decision_owner = binding.get("decision_owner")
+    has_alpha = isinstance(alignment.get("alpha_direction_binding"), dict)
+    status_label = (
+        "direction-probe-non-acceptance-non-production"
+        if has_alpha
+        else "non-acceptance-non-production"
+    )
+    continuation_field = (
+        "next_slice_requires_continue" if has_alpha else "hardening_requires_continue"
+    )
     if (
         not isinstance(case_id, str)
         or re.fullmatch(r"V-PREVIEW-[0-9]{3,}", case_id) is None
@@ -1106,13 +1116,39 @@ def resolved_direction_preview_slice_ref(
         or isinstance(representative_task_count, bool)
         or not isinstance(representative_task_count, int)
         or representative_task_count < 1
-        or binding.get("status_label") != "non-acceptance-non-production"
+        or binding.get("status_label") != status_label
         or decision_owner != "user"
         or binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT"
-        or binding.get("hardening_requires_continue") is not True
+        or binding.get(continuation_field) is not True
     ):
         return None
     return str(new_slice_ref)
+
+
+def resolved_alpha_direction_slice_ref(
+    alignment: dict[str, object], new_refs: list[str]
+) -> str | None:
+    """Resolve an optional second feedback checkpoint before hardening."""
+
+    binding = alignment.get("alpha_direction_binding")
+    preview_ref = resolved_direction_preview_slice_ref(alignment, new_refs)
+    if not isinstance(binding, dict) or preview_ref is None:
+        return None
+    preview_index = new_refs.index(preview_ref)
+    alpha_ref = binding.get("new_slice_ref")
+    case_id = binding.get("case_id")
+    if (
+        preview_index + 2 >= len(new_refs)
+        or alpha_ref != new_refs[preview_index + 1]
+        or not isinstance(case_id, str)
+        or re.fullmatch(r"V-PREVIEW-[0-9]{3,}", case_id) is None
+        or alignment.get("alpha_direction_checkpoint") != case_id
+        or binding.get("decision_owner") != "user"
+        or binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT"
+        or binding.get("engineering_hardening_requires_continue") is not True
+    ):
+        return None
+    return str(alpha_ref)
 
 
 def validate_direction_preview_binding(
@@ -1167,9 +1203,15 @@ def validate_direction_preview_binding(
         errors.append(
             f"{label}: direction preview representative_task_count must be positive"
         )
-    if binding.get("status_label") != "non-acceptance-non-production":
+    has_alpha = isinstance(alignment.get("alpha_direction_binding"), dict)
+    status_label = (
+        "direction-probe-non-acceptance-non-production"
+        if has_alpha
+        else "non-acceptance-non-production"
+    )
+    if binding.get("status_label") != status_label:
         errors.append(
-            f"{label}: direction preview status_label must equal non-acceptance-non-production"
+            f"{label}: direction preview status_label must equal {status_label}"
         )
     decision_owner = binding.get("decision_owner")
     if decision_owner != "user":
@@ -1180,10 +1222,89 @@ def validate_direction_preview_binding(
         errors.append(
             f"{label}: direction preview allowed_decisions must equal CONTINUE,REDIRECT,REJECT"
         )
-    if binding.get("hardening_requires_continue") is not True:
+    continuation_field = (
+        "next_slice_requires_continue" if has_alpha else "hardening_requires_continue"
+    )
+    if binding.get(continuation_field) is not True:
         errors.append(
-            f"{label}: direction preview must require CONTINUE before hardening"
+            f"{label}: direction preview must require CONTINUE before its next Slice"
         )
+    return errors
+
+
+def validate_alpha_direction_binding(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+) -> list[str]:
+    """Validate an optional user-visible checkpoint between probe and hardening."""
+
+    binding = alignment.get("alpha_direction_binding")
+    if binding is None:
+        return []
+    if not isinstance(binding, dict):
+        return [f"{label}: alpha_direction_binding must be a mapping"]
+    errors: list[str] = []
+    if resolved_alpha_direction_slice_ref(alignment, new_refs) is None:
+        errors.append(f"{label}: Alpha checkpoint must immediately follow the direction probe and precede hardening")
+    for field, pattern in (
+        ("case_id", r"V-PREVIEW-[0-9]{3,}"),
+        ("web_case_id", r"V-WEB-[0-9]{3,}"),
+        ("live_ad_hoc_case_id", r"V-ADHOC-[0-9]{3,}"),
+    ):
+        value = binding.get(field)
+        if not isinstance(value, str) or re.fullmatch(pattern, value) is None or value not in blocking_case_ids:
+            errors.append(f"{label}: Alpha {field} must be a blocking Case matching {pattern}")
+    return errors
+
+
+def validate_answer_hierarchy_protocol(
+    manifest: dict[str, object], label: str, *, require_frozen: bool = False
+) -> list[str]:
+    """Validate the optional, general answer-level and review-quality contract."""
+
+    protocol = manifest.get("answer_hierarchy_protocol")
+    if protocol is None:
+        return []
+    if not isinstance(protocol, dict):
+        return [f"{label}: answer_hierarchy_protocol must be a mapping"]
+    expected: dict[str, object] = {
+        "contract_ref": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
+        "direct_user_goal_answer_required": True,
+        "user_visible_flow_behavior_or_impact_condition": "required-by-original-question-or-material-conclusion-checklist",
+        "implementation_explanation_condition": "explicitly-requested-or-necessary-to-support-a-material-conclusion",
+        "limitations_and_unknowns_condition": "evidence-gap-conflict-or-coverage-boundary-exists",
+        "every_material_affirmative_claim_requires_citation": True,
+        "fixed-heading-or-word-ratio-required": False,
+        "material-conclusion-checklist_required": True,
+        "application_acceptance_required": True,
+        "shared_versioned_quality_contract_and_schema": True,
+        "application_uses_accepted_question_understanding_checklist": True,
+        "reviewer_reconstructs_checklist_from_immutable_original_question": True,
+        "reviewer_compares_independent_and_application_checklists_for_omissions": True,
+        "reviewer_context_and_verdict_independent": True,
+        "question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed": False,
+    }
+    errors = validate_exact_mapping_keys(
+        protocol, {"status", *expected}, f"{label}: answer_hierarchy_protocol"
+    )
+    for field, value in expected.items():
+        if protocol.get(field) != value:
+            errors.append(f"{label}: answer_hierarchy_protocol.{field} must equal {value}")
+    allowed_status = {"frozen"} if require_frozen else {"proposed-not-frozen", "frozen"}
+    if protocol.get("status") not in allowed_status:
+        errors.append(f"{label}: answer_hierarchy_protocol.status is invalid")
+    if require_frozen:
+        readiness = manifest.get("readiness_inputs")
+        supplied = readiness.get("answer_hierarchy_protocol_digest") if isinstance(readiness, dict) else None
+        expected_digest = canonical_mapping_digest(
+            ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA,
+            "answer_hierarchy_protocol",
+            protocol,
+        )
+        if supplied != expected_digest:
+            errors.append(f"{label}: answer_hierarchy_protocol_digest must bind the frozen protocol")
     return errors
 
 
@@ -1222,11 +1343,12 @@ def required_early_evaluation_slice_refs(
     preview_ref = resolved_direction_preview_slice_ref(alignment, new_refs)
     if preview_ref is None:
         return set(new_refs[:-1])
-    post_preview_refs = new_refs[1:]
-    if len(post_preview_refs) == 1:
+    checkpoint_ref = resolved_alpha_direction_slice_ref(alignment, new_refs) or preview_ref
+    post_checkpoint_refs = new_refs[new_refs.index(checkpoint_ref) + 1 :]
+    if len(post_checkpoint_refs) == 1:
         # A combined hardening/final Slice still owns the deferred early gates.
-        return set(post_preview_refs)
-    return set(post_preview_refs[:-1])
+        return set(post_checkpoint_refs)
+    return set(post_checkpoint_refs[:-1])
 
 
 def direction_preview_hardening_is_deferred(
@@ -1243,11 +1365,12 @@ def direction_preview_hardening_is_deferred(
     preview_ref = resolved_direction_preview_slice_ref(alignment, new_refs)
     if preview_ref is None:
         return False
+    checkpoint_ref = resolved_alpha_direction_slice_ref(alignment, new_refs) or preview_ref
     development = manifest.get("development")
     slices = development.get("slices") if isinstance(development, dict) else None
-    preview = slices.get(preview_ref) if isinstance(slices, dict) else None
-    preview_status = preview.get("status") if isinstance(preview, dict) else None
-    return preview_status in {"proposed", "authorized", "in-progress", "blocked"}
+    checkpoint = slices.get(checkpoint_ref) if isinstance(slices, dict) else None
+    checkpoint_status = checkpoint.get("status") if isinstance(checkpoint, dict) else None
+    return checkpoint_status in {"proposed", "authorized", "in-progress", "blocked"}
 
 
 def validate_early_evaluation_bindings(
@@ -1275,18 +1398,19 @@ def validate_early_evaluation_bindings(
         if direction_preview_enabled
         else None
     )
+    alpha_ref = resolved_alpha_direction_slice_ref(alignment, new_refs)
     if defer_until_post_preview and preview_ref is not None:
         preview_owned_fields: list[str] = []
         canary_bindings = alignment.get("early_hidden_canary_bindings")
         if isinstance(canary_bindings, dict):
             for binding_name, binding in canary_bindings.items():
-                if isinstance(binding, dict) and binding.get("new_slice_ref") == preview_ref:
+                if isinstance(binding, dict) and binding.get("new_slice_ref") in {preview_ref, alpha_ref}:
                     preview_owned_fields.append(
                         f"early_hidden_canary_bindings.{binding_name}"
                     )
         for field in ("early_comparison_binding", "early_diagnostic_binding"):
             binding = alignment.get(field)
-            if isinstance(binding, dict) and binding.get("new_slice_ref") == preview_ref:
+            if isinstance(binding, dict) and binding.get("new_slice_ref") in {preview_ref, alpha_ref}:
                 preview_owned_fields.append(field)
         if preview_owned_fields:
             errors.append(
@@ -1754,10 +1878,18 @@ def validate_product_goal_alignment_manifest(
             f"{label}: product_goal_alignment.evaluation_input_mode is invalid"
         )
     user_held_live = evaluation_input_mode == USER_HELD_LIVE_EVALUATION_MODE
-    if user_held_live and alignment.get("held_out_evaluation_owner") != "user":
-        errors.append(
-            f"{label}: user-held live evaluation must use held_out_evaluation_owner user"
-        )
+    if user_held_live:
+        input_owner = alignment.get("held_out_input_owner")
+        evaluation_owner = alignment.get("held_out_evaluation_owner")
+        if input_owner is None:
+            if evaluation_owner != "user":
+                errors.append(
+                    f"{label}: legacy user-held live evaluation must use held_out_evaluation_owner user"
+                )
+        elif input_owner != "user" or evaluation_owner != "independent-evaluator":
+            errors.append(
+                f"{label}: user-held input must use held_out_input_owner user and held_out_evaluation_owner independent-evaluator"
+            )
     if alignment.get("target_ref") != "SYS-PRODUCT-SUCCESS":
         errors.append(
             f"{label}: product_goal_alignment.target_ref must equal SYS-PRODUCT-SUCCESS"
@@ -1963,6 +2095,7 @@ def validate_product_goal_alignment_manifest(
         errors.append(
             f"{label}: blocking_case_ids must include every cross-domain, Web and ad-hoc Case"
         )
+    errors.extend(validate_answer_hierarchy_protocol(manifest, label))
     for case_id in blocking_case_ids:
         if re.fullmatch(r"V-(?:PRE-)?[A-Z0-9]+(?:-[A-Z0-9]+)*", case_id) is None:
             errors.append(
@@ -1986,6 +2119,14 @@ def validate_product_goal_alignment_manifest(
     if requires_direction_preview(iteration):
         errors.extend(
             validate_direction_preview_binding(
+                alignment,
+                new_refs,
+                blocking_case_ids,
+                label,
+            )
+        )
+        errors.extend(
+            validate_alpha_direction_binding(
                 alignment,
                 new_refs,
                 blocking_case_ids,
@@ -2433,7 +2574,34 @@ def validate_product_goal_result(
     if not isinstance(owners, list) or "quality" not in owners:
         errors.append(f"{label}: product-goal PASS Result must be owned by quality")
 
-    if requires_engineering_qa_hybrid(iteration):
+    product_goal_metadata, _, _, _ = product_goal_v000_contract(iteration)
+    for field, expected in {
+        **product_goal_metadata,
+        "product_goal_verdict": "PASS",
+    }.items():
+        if result.metadata.get(field) != expected:
+            errors.append(f"{label}: {field} must equal {expected}")
+    for field in ("product_goal_subject_digest", "product_goal_report_digest"):
+        value = result.metadata.get(field)
+        if not isinstance(value, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", value
+        ) is None:
+            errors.append(f"{label}: {field} must be an exact sha256 digest")
+
+    try:
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = safe_load_manifest(manifest_text)
+    except (OSError, UnicodeError, SafeYamlError) as error:
+        return errors + [f"{label}: cannot load product-goal Manifest: {error}"]
+    alignment = manifest.get("product_goal_alignment")
+    if not isinstance(alignment, dict):
+        return errors + [f"{label}: Manifest has no product_goal_alignment"]
+    answer_protocol = manifest.get("answer_protocol")
+    engineering_qa_result = requires_engineering_qa_hybrid(iteration) or (
+        isinstance(answer_protocol, dict)
+        and is_engineering_qa_adaptive_protocol(answer_protocol)
+    )
+    if engineering_qa_result:
         for field in (
             "authorized_source_retrieval_count",
             "authorized_source_retrieval_bytes",
@@ -2459,29 +2627,6 @@ def validate_product_goal_result(
             errors.append(
                 f"{label}: question_evidence_package_manifest_digest must be an exact sha256 digest"
             )
-
-    product_goal_metadata, _, _, _ = product_goal_v000_contract(iteration)
-    for field, expected in {
-        **product_goal_metadata,
-        "product_goal_verdict": "PASS",
-    }.items():
-        if result.metadata.get(field) != expected:
-            errors.append(f"{label}: {field} must equal {expected}")
-    for field in ("product_goal_subject_digest", "product_goal_report_digest"):
-        value = result.metadata.get(field)
-        if not isinstance(value, str) or re.fullmatch(
-            r"sha256:[0-9a-f]{64}", value
-        ) is None:
-            errors.append(f"{label}: {field} must be an exact sha256 digest")
-
-    try:
-        manifest_text = manifest_path.read_text(encoding="utf-8")
-        manifest = safe_load_manifest(manifest_text)
-    except (OSError, UnicodeError, SafeYamlError) as error:
-        return errors + [f"{label}: cannot load product-goal Manifest: {error}"]
-    alignment = manifest.get("product_goal_alignment")
-    if not isinstance(alignment, dict):
-        return errors + [f"{label}: Manifest has no product_goal_alignment"]
 
     completed_case_ids = manifest_resolved_sequence_items(
         manifest_text, "product_goal_alignment", "blocking_case_ids"
@@ -3138,36 +3283,36 @@ def validate_engineering_qa_question_evidence_package_classes(
     return errors
 
 
-def engineering_qa_hardening_has_started(manifest: dict[str, object]) -> bool:
-    """Return true once any post-preview Slice is no longer merely proposed."""
+def engineering_qa_hardening_slice_ref(manifest: dict[str, object]) -> str | None:
+    """Resolve the first engineering-hardening Slice after all feedback checkpoints."""
 
     development = manifest.get("development")
     slices = development.get("slices") if isinstance(development, dict) else None
     alignment = manifest.get("product_goal_alignment")
-    preview_binding = (
-        alignment.get("direction_preview_binding")
-        if isinstance(alignment, dict)
-        else None
-    )
+    if not isinstance(slices, dict) or not isinstance(alignment, dict):
+        return None
+    refs = [str(reference) for reference in slices]
+    preview_binding = alignment.get("direction_preview_binding")
     preview_ref = (
         preview_binding.get("new_slice_ref")
         if isinstance(preview_binding, dict)
         else None
     )
-    if (
-        not isinstance(slices, dict)
-        or len(slices) < 2
-        or not isinstance(preview_ref, str)
-        or preview_ref not in slices
-    ):
-        return True
-    post_preview = [
-        item for reference, item in slices.items() if reference != preview_ref
-    ]
-    return any(
-        not isinstance(item, dict) or item.get("status") != "proposed"
-        for item in post_preview
-    )
+    checkpoint = resolved_alpha_direction_slice_ref(alignment, refs) or preview_ref
+    if checkpoint not in refs:
+        return None
+    index = refs.index(checkpoint)
+    return refs[index + 1] if index + 1 < len(refs) else None
+
+
+def engineering_qa_hardening_has_started(manifest: dict[str, object]) -> bool:
+    """Return true only when the resolved hardening Slice has started."""
+
+    hardening_ref = engineering_qa_hardening_slice_ref(manifest)
+    development = manifest.get("development")
+    slices = development.get("slices") if isinstance(development, dict) else None
+    hardening = slices.get(hardening_ref) if isinstance(slices, dict) else None
+    return not isinstance(hardening, dict) or hardening.get("status") != "proposed"
 
 
 def _engineering_qa_new_freeze_receipt_errors(
@@ -3176,6 +3321,7 @@ def _engineering_qa_new_freeze_receipt_errors(
     field_label: str,
     *,
     hardening_authorization_ref: object,
+    hardening_ref: str,
 ) -> list[str]:
     errors: list[str] = []
     if not isinstance(value, str) or re.fullmatch(
@@ -3187,8 +3333,13 @@ def _engineering_qa_new_freeze_receipt_errors(
             f"{field_label} must not reuse positive_value_freeze_receipt_ref"
         )
     if value != hardening_authorization_ref:
+        authorization_label = (
+            "the current Slice 002"
+            if hardening_ref == "ITER-010-SLICE-002"
+            else hardening_ref
+        )
         errors.append(
-            f"{field_label} must equal the current Slice 002 authorization_ref"
+            f"{field_label} must equal {authorization_label} authorization_ref"
         )
     return errors
 
@@ -3201,6 +3352,7 @@ def validate_engineering_qa_reviewer_verification_investigation(
     *,
     hardening_started: bool,
     hardening_authorization_ref: object,
+    hardening_ref: str = "ITER-010-SLICE-002",
 ) -> list[str]:
     """Freeze an independent multi-step reviewer verification investigation."""
 
@@ -3277,8 +3429,10 @@ def validate_engineering_qa_reviewer_verification_investigation(
         "hardening_wall_time_fuse",
         "hardening_no_progress_fuse",
     )
+    hardening_ordinal = hardening_ref.rsplit("-", 1)[-1]
     proposed_fuse = (
-        "must-be-presealed-positive-high-safety-bound-before-slice-002-authorization"
+        "must-be-presealed-positive-high-safety-bound-before-slice-"
+        f"{hardening_ordinal}-authorization"
     )
     if not hardening_started:
         for field in fuse_fields:
@@ -3289,7 +3443,8 @@ def validate_engineering_qa_reviewer_verification_investigation(
         for field, expected in (
             (
                 "hardening_protocol_status",
-                "proposed-not-frozen-requires-new-user-receipt-before-slice-002",
+                "proposed-not-frozen-requires-new-user-receipt-before-slice-"
+                + hardening_ordinal,
             ),
             ("hardening_authorization_status", ENGINEERING_QA_NOT_AUTHORIZED),
             ("hardening_protocol_digest", ENGINEERING_QA_NOT_AUTHORIZED),
@@ -3330,6 +3485,7 @@ def validate_engineering_qa_reviewer_verification_investigation(
             alignment,
             f"{section_label}.hardening_freeze_receipt_ref",
             hardening_authorization_ref=hardening_authorization_ref,
+            hardening_ref=hardening_ref,
         )
     )
     frozen_protocol = {
@@ -3398,10 +3554,14 @@ def validate_engineering_qa_ablation(
     *,
     hardening_started: bool,
     hardening_authorization_ref: object,
+    hardening_ref: str = "ITER-010-SLICE-002",
+    final_ref: str = "ITER-010-SLICE-003",
 ) -> list[str]:
     """Freeze a fair three-arm cognition ablation before hardening starts."""
 
     section_label = f"{label}: engineering_qa_ablation"
+    hardening_case_field = f"slice_{hardening_ref.rsplit('-', 1)[-1]}_case_id"
+    final_case_field = f"slice_{final_ref.rsplit('-', 1)[-1]}_case_id"
     expected_keys = {
         "status",
         "authorization_required_before",
@@ -3420,8 +3580,8 @@ def validate_engineering_qa_ablation(
         "modeling_cost_accounting",
         "proposed_reuse_horizon_questions",
         "slice_001_required",
-        "slice_002_case_id",
-        "slice_003_case_id",
+        hardening_case_field,
+        final_case_field,
     }
     errors = validate_exact_mapping_keys(ablation, expected_keys, section_label)
     arm_expectations: dict[str, dict[str, object]] = {
@@ -3458,7 +3618,7 @@ def validate_engineering_qa_ablation(
                 )
 
     expected_scalars: dict[str, object] = {
-        "authorization_required_before": "ITER-010-SLICE-002-coding-or-execution",
+        "authorization_required_before": f"{hardening_ref}-coding-or-execution",
         "controlled_inputs": (
             "same-exact-revision-model-questions-model-call-and-resource-budget-"
             "cache-policy-and-state-rubric-and-evaluator"
@@ -3509,8 +3669,8 @@ def validate_engineering_qa_ablation(
             f"{section_label}.proposed_reuse_horizon_questions must be a positive integer"
         )
     for field, pattern in (
-        ("slice_002_case_id", r"V-COMP-EARLY-[0-9]{3,}"),
-        ("slice_003_case_id", r"V-COMP-[0-9]{3,}"),
+        (hardening_case_field, r"V-COMP-EARLY-[0-9]{3,}"),
+        (final_case_field, r"V-COMP-[0-9]{3,}"),
     ):
         value = ablation.get(field)
         if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
@@ -3534,6 +3694,7 @@ def validate_engineering_qa_ablation(
             alignment,
             f"{section_label}.authorization_ref",
             hardening_authorization_ref=hardening_authorization_ref,
+            hardening_ref=hardening_ref,
         )
     )
     frozen_protocol = {
@@ -3565,25 +3726,18 @@ def validate_engineering_qa_adaptive_gate(
     alignment = alignment if isinstance(alignment, dict) else {}
     answer_protocol = answer_protocol if isinstance(answer_protocol, dict) else {}
     hardening_started = engineering_qa_hardening_has_started(manifest)
+    hardening_ref = engineering_qa_hardening_slice_ref(manifest)
     hardening_authorization_ref: object = None
     development = manifest.get("development")
     slices = development.get("slices") if isinstance(development, dict) else None
-    preview_binding = alignment.get("direction_preview_binding")
-    preview_ref = (
-        preview_binding.get("new_slice_ref")
-        if isinstance(preview_binding, dict)
-        else None
-    )
-    if isinstance(slices, dict) and isinstance(preview_ref, str):
-        post_preview_refs = sorted(
-            str(reference) for reference in slices if reference != preview_ref
-        )
-        if post_preview_refs:
-            hardening_slice = slices.get(post_preview_refs[0])
-            if isinstance(hardening_slice, dict):
-                hardening_authorization_ref = hardening_slice.get(
-                    "authorization_ref"
-                )
+    refs = [str(reference) for reference in slices] if isinstance(slices, dict) else []
+    if isinstance(slices, dict) and isinstance(hardening_ref, str):
+        hardening_slice = slices.get(hardening_ref)
+        if isinstance(hardening_slice, dict):
+            hardening_authorization_ref = hardening_slice.get("authorization_ref")
+    if hardening_ref is None:
+        errors.append(f"{label}: engineering QA hardening Slice cannot be resolved")
+        hardening_ref = "unresolved-hardening-slice"
 
     package_classes = manifest.get("question_evidence_package_classes")
     if not isinstance(package_classes, dict):
@@ -3623,6 +3777,7 @@ def validate_engineering_qa_adaptive_gate(
                 label,
                 hardening_started=hardening_started,
                 hardening_authorization_ref=hardening_authorization_ref,
+                hardening_ref=hardening_ref,
             )
         )
 
@@ -3637,6 +3792,8 @@ def validate_engineering_qa_adaptive_gate(
                 label,
                 hardening_started=hardening_started,
                 hardening_authorization_ref=hardening_authorization_ref,
+                hardening_ref=hardening_ref,
+                final_ref=refs[-1] if refs else "unresolved-final-slice",
             )
         )
     return errors
@@ -4227,6 +4384,75 @@ def validate_positive_value_execution_readiness(
     return errors
 
 
+def validate_alpha_staged_execution_inputs(
+    manifest: dict[str, object],
+    alignment: dict[str, object],
+    new_refs: list[str],
+    label: str,
+) -> list[str]:
+    """Defer Alpha-only corpora and hidden/comparison freezes until their Slice."""
+
+    alpha_ref = resolved_alpha_direction_slice_ref(alignment, new_refs)
+    if alpha_ref is None:
+        return []
+    errors: list[str] = []
+    development = manifest.get("development")
+    slices = development.get("slices") if isinstance(development, dict) else None
+    alpha_slice = slices.get(alpha_ref) if isinstance(slices, dict) else None
+    alpha_started = not isinstance(alpha_slice, dict) or alpha_slice.get("status") != "proposed"
+    alpha_corpus = alignment.get("alpha_visible_development_corpus_digest")
+    if alpha_started:
+        if not isinstance(alpha_corpus, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", alpha_corpus) is None:
+            errors.append(f"{label}: alpha_visible_development_corpus_digest must be exact once Alpha starts")
+    elif alpha_corpus != (
+        "not-frozen-requires-slice-" + alpha_ref.rsplit("-", 1)[-1] + "-authorization"
+    ):
+        errors.append(f"{label}: alpha_visible_development_corpus_digest must remain deferred before Alpha")
+
+    hardening_ref = engineering_qa_hardening_slice_ref(manifest)
+    hardening_started = engineering_qa_hardening_has_started(manifest)
+    readiness = manifest.get("readiness_inputs")
+    readiness = readiness if isinstance(readiness, dict) else {}
+    hardening_ordinal = (
+        hardening_ref.rsplit("-", 1)[-1] if isinstance(hardening_ref, str) else "unknown"
+    )
+    if not hardening_started:
+        deferred_value = (
+            "not-frozen-requires-new-user-receipt-before-slice-" + hardening_ordinal
+        )
+        for field in (
+            "positive_value_metric",
+            "positive_value_unit",
+            "positive_value_comparison",
+            "positive_value_threshold",
+            "positive_value_reuse_horizon_questions",
+        ):
+            if alignment.get(field) != deferred_value:
+                errors.append(f"{label}: {field} must remain deferred before hardening")
+        if readiness.get("hidden_freeze_protocol_digest") != f"pending-until-slice-{hardening_ordinal}-freeze":
+            errors.append(f"{label}: hidden_freeze_protocol_digest must remain deferred before hardening")
+        if readiness.get("hidden_freeze_receipt_ref") != ENGINEERING_QA_NOT_AUTHORIZED:
+            errors.append(f"{label}: hidden_freeze_receipt_ref must remain not-authorized before hardening")
+        return errors
+
+    errors.extend(validate_positive_value_execution_readiness(alignment, label))
+    hidden_digest = readiness.get("hidden_freeze_protocol_digest")
+    if not isinstance(hidden_digest, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", hidden_digest) is None:
+        errors.append(f"{label}: hidden_freeze_protocol_digest must be exact once hardening starts")
+    hardening_slice = slices.get(hardening_ref) if isinstance(slices, dict) else None
+    authorization_ref = hardening_slice.get("authorization_ref") if isinstance(hardening_slice, dict) else None
+    errors.extend(
+        _engineering_qa_new_freeze_receipt_errors(
+            readiness.get("hidden_freeze_receipt_ref"),
+            alignment,
+            f"{label}: hidden_freeze_receipt_ref",
+            hardening_authorization_ref=authorization_ref,
+            hardening_ref=hardening_ref or "unresolved-hardening-slice",
+        )
+    )
+    return errors
+
+
 def validate_product_goal_execution_readiness(
     manifest: dict[str, object],
     label: str,
@@ -4310,7 +4536,14 @@ def validate_product_goal_execution_readiness(
         new_refs,
         direction_preview_enabled=requires_direction_preview(iteration),
     )
-    if (
+    alpha_ref = resolved_alpha_direction_slice_ref(alignment, new_refs)
+    if alpha_ref is not None:
+        errors.extend(
+            validate_alpha_staged_execution_inputs(
+                manifest, alignment, new_refs, label
+            )
+        )
+    elif (
         requires_reflection_gate(iteration)
         and len(new_refs) > 1
         and not defer_early_evaluation
@@ -4399,6 +4632,9 @@ def validate_product_goal_execution_readiness(
         errors.append(f"{label}: readiness_inputs must be a mapping before Slice execution")
         readiness_inputs = {}
     if engineering_qa_mode:
+        errors.extend(
+            validate_answer_hierarchy_protocol(manifest, label, require_frozen=True)
+        )
         architecture_decision = readiness_inputs.get(
             "required_architecture_decision"
         )
@@ -4625,13 +4861,12 @@ def validate_product_goal_execution_readiness(
         "information_boundary_oracle_digest",
         "legacy_calls_consistency_oracle_digest",
         "readiness_oracle_result_digest",
-        "hidden_freeze_protocol_digest",
         "system_contract_set_digest",
     ):
         value = (
             frontend.get(field)
             if field
-            not in {"hidden_freeze_protocol_digest", "system_contract_set_digest"}
+            != "system_contract_set_digest"
             else readiness_inputs.get(field)
         )
         if not isinstance(value, str) or re.fullmatch(
@@ -4676,6 +4911,12 @@ def validate_product_goal_execution_readiness(
                 )
         else:
             errors.append(f"{label}: hidden-freeze protocol components are unavailable")
+    elif alpha_ref is None:
+        hidden_digest = readiness_inputs.get("hidden_freeze_protocol_digest")
+        if not isinstance(hidden_digest, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", hidden_digest
+        ) is None:
+            errors.append(f"{label}: hidden_freeze_protocol_digest must be an exact sha256 digest")
     visible_corpus_digest = alignment.get("visible_development_corpus_digest")
     if not isinstance(visible_corpus_digest, str) or re.fullmatch(
         r"sha256:[0-9a-f]{64}", visible_corpus_digest

@@ -103,6 +103,206 @@ def product_goal_verification(
 
 
 class ManifestGateTests(unittest.TestCase):
+    def test_later_engineering_qa_result_inherits_source_safety_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            manifest_path = Path(directory) / "manifest.yaml"
+            manifest_path.write_text(
+                """product_goal_alignment:
+  new_capability_slice_refs: []
+  blocking_case_ids: []
+answer_protocol:
+  mode: adaptive-cognition-guided-engineering-investigation
+development:
+  slices: {}
+""",
+                encoding="utf-8",
+            )
+            verification = docs_gate.Document(
+                SCRIPT.parents[1]
+                / "docs/project/iterations/iteration-012/verification-matrix.md",
+                {"id": "ITER-012-VERIFICATION"},
+                "",
+            )
+            result = docs_gate.Document(
+                SCRIPT.parents[1]
+                / "docs/project/iterations/iteration-012/results/product.md",
+                {
+                    "id": "ITER-012-RESULT-PRODUCT-GOAL",
+                    "kind": "iteration-result",
+                    "status": "product-goal-pass",
+                    "authority": "execution-evidence",
+                    "owners": ["quality"],
+                },
+                "",
+            )
+            missing = docs_gate.validate_product_goal_result(
+                result, "ITER-012", manifest_path, verification
+            )
+            required_fields = {
+                "authorized_source_retrieval_count",
+                "authorized_source_retrieval_bytes",
+                "answer_direct_source_access_count",
+                "reviewer_direct_source_access_count",
+                "repository_write_count",
+                "silent_mode_fallback_count",
+                "question_evidence_package_manifest_digest",
+            }
+            self.assertTrue(
+                all(any(field in error for error in missing) for field in required_fields)
+            )
+
+            secured = docs_gate.Document(
+                result.path,
+                {
+                    **result.metadata,
+                    "authorized_source_retrieval_count": 1,
+                    "authorized_source_retrieval_bytes": 1,
+                    "answer_direct_source_access_count": 0,
+                    "reviewer_direct_source_access_count": 0,
+                    "repository_write_count": 0,
+                    "silent_mode_fallback_count": 0,
+                    "question_evidence_package_manifest_digest": "sha256:" + "a" * 64,
+                },
+                result.body,
+            )
+            secured_errors = docs_gate.validate_product_goal_result(
+                secured, "ITER-012", manifest_path, verification
+            )
+            self.assertFalse(
+                any(field in error for field in required_fields for error in secured_errors),
+                secured_errors,
+            )
+
+    def test_real_alpha_checkpoint_defers_hardening_gates_until_next_slice(self) -> None:
+        iteration_dir = SCRIPT.parents[1] / "docs/project/iterations/iteration-011"
+        manifest_text = (iteration_dir / "manifest.yaml").read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+        alignment = manifest["product_goal_alignment"]
+        refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "new_capability_slice_refs"
+        )
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "blocking_case_ids"
+        )
+        assert isinstance(alignment, dict)
+        assert refs is not None
+        assert blocking is not None
+
+        self.assertEqual(
+            docs_gate.resolved_alpha_direction_slice_ref(alignment, refs), refs[1]
+        )
+        self.assertEqual(
+            docs_gate.validate_alpha_direction_binding(
+                alignment, refs, blocking, "manifest.yaml"
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.required_early_evaluation_slice_refs(
+                alignment, refs, direction_preview_enabled=True
+            ),
+            {refs[2]},
+        )
+        self.assertEqual(docs_gate.engineering_qa_hardening_slice_ref(manifest), refs[2])
+        self.assertFalse(docs_gate.engineering_qa_hardening_has_started(manifest))
+        self.assertEqual(
+            docs_gate.validate_alpha_staged_execution_inputs(
+                manifest, alignment, refs, "manifest.yaml"
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_answer_hierarchy_protocol(manifest, "manifest.yaml"),
+            [],
+        )
+
+        alpha_started = copy.deepcopy(manifest)
+        alpha_alignment = alpha_started["product_goal_alignment"]
+        assert isinstance(alpha_alignment, dict)
+        alpha_started["development"]["slices"][refs[0]]["status"] = "authorized"
+        self.assertEqual(
+            docs_gate.validate_alpha_staged_execution_inputs(
+                alpha_started, alpha_alignment, refs, "manifest.yaml"
+            ),
+            [],
+        )
+        alpha_started["development"]["slices"][refs[1]]["status"] = "authorized"
+        self.assertFalse(docs_gate.engineering_qa_hardening_has_started(alpha_started))
+        alpha_errors = docs_gate.validate_alpha_staged_execution_inputs(
+            alpha_started, alpha_alignment, refs, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("alpha_visible_development_corpus_digest" in error for error in alpha_errors)
+        )
+        alpha_alignment["alpha_visible_development_corpus_digest"] = "sha256:" + "1" * 64
+        self.assertEqual(
+            docs_gate.validate_alpha_staged_execution_inputs(
+                alpha_started, alpha_alignment, refs, "manifest.yaml"
+            ),
+            [],
+        )
+
+        alpha_started["development"]["slices"][refs[2]]["status"] = "authorized"
+        self.assertTrue(docs_gate.engineering_qa_hardening_has_started(alpha_started))
+        hardening_errors = docs_gate.validate_alpha_staged_execution_inputs(
+            alpha_started, alpha_alignment, refs, "manifest.yaml"
+        )
+        self.assertTrue(any("positive_value_" in error for error in hardening_errors))
+        self.assertTrue(any("hidden_freeze_" in error for error in hardening_errors))
+        alpha_alignment.update(
+            {
+                "positive_value_metric": "normalized-reuse-cost",
+                "positive_value_unit": "basis-points",
+                "positive_value_comparison": "at-most",
+                "positive_value_threshold": 900000,
+                "positive_value_reuse_horizon_questions": 1,
+                "mature_source_agent_protocol_digest": "sha256:" + "2" * 64,
+                "mature_source_agent_rubric_digest": "sha256:" + "3" * 64,
+                "mature_source_agent_cache_policy_digest": "sha256:" + "4" * 64,
+                "positive_value_protocol_digest": "sha256:" + "5" * 64,
+                "positive_value_freeze_receipt_ref": "codex-user-message:sha256:" + "6" * 64,
+            }
+        )
+        hardening_receipt = "codex-user-message:sha256:" + "7" * 64
+        alpha_started["development"]["slices"][refs[2]][
+            "authorization_ref"
+        ] = hardening_receipt
+        alpha_started["readiness_inputs"].update(
+            {
+                "hidden_freeze_protocol_digest": "sha256:" + "8" * 64,
+                "hidden_freeze_receipt_ref": hardening_receipt,
+            }
+        )
+        self.assertEqual(
+            docs_gate.validate_alpha_staged_execution_inputs(
+                alpha_started, alpha_alignment, refs, "manifest.yaml"
+            ),
+            [],
+        )
+
+        hierarchy = alpha_started["answer_hierarchy_protocol"]
+        assert isinstance(hierarchy, dict)
+        hierarchy["status"] = "frozen"
+        alpha_started["readiness_inputs"]["answer_hierarchy_protocol_digest"] = (
+            docs_gate.canonical_mapping_digest(
+                docs_gate.ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA,
+                "answer_hierarchy_protocol",
+                hierarchy,
+            )
+        )
+        self.assertEqual(
+            docs_gate.validate_answer_hierarchy_protocol(
+                alpha_started, "manifest.yaml", require_frozen=True
+            ),
+            [],
+        )
+        hierarchy["direct_user_goal_answer_required"] = False
+        self.assertTrue(
+            docs_gate.validate_answer_hierarchy_protocol(
+                alpha_started, "manifest.yaml", require_frozen=True
+            )
+        )
+
     def test_execution_readiness_resolves_safe_yaml_block_sequences(self) -> None:
         text = """\
 product_goal_alignment:

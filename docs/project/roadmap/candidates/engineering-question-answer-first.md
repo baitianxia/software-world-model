@@ -73,23 +73,29 @@ Shell、网络、credential 或直接 Source 工具，但可以指出具体、�
 
 ## Staged validation
 
-### Stage 1：最小真实纵切与方向体验
+### Stage 1：最小真实方向探针
 
 复用但重新冻结 ITER-010 的 World Model Cognition → 自适应 Investigation → Broker/Worker → Ledger → Package 技术资产；新增最小 typed
-Answer Hierarchy、Application acceptance 和同结构 Reviewer Gate。先用确定性对抗 Draft 证明 Reviewer/Application 会拒绝实现细节主导、
-未先回答和关键流程副作用遗漏，再从同一 product-owned loopback Web 在一个真实工程运行 4 条不同维度自然问题及至少一条用户现场问题；
-至少 3 条 supported、至少覆盖 2 个非实现维度，且每条获批正文都必须通过独立的 answer-hierarchy 方向检查。需要补证时仍生成后继
-Package、完整重答和重审。
+Answer Hierarchy、Application acceptance 和同结构 Reviewer Gate。先以最小确定性正反例证明 Reviewer/Application 会拒绝实现细节主导、
+未先回答和关键流程副作用遗漏，再从同一 product-owned loopback Web 在一个真实工程运行 1 条代表问题与 1 条用户现场问题。用户立即
+查看原始答案、Citation、限制和折叠诊断，并决定 `CONTINUE / REDIRECT / REJECT`。
 
-首版只需要足以判断职责分工、答案层级和真实可用性的最小安全边界，不提前完成第二工程、大规模性能、异常穷举、完整 hidden、成熟
-源码 Agent 对照和正式验收。用户决定 `CONTINUE / REDIRECT / REJECT`；没有 `CONTINUE` 不进入夯实。
+探针只需要足以判断职责分工、答案层级和真实可用性的最小安全边界，不提前完成多题覆盖、第二工程、大规模性能、异常穷举、完整 hidden、
+成熟源码 Agent 对照和正式验收。没有 `CONTINUE` 不进入 Alpha。
 
-### Stage 2：跨工程和工程化夯实
+### Stage 2：跨维度可用 Alpha
 
-方向确认后验证第二工程、来源冲突、Ledger/Package 生命周期、复杂补证、资格、Provider disclosure、安全、性能、完整回归、early hidden
-canary、成熟源码 Agent 对照和 World Model 复用价值。修复必须落在通用表示、Broker policy、调查或审核合同，不能落在问题/工程分支。
+探针 `CONTINUE` 后只做其证据要求的最小通用修正，并立即在同一真实工程运行 3—5 条跨用途、架构、运行、流程、配置、故障、影响或实现
+维度的问题及至少 1 条新现场问题。至少两题不是实现细节题；仍不做 persistence、复杂补证、完整异常矩阵、第二工程、hidden、三臂或
+full regression。用户再次决定 `CONTINUE / REDIRECT / REJECT`；没有第二次 `CONTINUE` 不进入夯实。
 
-### Stage 3：正式验收
+### Stage 3：跨工程和工程化夯实
+
+Alpha 确认后才验证第二工程、来源冲突、Ledger/Package 生命周期、复杂补证、资格、Provider disclosure、安全、性能、完整回归、early
+hidden canary、成熟源码 Agent 对照和 World Model 复用价值。修复必须落在通用表示、Broker policy、调查或审核合同，不能落在
+问题/工程分支。
+
+### Stage 4：正式验收
 
 产品代码冻结后执行最终未见工程 10 answerable + 2 boundary、两条现场题和独立对照。重大错误为零、逐结论完整性不低于成熟源码 Agent、
 Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直接 Source/写/网络权限为零，用户最终决定是否接受。

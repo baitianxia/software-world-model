@@ -3993,6 +3993,158 @@
     "path": "docs/project/iterations/iteration-010/verification-matrix.md"
   },
   {
+    "id": "ITER-011-DEVELOPMENT-DESIGN",
+    "kind": "development-design-index",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "architecture",
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/development-design/README.md"
+  },
+  {
+    "id": "ITER-011-FINDINGS",
+    "kind": "iteration-findings-index",
+    "status": "open",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/findings/README.md"
+  },
+  {
+    "id": "ITER-011-INDEX",
+    "kind": "iteration-index",
+    "status": "proposed",
+    "authority": "project",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/README.md"
+  },
+  {
+    "id": "ITER-011-PROPOSAL",
+    "kind": "iteration-proposal",
+    "status": "proposed",
+    "authority": "project-proposal",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/proposal.md"
+  },
+  {
+    "id": "ITER-011-READINESS",
+    "kind": "iteration-readiness",
+    "status": "proposed",
+    "authority": "project-authorization",
+    "owners": [
+      "project",
+      "architecture",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/readiness-review.md"
+  },
+  {
+    "id": "ITER-011-RESULTS",
+    "kind": "iteration-result-index",
+    "status": "draft",
+    "authority": "evidence",
+    "owners": [
+      "quality",
+      "product",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/results/README.md"
+  },
+  {
+    "id": "ITER-011-SLICE-001",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "product",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-001-answer-first-direction-probe.md"
+  },
+  {
+    "id": "ITER-011-SLICE-002",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "product",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-002-cross-dimension-alpha.md"
+  },
+  {
+    "id": "ITER-011-SLICE-003",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-003-engineering-hardening.md"
+  },
+  {
+    "id": "ITER-011-SLICE-004",
+    "kind": "development-slice",
+    "status": "proposed",
+    "authority": "proposed-development",
+    "owners": [
+      "quality",
+      "product",
+      "project",
+      "architecture",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-004-formal-product-acceptance.md"
+  },
+  {
+    "id": "ITER-011-VERIFICATION",
+    "kind": "iteration-verification",
+    "status": "not-run",
+    "authority": "planned-verification",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-011/verification-matrix.md"
+  },
+  {
     "id": "ITERATION-INDEX",
     "kind": "iteration-index",
     "status": "current",

@@ -1,0 +1,569 @@
+schema_version: 1
+iteration:
+  id: ITER-011
+  status: proposed
+  outcome_scope: answer-first-engineering-qa-direction-probe-alpha-hardening-and-formal-acceptance
+
+baseline:
+  commit: ff60e10521cabc4301bebc25672ea75c769b4def
+  tree: 33a032790ed223074af005cd2cc0261fd97469ea
+  technical_product_subject_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
+  technical_product_subject_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
+  dirty_worktree_allowed: false
+  relation: exact-iteration-010-redirect-closure-with-technical-assets-preserved-and-product-direction-rejected
+
+product_goal_alignment:
+  target_ref: SYS-PRODUCT-SUCCESS
+  capability_path_ref: ROADMAP-M-002
+  capability_path_step: step-1-java-result-driven-world-model-investigation
+  predecessor_result_refs:
+    - ITER-006-RESULT-ACCEPTANCE
+    - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+  critical_assumption_ids: A1,A2,A3,A4
+  critical_assumption_catalog_digest: not-frozen-proposal-only
+  end_of_iteration_web_capability: unauthenticated-loopback-answer-first-engineering-qa-over-versioned-world-model-cognition-and-broker-controlled-exact-revision-evidence-with-independent-review-and-claim-citations
+  next_blocking_gap: second-language-cross-repository-large-project-continuous-update-and-controlled-nonlocal-deployment
+  baseline_gap: technical-evidence-chain-runs-but-flat-answer-and-review-contract-do-not-guarantee-user-goal-first-level-matched-answer
+  accepted_capability_refs:
+    - ITER-006-RESULT-ACCEPTANCE
+  new_capability_slice_refs:
+    - ITER-011-SLICE-001
+    - ITER-011-SLICE-002
+    - ITER-011-SLICE-003
+    - ITER-011-SLICE-004
+  evaluation_input_mode: user-held-live-after-product-code-freeze
+  held_out_free_question_delta: final-two-real-java-projects-with-ten-answerable-and-two-boundary-plus-two-live-ad-hoc-questions
+  held_out_input_owner: user
+  held_out_evaluation_owner: independent-evaluator
+  visible_development_corpus_digest: not-frozen-requires-slice-001-authorization
+  alpha_visible_development_corpus_digest: not-frozen-requires-slice-002-authorization
+  implementation_question_visibility: hidden
+  implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
+  evaluation_project_manifest_digest: user-held-not-disclosed
+  held_out_suite_digest: user-held-not-disclosed
+  baseline_result_digest: user-held-not-disclosed
+  mature_source_agent_protocol_digest: user-held-not-disclosed
+  mature_source_agent_rubric_digest: user-held-not-disclosed
+  mature_source_agent_cache_policy_digest: user-held-not-disclosed
+  positive_value_metric: not-frozen-requires-new-user-receipt-before-slice-003
+  positive_value_unit: not-frozen-requires-new-user-receipt-before-slice-003
+  positive_value_comparison: not-frozen-requires-new-user-receipt-before-slice-003
+  positive_value_threshold: not-frozen-requires-new-user-receipt-before-slice-003
+  positive_value_reuse_horizon_questions: not-frozen-requires-new-user-receipt-before-slice-003
+  positive_value_protocol_digest: user-held-not-disclosed
+  positive_value_freeze_receipt_ref: not-authorized
+  positive_value_adjudication_owner: independent-evaluator
+  authorized_software_sources_digest: user-held-not-disclosed
+  held_out_question_count: 12
+  held_out_answerable_question_count: 10
+  held_out_boundary_question_count: 2
+  held_out_answerable_without_symbol_count_minimum: 8
+  held_out_answerable_without_symbol_per_project_minimum: 3
+  held_out_baseline_supported_count: measured-after-product-code-freeze
+  held_out_target_supported_count: 10
+  supported_count_denominator: answerable-only
+  boundary_gap_counted_as_supported: false
+  cross_domain_cases:
+    - V-XD-001
+    - V-XD-002
+    - V-XD-003
+    - V-XD-004
+  blocking_case_ids:
+    - V-BASELINE-001
+    - V-ARCH-001
+    - V-HIERARCHY-001
+    - V-REVIEW-001
+    - V-SEC-001
+    - V-XD-001
+    - V-WEB-001
+    - V-ADHOC-001
+    - V-PREVIEW-001
+    - V-REFLECT-001
+    - V-ALPHA-002
+    - V-SEC-002
+    - V-XD-002
+    - V-WEB-002
+    - V-ADHOC-002
+    - V-PREVIEW-002
+    - V-REFLECT-002
+    - V-GENERAL-003
+    - V-RERETRIEVE-003
+    - V-PERSIST-003
+    - V-CONFLICT-003
+    - V-HARDEN-003
+    - V-SEC-003
+    - V-PERF-003
+    - V-XD-003
+    - V-WEB-003
+    - V-CANARY-003
+    - V-NEG-EARLY-003
+    - V-COMP-EARLY-003
+    - V-DIAG-003
+    - V-REGRESSION-003
+    - V-REFLECT-003
+    - V-HIDDEN-004
+    - V-COMP-004
+    - V-SEC-004
+    - V-XD-004
+    - V-WEB-004
+    - V-ADHOC-004
+    - V-REGRESSION-004
+    - V-010
+    - V-REFLECT-004
+  readiness_blocking_case_ids:
+    - V-PRE-001
+    - V-PRE-002
+    - V-PRE-003
+    - V-PRE-004
+    - V-PRE-005
+    - V-PRE-006
+  cross_domain_case_count: 4
+  cross_domain_bindings:
+    binding_001:
+      case_id: V-XD-001
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-011-SLICE-001
+    binding_002:
+      case_id: V-XD-002
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-011-SLICE-002
+    binding_003:
+      case_id: V-XD-003
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-011-SLICE-003
+    binding_004:
+      case_id: V-XD-004
+      accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
+      new_slice_ref: ITER-011-SLICE-004
+  first_product_web_checkpoint: V-WEB-001
+  direction_preview_checkpoint: V-PREVIEW-001
+  direction_preview_binding:
+    case_id: V-PREVIEW-001
+    web_case_id: V-WEB-001
+    new_slice_ref: ITER-011-SLICE-001
+    real_product_entry: loopback-product-owned-engineering-qa-web
+    representative_task_count: 1
+    live_ad_hoc_question_count: 1
+    status_label: direction-probe-non-acceptance-non-production
+    decision_owner: user
+    allowed_decisions: CONTINUE,REDIRECT,REJECT
+    next_slice_requires_continue: true
+  alpha_direction_checkpoint: V-PREVIEW-002
+  alpha_direction_binding:
+    case_id: V-PREVIEW-002
+    web_case_id: V-WEB-002
+    live_ad_hoc_case_id: V-ADHOC-002
+    new_slice_ref: ITER-011-SLICE-002
+    real_product_entry: same-loopback-product-owned-engineering-qa-web
+    prepared_cross_dimension_question_count_minimum: 3
+    prepared_cross_dimension_question_count_maximum: 5
+    live_ad_hoc_question_count_minimum: 1
+    status_label: usable-alpha-non-acceptance-non-production
+    decision_owner: user
+    allowed_decisions: CONTINUE,REDIRECT,REJECT
+    engineering_hardening_requires_continue: true
+    excluded_before_continue: persistence-complex-reretrieval-conflict-dedup-full-security-performance-regression-hidden-and-three-arm-comparison
+  web_checkpoint_binding:
+    case_id: V-WEB-001
+    new_slice_ref: ITER-011-SLICE-001
+    executes_cross_domain_case_id: V-XD-001
+  additional_web_checkpoint_bindings:
+    alpha_web:
+      case_id: V-WEB-002
+      new_slice_ref: ITER-011-SLICE-002
+      executes_cross_domain_case_id: V-XD-002
+    hardening_web:
+      case_id: V-WEB-003
+      new_slice_ref: ITER-011-SLICE-003
+      executes_cross_domain_case_id: V-XD-003
+    final_web:
+      case_id: V-WEB-004
+      new_slice_ref: ITER-011-SLICE-004
+      executes_cross_domain_case_id: V-XD-004
+  early_hidden_canary_bindings:
+    slice_003:
+      case_id: V-CANARY-003
+      new_slice_ref: ITER-011-SLICE-003
+      project_relation: independent-second-project-frozen-after-alpha-and-before-slice3-run
+      project_manifest_digest: user-held-not-disclosed
+      suite_digest: user-held-not-disclosed
+      question_count: 7
+      answerable_question_count: 5
+      boundary_question_count: 2
+      bounded_absence_question_count: 1
+      coverage_limitation_question_count: 1
+      negative_case_id: V-NEG-EARLY-003
+      evaluation_owner: independent-evaluator
+      implementation_visibility: hidden-until-slice-code-freeze
+      burn_rule: product-change-between-disclosure-and-slice-result-seal-burns-canary-and-preserves-result
+  early_comparison_binding:
+    case_id: V-COMP-EARLY-003
+    canary_case_id: V-CANARY-003
+    new_slice_ref: ITER-011-SLICE-003
+    protocol_digest_ref: mature_source_agent_protocol_digest
+    quality_rule: zero-major-error-and-no-need-claim-regression
+    positive_value_rule: precommitted-measurable-world-model-advantage-must-pass
+    positive_value_metric_ref: positive_value_metric
+    positive_value_unit_ref: positive_value_unit
+    positive_value_comparison_ref: positive_value_comparison
+    positive_value_threshold_ref: positive_value_threshold
+    positive_value_reuse_horizon_ref: positive_value_reuse_horizon_questions
+    baseline_cache_policy_digest_ref: mature_source_agent_cache_policy_digest
+    positive_value_protocol_digest_ref: positive_value_protocol_digest
+    positive_value_adjudication_owner_ref: positive_value_adjudication_owner
+    engineering_qa_ablation_ref: engineering_qa_ablation
+  early_diagnostic_binding:
+    case_id: V-DIAG-003
+    canary_case_id: V-CANARY-003
+    new_slice_ref: ITER-011-SLICE-003
+    layer_chain: source-observation-world-model-cognition-question-understanding-investigation-source-broker-retrieval-worker-evidence-ledger-question-evidence-package-answer-review-web
+  reflection_gate_bindings:
+    slice_001:
+      case_id: V-REFLECT-001
+      new_slice_ref: ITER-011-SLICE-001
+      assumption_ids: A1
+      conditional_falsifier_bindings:
+        cognition_and_source_combination:
+          assumption_id: A2
+          case_id: V-XD-001
+        minimum_security:
+          assumption_id: A3
+          case_id: V-SEC-001
+        future_value:
+          assumption_id: A4
+          case_id: V-PREVIEW-001
+      success_decision: CONTINUE
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+    slice_002:
+      case_id: V-REFLECT-002
+      new_slice_ref: ITER-011-SLICE-002
+      assumption_ids: A1,A2
+      conditional_falsifier_bindings:
+        hardening_viability:
+          assumption_id: A3
+          case_id: V-SEC-002
+        future_value:
+          assumption_id: A4
+          case_id: V-ALPHA-002
+      success_decision: CONTINUE
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+    slice_003:
+      case_id: V-REFLECT-003
+      new_slice_ref: ITER-011-SLICE-003
+      assumption_ids: A1,A2,A3
+      conditional_falsifier_bindings:
+        complete_cognition_value:
+          assumption_id: A4
+          case_id: V-COMP-EARLY-003
+      success_decision: CONTINUE
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+    slice_004:
+      case_id: V-REFLECT-004
+      new_slice_ref: ITER-011-SLICE-004
+      assumption_ids: A1,A2,A3,A4
+      conditional_falsifier_bindings: {}
+      success_decision: ACCEPT
+      decision_owner: user
+      required_before_next_authorization_or_acceptance: true
+  live_ad_hoc_question_checkpoint: V-ADHOC-004
+  live_ad_hoc_checkpoint_binding:
+    case_id: V-ADHOC-004
+    new_slice_ref: ITER-011-SLICE-004
+    executes_cross_domain_case_id: V-XD-004
+  live_ad_hoc_question_count: 2
+  live_ad_hoc_without_symbol_count_minimum: 1
+  stop_or_redirect_conditions:
+    - default-answer-remains-method-class-branch-call-order-or-internal-diagnostic-walkthrough
+    - answer-hierarchy-or-review-quality-gate-requires-question-project-keyword-symbol-class-method-fixture-or-oracle-routing
+    - reviewer-approves-major-error-material-omission-or-user-level-mismatch
+    - citation-does-not-support-a-material-conclusion
+    - world-model-is-reduced-to-manual-cache-or-retrieval-hints
+    - investigation-answer-or-reviewer-can-directly-read-source-or-use-filesystem-shell-network-or-credential
+    - source-write-update-silent-mode-fallback-secret-exposure-or-non-loopback-listener-occurs
+    - independent-review-is-removed-weakened-or-skipped-for-call-budget
+    - slice2-user-decision-is-not-continue-before-slice3
+    - user-decides-redirect-or-reject
+
+answer_hierarchy_protocol:
+  status: proposed-not-frozen
+  contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+  direct_user_goal_answer_required: true
+  user_visible_flow_behavior_or_impact_condition: required-by-original-question-or-material-conclusion-checklist
+  implementation_explanation_condition: explicitly-requested-or-necessary-to-support-a-material-conclusion
+  limitations_and_unknowns_condition: evidence-gap-conflict-or-coverage-boundary-exists
+  every_material_affirmative_claim_requires_citation: true
+  fixed-heading-or-word-ratio-required: false
+  material-conclusion-checklist_required: true
+  application_acceptance_required: true
+  shared_versioned_quality_contract_and_schema: true
+  application_uses_accepted_question_understanding_checklist: true
+  reviewer_reconstructs_checklist_from_immutable_original_question: true
+  reviewer_compares_independent_and_application_checklists_for_omissions: true
+  reviewer_context_and_verdict_independent: true
+  question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed: false
+
+source_scope:
+  provider: LOCAL_GIT
+  content_kind: exact-revision-java-source-repository-documents-build-configuration-tests-plus-prebuilt-world-model
+  contract_ref: SYS-CONTRACT-SOURCE-ARTIFACT
+  authorized_software_sources_digest: user-held-not-disclosed
+  question_or_suite_driven_update_allowed: false
+  question_time_read_only_retrieval_allowed: true
+  repository_write_allowed: false
+  verification_case_ids:
+    - V-SEC-001
+    - V-SEC-002
+    - V-SEC-003
+    - V-SEC-004
+
+hybrid_evidence_path:
+  mode: ENGINEERING_QA
+  strict_world_model_mode_preserved: true
+  direct_investigation_mode_preserved: true
+  silent_mode_fallback_allowed: false
+  world_model_role: persistent-versioned-verifiable-updatable-external-software-cognition
+  world_model_cognition_dimensions: context-entities-relations-behavior-constraints-state-evidence-coverage-and-unknown-boundaries
+  world_model_is_only_manual_map_cache_or_retrieval_hints: false
+  world_model_as_question-time-source-recall_gate_allowed: false
+  world_model_required_as_source_retrieval_gate: false
+  investigation_inputs: immutable-original-question-exact-world-model-cognition-and-prior-ledger-results
+  zero-irrelevant-or-insufficient-snapshot_blocks_exact-revision-retrieval: false
+  snapshot_source_revision_compatibility: exact-match-or-explicit-partitioned-version-comparison-otherwise-unaligned-navigation-only
+  investigation_model_role: independent-adaptive-result-driven-read-operation-proposal
+  investigation_model_direct_source_access: denied
+  source_broker_role: policy-compile-and-authorize-allowlisted-read-only-exact-revision-operations
+  retrieval_worker_role: isolated-execution-only
+  retrieval_worker_sources: exact-revision-source-repository-documents-build-configuration-tests
+  retrieval_worker_access: read-only-allowlisted-audited
+  source_trust: untrusted-input
+  live_provider_source-fragment-disclosure: separately-authorized-exact-provider-model-role-and-allowlist-only
+  evidence_ledger: append-only-per-question-until-seal
+  evidence_ledger_seal_trigger: investigation-finish-or-fail-closed-stop
+  question_evidence_package_role: sealed-two-partition-support-citation-and-boundary-audit-set-not-truth-authority
+  package_seal_confers_truth: false
+  sealed_package_mutation_allowed: false
+  answer_repository_access: denied
+  answer_direct_source_authority: denied
+  reviewer_repository_access: denied
+  reviewer_direct_source_authority: denied
+  reviewer_direct_shell_network_credential_or_tool_access: denied
+  answer_input: immutable-original-question-question-understanding-and-sealed-question-evidence-package-only
+  reviewer_input: immutable-original-question-question-understanding-sealed-question-evidence-package-and-draft-only
+  reviewer_verification_request_role: versioned-gap-proposal-binding-checklist-claim-evidence-class-and-need
+  reviewer_verification_returns_to_initial_investigation_model: false
+  reviewer_more_evidence_route: specific-verifiable-gap-through-independent-verification-investigation-application-source-broker-worker-new-ledger-revision-new-package-new-answer-new-review
+  knowledge_persistence: asynchronous-after-delivery-through-normal-admission-and-publication
+  status: frozen
+
+question_evidence_package_classes:
+  support_and_citation:
+    admission: modality-context-coverage-and-support-validated-only
+    affirmative_claim_support_allowed: true
+    claim_citation_allowed: true
+  retained_non_support:
+    required_entry_kinds: boundary,audit-gap,failure,partial,conflict,unknown,rejected-decision-and-resource-receipt
+    retention: mandatory-in-ledger-and-current-sealed-package
+    affirmative_claim_support_allowed: false
+    affirmative_claim_citation_allowed: false
+    labeled_boundary_or_audit_reference_allowed: true
+  single_package_identity: true
+  seal_confers_truth: false
+  status: frozen
+
+reviewer_verification_investigation:
+  role: independent-verification-investigation-llm
+  context: fresh-context-without-initial-investigation-answer-or-review-session-state
+  inputs: immutable-specific-review-gap-current-package-and-current-ledger-prefix
+  reviewer_operation_proposal_allowed: false
+  adaptive_multi_step_required: true
+  prior_verification_result_must_drive_next_step: true
+  application_source_broker_worker_route_required: true
+  direct_source_filesystem_shell_network_credential_or_tool_access: denied
+  returns_to_initial_investigation_model: false
+  creates_new_ledger_revision_package_answer_and_review: true
+  slice_001_preview_upper_bound: 1
+  slice_001_bound_scope: direction-preview-only-not-a-permanent-protocol-round-cap
+  hardening_fixed_round_upper_bound_allowed: false
+  hardening_package_revision_fuse: must-be-presealed-positive-high-safety-bound-before-slice-003-authorization
+  hardening_model_call_fuse: must-be-presealed-positive-high-safety-bound-before-slice-003-authorization
+  hardening_source_broker_operation_fuse: must-be-presealed-positive-high-safety-bound-before-slice-003-authorization
+  hardening_source_byte_fuse: must-be-presealed-positive-high-safety-bound-before-slice-003-authorization
+  hardening_wall_time_fuse: must-be-presealed-positive-high-safety-bound-before-slice-003-authorization
+  hardening_no_progress_fuse: must-be-presealed-positive-high-safety-bound-before-slice-003-authorization
+  answerable_fuse_exhaustion_outcome: fail
+  boundary_fuse_exhaustion_outcome: independently-reviewed-honest-limitation-or-fail
+  hardening_protocol_status: proposed-not-frozen-requires-new-user-receipt-before-slice-003
+  hardening_authorization_status: not-authorized
+  hardening_protocol_digest: not-authorized
+  hardening_freeze_receipt_ref: not-authorized
+  status: frozen-slice-001-preview-boundary
+
+engineering_qa_ablation:
+  status: proposed-not-authorized
+  authorization_required_before: ITER-011-SLICE-003-coding-or-execution
+  authorization_ref: not-authorized
+  frozen_protocol_digest: not-authorized
+  full_cognition_arm:
+    cognition_input: full-exact-world-model-cognition-context
+    investigation_chain: shared-adaptive-investigation-source-broker-worker-ledger-package-answer-review
+  locator_only_or_empty_arm:
+    cognition_input: predeclared-locator-only-projection-or-canonical-empty-when-no-locator-exists
+    investigation_chain: same-as-full-cognition-arm
+  mature_source_agent_arm:
+    protocol_ref: mature_source_agent_protocol_digest
+    cognition_input: none
+    investigation_chain: frozen-mature-source-agent
+  controlled_inputs: same-exact-revision-model-questions-model-call-and-resource-budget-cache-policy-and-state-rubric-and-evaluator
+  quality_gate: full-cognition-and-mature-source-agent-zero-major-error-boundary-correct-and-full-cognition-no-material-claim-regression-versus-mature-source-agent
+  locator_control_quality_failure_effect: may-prove-quality-gain-but-cannot-lower-full-cognition-acceptance-threshold
+  gain_gate: full-cognition-must-have-precommitted-quality-gain-or-precommitted-normalized-non-locator-investigation-cost-gain-versus-locator-only-or-empty-arm
+  proposed_quality_gain_threshold: at-least-one-predeclared-material-checklist-gain-with-no-regression
+  proposed_non_locator_cost_ratio_threshold_ppm: 900000
+  cost_dimensions: source-bytes-source-broker-operations-model-tokens-wall-time-provider-cost-and-world-model-build-update-storage-cost
+  modeling_cost_accounting: exact-world-model-build-update-storage-and-provider-cost-amortized-over-frozen-reuse-horizon
+  proposed_reuse_horizon_questions: 12
+  slice_001_required: false
+  slice_003_case_id: V-COMP-EARLY-003
+  slice_004_case_id: V-COMP-004
+
+answer_protocol:
+  schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1
+  contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+  mode: adaptive-cognition-guided-engineering-investigation
+  question_understanding_required_fields: user-goal,audience,requested-abstraction-level,material-conclusion-checklist,evidence-needs,response-language-and-constraints
+  question_understanding_model_call_upper_bound: 1
+  investigation_model_call_upper_bound: 12
+  max_investigation_steps_per_question: 24
+  slice_001_reviewer_verification_investigation_upper_bound: 1
+  max_source_broker_operations_per_question: 128
+  max_source_files_per_question: 64
+  max_source_bytes_per_question: 2097152
+  max_repository_document_bytes_per_question: 1048576
+  max_build_configuration_bytes_per_question: 524288
+  max_test_bytes_per_question: 1048576
+  max_world_model_result_bytes_per_question: 1048576
+  max_sealed_evidence_package_bytes_per_question: 4194304
+  max_support_items_per_question: 1024
+  max_evidence_ledger_bytes_per_question: 2097152
+  max_wall_time_milliseconds_per_question: 900000
+  initial_answer_model_calls: 1
+  independent_review_model_calls_per_attempt: 1
+  same_package_targeted_rewrite_upper_bound: 1
+  answer_attempt_upper_bound: 3
+  review_attempt_upper_bound: 3
+  provider_output_complete-replacement_upper_bound_per_stage: 2
+  hard_safety_model_call_upper_bound_per_question: 24
+  upfront_complete_retrieval_plan_required: false
+  investigation_proposal_must_consider_prior_results: true
+  source_broker_policy_compilation_required: true
+  evidence_ledger_append_only: true
+  question_evidence_package_sealed_after_investigation: true
+  sealed_package_mutation_allowed: false
+  safety_budget_reserves_independent_review: true
+  quality_checklist_reduction_due_to_remaining_calls_allowed: false
+  evidence_requirement_reduction_due_to_remaining_calls_allowed: false
+  review_skipping_due_to_remaining_calls_allowed: false
+  reviewer_more_evidence_requires_specific_verifiable_gap: true
+  reviewer_verification_request_requires_application_and_source_broker_revalidation: true
+  reviewer_verification_uses_independent_fresh_context_adaptive_investigation: true
+  reviewer_verification_returns_to_initial_investigation_model: false
+  reviewer_verification_fixed_round_cap_after_slice_001_allowed: false
+  reviewer_verification_creates_new_ledger_revision: true
+  reviewer_verification_creates_new_package: true
+  new_answer_after_new_package_required: true
+  same_package_rewrite_requires_specific_reviewer_finding: true
+  independent_rereview_after_any_answer_or_package_change_required: true
+  question_or_project_keyword_symbol_class_method_fixture_or_oracle_special_routing_allowed: false
+  resource_exhaustion_behavior: answerable-fail-boundary-limitation-only-if-independently-approved-otherwise-fail-closed
+  deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks: true
+  provider_request_retries_allowed: false
+  provider_switch_after_dispatch_allowed: false
+  status: frozen
+
+readiness_inputs:
+  required_architecture_decision: SYS-ADR-016
+  architecture_change_gate_case_id: V-ARCH-001
+  required_system_contract_refs:
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+    - SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL
+    - SYS-CONTRACT-SOURCE-ARTIFACT
+    - SYS-QUALITY-SECURITY
+    - SYS-OPS-LOCAL-BROWSER
+  system_contract_set_digest: pending-until-readiness-freeze
+  answer_hierarchy_protocol_digest: pending-until-readiness-freeze
+  investigation_budget_digest: pending-until-readiness-freeze
+  hidden_freeze_protocol_digest: pending-until-slice-003-freeze
+  hidden_freeze_receipt_ref: not-authorized
+
+development:
+  slices:
+    ITER-011-SLICE-001:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: none-first-slice
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+    ITER-011-SLICE-002:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+    ITER-011-SLICE-003:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+    ITER-011-SLICE-004:
+      status: proposed
+      coding_input: false
+      result: not-executed
+      reflection_decision: not-executed
+      reflection_prerequisite_result: not-executed
+      product_code_freeze_digest: not-executed
+      authorized_by: not-authorized
+      authorized_at: not-authorized
+      authorization_ref: not-authorized
+
+system_inputs:
+  ids:
+    - SYS-ADR-016
+    - SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+    - SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL
+    - SYS-CONTRACT-AI-MODEL-GATEWAY
+    - SYS-CONTRACT-SOURCE-ARTIFACT
+    - SYS-QUALITY-SECURITY
+    - SYS-OPS-LOCAL-BROWSER
+
+external_inputs: []
+
+verification:
+  matrix_id: ITER-011-VERIFICATION
+  evidence_location: var/iteration-011
+
+authorization:
+  readiness_review_id: ITER-011-READINESS
+  active_slice: none
+  authorized_by: pending
+  authorized_at: pending
+  authorization_ref: pending
+  planning_request_ref: codex-user-message:sha256:7711b359a33d13ac1dd4577dd316fd4bf49d04a05aef263cfc88ad9b3ad49af4
+  planning_request_scope: iteration-011-planning-documents-only
+  prior_iteration_live_grants_reusable: false

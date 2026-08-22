@@ -20,6 +20,9 @@ tests: []
 - [Iteration 005](iteration-005/README.md) — `Completed — User-selected Local Maven World Model Workspace + Product Web QA`；仅 Maven Structure 本机评测，Production Activation 未执行。
 - [Iteration 006](iteration-006/README.md) — `Completed / Narrow Acceptance — Java Static Call Behavior World Model`；V-001—V-010 在 exact run-008 闭合，run-003/run-007 FAIL 均保留，Production Activation 未执行。
 - [Iteration 007](iteration-007/README.md) — `Rejected — Java Source Semantics + Fixed Single-method QA`；SLICE-001 技术链 PASS、产品效果 FAIL，后续 Slice 未授权，无 Acceptance。
-- [Iteration 008](iteration-008/README.md) — `Proposed / Not Ready / Not Authorized — Bounded Agentic World Model Answering`；仍推进同一软件世界模型目标，只把 Agent 用作受限的 World Model 调查控制器。
+- [Iteration 008](iteration-008/README.md) — `Rejected / REDIRECT — Bounded Agentic World Model Answering`；真实 Web 正向题成功，边界答案交付失败，无 Acceptance。
+- [Iteration 009](iteration-009/README.md) — `Rejected / REDIRECT — Evidence-package Answering Direction Preview`；真实回答仍像代码走读，后续 Slice 未授权。
+- [Iteration 010](iteration-010/README.md) — `Rejected / REDIRECT — Adaptive Engineering QA`；调查、引用和 Web 技术链可运行，答案层级与审核方向 Gate 失败。
+- [Iteration 011](iteration-011/README.md) — `Proposed / Not Authorized — Answer-first Probe, Alpha, Hardening and Acceptance`；先做两次真实反馈，再决定是否工程夯实。
 
-当前没有活动 Iteration 或编码 Slice。ITER-008 只是候选计划，只有通过 System 设计、Readiness 和用户明确授权后才可进入开发。
+当前没有活动 Iteration 或编码 Slice。ITER-011 只是候选计划，只有通过 System 设计、Readiness 和用户明确授权后才可进入开发。

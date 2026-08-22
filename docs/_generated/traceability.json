@@ -3031,6 +3031,52 @@
       "validation"
     ]
   },
+  "ITER-011-SLICE-001": {
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-001-answer-first-direction-probe.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-011-SLICE-002": {
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-002-cross-dimension-alpha.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "ITER-011-SLICE-003": {
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-003-engineering-hardening.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
+  "ITER-011-SLICE-004": {
+    "path": "docs/project/iterations/iteration-011/development-design/SLICE-004-formal-product-acceptance.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation"
+    ]
+  },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [

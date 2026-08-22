@@ -24,7 +24,8 @@ product_goal_slice_gate_case_ids: []
 ## Status and dependencies
 
 同一 Iteration 有多个累积 Slice 时，本 Slice 必须依赖 accepted Readiness，并直接依赖前一个 Slice。Readiness 只授权第一个 Slice；
-后续 Slice 保持 proposed，直到前序人工 Web、独立隐藏 canary、停止 Gate 和方案复盘完成并形成 exact Slice Result。后续授权时再把
+后续 Slice 保持 proposed，直到前序人工 Web、该阶段适用的 hidden canary、停止 Gate 和方案复盘完成并形成 exact Slice Result。方向探针
+与可用 Alpha 使用可见真实输入判向，不因 hidden canary 延迟；Alpha `CONTINUE` 后的夯实 Slice 才承担 early hidden。后续授权时再把
 该 Result 加入 `depends_on`，并与 Manifest `reflection_prerequisite_result` 一致；不能先授权再补证据。
 
 ## Product-goal contribution and cumulative integration
@@ -42,9 +43,10 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 
 ## Direction preview checkpoint
 
-若本 Slice 是方向体验段，列出真实产品入口、最少代表性任务、仅为运行所必需的门禁、用户可见限制，以及体验后由谁作出
-`CONTINUE / REDIRECT / REJECT`。不得安排与方向判断无关的全面加固。若本 Slice 属于工程夯实或正式验收，必须引用前一方向体验的
-`CONTINUE` 结果。
+若本 Slice 是方向探针或可用 Alpha，列出真实产品入口、最少代表性任务、仅为运行所必需的门禁、用户可见限制，以及体验后由谁作出
+`CONTINUE / REDIRECT / REJECT`。探针使用极少量输入；Alpha 使用小而多样的输入并只做探针证据要求的最小通用修正。两者都不得安排
+与方向判断无关的全面加固。技术质量必须由独立评测方先行裁决，用户只作产品方向决定。若本 Slice 属于工程夯实或正式验收，必须引用
+前一 Alpha 或方向体验的 `CONTINUE` 结果。
 
 ## Current vs expected behavior
 

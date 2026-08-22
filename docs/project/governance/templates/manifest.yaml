@@ -22,7 +22,11 @@ product_goal_alignment:
   accepted_capability_refs: []
   new_capability_slice_refs: []
   held_out_free_question_delta: <measurable-before-and-after>
-  held_out_evaluation_owner: <independent-evaluator-or-user>
+  # 输入保管与技术裁决分离：用户可持有未公开问题；独立评测方裁决质量，用户只做方向/接受决定。
+  held_out_input_owner: <user-or-independent-evaluator>
+  held_out_evaluation_owner: independent-evaluator
+  visible_development_corpus_digest: <sha256-or-not-frozen-requires-slice-001-authorization>
+  alpha_visible_development_corpus_digest: <sha256-or-not-frozen-requires-slice-002-authorization>
   implementation_question_visibility: hidden
   implementation_project_identity_and_source_visibility: hidden-until-product-code-freeze
   evaluation_project_manifest_digest: <sha256-exact-project-and-version-manifest>
@@ -64,25 +68,44 @@ product_goal_alignment:
       new_slice_ref: <current-slice-id>
   first_product_web_checkpoint: <verification-case-id>
   direction_preview_checkpoint: <V-PREVIEW-NNN>
+  # 下列形状用于带 Alpha 的高方向风险计划。若 Proposal 论证不需要 Alpha，则使用 status_label=non-acceptance-non-production 和
+  # hardening_requires_continue=true，并删除 live_ad_hoc_question_count、next_slice_requires_continue 及整个 alpha_* binding。
   direction_preview_binding:
     case_id: <V-PREVIEW-NNN>
     new_slice_ref: <direction-preview-slice-id>
     real_product_entry: <entrypoint>
     representative_task_count: <small-positive-integer>
-    status_label: non-acceptance-non-production
+    live_ad_hoc_question_count: <positive-integer>
+    status_label: direction-probe-non-acceptance-non-production
     decision_owner: <user-or-product-owner>
     allowed_decisions: CONTINUE,REDIRECT,REJECT
-    hardening_requires_continue: true
+    next_slice_requires_continue: true
+  # 可选但对高方向风险变化默认要求：第二个小型、多样、真实 Web 反馈段。它必须紧随方向探针，且其 CONTINUE 才能启动 hardening。
+  alpha_direction_checkpoint: <V-PREVIEW-NNN>
+  alpha_direction_binding:
+    case_id: <V-PREVIEW-NNN>
+    web_case_id: <V-WEB-NNN>
+    live_ad_hoc_case_id: <V-ADHOC-NNN>
+    new_slice_ref: <alpha-slice-id>
+    real_product_entry: same-loopback-product-owned-engineering-qa-web
+    prepared_cross_dimension_question_count_minimum: <small-positive-integer>
+    prepared_cross_dimension_question_count_maximum: <small-positive-integer>
+    live_ad_hoc_question_count_minimum: <positive-integer>
+    status_label: usable-alpha-non-acceptance-non-production
+    decision_owner: user
+    allowed_decisions: CONTINUE,REDIRECT,REJECT
+    engineering_hardening_requires_continue: true
+    excluded_before_continue: <deferred-hardening-list>
   web_checkpoint_binding:
     case_id: <V-WEB-NNN>
     new_slice_ref: <current-slice-id>
     executes_cross_domain_case_id: <V-XD-NNN>
   # 可选：后续 Slice 的正式 Web checkpoint；每项必须绑定同一 Slice 的跨域 Case。
   additional_web_checkpoint_bindings: {}
-  # 多 Slice 时，最终验证前的每个 Slice 都应有一个独立持有的隐藏 canary；每项冻结问题总数、answerable、两类互补 boundary
-  # 和关联的 early negative Case。
+  # 带 Alpha 时，只有 Alpha CONTINUE 后的适用 hardening Slice 才绑定独立持有的 early hidden canary；Probe/Alpha 不得被 hidden 阻断。
+  # 每项冻结问题总数、answerable、两类互补 boundary 和关联的 early negative Case。
   early_hidden_canary_bindings: {}
-  # 第一段必须把同一 canary 绑定到成熟替代方案对照和逐层诊断；正向价值阈值在编码前冻结，不能只要求答案不退步。
+  # 首个适用 hardening Slice 把同一 canary 绑定到成熟替代方案对照和逐层诊断；正向价值阈值在该 Slice 编码前冻结。
   early_comparison_binding: {}
   early_diagnostic_binding: {}
   # 每个 Slice 恰好一个。PASS 只表示复盘完成；success_decision 才表示方案可继续或可接受。
@@ -151,6 +174,7 @@ readiness_inputs:
     information_preservation_oracle_digest: pending
     information_boundary_oracle_digest: pending
   hidden_freeze_protocol_digest: pending
+  hidden_freeze_receipt_ref: not-authorized
 
 development:
   slices:

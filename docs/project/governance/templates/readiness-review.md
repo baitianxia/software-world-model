@@ -32,6 +32,7 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 - Hidden held-out ownership, before/target counts and live Web questions: <exact-reference-and-verdict>
 - Stop / redirect decision: <exact-reference-and-verdict>
 - Direction preview can precede hardening: <real-entry-minimum-cases-deferred-hardening-and-owner>
+- High-risk Alpha can precede hardening: <second-small-diverse-live-checkpoint-or-documented-merge-rationale>
 
 ## Architecture reflection gate readiness
 
@@ -40,7 +41,8 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 再次授权时，后续 Slice 不得进入开发。
 每段 Reflection 必须绑定 exact 用户决策消息收据；后续 Slice 的授权必须引用同一条前序 Reflection 决策消息，且不能复用更早
 授权。成熟替代方案 protocol/rubric/cache policy 和正向价值 metric/unit/direction/threshold/replay protocol、独立裁决 Owner
-也必须在编码前冻结；调查步数与模型调用上限至少为 2，并结构化冻结 query/result 单步与总字节、总时长、Support、trace 和超限语义。
+必须在拥有该对照的夯实 Slice 授权前冻结；方向探针和 Alpha 只需冻结它们的后置状态与不得提前执行的边界。调查步数与模型调用上限
+至少为 2，并结构化冻结 query/result 单步与总字节、总时长、Support、trace 和超限语义。
 
 ## Outcome, scope and non-goals
 
@@ -48,8 +50,12 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 
 ## Slice, dependency and risk closure
 
-核对第一个用户可感知 Slice 会先形成明确标注的非验收方向体验版，并把全面契约、回归、性能、资格和正式验收留到方向
-`CONTINUE` 之后。体验前仍需闭合安全、权限、Secret、外部披露和失败真实性；除此之外的加固不得被误列为首次体验阻断。
+核对第一个用户可感知 Slice 会先形成明确标注的非验收方向探针；高方向风险变化还必须在全面夯实前形成小而多样的可用 Alpha，并由
+用户再次判向。全面契约、回归、性能、资格和正式验收只能放在 Alpha `CONTINUE` 之后。早期真实运行仍需闭合安全、权限、Secret、
+外部披露和失败真实性；除此之外的加固不得被误列为方向探针或 Alpha 的阻断。
+
+同时核对输入持有者、独立技术评测方和用户方向决策者是不同职责：独立评测先裁决正确性、完整性、Citation、边界和特判；用户只根据
+已复核且限制可见的真实结果决定 `CONTINUE / REDIRECT / REJECT`。
 
 ## Verification readiness
 

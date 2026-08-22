@@ -48,15 +48,18 @@
 
 从 ITER-008 起，每轮还必须冻结关键方案假设、最早反证和备选路线；Manifest、Readiness 与 Result 用同一个 Proposal 假设表摘要
 锁定原文，不能在看到结果后改写。每个 Slice 恰好绑定一个 `V-REFLECT-NNN`。Slice 的固定结束
-顺序是正式 Web/隐藏输入验证、形成 Result、完成方案复盘、作出 `CONTINUE / ACCEPT / REDIRECT / REJECT`。缺少复盘，或中间段
+顺序是正式 Web/本阶段适用的验证、形成 Result、完成方案复盘、作出 `CONTINUE / ACCEPT / REDIRECT / REJECT`；Probe/Alpha 使用可见输入，
+Alpha `CONTINUE` 后的 hardening 才承担 early hidden。缺少复盘，或中间段
 决定不是 `CONTINUE` 时，不得授权下一 Slice；机械测试 PASS 不能替代方案判断。
 
-产品计划还必须把“方向体验”和“工程夯实”分开。第一个 Slice 先用真实入口和少量代表性问题形成明确标注的非验收体验版，取得
-`CONTINUE / REDIRECT / REJECT` 方向结论；只有 `CONTINUE` 后的 Slice 才安排全面契约、回归、性能、能力资格、hidden canary 和
-正式验收。安全、权限、Secret 与失败真实性不能延后，但不得把完备证明材料误作首次体验的前置目标。
+产品计划还必须把“方向探针、可用 Alpha、工程夯实、正式验收”分开。第一个 Slice 用真实入口和极少量代表性输入形成非验收探针；
+高方向风险变化的下一个 Slice 只做最小通用修正，再用小而多样的问题与现场输入形成可用 Alpha。只有 Alpha 的 `CONTINUE` 后才安排
+全面契约、回归、性能、能力资格、hidden canary 和正式验收。安全、权限、Secret 与失败真实性不能延后，但不得把完备证明材料误作
+探针或 Alpha 的前置目标。
 
-Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、成熟源码 Agent protocol 和授权软件来源范围的 exact
-digest，以及前后支持题数。完成时 `V-000` Evidence 必须引用本轮一个带完整 `product_goal_*` 元数据的 PASS Result，不能填写
+Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、成熟源码 Agent protocol 和授权软件来源范围的 exact digest，
+以及前后支持题数。Probe/Alpha 期间可使用明确、失败关闭的 deferred/user-held marker；最迟在拥有对应 hidden/对照的 hardening 或 final
+Slice 授权前替换为 exact freeze，不能反向阻塞早期可见结果。完成时 `V-000` Evidence 必须引用本轮一个带完整 `product_goal_*` 元数据的 PASS Result，不能填写
 普通文字、机械测试 Result 或风险实验 Result 代替。
 
 机械 Gate 只能验证这些对象之间的闭合关系。Readiness 仍必须由用户查看 exact 冻结输入和案例后作语义判断；随机 digest、
