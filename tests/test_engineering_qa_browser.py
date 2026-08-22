@@ -4,12 +4,15 @@ from io import BytesIO
 import json
 import unittest
 
+from software_world_model.application_services.engineering_question_answering import (
+    EngineeringQuestionResourceLimits,
+)
+from software_world_model.cross_cutting import DomainError
 from software_world_model.interface.engineering_qa_browser import (
     EngineeringQuestionBrowserApplication,
     FixedEngineeringQuestionRequestFactory,
     InMemoryEngineeringQuestionWebProduct,
 )
-from software_world_model.cross_cutting import DomainError
 from tests import test_engineering_question_answering as fixtures
 
 
@@ -45,6 +48,7 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
         *,
         raw_body=None,
         environ_overrides=None,
+        app=None,
     ):
         raw = (
             raw_body
@@ -67,7 +71,7 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
         }
         environ.update(environ_overrides or {})
         body = b"".join(
-            self.app(
+            (app or self.app)(
                 environ,
                 start_response,
             )
@@ -82,6 +86,8 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
         self.assertIn("ENGINEERING_QA", html)
         self.assertIn("方向体验 · 非验收 · 非生产", html)
         self.assertIn("Broker", html)
+        self.assertIn('id="result-eyebrow"', html)
+        self.assertIn('approved?"REVIEWED RESULT":"FAIL CLOSED"', html)
 
         health = self.call("GET", "/health")
         value = json.loads(health["body"])
@@ -120,6 +126,57 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
             projection["entry_id"], value["citations"][0]["entry_id"]
         )
         self.assertFalse(projection["projection_is_answer_input"])
+
+    def test_budget_closed_result_is_labeled_and_explained_as_a_limitation(self):
+        limits = EngineeringQuestionResourceLimits(
+            maximum_total_model_role_calls=3
+        )
+        exact = fixtures.request(limits=limits)
+        factory = FixedEngineeringQuestionRequestFactory(
+            response_language=exact.response_language,
+            repository_id=exact.repository_id,
+            binding_id=exact.binding_id,
+            repository_revision=exact.repository_revision,
+            source_profile_ref=exact.source_profile_ref,
+            source_profile_digest=exact.source_profile_digest,
+            world_model_read_authority_digest=exact.world_model_read_authority_digest,
+            source_allowlist=exact.source_allowlist,
+            registered_operations=exact.registered_operations,
+            provider_disclosure_policy=exact.provider_disclosure_policy,
+            limits=limits,
+        )
+        app = EngineeringQuestionBrowserApplication(
+            InMemoryEngineeringQuestionWebProduct(
+                service=fixtures.EngineeringQuestionAnsweringTests().service(
+                    request_more_evidence=False
+                ),
+                request_factory=factory,
+            )
+        )
+        response = self.call(
+            "POST",
+            "/v1/engineering-qa/questions",
+            {
+                "request_id": "browser-budget-closed",
+                "question": exact.original_question,
+            },
+            app=app,
+        )
+
+        value = json.loads(response["body"])
+        self.assertEqual(value["status"], "FAILED_CLOSED")
+        self.assertEqual(
+            value["limitation"]["reason"],
+            "INDEPENDENT_REVIEW_RESERVE_EXHAUSTED",
+        )
+        self.assertIn("预留独立审核", value["limitation"]["message"])
+        self.assertFalse(value["limitation"]["delivery_authorized"])
+        self.assertEqual(
+            value["developer_details"]["terminal_reason"],
+            "INDEPENDENT_REVIEW_RESERVE_EXHAUSTED",
+        )
+        self.assertFalse(value["developer_details"]["answer_reached"])
+        self.assertFalse(value["developer_details"]["review_reached"])
 
     def test_request_id_replay_is_idempotent_and_mismatch_fails(self):
         payload = {

@@ -56,5 +56,9 @@ iteration: ITER-010
   单次使用；现把 required basis、eligible locator 和 consumed path 提升为动态角色控制，并由 Application 机械拒绝集合外 locator。
 - [FINDING-010-021](FINDING-010-021.md)：Preview Request 的 24-call 默认熔断未与更小的 exact run dispatch grant 对齐；现由同一
   `maximum_dispatches` 绑定 Request、Provider configuration 与 run grant，使 Application 在真实上限内预留 Answer/Review。
+- [FINDING-010-022](FINDING-010-022.md)：第六次 Web run 证明 latest-basis/eligible-locator 与审核预留均按设计工作，但 7-call grant 只够
+  Understanding + 4 次 Investigation，代表题尚未 FINISH，累计 26/28 后保持 `V-WEB-000 FAIL / blocking`。
+- [FINDING-010-023](FINDING-010-023.md)：Browser 曾把 Answer/Review 前的预算关闭也标成 `REVIEWED RESULT`；现按 Result status 区分
+  `REVIEWED RESULT`/`FAIL CLOSED`，显示用户可理解的预算 limitation，并在开发者详情保留 exact terminal reason 与阶段到达状态。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

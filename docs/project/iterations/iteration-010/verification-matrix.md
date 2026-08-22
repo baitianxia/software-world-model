@@ -27,9 +27,13 @@ discovery 共 1112 项，其中 1107 PASS，唯一 4 FAIL + 1 ERROR 的测试 id
 `FINDING-010-020/021` 的 latest-basis/eligible-locator 与 exact call-reserve 修复随后通过 focused 117/117、docs 397/397、`py_compile`、
 `git diff --check`；full discovery 增至 1113 项，其中 1108 PASS，唯一 4 FAIL + 1 ERROR 仍保持同一历史 hold identity、marker 与 Codex
 digest，没有新增失败。
+`FINDING-010-023` 的 fail-closed Browser presentation 与 current Operations write-back 最终通过 focused 118/118、docs 399/399、
+`py_compile`、`git diff --check`；full discovery 为 1114 项，其中 1109 PASS，唯一历史 4 FAIL + 1 ERROR identity/type/marker/digest 不变。
+首次 full run 曾以新增 ITER-007 system fileset digest mismatch 阻断；同步 ITER-007/010 exact current fileset digest 后针对性 84/84 与最终
+full gate 均闭合，因此没有把该新增失败混入 historical hold。
 V-BASELINE/V-ARCH/V-QINTENT/V-COGNITION/V-INVESTIGATE/V-BROKER/
 V-LEDGER/V-ISOLATION/V-REVIEW/V-LIMIT/V-SEC 的确定性子断言已有测试证据，但它们的 Case verdict 仍等待 clean freeze 或所要求的真实链；
-`V-WEB-000` 已有五次永久失败的真实尝试。candidate `b8360a3…` 在第二个 Provider output 暴露 live role-progress 大小写错误；2 次
+`V-WEB-000` 已有六次永久失败的真实尝试。candidate `b8360a3…` 在第二个 Provider output 暴露 live role-progress 大小写错误；2 次
 dispatch，见 `FINDING-010-015`。修复后的 candidate `50b08b5…` 继续完成 4 次 dispatch，但目录级 SOURCE capability 的首个 search
 耗尽 64 文件上限，后续 Broker 拒绝；模型随后提交含空引用的 FINISH，暴露 Schema/Prompt/shared validator 与领域 invariant 不一致，见
 `FINDING-010-016/017`。第三个 candidate `e35d8f7…` 已用新 2-call qualification 和 17 个 exact 文件 Profile 运行；SOURCE search
@@ -43,7 +47,12 @@ dispatch 后，模型未引用紧邻的最新 Ledger Result，并再次选择已
 见 `FINDING-010-020`。五次 Web run 共 19 次 role dispatch，另有 2 次 current qualification call，累计 21/28；第五次仍为 retry 0、
 switch 0、Production Activation `NOT_EXECUTED`。Prompt-only 控制已改为显式 latest-basis/eligible-locator 投影与 Application validation；同时
 Preview Request call fuse 与 exact run grant 对齐以预留 Answer/Review，见 `FINDING-010-020/021`。旧 candidate/run 不能由后续修复追溯
-覆盖。新的 clean candidate 与剩余最多 7 次授权尚未重验。`V-XD-001` 又因 `mall` 未形成
+覆盖。candidate `d6d8d02…` 随后在 7-call exact grant 下完成 Understanding、literal search 和 3 个不同 full-content READ；每步都满足
+latest basis/eligible locator，no-progress 0。第 4 次 Investigation 后仍未完成全部 material conclusions，Application 在第 6 个 Provider
+dispatch 前保留 Answer/Review 所需 2 次调用并以 `INDEPENDENT_REVIEW_RESERVE_EXHAUSTED` 关闭，Draft/Review 均为 0，见
+`FINDING-010-022`。六次 Web run 共 24 次 role dispatch，另有 2 次 current qualification call，累计 26/28；全部 retry 0、switch 0、
+Production Activation `NOT_EXECUTED`，剩余 2 次未使用。该 run 还暴露 fail-closed Result 被 UI 固定标成 `REVIEWED RESULT` 的显示缺口，
+已按 `FINDING-010-023` 修复；因此 `d6d8d02…` 也成为 burned candidate，新的页面尚无 live 证据。`V-XD-001` 又因 `mall` 未形成
 declaration/`CALLS` Result 保持独立 blocking，见 `FINDING-010-014`。`V-WEB-001`、
 `V-PREVIEW-001` 和 `V-REFLECT-001` 未运行。
 
@@ -69,7 +78,7 @@ declaration/`CALLS` Result 保持独立 blocking，见 `FINDING-010-014`。`V-WE
 | V-LIMIT-001 | Preview 在调查或证据不足、安全熔断耗尽时保持诚实 | application / boundary | 可回答、证据不足、合法补证、无进展、上限耗尽、answerable/boundary fixture | 不伪造、不把未查到写成不存在；Slice1 最多一次补证；answerable 因熔断未回答计 FAIL；boundary 仅可独立审核 Limitation 或 fail closed | not-executed | NOT-RUN / blocking |
 | V-SEC-001 | Slice1 exact revision、allowlist、untrusted Source、Provider disclosure、Secret、预算与 Web 安全成立 | security / integration | drift、oversize、injection、unauthorized fragment/provider、review tamper、outcome unknown、non-loopback probes | 全部失败关闭；request retry/provider switch/source write/update/silent fallback=0；合法本地确定性路径完成 | not-executed | NOT-RUN / blocking |
 | V-XD-001 | 同一 ENGINEERING_QA 答案组合 ITER-006 accepted World Model 认知与 query-time 新来源 Evidence | product / integration | declaration/`CALLS` Result + repository document/config/test/source conclusion；无符号自然问题 | 同一 Ledger/Package/Answer/Review；结论分别绑定正确来源；不是两个正文或模式拼接 | `FINDING-010-014`：mall Maven Snapshot 已发布，但 Java Profile 对真实源码失败关闭；Maven relation 不替代 declaration/`CALLS` | NOT-RUN / blocking |
-| V-WEB-000 | Slice1 在完整夯实前交付最早可体验的真实 Web 微纵切 | product / browser | exact freeze/live grant、普通用户无认证、一条 World Model + query-time Source 代表问题 | 最小真实链可用；exact revision/read-only/untrusted Source/support-citation 分区/Citation/独立 Review 全部成立；非回放/CLI | burned candidates `b8360a3…` + `50b08b5…` + `e35d8f7…` + `91dffec…` + `1f4e1b0…` / exact mall `0504e86…` / 19 role dispatch + 2 current qualification calls = 21/28 / 0 retry / `FINDING-010-015—021`；须 new clean freeze、Prompt-bound grant 与新 run | FAIL / blocking |
+| V-WEB-000 | Slice1 在完整夯实前交付最早可体验的真实 Web 微纵切 | product / browser | exact freeze/live grant、普通用户无认证、一条 World Model + query-time Source 代表问题 | 最小真实链可用；exact revision/read-only/untrusted Source/support-citation 分区/Citation/独立 Review 全部成立；非回放/CLI | burned candidates `b8360a3…` + `50b08b5…` + `e35d8f7…` + `91dffec…` + `1f4e1b0…` + `d6d8d02…` / exact mall `0504e86…` / 24 role dispatch + 2 current qualification calls = 26/28 / 0 retry / `FINDING-010-015—023`；须提高累计上限、new clean freeze、Prompt-bound grant 与新 run | FAIL / blocking |
 | V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | not-executed | NOT-RUN / blocking |
 | V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |
 | V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |

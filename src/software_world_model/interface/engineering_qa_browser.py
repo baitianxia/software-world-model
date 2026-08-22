@@ -39,6 +39,19 @@ _CITATION_ROUTE = re.compile(
 )
 
 
+def _failure_limitation_message(reason: str) -> str:
+    if reason == "INDEPENDENT_REVIEW_RESERVE_EXHAUSTED":
+        return (
+            "调查在预留独立审核所需调用额度前达到本次上限；"
+            "未形成可交付答案。"
+        )
+    if reason == "REVIEW_REJECTED":
+        return "独立审核未批准本次答案；本次请求已失败关闭。"
+    if reason.endswith("_FUSE_EXHAUSTED"):
+        return "本次调查达到预先密封的安全上限；未形成经独立审核的可交付答案。"
+    return "调查或独立审核未形成可授权答案；本次请求已失败关闭。"
+
+
 class EngineeringQuestionRequestFactory(Protocol):
     def create(
         self, *, request_ref: str, original_question: str
@@ -357,7 +370,7 @@ class InMemoryEngineeringQuestionWebProduct:
         if result.authorized_answer is None:
             page["limitation"] = {
                 "reason": result.terminal_reason,
-                "message": "调查或独立审核未形成可授权答案；本次请求已失败关闭。",
+                "message": _failure_limitation_message(result.terminal_reason),
                 "delivery_authorized": False,
             }
         details = dict(page["developer_details"])

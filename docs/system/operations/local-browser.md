@@ -15,7 +15,21 @@ tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py,
 `WORLD_MODEL / EVALUATION_ONLY` 入口用于体验 Snapshot-first Maven Structure 或已授权候选 Java Static Call Behavior
 World Model。两者不能静默互相兜底。
 
-ADR-016 接受了第三个、面向普通用户的默认目标入口 `ENGINEERING_QA`。`ITER-010 / SLICE-001` 已实现 loopback WSGI 页面、本地 no-disclosure Request factory、exact authorized prepared-Request factory、内存 Result/Citation 投影、逐角色 disclosure/Gateway policy、current DeepSeek 组合和 trusted `swm-engineering-qa` launcher；factory 还必须固定与 repository Binding 一致的 versioned Source Profile ref/digest，不能从问题或文件名推断 evidence class。launcher 在 listener 前证明自身来自 clean exact candidate，装载 published Bundle、exact Source revision/Profile、prepared Request/run grant，并先写 0600 launch receipt；graceful exit 再写 role/Gateway/TLS terminal audit。确定性 fake transport 已证明组合不读取 credential、不建立网络。页面要求 exact `127.0.0.1` remote/Host 并持续显示“方向体验 / 非验收 / 非生产”；live health/developer details 必须显示 exact Provider/configuration/qualification/run digest 和预备 Request，local health 则明确 `external_provider_dispatch=false`。截至当前已记录证据仍没有真实 listener、Provider dispatch、源码片段外发或 browser session，因此不声称该模式已经真实运行，也不用旧入口伪装新能力。
+ADR-016 接受了第三个、面向普通用户的默认目标入口 `ENGINEERING_QA`。`ITER-010 / SLICE-001` 已实现 loopback WSGI 页面、本地
+no-disclosure Request factory、exact authorized prepared-Request factory、内存 Result/Citation 投影、逐角色 disclosure/Gateway policy、
+current DeepSeek 组合和 trusted `swm-engineering-qa` launcher；factory 还必须固定与 repository Binding 一致的 versioned Source Profile
+ref/digest，不能从问题或文件名推断 evidence class。launcher 在 listener 前证明自身来自 clean exact candidate，装载 published Bundle、
+exact Source revision/Profile、prepared Request/run grant，并先写 0600 launch receipt；graceful exit 再写 role/Gateway/TLS terminal audit。
+确定性 fake transport 已证明组合不读取 credential、不建立网络。页面要求 exact `127.0.0.1` remote/Host 并持续显示“方向体验 / 非验收 /
+非生产”；live health/developer details 必须显示 exact Provider/configuration/qualification/run digest 和预备 Request，local health 则明确
+`external_provider_dispatch=false`。
+
+截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 6 个永久保留的 `V-WEB-000` 方向体验 run，共 24 次
+Engineering QA role dispatch；另有 2 次 current DeepSeek qualification call。全部 run 都绑定 exact candidate/Request/Source Profile/Maven
+Bundle/grant，retry/provider switch 为 0，Production Activation `NOT_EXECUTED`，并排除 `src/main/resources`。这些 run 依次暴露并关闭
+role-progress、Schema/cardinality、Source Profile、literal/locator、no-progress、fresh Ledger/eligible locator 和 call-reserve 缺口；最新 run
+在 7-call grant 内正确预留 Answer/Review，但调查未 FINISH，所以 `V-WEB-000` 仍为 `FAIL / blocking`，不能声称该模式已经交付可用答案。
+run 后的 fail-closed Browser presentation 修复也尚未取得新的 live 证据，不能由旧页面追溯证明。
 
 clean product freeze 和本次 exact question/run authorization 完成后，Engineering QA 入口使用：
 

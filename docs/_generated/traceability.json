@@ -1830,6 +1830,18 @@
       "tests/test_engineering_question_answering.py"
     ]
   },
+  "FINDING-010-023": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-023.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_engineering_question_answering.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

@@ -4041,6 +4041,9 @@ class EngineeringQuestionExecutionResult:
                 else []
             ),
             "developer_details": {
+                "terminal_reason": self.terminal_reason,
+                "answer_reached": bool(self.drafts),
+                "review_reached": bool(self.reviews),
                 "question_understanding_digest": self.understanding.digest.value,
                 "cognition_context": self.cognition.model_view(),
                 "ledger_seals": [
