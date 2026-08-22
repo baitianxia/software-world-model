@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@5"
+    "engineering-qa-adaptive-investigation-prompt@6"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -136,6 +136,13 @@ single-use investigation inputs, and consumed_full_content_paths MUST NOT be
 read or parsed again. Never repeat an earlier query or locator intent. Compare
 progress_digest values in the typed results; after repeated progress, choose a
 different query, locator, or evidence class, or FINISH.
+Obey the exact field combination for the chosen operation: SEARCH requires a
+non-null evidence_class and query, a null locator_reference, and an empty
+finish_dispositions array; READ or PARSE requires a non-null evidence_class and
+one eligible locator_reference, a null query, and an empty finish_dispositions
+array; FINISH requires evidence_class, query, and locator_reference all to be
+null and requires a non-empty finish_dispositions array. Do not carry an
+evidence_class from the preceding action into FINISH.
 FINISH must disposition every checklist item against the current evidence;
 unknown, conflict, or failure is preferable to invented support. Every FINISH
 disposition, including UNKNOWN, CONFLICT, or FAILURE, must cite one or more
@@ -161,6 +168,13 @@ locator, or evidence class, or FINISH after repeated progress. FINISH must
 disposition every requested checklist item honestly. Every disposition must
 cite one or more exact evidence or boundary entry IDs from the current input;
 never return an empty evidence_references array.
+Obey the exact field combination for the chosen operation: SEARCH requires a
+non-null evidence_class and query, a null locator_reference, and an empty
+finish_dispositions array; READ or PARSE requires a non-null evidence_class and
+one eligible locator_reference, a null query, and an empty finish_dispositions
+array; FINISH requires evidence_class, query, and locator_reference all to be
+null and requires a non-empty finish_dispositions array. Do not carry an
+evidence_class from the preceding action into FINISH.
 """,
     EngineeringQuestionModelRole.ANSWER: """
 Answer from the sealed Question Evidence Package only. Lead with the direct

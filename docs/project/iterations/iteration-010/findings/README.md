@@ -60,5 +60,7 @@ iteration: ITER-010
   Understanding + 4 次 Investigation，代表题尚未 FINISH，累计 26/28 后保持 `V-WEB-000 FAIL / blocking`。
 - [FINDING-010-023](FINDING-010-023.md)：Browser 曾把 Answer/Review 前的预算关闭也标成 `REVIEWED RESULT`；现按 Result status 区分
   `REVIEWED RESULT`/`FAIL CLOSED`，显示用户可理解的预算 limitation，并在开发者详情保留 exact terminal reason 与阶段到达状态。
+- [FINDING-010-024](FINDING-010-024.md)：第七次 Web run 的 FINISH 沿用了前一个 action 的 SOURCE evidence class，既有领域 invariant
+  正确失败关闭；Prompt `@6` 现逐操作冻结 evidence class/query/locator/disposition 的合法字段组合，不放宽或静默归一化领域契约。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -250,10 +250,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 {EngineeringQuestionModelRole.ANSWER},
             )
 
-    def test_current_investigation_prompt_requires_finish_boundary_references(self) -> None:
+    def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@5",
+            "engineering-qa-adaptive-investigation-prompt@6",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -276,6 +276,16 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("Never repeat an earlier query or locator intent", prompt)
             self.assertIn("consumed_full_content_paths", prompt)
             self.assertIn("progress_digest", prompt)
+            self.assertIn("SEARCH requires a non-null evidence_class and query", prompt)
+            self.assertIn("READ or PARSE requires a non-null evidence_class", prompt)
+            self.assertIn(
+                "FINISH requires evidence_class, query, and locator_reference all to be null",
+                prompt,
+            )
+            self.assertIn(
+                "Do not carry an evidence_class from the preceding action into FINISH",
+                prompt,
+            )
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:
