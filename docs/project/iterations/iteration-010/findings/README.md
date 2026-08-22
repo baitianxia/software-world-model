@@ -43,5 +43,10 @@ iteration: ITER-010
   Snapshot 可继续最早 Web，但不能替代 `V-XD-001` 要求的 declaration/`CALLS`，该 Gate 保持 blocking。
 - [FINDING-010-015](FINDING-010-015.md)：首次真实 Web 暴露 live role-progress policy 把合法小写 `search/read/parse` 与错误大写常量
   比较，系统性拒绝所有非 FINISH 调查；已改为 authoritative enum values 并补 initial/verification 回归，旧 candidate/run 保持 FAIL。
+- [FINDING-010-016](FINDING-010-016.md)：第二次真实 Web 的 FINISH 为三个 UNKNOWN 项返回空引用；investigation Schema/Prompt 与共享
+  array validator 原先未表达并重验领域层非空唯一 evidence/boundary reference invariant，现已升级契约并补机械回归，旧 qualification
+  因 implementation digest 变化须重新取得。
+- [FINDING-010-017](FINDING-010-017.md)：第二次代表题的目录级 SOURCE capability 含 167 个 entry，首个搜索即耗尽规范的 64 文件
+  question fuse；下一次只登记登录/JWT 相关 exact 文件，不提高上限、不纳入 `src/main/resources`。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

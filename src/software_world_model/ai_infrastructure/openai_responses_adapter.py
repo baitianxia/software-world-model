@@ -420,6 +420,25 @@ def _validate_schema_definition(
         items = schema.get("items")
         if not isinstance(items, dict):
             raise ValueError(f"{path}.items must be an object")
+        minimum_items = schema.get("minItems")
+        maximum_items = schema.get("maxItems")
+        unique_items = schema.get("uniqueItems")
+        if minimum_items is not None and (
+            type(minimum_items) is not int or minimum_items < 0
+        ):
+            raise ValueError(f"{path}.minItems must be a non-negative integer")
+        if maximum_items is not None and (
+            type(maximum_items) is not int or maximum_items < 0
+        ):
+            raise ValueError(f"{path}.maxItems must be a non-negative integer")
+        if (
+            isinstance(minimum_items, int)
+            and isinstance(maximum_items, int)
+            and minimum_items > maximum_items
+        ):
+            raise ValueError(f"{path}.minItems cannot exceed maxItems")
+        if unique_items is not None and type(unique_items) is not bool:
+            raise ValueError(f"{path}.uniqueItems must be a boolean")
         _validate_schema_definition(items, root_schema, path=f"{path}[]")
     definitions = schema.get("$defs")
     if definitions is not None:
@@ -471,6 +490,18 @@ def _validate_output(
         items = schema.get("items")
         if not isinstance(items, dict):
             raise ValueError(f"{path} array schema has no item definition")
+        minimum_items = schema.get("minItems")
+        maximum_items = schema.get("maxItems")
+        if isinstance(minimum_items, int) and len(value) < minimum_items:
+            raise ValueError(f"{path} has fewer than minItems")
+        if isinstance(maximum_items, int) and len(value) > maximum_items:
+            raise ValueError(f"{path} has more than maxItems")
+        if schema.get("uniqueItems") is True and any(
+            item == previous
+            for index, item in enumerate(value)
+            for previous in value[:index]
+        ):
+            raise ValueError(f"{path} contains duplicate items")
         for index, item in enumerate(value):
             _validate_output(item, items, root_schema, path=f"{path}[{index}]")
     elif isinstance(value, (int, float)) and not isinstance(value, bool):

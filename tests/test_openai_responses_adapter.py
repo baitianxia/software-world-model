@@ -191,6 +191,66 @@ class OpenAIResponsesAdapterTests(unittest.TestCase):
             )
         self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
 
+    def test_array_cardinality_and_uniqueness_are_revalidated(self) -> None:
+        definition = OutputSchemaDefinition(
+            "references",
+            {
+                "type": "object",
+                "properties": {
+                    "references": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "uniqueItems": True,
+                    }
+                },
+                "required": ["references"],
+                "additionalProperties": False,
+            },
+        )
+
+        self.assertEqual(
+            definition.validate_output_text('{"references":["entry-1"]}'),
+            {"references": ["entry-1"]},
+        )
+        for invalid in (
+            '{"references":[]}',
+            '{"references":["entry-1","entry-1"]}',
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(
+                DomainError
+            ) as raised:
+                definition.validate_output_text(invalid)
+            self.assertEqual(
+                raised.exception.code,
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            )
+
+    def test_array_cardinality_schema_bounds_must_be_valid(self) -> None:
+        for constraint in (
+            {"minItems": -1},
+            {"maxItems": -1},
+            {"minItems": 2, "maxItems": 1},
+            {"uniqueItems": "yes"},
+        ):
+            schema = {
+                "type": "object",
+                "properties": {
+                    "references": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        **constraint,
+                    }
+                },
+                "required": ["references"],
+                "additionalProperties": False,
+            }
+            with self.subTest(constraint=constraint), self.assertRaises(
+                DomainError
+            ) as raised:
+                OutputSchemaDefinition("invalid-array-bound", schema)
+            self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
+
     def test_live_level_cannot_be_declared_without_qualified_exact_model(self) -> None:
         with self.assertRaises(DomainError) as raised:
             self.adapter(

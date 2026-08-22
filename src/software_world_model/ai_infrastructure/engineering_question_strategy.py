@@ -63,10 +63,10 @@ ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@1"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@1"
+    "engineering-qa-initial-investigation@2"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@1"
+    "engineering-qa-verification-investigation@2"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@1"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@1"
@@ -100,6 +100,12 @@ class EngineeringQuestionModelRole(str, Enum):
 
 _NULLABLE_STRING_SCHEMA = {"type": ["string", "null"]}
 _STRING_ARRAY_SCHEMA = {"type": "array", "items": {"type": "string"}}
+_NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA = {
+    "type": "array",
+    "items": {"type": "string"},
+    "minItems": 1,
+    "uniqueItems": True,
+}
 _EVIDENCE_CLASS_SCHEMA = {
     "type": ["string", "null"],
     "enum": [
@@ -127,7 +133,7 @@ _FINISH_DISPOSITION_SCHEMA = {
             "type": "string",
             "enum": [item.value for item in ChecklistOutcome],
         },
-        "evidence_references": _STRING_ARRAY_SCHEMA,
+        "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
         "explanation": {"type": "string"},
     },
     "required": [

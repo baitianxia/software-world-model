@@ -6,11 +6,13 @@ import unittest
 
 from software_world_model.ai_infrastructure.engineering_question_model_source import (
     ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF,
+    ENGINEERING_QUESTION_MODEL_PROMPT_REF,
     EngineeringQuestionModelConfiguration,
     EngineeringQuestionModelEgressPolicy,
     EngineeringQuestionRunDisclosureAuthorization,
     ModelBackedEngineeringQuestionStructuredOutputSource,
     SealedEngineeringQuestionRoleDisclosureAuthorizer,
+    engineering_question_role_prompt,
 )
 from software_world_model.ai_infrastructure.engineering_question_strategy import (
     ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF,
@@ -246,6 +248,21 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                     role, {"operation": InvestigationOperation.FINISH.value}
                 ),
                 {EngineeringQuestionModelRole.ANSWER},
+            )
+
+    def test_current_investigation_prompt_requires_finish_boundary_references(self) -> None:
+        self.assertEqual(
+            ENGINEERING_QUESTION_MODEL_PROMPT_REF,
+            "engineering-qa-adaptive-investigation-prompt@2",
+        )
+        for role in (
+            EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
+            EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION,
+        ):
+            prompt = " ".join(engineering_question_role_prompt(role).split())
+            self.assertIn(
+                "never return an empty evidence_references array",
+                prompt,
             )
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:

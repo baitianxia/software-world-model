@@ -404,6 +404,15 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         for definition in schemas.values():
             self.assertFalse(definition.schema["additionalProperties"])
+        for schema_ref in (
+            ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
+            ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF,
+        ):
+            references = schemas[schema_ref].schema["properties"][
+                "finish_dispositions"
+            ]["items"]["properties"]["evidence_references"]
+            self.assertEqual(references["minItems"], 1)
+            self.assertTrue(references["uniqueItems"])
         self.assertEqual(
             engineering_question_output_contract_digest(),
             engineering_question_output_contract_digest(),
