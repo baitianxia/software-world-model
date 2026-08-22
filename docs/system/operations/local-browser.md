@@ -24,12 +24,17 @@ exact Source revision/Profile、prepared Request/run grant，并先写 0600 laun
 非生产”；live health/developer details 必须显示 exact Provider/configuration/qualification/run digest 和预备 Request，local health 则明确
 `external_provider_dispatch=false`。
 
-截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 6 个永久保留的 `V-WEB-000` 方向体验 run，共 24 次
+截至 `2026-08-22`，ITER-010 已在 exact loopback listener 与 in-app browser 上执行 9 个永久保留的 `V-WEB-000` 方向体验 run，共 47 次
 Engineering QA role dispatch；另有 2 次 current DeepSeek qualification call。全部 run 都绑定 exact candidate/Request/Source Profile/Maven
-Bundle/grant，retry/provider switch 为 0，Production Activation `NOT_EXECUTED`，并排除 `src/main/resources`。这些 run 依次暴露并关闭
-role-progress、Schema/cardinality、Source Profile、literal/locator、no-progress、fresh Ledger/eligible locator 和 call-reserve 缺口；最新 run
-在 7-call grant 内正确预留 Answer/Review，但调查未 FINISH，所以 `V-WEB-000` 仍为 `FAIL / blocking`，不能声称该模式已经交付可用答案。
-run 后的 fail-closed Browser presentation 修复也尚未取得新的 live 证据，不能由旧页面追溯证明。
+Bundle/grant，retry/provider switch 为 0，Production Activation `NOT_EXECUTED`，并排除 `src/main/resources`。前 8 个 run 依次暴露并关闭
+role-progress、Schema/cardinality、Source Profile、literal/locator、no-progress、fresh Ledger/eligible locator、call-reserve、FINISH 字段组合和
+disposition reference eligibility 缺口，永久保持失败关闭。
+
+第 9 个 clean candidate run `web-v-web-000-012` 在 24-call 每题安全熔断内实际消费 9 次 role dispatch，完成 Understanding、adaptive
+Investigation、密封 Package、Answer 与独立 Review，Browser 返回 `APPROVED / REVIEWED RESULT`。6 个 Source/World Model Citation 均由
+in-app Browser 实际打开并绑定同一 Package/Result，console 为空；terminal audit 为一次 verified TLS handshake、8 次 reuse、retry/switch
+0、Production Activation `NOT_EXECUTED`，全部 model manifest 对 `src/main/resources` 匹配数为 0。因此 `V-WEB-000` 最早微检查点为
+PASS；它仍是 `DIRECTION_PREVIEW / NOT_ACCEPTANCE / NOT_PRODUCTION`，不能替代 `V-XD-001`、完整方向体验、Reflection 或 Slice Acceptance。
 
 clean product freeze 和本次 exact question/run authorization 完成后，Engineering QA 入口使用：
 

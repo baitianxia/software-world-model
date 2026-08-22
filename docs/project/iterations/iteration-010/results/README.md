@@ -12,7 +12,10 @@ iteration: ITER-010
 
 # ITER-010 Results
 
-尚无执行 Result。ITER-009 Result 只作为 rejected baseline evidence，不是 ITER-010 Result。
+- [V-WEB-000 Live Run 009](v-web-000-live-run-009.md)：最早真实 Web 微纵切 PASS；exact mall + Maven Cognition + adaptive Source +
+  sealed Package + Answer + independent Review + 6 个可打开 Citation。它是 `NOT_ACCEPTANCE / NOT_PRODUCTION` 微检查点，不是 Slice Result。
+
+尚无完整 Slice Result、方向裁决或 Acceptance。ITER-009 Result 只作为 rejected baseline evidence，不是 ITER-010 Result。
 
 每个 Slice 必须单独记录 exact commit/tree、System fileset、mode/Strategy/Prompt/schema、World Model Read Set、source revision/allowlist、
 Provider disclosure、qualification/grant、Evidence Package/Review、request/Web/Citation、安全计数、全部 Case、假设 Verdict、Finding 处置和

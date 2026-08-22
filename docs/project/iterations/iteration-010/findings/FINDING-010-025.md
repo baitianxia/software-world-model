@@ -55,5 +55,5 @@ disposition，错误为 `SUPPORTED checklist disposition requires admissible sup
 cognition/browser/strategy/preview/application/source/model-source/live focused tests 63/63 PASS；docs 401/401、`py_compile` 与 `git diff --check`
 PASS。允许 AF_UNIX 的 full discovery 共 1115 项，其中 1110 PASS；唯一 4 FAIL + 1 ERROR 的 identity、marker 与 Codex
 actual/frozen digest `7645c3ca… / 9f6748b4…` 精确保持 `FINDING-008-020` 历史 hold，没有新增失败。第八次 live run 属于 Prompt
-`@6` 的永久失败证据，不能追溯证明新的动态 eligibility 与 Prompt `@7`；须以新 clean candidate 与 Prompt-bound grant 重跑
-`V-WEB-000`。
+`@6` 的永久失败证据，不能追溯证明新的动态 eligibility 与 Prompt `@7`。后续 clean candidate `f38f6cc…` 已通过
+`V-WEB-000`，exact live 证据见 `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`；旧失败仍不改写。
