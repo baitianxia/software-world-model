@@ -50,11 +50,18 @@ Application 交付的 `answer.body`，而该正文就是 Answer Proposal 中所�
 退化，而且无法证明不是项目、题目、符号、类或方法特判。
 
 主要处置由 `ITER-010-PDR-001` 修订回同轮 Slice1：先把现有产品恢复为可重复启动、同会话连续自由提问的 Web Alpha，再在真实问题上验证
-最小通用答案/Reviewer 修复。typed 答案层次仍可作为候选实现，但不得在体验前被预设为必须完整建设的新架构；最低要求是能区分直接
-答案、按需的用户可见流程/影响、诚实边界和必要实现证据，并让 Reviewer 对“默认正文被实现步骤主导”“没有先回答用户目标”或“关键
-流程副作用遗漏”给出可执行的 rewrite/reject Finding。
+最小通用答案/Reviewer 修复。返工实现已把抽象层级收敛为 `DIRECT / USER_VISIBLE_EXPLANATION / IMPLEMENTATION_DETAIL`，为每个 Claim
+增加受控 content role 与 material-checklist links，并由 Application 强制一个直接答案排首位、全 checklist 覆盖、disposition/证据分区
+一致。`USER_VISIBLE_EXPLANATION` 的默认正文不展开实现证据，但开发者详情保留 typed Claim；该投影不使用固定标题或字数比例。
+
+Reviewer 输出现先从 immutable original question 独立重建 material conclusions，显式报告 Application checklist omission，再分别返回
+direct answer、abstraction fit、material completeness 和 implementation-detail budget 的 `PASS / FAIL`。只有四项全 PASS、无 checklist
+omission、无 Finding 才能 `APPROVED`；这使“默认正文被实现步骤主导”“没有先回答用户目标”和“关键流程副作用遗漏”成为可执行 Gate，
+而不是 Prompt 期望。当前证据是通用 closed schema/Application invariant 的确定性测试通过；它没有按登录题、工程、关键词、符号、类、
+方法、fixture 或 Oracle 分支，也不构成原失败题加两道异质题的真实 Provider 回归 PASS。
 
 回归必须包含原失败题和至少两个相邻或异质问题，禁止问题/工程/关键词/符号/类/方法/fixture/Oracle 分支。单题失败只关闭当前 Request
 并继续同轮返工；只有多个异质问题共同证明核心路径无法有界修复，或用户持续体验后明确拒绝，才允许转向。
 
-本 Finding 与 PDR 仍不构成编码或 live 授权。ITER-010/Slice1 当前 paused/coding_input=false，旧 grant 不得复用。
+本 Finding 与 PDR 本身不构成编码或 live 授权。用户后续以 `32b298de…` 恢复同一 Slice 的开发；旧 grant 仍不得复用，真实 live 必须在
+新 product freeze 后按新会话边界另行授权。

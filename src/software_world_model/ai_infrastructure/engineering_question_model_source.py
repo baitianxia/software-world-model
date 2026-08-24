@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@8"
+    "engineering-qa-adaptive-investigation-prompt@9"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -70,6 +70,15 @@ ENGINEERING_QUESTION_REDACTION_REF = (
 )
 ENGINEERING_QUESTION_RUN_AUTHORIZATION_SCHEMA = (
     "SWM-ENGINEERING-QA-RUN-DISCLOSURE-AUTHORIZATION@1"
+)
+ENGINEERING_QUESTION_SESSION_AUTHORITY_SCHEMA = (
+    "ENGINEERING_QA_SESSION_AUTHORITY@1"
+)
+ENGINEERING_QUESTION_SUBMISSION_RECEIPT_SCHEMA = (
+    "SWM-ENGINEERING-QA-QUESTION-SUBMISSION-RECEIPT@1"
+)
+ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA = (
+    "SWM-ENGINEERING-QA-RUN-DISCLOSURE-AUTHORIZATION@2"
 )
 ENGINEERING_QUESTION_ROLE_DISCLOSURE_REQUEST_SCHEMA = (
     "SWM-ENGINEERING-QA-ROLE-DISCLOSURE-REQUEST@1"
@@ -117,9 +126,14 @@ candidate, coverage gap, package seal, or model statement into a fact.
 _ROLE_PROMPTS: Mapping[EngineeringQuestionModelRole, str] = {
     EngineeringQuestionModelRole.QUESTION_UNDERSTANDING: """
 Preserve the original question verbatim. Identify the user's goal, audience,
-requested abstraction level, every material conclusion that must be answered,
-the evidence needs, response language, and response constraints. Do not narrow
-the question based on currently available evidence.
+and the least detailed controlled abstraction level that still satisfies the
+question: DIRECT, USER_VISIBLE_EXPLANATION, or IMPLEMENTATION_DETAIL. Do not
+choose implementation detail merely because the supplied system concerns code.
+List every material conclusion that must be answered. For a flow or lifecycle,
+include user-visible stages, outcomes, and material state changes or side effects
+in that checklist; do not substitute class or method names for those conclusions.
+Identify the evidence needs, response language, and response constraints. Do not
+narrow the question based on currently available evidence.
 """,
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: """
 Choose exactly one next investigation action from the registered vocabulary or
@@ -190,20 +204,36 @@ null and requires a non-empty finish_dispositions array. Do not carry an
 evidence_class from the preceding action into FINISH.
 """,
     EngineeringQuestionModelRole.ANSWER: """
-Answer from the sealed Question Evidence Package only. Lead with the direct
-conclusion at the requested abstraction level. Every affirmative claim must cite
-one or more support/citation entry IDs that actually support it. Boundary/audit
-entries can justify only explicit limitations or unknowns. Do not expose
-pipeline diagnostics or claim completeness beyond the recorded coverage.
+Answer from the sealed Question Evidence Package only. Return exactly one
+DIRECT_ANSWER claim first; when the Package proves only a boundary, that direct
+claim may use LIMITATION kind and boundary/audit evidence instead of inventing
+an affirmative answer. Then, only as needed, use USER_VISIBLE_PROCESS,
+IMPACT_OR_SIDE_EFFECT, optional IMPLEMENTATION_EVIDENCE, and LIMITATION in that
+order. Link every claim to exact material checklist item IDs and cover every
+checklist item. At DIRECT level, omit implementation evidence. At
+USER_VISIBLE_EXPLANATION level, add implementation evidence only when explicitly
+requested or necessary to support a material conclusion, and keep it outside the
+default user-visible body. Every affirmative claim must cite one or more
+support/citation entry IDs that actually support it. Boundary/audit entries can
+justify only explicit limitations or unknowns. Do not expose pipeline diagnostics
+or claim completeness beyond the recorded coverage.
 """,
     EngineeringQuestionModelRole.REVIEW: """
 Independently review the draft against the original question, accepted
 understanding, and current Package. Approve only a direct, correct, complete,
 well-scoped answer whose affirmative claims have valid support citations and
-whose limitations are honest. A rewrite uses existing Package evidence. A
-more-evidence request must name one checklist item or claim, one evidence class,
-and a concrete evidence need; it must not contain an operation, path, command,
-URL, or tool instruction.
+whose limitations are honest. First reconstruct the material conclusions from
+the immutable original question without adopting the Application checklist;
+then list any reconstructed conclusion omitted by that checklist. Explicitly
+mark the four closed quality checks:
+direct answer first, abstraction fit, material checklist completeness including
+user-visible stages and side effects, and implementation-detail budget. APPROVED
+requires PASS for all four. If the default answer is implementation-led, misses
+a material effect, or does not answer the user's goal first, return an actionable
+rewrite Finding bound to a checklist item or claim. A rewrite uses existing
+Package evidence. A more-evidence request must name one checklist item or claim,
+one evidence class, and a concrete evidence need; it must not contain an
+operation, path, command, URL, or tool instruction.
 """,
 }
 
@@ -352,6 +382,303 @@ class EngineeringQuestionModelConfiguration:
                 ErrorCode.QUALIFICATION_INVALID,
                 "Engineering QA Provider qualification expired before dispatch",
             )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringQuestionSessionAuthority:
+    """Bound one sustained loopback session without pre-authorizing a question."""
+
+    schema: str
+    environment: str
+    status: str
+    session_ref: str
+    loopback_origin: str
+    product_candidate_digest: Digest
+    request_template_digest: Digest
+    provider_binding_digest: Digest
+    provider_disclosure_policy_ref: str
+    prompt_contract_digest: Digest
+    output_contract_digest: Digest
+    authorized_roles: tuple[EngineeringQuestionModelRole, ...]
+    maximum_questions: int
+    maximum_dispatches_per_question: int
+    maximum_total_dispatches: int
+    authorized_by: str
+    authorized_at: datetime
+    expires_at: datetime
+    authorization_ref: str
+    authorization_message_digest: Digest
+    redaction_ref: str
+    production_activation: str
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        session_ref: str,
+        product_candidate_digest: Digest,
+        request_template_digest: Digest,
+        configuration: EngineeringQuestionModelConfiguration,
+        maximum_questions: int,
+        maximum_dispatches_per_question: int,
+        maximum_total_dispatches: int,
+        authorized_at: datetime,
+        expires_at: datetime,
+        authorization_ref: str,
+        authorization_message_digest: Digest,
+        loopback_origin: str = "http://127.0.0.1:8765/",
+    ) -> "EngineeringQuestionSessionAuthority":
+        _text(session_ref, "Engineering QA session reference")
+        issued = _aware_utc(authorized_at, "session authorization time")
+        expiry = _aware_utc(expires_at, "session authorization expiration")
+        expected_ref = f"codex-user-message:{authorization_message_digest.value}"
+        if authorization_ref != expected_ref:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering QA session authorization does not bind its user message",
+            )
+        if loopback_origin != "http://127.0.0.1:8765/":
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Engineering QA Alpha session origin must be exact loopback port 8765",
+            )
+        if (
+            issued >= expiry
+            or expiry > configuration.qualification_valid_until.astimezone(timezone.utc)
+            or type(maximum_questions) is not int
+            or not 1 <= maximum_questions <= 128
+            or type(maximum_dispatches_per_question) is not int
+            or not 1
+            <= maximum_dispatches_per_question
+            <= configuration.maximum_calls
+            or type(maximum_total_dispatches) is not int
+            or maximum_total_dispatches < maximum_dispatches_per_question
+            or maximum_total_dispatches
+            > maximum_questions * maximum_dispatches_per_question
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering QA session authorization bounds are invalid",
+            )
+        roles = tuple(EngineeringQuestionModelRole)
+        core = {
+            "schema": ENGINEERING_QUESTION_SESSION_AUTHORITY_SCHEMA,
+            "environment": _ENVIRONMENT,
+            "status": "AUTHORIZED",
+            "session_ref": session_ref,
+            "loopback_origin": loopback_origin,
+            "product_candidate_digest": product_candidate_digest.value,
+            "request_template_digest": request_template_digest.value,
+            "provider_binding_digest": configuration.digest.value,
+            "provider_disclosure_policy_ref": (
+                configuration.provider_disclosure_policy_ref
+            ),
+            "prompt_contract_digest": engineering_question_prompt_contract_digest().value,
+            "output_contract_digest": engineering_question_output_contract_digest().value,
+            "authorized_roles": tuple(role.value for role in roles),
+            "maximum_questions": maximum_questions,
+            "maximum_dispatches_per_question": maximum_dispatches_per_question,
+            "maximum_total_dispatches": maximum_total_dispatches,
+            "authorized_by": "user",
+            "authorized_at": _time(issued),
+            "expires_at": _time(expiry),
+            "authorization_ref": authorization_ref,
+            "authorization_message_digest": authorization_message_digest.value,
+            "redaction_ref": ENGINEERING_QUESTION_REDACTION_REF,
+            "request_retry_allowed": False,
+            "provider_switch_after_dispatch_allowed": False,
+            "production_activation": _PRODUCTION_ACTIVATION,
+        }
+        return cls(
+            schema=ENGINEERING_QUESTION_SESSION_AUTHORITY_SCHEMA,
+            environment=_ENVIRONMENT,
+            status="AUTHORIZED",
+            session_ref=session_ref,
+            loopback_origin=loopback_origin,
+            product_candidate_digest=product_candidate_digest,
+            request_template_digest=request_template_digest,
+            provider_binding_digest=configuration.digest,
+            provider_disclosure_policy_ref=(
+                configuration.provider_disclosure_policy_ref
+            ),
+            prompt_contract_digest=engineering_question_prompt_contract_digest(),
+            output_contract_digest=engineering_question_output_contract_digest(),
+            authorized_roles=roles,
+            maximum_questions=maximum_questions,
+            maximum_dispatches_per_question=maximum_dispatches_per_question,
+            maximum_total_dispatches=maximum_total_dispatches,
+            authorized_by="user",
+            authorized_at=issued,
+            expires_at=expiry,
+            authorization_ref=authorization_ref,
+            authorization_message_digest=authorization_message_digest,
+            redaction_ref=ENGINEERING_QUESTION_REDACTION_REF,
+            production_activation=_PRODUCTION_ACTIVATION,
+            digest=digest_of([ENGINEERING_QUESTION_SESSION_AUTHORITY_SCHEMA, core]),
+        )
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "schema": self.schema,
+            "environment": self.environment,
+            "status": self.status,
+            "session_ref": self.session_ref,
+            "loopback_origin": self.loopback_origin,
+            "product_candidate_digest": self.product_candidate_digest.value,
+            "request_template_digest": self.request_template_digest.value,
+            "provider_binding_digest": self.provider_binding_digest.value,
+            "provider_disclosure_policy_ref": self.provider_disclosure_policy_ref,
+            "prompt_contract_digest": self.prompt_contract_digest.value,
+            "output_contract_digest": self.output_contract_digest.value,
+            "authorized_roles": tuple(role.value for role in self.authorized_roles),
+            "maximum_questions": self.maximum_questions,
+            "maximum_dispatches_per_question": (
+                self.maximum_dispatches_per_question
+            ),
+            "maximum_total_dispatches": self.maximum_total_dispatches,
+            "authorized_by": self.authorized_by,
+            "authorized_at": _time(self.authorized_at),
+            "expires_at": _time(self.expires_at),
+            "authorization_ref": self.authorization_ref,
+            "authorization_message_digest": self.authorization_message_digest.value,
+            "redaction_ref": self.redaction_ref,
+            "request_retry_allowed": False,
+            "provider_switch_after_dispatch_allowed": False,
+            "production_activation": self.production_activation,
+            "digest": self.digest.value,
+        }
+
+    def require_current(
+        self,
+        *,
+        configuration: EngineeringQuestionModelConfiguration,
+        request_template_digest: Digest,
+        product_candidate_digest: Digest,
+        at: datetime,
+    ) -> None:
+        expected = EngineeringQuestionSessionAuthority.create(
+            session_ref=self.session_ref,
+            product_candidate_digest=product_candidate_digest,
+            request_template_digest=request_template_digest,
+            configuration=configuration,
+            maximum_questions=self.maximum_questions,
+            maximum_dispatches_per_question=(
+                self.maximum_dispatches_per_question
+            ),
+            maximum_total_dispatches=self.maximum_total_dispatches,
+            authorized_at=self.authorized_at,
+            expires_at=self.expires_at,
+            authorization_ref=self.authorization_ref,
+            authorization_message_digest=self.authorization_message_digest,
+            loopback_origin=self.loopback_origin,
+        )
+        if self != expected:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering QA session authority is inconsistent",
+            )
+        current = _aware_utc(at, "current time")
+        configuration.require_current(current)
+        if current < self.authorized_at or current >= self.expires_at:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Engineering QA session authority is not current",
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringQuestionSubmissionReceipt:
+    schema: str
+    receipt_id: StableId
+    session_authority_digest: Digest
+    question_digest: Digest
+    question_utf8_bytes: int
+    disclosure_acknowledged: bool
+    submitted_at: datetime
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        receipt_id: StableId,
+        session_authority: EngineeringQuestionSessionAuthority,
+        question: str,
+        disclosure_acknowledged: bool,
+        submitted_at: datetime,
+    ) -> "EngineeringQuestionSubmissionReceipt":
+        normalized = normalized_engineering_question(question)
+        current = _aware_utc(submitted_at, "question submission time")
+        if disclosure_acknowledged is not True:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Engineering QA question disclosure must be explicitly acknowledged",
+            )
+        if current < session_authority.authorized_at or current >= session_authority.expires_at:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Engineering QA question was submitted outside the authorized session",
+            )
+        question_bytes = normalized.encode("utf-8")
+        question_digest = digest_of(
+            ["ENGINEERING_QA_SUBMITTED_QUESTION@1", normalized]
+        )
+        core = {
+            "schema": ENGINEERING_QUESTION_SUBMISSION_RECEIPT_SCHEMA,
+            "receipt_id": receipt_id.value,
+            "session_authority_digest": session_authority.digest.value,
+            "question_digest": question_digest.value,
+            "question_utf8_bytes": len(question_bytes),
+            "disclosure_acknowledged": True,
+            "submitted_at": _time(current),
+        }
+        return cls(
+            schema=ENGINEERING_QUESTION_SUBMISSION_RECEIPT_SCHEMA,
+            receipt_id=receipt_id,
+            session_authority_digest=session_authority.digest,
+            question_digest=question_digest,
+            question_utf8_bytes=len(question_bytes),
+            disclosure_acknowledged=True,
+            submitted_at=current,
+            digest=digest_of(
+                [ENGINEERING_QUESTION_SUBMISSION_RECEIPT_SCHEMA, core]
+            ),
+        )
+
+    def require_valid(
+        self,
+        *,
+        session_authority: EngineeringQuestionSessionAuthority,
+        question: str,
+    ) -> None:
+        expected = EngineeringQuestionSubmissionReceipt.create(
+            receipt_id=self.receipt_id,
+            session_authority=session_authority,
+            question=question,
+            disclosure_acknowledged=self.disclosure_acknowledged,
+            submitted_at=self.submitted_at,
+        )
+        if self != expected:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering QA question submission receipt is inconsistent",
+            )
+
+
+def normalized_engineering_question(question: str) -> str:
+    if not isinstance(question, str):
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering QA question must be text",
+        )
+    normalized = question.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized or len(normalized.encode("utf-8")) > 65_536:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering QA question must contain 1 through 65536 UTF-8 bytes",
+        )
+    return normalized
 
 
 @dataclass(frozen=True, slots=True)
@@ -576,6 +903,226 @@ class EngineeringQuestionRunDisclosureAuthorization:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
                 "Engineering QA run disclosure authorization is not current",
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringQuestionSessionRunDisclosureAuthorization(
+    EngineeringQuestionRunDisclosureAuthorization
+):
+    """Per-question run compiled from one session and one user submission."""
+
+    session_authority_digest: Digest
+    question_submission_receipt_digest: Digest
+
+    @classmethod
+    def create_from_session(
+        cls,
+        *,
+        run_ref: str,
+        request: EngineeringQuestionRequest,
+        evaluation_subject_digest: Digest,
+        configuration: EngineeringQuestionModelConfiguration,
+        session_authority: EngineeringQuestionSessionAuthority,
+        question_submission_receipt: EngineeringQuestionSubmissionReceipt,
+        request_template_digest: Digest,
+        product_candidate_digest: Digest,
+    ) -> "EngineeringQuestionSessionRunDisclosureAuthorization":
+        _text(run_ref, "Engineering QA run reference")
+        session_authority.require_current(
+            configuration=configuration,
+            request_template_digest=request_template_digest,
+            product_candidate_digest=product_candidate_digest,
+            at=question_submission_receipt.submitted_at,
+        )
+        question_submission_receipt.require_valid(
+            session_authority=session_authority,
+            question=request.original_question,
+        )
+        if (
+            request.provider_disclosure_policy
+            != configuration.provider_disclosure_policy_ref
+            or request.request_ref
+            != question_submission_receipt.receipt_id.value
+            or request.limits.maximum_total_model_role_calls
+            != session_authority.maximum_dispatches_per_question
+            or session_authority.request_template_digest
+            != request_template_digest
+            or session_authority.product_candidate_digest
+            != product_candidate_digest
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Engineering QA submitted question is outside the session template",
+            )
+        issued = question_submission_receipt.submitted_at
+        expiry = session_authority.expires_at
+        roles = tuple(EngineeringQuestionModelRole)
+        core = {
+            "schema": ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA,
+            "environment": _ENVIRONMENT,
+            "status": "AUTHORIZED",
+            "run_ref": run_ref,
+            "request_digest": request.digest.value,
+            "request_provider_disclosure_policy_ref": (
+                request.provider_disclosure_policy
+            ),
+            "evaluation_subject_digest": evaluation_subject_digest.value,
+            "provider_binding_digest": configuration.digest.value,
+            "provider_disclosure_policy_ref": (
+                configuration.provider_disclosure_policy_ref
+            ),
+            "prompt_contract_digest": engineering_question_prompt_contract_digest().value,
+            "output_contract_digest": engineering_question_output_contract_digest().value,
+            "authorized_roles": tuple(role.value for role in roles),
+            "maximum_dispatches": (
+                session_authority.maximum_dispatches_per_question
+            ),
+            "authorized_by": "user",
+            "authorized_at": _time(issued),
+            "expires_at": _time(expiry),
+            "authorization_ref": session_authority.authorization_ref,
+            "authorization_message_digest": (
+                session_authority.authorization_message_digest.value
+            ),
+            "redaction_ref": ENGINEERING_QUESTION_REDACTION_REF,
+            "session_authority_digest": session_authority.digest.value,
+            "question_submission_receipt_digest": (
+                question_submission_receipt.digest.value
+            ),
+            "request_retry_allowed": False,
+            "provider_switch_after_dispatch_allowed": False,
+            "production_activation": _PRODUCTION_ACTIVATION,
+        }
+        return cls(
+            schema=ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA,
+            environment=_ENVIRONMENT,
+            status="AUTHORIZED",
+            run_ref=run_ref,
+            request_digest=request.digest,
+            request_provider_disclosure_policy_ref=(
+                request.provider_disclosure_policy
+            ),
+            evaluation_subject_digest=evaluation_subject_digest,
+            provider_binding_digest=configuration.digest,
+            provider_disclosure_policy_ref=(
+                configuration.provider_disclosure_policy_ref
+            ),
+            prompt_contract_digest=engineering_question_prompt_contract_digest(),
+            output_contract_digest=engineering_question_output_contract_digest(),
+            authorized_roles=roles,
+            maximum_dispatches=(
+                session_authority.maximum_dispatches_per_question
+            ),
+            authorized_by="user",
+            authorized_at=issued,
+            expires_at=expiry,
+            authorization_ref=session_authority.authorization_ref,
+            authorization_message_digest=(
+                session_authority.authorization_message_digest
+            ),
+            redaction_ref=ENGINEERING_QUESTION_REDACTION_REF,
+            production_activation=_PRODUCTION_ACTIVATION,
+            digest=digest_of(
+                [ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA, core]
+            ),
+            session_authority_digest=session_authority.digest,
+            question_submission_receipt_digest=(
+                question_submission_receipt.digest
+            ),
+        )
+
+    def model_view(self) -> dict[str, object]:
+        value = super().model_view()
+        value.update(
+            {
+                "session_authority_digest": self.session_authority_digest.value,
+                "question_submission_receipt_digest": (
+                    self.question_submission_receipt_digest.value
+                ),
+            }
+        )
+        return value
+
+    def require_current(
+        self,
+        *,
+        configuration: EngineeringQuestionModelConfiguration,
+        at: datetime,
+    ) -> None:
+        core = {
+            "schema": ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA,
+            "environment": _ENVIRONMENT,
+            "status": "AUTHORIZED",
+            "run_ref": self.run_ref,
+            "request_digest": self.request_digest.value,
+            "request_provider_disclosure_policy_ref": (
+                self.request_provider_disclosure_policy_ref
+            ),
+            "evaluation_subject_digest": self.evaluation_subject_digest.value,
+            "provider_binding_digest": configuration.digest.value,
+            "provider_disclosure_policy_ref": (
+                configuration.provider_disclosure_policy_ref
+            ),
+            "prompt_contract_digest": engineering_question_prompt_contract_digest().value,
+            "output_contract_digest": engineering_question_output_contract_digest().value,
+            "authorized_roles": tuple(
+                role.value for role in EngineeringQuestionModelRole
+            ),
+            "maximum_dispatches": self.maximum_dispatches,
+            "authorized_by": "user",
+            "authorized_at": _time(self.authorized_at),
+            "expires_at": _time(self.expires_at),
+            "authorization_ref": self.authorization_ref,
+            "authorization_message_digest": self.authorization_message_digest.value,
+            "redaction_ref": ENGINEERING_QUESTION_REDACTION_REF,
+            "session_authority_digest": self.session_authority_digest.value,
+            "question_submission_receipt_digest": (
+                self.question_submission_receipt_digest.value
+            ),
+            "request_retry_allowed": False,
+            "provider_switch_after_dispatch_allowed": False,
+            "production_activation": _PRODUCTION_ACTIVATION,
+        }
+        if (
+            self.schema != ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA
+            or self.environment != _ENVIRONMENT
+            or self.status != "AUTHORIZED"
+            or self.provider_binding_digest != configuration.digest
+            or self.request_provider_disclosure_policy_ref
+            != configuration.provider_disclosure_policy_ref
+            or self.provider_disclosure_policy_ref
+            != configuration.provider_disclosure_policy_ref
+            or self.prompt_contract_digest
+            != engineering_question_prompt_contract_digest()
+            or self.output_contract_digest
+            != engineering_question_output_contract_digest()
+            or self.authorized_roles != tuple(EngineeringQuestionModelRole)
+            or self.authorized_by != "user"
+            or self.redaction_ref != ENGINEERING_QUESTION_REDACTION_REF
+            or self.production_activation != _PRODUCTION_ACTIVATION
+            or self.authorization_ref
+            != f"codex-user-message:{self.authorization_message_digest.value}"
+            or type(self.maximum_dispatches) is not int
+            or not 1 <= self.maximum_dispatches <= configuration.maximum_calls
+            or self.authorized_at >= self.expires_at
+            or self.expires_at
+            > configuration.qualification_valid_until.astimezone(timezone.utc)
+            or self.digest
+            != digest_of(
+                [ENGINEERING_QUESTION_SESSION_RUN_AUTHORIZATION_SCHEMA, core]
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering QA session run authorization is inconsistent",
+            )
+        current = _aware_utc(at, "current time")
+        configuration.require_current(current)
+        if current < self.authorized_at or current >= self.expires_at:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Engineering QA session run authorization is not current",
             )
 
 
@@ -1164,8 +1711,7 @@ class EngineeringQuestionModelEgressPolicy:
             or sealed.purpose != "exact authorized Engineering QA role input"
             or sealed.disposition is not InputDisposition.PROVIDED
             or sealed.transformation_ref != "canonical-json-utf8@1"
-            or run_grant.schema_ref
-            != ENGINEERING_QUESTION_RUN_AUTHORIZATION_SCHEMA
+            or run_grant.schema_ref != self._run_authorization.schema
             or run_grant.classification != self._configuration.classification
             or run_grant.purpose
             != "bind the exact user-authorized preview run without model disclosure"
@@ -1498,6 +2044,9 @@ class ModelBackedEngineeringQuestionStructuredOutputSource(
                 manifest=manifest,
                 configuration=self._configuration,
                 output_schema_ref=output_schema_ref,
+                run_authorization_schema=(
+                    self._authorizer.run_authorization.schema
+                ),
                 run_authorization_digest=(
                     self._authorizer.run_authorization.digest
                 ),
@@ -1619,6 +2168,7 @@ def _gateway_manifest(
     manifest: EngineeringQuestionRoleInputManifest,
     configuration: EngineeringQuestionModelConfiguration,
     output_schema_ref: str,
+    run_authorization_schema: str,
     run_authorization_digest: Digest,
 ) -> AuthorizedInputManifest:
     prompt = engineering_question_role_prompt(manifest.role)
@@ -1651,7 +2201,7 @@ def _gateway_manifest(
             ),
             AuthorizedInputItem.create(
                 item_id="run-disclosure-authorization",
-                schema_ref=ENGINEERING_QUESTION_RUN_AUTHORIZATION_SCHEMA,
+                schema_ref=run_authorization_schema,
                 classification=configuration.classification,
                 purpose="bind the exact user-authorized preview run without model disclosure",
                 authority_reference=run_authorization_digest.value,

@@ -1,17 +1,34 @@
 from __future__ import annotations
 
 from io import BytesIO
+from datetime import datetime, timedelta, timezone
 import json
 import unittest
 
+from software_world_model.ai_infrastructure.engineering_question_model_source import (
+    EngineeringQuestionModelConfiguration,
+    EngineeringQuestionSessionAuthority,
+    EngineeringQuestionSessionRunDisclosureAuthorization,
+    EngineeringQuestionSubmissionReceipt,
+)
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionResourceLimits,
 )
-from software_world_model.cross_cutting import DomainError
+from software_world_model.cross_cutting import (
+    Digest,
+    DomainError,
+    ErrorCode,
+    StableId,
+    digest_of,
+)
 from software_world_model.interface.engineering_qa_browser import (
     EngineeringQuestionBrowserApplication,
+    EngineeringQuestionSessionExecution,
+    EngineeringQuestionSessionRequestTemplate,
+    EngineeringQuestionWebRuntimeStatus,
     FixedEngineeringQuestionRequestFactory,
     InMemoryEngineeringQuestionWebProduct,
+    InMemoryEngineeringQuestionSessionWebProduct,
 )
 from tests import test_engineering_question_answering as fixtures
 
@@ -69,6 +86,14 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
             "CONTENT_LENGTH": str(len(raw)),
             "wsgi.input": BytesIO(raw),
         }
+        if method.upper() == "POST":
+            environ.update(
+                {
+                    "CONTENT_TYPE": "application/json",
+                    "HTTP_ORIGIN": "http://127.0.0.1:8765",
+                    "HTTP_SEC_FETCH_SITE": "same-origin",
+                }
+            )
         environ.update(environ_overrides or {})
         body = b"".join(
             (app or self.app)(
@@ -243,6 +268,41 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
             json.loads(response["body"])["error"], "CONTROL_STATE_DENIED"
         )
 
+    def test_cross_origin_or_non_json_submission_is_rejected_before_session_creation(self):
+        session_factory, runtime_status = self.session_factory()
+        app = EngineeringQuestionBrowserApplication(
+            InMemoryEngineeringQuestionSessionWebProduct(
+                execution_factory=session_factory,
+                runtime_status=runtime_status,
+                known_limitations=("Alpha evaluation only",),
+            )
+        )
+        payload = {
+            "question": "How does startup work?",
+            "disclosure_acknowledged": True,
+        }
+        cross_origin = self.call(
+            "POST",
+            "/v1/engineering-qa/questions",
+            payload,
+            environ_overrides={
+                "HTTP_ORIGIN": "https://attacker.example",
+                "HTTP_SEC_FETCH_SITE": "cross-site",
+            },
+            app=app,
+        )
+        non_json = self.call(
+            "POST",
+            "/v1/engineering-qa/questions",
+            payload,
+            environ_overrides={"CONTENT_TYPE": "text/plain"},
+            app=app,
+        )
+
+        self.assertEqual(cross_origin["status"], "403 Forbidden")
+        self.assertEqual(non_json["status"], "403 Forbidden")
+        self.assertEqual(session_factory.created_questions, 0)
+
     def test_local_preview_factory_cannot_authorize_external_disclosure(self):
         exact = fixtures.request()
         with self.assertRaises(DomainError):
@@ -257,6 +317,279 @@ class EngineeringQuestionBrowserTests(unittest.TestCase):
                 source_allowlist=exact.source_allowlist,
                 provider_disclosure_policy="EXTERNAL_PROVIDER_ALLOWED",
             )
+
+    def test_session_web_accepts_multiple_questions_with_server_owned_ids(self):
+        session_factory, runtime_status = self.session_factory()
+        app = EngineeringQuestionBrowserApplication(
+            InMemoryEngineeringQuestionSessionWebProduct(
+                execution_factory=session_factory,
+                runtime_status=runtime_status,
+                known_limitations=(
+                    "Alpha evaluation only",
+                    "fixed Java project and revision",
+                ),
+            )
+        )
+        health = self.call("GET", "/health", app=app)
+        health_value = json.loads(health["body"])
+        self.assertEqual(
+            health_value["question_submission_mode"], "SESSION_AUTHORIZED"
+        )
+        self.assertEqual(health_value["project"]["repository_revision"], fixtures.REVISION)
+        self.assertEqual(
+            set(health_value["project"]["source_class_allowlist"]),
+            {"SOURCE", "REPOSITORY_DOCUMENT", "BUILD_CONFIGURATION", "TEST"},
+        )
+        self.assertTrue(health_value["known_limitations"])
+
+        pages = []
+        for question in ("How does startup work?", "What controls timeout?"):
+            response = self.call(
+                "POST",
+                "/v1/engineering-qa/questions",
+                {"question": question, "disclosure_acknowledged": True},
+                app=app,
+            )
+            self.assertEqual(response["status"], "200 OK")
+            pages.append(json.loads(response["body"]))
+        self.assertNotEqual(
+            pages[0]["submission"]["request_id"],
+            pages[1]["submission"]["request_id"],
+        )
+        self.assertNotEqual(
+            pages[0]["submission"]["receipt_digest"],
+            pages[1]["submission"]["receipt_digest"],
+        )
+        self.assertEqual(session_factory.created_questions, 2)
+
+        client_authority = self.call(
+            "POST",
+            "/v1/engineering-qa/questions",
+            {
+                "request_id": "client-controlled",
+                "question": "unsafe",
+                "disclosure_acknowledged": True,
+            },
+            app=app,
+        )
+        self.assertEqual(client_authority["status"], "400 Bad Request")
+
+    def test_session_question_failure_does_not_stop_the_next_question(self):
+        session_factory, runtime_status = self.session_factory(fail_first=True)
+        app = EngineeringQuestionBrowserApplication(
+            InMemoryEngineeringQuestionSessionWebProduct(
+                execution_factory=session_factory,
+                runtime_status=runtime_status,
+                known_limitations=("Alpha evaluation only",),
+            )
+        )
+        first = self.call(
+            "POST",
+            "/v1/engineering-qa/questions",
+            {"question": "controlled failure", "disclosure_acknowledged": True},
+            app=app,
+        )
+        self.assertEqual(first["status"], "409 Conflict")
+        second = self.call(
+            "POST",
+            "/v1/engineering-qa/questions",
+            {"question": "How does startup work?", "disclosure_acknowledged": True},
+            app=app,
+        )
+        self.assertEqual(second["status"], "200 OK")
+        self.assertEqual(json.loads(second["body"])["status"], "APPROVED")
+        health = json.loads(self.call("GET", "/health", app=app)["body"])
+        self.assertEqual(health["session"]["accepted_question_count"], 2)
+
+    def test_session_rejects_a_replayed_submission_and_closes_its_execution(self):
+        base_factory, runtime_status = self.session_factory()
+        question = "How does startup work?"
+        first_execution = base_factory.create(
+            question=question,
+            disclosure_acknowledged=True,
+        )
+        close_count = 0
+
+        def close():
+            nonlocal close_count
+            close_count += 1
+
+        repeated_execution = EngineeringQuestionSessionExecution(
+            request=first_execution.request,
+            submission_receipt=first_execution.submission_receipt,
+            run_authorization=first_execution.run_authorization,
+            service=first_execution.service,
+            dispatch_attempt_count=first_execution.dispatch_attempt_count,
+            close=close,
+        )
+
+        class RepeatingFactory:
+            session_authority = base_factory.session_authority
+            request_template = base_factory.request_template
+
+            def create(self, **_):
+                return repeated_execution
+
+        product = InMemoryEngineeringQuestionSessionWebProduct(
+            execution_factory=RepeatingFactory(),
+            runtime_status=runtime_status,
+            known_limitations=("Alpha evaluation only",),
+        )
+        product.answer(
+            request_ref=None,
+            question=question,
+            disclosure_acknowledged=True,
+        )
+        with self.assertRaises(DomainError) as replay:
+            product.answer(
+                request_ref=None,
+                question=question,
+                disclosure_acknowledged=True,
+            )
+
+        self.assertEqual(replay.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+        self.assertEqual(close_count, 2)
+
+    def session_factory(self, *, fail_first: bool = False):
+        now = datetime.now(timezone.utc)
+        exact = fixtures.request(
+            limits=EngineeringQuestionResourceLimits(
+                maximum_total_model_role_calls=24
+            )
+        )
+        source_profile = fixtures.source_profile()
+        source_class_allowlist = tuple(
+            (evidence_class.value, paths)
+            for evidence_class, paths in source_profile.evidence_class_paths
+        )
+        source_allowlist = tuple(
+            path for _, paths in source_class_allowlist for path in paths
+        )
+        configuration = EngineeringQuestionModelConfiguration(
+            provider_type="FIXTURE",
+            adapter_version="fixture@1",
+            endpoint="https://provider.example.test/v1/chat",
+            model_ref="fixture-model@1",
+            expected_actual_model_fingerprint="fixture-model@1",
+            provider_configuration_fingerprint=Digest("sha256:" + "8" * 64),
+            secret_reference="env:FIXTURE_API_KEY",
+            qualification_ref="fixture-qualification",
+            qualification_valid_until=now + timedelta(days=1),
+            maximum_calls=24,
+        )
+        template = EngineeringQuestionSessionRequestTemplate.create(
+            response_language=exact.response_language,
+            repository_id=exact.repository_id,
+            binding_id=exact.binding_id,
+            repository_revision=exact.repository_revision,
+            source_profile_ref=exact.source_profile_ref,
+            source_profile_digest=exact.source_profile_digest,
+            world_model_read_authority_digest=exact.world_model_read_authority_digest,
+            source_allowlist=source_allowlist,
+            registered_operations=exact.registered_operations,
+            provider_disclosure_policy=configuration.provider_disclosure_policy_ref,
+            limits=exact.limits,
+            source_class_allowlist=source_class_allowlist,
+        )
+        product_digest = digest_of("session browser product")
+        message_digest = digest_of("authorize browser session")
+        authority = EngineeringQuestionSessionAuthority.create(
+            session_ref="browser-session-fixture",
+            product_candidate_digest=product_digest,
+            request_template_digest=template.digest,
+            configuration=configuration,
+            maximum_questions=3,
+            maximum_dispatches_per_question=24,
+            maximum_total_dispatches=72,
+            authorized_at=now - timedelta(minutes=1),
+            expires_at=now + timedelta(hours=1),
+            authorization_ref=f"codex-user-message:{message_digest.value}",
+            authorization_message_digest=message_digest,
+        )
+        factory = _FixtureSessionExecutionFactory(
+            session_authority=authority,
+            request_template=template,
+            configuration=configuration,
+            product_digest=product_digest,
+            now=now,
+            fail_first=fail_first,
+        )
+        runtime = EngineeringQuestionWebRuntimeStatus.session_authorized(
+            template=template,
+            configuration=configuration,
+            session_authority=authority,
+            product_candidate_digest=product_digest,
+            at=now,
+        )
+        return factory, runtime
+
+
+class _FailingService:
+    def answer(self, request):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "controlled request failure",
+        )
+
+
+class _FixtureSessionExecutionFactory:
+    def __init__(
+        self,
+        *,
+        session_authority,
+        request_template,
+        configuration,
+        product_digest,
+        now,
+        fail_first,
+    ):
+        self.session_authority = session_authority
+        self.request_template = request_template
+        self.configuration = configuration
+        self.product_digest = product_digest
+        self.now = now
+        self.fail_first = fail_first
+        self.created_questions = 0
+
+    def create(self, *, question, disclosure_acknowledged):
+        self.created_questions += 1
+        digit = f"{self.created_questions:032x}"
+        receipt = EngineeringQuestionSubmissionReceipt.create(
+            receipt_id=StableId("engq_submission_" + digit),
+            session_authority=self.session_authority,
+            question=question,
+            disclosure_acknowledged=disclosure_acknowledged,
+            submitted_at=self.now,
+        )
+        request = self.request_template.create_request(
+            receipt=receipt,
+            question=question,
+        )
+        run = EngineeringQuestionSessionRunDisclosureAuthorization.create_from_session(
+            run_ref="engq_run_" + digit,
+            request=request,
+            evaluation_subject_digest=digest_of(["session question", digit]),
+            configuration=self.configuration,
+            session_authority=self.session_authority,
+            question_submission_receipt=receipt,
+            request_template_digest=self.request_template.digest,
+            product_candidate_digest=self.product_digest,
+        )
+        service = (
+            _FailingService()
+            if self.fail_first and self.created_questions == 1
+            else fixtures.EngineeringQuestionAnsweringTests().service(
+                request_more_evidence=False
+            )
+        )
+        return EngineeringQuestionSessionExecution(
+            request=request,
+            submission_receipt=receipt,
+            run_authorization=run,
+            service=service,
+            dispatch_attempt_count=lambda: 0,
+            close=lambda: None,
+        )
 
 
 if __name__ == "__main__":

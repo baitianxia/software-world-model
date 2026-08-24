@@ -1,14 +1,14 @@
 ---
 id: ITER-010-INDEX
 kind: iteration-index
-status: paused
-authority: project-decision
+status: authorized
+authority: current-development
 owners: [product, project, architecture, engineering, quality]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-DECISIONS, ITER-010-PDR-001]
 code: []
 tests: []
 iteration: ITER-010
-coding_input: false
+coding_input: true
 ---
 
 # ITER-010：世界模型认知引导的自适应工程问答
@@ -33,14 +33,17 @@ coding_input: false
 
 ## Status and authorization
 
-`PAUSED / REWORK / SLICE-001 NO CODING INPUT / SLICE-002 AND SLICE-003 PROPOSED BUT NOT AUTHORIZED / NO ACCEPTANCE`。
+`AUTHORIZED / REWORK / SLICE-001 CURRENT DEVELOPMENT / SLICE-002 AND SLICE-003 PROPOSED BUT NOT AUTHORIZED / NO ACCEPTANCE`。
 
 Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
 能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。
 
 旧记录曾把用户消息 `d746968f…` 解释为 `REDIRECT`。最新接受的 [PDR-001](decisions/PDR-001-resume-as-rework.md) 明确：该消息要求
 实现者自行复核并修复已知错误，并没有明确拒绝产品方向；历史 Result 的技术事实与具体 FAIL 保留，但整轮终止结论修订为 `REWORK`。
-`FINDING-010-028` 定位的答案和审核根因回到本轮处理。本轮当前仍暂停且不是编码输入；所有旧 live grant 已消费，恢复开发必须另行授权。
+`FINDING-010-028` 定位的答案和审核根因回到本轮处理。用户随后以
+`codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5`（`2026-08-24T02:55:16Z`）
+明确要求“继续开发”，因此同一个 `ITER-010-SLICE-001` 已恢复为当前编码输入。历史失败 Result 和 PDR-001 均保留；该收据不授权
+`SLICE-002/003`、hidden 或 Production Activation，也不自动复用任何已消费的 live grant。
 
 用户消息 `codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc` 于
 `2026-08-21T08:23:25Z` 要求按最新讨论重新制定计划并更新文档。它确认：World Model 仍是真正的软件外部认知；提问期由 LLM 主导
@@ -69,5 +72,6 @@ loopback Web/browser 验证；`SLICE-002/003`、hidden disclosure 和 Production
 - [Decisions](decisions/README.md)
 
 原计划在 Slice1 的方向 Gate 暂停：技术链完成，但答案/审核质量失败。A3 的旧表述被本次结果证伪，A1/A4/A5 仍未解决；Slice2/3、
-三臂消融、hidden、正式验收和 Production 均未执行。PDR-001 允许在同一 Iteration 内对 Slice1 做有界 `REWORK`，但当前消息只授权
-修订项目计划，不授权重新编码或 live。首个恢复交付必须是持续 Web Alpha，而不是再做一次单题冻结运行。
+三臂消融、hidden、正式验收和 Production 均未执行。PDR-001 允许在同一 Iteration 内对 Slice1 做有界 `REWORK`；新收据现已恢复
+产品/System 代码与本地确定性验证。首个恢复交付必须是持续 Web Alpha，而不是再做一次单题冻结运行；真实 Provider、动态源码披露与
+live browser 仍等待新版本冻结后的 exact 运行授权。

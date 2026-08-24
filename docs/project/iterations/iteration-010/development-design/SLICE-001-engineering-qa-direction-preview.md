@@ -1,14 +1,14 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: paused
-authority: project-decision
+status: authorized
+authority: current-development
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
-coding_input: false
+coding_input: true
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
@@ -23,13 +23,16 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, 
 
 ## Status and dependencies
 
-`PAUSED / REWORK / NO CODING INPUT`。用户曾以
+`AUTHORIZED / REWORK / CURRENT DEVELOPMENT / CODING INPUT`。用户曾以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
 
 公开题和现场题执行后，旧记录把消息 `d746968f…` 解释为 `REDIRECT`：默认正文仍被类、方法和调用顺序主导，Reviewer 没有识别该质量
 失败。[PDR-001](../decisions/PDR-001-resume-as-rework.md) 已确认该消息没有明确拒绝方向，当前决定为同轮 `REWORK`。
-`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 继续保存 exact 执行事实；所有旧授权均已消费，当前规划纠正不授权任何新代码或 live。
+`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 继续保存 exact 执行事实。用户现以
+`codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5`（`2026-08-24T02:55:16Z`）
+明确要求继续开发，恢复同一个 Slice 的产品/System 编码和本地确定性验证。该收据晚于失败 Result 与 PDR-001，不改写历史失败，也不授权
+Slice2/3、hidden、Production Activation 或复用旧 live grant。
 
 ## Rework outcome：先交付持续 Web Alpha
 
@@ -83,8 +86,10 @@ Limitation、可打开 Citation 和请求级状态；World Model Cognition、Led
 
 ## Current vs expected behavior
 
-当前产品能在 World Model 上做有界调查并给出代码行为，但真实模型 launcher 只接受启动前精确准备的一道问题，尚不是持续聊天；默认
-正文还会机械展开方法、分支和调用顺序，Reviewer 可能漏判重要副作用。
+历史 frozen/live 产品能在 World Model 上做有界调查并给出代码行为，但 launcher 只接受启动前精确准备的一道问题；其默认正文会机械
+展开方法、分支和调用顺序，Reviewer 可能漏判重要副作用。当前返工 worktree 已确定性实现 Session Authority、server-owned 逐题
+Request/run、固定 `8765` 的持续 Alpha 命令、跨题隔离/失败继续、same-origin ingress，以及受控答案层级/Reviewer quality Gate；这些组件
+尚未成为 clean frozen candidate，也没有真实 Provider、listener 或原题加两道异质题的执行证据，因此不能把历史实际行为改写为已修复。
 
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
@@ -96,7 +101,7 @@ Web 服务。
 ### Phase 0：复核正式边界
 
 开发前必须确认 `FINDING-010-002`、`SYS-ADR-016`、Engineering Question Answering Contract、Product Success、runtime/Agentic/Evidence/
-World Model/Response/Source/Security/Browser 文档和治理门禁共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1`。严格 `WORLD_MODEL`
+World Model/Response/Source/Security/Browser 文档和治理门禁共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2`。严格 `WORLD_MODEL`
 Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback。任一 current Owner 或 Manifest digest 不一致即停止。
 
 ### Phase 1：最小真实协议
@@ -115,10 +120,14 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
   校验通过的可采信条目，只有它们能支持肯定 Claim 与 Citation；`boundary/audit` 必须保留 Gap、Failure、Partial、Conflict、Unknown、
   拒绝决定和资源收据，只能约束结论或形成标记清楚的边界说明，不能支持肯定 Claim。seal 不把任何条目或模型推断变成真。
-- Answer 在全新上下文中只读当前 sealed Package。每个实质结论绑定包内证据；代码只在问题要求或支持结论确有必要时展开。
+- Answer 在全新上下文中只读当前 sealed Package。Question Understanding 使用受控 detail level；每个 Claim 声明 direct/process/impact/
+  implementation/limitation role 并绑定 material checklist。Application 强制直接答案排首位、全 checklist 覆盖、disposition/证据分区
+  一致；真实边界可直接回答 limitation。`USER_VISIBLE_EXPLANATION` 默认正文不展开实现证据，代码只在问题要求或支持结论确有必要时产生。
 - Reviewer 在另一个新上下文中读取原问题、理解记录、当前 Package 和 Draft，无 repo/Source/World Model tool、FS、Shell、network 或
-  credential。表达缺陷可请求同包针对性重写；证据缺口只能输出绑定 Checklist/Claim/evidence class/need 的 versioned Verification
-  Request，不能提出可执行 path/command/operation。
+  credential。它从原问题独立重建 material conclusions、列出 Application checklist omission，并分别给 direct answer、abstraction fit、
+  material completeness、implementation-detail budget 返回 PASS/FAIL；四项全 PASS、无 omission/Finding 才能批准。表达缺陷可请求同包
+  针对性重写；证据缺口只能输出绑定 Checklist/Claim/evidence class/need 的 versioned Verification Request，不能提出可执行
+  path/command/operation。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
   Result 自适应提出 search/read/parse/finish；每一步仍由 Application/Broker 校验编译、Worker 执行。它不回初始 Investigation LLM，
   不继承 Reviewer 会话，也无直接来源权限。完成后追加新 Ledger Revision、密封新 Package、完整生成新 Answer 并独立 Review；旧 Review
@@ -150,6 +159,8 @@ submodule/remote 自动获取、binary、oversize、path traversal、写、执�
 ID/digest。Slice1 的 request-scoped Ledger 必须只追加且能形成完整 Result；跨进程持久恢复与复杂幂等 replay 明确后移到 Slice2。live
 前另行冻结 exact
 Provider/model/role、fragment allowlist、redaction、configuration、secret reference 和 audit；计划与开发授权都不允许自动外发。
+持续问题 POST 还必须在 receipt/transport/credential 前满足 exact same-origin `application/json`；跨站 simple request 不能仅因目标是
+loopback 就取得题目提交权。
 
 ## Open questions and implementation risks
 
@@ -211,4 +222,7 @@ Source Profile、Request/run grant 和 0600 launch receipt，退出时密封逐�
 product freeze 后形成执行证据。
 `FINDING-010-013` 记录冻结前验证：focused 58/58、docs 389/389、compile/diff PASS；full 1108 中 1103 PASS，唯一 4 FAIL + 1 ERROR
 精确属于 `FINDING-008-020` 的历史 runtime drift。raw suite 不写成 PASS，只允许 exact preserved historical hold gate 继续 clean freeze。
+`FINDING-010-028` 至 `031` 记录本次返工的答案层级/Reviewer Gate、持续 Session Authority、rework Manifest parser 与 same-origin ingress；
+`FINDING-010-032` 记录完整 1141 项只保留既有 4 FAIL + 1 ERROR historical hold。当前只形成代码和确定性证据，真实三题体验 Gate 仍保持
+NOT-RUN。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

@@ -16,7 +16,8 @@ swm-provider = "software_world_model.interface.provider_cli:main"
 swm-deepseek-provider = "software_world_model.interface.deepseek_provider_cli:main"
 swm-read-set-catalog = "software_world_model.interface.read_set_catalog_cli:main"
 swm-world-model = "software_world_model.interface.world_model_http:main"
-swm-engineering-qa = "software_world_model.interface.engineering_qa_preview_cli:main"
+swm-engineering-qa = "software_world_model.interface.engineering_qa_alpha_cli:main"
+swm-engineering-qa-preview = "software_world_model.interface.engineering_qa_preview_cli:main"
 swm-jwt-evaluation = "validation.jwt_iteration_001.cli:main"
 
 [tool.unittest]

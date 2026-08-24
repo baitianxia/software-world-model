@@ -32,8 +32,18 @@ coding_input: false
 接受本 Readiness，并只授权 `ITER-010-SLICE-001` 开发。修正前设计的旧授权不会被当作本设计的授权。
 
 该历史开发授权及其派生 live grant 均已执行、消费或停止。最新 [PDR-001](decisions/PDR-001-resume-as-rework.md) 只把错误的整轮
-`REDIRECT` 解释纠正为 `REWORK`，没有自动恢复旧授权。当前 ITER-010/Slice1 为 `paused / coding_input=false`；持续 Web Alpha 的必要
-System Owner 变更、产品编码、Provider 调用、动态问题/源码披露和 live browser 仍须在恢复前单独完成 Readiness 差异复核并取得新授权。
+`REDIRECT` 解释纠正为 `REWORK`，没有自动恢复旧授权。用户随后以
+`codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5`（`2026-08-24T02:55:16Z`）
+明确要求继续开发，恢复同一个 Slice1 的产品/System 编码与本地确定性验证。Provider 调用、动态问题/源码披露和 live browser 不从该
+开发收据推导，仍须在新 product freeze 后按 exact Session Authority 单独授权。
+
+## Rework authorization delta
+
+`FINDING-010-029` 已完成恢复前的最小 System Owner 差异复核：旧 prepared Request/run 只保留历史单题兼容身份；持续 Alpha 在 listener
+前固定 exact product、工程/revision、World Model、Source Profile/allowlist、Provider/configuration/qualification、角色契约、有效期和
+每题/整会话熔断。用户提交动作密封 exact question receipt，System Owner 生成 server-owned per-question Request/run，动态角色输入仍
+逐次形成 one-use disclosure authorization。该变化不放宽 Source、Provider、zero-retry、loopback 或非生产边界，已同步 ADR-016、
+Engineering QA Contract、Security 和 Local Browser Operations。
 
 ## Product-goal alignment gate
 
@@ -74,7 +84,7 @@ Package、Answer、Review，不回初始 Investigation。
 ## System contracts and unresolved decisions
 
 系统 Owner 沿用 `SYS-ADR-016` 与 Engineering Question Answering Contract。planning commit 中的 current System docs 与 Manifest
-共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1`，system fileset digest 和 investigation budget digest 已按该输入冻结。
+共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2`，system fileset digest、answer hierarchy digest 和 investigation budget digest 已按该输入冻结。
 
 DTO、Broker port、抽象 read operation、Ledger storage 和 UI 折叠是实现细节；以下不是实现选择：World Model 不得缩窄为手册；调查必须
 由先前结果驱动；模型无直接 FS/Shell/network/credential/source authority；Ledger append-only；调查后才 seal；Package seal 不等于真值；
@@ -83,7 +93,7 @@ Reviewer 补证必须由独立新上下文调查生成后继 Package 并重答�
 
 ## Slice, dependency and risk closure
 
-Slice1 的历史开发已执行完毕；当前为 `paused / rework / coding_input=false`。恢复后的最短顺序是：闭合持续自由提问必需的最小会话授权
+Slice1 的历史失败尝试已执行完毕；当前为 `authorized / rework / coding_input=true`。最短顺序是：闭合持续自由提问必需的最小会话授权
 语义 → 复用现有调查链接通可重复启动的持续 Web → 同一会话运行原失败题和至少两个异质问题 → 通用修复答案与 Reviewer → 独立复核和
 用户实际体验。不得在首次持续体验前建设完整 Schema、持久化、第二工程、hidden、三臂或 full regression。Slice2/3 继续需要持续 Alpha
 的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
@@ -106,8 +116,8 @@ Investigation。
 
 ## Authorization decision
 
-**HISTORICAL READINESS ACCEPTED / CURRENT REWORK PAUSED / NO CODING INPUT。** 原 Readiness 和 Slice1 开发曾由收据
-`585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，不是新的开发授权。`PROJECT-CURRENT` 当前不得
-指向活动 Slice；新的产品代码、确定性测试变更、credential、Provider/model call、动态问题/源码披露、live Web/browser、hidden 或
-Production Activation 均未获本次授权。
-恢复 Slice1 与后续 Slice2 的三臂消融、hardening 高安全上限均须另取适用的新用户授权，不能复用旧 positive-value 收据。
+**HISTORICAL READINESS ACCEPTED / CURRENT REWORK AUTHORIZED / SLICE1 CODING INPUT。** 原 Readiness 和 Slice1 开发曾由收据
+`585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，后续 `32b298de…` 收据恢复当前 Slice1 的
+产品/System 代码与确定性测试，`PROJECT-CURRENT` 已重新指向该 Slice。credential、Provider/model call、动态问题/源码披露与 live
+Web/browser 仍需新 freeze 后的 exact session grant；hidden、Production Activation 和 Slice2 未授权。Slice2 的三臂消融、hardening
+高安全上限仍须另取适用的新用户授权，不能复用旧 positive-value 收据。

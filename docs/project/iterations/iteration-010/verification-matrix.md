@@ -86,13 +86,13 @@ Citation 全部打开、console `[]`、retry/switch/outcome-unknown 0、resource
 `V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001` 与 `V-PREVIEW-001` 继续为 FAIL；`V-REFLECT-001` PASS 只表示失败复盘完整。
 
 [PDR-001](decisions/PDR-001-resume-as-rework.md) 依据最新用户收据修订的是迭代级决定，不改写上述执行事实。旧消息 `d746968f…` 没有明确
-表达 `REDIRECT`；当前 ITER-010/Slice1 为 paused/rework，尚无新编码或 live 授权。恢复后必须先执行以下持续 Web Alpha Case，不能用旧的
-单题启动器、测试或固定 1+1 回放代替。
+表达 `REDIRECT`；后续 `32b298de…` 收据已恢复 ITER-010/Slice1 的编码，live 仍未获得新 freeze 后授权。当前必须先执行以下持续 Web
+Alpha Case，不能用旧的单题启动器、测试或固定 1+1 回放代替。
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | not-executed | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | not-executed | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | Alpha CLI/session/browser deterministic tests：零 dispatch 启动顺序、多题 server identity、失败后继续、receipt replay 与跨站 POST 拒绝；没有 listener/Provider 运行 | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2` closed schema/Application tests：受控 detail/content role、checklist coverage、默认正文投影、独立 checklist 与四项 quality Gate；没有真实三题 Result | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

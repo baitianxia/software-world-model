@@ -3342,7 +3342,7 @@ class ReflectionGateTests(unittest.TestCase):
             "status": "frozen",
         }
         answer_protocol: dict[str, object] = {
-            "schema": "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1",
+            "schema": "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2",
             "contract_ref": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
             "mode": "adaptive-cognition-guided-engineering-investigation",
             "question_understanding_required_fields": (
@@ -3885,7 +3885,7 @@ class ReflectionGateTests(unittest.TestCase):
                 True,
             ),
             ("hybrid_evidence_path", "knowledge_persistence", "synchronous"),
-            ("answer_protocol", "schema", "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2"),
+            ("answer_protocol", "schema", "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1"),
             ("answer_protocol", "mode", "upfront-engineering-qa-hybrid-evidence"),
             ("answer_protocol", "contract_ref", "SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING"),
             (
@@ -6252,7 +6252,30 @@ class ReworkPlanningGateTests(unittest.TestCase):
         self.assertEqual(parse_errors, [])
         return documents, {document.identifier: document for document in documents}
 
-    def test_paused_rework_validates_the_immutable_historical_result(self) -> None:
+    def test_file_backed_rework_authorization_history_is_materialized(self) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+
+        self.assertEqual(
+            docs_gate.manifest_resolved_nested_sequence_items(
+                manifest_text,
+                (
+                    "development",
+                    "slices",
+                    "ITER-010-SLICE-001",
+                    "prior_authorization_refs",
+                ),
+            ),
+            [
+                "codex-user-message:sha256:"
+                "585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
+            ],
+        )
+
+    def test_rework_validates_the_immutable_historical_result(self) -> None:
         _, by_id = self._documents()
         manifest_path = (
             docs_gate.REPOSITORY
@@ -6265,7 +6288,6 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 "ITER-010",
                 by_id,
                 require_execution_slice_sequence=True,
-                require_paused_slice_sequence=True,
                 verification=verification,
             ),
             [],
@@ -6291,7 +6313,6 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "ITER-010",
             tampered_by_id,
             require_execution_slice_sequence=True,
-            require_paused_slice_sequence=True,
             verification=verification,
         )
         self.assertTrue(

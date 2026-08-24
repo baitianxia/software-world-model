@@ -70,7 +70,16 @@ iteration: ITER-010
 - [FINDING-010-027](FINDING-010-027.md)：用户现场登录题的主链、3 个 Citation 和独立 Review 均成立，但正文仍主要按 Controller/Service/
   Filter 方法调用顺序展开，并省略 `insertLoginLog` 副作用。原运行不重试、不追认；PDR-001 将旧 `REDIRECT` 推断修订为同轮 `REWORK`。
 - [FINDING-010-028](FINDING-010-028.md)：Prompt 要求答案优先，但 Question Understanding 只提供自由文本层级，Answer 只有扁平 Claim，
-  Application 机械拼接正文，Reviewer 没有可执行的方向质量 invariant；PDR-001 将根因处置回同轮持续 Web Alpha，先做最小通用
-  答案/Reviewer 修复。typed answer hierarchy 是待验证手段而非首次体验前置工程，仍禁止题目特例补丁。
+  Application 机械拼接正文，Reviewer 没有可执行的方向质量 invariant；返工现以受控 detail/content role、逐 Claim checklist links、
+  默认正文投影、Reviewer 独立 checklist 与四项 PASS/FAIL Gate 形成通用机械约束，确定性测试通过，真实三题回归仍待新 freeze/live 授权。
+- [FINDING-010-029](FINDING-010-029.md)：既有 live launcher 只允许一个 prepared Request/run，与同会话自由提问冲突；现以会话级
+  exact authority、用户提交 receipt、System Owner 编译逐题 Request/run 和既有逐角色 one-use disclosure 形成闭合授权链，浏览器不再
+  要求普通用户构造 request ID 或 grant。已写回 ADR-016、Engineering QA Contract、Security 与 Local Browser Operations。
+- [FINDING-010-030](FINDING-010-030.md)：惰性 Manifest 解析只物化 `rework_result_refs`，会漏掉 file-backed
+  `prior_authorization_refs` 并误判合法的同 Slice 返工授权；现以 closed 字段 allowlist 解析两类历史序列，并由文档门禁测试覆盖。
+- [FINDING-010-031](FINDING-010-031.md)：loopback Host 不能证明问题由当前页面主动提交；跨站 simple request 仍可能伪造确认并消费调用。
+  现于 receipt/transport 前强制 exact same-origin、`application/json` 和可选 `Sec-Fetch-Site: same-origin`，跨站请求失败关闭。
+- [FINDING-010-032](FINDING-010-032.md)：返工后完整 1141 项中 1136 PASS，raw 仍为既有 4 FAIL + 1 ERROR；未通过项精确属于冻结的
+  V-009 Adapter Conformance 与 Codex binary drift。保持 raw FAIL，只以 zero-new-failure historical hold 继续准备 candidate。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -73,7 +73,7 @@ DIRECTION_PREVIEW_START_ITERATION = 9
 ENGINEERING_QA_HYBRID_START_ITERATION = 10
 REWORK_LIFECYCLE_START_ITERATION = 10
 ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA = (
-    "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1"
+    "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2"
 )
 ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE = (
     "adaptive-cognition-guided-engineering-investigation"
@@ -5407,16 +5407,20 @@ def validate_product_goal_reference_targets(
     if isinstance(raw_slices, dict):
         for reference in new_refs:
             state = raw_slices.get(reference)
-            if not isinstance(state, dict) or not isinstance(
-                state.get("rework_result_refs"), dict
-            ):
+            if not isinstance(state, dict):
                 continue
-            resolved_rework_refs = manifest_resolved_nested_sequence_items(
-                text,
-                ("development", "slices", reference, "rework_result_refs"),
-            )
-            if resolved_rework_refs is not None:
-                state["rework_result_refs"] = resolved_rework_refs
+            for sequence_field in (
+                "rework_result_refs",
+                "prior_authorization_refs",
+            ):
+                if not isinstance(state.get(sequence_field), dict):
+                    continue
+                resolved_items = manifest_resolved_nested_sequence_items(
+                    text,
+                    ("development", "slices", reference, sequence_field),
+                )
+                if resolved_items is not None:
+                    state[sequence_field] = resolved_items
     if require_execution_slice_sequence:
         errors.extend(
             validate_product_goal_execution_readiness(

@@ -31,7 +31,7 @@ from software_world_model.cross_cutting import (
 
 
 ENGINEERING_QA_MODE = "ENGINEERING_QA"
-ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1"
+ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2"
 ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@1"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
 ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@1"
@@ -247,6 +247,20 @@ class AnswerClaimKind(str, Enum):
     LIMITATION = "LIMITATION"
 
 
+class AnswerDetailLevel(str, Enum):
+    DIRECT = "DIRECT"
+    USER_VISIBLE_EXPLANATION = "USER_VISIBLE_EXPLANATION"
+    IMPLEMENTATION_DETAIL = "IMPLEMENTATION_DETAIL"
+
+
+class AnswerContentRole(str, Enum):
+    DIRECT_ANSWER = "DIRECT_ANSWER"
+    USER_VISIBLE_PROCESS = "USER_VISIBLE_PROCESS"
+    IMPACT_OR_SIDE_EFFECT = "IMPACT_OR_SIDE_EFFECT"
+    IMPLEMENTATION_EVIDENCE = "IMPLEMENTATION_EVIDENCE"
+    LIMITATION = "LIMITATION"
+
+
 class EngineeringReviewDecision(str, Enum):
     APPROVED = "APPROVED"
     REWRITE_REQUIRED = "REWRITE_REQUIRED"
@@ -257,6 +271,11 @@ class EngineeringReviewDecision(str, Enum):
 class EngineeringQuestionResultStatus(str, Enum):
     APPROVED = "APPROVED"
     FAILED_CLOSED = "FAILED_CLOSED"
+
+
+class EngineeringReviewQualityStatus(str, Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
 
 
 @dataclass(frozen=True, slots=True)
@@ -447,7 +466,7 @@ class QuestionUnderstandingProposal:
     preserved_original_question: str
     user_goal: str
     audience: str
-    requested_abstraction_level: str
+    requested_abstraction_level: AnswerDetailLevel
     material_conclusions: tuple[str, ...]
     evidence_needs: tuple[str, ...]
     response_language: str
@@ -463,7 +482,7 @@ class QuestionUnderstandingProposal:
         preserved_original_question: str,
         user_goal: str,
         audience: str,
-        requested_abstraction_level: str,
+        requested_abstraction_level: AnswerDetailLevel,
         material_conclusions: Sequence[str],
         evidence_needs: Sequence[str],
         response_language: str,
@@ -482,6 +501,11 @@ class QuestionUnderstandingProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "response constraints must be unique and contain at most twelve items",
             )
+        if not isinstance(requested_abstraction_level, AnswerDetailLevel):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "requested abstraction level must use the controlled answer-detail vocabulary",
+            )
         core = {
             "role_context_id": role_context_id.value,
             "request_digest": request_digest.value,
@@ -492,11 +516,7 @@ class QuestionUnderstandingProposal:
             ),
             "user_goal": _text(user_goal, "user goal", maximum_bytes=8_192),
             "audience": _text(audience, "audience", maximum_bytes=1_024),
-            "requested_abstraction_level": _text(
-                requested_abstraction_level,
-                "requested abstraction level",
-                maximum_bytes=1_024,
-            ),
+            "requested_abstraction_level": requested_abstraction_level.value,
             "material_conclusions": conclusions,
             "evidence_needs": needs,
             "response_language": _text(
@@ -510,12 +530,12 @@ class QuestionUnderstandingProposal:
             preserved_original_question=core["preserved_original_question"],
             user_goal=core["user_goal"],
             audience=core["audience"],
-            requested_abstraction_level=core["requested_abstraction_level"],
+            requested_abstraction_level=requested_abstraction_level,
             material_conclusions=conclusions,
             evidence_needs=needs,
             response_language=core["response_language"],
             response_constraints=constraints,
-            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@1", core]),
+            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@2", core]),
         )
 
 
@@ -533,7 +553,7 @@ class QuestionUnderstanding:
     original_question: str
     user_goal: str
     audience: str
-    requested_abstraction_level: str
+    requested_abstraction_level: AnswerDetailLevel
     checklist: tuple[QuestionChecklistItem, ...]
     evidence_needs: tuple[str, ...]
     response_language: str
@@ -591,7 +611,7 @@ class QuestionUnderstanding:
             "original_question": request.original_question,
             "user_goal": proposal.user_goal,
             "audience": proposal.audience,
-            "requested_abstraction_level": proposal.requested_abstraction_level,
+            "requested_abstraction_level": proposal.requested_abstraction_level.value,
             "checklist": tuple(
                 (item.item_id, item.conclusion, item.digest.value) for item in checklist
             ),
@@ -600,7 +620,7 @@ class QuestionUnderstanding:
             "response_constraints": proposal.response_constraints,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["QUESTION_UNDERSTANDING@1", core])
+        digest = digest_of(["QUESTION_UNDERSTANDING@2", core])
         return cls(
             understanding_id=_stable_id("question_understanding", core),
             request_digest=request.digest,
@@ -622,7 +642,7 @@ class QuestionUnderstanding:
             "understanding_digest": self.digest.value,
             "user_goal": self.user_goal,
             "audience": self.audience,
-            "requested_abstraction_level": self.requested_abstraction_level,
+            "requested_abstraction_level": self.requested_abstraction_level.value,
             "material_conclusion_checklist": [
                 {"item_id": item.item_id, "conclusion": item.conclusion}
                 for item in self.checklist
@@ -3517,6 +3537,8 @@ class VerificationInvestigationRole(Protocol):
 class EngineeringAnswerClaimProposal:
     claim_id: str
     kind: AnswerClaimKind
+    content_role: AnswerContentRole
+    checklist_item_ids: tuple[str, ...]
     text: str
     evidence_entry_ids: tuple[StableId, ...]
     digest: Digest
@@ -3527,9 +3549,42 @@ class EngineeringAnswerClaimProposal:
         *,
         claim_id: str,
         kind: AnswerClaimKind,
+        content_role: AnswerContentRole,
+        checklist_item_ids: Sequence[str],
         text: str,
         evidence_entry_ids: Sequence[StableId],
     ) -> "EngineeringAnswerClaimProposal":
+        if not isinstance(kind, AnswerClaimKind) or not isinstance(
+            content_role, AnswerContentRole
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "answer claim kind and content role must use the controlled vocabulary",
+            )
+        checklist = tuple(
+            _reference(item, "answer claim checklist item")
+            for item in checklist_item_ids
+        )
+        if not checklist or len(checklist) != len(set(checklist)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "answer claim requires unique material checklist references",
+            )
+        if (
+            content_role is AnswerContentRole.LIMITATION
+            and kind is not AnswerClaimKind.LIMITATION
+        ) or (
+            kind is AnswerClaimKind.LIMITATION
+            and content_role
+            not in (
+                AnswerContentRole.DIRECT_ANSWER,
+                AnswerContentRole.LIMITATION,
+            )
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "answer limitation kind requires a direct-answer or limitation content role",
+            )
         references = tuple(evidence_entry_ids)
         if not references or len(set(references)) != len(references):
             raise DomainError(
@@ -3539,15 +3594,19 @@ class EngineeringAnswerClaimProposal:
         core = {
             "claim_id": _reference(claim_id, "answer claim ID"),
             "kind": kind.value,
+            "content_role": content_role.value,
+            "checklist_item_ids": checklist,
             "text": _text(text, "answer claim text", maximum_bytes=32_768),
             "evidence_entry_ids": tuple(item.value for item in references),
         }
         return cls(
             claim_id=core["claim_id"],
             kind=kind,
+            content_role=content_role,
+            checklist_item_ids=checklist,
             text=core["text"],
             evidence_entry_ids=references,
-            digest=digest_of(["ENGINEERING_ANSWER_CLAIM_PROPOSAL@1", core]),
+            digest=digest_of(["ENGINEERING_ANSWER_CLAIM_PROPOSAL@2", core]),
         )
 
 
@@ -3579,6 +3638,28 @@ class EngineeringAnswerProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "engineering answer contains duplicate claim IDs",
             )
+        direct = tuple(
+            item
+            for item in claim_tuple
+            if item.content_role is AnswerContentRole.DIRECT_ANSWER
+        )
+        role_order = {
+            AnswerContentRole.DIRECT_ANSWER: 0,
+            AnswerContentRole.USER_VISIBLE_PROCESS: 1,
+            AnswerContentRole.IMPACT_OR_SIDE_EFFECT: 2,
+            AnswerContentRole.IMPLEMENTATION_EVIDENCE: 3,
+            AnswerContentRole.LIMITATION: 4,
+        }
+        ordinals = tuple(role_order[item.content_role] for item in claim_tuple)
+        if (
+            len(direct) != 1
+            or claim_tuple[0].content_role is not AnswerContentRole.DIRECT_ANSWER
+            or ordinals != tuple(sorted(ordinals))
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "engineering answer must contain one direct answer first and ordered supporting roles",
+            )
         core = {
             "role_context_id": role_context_id.value,
             "package_digest": package_digest.value,
@@ -3592,7 +3673,7 @@ class EngineeringAnswerProposal:
             package_digest=package_digest,
             response_language=core["response_language"],
             claims=claim_tuple,
-            digest=digest_of(["ENGINEERING_ANSWER_PROPOSAL@1", core]),
+            digest=digest_of(["ENGINEERING_ANSWER_PROPOSAL@2", core]),
         )
 
 
@@ -3603,6 +3684,7 @@ class EngineeringAnswerDraft:
     package_digest: Digest
     response_language: str
     claims: tuple[EngineeringAnswerClaimProposal, ...]
+    default_body_claim_ids: tuple[str, ...]
     body: str
     proposal_digest: Digest
     digest: Digest
@@ -3612,8 +3694,8 @@ class EngineeringAnswerDraft:
         cls,
         *,
         package: QuestionEvidencePackage,
+        understanding: QuestionUnderstanding,
         expected_role_context_id: StableId,
-        expected_response_language: str,
         proposal: EngineeringAnswerProposal,
         revision: int,
     ) -> "EngineeringAnswerDraft":
@@ -3621,6 +3703,8 @@ class EngineeringAnswerDraft:
             EngineeringAnswerClaimProposal.create(
                 claim_id=item.claim_id,
                 kind=item.kind,
+                content_role=item.content_role,
+                checklist_item_ids=item.checklist_item_ids,
                 text=item.text,
                 evidence_entry_ids=item.evidence_entry_ids,
             )
@@ -3645,13 +3729,75 @@ class EngineeringAnswerDraft:
         if (
             proposal.role_context_id != expected_role_context_id
             or proposal.package_digest != package.digest
-            or proposal.response_language != expected_response_language
+            or proposal.response_language != understanding.response_language
+            or understanding.digest != package.understanding_digest
             or revision < 1
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "answer proposal does not bind the current Package and fresh role context",
             )
+        checklist_ids = {item.item_id for item in understanding.checklist}
+        if {
+            checklist_item_id
+            for claim in proposal.claims
+            for checklist_item_id in claim.checklist_item_ids
+        } != checklist_ids:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "answer claims must cover every material conclusion exactly through typed checklist links",
+            )
+        if any(
+            not set(claim.checklist_item_ids).issubset(checklist_ids)
+            for claim in proposal.claims
+        ):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "answer claim refers to an unknown material checklist item",
+            )
+        implementation_claims = tuple(
+            claim
+            for claim in proposal.claims
+            if claim.content_role is AnswerContentRole.IMPLEMENTATION_EVIDENCE
+        )
+        if (
+            understanding.requested_abstraction_level is AnswerDetailLevel.DIRECT
+            and implementation_claims
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "implementation evidence exceeds the accepted answer-detail level",
+            )
+        disposition_by_checklist = {
+            item.checklist_item_id: item.outcome
+            for item in package.checklist_dispositions
+        }
+        if set(disposition_by_checklist) != checklist_ids:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "answer Package checklist differs from the accepted understanding",
+            )
+        for checklist_item_id, outcome in disposition_by_checklist.items():
+            linked = tuple(
+                claim
+                for claim in proposal.claims
+                if checklist_item_id in claim.checklist_item_ids
+            )
+            if (
+                outcome is ChecklistOutcome.SUPPORTED
+                and not any(
+                    claim.kind is AnswerClaimKind.AFFIRMATIVE for claim in linked
+                )
+            ) or (
+                outcome is not ChecklistOutcome.SUPPORTED
+                and not any(
+                    claim.kind is AnswerClaimKind.LIMITATION for claim in linked
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "answer claim role does not honestly represent its checklist disposition",
+                )
         support_ids = {item.entry_id for item in package.support_citation}
         boundary_ids = {item.entry_id for item in package.boundary_audit}
         for claim in proposal.claims:
@@ -3667,22 +3813,37 @@ class EngineeringAnswerDraft:
                     ErrorCode.CONTROL_STATE_DENIED,
                     "limitation claim must cite retained boundary/audit entries",
                 )
-        body = "\n\n".join(item.text for item in proposal.claims)
+        default_body_claims = tuple(
+            claim
+            for claim in proposal.claims
+            if (
+                understanding.requested_abstraction_level
+                is AnswerDetailLevel.IMPLEMENTATION_DETAIL
+                or claim.content_role
+                is not AnswerContentRole.IMPLEMENTATION_EVIDENCE
+            )
+        )
+        default_body_claim_ids = tuple(
+            claim.claim_id for claim in default_body_claims
+        )
+        body = "\n\n".join(item.text for item in default_body_claims)
         core = {
             "revision": revision,
             "package_digest": package.digest.value,
             "response_language": proposal.response_language,
             "claims": tuple(item.digest.value for item in proposal.claims),
+            "default_body_claim_ids": default_body_claim_ids,
             "body": body,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@1", core])
+        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@2", core])
         return cls(
             draft_id=_stable_id("engineering_draft", core),
             revision=revision,
             package_digest=package.digest,
             response_language=proposal.response_language,
             claims=proposal.claims,
+            default_body_claim_ids=default_body_claim_ids,
             body=body,
             proposal_digest=proposal.digest,
             digest=digest,
@@ -3694,11 +3855,14 @@ class EngineeringAnswerDraft:
             "revision": self.revision,
             "package_digest": self.package_digest.value,
             "response_language": self.response_language,
+            "default_body_claim_ids": list(self.default_body_claim_ids),
             "body": self.body,
             "claims": [
                 {
                     "claim_id": item.claim_id,
                     "kind": item.kind.value,
+                    "content_role": item.content_role.value,
+                    "checklist_item_ids": list(item.checklist_item_ids),
                     "text": item.text,
                     "evidence_entry_ids": [
                         reference.value for reference in item.evidence_entry_ids
@@ -3763,11 +3927,138 @@ class EngineeringReviewFinding:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringReviewQualityAssessment:
+    direct_answer: EngineeringReviewQualityStatus
+    abstraction_fit: EngineeringReviewQualityStatus
+    material_completeness: EngineeringReviewQualityStatus
+    implementation_detail_budget: EngineeringReviewQualityStatus
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        direct_answer: EngineeringReviewQualityStatus,
+        abstraction_fit: EngineeringReviewQualityStatus,
+        material_completeness: EngineeringReviewQualityStatus,
+        implementation_detail_budget: EngineeringReviewQualityStatus,
+    ) -> "EngineeringReviewQualityAssessment":
+        values = (
+            direct_answer,
+            abstraction_fit,
+            material_completeness,
+            implementation_detail_budget,
+        )
+        if any(not isinstance(item, EngineeringReviewQualityStatus) for item in values):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review quality assessment must use the closed PASS/FAIL vocabulary",
+            )
+        core = {
+            "direct_answer": direct_answer.value,
+            "abstraction_fit": abstraction_fit.value,
+            "material_completeness": material_completeness.value,
+            "implementation_detail_budget": implementation_detail_budget.value,
+        }
+        return cls(
+            direct_answer=direct_answer,
+            abstraction_fit=abstraction_fit,
+            material_completeness=material_completeness,
+            implementation_detail_budget=implementation_detail_budget,
+            digest=digest_of(["ENGINEERING_REVIEW_QUALITY_ASSESSMENT@1", core]),
+        )
+
+    @property
+    def all_pass(self) -> bool:
+        return all(
+            item is EngineeringReviewQualityStatus.PASS
+            for item in (
+                self.direct_answer,
+                self.abstraction_fit,
+                self.material_completeness,
+                self.implementation_detail_budget,
+            )
+        )
+
+    def model_view(self) -> dict[str, str]:
+        return {
+            "direct_answer": self.direct_answer.value,
+            "abstraction_fit": self.abstraction_fit.value,
+            "material_completeness": self.material_completeness.value,
+            "implementation_detail_budget": (
+                self.implementation_detail_budget.value
+            ),
+            "digest": self.digest.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringReviewChecklistAssessment:
+    independent_material_conclusions: tuple[str, ...]
+    application_checklist_omissions: tuple[str, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        independent_material_conclusions: Sequence[str],
+        application_checklist_omissions: Sequence[str],
+    ) -> "EngineeringReviewChecklistAssessment":
+        independent = _unique_texts(
+            independent_material_conclusions,
+            "Reviewer independent material conclusions",
+            maximum_items=12,
+        )
+        omissions = tuple(
+            _text(
+                item,
+                "Reviewer application checklist omission",
+                maximum_bytes=8_192,
+            )
+            for item in application_checklist_omissions
+        )
+        if (
+            len(omissions) > 12
+            or len(omissions) != len(set(omissions))
+            or not set(omissions).issubset(independent)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer checklist omissions must be unique independent conclusions",
+            )
+        core = {
+            "independent_material_conclusions": independent,
+            "application_checklist_omissions": omissions,
+        }
+        return cls(
+            independent_material_conclusions=independent,
+            application_checklist_omissions=omissions,
+            digest=digest_of(
+                ["ENGINEERING_REVIEW_CHECKLIST_ASSESSMENT@1", core]
+            ),
+        )
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "independent_material_conclusions": list(
+                self.independent_material_conclusions
+            ),
+            "application_checklist_omissions": list(
+                self.application_checklist_omissions
+            ),
+            "digest": self.digest.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringReviewProposal:
     role_context_id: StableId
     package_digest: Digest
     draft_digest: Digest
     decision: EngineeringReviewDecision
+    quality_assessment: EngineeringReviewQualityAssessment
+    checklist_assessment: EngineeringReviewChecklistAssessment
     findings: tuple[EngineeringReviewFinding, ...]
     verification_request: VerificationRequestProposal | None
     digest: Digest
@@ -3780,19 +4071,75 @@ class EngineeringReviewProposal:
         package_digest: Digest,
         draft_digest: Digest,
         decision: EngineeringReviewDecision,
+        quality_assessment: EngineeringReviewQualityAssessment,
+        checklist_assessment: EngineeringReviewChecklistAssessment,
         findings: Sequence[EngineeringReviewFinding] = (),
         verification_request: VerificationRequestProposal | None = None,
     ) -> "EngineeringReviewProposal":
+        if not isinstance(
+            quality_assessment, EngineeringReviewQualityAssessment
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review Proposal requires one closed direction quality assessment",
+            )
+        expected_quality = EngineeringReviewQualityAssessment.create(
+            direct_answer=quality_assessment.direct_answer,
+            abstraction_fit=quality_assessment.abstraction_fit,
+            material_completeness=quality_assessment.material_completeness,
+            implementation_detail_budget=(
+                quality_assessment.implementation_detail_budget
+            ),
+        )
+        if quality_assessment != expected_quality:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Review quality assessment identity is invalid",
+            )
+        if not isinstance(
+            checklist_assessment, EngineeringReviewChecklistAssessment
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review Proposal requires one independent checklist assessment",
+            )
+        expected_checklist = EngineeringReviewChecklistAssessment.create(
+            independent_material_conclusions=(
+                checklist_assessment.independent_material_conclusions
+            ),
+            application_checklist_omissions=(
+                checklist_assessment.application_checklist_omissions
+            ),
+        )
+        if checklist_assessment != expected_checklist:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Review checklist assessment identity is invalid",
+            )
+        if (
+            checklist_assessment.application_checklist_omissions
+            and quality_assessment.material_completeness
+            is not EngineeringReviewQualityStatus.FAIL
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer checklist omissions require a failed material-completeness check",
+            )
         finding_tuple = tuple(findings)
         if len({item.digest for item in finding_tuple}) != len(finding_tuple):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT, "Review Proposal contains duplicate Findings"
             )
         if decision is EngineeringReviewDecision.APPROVED:
-            if finding_tuple or verification_request:
+            if (
+                not quality_assessment.all_pass
+                or checklist_assessment.application_checklist_omissions
+                or finding_tuple
+                or verification_request
+            ):
                 raise DomainError(
                     ErrorCode.INVALID_ARGUMENT,
-                    "APPROVED review cannot carry Findings or a verification request",
+                    "APPROVED review requires all direction checks and no Finding or verification request",
                 )
         elif decision is EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED:
             if not finding_tuple or verification_request is None:
@@ -3810,6 +4157,8 @@ class EngineeringReviewProposal:
             "package_digest": package_digest.value,
             "draft_digest": draft_digest.value,
             "decision": decision.value,
+            "quality_assessment": quality_assessment.digest.value,
+            "checklist_assessment": checklist_assessment.digest.value,
             "findings": tuple(item.digest.value for item in finding_tuple),
             "verification_request": (
                 verification_request.digest.value if verification_request else None
@@ -3820,9 +4169,11 @@ class EngineeringReviewProposal:
             package_digest=package_digest,
             draft_digest=draft_digest,
             decision=decision,
+            quality_assessment=quality_assessment,
+            checklist_assessment=checklist_assessment,
             findings=finding_tuple,
             verification_request=verification_request,
-            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@1", core]),
+            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@2", core]),
         )
 
 
@@ -3833,6 +4184,8 @@ class EngineeringAnswerReview:
     package_digest: Digest
     draft_digest: Digest
     decision: EngineeringReviewDecision
+    quality_assessment: EngineeringReviewQualityAssessment
+    checklist_assessment: EngineeringReviewChecklistAssessment
     findings: tuple[EngineeringReviewFinding, ...]
     verification_request: VerificationRequestProposal | None
     proposal_digest: Digest
@@ -3883,6 +4236,8 @@ class EngineeringAnswerReview:
             package_digest=proposal.package_digest,
             draft_digest=proposal.draft_digest,
             decision=proposal.decision,
+            quality_assessment=proposal.quality_assessment,
+            checklist_assessment=proposal.checklist_assessment,
             findings=expected_findings,
             verification_request=expected_request,
         )
@@ -3942,17 +4297,21 @@ class EngineeringAnswerReview:
             "package_digest": package.digest.value,
             "draft_digest": draft.digest.value,
             "decision": proposal.decision.value,
+            "quality_assessment": proposal.quality_assessment.digest.value,
+            "checklist_assessment": proposal.checklist_assessment.digest.value,
             "findings": tuple(item.digest.value for item in proposal.findings),
             "verification_request": request.digest.value if request else None,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@1", core])
+        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@2", core])
         return cls(
             review_id=_stable_id("engineering_review", core),
             attempt=attempt,
             package_digest=package.digest,
             draft_digest=draft.digest,
             decision=proposal.decision,
+            quality_assessment=proposal.quality_assessment,
+            checklist_assessment=proposal.checklist_assessment,
             findings=proposal.findings,
             verification_request=request,
             proposal_digest=proposal.digest,
@@ -3995,6 +4354,8 @@ class AuthorizedEngineeringAnswer:
     ) -> "AuthorizedEngineeringAnswer":
         if (
             review.decision is not EngineeringReviewDecision.APPROVED
+            or not review.quality_assessment.all_pass
+            or review.checklist_assessment.application_checklist_omissions
             or review.findings
             or review.package_digest != package.digest
             or review.draft_digest != draft.digest
@@ -4009,6 +4370,7 @@ class AuthorizedEngineeringAnswer:
             dict.fromkeys(
                 reference
                 for claim in draft.claims
+                if claim.claim_id in draft.default_body_claim_ids
                 if claim.kind is AnswerClaimKind.AFFIRMATIVE
                 for reference in claim.evidence_entry_ids
             )
@@ -4022,7 +4384,7 @@ class AuthorizedEngineeringAnswer:
             "claim_ids": tuple(item.claim_id for item in draft.claims),
             "citation_entry_ids": tuple(item.value for item in citation_ids),
         }
-        digest = digest_of(["AUTHORIZED_ENGINEERING_ANSWER@1", core])
+        digest = digest_of(["AUTHORIZED_ENGINEERING_ANSWER@2", core])
         return cls(
             authorization_id=_stable_id("engineering_answer", core),
             request_digest=request.digest,
@@ -4317,6 +4679,12 @@ class EngineeringQuestionExecutionResult:
                     {
                         "review_id": review.review_id.value,
                         "decision": review.decision.value,
+                        "quality_assessment": (
+                            review.quality_assessment.model_view()
+                        ),
+                        "checklist_assessment": (
+                            review.checklist_assessment.model_view()
+                        ),
                         "findings": [
                             item.finding_code for item in review.findings
                         ],
@@ -5121,8 +5489,8 @@ class EngineeringQuestionAnsweringService:
             )
             draft = EngineeringAnswerDraft.accept(
                 package=package,
+                understanding=understanding,
                 expected_role_context_id=answer_context,
-                expected_response_language=request.response_language,
                 proposal=proposal,
                 revision=usage.answer_attempts,
             )
@@ -5586,6 +5954,8 @@ __all__ = [
     "ENGINEERING_QA_PACKAGE_SCHEMA",
     "ENGINEERING_QA_PROTOCOL",
     "ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA",
+    "AnswerContentRole",
+    "AnswerDetailLevel",
     "AnswerClaimKind",
     "AuthorizedEngineeringAnswer",
     "BoundaryAuditEntry",
@@ -5609,8 +5979,11 @@ __all__ = [
     "EngineeringQuestionResourceUsage",
     "EngineeringQuestionResultStatus",
     "EngineeringReviewDecision",
+    "EngineeringReviewChecklistAssessment",
     "EngineeringReviewFinding",
     "EngineeringReviewProposal",
+    "EngineeringReviewQualityAssessment",
+    "EngineeringReviewQualityStatus",
     "EvidenceLedger",
     "EvidenceLedgerEntry",
     "InitialInvestigationInput",

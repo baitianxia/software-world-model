@@ -2175,6 +2175,59 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-028.md"
   },
   {
+    "id": "FINDING-010-029",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "architecture",
+      "application",
+      "security",
+      "interface",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-029.md"
+  },
+  {
+    "id": "FINDING-010-030",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "project",
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-030.md"
+  },
+  {
+    "id": "FINDING-010-031",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "security",
+      "interface",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-031.md"
+  },
+  {
+    "id": "FINDING-010-032",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-032.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -3814,8 +3867,8 @@
   {
     "id": "ITER-010-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "paused",
-    "authority": "project-decision",
+    "status": "current",
+    "authority": "project-plan",
     "owners": [
       "engineering",
       "architecture",
@@ -3841,8 +3894,8 @@
   {
     "id": "ITER-010-INDEX",
     "kind": "iteration-index",
-    "status": "paused",
-    "authority": "project-decision",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "product",
       "project",
@@ -3967,8 +4020,8 @@
   {
     "id": "ITER-010-SLICE-001",
     "kind": "development-slice",
-    "status": "paused",
-    "authority": "project-decision",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "engineering",
       "architecture",
@@ -4703,7 +4756,10 @@
       "FINDING-010-001",
       "FINDING-010-002",
       "FINDING-010-005",
-      "FINDING-010-011"
+      "FINDING-010-011",
+      "FINDING-010-028",
+      "FINDING-010-029",
+      "FINDING-010-031"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },
@@ -5413,7 +5469,9 @@
       "FINDING-010-008",
       "FINDING-010-009",
       "FINDING-010-011",
-      "FINDING-010-012"
+      "FINDING-010-012",
+      "FINDING-010-029",
+      "FINDING-010-031"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

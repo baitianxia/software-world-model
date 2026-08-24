@@ -21,7 +21,7 @@ iteration: ITER-010
   `FINDING-010-027` 保留；旧记录随后把用户要求自行修复的消息解释为 `REDIRECT`。
 - [SLICE-001 Historical Stop Result](slice-001-stop-redirect.md)：技术 Web/Citation/隔离资产永久保留；扁平 Claim/Review 合同再次产生代码
   走读式默认答案并被 Reviewer 批准，历史答案/审核 Gate FAIL 不变。[PDR-001](../decisions/PDR-001-resume-as-rework.md) 将迭代级决定修订
-  为 `REWORK`；ITER-010/Slice1 当前 paused 且无编码授权，Slice2/3 未授权。
+  为 `REWORK`；后续 `32b298de…` 收据已恢复 ITER-010/Slice1 开发，Slice2/3 未授权。
 
 本轮没有 Acceptance。`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 是 `failed-preserved` Slice Result，ID/文件名为历史定位符；PDR-001
 只修订项目决定，不把 FAIL 改成 PASS。ITER-009 Result 只作为 rejected baseline evidence，不是 ITER-010 Result。

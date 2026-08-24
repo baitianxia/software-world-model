@@ -1,11 +1,11 @@
 schema_version: 1
 iteration:
   id: ITER-010
-  status: paused
+  status: authorized
   outcome_scope: world-model-cognition-guided-adaptive-engineering-investigation-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
   current_decision_ref: ITER-010-PDR-001
-  coding_input: false
+  coding_input: true
 
 baseline:
   commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
@@ -270,8 +270,10 @@ rework:
   user_receipt_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
   historical_redirect_message_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
   historical_redirect_message_was_explicit: false
-  authorization_status: not-authorized
-  coding_input: false
+  authorization_status: authorized
+  coding_input: true
+  authorized_at: 2026-08-24T02:55:16Z
+  authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
   first_delivery: sustained-loopback-web-alpha
   repeatable_start_required: true
   listener: 127.0.0.1
@@ -421,8 +423,26 @@ engineering_qa_ablation:
   slice_002_case_id: V-COMP-EARLY-002
   slice_003_case_id: V-COMP-001
 
+answer_hierarchy_protocol:
+  status: frozen
+  contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+  direct_user_goal_answer_required: true
+  user_visible_flow_behavior_or_impact_condition: required-by-original-question-or-material-conclusion-checklist
+  implementation_explanation_condition: explicitly-requested-or-necessary-to-support-a-material-conclusion
+  limitations_and_unknowns_condition: evidence-gap-conflict-or-coverage-boundary-exists
+  every_material_affirmative_claim_requires_citation: true
+  fixed-heading-or-word-ratio-required: false
+  material-conclusion-checklist_required: true
+  application_acceptance_required: true
+  shared_versioned_quality_contract_and_schema: true
+  application_uses_accepted_question_understanding_checklist: true
+  reviewer_reconstructs_checklist_from_immutable_original_question: true
+  reviewer_compares_independent_and_application_checklists_for_omissions: true
+  reviewer_context_and_verdict_independent: true
+  question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed: false
+
 answer_protocol:
-  schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1
+  schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2
   contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
   mode: adaptive-cognition-guided-engineering-investigation
   question_understanding_required_fields: user-goal,audience,requested-abstraction-level,material-conclusion-checklist,evidence-needs,response-language-and-constraints
@@ -496,6 +516,7 @@ readiness_inputs:
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
   no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
   answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+  answer_hierarchy_protocol_digest: sha256:5be994c2bce0745eb6abf2202b3004e69c223d309f8a06f86c9f1a4c9c98a841
   system_contract_set_schema: ITER-010-SYSTEM-CONTRACT-SET@1
   system_contract_set_paths:
     - docs/system/architecture/components.md
@@ -527,13 +548,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:fd02998712188c7497b4ba647b309a0a29d8ff8627a768dd991674278eb51de2
+  system_contract_set_digest: sha256:8ee4e536112cd3b3e5717641556ec4a689dce1d7fbf24cb26b8be82765989828
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
-  investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-1.0.0
+  investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-2.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:e05ca850e7f37b543bcc1932f06ff35dd772251ecadd578961e89fd9704fc85f
+  investigation_budget_digest: sha256:f0edad17c8d56b1e5005f10609c19eadc4f78fe5571e351ba7c4b52f07ff9c4f
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
@@ -556,11 +577,10 @@ readiness_inputs:
 development:
   slices:
     ITER-010-SLICE-001:
-      status: paused
-      coding_input: false
-      result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
-      reflection_decision: REWORK
-      reflection_decision_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
+      status: authorized
+      coding_input: true
+      result: in-progress
+      reflection_decision: in-progress
       project_decision_ref: ITER-010-PDR-001
       historical_reflection_decision: REDIRECT
       historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
@@ -569,15 +589,18 @@ development:
       rework_result_refs:
         - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
       rework_prerequisite_result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+      prior_authorization_refs:
+        - "codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
-      product_code_freeze_status: preserved-real-web-quality-failure-rework-baseline
-      frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
-      frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: public-and-onsite-web-results-preserved-rework-required
+      product_code_freeze_digest: not-executed
+      product_code_freeze_status: pending-rework-product-freeze
+      rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
+      rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
+      rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
+      live_question_status: deterministic-alpha-and-answer-contract-complete-new-live-three-question-regression-pending
       authorized_by: user
-      authorized_at: 2026-08-21T09:18:34Z
-      authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
+      authorized_at: 2026-08-24T02:55:16Z
+      authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
     ITER-010-SLICE-002:
       status: proposed
       coding_input: false
@@ -605,7 +628,7 @@ verification:
 
 authorization:
   readiness_review_id: ITER-010-READINESS
-  active_slice: none
+  active_slice: ITER-010-SLICE-001
   authorized_by: user
   authorized_at: 2026-08-21T09:18:34Z
   authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e

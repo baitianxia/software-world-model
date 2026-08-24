@@ -17,6 +17,8 @@ from types import MappingProxyType
 from typing import Mapping, NoReturn, Protocol, Sequence, cast
 
 from software_world_model.application_services.engineering_question_answering import (
+    AnswerContentRole,
+    AnswerDetailLevel,
     AnswerClaimKind,
     ChecklistDisposition,
     ChecklistOutcome,
@@ -28,9 +30,12 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringAnswerReviewerRole,
     EngineeringEvidenceClass,
     EngineeringQuestionRequest,
+    EngineeringReviewChecklistAssessment,
     EngineeringReviewDecision,
     EngineeringReviewFinding,
     EngineeringReviewProposal,
+    EngineeringReviewQualityAssessment,
+    EngineeringReviewQualityStatus,
     InitialInvestigationInput,
     InitialInvestigationRole,
     InvestigationKind,
@@ -57,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@1"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@2"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@1"
@@ -68,8 +73,8 @@ ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@2"
 )
-ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@1"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@1"
+ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@2"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@2"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -180,7 +185,10 @@ _QUESTION_UNDERSTANDING_OUTPUT_SCHEMA = {
         "preserved_original_question": {"type": "string"},
         "user_goal": {"type": "string"},
         "audience": {"type": "string"},
-        "requested_abstraction_level": {"type": "string"},
+        "requested_abstraction_level": {
+            "type": "string",
+            "enum": [item.value for item in AnswerDetailLevel],
+        },
         "material_conclusions": _STRING_ARRAY_SCHEMA,
         "evidence_needs": _STRING_ARRAY_SCHEMA,
         "response_language": {"type": "string"},
@@ -206,10 +214,22 @@ _ANSWER_CLAIM_SCHEMA = {
             "type": "string",
             "enum": [item.value for item in AnswerClaimKind],
         },
+        "content_role": {
+            "type": "string",
+            "enum": [item.value for item in AnswerContentRole],
+        },
+        "checklist_item_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
         "text": {"type": "string"},
         "evidence_entry_ids": _STRING_ARRAY_SCHEMA,
     },
-    "required": ["claim_id", "kind", "text", "evidence_entry_ids"],
+    "required": [
+        "claim_id",
+        "kind",
+        "content_role",
+        "checklist_item_ids",
+        "text",
+        "evidence_entry_ids",
+    ],
     "additionalProperties": False,
 }
 _ANSWER_OUTPUT_SCHEMA = {
@@ -237,6 +257,44 @@ _REVIEW_FINDING_SCHEMA = {
     ],
     "additionalProperties": False,
 }
+_REVIEW_QUALITY_ASSESSMENT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        field: {
+            "type": "string",
+            "enum": [item.value for item in EngineeringReviewQualityStatus],
+        }
+        for field in (
+            "direct_answer",
+            "abstraction_fit",
+            "material_completeness",
+            "implementation_detail_budget",
+        )
+    },
+    "required": [
+        "direct_answer",
+        "abstraction_fit",
+        "material_completeness",
+        "implementation_detail_budget",
+    ],
+    "additionalProperties": False,
+}
+_REVIEW_CHECKLIST_ASSESSMENT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "independent_material_conclusions": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+        "application_checklist_omissions": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": True,
+        },
+    },
+    "required": [
+        "independent_material_conclusions",
+        "application_checklist_omissions",
+    ],
+    "additionalProperties": False,
+}
 _VERIFICATION_REQUEST_SCHEMA = {
     "type": "object",
     "properties": {
@@ -260,12 +318,20 @@ _REVIEW_OUTPUT_SCHEMA = {
             "type": "string",
             "enum": [item.value for item in EngineeringReviewDecision],
         },
+        "quality_assessment": _REVIEW_QUALITY_ASSESSMENT_SCHEMA,
+        "checklist_assessment": _REVIEW_CHECKLIST_ASSESSMENT_SCHEMA,
         "findings": {"type": "array", "items": _REVIEW_FINDING_SCHEMA},
         "verification_request": {
             "anyOf": [_VERIFICATION_REQUEST_SCHEMA, {"type": "null"}]
         },
     },
-    "required": ["decision", "findings", "verification_request"],
+    "required": [
+        "decision",
+        "quality_assessment",
+        "checklist_assessment",
+        "findings",
+        "verification_request",
+    ],
     "additionalProperties": False,
 }
 
@@ -632,7 +698,22 @@ class EngineeringQuestionRoleInputBuilder:
                 }
                 for item in rewrite_findings
             ],
-            "response_rule": "CONCLUSION_FIRST_WITH_PACKAGE_ENTRY_CITATIONS",
+            "response_rule": (
+                "ONE_DIRECT_ANSWER_FIRST_THEN_USER_VISIBLE_PROCESS_IMPACT_"
+                "OPTIONAL_IMPLEMENTATION_EVIDENCE_AND_LIMITATION"
+            ),
+            "answer_structure_contract": {
+                "detail_level": understanding.requested_abstraction_level.value,
+                "required_first_role": AnswerContentRole.DIRECT_ANSWER.value,
+                "ordered_roles": [item.value for item in AnswerContentRole],
+                "every_claim_links_material_checklist": True,
+                "every_material_checklist_item_covered": True,
+                "implementation_evidence_is_optional": True,
+                "implementation_evidence_default_visible": (
+                    understanding.requested_abstraction_level
+                    is AnswerDetailLevel.IMPLEMENTATION_DETAIL
+                ),
+            },
         }
         digests = [understanding.digest, package.digest]
         digests.extend(item.digest for item in rewrite_findings)
@@ -667,9 +748,30 @@ class EngineeringQuestionRoleInputBuilder:
             "question_understanding": understanding.model_view(),
             "question_evidence_package": package.model_view(),
             "draft": draft.model_view(),
+            "answer_structure": {
+                "detail_level": understanding.requested_abstraction_level.value,
+                "first_content_role": draft.claims[0].content_role.value,
+                "default_body_claim_ids": list(draft.default_body_claim_ids),
+                "content_role_counts": {
+                    role.value: sum(
+                        claim.content_role is role for claim in draft.claims
+                    )
+                    for role in AnswerContentRole
+                },
+                "material_checklist_coverage": {
+                    item.item_id: [
+                        claim.claim_id
+                        for claim in draft.claims
+                        if item.item_id in claim.checklist_item_ids
+                    ]
+                    for item in understanding.checklist
+                },
+            },
             "review_dimensions": [
                 "direct_answer",
                 "abstraction_level",
+                "material_process_and_side_effect_completeness",
+                "implementation_detail_budget",
                 "correctness",
                 "completeness",
                 "relevance",
@@ -756,8 +858,8 @@ class StructuredQuestionUnderstandingRole(_StructuredRoleAdapter):
                 ),
                 user_goal=cast(str, value["user_goal"]),
                 audience=cast(str, value["audience"]),
-                requested_abstraction_level=cast(
-                    str, value["requested_abstraction_level"]
+                requested_abstraction_level=AnswerDetailLevel(
+                    cast(str, value["requested_abstraction_level"])
                 ),
                 material_conclusions=cast(
                     Sequence[str], value["material_conclusions"]
@@ -831,6 +933,12 @@ class StructuredEngineeringAnswerRole(_StructuredRoleAdapter):
                 EngineeringAnswerClaimProposal.create(
                     claim_id=cast(str, item["claim_id"]),
                     kind=AnswerClaimKind(cast(str, item["kind"])),
+                    content_role=AnswerContentRole(
+                        cast(str, item["content_role"])
+                    ),
+                    checklist_item_ids=cast(
+                        Sequence[str], item["checklist_item_ids"]
+                    ),
                     text=cast(str, item["text"]),
                     evidence_entry_ids=tuple(
                         StableId(reference)
@@ -872,6 +980,36 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
         )
         value = self._output(manifest)
         try:
+            quality_value = cast(
+                Mapping[str, object], value["quality_assessment"]
+            )
+            quality_assessment = EngineeringReviewQualityAssessment.create(
+                direct_answer=EngineeringReviewQualityStatus(
+                    cast(str, quality_value["direct_answer"])
+                ),
+                abstraction_fit=EngineeringReviewQualityStatus(
+                    cast(str, quality_value["abstraction_fit"])
+                ),
+                material_completeness=EngineeringReviewQualityStatus(
+                    cast(str, quality_value["material_completeness"])
+                ),
+                implementation_detail_budget=EngineeringReviewQualityStatus(
+                    cast(str, quality_value["implementation_detail_budget"])
+                ),
+            )
+            checklist_value = cast(
+                Mapping[str, object], value["checklist_assessment"]
+            )
+            checklist_assessment = EngineeringReviewChecklistAssessment.create(
+                independent_material_conclusions=cast(
+                    Sequence[str],
+                    checklist_value["independent_material_conclusions"],
+                ),
+                application_checklist_omissions=cast(
+                    Sequence[str],
+                    checklist_value["application_checklist_omissions"],
+                ),
+            )
             findings = tuple(
                 EngineeringReviewFinding.create(
                     finding_code=cast(str, item["finding_code"]),
@@ -901,6 +1039,8 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
                 package_digest=package.digest,
                 draft_digest=draft.digest,
                 decision=EngineeringReviewDecision(cast(str, value["decision"])),
+                quality_assessment=quality_assessment,
+                checklist_assessment=checklist_assessment,
                 findings=findings,
                 verification_request=verification_request,
             )

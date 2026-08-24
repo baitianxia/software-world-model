@@ -41,7 +41,8 @@ Slice1 后续真实运行证明调查、证据、Citation 与 Web 链能够工�
 Slice1 首先把现有链恢复为可重复启动、同会话连续自由提问的 Web Alpha，然后在同轮按真实问题修复答案与审核的通用根因。单题失败只
 判该 Request 失败；只有多类问题共同证明核心架构无法有界修复，或用户实际体验后明确拒绝，才触发架构转向。
 
-该 PDR 只修订项目方向；Slice1 当前 `paused / coding_input=false`，旧授权与所有 live grant 已消费，恢复编码和外部调用必须另行授权。
+该 PDR 只修订项目方向；其接受时 Slice1 为 `paused / coding_input=false`，旧授权与所有 live grant 已消费。后续 `32b298de…` 收据已恢复
+编码，外部调用仍须在新 product freeze 后另行授权。
 
 ## Product-goal alignment and cumulative delta
 
@@ -149,11 +150,14 @@ Investigation/Verification Investigation/Answer/Reviewer 直接 Source/FS/Shell/
 
 ## Authorization decision
 
-**ACCEPTED HISTORICAL PROPOSAL / CURRENT REWORK PAUSED / NO CODING INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
+**ACCEPTED PROPOSAL / CURRENT REWORK AUTHORIZED / SLICE1 CODING INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受本 Proposal 与 Readiness，并曾授权 `ITER-010-SLICE-001` 成为产品编码输入。该历史授权基于已冻结的 planning commit
 `01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。
 
-该授权及后续派生 grant 已消费或停止。PDR-001 只授权当前计划纠正，不恢复产品代码、确定性测试变更、credential、Provider/model call、
-live Web/browser、源码片段外发、hidden disclosure、`SLICE-002/003` 或 Production Activation。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的一次性检索/先封包设计。
+该历史授权及后续派生 grant 已消费或停止。PDR-001 只授权项目决定纠正；用户随后以
+`codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5`（`2026-08-24T02:55:16Z`）
+明确要求继续开发，恢复同一个 Slice1 的产品/System 编码与本地确定性测试。它不复用 credential、Provider/model、动态源码披露或 live
+Web/browser grant；这些仍须在新 product freeze 后按 exact Session Authority 另行授权。hidden、`SLICE-002/003` 与 Production
+Activation 继续未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的一次性检索/先封包设计。
 新三臂消融的 exact protocol、阈值和 digest 仍须在 Slice2 前由新的用户收据冻结。

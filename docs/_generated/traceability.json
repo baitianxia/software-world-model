@@ -1901,6 +1901,51 @@
       "tests/test_engineering_qa_browser.py"
     ]
   },
+  "FINDING-010-029": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-029.md",
+    "code": [
+      "pyproject.toml",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_live.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_alpha_cli.py"
+    ]
+  },
+  "FINDING-010-030": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-030.md",
+    "code": [
+      "scripts/docs.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py"
+    ]
+  },
+  "FINDING-010-031": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-031.md",
+    "code": [
+      "src/software_world_model/interface/engineering_qa_browser.py"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_browser.py"
+    ]
+  },
+  "FINDING-010-032": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-032.md",
+    "code": [
+      "pyproject.toml",
+      "scripts/docs.py",
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -3139,7 +3184,8 @@
       "src/software_world_model/interface/engineering_qa_source.py",
       "src/software_world_model/interface/engineering_qa_live.py",
       "src/software_world_model/interface/engineering_qa_browser.py",
-      "src/software_world_model/interface/engineering_qa_browser_ui.py"
+      "src/software_world_model/interface/engineering_qa_browser_ui.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py"
     ],
     "tests": [
       "tests/test_engineering_question_answering.py",
@@ -3148,7 +3194,8 @@
       "tests/test_engineering_question_model_source.py",
       "tests/test_engineering_qa_source.py",
       "tests/test_engineering_qa_live.py",
-      "tests/test_engineering_qa_browser.py"
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
   "SYS-ARCH-COMPONENTS": {
@@ -3352,6 +3399,7 @@
       "src/software_world_model/interface/engineering_qa_source.py",
       "src/software_world_model/interface/engineering_qa_live.py",
       "src/software_world_model/interface/engineering_qa_preview_cli.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py",
       "src/software_world_model/interface/engineering_qa_browser.py",
       "src/software_world_model/interface/engineering_qa_browser_ui.py"
     ],
@@ -3363,6 +3411,7 @@
       "tests/test_engineering_qa_source.py",
       "tests/test_engineering_qa_live.py",
       "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_alpha_cli.py",
       "tests/test_engineering_qa_browser.py"
     ]
   },
@@ -3860,6 +3909,7 @@
   "SYS-OPS-LOCAL-BROWSER": {
     "path": "docs/system/operations/local-browser.md",
     "code": [
+      "pyproject.toml",
       "src/software_world_model/interface/http_api.py",
       "src/software_world_model/interface/browser_ui.py",
       "src/software_world_model/interface/world_model_browser.py",
@@ -3870,7 +3920,8 @@
       "src/software_world_model/interface/engineering_qa_browser.py",
       "src/software_world_model/interface/engineering_qa_browser_ui.py",
       "src/software_world_model/interface/engineering_qa_live.py",
-      "src/software_world_model/interface/engineering_qa_preview_cli.py"
+      "src/software_world_model/interface/engineering_qa_preview_cli.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py"
     ],
     "tests": [
       "tests/test_browser_chat_interface.py",
@@ -3886,6 +3937,7 @@
       "tests/test_engineering_question_model_source.py",
       "tests/test_engineering_qa_live.py",
       "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_alpha_cli.py",
       "tests/test_engineering_qa_browser.py"
     ]
   },

@@ -67,7 +67,7 @@ class AdaptiveStructuredOutputSource:
                 "preserved_original_question": body["original_question"],
                 "user_goal": "Understand startup and timeout configuration.",
                 "audience": "maintainer",
-                "requested_abstraction_level": "engineering overview",
+                "requested_abstraction_level": "USER_VISIBLE_EXPLANATION",
                 "material_conclusions": [
                     "Explain startup and the effective timeout control."
                 ],
@@ -92,6 +92,8 @@ class AdaptiveStructuredOutputSource:
                     {
                         "claim_id": "claim-1",
                         "kind": "AFFIRMATIVE",
+                        "content_role": "DIRECT_ANSWER",
+                        "checklist_item_ids": ["check-1"],
                         "text": (
                             "Start the service through its documented entry point; "
                             "the request timeout is controlled by repository configuration."
@@ -107,6 +109,18 @@ class AdaptiveStructuredOutputSource:
             if self.request_more_evidence and self.review_calls == 1:
                 output = {
                     "decision": "MORE_EVIDENCE_REQUIRED",
+                    "quality_assessment": {
+                        "direct_answer": "PASS",
+                        "abstraction_fit": "PASS",
+                        "material_completeness": "PASS",
+                        "implementation_detail_budget": "PASS",
+                    },
+                    "checklist_assessment": {
+                        "independent_material_conclusions": [
+                            "Explain startup and the effective timeout control."
+                        ],
+                        "application_checklist_omissions": [],
+                    },
                     "findings": [
                         {
                             "finding_code": "CONFIGURATION_EVIDENCE_MISSING",
@@ -129,6 +143,18 @@ class AdaptiveStructuredOutputSource:
             else:
                 output = {
                     "decision": "APPROVED",
+                    "quality_assessment": {
+                        "direct_answer": "PASS",
+                        "abstraction_fit": "PASS",
+                        "material_completeness": "PASS",
+                        "implementation_detail_budget": "PASS",
+                    },
+                    "checklist_assessment": {
+                        "independent_material_conclusions": [
+                            "Explain startup and the effective timeout control."
+                        ],
+                        "application_checklist_omissions": [],
+                    },
                     "findings": [],
                     "verification_request": None,
                 }
@@ -334,6 +360,18 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             package.digest.value,
         )
         self.assertEqual(review.body["draft"]["digest"], draft.digest.value)
+        self.assertEqual(
+            answer.body["answer_structure_contract"]["required_first_role"],
+            "DIRECT_ANSWER",
+        )
+        self.assertEqual(
+            review.body["answer_structure"]["first_content_role"],
+            "DIRECT_ANSWER",
+        )
+        self.assertEqual(
+            review.body["answer_structure"]["material_checklist_coverage"],
+            {"check-1": ("claim-1",)},
+        )
         forbidden = {
             "repository_root",
             "credential",
@@ -463,6 +501,25 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         for definition in schemas.values():
             self.assertFalse(definition.schema["additionalProperties"])
+        answer_claim = schemas[
+            ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF
+        ].schema["properties"]["claims"]["items"]
+        self.assertIn("content_role", answer_claim["required"])
+        self.assertIn("checklist_item_ids", answer_claim["required"])
+        review = schemas[ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF].schema
+        self.assertIn("quality_assessment", review["required"])
+        self.assertIn("checklist_assessment", review["required"])
+        self.assertEqual(
+            set(
+                review["properties"]["quality_assessment"]["properties"]
+            ),
+            {
+                "direct_answer",
+                "abstraction_fit",
+                "material_completeness",
+                "implementation_detail_budget",
+            },
+        )
         for schema_ref in (
             ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
             ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF,
@@ -594,7 +651,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                         "preserved_original_question": req.original_question,
                         "user_goal": "Understand startup.",
                         "audience": "maintainer",
-                        "requested_abstraction_level": "overview",
+                        "requested_abstraction_level": "DIRECT",
                         "material_conclusions": ["Explain startup."],
                         "evidence_needs": ["Exact startup evidence."],
                         "response_language": req.response_language,
@@ -623,7 +680,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "preserved_original_question": req.original_question,
             "user_goal": "Understand startup.",
             "audience": "maintainer",
-            "requested_abstraction_level": "overview",
+            "requested_abstraction_level": "DIRECT",
             "material_conclusions": ["Explain startup."],
             "evidence_needs": ["Exact startup evidence."],
             "response_language": req.response_language,
@@ -657,6 +714,16 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         draft = self.result.current_draft
         output = {
             "decision": "MORE_EVIDENCE_REQUIRED",
+            "quality_assessment": {
+                "direct_answer": "PASS",
+                "abstraction_fit": "PASS",
+                "material_completeness": "PASS",
+                "implementation_detail_budget": "PASS",
+            },
+            "checklist_assessment": {
+                "independent_material_conclusions": ["Explain startup."],
+                "application_checklist_omissions": [],
+            },
             "findings": [
                 {
                     "finding_code": "EVIDENCE_MISSING",
@@ -706,7 +773,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "preserved_original_question": req.original_question,
             "user_goal": "Understand startup.",
             "audience": "maintainer",
-            "requested_abstraction_level": "overview",
+            "requested_abstraction_level": "DIRECT",
             "material_conclusions": ["Explain startup."],
             "evidence_needs": ["Exact startup evidence."],
             "response_language": req.response_language,

@@ -10,6 +10,9 @@ from software_world_model.ai_infrastructure.engineering_question_model_source im
     EngineeringQuestionModelConfiguration,
     EngineeringQuestionModelEgressPolicy,
     EngineeringQuestionRunDisclosureAuthorization,
+    EngineeringQuestionSessionAuthority,
+    EngineeringQuestionSessionRunDisclosureAuthorization,
+    EngineeringQuestionSubmissionReceipt,
     ModelBackedEngineeringQuestionStructuredOutputSource,
     SealedEngineeringQuestionRoleDisclosureAuthorizer,
     engineering_question_role_prompt,
@@ -30,6 +33,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
 )
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionRequest,
+    EngineeringQuestionResourceLimits,
     InvestigationOperation,
 )
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, StableId, digest_of
@@ -78,7 +82,7 @@ class LiveRoleAdapter:
                 "preserved_original_question": question,
                 "user_goal": "Understand the system behavior.",
                 "audience": "maintainer",
-                "requested_abstraction_level": "engineering overview",
+                "requested_abstraction_level": "USER_VISIBLE_EXPLANATION",
                 "material_conclusions": ["Explain the requested behavior."],
                 "evidence_needs": ["published cognition and exact source evidence"],
                 "response_language": language,
@@ -227,6 +231,71 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertNotIn(authorization.authorization_ref, wire_text)
         self.assertEqual(source.audits[0].outcome, "COMPLETED")
 
+    def test_session_authority_requires_exact_user_submission_before_run(self) -> None:
+        template_digest = digest_of("fixed session request template")
+        product_digest = digest_of("fixed alpha product subject")
+        message_digest = digest_of("authorize sustained Engineering QA session")
+        session = EngineeringQuestionSessionAuthority.create(
+            session_ref="engineering-qa-alpha-session-001",
+            product_candidate_digest=product_digest,
+            request_template_digest=template_digest,
+            configuration=self.configuration,
+            maximum_questions=3,
+            maximum_dispatches_per_question=4,
+            maximum_total_dispatches=12,
+            authorized_at=_NOW - timedelta(minutes=1),
+            expires_at=_NOW + timedelta(hours=1),
+            authorization_ref=f"codex-user-message:{message_digest.value}",
+            authorization_message_digest=message_digest,
+        )
+        question = "How does this system start?"
+        receipt = EngineeringQuestionSubmissionReceipt.create(
+            receipt_id=StableId("engq_submission_" + "5" * 32),
+            session_authority=session,
+            question=question,
+            disclosure_acknowledged=True,
+            submitted_at=_NOW,
+        )
+        source_profile = fixtures.source_profile()
+        submitted_request = EngineeringQuestionRequest.create(
+            request_ref=receipt.receipt_id.value,
+            original_question=question,
+            response_language="en",
+            repository_id=fixtures.sid("repository", "1"),
+            binding_id=fixtures.sid("binding", "2"),
+            repository_revision=fixtures.REVISION,
+            source_profile_ref=source_profile.profile_ref,
+            source_profile_digest=source_profile.profile_digest,
+            world_model_read_authority_digest=Digest("sha256:" + "3" * 64),
+            source_allowlist=(".",),
+            provider_disclosure_policy=ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF,
+            limits=EngineeringQuestionResourceLimits(
+                maximum_total_model_role_calls=4
+            ),
+        )
+        run = EngineeringQuestionSessionRunDisclosureAuthorization.create_from_session(
+            run_ref="engq_run_" + "6" * 32,
+            request=submitted_request,
+            evaluation_subject_digest=digest_of("submitted question subject"),
+            configuration=self.configuration,
+            session_authority=session,
+            question_submission_receipt=receipt,
+            request_template_digest=template_digest,
+            product_candidate_digest=product_digest,
+        )
+
+        run.require_current(configuration=self.configuration, at=_NOW)
+        self.assertEqual(run.session_authority_digest, session.digest)
+        self.assertEqual(run.question_submission_receipt_digest, receipt.digest)
+        with self.assertRaises(DomainError):
+            EngineeringQuestionSubmissionReceipt.create(
+                receipt_id=StableId("engq_submission_" + "7" * 32),
+                session_authority=session,
+                question="Another question",
+                disclosure_acknowledged=False,
+                submitted_at=_NOW,
+            )
+
     def test_gateway_role_progress_accepts_investigation_schema_enum_values(self) -> None:
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -253,7 +322,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@8",
+            "engineering-qa-adaptive-investigation-prompt@9",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,

@@ -4,12 +4,15 @@ from dataclasses import replace
 import unittest
 
 from software_world_model.application_services.engineering_question_answering import (
+    AnswerContentRole,
+    AnswerDetailLevel,
     AnswerClaimKind,
     ChecklistDisposition,
     ChecklistOutcome,
     CognitionDimension,
     CognitionItem,
     EngineeringAnswerClaimProposal,
+    EngineeringAnswerDraft,
     EngineeringAnswerProposal,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionRequest,
@@ -17,8 +20,11 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringQuestionResourceUsage,
     EngineeringQuestionResultStatus,
     EngineeringReviewDecision,
+    EngineeringReviewChecklistAssessment,
     EngineeringReviewFinding,
     EngineeringReviewProposal,
+    EngineeringReviewQualityAssessment,
+    EngineeringReviewQualityStatus,
     EngineeringEvidenceClass,
     EvidenceLedger,
     InvestigationKind,
@@ -54,6 +60,26 @@ REVISION = "a" * 40
 
 def sid(kind: str, digit: str) -> StableId:
     return StableId(f"{kind}_{digit * 32}")
+
+
+def passing_quality() -> EngineeringReviewQualityAssessment:
+    return EngineeringReviewQualityAssessment.create(
+        direct_answer=EngineeringReviewQualityStatus.PASS,
+        abstraction_fit=EngineeringReviewQualityStatus.PASS,
+        material_completeness=EngineeringReviewQualityStatus.PASS,
+        implementation_detail_budget=EngineeringReviewQualityStatus.PASS,
+    )
+
+
+def matching_review_checklist(
+    understanding: QuestionUnderstanding,
+) -> EngineeringReviewChecklistAssessment:
+    return EngineeringReviewChecklistAssessment.create(
+        independent_material_conclusions=tuple(
+            item.conclusion for item in understanding.checklist
+        ),
+        application_checklist_omissions=(),
+    )
 
 
 def source_profile() -> LocalGitEvidenceClassProfile:
@@ -96,7 +122,7 @@ class UnderstandingRole:
             preserved_original_question=request.original_question,
             user_goal="Understand startup and timeout configuration.",
             audience="maintainer",
-            requested_abstraction_level="engineering overview",
+            requested_abstraction_level=AnswerDetailLevel.USER_VISIBLE_EXPLANATION,
             material_conclusions=("Explain startup and the effective timeout control.",),
             evidence_needs=("published architecture and repository usage/configuration",),
             response_language=request.response_language,
@@ -311,6 +337,8 @@ class AnswerRole:
                 EngineeringAnswerClaimProposal.create(
                     claim_id="claim-1",
                     kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
                     text=(
                         "Start the service through its documented entry point; "
                         "the request timeout is controlled by the repository configuration."
@@ -355,6 +383,8 @@ class ReviewerRole:
                 package_digest=package.digest,
                 draft_digest=draft.digest,
                 decision=EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED,
+                quality_assessment=passing_quality(),
+                checklist_assessment=matching_review_checklist(understanding),
                 findings=(finding,),
                 verification_request=verification,
             )
@@ -363,6 +393,8 @@ class ReviewerRole:
             package_digest=package.digest,
             draft_digest=draft.digest,
             decision=EngineeringReviewDecision.APPROVED,
+            quality_assessment=passing_quality(),
+            checklist_assessment=matching_review_checklist(understanding),
         )
 
 
@@ -960,6 +992,8 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                         EngineeringAnswerClaimProposal.create(
                             claim_id="claim-bad",
                             kind=AnswerClaimKind.AFFIRMATIVE,
+                            content_role=AnswerContentRole.DIRECT_ANSWER,
+                            checklist_item_ids=("check-1",),
                             text="This unsupported assertion must be rejected.",
                             evidence_entry_ids=(package.boundary_audit[0].entry_id,),
                         ),
@@ -978,6 +1012,113 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         )
         with self.assertRaises(DomainError):
             service.answer(request())
+
+    def test_typed_answer_contract_requires_one_direct_answer_first(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        support = tuple(
+            item.entry_id for item in result.current_package.support_citation
+        )
+        process = EngineeringAnswerClaimProposal.create(
+            claim_id="claim-process",
+            kind=AnswerClaimKind.AFFIRMATIVE,
+            content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
+            checklist_item_ids=("check-1",),
+            text="The user-visible process follows the documented entry point.",
+            evidence_entry_ids=support,
+        )
+        direct = EngineeringAnswerClaimProposal.create(
+            claim_id="claim-direct",
+            kind=AnswerClaimKind.AFFIRMATIVE,
+            content_role=AnswerContentRole.DIRECT_ANSWER,
+            checklist_item_ids=("check-1",),
+            text="Use the documented entry point.",
+            evidence_entry_ids=support,
+        )
+
+        with self.assertRaises(DomainError):
+            EngineeringAnswerProposal.create(
+                role_context_id=sid("role_context", "e"),
+                package_digest=result.current_package.digest,
+                response_language=result.understanding.response_language,
+                claims=(process, direct),
+            )
+
+    def test_direct_answer_can_be_an_honest_boundary_limitation(self):
+        claim = EngineeringAnswerClaimProposal.create(
+            claim_id="claim-direct-boundary",
+            kind=AnswerClaimKind.LIMITATION,
+            content_role=AnswerContentRole.DIRECT_ANSWER,
+            checklist_item_ids=("check-1",),
+            text="The available evidence cannot determine the requested behavior.",
+            evidence_entry_ids=(sid("ledger_entry", "f"),),
+        )
+
+        self.assertEqual(claim.kind, AnswerClaimKind.LIMITATION)
+        self.assertEqual(claim.content_role, AnswerContentRole.DIRECT_ANSWER)
+
+    def test_user_visible_answer_keeps_implementation_out_of_default_body(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        support = tuple(item.entry_id for item in package.support_citation)
+        role_context = sid("role_context", "f")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    text="Use the documented entry point.",
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-implementation",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.IMPLEMENTATION_EVIDENCE,
+                    checklist_item_ids=("check-1",),
+                    text=" ".join("implementation-detail" for _ in range(20)),
+                    evidence_entry_ids=support,
+                ),
+            ),
+        )
+
+        draft = EngineeringAnswerDraft.accept(
+            package=package,
+            understanding=result.understanding,
+            expected_role_context_id=role_context,
+            proposal=proposal,
+            revision=1,
+        )
+        self.assertEqual(draft.default_body_claim_ids, ("claim-direct",))
+        self.assertIn("documented entry point", draft.body)
+        self.assertNotIn("implementation-detail", draft.body)
+        self.assertEqual(
+            draft.model_view()["claims"][1]["content_role"],
+            "IMPLEMENTATION_EVIDENCE",
+        )
+
+    def test_approved_review_requires_all_direction_quality_checks(self):
+        failed_quality = EngineeringReviewQualityAssessment.create(
+            direct_answer=EngineeringReviewQualityStatus.FAIL,
+            abstraction_fit=EngineeringReviewQualityStatus.PASS,
+            material_completeness=EngineeringReviewQualityStatus.PASS,
+            implementation_detail_budget=EngineeringReviewQualityStatus.PASS,
+        )
+        with self.assertRaises(DomainError):
+            EngineeringReviewProposal.create(
+                role_context_id=sid("role_context", "9"),
+                package_digest=Digest("sha256:" + "1" * 64),
+                draft_digest=Digest("sha256:" + "2" * 64),
+                decision=EngineeringReviewDecision.APPROVED,
+                quality_assessment=failed_quality,
+                checklist_assessment=EngineeringReviewChecklistAssessment.create(
+                    independent_material_conclusions=("Explain the user goal.",),
+                    application_checklist_omissions=(),
+                ),
+            )
 
     def test_worker_cannot_return_another_profile_class_path(self):
         class RelabelingWorker(ScriptedWorker):

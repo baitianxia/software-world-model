@@ -5,8 +5,8 @@ status: current
 authority: operational
 owners: [operations, interface]
 depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-QUALITY-SECURITY]
-code: [src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py]
-tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_browser.py]
+code: [pyproject.toml, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
 
 # 本机浏览器体验
@@ -17,7 +17,7 @@ World Model。两者不能静默互相兜底。
 
 ADR-016 接受了第三个、面向普通用户的默认目标入口 `ENGINEERING_QA`。`ITER-010 / SLICE-001` 已实现 loopback WSGI 页面、本地
 no-disclosure Request factory、exact authorized prepared-Request factory、内存 Result/Citation 投影、逐角色 disclosure/Gateway policy、
-current DeepSeek 组合和 trusted `swm-engineering-qa` launcher；factory 还必须固定与 repository Binding 一致的 versioned Source Profile
+current DeepSeek 组合和历史 prepared launcher；factory 还必须固定与 repository Binding 一致的 versioned Source Profile
 ref/digest，不能从问题或文件名推断 evidence class。launcher 在 listener 前证明自身来自 clean exact candidate，装载 published Bundle、
 exact Source revision/Profile、prepared Request/run grant，并先写 0600 launch receipt；graceful exit 再写 role/Gateway/TLS terminal audit。
 确定性 fake transport 已证明组合不读取 credential、不建立网络。页面要求 exact `127.0.0.1` remote/Host 并持续显示“方向体验 / 非验收 /
@@ -49,11 +49,69 @@ dispatch，retry/switch/outcome-unknown 0，全部 model manifest 对 `src/main/
 audit 为 TLS handshake 1、reuse 9、HTTP/credential 10/10、retry/switch/outcome-unknown 0，30 个 manifest item 对
 `src/main/resources` 匹配数为 0，Production Activation `NOT_EXECUTED`。因此公开 4 题与现场题合并后 `V-WEB-001` PASS。现场正文仍
 主要按 Controller/Service/Filter 方法调用顺序展开，并省略 exact Source 中的 `insertLoginLog` 副作用；`FINDING-010-027` 将其保留为
-用户方向裁决输入。用户随后决定 `REDIRECT`：`V-PREVIEW-001` FAIL，ITER-010 rejected，技术 Web PASS 不构成 Acceptance 或继续编码
-授权。`FINDING-010-028` 将最早共同偏差定位为自由文本抽象层级、扁平 Answer Claim 和不可执行的 Reviewer 方向质量 Gate；现有 launcher
-与运行资产保留为失败证据，下一产品变化必须来自新的 Iteration，不能复用旧 question/run grant。
+质量失败输入。旧记录曾把用户要求实现者自行复核并修复的消息推断为 `REDIRECT`；PDR-001 已纠正为同一 `ITER-010/Slice1` 的
+`REWORK`，历史 `V-PREVIEW-001` 与答案/审核 FAIL 不改写。`FINDING-010-028` 定位答案层级根因，`FINDING-010-029` 定位单题 prepared
+launcher 与持续体验冲突；新收据已恢复 Slice1 开发，但旧 question/run grant 仍不可复用。
 
-clean product freeze 和本次 exact question/run authorization 完成后，Engineering QA 入口使用：
+当前 Alpha 目标在 listener 前固定一个 `ENGINEERING_QA_SESSION_AUTHORITY@1`，而不是固定一条问题。它绑定 clean product、exact 工程/
+revision、World Model、Source Profile/allowlist、Provider/model/configuration/qualification、披露边界、有效期和每题/整会话安全熔断。
+页面显示这些边界；体验者只输入问题并确认提交，服务签发 request/run identity 并由 System Owner 编译该题 exact grant。每题后续动态
+Ledger/Package 输入仍逐角色形成 one-use authorization。题目失败只关闭该请求，服务继续接受下一题；session authority 漂移、过期或总
+熔断耗尽则拒绝后续新题。问题 POST 仅接受当前 `http://127.0.0.1:8765` 页面发出的 same-origin `application/json`；跨站或
+`text/plain` 请求在 receipt 与 transport 前拒绝。当前实现与确定性证据闭合前，不得把该目标写成 live PASS。
+
+持续 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
+接触其中的授权或内部参数：
+
+```bash
+PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_alpha_cli \
+  --session-config /absolute/frozen/engineering-qa-session.json
+```
+
+session configuration 必须是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，并且根对象恰好包含下列字段；四类路径、
+排除项、Snapshot 和已知限制都必须是非空无重复数组：
+
+```json
+{
+  "schema": "SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1",
+  "product_repository": "/absolute/clean/software-world-model",
+  "product_commit": "<exact-40-hex-product-commit>",
+  "product_tree": "<exact-40-hex-product-tree>",
+  "repository": "/absolute/exact/source-repository",
+  "repository_id": "<stable-repository-id>",
+  "binding_id": "<world-model-binding-id>",
+  "repository_revision": "<exact-40-hex-source-commit>",
+  "source_profile_ref": "<versioned-source-profile-ref>",
+  "source_paths": ["src/main/java"],
+  "document_paths": ["README.md"],
+  "build_paths": ["pom.xml"],
+  "test_paths": ["src/test/java"],
+  "excluded_source_paths": ["src/main/resources"],
+  "ordered_envelope": "/absolute/published/ordered.json",
+  "snapshot_bundles": ["/absolute/published/snapshot.json"],
+  "cognition_snapshot_id": "<exact-snapshot-id-or-null>",
+  "response_language": "zh-CN",
+  "session_ref": "<unique-session-ref>",
+  "authorization_message_digest": "sha256:<post-freeze-user-session-authorization-digest>",
+  "authorized_at": "<canonical-UTC-time>",
+  "expires_at": "<canonical-UTC-time-not-after-conformance-expiry>",
+  "conformance_result": "/absolute/current/deepseek-conformance.json",
+  "gateway_database": "/absolute/new/gateway.sqlite3",
+  "launch_receipt": "/absolute/new/alpha-launch.json",
+  "terminal_receipt": "/absolute/new/alpha-terminal.json",
+  "maximum_questions": 3,
+  "maximum_dispatches_per_question": 24,
+  "maximum_total_dispatches": 72,
+  "known_limitations": ["Alpha evaluation only", "src/main/resources is excluded"]
+}
+```
+
+`cognition_snapshot_id` 在单 Snapshot 时可为 JSON `null`，多 Snapshot 时必须是 exact ID。数据库与两份 receipt 路径必须互异且尚不存在；
+配置不得包含 Secret value，DeepSeek credential 只在每题首个已授权 dispatch 前从冻结配置所指的环境引用解析。该配置必须绑定新 product
+freeze 与 post-freeze live 授权，且 launcher 不接受 host/port/question/request/run 参数。旧
+`engineering_qa_preview_cli` 是历史单题审计兼容面，不是当前 Alpha 或平行演示入口。
+
+历史 exact prepared question/run 的审计复现入口使用：
 
 ```bash
 PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_preview_cli \
@@ -77,12 +135,14 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_previe
   --port 55120
 ```
 
+安装后的兼容命令名为 `swm-engineering-qa-preview`；`swm-engineering-qa` 只指向当前持续 Alpha，避免普通体验者误入逐题 prepared 入口。
+
 所有占位符都必须替换为 freeze 后的 exact 值；多 Snapshot Read Bundle 还必须传 `--cognition-snapshot-id`。三个输出路径必须尚不存在且
 彼此不同。命令不接受 host 参数，固定绑定 `127.0.0.1`；它不下载、更新、checkout、推断 evidence class 或读取 hidden 输入。
 
 - `WORLD_MODEL` 显示 source revision、exact Snapshot、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact 与 Evidence 引用；问题请求只读不含 Evidence payload 的 exact Snapshot Read Bundle，不得触发更新或访问 Source、权威数据库或 Evidence Store。点击引用由浏览器另行访问密封结果后的 Citation Projector，不把正文发送回问答进程。
 - `DIRECT_INVESTIGATION` 显示 exact Source Target 与 Evidence Packet；它按 ADR-013 调查源码，但不能标成世界模型回答。
-- `ENGINEERING_QA` 目标页面在请求开始前已固定该模式、protocol identity、exact repository/revision、World Model Read Authority、Source allowlist 和 Source Profile identity。真实模型预览还只能接受 run grant 中 exact prepared request ID/question；页面从 health 读取并预填，不得用浏览器随机 ID 或改写问题扩张授权。默认主视图只展示原问题、结论优先答案、结论级 Citation 与用户可理解的 unknown/limitation；World Model Cognition Context、Investigation Step、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
+- `ENGINEERING_QA` 页面在 Session Authority 中固定模式、protocol identity、exact repository/revision、World Model Read Authority、Source allowlist 和 Source Profile identity。当前 Alpha 的浏览器只提交 question 与 disclosure acknowledgement，request/run ID 由服务签发；历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。默认主视图只展示原问题、结论优先答案、结论级 Citation 与用户可理解的 unknown/limitation；World Model Cognition Context、Investigation Step、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
 - Engineering QA 页面不根据问题、项目、关键词、符号、fixture 或 Oracle 切换后端。World Model Cognition Context 缺失/无关不会切换为 Direct；Investigation LLM 的自适应源码调查是同一 `ENGINEERING_QA` Request 预先声明的部分，每个 Proposal 必须由 Broker 编译、Worker 只读执行并追加 Ledger，实际模式和证据来源必须可审计。
 
 人工更新是独立操作：即使从未提问也能构建新 Snapshot；计划或来源事件自动更新需要独立启用和运维证明。
