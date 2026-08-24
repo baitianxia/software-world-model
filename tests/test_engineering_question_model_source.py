@@ -381,7 +381,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@27",
+            "engineering-qa-adaptive-investigation-prompt@28",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -400,7 +400,6 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("basis_entry_ids MUST include", prompt)
             self.assertIn("eligible_locator_references", prompt)
             self.assertIn("eligible_required_path_locators", prompt)
-            self.assertIn("one or more unique", prompt)
             self.assertIn("checklist_item_ids", prompt)
             self.assertIn("non-empty and unique", prompt)
             self.assertIn("never use", prompt)
@@ -446,6 +445,14 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("final HTTP or API status", prompt)
             self.assertIn("framework default", prompt)
             self.assertIn("transport status", prompt)
+        verification_prompt = " ".join(
+            engineering_question_role_prompt(
+                EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION
+            ).split()
+        )
+        self.assertIn("last_broker_rejection", verification_prompt)
+        self.assertIn("preserves every non-gap disposition", verification_prompt)
+        self.assertIn("entire authorized checklist scope", verification_prompt)
         understanding_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.QUESTION_UNDERSTANDING
@@ -482,6 +489,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 EngineeringQuestionModelRole.INITIAL_INVESTIGATION
             ).split()
         )
+        self.assertIn("one or more unique", initial_prompt)
         self.assertIn(
             "mandatory minimum, not the maximum investigation plan",
             initial_prompt,

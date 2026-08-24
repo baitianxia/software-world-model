@@ -30,6 +30,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringQuestionResultStatus,
     EvidenceLedger,
     InitialInvestigationInput,
+    LedgerEntryKind,
     RequiredEvidencePathLocator,
     RetrievalItem,
     SourceBroker,
@@ -606,6 +607,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "eligible_required_path_locators",
                 "consumed_full_content_paths",
                 "prior_action_intents",
+                "last_broker_rejection",
                 "registered_evidence_classes",
                 "required_evidence_classes",
                 "investigated_evidence_classes",
@@ -629,13 +631,17 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["eligible_required_path_locators"], ())
-        self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(
+            manifest.body["consumed_full_content_paths"],
+            ("README.md",),
+        )
         self.assertEqual(
             manifest.body["untried_required_evidence_classes"],
             ("TEST",),
         )
         self.assertEqual(manifest.body["unregistered_required_evidence_classes"], ())
         self.assertEqual(manifest.body["prior_action_intents"], ())
+        self.assertIsNone(manifest.body["last_broker_rejection"])
         self.assertEqual(
             set(manifest.body["admissible_support_references"]),
             {item.source_reference for item in package.support_citation},
@@ -644,6 +650,86 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ledger.entries[-1].entry_id.value,
             manifest.body["admissible_boundary_references"],
         )
+
+        proposal_id = "investigation_proposal_" + "a" * 32
+        rejected_ledger = ledger.append(
+            kind=LedgerEntryKind.INVESTIGATION_PROPOSAL,
+            subject_id=proposal_id,
+            subject_digest=Digest("sha256:" + "a" * 64),
+            references=(ledger.entries[-1].entry_id.value,),
+            details={
+                "investigation_kind": "VERIFICATION",
+                "attempt_id": investigation_input.attempt_id.value,
+                "operation": "search",
+                "step_index": "1",
+                "evidence_class": "TEST",
+                "query": "timeout",
+            },
+        ).append(
+            kind=LedgerEntryKind.BROKER_DECISION,
+            subject_id="broker_decision_" + "b" * 32,
+            subject_digest=Digest("sha256:" + "b" * 64),
+            references=(proposal_id,),
+            details={
+                "status": "REJECTED",
+                "reason": "DUPLICATE_ACTION_INTENT",
+            },
+        )
+        rejected_manifest = (
+            EngineeringQuestionRoleInputBuilder.verification_investigation(
+                replace(
+                    investigation_input,
+                    step_index=2,
+                    ledger=rejected_ledger,
+                )
+            )
+        )
+        self.assertEqual(
+            rejected_manifest.body["last_broker_rejection"],
+            {
+                "decision_id": "broker_decision_" + "b" * 32,
+                "proposal_id": proposal_id,
+                "reason_code": "DUPLICATE_ACTION_INTENT",
+                "required_response": (
+                    "CHOOSE_A_DISTINCT_REGISTERED_ACTION_OR_FINISH_HONESTLY"
+                ),
+            },
+        )
+
+        authorized_proposal_id = "investigation_proposal_" + "c" * 32
+        recovered_ledger = rejected_ledger.append(
+            kind=LedgerEntryKind.INVESTIGATION_PROPOSAL,
+            subject_id=authorized_proposal_id,
+            subject_digest=Digest("sha256:" + "c" * 64),
+            references=(rejected_ledger.entries[-1].entry_id.value,),
+            details={
+                "investigation_kind": "VERIFICATION",
+                "attempt_id": investigation_input.attempt_id.value,
+                "operation": "search",
+                "step_index": "2",
+                "evidence_class": "TEST",
+                "query": "expiry",
+            },
+        ).append(
+            kind=LedgerEntryKind.BROKER_DECISION,
+            subject_id="broker_decision_" + "d" * 32,
+            subject_digest=Digest("sha256:" + "d" * 64),
+            references=(authorized_proposal_id,),
+            details={
+                "status": "AUTHORIZED",
+                "reason": "POLICY_COMPILED",
+            },
+        )
+        recovered_manifest = (
+            EngineeringQuestionRoleInputBuilder.verification_investigation(
+                replace(
+                    investigation_input,
+                    step_index=3,
+                    ledger=recovered_ledger,
+                )
+            )
+        )
+        self.assertIsNone(recovered_manifest.body["last_broker_rejection"])
 
         with self.assertRaises(DomainError) as caught:
             EngineeringQuestionRoleInputBuilder.verification_investigation(

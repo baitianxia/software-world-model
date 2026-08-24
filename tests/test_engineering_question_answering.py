@@ -8,6 +8,7 @@ from software_world_model.application_services.engineering_question_answering im
     AnswerDetailLevel,
     AnswerClaimKind,
     ChecklistDisposition,
+    ChecklistDispositionReferenceEligibility,
     ChecklistOutcome,
     CognitionDimension,
     CognitionItem,
@@ -48,6 +49,8 @@ from software_world_model.application_services.engineering_question_answering im
     SourceReadOperation,
     VerificationRequestProposal,
     WorldModelCognitionContext,
+    _eligible_locator_references,
+    _merge_verification_checklist_dispositions,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -1020,6 +1023,203 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 item.kind is PackageBoundaryKind.GAP
                 for item in second.boundary_audit
             )
+        )
+
+    def test_verification_finish_delta_replaces_only_authorized_gap(self):
+        package = self.service(request_more_evidence=False).answer(
+            request()
+        ).current_package
+        first = package.checklist_dispositions[0]
+        second = ChecklistDisposition.create(
+            checklist_item_id="check-2",
+            outcome=first.outcome,
+            evidence_references=first.evidence_references,
+            explanation="The predecessor has a separate retained conclusion.",
+            material_observations=(
+                MaterialObservation.create(
+                    checklist_item_id="check-2",
+                    kind=MaterialObservationKind.OUTCOME,
+                    statement="The predecessor retains a separate outcome.",
+                    evidence_references=first.evidence_references,
+                ),
+            ),
+        )
+        package = replace(
+            package,
+            checklist_dispositions=(first, second),
+            digest=Digest("sha256:" + "d" * 64),
+        )
+        verification = VerificationRequestProposal.create(
+            package_digest=package.digest,
+            checklist_item_id="check-2",
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            evidence_need="Exact implementation for the second conclusion",
+        )
+        replacement = ChecklistDisposition.create(
+            checklist_item_id="check-2",
+            outcome=ChecklistOutcome.SUPPORTED,
+            evidence_references=first.evidence_references,
+            explanation="The verification evidence resolves the second conclusion.",
+            material_observations=(
+                MaterialObservation.create(
+                    checklist_item_id="check-2",
+                    kind=MaterialObservationKind.OUTCOME,
+                    statement="The verification evidence establishes the second outcome.",
+                    evidence_references=first.evidence_references,
+                ),
+            ),
+        )
+
+        merged = _merge_verification_checklist_dispositions(
+            current_package=package,
+            verification_request=verification,
+            verification_dispositions=(replacement,),
+        )
+
+        self.assertEqual(merged, (first, replacement))
+        self.assertIs(merged[0], first)
+        with self.assertRaises(DomainError) as caught:
+            _merge_verification_checklist_dispositions(
+                current_package=package,
+                verification_request=verification,
+                verification_dispositions=(first, replacement),
+            )
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+
+    def test_verification_finish_validates_only_gap_checklist_scope(self):
+        req = request()
+        context = sid("role_context", "c")
+        understanding = QuestionUnderstanding.accept(
+            request=req,
+            expected_role_context_id=context,
+            proposal=QuestionUnderstandingProposal.create(
+                role_context_id=context,
+                request_digest=req.digest,
+                preserved_original_question=req.original_question,
+                user_goal="Confirm two independently supportable conclusions.",
+                audience="maintainer",
+                requested_abstraction_level=(
+                    AnswerDetailLevel.USER_VISIBLE_EXPLANATION
+                ),
+                material_conclusions=(
+                    "Explain the documented startup path.",
+                    "Explain the separate timeout behavior.",
+                ),
+                evidence_needs=("Exact repository evidence.",),
+                required_evidence_classes=(
+                    EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                ),
+                required_evidence_paths=("README.md",),
+                response_language=req.response_language,
+            ),
+        )
+        cognition = CognitionProjector().project(request=req)
+        ledger = EvidenceLedger.start(request=req, cognition=cognition)
+        support_reference = cognition.items[0].item_id.value
+        target = understanding.checklist[1].item_id
+        disposition = ChecklistDisposition.create(
+            checklist_item_id=target,
+            outcome=ChecklistOutcome.SUPPORTED,
+            evidence_references=(support_reference,),
+            explanation="The gap is supported by the retained cognition evidence.",
+            material_observations=(
+                MaterialObservation.create(
+                    checklist_item_id=target,
+                    kind=MaterialObservationKind.OUTCOME,
+                    statement="The retained evidence establishes the timeout behavior.",
+                    evidence_references=(support_reference,),
+                ),
+            ),
+        )
+        attempt = sid("verification_attempt", "d")
+        role_context = sid("role_context", "e")
+        proposal = InvestigationStepProposal.create(
+            investigation_kind=InvestigationKind.VERIFICATION,
+            attempt_id=attempt,
+            role_context_id=role_context,
+            request_digest=req.digest,
+            step_index=1,
+            ledger_id=ledger.ledger_id,
+            ledger_generation=ledger.generation,
+            ledger_revision=len(ledger.entries),
+            ledger_prefix_digest=ledger.prefix_digest,
+            operation=InvestigationOperation.FINISH,
+            checklist_item_ids=(target,),
+            basis_entry_ids=(ledger.entries[-1].entry_id,),
+            unknown_to_reduce="The authorized verification gap is resolved.",
+            finish_dispositions=(disposition,),
+        )
+
+        EngineeringQuestionAnsweringService._validate_investigation_proposal(
+            request=req,
+            understanding=understanding,
+            ledger=ledger,
+            proposal=proposal,
+            expected_kind=InvestigationKind.VERIFICATION,
+            expected_attempt_id=attempt,
+            expected_role_context_id=role_context,
+            expected_step_index=1,
+            eligible_locator_references=(),
+            disposition_reference_eligibility=(
+                # A verification delta may cite retained Package support.
+                ChecklistDispositionReferenceEligibility.create(
+                    support_references=(support_reference,),
+                    boundary_references=(),
+                )
+            ),
+            authorized_checklist_item_ids=(target,),
+        )
+
+        unauthorized = InvestigationStepProposal.create(
+            investigation_kind=InvestigationKind.VERIFICATION,
+            attempt_id=attempt,
+            role_context_id=role_context,
+            request_digest=req.digest,
+            step_index=1,
+            ledger_id=ledger.ledger_id,
+            ledger_generation=ledger.generation,
+            ledger_revision=len(ledger.entries),
+            ledger_prefix_digest=ledger.prefix_digest,
+            operation=InvestigationOperation.SEARCH,
+            checklist_item_ids=(understanding.checklist[0].item_id,),
+            evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            query="startup",
+            basis_entry_ids=(ledger.entries[-1].entry_id,),
+            unknown_to_reduce="Search outside the authorized verification gap.",
+        )
+        with self.assertRaises(DomainError) as caught:
+            EngineeringQuestionAnsweringService._validate_investigation_proposal(
+                request=req,
+                understanding=understanding,
+                ledger=ledger,
+                proposal=unauthorized,
+                expected_kind=InvestigationKind.VERIFICATION,
+                expected_attempt_id=attempt,
+                expected_role_context_id=role_context,
+                expected_step_index=1,
+                eligible_locator_references=(),
+                disposition_reference_eligibility=(
+                    ChecklistDispositionReferenceEligibility.create(
+                        support_references=(support_reference,),
+                        boundary_references=(),
+                    )
+                ),
+                authorized_checklist_item_ids=(target,),
+            )
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+        self.assertIn("authorized Checklist scope", caught.exception.message)
+
+    def test_predecessor_package_full_read_blocks_verification_reread_locator(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        search_result = result.retrieval_results[0]
+
+        self.assertTrue(_eligible_locator_references((search_result,)))
+        self.assertEqual(
+            _eligible_locator_references(
+                (search_result,),
+                preconsumed_full_content_paths=("README.md",),
+            ),
+            (),
         )
 
     def test_ledger_is_append_only_and_requires_terminal_entry(self):

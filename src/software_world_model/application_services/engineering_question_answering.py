@@ -2681,6 +2681,52 @@ def _prior_action_intents(
     return tuple(intents)
 
 
+def _last_attempt_broker_rejection(
+    *,
+    ledger: EvidenceLedger,
+    attempt_id: StableId,
+) -> dict[str, object] | None:
+    proposal_ids = {
+        entry.subject_id
+        for entry in ledger.entries
+        if entry.kind is LedgerEntryKind.INVESTIGATION_PROPOSAL
+        and dict(entry.details).get("attempt_id") == attempt_id.value
+    }
+    latest: dict[str, object] | None = None
+    for entry in ledger.entries:
+        if (
+            entry.kind is not LedgerEntryKind.BROKER_DECISION
+            or len(entry.references) != 1
+            or entry.references[0] not in proposal_ids
+        ):
+            continue
+        details = dict(entry.details)
+        status = details.get("status")
+        if status == BrokerDecisionStatus.REJECTED.value:
+            reason = details.get("reason")
+            if not isinstance(reason, str) or not reason:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "rejected Broker Decision lacks its reason code",
+                )
+            latest = {
+                "decision_id": entry.subject_id,
+                "proposal_id": entry.references[0],
+                "reason_code": reason,
+                "required_response": (
+                    "CHOOSE_A_DISTINCT_REGISTERED_ACTION_OR_FINISH_HONESTLY"
+                ),
+            }
+        elif status == BrokerDecisionStatus.AUTHORIZED.value:
+            latest = None
+        else:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Broker Decision has an unknown status",
+            )
+    return latest
+
+
 def _duplicates_prior_action_intent(
     *,
     proposal: InvestigationStepProposal,
@@ -2725,8 +2771,13 @@ def _eligible_locator_references(
     required_path_locators: Sequence[RequiredEvidencePathLocator] = (),
     attempt_id: StableId | None = None,
     request_digest: Digest | None = None,
+    preconsumed_full_content_paths: Sequence[str] = (),
 ) -> tuple[StableId, ...]:
     consumed_paths = set(_consumed_full_content_paths(retrieval_results))
+    consumed_paths.update(
+        _canonical_relative_path(path)
+        for path in preconsumed_full_content_paths
+    )
     eligible_items = tuple(
         item
         for result in retrieval_results
@@ -3993,6 +4044,63 @@ class VerificationRequestProposal:
         }
 
 
+_DISPLAY_LINE_RANGE_SUFFIX = re.compile(r":L[1-9][0-9]*(?:-[1-9][0-9]*)?$")
+
+
+def _package_full_content_paths(
+    package: QuestionEvidencePackage,
+) -> tuple[str, ...]:
+    paths: set[str] = set()
+    for entry in package.support_citation:
+        if (
+            entry.origin_class != "EXACT_REVISION_SOURCE"
+            or _DISPLAY_LINE_RANGE_SUFFIX.search(entry.locator)
+        ):
+            continue
+        normalized = _canonical_relative_path(entry.locator)
+        if normalized != entry.locator:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "current Package contains a non-canonical full-content locator",
+            )
+        paths.add(normalized)
+    return tuple(sorted(paths))
+
+
+def _merge_verification_checklist_dispositions(
+    *,
+    current_package: QuestionEvidencePackage,
+    verification_request: VerificationRequestProposal,
+    verification_dispositions: Sequence[ChecklistDisposition],
+) -> tuple[ChecklistDisposition, ...]:
+    prior = tuple(current_package.checklist_dispositions)
+    delta = tuple(verification_dispositions)
+    target = verification_request.checklist_item_id
+    if verification_request.package_digest != current_package.digest:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "verification disposition delta is not bound to the current Package",
+        )
+    if (
+        len({item.checklist_item_id for item in prior}) != len(prior)
+        or sum(item.checklist_item_id == target for item in prior) != 1
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "current Package does not contain one exact verification target",
+        )
+    if len(delta) != 1 or delta[0].checklist_item_id != target:
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "verification FINISH must disposition only its authorized gap exactly once",
+        )
+    replacement = delta[0]
+    return tuple(
+        replacement if item.checklist_item_id == target else item
+        for item in prior
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class VerificationInvestigationInput:
     attempt_id: StableId
@@ -4021,6 +4129,9 @@ class VerificationInvestigationInput:
             required_path_locators=self.required_path_locators,
             attempt_id=self.attempt_id,
             request_digest=self.current_package.request_digest,
+            preconsumed_full_content_paths=_package_full_content_paths(
+                self.current_package
+            ),
         )
 
     @property
@@ -4036,7 +4147,14 @@ class VerificationInvestigationInput:
 
     @property
     def consumed_full_content_paths(self) -> tuple[str, ...]:
-        return _consumed_full_content_paths(self.retrieval_results)
+        return tuple(
+            sorted(
+                {
+                    *_package_full_content_paths(self.current_package),
+                    *_consumed_full_content_paths(self.retrieval_results),
+                }
+            )
+        )
 
     @property
     def unread_required_evidence_paths(self) -> tuple[str, ...]:
@@ -4048,6 +4166,13 @@ class VerificationInvestigationInput:
     @property
     def prior_action_intents(self) -> tuple[dict[str, object], ...]:
         return _prior_action_intents(
+            ledger=self.ledger,
+            attempt_id=self.attempt_id,
+        )
+
+    @property
+    def last_broker_rejection(self) -> dict[str, object] | None:
+        return _last_attempt_broker_rejection(
             ledger=self.ledger,
             attempt_id=self.attempt_id,
         )
@@ -4138,6 +4263,7 @@ class VerificationInvestigationInput:
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "prior_action_intents": list(self.prior_action_intents),
+            "last_broker_rejection": self.last_broker_rejection,
             "registered_evidence_classes": [
                 item.value for item in self.registered_evidence_classes
             ],
@@ -6168,6 +6294,13 @@ class EngineeringQuestionAnsweringService:
             results = list(verification.retrieval_results)
             decisions = list(verification.broker_decisions)
             usage = verification.usage
+            next_dispositions = verification.dispositions
+            if verification.ledger.terminal_status is LedgerTerminalStatus.FINISHED:
+                next_dispositions = _merge_verification_checklist_dispositions(
+                    current_package=package,
+                    verification_request=verification_request,
+                    verification_dispositions=verification.dispositions,
+                )
             next_package = QuestionEvidencePackage.seal(
                 request=request,
                 understanding=understanding,
@@ -6175,7 +6308,7 @@ class EngineeringQuestionAnsweringService:
                 ledger=verification.ledger,
                 retrieval_results=results,
                 broker_decisions=decisions,
-                checklist_dispositions=verification.dispositions,
+                checklist_dispositions=next_dispositions,
                 package_revision=verification.ledger.generation,
                 prior_package_digest=package.digest,
             )
@@ -6233,12 +6366,18 @@ class EngineeringQuestionAnsweringService:
         )
         required_evidence_classes = understanding.required_evidence_classes
         required_evidence_paths = understanding.required_evidence_paths
+        authorized_checklist_item_ids = tuple(
+            item.item_id for item in understanding.checklist
+        )
         if (
             investigation_kind is InvestigationKind.VERIFICATION
             and verification_request is not None
         ):
             required_evidence_classes = (verification_request.evidence_class,)
             required_evidence_paths = ()
+            authorized_checklist_item_ids = (
+                verification_request.checklist_item_id,
+            )
         required_path_classes = tuple(
             self._source_broker.evidence_class_for_path(
                 request=request,
@@ -6408,6 +6547,7 @@ class EngineeringQuestionAnsweringService:
                     investigation_input.eligible_locator_references
                 ),
                 disposition_reference_eligibility=disposition_reference_eligibility,
+                authorized_checklist_item_ids=authorized_checklist_item_ids,
             )
             pre_proposal_ledger = ledger
             proposal_details = {
@@ -6875,6 +7015,7 @@ class EngineeringQuestionAnsweringService:
         expected_step_index: int,
         eligible_locator_references: tuple[StableId, ...],
         disposition_reference_eligibility: ChecklistDispositionReferenceEligibility,
+        authorized_checklist_item_ids: tuple[str, ...],
     ) -> None:
         expected_reference_eligibility = ChecklistDispositionReferenceEligibility.create(
             support_references=disposition_reference_eligibility.support_references,
@@ -6940,10 +7081,22 @@ class EngineeringQuestionAnsweringService:
                 "investigation proposal does not bind its exact fresh context and Ledger prefix",
             )
         checklist_ids = {item.item_id for item in understanding.checklist}
-        if not set(proposal.checklist_item_ids).issubset(checklist_ids):
+        authorized_checklist_ids = set(authorized_checklist_item_ids)
+        if (
+            not authorized_checklist_ids
+            or not authorized_checklist_ids.issubset(checklist_ids)
+            or len(authorized_checklist_ids) != len(authorized_checklist_item_ids)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "investigation checklist authority is invalid",
+            )
+        if not set(proposal.checklist_item_ids).issubset(
+            authorized_checklist_ids
+        ):
             raise DomainError(
                 ErrorCode.PROVIDER_RESPONSE_INVALID,
-                "investigation proposal references an unknown Question Checklist item",
+                "investigation proposal exceeds its authorized Checklist scope",
             )
         ledger_entry_ids = {item.entry_id for item in ledger.entries}
         if not set(proposal.basis_entry_ids).issubset(ledger_entry_ids):
@@ -6970,12 +7123,13 @@ class EngineeringQuestionAnsweringService:
                 item.checklist_item_id for item in proposal.finish_dispositions
             }
             if (
-                disposition_ids != checklist_ids
-                or len(proposal.finish_dispositions) != len(checklist_ids)
+                disposition_ids != authorized_checklist_ids
+                or len(proposal.finish_dispositions)
+                != len(authorized_checklist_ids)
             ):
                 raise DomainError(
                     ErrorCode.PROVIDER_RESPONSE_INVALID,
-                    "FINISH must disposition every Checklist item exactly once",
+                    "FINISH must disposition every authorized Checklist item exactly once",
                 )
             support_references = set(
                 disposition_reference_eligibility.support_references

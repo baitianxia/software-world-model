@@ -180,5 +180,14 @@ iteration: ITER-010
   Contract 演进产生伪回归。现直接核对当时冻结的 schema/digest，不修改历史 Manifest，也不削弱活动 Iteration 的 current fileset Gate。
 - [FINDING-010-069](FINDING-010-069.md)：上述处置后 Engineering QA 106/106、current docs 463/463、含 docs Gate 139/139、compile/diff PASS；允许 AF_UNIX 的
   full 1172 项中 1167 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-070](FINDING-010-070.md)：clean `7fb7e7c…` / run-025 的 Q2 已由 Reviewer/Application 正确派生只绑定 `check-3` 的
+  Verification Request，补证 FINISH 也正确只返回该项，却被共享的“完整 Checklist exact-once”规则拒绝。现区分 Initial 全量 scope 与
+  Verification 单 gap scope，并由可信 Application 保序替换 predecessor Package 唯一目标、原样保留非目标 disposition。
+- [FINDING-010-071](FINDING-010-071.md)：run-025 的补证输入未把 predecessor Package 已有 full-content source 当作 consumed，且最新
+  Broker duplicate rejection 只埋在长 Ledger 中，造成重复读与重复动作。现投影 Package + 新 Result consumed-path 并集和当前 attempt
+  最近 Broker rejection；不重新披露旧 raw Result，不扩大 path/operation authority，也不削弱 duplicate/no-progress fuse。
+- [FINDING-010-072](FINDING-010-072.md)：上述处置后 Engineering QA 109/109、docs 组合 142/142、历史 oracle 组合 74/74、current docs
+  466/466、compile/diff PASS；允许 AF_UNIX 的 full 1175 项中 1170 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 historical hold，
+  没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -169,6 +169,18 @@ token filter 的 empty-context 与 authorization manager 的 deny decision 无�
 mapper 的 full-content implementation 支持；custom-handler wiring 只证明选择，transport status 与 application/response-body code 分开。
 Prompt 升为 `@26`；run-023 永久保留为 Q1/Q2 可接受、Q3 独立重大质量 FAIL，不能取得三题 Gate。
 
+后续 clean `740c74a…` / run-024 证明两类重复 Provider 状态仍会破坏闭包：FINISH parent 漏抄 child reference、同一 UNKNOWN item
+重复分装，以及 Reviewer 已形成 typed evidence gap 后仍独立维护不一致 action/request。`FINDING-010-066/067` 已把 FINISH 收敛为单一
+outcome-tagged list、由 trusted Adapter 派生 parent reference，并让 Application 从 typed remediation 派生 Review action/request；
+`FINDING-010-068/069` 闭合 deterministic Gate。
+
+该处置形成 clean `7fb7e7c…` / run-025：fresh Conformance 2/2 PASS，同一持续 Alpha 三题使用 8/13/12 dispatch，retry/switch 0；
+66,000-byte UTF-8 输入在 Provider 前拒绝，private files、listener continuity 与 Production `NOT_EXECUTED` 成立。Q1 独立可接受且四个
+Citation 已打开核对。Q2 的 Reviewer 正确派生只绑定 `check-3` 的补证 Request，Verification 也正确只返回一个 `check-3` disposition，
+但 Application 仍要求重报完整四项 Checklist 而错误关闭。Q3 在所需 handler implementation 不属于本次 exact Source allowlist 时，
+重复 intent 被 Broker/no-progress fuse 安全关闭。`FINDING-010-070/071` 因而把补证 FINISH 定义为单 gap delta + trusted merge，并将
+predecessor Package full-content paths 与最新 Broker rejection 提升为补证控制状态；run-025 仍是 1 PASS + 2 FAIL，不能取得三题 Gate。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -209,7 +221,10 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - 每个 FINISH disposition 必须从完整引用内容列出有界原子 material observations，区分 process、outcome、state change、side effect 与
   limitation，并逐条绑定 admissible evidence；`SUPPORTED` 只能包含 affirmative observation，non-supported outcome 只能包含
   `LIMITATION`。Provider-facing output 只用一个 outcome-tagged `finish_dispositions` 数组且不重复 parent references；可信 adapter 按
-  child observation 顺序稳定汇总 exact references，Application Domain 再独立拒绝混类、非 exact-once、错误证据分区或证据不闭合。
+  child observation 顺序稳定汇总 exact references。Initial authorized scope 是完整 Question Checklist；Verification scope 只有 Request
+  指定的一个 gap，FINISH 只能返回该 gap delta。Application Domain 独立拒绝越权、混类、非 exact-once、错误证据分区或证据不闭合；
+  成功补证后由可信 Application 按 predecessor 顺序替换唯一目标 disposition、原样保留所有非目标项并形成 successor Package，失败关闭
+  不执行 merge。
   一个代表性事实不能闭合宽泛 checklist。Application 生成稳定 observation identity 并拒绝跨 checklist 或重复。
   caller/configuration/wiring 只证明接线，不能替代被委托组件自身
   的条件、比较、状态变化、结果或失败语义；每个相关 full-content 实现 entry 中的 material side effect 必须单独观察。
@@ -234,9 +249,11 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   `INVESTIGATE_MISSING_EVIDENCE`，不可恢复失败使用 `REJECT_UNRECOVERABLE`；可信 Application 按固定优先级派生 action 与 versioned
   Verification Request。Reviewer 不能提出可执行 path/command/operation，也不能因 Draft 扩张了原问题不要求的细节而扩大调查。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
-  Result 自适应提出 search/read/parse/finish；每一步仍由 Application/Broker 校验编译、Worker 执行。它不回初始 Investigation LLM，
-  不继承 Reviewer 会话，也无直接来源权限。完成后追加新 Ledger Revision、密封新 Package、完整生成新 Answer 并独立 Review；旧 Review
-  不得批准新包。
+  Result 自适应提出 search/read/parse/finish；predecessor Package 已含的 full-content exact-source locators 与 gap 后 full reads 共同
+  标记为 consumed，相应 locator 不再 eligible，旧 raw Result 不重新进入输入。当前 attempt 最近一次 Broker rejection 以受信控制状态
+  显式投影，角色必须选择真正不同的合法 action 或诚实 FINISH。每一步仍由 Application/Broker 校验编译、Worker 执行；上述状态都不授予
+  新 path/operation。它不回初始 Investigation LLM，不继承 Reviewer 会话，也无直接来源权限。完成后追加新 Ledger Revision、密封新
+  Package、完整生成新 Answer 并独立 Review；旧 Review 不得批准新包。
 - 为尽快验证方向，Slice1 每个问题最多冻结一次 Verification Investigation；这是 preview 的临时安全边界，不是永久协议。Slice2/3
   禁止固定一轮上限，改为在各自 exact freeze 前预密封 Package Revision、model call、Broker operation、source bytes、wall time 与
   no-progress 高安全熔断。answerable 因任一熔断耗尽而未回答必须计 `FAIL`，不能用 Limitation 取得 supported 分数。
@@ -380,4 +397,11 @@ Application 按 reject → missing evidence → rewrite → empty-approved 派�
 `FINDING-010-068/069` 校正历史 ITER-007 oracle 用 current System 文档重算冻结摘要的局部测试错误，并闭合新协议 deterministic Gate：
 Engineering QA 106/106、current docs 463/463、允许 AF_UNIX 的 full 1172/1167；raw 唯一 4 FAIL + 1 ERROR 仍是冻结 historical hold。
 new clean/fresh Conformance、持续 Browser 三题与独立答案复核仍待执行。
+`FINDING-010-070/071` 记录 clean `7fb7e7c…` / run-025 的 Q2 Verification scope 契约错配，以及补证重复读取 predecessor Package 内容、
+重复已拒绝 intent 的控制面缺口。处置将成功 Verification FINISH 收窄为单 gap delta，由 Application 可信保序合并，并把 Package full reads
+与最新 Broker rejection 投影到角色输入；旧 raw Result、Source authority、duplicate/no-progress fuse 均未放宽。新确定性 Gate 与
+clean/fresh run 仍须闭合，run-025 不追认为三题 PASS。
+`FINDING-010-072` 已以 Engineering QA 109/109、docs 组合 142/142、历史 oracle 组合 74/74、current docs 466/466、compile/diff 与
+允许 AF_UNIX 的 full 1175/1170 exact historical hold 闭合 deterministic Gate。下一步只能从新 clean candidate 执行 fresh Conformance、
+持续三题与独立复核；旧 run-025 仍不追认。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

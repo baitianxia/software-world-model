@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@27"
+    "engineering-qa-adaptive-investigation-prompt@28"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -332,19 +332,31 @@ or FINISH and adapt to the newest result. Do not reuse old raw results, propose
 commands, semantic search descriptions, or broaden the gap. A search query must
 be a short literal token likely to occur verbatim. On every action,
 basis_entry_ids MUST include required_basis_entry_id copied exactly from the
-current input. Every action must copy one or more unique requested checklist
-item IDs into checklist_item_ids; never return an empty list. basis_entry_ids
+current input. verification_request.checklist_item_id is this role's entire
+authorized checklist scope. Every action must copy that one exact ID into
+checklist_item_ids; never add another Package checklist item or return an empty
+list. The trusted Application preserves every non-gap disposition from the
+predecessor Package and replaces only this authorized gap after successful
+FINISH. Do not repeat or reconstruct the complete predecessor disposition set.
+basis_entry_ids
 must also remain non-empty and unique. For read/parse, locator_reference MUST
 copy one exact opaque ID from eligible_locator_references; never use an ID found
 only inside a typed result, a human locator/path, or an allowlisted path. If
 eligible_locator_references is empty, choose search or FINISH. Never repeat an
 earlier query or locator intent, and never read/parse any
-consumed_full_content_paths. prior_action_intents contains every earlier action
+consumed_full_content_paths. This list includes full content already present in
+the predecessor Package as well as new reads, because the Package already
+supplies that exact content. prior_action_intents contains every earlier action
 in this attempt. Never repeat the same SEARCH evidence_class plus query pair,
 and never reuse a READ/PARSE locator reference. If the newest progress_digest
 already appears in an earlier typed result, the newest action made no progress;
-change the evidence class, query, or eligible locator, or FINISH immediately. FINISH must
-disposition every requested checklist item honestly. Every child observation
+change the evidence class, query, or eligible locator, or FINISH immediately.
+last_broker_rejection is a trusted concise projection of the newest rejected
+action in this attempt. When non-null, do not repeat that action: choose a truly
+distinct registered action that can reduce the gap, or FINISH with an honest
+non-supported disposition before the no-progress fuse closes the question.
+FINISH must disposition only verification_request.checklist_item_id, exactly
+once and honestly. Every child observation
 must return non-empty unique evidence_references. SUPPORTED observations may
 copy only exact opaque values from admissible_support_references; UNKNOWN,
 CONFLICT, or FAILED observations may copy only exact opaque values from
@@ -360,8 +372,9 @@ locator_reference, and an empty finish_dispositions array; READ or PARSE require
 a non-null evidence_class and one eligible locator_reference, a null query, and
 an empty finish_dispositions array; FINISH requires evidence_class, query, and
 locator_reference all to be null and returns every requested checklist item
-exactly once in the single finish_dispositions array, with at least one total
-disposition. SUPPORTED permits only affirmative observations; UNKNOWN, CONFLICT,
+exactly once in the single finish_dispositions array; in this role that means
+only verification_request.checklist_item_id. Do not include any non-gap checklist item. SUPPORTED permits only
+affirmative observations; UNKNOWN, CONFLICT,
 or FAILED permit only LIMITATION observations. Do not carry an evidence_class
 from the preceding action into FINISH. Do not return parent evidence_references;
 the trusted Adapter derives them from the child observation references. Never

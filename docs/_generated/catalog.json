@@ -2679,6 +2679,41 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-069.md"
   },
   {
+    "id": "FINDING-010-070",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-070.md"
+  },
+  {
+    "id": "FINDING-010-071",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-071.md"
+  },
+  {
+    "id": "FINDING-010-072",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-072.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5229,7 +5264,9 @@
       "FINDING-010-058",
       "FINDING-010-060",
       "FINDING-010-062",
-      "FINDING-010-064"
+      "FINDING-010-064",
+      "FINDING-010-070",
+      "FINDING-010-071"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },
@@ -5941,7 +5978,9 @@
       "FINDING-010-011",
       "FINDING-010-012",
       "FINDING-010-029",
-      "FINDING-010-031"
+      "FINDING-010-031",
+      "FINDING-010-070",
+      "FINDING-010-071"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

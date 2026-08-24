@@ -66,16 +66,16 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@17"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@18"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@9"
+    "engineering-qa-initial-investigation@10"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@9"
+    "engineering-qa-verification-investigation@10"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@5"
@@ -249,8 +249,10 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
         "finish_dispositions": {
             "type": "array",
             "description": (
-                "The only FINISH disposition list. Each checklist item appears "
-                "exactly once. The outcome-tagged variant mechanically selects "
+                "The only FINISH disposition list. Each item in this role input's "
+                "authorized checklist scope appears exactly once. Initial scope is "
+                "the complete Question Checklist; Verification scope is its one "
+                "requested gap. The outcome-tagged variant mechanically selects "
                 "affirmative or limitation observations; parent evidence references "
                 "are derived from child observations by the trusted adapter."
             ),
