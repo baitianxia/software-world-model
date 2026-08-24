@@ -67,16 +67,16 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@15"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@16"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@7"
+    "engineering-qa-initial-investigation@8"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@7"
+    "engineering-qa-verification-investigation@8"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@4"
@@ -124,6 +124,20 @@ _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA = {
     "items": {"type": "string"},
     "minItems": 1,
     "uniqueItems": True,
+}
+_INVESTIGATION_CHECKLIST_IDS_SCHEMA = {
+    **_NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+    "description": (
+        "One or more unique checklist_item_id values from the current role input "
+        "that this action reduces or dispositions."
+    ),
+}
+_INVESTIGATION_BASIS_ENTRY_IDS_SCHEMA = {
+    **_NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+    "description": (
+        "One or more unique current Ledger entry IDs, including the exact "
+        "required_basis_entry_id."
+    ),
 }
 _EVIDENCE_CLASS_SCHEMA = {
     "type": ["string", "null"],
@@ -229,11 +243,11 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
             "type": "string",
             "enum": [item.value for item in InvestigationOperation],
         },
-        "checklist_item_ids": _STRING_ARRAY_SCHEMA,
+        "checklist_item_ids": _INVESTIGATION_CHECKLIST_IDS_SCHEMA,
         "evidence_class": _EVIDENCE_CLASS_SCHEMA,
         "query": _NULLABLE_STRING_SCHEMA,
         "locator_reference": _NULLABLE_STRING_SCHEMA,
-        "basis_entry_ids": _STRING_ARRAY_SCHEMA,
+        "basis_entry_ids": _INVESTIGATION_BASIS_ENTRY_IDS_SCHEMA,
         "unknown_to_reduce": {"type": "string"},
         "supported_finish_dispositions": {
             "type": "array",

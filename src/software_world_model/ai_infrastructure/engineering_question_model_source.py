@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@24"
+    "engineering-qa-adaptive-investigation-prompt@25"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -185,7 +185,11 @@ FINISH. Base it on the immutable question, accepted understanding, exact World
 Model cognition, current Ledger prefix, and typed results. A search query must
 be a short literal token likely to occur verbatim in the selected evidence, not
 a semantic description or command. On every action, basis_entry_ids MUST include
-required_basis_entry_id copied exactly from the current input. For read/parse,
+required_basis_entry_id copied exactly from the current input.
+Every SEARCH, READ, PARSE, or FINISH action must copy one or more unique exact
+checklist item IDs from the current input into checklist_item_ids; an empty list
+does not bind the action to the question. basis_entry_ids must likewise be
+non-empty and unique and must include required_basis_entry_id. For read/parse,
 locator_reference MUST copy one exact opaque ID from eligible_locator_references;
 never use an ID found only inside a typed result, a human locator/path, or an
 allowlisted path. If eligible_locator_references is empty, choose search or
@@ -313,9 +317,11 @@ or FINISH and adapt to the newest result. Do not reuse old raw results, propose
 commands, semantic search descriptions, or broaden the gap. A search query must
 be a short literal token likely to occur verbatim. On every action,
 basis_entry_ids MUST include required_basis_entry_id copied exactly from the
-current input. For read/parse, locator_reference MUST copy one exact opaque ID
-from eligible_locator_references; never use an ID found only inside a typed
-result, a human locator/path, or an allowlisted path. If
+current input. Every action must copy one or more unique requested checklist
+item IDs into checklist_item_ids; never return an empty list. basis_entry_ids
+must also remain non-empty and unique. For read/parse, locator_reference MUST
+copy one exact opaque ID from eligible_locator_references; never use an ID found
+only inside a typed result, a human locator/path, or an allowlisted path. If
 eligible_locator_references is empty, choose search or FINISH. Never repeat an
 earlier query or locator intent, and never read/parse any
 consumed_full_content_paths. prior_action_intents contains every earlier action

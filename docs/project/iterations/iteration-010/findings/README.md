@@ -160,5 +160,10 @@ iteration: ITER-010
   正确失败关闭，且尚余 8 个含当前动作的调查 call。现要求 FINISH partition disjoint + exact-once，并明确 mandatory minimum 不是调查上限。
 - [FINDING-010-061](FINDING-010-061.md)：上述修复后 Engineering QA 101/101、docs 455/455、compile/diff PASS；允许 AF_UNIX 的
   full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-062](FINDING-010-062.md)：clean `be15a0a…` / run-022 的首个 Investigation 已选合法 direct locator 与 current basis，却
+  返回空 `checklist_item_ids`；Domain 正确关闭，而 Provider Schema 原来允许空/重复数组。现把 checklist/basis 两个绑定数组与 Domain 对齐为
+  non-empty + unique，并保留 Application exact binding 重验。
+- [FINDING-010-063](FINDING-010-063.md)：上述修复后三模块 65/65、Engineering QA 102/102、docs/compile/diff PASS；允许 AF_UNIX 的
+  full 1168 项中 1163 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

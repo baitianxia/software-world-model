@@ -152,6 +152,16 @@ search-only boundary reference，被本地 validator 以 `STRUCTURED_OUTPUT_INVA
 Profile-bound mandatory-path direct locator，并把 Provider-facing FINISH 拆为结构互斥的 supported/non-supported arrays；run-020 仍是
 1 个独立可接受答案 + 2 个业务题 FAIL + 1 个被人工中断的限界探针。
 
+该处置形成 clean candidate `dfba244…`，run-021 的 Q1/Q3 各以 8 次 dispatch 获得独立可接受的 `APPROVED`，Q2 也已 direct READ
+全部 4 个 mandatory paths；但 Q2 把 3 个 UNKNOWN 同时复制进 supported/non-supported arrays，并在尚余 8 个含当前动作 call 时
+FINISH，被本地 Schema 正确关闭。66,000-byte 输入在 Provider 前拒绝，Gateway 根保持 22。`FINDING-010-060/061` 已要求 FINISH
+partition disjoint + exact-once，并把 mandatory paths 明确为 minimum 而非调查上限；run-021 仍是 2 个独立可接受答案 + 1 个业务题 FAIL。
+
+该处置再形成 clean candidate `be15a0a…`，run-022 的 Conformance 2/2 PASS；首题第一个 Investigation 选择合法 direct locator 与 current
+basis，却返回空 `checklist_item_ids`，被 Domain 正确关闭。根因是 Provider Schema 允许 checklist/basis 数组为空或重复，而 Domain 要求
+non-empty + unique。会话在 2 次 dispatch 后停止，未提交其余问题；`FINDING-010-062` 现使 Initial/Verification Provider Schema、Prompt 与
+Domain 的两个 binding arrays 对齐，不用旧 run 补齐新 candidate 的体验证据。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -341,4 +351,9 @@ Provider Schema/Prompt 要求 supported/non-supported arrays disjoint 且 union 
 mandatory minimum，并在授权未读来源和剩余 fuse 可达时继续缩小 material gap。Strategy/Initial+Verification/Prompt 升为
 `@15/@7/@24`；Engineering QA 101/101、docs/compile/diff 与允许 AF_UNIX 的 full 1167/1162 exact historical hold 由
 `FINDING-010-061` 闭合。deterministic Gate 已闭合，new clean/fresh live 待执行。
+`FINDING-010-062` 记录 clean `be15a0a…` / run-022 首个 Investigation 的空 `checklist_item_ids` 被 Domain 正确关闭；根因是 Provider
+Schema 允许空/重复 checklist/basis binding arrays。处置将 Initial/Verification Schema 与 Domain 对齐为 non-empty + unique，并在 Prompt
+要求 exact current-input binding；三模块定向 65/65 PASS。
+`FINDING-010-063` 记录 Engineering QA 102/102、docs/compile/diff PASS 与允许 AF_UNIX 的 full 1168/1163；raw 唯一 4 FAIL + 1 ERROR
+仍是冻结 historical hold，没有 ITER-010 新失败。deterministic Gate 已闭合，new clean/fresh live 待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

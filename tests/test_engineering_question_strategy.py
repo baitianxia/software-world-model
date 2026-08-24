@@ -862,6 +862,40 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             schema.validate_output_text(json.dumps(duplicated_unknown))
         self.assertEqual(caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
 
+    def test_investigation_schema_rejects_empty_or_duplicate_binding_arrays(self):
+        valid = {
+            "operation": "read",
+            "checklist_item_ids": ["check-1"],
+            "evidence_class": "SOURCE",
+            "query": None,
+            "locator_reference": "required-path-locator-1",
+            "basis_entry_ids": ["ledger-entry-1"],
+            "unknown_to_reduce": "Read one decisive implementation path.",
+            "supported_finish_dispositions": [],
+            "non_supported_finish_dispositions": [],
+        }
+        for schema_ref in (
+            ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
+            ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF,
+        ):
+            schema = engineering_question_output_schemas()[schema_ref]
+            schema.validate_output_text(json.dumps(valid))
+
+            for field, value in (
+                ("checklist_item_ids", []),
+                ("checklist_item_ids", ["check-1", "check-1"]),
+                ("basis_entry_ids", []),
+                ("basis_entry_ids", ["ledger-entry-1", "ledger-entry-1"]),
+            ):
+                invalid = dict(valid)
+                invalid[field] = value
+                with self.assertRaises(DomainError) as caught:
+                    schema.validate_output_text(json.dumps(invalid))
+                self.assertEqual(
+                    caught.exception.code,
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                )
+
     def test_answer_schema_rejects_kind_and_content_role_mixing(self):
         schema = engineering_question_output_schemas()[
             ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF

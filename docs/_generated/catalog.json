@@ -2587,6 +2587,29 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-061.md"
   },
   {
+    "id": "FINDING-010-062",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-062.md"
+  },
+  {
+    "id": "FINDING-010-063",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-063.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5135,7 +5158,8 @@
       "FINDING-010-031",
       "FINDING-010-057",
       "FINDING-010-058",
-      "FINDING-010-060"
+      "FINDING-010-060",
+      "FINDING-010-062"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },

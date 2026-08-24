@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@24",
+            "engineering-qa-adaptive-investigation-prompt@25",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -357,6 +357,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("basis_entry_ids MUST include", prompt)
             self.assertIn("eligible_locator_references", prompt)
             self.assertIn("eligible_required_path_locators", prompt)
+            self.assertIn("one or more unique", prompt)
+            self.assertIn("checklist_item_ids", prompt)
+            self.assertIn("non-empty and unique", prompt)
             self.assertIn("never use", prompt)
             self.assertIn("a human locator/path, or an allowlisted path", prompt)
             self.assertIn(
