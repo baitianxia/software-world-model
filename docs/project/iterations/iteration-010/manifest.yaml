@@ -492,6 +492,7 @@ answer_protocol:
   answer_closed-shape: one-direct-answer-object-plus-non-direct-followup-claims
   answer_followup_role_order_normalization: stable-controlled-role-order-with-raw-provider-output-preserved
   implementation_evidence_default_visibility: all-at-implementation-detail-otherwise-only-unique-material-observation-carriers
+  reviewer_claim_consistency_gate: direct-default-claims-package-and-independent-observations-pairwise-semantic-check
   reviewer_independent_package_and_draft_observation_audit_required: true
   sealed_package_mutation_allowed: false
   safety_budget_reserves_independent_review: true
@@ -569,13 +570,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:8be546fb978ea07ce222eb140c6d1f007d10b9c65c1efe47acc1b422348e7f5f
+  system_contract_set_digest: sha256:2849e5c32158c4768bc1ff79f159ec0b0c81b960e6aa29c597670eebc9789a6f
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:5741aa8c072d3b5a82c83e35a7ca9ff50061a3fdefe7205c2ae8cdd4f9dbefe7
+  investigation_budget_digest: sha256:7a0d7eb553051b4bc69414ab662643454a0f78c7b02ff49cf0777303087fb26b
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
@@ -618,7 +619,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: run-018-two-approved-one-uniquely-material-implementation-evidence-visibility-failure-preserved-deterministic-gates-complete-new-clean-live-pending
+      live_question_status: run-019-three-model-approved-one-independent-cross-claim-consistency-failure-preserved-deterministic-gates-complete-new-clean-live-pending
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

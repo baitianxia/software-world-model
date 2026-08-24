@@ -136,6 +136,12 @@ dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；22,000
 `NOT_EXECUTED`；22,000 字符输入继续在 Provider 前拒绝。`FINDING-010-053` 现只隐藏 observations 已由其他可见 Claim 完整覆盖的实现
 证据，uniquely material 的简洁核对依据保持可见，部分交叠仍失败；旧会话保持 2 PASS + 1 FAIL。
 
+该处置形成 clean candidate `c65617e…`，run-019 fresh DeepSeek Conformance 2/2 PASS。同一持续会话三题分别以 12/15/12 次 dispatch 获得
+模型 `APPROVED`，且第三题 requested implementation evidence 已进入默认正文；但独立技术复核发现其一处把未认证与权限不足都写成 403，
+后一处又正确分流为 401/403。raw Review 逐字复述冲突仍全 PASS。terminal receipt `sha256:cfed19a1…` 记录 3 题、39 dispatch、
+retry/switch 0、private files、verified transport 与 Production `NOT_EXECUTED`；22,000 字符输入仍在 Provider 前拒绝。见
+`FINDING-010-055`；旧会话按 2 个独立可接受答案 + 1 个 independent-quality FAIL 保留。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -307,4 +313,7 @@ historical hold，没有新增失败。确定性 Gate 已闭合，新 clean/fres
 处置保留用户明确要求的简洁核对依据，同时继续隐藏完全冗余的实现详情并拒绝部分 observation overlap。Engineering QA 99/99 PASS，
 docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full 1165/1160 只保留既有 4 FAIL + 1 ERROR，见 `FINDING-010-054`。确定性 Gate
 已闭合，新 clean/fresh live 仍待执行。
+`FINDING-010-055` 记录 `c65617e…` / run-019 的三项模型 `APPROVED` 与一个独立发现的跨 Claim 失败语义冲突；处置新增 closed
+`claim_consistency` 第五项 Gate，互斥结果必须 FAIL 并 rewrite。Engineering QA 99/99、docs 450/450、compile/diff PASS；允许 AF_UNIX
+的 full 1165/1160 只保留既有 4 FAIL + 1 ERROR，见 `FINDING-010-056`。确定性 Gate 已闭合，新 clean/fresh live 待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

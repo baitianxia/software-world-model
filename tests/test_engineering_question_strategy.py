@@ -123,6 +123,7 @@ class AdaptiveStructuredOutputSource:
                         "direct_answer": "PASS",
                         "abstraction_fit": "PASS",
                         "material_completeness": "PASS",
+                        "claim_consistency": "PASS",
                         "implementation_detail_budget": "PASS",
                     },
                     "checklist_assessment": {
@@ -160,6 +161,7 @@ class AdaptiveStructuredOutputSource:
                         "direct_answer": "PASS",
                         "abstraction_fit": "PASS",
                         "material_completeness": "PASS",
+                        "claim_consistency": "PASS",
                         "implementation_detail_budget": "PASS",
                     },
                     "checklist_assessment": {
@@ -693,6 +695,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "direct_answer",
                 "abstraction_fit",
                 "material_completeness",
+                "claim_consistency",
                 "implementation_detail_budget",
             },
         )
@@ -1104,6 +1107,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "direct_answer": "PASS",
                 "abstraction_fit": "PASS",
                 "material_completeness": "PASS",
+                "claim_consistency": "PASS",
                 "implementation_detail_budget": "PASS",
             },
             "checklist_assessment": {

@@ -4490,6 +4490,7 @@ class EngineeringReviewQualityAssessment:
     direct_answer: EngineeringReviewQualityStatus
     abstraction_fit: EngineeringReviewQualityStatus
     material_completeness: EngineeringReviewQualityStatus
+    claim_consistency: EngineeringReviewQualityStatus
     implementation_detail_budget: EngineeringReviewQualityStatus
     digest: Digest
 
@@ -4500,12 +4501,14 @@ class EngineeringReviewQualityAssessment:
         direct_answer: EngineeringReviewQualityStatus,
         abstraction_fit: EngineeringReviewQualityStatus,
         material_completeness: EngineeringReviewQualityStatus,
+        claim_consistency: EngineeringReviewQualityStatus,
         implementation_detail_budget: EngineeringReviewQualityStatus,
     ) -> "EngineeringReviewQualityAssessment":
         values = (
             direct_answer,
             abstraction_fit,
             material_completeness,
+            claim_consistency,
             implementation_detail_budget,
         )
         if any(not isinstance(item, EngineeringReviewQualityStatus) for item in values):
@@ -4517,14 +4520,16 @@ class EngineeringReviewQualityAssessment:
             "direct_answer": direct_answer.value,
             "abstraction_fit": abstraction_fit.value,
             "material_completeness": material_completeness.value,
+            "claim_consistency": claim_consistency.value,
             "implementation_detail_budget": implementation_detail_budget.value,
         }
         return cls(
             direct_answer=direct_answer,
             abstraction_fit=abstraction_fit,
             material_completeness=material_completeness,
+            claim_consistency=claim_consistency,
             implementation_detail_budget=implementation_detail_budget,
-            digest=digest_of(["ENGINEERING_REVIEW_QUALITY_ASSESSMENT@1", core]),
+            digest=digest_of(["ENGINEERING_REVIEW_QUALITY_ASSESSMENT@2", core]),
         )
 
     @property
@@ -4535,6 +4540,7 @@ class EngineeringReviewQualityAssessment:
                 self.direct_answer,
                 self.abstraction_fit,
                 self.material_completeness,
+                self.claim_consistency,
                 self.implementation_detail_budget,
             )
         )
@@ -4544,6 +4550,7 @@ class EngineeringReviewQualityAssessment:
             "direct_answer": self.direct_answer.value,
             "abstraction_fit": self.abstraction_fit.value,
             "material_completeness": self.material_completeness.value,
+            "claim_consistency": self.claim_consistency.value,
             "implementation_detail_budget": (
                 self.implementation_detail_budget.value
             ),
@@ -4786,6 +4793,7 @@ class EngineeringReviewProposal:
             direct_answer=quality_assessment.direct_answer,
             abstraction_fit=quality_assessment.abstraction_fit,
             material_completeness=quality_assessment.material_completeness,
+            claim_consistency=quality_assessment.claim_consistency,
             implementation_detail_budget=(
                 quality_assessment.implementation_detail_budget
             ),

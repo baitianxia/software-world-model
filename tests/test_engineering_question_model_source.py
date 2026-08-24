@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@21",
+            "engineering-qa-adaptive-investigation-prompt@22",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -473,6 +473,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("multiple mechanisms, participants, or checking surfaces", review_prompt)
         self.assertIn("explicitly scan every relevant full-content", review_prompt)
         self.assertIn("empty-link affirmative DIRECT_ANSWER", review_prompt)
+        self.assertIn("cross-Claim and observation consistency", review_prompt)
+        self.assertIn("APPROVED requires PASS for all five", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:

@@ -142,5 +142,10 @@ iteration: ITER-010
   完整覆盖的实现证据；uniquely material 的简洁核对依据保持可见，部分交叠仍失败关闭。
 - [FINDING-010-054](FINDING-010-054.md)：上述修复后 Engineering QA 99/99、docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full
   1165 项中 1160 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-055](FINDING-010-055.md)：clean `c65617e…` / run-019 的三题均获模型 `APPROVED`，但独立复核发现 401/403 正文先把
+  未认证与权限不足都归为 403，随后又正确分流为 401/403；Reviewer 逐字复述冲突却仍全 PASS。现新增 closed `claim_consistency` Gate，
+  成对审核 direct/default Claims、Package 与独立 observations；五项全 PASS 才能批准。
+- [FINDING-010-056](FINDING-010-056.md)：上述修复后 Engineering QA 99/99、docs 450/450、compile/diff PASS；允许 AF_UNIX 的 full
+  1165 项中 1160 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

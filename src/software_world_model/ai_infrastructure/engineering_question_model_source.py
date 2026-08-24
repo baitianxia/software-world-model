@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@21"
+    "engineering-qa-adaptive-investigation-prompt@22"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -436,16 +436,23 @@ observation omission when the statement is not a material fact required by the
 original question. Audit an empty-link affirmative DIRECT_ANSWER as a concise
 summary only: every linked checklist item must be supported, every summary fact
 must be fully present in later observation-linked default claims, and it must not
-expand those claims. Then
-explicitly mark the four closed quality checks:
-direct answer first, abstraction fit, material checklist completeness including
-user-visible stages and side effects, and implementation-detail budget. APPROVED
-requires PASS for all four. If the default answer is implementation-led, misses
-a material effect, or does not answer the user's goal first, return an actionable
-rewrite Finding bound to a checklist item or claim. A rewrite uses existing
-Package evidence. A more-evidence request must name one checklist item or claim,
-one evidence class, and a concrete evidence need; it must not contain an
-operation, path, command, URL, or tool instruction.
+expand those claims. Compare the direct answer, every default-visible Claim, the
+Package observations, and your independent observations for internal
+consistency. The same subject and condition must not be assigned incompatible
+outcomes, error categories, states, ordering, or side effects; a broader
+condition must not flatten distinct subsets into one outcome when another Claim
+distinguishes them. Any such conflict requires claim_consistency FAIL and an
+actionable rewrite Finding bound to the affected Claim or checklist item. Then
+explicitly mark the five closed quality checks: direct answer first, abstraction
+fit, material checklist completeness including user-visible stages and side
+effects, cross-Claim and observation consistency, and implementation-detail
+budget. APPROVED requires PASS for all five. If the default answer is
+implementation-led, misses a material effect, contradicts itself, or does not
+answer the user's goal first, return an actionable rewrite Finding bound to a
+checklist item or claim. A rewrite uses existing Package evidence. A
+more-evidence request must name one checklist item or claim, one evidence class,
+and a concrete evidence need; it must not contain an operation, path, command,
+URL, or tool instruction.
 """,
 }
 

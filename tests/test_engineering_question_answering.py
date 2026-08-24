@@ -71,6 +71,7 @@ def passing_quality() -> EngineeringReviewQualityAssessment:
         direct_answer=EngineeringReviewQualityStatus.PASS,
         abstraction_fit=EngineeringReviewQualityStatus.PASS,
         material_completeness=EngineeringReviewQualityStatus.PASS,
+        claim_consistency=EngineeringReviewQualityStatus.PASS,
         implementation_detail_budget=EngineeringReviewQualityStatus.PASS,
     )
 
@@ -2009,9 +2010,10 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
 
     def test_approved_review_requires_all_direction_quality_checks(self):
         failed_quality = EngineeringReviewQualityAssessment.create(
-            direct_answer=EngineeringReviewQualityStatus.FAIL,
+            direct_answer=EngineeringReviewQualityStatus.PASS,
             abstraction_fit=EngineeringReviewQualityStatus.PASS,
             material_completeness=EngineeringReviewQualityStatus.PASS,
+            claim_consistency=EngineeringReviewQualityStatus.FAIL,
             implementation_detail_budget=EngineeringReviewQualityStatus.PASS,
         )
         with self.assertRaises(DomainError):

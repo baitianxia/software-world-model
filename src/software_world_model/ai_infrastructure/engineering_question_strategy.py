@@ -67,7 +67,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@12"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@13"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -79,7 +79,7 @@ ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@5"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@4"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -401,6 +401,7 @@ _REVIEW_QUALITY_ASSESSMENT_SCHEMA = {
             "direct_answer",
             "abstraction_fit",
             "material_completeness",
+            "claim_consistency",
             "implementation_detail_budget",
         )
     },
@@ -408,6 +409,7 @@ _REVIEW_QUALITY_ASSESSMENT_SCHEMA = {
         "direct_answer",
         "abstraction_fit",
         "material_completeness",
+        "claim_consistency",
         "implementation_detail_budget",
     ],
     "additionalProperties": False,
@@ -994,6 +996,7 @@ class EngineeringQuestionRoleInputBuilder:
                 "direct_answer",
                 "abstraction_level",
                 "material_process_and_side_effect_completeness",
+                "cross_claim_and_observation_consistency",
                 "implementation_detail_budget",
                 "correctness",
                 "completeness",
@@ -1246,6 +1249,9 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
                 ),
                 material_completeness=EngineeringReviewQualityStatus(
                     cast(str, quality_value["material_completeness"])
+                ),
+                claim_consistency=EngineeringReviewQualityStatus(
+                    cast(str, quality_value["claim_consistency"])
                 ),
                 implementation_detail_budget=EngineeringReviewQualityStatus(
                     cast(str, quality_value["implementation_detail_budget"])
