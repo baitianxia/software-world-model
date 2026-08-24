@@ -73,7 +73,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@24"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@25"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -155,21 +155,32 @@ def _evidence_boundary_challenges(
             challenge.kind
             is EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
         ):
-            entry_reference = challenge.package_entry_ids[0].value
+            entry_id = challenge.package_entry_ids[0]
             view["application_material_observations_for_entry"] = [
                 observation.model_view()
-                for disposition in package.checklist_dispositions
-                for observation in disposition.material_observations
-                if entry_reference in observation.evidence_references
+                for observation in package.material_observations_for_support_entry(
+                    entry_id
+                )
             ]
             view["material_effect_omission_layer_contract"] = {
                 EngineeringMaterialEffectOmissionLayer.APPLICATION_PACKAGE.value: (
                     "effect is absent from the projected exact Application observations; "
-                    "use INVESTIGATE_MISSING_EVIDENCE"
+                    "return only absent effects and use INVESTIGATE_MISSING_EVIDENCE"
                 ),
                 EngineeringMaterialEffectOmissionLayer.DEFAULT_DRAFT.value: (
                     "effect exactly exists in the projected Application observations but "
                     "is absent from the default Draft; use REWRITE_WITH_EXISTING_EVIDENCE"
+                ),
+            }
+            view["material_effect_omission_layer_precedence"] = {
+                "empty_projection_with_nonempty_omission": (
+                    EngineeringMaterialEffectOmissionLayer.APPLICATION_PACKAGE.value
+                ),
+                "any_effect_absent_from_projection": (
+                    "RETURN_ONLY_ABSENT_EFFECTS_AS_APPLICATION_PACKAGE"
+                ),
+                "all_omitted_effects_present_in_projection": (
+                    "RETURN_EXACT_PROJECTED_EFFECTS_AS_DEFAULT_DRAFT"
                 ),
             }
         views.append(view)

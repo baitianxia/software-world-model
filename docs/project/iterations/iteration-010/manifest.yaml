@@ -643,7 +643,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:aa03a300a400fa816e154f41a814f6c34b939369bcd260107958b0b9c1ef0e96
+  system_contract_set_digest: sha256:aec7d46872fcc0c8c5d16cd53ad8f28f8cc98fac1e39065a63dded40c9b7076f
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -692,7 +692,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: run-031-q1-failed-closed-q2-q3-negative-not-run-findings-084-085-material-effect-layer-corrective-deterministic-gate-closed-new-clean-fresh-live-pending
+      live_question_status: run-032-q1-pass-q2-fail-q3-outcome-unknown-negative-pass-findings-086-087-source-reference-resolution-corrective-deterministic-gate-closed-new-clean-fresh-live-pending
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

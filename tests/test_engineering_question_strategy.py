@@ -626,7 +626,17 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
 
     def test_review_projects_configuration_status_and_unmounted_type_boundaries(self):
         package = self.result.current_package
-        original_entry = package.support_citation[0]
+        support_by_source = {
+            item.source_reference: item for item in package.support_citation
+        }
+        observation_source_reference = next(
+            reference
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+            for reference in observation.evidence_references
+            if reference in support_by_source
+        )
+        original_entry = support_by_source[observation_source_reference]
         content = """package com.acme.security;
 import com.acme.security.AccessDeniedHandler;
 import com.acme.security.LoginDto;
@@ -724,15 +734,36 @@ class SecurityConfig {
                 "EXTERNAL_INTERACTION",
             ],
         )
+        expected_entry_observations = [
+            observation.model_view()
+            for disposition in challenged_package.checklist_dispositions
+            for observation in disposition.material_observations
+            if entry.source_reference in observation.evidence_references
+        ]
+        self.assertTrue(expected_entry_observations)
         self.assertEqual(
             projected[-2]["application_material_observations_for_entry"],
-            [],
+            expected_entry_observations,
         )
         self.assertEqual(
             set(
                 projected[-2]["material_effect_omission_layer_contract"]
             ),
             {"APPLICATION_PACKAGE", "DEFAULT_DRAFT"},
+        )
+        self.assertEqual(
+            projected[-2]["material_effect_omission_layer_precedence"],
+            {
+                "empty_projection_with_nonempty_omission": (
+                    "APPLICATION_PACKAGE"
+                ),
+                "any_effect_absent_from_projection": (
+                    "RETURN_ONLY_ABSENT_EFFECTS_AS_APPLICATION_PACKAGE"
+                ),
+                "all_omitted_effects_present_in_projection": (
+                    "RETURN_EXACT_PROJECTED_EFFECTS_AS_DEFAULT_DRAFT"
+                ),
+            },
         )
         self.assertEqual(
             projected[-1]["required_fulfillment_dimensions"],
@@ -932,6 +963,83 @@ class SecurityConfig {
         self.assertEqual(
             accepted.decision,
             EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED,
+        )
+
+        effect_index = next(
+            index
+            for index, item in enumerate(projected)
+            if item["kind"] == "FULL_CONTENT_MATERIAL_EFFECT_SCAN"
+        )
+        exact_projected_statement = expected_entry_observations[0]["statement"]
+        draft_layer_findings = tuple(
+            EngineeringReviewFinding.create(
+                finding_code=finding.finding_code,
+                checklist_item_id=finding.checklist_item_id,
+                claim_id=finding.claim_id,
+                description=finding.description,
+                remediation=(
+                    EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                    if index == effect_index
+                    else finding.remediation
+                ),
+                existing_evidence_entry_ids=(
+                    (entry.entry_id,)
+                    if index == effect_index
+                    else finding.existing_evidence_entry_ids
+                ),
+                evidence_class=(
+                    None if index == effect_index else finding.evidence_class
+                ),
+                evidence_need=(
+                    None if index == effect_index else finding.evidence_need
+                ),
+            )
+            for index, finding in enumerate(findings)
+        )
+        draft_layer_assessments = tuple(
+            EngineeringEvidenceBoundaryAssessment.create(
+                challenge_id=assessment.challenge_id,
+                evidence_boundary=assessment.evidence_boundary,
+                draft_scope=assessment.draft_scope,
+                disposition=assessment.disposition,
+                finding_code=assessment.finding_code,
+                material_effect_omission_layer=(
+                    EngineeringMaterialEffectOmissionLayer.DEFAULT_DRAFT
+                    if index == effect_index
+                    else assessment.material_effect_omission_layer
+                ),
+                omitted_material_effect_statements=(
+                    (exact_projected_statement,)
+                    if index == effect_index
+                    else assessment.omitted_material_effect_statements
+                ),
+            )
+            for index, assessment in enumerate(assessments)
+        )
+        draft_layer_proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "7"),
+            package_digest=challenged_package.digest,
+            draft_digest=draft.digest,
+            quality_assessment=fixtures.passing_quality(),
+            checklist_assessment=fixtures.matching_review_checklist(
+                self.result.understanding,
+                challenged_package,
+            ),
+            evidence_boundary_assessments=draft_layer_assessments,
+            findings=draft_layer_findings,
+        )
+        draft_layer_accepted = EngineeringAnswerReview.accept(
+            package=challenged_package,
+            draft=draft,
+            understanding=self.result.understanding,
+            expected_role_context_id=sid("role_context", "7"),
+            proposal=draft_layer_proposal,
+            attempt=2,
+            focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        self.assertEqual(
+            draft_layer_accepted.decision,
+            EngineeringReviewDecision.REWRITE_REQUIRED,
         )
 
         wrong_layer_assessments = tuple(

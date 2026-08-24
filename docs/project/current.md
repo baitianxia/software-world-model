@@ -91,11 +91,11 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / run-031 Q1 FAIL, Q2-Q3 NOT-RUN / corrective deterministic Gate closed / fresh live pending** | clean `3c45072…` / run-031 fresh Conformance 2/2 PASS；Q1 第二次 challenge 发现 cache write 却把缺失 Application observation 错选为第二次同包 rewrite，最终 `SAME_PACKAGE_REWRITE_FUSE_EXHAUSTED`。`FINDING-010-084/085` 不放宽 fuse，而是增加 exact omitted-effect statements、`APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 及 Application 重算；focused 80/80、Engineering QA 117/117、docs/oracle/full exact historical hold 已闭合。Strategy/Prompt/Review Schema 为 `@24/@34/@9`；run-031 不追认，新 clean/fresh live 待执行。`V-ANSWER-REWORK` 继续 blocking，项目决定仍为 REWORK，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / run-032 Q1 PASS, Q2 FAIL, Q3 OUTCOME_UNKNOWN, negative PASS / corrective deterministic Gate closed / fresh live pending** | clean `3bd3c04…` / run-032 fresh Conformance 2/2 PASS；持续 Browser 中 Q1 12 dispatch 独立 PASS，Q2 9 dispatch 暴露 observation 的 `retrieval_item_*` source reference 被错误与 `support_entry_*` ID 直接比较，形成伪空投影并失败关闭；Q3 第 6 次 Answer dispatch 遇到 `REMOTE_DISCONNECTED`，按零重试封存 outcome unknown；66,000-byte 在 Provider 前拒绝且总 dispatch 保持 27。`FINDING-010-086/087` 统一 entry → source-reference resolver、加入 application-missing-first layer precedence，并以 focused 80/80、Engineering QA 117/117、docs/oracle/full exact historical hold 闭合；Strategy/Prompt 为 `@25/@35`，Review Schema 保持 `@9`。run-032 不追认，新 clean/fresh live 待执行。`V-ANSWER-REWORK` 继续 blocking，项目决定仍为 REWORK，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
-| `local-browser` | Three non-fallback product identities | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面保持 Source-off 评测身份；Engineering QA 持续 Alpha 的 run-031 只执行 Q1 且安全关闭，Q2/Q3 未运行，三者不互相兜底 |
+| `local-browser` | Three non-fallback product identities | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面保持 Source-off 评测身份；Engineering QA 持续 Alpha run-032 执行三题并保留 Q1 PASS、Q2 FAIL、Q3 OUTCOME_UNKNOWN 与 Provider 前负测，三者不互相兜底 |
 | Production Activation | **NOT EXECUTED** | 不得由任何本机 PASS 自动推导 |
 
 精确产品边界见 [Iteration 006 Acceptance](iterations/iteration-006/results/acceptance.md)。原始 Provider、能力、产品和浏览器证据
@@ -401,6 +401,19 @@ Application 重算 effect 是否存在于 challenged entry 的 exact observation
 observation 已存在时走 entry-bound rewrite。Strategy/Prompt/Review Schema 为 `@24/@34/@9`；`FINDING-010-085` 已以 focused 80/80、
 Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact
 historical hold 闭合 deterministic Gate。下一步只能形成新 clean candidate/fresh live；run-031 不追认，Production Activation 仍未执行。
+
+clean `3bd3c04…` / run-032 的 fresh Conformance 2/2 PASS。持续 Browser 的 Q1 用 12 dispatch 得到独立可接受的 APPROVED；Q2 用 9
+dispatch 后暴露 challenge projection 与 Application membership Gate 都把 observation 的 `retrieval_item_*` source reference 错当成
+`support_entry_*` entry ID 比较，导致 sealed Package 已有登录日志 observation 却投影为空，并以错误 `DEFAULT_DRAFT` 响应失败关闭。Q3
+前 5 次 dispatch completed，第 6 次 Answer dispatch 遇到 `REMOTE_DISCONNECTED`，按授权零重试封存 outcome unknown；66,000-byte
+请求在 Provider 前拒绝，accepted question 3、dispatch 27 均未增加。terminal receipt、Gateway quick check、checkpoint、0600 与 listener
+关闭审计均通过，Production `NOT_EXECUTED`。
+
+`FINDING-010-086` 现要求 challenge 与 Application 复用 exact support entry → `source_reference` → observation resolver，并明确空投影有
+omission 时禁止 `DEFAULT_DRAFT`、两层 omission 同时存在时先补 Application observation。Strategy/Prompt 为 `@25/@35`，Review Schema
+保持 `@9`；`FINDING-010-087` 已以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 82/82、481 current docs、
+compile/diff 和允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合 deterministic Gate。没有 ITER-010 新失败；下一步只能形成新
+clean candidate/fresh live。run-032 不追认，项目状态仍为 REWORK，Production Activation 仍未执行。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

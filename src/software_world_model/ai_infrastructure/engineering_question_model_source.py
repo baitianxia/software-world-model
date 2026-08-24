@@ -62,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@34"
+    "engineering-qa-adaptive-investigation-prompt@35"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -609,11 +609,16 @@ a broad checklist summary or a different effect from the same file. Use
 DEFAULT_DRAFT only when every returned statement already appears exactly in
 that projection and only the Draft omits it; bind REWRITE_WITH_EXISTING_EVIDENCE
 to the challenged entry. Use APPLICATION_PACKAGE when any returned effect is
-absent from that exact projection; bind INVESTIGATE_MISSING_EVIDENCE for the
-entry's evidence class and semantic need so a successor gap delta can add the
-typed observation. A same-Package rewrite cannot invent or substitute a missing
-observation ID. Use WITHIN_EVIDENCE_BOUNDARY only when all found effects are
-covered.
+absent from that exact projection; in that case return only the absent effects,
+not a projected effect that the Draft already covers, and bind
+INVESTIGATE_MISSING_EVIDENCE for the entry's evidence class and semantic need so
+a successor gap delta can add the typed observation. If the projected array is
+empty, DEFAULT_DRAFT is impossible for any non-empty omission. Follow the
+projected material_effect_omission_layer_precedence literally. A same-Package
+rewrite cannot invent or substitute a missing observation ID. Use
+WITHIN_EVIDENCE_BOUNDARY only when all found effects are covered. Never include
+an effect in omitted_material_effect_statements when an exact default Claim
+already states that effect.
 ORIGINAL_QUESTION_FULFILLMENT_SCAN is a separate literal-goal challenge. Rebuild
 the user's requested result from original_question and compare it with the full
 default Draft, not merely with checklist IDs or component names. Check every

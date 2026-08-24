@@ -264,7 +264,8 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - 上述 finding-free Review 只是 `COMPREHENSIVE` provisional approval。Application 从当前 Package/Draft 投影 cited configuration
   placeholder、Claim 中 cited content 未出现的 HTTP status literal、Draft 提及但实现未挂载的 same-application type，以及每个被默认正文
   Claim 引用的 full-content Java support entry 的独立 material-effect scan，并为每个 scan 投影该 entry 已有的 exact Application
-  material observations；此外每个有默认正文和引用 entry 的 Draft 投影一个
+  material observations；entry 归属必须通过 support entry 的 `source_reference` 解析 observation evidence references，不能直接比较
+  `support_entry_*` 与 `retrieval_item_*`。此外每个有默认正文和引用 entry 的 Draft 投影一个
   original-question fulfillment scan，检查 direct goal、ordered actions、input/output handoff、known/unknown boundary 与 material
   outcomes，随后使用另一个 fresh context 执行
   `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、caller/getter/import 与 DTO
@@ -273,7 +274,8 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   scope、Draft scope 与 `WITHIN_EVIDENCE_BOUNDARY / DRAFT_EXCEEDS_EVIDENCE_BOUNDARY / DRAFT_OMITS_MATERIAL_EFFECT /
   DRAFT_OMITS_MATERIAL_REQUIREMENT`。material-effect omission 还必须返回 exact effect statements 和
   `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer：前者只允许同 evidence class Verification，后者只允许 exact projected observation
-  已存在时绑定 challenged entry rewrite。后两种专用 disposition 必须与对应 challenge kind 匹配；所有非 passing
+  已存在时绑定 challenged entry rewrite。空 observation 投影存在 omission 时只允许前者；两层 omission 同时存在时先只返回
+  Application-Package 缺口并形成 successor Verification，后继 Package 再审核 draft-only omission。后两种专用 disposition 必须与对应 challenge kind 匹配；所有非 passing
   assessment 都必须绑定同输出中作用于该 exact challenge Claim 的 Finding，只有 Claim 同时属于每个 challenge 时才允许复用 Finding
   code。Application 重算 exact ID 集合，Gateway 强制 focus 顺序；只有集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的
   challenge 才可 Authorization。Package 已有 observation 时的 Draft omission 走同包 rewrite；full entry 已证明但 sealed Package 缺少
@@ -493,4 +495,13 @@ rewrite fuse，而是为每个 material-effect omission 增加 exact statements 
 重算 observation membership、entry/evidence class 与 remediation。`FINDING-010-085` 再以 focused 80/80、Engineering QA 117/117、
 docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合
 deterministic Gate；没有 ITER-010 新失败。新的 clean/fresh live Gate 待执行。
+`FINDING-010-086` 记录 clean `3bd3c04…` / run-032：fresh Conformance 2/2 PASS；持续 Browser 的 Q1 12 dispatch 独立 PASS，Q2
+9 dispatch 因 material observation 的 `retrieval_item_*` source reference 被错误拿 `support_entry_*` 比较而形成伪空投影，Reviewer 错选
+`DEFAULT_DRAFT` 后由 Application 正确失败关闭；Q3 第 6 次 Answer dispatch 遇到 `REMOTE_DISCONNECTED` 并按零重试封存
+OUTCOME_UNKNOWN；66,000-byte 在 Provider 前拒绝且总 dispatch 保持 27。处置为 challenge/Application 复用 exact entry → source-reference
+resolver，并加入 application-missing-first layer precedence；Strategy/Prompt 为 `@25/@35`，Review Schema 保持 `@9`。run-032 不追认，
+Production 不执行，新的 deterministic 与 clean/fresh live Gate 待闭合。
+`FINDING-010-087` 再以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff
+与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合 deterministic Gate；没有 ITER-010 新失败。下一步只能从新 clean candidate
+执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立复核；run-032 不追认，Production 不执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

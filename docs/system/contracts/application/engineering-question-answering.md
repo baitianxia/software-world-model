@@ -108,6 +108,8 @@ Application 必须从当前 Package/Draft 机械投影 `evidence_boundary_challe
 Draft 提及同 application import、但相应实现未进入 Package 时，投影 type、importing entry 与相关 Claim；每个被默认正文 Claim 引用的
 full-content Java support entry 还必须各自投影 `FULL_CONTENT_MATERIAL_EFFECT_SCAN`，逐 entry 检查 persistence write、audit write、
 cache mutation、notification 与 external interaction，并同时投影该 entry 当前已经拥有的 exact Application material observations。
+该 observation 归属必须先由 exact support entry ID 解析出其 `source_reference`，再匹配 material observation 的 evidence references；
+不得把 `support_entry_*` 与 `retrieval_item_*` 两个 ID 域直接比较，也不得让 challenge view 与 Application Gate 各自维护不同映射。
 每个具有默认正文和实际引用 Package entry 的 Draft 还必须投影一个
 `ORIGINAL_QUESTION_FULFILLMENT_SCAN`，绑定全部 default Claim 与引用 entry，并独立核对 direct user goal、ordered user actions、
 input/output handoff、known/unknown boundary 和 material outcomes；对 startup/call/use/integrate/diagnose 问题，组件或依赖清单不能
@@ -125,7 +127,9 @@ comprehensive 提前处置都在 Application 授权前失败关闭。每个非 p
 remediation 状态机处理。`DRAFT_OMITS_MATERIAL_EFFECT` 还必须列出 exact omitted-effect statements 并选择 closed omission layer：
 `APPLICATION_PACKAGE` 表示 effect 不在该 entry 的投影 observation 中，只能绑定同 evidence class 的
 `INVESTIGATE_MISSING_EVIDENCE`；`DEFAULT_DRAFT` 表示 effect 已精确存在于该投影，只能绑定 challenged entry 的
-`REWRITE_WITH_EXISTING_EVIDENCE`。Application 重算 statement membership、entry/class 与 remediation，错误层级失败关闭；只有所有
+`REWRITE_WITH_EXISTING_EVIDENCE`。空投影存在非空 omission 时 `DEFAULT_DRAFT` 不可能；同一扫描同时发现两层 omission 时，当前轮只返回
+不在 Application observation 投影中的 effects 并优先形成 successor Verification，后继 Package 再审核剩余 draft-only omission。
+Application 重算 statement membership、entry/class 与 remediation，错误层级失败关闭；只有所有
 challenge 都在边界内且 Finding 为空的 challenge approval 可以授权 Delivery。
 
 1. Answer 使用隔离的新上下文，只读 original question、accepted Question Understanding 和一个密封 Package；没有 Repository mount、Source/World Model Tool、Evidence Ledger write port、shell、网络、credential、Reviewer 输入、Investigation 私有输出或 Provider 会话历史。
@@ -171,3 +175,7 @@ Question Understanding、World Model Cognition Context、Investigation Proposal�
 `FINDING-010-084` 进一步要求 material-effect omission 的 exact statements 与 `APPLICATION_PACKAGE / DEFAULT_DRAFT` closed layer；
 Application 重算 observation membership、challenged entry/evidence class 与 remediation，不通过增加 rewrite fuse 掩盖 observation 缺口。
 `FINDING-010-085` 已闭合该协议的 deterministic Gate；run-031 保持 Q1 FAIL、Q2/Q3 NOT-RUN，新的 clean/fresh live Gate 仍须执行。
+`FINDING-010-086` 的 run-032 又证明 observation evidence references 属于 source-reference 域；旧实现错误地直接比较 Package entry ID，
+导致 challenge projection 与 membership Gate 同时得到伪空集。统一 resolver 与 application-missing-first layer precedence 是本契约的一部分；
+run-032 保持 Q1 PASS、Q2 FAIL、Q3 post-dispatch OUTCOME_UNKNOWN、66,000-byte Provider-before-call PASS，不得追认。
+`FINDING-010-087` 已闭合 source-reference resolver 与 layer precedence 的 deterministic Gate；新的 clean/fresh live 仍须独立执行。

@@ -4015,6 +4015,25 @@ class QuestionEvidencePackage:
     def serialized_bytes(self) -> int:
         return len(canonical_json_bytes(self.model_view()))
 
+    def material_observations_for_support_entry(
+        self, entry_id: StableId
+    ) -> tuple[MaterialObservation, ...]:
+        matching_entries = tuple(
+            item for item in self.support_citation if item.entry_id == entry_id
+        )
+        if len(matching_entries) != 1:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "material-observation projection requires one exact support entry",
+            )
+        source_reference = matching_entries[0].source_reference
+        return tuple(
+            observation
+            for disposition in self.checklist_dispositions
+            for observation in disposition.material_observations
+            if source_reference in observation.evidence_references
+        )
+
     def model_view(self) -> dict[str, object]:
         return {
             "schema": self.schema,
@@ -6217,9 +6236,9 @@ class EngineeringAnswerReview:
         package_material_observation_statements_by_entry = {
             entry_id: {
                 observation.statement
-                for disposition in package.checklist_dispositions
-                for observation in disposition.material_observations
-                if entry_id.value in observation.evidence_references
+                for observation in package.material_observations_for_support_entry(
+                    entry_id
+                )
             }
             for entry_id in support_ids
         }

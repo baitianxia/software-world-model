@@ -205,5 +205,23 @@ iteration: ITER-010
   challenge 逐项返回 evidence/Draft scope 与受控 disposition，Application 重算 exact ID 集合并校验越界 Finding 绑定后才可授权。
 - [FINDING-010-078](FINDING-010-078.md)：上述处置后 focused 78/78、Engineering QA 115/115、docs 组合 148/148、历史 oracle
   组合 80/80、current docs/compile/diff 与 full 1181/1176 exact historical hold 闭合 deterministic Gate；新 clean/fresh live 是下一 Gate。
+- [FINDING-010-079](FINDING-010-079.md)：run-029 证明 comprehensive approval 仍会漏掉完整 Java entry 中的 material effect，并暴露
+  rewrite 丢失安全 observation 与 challenge Finding 错绑；现投影逐 entry effect scan、Answer exact observation table 与 exact Claim binding。
+- [FINDING-010-080](FINDING-010-080.md)：上述处置以 focused 79/79、Engineering QA 116/116、docs/oracle/full exact historical hold
+  闭合 deterministic Gate；没有 ITER-010 新失败。
+- [FINDING-010-081](FINDING-010-081.md)：run-030 的 Q1/Q3 独立 PASS；Q2 页面虽 APPROVED，却遗漏 login token → protected request
+  handoff 与 resources-excluded header/prefix unknown，实际仍为 FAIL。
+- [FINDING-010-082](FINDING-010-082.md)：startup/call/use/integrate/diagnose 现要求 operational checklist、输入输出 handoff 和通用
+  original-question fulfillment scan，缺 material 用户目标必须失败并形成绑定 Finding。
+- [FINDING-010-083](FINDING-010-083.md)：上述处置以 focused 80/80、Engineering QA 117/117、docs/oracle/full exact historical hold
+  闭合 deterministic Gate；没有 ITER-010 新失败。
+- [FINDING-010-084](FINDING-010-084.md)：run-031 的 Q1 发现 cache write，却把缺失 Application observation 错选成第二次同包 rewrite；
+  现要求 exact omitted-effect statements 与 `APPLICATION_PACKAGE / DEFAULT_DRAFT` closed layer，不放宽 rewrite fuse。
+- [FINDING-010-085](FINDING-010-085.md)：上述 layer、statement membership、entry/class/remediation 重算以 focused 80/80、
+  Engineering QA 117/117、docs/oracle/full exact historical hold 闭合 deterministic Gate。
+- [FINDING-010-086](FINDING-010-086.md)：run-032 证明 observation 使用 `retrieval_item_*` source reference，而旧 challenge/Application
+  错拿 `support_entry_*` 直接比较并形成伪空集；Q1 PASS、Q2 FAIL、Q3 OUTCOME_UNKNOWN、66,000-byte Provider 前拒绝均永久保留。
+- [FINDING-010-087](FINDING-010-087.md)：统一 exact entry → source-reference resolver 与 application-missing-first layer precedence 后，
+  focused 80/80、Engineering QA 117/117、docs/oracle/full exact historical hold 已闭合；新 clean/fresh live 是下一 Gate。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
