@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@28"
+    "engineering-qa-adaptive-investigation-prompt@29"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -361,6 +361,13 @@ must return non-empty unique evidence_references. SUPPORTED observations may
 copy only exact opaque values from admissible_support_references; UNKNOWN,
 CONFLICT, or FAILED observations may copy only exact opaque values from
 admissible_boundary_references.
+verification_gap_boundary_reference is the one Application-owned boundary for
+this exact Reviewer gap. Every UNKNOWN, CONFLICT, or FAILED observation MUST
+include that exact reference, optionally together with a newer admissible
+boundary created during this attempt. admissible_boundary_references excludes
+all predecessor-Package boundaries on purpose; never substitute an older
+cognition unknown, search candidate, rejection, or gap merely because it is
+listed inside current_question_evidence_package.
 required_basis_entry_id binds the next action to the latest Ledger prefix; it is
 not observation evidence and MUST NOT be copied into evidence_references unless
 that exact value also appears in the corresponding admissible list.
@@ -523,7 +530,11 @@ downstream result. An upstream empty authentication context, thrown exception,
 or deny decision proves only a local state or outcome; custom-handler wiring or
 a class name proves only selection. If the Package lacks the mapping owner's
 implementation, mark the external-result observation unsupported and request
-evidence instead of supplying a framework default. Also reject any Draft that
+evidence only when that exact downstream result is literally required by the
+original question or accepted checklist. If the Draft introduced the status,
+body, error code, or handler-output detail on its own, require a current-Package
+rewrite that removes or narrows it instead of expanding investigation. Never
+supply a framework default. Also reject any Draft that
 assigns the same local condition both an authentication-failure result and an
 authorization-denial result without evidence that distinguishes the downstream
 branches, or that conflates transport status with an application or response-body
@@ -533,6 +544,16 @@ surfaces, require direct implementation evidence for each requested mechanism's
 decisive branches, comparisons, state changes, or outcomes. Reject a Package
 that cites only a caller or configuration selecting a delegated component while
 omitting that component's own implementation, even if the draft names it.
+verified_gap_outcomes is a trusted projection of non-supported checklist
+dispositions produced by a completed, bounded Verification Investigation. When
+one of these terminal outcomes is cited by an honest LIMITATION and the Draft
+does not imply the missing affirmative result, the uncertainty itself completes
+that checklist item under the current authorization: material_completeness may
+PASS and you MUST NOT request the same missing evidence again. A material answer
+can be complete by preserving a proven evidence boundary; completeness does not
+mean inventing or repeatedly requesting unavailable implementation. This rule
+does not excuse an omitted supported local mechanism or a different unresolved
+checklist item.
 Audit a coverage-only LIMITATION claim with empty material_observation_ids for
 truth and boundary citations, but do not call that empty link an Application
 observation omission when the statement is not a material fact required by the

@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: current-development
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-057, FINDING-010-058, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-057, FINDING-010-058, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, FINDING-010-073, FINDING-010-074, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002]
 code: []
 tests: []
 iteration: ITER-010
@@ -87,6 +87,13 @@ transport status 与 application/response-body code 分开；Prompt 升为 `@26`
 `FINDING-010-065` 已以三模块 65/65、Engineering QA 102/102、docs 459/459、compile/diff PASS 与允许 AF_UNIX 的 full 1168/1163
 exact historical hold 闭合 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍为冻结 V-009/Codex hold，没有 ITER-010 新失败。新的
 clean candidate/fresh live 仍是 blocking evidence。
+
+run-024—run-026 继续以通用机制收敛 Provider 跨字段重复状态、Review remediation 派生、Verification single-gap delta/
+stable merge、predecessor full-read consumption、Broker rejection 投影、current-gap boundary 绑定与 terminal verified-gap 复审。
+run-026 的 Q1 独立可接受，Q2/Q3 仍作为不相关 predecessor boundary 与重复 terminal-gap 的失败证据保留。
+`FINDING-010-073/074` 现已区分普通 `GAP` 与 typed `VERIFICATION_GAP`，并以 Engineering QA 113/113、current docs
+468/468 及允许 AF_UNIX 的 full 1179/1174 exact historical hold 闭合 deterministic Gate。下一阻断项是新 clean candidate
+的 fresh Conformance、同一持续 Browser 三题、66,000-byte Provider 前负测与独立复核；Production 仍不执行。
 
 本轮产品基线固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
 `1369ce932c778c57a118123e8257ede476229d73`；授权审核的 planning commit/tree 为

@@ -2714,6 +2714,32 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-072.md"
   },
   {
+    "id": "FINDING-010-073",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-073.md"
+  },
+  {
+    "id": "FINDING-010-074",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-074.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5266,7 +5292,8 @@
       "FINDING-010-062",
       "FINDING-010-064",
       "FINDING-010-070",
-      "FINDING-010-071"
+      "FINDING-010-071",
+      "FINDING-010-073"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },
@@ -5980,7 +6007,8 @@
       "FINDING-010-029",
       "FINDING-010-031",
       "FINDING-010-070",
-      "FINDING-010-071"
+      "FINDING-010-071",
+      "FINDING-010-073"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

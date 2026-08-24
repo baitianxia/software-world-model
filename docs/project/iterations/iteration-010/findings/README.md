@@ -189,5 +189,11 @@ iteration: ITER-010
 - [FINDING-010-072](FINDING-010-072.md)：上述处置后 Engineering QA 109/109、docs 组合 142/142、历史 oracle 组合 74/74、current docs
   466/466、compile/diff PASS；允许 AF_UNIX 的 full 1175 项中 1170 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 historical hold，
   没有 ITER-010 新失败。
+- [FINDING-010-073](FINDING-010-073.md)：clean `32a00a3…` / run-026 的 Q2 Verification limitation 错借 predecessor Package 中与当前
+  gap 无关的 cognition unknown，Q3 Reviewer 又重复请求已经受控穷尽并诚实披露的同一 gap。现排除 predecessor boundary、强制每个
+  非支持 observation 保留当前 gap boundary，并向 Reviewer 投影 terminal verified gap；非必要 Draft 扩张只能同包删除或收窄。
+- [FINDING-010-074](FINDING-010-074.md)：上述处置及 typed `VERIFICATION_GAP` 独立审计后，focused 76/76、Engineering QA
+  113/113、docs 组合 146/146、历史 oracle 组合 78/78、current docs 468/468、compile/diff PASS；允许 AF_UNIX 的
+  full 1179 项中 1174 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

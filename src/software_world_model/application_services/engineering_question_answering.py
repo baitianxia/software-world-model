@@ -244,6 +244,7 @@ class MaterialObservationKind(str, Enum):
 class PackageBoundaryKind(str, Enum):
     BOUNDARY = "BOUNDARY"
     GAP = "GAP"
+    VERIFICATION_GAP = "VERIFICATION_GAP"
     FAILURE = "FAILURE"
     PARTIAL = "PARTIAL"
     CONFLICT = "CONFLICT"
@@ -3000,6 +3001,43 @@ def _disposition_reference_eligibility(
     )
 
 
+def _verification_disposition_reference_eligibility(
+    *,
+    cognition: WorldModelCognitionContext,
+    ledger: EvidenceLedger,
+    retrieval_results: Sequence[RetrievalResult],
+    broker_decisions: Sequence[SourceBrokerDecision],
+    current_package: "QuestionEvidencePackage",
+) -> ChecklistDispositionReferenceEligibility:
+    """Limit a verification delta to support plus boundaries created for its gap.
+
+    A successor investigation may reuse affirmative support retained by the
+    predecessor Package, but an UNKNOWN/CONFLICT/FAILED delta must not relabel an
+    unrelated predecessor boundary as evidence for the new Reviewer gap. The
+    successor Verification Request is itself a retained boundary, and any later
+    search result, rejection, gap, or receipt remains available through the
+    ordinary eligibility calculation.
+    """
+
+    complete = _disposition_reference_eligibility(
+        cognition=cognition,
+        ledger=ledger,
+        retrieval_results=retrieval_results,
+        broker_decisions=broker_decisions,
+    )
+    predecessor_boundaries = {
+        item.source_reference for item in current_package.boundary_audit
+    }
+    return ChecklistDispositionReferenceEligibility.create(
+        support_references=complete.support_references,
+        boundary_references=tuple(
+            reference
+            for reference in complete.boundary_references
+            if reference not in predecessor_boundaries
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class InitialInvestigationInput:
     attempt_id: StableId
@@ -3751,7 +3789,11 @@ class QuestionEvidencePackage:
                 boundary.append(
                     BoundaryAuditEntry.create(
                         source_reference=entry.entry_id.value,
-                        kind=PackageBoundaryKind.GAP,
+                        kind=(
+                            PackageBoundaryKind.VERIFICATION_GAP
+                            if entry.kind is LedgerEntryKind.VERIFICATION_REQUEST
+                            else PackageBoundaryKind.GAP
+                        ),
                         evidence_class=evidence_class,
                         repository_revision=request.repository_revision,
                         description=details.get(
@@ -4122,6 +4164,23 @@ class VerificationInvestigationInput:
         return self.ledger.entries[-1].entry_id
 
     @property
+    def verification_gap_boundary_reference(self) -> StableId:
+        matches = tuple(
+            entry
+            for entry in self.ledger.entries
+            if entry.kind is LedgerEntryKind.VERIFICATION_REQUEST
+            and entry.subject_id
+            == self.verification_request.verification_request_id.value
+            and entry.subject_digest == self.verification_request.digest
+        )
+        if len(matches) != 1:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "verification investigation lacks one exact gap boundary reference",
+            )
+        return matches[0].entry_id
+
+    @property
     def eligible_locator_references(self) -> tuple[StableId, ...]:
         return _eligible_locator_references(
             self.retrieval_results,
@@ -4245,6 +4304,21 @@ class VerificationInvestigationInput:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "verification investigation may only receive Results appended after its current gap Request",
             )
+        admissible_boundaries = set(
+            self.disposition_reference_eligibility.boundary_references
+        )
+        predecessor_boundaries = {
+            item.source_reference for item in self.current_package.boundary_audit
+        }
+        if (
+            self.verification_gap_boundary_reference.value
+            not in admissible_boundaries
+            or admissible_boundaries.intersection(predecessor_boundaries)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "verification boundary eligibility is not scoped to the current gap",
+            )
 
     def model_view(self) -> dict[str, object]:
         self.validate_new_result_closure()
@@ -4254,6 +4328,9 @@ class VerificationInvestigationInput:
             "role_context_id": self.role_context_id.value,
             "step_index": self.step_index,
             "required_basis_entry_id": self.required_basis_entry_id.value,
+            "verification_gap_boundary_reference": (
+                self.verification_gap_boundary_reference.value
+            ),
             "eligible_locator_references": [
                 item.value for item in self.eligible_locator_references
             ],
@@ -6495,6 +6572,15 @@ class EngineeringQuestionAnsweringService:
                         ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                         "verification investigation lacks its immutable gap and current Package",
                     )
+                disposition_reference_eligibility = (
+                    _verification_disposition_reference_eligibility(
+                        cognition=cognition,
+                        ledger=ledger,
+                        retrieval_results=tuple(results),
+                        broker_decisions=tuple(decisions),
+                        current_package=current_package,
+                    )
+                )
                 verification_input = VerificationInvestigationInput(
                     attempt_id=attempt_id,
                     role_context_id=role_context,
@@ -7154,6 +7240,29 @@ class EngineeringQuestionAnsweringService:
                         ErrorCode.PROVIDER_RESPONSE_INVALID,
                         f"FINISH disposition requires an admissible {category} reference",
                     )
+                if (
+                    expected_kind is InvestigationKind.VERIFICATION
+                    and disposition.outcome is not ChecklistOutcome.SUPPORTED
+                ):
+                    verification_entries = tuple(
+                        entry
+                        for entry in ledger.entries
+                        if entry.kind is LedgerEntryKind.VERIFICATION_REQUEST
+                    )
+                    if not verification_entries:
+                        raise DomainError(
+                            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                            "verification FINISH has no current gap boundary",
+                        )
+                    gap_reference = verification_entries[-1].entry_id.value
+                    if gap_reference not in references or any(
+                        gap_reference not in observation.evidence_references
+                        for observation in disposition.material_observations
+                    ):
+                        raise DomainError(
+                            ErrorCode.PROVIDER_RESPONSE_INVALID,
+                            "non-supported verification observations must retain the current gap boundary",
+                        )
 
     @staticmethod
     def _validate_retrieval_result(

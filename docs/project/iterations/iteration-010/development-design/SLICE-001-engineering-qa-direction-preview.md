@@ -181,6 +181,13 @@ Citation 已打开核对。Q2 的 Reviewer 正确派生只绑定 `check-3` 的�
 重复 intent 被 Broker/no-progress fuse 安全关闭。`FINDING-010-070/071` 因而把补证 FINISH 定义为单 gap delta + trusted merge，并将
 predecessor Package full-content paths 与最新 Broker rejection 提升为补证控制状态；run-025 仍是 1 PASS + 2 FAIL，不能取得三题 Gate。
 
+上述处置形成 clean `32a00a3…` / run-026。fresh Conformance 2/2 PASS；持续三题分别使用 8/12/14 dispatch，retry/switch 0，
+66,000-byte 输入在 Provider 前拒绝。Q1 `APPROVED`；Q2 的 Verification `UNKNOWN` observations 错借 predecessor Package 中描述
+数据库/JWT/端口的 cognition unknown，Answer observation/evidence closure 正确失败；Q3 已诚实保留 handler implementation limitation，
+Reviewer 却再次请求同一已穷尽 gap 并触发 preview Verification fuse。`FINDING-010-073` 因而把 predecessor boundary 从补证
+admissible 域排除，强制每个非支持 observation 绑定 current gap，并把 terminal verified gap 投影给独立 Reviewer。run-026 仍是 1
+PASS + 2 FAIL，不追认三题 Gate。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -252,8 +259,14 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Result 自适应提出 search/read/parse/finish；predecessor Package 已含的 full-content exact-source locators 与 gap 后 full reads 共同
   标记为 consumed，相应 locator 不再 eligible，旧 raw Result 不重新进入输入。当前 attempt 最近一次 Broker rejection 以受信控制状态
   显式投影，角色必须选择真正不同的合法 action 或诚实 FINISH。每一步仍由 Application/Broker 校验编译、Worker 执行；上述状态都不授予
-  新 path/operation。它不回初始 Investigation LLM，不继承 Reviewer 会话，也无直接来源权限。完成后追加新 Ledger Revision、密封新
+  新 path/operation。predecessor Package 的 boundary source references 不得进入补证 admissible boundary；角色取得唯一 current gap
+  boundary，每个 non-supported observation 必须保留该 reference。它不回初始 Investigation LLM，不继承 Reviewer 会话，也无直接来源
+  权限。完成后追加新 Ledger Revision、密封新
   Package、完整生成新 Answer 并独立 Review；旧 Review 不得批准新包。
+- Package 将 Initial Investigation 的普通 `GAP` 与 `VERIFICATION_REQUEST` 的 typed `VERIFICATION_GAP` 分开密封。Review 输入只将真实
+  绑定 `VERIFICATION_GAP` 的 non-supported successor disposition 投影为 terminal `verified_gap_outcome`。Draft 诚实
+  保留该 limitation 且不暗示缺失肯定结果时，Reviewer 不得再次请求同一缺证；Draft 自行扩张、删除后仍完整回答 original/checklist 的
+  status/body/error detail 必须同包删除或收窄，不能扩大调查。
 - 为尽快验证方向，Slice1 每个问题最多冻结一次 Verification Investigation；这是 preview 的临时安全边界，不是永久协议。Slice2/3
   禁止固定一轮上限，改为在各自 exact freeze 前预密封 Package Revision、model call、Broker operation、source bytes、wall time 与
   no-progress 高安全熔断。answerable 因任一熔断耗尽而未回答必须计 `FAIL`，不能用 Limitation 取得 supported 分数。
@@ -404,4 +417,10 @@ clean/fresh run 仍须闭合，run-025 不追认为三题 PASS。
 `FINDING-010-072` 已以 Engineering QA 109/109、docs 组合 142/142、历史 oracle 组合 74/74、current docs 466/466、compile/diff 与
 允许 AF_UNIX 的 full 1175/1170 exact historical hold 闭合 deterministic Gate。下一步只能从新 clean candidate 执行 fresh Conformance、
 持续三题与独立复核；旧 run-025 仍不追认。
+`FINDING-010-073` 记录 clean `32a00a3…` / run-026 的 gap-boundary 错绑和 terminal verified gap 重复请求。处置排除所有 predecessor
+boundary、强制每个 Verification non-supported observation 绑定本次 gap，并向 Review 投影可信 terminal outcome；Strategy/Prompt 升为
+`@19/@29`，三模块 76/76 PASS。扩展 deterministic Gate 与下一 clean/fresh live 仍须闭合；run-026 不追认。
+`FINDING-010-074` 已以 Engineering QA 113/113、docs 组合 146/146、历史 oracle 组合 78/78、current docs 468/468、
+compile/diff 及允许 AF_UNIX 的 full 1179/1174 exact historical hold 闭合 deterministic Gate。下一步只能从新 clean
+candidate 执行 fresh Conformance、持续三题、Provider 前负测与独立复核；run-026 仍不追认。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

@@ -486,7 +486,14 @@ answer_protocol:
   verification_finish_disposition_role: single-gap-delta
   verification_successor_disposition_merge: trusted-stable-replace-target-preserve-non-target
   verification_predecessor-package-full-content-counts-consumed: true
+  verification_predecessor-package-boundaries-admissible: false
+  verification_gap-boundary-reference-projected: true
+  verification_non-supported-observation-must-retain-current-gap: true
   verification_last-broker-rejection-projected: true
+  review-terminal-verified-gap-outcome-projected: true
+  review-terminal-gap-kind: VERIFICATION_GAP
+  review-terminal-verified-gap-repeat-request: forbidden
+  review-nonmaterial-draft-expansion-remediation: current-package-rewrite-not-investigation
   required_evidence_path_upper_bound: 4
   required_evidence_path_budget_reserve: four-direct-full-read-plus-one-finish-leaves-seven-adaptive-calls
   required_evidence_paths_role: mandatory-minimum-not-investigation-maximum
@@ -604,13 +611,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:90217467f13df688e4a4bc7f6308960c522bc21b5e5e6600d68e1320a19b59ab
+  system_contract_set_digest: sha256:2e1b7a04d74289cc28c1bb817e950c9a4e39707859bd4ae81863f4d087dc7e9b
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:fa2757026df39e640fba1bad214f2c57826e5520fb83531878d3e82042189bf5
+  investigation_budget_digest: sha256:0c478513d90d1eea9182cf408f18a014bff158a22c977e3d86460360df40a1b0
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
@@ -653,7 +660,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: run-025-q1-approved-q2-verification-gap-delta-contract-failure-q3-safe-no-progress-close-preserved-deterministic-gates-complete-new-clean-live-pending
+      live_question_status: run-026-q1-approved-q2-predecessor-boundary-misbinding-failed-q3-terminal-gap-repeat-failed-preserved-finding-074-deterministic-gate-complete-new-clean-live-pending
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

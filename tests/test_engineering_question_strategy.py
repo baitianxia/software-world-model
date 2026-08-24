@@ -21,16 +21,23 @@ from software_world_model.ai_infrastructure.engineering_question_strategy import
     StructuredEngineeringAnswerRole,
     StructuredEngineeringAnswerReviewerRole,
     StructuredQuestionUnderstandingRole,
+    _verified_gap_outcomes,
     engineering_question_output_contract_digest,
     engineering_question_output_schemas,
 )
 from software_world_model.application_services.engineering_question_answering import (
+    BoundaryAuditEntry,
+    ChecklistDisposition,
     ChecklistDispositionReferenceEligibility,
+    ChecklistOutcome,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionResultStatus,
     EvidenceLedger,
     InitialInvestigationInput,
     LedgerEntryKind,
+    MaterialObservation,
+    MaterialObservationKind,
+    PackageBoundaryKind,
     RequiredEvidencePathLocator,
     RetrievalItem,
     SourceBroker,
@@ -498,6 +505,11 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             package.digest.value,
         )
         self.assertEqual(review.body["draft"]["digest"], draft.digest.value)
+        self.assertEqual(review.body["verified_gap_outcomes"], ())
+        self.assertEqual(
+            review.body["verified_gap_review_rule"],
+            "DO_NOT_REPEAT_A_TERMINAL_VERIFIED_GAP_WHEN_THE_DRAFT_PRESERVES_ITS_HONEST_LIMITATION",
+        )
         self.assertEqual(
             answer.body["answer_structure_contract"]["required_first_role"],
             "DIRECT_ANSWER",
@@ -552,6 +564,87 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertFalse(collect_keys(answer.gateway_input()) & forbidden)
         self.assertFalse(collect_keys(review.gateway_input()) & forbidden)
 
+    def test_review_projects_terminal_verified_gap_outcome(self):
+        package = self.result.current_package
+        gap_reference = "ledger_entry_" + "9" * 32
+        gap = BoundaryAuditEntry.create(
+            source_reference=gap_reference,
+            kind=PackageBoundaryKind.VERIFICATION_GAP,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            repository_revision=package.repository_revision,
+            description="The bounded verification gap remains unresolved.",
+        )
+        observation = MaterialObservation.create(
+            checklist_item_id="check-1",
+            kind=MaterialObservationKind.LIMITATION,
+            statement="The downstream response mapping remains unknown.",
+            evidence_references=(gap_reference,),
+        )
+        disposition = ChecklistDisposition.create(
+            checklist_item_id="check-1",
+            outcome=ChecklistOutcome.UNKNOWN,
+            evidence_references=(gap_reference,),
+            explanation="The authorized verification exhausted the gap.",
+            material_observations=(observation,),
+        )
+
+        projection = _verified_gap_outcomes(
+            replace(
+                package,
+                checklist_dispositions=(disposition,),
+                boundary_audit=(*package.boundary_audit, gap),
+            )
+        )
+
+        self.assertEqual(
+            projection,
+            [
+                {
+                    "checklist_item_id": "check-1",
+                    "outcome": "UNKNOWN",
+                    "explanation": "The authorized verification exhausted the gap.",
+                    "gap_boundary_entry_ids": [gap.entry_id.value],
+                    "terminal_under_current_authorization": True,
+                }
+            ],
+        )
+
+    def test_review_does_not_project_an_initial_investigation_gap_as_terminal(self):
+        package = self.result.current_package
+        gap_reference = "ledger_entry_" + "8" * 32
+        gap = BoundaryAuditEntry.create(
+            source_reference=gap_reference,
+            kind=PackageBoundaryKind.GAP,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            repository_revision=package.repository_revision,
+            description="The initial investigation still has an unresolved gap.",
+        )
+        disposition = ChecklistDisposition.create(
+            checklist_item_id="check-1",
+            outcome=ChecklistOutcome.UNKNOWN,
+            evidence_references=(gap_reference,),
+            explanation="The initial investigation has not verified this gap.",
+            material_observations=(
+                MaterialObservation.create(
+                    checklist_item_id="check-1",
+                    kind=MaterialObservationKind.LIMITATION,
+                    statement="The result remains unknown before verification.",
+                    evidence_references=(gap_reference,),
+                ),
+            ),
+        )
+
+        self.assertEqual(
+            _verified_gap_outcomes(
+                replace(
+                    package,
+                    checklist_dispositions=(disposition,),
+                    boundary_audit=(*package.boundary_audit, gap),
+                )
+            ),
+            [],
+        )
+
     def test_verification_input_is_gap_plus_current_package_and_ledger(self):
         package = self.result.current_package
         verification = VerificationRequestProposal.create(
@@ -579,10 +672,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                     support_references=tuple(
                         item.source_reference for item in package.support_citation
                     ),
-                    boundary_references=tuple(
-                        item.source_reference for item in package.boundary_audit
-                    )
-                    + (ledger.entries[-1].entry_id.value,),
+                    boundary_references=(ledger.entries[-1].entry_id.value,),
                 )
             ),
             registered_evidence_classes=(EngineeringEvidenceClass.TEST,),
@@ -603,6 +693,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "role_context_id",
                 "step_index",
                 "required_basis_entry_id",
+                "verification_gap_boundary_reference",
                 "eligible_locator_references",
                 "eligible_required_path_locators",
                 "consumed_full_content_paths",
@@ -629,6 +720,10 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             manifest.body["required_basis_entry_id"],
             ledger.entries[-1].entry_id.value,
         )
+        self.assertEqual(
+            manifest.body["verification_gap_boundary_reference"],
+            ledger.entries[-1].entry_id.value,
+        )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["eligible_required_path_locators"], ())
         self.assertEqual(
@@ -649,6 +744,11 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertIn(
             ledger.entries[-1].entry_id.value,
             manifest.body["admissible_boundary_references"],
+        )
+        self.assertFalse(
+            set(manifest.body["admissible_boundary_references"]).intersection(
+                item.source_reference for item in package.boundary_audit
+            )
         )
 
         proposal_id = "investigation_proposal_" + "a" * 32

@@ -47,10 +47,12 @@ from software_world_model.application_services.engineering_question_answering im
     RetrievalStatus,
     SourceBroker,
     SourceReadOperation,
+    VerificationInvestigationInput,
     VerificationRequestProposal,
     WorldModelCognitionContext,
     _eligible_locator_references,
     _merge_verification_checklist_dispositions,
+    _verification_disposition_reference_eligibility,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -1020,7 +1022,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         self.assertEqual(result.usage.verification_investigations, 1)
         self.assertTrue(
             any(
-                item.kind is PackageBoundaryKind.GAP
+                item.kind is PackageBoundaryKind.VERIFICATION_GAP
                 for item in second.boundary_audit
             )
         )
@@ -1221,6 +1223,143 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             ),
             (),
         )
+
+    def test_verification_boundary_eligibility_excludes_predecessor_unknowns(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        verification = VerificationRequestProposal.create(
+            package_digest=package.digest,
+            checklist_item_id="check-1",
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            evidence_need="The exact downstream implementation outcome",
+        )
+        ledger = result.ledgers[-1].successor(
+            verification_request_id=verification.verification_request_id,
+            verification_request_digest=verification.digest,
+            prior_package_digest=package.digest,
+            maximum_bytes=result.request.limits.maximum_ledger_bytes,
+        )
+
+        eligibility = _verification_disposition_reference_eligibility(
+            cognition=result.cognition,
+            ledger=ledger,
+            retrieval_results=result.retrieval_results,
+            broker_decisions=result.broker_decisions,
+            current_package=package,
+        )
+
+        gap_reference = ledger.entries[-1].entry_id.value
+        self.assertIn(gap_reference, eligibility.boundary_references)
+        self.assertFalse(
+            set(eligibility.boundary_references).intersection(
+                item.source_reference for item in package.boundary_audit
+            )
+        )
+        investigation_input = VerificationInvestigationInput(
+            attempt_id=sid("verification_attempt", "b"),
+            role_context_id=sid("role_context", "c"),
+            step_index=1,
+            verification_request=verification,
+            current_package=package,
+            ledger=ledger,
+            retrieval_results=(),
+            disposition_reference_eligibility=eligibility,
+            registered_evidence_classes=(EngineeringEvidenceClass.SOURCE,),
+            required_evidence_classes=(EngineeringEvidenceClass.SOURCE,),
+        )
+        investigation_input.validate_new_result_closure()
+
+        predecessor_reference = package.boundary_audit[0].source_reference
+        with self.assertRaises(DomainError) as caught:
+            replace(
+                investigation_input,
+                disposition_reference_eligibility=(
+                    ChecklistDispositionReferenceEligibility.create(
+                        support_references=eligibility.support_references,
+                        boundary_references=(
+                            gap_reference,
+                            predecessor_reference,
+                        ),
+                    )
+                ),
+            ).validate_new_result_closure()
+        self.assertEqual(
+            caught.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+        )
+
+    def test_non_supported_verification_finish_must_retain_gap_boundary(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        verification = VerificationRequestProposal.create(
+            package_digest=package.digest,
+            checklist_item_id="check-1",
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            evidence_need="The exact downstream implementation outcome",
+        )
+        ledger = result.ledgers[-1].successor(
+            verification_request_id=verification.verification_request_id,
+            verification_request_digest=verification.digest,
+            prior_package_digest=package.digest,
+            maximum_bytes=result.request.limits.maximum_ledger_bytes,
+        )
+        attempt = sid("verification_attempt", "d")
+        role_context = sid("role_context", "e")
+        predecessor_reference = package.boundary_audit[0].source_reference
+        observation = MaterialObservation.create(
+            checklist_item_id="check-1",
+            kind=MaterialObservationKind.LIMITATION,
+            statement="The downstream result remains unknown.",
+            evidence_references=(predecessor_reference,),
+        )
+        disposition = ChecklistDisposition.create(
+            checklist_item_id="check-1",
+            outcome=ChecklistOutcome.UNKNOWN,
+            evidence_references=(predecessor_reference,),
+            explanation="The current gap was not resolved.",
+            material_observations=(observation,),
+        )
+        proposal = InvestigationStepProposal.create(
+            investigation_kind=InvestigationKind.VERIFICATION,
+            attempt_id=attempt,
+            role_context_id=role_context,
+            request_digest=result.request.digest,
+            step_index=1,
+            ledger_id=ledger.ledger_id,
+            ledger_generation=ledger.generation,
+            ledger_revision=len(ledger.entries),
+            ledger_prefix_digest=ledger.prefix_digest,
+            operation=InvestigationOperation.FINISH,
+            checklist_item_ids=("check-1",),
+            basis_entry_ids=(ledger.entries[-1].entry_id,),
+            unknown_to_reduce="The exact downstream implementation outcome",
+            finish_dispositions=(disposition,),
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            EngineeringQuestionAnsweringService._validate_investigation_proposal(
+                request=result.request,
+                understanding=result.understanding,
+                ledger=ledger,
+                proposal=proposal,
+                expected_kind=InvestigationKind.VERIFICATION,
+                expected_attempt_id=attempt,
+                expected_role_context_id=role_context,
+                expected_step_index=1,
+                eligible_locator_references=(),
+                disposition_reference_eligibility=(
+                    ChecklistDispositionReferenceEligibility.create(
+                        support_references=(),
+                        boundary_references=(
+                            predecessor_reference,
+                            ledger.entries[-1].entry_id.value,
+                        ),
+                    )
+                ),
+                authorized_checklist_item_ids=("check-1",),
+            )
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+        self.assertIn("current gap boundary", caught.exception.message)
 
     def test_ledger_is_append_only_and_requires_terminal_entry(self):
         req = request()

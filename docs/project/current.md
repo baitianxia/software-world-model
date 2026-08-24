@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, FINDING-010-055, FINDING-010-056, FINDING-010-057, FINDING-010-058, FINDING-010-059, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, FINDING-010-055, FINDING-010-056, FINDING-010-057, FINDING-010-058, FINDING-010-059, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, FINDING-010-073, FINDING-010-074, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-24
@@ -91,7 +91,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / fresh clean live next** | clean `7fb7e7c…` / run-025 已在同一持续会话完成三题与 66,000-byte Provider 前负测：Q1 独立可接受且四个 Citation 已核对；Q2 的 Reviewer/Verification 正确形成单 `check-3` 补证 delta，却被 Application 旧“全 Checklist 重报”规则错误关闭；Q3 在缺失 handler implementation 且不扩大 exact allowlist 时由 duplicate/no-progress fuse 安全关闭。`FINDING-010-070/071` 已把成功补证定义为单 gap delta + trusted stable merge，并把 predecessor Package full reads 与最新 Broker rejection 投影为控制状态；`FINDING-010-072` 以 Engineering QA 109/109、docs 组合 142/142、current docs 466/466 和 full 1175/1170 exact historical hold 闭合 deterministic Gate。下一步必须从新 clean candidate 执行 fresh Conformance、三题与超限负测。`V-ANSWER-REWORK` 继续 blocking，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / deterministic gate complete / clean live next** | clean `32a00a3…` / run-026 的 Q1 独立可接受；Q2/Q3 分别暴露 unrelated predecessor boundary 与 repeated terminal gap，均安全失败。`FINDING-010-073` 已排除 predecessor boundary、强制非支持 observation 绑定 current gap，并仅投影 typed `VERIFICATION_GAP`。`FINDING-010-074` 以 Engineering QA 113/113、docs 组合 146/146、oracle 组合 78/78、current docs 468/468 及 full 1179/1174 exact historical hold 闭合 deterministic Gate。下一步是新 clean candidate 的 fresh Conformance、持续三题、Provider 前负测与独立复核。`V-ANSWER-REWORK` 继续 blocking，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -303,6 +303,20 @@ latest Broker rejection projection 修复通用根因；run-025 保持 1 PASS + 
 以及允许 AF_UNIX 的 full 1175/1170 exact historical hold 闭合 deterministic Gate。默认 sandbox 的额外 1 FAIL + 6 ERROR 也精确属于
 AF_UNIX 权限噪声。下一步是提交新的 clean candidate 并执行 fresh DeepSeek Conformance、持续三题、66,000-byte Provider 前负测与
 raw Answer/Reviewer 独立复核；run-025 不追认，Production Activation 仍未执行。
+
+随后 clean `32a00a3…` / run-026 的 fresh Conformance 2/2 PASS，同一 listener 三题使用 8/12/14 dispatch，retry/switch 0，
+66,000-byte 输入在 Provider 前拒绝且调用总数保持 34。Q1 `APPROVED`；Q2 的 Verification limitation observations 错把旧
+`cognition-unknown-1/2/3` 当成 CommonResult gap，Answer citation closure 正确失败；Q3 的 handler limitation 已诚实形成，却被第二次
+Review 对同一 gap 再请求并耗尽一次 preview fuse。terminal receipt document digest `sha256:cfa93204…32c0ea`，Browser console 为空，
+private files 与 Production `NOT_EXECUTED` 成立。`FINDING-010-073` 已把 predecessor boundary 从补证 eligibility 排除，逐 child 强制
+current gap reference，并向 Reviewer 投影 typed terminal verified outcome；Strategy/Prompt 升为 `@19/@29`，focused 76/76 PASS。run-026
+永久保持 1 PASS + 2 FAIL；扩展 Gate 与下一 clean/fresh live 仍待执行。
+
+`FINDING-010-074` 已以 Engineering QA 113/113、docs 组合 146/146、历史 oracle 组合 78/78、current docs 468/468、
+compile/diff PASS 与允许 AF_UNIX 的 full 1179/1174 exact historical hold 闭合 deterministic Gate。默认 sandbox 额外
+1 FAIL + 6 ERROR 精确属于 AF_UNIX 权限噪声；raw 唯一 4 FAIL + 1 ERROR 仍是冻结 V-009/Codex hold，没有
+ITER-010 新失败。下一步只能从新 clean candidate 执行 fresh Conformance、持续 Browser 三题、Provider 前负测与
+raw Answer/Reviewer 独立复核；Production Activation 仍未执行。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

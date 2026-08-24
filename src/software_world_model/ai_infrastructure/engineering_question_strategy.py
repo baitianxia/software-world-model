@@ -46,6 +46,7 @@ from software_world_model.application_services.engineering_question_answering im
     MAXIMUM_REQUIRED_EVIDENCE_PATHS,
     MaterialObservation,
     MaterialObservationKind,
+    PackageBoundaryKind,
     QuestionEvidencePackage,
     QuestionUnderstanding,
     QuestionUnderstandingProposal,
@@ -66,7 +67,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@18"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@19"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -101,6 +102,40 @@ def _thaw(value: object) -> object:
     if isinstance(value, tuple):
         return [_thaw(item) for item in value]
     return value
+
+
+def _verified_gap_outcomes(
+    package: QuestionEvidencePackage,
+) -> list[dict[str, object]]:
+    gap_entries = {
+        item.source_reference: item
+        for item in package.boundary_audit
+        if item.kind is PackageBoundaryKind.VERIFICATION_GAP
+    }
+    outcomes: list[dict[str, object]] = []
+    for disposition in package.checklist_dispositions:
+        if disposition.outcome is ChecklistOutcome.SUPPORTED:
+            continue
+        retained_gap_references = tuple(
+            reference
+            for reference in disposition.evidence_references
+            if reference in gap_entries
+        )
+        if not retained_gap_references:
+            continue
+        outcomes.append(
+            {
+                "checklist_item_id": disposition.checklist_item_id,
+                "outcome": disposition.outcome.value,
+                "explanation": disposition.explanation,
+                "gap_boundary_entry_ids": [
+                    gap_entries[reference].entry_id.value
+                    for reference in retained_gap_references
+                ],
+                "terminal_under_current_authorization": True,
+            }
+        )
+    return outcomes
 
 
 class EngineeringQuestionModelRole(str, Enum):
@@ -1027,6 +1062,7 @@ class EngineeringQuestionRoleInputBuilder:
             "question_understanding": understanding.model_view(),
             "question_evidence_package": package.model_view(),
             "draft": draft.model_view(),
+            "verified_gap_outcomes": _verified_gap_outcomes(package),
             "answer_structure": {
                 "detail_level": understanding.requested_abstraction_level.value,
                 "first_content_role": draft.claims[0].content_role.value,
@@ -1071,6 +1107,10 @@ class EngineeringQuestionRoleInputBuilder:
             ],
             "verification_request_rule": (
                 "BIND_CHECKLIST_OR_CLAIM_EVIDENCE_CLASS_AND_NEED_NO_OPERATION"
+            ),
+            "verified_gap_review_rule": (
+                "DO_NOT_REPEAT_A_TERMINAL_VERIFIED_GAP_WHEN_THE_DRAFT_"
+                "PRESERVES_ITS_HONEST_LIMITATION"
             ),
         }
         return EngineeringQuestionRoleInputManifest.create(

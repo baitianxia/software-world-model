@@ -381,7 +381,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@28",
+            "engineering-qa-adaptive-investigation-prompt@29",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -451,6 +451,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             ).split()
         )
         self.assertIn("last_broker_rejection", verification_prompt)
+        self.assertIn("verification_gap_boundary_reference", verification_prompt)
+        self.assertIn("excludes all predecessor-Package boundaries", verification_prompt)
         self.assertIn("preserves every non-gap disposition", verification_prompt)
         self.assertIn("entire authorized checklist scope", verification_prompt)
         understanding_prompt = " ".join(
@@ -562,6 +564,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("do not return a separate decision", review_prompt)
         self.assertIn("merely because the Draft mentions", review_prompt)
         self.assertIn("mapping owner's implementation", review_prompt)
+        self.assertIn("verified_gap_outcomes", review_prompt)
+        self.assertIn("MUST NOT request the same missing evidence again", review_prompt)
+        self.assertIn("If the Draft introduced the status", review_prompt)
         self.assertIn("same local condition", review_prompt)
         self.assertIn("transport status", review_prompt)
 
