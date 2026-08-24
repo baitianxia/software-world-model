@@ -42,6 +42,7 @@ from software_world_model.application_services.engineering_question_answering im
     InvestigationKind,
     InvestigationOperation,
     InvestigationStepProposal,
+    MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
     MaterialObservation,
     MaterialObservationKind,
     QuestionEvidencePackage,
@@ -65,16 +66,16 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@5"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@6"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@1"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@3"
+    "engineering-qa-initial-investigation@4"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@3"
+    "engineering-qa-verification-investigation@4"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@4"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
@@ -165,7 +166,7 @@ _FINISH_DISPOSITION_SCHEMA = {
             "type": "array",
             "items": _MATERIAL_OBSERVATION_SCHEMA,
             "minItems": 1,
-            "maxItems": 8,
+            "maxItems": MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
         },
     },
     "required": [

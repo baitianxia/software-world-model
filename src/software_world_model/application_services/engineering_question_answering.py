@@ -35,6 +35,7 @@ ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
 ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@2"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
 ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@1"
+MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION = 16
 
 _FULL_GIT_OID = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _SAFE_REFERENCE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@-]{0,255}$")
@@ -1423,10 +1424,13 @@ class ChecklistDisposition:
             checklist_item_id, "checklist item ID"
         )
         observations = tuple(material_observations)
-        if not observations or len(observations) > 8:
+        if (
+            not observations
+            or len(observations) > MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION
+        ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "checklist disposition requires one to eight material observations",
+                "checklist disposition exceeds its material observation bounds",
             )
         if len({item.observation_id for item in observations}) != len(observations):
             raise DomainError(
@@ -4055,6 +4059,18 @@ class EngineeringAnswerDraft:
             for claim in default_body_claims
             for observation_id in claim.material_observation_ids
         }
+        default_body_observation_sequence = tuple(
+            observation_id
+            for claim in default_body_claims
+            for observation_id in claim.material_observation_ids
+        )
+        if len(default_body_observation_sequence) != len(
+            default_body_observation_ids
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "material observations must not repeat across user-visible answer claims",
+            )
         if default_body_observation_ids != set(observation_by_id):
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,

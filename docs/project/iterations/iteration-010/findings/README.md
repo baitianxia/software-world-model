@@ -105,5 +105,11 @@ iteration: ITER-010
 - [FINDING-010-041](FINDING-010-041.md)：clean `31a9ccd…` 的新 DeepSeek Conformance 只调用一次即收到官方定义为余额不足的 HTTP 402；
   TLS/credential 成功、retry/switch 0。旧 adapter qualification 仍在有效期且 implementation/config digest 相同，但不能冒充当前账户可用
   或新三题答案；live 保持环境 hold，等待账户持有人恢复余额后以 fresh session 继续。
+- [FINDING-010-042](FINDING-010-042.md)：余额恢复后的 fresh Conformance 2/2 PASS；异质构建题的合法 FINISH 返回 9 条原子事实，撞上
+  每项 8 条旧上限，且 completed-output rejection 被错误重标为 qualification drift。现以每项 16/全局 64 闭合原子事实，并仅在完整 exact
+  binding 成立时传播真实 structured-output failure。
+- [FINDING-010-043](FINDING-010-043.md)：旧候选第三题虽被 Reviewer 批准，却用 dynamic manager 接线代替内部权限判定证据，并在默认正文
+  重复同一批 observation。现明确 setup/wiring 不证明被委托行为，Reviewer 必须请求决定性证据；Application 机械要求每个 observation 在
+  默认用户可见 Claim 中恰好出现一次。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

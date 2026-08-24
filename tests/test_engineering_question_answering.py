@@ -33,6 +33,7 @@ from software_world_model.application_services.engineering_question_answering im
     InvestigationStepProposal,
     LedgerEntryKind,
     LedgerTerminalStatus,
+    MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
     MaterialObservation,
     MaterialObservationKind,
     PackageBoundaryKind,
@@ -464,6 +465,45 @@ class ManualClock:
 
 
 class EngineeringQuestionAnsweringTests(unittest.TestCase):
+    def test_checklist_disposition_preserves_sixteen_atomic_observations(self) -> None:
+        reference = "retrieval_item_" + "1" * 32
+        observations = tuple(
+            MaterialObservation.create(
+                checklist_item_id="check-1",
+                kind=MaterialObservationKind.PROCESS_STAGE,
+                statement=f"Material repository fact {index}.",
+                evidence_references=(reference,),
+            )
+            for index in range(MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION)
+        )
+
+        disposition = ChecklistDisposition.create(
+            checklist_item_id="check-1",
+            outcome=ChecklistOutcome.SUPPORTED,
+            evidence_references=(reference,),
+            explanation="The retained source supports every atomic observation.",
+            material_observations=observations,
+        )
+
+        self.assertEqual(len(disposition.material_observations), 16)
+        with self.assertRaises(DomainError) as raised:
+            ChecklistDisposition.create(
+                checklist_item_id="check-1",
+                outcome=ChecklistOutcome.SUPPORTED,
+                evidence_references=(reference,),
+                explanation="The retained source supports every atomic observation.",
+                material_observations=observations
+                + (
+                    MaterialObservation.create(
+                        checklist_item_id="check-1",
+                        kind=MaterialObservationKind.PROCESS_STAGE,
+                        statement="One material repository fact beyond the bound.",
+                        evidence_references=(reference,),
+                    ),
+                ),
+            )
+        self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
+
     def service(self, *, request_more_evidence: bool):
         profile = source_profile()
         return EngineeringQuestionAnsweringService(
@@ -1152,6 +1192,53 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 proposal=proposal,
                 revision=1,
             )
+        self.assertEqual(caught.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+
+    def test_user_visible_answer_cannot_repeat_material_observations(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        observations = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        support = tuple(item.entry_id for item in package.support_citation)
+        role_context = sid("role_context", "a")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observations,
+                    text="Use the documented entry point and expect its startup effect.",
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-repeated-process",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=(observations[0],),
+                    text="Use the documented entry point.",
+                    evidence_entry_ids=support,
+                ),
+            ),
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            EngineeringAnswerDraft.accept(
+                package=package,
+                understanding=result.understanding,
+                expected_role_context_id=role_context,
+                proposal=proposal,
+                revision=1,
+            )
+
         self.assertEqual(caught.exception.code, ErrorCode.CONTROL_STATE_DENIED)
 
     def test_direct_answer_can_be_an_honest_boundary_limitation(self):

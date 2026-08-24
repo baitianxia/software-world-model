@@ -30,6 +30,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ModelGateway,
     ProviderAdapterCapabilities,
     ProviderOutcomeUnknown,
+    ProviderOutputRejected,
     ReplayClassification,
 )
 from software_world_model.application_services.engineering_question_answering import (
@@ -58,6 +59,7 @@ class LiveRoleAdapter:
         qualification_ref: str = _QUALIFICATION_REF,
         outcome_unknown: bool = False,
         failure_code: ErrorCode | None = None,
+        reject_output: bool = False,
     ) -> None:
         self.capabilities = ProviderAdapterCapabilities(
             no_external_access=True,
@@ -71,6 +73,7 @@ class LiveRoleAdapter:
         )
         self.outcome_unknown = outcome_unknown
         self.failure_code = failure_code
+        self.reject_output = reject_output
         self.requests = []
 
     def invoke(self, request):
@@ -96,7 +99,7 @@ class LiveRoleAdapter:
             sort_keys=True,
             separators=(",", ":"),
         )
-        return AdapterResponse.create(
+        response = AdapterResponse.create(
             provider_request_id="engineering-qa-fixture-request",
             actual_model_fingerprint="engineering-qa-model@1",
             replay_classification=ReplayClassification.PINNED,
@@ -106,6 +109,15 @@ class LiveRoleAdapter:
             usage_complete=True,
             termination_reason="stop",
         )
+        if self.reject_output:
+            raise ProviderOutputRejected(
+                DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    "fixture output exceeds the closed schema",
+                ),
+                response,
+            )
+        return response
 
 
 def request(*, question: str = "How does this system start?") -> EngineeringQuestionRequest:
@@ -324,7 +336,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@12",
+            "engineering-qa-adaptive-investigation-prompt@14",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -370,6 +382,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 "lack of detail in one modality is not global absence",
                 prompt,
             )
+            self.assertIn("one to 16 atomic material_observations", prompt)
+            self.assertIn("A setup statement supports setup only", prompt)
+            self.assertIn("wiring statement supports only that relationship", prompt)
         answer_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.ANSWER
@@ -388,6 +403,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             answer_prompt,
         )
         self.assertIn(
+            "each Package material-observation ID must appear exactly once",
+            answer_prompt,
+        )
+        self.assertIn(
             "put their limitation observations in the one DIRECT_ANSWER limitation",
             answer_prompt,
         )
@@ -400,6 +419,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             "do not call that empty link an Application observation omission",
             review_prompt,
         )
+        self.assertIn("delegation-only evidence", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:
@@ -462,6 +482,24 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIsNotNone(source.audits[0].model_call_id)
         self.assertEqual(source.audits[0].model_call_state, "FAILED")
         self.assertEqual(source.audits[0].failure_code, "PROVIDER_HTTP_ERROR")
+        self.assertEqual(source.audits[0].outcome, "REJECTED")
+
+    def test_exact_rejected_output_is_not_reclassified_as_binding_drift(self) -> None:
+        adapter = LiveRoleAdapter(reject_output=True)
+        source, _ = self.source(adapter, policy_enforced=True)
+
+        with self.assertRaises(DomainError) as raised:
+            source.output_for(**self.output_arguments())
+
+        self.assertEqual(raised.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+        self.assertIn(
+            "current question was closed without retry", raised.exception.message
+        )
+        self.assertEqual(len(adapter.requests), 1)
+        self.assertEqual(source.dispatch_attempt_count, 1)
+        self.assertIsNotNone(source.audits[0].model_call_id)
+        self.assertEqual(source.audits[0].model_call_state, "COMPLETED")
+        self.assertEqual(source.audits[0].failure_code, "STRUCTURED_OUTPUT_INVALID")
         self.assertEqual(source.audits[0].outcome, "REJECTED")
 
     def test_conformance_identity_drift_is_rejected_after_one_dispatch(self) -> None:

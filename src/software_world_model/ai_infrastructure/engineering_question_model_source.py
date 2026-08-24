@@ -28,6 +28,7 @@ from software_world_model.cross_cutting import (
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionRequest,
     InvestigationOperation,
+    MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
 )
 
 from .engineering_question_strategy import (
@@ -60,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@12"
+    "engineering-qa-adaptive-investigation-prompt@14"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -137,7 +138,7 @@ evidence-observation audit.
 Identify the evidence needs, response language, and response constraints. Do not
 narrow the question based on currently available evidence.
 """,
-    EngineeringQuestionModelRole.INITIAL_INVESTIGATION: """
+    EngineeringQuestionModelRole.INITIAL_INVESTIGATION: f"""
 Choose exactly one next investigation action from the registered vocabulary or
 FINISH. Base it on the immutable question, accepted understanding, exact World
 Model cognition, current Ledger prefix, and typed results. A search query must
@@ -178,7 +179,15 @@ directly reduce the material unknown within the remaining fuse, investigate it;
 lack of detail in one modality is not global absence. FINISH is appropriate only
 when the retained evidence and boundary actually justify every disposition, not
 merely because the first investigated class was insufficient.
-Each FINISH disposition must also return one to eight atomic
+A setup statement supports setup only; a declaration, registration, dependency,
+or wiring statement supports only that relationship. None of them proves the
+delegated component's conditions, comparisons, state changes, outcomes, failure
+semantics, or an adjacent application flow. When a material checklist item asks
+how, why, under what conditions, or how to troubleshoot behavior, inspect
+eligible implementation evidence that states those decisive details or assign
+an honest non-supported disposition.
+Each FINISH disposition must also return one to
+{MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION} atomic
 material_observations. Inspect the complete content of every cited admissible
 entry and enumerate every distinct fact material to the original question at
 the accepted abstraction level; a broad summary or one representative effect
@@ -190,7 +199,7 @@ SUPPORTED disposition; use LIMITATION for every non-supported disposition.
 Each observation must be one explicit fact and cite every exact admissible
 reference needed to support it, all retained by its parent disposition.
 """,
-    EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION: """
+    EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION: f"""
 Investigate only the concrete Reviewer gap using the current Package, successor
 Ledger, and results created after that gap. Choose exactly one registered action
 or FINISH and adapt to the newest result. Do not reuse old raw results, propose
@@ -227,7 +236,15 @@ directly reduce the material unknown within the remaining fuse, investigate it;
 lack of detail in one modality is not global absence. FINISH is appropriate only
 when the retained evidence and boundary actually justify every disposition, not
 merely because the first investigated class was insufficient.
-Each FINISH disposition must also return one to eight atomic
+A setup statement supports setup only; a declaration, registration, dependency,
+or wiring statement supports only that relationship. None of them proves the
+delegated component's conditions, comparisons, state changes, outcomes, failure
+semantics, or an adjacent application flow. When a material checklist item asks
+how, why, under what conditions, or how to troubleshoot behavior, inspect
+eligible implementation evidence that states those decisive details or assign
+an honest non-supported disposition.
+Each FINISH disposition must also return one to
+{MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION} atomic
 material_observations under the same rules as initial investigation: inspect
 complete cited content; do not let a broad summary or representative effect
 stand in for distinct process stages, outcomes, state/context mutations,
@@ -252,6 +269,11 @@ coverage boundary and cites boundary/audit entries; never attach supported
 observation IDs to such a limitation. A direct limitation that answers an
 unsupported checklist item still links that item's LIMITATION observations. Do
 not attach an observation ID to a merely representative or broader claim.
+Across default user-visible claims, each Package material-observation ID must
+appear exactly once. Keep the DIRECT_ANSWER concise and allocate granular stages,
+conditions, outcomes, and side effects to later user-visible claims instead of
+restating the same observations in both places. Implementation-only claims may
+reuse an observation outside the default body when needed for developer detail.
 The only legal kind/content_role pairs are AFFIRMATIVE with DIRECT_ANSWER,
 USER_VISIBLE_PROCESS, IMPACT_OR_SIDE_EFFECT, or IMPLEMENTATION_EVIDENCE; and
 LIMITATION with DIRECT_ANSWER or LIMITATION. Never assign LIMITATION kind to a
@@ -284,6 +306,12 @@ observations and with the default Draft body. Report the exact independent
 observation statements omitted by either; a broad summary or one representative
 effect does not cover distinct stages, outcomes, state/context mutations,
 persistence or audit writes, external interactions, or failure outcomes.
+A setup statement supports setup only, and a declaration, registration,
+dependency, or wiring statement supports only that relationship. Treat a Package
+that substitutes such adjacent or delegation-only evidence for requested
+behavioral conditions, comparisons, state changes, outcomes, or failure
+semantics as materially incomplete. Request concrete evidence for the missing
+checklist item instead of approving a component name as its implementation.
 Audit a coverage-only LIMITATION claim with empty material_observation_ids for
 truth and boundary citations, but do not call that empty link an Application
 observation omission when the statement is not a material fact required by the
@@ -2386,6 +2414,61 @@ def _require_eligible_result(
             failure_code,
             (
                 "Engineering QA Provider call failed with "
+                f"{call.failure_code}; the current question was closed without retry"
+            ),
+            {
+                "model_call_id": call.model_call_id.value,
+                "model_call_state": call.state.value,
+            },
+        )
+    exact_rejected_output = (
+        not result.replayed
+        and call.state is ModelCallState.COMPLETED
+        and call.failure_code is not None
+        and call.manifest_digest == gateway_manifest.digest
+        and call.provider_request_digest == receipt.provider_request_digest
+        and call.provider_type == configuration.provider_type
+        and call.adapter_version == configuration.adapter_version
+        and call.requested_model_ref == configuration.model_ref
+        and response is not None
+        and response.actual_model_fingerprint
+        == configuration.expected_actual_model_fingerprint
+        and response.output_digest == digest_of(response.output_text)
+        and response.usage_complete is True
+        and call.actual_model_fingerprint == response.actual_model_fingerprint
+        and call.provider_request_id == response.provider_request_id
+        and call.output_digest == response.output_digest
+        and call.input_tokens == response.input_tokens
+        and call.output_tokens == response.output_tokens
+        and call.usage_complete == response.usage_complete
+        and call.isolation_receipt_id == receipt.receipt_id
+        and call.isolation_receipt_digest == receipt.digest
+        and receipt.manifest_digest == gateway_manifest.digest
+        and receipt.provider_type == configuration.provider_type
+        and receipt.adapter_version == configuration.adapter_version
+        and receipt.provider_configuration_fingerprint
+        == configuration.provider_configuration_fingerprint
+        and receipt.runtime_access_mode is RuntimeAccessMode.NO_EXTERNAL_ACCESS
+        and receipt.platform_proposal_mode is PlatformProposalMode.NONE
+        and receipt.conformance_result_ref == configuration.qualification_ref
+        and receipt.digest == expected_receipt_digest
+        and eligibility.eligible_for_production_domain_output is False
+        and eligibility.reason == f"MODEL_OUTPUT_REJECTED_{call.failure_code}"
+        and eligibility.actual_model_fingerprint
+        == configuration.expected_actual_model_fingerprint
+        and eligibility.isolation_receipt_id == receipt.receipt_id
+        and eligibility.model_call_id == call.model_call_id
+        and eligibility.digest == expected_eligibility_digest
+    )
+    if exact_rejected_output:
+        try:
+            failure_code = ErrorCode(call.failure_code)
+        except ValueError:
+            failure_code = ErrorCode.LIVE_INTEGRATION_HELD
+        raise DomainError(
+            failure_code,
+            (
+                "Engineering QA Provider output was rejected with "
                 f"{call.failure_code}; the current question was closed without retry"
             ),
             {

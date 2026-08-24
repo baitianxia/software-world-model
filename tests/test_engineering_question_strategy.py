@@ -602,7 +602,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "finish_dispositions"
             ]["items"]["properties"]["material_observations"]
             self.assertEqual(observations["minItems"], 1)
-            self.assertEqual(observations["maxItems"], 8)
+            self.assertEqual(observations["maxItems"], 16)
         review_checklist = review["properties"]["checklist_assessment"]
         self.assertIn(
             "independent_material_observations",
