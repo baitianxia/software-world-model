@@ -3671,10 +3671,11 @@ class ReflectionGateTests(unittest.TestCase):
             "max_evidence_ledger_bytes_per_question": 2097152,
             "max_wall_time_milliseconds_per_question": 900000,
             "initial_answer_model_calls": 1,
-            "independent_review_model_calls_per_attempt": 1,
+            "independent_review_model_calls_per_authorizable_draft": 2,
+            "final_answer_role_call_reserve": 3,
             "same_package_targeted_rewrite_upper_bound": 1,
             "answer_attempt_upper_bound": 3,
-            "review_attempt_upper_bound": 3,
+            "review_attempt_upper_bound": 4,
             "provider_output_complete-replacement_upper_bound_per_stage": 2,
             "hard_safety_model_call_upper_bound_per_question": 24,
             "upfront_complete_retrieval_plan_required": False,
@@ -3697,7 +3698,18 @@ class ReflectionGateTests(unittest.TestCase):
             "answer_claim_material_observation_and_evidence_closure_required": True,
             "reviewer_independent_package_and_draft_observation_audit_required": True,
             "sealed_package_mutation_allowed": False,
-            "safety_budget_reserves_independent_review": True,
+            "safety_budget_reserves_answer-comprehensive-review-and-challenge-review": True,
+            "review_focus_order": (
+                "comprehensive-then-evidence-boundary-challenge"
+            ),
+            "reviewer_evidence_boundary_challenge_projection": (
+                "cited-configuration-placeholders-plus-claim-status-literals-"
+                "absent-from-cited-content-plus-mentioned-same-application-types-"
+                "without-mounted-implementation"
+            ),
+            "reviewer_evidence_boundary_projection_is-semantic-verdict": False,
+            "configuration_placeholder_proves_concrete_runtime_value": False,
+            "caller-import-or-registration-proves-unmounted-fields-validation-or-output": False,
             "quality_checklist_reduction_due_to_remaining_calls_allowed": False,
             "evidence_requirement_reduction_due_to_remaining_calls_allowed": False,
             "review_skipping_due_to_remaining_calls_allowed": False,
@@ -3981,7 +3993,7 @@ class ReflectionGateTests(unittest.TestCase):
         )
         answer_protocol = manifest["answer_protocol"]
         answer_protocol["answer_attempt_upper_bound"] = 5
-        answer_protocol["review_attempt_upper_bound"] = 5
+        answer_protocol["review_attempt_upper_bound"] = 6
         answer_protocol["hard_safety_model_call_upper_bound_per_question"] = 40
 
         ablation = manifest["engineering_qa_ablation"]
@@ -4268,8 +4280,18 @@ class ReflectionGateTests(unittest.TestCase):
             ("answer_protocol", "sealed_package_mutation_allowed", True),
             (
                 "answer_protocol",
-                "safety_budget_reserves_independent_review",
+                "safety_budget_reserves_answer-comprehensive-review-and-challenge-review",
                 False,
+            ),
+            (
+                "answer_protocol",
+                "review_focus_order",
+                "comprehensive-only",
+            ),
+            (
+                "answer_protocol",
+                "reviewer_evidence_boundary_projection_is-semantic-verdict",
+                True,
             ),
             (
                 "answer_protocol",

@@ -21,6 +21,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringQuestionResourceUsage,
     EngineeringQuestionResultStatus,
     EngineeringReviewDecision,
+    EngineeringReviewFocus,
     EngineeringReviewChecklistAssessment,
     EngineeringReviewFinding,
     EngineeringReviewMaterialObservation,
@@ -418,6 +419,7 @@ class ReviewerRole:
     def __init__(self, *, request_more_evidence: bool):
         self.request_more_evidence = request_more_evidence
         self.calls = 0
+        self.focuses = []
 
     def review(
         self,
@@ -427,8 +429,10 @@ class ReviewerRole:
         package,
         draft,
         role_context_id,
+        review_focus=EngineeringReviewFocus.COMPREHENSIVE,
     ):
         self.calls += 1
+        self.focuses.append(review_focus)
         if self.request_more_evidence and self.calls == 1:
             finding = EngineeringReviewFinding.create(
                 finding_code="CONFIGURATION_EVIDENCE_MISSING",
@@ -603,6 +607,67 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             3,
         )
         self.assertEqual(result.production_activation, "NOT_EXECUTED")
+
+    def test_evidence_boundary_challenge_can_block_provisional_approval(self):
+        class ChallengeRejectingReviewer:
+            def __init__(self):
+                self.delegate = ReviewerRole(request_more_evidence=False)
+
+            def review(self, *, review_focus, **kwargs):
+                if review_focus is EngineeringReviewFocus.COMPREHENSIVE:
+                    return self.delegate.review(
+                        review_focus=review_focus,
+                        **kwargs,
+                    )
+                finding = EngineeringReviewFinding.create(
+                    finding_code="EVIDENCE_BOUNDARY_UNRECOVERABLE",
+                    checklist_item_id="check-1",
+                    claim_id="claim-1",
+                    description=(
+                        "The provisional answer crosses an unrecoverable evidence boundary."
+                    ),
+                    remediation=EngineeringReviewRemediation.REJECT_UNRECOVERABLE,
+                )
+                return EngineeringReviewProposal.create(
+                    role_context_id=kwargs["role_context_id"],
+                    package_digest=kwargs["package"].digest,
+                    draft_digest=kwargs["draft"].digest,
+                    decision=EngineeringReviewDecision.REJECT,
+                    quality_assessment=passing_quality(),
+                    checklist_assessment=matching_review_checklist(
+                        kwargs["understanding"],
+                        kwargs["package"],
+                    ),
+                    findings=(finding,),
+                )
+
+        profile = source_profile()
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=UnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=InitialInvestigator(),
+            verification_investigation_role=VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=profile),
+            retrieval_worker=ScriptedWorker(),
+            answer_role=AnswerRole(),
+            reviewer_role=ChallengeRejectingReviewer(),
+        )
+
+        result = service.answer(request())
+
+        self.assertEqual(
+            result.status,
+            EngineeringQuestionResultStatus.FAILED_CLOSED,
+        )
+        self.assertEqual(result.terminal_reason, "REVIEW_REJECTED")
+        self.assertIsNone(result.authorized_answer)
+        self.assertEqual(
+            [review.focus for review in result.reviews],
+            [
+                EngineeringReviewFocus.COMPREHENSIVE,
+                EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            ],
+        )
 
     def test_non_supported_finish_reopens_untried_required_source_class(self):
         class PrematureFinishInvestigator:
@@ -1008,7 +1073,15 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         self.assertNotEqual(second.digest, first.digest)
         self.assertEqual(second.ledger_generation, 2)
         self.assertEqual(len(result.drafts), 2)
-        self.assertEqual(len(result.reviews), 2)
+        self.assertEqual(len(result.reviews), 3)
+        self.assertEqual(
+            [review.focus for review in result.reviews],
+            [
+                EngineeringReviewFocus.COMPREHENSIVE,
+                EngineeringReviewFocus.COMPREHENSIVE,
+                EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            ],
+        )
         self.assertEqual(
             result.authorized_answer.package_digest,
             second.digest,

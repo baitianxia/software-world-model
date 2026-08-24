@@ -59,6 +59,13 @@ session authority，System Owner 才能生成 server-owned request/run identity 
 权威字段。每个动态角色输入仍须按第 6 条形成 exact one-use 子授权。题目失败只关闭该 Request，服务可继续；会话边界漂移、过期或总熔断
 耗尽则拒绝后续题。浏览器 POST 还必须在 receipt 前证明 exact same-origin `application/json`，跨站请求不能用 loopback 位置冒充用户确认。
 旧单题 prepared launcher 不是持续产品入口。
+15. 每个 Draft 必须先运行 fresh `COMPREHENSIVE` Review；只有其 finding-free provisional approval 才运行另一个 fresh
+`EVIDENCE_BOUNDARY_CHALLENGE` Review。Application 从当前 Package/Draft 投影配置 placeholder、Claim 中引用内容未出现的具体 HTTP status
+literal，以及 Draft 提及但 implementation 未按 package-qualified import identity 挂载的同 application type 作为 challenge leads；
+异包同名 Java 文件不能冒充该 implementation。lead 本身不自动判错；它强制独立比较
+placeholder 与 runtime value、caller/import 与 DTO fields/handler output、上游 local state 与下游 status 的证据所有权。Gateway 只允许
+Answer → comprehensive Review → challenge Review 的 focus 顺序，Authorization 只能绑定后者。资源预算必须为 Answer + 两个 Review
+预留三次 role call，不能以调用上限跳过最终挑战。
 
 不同类型的包内证据保留各自 modality：世界模型表达已发布的系统认知及其 Coverage，exact 源码/配置表达该 revision 的静态实现，文档表达记录的用法或意图，测试表达静态预期或已密封的执行观察，模型 Proposal 只表达调查或回答建议。某一来源类型不自动拥有对所有命题的优先级；当相同 Context 中出现不兼容且无受控解析规则时，Package 必须保留 Conflict，答案不得静默选边。
 
@@ -74,8 +81,8 @@ session authority，System Owner 才能生成 server-owned request/run identity 
 
 ## Consequences
 
-默认工程问答以世界模型认知为稳定起点，并允许独立 Investigation LLM 像高级工程师一样根据发现逐步调查；Reviewer 可指出自己的具体证据缺口，另一个全新 Verification Investigation 再独立补证。平台仍独占来源权限，回答和审核仍只使用双分区密封证据。代价是增加 Source Broker、append-only Evidence Ledger、调查状态机、Package Revision 和独立补证闭环，也必须分别证明世界模型认知的因果贡献、调查质量和隔离边界。
+默认工程问答以世界模型认知为稳定起点，并允许独立 Investigation LLM 像高级工程师一样根据发现逐步调查；Reviewer 可指出自己的具体证据缺口，另一个全新 Verification Investigation 再独立补证。provisional comprehensive approval 还必须经过另一个 fresh evidence-boundary challenge，降低调查、回答与单一审核共享证据扩张盲点的风险。平台仍独占来源权限，回答和审核仍只使用双分区密封证据。代价是增加 Source Broker、append-only Evidence Ledger、调查状态机、Package Revision、每个可授权 Draft 的第二次 Review 和独立补证闭环，也必须分别证明世界模型认知的因果贡献、调查质量和隔离边界。
 
 ## Adoption state
 
-本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标。`ITER-010 / SLICE-001` 已产生本地确定性的 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 协议、持久 World Model Cognition Adapter、Source Profile-bound Broker/Worker、mandatory-path direct locator、Ledger/Package、Answer/Review、五角色 closed input/output receipt、逐输入 disclosure/Gateway policy、DeepSeek 组合、Session Authority、逐题 server-owned Request/run 和固定 `8765` 的持续 Alpha launcher。返工还加入受控答案层级、逐 Claim checklist/observation links、默认正文投影、结构互斥 FINISH arrays、Reviewer 独立 checklist + evidence-observation comparison 与五项方向质量 Gate，其中 `claim_consistency` 显式阻断内部矛盾，下游 response ownership rule 阻断由上游局部状态推导最终 status/body。以上只有本地确定性验证；在新 product freeze 和单独授权的真实持续 browser 运行前，不证明真实 Provider、Capability Qualification、Product Validation、Slice Acceptance 或 Activation 已完成。旧 prepared launcher 仅保留历史运行兼容身份，不得标为当前 Alpha 产品。
+本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标。`ITER-010 / SLICE-001` 已产生本地确定性的 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 协议、持久 World Model Cognition Adapter、Source Profile-bound Broker/Worker、mandatory-path direct locator、Ledger/Package、Answer、comprehensive + evidence-boundary challenge Review、五角色 closed input/output receipt、逐输入 disclosure/Gateway role-focus policy、DeepSeek 组合、Session Authority、逐题 server-owned Request/run 和固定 `8765` 的持续 Alpha launcher。返工还加入受控答案层级、逐 Claim checklist/observation links、默认正文投影、结构互斥 FINISH arrays、Reviewer 独立 checklist + evidence-observation comparison、配置/未挂载类型/status literal challenge leads 与五项方向质量 Gate，其中 `claim_consistency` 显式阻断内部矛盾，下游 response ownership rule 阻断由上游局部状态推导最终 status/body。以上只有本地确定性验证；在新 product freeze 和单独授权的真实持续 browser 运行前，不证明真实 Provider、Capability Qualification、Product Validation、Slice Acceptance 或 Activation 已完成。旧 prepared launcher 仅保留历史运行兼容身份，不得标为当前 Alpha 产品。

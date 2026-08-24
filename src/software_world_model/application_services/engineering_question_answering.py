@@ -281,6 +281,14 @@ class EngineeringReviewDecision(str, Enum):
     REJECT = "REJECT"
 
 
+class EngineeringReviewFocus(str, Enum):
+    COMPREHENSIVE = "COMPREHENSIVE"
+    EVIDENCE_BOUNDARY_CHALLENGE = "EVIDENCE_BOUNDARY_CHALLENGE"
+
+
+_FINAL_ANSWER_ROLE_CALL_RESERVE = 3
+
+
 class EngineeringReviewRemediation(str, Enum):
     REWRITE_WITH_EXISTING_EVIDENCE = "REWRITE_WITH_EXISTING_EVIDENCE"
     INVESTIGATE_MISSING_EVIDENCE = "INVESTIGATE_MISSING_EVIDENCE"
@@ -317,7 +325,7 @@ class EngineeringQuestionResourceLimits:
     maximum_package_bytes: int = 4_194_304
     maximum_support_items: int = 1_024
     maximum_answer_attempts: int = 3
-    maximum_review_attempts: int = 3
+    maximum_review_attempts: int = 4
     maximum_same_package_rewrites: int = 1
     maximum_no_progress_steps: int = 2
     maximum_wall_time_milliseconds: int = 900_000
@@ -5486,6 +5494,7 @@ class EngineeringReviewProposal:
 class EngineeringAnswerReview:
     review_id: StableId
     attempt: int
+    focus: EngineeringReviewFocus
     package_digest: Digest
     draft_digest: Digest
     decision: EngineeringReviewDecision
@@ -5506,7 +5515,13 @@ class EngineeringAnswerReview:
         expected_role_context_id: StableId,
         proposal: EngineeringReviewProposal,
         attempt: int,
+        focus: EngineeringReviewFocus,
     ) -> "EngineeringAnswerReview":
+        if not isinstance(focus, EngineeringReviewFocus):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review focus must use the closed comprehensive/challenge vocabulary",
+            )
         expected_findings = tuple(
             EngineeringReviewFinding.create(
                 finding_code=item.finding_code,
@@ -5637,6 +5652,7 @@ class EngineeringAnswerReview:
                 )
         core = {
             "attempt": attempt,
+            "focus": focus.value,
             "package_digest": package.digest.value,
             "draft_digest": draft.digest.value,
             "decision": proposal.decision.value,
@@ -5646,10 +5662,11 @@ class EngineeringAnswerReview:
             "verification_request": request.digest.value if request else None,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@3", core])
+        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@4", core])
         return cls(
             review_id=_stable_id("engineering_review", core),
             attempt=attempt,
+            focus=focus,
             package_digest=package.digest,
             draft_digest=draft.digest,
             decision=proposal.decision,
@@ -5671,6 +5688,7 @@ class EngineeringAnswerReviewerRole(Protocol):
         package: QuestionEvidencePackage,
         draft: EngineeringAnswerDraft,
         role_context_id: StableId,
+        review_focus: EngineeringReviewFocus = EngineeringReviewFocus.COMPREHENSIVE,
     ) -> EngineeringReviewProposal: ...
 
 
@@ -5697,6 +5715,8 @@ class AuthorizedEngineeringAnswer:
     ) -> "AuthorizedEngineeringAnswer":
         if (
             review.decision is not EngineeringReviewDecision.APPROVED
+            or review.focus
+            is not EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
             or not review.quality_assessment.all_pass
             or review.checklist_assessment.application_checklist_omissions
             or review.checklist_assessment.application_material_observation_omissions
@@ -5709,7 +5729,7 @@ class AuthorizedEngineeringAnswer:
         ):
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
-                "only a finding-free Review of the current Package and Draft can authorize delivery",
+                "only a finding-free evidence-boundary challenge Review of the current Package and Draft can authorize delivery",
             )
         citation_ids = tuple(
             dict.fromkeys(
@@ -6513,7 +6533,7 @@ class EngineeringQuestionAnsweringService:
                     reason="WALL_TIME_FUSE_EXHAUSTED",
                 )
             if (
-                usage.total_role_calls + 3
+                usage.total_role_calls + 1 + _FINAL_ANSWER_ROLE_CALL_RESERVE
                 > request.limits.maximum_total_model_role_calls
             ):
                 return self._fail_investigation(
@@ -6960,7 +6980,7 @@ class EngineeringQuestionAnsweringService:
                     "REVIEW_ATTEMPT_FUSE_EXHAUSTED",
                 )
             if (
-                usage.total_role_calls + 2
+                usage.total_role_calls + _FINAL_ANSWER_ROLE_CALL_RESERVE
                 > request.limits.maximum_total_model_role_calls
             ):
                 return _AnswerReviewRun(
@@ -7018,6 +7038,7 @@ class EngineeringQuestionAnsweringService:
                 package=package,
                 draft=draft,
                 role_context_id=review_context,
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
             )
             usage = replace(
                 usage,
@@ -7031,6 +7052,7 @@ class EngineeringQuestionAnsweringService:
                 expected_role_context_id=review_context,
                 proposal=review_proposal,
                 attempt=usage.review_attempts,
+                focus=EngineeringReviewFocus.COMPREHENSIVE,
             )
             reviews.append(review)
             if self._wall_time_exhausted(request=request, started_ns=started_ns):
@@ -7042,6 +7064,64 @@ class EngineeringQuestionAnsweringService:
                     None,
                     "WALL_TIME_FUSE_EXHAUSTED",
                 )
+            if review.decision is EngineeringReviewDecision.APPROVED:
+                if (
+                    usage.review_attempts
+                    >= request.limits.maximum_review_attempts
+                    or usage.total_role_calls
+                    >= request.limits.maximum_total_model_role_calls
+                ):
+                    return _AnswerReviewRun(
+                        usage,
+                        tuple(drafts),
+                        tuple(reviews),
+                        None,
+                        None,
+                        "EVIDENCE_BOUNDARY_CHALLENGE_RESERVE_EXHAUSTED",
+                    )
+                challenge_context = self._fresh_context(
+                    request=request,
+                    role="review-evidence-boundary-challenge",
+                    ordinal=usage.review_attempts + 1,
+                    used_contexts=used_contexts,
+                )
+                challenge_proposal = self._reviewer_role.review(
+                    original_question=request.original_question,
+                    understanding=understanding,
+                    package=package,
+                    draft=draft,
+                    role_context_id=challenge_context,
+                    review_focus=(
+                        EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                    ),
+                )
+                usage = replace(
+                    usage,
+                    total_role_calls=usage.total_role_calls + 1,
+                    review_attempts=usage.review_attempts + 1,
+                )
+                review = EngineeringAnswerReview.accept(
+                    package=package,
+                    draft=draft,
+                    understanding=understanding,
+                    expected_role_context_id=challenge_context,
+                    proposal=challenge_proposal,
+                    attempt=usage.review_attempts,
+                    focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+                )
+                reviews.append(review)
+                if self._wall_time_exhausted(
+                    request=request,
+                    started_ns=started_ns,
+                ):
+                    return _AnswerReviewRun(
+                        usage,
+                        tuple(drafts),
+                        tuple(reviews),
+                        None,
+                        None,
+                        "WALL_TIME_FUSE_EXHAUSTED",
+                    )
             if review.decision is EngineeringReviewDecision.APPROVED:
                 authorized = AuthorizedEngineeringAnswer.authorize(
                     request=request,
@@ -7528,6 +7608,7 @@ __all__ = [
     "EngineeringQuestionResourceUsage",
     "EngineeringQuestionResultStatus",
     "EngineeringReviewDecision",
+    "EngineeringReviewFocus",
     "EngineeringReviewChecklistAssessment",
     "EngineeringReviewFinding",
     "EngineeringReviewMaterialObservation",

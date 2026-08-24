@@ -13,6 +13,8 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 import json
+from pathlib import PurePosixPath
+import re
 from types import MappingProxyType
 from typing import Mapping, NoReturn, Protocol, Sequence, cast
 
@@ -33,6 +35,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringReviewChecklistAssessment,
     EngineeringReviewMaterialObservation,
     EngineeringReviewFinding,
+    EngineeringReviewFocus,
     EngineeringReviewProposal,
     EngineeringReviewQualityAssessment,
     EngineeringReviewQualityStatus,
@@ -67,7 +70,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@19"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@20"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -136,6 +139,151 @@ def _verified_gap_outcomes(
             }
         )
     return outcomes
+
+
+_CONFIGURATION_PLACEHOLDER_RE = re.compile(
+    r"\$\{([A-Za-z0-9_.-]+)(?::[^}]*)?\}"
+)
+_JAVA_PACKAGE_RE = re.compile(
+    r"(?m)^\s*package\s+([A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)\s*;"
+)
+_JAVA_IMPORT_RE = re.compile(
+    r"(?m)^\s*import\s+(?!static\s+)([A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)\s*;"
+)
+_HTTP_STATUS_LITERAL_RE = re.compile(r"(?<![0-9])[1-5][0-9]{2}(?![0-9])")
+
+
+def _evidence_boundary_challenges(
+    package: QuestionEvidencePackage,
+    draft: EngineeringAnswerDraft,
+) -> list[dict[str, object]]:
+    """Project deterministic review leads without deciding their semantics.
+
+    The second Reviewer still makes the semantic judgment, but it cannot miss
+    configuration placeholders, exact status literals absent from cited
+    content, or same-application imported types whose implementation is not in
+    the Package merely because those signals are buried in long source entries.
+    """
+
+    challenges: list[dict[str, object]] = []
+    support_by_id = {item.entry_id: item for item in package.support_citation}
+    default_claims = tuple(
+        claim
+        for claim in draft.claims
+        if claim.claim_id in draft.default_body_claim_ids
+    )
+    cited_default_claim_ids_by_entry = {
+        entry_id: [
+            claim.claim_id
+            for claim in default_claims
+            if entry_id in claim.evidence_entry_ids
+        ]
+        for entry_id in support_by_id
+    }
+    mounted_java_types: set[str] = set()
+    for item in package.support_citation:
+        if not item.locator.endswith(".java"):
+            continue
+        package_match = _JAVA_PACKAGE_RE.search(item.content)
+        if package_match is None:
+            continue
+        mounted_java_types.add(
+            f"{package_match.group(1)}.{PurePosixPath(item.locator).stem}"
+        )
+
+    for entry in package.support_citation:
+        claim_ids = cited_default_claim_ids_by_entry[entry.entry_id]
+        configuration_keys = sorted(
+            set(_CONFIGURATION_PLACEHOLDER_RE.findall(entry.content))
+        )
+        if configuration_keys and claim_ids:
+            challenges.append(
+                {
+                    "kind": "CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE",
+                    "package_entry_id": entry.entry_id.value,
+                    "default_claim_ids": claim_ids,
+                    "configuration_keys": configuration_keys,
+                    "rule": (
+                        "THE_PLACEHOLDER_PROVES_THE_KEY_AND_INJECTION_ONLY_"
+                        "NOT_A_CONCRETE_RUNTIME_VALUE"
+                    ),
+                }
+            )
+
+    for claim in default_claims:
+        cited_content = "\n".join(
+            support_by_id[entry_id].content
+            for entry_id in claim.evidence_entry_ids
+            if entry_id in support_by_id
+        )
+        for literal in sorted(set(_HTTP_STATUS_LITERAL_RE.findall(claim.text))):
+            if literal in cited_content:
+                continue
+            challenges.append(
+                {
+                    "kind": "CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT",
+                    "claim_id": claim.claim_id,
+                    "literal": literal,
+                    "cited_package_entry_ids": [
+                        entry_id.value for entry_id in claim.evidence_entry_ids
+                    ],
+                    "rule": (
+                        "REQUIRE_THE_FULL_CONTENT_OUTPUT_OWNER_OR_NARROW_TO_"
+                        "THE_SUPPORTED_LOCAL_STATE"
+                    ),
+                }
+            )
+
+    unresolved_imports: dict[str, set[str]] = {}
+    unresolved_import_entries: dict[str, set[str]] = {}
+    unresolved_import_types: dict[str, set[str]] = {}
+    for entry in package.support_citation:
+        package_match = _JAVA_PACKAGE_RE.search(entry.content)
+        if package_match is None:
+            continue
+        namespace = package_match.group(1).split(".")
+        namespace_root = tuple(namespace[:2])
+        for imported in _JAVA_IMPORT_RE.findall(entry.content):
+            imported_parts = imported.split(".")
+            symbol = imported_parts[-1]
+            matching_claim_ids = [
+                claim.claim_id
+                for claim in default_claims
+                if re.search(
+                    rf"(?<![A-Za-z0-9_$]){re.escape(symbol)}(?![A-Za-z0-9_$])",
+                    claim.text,
+                )
+            ]
+            if (
+                tuple(imported_parts[:2]) != namespace_root
+                or imported in mounted_java_types
+                or not matching_claim_ids
+            ):
+                continue
+            unresolved_imports.setdefault(symbol, set()).update(
+                matching_claim_ids
+            )
+            unresolved_import_entries.setdefault(symbol, set()).add(
+                entry.entry_id.value
+            )
+            unresolved_import_types.setdefault(symbol, set()).add(imported)
+    for symbol in sorted(unresolved_imports):
+        challenges.append(
+            {
+                "kind": "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
+                "symbol": symbol,
+                "qualified_types": sorted(unresolved_import_types[symbol]),
+                "default_claim_ids": sorted(unresolved_imports[symbol]),
+                "importing_package_entry_ids": sorted(
+                    unresolved_import_entries[symbol]
+                ),
+                "rule": (
+                    "CALLER_USE_OR_REGISTRATION_PROVES_ONLY_THAT_RELATIONSHIP_"
+                    "NOT_THE_IMPORTED_TYPES_FIELDS_OR_OUTPUT"
+                ),
+            }
+        )
+    return challenges
 
 
 class EngineeringQuestionModelRole(str, Enum):
@@ -1047,7 +1195,13 @@ class EngineeringQuestionRoleInputBuilder:
         package: QuestionEvidencePackage,
         draft: EngineeringAnswerDraft,
         role_context_id: StableId,
+        review_focus: EngineeringReviewFocus = EngineeringReviewFocus.COMPREHENSIVE,
     ) -> EngineeringQuestionRoleInputManifest:
+        if not isinstance(review_focus, EngineeringReviewFocus):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering QA Review focus is outside the closed vocabulary",
+            )
         if (
             understanding.request_digest != package.request_digest
             or original_question != package.original_question
@@ -1062,7 +1216,12 @@ class EngineeringQuestionRoleInputBuilder:
             "question_understanding": understanding.model_view(),
             "question_evidence_package": package.model_view(),
             "draft": draft.model_view(),
+            "review_focus": review_focus.value,
             "verified_gap_outcomes": _verified_gap_outcomes(package),
+            "evidence_boundary_challenges": _evidence_boundary_challenges(
+                package,
+                draft,
+            ),
             "answer_structure": {
                 "detail_level": understanding.requested_abstraction_level.value,
                 "first_content_role": draft.claims[0].content_role.value,
@@ -1331,6 +1490,7 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
         package: QuestionEvidencePackage,
         draft: EngineeringAnswerDraft,
         role_context_id: StableId,
+        review_focus: EngineeringReviewFocus = EngineeringReviewFocus.COMPREHENSIVE,
     ) -> EngineeringReviewProposal:
         manifest = EngineeringQuestionRoleInputBuilder.review(
             original_question=original_question,
@@ -1338,6 +1498,7 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
             package=package,
             draft=draft,
             role_context_id=role_context_id,
+            review_focus=review_focus,
         )
         value = self._output(manifest)
         try:

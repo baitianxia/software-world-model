@@ -27,6 +27,7 @@ from software_world_model.cross_cutting import (
 )
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionRequest,
+    EngineeringReviewFocus,
     InvestigationOperation,
     MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
 )
@@ -61,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@29"
+    "engineering-qa-adaptive-investigation-prompt@30"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -173,6 +174,14 @@ mapper when it is authorized; if that decisive owner is unavailable, preserve
 the final external outcome as a distinct unknown instead of assuming a framework
 default. Treat a transport status and an application or response-body error code
 as separate conclusions unless exact evidence establishes both.
+Treat a configuration placeholder such as `${key}` or an injection annotation
+as evidence only that the named key is consumed. A concrete header name, token
+prefix, port, URL, secret, profile, or other runtime value is a separate
+conclusion that requires directly authorized value evidence; when configuration
+content is excluded or absent, preserve that value as unknown. Likewise, a
+method parameter, return type, import, caller, or registration proves only that
+the named type participates in that relationship. It does not prove an
+unmounted DTO's fields or an unmounted handler's output.
 Do not select a directory, an excluded or nonexistent path, a redundant test or
 document, or every authorized file. The set must remain executable within the
 sealed investigation fuse: prefer the smallest decisive implementation set and
@@ -292,6 +301,12 @@ semantics, or an adjacent application flow. When a material checklist item asks
 how, why, under what conditions, or how to troubleshoot behavior, inspect
 eligible implementation evidence that states those decisive details or assign
 an honest non-supported disposition.
+An expression such as `${{key}}` or an injection annotation proves only the
+configuration key and injection point, never its concrete runtime value. Do not
+invent a header name, token prefix, port, URL, secret, profile, or other setting
+from conventions. A parameter or imported application type proves only the
+visible signature or relationship; without that type's mounted implementation,
+do not infer DTO fields, validation rules, handler response content, or status.
 Likewise, an upstream local intermediate state, exception, or authorization
 decision does not prove a final HTTP or API status, error category, or response
 body. That downstream outcome requires full-content evidence from the response
@@ -409,6 +424,11 @@ semantics, or an adjacent application flow. When a material checklist item asks
 how, why, under what conditions, or how to troubleshoot behavior, inspect
 eligible implementation evidence that states those decisive details or assign
 an honest non-supported disposition.
+An expression such as `${{key}}` or an injection annotation proves only the
+configuration key and injection point, never its concrete runtime value. A
+parameter, return type, import, caller, or registration proves only the visible
+relationship; without the named application's mounted implementation, do not
+infer DTO fields, validation rules, handler output, or response status.
 An upstream local intermediate state, exception, or authorization decision also
 does not prove a final HTTP or API status, error category, or response body.
 Require full-content evidence from the response or exception mapper that owns
@@ -489,6 +509,13 @@ affirmative claim must cite one or more
 support/citation entry IDs that actually support it. Boundary/audit entries can
 justify only explicit limitations or unknowns. Do not expose pipeline diagnostics
 or claim completeness beyond the recorded coverage.
+Treat `${key}` and injection annotations as evidence of a configuration key and
+injection point only. Never turn them into a concrete header name, token prefix,
+port, URL, secret, profile, or other runtime value without directly cited value
+evidence. A method parameter, return type, import, caller, or registration proves
+only that visible relationship; it does not expose an unmounted DTO's fields or
+an unmounted handler's response behavior. State the supported relationship and
+retain the missing detail as a limitation when it is material.
 Do not turn a Package observation about an upstream local state, exception, or
 authorization decision into a final HTTP or API status, error category, or
 response body unless the linked support evidence contains the response or
@@ -513,6 +540,22 @@ observations and with the default Draft body. Report the exact independent
 observation statements omitted by either; a broad summary or one representative
 effect does not cover distinct stages, outcomes, state/context mutations,
 persistence or audit writes, external interactions, or failure outcomes.
+review_focus declares this fresh review's mandatory emphasis. COMPREHENSIVE is
+the normal independent review. EVIDENCE_BOUNDARY_CHALLENGE is a second independent
+pass after a provisional approval; do not assume or repeat that approval. Audit
+every item in evidence_boundary_challenges against the exact Draft claim and its
+cited full content. The projected items are review leads, not automatic defects:
+a status copied only as the user's observed symptom or a type mentioned only as
+a registered participant may be valid. But a concrete runtime configuration
+value cannot be derived from a placeholder alone, a numeric HTTP result cannot
+be attributed to code whose cited content lacks that result or its output owner,
+and an imported-but-unmounted application type cannot supply fields, validation,
+or output behavior merely through its caller or wiring. If such an expansion is
+introduced only by the Draft, require a current-Package rewrite that removes or
+narrows it. If the original question or checklist materially requires the
+missing conclusion, request its direct evidence or accept an already verified
+terminal evidence boundary as an honest limitation. EVIDENCE_BOUNDARY_CHALLENGE
+may approve only after all projected leads have been compared this way.
 A flow or lifecycle review must explicitly scan every relevant full-content
 implementation entry for persistence, audit, cache mutation, notification, and
 external-interaction effects. Report each material effect omitted from the
@@ -524,6 +567,13 @@ that substitutes such adjacent or delegation-only evidence for requested
 behavioral conditions, comparisons, state changes, outcomes, or failure
 semantics as materially incomplete. Request concrete evidence for the missing
 checklist item instead of approving a component name as its implementation.
+Treat a configuration placeholder such as `${key}` or an injection annotation
+as proof only of the key and injection point, not a concrete header name, token
+prefix, port, URL, secret, profile, or other runtime value. Treat a method
+parameter, return type, import, caller, or registration as proof only of that
+visible signature or relationship. Without the mounted implementation, reject
+claims about the referenced DTO's fields, its validation rules, or the handler's
+response content and status.
 For every externally visible HTTP or API status, error category, or response
 body, identify the full-content response or exception mapper that owns that
 downstream result. An upstream empty authentication context, thrown exception,
@@ -1947,7 +1997,12 @@ class EngineeringQuestionModelEgressPolicy:
         self._allowed_roles = {
             EngineeringQuestionModelRole.QUESTION_UNDERSTANDING
         }
-        self._pending: tuple[Digest, EngineeringQuestionModelRole] | None = None
+        self._allowed_review_focus: EngineeringReviewFocus | None = None
+        self._pending: tuple[
+            Digest,
+            EngineeringQuestionModelRole,
+            EngineeringReviewFocus | None,
+        ] | None = None
         self._terminal = False
         self._run_authorization.require_current(
             configuration=self._configuration,
@@ -2126,6 +2181,22 @@ class EngineeringQuestionModelEgressPolicy:
             authority_digests=authority_digests,
             body=body,
         )
+        review_focus = None
+        if role is EngineeringQuestionModelRole.REVIEW:
+            try:
+                review_focus = EngineeringReviewFocus(
+                    str(body.get("review_focus"))
+                )
+            except ValueError as exc:
+                raise DomainError(
+                    ErrorCode.QUALIFICATION_INVALID,
+                    "Engineering QA Gateway Review focus is not current",
+                ) from exc
+            if review_focus is not self._allowed_review_focus:
+                raise DomainError(
+                    ErrorCode.QUALIFICATION_INVALID,
+                    "Engineering QA Gateway Review focus is out of order",
+                )
         if (
             expected_role_manifest.request_digest
             != self._run_authorization.request_digest
@@ -2139,7 +2210,7 @@ class EngineeringQuestionModelEgressPolicy:
                 ErrorCode.CONTROL_STATE_DENIED,
                 "Engineering QA role payload is outside the exact authorized Request",
             )
-        self._pending = (context.manifest.digest, role)
+        self._pending = (context.manifest.digest, role, review_focus)
 
     def validate_result(self, result: ModelGatewayResult) -> None:
         pending = self._pending
@@ -2148,7 +2219,7 @@ class EngineeringQuestionModelEgressPolicy:
                 ErrorCode.CONTROL_STATE_DENIED,
                 "Engineering QA Gateway returned a Result without a pending context",
             )
-        manifest_digest, role = pending
+        manifest_digest, role, review_focus = pending
         self._pending = None
         try:
             if result.call.manifest_digest != manifest_digest:
@@ -2169,7 +2240,22 @@ class EngineeringQuestionModelEgressPolicy:
             value = _unique_json_object(
                 result.response.output_text, "Engineering QA model Result"
             )
-            self._allowed_roles = self._next_roles(role, value)
+            self._allowed_roles = self._next_roles(
+                role,
+                value,
+                review_focus=review_focus,
+            )
+            if role is EngineeringQuestionModelRole.ANSWER:
+                self._allowed_review_focus = EngineeringReviewFocus.COMPREHENSIVE
+            elif (
+                role is EngineeringQuestionModelRole.REVIEW
+                and self._allowed_roles == {EngineeringQuestionModelRole.REVIEW}
+            ):
+                self._allowed_review_focus = (
+                    EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                )
+            else:
+                self._allowed_review_focus = None
             self._validated_roles.append(role)
             if not self._allowed_roles:
                 self._terminal = True
@@ -2185,6 +2271,8 @@ class EngineeringQuestionModelEgressPolicy:
     def _next_roles(
         role: EngineeringQuestionModelRole,
         value: Mapping[str, object],
+        *,
+        review_focus: EngineeringReviewFocus | None = None,
     ) -> set[EngineeringQuestionModelRole]:
         if role is EngineeringQuestionModelRole.QUESTION_UNDERSTANDING:
             return {EngineeringQuestionModelRole.INITIAL_INVESTIGATION}
@@ -2207,6 +2295,11 @@ class EngineeringQuestionModelEgressPolicy:
             )
         if role is EngineeringQuestionModelRole.ANSWER:
             return {EngineeringQuestionModelRole.REVIEW}
+        if not isinstance(review_focus, EngineeringReviewFocus):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "Engineering QA Review Result has no current Review focus",
+            )
         findings = value.get("findings")
         if not isinstance(findings, list):
             raise DomainError(
@@ -2224,6 +2317,8 @@ class EngineeringQuestionModelEgressPolicy:
             return {EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION}
         if findings:
             return {EngineeringQuestionModelRole.ANSWER}
+        if review_focus is EngineeringReviewFocus.COMPREHENSIVE:
+            return {EngineeringQuestionModelRole.REVIEW}
         return set()
 
 

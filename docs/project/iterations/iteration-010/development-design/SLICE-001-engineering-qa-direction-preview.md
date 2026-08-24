@@ -255,6 +255,11 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   `REWRITE_WITH_EXISTING_EVIDENCE`，material 证据缺口使用绑定 Checklist/Claim/evidence class/need 的
   `INVESTIGATE_MISSING_EVIDENCE`，不可恢复失败使用 `REJECT_UNRECOVERABLE`；可信 Application 按固定优先级派生 action 与 versioned
   Verification Request。Reviewer 不能提出可执行 path/command/operation，也不能因 Draft 扩张了原问题不要求的细节而扩大调查。
+- 上述 finding-free Review 只是 `COMPREHENSIVE` provisional approval。Application 从当前 Package/Draft 投影 cited configuration
+  placeholder、Claim 中 cited content 未出现的 HTTP status literal、以及 Draft 提及但实现未挂载的 same-application type，随后使用另一个
+  fresh context 执行 `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、
+  caller/import 与 DTO fields/handler output、上游 local state 与下游 status。Gateway 强制 focus 顺序；只有 challenge finding-free 才可
+  Authorization。每题为 Answer + 双 Review 预留 3 calls，Review attempt 上限 4，hard 24-call fuse 不变。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
   Result 自适应提出 search/read/parse/finish；predecessor Package 已含的 full-content exact-source locators 与 gap 后 full reads 共同
   标记为 consumed，相应 locator 不再 eligible，旧 raw Result 不重新进入输入。当前 attempt 最近一次 Broker rejection 以受信控制状态
@@ -262,7 +267,7 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   新 path/operation。predecessor Package 的 boundary source references 不得进入补证 admissible boundary；角色取得唯一 current gap
   boundary，每个 non-supported observation 必须保留该 reference。它不回初始 Investigation LLM，不继承 Reviewer 会话，也无直接来源
   权限。完成后追加新 Ledger Revision、密封新
-  Package、完整生成新 Answer 并独立 Review；旧 Review 不得批准新包。
+  Package、完整生成新 Answer 并重新执行 comprehensive + challenge Review；旧 Review 不得批准新包。
 - Package 将 Initial Investigation 的普通 `GAP` 与 `VERIFICATION_REQUEST` 的 typed `VERIFICATION_GAP` 分开密封。Review 输入只将真实
   绑定 `VERIFICATION_GAP` 的 non-supported successor disposition 投影为 terminal `verified_gap_outcome`。Draft 诚实
   保留该 limitation 且不暗示缺失肯定结果时，Reviewer 不得再次请求同一缺证；Draft 自行扩张、删除后仍完整回答 original/checklist 的
@@ -317,8 +322,9 @@ loopback 就取得题目提交权。
 7. `V-LEDGER-001`：Ledger append-only，调查后 seal；Package 的 support/citation 仅 admissible，boundary/audit 必须保留且不能支持肯定 Claim，
    seal 不等于真值，revision 身份不可混用。
 8. `V-ANSWER-001`：历史 4+1 题结果继续保留，其中现场题答案层级与完整性 FAIL，不因 PDR 改写为 PASS。
-9. `V-REVIEW-001`：历史 Reviewer 漏判继续为 FAIL；返工版 Reviewer 只给具体 gap，独立 Verification Investigation 在新上下文中多步自适应补证，经 Broker/Worker 形成新
-   Ledger/Package/Answer/Review；不回初始 Investigation 且无直接 Source。
+9. `V-REVIEW-001`：历史 Reviewer 漏判继续为 FAIL；返工版 comprehensive Review 只形成 provisional approval，fresh evidence-boundary
+   challenge 可阻断配置/未挂载类型/下游 status 扩张；Reviewer 只给具体 gap，独立 Verification Investigation 在新上下文中多步自适应补证，
+   经 Broker/Worker 形成新 Ledger/Package/Answer/双 Review；不回初始 Investigation 且无直接 Source。
 10. `V-LIMIT-001`：证据或安全上限不足时准确 Limitation 或失败关闭，不伪造 absence/coverage；answerable 因上限耗尽计 FAIL。
 11. `V-XD-001`、`V-WEB-000`：历史最小纵切技术 PASS 保留，不冒充持续体验或返工 PASS。
 12. `V-EXPERIENCE-001`：同一 Web 由一条固定命令重复启动，在固定工程/revision 的同一会话连续自由提问；受控坏题只失败该 Request，
@@ -423,4 +429,12 @@ boundary、强制每个 Verification non-supported observation 绑定本次 gap�
 `FINDING-010-074` 已以 Engineering QA 113/113、docs 组合 146/146、历史 oracle 组合 78/78、current docs 468/468、
 compile/diff 及允许 AF_UNIX 的 full 1179/1174 exact historical hold 闭合 deterministic Gate。下一步只能从新 clean
 candidate 执行 fresh Conformance、持续三题、Provider 前负测与独立复核；run-026 仍不追认。
+`FINDING-010-075` 记录 clean `b709fad…` / run-027 的 1 PASS + 2 错误放行：placeholder 被扩张为具体 header，caller/import 被扩张为
+未挂载 DTO fields/handler output，上游 deny 被扩张为下游 401/403；唯一 Reviewer 复述同一错误并全 PASS。处置要求 comprehensive
+provisional Review 后再执行 fresh evidence-boundary challenge，Application 投影三类通用 leads，Gateway 强制 focus 顺序，Authorization
+只接受 challenge；Strategy/Prompt 为 `@20/@30`，focused 78/78、Engineering QA 115/115 PASS。扩展 deterministic Gate 与下一
+clean/fresh live 仍待闭合；run-027 永久保持 Q1 PASS + Q2/Q3 FAIL。
+`FINDING-010-076` 已以 docs 组合 148/148、历史 oracle 组合 80/80、current docs/compile/diff 与允许 AF_UNIX 的 full
+1181/1176 exact historical hold 闭合上述 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍为冻结历史 hold，没有 ITER-010 新失败。
+下一步只能从新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与独立复核；run-027 不追认，Production 不执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

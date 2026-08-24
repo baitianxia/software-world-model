@@ -4162,7 +4162,6 @@ def validate_engineering_qa_reviewer_verification_investigation(
     )
     initial_investigation = answer_protocol.get("investigation_model_call_upper_bound")
     review_attempts = answer_protocol.get("review_attempt_upper_bound")
-    review_calls = answer_protocol.get("independent_review_model_calls_per_attempt")
     question_calls = answer_protocol.get("question_understanding_model_call_upper_bound")
     if all(
         isinstance(value, int) and not isinstance(value, bool)
@@ -4172,7 +4171,6 @@ def validate_engineering_qa_reviewer_verification_investigation(
             model_calls,
             answer_attempts,
             review_attempts,
-            review_calls,
             question_calls,
         )
     ):
@@ -4181,11 +4179,11 @@ def validate_engineering_qa_reviewer_verification_investigation(
             + initial_investigation
             + model_calls
             + answer_attempts
-            + review_attempts * review_calls
+            + review_attempts
         )
         if hard_call_bound < minimum_calls:
             errors.append(
-                f"{section_label}: hard_safety_model_call_upper_bound_per_question must reserve every verification investigation call, answer and review"
+                f"{section_label}: hard_safety_model_call_upper_bound_per_question must reserve every verification investigation call, answer and comprehensive/challenge review"
             )
     return errors
 
@@ -4498,7 +4496,8 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "max_evidence_ledger_bytes_per_question",
         "max_wall_time_milliseconds_per_question",
         "initial_answer_model_calls",
-        "independent_review_model_calls_per_attempt",
+        "independent_review_model_calls_per_authorizable_draft",
+        "final_answer_role_call_reserve",
         "same_package_targeted_rewrite_upper_bound",
         "answer_attempt_upper_bound",
         "review_attempt_upper_bound",
@@ -4519,7 +4518,8 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "question_understanding_model_call_upper_bound": 1,
         "slice_001_reviewer_verification_investigation_upper_bound": 1,
         "initial_answer_model_calls": 1,
-        "independent_review_model_calls_per_attempt": 1,
+        "independent_review_model_calls_per_authorizable_draft": 2,
+        "final_answer_role_call_reserve": 3,
         "same_package_targeted_rewrite_upper_bound": 1,
     }
     for field, expected in exact_numeric_values.items():
@@ -4575,11 +4575,11 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
     if (
         review_attempts is not None
         and answer_attempts is not None
-        and review_attempts != answer_attempts
+        and review_attempts < answer_attempts + 1
     ):
         errors.append(
-            f"{label}: answer_protocol.review_attempt_upper_bound must equal "
-            "answer_attempt_upper_bound so every answer attempt is independently reviewed"
+            f"{label}: answer_protocol.review_attempt_upper_bound must cover "
+            "every answer attempt plus the final evidence-boundary challenge"
         )
     hard_call_bound = numeric_fields.get(
         "hard_safety_model_call_upper_bound_per_question"
@@ -4590,9 +4590,6 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
     investigation_calls = numeric_fields.get(
         "investigation_model_call_upper_bound"
     )
-    calls_per_review = numeric_fields.get(
-        "independent_review_model_calls_per_attempt"
-    )
     if all(
         value is not None
         for value in (
@@ -4601,14 +4598,13 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
             investigation_calls,
             answer_attempts,
             review_attempts,
-            calls_per_review,
         )
     ):
         minimum_core_calls = (
             question_calls
             + investigation_calls
             + answer_attempts
-            + review_attempts * calls_per_review
+            + review_attempts
         )
         if hard_call_bound < minimum_core_calls:
             errors.append(
@@ -4631,6 +4627,9 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "provider_finish_parent-evidence-references-returned-by-provider",
         "provider_review_returns-independent-decision-or-verification-request",
         "reviewer_draft-only-scope-expansion-may-trigger-new-evidence-investigation",
+        "reviewer_evidence_boundary_projection_is-semantic-verdict",
+        "configuration_placeholder_proves_concrete_runtime_value",
+        "caller-import-or-registration-proves-unmounted-fields-validation-or-output",
     ):
         if answer_protocol.get(field) is not False:
             errors.append(f"{label}: answer_protocol.{field} must be false")
@@ -4643,7 +4642,7 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "material_observation_identity_application_owned",
         "answer_claim_material_observation_and_evidence_closure_required",
         "reviewer_independent_package_and_draft_observation_audit_required",
-        "safety_budget_reserves_independent_review",
+        "safety_budget_reserves_answer-comprehensive-review-and-challenge-review",
         "reviewer_more_evidence_requires_specific_verifiable_gap",
         "reviewer_verification_request_requires_application_and_source_broker_revalidation",
         "reviewer_verification_uses_independent_fresh_context_adaptive_investigation",
@@ -4676,6 +4675,14 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
             "application-owned-reject-then-missing-evidence-then-rewrite-"
             "then-empty-approved"
         ),
+        "review_focus_order": (
+            "comprehensive-then-evidence-boundary-challenge"
+        ),
+        "reviewer_evidence_boundary_challenge_projection": (
+            "cited-configuration-placeholders-plus-claim-status-literals-"
+            "absent-from-cited-content-plus-mentioned-same-application-types-"
+            "without-mounted-implementation"
+        ),
     }
     for field, expected in expected_structured_protocol_values.items():
         if answer_protocol.get(field) != expected:
@@ -4704,6 +4711,8 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "max_investigation_model_calls",
         "planner_model_call_upper_bound",
         "total_model_call_upper_bound_per_question",
+        "independent_review_model_calls_per_attempt",
+        "safety_budget_reserves_independent_review",
         "max_query_bytes_per_step",
         "max_result_bytes_per_step",
         "max_total_query_bytes_per_question",

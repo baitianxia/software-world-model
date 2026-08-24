@@ -119,10 +119,11 @@ Explicit ENGINEERING_QA request
   → repeat adaptive investigation until a valid FINISH disposition or fail-closed fuse
   → seal one Question Evidence Package with admissible support/citation and retained boundary/audit partitions
   → fresh isolated conclusion-first Answer with claim citations
-  → independent Review against original question and current package
-  → Application derives APPROVED Delivery, same-package rewrite/re-review, or one typed-Finding Verification gap Request
+  → fresh comprehensive Review against original question and current package
+  → on provisional approval, fresh evidence-boundary challenge Review over deterministic placeholder/status/unmounted-type leads
+  → Application derives APPROVED Delivery only from the challenge, or same-package rewrite/re-review, or one typed-Finding Verification gap Request
   → fresh independent Verification Investigation reads gap + current Package/Ledger and adaptively proposes through Broker/Worker
-  → on supplemental evidence: new Ledger Revision → new Package → new Answer → new Review
+  → on supplemental evidence: new Ledger Revision → new Package → new Answer → new comprehensive + challenge Review
 ```
 
 该流程的模式在任何读取和模型调用前已固定。软件世界模型为 Investigation LLM 提供持久的系统认知，不是手册、地图或 locator 缓存；这些都只是 World Model Cognition Context 的投影。认知缺失、无关或 Coverage 不足是 Ledger/Package 的显式状态，不阻断原 Checklist 在同一授权 exact revision 中驱动只读调查；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。
@@ -133,6 +134,11 @@ Question Evidence Package 只有一个 seal/identity，但 `support/citation` �
 Conflict、Unknown、拒绝和资源记录；后者不能支持肯定 Claim。Reviewer 不规划补证操作，只返回具体 gap；补证由另一个全新上下文的
 Verification Investigation 多步推进，不回到初始调查。非验收方向体验可以临时限制最多一次补证调查；正式 hardening/验收不得固定一轮，
 必须预密封 revision/call/operation/bytes/wall-time/no-progress 熔断，answerable 因熔断未获批准计失败。
+
+comprehensive Review 通过后不会直接 Delivery。Application 从当前 Package/Draft 投影配置 placeholder、引用内容中没有的具体 status
+literal 和未挂载 same-application type，Gateway 只允许另一个 fresh challenge Review；只有 challenge finding-free 才终止问答链。placeholder
+只证明 key/injection，caller/import 只证明关系，上游 local state 只证明局部结果，均不能自动扩张为 runtime value、DTO/handler behavior 或
+下游 HTTP mapping。
 
 已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞本题。
 

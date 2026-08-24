@@ -36,6 +36,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringQuestionRequest,
     EngineeringQuestionResourceLimits,
+    EngineeringReviewFocus,
     InvestigationOperation,
 )
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, StableId, digest_of
@@ -339,7 +340,19 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         review = EngineeringQuestionModelRole.REVIEW
         self.assertEqual(
             EngineeringQuestionModelEgressPolicy._next_roles(
-                review, {"findings": []}
+                review,
+                {"findings": []},
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
+            ),
+            {EngineeringQuestionModelRole.REVIEW},
+        )
+        self.assertEqual(
+            EngineeringQuestionModelEgressPolicy._next_roles(
+                review,
+                {"findings": []},
+                review_focus=(
+                    EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                ),
             ),
             set(),
         )
@@ -351,6 +364,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                         {"remediation": "REWRITE_WITH_EXISTING_EVIDENCE"}
                     ]
                 },
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
             ),
             {EngineeringQuestionModelRole.ANSWER},
         )
@@ -362,6 +376,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                         {"remediation": "INVESTIGATE_MISSING_EVIDENCE"}
                     ]
                 },
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
             ),
             {EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION},
         )
@@ -374,6 +389,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                         {"remediation": "REJECT_UNRECOVERABLE"},
                     ]
                 },
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
             ),
             set(),
         )
@@ -381,7 +397,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@29",
+            "engineering-qa-adaptive-investigation-prompt@30",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -445,6 +461,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("final HTTP or API status", prompt)
             self.assertIn("framework default", prompt)
             self.assertIn("transport status", prompt)
+            self.assertIn("configuration key and injection point", prompt)
+            self.assertIn("do not infer DTO fields", prompt)
         verification_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION
@@ -486,6 +504,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("externally visible error category", understanding_prompt)
         self.assertIn("response or exception mapper", understanding_prompt)
         self.assertIn("transport status", understanding_prompt)
+        self.assertIn("concrete header name, token prefix", understanding_prompt)
+        self.assertIn("unmounted DTO's fields", understanding_prompt)
         initial_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.INITIAL_INVESTIGATION
@@ -543,6 +563,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("final HTTP or API status", answer_prompt)
         self.assertIn("framework default", answer_prompt)
         self.assertIn("transport status", answer_prompt)
+        self.assertIn("configuration key and injection point", answer_prompt)
+        self.assertIn("unmounted DTO's fields", answer_prompt)
         review_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.REVIEW
@@ -569,6 +591,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("If the Draft introduced the status", review_prompt)
         self.assertIn("same local condition", review_prompt)
         self.assertIn("transport status", review_prompt)
+        self.assertIn("EVIDENCE_BOUNDARY_CHALLENGE", review_prompt)
+        self.assertIn("evidence_boundary_challenges", review_prompt)
+        self.assertIn("projected items are review leads", review_prompt)
+        self.assertIn("concrete runtime configuration value", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:

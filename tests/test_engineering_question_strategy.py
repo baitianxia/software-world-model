@@ -21,6 +21,7 @@ from software_world_model.ai_infrastructure.engineering_question_strategy import
     StructuredEngineeringAnswerRole,
     StructuredEngineeringAnswerReviewerRole,
     StructuredQuestionUnderstandingRole,
+    _evidence_boundary_challenges,
     _verified_gap_outcomes,
     engineering_question_output_contract_digest,
     engineering_question_output_schemas,
@@ -32,6 +33,7 @@ from software_world_model.application_services.engineering_question_answering im
     ChecklistOutcome,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionResultStatus,
+    EngineeringReviewFocus,
     EvidenceLedger,
     InitialInvestigationInput,
     LedgerEntryKind,
@@ -41,11 +43,18 @@ from software_world_model.application_services.engineering_question_answering im
     RequiredEvidencePathLocator,
     RetrievalItem,
     SourceBroker,
+    SupportCitationEntry,
     VerificationInvestigationInput,
     VerificationRequestProposal,
     EngineeringEvidenceClass,
 )
-from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, StableId
+from software_world_model.cross_cutting import (
+    Digest,
+    DomainError,
+    ErrorCode,
+    StableId,
+    digest_of,
+)
 from tests import test_engineering_question_answering as fixtures
 
 
@@ -506,6 +515,8 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(review.body["draft"]["digest"], draft.digest.value)
         self.assertEqual(review.body["verified_gap_outcomes"], ())
+        self.assertEqual(review.body["review_focus"], "COMPREHENSIVE")
+        self.assertEqual(review.body["evidence_boundary_challenges"], ())
         self.assertEqual(
             review.body["verified_gap_review_rule"],
             "DO_NOT_REPEAT_A_TERMINAL_VERIFIED_GAP_WHEN_THE_DRAFT_PRESERVES_ITS_HONEST_LIMITATION",
@@ -563,6 +574,99 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         }
         self.assertFalse(collect_keys(answer.gateway_input()) & forbidden)
         self.assertFalse(collect_keys(review.gateway_input()) & forbidden)
+
+    def test_review_projects_configuration_status_and_unmounted_type_boundaries(self):
+        package = self.result.current_package
+        original_entry = package.support_citation[0]
+        content = """package com.acme.security;
+import com.acme.security.AccessDeniedHandler;
+import com.acme.security.LoginDto;
+class SecurityConfig {
+  @Value("${jwt.tokenHeader}") String tokenHeader;
+  void configure(LoginDto input, AccessDeniedHandler handler) {}
+}
+"""
+        entry = SupportCitationEntry.create(
+            source_reference=original_entry.source_reference,
+            origin_class=original_entry.origin_class,
+            evidence_class=original_entry.evidence_class,
+            modality=original_entry.modality,
+            context_ref=original_entry.context_ref,
+            repository_revision=original_entry.repository_revision,
+            locator="src/SecurityConfig.java",
+            content=content,
+            content_digest=digest_of(content),
+            support_references=original_entry.support_references,
+            coverage=original_entry.coverage,
+        )
+        same_named_foreign_entry = SupportCitationEntry.create(
+            source_reference=original_entry.source_reference,
+            origin_class=original_entry.origin_class,
+            evidence_class=original_entry.evidence_class,
+            modality=original_entry.modality,
+            context_ref=original_entry.context_ref,
+            repository_revision=original_entry.repository_revision,
+            locator="src/other/LoginDto.java",
+            content="package com.acme.other;\nclass LoginDto {}\n",
+            content_digest=digest_of(
+                "package com.acme.other;\nclass LoginDto {}\n"
+            ),
+            support_references=original_entry.support_references,
+            coverage=original_entry.coverage,
+        )
+        claim = replace(
+            self.result.current_draft.claims[0],
+            text=(
+                "Use the Authorization header. LoginDto contains username and "
+                "password, and AccessDeniedHandler returns 403."
+            ),
+            evidence_entry_ids=(entry.entry_id,),
+        )
+        draft = replace(self.result.current_draft, claims=(claim,))
+        challenged_package = replace(
+            package,
+            support_citation=(entry, same_named_foreign_entry),
+        )
+        projected = _evidence_boundary_challenges(challenged_package, draft)
+
+        self.assertEqual(
+            [item["kind"] for item in projected],
+            [
+                "CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE",
+                "CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT",
+                "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
+                "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
+            ],
+        )
+        self.assertEqual(projected[0]["configuration_keys"], ["jwt.tokenHeader"])
+        self.assertEqual(projected[1]["literal"], "403")
+        self.assertEqual(
+            [item["symbol"] for item in projected[2:]],
+            ["AccessDeniedHandler", "LoginDto"],
+        )
+        self.assertEqual(
+            [item["qualified_types"] for item in projected[2:]],
+            [
+                ["com.acme.security.AccessDeniedHandler"],
+                ["com.acme.security.LoginDto"],
+            ],
+        )
+        review = EngineeringQuestionRoleInputBuilder.review(
+            original_question=self.result.request.original_question,
+            understanding=self.result.understanding,
+            package=challenged_package,
+            draft=draft,
+            role_context_id=sid("role_context", "e"),
+            review_focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        self.assertEqual(
+            review.body["review_focus"],
+            "EVIDENCE_BOUNDARY_CHALLENGE",
+        )
+        self.assertEqual(
+            review.gateway_input()["input"]["evidence_boundary_challenges"],
+            projected,
+        )
 
     def test_review_projects_terminal_verified_gap_outcome(self):
         package = self.result.current_package
@@ -1243,7 +1347,20 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
         self.assertEqual(len(result.packages), 2)
         self.assertEqual(len(result.ledgers), 2)
-        self.assertEqual(output_source.review_calls, 2)
+        self.assertEqual(output_source.review_calls, 3)
+        review_manifests = [
+            manifest
+            for manifest in output_source.manifests
+            if manifest.role is EngineeringQuestionModelRole.REVIEW
+        ]
+        self.assertEqual(
+            [manifest.body["review_focus"] for manifest in review_manifests],
+            [
+                "COMPREHENSIVE",
+                "COMPREHENSIVE",
+                "EVIDENCE_BOUNDARY_CHALLENGE",
+            ],
+        )
         self.assertEqual(
             bundle.output_contract_digest,
             engineering_question_output_contract_digest(),

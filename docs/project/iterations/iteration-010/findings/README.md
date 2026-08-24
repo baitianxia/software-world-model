@@ -195,5 +195,10 @@ iteration: ITER-010
 - [FINDING-010-074](FINDING-010-074.md)：上述处置及 typed `VERIFICATION_GAP` 独立审计后，focused 76/76、Engineering QA
   113/113、docs 组合 146/146、历史 oracle 组合 78/78、current docs 468/468、compile/diff PASS；允许 AF_UNIX 的
   full 1179 项中 1174 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 historical hold，没有 ITER-010 新失败。
+- [FINDING-010-075](FINDING-010-075.md)：clean `b709fad…` / run-027 的 Q1 独立复核 PASS，但 Q2/Q3 被单一 Reviewer 错误
+  `APPROVED`；placeholder、unmounted type 和 downstream status 的证据所有权均被扩张。现把 comprehensive Review 降为
+  provisional，再由 fresh evidence-boundary challenge 独立授权；focused 78/78、Engineering QA 115/115 PASS，扩展 Gate 与新 live 待闭合。
+- [FINDING-010-076](FINDING-010-076.md)：上述双审处置经 focused 78/78、Engineering QA 115/115、docs 组合 148/148、历史 oracle
+  组合 80/80、current docs/compile/diff 与 full 1181/1176 exact historical hold 闭合 deterministic Gate；新 clean/fresh live 是下一 Gate。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
