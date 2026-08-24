@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@16"
+    "engineering-qa-adaptive-investigation-prompt@17"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -136,7 +136,13 @@ in that checklist; do not substitute class or method names for those conclusions
 Checklist items may summarize the goal, but they do not waive the later atomic
 evidence-observation audit.
 Identify the evidence needs, response language, and response constraints. Do not
-narrow the question based on currently available evidence.
+narrow the question based on currently available evidence. The requested
+abstraction level controls the delivered answer, not which evidence may be
+investigated. In Engineering QA, a question asking how a feature, flow,
+lifecycle, authorization decision, or failure path works normally needs exact
+SOURCE behavior evidence even when the answer should remain user-visible. Record
+that evidence need; do not limit investigation to UI, documentation, or logs and
+do not use a presentation constraint to forbid implementation evidence.
 """,
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: f"""
 Choose exactly one next investigation action from the registered vocabulary or
@@ -179,6 +185,13 @@ directly reduce the material unknown within the remaining fuse, investigate it;
 lack of detail in one modality is not global absence. FINISH is appropriate only
 when the retained evidence and boundary actually justify every disposition, not
 merely because the first investigated class was insufficient.
+registered_evidence_classes, investigated_evidence_classes, and
+untried_registered_evidence_classes are Application-owned closure state. Never
+claim that no other authorized evidence exists while the untried list is
+non-empty. A FINISH containing any non-supported disposition while that list is
+non-empty is rejected into a GAP naming the next required class; consume that
+GAP and investigate the named class instead of repeating FINISH. USER_VISIBLE
+presentation scope does not make SOURCE implementation behavior ineligible.
 A setup statement supports setup only; a declaration, registration, dependency,
 or wiring statement supports only that relationship. None of them proves the
 delegated component's conditions, comparisons, state changes, outcomes, failure
@@ -236,6 +249,13 @@ directly reduce the material unknown within the remaining fuse, investigate it;
 lack of detail in one modality is not global absence. FINISH is appropriate only
 when the retained evidence and boundary actually justify every disposition, not
 merely because the first investigated class was insufficient.
+registered_evidence_classes, investigated_evidence_classes, and
+untried_registered_evidence_classes are Application-owned closure state for the
+concrete verification gap. Never claim that no other authorized evidence exists
+while the untried list is non-empty. A FINISH containing any non-supported
+disposition while that list is non-empty is rejected into a GAP naming the next
+required class; consume that GAP and investigate the named class instead of
+repeating FINISH.
 A setup statement supports setup only; a declaration, registration, dependency,
 or wiring statement supports only that relationship. None of them proves the
 delegated component's conditions, comparisons, state changes, outcomes, failure

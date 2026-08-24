@@ -164,14 +164,13 @@ class EngineeringEvidenceClass(str, Enum):
     TEST = "TEST"
 
 
-_RETRIEVAL_EVIDENCE_CLASSES = frozenset(
-    {
-        EngineeringEvidenceClass.SOURCE,
-        EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
-        EngineeringEvidenceClass.BUILD_CONFIGURATION,
-        EngineeringEvidenceClass.TEST,
-    }
+_RETRIEVAL_EVIDENCE_CLASS_ORDER = (
+    EngineeringEvidenceClass.SOURCE,
+    EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+    EngineeringEvidenceClass.BUILD_CONFIGURATION,
+    EngineeringEvidenceClass.TEST,
 )
+_RETRIEVAL_EVIDENCE_CLASSES = frozenset(_RETRIEVAL_EVIDENCE_CLASS_ORDER)
 
 
 class SourceReadOperation(str, Enum):
@@ -2127,16 +2126,11 @@ class SourceBroker:
         source_profile.require_valid()
         self._source_profile = source_profile
 
-    def compile(
-        self,
-        *,
-        request: EngineeringQuestionRequest,
-        proposal: InvestigationStepProposal,
-        ledger: EvidenceLedger,
-        locator_catalog: Mapping[StableId, RetrievalItem],
-        usage: EngineeringQuestionResourceUsage,
-    ) -> SourceBrokerCompilation:
-        self._require_binding(request=request, proposal=proposal, ledger=ledger)
+    def registered_evidence_classes(
+        self, *, request: EngineeringQuestionRequest
+    ) -> tuple[EngineeringEvidenceClass, ...]:
+        """Return the exact ordered retrieval registry bound to this Request."""
+
         self._source_profile.require_valid()
         if (
             self._source_profile.binding_id != request.binding_id
@@ -2147,6 +2141,23 @@ class SourceBroker:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Source Broker profile does not bind the current Request",
             )
+        return tuple(
+            evidence_class
+            for evidence_class in _RETRIEVAL_EVIDENCE_CLASS_ORDER
+            if self._source_profile.paths_for(evidence_class)
+        )
+
+    def compile(
+        self,
+        *,
+        request: EngineeringQuestionRequest,
+        proposal: InvestigationStepProposal,
+        ledger: EvidenceLedger,
+        locator_catalog: Mapping[StableId, RetrievalItem],
+        usage: EngineeringQuestionResourceUsage,
+    ) -> SourceBrokerCompilation:
+        self._require_binding(request=request, proposal=proposal, ledger=ledger)
+        self.registered_evidence_classes(request=request)
         if proposal.operation is InvestigationOperation.FINISH:
             return self._reject(
                 request=request,
@@ -2483,6 +2494,33 @@ def _eligible_locator_references(
     )
 
 
+def _untried_registered_evidence_classes(
+    *,
+    registered: Sequence[EngineeringEvidenceClass],
+    investigated: Sequence[EngineeringEvidenceClass],
+) -> tuple[EngineeringEvidenceClass, ...]:
+    registered_tuple = tuple(registered)
+    investigated_tuple = tuple(investigated)
+    if (
+        len(set(registered_tuple)) != len(registered_tuple)
+        or len(set(investigated_tuple)) != len(investigated_tuple)
+        or any(
+            not isinstance(item, EngineeringEvidenceClass)
+            or item not in _RETRIEVAL_EVIDENCE_CLASSES
+            for item in (*registered_tuple, *investigated_tuple)
+        )
+        or not set(investigated_tuple).issubset(registered_tuple)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "investigation evidence-class registry is invalid",
+        )
+    investigated_set = set(investigated_tuple)
+    return tuple(
+        item for item in registered_tuple if item not in investigated_set
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ChecklistDispositionReferenceEligibility:
     support_references: tuple[str, ...]
@@ -2618,6 +2656,8 @@ class InitialInvestigationInput:
     ledger: EvidenceLedger
     retrieval_results: tuple[RetrievalResult, ...]
     disposition_reference_eligibility: ChecklistDispositionReferenceEligibility
+    registered_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
+    investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -2638,6 +2678,15 @@ class InitialInvestigationInput:
             attempt_id=self.attempt_id,
         )
 
+    @property
+    def untried_registered_evidence_classes(
+        self,
+    ) -> tuple[EngineeringEvidenceClass, ...]:
+        return _untried_registered_evidence_classes(
+            registered=self.registered_evidence_classes,
+            investigated=self.investigated_evidence_classes,
+        )
+
     def model_view(self) -> dict[str, object]:
         return {
             "role": "INITIAL_INVESTIGATION",
@@ -2650,6 +2699,15 @@ class InitialInvestigationInput:
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "prior_action_intents": list(self.prior_action_intents),
+            "registered_evidence_classes": [
+                item.value for item in self.registered_evidence_classes
+            ],
+            "investigated_evidence_classes": [
+                item.value for item in self.investigated_evidence_classes
+            ],
+            "untried_registered_evidence_classes": [
+                item.value for item in self.untried_registered_evidence_classes
+            ],
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
             ),
@@ -3574,6 +3632,8 @@ class VerificationInvestigationInput:
     ledger: EvidenceLedger
     retrieval_results: tuple[RetrievalResult, ...]
     disposition_reference_eligibility: ChecklistDispositionReferenceEligibility
+    registered_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
+    investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -3592,6 +3652,15 @@ class VerificationInvestigationInput:
         return _prior_action_intents(
             ledger=self.ledger,
             attempt_id=self.attempt_id,
+        )
+
+    @property
+    def untried_registered_evidence_classes(
+        self,
+    ) -> tuple[EngineeringEvidenceClass, ...]:
+        return _untried_registered_evidence_classes(
+            registered=self.registered_evidence_classes,
+            investigated=self.investigated_evidence_classes,
         )
 
     def validate_new_result_closure(self) -> None:
@@ -3656,6 +3725,15 @@ class VerificationInvestigationInput:
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "prior_action_intents": list(self.prior_action_intents),
+            "registered_evidence_classes": [
+                item.value for item in self.registered_evidence_classes
+            ],
+            "investigated_evidence_classes": [
+                item.value for item in self.investigated_evidence_classes
+            ],
+            "untried_registered_evidence_classes": [
+                item.value for item in self.untried_registered_evidence_classes
+            ],
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
             ),
@@ -5545,6 +5623,19 @@ class EngineeringQuestionAnsweringService:
             for item in result.items
         }
         progress_digests = {result.progress_digest for result in results}
+        registered_evidence_classes = (
+            self._source_broker.registered_evidence_classes(request=request)
+        )
+        if (
+            investigation_kind is InvestigationKind.VERIFICATION
+            and verification_request is not None
+        ):
+            registered_evidence_classes = tuple(
+                item
+                for item in registered_evidence_classes
+                if item is verification_request.evidence_class
+            )
+        investigated_evidence_classes: set[EngineeringEvidenceClass] = set()
         step_index = 0
         local_calls = 0
         while True:
@@ -5619,6 +5710,12 @@ class EngineeringQuestionAnsweringService:
                     ledger=ledger,
                     retrieval_results=tuple(results),
                     disposition_reference_eligibility=disposition_reference_eligibility,
+                    registered_evidence_classes=registered_evidence_classes,
+                    investigated_evidence_classes=tuple(
+                        item
+                        for item in registered_evidence_classes
+                        if item in investigated_evidence_classes
+                    ),
                 )
                 proposal = self._initial_investigation_role.propose(
                     investigation_input
@@ -5638,6 +5735,12 @@ class EngineeringQuestionAnsweringService:
                     ledger=ledger,
                     retrieval_results=tuple(results[attempt_result_start:]),
                     disposition_reference_eligibility=disposition_reference_eligibility,
+                    registered_evidence_classes=registered_evidence_classes,
+                    investigated_evidence_classes=tuple(
+                        item
+                        for item in registered_evidence_classes
+                        if item in investigated_evidence_classes
+                    ),
                 )
                 verification_input.validate_new_result_closure()
                 proposal = self._verification_investigation_role.propose(
@@ -5697,6 +5800,48 @@ class EngineeringQuestionAnsweringService:
                 maximum_bytes=request.limits.maximum_ledger_bytes,
             )
             if proposal.operation is InvestigationOperation.FINISH:
+                non_supported = tuple(
+                    item
+                    for item in proposal.finish_dispositions
+                    if item.outcome is not ChecklistOutcome.SUPPORTED
+                )
+                untried = (
+                    investigation_input.untried_registered_evidence_classes
+                )
+                if non_supported and untried:
+                    required_class = untried[0]
+                    gap_core = {
+                        "proposal_digest": proposal.digest.value,
+                        "evidence_class": required_class.value,
+                        "checklist_item_ids": tuple(
+                            item.checklist_item_id for item in non_supported
+                        ),
+                    }
+                    gap_digest = digest_of(
+                        [
+                            "ENGINEERING_QA_NON_SUPPORTED_FINISH_GAP@1",
+                            gap_core,
+                        ]
+                    )
+                    ledger = ledger.append(
+                        kind=LedgerEntryKind.GAP,
+                        subject_id=_stable_id(
+                            "investigation_gap", gap_core
+                        ).value,
+                        subject_digest=gap_digest,
+                        references=(proposal.proposal_id.value,),
+                        details={
+                            "reason": "NON_SUPPORTED_FINISH_REQUIRES_REGISTERED_EVIDENCE_CLASS",
+                            "evidence_class": required_class.value,
+                            "evidence_need": (
+                                "Investigate the registered "
+                                f"{required_class.value} evidence class before "
+                                "a non-supported FINISH."
+                            ),
+                        },
+                        maximum_bytes=request.limits.maximum_ledger_bytes,
+                    )
+                    continue
                 ledger = self._append_resource_receipt(
                     request=request, ledger=ledger, usage=usage
                 )
@@ -5803,6 +5948,7 @@ class EngineeringQuestionAnsweringService:
                     failure_code="SOURCE_WORKER_OUTCOME_UNKNOWN",
                 )
             self._validate_retrieval_result(request=request, operation=operation, result=result)
+            investigated_evidence_classes.add(operation.evidence_class)
             results.append(result)
             for item in result.items:
                 locator_catalog[item.locator_reference] = item

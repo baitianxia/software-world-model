@@ -359,6 +359,10 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                     boundary_references=("cognition-unknown-1",),
                 )
             ),
+            registered_evidence_classes=(
+                EngineeringEvidenceClass.SOURCE,
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            ),
         )
         manifest = EngineeringQuestionRoleInputBuilder.initial_investigation(
             investigation_input
@@ -376,6 +380,15 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
         self.assertEqual(manifest.body["prior_action_intents"], ())
+        self.assertEqual(
+            manifest.body["registered_evidence_classes"],
+            ("SOURCE", "REPOSITORY_DOCUMENT"),
+        )
+        self.assertEqual(manifest.body["investigated_evidence_classes"], ())
+        self.assertEqual(
+            manifest.body["untried_registered_evidence_classes"],
+            ("SOURCE", "REPOSITORY_DOCUMENT"),
+        )
         self.assertEqual(
             manifest.body["admissible_support_references"],
             (self.result.cognition.items[0].item_id.value,),
@@ -483,6 +496,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                     + (ledger.entries[-1].entry_id.value,),
                 )
             ),
+            registered_evidence_classes=(EngineeringEvidenceClass.TEST,),
         )
         manifest = EngineeringQuestionRoleInputBuilder.verification_investigation(
             investigation_input
@@ -502,6 +516,9 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "eligible_locator_references",
                 "consumed_full_content_paths",
                 "prior_action_intents",
+                "registered_evidence_classes",
+                "investigated_evidence_classes",
+                "untried_registered_evidence_classes",
                 "admissible_support_references",
                 "admissible_boundary_references",
                 "verification_request",
@@ -518,6 +535,10 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(
+            manifest.body["untried_registered_evidence_classes"],
+            ("TEST",),
+        )
         self.assertEqual(manifest.body["prior_action_intents"], ())
         self.assertEqual(
             set(manifest.body["admissible_support_references"]),

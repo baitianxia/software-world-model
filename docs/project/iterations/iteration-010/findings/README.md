@@ -117,5 +117,8 @@ iteration: ITER-010
 - [FINDING-010-045](FINDING-010-045.md)：clean `47a96b6…` 原题已返回短直答和无重复的逐事实 Claim，但短直答为避免重复使用空 observation
   link，被旧 value rule 与 coverage Limitation 一并拒绝。现允许有 support 的 affirmative DIRECT_ANSWER 作为受控空-link 摘要；它不取得
   observation coverage、只能链接 supported checklist，Reviewer 必须核对其未扩张后续事实。
+- [FINDING-010-046](FINDING-010-046.md)：clean `8565fa5…` 的现场题再次只读 README 后把所有结论过早标成全局 Unknown，错误 limitation
+  仍被 Reviewer 批准。现由 Source Profile 投影 registered/investigated/untried evidence classes；含 non-supported disposition 的 FINISH
+  在 untried 非空时由 Application 追加 required-class GAP 并继续调查，答案抽象层级不再排除 Source behavior evidence。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

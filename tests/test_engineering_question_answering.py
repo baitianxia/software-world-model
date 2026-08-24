@@ -562,6 +562,188 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         )
         self.assertEqual(result.production_activation, "NOT_EXECUTED")
 
+    def test_non_supported_finish_reopens_untried_registered_source_class(self):
+        class PrematureFinishInvestigator:
+            closure_state = None
+
+            def propose(self, investigation_input):
+                if investigation_input.step_index == 1:
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.SEARCH,
+                        evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                        query="start",
+                    )
+                if investigation_input.step_index == 2:
+                    boundary = (
+                        investigation_input.disposition_reference_eligibility
+                        .boundary_references[0]
+                    )
+                    disposition = ChecklistDisposition.create(
+                        checklist_item_id="check-1",
+                        outcome=ChecklistOutcome.UNKNOWN,
+                        evidence_references=(boundary,),
+                        explanation="The repository document lacks the behavior.",
+                        material_observations=(
+                            MaterialObservation.create(
+                                checklist_item_id="check-1",
+                                kind=MaterialObservationKind.LIMITATION,
+                                statement=(
+                                    "The repository document does not establish "
+                                    "the behavior."
+                                ),
+                                evidence_references=(boundary,),
+                            ),
+                        ),
+                    )
+                    ledger = investigation_input.ledger
+                    return InvestigationStepProposal.create(
+                        investigation_kind=InvestigationKind.INITIAL,
+                        attempt_id=investigation_input.attempt_id,
+                        role_context_id=investigation_input.role_context_id,
+                        request_digest=investigation_input.request.digest,
+                        step_index=investigation_input.step_index,
+                        ledger_id=ledger.ledger_id,
+                        ledger_generation=ledger.generation,
+                        ledger_revision=len(ledger.entries),
+                        ledger_prefix_digest=ledger.prefix_digest,
+                        operation=InvestigationOperation.FINISH,
+                        checklist_item_ids=("check-1",),
+                        basis_entry_ids=(ledger.entries[-1].entry_id,),
+                        unknown_to_reduce="No repository-document detail was found.",
+                        finish_dispositions=(disposition,),
+                    )
+                if investigation_input.step_index == 3:
+                    self.closure_state = (
+                        investigation_input.registered_evidence_classes,
+                        investigation_input.investigated_evidence_classes,
+                        investigation_input.untried_registered_evidence_classes,
+                        investigation_input.ledger.entries[-1],
+                    )
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.SEARCH,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        query="start",
+                    )
+                if investigation_input.step_index == 4:
+                    locator = (
+                        investigation_input.retrieval_results[-1]
+                        .items[0]
+                        .locator_reference
+                    )
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.READ,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        locator_reference=locator,
+                    )
+                evidence = (
+                    investigation_input.retrieval_results[-1].items[0].item_id.value
+                )
+                return step_proposal(
+                    investigation_input,
+                    operation=InvestigationOperation.FINISH,
+                    evidence_reference=evidence,
+                )
+
+        class SourceAwareWorker:
+            def execute(self, operation):
+                if operation.operation is SourceReadOperation.SEARCH:
+                    path = (
+                        "README.md"
+                        if operation.evidence_class
+                        is EngineeringEvidenceClass.REPOSITORY_DOCUMENT
+                        else "src/Service.java"
+                    )
+                    item = RetrievalItem.create(
+                        operation_id=operation.operation_id,
+                        ordinal=1,
+                        evidence_class=operation.evidence_class,
+                        path=path,
+                        line_start=1,
+                        line_end=1,
+                        content=(
+                            "JWT is supported."
+                            if path == "README.md"
+                            else (
+                                "Start through the documented entry point; "
+                                "write a PID file and apply the timeout."
+                            )
+                        ),
+                        modality=operation.result_modality,
+                        coverage_complete=True,
+                    )
+                else:
+                    item = RetrievalItem.create(
+                        operation_id=operation.operation_id,
+                        ordinal=1,
+                        evidence_class=operation.evidence_class,
+                        path=operation.path,
+                        content=(
+                            "Start through the documented entry point; "
+                            "write a PID file and apply the timeout."
+                        ),
+                        modality=operation.result_modality,
+                        coverage_complete=True,
+                    )
+                return RetrievalResult.create(
+                    operation=operation,
+                    status=RetrievalStatus.COMPLETE,
+                    items=(item,),
+                    bytes_read=len(item.content.encode()),
+                    files_read=1,
+                    truncated=False,
+                    coverage={"complete": "true"},
+                )
+
+        investigator = PrematureFinishInvestigator()
+        profile = source_profile()
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=UnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=investigator,
+            verification_investigation_role=VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=profile),
+            retrieval_worker=SourceAwareWorker(),
+            answer_role=AnswerRole(),
+            reviewer_role=ReviewerRole(request_more_evidence=False),
+        )
+
+        result = service.answer(request())
+
+        self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
+        registered, investigated, untried, gap = investigator.closure_state
+        self.assertEqual(
+            registered,
+            (
+                EngineeringEvidenceClass.SOURCE,
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                EngineeringEvidenceClass.BUILD_CONFIGURATION,
+                EngineeringEvidenceClass.TEST,
+            ),
+        )
+        self.assertEqual(
+            investigated,
+            (EngineeringEvidenceClass.REPOSITORY_DOCUMENT,),
+        )
+        self.assertEqual(
+            untried,
+            (
+                EngineeringEvidenceClass.SOURCE,
+                EngineeringEvidenceClass.BUILD_CONFIGURATION,
+                EngineeringEvidenceClass.TEST,
+            ),
+        )
+        self.assertEqual(gap.kind, LedgerEntryKind.GAP)
+        self.assertEqual(dict(gap.details)["evidence_class"], "SOURCE")
+        self.assertEqual(
+            dict(gap.details)["reason"],
+            "NON_SUPPORTED_FINISH_REQUIRES_REGISTERED_EVIDENCE_CLASS",
+        )
+        self.assertEqual(result.usage.investigation_role_calls, 5)
+        self.assertEqual(result.usage.source_operations, 3)
+
     def test_independent_verification_creates_successor_chain(self):
         result = self.service(request_more_evidence=True).answer(request())
 

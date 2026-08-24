@@ -336,7 +336,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@16",
+            "engineering-qa-adaptive-investigation-prompt@17",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -382,9 +382,21 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 "lack of detail in one modality is not global absence",
                 prompt,
             )
+            self.assertIn("untried_registered_evidence_classes", prompt)
+            self.assertIn("is rejected into a GAP", prompt)
             self.assertIn("one to 16 atomic material_observations", prompt)
             self.assertIn("A setup statement supports setup only", prompt)
             self.assertIn("wiring statement supports only that relationship", prompt)
+        understanding_prompt = " ".join(
+            engineering_question_role_prompt(
+                EngineeringQuestionModelRole.QUESTION_UNDERSTANDING
+            ).split()
+        )
+        self.assertIn(
+            "abstraction level controls the delivered answer, not which evidence",
+            understanding_prompt,
+        )
+        self.assertIn("normally needs exact SOURCE behavior evidence", understanding_prompt)
         answer_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.ANSWER
