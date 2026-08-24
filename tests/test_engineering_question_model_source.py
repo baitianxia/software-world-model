@@ -322,7 +322,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@11",
+            "engineering-qa-adaptive-investigation-prompt@12",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -364,6 +364,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("admissible_boundary_references", prompt)
             self.assertIn("required_basis_entry_id binds the next action", prompt)
             self.assertIn("it is not disposition evidence", prompt)
+            self.assertIn(
+                "lack of detail in one modality is not global absence",
+                prompt,
+            )
         answer_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.ANSWER
@@ -375,6 +379,14 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         )
         self.assertIn(
             "never attach supported observation IDs to such a limitation",
+            answer_prompt,
+        )
+        self.assertIn(
+            "Never assign LIMITATION kind to a USER_VISIBLE_PROCESS",
+            answer_prompt,
+        )
+        self.assertIn(
+            "put their limitation observations in the one DIRECT_ANSWER limitation",
             answer_prompt,
         )
         review_prompt = " ".join(

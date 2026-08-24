@@ -2005,6 +2005,17 @@
       "tests"
     ]
   },
+  "FINDING-010-038": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-038.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_question_strategy.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

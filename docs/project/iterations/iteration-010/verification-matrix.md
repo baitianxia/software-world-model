@@ -109,10 +109,15 @@ observation` 失败关闭；见 `FINDING-010-036`。该 Result 不能取得答�
 coverage-only Limitation 收窄后的 Answer/strategy/model-source 49/49、Engineering QA 86/86、current docs 430/430 PASS；最终 full 1147 项
 中 1142 PASS，raw 仍精确为既有 4 FAIL + 1 ERROR，见 `FINDING-010-037`。新修复尚未取得 clean freeze 后的 live Result。
 
+clean candidate `e15ec50…` 与 current Conformance `sha256:5ef04be6…` 的原题 run 同样为 5 次 role dispatch、retry/switch 0、private SQLite。
+上一修复的空-link coverage Limitation 已生效；但 Investigation 只读 README 后过早 FINISH，Answer 将 limitation observations 错标为
+process/impact roles，Domain 以 structured-output violation 失败关闭。`FINDING-010-038` 已形成 closed kind/role mapping 与跨 evidence-class
+unknown 消减规则，尚待新 clean candidate live 重验。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `b6e13eb…` 的答案缺陷/DB `0644` 与 `fc827ce…` 的 coverage-only Limitation link 缺陷均使对应 run 失败；后者已证明 private SQLite 和单题 fail-closed，但同会话三题 + 受控失败仍未完成 | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `b6e13eb…` 原题遗漏副作用且假批准；`fc827ce…` 已让 Package/正文覆盖副作用，但 coverage limitation link 组合缺口导致 Draft 失败关闭；`FINDING-010-036` 修复尚无新 clean candidate 三题 Result | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `b6e13eb…`、`fc827ce…`、`e15ec50…` 分别暴露答案/DB、coverage link、证据类/claim-pair 缺陷并失败关闭；后两者证明 private SQLite 和单题 fail-closed，但同会话三题 + 受控失败仍未完成 | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `fc827ce…` 已让 Package/正文覆盖副作用但 coverage link 失败；`e15ec50…` 采用该修复后又因过早 Unknown 与 illegal limitation pair 失败；`FINDING-010-038` 尚无新 clean candidate 三题 Result | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

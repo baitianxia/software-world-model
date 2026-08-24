@@ -94,5 +94,8 @@ iteration: ITER-010
   强制 observation/evidence closure。
 - [FINDING-010-037](FINDING-010-037.md)：coverage-only Limitation 修复后的完整 1147 项中 1142 PASS，raw 仍精确为既有 4 FAIL + 1
   ERROR historical hold；定向错误形状回归与治理 Gate 通过，没有新增 ITER-010 失败。
+- [FINDING-010-038](FINDING-010-038.md)：clean `e15ec50…` 原题已采用空-link coverage Limitation，但 Investigation 在只读 README 后过早
+  FINISH，Answer 又把 limitation 错标为 process/impact role。保留 Domain fail-closed，并显式下发合法 kind/role mapping 与跨 evidence-class
+  未知消减规则。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -96,6 +96,11 @@ DeepSeek Conformance 重跑原题；Package/正文覆盖了登录审计副作用
 规则强迫错绑 supported observations，Draft 因而失败关闭。`FINDING-010-036` 把该通用组合缺口收窄为仅末尾 coverage limitation 可用空
 link；该修复尚未成为新的 clean frozen candidate，也没有原题加两道异质题的完整真实执行证据，因此不能把失败行为写成已修复。
 
+随后 clean candidate `e15ec50…` 已绑定 current DeepSeek Conformance 再跑原题；空-link coverage Limitation 已按预期生效，但 Investigation
+在只读 README 后过早以全局 Unknown 结束，Answer 又把 limitation observations 错标为 process/impact roles，Domain 因而失败关闭。
+`FINDING-010-038` 不放松 Domain，而是显式下发合法 kind/role mapping，并要求 UNKNOWN/CONFLICT/FAILED FINISH 前尝试仍可直接减少
+material unknown 的已授权 evidence class。该修复也尚无新的 clean/live 证据。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -241,5 +246,6 @@ product freeze 后形成执行证据。
 `FINDING-010-035` 记录新协议完整 1144 项中 1139 PASS、raw 只保留既有 4 FAIL + 1 ERROR historical hold；`FINDING-010-036` 记录
 `fc827ce…` 原题已经覆盖审计副作用却因 coverage-only Limitation link 组合缺口失败关闭，以及对应通用 contract 修复；
 `FINDING-010-037` 记录修复后完整 1147 项中 1142 PASS、raw 仍只保留既有 4 FAIL + 1 ERROR historical hold。现有 Alpha 运行只证明
-缺陷可复现或部分约束生效，新修复仍只有确定性证据，真实三题体验 Gate 保持 NOT-RUN。
+缺陷可复现或部分约束生效；`FINDING-010-038` 记录 `e15ec50…` 的证据类过早结束与 illegal limitation kind/role pairing，并以通用 prompt/
+input contract 修复。新修复仍只有确定性证据，真实三题体验 Gate 保持 NOT-RUN。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

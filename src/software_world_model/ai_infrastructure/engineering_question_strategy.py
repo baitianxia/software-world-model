@@ -65,7 +65,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@4"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@5"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@1"
@@ -784,6 +784,24 @@ class EngineeringQuestionRoleInputBuilder:
                 "every_material_observation_visible_in_default_body": True,
                 "observation_link_requires_explicit_claim_text_and_all_evidence": True,
                 "coverage_only_limitation_empty_observation_links_allowed": True,
+                "allowed_kind_by_content_role": {
+                    AnswerContentRole.DIRECT_ANSWER.value: (
+                        AnswerClaimKind.AFFIRMATIVE.value,
+                        AnswerClaimKind.LIMITATION.value,
+                    ),
+                    AnswerContentRole.USER_VISIBLE_PROCESS.value: (
+                        AnswerClaimKind.AFFIRMATIVE.value,
+                    ),
+                    AnswerContentRole.IMPACT_OR_SIDE_EFFECT.value: (
+                        AnswerClaimKind.AFFIRMATIVE.value,
+                    ),
+                    AnswerContentRole.IMPLEMENTATION_EVIDENCE.value: (
+                        AnswerClaimKind.AFFIRMATIVE.value,
+                    ),
+                    AnswerContentRole.LIMITATION.value: (
+                        AnswerClaimKind.LIMITATION.value,
+                    ),
+                },
                 "implementation_evidence_is_optional": True,
                 "implementation_evidence_default_visible": (
                     understanding.requested_abstraction_level

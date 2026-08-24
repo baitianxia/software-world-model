@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@11"
+    "engineering-qa-adaptive-investigation-prompt@12"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -172,6 +172,12 @@ copied into evidence_references unless that exact value also appears in the
 corresponding admissible list. After a search hit, prefer reading or parsing an
 issued locator before broadening the search when that result can reduce the
 current unknown.
+Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the registered
+evidence classes and prior action intents. If an untried eligible class can
+directly reduce the material unknown within the remaining fuse, investigate it;
+lack of detail in one modality is not global absence. FINISH is appropriate only
+when the retained evidence and boundary actually justify every disposition, not
+merely because the first investigated class was insufficient.
 Each FINISH disposition must also return one to eight atomic
 material_observations. Inspect the complete content of every cited admissible
 entry and enumerate every distinct fact material to the original question at
@@ -215,6 +221,12 @@ one eligible locator_reference, a null query, and an empty finish_dispositions
 array; FINISH requires evidence_class, query, and locator_reference all to be
 null and requires a non-empty finish_dispositions array. Do not carry an
 evidence_class from the preceding action into FINISH.
+Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the registered
+evidence classes and prior action intents. If an untried eligible class can
+directly reduce the material unknown within the remaining fuse, investigate it;
+lack of detail in one modality is not global absence. FINISH is appropriate only
+when the retained evidence and boundary actually justify every disposition, not
+merely because the first investigated class was insufficient.
 Each FINISH disposition must also return one to eight atomic
 material_observations under the same rules as initial investigation: inspect
 complete cited content; do not let a broad summary or representative effect
@@ -240,6 +252,13 @@ coverage boundary and cites boundary/audit entries; never attach supported
 observation IDs to such a limitation. A direct limitation that answers an
 unsupported checklist item still links that item's LIMITATION observations. Do
 not attach an observation ID to a merely representative or broader claim.
+The only legal kind/content_role pairs are AFFIRMATIVE with DIRECT_ANSWER,
+USER_VISIBLE_PROCESS, IMPACT_OR_SIDE_EFFECT, or IMPLEMENTATION_EVIDENCE; and
+LIMITATION with DIRECT_ANSWER or LIMITATION. Never assign LIMITATION kind to a
+USER_VISIBLE_PROCESS, IMPACT_OR_SIDE_EFFECT, or IMPLEMENTATION_EVIDENCE claim.
+When all checklist dispositions are non-supported, put their limitation
+observations in the one DIRECT_ANSWER limitation and, only if needed, additional
+final LIMITATION claims.
 Material process stages, outcomes, state changes, and side effects belong in
 the user-visible answer; they are not optional implementation detail. At DIRECT
 level, omit implementation evidence. At

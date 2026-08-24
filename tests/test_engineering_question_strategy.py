@@ -418,6 +418,18 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "DIRECT_ANSWER",
         )
         self.assertEqual(
+            answer.body["answer_structure_contract"][
+                "allowed_kind_by_content_role"
+            ],
+            {
+                "DIRECT_ANSWER": ("AFFIRMATIVE", "LIMITATION"),
+                "USER_VISIBLE_PROCESS": ("AFFIRMATIVE",),
+                "IMPACT_OR_SIDE_EFFECT": ("AFFIRMATIVE",),
+                "IMPLEMENTATION_EVIDENCE": ("AFFIRMATIVE",),
+                "LIMITATION": ("LIMITATION",),
+            },
+        )
+        self.assertEqual(
             review.body["answer_structure"]["first_content_role"],
             "DIRECT_ANSWER",
         )
