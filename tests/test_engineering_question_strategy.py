@@ -15,6 +15,7 @@ from software_world_model.ai_infrastructure.engineering_question_strategy import
     EngineeringQuestionRoleInputBuilder,
     EngineeringQuestionRoleOutput,
     EngineeringQuestionStructuredStrategyBundle,
+    StructuredEngineeringAnswerRole,
     StructuredEngineeringAnswerReviewerRole,
     StructuredQuestionUnderstandingRole,
     engineering_question_output_contract_digest,
@@ -858,6 +859,66 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             self.assertEqual(
                 caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
             )
+
+    def test_answer_adapter_stably_canonicalizes_supporting_role_order(self):
+        support_entry_id = (
+            self.result.current_package.support_citation[0].entry_id.value
+        )
+
+        def claim(claim_id, content_role, observation_digit):
+            return {
+                "claim_id": claim_id,
+                "kind": "AFFIRMATIVE",
+                "content_role": content_role,
+                "checklist_item_ids": ["check-1"],
+                "material_observation_ids": [
+                    sid("material_observation", observation_digit).value
+                ],
+                "text": f"Evidence-bound {content_role} claim {claim_id}.",
+                "evidence_entry_ids": [support_entry_id],
+            }
+
+        output = {
+            "response_language": self.result.understanding.response_language,
+            "direct_answer": {
+                "claim_id": "direct-answer",
+                "kind": "AFFIRMATIVE",
+                "content_role": "DIRECT_ANSWER",
+                "checklist_item_ids": ["check-1"],
+                "material_observation_ids": [],
+                "text": "Direct supported summary.",
+                "evidence_entry_ids": [support_entry_id],
+            },
+            "claims": [
+                claim("impact", "IMPACT_OR_SIDE_EFFECT", "1"),
+                claim("process-a", "USER_VISIBLE_PROCESS", "2"),
+                claim("process-b", "USER_VISIBLE_PROCESS", "3"),
+            ],
+        }
+        role = StructuredEngineeringAnswerRole(
+            FixedOutputSource(json.dumps(output))
+        )
+
+        proposal = role.generate(
+            original_question=self.result.request.original_question,
+            understanding=self.result.understanding,
+            package=self.result.current_package,
+            role_context_id=sid("role_context", "8"),
+        )
+
+        self.assertEqual(
+            [item.claim_id for item in proposal.claims],
+            ["direct-answer", "process-a", "process-b", "impact"],
+        )
+        self.assertEqual(
+            [item.content_role.value for item in proposal.claims],
+            [
+                "DIRECT_ANSWER",
+                "USER_VISIBLE_PROCESS",
+                "USER_VISIBLE_PROCESS",
+                "IMPACT_OR_SIDE_EFFECT",
+            ],
+        )
 
     def test_structured_roles_run_the_complete_local_state_machine(self):
         output_source = AdaptiveStructuredOutputSource(request_more_evidence=True)

@@ -132,5 +132,10 @@ iteration: ITER-010
   收紧为 4、未闭合时只暴露 required locator、投影 exact remaining fuse，并准确传播已重验 binding 的 outcome unknown。
 - [FINDING-010-050](FINDING-010-050.md)：上述修复后 Engineering QA 97/97、docs 444/444、compile/diff PASS；允许 AF_UNIX 的 full
   1163 项中 1158 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-051](FINDING-010-051.md)：clean `d12223f…` / run-017 已证明 4-path/fuse 修复可达，三题中构建/resources 题获
+  `APPROVED`，但登录与 401/403 题都因合法 follow-up role 被 Provider 以后补 process 的顺序返回而在 Answer Domain 前失败。Gateway
+  raw output 保留；可信 adapter 现只按受控 role 稳定归一化展示顺序，不改写任何 Claim 语义、链接或同 role 原顺序。
+- [FINDING-010-052](FINDING-010-052.md)：上述修复后 Engineering QA 98/98、docs 446/446、compile/diff PASS；允许 AF_UNIX 的 full
+  1164 项中 1159 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

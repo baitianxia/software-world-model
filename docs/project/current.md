@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-24
@@ -91,7 +91,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / required-path budget reachability** | clean `00afecd…` / run-016 的三题均未形成可交付答案：原题第 12 次总 dispatch 为真实 Provider outcome unknown，却被页面误报 binding drift；另两题各用满 12 次 Investigation，因为 8/6 个 mandatory paths 与非必读 locator 消耗而无法 FINISH。`FINDING-010-049` 现把上限收紧为预算可达的 4，未闭合时只暴露 required locator、投影 remaining fuse，并准确传播 exact outcome unknown；Engineering QA 97/97、docs 444/444，允许 AF_UNIX 的 full 1163/1158 且只保留既有 4 FAIL + 1 ERROR。新 clean/live 仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / Answer role-order normalization** | clean `d12223f…` / run-017 已证明 4-path/fuse 修复可达：三题调查均进入 Answer，构建/resources 题 14 次 dispatch 后 `APPROVED`；登录与 401/403 题分别 9/12 次 dispatch 后因 follow-up claims 的合法 role 非单调排序在 Answer Domain 前失败。`FINDING-010-051` 只稳定归一化 follow-up 展示顺序并保留 raw output/全部 Claim 语义；Engineering QA 98/98、docs 446/446、允许 AF_UNIX 的 full 1164/1159，且只保留既有 4 FAIL + 1 ERROR。新 clean/fresh live 仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -194,6 +194,22 @@ Understanding schema 升为 `@20/@10/@4`；新确定性、完整回归、clean c
 本次处置的 Engineering QA 组合 97/97、docs 444/444、compile/diff PASS。允许 AF_UNIX 的 full 1163 项中 1158 PASS，raw 唯一
 4 FAIL + 1 ERROR 仍精确为冻结 V-009 Adapter Conformance 与本机 Codex binary digest historical hold；默认 sandbox 额外 1 FAIL +
 6 ERROR 精确属于 AF_UNIX 权限噪声。见 `FINDING-010-050`。raw suite 保持 FAIL，只允许形成下一 clean candidate，不替代 fresh live。
+
+上述处置形成 clean candidate `d12223f225d4cd57335a25a6d2eff4af5ee6ee7b` / tree
+`5f7011668f5d76343a5b7b1ecb3c47eb739472f5`。run-017 fresh DeepSeek Conformance 2/2 PASS，Result
+`sha256:dccfffa4991cd2f8df7f586f3e94e825f5859bcb0e96983fd032a6274992da12`。同一持续会话三题分别使用 9/14/12
+次 dispatch：原登录题和 401/403 题都完成 required paths 与 FINISH、进入 Answer，却分别以
+`USER_VISIBLE_PROCESS → IMPACT_OR_SIDE_EFFECT → USER_VISIBLE_PROCESS → IMPACT_OR_SIDE_EFFECT` 和
+`USER_VISIBLE_PROCESS → IMPACT_OR_SIDE_EFFECT → USER_VISIBLE_PROCESS` 返回合法但乱序的 follow-up roles，Application 在 Review 前
+失败关闭；构建/安全/resources unknown 题取得 `APPROVED`，并诚实保留未授权 resources 中数据库连接、JWT 密钥和端口为未知。
+terminal receipt `sha256:e901faf295850f7aff1c94b36ab7f02cdda1c7d36f611821a9757445f077f69f` 记录 35 dispatch、retry/switch
+0、private files、verified transport 与 Production `NOT_EXECUTED`；22,000 字符输入仍在 Provider 前拒绝且 call root 不增加。
+
+`FINDING-010-051` 现让可信 Answer adapter 在 Gateway raw output/digest 保持不变的前提下，只按既有受控 content-role 顺序稳定归一化
+follow-up claims；同 role 原顺序及所有 Claim ID、kind、role、文本、checklist/observation/evidence links 均不改写，其他 Domain invariant
+继续失败关闭。Strategy 升为 `@11`，Engineering QA 组合 98/98、docs 446/446、compile/diff PASS；允许 AF_UNIX 的 full 1164 项中
+1159 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 historical hold，见 `FINDING-010-052`。确定性 Gate 已闭合；新 clean/fresh
+Conformance 和三题 live 仍须继续，本次 1 PASS + 2 FAIL 不追认为体验或答案质量 PASS。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

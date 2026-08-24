@@ -85,6 +85,12 @@ Answer closed output 必须由一个且仅一个必填 `direct_answer` 对象和
 limitation `LIMITATION`。混合 Package 的 direct answer 必须是只概括 supported checklist 的 affirmative summary，所有
 unknown/conflict/failure 进入末尾 limitation follow-up；只有全部 checklist 都 non-supported 时 direct answer 才能是 limitation。
 
+Gateway 必须保留原始 Provider Answer output 与 digest。可信 Answer adapter 在构造 Domain Proposal 前，只能对 follow-up claims 按
+`USER_VISIBLE_PROCESS → IMPACT_OR_SIDE_EFFECT → IMPLEMENTATION_EVIDENCE → LIMITATION` 做稳定的展示顺序归一化；同一 role 内的
+Provider 顺序以及 claim ID、kind、role、checklist/observation/evidence links 和文本都不得改写，唯一 `direct_answer` 仍固定首位。该
+归一化不修复非法 role、kind/role 混类、coverage、证据分区或正文语义错误；Application 对归一化后的 Proposal 继续执行全部 fail-closed
+不变量，并拒绝任何绕过 adapter 的乱序 Proposal。raw output 与 canonical Proposal 必须分别可审计。
+
 Reviewer 的完整性审计必须逐个检查 flow/lifecycle 相关 full-content entry 的成功/失败分支以及持久化、审计、缓存、通知和外部交互；
 对多机制/检查面，还必须确认每个决定性机制自身的实现已进入 Package。caller/configuration/wiring 只证明接线，不能证明被委托行为。
 

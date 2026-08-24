@@ -67,7 +67,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@10"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@11"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -82,6 +82,10 @@ ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
+
+_ANSWER_CONTENT_ROLE_ORDINAL = {
+    role: ordinal for ordinal, role in enumerate(AnswerContentRole)
+}
 
 
 def _freeze(value: object) -> object:
@@ -1185,6 +1189,18 @@ class StructuredEngineeringAnswerRole(_StructuredRoleAdapter):
                     ),
                 )
                 for item in claim_values
+            )
+            # The Provider output remains immutable in the Gateway audit.  The
+            # adapter canonicalizes only the presentation order required by the
+            # domain contract, preserving Provider order within each role.
+            claims = (
+                claims[0],
+                *sorted(
+                    claims[1:],
+                    key=lambda claim: _ANSWER_CONTENT_ROLE_ORDINAL[
+                        claim.content_role
+                    ],
+                ),
             )
             return EngineeringAnswerProposal.create(
                 role_context_id=role_context_id,

@@ -121,6 +121,14 @@ Investigation，分别因 8/6 个 mandatory-read paths 与非必读 locator 消�
 现把 mandatory-read 上限收紧为与 12-call fuse 可达的 4，未闭合时只暴露 required locator 并投影剩余 fuse，同时准确传播 exact-binding
 outcome unknown；旧三题仍全部是失败证据。
 
+该处置形成 clean candidate `d12223f…`，run-017 fresh DeepSeek Conformance 2/2 PASS。新的 4-path required closure 已使三题调查全部进入
+Answer；构建/安全/resources unknown 题以 14 次 dispatch 获得 `APPROVED`，但原登录题和 401/403 题分别在 9/12 次 dispatch 后因
+follow-up role 顺序为“process → impact → process …”而在 Review 前失败关闭。两份 raw Answer 的 checklist、observation、evidence
+links 与内容齐全，失败只来自 Provider 后补 process claim 时打破全局 role 顺序。terminal receipt `sha256:e901faf2…` 记录 3 题、35
+dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；22,000 字符输入继续在 Provider 前拒绝。`FINDING-010-051`
+现保留 Gateway raw output，只在可信 adapter 内按既有受控 role 稳定归一化 follow-up 展示顺序，不改写任何 Claim 语义或 links；旧会话仍是
+1 PASS + 2 FAIL 诊断证据。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -284,4 +292,8 @@ required-locator priority、remaining-fuse 投影和 exact terminal propagation 
 继续为 FAIL。
 `FINDING-010-050` 记录上述修复后的 Engineering QA 97/97、docs 444/444 与允许 AF_UNIX 的 full 1163/1158；raw 唯一
 4 FAIL + 1 ERROR 仍为冻结 historical hold，没有 ITER-010 新失败，但也不替代 fresh live。
+`FINDING-010-051` 记录 `d12223f…` / run-017 的 4-path 可达性、一个真实 `APPROVED` 与两个同形 Answer role-order FAIL；处置只稳定
+归一化 follow-up 展示顺序，Gateway raw 与 Claim 语义保持不变。Engineering QA 98/98 PASS。
+`FINDING-010-052` 记录 docs 446/446、compile/diff PASS 与允许 AF_UNIX 的 full 1164/1159；raw 唯一 4 FAIL + 1 ERROR 仍是冻结
+historical hold，没有新增失败。确定性 Gate 已闭合，新 clean/fresh live 仍待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。
