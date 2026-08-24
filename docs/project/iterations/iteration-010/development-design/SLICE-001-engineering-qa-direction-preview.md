@@ -373,4 +373,11 @@ clean/fresh live 待闭合。
 `FINDING-010-065` 记录上述修复的三模块 65/65、Engineering QA 102/102、docs 459/459、compile/diff PASS 与允许 AF_UNIX 的 full
 1168/1163；raw 唯一 4 FAIL + 1 ERROR 仍是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。deterministic Gate 已闭合，
 new clean/fresh live 待执行。
+`FINDING-010-066/067` 记录 clean `740c74a…` / run-024 的三类 Provider 重复状态失败：FINISH parent 漏抄 child reference、同一
+UNKNOWN checklist 重复分装进两个 arrays，以及 Reviewer 明确识别 material evidence gap 后仍另行声明 rewrite/null request。处置将 FINISH
+改为单一 outcome-tagged list 并由 trusted Adapter 派生 parent reference closure；Review 只返回 typed Finding remediation，由可信
+Application 按 reject → missing evidence → rewrite → empty-approved 派生 action/request。旧 run 不追认。
+`FINDING-010-068/069` 校正历史 ITER-007 oracle 用 current System 文档重算冻结摘要的局部测试错误，并闭合新协议 deterministic Gate：
+Engineering QA 106/106、current docs 463/463、允许 AF_UNIX 的 full 1172/1167；raw 唯一 4 FAIL + 1 ERROR 仍是冻结 historical hold。
+new clean/fresh Conformance、持续 Browser 三题与独立答案复核仍待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。
