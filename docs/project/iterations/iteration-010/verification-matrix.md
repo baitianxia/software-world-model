@@ -171,10 +171,20 @@ retry/switch 0、private files、verified transport、Production `NOT_EXECUTED`�
 上述修复最终通过 Engineering QA 99/99、docs 450/450、compile/diff；允许 AF_UNIX 的 full 1165 项中 1160 PASS，raw 唯一 4 FAIL +
 1 ERROR 仍为冻结 historical hold，没有 ITER-010 新失败，见 `FINDING-010-056`。确定性 Gate 已闭合，新 clean/fresh live 尚未执行。
 
+该处置形成 clean `274e5ea…`，run-020 fresh DeepSeek Conformance 2/2 PASS。Q1 以 10 次 dispatch 获得独立可接受的 `APPROVED`；Q2 已
+声明 4 个 mandatory paths，却因没有 direct locator 而把 path/filename 当内容搜索词，5 次 dispatch 后触发
+`NO_PROGRESS_FUSE_EXHAUSTED`；同一 listener 随后接受 Q3，后者以 11 次 dispatch 完整读取四个决定性实现，却在一个 `SUPPORTED`
+FINISH item 混入 `LIMITATION` 与 search-only boundary reference，被本地 validator 以 `STRUCTURED_OUTPUT_INVALID` 正确关闭。22,000
+ASCII 字符约 22 KB，低于 65,536-byte server limit，合法发生 1 次 dispatch 后人工停止；terminal receipt `sha256:1408e827…` 记录
+4 题、27 dispatch（10/5/11/1）、retry/switch 0、verified transport 与 Production `NOT_EXECUTED`。见 `FINDING-010-057/058`。
+Request + attempt + Profile-bound direct locator、结构互斥 FINISH arrays 和 modality-minimal Understanding Prompt 的 Engineering QA
+101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见
+`FINDING-010-059`。确定性 Gate 已闭合，新 clean/fresh live 尚未执行。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `c65617e…` / run-019 已证明三题连续提交、三个模型 `APPROVED`、requested implementation evidence 可见、private files、Provider 前超限隔离与 listener 存活；但第三题有独立确认的内部矛盾，不能取得质量 PASS | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-019 的 Q3 暴露 Reviewer 未检查跨 Claim consistency；`FINDING-010-055/056` 已闭合 99/99 定向、450/450 docs 与无新增 full regression，仍须新 clean/fresh 三题 Result 与独立技术复核 | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `274e5ea…` / run-020 已证明 Q2 fail 后同一 listener 接受 Q3、private files、retry/switch 0；但仅 Q1 独立可接受，Q2/Q3 分别 no-progress/structured-output FAIL，不能取得体验质量 PASS | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-020 暴露 mandatory-path rediscovery 与 FINISH mixed schema；`FINDING-010-057/058/059` 已闭合 deterministic Gate，仍须新 clean/fresh 三题 Result 与独立技术复核 | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
@@ -191,7 +201,7 @@ retry/switch 0、private files、verified transport、Production `NOT_EXECUTED`�
 | V-QINTENT-001 | Question Understanding 忠实表达用户目标、受众、抽象层级、物质结论和证据需求 | application / contract | 用途/架构/运行/故障/影响/实现、多条件、改述、不同受众 fixture | 原问题约束不丢失/新增；无题型/工程/关键词/符号路由；输出 schema 可审计 | not-executed | NOT-RUN / blocking |
 | V-COGNITION-001 | World Model 作为 exact、持久、版本化、可验证、可更新的软件外部认知进入问答 | architecture / knowledge | context/scope/schema/snapshot、实体/关系/行为/约束/状态/evidence/coverage/unknown fixtures | 手册/地图只作为投影；认知不退化为 cache/hints；coverage 不足不成为 Source recall Gate | not-executed | NOT-RUN / blocking |
 | V-INVESTIGATE-001 | Investigation LLM 根据 prior Ledger Result 自适应提出下一步并合法结束 | application / investigation | 至少两步依赖链、partial/zero cognition、no-progress、premature finish、改述 fixture | 每步引用 prior result/progress；不是 upfront 固定计划；无题目/工程/关键词/符号/类/方法/fixture/oracle 分支 | not-executed | NOT-RUN / blocking |
-| V-BROKER-001 | Source Broker/Worker 在模型无直接 Source 权限下编译并执行受控读操作 | security / integration | 合法抽象 proposal、path/symlink/write/exec/network/secret/disclosure probes、exact revision drift | Broker policy 决定唯一合法操作；Worker execution only；所有模型 direct FS/Shell/network/credential/source=0；完整操作/bytes/outcome audit | not-executed | NOT-RUN / blocking |
+| V-BROKER-001 | Source Broker/Worker 在模型无直接 Source 权限下编译并执行受控读操作 | security / integration | 合法抽象 proposal、request/attempt/profile-bound mandatory-path locator、跨 attempt/forged locator、path/symlink/write/exec/network/secret/disclosure probes、exact revision drift | Broker policy 决定唯一合法操作；direct locator 不赋予模型 path authority；Worker execution only；所有模型 direct FS/Shell/network/credential/source=0；完整操作/bytes/outcome audit | not-executed | NOT-RUN / blocking |
 | V-LEDGER-001 | Evidence Ledger 只追加，调查结束后才密封双分区 Package，identity 与 seal 语义正确 | application / evidence | append/overwrite、finish/stop、admissible/rejected、gap/failure/partial/conflict/unknown、old/new revision fixtures | 历史不可改；未 finish 不 seal；support/citation 仅 admissible；boundary/audit 强制保留且不得支持肯定 Claim；seal 非 truth；旧 Review 不批新包 | not-executed | NOT-RUN / blocking |
 | V-ISOLATION-001 | Investigation、Answer、Reviewer 与实际 Source 权限物理/应用隔离 | security / isolation | source injection、path/write/exec/network/secret probes；role package/import/mount audit | 只有 Broker/Worker 受控读；Source untrusted；Investigation/Answer/Reviewer 直接 repo/source/tool access=0；非法动作失败关闭 | not-executed | NOT-RUN / blocking |
 | V-ANSWER-001 | Preview 跨类型问题先给直接、层级匹配的答案，代码细节按需 | product / answer | 一个真实工程 4 条不同覆盖维度问题、exact Package、结论级 rubric | 至少 3 supported 且覆盖至少 2 个非实现维度；重大错误 0；每个物质结论 Citation；无内部诊断平铺 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-ANSWER-001 | FAIL / blocking |

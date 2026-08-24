@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@22",
+            "engineering-qa-adaptive-investigation-prompt@23",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -356,6 +356,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("required_basis_entry_id", prompt)
             self.assertIn("basis_entry_ids MUST include", prompt)
             self.assertIn("eligible_locator_references", prompt)
+            self.assertIn("eligible_required_path_locators", prompt)
             self.assertIn("never use", prompt)
             self.assertIn("a human locator/path, or an allowlisted path", prompt)
             self.assertIn(
@@ -372,6 +373,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 "FINISH requires evidence_class, query, and locator_reference all to be null",
                 prompt,
             )
+            self.assertIn("supported_finish_dispositions", prompt)
+            self.assertIn("non_supported_finish_dispositions", prompt)
             self.assertIn(
                 "Do not carry an evidence_class from the preceding action into FINISH",
                 prompt,
@@ -408,6 +411,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("one to four exact strings", understanding_prompt)
         self.assertIn(
             "remain executable within the sealed investigation fuse",
+            understanding_prompt,
+        )
+        self.assertIn(
+            "Do not introduce TEST, logs, configuration, or another evidence modality",
             understanding_prompt,
         )
         self.assertIn("separate checklist items", understanding_prompt)

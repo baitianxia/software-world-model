@@ -27,6 +27,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringQuestionResultStatus,
     EvidenceLedger,
     InitialInvestigationInput,
+    RequiredEvidencePathLocator,
     RetrievalItem,
     SourceBroker,
     VerificationInvestigationInput,
@@ -240,7 +241,8 @@ class AdaptiveStructuredOutputSource:
                 "locator_reference": None,
                 "basis_entry_ids": [last_entry_id],
                 "unknown_to_reduce": "Locate the next exact repository observation.",
-                "finish_dispositions": [],
+                "supported_finish_dispositions": [],
+                "non_supported_finish_dispositions": [],
             }
         if step == 2:
             evidence_class = (
@@ -256,7 +258,8 @@ class AdaptiveStructuredOutputSource:
                 "locator_reference": results[-1]["items"][0]["locator_reference"],
                 "basis_entry_ids": [last_entry_id],
                 "unknown_to_reduce": "Read the issued exact-revision locator.",
-                "finish_dispositions": [],
+                "supported_finish_dispositions": [],
+                "non_supported_finish_dispositions": [],
             }
         evidence_reference = results[-1]["items"][0]["item_id"]
         if evidence_reference not in body["admissible_support_references"]:
@@ -269,7 +272,7 @@ class AdaptiveStructuredOutputSource:
             "locator_reference": None,
             "basis_entry_ids": [last_entry_id],
             "unknown_to_reduce": "All checklist items have an explicit disposition.",
-            "finish_dispositions": [
+            "supported_finish_dispositions": [
                 {
                     "checklist_item_id": "check-1",
                     "outcome": "SUPPORTED",
@@ -293,6 +296,7 @@ class AdaptiveStructuredOutputSource:
                     ],
                 }
             ],
+            "non_supported_finish_dispositions": [],
         }
 
 
@@ -355,6 +359,13 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         ledger = EvidenceLedger.start(
             request=self.result.request, cognition=self.result.cognition
         )
+        required_locator = RequiredEvidencePathLocator.create(
+            attempt_id=sid("investigation_attempt", "2"),
+            request_digest=self.result.request.digest,
+            source_profile_digest=self.result.request.source_profile_digest,
+            evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            path="README.md",
+        )
         investigation_input = InitialInvestigationInput(
             attempt_id=sid("investigation_attempt", "2"),
             role_context_id=sid("role_context", "3"),
@@ -381,6 +392,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
             ),
             required_evidence_paths=("README.md",),
+            required_path_locators=(required_locator,),
         )
         manifest = EngineeringQuestionRoleInputBuilder.initial_investigation(
             investigation_input
@@ -395,7 +407,14 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             manifest.body["required_basis_entry_id"],
             ledger.entries[-1].entry_id.value,
         )
-        self.assertEqual(manifest.body["eligible_locator_references"], ())
+        self.assertEqual(
+            manifest.body["eligible_locator_references"],
+            (required_locator.locator_reference.value,),
+        )
+        self.assertEqual(
+            manifest.body["eligible_required_path_locators"],
+            (required_locator.model_view(),),
+        )
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
         self.assertEqual(manifest.body["maximum_initial_investigation_calls"], 12)
         self.assertEqual(
@@ -590,6 +609,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "step_index",
                 "required_basis_entry_id",
                 "eligible_locator_references",
+                "eligible_required_path_locators",
                 "consumed_full_content_paths",
                 "prior_action_intents",
                 "registered_evidence_classes",
@@ -614,6 +634,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ledger.entries[-1].entry_id.value,
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
+        self.assertEqual(manifest.body["eligible_required_path_locators"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
         self.assertEqual(
             manifest.body["untried_required_evidence_classes"],
@@ -703,10 +724,11 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
             ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF,
         ):
-            variants = schemas[schema_ref].schema["properties"][
-                "finish_dispositions"
-            ]["items"]["anyOf"]
-            self.assertEqual(len(variants), 2)
+            properties = schemas[schema_ref].schema["properties"]
+            variants = (
+                properties["supported_finish_dispositions"]["items"],
+                properties["non_supported_finish_dispositions"]["items"],
+            )
             for variant in variants:
                 references = variant["properties"]["evidence_references"]
                 self.assertEqual(references["minItems"], 1)
@@ -773,6 +795,19 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         ]
 
         def output(*, outcome, observation_kind):
+            disposition = {
+                "checklist_item_id": "check-1",
+                "outcome": outcome,
+                "evidence_references": ["evidence-1"],
+                "explanation": "The disposition is explicit.",
+                "material_observations": [
+                    {
+                        "kind": observation_kind,
+                        "statement": "One atomic observation.",
+                        "evidence_references": ["evidence-1"],
+                    }
+                ],
+            }
             return json.dumps(
                 {
                     "operation": "FINISH",
@@ -782,21 +817,12 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                     "locator_reference": None,
                     "basis_entry_ids": ["ledger-entry-1"],
                     "unknown_to_reduce": "The item has a final disposition.",
-                    "finish_dispositions": [
-                        {
-                            "checklist_item_id": "check-1",
-                            "outcome": outcome,
-                            "evidence_references": ["evidence-1"],
-                            "explanation": "The disposition is explicit.",
-                            "material_observations": [
-                                {
-                                    "kind": observation_kind,
-                                    "statement": "One atomic observation.",
-                                    "evidence_references": ["evidence-1"],
-                                }
-                            ],
-                        }
-                    ],
+                    "supported_finish_dispositions": (
+                        [disposition] if outcome == "SUPPORTED" else []
+                    ),
+                    "non_supported_finish_dispositions": (
+                        [] if outcome == "SUPPORTED" else [disposition]
+                    ),
                 }
             )
 
@@ -973,10 +999,17 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             for manifest in output_source.manifests
             if manifest.role is EngineeringQuestionModelRole.INITIAL_INVESTIGATION
         ]
-        self.assertEqual(initial_manifests[0].body["eligible_locator_references"], ())
+        self.assertEqual(
+            len(initial_manifests[0].body["eligible_locator_references"]),
+            1,
+        )
+        self.assertEqual(
+            len(initial_manifests[0].body["eligible_required_path_locators"]),
+            1,
+        )
         self.assertEqual(
             len(initial_manifests[1].body["eligible_locator_references"]),
-            1,
+            2,
         )
         self.assertEqual(
             initial_manifests[1].body["prior_action_intents"][0]["operation"],

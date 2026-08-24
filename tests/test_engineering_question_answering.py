@@ -1090,6 +1090,96 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         )
         self.assertIsNone(compilation.operation)
 
+    def test_broker_authorizes_request_bound_required_path_locator_without_search(self):
+        req = request()
+        cognition = CognitionProjector().project(request=req)
+        ledger = EvidenceLedger.start(request=req, cognition=cognition)
+        broker = SourceBroker(source_profile=source_profile())
+        locator = broker.issue_required_path_locators(
+            request=req,
+            attempt_id=sid("investigation_attempt", "9"),
+            paths=("README.md",),
+        )[0]
+        input_stub = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": sid("investigation_attempt", "9"),
+                "role_context_id": sid("role_context", "a"),
+                "step_index": 1,
+                "request": req,
+            },
+        )()
+        proposal = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.READ,
+            evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            locator_reference=locator.locator_reference,
+        )
+
+        compilation = broker.compile(
+            request=req,
+            proposal=proposal,
+            ledger=ledger,
+            locator_catalog={},
+            required_path_locator_catalog={locator.locator_reference: locator},
+            usage=EngineeringQuestionResourceUsage(),
+        )
+
+        self.assertEqual(compilation.decision.status.value, "AUTHORIZED")
+        self.assertIsNotNone(compilation.operation)
+        self.assertEqual(compilation.operation.path, "README.md")
+        self.assertEqual(
+            compilation.operation.locator_reference,
+            locator.locator_reference,
+        )
+        compilation.operation.validate_identity()
+
+    def test_broker_rejects_required_path_locator_from_another_attempt(self):
+        req = request()
+        cognition = CognitionProjector().project(request=req)
+        ledger = EvidenceLedger.start(request=req, cognition=cognition)
+        broker = SourceBroker(source_profile=source_profile())
+        locator = broker.issue_required_path_locators(
+            request=req,
+            attempt_id=sid("investigation_attempt", "9"),
+            paths=("README.md",),
+        )[0]
+        input_stub = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": sid("investigation_attempt", "8"),
+                "role_context_id": sid("role_context", "a"),
+                "step_index": 1,
+                "request": req,
+            },
+        )()
+        proposal = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.READ,
+            evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            locator_reference=locator.locator_reference,
+        )
+
+        compilation = broker.compile(
+            request=req,
+            proposal=proposal,
+            ledger=ledger,
+            locator_catalog={},
+            required_path_locator_catalog={locator.locator_reference: locator},
+            usage=EngineeringQuestionResourceUsage(),
+        )
+
+        self.assertEqual(compilation.decision.status.value, "REJECTED")
+        self.assertEqual(
+            compilation.decision.reason_code,
+            "REQUIRED_PATH_LOCATOR_BINDING_MISMATCH",
+        )
+        self.assertIsNone(compilation.operation)
+
     def test_broker_rejects_world_model_as_a_source_evidence_class(self):
         req = request()
         cognition = CognitionProjector().project(request=req)

@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: current-development
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-DECISIONS, ITER-010-PDR-001]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-057, FINDING-010-058, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002]
 code: []
 tests: []
 iteration: ITER-010
@@ -51,9 +51,19 @@ Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调
 
 该收据曾只授权重制计划和文档。用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
-接受 Readiness，并只授权 `ITER-010-SLICE-001` 产品代码开发与本地确定性验证。后续 exact grants 已完成本 Slice 所需 Provider/model 与
-loopback Web/browser 验证；`SLICE-002/003`、hidden disclosure 和 Production Activation 从未授权。所有 live grants 均已消费或停止，
-不得跨新 Iteration 复用。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
+接受 Readiness，并只授权 `ITER-010-SLICE-001` 产品代码开发与本地确定性验证。用户随后以
+`codex-user-message:sha256:815d868ca3df4795276934acbc21d12584fcfd4cb49b31c67696c72d3a5a6b74` 授权本次 mall / DeepSeek
+验证的 exact endpoint、问题、Maven World Model 投影、角色 Ledger 和所选 Java/README/POM/Test evidence；调用数不限、retry 0，
+`src/main/resources` 与配置凭据排除，Production Activation 不执行。该 root authorization 只允许每个 fresh candidate/session 继续
+收窄并密封 exact dispatch，不能跨产品冻结复用旧 dispatch grant。`SLICE-002/003`、hidden disclosure 和 Production Activation 仍未授权。
+此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的设计。
+
+clean candidate `274e5ea…` 的 run-020 current DeepSeek Conformance 2/2 PASS；同一持续 Alpha 中，原登录题独立可接受，构建/安全接入题
+因 mandatory path 只能经内容 SEARCH 重新发现而触发 no-progress，401/403 题完整读取决定性实现后又因一个 `SUPPORTED` FINISH item
+混入 `LIMITATION` observation 被本地 validator 正确失败关闭。`FINDING-010-057/058` 因而增加 Request + attempt + Profile-bound opaque
+direct locator，并把 provider-facing FINISH 拆成结构互斥的 supported/non-supported arrays；旧 run-020 只作失败诊断证据，新 clean/fresh
+三题与超限输入仍须重跑后才能更新体验 Gate。`FINDING-010-059` 已以 Engineering QA 101/101、current docs/compile/diff 和允许 AF_UNIX
+的 full 1167/1162 exact historical hold 闭合确定性 Gate；它不替代 fresh Provider/browser 证据。
 
 本轮产品基线固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
 `1369ce932c778c57a118123e8257ede476229d73`；授权审核的 planning commit/tree 为
@@ -73,5 +83,5 @@ loopback Web/browser 验证；`SLICE-002/003`、hidden disclosure 和 Production
 
 原计划在 Slice1 的方向 Gate 暂停：技术链完成，但答案/审核质量失败。A3 的旧表述被本次结果证伪，A1/A4/A5 仍未解决；Slice2/3、
 三臂消融、hidden、正式验收和 Production 均未执行。PDR-001 允许在同一 Iteration 内对 Slice1 做有界 `REWORK`；新收据现已恢复
-产品/System 代码与本地确定性验证。首个恢复交付必须是持续 Web Alpha，而不是再做一次单题冻结运行；真实 Provider、动态源码披露与
-live browser 仍等待新版本冻结后的 exact 运行授权。
+产品/System 代码与本地确定性验证。持续 Web Alpha 已成为当前返工载体；下一步是在确定性 Gate 闭合后冻结新 candidate，以现有 root
+authorization 收窄 fresh session，重跑原题、两道异质题和 Provider 前超限拒绝。任何本机 PASS 都不授权 hidden、Slice2/3 或 Production。

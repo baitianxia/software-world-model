@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@22"
+    "engineering-qa-adaptive-investigation-prompt@23"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -167,6 +167,10 @@ Do not select a directory, an excluded or nonexistent path, a redundant test or
 document, or every authorized file. The set must remain executable within the
 sealed investigation fuse: prefer the smallest decisive implementation set and
 do not spend mandatory-read capacity on corroboration that can remain optional.
+Do not introduce TEST, logs, configuration, or another evidence modality merely
+because it is available or because the user asks for a verifiable basis. Select
+such a class only when that modality itself is material to the explicit question;
+exact source locations are already a verifiable basis for source-behavior claims.
 Every selected path's evidence class must also appear in
 required_evidence_classes.
 """,
@@ -191,13 +195,22 @@ maximum_initial_investigation_calls and
 remaining_initial_investigation_calls_including_current expose the exact sealed
 fuse. Reserve one remaining action for FINISH after evidence closure; do not use
 the final action for optional exploration.
-Obey the exact field combination for the chosen operation: SEARCH requires a
-non-null evidence_class and query, a null locator_reference, and an empty
-finish_dispositions array; READ or PARSE requires a non-null evidence_class and
-one eligible locator_reference, a null query, and an empty finish_dispositions
-array; FINISH requires evidence_class, query, and locator_reference all to be
-null and requires a non-empty finish_dispositions array. Do not carry an
-evidence_class from the preceding action into FINISH.
+eligible_required_path_locators contains Application/Broker-issued descriptors
+for exact mandatory paths that already passed the immutable Request and Source
+Profile checks. When this list is non-empty, choose READ or PARSE using one
+descriptor's exact locator_reference and evidence_class; do not SEARCH to
+rediscover its path. Obey the exact field combination for the chosen operation:
+SEARCH requires a non-null evidence_class and query, a null locator_reference,
+and empty supported_finish_dispositions and
+non_supported_finish_dispositions arrays; READ or PARSE requires a non-null
+evidence_class and one eligible locator_reference, a null query, and both arrays
+empty; FINISH requires evidence_class, query, and locator_reference all to be
+null and distributes every checklist item exactly once between the two arrays,
+with at least one total disposition. Do not carry an evidence_class from the
+preceding action into FINISH. supported_finish_dispositions may contain only
+SUPPORTED outcomes and affirmative PROCESS_STAGE, OUTCOME, STATE_CHANGE, or
+SIDE_EFFECT observations. non_supported_finish_dispositions may contain only
+UNKNOWN, CONFLICT, or FAILED outcomes and LIMITATION observations.
 FINISH must disposition every checklist item against the current evidence;
 unknown, conflict, or failure is preferable to invented support. Every FINISH
 disposition must return a non-empty evidence_references array. SUPPORTED may
@@ -228,15 +241,15 @@ implementation behavior ineligible.
 required_evidence_paths and unread_required_evidence_paths are also
 Application-owned closure state. Every required path must receive a full-content
 READ or PARSE before any FINISH, including a fully SUPPORTED FINISH; SEARCH alone
-does not consume a path. If an unread required path lacks an eligible locator,
-SEARCH its shortest distinctive filename or symbol token in that path's evidence
-class, then READ or PARSE the exact issued locator. A premature FINISH is rejected
-into a GAP naming the next required path; consume that GAP instead of repeating
-FINISH.
+does not consume a path. The Application normally supplies every unread path in
+eligible_required_path_locators, so consume that direct locator before any
+optional search. If a required locator is absent because the Application cannot
+bind it, do not invent one. A premature FINISH is rejected into a GAP naming the
+next required path; consume that GAP instead of repeating FINISH.
 While unread required paths remain, eligible_locator_references is mechanically
 restricted to issued locators for those paths. Read one of those exact locators;
-if the list is empty, search for an unread required path. Do not spend an action
-reading a merely related, non-required search hit before mandatory closure.
+do not spend an action searching for or reading a merely related, non-required
+hit before mandatory closure.
 Every path listed in request.source_allowlist is authorized by the bound Source
 Profile. Never call such a path unauthorized; when the Broker issues an eligible
 locator for a material allowlisted path, read or parse it before claiming that
@@ -296,13 +309,20 @@ may copy only exact opaque values from admissible_boundary_references.
 required_basis_entry_id binds the next action to the latest Ledger prefix; it is
 not disposition evidence and MUST NOT be copied into evidence_references unless
 that exact value also appears in the corresponding admissible list.
-Obey the exact field combination for the chosen operation: SEARCH requires a
-non-null evidence_class and query, a null locator_reference, and an empty
-finish_dispositions array; READ or PARSE requires a non-null evidence_class and
-one eligible locator_reference, a null query, and an empty finish_dispositions
-array; FINISH requires evidence_class, query, and locator_reference all to be
-null and requires a non-empty finish_dispositions array. Do not carry an
-evidence_class from the preceding action into FINISH.
+eligible_required_path_locators has the same Application/Broker-issued exact
+mandatory-path meaning as in initial investigation. Prefer one of those direct
+READ/PARSE capabilities before SEARCH. Obey the exact field combination for the
+chosen operation: SEARCH requires a non-null evidence_class and query, a null
+locator_reference, and empty supported_finish_dispositions and
+non_supported_finish_dispositions arrays; READ or PARSE requires a non-null
+evidence_class and one eligible locator_reference, a null query, and both arrays
+empty; FINISH requires evidence_class, query, and locator_reference all to be
+null and distributes every requested checklist item exactly once between the
+two arrays, with at least one total disposition. supported_finish_dispositions
+may contain only SUPPORTED outcomes and affirmative observations;
+non_supported_finish_dispositions may contain only UNKNOWN, CONFLICT, or FAILED
+outcomes and LIMITATION observations. Do not carry an evidence_class from the
+preceding action into FINISH.
 Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the concrete gap's
 required evidence class and prior action intents. If that class remains untried
 and registered, investigate it; lack of detail in one modality is not global

@@ -453,6 +453,7 @@ answer_protocol:
   contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
   mode: adaptive-cognition-guided-engineering-investigation
   question_understanding_required_fields: user-goal,audience,requested-abstraction-level,material-conclusion-checklist,evidence-needs,response-language-and-constraints
+  question_understanding_available-modality-alone-creates-material-need: false
   question_understanding_model_call_upper_bound: 1
   investigation_model_call_upper_bound: 12
   max_investigation_steps_per_question: 24
@@ -478,15 +479,22 @@ answer_protocol:
   upfront_complete_retrieval_plan_required: false
   investigation_proposal_must_consider_prior_results: true
   required_evidence_path_upper_bound: 4
-  required_evidence_path_budget_reserve: four-search-plus-four-full-read-plus-one-finish-leaves-three-adaptive-calls
+  required_evidence_path_budget_reserve: four-direct-full-read-plus-one-finish-leaves-seven-adaptive-calls
   required_evidence_paths_complete-read-before-any-finish: true
   search_or-truncated-read_satisfies_required-path: false
   unread_required_path_locator_priority_required: true
+  mandatory_path_direct_locator_schema: ENGINEERING_QA_REQUIRED_EVIDENCE_PATH_LOCATOR@1
+  mandatory_path_direct_locator_binding: exact-request-digest-plus-investigation-attempt-plus-source-profile-digest-plus-evidence-class-plus-path
+  mandatory_path_direct_locator_grants-model-path-authority: false
+  source_broker_policy: ENGINEERING_QA_SOURCE_BROKER@2
   initial_investigation_exact_remaining-call-count-visible: true
   source_broker_policy_compilation_required: true
   evidence_ledger_append_only: true
   question_evidence_package_sealed_after_investigation: true
   finish_material_observations_required: true
+  provider_finish_disposition_shape: structurally-exclusive-supported-and-non-supported-arrays
+  supported_finish_disposition_observation_kinds: process-stage,outcome,state-change,side-effect
+  non_supported_finish_disposition_observation_kinds: limitation
   material_observation_identity_application_owned: true
   answer_claim_material_observation_and_evidence_closure_required: true
   answer_closed-shape: one-direct-answer-object-plus-non-direct-followup-claims
@@ -570,13 +578,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:2849e5c32158c4768bc1ff79f159ec0b0c81b960e6aa29c597670eebc9789a6f
+  system_contract_set_digest: sha256:96993c49124b9f436308715428894c1dbd9f2d6c7c0aeb645df562d9ff492a41
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:7a0d7eb553051b4bc69414ab662643454a0f78c7b02ff49cf0777303087fb26b
+  investigation_budget_digest: sha256:002605027d8f28afbf2b79c8852853032cd6aeb88d67dd37d84412898bb15b6c
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

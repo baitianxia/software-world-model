@@ -142,6 +142,16 @@ dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；22,000
 retry/switch 0、private files、verified transport 与 Production `NOT_EXECUTED`；22,000 字符输入仍在 Provider 前拒绝。见
 `FINDING-010-055`；旧会话按 2 个独立可接受答案 + 1 个 independent-quality FAIL 保留。
 
+该处置形成 clean candidate `274e5ea…`，run-020 fresh DeepSeek Conformance 2/2 PASS。原登录题以 10 次 dispatch 获得独立可接受的
+`APPROVED`；构建/安全/resources unknown 题虽已声明 4 个 exact mandatory paths，却因 Application 只给 search-issued locator 而没有
+direct locator，把 path/filename 当内容搜索词，5 次 dispatch 后以 `NO_PROGRESS_FUSE_EXHAUSTED` 关闭。listener 未重启即接受 401/403
+题，证明单题隔离；该题以 11 次 dispatch 完整读取 4 个决定性实现后，在一个 `SUPPORTED` FINISH item 中混入 `LIMITATION` 和
+search-only boundary reference，被本地 validator 以 `STRUCTURED_OUTPUT_INVALID` 正确关闭。随后 22,000 ASCII 字符因仅约 22 KB、低于
+65,536-byte 服务端上限而合法发生 1 次 dispatch，人工停止会话。terminal receipt `sha256:1408e827…` 记录 4 题、27 dispatch
+（10/5/11/1）、retry/switch 0、verified transport 与 Production `NOT_EXECUTED`。`FINDING-010-057/058` 现分别签发 Request + attempt +
+Profile-bound mandatory-path direct locator，并把 Provider-facing FINISH 拆为结构互斥的 supported/non-supported arrays；run-020 仍是
+1 个独立可接受答案 + 2 个业务题 FAIL + 1 个被人工中断的限界探针。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -165,19 +175,24 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   finish 意图。下一步必须引用 prior Result/progress，不能一次性预写固定列表，也不能按题目/工程/关键词/符号路由。
 - Source Broker 把提议的 evidence class 也视为不可信，按 exact Source Profile 验证并编译操作、版本、路径、global/class
   allowlist、bytes、disclosure 和安全上限。Retrieval Worker 重验 Profile 后只执行 Broker 批准的 exact-revision、read-only 操作，
-  Application 再验证 Result class/path。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority 或来源分类权。
+  Application 再验证 Result class/path。已验证 mandatory path 由 Broker 签发 Request + attempt + Profile + class + path 绑定的 direct
+  opaque locator；模型只复制当前 eligible reference/class，不能提交 path authority。两者都不生成答案；模型没有直接
+  FS/Shell/network/credential/write/source authority 或来源分类权。
 - 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
   只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
 - Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合及 1—4 个 exact mandatory-read paths；多机制/
   检查面选择各决定性实现，flow/lifecycle 把结果、状态变化与持久化/审计/缓存/通知/外部交互副作用拆成独立 checklist。4-path 上限与
-  12-call initial fuse 保证最坏 4 SEARCH + 4 READ/PARSE + 1 FINISH 后仍有 3 次自适应余量；可选佐证不得占用 mandatory capacity。
+  12-call initial fuse 保证 4 次 direct READ/PARSE + 1 FINISH 后仍有 7 次自适应余量；可选佐证不得占用 mandatory capacity，也不能因
+  evidence modality 可用或用户只要求“可核对依据”就引入无关 TEST/log/config need。
   Application 区分 registered/required/investigated/untried/unregistered classes 与 required/unread paths；向 Initial Investigation 投影 exact
-  maximum/remaining calls，并在 unread required path 存在时只暴露这些路径的 eligible locator。任何 FINISH 前都必须以无行范围、
+  maximum/remaining calls，并在 unread required path 存在时投影 direct locator descriptor 且只暴露这些路径的 eligible locator；角色优先
+  直接读取，不通过内容 SEARCH 重新发现已知 path。任何 FINISH 前都必须以无行范围、
   `coverage_complete=true` 的 READ/PARSE 闭合 required paths，SEARCH/截断内容不消费义务；non-supported FINISH 只额外闭合仍可调查的
   required class，不机械遍历无关 registered class，unregistered required 则保留为能力边界。
 - 每个 FINISH disposition 必须从完整引用内容列出有界原子 material observations，区分 process、outcome、state change、side effect 与
   limitation，并逐条绑定 admissible evidence；`SUPPORTED` 只能包含 affirmative observation，non-supported outcome 只能包含
-  `LIMITATION`，output schema 与 Application Domain 均拒绝混类。一个代表性事实不能闭合宽泛 checklist。Application 生成稳定
+  `LIMITATION`。Provider-facing output 用结构互斥的 `supported_finish_dispositions / non_supported_finish_dispositions` 两数组，可信
+  adapter 只合并已验证数组；Application Domain 再独立拒绝混类。一个代表性事实不能闭合宽泛 checklist。Application 生成稳定
   observation identity 并拒绝跨 checklist、重复、错误分区或证据不闭合。caller/configuration/wiring 只证明接线，不能替代被委托组件自身
   的条件、比较、状态变化、结果或失败语义；每个相关 full-content 实现 entry 中的 material side effect 必须单独观察。
 - Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
@@ -316,4 +331,8 @@ docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full 1165/1160 只保留�
 `FINDING-010-055` 记录 `c65617e…` / run-019 的三项模型 `APPROVED` 与一个独立发现的跨 Claim 失败语义冲突；处置新增 closed
 `claim_consistency` 第五项 Gate，互斥结果必须 FAIL 并 rewrite。Engineering QA 99/99、docs 450/450、compile/diff PASS；允许 AF_UNIX
 的 full 1165/1160 只保留既有 4 FAIL + 1 ERROR，见 `FINDING-010-056`。确定性 Gate 已闭合，新 clean/fresh live 待执行。
+`FINDING-010-057/058` 记录 `274e5ea…` / run-020 的 Q2 mandatory-path rediscovery/no-progress 与 Q3 conditional FINISH schema 混类；
+处置分别新增 Broker direct required-path locator 和结构互斥 FINISH arrays，并把“可核对依据”与无关 TEST/log/config need 分开。Engineering
+QA 101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167/1162 只保留既有 4 FAIL + 1 ERROR historical hold，见
+`FINDING-010-059`。确定性 Gate 已闭合，new clean/fresh live 仍待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

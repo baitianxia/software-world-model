@@ -147,5 +147,13 @@ iteration: ITER-010
   成对审核 direct/default Claims、Package 与独立 observations；五项全 PASS 才能批准。
 - [FINDING-010-056](FINDING-010-056.md)：上述修复后 Engineering QA 99/99、docs 450/450、compile/diff PASS；允许 AF_UNIX 的 full
   1165 项中 1160 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-057](FINDING-010-057.md)：clean `274e5ea…` / run-020 的 Q2 已声明 4 个 exact mandatory paths，却因角色拿不到 direct
+  locator 而把 path/filename 当内容搜索词，零命中与重复动作在 5 次 dispatch 后触发 no-progress fuse。现由 Application/Broker 为每个已验证
+  required path 签发 Request + attempt + Profile + class + path 绑定的 opaque direct locator；模型仍无 path authority。
+- [FINDING-010-058](FINDING-010-058.md)：run-020 的 Q3 已完整读取四个决定性实现，却在一个 `SUPPORTED` FINISH item 中再次混入
+  `LIMITATION` 与 search-only boundary reference，被本地 validator 正确关闭。Provider-facing FINISH 现拆为结构互斥的
+  supported/non-supported 数组；Prompt 同时禁止因“可核对依据”擅自引入无关 TEST/log/config need。
+- [FINDING-010-059](FINDING-010-059.md)：上述修复后 Engineering QA 101/101、docs 453/453、compile/diff PASS；允许 AF_UNIX 的
+  full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

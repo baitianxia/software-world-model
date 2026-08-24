@@ -34,7 +34,10 @@ ENGINEERING_QA_MODE = "ENGINEERING_QA"
 ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
 ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@2"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
-ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@1"
+ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@2"
+ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA = (
+    "ENGINEERING_QA_REQUIRED_EVIDENCE_PATH_LOCATOR@1"
+)
 MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION = 16
 MAXIMUM_REQUIRED_EVIDENCE_PATHS = 4
 
@@ -1783,6 +1786,84 @@ class RetrievalItem:
 
 
 @dataclass(frozen=True, slots=True)
+class RequiredEvidencePathLocator:
+    """Application/Broker-issued authority for one already-validated exact path.
+
+    Question Understanding may select only paths from the immutable Request
+    allowlist.  Requiring the Investigation model to rediscover such a path by
+    literal content search adds no authority and can strand a mandatory read.
+    This locator lets the Broker expose that validated path as an opaque,
+    single-use READ/PARSE capability without turning a model-supplied path into
+    executable authority.
+    """
+
+    locator_reference: StableId
+    attempt_id: StableId
+    request_digest: Digest
+    source_profile_digest: Digest
+    evidence_class: EngineeringEvidenceClass
+    path: str
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        attempt_id: StableId,
+        request_digest: Digest,
+        source_profile_digest: Digest,
+        evidence_class: EngineeringEvidenceClass,
+        path: str,
+    ) -> "RequiredEvidencePathLocator":
+        if evidence_class not in _RETRIEVAL_EVIDENCE_CLASSES:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "required evidence path locator needs a retrievable evidence class",
+            )
+        core = {
+            "schema": ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA,
+            "attempt_id": attempt_id.value,
+            "request_digest": request_digest.value,
+            "source_profile_digest": source_profile_digest.value,
+            "evidence_class": evidence_class.value,
+            "path": _canonical_relative_path(path),
+        }
+        return cls(
+            locator_reference=_stable_id("required_path_locator", core),
+            attempt_id=attempt_id,
+            request_digest=request_digest,
+            source_profile_digest=source_profile_digest,
+            evidence_class=evidence_class,
+            path=core["path"],
+            digest=digest_of([ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA, core]),
+        )
+
+    def validate_identity(self) -> None:
+        expected = self.create(
+            attempt_id=self.attempt_id,
+            request_digest=self.request_digest,
+            source_profile_digest=self.source_profile_digest,
+            evidence_class=self.evidence_class,
+            path=self.path,
+        )
+        if self != expected:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "required evidence path locator identity is invalid",
+            )
+
+    def model_view(self) -> dict[str, object]:
+        self.validate_identity()
+        return {
+            "locator_reference": self.locator_reference.value,
+            "attempt_id": self.attempt_id.value,
+            "evidence_class": self.evidence_class.value,
+            "path": self.path,
+            "digest": self.digest.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class CompiledSourceOperation:
     operation_id: StableId
     broker_policy: str
@@ -2231,6 +2312,35 @@ class SourceBroker:
             )
         return matches[0]
 
+    def issue_required_path_locators(
+        self,
+        *,
+        request: EngineeringQuestionRequest,
+        attempt_id: StableId,
+        paths: Sequence[str],
+    ) -> tuple[RequiredEvidencePathLocator, ...]:
+        """Mint exact, Request-bound capabilities for mandatory read paths."""
+
+        normalized_paths = tuple(_canonical_relative_path(path) for path in paths)
+        if len(set(normalized_paths)) != len(normalized_paths):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "required evidence path locator input contains duplicate paths",
+            )
+        return tuple(
+            RequiredEvidencePathLocator.create(
+                attempt_id=attempt_id,
+                request_digest=request.digest,
+                source_profile_digest=request.source_profile_digest,
+                evidence_class=self.evidence_class_for_path(
+                    request=request,
+                    path=path,
+                ),
+                path=path,
+            )
+            for path in normalized_paths
+        )
+
     def compile(
         self,
         *,
@@ -2239,6 +2349,9 @@ class SourceBroker:
         ledger: EvidenceLedger,
         locator_catalog: Mapping[StableId, RetrievalItem],
         usage: EngineeringQuestionResourceUsage,
+        required_path_locator_catalog: Mapping[
+            StableId, RequiredEvidencePathLocator
+        ] | None = None,
     ) -> SourceBrokerCompilation:
         self._require_binding(request=request, proposal=proposal, ledger=ledger)
         self.registered_evidence_classes(request=request)
@@ -2312,34 +2425,67 @@ class SourceBroker:
         if source_operation in {SourceReadOperation.READ, SourceReadOperation.PARSE}:
             locator_reference = proposal.locator_reference
             locator = locator_catalog.get(locator_reference) if locator_reference else None
-            if locator is None:
+            required_path_locator = (
+                required_path_locator_catalog.get(locator_reference)
+                if locator_reference and required_path_locator_catalog is not None
+                else None
+            )
+            if locator is not None and required_path_locator is not None:
+                return self._reject(
+                    request=request,
+                    proposal=proposal,
+                    ledger=ledger,
+                    reason="LOCATOR_AUTHORITY_AMBIGUOUS",
+                )
+            if locator is None and required_path_locator is None:
                 return self._reject(
                     request=request,
                     proposal=proposal,
                     ledger=ledger,
                     reason="LOCATOR_NOT_ISSUED_BY_CURRENT_LEDGER",
                 )
-            issued_item_references = {
-                reference
-                for entry in ledger.entries
-                if entry.kind is LedgerEntryKind.SOURCE_RESULT
-                for reference in entry.references
-            }
-            if locator.item_id.value not in issued_item_references:
-                return self._reject(
-                    request=request,
-                    proposal=proposal,
-                    ledger=ledger,
-                    reason="LOCATOR_NOT_ISSUED_BY_CURRENT_LEDGER",
+            if locator is not None:
+                issued_item_references = {
+                    reference
+                    for entry in ledger.entries
+                    if entry.kind is LedgerEntryKind.SOURCE_RESULT
+                    for reference in entry.references
+                }
+                if locator.item_id.value not in issued_item_references:
+                    return self._reject(
+                        request=request,
+                        proposal=proposal,
+                        ledger=ledger,
+                        reason="LOCATOR_NOT_ISSUED_BY_CURRENT_LEDGER",
+                    )
+                locator_evidence_class = locator.evidence_class
+                path = locator.path
+            else:
+                assert required_path_locator is not None
+                required_path_locator.validate_identity()
+                expected_required_path_locator = RequiredEvidencePathLocator.create(
+                    attempt_id=proposal.attempt_id,
+                    request_digest=request.digest,
+                    source_profile_digest=request.source_profile_digest,
+                    evidence_class=required_path_locator.evidence_class,
+                    path=required_path_locator.path,
                 )
-            if locator.evidence_class is not proposal.evidence_class:
+                if required_path_locator != expected_required_path_locator:
+                    return self._reject(
+                        request=request,
+                        proposal=proposal,
+                        ledger=ledger,
+                        reason="REQUIRED_PATH_LOCATOR_BINDING_MISMATCH",
+                    )
+                locator_evidence_class = required_path_locator.evidence_class
+                path = required_path_locator.path
+            if locator_evidence_class is not proposal.evidence_class:
                 return self._reject(
                     request=request,
                     proposal=proposal,
                     ledger=ledger,
                     reason="LOCATOR_EVIDENCE_CLASS_MISMATCH",
                 )
-            path = locator.path
             if not _path_allowed(path, request.source_allowlist):
                 return self._reject(
                     request=request,
@@ -2570,6 +2716,9 @@ def _eligible_locator_references(
     retrieval_results: Sequence[RetrievalResult],
     *,
     required_evidence_paths: Sequence[str] = (),
+    required_path_locators: Sequence[RequiredEvidencePathLocator] = (),
+    attempt_id: StableId | None = None,
+    request_digest: Digest | None = None,
 ) -> tuple[StableId, ...]:
     consumed_paths = set(_consumed_full_content_paths(retrieval_results))
     eligible_items = tuple(
@@ -2581,11 +2730,49 @@ def _eligible_locator_references(
     unread_required_paths = {
         path for path in required_evidence_paths if path not in consumed_paths
     }
+    direct_locators = tuple(required_path_locators)
+    if required_evidence_paths:
+        if attempt_id is None or request_digest is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "required evidence path locators lack their Request binding",
+            )
+        for locator in direct_locators:
+            locator.validate_identity()
+        if (
+            len({item.locator_reference for item in direct_locators})
+            != len(direct_locators)
+            or len({item.path for item in direct_locators}) != len(direct_locators)
+            or {item.path for item in direct_locators}
+            != set(required_evidence_paths)
+            or any(
+                item.attempt_id != attempt_id
+                or item.request_digest != request_digest
+                for item in direct_locators
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "required evidence path locators do not bind the exact mandatory-read set",
+            )
+    elif direct_locators:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "required evidence path locators exist without mandatory-read paths",
+        )
     if unread_required_paths:
         eligible_items = tuple(
             item for item in eligible_items if item.path in unread_required_paths
         )
-    return tuple(item.locator_reference for item in eligible_items)
+        direct_references = tuple(
+            item.locator_reference
+            for item in direct_locators
+            if item.path in unread_required_paths
+        )
+    else:
+        direct_references = ()
+    issued_references = tuple(item.locator_reference for item in eligible_items)
+    return tuple(dict.fromkeys((*direct_references, *issued_references)))
 
 
 def _evidence_class_closure(
@@ -2771,6 +2958,7 @@ class InitialInvestigationInput:
     required_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     required_evidence_paths: tuple[str, ...] = ()
+    required_path_locators: tuple[RequiredEvidencePathLocator, ...] = ()
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -2781,6 +2969,20 @@ class InitialInvestigationInput:
         return _eligible_locator_references(
             self.retrieval_results,
             required_evidence_paths=self.required_evidence_paths,
+            required_path_locators=self.required_path_locators,
+            attempt_id=self.attempt_id,
+            request_digest=self.request.digest,
+        )
+
+    @property
+    def eligible_required_path_locators(
+        self,
+    ) -> tuple[RequiredEvidencePathLocator, ...]:
+        eligible = set(self.eligible_locator_references)
+        return tuple(
+            item
+            for item in self.required_path_locators
+            if item.locator_reference in eligible
         )
 
     @property
@@ -2839,6 +3041,10 @@ class InitialInvestigationInput:
             "required_basis_entry_id": self.required_basis_entry_id.value,
             "eligible_locator_references": [
                 item.value for item in self.eligible_locator_references
+            ],
+            "eligible_required_path_locators": [
+                item.model_view()
+                for item in self.eligible_required_path_locators
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "prior_action_intents": list(self.prior_action_intents),
@@ -3795,6 +4001,7 @@ class VerificationInvestigationInput:
     required_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     required_evidence_paths: tuple[str, ...] = ()
+    required_path_locators: tuple[RequiredEvidencePathLocator, ...] = ()
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -3802,7 +4009,24 @@ class VerificationInvestigationInput:
 
     @property
     def eligible_locator_references(self) -> tuple[StableId, ...]:
-        return _eligible_locator_references(self.retrieval_results)
+        return _eligible_locator_references(
+            self.retrieval_results,
+            required_evidence_paths=self.required_evidence_paths,
+            required_path_locators=self.required_path_locators,
+            attempt_id=self.attempt_id,
+            request_digest=self.current_package.request_digest,
+        )
+
+    @property
+    def eligible_required_path_locators(
+        self,
+    ) -> tuple[RequiredEvidencePathLocator, ...]:
+        eligible = set(self.eligible_locator_references)
+        return tuple(
+            item
+            for item in self.required_path_locators
+            if item.locator_reference in eligible
+        )
 
     @property
     def consumed_full_content_paths(self) -> tuple[str, ...]:
@@ -3901,6 +4125,10 @@ class VerificationInvestigationInput:
             "required_basis_entry_id": self.required_basis_entry_id.value,
             "eligible_locator_references": [
                 item.value for item in self.eligible_locator_references
+            ],
+            "eligible_required_path_locators": [
+                item.model_view()
+                for item in self.eligible_required_path_locators
             ],
             "consumed_full_content_paths": list(self.consumed_full_content_paths),
             "prior_action_intents": list(self.prior_action_intents),
@@ -5855,6 +6083,14 @@ class EngineeringQuestionAnsweringService:
                 ErrorCode.PROVIDER_RESPONSE_INVALID,
                 "question understanding required path lacks its registered evidence class",
             )
+        required_path_locators = self._source_broker.issue_required_path_locators(
+            request=request,
+            attempt_id=attempt_id,
+            paths=required_evidence_paths,
+        )
+        required_path_locator_catalog = {
+            item.locator_reference: item for item in required_path_locators
+        }
         investigated_evidence_classes: set[EngineeringEvidenceClass] = set()
         step_index = 0
         local_calls = 0
@@ -5938,6 +6174,7 @@ class EngineeringQuestionAnsweringService:
                         if item in investigated_evidence_classes
                     ),
                     required_evidence_paths=required_evidence_paths,
+                    required_path_locators=required_path_locators,
                 )
                 proposal = self._initial_investigation_role.propose(
                     investigation_input
@@ -5965,6 +6202,7 @@ class EngineeringQuestionAnsweringService:
                         if item in investigated_evidence_classes
                     ),
                     required_evidence_paths=required_evidence_paths,
+                    required_path_locators=required_path_locators,
                 )
                 verification_input.validate_new_result_closure()
                 proposal = self._verification_investigation_role.propose(
@@ -6131,6 +6369,7 @@ class EngineeringQuestionAnsweringService:
                 ledger=pre_proposal_ledger,
                 locator_catalog=locator_catalog,
                 usage=usage,
+                required_path_locator_catalog=required_path_locator_catalog,
             )
             decision = compilation.decision
             decisions.append(decision)
@@ -6828,6 +7067,7 @@ __all__ = [
     "ENGINEERING_QA_MODE",
     "ENGINEERING_QA_PACKAGE_SCHEMA",
     "ENGINEERING_QA_PROTOCOL",
+    "ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA",
     "ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA",
     "AnswerContentRole",
     "AnswerDetailLevel",
@@ -6877,6 +7117,7 @@ __all__ = [
     "QuestionUnderstanding",
     "QuestionUnderstandingProposal",
     "QuestionUnderstandingRole",
+    "RequiredEvidencePathLocator",
     "RetrievalItem",
     "RetrievalResult",
     "RetrievalStatus",

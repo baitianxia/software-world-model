@@ -2525,6 +2525,44 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-056.md"
   },
   {
+    "id": "FINDING-010-057",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-057.md"
+  },
+  {
+    "id": "FINDING-010-058",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai-infrastructure",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-058.md"
+  },
+  {
+    "id": "FINDING-010-059",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-059.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5070,7 +5108,9 @@
       "FINDING-010-011",
       "FINDING-010-028",
       "FINDING-010-029",
-      "FINDING-010-031"
+      "FINDING-010-031",
+      "FINDING-010-057",
+      "FINDING-010-058"
     ],
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },

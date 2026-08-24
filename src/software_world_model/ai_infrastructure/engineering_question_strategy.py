@@ -67,16 +67,16 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@13"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@14"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@5"
+    "engineering-qa-initial-investigation@6"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@5"
+    "engineering-qa-verification-investigation@6"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@4"
@@ -210,22 +210,18 @@ def _finish_disposition_variant(
     }
 
 
-_FINISH_DISPOSITION_SCHEMA = {
-    "anyOf": [
-        _finish_disposition_variant(
-            outcomes=(ChecklistOutcome.SUPPORTED,),
-            observation_schema=_SUPPORTED_MATERIAL_OBSERVATION_SCHEMA,
-        ),
-        _finish_disposition_variant(
-            outcomes=(
-                ChecklistOutcome.UNKNOWN,
-                ChecklistOutcome.CONFLICT,
-                ChecklistOutcome.FAILED,
-            ),
-            observation_schema=_LIMITATION_MATERIAL_OBSERVATION_SCHEMA,
-        ),
-    ]
-}
+_SUPPORTED_FINISH_DISPOSITION_SCHEMA = _finish_disposition_variant(
+    outcomes=(ChecklistOutcome.SUPPORTED,),
+    observation_schema=_SUPPORTED_MATERIAL_OBSERVATION_SCHEMA,
+)
+_NON_SUPPORTED_FINISH_DISPOSITION_SCHEMA = _finish_disposition_variant(
+    outcomes=(
+        ChecklistOutcome.UNKNOWN,
+        ChecklistOutcome.CONFLICT,
+        ChecklistOutcome.FAILED,
+    ),
+    observation_schema=_LIMITATION_MATERIAL_OBSERVATION_SCHEMA,
+)
 _INVESTIGATION_OUTPUT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -239,9 +235,13 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
         "locator_reference": _NULLABLE_STRING_SCHEMA,
         "basis_entry_ids": _STRING_ARRAY_SCHEMA,
         "unknown_to_reduce": {"type": "string"},
-        "finish_dispositions": {
+        "supported_finish_dispositions": {
             "type": "array",
-            "items": _FINISH_DISPOSITION_SCHEMA,
+            "items": _SUPPORTED_FINISH_DISPOSITION_SCHEMA,
+        },
+        "non_supported_finish_dispositions": {
+            "type": "array",
+            "items": _NON_SUPPORTED_FINISH_DISPOSITION_SCHEMA,
         },
     },
     "required": [
@@ -252,7 +252,8 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
         "locator_reference",
         "basis_entry_ids",
         "unknown_to_reduce",
-        "finish_dispositions",
+        "supported_finish_dispositions",
+        "non_supported_finish_dispositions",
     ],
     "additionalProperties": False,
 }
@@ -1377,6 +1378,16 @@ def _investigation_proposal(
     investigation_input: InitialInvestigationInput | VerificationInvestigationInput,
 ) -> InvestigationStepProposal:
     try:
+        raw_dispositions = (
+            *cast(
+                Sequence[Mapping[str, object]],
+                value["supported_finish_dispositions"],
+            ),
+            *cast(
+                Sequence[Mapping[str, object]],
+                value["non_supported_finish_dispositions"],
+            ),
+        )
         dispositions = tuple(
             ChecklistDisposition.create(
                 checklist_item_id=cast(str, item["checklist_item_id"]),
@@ -1405,9 +1416,7 @@ def _investigation_proposal(
                     )
                 ),
             )
-            for item in cast(
-                Sequence[Mapping[str, object]], value["finish_dispositions"]
-            )
+            for item in raw_dispositions
         )
         evidence_class_value = cast(str | None, value["evidence_class"])
         locator_value = cast(str | None, value["locator_reference"])
