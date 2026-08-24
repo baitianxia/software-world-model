@@ -65,7 +65,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@3"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@4"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@1"
@@ -76,7 +76,7 @@ ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@3"
 )
-ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@3"
+ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@4"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
@@ -108,6 +108,11 @@ class EngineeringQuestionModelRole(str, Enum):
 
 _NULLABLE_STRING_SCHEMA = {"type": ["string", "null"]}
 _STRING_ARRAY_SCHEMA = {"type": "array", "items": {"type": "string"}}
+_UNIQUE_STRING_ARRAY_SCHEMA = {
+    "type": "array",
+    "items": {"type": "string"},
+    "uniqueItems": True,
+}
 _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA = {
     "type": "array",
     "items": {"type": "string"},
@@ -242,7 +247,7 @@ _ANSWER_CLAIM_SCHEMA = {
             "enum": [item.value for item in AnswerContentRole],
         },
         "checklist_item_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
-        "material_observation_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+        "material_observation_ids": _UNIQUE_STRING_ARRAY_SCHEMA,
         "text": {"type": "string"},
         "evidence_entry_ids": _STRING_ARRAY_SCHEMA,
     },
@@ -774,10 +779,11 @@ class EngineeringQuestionRoleInputBuilder:
                 "ordered_roles": [item.value for item in AnswerContentRole],
                 "every_claim_links_material_checklist": True,
                 "every_material_checklist_item_covered": True,
-                "every_claim_links_material_observations": True,
+                "every_material_fact_claim_links_material_observations": True,
                 "every_package_material_observation_covered": True,
                 "every_material_observation_visible_in_default_body": True,
                 "observation_link_requires_explicit_claim_text_and_all_evidence": True,
+                "coverage_only_limitation_empty_observation_links_allowed": True,
                 "implementation_evidence_is_optional": True,
                 "implementation_evidence_default_visible": (
                     understanding.requested_abstraction_level

@@ -441,6 +441,7 @@ answer_hierarchy_protocol:
   finish_material_observations_required: true
   material_observation_kinds: process-stage,outcome,state-change,side-effect,limitation
   answer_claim_material_observation_links_required: true
+  coverage_only_limitation_empty_observation_links_allowed: true
   all_material_observations_default_visible_required: true
   reviewer_independent_evidence_observation_audit_required: true
   package_and_draft_observation_omissions_block_approval: true
@@ -526,7 +527,7 @@ readiness_inputs:
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
   no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
   answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
-  answer_hierarchy_protocol_digest: sha256:0ab7bdd1be966f8195255694bcadae6d289d3d03878ff4412a43e658020ad08a
+  answer_hierarchy_protocol_digest: sha256:bf72d8960dd8f895d9392b85fa4f5ad89b10c74b7800b2bca273b21c23351896
   system_contract_set_schema: ITER-010-SYSTEM-CONTRACT-SET@1
   system_contract_set_paths:
     - docs/system/architecture/components.md
@@ -558,7 +559,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:ad1761834aef51dea35685a23e0b1421d3fd295ad6ebbdaed99620f4dc064340
+  system_contract_set_digest: sha256:177b0a4357d19b5dc28e3c4997b67d653b4d66fd1392f5783827ec657a625898
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

@@ -3713,10 +3713,18 @@ class EngineeringAnswerClaimProposal:
                 "answer claim requires unique material checklist references",
             )
         observations = tuple(material_observation_ids)
-        if not observations or len(observations) != len(set(observations)):
+        if len(observations) != len(set(observations)):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "answer claim requires unique material observation references",
+                "answer claim material observation references must be unique",
+            )
+        if not observations and not (
+            kind is AnswerClaimKind.LIMITATION
+            and content_role is AnswerContentRole.LIMITATION
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "only a coverage-only limitation may omit material observation references",
             )
         if (
             content_role is AnswerContentRole.LIMITATION
@@ -3758,7 +3766,7 @@ class EngineeringAnswerClaimProposal:
             material_observation_ids=observations,
             text=core["text"],
             evidence_entry_ids=references,
-            digest=digest_of(["ENGINEERING_ANSWER_CLAIM_PROPOSAL@3", core]),
+            digest=digest_of(["ENGINEERING_ANSWER_CLAIM_PROPOSAL@4", core]),
         )
 
 
@@ -3825,7 +3833,7 @@ class EngineeringAnswerProposal:
             package_digest=package_digest,
             response_language=core["response_language"],
             claims=claim_tuple,
-            digest=digest_of(["ENGINEERING_ANSWER_PROPOSAL@3", core]),
+            digest=digest_of(["ENGINEERING_ANSWER_PROPOSAL@4", core]),
         )
 
 
@@ -4062,7 +4070,7 @@ class EngineeringAnswerDraft:
             "body": body,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@3", core])
+        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@4", core])
         return cls(
             draft_id=_stable_id("engineering_draft", core),
             revision=revision,

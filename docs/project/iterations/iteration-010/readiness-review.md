@@ -85,8 +85,10 @@ Package、Answer、Review，不回初始 Investigation。
 
 系统 Owner 沿用 `SYS-ADR-016` 与 Engineering Question Answering Contract。原 planning commit 与授权时 Manifest 冻结的是
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2`；同一已授权 Slice 的 `FINDING-010-033` 根据真实失败把 current System Contract/Manifest 升级为
-`@3` 的 evidence-grounded atomic observation closure。该变更不扩大模式、Source 或 live 权限，current system fileset 与 answer hierarchy
-digest 必须随实现重新计算并通过 docs gate；原 readiness receipt 继续只证明 Slice1 授权，不证明新 candidate 或 live PASS。
+`@3` 的 evidence-grounded atomic observation closure；`FINDING-010-036` 再闭合 coverage-only Limitation 与 material-fact observation link
+之间的组合缺口，只允许末尾 coverage limitation 使用空 link，不放松其他 Claim 的 observation/evidence closure。两项变更均不扩大模式、
+Source 或 live 权限，current system fileset 与 answer hierarchy digest 必须随实现重新计算并通过 docs gate；原 readiness receipt 继续只证明
+Slice1 授权，不证明新 candidate 或 live PASS。
 
 DTO、Broker port、抽象 read operation、Ledger storage 和 UI 折叠是实现细节；以下不是实现选择：World Model 不得缩窄为手册；调查必须
 由先前结果驱动；模型无直接 FS/Shell/network/credential/source authority；Ledger append-only；调查后才 seal；Package seal 不等于真值；

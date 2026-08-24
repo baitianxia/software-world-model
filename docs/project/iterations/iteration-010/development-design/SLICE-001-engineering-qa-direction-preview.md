@@ -91,8 +91,10 @@ Limitation、可打开 Citation 和请求级状态；World Model Cognition、Led
 Service source 已进入 Package/Reviewer，正文仍遗漏成功登录审计写入且 Review 错误 `APPROVED`，因此该 Result 只作为失败证据，不构成
 `V-EXPERIENCE/V-ANSWER-REWORK` PASS。`FINDING-010-033` 把根因定位到宽泛 checklist 可被代表性事实伪闭合，并以协议 `@3` 的原子
 evidence observations、Answer observation/evidence closure 与 Reviewer 独立 Package/Draft observation audit 做通用修复；
-`FINDING-010-034` 同时修复该会话暴露的 Gateway SQLite `0644` 主文件/WAL/SHM 权限缺口。这些新组件尚未成为 clean frozen candidate，
-也没有新协议下原题加两道异质题的真实执行证据，因此不能把失败行为写成已修复。
+`FINDING-010-034` 同时修复该会话暴露的 Gateway SQLite `0644` 主文件/WAL/SHM 权限缺口。clean candidate `fc827ce…` 已绑定 current
+DeepSeek Conformance 重跑原题；Package/正文覆盖了登录审计副作用且 private DB 成立，但 coverage-only Limitation 被非空 observation-link
+规则强迫错绑 supported observations，Draft 因而失败关闭。`FINDING-010-036` 把该通用组合缺口收窄为仅末尾 coverage limitation 可用空
+link；该修复尚未成为新的 clean frozen candidate，也没有原题加两道异质题的完整真实执行证据，因此不能把失败行为写成已修复。
 
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
@@ -127,7 +129,9 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   校验通过的可采信条目，只有它们能支持肯定 Claim 与 Citation；`boundary/audit` 必须保留 Gap、Failure、Partial、Conflict、Unknown、
   拒绝决定和资源收据，只能约束结论或形成标记清楚的边界说明，不能支持肯定 Claim。seal 不把任何条目或模型推断变成真。
 - Answer 在全新上下文中只读当前 sealed Package。Question Understanding 使用受控 detail level；每个 Claim 声明 direct/process/impact/
-  implementation/limitation role 并绑定 material checklist 和文本实际表达的 observation IDs。Application 强制直接答案排首位、全
+  implementation/limitation role 并绑定 material checklist；表达 material fact 时还绑定文本实际表达的 observation IDs。仅末尾
+  coverage-only Limitation 可以使用空 observation link 且只引用 boundary/audit，不能承载 affirmative fact、错绑 supported observation
+  或替代 Package observation 覆盖。Application 强制直接答案排首位、全
   checklist/observation 覆盖、每条 observation 默认可见、disposition/证据分区一致且 Claim 引用 observation 所需全部 Package entries；
   真实边界可直接回答 limitation。`USER_VISIBLE_EXPLANATION` 默认正文不展开实现证据，但流程阶段、结果、状态变化和副作用不能被归为可选
   实现详情。
@@ -234,6 +238,8 @@ product freeze 后形成执行证据。
 `FINDING-010-028` 至 `031` 记录本次返工的答案层级/Reviewer Gate、持续 Session Authority、rework Manifest parser 与 same-origin ingress；
 `FINDING-010-032` 记录完整 1141 项只保留既有 4 FAIL + 1 ERROR historical hold。`FINDING-010-033` 记录首次持续 Alpha 仍发生代表性
 事实伪闭合并升级为原子 evidence-observation contract；`FINDING-010-034` 记录 Gateway SQLite 主文件及 sidecar 的 private-mode 修复；
-`FINDING-010-035` 记录新协议完整 1144 项中 1139 PASS、raw 只保留既有 4 FAIL + 1 ERROR historical hold。旧 Alpha 运行只证明缺陷可
-复现，当前新协议仍只有确定性证据，真实三题体验 Gate 保持 NOT-RUN。
+`FINDING-010-035` 记录新协议完整 1144 项中 1139 PASS、raw 只保留既有 4 FAIL + 1 ERROR historical hold；`FINDING-010-036` 记录
+`fc827ce…` 原题已经覆盖审计副作用却因 coverage-only Limitation link 组合缺口失败关闭，以及对应通用 contract 修复；
+`FINDING-010-037` 记录修复后完整 1147 项中 1142 PASS、raw 仍只保留既有 4 FAIL + 1 ERROR historical hold。现有 Alpha 运行只证明
+缺陷可复现或部分约束生效，新修复仍只有确定性证据，真实三题体验 Gate 保持 NOT-RUN。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

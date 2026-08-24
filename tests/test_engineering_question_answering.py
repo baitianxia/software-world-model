@@ -1168,6 +1168,128 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         self.assertEqual(claim.kind, AnswerClaimKind.LIMITATION)
         self.assertEqual(claim.content_role, AnswerContentRole.DIRECT_ANSWER)
 
+    def test_coverage_only_limitation_can_omit_observation_links(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        observations = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        support = tuple(item.entry_id for item in package.support_citation)
+        boundary = tuple(item.entry_id for item in package.boundary_audit)
+        self.assertTrue(boundary)
+        role_context = sid("role_context", "b")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observations,
+                    text=(
+                        "Use the documented entry point; startup also writes "
+                        "a local PID file."
+                    ),
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-coverage-boundary",
+                    kind=AnswerClaimKind.LIMITATION,
+                    content_role=AnswerContentRole.LIMITATION,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=(),
+                    text="The retained evidence does not establish deployment behavior.",
+                    evidence_entry_ids=boundary,
+                ),
+            ),
+        )
+
+        draft = EngineeringAnswerDraft.accept(
+            package=package,
+            understanding=result.understanding,
+            expected_role_context_id=role_context,
+            proposal=proposal,
+            revision=1,
+        )
+
+        self.assertIn("deployment behavior", draft.body)
+        self.assertEqual(
+            draft.claims[1].material_observation_ids,
+            (),
+        )
+
+    def test_affirmative_claim_cannot_omit_observation_links(self):
+        with self.assertRaises(DomainError) as caught:
+            EngineeringAnswerClaimProposal.create(
+                claim_id="claim-empty-observations",
+                kind=AnswerClaimKind.AFFIRMATIVE,
+                content_role=AnswerContentRole.DIRECT_ANSWER,
+                checklist_item_ids=("check-1",),
+                material_observation_ids=(),
+                text="An unlinked fact.",
+                evidence_entry_ids=(sid("support_entry", "e"),),
+            )
+
+        self.assertEqual(caught.exception.code, ErrorCode.INVALID_ARGUMENT)
+
+    def test_coverage_limitation_cannot_attach_supported_observations(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        observations = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        role_context = sid("role_context", "c")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observations,
+                    text=(
+                        "Use the documented entry point; startup also writes "
+                        "a local PID file."
+                    ),
+                    evidence_entry_ids=tuple(
+                        item.entry_id for item in package.support_citation
+                    ),
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-invalid-boundary",
+                    kind=AnswerClaimKind.LIMITATION,
+                    content_role=AnswerContentRole.LIMITATION,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observations,
+                    text="The retained evidence has a deployment boundary.",
+                    evidence_entry_ids=tuple(
+                        item.entry_id for item in package.boundary_audit
+                    ),
+                ),
+            ),
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            EngineeringAnswerDraft.accept(
+                package=package,
+                understanding=result.understanding,
+                expected_role_context_id=role_context,
+                proposal=proposal,
+                revision=1,
+            )
+
+        self.assertEqual(caught.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+
     def test_user_visible_answer_keeps_implementation_out_of_default_body(self):
         result = self.service(request_more_evidence=False).answer(request())
         package = result.current_package

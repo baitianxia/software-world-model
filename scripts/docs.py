@@ -81,7 +81,7 @@ ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE = (
 ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA = (
     "ENGINEERING_QA_REVIEWER_VERIFICATION_INVESTIGATION@1"
 )
-ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA = "ENGINEERING_QA_ANSWER_HIERARCHY@2"
+ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA = "ENGINEERING_QA_ANSWER_HIERARCHY@3"
 ENGINEERING_QA_ABLATION_SCHEMA = "ENGINEERING_QA_COGNITION_ABLATION@1"
 ENGINEERING_QA_NOT_AUTHORIZED = "not-authorized"
 DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
@@ -1459,6 +1459,7 @@ def validate_answer_hierarchy_protocol(
         "finish_material_observations_required": True,
         "material_observation_kinds": "process-stage,outcome,state-change,side-effect,limitation",
         "answer_claim_material_observation_links_required": True,
+        "coverage_only_limitation_empty_observation_links_allowed": True,
         "all_material_observations_default_visible_required": True,
         "reviewer_independent_evidence_observation_audit_required": True,
         "package_and_draft_observation_omissions_block_approval": True,

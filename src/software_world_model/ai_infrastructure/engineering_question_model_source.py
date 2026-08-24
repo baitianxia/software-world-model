@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@10"
+    "engineering-qa-adaptive-investigation-prompt@11"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -231,13 +231,18 @@ claim may use LIMITATION kind and boundary/audit evidence instead of inventing
 an affirmative answer. Then, only as needed, use USER_VISIBLE_PROCESS,
 IMPACT_OR_SIDE_EFFECT, optional IMPLEMENTATION_EVIDENCE, and LIMITATION in that
 order. Link every claim to exact material checklist item IDs and cover every
-checklist item. Also link every claim to the exact Package material-observation
-IDs its text explicitly states, cover every observation in the default
-user-visible body, and cite every Package entry recorded for each linked
-observation. Do not attach an observation ID to a merely representative or
-broader claim. Material process stages, outcomes, state changes, and side
-effects belong in the user-visible answer; they are not optional implementation
-detail. At DIRECT level, omit implementation evidence. At
+checklist item. Also link every material-fact claim to the exact Package
+material-observation IDs its text explicitly states, cover every observation in
+the default user-visible body, and cite every Package entry recorded for each
+linked observation. A final coverage-only LIMITATION claim may use an empty
+material_observation_ids array only when it states a retained evidence scope or
+coverage boundary and cites boundary/audit entries; never attach supported
+observation IDs to such a limitation. A direct limitation that answers an
+unsupported checklist item still links that item's LIMITATION observations. Do
+not attach an observation ID to a merely representative or broader claim.
+Material process stages, outcomes, state changes, and side effects belong in
+the user-visible answer; they are not optional implementation detail. At DIRECT
+level, omit implementation evidence. At
 USER_VISIBLE_EXPLANATION level, add implementation evidence only when explicitly
 requested or necessary to support a material conclusion, and keep it outside the
 default user-visible body. Every affirmative claim must cite one or more
@@ -259,7 +264,11 @@ IDs. Compare that independent set both with the Application's Package
 observations and with the default Draft body. Report the exact independent
 observation statements omitted by either; a broad summary or one representative
 effect does not cover distinct stages, outcomes, state/context mutations,
-persistence or audit writes, external interactions, or failure outcomes. Then
+persistence or audit writes, external interactions, or failure outcomes.
+Audit a coverage-only LIMITATION claim with empty material_observation_ids for
+truth and boundary citations, but do not call that empty link an Application
+observation omission when the statement is not a material fact required by the
+original question. Then
 explicitly mark the four closed quality checks:
 direct answer first, abstraction fit, material checklist completeness including
 user-visible stages and side effects, and implementation-detail budget. APPROVED

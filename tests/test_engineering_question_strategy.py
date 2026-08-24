@@ -560,6 +560,9 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertIn("content_role", answer_claim["required"])
         self.assertIn("checklist_item_ids", answer_claim["required"])
         self.assertIn("material_observation_ids", answer_claim["required"])
+        observation_links = answer_claim["properties"]["material_observation_ids"]
+        self.assertTrue(observation_links["uniqueItems"])
+        self.assertNotIn("minItems", observation_links)
         review = schemas[ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF].schema
         self.assertIn("quality_assessment", review["required"])
         self.assertIn("checklist_assessment", review["required"])

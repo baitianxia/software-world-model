@@ -1981,6 +1981,30 @@
       "tests"
     ]
   },
+  "FINDING-010-036": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-036.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_question_strategy.py"
+    ]
+  },
+  "FINDING-010-037": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-037.md",
+    "code": [
+      "pyproject.toml",
+      "scripts/docs.py",
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

@@ -101,10 +101,18 @@ Engineering QA 83/83、docs/freeze/browser 86/86、current docs 427/427 PASS；�
 raw 仍精确为既有 4 FAIL + 1 ERROR，见 `FINDING-010-035`。默认沙箱额外出现的 AF_UNIX denial 不属于产品回归，raw full suite 仍不写成
 PASS。
 
+clean candidate `fc827ce…` 已取得 current DeepSeek Conformance `sha256:c6f6a0f…` 并真实提交原题。5 次 role dispatch、retry/switch 0；
+Package 与 Answer affirmative 正文已显式覆盖 `loginLogMapper.insert` 审计写入，Gateway 主文件/live WAL/SHM 为 `0600`。但 Answer 的末尾
+coverage-only Limitation 因非空 link 规则错绑全部 supported observations，Application 以 `answer claim kind differs from its material
+observation` 失败关闭；见 `FINDING-010-036`。该 Result 不能取得答案或体验 PASS。
+
+coverage-only Limitation 收窄后的 Answer/strategy/model-source 49/49、Engineering QA 86/86、current docs 430/430 PASS；最终 full 1147 项
+中 1142 PASS，raw 仍精确为既有 4 FAIL + 1 ERROR，见 `FINDING-010-037`。新修复尚未取得 clean freeze 后的 live Result。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | candidate `b6e13eb…` 首次持续 listener/browser 与现场题执行成立，但答案缺陷和 DB `0644` 使该 run 失败；Alpha deterministic tests 已覆盖零 dispatch 启动、多题 identity、失败继续、same-origin 与 private SQLite，完整新 candidate run 尚未执行 | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | candidate `b6e13eb…` 原题仍遗漏副作用且假批准；`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` deterministic schema/Application tests 已阻断代表性观察替代副作用与 Reviewer observation omission；没有新协议真实三题 Result | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `b6e13eb…` 的答案缺陷/DB `0644` 与 `fc827ce…` 的 coverage-only Limitation link 缺陷均使对应 run 失败；后者已证明 private SQLite 和单题 fail-closed，但同会话三题 + 受控失败仍未完成 | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `b6e13eb…` 原题遗漏副作用且假批准；`fc827ce…` 已让 Package/正文覆盖副作用，但 coverage limitation link 组合缺口导致 Draft 失败关闭；`FINDING-010-036` 修复尚无新 clean candidate 三题 Result | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

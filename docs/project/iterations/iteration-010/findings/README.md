@@ -89,5 +89,10 @@ iteration: ITER-010
   `0600`。
 - [FINDING-010-035](FINDING-010-035.md)：协议 `@3` 与 private SQLite 回归后的完整 1144 项中 1139 PASS，raw 只保留既有
   4 FAIL + 1 ERROR；本机 AF_UNIX 重跑消除沙箱额外错误。保持 exact historical hold，不追认冻结 runtime。
+- [FINDING-010-036](FINDING-010-036.md)：clean `fc827ce…` 原题已经覆盖登录审计副作用，但 coverage-only Limitation 被非空
+  observation-link 规则强迫错绑 supported observations 而失败关闭；收窄为仅末尾 coverage limitation 可用空 link，其他事实 Claim 继续
+  强制 observation/evidence closure。
+- [FINDING-010-037](FINDING-010-037.md)：coverage-only Limitation 修复后的完整 1147 项中 1142 PASS，raw 仍精确为既有 4 FAIL + 1
+  ERROR historical hold；定向错误形状回归与治理 Gate 通过，没有新增 ITER-010 失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
