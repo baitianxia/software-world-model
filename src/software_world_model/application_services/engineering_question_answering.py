@@ -317,6 +317,11 @@ class EngineeringEvidenceBoundaryAssessmentDisposition(str, Enum):
     DRAFT_OMITS_MATERIAL_REQUIREMENT = "DRAFT_OMITS_MATERIAL_REQUIREMENT"
 
 
+class EngineeringMaterialEffectOmissionLayer(str, Enum):
+    APPLICATION_PACKAGE = "APPLICATION_PACKAGE"
+    DEFAULT_DRAFT = "DEFAULT_DRAFT"
+
+
 _FINAL_ANSWER_ROLE_CALL_RESERVE = 3
 
 
@@ -5322,6 +5327,8 @@ class EngineeringEvidenceBoundaryAssessment:
     draft_scope: str
     disposition: EngineeringEvidenceBoundaryAssessmentDisposition
     finding_code: str | None
+    material_effect_omission_layer: EngineeringMaterialEffectOmissionLayer | None
+    omitted_material_effect_statements: tuple[str, ...]
     digest: Digest
 
     @classmethod
@@ -5333,6 +5340,10 @@ class EngineeringEvidenceBoundaryAssessment:
         draft_scope: str,
         disposition: EngineeringEvidenceBoundaryAssessmentDisposition,
         finding_code: str | None,
+        material_effect_omission_layer: (
+            EngineeringMaterialEffectOmissionLayer | None
+        ) = None,
+        omitted_material_effect_statements: Sequence[str] = (),
     ) -> "EngineeringEvidenceBoundaryAssessment":
         if not isinstance(
             disposition, EngineeringEvidenceBoundaryAssessmentDisposition
@@ -5359,6 +5370,38 @@ class EngineeringEvidenceBoundaryAssessment:
                 ErrorCode.INVALID_ARGUMENT,
                 "Evidence-boundary assessment Finding binding contradicts its disposition",
             )
+        omitted_effect_statements = tuple(
+            _text(
+                item,
+                "Evidence-boundary omitted material-effect statement",
+                maximum_bytes=8_192,
+            )
+            for item in omitted_material_effect_statements
+        )
+        is_material_effect_omission = (
+            disposition
+            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
+        )
+        if is_material_effect_omission:
+            if (
+                not isinstance(
+                    material_effect_omission_layer,
+                    EngineeringMaterialEffectOmissionLayer,
+                )
+                or not omitted_effect_statements
+                or len(omitted_effect_statements) > 16
+                or len(omitted_effect_statements)
+                != len(set(omitted_effect_statements))
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "material-effect omission requires one closed omission layer and unique exact effect statements",
+                )
+        elif material_effect_omission_layer is not None or omitted_effect_statements:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "material-effect omission details are only valid for the material-effect disposition",
+            )
         core = {
             "challenge_id": challenge_id.value,
             "evidence_boundary": _text(
@@ -5373,6 +5416,12 @@ class EngineeringEvidenceBoundaryAssessment:
             ),
             "disposition": disposition.value,
             "finding_code": normalized_finding_code,
+            "material_effect_omission_layer": (
+                material_effect_omission_layer.value
+                if material_effect_omission_layer is not None
+                else None
+            ),
+            "omitted_material_effect_statements": omitted_effect_statements,
         }
         return cls(
             challenge_id=challenge_id,
@@ -5380,11 +5429,13 @@ class EngineeringEvidenceBoundaryAssessment:
             draft_scope=core["draft_scope"],
             disposition=disposition,
             finding_code=normalized_finding_code,
-            digest=digest_of(["ENGINEERING_EVIDENCE_BOUNDARY_ASSESSMENT@1", core]),
+            material_effect_omission_layer=material_effect_omission_layer,
+            omitted_material_effect_statements=omitted_effect_statements,
+            digest=digest_of(["ENGINEERING_EVIDENCE_BOUNDARY_ASSESSMENT@2", core]),
         )
 
     def model_view(self) -> dict[str, object]:
-        return {
+        view = {
             "challenge_id": self.challenge_id.value,
             "evidence_boundary": self.evidence_boundary,
             "draft_scope": self.draft_scope,
@@ -5392,6 +5443,21 @@ class EngineeringEvidenceBoundaryAssessment:
             "finding_code": self.finding_code,
             "digest": self.digest.value,
         }
+        if (
+            self.disposition
+            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
+        ):
+            view.update(
+                {
+                    "material_effect_omission_layer": (
+                        self.material_effect_omission_layer.value
+                    ),
+                    "omitted_material_effect_statements": list(
+                        self.omitted_material_effect_statements
+                    ),
+                }
+            )
+        return view
 
 
 @dataclass(frozen=True, slots=True)
@@ -5942,6 +6008,12 @@ class EngineeringReviewProposal:
                 draft_scope=item.draft_scope,
                 disposition=item.disposition,
                 finding_code=item.finding_code,
+                material_effect_omission_layer=(
+                    item.material_effect_omission_layer
+                ),
+                omitted_material_effect_statements=(
+                    item.omitted_material_effect_statements
+                ),
             )
             for item in boundary_assessments
         )
@@ -6138,7 +6210,19 @@ class EngineeringAnswerReview:
         checklist_ids = {item.item_id for item in understanding.checklist}
         claim_ids = {item.claim_id for item in draft.claims}
         support_ids = {item.entry_id for item in package.support_citation}
+        support_by_id = {
+            item.entry_id: item for item in package.support_citation
+        }
         boundary_ids = {item.entry_id for item in package.boundary_audit}
+        package_material_observation_statements_by_entry = {
+            entry_id: {
+                observation.statement
+                for disposition in package.checklist_dispositions
+                for observation in disposition.material_observations
+                if entry_id.value in observation.evidence_references
+            }
+            for entry_id in support_ids
+        }
         expected_challenges = project_evidence_boundary_challenges(package, draft)
         expected_challenge_by_id = {
             item.challenge_id: item for item in expected_challenges
@@ -6183,15 +6267,65 @@ class EngineeringAnswerReview:
                 assessment.disposition
                 is not EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
             ):
-                if not any(
-                    finding.finding_code == assessment.finding_code
-                    and finding.claim_id in challenge.claim_ids
+                matching_findings = tuple(
+                    finding
                     for finding in proposal.findings
-                ):
+                    if finding.finding_code == assessment.finding_code
+                    and finding.claim_id in challenge.claim_ids
+                )
+                if len(matching_findings) != 1:
                     raise DomainError(
                         ErrorCode.PROVIDER_RESPONSE_INVALID,
                         "non-passing evidence-boundary assessment must bind a Finding on one challenged Claim",
                     )
+                if (
+                    assessment.disposition
+                    is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
+                ):
+                    finding = matching_findings[0]
+                    entry_id = challenge.package_entry_ids[0]
+                    statements = set(
+                        assessment.omitted_material_effect_statements
+                    )
+                    package_statements = (
+                        package_material_observation_statements_by_entry[
+                            entry_id
+                        ]
+                    )
+                    if (
+                        assessment.material_effect_omission_layer
+                        is EngineeringMaterialEffectOmissionLayer.APPLICATION_PACKAGE
+                    ):
+                        if (
+                            finding.remediation
+                            is not EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+                            or finding.evidence_class
+                            is not support_by_id[entry_id].evidence_class
+                            or statements & package_statements
+                        ):
+                            raise DomainError(
+                                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                                "Application-Package material-effect omissions require a same-class Verification Finding and effects absent from exact Package observations",
+                            )
+                    elif (
+                        assessment.material_effect_omission_layer
+                        is EngineeringMaterialEffectOmissionLayer.DEFAULT_DRAFT
+                    ):
+                        if (
+                            finding.remediation
+                            is not EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                            or not statements.issubset(package_statements)
+                            or entry_id not in finding.existing_evidence_entry_ids
+                        ):
+                            raise DomainError(
+                                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                                "Draft-only material-effect omissions require exact Package observations and a rewrite Finding bound to the challenged entry",
+                            )
+                    else:  # pragma: no cover - guarded by Assessment.create
+                        raise DomainError(
+                            ErrorCode.PROVIDER_RESPONSE_INVALID,
+                            "material-effect omission is missing its closed omission layer",
+                        )
         for observation in proposal.checklist_assessment.independent_material_observations:
             if observation.checklist_item_id not in checklist_ids:
                 raise DomainError(
@@ -8240,6 +8374,7 @@ __all__ = [
     "EngineeringEvidenceBoundaryChallenge",
     "EngineeringEvidenceBoundaryChallengeKind",
     "EngineeringEvidenceClass",
+    "EngineeringMaterialEffectOmissionLayer",
     "EngineeringQuestionAnsweringService",
     "EngineeringQuestionExecutionResult",
     "EngineeringQuestionRequest",

@@ -397,7 +397,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@33",
+            "engineering-qa-adaptive-investigation-prompt@34",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -612,6 +612,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("getter invocation in caller content", review_prompt)
         self.assertIn("FULL_CONTENT_MATERIAL_EFFECT_SCAN", review_prompt)
         self.assertIn("DRAFT_OMITS_MATERIAL_EFFECT", review_prompt)
+        self.assertIn("omitted_material_effect_statements", review_prompt)
+        self.assertIn("material_effect_omission_layer", review_prompt)
+        self.assertIn("application_material_observations_for_entry", review_prompt)
+        self.assertIn("same-Package rewrite cannot invent or substitute", review_prompt)
         self.assertIn("ORIGINAL_QUESTION_FULFILLMENT_SCAN", review_prompt)
         self.assertIn("DRAFT_OMITS_MATERIAL_REQUIREMENT", review_prompt)
         self.assertIn("input/output handoff", review_prompt)

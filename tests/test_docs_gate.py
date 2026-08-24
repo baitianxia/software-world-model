@@ -3721,6 +3721,7 @@ class ReflectionGateTests(unittest.TestCase):
                 "persistence-write,audit-write,cache-mutation,notification,"
                 "external-interaction"
             ),
+            "reviewer_full-content-material-effect-application-observations-projected": True,
             "reviewer_original-question-fulfillment-scan-required": True,
             "reviewer_original-question-fulfillment-dimensions": (
                 "direct-user-goal,ordered-user-actions,input-output-handoffs,"
@@ -3731,6 +3732,22 @@ class ReflectionGateTests(unittest.TestCase):
                 "draft-omits-material-effect,draft-omits-material-requirement"
             ),
             "challenge_review_specialized-disposition-kind-match-required": True,
+            "challenge_review_assessment_fields": (
+                "evidence-boundary,draft-scope,disposition,finding-code-plus-"
+                "material-effect-layer-and-exact-statements-for-effect-omission"
+            ),
+            "challenge_review_material-effect-omission-layer-vocabulary": (
+                "application-package,default-draft"
+            ),
+            "challenge_review_material-effect-application-package-remediation": (
+                "same-evidence-class-verification-and-effect-absent-from-exact-"
+                "package-observations"
+            ),
+            "challenge_review_material-effect-default-draft-remediation": (
+                "challenged-entry-rewrite-and-effect-present-in-exact-package-"
+                "observations"
+            ),
+            "challenge_review_material-effect-layer-binding-application-verified": True,
             "challenge_review_non-passing-disposition-requires-finding-on-exact-challenged-claim": True,
             "challenge_review_shared-finding-code-requires-claim-in-every-bound-challenge": True,
             "package-material-effect-observation-omission-remediation": (

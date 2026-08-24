@@ -287,14 +287,22 @@ handler mapping unknown，两题独立 PASS；Q2 虽被页面错误 `APPROVED`�
 明确 configuration-backed header/prefix unknown，实际 2 PASS + 1 FAIL。见 `FINDING-010-081`。
 
 `FINDING-010-082` 已增加 operational Question Understanding/Answer handoff、通用 `ORIGINAL_QUESTION_FULFILLMENT_SCAN`、
-`DRAFT_OMITS_MATERIAL_REQUIREMENT` 与专用 disposition/challenge-kind matching。focused 80/80、Engineering QA 117/117 PASS；扩展
+`DRAFT_OMITS_MATERIAL_REQUIREMENT` 与专用 disposition/challenge-kind matching。focused 80/80、Engineering QA 117/117 PASS；
 `FINDING-010-083` 再以 docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178
 exact historical hold 闭合 deterministic Gate；没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-030 不追认。
 
+clean `3c45072…` / run-031 的 fresh DeepSeek Conformance 2/2 PASS；Q1 使用 12 dispatch，retry/switch/outcome-unknown 0，但第二次
+challenge 发现 cache write 时没有声明 Application observation omission，错误请求第二次同包 rewrite，最终
+`SAME_PACKAGE_REWRITE_FUSE_EXHAUSTED` / Q1 FAIL；Q2/Q3 与 66,000-byte 负测未执行。`FINDING-010-084` 要求 exact omitted-effect
+statements 与 `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer，并由 Application 重算 observation membership、entry/evidence class 与
+remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合
+82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合 deterministic Gate。新 clean/fresh live
+仍待执行，run-031 不追认。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-030 再次证明同会话三题、Provider 前超限拒绝、private files、clean stop 与问题隔离；但答案质量为 2/3，持续运行不能替代答案质量 Gate | FAIL / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-030 Q1/Q3 独立 PASS，Q2 页面错误 `APPROVED`，实际 2/3。`FINDING-010-081/082/083` 已闭合 focused/Engineering QA/docs/oracle/full exact historical hold deterministic Gate；新 clean/fresh 三题待执行 | FAIL / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-030 证明同会话三题与 Provider 前负测但答案 2/3；run-031 Q1 正确安全关闭并保持 private/clean stop，却未完成持续三题与负测。持续运行不能替代答案质量 Gate | FAIL / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-030 实际 2/3；run-031 Q1 因 cache effect 错选 rewrite 而 FAIL，Q2/Q3 NOT-RUN。`FINDING-010-084/085` corrective deterministic Gate 已闭合，新 clean/fresh live 待执行 | FAIL / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

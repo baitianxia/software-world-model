@@ -30,7 +30,9 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringAnswerReviewerRole,
     EngineeringEvidenceBoundaryAssessment,
     EngineeringEvidenceBoundaryAssessmentDisposition,
+    EngineeringEvidenceBoundaryChallengeKind,
     EngineeringEvidenceClass,
+    EngineeringMaterialEffectOmissionLayer,
     EngineeringQuestionRequest,
     EngineeringReviewChecklistAssessment,
     EngineeringReviewMaterialObservation,
@@ -71,7 +73,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@23"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@24"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -83,7 +85,7 @@ ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@10"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@8"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@9"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -146,10 +148,32 @@ def _evidence_boundary_challenges(
     package: QuestionEvidencePackage,
     draft: EngineeringAnswerDraft,
 ) -> list[dict[str, object]]:
-    return [
-        item.model_view()
-        for item in project_evidence_boundary_challenges(package, draft)
-    ]
+    views: list[dict[str, object]] = []
+    for challenge in project_evidence_boundary_challenges(package, draft):
+        view = challenge.model_view()
+        if (
+            challenge.kind
+            is EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
+        ):
+            entry_reference = challenge.package_entry_ids[0].value
+            view["application_material_observations_for_entry"] = [
+                observation.model_view()
+                for disposition in package.checklist_dispositions
+                for observation in disposition.material_observations
+                if entry_reference in observation.evidence_references
+            ]
+            view["material_effect_omission_layer_contract"] = {
+                EngineeringMaterialEffectOmissionLayer.APPLICATION_PACKAGE.value: (
+                    "effect is absent from the projected exact Application observations; "
+                    "use INVESTIGATE_MISSING_EVIDENCE"
+                ),
+                EngineeringMaterialEffectOmissionLayer.DEFAULT_DRAFT.value: (
+                    "effect exactly exists in the projected Application observations but "
+                    "is absent from the default Draft; use REWRITE_WITH_EXISTING_EVIDENCE"
+                ),
+            }
+        views.append(view)
+    return views
 
 
 class EngineeringQuestionModelRole(str, Enum):
@@ -661,6 +685,20 @@ _REVIEW_EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA = {
                     ],
                 },
                 "finding_code": {"type": "string"},
+                "material_effect_omission_layer": {
+                    "type": "string",
+                    "enum": [
+                        item.value
+                        for item in EngineeringMaterialEffectOmissionLayer
+                    ],
+                },
+                "omitted_material_effect_statements": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "uniqueItems": True,
+                },
             },
             "required": [
                 "challenge_id",
@@ -668,6 +706,8 @@ _REVIEW_EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA = {
                 "draft_scope",
                 "disposition",
                 "finding_code",
+                "material_effect_omission_layer",
+                "omitted_material_effect_statements",
             ],
             "additionalProperties": False,
         },
@@ -1223,12 +1263,16 @@ class EngineeringQuestionRoleInputBuilder:
             is EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
             else ()
         )
+        challenge_views = (
+            _evidence_boundary_challenges(package, draft)
+            if review_focus
+            is EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+            else []
+        )
         body = {
             "review_focus": review_focus.value,
             "verified_gap_outcomes": _verified_gap_outcomes(package),
-            "evidence_boundary_challenges": [
-                item.model_view() for item in challenges
-            ],
+            "evidence_boundary_challenges": challenge_views,
             "evidence_boundary_assessment_contract": {
                 "required_challenge_ids": [
                     item.challenge_id.value for item in challenges
@@ -1247,6 +1291,11 @@ class EngineeringQuestionRoleInputBuilder:
                 "omitted_material_effect_disposition": (
                     EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT.value
                 ),
+                "material_effect_omission_layers": [
+                    item.value for item in EngineeringMaterialEffectOmissionLayer
+                ],
+                "material_effect_application_omission_requires_verification": True,
+                "material_effect_draft_omission_requires_exact_projected_observation": True,
                 "omitted_material_requirement_disposition": (
                     EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT.value
                 ),
@@ -1612,6 +1661,17 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
                         )
                     ),
                     finding_code=cast(str | None, item["finding_code"]),
+                    material_effect_omission_layer=(
+                        EngineeringMaterialEffectOmissionLayer(
+                            cast(str, item["material_effect_omission_layer"])
+                        )
+                        if "material_effect_omission_layer" in item
+                        else None
+                    ),
+                    omitted_material_effect_statements=cast(
+                        Sequence[str],
+                        item.get("omitted_material_effect_statements", ()),
+                    ),
                 )
                 for item in cast(
                     Sequence[Mapping[str, object]],

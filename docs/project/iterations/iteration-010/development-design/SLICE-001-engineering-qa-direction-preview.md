@@ -263,14 +263,17 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Verification Request。Reviewer 不能提出可执行 path/command/operation，也不能因 Draft 扩张了原问题不要求的细节而扩大调查。
 - 上述 finding-free Review 只是 `COMPREHENSIVE` provisional approval。Application 从当前 Package/Draft 投影 cited configuration
   placeholder、Claim 中 cited content 未出现的 HTTP status literal、Draft 提及但实现未挂载的 same-application type，以及每个被默认正文
-  Claim 引用的 full-content Java support entry 的独立 material-effect scan；此外每个有默认正文和引用 entry 的 Draft 投影一个
+  Claim 引用的 full-content Java support entry 的独立 material-effect scan，并为每个 scan 投影该 entry 已有的 exact Application
+  material observations；此外每个有默认正文和引用 entry 的 Draft 投影一个
   original-question fulfillment scan，检查 direct goal、ordered actions、input/output handoff、known/unknown boundary 与 material
   outcomes，随后使用另一个 fresh context 执行
   `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、caller/getter/import 与 DTO
   fields/wire property/handler output、上游 local state 与下游 status，并逐 entry 检查 persistence/audit write、cache mutation、
   notification 和 external interaction。每项 lead 具有 Application-owned 稳定 `challenge_id`；challenge 必须恰好逐项返回 evidence
   scope、Draft scope 与 `WITHIN_EVIDENCE_BOUNDARY / DRAFT_EXCEEDS_EVIDENCE_BOUNDARY / DRAFT_OMITS_MATERIAL_EFFECT /
-  DRAFT_OMITS_MATERIAL_REQUIREMENT`。后两种专用 disposition 必须与对应 challenge kind 匹配；所有非 passing
+  DRAFT_OMITS_MATERIAL_REQUIREMENT`。material-effect omission 还必须返回 exact effect statements 和
+  `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer：前者只允许同 evidence class Verification，后者只允许 exact projected observation
+  已存在时绑定 challenged entry rewrite。后两种专用 disposition 必须与对应 challenge kind 匹配；所有非 passing
   assessment 都必须绑定同输出中作用于该 exact challenge Claim 的 Finding，只有 Claim 同时属于每个 challenge 时才允许复用 Finding
   code。Application 重算 exact ID 集合，Gateway 强制 focus 顺序；只有集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的
   challenge 才可 Authorization。Package 已有 observation 时的 Draft omission 走同包 rewrite；full entry 已证明但 sealed Package 缺少
@@ -483,4 +486,11 @@ Draft 投影通用 `ORIGINAL_QUESTION_FULFILLMENT_SCAN`；缺 material 用户目
 exact historical hold 闭合 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍为冻结历史 hold，没有 ITER-010 新失败。下一步只能从
 新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge-assessment 独立复核；
 run-030 不追认，Production 不执行。
+`FINDING-010-084` 记录 clean `3c45072…` / run-031：fresh Conformance 2/2 PASS；Q1 在同一 Browser 会话使用 12 dispatch，retry/switch/
+outcome-unknown 0，但第二次 challenge 发现 cache write 后没有声明 Application observation omission，反而错误请求第二次同包 rewrite，
+结果 `SAME_PACKAGE_REWRITE_FUSE_EXHAUSTED` / Q1 FAIL。Q2/Q3 与 66,000-byte 负测因 systemic blocker 未执行，Production 不执行。处置不放宽
+rewrite fuse，而是为每个 material-effect omission 增加 exact statements 与 `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer；Application
+重算 observation membership、entry/evidence class 与 remediation。`FINDING-010-085` 再以 focused 80/80、Engineering QA 117/117、
+docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合
+deterministic Gate；没有 ITER-010 新失败。新的 clean/fresh live Gate 待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

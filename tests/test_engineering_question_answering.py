@@ -18,6 +18,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringEvidenceBoundaryAssessment,
     EngineeringEvidenceBoundaryAssessmentDisposition,
     EngineeringEvidenceBoundaryChallengeKind,
+    EngineeringMaterialEffectOmissionLayer,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionRequest,
     EngineeringQuestionResourceLimits,
@@ -1610,6 +1611,16 @@ class Service {
                                 finding.finding_code
                                 if item is effect_challenge
                                 else None
+                            ),
+                            material_effect_omission_layer=(
+                                EngineeringMaterialEffectOmissionLayer.APPLICATION_PACKAGE
+                                if item is effect_challenge
+                                else None
+                            ),
+                            omitted_material_effect_statements=(
+                                (effect_statement,)
+                                if item is effect_challenge
+                                else ()
                             ),
                         )
                         for item in challenges

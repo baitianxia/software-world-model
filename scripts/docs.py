@@ -4662,6 +4662,8 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "verification-successor-may-reuse-predecessor-support",
         "reviewer_original-question-fulfillment-scan-required",
         "challenge_review_specialized-disposition-kind-match-required",
+        "reviewer_full-content-material-effect-application-observations-projected",
+        "challenge_review_material-effect-layer-binding-application-verified",
     ):
         if answer_protocol.get(field) is not True:
             errors.append(f"{label}: answer_protocol.{field} must be true")
@@ -4702,6 +4704,21 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "reviewer_full-content-material-effect-categories": (
             "persistence-write,audit-write,cache-mutation,notification,"
             "external-interaction"
+        ),
+        "challenge_review_assessment_fields": (
+            "evidence-boundary,draft-scope,disposition,finding-code-plus-"
+            "material-effect-layer-and-exact-statements-for-effect-omission"
+        ),
+        "challenge_review_material-effect-omission-layer-vocabulary": (
+            "application-package,default-draft"
+        ),
+        "challenge_review_material-effect-application-package-remediation": (
+            "same-evidence-class-verification-and-effect-absent-from-exact-"
+            "package-observations"
+        ),
+        "challenge_review_material-effect-default-draft-remediation": (
+            "challenged-entry-rewrite-and-effect-present-in-exact-package-"
+            "observations"
         ),
         "reviewer_original-question-fulfillment-dimensions": (
             "direct-user-goal,ordered-user-actions,input-output-handoffs,"
