@@ -470,6 +470,29 @@ class ManualClock:
 
 
 class EngineeringQuestionAnsweringTests(unittest.TestCase):
+    def test_question_understanding_rejects_more_than_four_required_paths(self):
+        req = request()
+
+        with self.assertRaises(DomainError) as caught:
+            QuestionUnderstandingProposal.create(
+                role_context_id=sid("role_context", "f"),
+                request_digest=req.digest,
+                preserved_original_question=req.original_question,
+                user_goal="Trace the decisive implementation.",
+                audience="maintainer",
+                requested_abstraction_level=AnswerDetailLevel.IMPLEMENTATION_DETAIL,
+                material_conclusions=("Explain the decisive behavior.",),
+                evidence_needs=("Exact implementation behavior.",),
+                required_evidence_classes=(EngineeringEvidenceClass.SOURCE,),
+                required_evidence_paths=tuple(
+                    f"src/Required{index}.java" for index in range(5)
+                ),
+                response_language=req.response_language,
+            )
+
+        self.assertEqual(caught.exception.code, ErrorCode.INVALID_ARGUMENT)
+        self.assertIn("one to four", caught.exception.message)
+
     def test_checklist_disposition_preserves_sixteen_atomic_observations(self) -> None:
         reference = "retrieval_item_" + "1" * 32
         observations = tuple(
@@ -801,6 +824,9 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
 
         class PrematureSupportedInvestigator:
             path_gap = None
+            eligible_locator_references = ()
+            caller_locator = None
+            delegate_locator = None
 
             def propose(self, investigation_input):
                 if investigation_input.step_index == 1:
@@ -816,22 +842,25 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                         for item in investigation_input.retrieval_results[0].items
                         if item.path == "src/Caller.java"
                     )
-                    return step_proposal(
-                        investigation_input,
-                        operation=InvestigationOperation.READ,
-                        evidence_class=EngineeringEvidenceClass.SOURCE,
-                        locator_reference=caller.locator_reference,
+                    delegate = next(
+                        item
+                        for item in investigation_input.retrieval_results[0].items
+                        if item.path == "src/Delegate.java"
                     )
-                if investigation_input.step_index == 3:
-                    evidence = (
-                        investigation_input.retrieval_results[-1].items[0].item_id.value
+                    self.eligible_locator_references = (
+                        investigation_input.eligible_locator_references
                     )
+                    self.caller_locator = caller.locator_reference
+                    self.delegate_locator = delegate.locator_reference
                     return step_proposal(
                         investigation_input,
                         operation=InvestigationOperation.FINISH,
-                        evidence_reference=evidence,
+                        evidence_reference=(
+                            investigation_input.disposition_reference_eligibility
+                            .support_references[0]
+                        ),
                     )
-                if investigation_input.step_index == 4:
+                if investigation_input.step_index == 3:
                     self.path_gap = investigation_input.ledger.entries[-1]
                     delegate = next(
                         item
@@ -926,8 +955,16 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             dict(investigator.path_gap.details)["required_evidence_path"],
             "src/Delegate.java",
         )
-        self.assertEqual(result.usage.investigation_role_calls, 5)
-        self.assertEqual(result.usage.source_operations, 3)
+        self.assertNotIn(
+            investigator.caller_locator,
+            investigator.eligible_locator_references,
+        )
+        self.assertIn(
+            investigator.delegate_locator,
+            investigator.eligible_locator_references,
+        )
+        self.assertEqual(result.usage.investigation_role_calls, 4)
+        self.assertEqual(result.usage.source_operations, 2)
 
     def test_independent_verification_creates_successor_chain(self):
         result = self.service(request_more_evidence=True).answer(request())

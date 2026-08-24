@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@19",
+            "engineering-qa-adaptive-investigation-prompt@20",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -405,8 +405,23 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("smallest unique set directly needed", understanding_prompt)
         self.assertIn("required_evidence_paths", understanding_prompt)
         self.assertIn("mandatory-read set", understanding_prompt)
+        self.assertIn("one to four exact strings", understanding_prompt)
+        self.assertIn(
+            "remain executable within the sealed investigation fuse",
+            understanding_prompt,
+        )
         self.assertIn("separate checklist items", understanding_prompt)
         self.assertIn("audit, cache, notification", understanding_prompt)
+        initial_prompt = " ".join(
+            engineering_question_role_prompt(
+                EngineeringQuestionModelRole.INITIAL_INVESTIGATION
+            ).split()
+        )
+        self.assertIn(
+            "remaining_initial_investigation_calls_including_current",
+            initial_prompt,
+        )
+        self.assertIn("mechanically restricted to issued locators", initial_prompt)
         answer_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.ANSWER
@@ -486,18 +501,26 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
 
     def test_unknown_provider_outcome_is_audited_and_never_retried(self) -> None:
         adapter = LiveRoleAdapter(outcome_unknown=True)
-        source, _ = self.source(adapter)
+        source, _ = self.source(adapter, policy_enforced=True)
         arguments = self.output_arguments()
 
-        with self.assertRaises(DomainError):
+        with self.assertRaises(DomainError) as first:
             source.output_for(**arguments)
         with self.assertRaises(DomainError) as replay:
             source.output_for(**arguments)
 
+        self.assertEqual(first.exception.code, ErrorCode.LIVE_INTEGRATION_HELD)
+        self.assertIn("outcome is unknown", first.exception.message)
+        self.assertIn("closed without retry", first.exception.message)
+        self.assertEqual(
+            first.exception.details["reason_code"],
+            "PROVIDER_OUTCOME_UNKNOWN",
+        )
         self.assertEqual(replay.exception.code, ErrorCode.CONTROL_STATE_DENIED)
         self.assertEqual(len(adapter.requests), 1)
         self.assertEqual(source.dispatch_attempt_count, 1)
         self.assertEqual(source.audits[0].model_call_state, "OUTCOME_UNKNOWN")
+        self.assertEqual(source.audits[0].failure_code, "LIVE_INTEGRATION_HELD")
         self.assertEqual(source.audits[0].outcome, "REJECTED")
 
     def test_exact_provider_http_failure_is_not_reclassified_as_binding_drift(self) -> None:

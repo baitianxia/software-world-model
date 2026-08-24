@@ -394,6 +394,13 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
+        self.assertEqual(manifest.body["maximum_initial_investigation_calls"], 12)
+        self.assertEqual(
+            manifest.body[
+                "remaining_initial_investigation_calls_including_current"
+            ],
+            12,
+        )
         self.assertEqual(manifest.body["prior_action_intents"], ())
         self.assertEqual(
             manifest.body["registered_evidence_classes"],
@@ -726,7 +733,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF
         ].schema["properties"]["required_evidence_paths"]
         self.assertEqual(understanding_paths["minItems"], 1)
-        self.assertEqual(understanding_paths["maxItems"], 8)
+        self.assertEqual(understanding_paths["maxItems"], 4)
         self.assertTrue(understanding_paths["uniqueItems"])
         review_checklist = review["properties"]["checklist_assessment"]
         self.assertIn(

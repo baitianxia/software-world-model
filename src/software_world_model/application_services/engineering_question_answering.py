@@ -36,6 +36,7 @@ ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@2"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
 ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@1"
 MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION = 16
+MAXIMUM_REQUIRED_EVIDENCE_PATHS = 4
 
 _FULL_GIT_OID = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _SAFE_REFERENCE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@-]{0,255}$")
@@ -524,12 +525,12 @@ class QuestionUnderstandingProposal:
         )
         if (
             not required_paths
-            or len(required_paths) > 8
+            or len(required_paths) > MAXIMUM_REQUIRED_EVIDENCE_PATHS
             or len(set(required_paths)) != len(required_paths)
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "required evidence paths must contain one to eight unique repository-relative paths",
+                "required evidence paths must contain one to four unique repository-relative paths",
             )
         constraints = tuple(
             _text(value, "response constraint", maximum_bytes=4_096)
@@ -580,7 +581,7 @@ class QuestionUnderstandingProposal:
             required_evidence_paths=required_paths,
             response_language=core["response_language"],
             response_constraints=constraints,
-            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@4", core]),
+            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@5", core]),
         )
 
 
@@ -677,7 +678,7 @@ class QuestionUnderstanding:
             "response_constraints": proposal.response_constraints,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["QUESTION_UNDERSTANDING@4", core])
+        digest = digest_of(["QUESTION_UNDERSTANDING@5", core])
         return cls(
             understanding_id=_stable_id("question_understanding", core),
             request_digest=request.digest,
@@ -2567,14 +2568,24 @@ def _duplicates_prior_action_intent(
 
 def _eligible_locator_references(
     retrieval_results: Sequence[RetrievalResult],
+    *,
+    required_evidence_paths: Sequence[str] = (),
 ) -> tuple[StableId, ...]:
     consumed_paths = set(_consumed_full_content_paths(retrieval_results))
-    return tuple(
-        item.locator_reference
+    eligible_items = tuple(
+        item
         for result in retrieval_results
         for item in result.items
         if item.line_start is not None and item.path not in consumed_paths
     )
+    unread_required_paths = {
+        path for path in required_evidence_paths if path not in consumed_paths
+    }
+    if unread_required_paths:
+        eligible_items = tuple(
+            item for item in eligible_items if item.path in unread_required_paths
+        )
+    return tuple(item.locator_reference for item in eligible_items)
 
 
 def _evidence_class_closure(
@@ -2767,7 +2778,10 @@ class InitialInvestigationInput:
 
     @property
     def eligible_locator_references(self) -> tuple[StableId, ...]:
-        return _eligible_locator_references(self.retrieval_results)
+        return _eligible_locator_references(
+            self.retrieval_results,
+            required_evidence_paths=self.required_evidence_paths,
+        )
 
     @property
     def consumed_full_content_paths(self) -> tuple[str, ...]:
@@ -2778,6 +2792,15 @@ class InitialInvestigationInput:
         consumed = set(self.consumed_full_content_paths)
         return tuple(
             path for path in self.required_evidence_paths if path not in consumed
+        )
+
+    @property
+    def remaining_initial_investigation_calls_including_current(self) -> int:
+        return max(
+            0,
+            self.request.limits.maximum_initial_investigation_calls
+            - self.step_index
+            + 1,
         )
 
     @property
@@ -2837,6 +2860,12 @@ class InitialInvestigationInput:
             "required_evidence_paths": list(self.required_evidence_paths),
             "unread_required_evidence_paths": list(
                 self.unread_required_evidence_paths
+            ),
+            "maximum_initial_investigation_calls": (
+                self.request.limits.maximum_initial_investigation_calls
+            ),
+            "remaining_initial_investigation_calls_including_current": (
+                self.remaining_initial_investigation_calls_including_current
             ),
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references

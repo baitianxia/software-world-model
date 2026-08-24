@@ -127,5 +127,10 @@ iteration: ITER-010
 - [FINDING-010-048](FINDING-010-048.md)：clean `5ce5ab0…` 的 run-015 三题证明 class 闭包仍会漏读被委托实现、扁平 Answer Schema 仍允许
   两个直接回答，且 Reviewer 再次漏审持久化审计副作用。现由 Understanding 声明 exact mandatory-read paths，Application 在任何 FINISH 前
   闭合完整读取，并把 Answer 改为唯一 `direct_answer` + 禁止直答的 follow-up claims；新 clean/fresh live 仍待执行。
+- [FINDING-010-049](FINDING-010-049.md)：clean `00afecd…` 的 run-016 三题证明 1—8 个 mandatory-read paths 与 12-call 调查熔断
+  数学不可达，且非必读 search hit 会继续消耗步骤；第一题的真实 `PROVIDER_OUTCOME_UNKNOWN` 又被误报为 binding drift。现把必读路径上限
+  收紧为 4、未闭合时只暴露 required locator、投影 exact remaining fuse，并准确传播已重验 binding 的 outcome unknown。
+- [FINDING-010-050](FINDING-010-050.md)：上述修复后 Engineering QA 97/97、docs 444/444、compile/diff PASS；允许 AF_UNIX 的 full
+  1163 项中 1158 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

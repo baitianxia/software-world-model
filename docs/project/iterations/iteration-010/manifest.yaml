@@ -477,8 +477,12 @@ answer_protocol:
   hard_safety_model_call_upper_bound_per_question: 24
   upfront_complete_retrieval_plan_required: false
   investigation_proposal_must_consider_prior_results: true
+  required_evidence_path_upper_bound: 4
+  required_evidence_path_budget_reserve: four-search-plus-four-full-read-plus-one-finish-leaves-three-adaptive-calls
   required_evidence_paths_complete-read-before-any-finish: true
   search_or-truncated-read_satisfies_required-path: false
+  unread_required_path_locator_priority_required: true
+  initial_investigation_exact_remaining-call-count-visible: true
   source_broker_policy_compilation_required: true
   evidence_ledger_append_only: true
   question_evidence_package_sealed_after_investigation: true
@@ -507,6 +511,7 @@ answer_protocol:
   deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks: true
   provider_request_retries_allowed: false
   provider_switch_after_dispatch_allowed: false
+  exact_provider_outcome-unknown_preserved-after-binding-revalidation: true
   status: frozen
 
 readiness_inputs:
@@ -562,13 +567,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:b579af2c6edf4ccd6018761bafd11e45345a25bba76ef9385fb25501fbe744a7
+  system_contract_set_digest: sha256:be6acb127d6caf33b7d18c7533c9708fe64dcc9f9e87c3ddc3837ac8f1961e8f
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:4e2aad0a4ac48643ff84e4011c85fae328297ed6bc74b1ac32e213db46caceb3
+  investigation_budget_digest: sha256:83f69653b816edcb6bfdb10ee74ff860ef2a6b4b349ab3858d7bcd0d2368b5d8
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

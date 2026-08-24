@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-24
@@ -91,7 +91,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / required-path and answer-shape closure** | clean `5ce5ab0…` / run-015 的原始 SQLite 否定页面两个 `APPROVED`：原题漏登录审计副作用，401/403 题用 manager 接线代替内部行为；混合题又因两个直接回答失败关闭。`FINDING-010-048` 现以 mandatory-read path closure、唯一 `direct_answer` + follow-up schema 和独立 side-effect audit 处置根因；定向 96/96、docs 442/442，允许 AF_UNIX 的 full 1162/1157 且只保留既有 4 FAIL + 1 ERROR。clean commit、fresh Conformance 与同会话三题仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / required-path budget reachability** | clean `00afecd…` / run-016 的三题均未形成可交付答案：原题第 12 次总 dispatch 为真实 Provider outcome unknown，却被页面误报 binding drift；另两题各用满 12 次 Investigation，因为 8/6 个 mandatory paths 与非必读 locator 消耗而无法 FINISH。`FINDING-010-049` 现把上限收紧为预算可达的 4，未闭合时只暴露 required locator、投影 remaining fuse，并准确传播 exact outcome unknown；Engineering QA 97/97、docs 444/444，允许 AF_UNIX 的 full 1163/1158 且只保留既有 4 FAIL + 1 ERROR。新 clean/live 仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -177,6 +177,23 @@ FINISH 前都要求无行范围、coverage-complete 的 READ/PARSE，SEARCH/截�
 拆分并独立审核持久化、审计、缓存、通知和外部交互，多机制问题要求各决定性实现而非 caller/wiring。Prompt/Strategy 升为 `@19/@9`，
 定向 96/96、docs 442/442 PASS；允许 AF_UNIX 的 full 1162 项中 1157 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结历史 hold。
 新 clean/fresh 三题仍待执行，run-015 的两个错误批准与一个失败均不追认。
+
+上述处置形成 clean candidate `00afecd…` 并通过 run-016 fresh DeepSeek Conformance 2/2，Result
+`sha256:df22a7eb3e289a5edaf6b11ab61df35bfffc63e34780614e4a2e74e821020df4`。同一持续会话中，原题在第 12 次总
+dispatch 遇到一次真实 post-dispatch outcome unknown，另外两题各在 1 次 Understanding + 12 次 Investigation 后触发安全上限；三题
+Question Understanding 分别声明 6/8/6 个 mandatory-read paths，且 Investigation 会继续读取搜索结果中的非必读相关文件。terminal
+receipt `sha256:b3c94c2d30194a42a9a0b286a190ef16b345b662b657acff6b0c7700c283c67b` 记录 3 题、38 dispatch、
+retry/switch 0、private files 和 Production `NOT_EXECUTED`；Provider 前超长输入拒绝继续成立。
+
+`FINDING-010-049` 现把 mandatory-read path 上限从 8 收紧为 4，使当前 12-call initial fuse 在最坏 search/read/finish 组合下仍留 3 次
+自适应余量；unread required path 存在时只向角色暴露对应 locator，并投影 exact maximum/remaining calls。exact-binding
+`OUTCOME_UNKNOWN` 也不再落入 qualification drift，而以 `LIVE_INTEGRATION_HELD` 明确当前题关闭且 zero retry。Prompt/Strategy/
+Understanding schema 升为 `@20/@10/@4`；新确定性、完整回归、clean commit、fresh Conformance 和三题 live 仍待闭合，旧三题全部只保留
+为失败诊断。
+
+本次处置的 Engineering QA 组合 97/97、docs 444/444、compile/diff PASS。允许 AF_UNIX 的 full 1163 项中 1158 PASS，raw 唯一
+4 FAIL + 1 ERROR 仍精确为冻结 V-009 Adapter Conformance 与本机 Codex binary digest historical hold；默认 sandbox 额外 1 FAIL +
+6 ERROR 精确属于 AF_UNIX 权限噪声。见 `FINDING-010-050`。raw suite 保持 FAIL，只允许形成下一 clean candidate，不替代 fresh live。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

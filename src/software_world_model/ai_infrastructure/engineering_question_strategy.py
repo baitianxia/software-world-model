@@ -43,6 +43,7 @@ from software_world_model.application_services.engineering_question_answering im
     InvestigationOperation,
     InvestigationStepProposal,
     MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
+    MAXIMUM_REQUIRED_EVIDENCE_PATHS,
     MaterialObservation,
     MaterialObservationKind,
     QuestionEvidencePackage,
@@ -66,10 +67,10 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@9"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@10"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-question-understanding@3"
+    "engineering-qa-question-understanding@4"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-initial-investigation@5"
@@ -274,7 +275,7 @@ _QUESTION_UNDERSTANDING_OUTPUT_SCHEMA = {
             "type": "array",
             "items": {"type": "string"},
             "minItems": 1,
-            "maxItems": 8,
+            "maxItems": MAXIMUM_REQUIRED_EVIDENCE_PATHS,
             "uniqueItems": True,
         },
         "response_language": {"type": "string"},
@@ -798,7 +799,7 @@ class EngineeringQuestionRoleInputBuilder:
             ],
             "authorized_evidence_paths": list(request.source_allowlist),
             "required_evidence_path_policy": (
-                "ONE_TO_EIGHT_EXACT_AUTHORIZED_PATHS_WHOSE_FULL_CONTENT_IS_"
+                "ONE_TO_FOUR_EXACT_AUTHORIZED_PATHS_WHOSE_FULL_CONTENT_IS_"
                 "INDISPENSABLE_BEFORE_FINISH"
             ),
         }

@@ -114,6 +114,13 @@ supported/affirmative、non-supported/limitation 的一致组合。该修复仍�
 3 题、32 dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED` 只保留为失败诊断。定向 96/96、docs 442/442，允许
 AF_UNIX 的 full 1162/1157 且只保留既有 4 FAIL + 1 ERROR；新 clean/fresh live 仍待执行。
 
+该处置形成 clean candidate `00afecd…`，run-016 fresh DeepSeek Conformance 2/2 PASS；但同一持续会话的三题都未形成可交付答案。原题在
+第 12 次总 dispatch 遇到一次真实 post-dispatch `PROVIDER_OUTCOME_UNKNOWN`，页面又误报 binding drift；另外两题各用满 12 次
+Investigation，分别因 8/6 个 mandatory-read paths 与非必读 locator 消耗而无法 FINISH。terminal receipt `sha256:b3c94c2…` 记录
+3 题、38 dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；超长输入仍在 Provider 前拒绝。`FINDING-010-049`
+现把 mandatory-read 上限收紧为与 12-call fuse 可达的 4，未闭合时只暴露 required locator 并投影剩余 fuse，同时准确传播 exact-binding
+outcome unknown；旧三题仍全部是失败证据。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -140,9 +147,11 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Application 再验证 Result class/path。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority 或来源分类权。
 - 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
   只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
-- Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合及 1—8 个 exact mandatory-read paths；多机制/
-  检查面选择各决定性实现，flow/lifecycle 把结果、状态变化与持久化/审计/缓存/通知/外部交互副作用拆成独立 checklist。Application 区分
-  registered/required/investigated/untried/unregistered classes 与 required/unread paths；任何 FINISH 前都必须以无行范围、
+- Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合及 1—4 个 exact mandatory-read paths；多机制/
+  检查面选择各决定性实现，flow/lifecycle 把结果、状态变化与持久化/审计/缓存/通知/外部交互副作用拆成独立 checklist。4-path 上限与
+  12-call initial fuse 保证最坏 4 SEARCH + 4 READ/PARSE + 1 FINISH 后仍有 3 次自适应余量；可选佐证不得占用 mandatory capacity。
+  Application 区分 registered/required/investigated/untried/unregistered classes 与 required/unread paths；向 Initial Investigation 投影 exact
+  maximum/remaining calls，并在 unread required path 存在时只暴露这些路径的 eligible locator。任何 FINISH 前都必须以无行范围、
   `coverage_complete=true` 的 READ/PARSE 闭合 required paths，SEARCH/截断内容不消费义务；non-supported FINISH 只额外闭合仍可调查的
   required class，不机械遍历无关 registered class，unregistered required 则保留为能力边界。
 - 每个 FINISH disposition 必须从完整引用内容列出有界原子 material observations，区分 process、outcome、state change、side effect 与
@@ -270,4 +279,9 @@ product freeze 后形成执行证据。
 `FINDING-010-037` 记录修复后完整 1147 项中 1142 PASS、raw 仍只保留既有 4 FAIL + 1 ERROR historical hold。现有 Alpha 运行只证明
 缺陷可复现或部分约束生效；`FINDING-010-038` 记录 `e15ec50…` 的证据类过早结束与 illegal limitation kind/role pairing，并以通用 prompt/
 input contract 修复。新修复仍只有确定性证据，真实三题体验 Gate 保持 NOT-RUN。
+`FINDING-010-049` 记录 `00afecd…` 三题暴露的 mandatory-read path/fuse 不可达与 outcome-unknown 错误分类，并以 4-path capacity、
+required-locator priority、remaining-fuse 投影和 exact terminal propagation 闭合 current System Contract；新 clean/fresh live 前体验 Gate
+继续为 FAIL。
+`FINDING-010-050` 记录上述修复后的 Engineering QA 97/97、docs 444/444 与允许 AF_UNIX 的 full 1163/1158；raw 唯一
+4 FAIL + 1 ERROR 仍为冻结 historical hold，没有 ITER-010 新失败，但也不替代 fresh live。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

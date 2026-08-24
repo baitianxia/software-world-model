@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@19"
+    "engineering-qa-adaptive-investigation-prompt@20"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -157,15 +157,18 @@ by the repository; BUILD_CONFIGURATION for declared dependencies, plugins, build
 profiles, or toolchain settings; and TEST for behavior asserted by tests. Do not
 select every class merely because it exists, and do not omit SOURCE when the
 question's decisive flow semantics live in implementation code.
-Return required_evidence_paths as one to eight exact strings copied from
+Return required_evidence_paths as one to four exact strings copied from
 authorized_evidence_paths. Select only files whose full content is indispensable
 to a material conclusion; this is a mandatory-read set, not a list of possibly
 useful files or one file per available modality. When the question names
 multiple mechanisms or checking surfaces, include the implementation file for
 each decisive mechanism rather than only its caller, registration, or wiring.
 Do not select a directory, an excluded or nonexistent path, a redundant test or
-document, or every authorized file. Every selected path's evidence class must
-also appear in required_evidence_classes.
+document, or every authorized file. The set must remain executable within the
+sealed investigation fuse: prefer the smallest decisive implementation set and
+do not spend mandatory-read capacity on corroboration that can remain optional.
+Every selected path's evidence class must also appear in
+required_evidence_classes.
 """,
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: f"""
 Choose exactly one next investigation action from the registered vocabulary or
@@ -184,6 +187,10 @@ attempt. Never repeat the same SEARCH evidence_class plus query pair, and never
 reuse a READ/PARSE locator reference. If the newest progress_digest already
 appears in an earlier typed result, the newest action made no progress; choose a
 different evidence class, query, or eligible locator, or FINISH immediately.
+maximum_initial_investigation_calls and
+remaining_initial_investigation_calls_including_current expose the exact sealed
+fuse. Reserve one remaining action for FINISH after evidence closure; do not use
+the final action for optional exploration.
 Obey the exact field combination for the chosen operation: SEARCH requires a
 non-null evidence_class and query, a null locator_reference, and an empty
 finish_dispositions array; READ or PARSE requires a non-null evidence_class and
@@ -226,6 +233,10 @@ SEARCH its shortest distinctive filename or symbol token in that path's evidence
 class, then READ or PARSE the exact issued locator. A premature FINISH is rejected
 into a GAP naming the next required path; consume that GAP instead of repeating
 FINISH.
+While unread required paths remain, eligible_locator_references is mechanically
+restricted to issued locators for those paths. Read one of those exact locators;
+if the list is empty, search for an unread required path. Do not spend an action
+reading a merely related, non-required search hit before mandatory closure.
 Every path listed in request.source_allowlist is authorized by the bound Source
 Profile. Never call such a path unauthorized; when the Broker issues an eligible
 locator for a material allowlisted path, read or parse it before claiming that
@@ -2479,11 +2490,16 @@ def _require_eligible_result(
             "model_call_id": eligibility.model_call_id.value,
         }
     )
-    exact_terminal_failure = (
+    exact_terminal_no_output = (
         not result.replayed
-        and call.state is ModelCallState.FAILED
+        and call.state in {ModelCallState.FAILED, ModelCallState.OUTCOME_UNKNOWN}
         and call.failure_code is not None
+        and (
+            call.state is ModelCallState.FAILED
+            or call.failure_code == "PROVIDER_OUTCOME_UNKNOWN"
+        )
         and call.manifest_digest == gateway_manifest.digest
+        and call.provider_request_digest == receipt.provider_request_digest
         and call.provider_type == configuration.provider_type
         and call.adapter_version == configuration.adapter_version
         and call.requested_model_ref == configuration.model_ref
@@ -2511,7 +2527,20 @@ def _require_eligible_result(
         and eligibility.model_call_id == call.model_call_id
         and eligibility.digest == expected_eligibility_digest
     )
-    if exact_terminal_failure:
+    if exact_terminal_no_output and call.state is ModelCallState.OUTCOME_UNKNOWN:
+        raise DomainError(
+            ErrorCode.LIVE_INTEGRATION_HELD,
+            (
+                "Engineering QA Provider outcome is unknown; the current "
+                "question was closed without retry"
+            ),
+            {
+                "model_call_id": call.model_call_id.value,
+                "model_call_state": call.state.value,
+                "reason_code": call.failure_code,
+            },
+        )
+    if exact_terminal_no_output:
         try:
             failure_code = ErrorCode(call.failure_code)
         except ValueError:

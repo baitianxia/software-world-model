@@ -137,10 +137,19 @@ PASS。当前 mandatory-read path、唯一 direct-answer shape 与独立 side-ef
 AF_UNIX 的 full 1162 项中 1157 PASS，唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold。仍须 clean freeze、fresh
 Conformance 和完整三题重验。
 
+该处置形成 clean `00afecd…`，run-016 fresh DeepSeek Conformance 2/2 PASS；同一持续会话三题分别用 12/13/13 次 dispatch，全部未形成
+交付答案。原题的第 12 次总 dispatch 为 post-dispatch `PROVIDER_OUTCOME_UNKNOWN`，Gateway raw state 正确但页面误报 binding drift；
+另两题的 Question Understanding 分别声明 8/6 个 mandatory-read paths，12 次 Investigation 被 search/read 和非必读 locator 消耗，无法
+FINISH。terminal receipt `sha256:b3c94c2…` 记录 38 dispatch、retry/switch 0、private files、Production `NOT_EXECUTED`；22,000 字符
+输入仍在 Provider 前拒绝且 call root 不增加。见 `FINDING-010-049`。当前 4-path/fuse reachability、required-locator priority、remaining-fuse
+投影与 exact outcome-unknown propagation 的 Engineering QA 组合 97/97、docs 444/444、compile/diff PASS；允许 AF_UNIX 的 full
+1163 项中 1158 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，见 `FINDING-010-050`。新 clean candidate
+与 fresh live 仍待执行。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `5ce5ab0…` 已证明三题连续提交、private SQLite、Provider 前超限隔离与 listener 存活；但两个页面 `APPROVED` 经 raw evidence 判为质量失败，混合题失败关闭，仍未完成三题答案 | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-015 暴露副作用再遗漏、多个 direct answer 与 delegated implementation 漏读；`FINDING-010-048` 的通用修复只有定向确定性证据，仍须新 clean/fresh 三题 Result | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `00afecd…` 已证明三题连续提交、private SQLite、Provider 前超限隔离与 listener 存活；但三题分别因 outcome unknown 或 required-path/fuse 不可达失败，仍未完成三题答案 | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-016 暴露 mandatory-path/fuse 不可达与 non-required locator 消耗；`FINDING-010-049` 的通用修复只有定向确定性证据，仍须新 clean/fresh 三题 Result | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
