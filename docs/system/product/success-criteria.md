@@ -21,7 +21,7 @@ tests: []
   只能单独体验、不能与既有能力组合的孤立 Profile、View 或入口；
 - `ENGINEERING_QA` 在请求开始前固定模式、exact revision、World Model Read Authority、Source allowlist、Provider disclosure 和资源熔断；Investigation LLM 依据原问题、World Model Cognition Context 和 append-only Evidence Ledger 动态提出调查，Source Broker 校验编译，只有隔离 Retrieval Worker 可以只读 Source；Answer/Reviewer 只读调查结束后密封、support/citation 与 boundary/audit 分区的 Question Evidence Package，不触发同步 Knowledge Update，不静默切换 `WORLD_MODEL` 或 `DIRECT_INVESTIGATION`；
 - Reviewer 只能提出绑定当前 Package 或具体 material 结论/证据需求的 typed remediation Finding；可信 Application 派生 Verification gap，新的独立 Verification Investigation 在全新上下文读取 gap + current Package/Ledger，自适应经 Broker/Worker 执行后形成新 Ledger/Package，并重新 Answer/Review；
-- Engineering QA 的 comprehensive Review 只能形成 provisional approval；另一个 fresh evidence-boundary challenge 必须审核配置 placeholder、引用中缺失的 status literal 与未挂载 application type leads，且只有 finding-free challenge Review 可以授权答案。调用预算不足以完成 Answer + 双 Review 时失败关闭，不能跳过挑战；
+- Engineering QA 的 comprehensive Review 只能形成 provisional approval；另一个 fresh evidence-boundary challenge 必须按稳定 ID 逐项审核配置 placeholder、引用中缺失的 status literal 与未挂载 application type leads，分别比较 evidence/Draft scope。只有 Application 重算的 exact ID 集合完整、全部在边界内且 finding-free 的 challenge Review 可以授权答案；调用预算不足以完成 Answer + 双 Review 时失败关闭，不能跳过挑战；
 - 答案先回应用户目标并匹配期望抽象层级，代码细节只按问题需要展开；每个实质结论绑定包内真实引用，经授权软件来源仍不能证明的设计动机或其他内容明确返回 unknown/limitation；
 - 在未参与实现的工程上，由独立评测方或用户持有、实现阶段不可见的 held-out 自由问题，加上验收现场临时提出的问题，
   答案重大错误、物质遗漏和无据实质结论为零，未知边界准确，重要结论有可核验引用；从 `ITER-010-PDR-002` 后首个新建产品迭代起，

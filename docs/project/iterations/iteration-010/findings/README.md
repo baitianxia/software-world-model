@@ -200,5 +200,10 @@ iteration: ITER-010
   provisional，再由 fresh evidence-boundary challenge 独立授权；focused 78/78、Engineering QA 115/115 PASS，扩展 Gate 与新 live 待闭合。
 - [FINDING-010-076](FINDING-010-076.md)：上述双审处置经 focused 78/78、Engineering QA 115/115、docs 组合 148/148、历史 oracle
   组合 80/80、current docs/compile/diff 与 full 1181/1176 exact historical hold 闭合 deterministic Gate；新 clean/fresh live 是下一 Gate。
+- [FINDING-010-077](FINDING-010-077.md)：clean `f832ceb…` / run-028 的 Q1/Q3 独立 PASS，Q2 仍把 caller getter 扩张为未挂载 DTO
+  fields/wire property；fresh challenge 已收到精确 type lead 却原样复述并错误 `APPROVED`。现为每个 lead 密封稳定 `challenge_id`，要求
+  challenge 逐项返回 evidence/Draft scope 与受控 disposition，Application 重算 exact ID 集合并校验越界 Finding 绑定后才可授权。
+- [FINDING-010-078](FINDING-010-078.md)：上述处置后 focused 78/78、Engineering QA 115/115、docs 组合 148/148、历史 oracle
+  组合 80/80、current docs/compile/diff 与 full 1181/1176 exact historical hold 闭合 deterministic Gate；新 clean/fresh live 是下一 Gate。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

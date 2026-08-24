@@ -526,7 +526,15 @@ answer_protocol:
   reviewer_claim_consistency_gate: direct-default-claims-package-and-independent-observations-pairwise-semantic-check
   reviewer_evidence_boundary_challenge_projection: cited-configuration-placeholders-plus-claim-status-literals-absent-from-cited-content-plus-mentioned-same-application-types-without-mounted-implementation
   reviewer_evidence_boundary_projection_is-semantic-verdict: false
+  reviewer_evidence_boundary_challenge_identity: application-owned-stable-challenge-id
+  comprehensive_review_evidence-boundary-assessments: empty
+  challenge_review_assessment_coverage: exact-required-challenge-id-set-once
+  challenge_review_assessment_fields: evidence-boundary,draft-scope,disposition,finding-code
+  challenge_review_disposition_vocabulary: within-evidence-boundary,draft-exceeds-evidence-boundary
+  challenge_review_exceeded-disposition-requires-finding-on-challenged-claim: true
+  challenge_review_missing-duplicate-unknown-or-misbound-assessment: fail-closed-before-authorization
   configuration_placeholder_proves_concrete_runtime_value: false
+  caller_getter-proves-unmounted-field-wire-property-or-validation: false
   caller-import-or-registration-proves-unmounted-fields-validation-or-output: false
   externally_visible_outcome_owner_evidence_required: full-content-response-or-exception-mapper
   upstream_local_state_exception_or_deny_proves_downstream_status_error_or_body: false
@@ -617,13 +625,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:0b3f455cdcfc7e8706a5122075c97a042ff24f51291a44918fb26fdaa456d125
+  system_contract_set_digest: sha256:c2a4cffcebb32a8885ecf0e409de83a1b354fcf7e7434347ceab0fd6929f8823
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:085a513558923fb93c3f747684fd3c04380d75938c773afbfa80c2554f513c59
+  investigation_budget_digest: sha256:97189e5e6849f85e68b73251ceb6d62585d33eb84c883141ccd0fc939489d249
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

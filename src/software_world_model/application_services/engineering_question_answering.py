@@ -49,6 +49,16 @@ _PATH_LIKE_EVIDENCE_NEED = re.compile(
     r"[;&|`$<>])",
     re.IGNORECASE,
 )
+_CONFIGURATION_PLACEHOLDER_RE = re.compile(
+    r"\$\{([A-Za-z0-9_.-]+)(?::[^}]*)?\}"
+)
+_JAVA_PACKAGE_RE = re.compile(
+    r"(?m)^\s*package\s+([A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)\s*;"
+)
+_JAVA_IMPORT_RE = re.compile(
+    r"(?m)^\s*import\s+(?!static\s+)([A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)\s*;"
+)
+_HTTP_STATUS_LITERAL_RE = re.compile(r"(?<![0-9])[1-5][0-9]{2}(?![0-9])")
 
 
 def _text(value: str, label: str, *, maximum_bytes: int = 65_536) -> str:
@@ -284,6 +294,23 @@ class EngineeringReviewDecision(str, Enum):
 class EngineeringReviewFocus(str, Enum):
     COMPREHENSIVE = "COMPREHENSIVE"
     EVIDENCE_BOUNDARY_CHALLENGE = "EVIDENCE_BOUNDARY_CHALLENGE"
+
+
+class EngineeringEvidenceBoundaryChallengeKind(str, Enum):
+    CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE = (
+        "CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE"
+    )
+    CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT = (
+        "CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT"
+    )
+    MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION = (
+        "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION"
+    )
+
+
+class EngineeringEvidenceBoundaryAssessmentDisposition(str, Enum):
+    WITHIN_EVIDENCE_BOUNDARY = "WITHIN_EVIDENCE_BOUNDARY"
+    DRAFT_EXCEEDS_EVIDENCE_BOUNDARY = "DRAFT_EXCEEDS_EVIDENCE_BOUNDARY"
 
 
 _FINAL_ANSWER_ROLE_CALL_RESERVE = 3
@@ -4892,6 +4919,353 @@ class EngineeringAnswerRole(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringEvidenceBoundaryChallenge:
+    challenge_id: StableId
+    kind: EngineeringEvidenceBoundaryChallengeKind
+    claim_ids: tuple[str, ...]
+    package_entry_ids: tuple[StableId, ...]
+    rule: str
+    configuration_keys: tuple[str, ...]
+    literal: str | None
+    symbol: str | None
+    qualified_types: tuple[str, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        kind: EngineeringEvidenceBoundaryChallengeKind,
+        claim_ids: Sequence[str],
+        package_entry_ids: Sequence[StableId],
+        rule: str,
+        configuration_keys: Sequence[str] = (),
+        literal: str | None = None,
+        symbol: str | None = None,
+        qualified_types: Sequence[str] = (),
+    ) -> "EngineeringEvidenceBoundaryChallenge":
+        if not isinstance(kind, EngineeringEvidenceBoundaryChallengeKind):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Evidence-boundary challenge kind must use the closed vocabulary",
+            )
+        normalized_claim_ids = tuple(
+            _reference(item, "Evidence-boundary challenge Claim ID")
+            for item in claim_ids
+        )
+        entries = tuple(package_entry_ids)
+        if (
+            not normalized_claim_ids
+            or len(normalized_claim_ids) != len(set(normalized_claim_ids))
+            or not entries
+            or len(entries) != len(set(entries))
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Evidence-boundary challenge requires unique Claims and Package entries",
+            )
+        keys = tuple(
+            _reference(item, "Evidence-boundary configuration key")
+            for item in configuration_keys
+        )
+        types = tuple(
+            _reference(item, "Evidence-boundary qualified type")
+            for item in qualified_types
+        )
+        normalized_literal = (
+            _reference(literal, "Evidence-boundary HTTP status literal")
+            if literal is not None
+            else None
+        )
+        normalized_symbol = (
+            _reference(symbol, "Evidence-boundary application symbol")
+            if symbol is not None
+            else None
+        )
+        if kind is EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE:
+            valid_shape = bool(keys) and normalized_literal is None and normalized_symbol is None and not types
+        elif kind is EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT:
+            valid_shape = (
+                len(normalized_claim_ids) == 1
+                and normalized_literal is not None
+                and not keys
+                and normalized_symbol is None
+                and not types
+            )
+        else:
+            valid_shape = (
+                normalized_symbol is not None
+                and bool(types)
+                and not keys
+                and normalized_literal is None
+            )
+        if not valid_shape:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Evidence-boundary challenge detail shape does not match its kind",
+            )
+        core = {
+            "kind": kind.value,
+            "claim_ids": normalized_claim_ids,
+            "package_entry_ids": tuple(item.value for item in entries),
+            "rule": _reference(rule, "Evidence-boundary challenge rule"),
+            "configuration_keys": keys,
+            "literal": normalized_literal,
+            "symbol": normalized_symbol,
+            "qualified_types": types,
+        }
+        return cls(
+            challenge_id=_stable_id("evidence_boundary_challenge", core),
+            kind=kind,
+            claim_ids=normalized_claim_ids,
+            package_entry_ids=entries,
+            rule=core["rule"],
+            configuration_keys=keys,
+            literal=normalized_literal,
+            symbol=normalized_symbol,
+            qualified_types=types,
+            digest=digest_of(["ENGINEERING_EVIDENCE_BOUNDARY_CHALLENGE@1", core]),
+        )
+
+    def model_view(self) -> dict[str, object]:
+        common = {
+            "challenge_id": self.challenge_id.value,
+            "kind": self.kind.value,
+            "rule": self.rule,
+        }
+        if self.kind is EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE:
+            return {
+                **common,
+                "package_entry_id": self.package_entry_ids[0].value,
+                "default_claim_ids": list(self.claim_ids),
+                "configuration_keys": list(self.configuration_keys),
+            }
+        if self.kind is EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT:
+            return {
+                **common,
+                "claim_id": self.claim_ids[0],
+                "literal": self.literal,
+                "cited_package_entry_ids": [
+                    item.value for item in self.package_entry_ids
+                ],
+            }
+        return {
+            **common,
+            "symbol": self.symbol,
+            "qualified_types": list(self.qualified_types),
+            "default_claim_ids": list(self.claim_ids),
+            "importing_package_entry_ids": [
+                item.value for item in self.package_entry_ids
+            ],
+        }
+
+
+def project_evidence_boundary_challenges(
+    package: QuestionEvidencePackage,
+    draft: EngineeringAnswerDraft,
+) -> tuple[EngineeringEvidenceBoundaryChallenge, ...]:
+    """Project stable review leads from the current Package and Draft."""
+
+    challenges: list[EngineeringEvidenceBoundaryChallenge] = []
+    support_by_id = {item.entry_id: item for item in package.support_citation}
+    default_claims = tuple(
+        claim
+        for claim in draft.claims
+        if claim.claim_id in draft.default_body_claim_ids
+    )
+    cited_default_claim_ids_by_entry = {
+        entry_id: tuple(
+            claim.claim_id
+            for claim in default_claims
+            if entry_id in claim.evidence_entry_ids
+        )
+        for entry_id in support_by_id
+    }
+    mounted_java_types: set[str] = set()
+    for item in package.support_citation:
+        if not item.locator.endswith(".java"):
+            continue
+        package_match = _JAVA_PACKAGE_RE.search(item.content)
+        if package_match is None:
+            continue
+        filename = item.locator.rsplit("/", 1)[-1]
+        mounted_java_types.add(f"{package_match.group(1)}.{filename[:-5]}")
+
+    for entry in package.support_citation:
+        claim_ids = cited_default_claim_ids_by_entry[entry.entry_id]
+        configuration_keys = tuple(
+            sorted(set(_CONFIGURATION_PLACEHOLDER_RE.findall(entry.content)))
+        )
+        if configuration_keys and claim_ids:
+            challenges.append(
+                EngineeringEvidenceBoundaryChallenge.create(
+                    kind=(
+                        EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE
+                    ),
+                    claim_ids=claim_ids,
+                    package_entry_ids=(entry.entry_id,),
+                    configuration_keys=configuration_keys,
+                    rule=(
+                        "THE_PLACEHOLDER_PROVES_THE_KEY_AND_INJECTION_ONLY_"
+                        "NOT_A_CONCRETE_RUNTIME_VALUE"
+                    ),
+                )
+            )
+
+    for claim in default_claims:
+        cited_entries = tuple(claim.evidence_entry_ids)
+        cited_content = "\n".join(
+            support_by_id[entry_id].content
+            for entry_id in cited_entries
+            if entry_id in support_by_id
+        )
+        for literal in sorted(set(_HTTP_STATUS_LITERAL_RE.findall(claim.text))):
+            if literal in cited_content:
+                continue
+            challenges.append(
+                EngineeringEvidenceBoundaryChallenge.create(
+                    kind=(
+                        EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT
+                    ),
+                    claim_ids=(claim.claim_id,),
+                    package_entry_ids=cited_entries,
+                    literal=literal,
+                    rule=(
+                        "REQUIRE_THE_FULL_CONTENT_OUTPUT_OWNER_OR_NARROW_TO_"
+                        "THE_SUPPORTED_LOCAL_STATE"
+                    ),
+                )
+            )
+
+    unresolved_claims: dict[str, set[str]] = {}
+    unresolved_entries: dict[str, set[StableId]] = {}
+    unresolved_types: dict[str, set[str]] = {}
+    for entry in package.support_citation:
+        package_match = _JAVA_PACKAGE_RE.search(entry.content)
+        if package_match is None:
+            continue
+        namespace_root = tuple(package_match.group(1).split(".")[:2])
+        for imported in _JAVA_IMPORT_RE.findall(entry.content):
+            imported_parts = imported.split(".")
+            symbol = imported_parts[-1]
+            matching_claim_ids = tuple(
+                claim.claim_id
+                for claim in default_claims
+                if re.search(
+                    rf"(?<![A-Za-z0-9_$]){re.escape(symbol)}(?![A-Za-z0-9_$])",
+                    claim.text,
+                )
+            )
+            if (
+                tuple(imported_parts[:2]) != namespace_root
+                or imported in mounted_java_types
+                or not matching_claim_ids
+            ):
+                continue
+            unresolved_claims.setdefault(symbol, set()).update(
+                matching_claim_ids
+            )
+            unresolved_entries.setdefault(symbol, set()).add(entry.entry_id)
+            unresolved_types.setdefault(symbol, set()).add(imported)
+    for symbol in sorted(unresolved_claims):
+        challenges.append(
+            EngineeringEvidenceBoundaryChallenge.create(
+                kind=(
+                    EngineeringEvidenceBoundaryChallengeKind.MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION
+                ),
+                claim_ids=tuple(sorted(unresolved_claims[symbol])),
+                package_entry_ids=tuple(sorted(unresolved_entries[symbol], key=lambda item: item.value)),
+                symbol=symbol,
+                qualified_types=tuple(sorted(unresolved_types[symbol])),
+                rule=(
+                    "CALLER_USE_OR_REGISTRATION_PROVES_ONLY_THAT_RELATIONSHIP_"
+                    "NOT_THE_IMPORTED_TYPES_FIELDS_OR_OUTPUT"
+                ),
+            )
+        )
+    return tuple(challenges)
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringEvidenceBoundaryAssessment:
+    challenge_id: StableId
+    evidence_boundary: str
+    draft_scope: str
+    disposition: EngineeringEvidenceBoundaryAssessmentDisposition
+    finding_code: str | None
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        challenge_id: StableId,
+        evidence_boundary: str,
+        draft_scope: str,
+        disposition: EngineeringEvidenceBoundaryAssessmentDisposition,
+        finding_code: str | None,
+    ) -> "EngineeringEvidenceBoundaryAssessment":
+        if not isinstance(
+            disposition, EngineeringEvidenceBoundaryAssessmentDisposition
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Evidence-boundary assessment disposition must use the closed vocabulary",
+            )
+        normalized_finding_code = (
+            _reference(finding_code, "Evidence-boundary assessment Finding code")
+            if finding_code is not None
+            else None
+        )
+        if (
+            disposition
+            is EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+            and normalized_finding_code is not None
+        ) or (
+            disposition
+            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+            and normalized_finding_code is None
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Evidence-boundary assessment Finding binding contradicts its disposition",
+            )
+        core = {
+            "challenge_id": challenge_id.value,
+            "evidence_boundary": _text(
+                evidence_boundary,
+                "Evidence-boundary assessment evidence scope",
+                maximum_bytes=8_192,
+            ),
+            "draft_scope": _text(
+                draft_scope,
+                "Evidence-boundary assessment Draft scope",
+                maximum_bytes=8_192,
+            ),
+            "disposition": disposition.value,
+            "finding_code": normalized_finding_code,
+        }
+        return cls(
+            challenge_id=challenge_id,
+            evidence_boundary=core["evidence_boundary"],
+            draft_scope=core["draft_scope"],
+            disposition=disposition,
+            finding_code=normalized_finding_code,
+            digest=digest_of(["ENGINEERING_EVIDENCE_BOUNDARY_ASSESSMENT@1", core]),
+        )
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "challenge_id": self.challenge_id.value,
+            "evidence_boundary": self.evidence_boundary,
+            "draft_scope": self.draft_scope,
+            "disposition": self.disposition.value,
+            "finding_code": self.finding_code,
+            "digest": self.digest.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringReviewFinding:
     finding_code: str
     checklist_item_id: str | None
@@ -5328,6 +5702,9 @@ class EngineeringReviewProposal:
     decision: EngineeringReviewDecision
     quality_assessment: EngineeringReviewQualityAssessment
     checklist_assessment: EngineeringReviewChecklistAssessment
+    evidence_boundary_assessments: tuple[
+        EngineeringEvidenceBoundaryAssessment, ...
+    ]
     findings: tuple[EngineeringReviewFinding, ...]
     verification_request: VerificationRequestProposal | None
     digest: Digest
@@ -5341,6 +5718,9 @@ class EngineeringReviewProposal:
         draft_digest: Digest,
         quality_assessment: EngineeringReviewQualityAssessment,
         checklist_assessment: EngineeringReviewChecklistAssessment,
+        evidence_boundary_assessments: Sequence[
+            EngineeringEvidenceBoundaryAssessment
+        ] = (),
         findings: Sequence[EngineeringReviewFinding] = (),
     ) -> "EngineeringReviewProposal":
         finding_tuple = tuple(findings)
@@ -5351,6 +5731,7 @@ class EngineeringReviewProposal:
             decision=_review_decision_from_findings(finding_tuple),
             quality_assessment=quality_assessment,
             checklist_assessment=checklist_assessment,
+            evidence_boundary_assessments=evidence_boundary_assessments,
             findings=finding_tuple,
             verification_request=_verification_request_from_findings(
                 package_digest=package_digest,
@@ -5368,6 +5749,9 @@ class EngineeringReviewProposal:
         decision: EngineeringReviewDecision,
         quality_assessment: EngineeringReviewQualityAssessment,
         checklist_assessment: EngineeringReviewChecklistAssessment,
+        evidence_boundary_assessments: Sequence[
+            EngineeringEvidenceBoundaryAssessment
+        ] = (),
         findings: Sequence[EngineeringReviewFinding] = (),
         verification_request: VerificationRequestProposal | None = None,
     ) -> "EngineeringReviewProposal":
@@ -5421,6 +5805,26 @@ class EngineeringReviewProposal:
                 ErrorCode.PROVIDER_RESPONSE_INVALID,
                 "Review checklist assessment identity is invalid",
             )
+        boundary_assessments = tuple(evidence_boundary_assessments)
+        expected_boundary_assessments = tuple(
+            EngineeringEvidenceBoundaryAssessment.create(
+                challenge_id=item.challenge_id,
+                evidence_boundary=item.evidence_boundary,
+                draft_scope=item.draft_scope,
+                disposition=item.disposition,
+                finding_code=item.finding_code,
+            )
+            for item in boundary_assessments
+        )
+        if (
+            boundary_assessments != expected_boundary_assessments
+            or len({item.challenge_id for item in boundary_assessments})
+            != len(boundary_assessments)
+        ):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Review evidence-boundary assessments must be valid and unique",
+            )
         if (
             (
                 checklist_assessment.application_checklist_omissions
@@ -5438,6 +5842,17 @@ class EngineeringReviewProposal:
         if len({item.digest for item in finding_tuple}) != len(finding_tuple):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT, "Review Proposal contains duplicate Findings"
+            )
+        finding_codes = {item.finding_code for item in finding_tuple}
+        if any(
+            item.disposition
+            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+            and item.finding_code not in finding_codes
+            for item in boundary_assessments
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "exceeded evidence-boundary assessment must bind a returned Finding",
             )
         expected_decision = _review_decision_from_findings(finding_tuple)
         expected_verification_request = _verification_request_from_findings(
@@ -5472,6 +5887,9 @@ class EngineeringReviewProposal:
             "decision": decision.value,
             "quality_assessment": quality_assessment.digest.value,
             "checklist_assessment": checklist_assessment.digest.value,
+            "evidence_boundary_assessments": tuple(
+                item.digest.value for item in boundary_assessments
+            ),
             "findings": tuple(item.digest.value for item in finding_tuple),
             "verification_request": (
                 verification_request.digest.value if verification_request else None
@@ -5484,9 +5902,10 @@ class EngineeringReviewProposal:
             decision=decision,
             quality_assessment=quality_assessment,
             checklist_assessment=checklist_assessment,
+            evidence_boundary_assessments=boundary_assessments,
             findings=finding_tuple,
             verification_request=verification_request,
-            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@4", core]),
+            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@5", core]),
         )
 
 
@@ -5500,6 +5919,9 @@ class EngineeringAnswerReview:
     decision: EngineeringReviewDecision
     quality_assessment: EngineeringReviewQualityAssessment
     checklist_assessment: EngineeringReviewChecklistAssessment
+    evidence_boundary_assessments: tuple[
+        EngineeringEvidenceBoundaryAssessment, ...
+    ]
     findings: tuple[EngineeringReviewFinding, ...]
     verification_request: VerificationRequestProposal | None
     proposal_digest: Digest
@@ -5562,6 +5984,9 @@ class EngineeringAnswerReview:
             decision=proposal.decision,
             quality_assessment=proposal.quality_assessment,
             checklist_assessment=proposal.checklist_assessment,
+            evidence_boundary_assessments=(
+                proposal.evidence_boundary_assessments
+            ),
             findings=expected_findings,
             verification_request=expected_request,
         )
@@ -5585,6 +6010,43 @@ class EngineeringAnswerReview:
         claim_ids = {item.claim_id for item in draft.claims}
         support_ids = {item.entry_id for item in package.support_citation}
         boundary_ids = {item.entry_id for item in package.boundary_audit}
+        expected_challenges = project_evidence_boundary_challenges(package, draft)
+        expected_challenge_by_id = {
+            item.challenge_id: item for item in expected_challenges
+        }
+        expected_challenge_ids = {
+            item.challenge_id for item in expected_challenges
+        }
+        assessment_ids = {
+            item.challenge_id
+            for item in proposal.evidence_boundary_assessments
+        }
+        if focus is EngineeringReviewFocus.COMPREHENSIVE:
+            if proposal.evidence_boundary_assessments:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "comprehensive Review cannot pre-disposition evidence-boundary challenges",
+                )
+        elif assessment_ids != expected_challenge_ids:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "evidence-boundary challenge Review must disposition every projected challenge exactly once",
+            )
+        for assessment in proposal.evidence_boundary_assessments:
+            if (
+                assessment.disposition
+                is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+            ):
+                challenge = expected_challenge_by_id[assessment.challenge_id]
+                if not any(
+                    finding.finding_code == assessment.finding_code
+                    and finding.claim_id in challenge.claim_ids
+                    for finding in proposal.findings
+                ):
+                    raise DomainError(
+                        ErrorCode.PROVIDER_RESPONSE_INVALID,
+                        "exceeded evidence-boundary assessment must bind a Finding on one challenged Claim",
+                    )
         for observation in proposal.checklist_assessment.independent_material_observations:
             if observation.checklist_item_id not in checklist_ids:
                 raise DomainError(
@@ -5658,11 +6120,15 @@ class EngineeringAnswerReview:
             "decision": proposal.decision.value,
             "quality_assessment": proposal.quality_assessment.digest.value,
             "checklist_assessment": proposal.checklist_assessment.digest.value,
+            "evidence_boundary_assessments": tuple(
+                item.digest.value
+                for item in proposal.evidence_boundary_assessments
+            ),
             "findings": tuple(item.digest.value for item in proposal.findings),
             "verification_request": request.digest.value if request else None,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@4", core])
+        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@5", core])
         return cls(
             review_id=_stable_id("engineering_review", core),
             attempt=attempt,
@@ -5672,6 +6138,9 @@ class EngineeringAnswerReview:
             decision=proposal.decision,
             quality_assessment=proposal.quality_assessment,
             checklist_assessment=proposal.checklist_assessment,
+            evidence_boundary_assessments=(
+                proposal.evidence_boundary_assessments
+            ),
             findings=proposal.findings,
             verification_request=request,
             proposal_digest=proposal.digest,
@@ -5713,6 +6182,13 @@ class AuthorizedEngineeringAnswer:
         draft: EngineeringAnswerDraft,
         review: EngineeringAnswerReview,
     ) -> "AuthorizedEngineeringAnswer":
+        expected_boundary_challenge_ids = {
+            item.challenge_id
+            for item in project_evidence_boundary_challenges(package, draft)
+        }
+        reviewed_boundary_challenge_ids = {
+            item.challenge_id for item in review.evidence_boundary_assessments
+        }
         if (
             review.decision is not EngineeringReviewDecision.APPROVED
             or review.focus
@@ -5721,6 +6197,15 @@ class AuthorizedEngineeringAnswer:
             or review.checklist_assessment.application_checklist_omissions
             or review.checklist_assessment.application_material_observation_omissions
             or review.checklist_assessment.draft_material_observation_omissions
+            or reviewed_boundary_challenge_ids
+            != expected_boundary_challenge_ids
+            or len(review.evidence_boundary_assessments)
+            != len(expected_boundary_challenge_ids)
+            or any(
+                item.disposition
+                is not EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+                for item in review.evidence_boundary_assessments
+            )
             or review.findings
             or review.package_digest != package.digest
             or review.draft_digest != draft.digest
@@ -6043,6 +6528,7 @@ class EngineeringQuestionExecutionResult:
                 "review": (
                     {
                         "review_id": review.review_id.value,
+                        "focus": review.focus.value,
                         "decision": review.decision.value,
                         "quality_assessment": (
                             review.quality_assessment.model_view()
@@ -6050,6 +6536,10 @@ class EngineeringQuestionExecutionResult:
                         "checklist_assessment": (
                             review.checklist_assessment.model_view()
                         ),
+                        "evidence_boundary_assessments": [
+                            item.model_view()
+                            for item in review.evidence_boundary_assessments
+                        ],
                         "findings": [
                             item.finding_code for item in review.findings
                         ],
@@ -7600,6 +8090,10 @@ __all__ = [
     "EngineeringAnswerReviewerRole",
     "EngineeringAnswerReview",
     "EngineeringAnswerRole",
+    "EngineeringEvidenceBoundaryAssessment",
+    "EngineeringEvidenceBoundaryAssessmentDisposition",
+    "EngineeringEvidenceBoundaryChallenge",
+    "EngineeringEvidenceBoundaryChallengeKind",
     "EngineeringEvidenceClass",
     "EngineeringQuestionAnsweringService",
     "EngineeringQuestionExecutionResult",
@@ -7633,6 +8127,7 @@ __all__ = [
     "QuestionUnderstanding",
     "QuestionUnderstandingProposal",
     "QuestionUnderstandingRole",
+    "project_evidence_boundary_challenges",
     "RequiredEvidencePathLocator",
     "RetrievalItem",
     "RetrievalResult",

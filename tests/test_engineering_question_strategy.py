@@ -31,9 +31,16 @@ from software_world_model.application_services.engineering_question_answering im
     ChecklistDisposition,
     ChecklistDispositionReferenceEligibility,
     ChecklistOutcome,
+    EngineeringAnswerReview,
+    EngineeringEvidenceBoundaryAssessment,
+    EngineeringEvidenceBoundaryAssessmentDisposition,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionResultStatus,
+    EngineeringReviewDecision,
+    EngineeringReviewFinding,
     EngineeringReviewFocus,
+    EngineeringReviewProposal,
+    EngineeringReviewRemediation,
     EvidenceLedger,
     InitialInvestigationInput,
     LedgerEntryKind,
@@ -155,6 +162,7 @@ class AdaptiveStructuredOutputSource:
                         "application_material_observation_omissions": [],
                         "draft_material_observation_omissions": [],
                     },
+                    "evidence_boundary_assessments": [],
                     "findings": [
                         {
                             "finding_code": "CONFIGURATION_EVIDENCE_MISSING",
@@ -190,6 +198,21 @@ class AdaptiveStructuredOutputSource:
                         "application_material_observation_omissions": [],
                         "draft_material_observation_omissions": [],
                     },
+                    "evidence_boundary_assessments": [
+                        {
+                            "challenge_id": item["challenge_id"],
+                            "evidence_boundary": (
+                                "The cited content proves only the relationship "
+                                "described by the projected challenge."
+                            ),
+                            "draft_scope": (
+                                "The Draft stays within that visible relationship."
+                            ),
+                            "disposition": "WITHIN_EVIDENCE_BOUNDARY",
+                            "finding_code": None,
+                        }
+                        for item in body["evidence_boundary_challenges"]
+                    ],
                     "findings": [],
                 }
         return EngineeringQuestionRoleOutput.create(
@@ -625,10 +648,18 @@ class SecurityConfig {
         draft = replace(self.result.current_draft, claims=(claim,))
         challenged_package = replace(
             package,
-            support_citation=(entry, same_named_foreign_entry),
+            support_citation=(
+                *package.support_citation,
+                entry,
+                same_named_foreign_entry,
+            ),
         )
         projected = _evidence_boundary_challenges(challenged_package, draft)
 
+        self.assertEqual(
+            len({item["challenge_id"] for item in projected}),
+            len(projected),
+        )
         self.assertEqual(
             [item["kind"] for item in projected],
             [
@@ -667,6 +698,113 @@ class SecurityConfig {
             review.gateway_input()["input"]["evidence_boundary_challenges"],
             projected,
         )
+        self.assertEqual(
+            review.body["evidence_boundary_assessment_contract"][
+                "required_challenge_ids"
+            ],
+            tuple(item["challenge_id"] for item in projected),
+        )
+
+        missing_assessment_proposal = EngineeringReviewProposal.create(
+            role_context_id=sid("role_context", "f"),
+            package_digest=challenged_package.digest,
+            draft_digest=draft.digest,
+            decision=EngineeringReviewDecision.APPROVED,
+            quality_assessment=fixtures.passing_quality(),
+            checklist_assessment=fixtures.matching_review_checklist(
+                self.result.understanding,
+                challenged_package,
+            ),
+        )
+        with self.assertRaises(DomainError) as missing:
+            EngineeringAnswerReview.accept(
+                package=challenged_package,
+                draft=draft,
+                understanding=self.result.understanding,
+                expected_role_context_id=sid("role_context", "f"),
+                proposal=missing_assessment_proposal,
+                attempt=2,
+                focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            )
+        self.assertEqual(missing.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+
+        unbound_exceeded = EngineeringEvidenceBoundaryAssessment.create(
+            challenge_id=StableId(projected[-1]["challenge_id"]),
+            evidence_boundary="Caller content proves only a visible method call.",
+            draft_scope="The Draft asserts fields of the unmounted type.",
+            disposition=(
+                EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+            ),
+            finding_code="UNMOUNTED_TYPE_STRUCTURE",
+        )
+        with self.assertRaises(DomainError) as unbound:
+            EngineeringReviewProposal.create(
+                role_context_id=sid("role_context", "b"),
+                package_digest=challenged_package.digest,
+                draft_digest=draft.digest,
+                decision=EngineeringReviewDecision.APPROVED,
+                quality_assessment=fixtures.passing_quality(),
+                checklist_assessment=fixtures.matching_review_checklist(
+                    self.result.understanding,
+                    challenged_package,
+                ),
+                evidence_boundary_assessments=(unbound_exceeded,),
+            )
+        self.assertEqual(unbound.exception.code, ErrorCode.INVALID_ARGUMENT)
+
+        findings = tuple(
+            EngineeringReviewFinding.create(
+                finding_code=f"EVIDENCE_BOUNDARY_{index}",
+                checklist_item_id=None,
+                claim_id="claim-1",
+                description=(
+                    "The Draft exceeds the exact relationship visible in the cited content."
+                ),
+                remediation=(
+                    EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                ),
+                existing_evidence_entry_ids=(entry.entry_id,),
+            )
+            for index, _ in enumerate(projected, start=1)
+        )
+        assessments = tuple(
+            EngineeringEvidenceBoundaryAssessment.create(
+                challenge_id=StableId(item["challenge_id"]),
+                evidence_boundary="Only the cited visible relationship is supported.",
+                draft_scope="The Draft asserts a concrete value, type structure, or downstream output.",
+                disposition=(
+                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+                ),
+                finding_code=findings[index].finding_code,
+            )
+            for index, item in enumerate(projected)
+        )
+        complete_proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "c"),
+            package_digest=challenged_package.digest,
+            draft_digest=draft.digest,
+            quality_assessment=fixtures.passing_quality(),
+            checklist_assessment=fixtures.matching_review_checklist(
+                self.result.understanding,
+                challenged_package,
+            ),
+            evidence_boundary_assessments=assessments,
+            findings=findings,
+        )
+        accepted = EngineeringAnswerReview.accept(
+            package=challenged_package,
+            draft=draft,
+            understanding=self.result.understanding,
+            expected_role_context_id=sid("role_context", "c"),
+            proposal=complete_proposal,
+            attempt=2,
+            focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        self.assertEqual(
+            {item.challenge_id.value for item in accepted.evidence_boundary_assessments},
+            {item["challenge_id"] for item in projected},
+        )
+        self.assertEqual(accepted.decision, EngineeringReviewDecision.REWRITE_REQUIRED)
 
     def test_review_projects_terminal_verified_gap_outcome(self):
         package = self.result.current_package
@@ -992,6 +1130,7 @@ class SecurityConfig {
         review = schemas[ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF].schema
         self.assertIn("quality_assessment", review["required"])
         self.assertIn("checklist_assessment", review["required"])
+        self.assertIn("evidence_boundary_assessments", review["required"])
         self.assertNotIn("decision", review["properties"])
         self.assertNotIn("verification_request", review["properties"])
         review_finding_variants = review["properties"]["findings"]["items"][
@@ -1007,6 +1146,20 @@ class SecurityConfig {
                 "REWRITE_WITH_EXISTING_EVIDENCE",
                 "INVESTIGATE_MISSING_EVIDENCE",
                 "REJECT_UNRECOVERABLE",
+            },
+        )
+        boundary_assessment_variants = review["properties"][
+            "evidence_boundary_assessments"
+        ]["items"]["anyOf"]
+        self.assertEqual(len(boundary_assessment_variants), 2)
+        self.assertEqual(
+            {
+                item["properties"]["disposition"]["enum"][0]
+                for item in boundary_assessment_variants
+            },
+            {
+                "WITHIN_EVIDENCE_BOUNDARY",
+                "DRAFT_EXCEEDS_EVIDENCE_BOUNDARY",
             },
         )
         self.assertEqual(
@@ -1540,6 +1693,7 @@ class SecurityConfig {
                 "application_material_observation_omissions": [],
                 "draft_material_observation_omissions": [],
             },
+            "evidence_boundary_assessments": [],
             "findings": [
                 {
                     "finding_code": "EVIDENCE_MISSING",

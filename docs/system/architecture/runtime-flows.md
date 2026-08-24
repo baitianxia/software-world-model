@@ -136,9 +136,10 @@ Verification Investigation 多步推进，不回到初始调查。非验收方�
 必须预密封 revision/call/operation/bytes/wall-time/no-progress 熔断，answerable 因熔断未获批准计失败。
 
 comprehensive Review 通过后不会直接 Delivery。Application 从当前 Package/Draft 投影配置 placeholder、引用内容中没有的具体 status
-literal 和未挂载 same-application type，Gateway 只允许另一个 fresh challenge Review；只有 challenge finding-free 才终止问答链。placeholder
-只证明 key/injection，caller/import 只证明关系，上游 local state 只证明局部结果，均不能自动扩张为 runtime value、DTO/handler behavior 或
-下游 HTTP mapping。
+literal 和未挂载 same-application type，并为每项生成稳定 `challenge_id`；Gateway 只允许另一个 fresh challenge Review。challenge 必须逐项
+比较 evidence scope 与 Draft scope，越界项绑定同输出中作用于被挑战 Claim 的 Finding；Application 重算 exact ID 集合，只有集合完整、全部
+`WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 才终止问答链。placeholder 只证明 key/injection，caller/getter/import 只证明可见关系，不证明
+未挂载 field/wire property；上游 local state 只证明局部结果，均不能自动扩张为 runtime value、DTO/handler behavior 或下游 HTTP mapping。
 
 已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞本题。
 

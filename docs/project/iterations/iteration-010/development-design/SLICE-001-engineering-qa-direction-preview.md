@@ -258,8 +258,10 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - 上述 finding-free Review 只是 `COMPREHENSIVE` provisional approval。Application 从当前 Package/Draft 投影 cited configuration
   placeholder、Claim 中 cited content 未出现的 HTTP status literal、以及 Draft 提及但实现未挂载的 same-application type，随后使用另一个
   fresh context 执行 `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、
-  caller/import 与 DTO fields/handler output、上游 local state 与下游 status。Gateway 强制 focus 顺序；只有 challenge finding-free 才可
-  Authorization。每题为 Answer + 双 Review 预留 3 calls，Review attempt 上限 4，hard 24-call fuse 不变。
+  caller/getter/import 与 DTO fields/wire property/handler output、上游 local state 与下游 status。每项 lead 具有 Application-owned 稳定
+  `challenge_id`；challenge 必须恰好逐项返回 evidence scope、Draft scope 与受控 disposition，越界项绑定同输出中作用于被挑战 Claim 的
+  Finding。Application 重算 exact ID 集合，Gateway 强制 focus 顺序；只有集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的
+  challenge 才可 Authorization。每题为 Answer + 双 Review 预留 3 calls，Review attempt 上限 4，hard 24-call fuse 不变。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
   Result 自适应提出 search/read/parse/finish；predecessor Package 已含的 full-content exact-source locators 与 gap 后 full reads 共同
   标记为 consumed，相应 locator 不再 eligible，旧 raw Result 不重新进入输入。当前 attempt 最近一次 Broker rejection 以受信控制状态
@@ -437,4 +439,13 @@ clean/fresh live 仍待闭合；run-027 永久保持 Q1 PASS + Q2/Q3 FAIL。
 `FINDING-010-076` 已以 docs 组合 148/148、历史 oracle 组合 80/80、current docs/compile/diff 与允许 AF_UNIX 的 full
 1181/1176 exact historical hold 闭合上述 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍为冻结历史 hold，没有 ITER-010 新失败。
 下一步只能从新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与独立复核；run-027 不追认，Production 不执行。
+`FINDING-010-077` 记录 clean `f832ceb…` / run-028 的 2 PASS + 1 错误放行：Q2 fresh challenge 已收到未挂载 type lead，却仍把
+caller getter 扩张为 DTO field/wire property 并以空 Findings 批准。处置为每项 lead 密封 Application-owned stable `challenge_id`，
+challenge 必须逐项返回 evidence scope、Draft scope 与受控 disposition；Application 重算 exact ID 集合并要求越界项绑定同输出中作用于
+被挑战 Claim 的 Finding。Strategy/Prompt/Review Schema 为 `@21/@31/@6`，focused 78/78、Engineering QA 115/115 PASS；扩展
+deterministic 与下一 clean/fresh live 待闭合，run-028 永久保持 Q1/Q3 PASS、Q2 FAIL，Production 不执行。
+`FINDING-010-078` 已以 docs 组合 148/148、历史 oracle 组合 80/80、current docs/compile/diff 与允许 AF_UNIX 的 full
+1181/1176 exact historical hold 闭合上述 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍是冻结历史 hold，没有 ITER-010 新失败。
+下一步只能从新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw challenge assessment 独立复核；run-028
+不追认，Production 不执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

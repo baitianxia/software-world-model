@@ -62,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@30"
+    "engineering-qa-adaptive-investigation-prompt@31"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -516,6 +516,11 @@ evidence. A method parameter, return type, import, caller, or registration prove
 only that visible relationship; it does not expose an unmounted DTO's fields or
 an unmounted handler's response behavior. State the supported relationship and
 retain the missing detail as a limitation when it is material.
+A caller invoking a getter proves that the caller invokes that method and uses
+its returned value. It does not by itself prove that the referenced type stores
+a same-named field, accepts a same-named wire property, or declares particular
+validation constraints. Describe the visible call instead of converting it
+into unmounted type structure.
 Do not turn a Package observation about an upstream local state, exception, or
 authorization decision into a final HTTP or API status, error category, or
 response body unless the linked support evidence contains the response or
@@ -556,6 +561,18 @@ narrows it. If the original question or checklist materially requires the
 missing conclusion, request its direct evidence or accept an already verified
 terminal evidence boundary as an honest limitation. EVIDENCE_BOUNDARY_CHALLENGE
 may approve only after all projected leads have been compared this way.
+For COMPREHENSIVE, return an empty evidence_boundary_assessments array. For
+EVIDENCE_BOUNDARY_CHALLENGE, return exactly one assessment for every required
+challenge_id and no others. In each assessment, separately state the maximum
+scope proved by the cited content in evidence_boundary and the scope asserted
+by the exact Draft claim in draft_scope. Do not copy the Draft sentence into an
+independent observation and call that a comparison. Use WITHIN_EVIDENCE_BOUNDARY
+only when every asserted relationship stays inside the stated evidence scope.
+Otherwise use DRAFT_EXCEEDS_EVIDENCE_BOUNDARY and bind finding_code to an exact
+Finding returned in the same output. A getter invocation in caller content does
+not make a statement that the unmounted type "contains" the corresponding
+field or wire property safe; that structural statement exceeds caller evidence
+and requires narrowing or direct implementation evidence.
 A flow or lifecycle review must explicitly scan every relevant full-content
 implementation entry for persistence, audit, cache mutation, notification, and
 external-interaction effects. Report each material effect omitted from the

@@ -64,8 +64,10 @@ session authority，System Owner 才能生成 server-owned request/run identity 
 literal，以及 Draft 提及但 implementation 未按 package-qualified import identity 挂载的同 application type 作为 challenge leads；
 异包同名 Java 文件不能冒充该 implementation。lead 本身不自动判错；它强制独立比较
 placeholder 与 runtime value、caller/import 与 DTO fields/handler output、上游 local state 与下游 status 的证据所有权。Gateway 只允许
-Answer → comprehensive Review → challenge Review 的 focus 顺序，Authorization 只能绑定后者。资源预算必须为 Answer + 两个 Review
-预留三次 role call，不能以调用上限跳过最终挑战。
+Answer → comprehensive Review → challenge Review 的 focus 顺序。每个 lead 具有 Application-owned 稳定 `challenge_id`；challenge 必须
+逐项返回 evidence scope、Draft scope 与 `WITHIN_EVIDENCE_BOUNDARY / DRAFT_EXCEEDS_EVIDENCE_BOUNDARY`，越界项绑定同输出中作用于被挑战
+Claim 的 Finding。Application 重算并要求 ID 集合恰好一致，漏项、重复、错绑或 comprehensive 提前处置均失败关闭；Authorization 只能
+绑定全部 challenge 在边界内且 finding-free 的后者。资源预算必须为 Answer + 两个 Review 预留三次 role call，不能以调用上限跳过最终挑战。
 
 不同类型的包内证据保留各自 modality：世界模型表达已发布的系统认知及其 Coverage，exact 源码/配置表达该 revision 的静态实现，文档表达记录的用法或意图，测试表达静态预期或已密封的执行观察，模型 Proposal 只表达调查或回答建议。某一来源类型不自动拥有对所有命题的优先级；当相同 Context 中出现不兼容且无受控解析规则时，Package 必须保留 Conflict，答案不得静默选边。
 
@@ -81,7 +83,7 @@ Answer → comprehensive Review → challenge Review 的 focus 顺序，Authoriz
 
 ## Consequences
 
-默认工程问答以世界模型认知为稳定起点，并允许独立 Investigation LLM 像高级工程师一样根据发现逐步调查；Reviewer 可指出自己的具体证据缺口，另一个全新 Verification Investigation 再独立补证。provisional comprehensive approval 还必须经过另一个 fresh evidence-boundary challenge，降低调查、回答与单一审核共享证据扩张盲点的风险。平台仍独占来源权限，回答和审核仍只使用双分区密封证据。代价是增加 Source Broker、append-only Evidence Ledger、调查状态机、Package Revision、每个可授权 Draft 的第二次 Review 和独立补证闭环，也必须分别证明世界模型认知的因果贡献、调查质量和隔离边界。
+默认工程问答以世界模型认知为稳定起点，并允许独立 Investigation LLM 像高级工程师一样根据发现逐步调查；Reviewer 可指出自己的具体证据缺口，另一个全新 Verification Investigation 再独立补证。provisional comprehensive approval 还必须经过另一个 fresh evidence-boundary challenge，且该 challenge 的每个机械投影 lead 都有稳定 identity 和显式 scope comparison，降低调查、回答与单一审核共享证据扩张盲点以及 Reviewer 跳过 lead 的风险。平台仍独占来源权限，回答和审核仍只使用双分区密封证据。代价是增加 Source Broker、append-only Evidence Ledger、调查状态机、Package Revision、每个可授权 Draft 的第二次 Review、逐 challenge structured assessment 和独立补证闭环，也必须分别证明世界模型认知的因果贡献、调查质量和隔离边界。
 
 ## Adoption state
 

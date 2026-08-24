@@ -397,7 +397,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@30",
+            "engineering-qa-adaptive-investigation-prompt@31",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -595,6 +595,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("evidence_boundary_challenges", review_prompt)
         self.assertIn("projected items are review leads", review_prompt)
         self.assertIn("concrete runtime configuration value", review_prompt)
+        self.assertIn("exactly one assessment for every required challenge_id", review_prompt)
+        self.assertIn("evidence_boundary and the scope asserted", review_prompt)
+        self.assertIn("DRAFT_EXCEEDS_EVIDENCE_BOUNDARY", review_prompt)
+        self.assertIn("getter invocation in caller content", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:
