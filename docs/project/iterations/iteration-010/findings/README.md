@@ -111,5 +111,8 @@ iteration: ITER-010
 - [FINDING-010-043](FINDING-010-043.md)：旧候选第三题虽被 Reviewer 批准，却用 dynamic manager 接线代替内部权限判定证据，并在默认正文
   重复同一批 observation。现明确 setup/wiring 不证明被委托行为，Reviewer 必须请求决定性证据；Application 机械要求每个 observation 在
   默认用户可见 Claim 中恰好出现一次。
+- [FINDING-010-044](FINDING-010-044.md)：clean `34f0496…` 原题的直答已完整自然，但模型追加的过程 Claim 完全重复同 7 个 observation，
+  硬拒绝整题没有必要。Application 现按顺序保留首次覆盖、把全冗余后续 Claim 投影到开发者详情；部分交叠仍失败关闭且默认正文仍须覆盖
+  精确 observation 全集。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

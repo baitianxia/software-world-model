@@ -4041,7 +4041,7 @@ class EngineeringAnswerDraft:
                         ErrorCode.CONTROL_STATE_DENIED,
                         "answer claim does not cite every Package entry supporting its material observation",
                     )
-        default_body_claims = tuple(
+        default_body_candidates = tuple(
             claim
             for claim in proposal.claims
             if (
@@ -4051,6 +4051,26 @@ class EngineeringAnswerDraft:
                 is not AnswerContentRole.IMPLEMENTATION_EVIDENCE
             )
         )
+        projected_claims: list[EngineeringAnswerClaimProposal] = []
+        projected_observation_ids: set[StableId] = set()
+        for claim in default_body_candidates:
+            claim_observation_ids = set(claim.material_observation_ids)
+            if not claim_observation_ids:
+                projected_claims.append(claim)
+                continue
+            overlap = claim_observation_ids.intersection(
+                projected_observation_ids
+            )
+            if overlap == claim_observation_ids:
+                continue
+            if overlap:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "a user-visible answer claim partially repeats material observations",
+                )
+            projected_claims.append(claim)
+            projected_observation_ids.update(claim_observation_ids)
+        default_body_claims = tuple(projected_claims)
         default_body_claim_ids = tuple(
             claim.claim_id for claim in default_body_claims
         )
@@ -4059,18 +4079,6 @@ class EngineeringAnswerDraft:
             for claim in default_body_claims
             for observation_id in claim.material_observation_ids
         }
-        default_body_observation_sequence = tuple(
-            observation_id
-            for claim in default_body_claims
-            for observation_id in claim.material_observation_ids
-        )
-        if len(default_body_observation_sequence) != len(
-            default_body_observation_ids
-        ):
-            raise DomainError(
-                ErrorCode.CONTROL_STATE_DENIED,
-                "material observations must not repeat across user-visible answer claims",
-            )
         if default_body_observation_ids != set(observation_by_id):
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,

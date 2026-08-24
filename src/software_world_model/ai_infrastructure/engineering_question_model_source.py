@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@14"
+    "engineering-qa-adaptive-investigation-prompt@15"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -274,6 +274,9 @@ appear exactly once. Keep the DIRECT_ANSWER concise and allocate granular stages
 conditions, outcomes, and side effects to later user-visible claims instead of
 restating the same observations in both places. Implementation-only claims may
 reuse an observation outside the default body when needed for developer detail.
+A later user-visible claim whose observation IDs are already wholly covered is
+excluded from the default body; a partial overlap is rejected. Do not rely on
+that projection to repeat prose that should have been concise.
 The only legal kind/content_role pairs are AFFIRMATIVE with DIRECT_ANSWER,
 USER_VISIBLE_PROCESS, IMPACT_OR_SIDE_EFFECT, or IMPLEMENTATION_EVIDENCE; and
 LIMITATION with DIRECT_ANSWER or LIMITATION. Never assign LIMITATION kind to a

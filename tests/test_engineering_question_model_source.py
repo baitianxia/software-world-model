@@ -336,7 +336,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@14",
+            "engineering-qa-adaptive-investigation-prompt@15",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -406,6 +406,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             "each Package material-observation ID must appear exactly once",
             answer_prompt,
         )
+        self.assertIn("a partial overlap is rejected", answer_prompt)
         self.assertIn(
             "put their limitation observations in the one DIRECT_ANSWER limitation",
             answer_prompt,

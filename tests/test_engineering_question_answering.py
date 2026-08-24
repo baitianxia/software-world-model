@@ -1194,7 +1194,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             )
         self.assertEqual(caught.exception.code, ErrorCode.CONTROL_STATE_DENIED)
 
-    def test_user_visible_answer_cannot_repeat_material_observations(self):
+    def test_wholly_redundant_user_visible_claim_moves_out_of_default_body(self):
         result = self.service(request_more_evidence=False).answer(request())
         package = result.current_package
         observations = tuple(
@@ -1225,6 +1225,56 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                     checklist_item_ids=("check-1",),
                     material_observation_ids=(observations[0],),
                     text="Use the documented entry point.",
+                    evidence_entry_ids=support,
+                ),
+            ),
+        )
+
+        draft = EngineeringAnswerDraft.accept(
+            package=package,
+            understanding=result.understanding,
+            expected_role_context_id=role_context,
+            proposal=proposal,
+            revision=1,
+        )
+
+        self.assertEqual(draft.default_body_claim_ids, ("claim-direct",))
+        self.assertEqual(
+            draft.body,
+            "Use the documented entry point and expect its startup effect.",
+        )
+
+    def test_partially_overlapping_user_visible_claim_is_rejected(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        observations = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        support = tuple(item.entry_id for item in package.support_citation)
+        role_context = sid("role_context", "9")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=(observations[0],),
+                    text="Use the documented entry point.",
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-partial-overlap",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observations,
+                    text="Use the documented entry point and expect its startup effect.",
                     evidence_entry_ids=support,
                 ),
             ),
