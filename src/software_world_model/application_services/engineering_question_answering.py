@@ -280,6 +280,12 @@ class EngineeringReviewDecision(str, Enum):
     REJECT = "REJECT"
 
 
+class EngineeringReviewRemediation(str, Enum):
+    REWRITE_WITH_EXISTING_EVIDENCE = "REWRITE_WITH_EXISTING_EVIDENCE"
+    INVESTIGATE_MISSING_EVIDENCE = "INVESTIGATE_MISSING_EVIDENCE"
+    REJECT_UNRECOVERABLE = "REJECT_UNRECOVERABLE"
+
+
 class EngineeringQuestionResultStatus(str, Enum):
     APPROVED = "APPROVED"
     FAILED_CLOSED = "FAILED_CLOSED"
@@ -4680,6 +4686,10 @@ class EngineeringReviewFinding:
     checklist_item_id: str | None
     claim_id: str | None
     description: str
+    remediation: EngineeringReviewRemediation
+    existing_evidence_entry_ids: tuple[StableId, ...]
+    evidence_class: EngineeringEvidenceClass | None
+    evidence_need: str | None
     digest: Digest
 
     @classmethod
@@ -4688,29 +4698,143 @@ class EngineeringReviewFinding:
         *,
         finding_code: str,
         description: str,
+        remediation: EngineeringReviewRemediation,
         checklist_item_id: str | None = None,
         claim_id: str | None = None,
+        existing_evidence_entry_ids: Sequence[StableId] = (),
+        evidence_class: EngineeringEvidenceClass | None = None,
+        evidence_need: str | None = None,
     ) -> "EngineeringReviewFinding":
         if checklist_item_id is None and claim_id is None:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "Review Finding must bind a checklist item or answer Claim",
             )
+        if not isinstance(remediation, EngineeringReviewRemediation):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review Finding remediation must use the controlled vocabulary",
+            )
+        evidence_entry_ids = tuple(existing_evidence_entry_ids)
+        if len(evidence_entry_ids) != len(set(evidence_entry_ids)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review Finding contains duplicate existing Package evidence entries",
+            )
+        if remediation is EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE:
+            if (
+                not evidence_entry_ids
+                or evidence_class is not None
+                or evidence_need is not None
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "rewrite Finding requires existing Package evidence and no evidence gap",
+                )
+        elif remediation is EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE:
+            if (
+                evidence_entry_ids
+                or evidence_class not in _RETRIEVAL_EVIDENCE_CLASSES
+                or evidence_need is None
+                or checklist_item_id is None
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "evidence-gap Finding requires a checklist item, controlled evidence class, and need",
+                )
+            evidence_need = _text(
+                evidence_need, "Review Finding evidence need", maximum_bytes=8_192
+            )
+            if _PATH_LIKE_EVIDENCE_NEED.search(evidence_need):
+                raise DomainError(
+                    ErrorCode.PROVIDER_OUTPUT_FORBIDDEN,
+                    "Review Finding evidence need cannot contain an operation, path, URL, or command",
+                )
+        elif (
+            evidence_entry_ids
+            or evidence_class is not None
+            or evidence_need is not None
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "unrecoverable Finding cannot carry rewrite evidence or an evidence gap",
+            )
+        normalized_finding_code = _reference(finding_code, "Review Finding code")
+        normalized_checklist_item_id = (
+            _reference(checklist_item_id, "Review Finding checklist item")
+            if checklist_item_id
+            else None
+        )
+        normalized_claim_id = (
+            _reference(claim_id, "Review Finding claim ID") if claim_id else None
+        )
+        normalized_description = _text(
+            description, "Review Finding description", maximum_bytes=8_192
+        )
         core = {
-            "finding_code": _reference(finding_code, "Review Finding code"),
-            "checklist_item_id": (
-                _reference(checklist_item_id, "Review Finding checklist item")
-                if checklist_item_id
-                else None
+            "finding_code": normalized_finding_code,
+            "checklist_item_id": normalized_checklist_item_id,
+            "claim_id": normalized_claim_id,
+            "description": normalized_description,
+            "remediation": remediation.value,
+            "existing_evidence_entry_ids": tuple(
+                item.value for item in evidence_entry_ids
             ),
-            "claim_id": (
-                _reference(claim_id, "Review Finding claim ID") if claim_id else None
-            ),
-            "description": _text(
-                description, "Review Finding description", maximum_bytes=8_192
-            ),
+            "evidence_class": evidence_class.value if evidence_class else None,
+            "evidence_need": evidence_need,
         }
-        return cls(**core, digest=digest_of(["ENGINEERING_REVIEW_FINDING@1", core]))
+        return cls(
+            finding_code=normalized_finding_code,
+            checklist_item_id=normalized_checklist_item_id,
+            claim_id=normalized_claim_id,
+            description=normalized_description,
+            remediation=remediation,
+            existing_evidence_entry_ids=evidence_entry_ids,
+            evidence_class=evidence_class,
+            evidence_need=evidence_need,
+            digest=digest_of(["ENGINEERING_REVIEW_FINDING@2", core]),
+        )
+
+
+def _review_decision_from_findings(
+    findings: Sequence[EngineeringReviewFinding],
+) -> EngineeringReviewDecision:
+    remediations = {item.remediation for item in findings}
+    if EngineeringReviewRemediation.REJECT_UNRECOVERABLE in remediations:
+        return EngineeringReviewDecision.REJECT
+    if EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE in remediations:
+        return EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED
+    if findings:
+        return EngineeringReviewDecision.REWRITE_REQUIRED
+    return EngineeringReviewDecision.APPROVED
+
+
+def _verification_request_from_findings(
+    *,
+    package_digest: Digest,
+    findings: Sequence[EngineeringReviewFinding],
+) -> VerificationRequestProposal | None:
+    if (
+        _review_decision_from_findings(findings)
+        is not EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED
+    ):
+        return None
+    for finding in findings:
+        if (
+            finding.remediation
+            is EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+        ):
+            assert finding.checklist_item_id is not None
+            assert finding.evidence_class is not None
+            assert finding.evidence_need is not None
+            return VerificationRequestProposal.create(
+                package_digest=package_digest,
+                checklist_item_id=finding.checklist_item_id,
+                claim_id=finding.claim_id,
+                evidence_class=finding.evidence_class,
+                evidence_need=finding.evidence_need,
+            )
+    return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -4998,6 +5122,32 @@ class EngineeringReviewProposal:
     digest: Digest
 
     @classmethod
+    def create_from_findings(
+        cls,
+        *,
+        role_context_id: StableId,
+        package_digest: Digest,
+        draft_digest: Digest,
+        quality_assessment: EngineeringReviewQualityAssessment,
+        checklist_assessment: EngineeringReviewChecklistAssessment,
+        findings: Sequence[EngineeringReviewFinding] = (),
+    ) -> "EngineeringReviewProposal":
+        finding_tuple = tuple(findings)
+        return cls.create(
+            role_context_id=role_context_id,
+            package_digest=package_digest,
+            draft_digest=draft_digest,
+            decision=_review_decision_from_findings(finding_tuple),
+            quality_assessment=quality_assessment,
+            checklist_assessment=checklist_assessment,
+            findings=finding_tuple,
+            verification_request=_verification_request_from_findings(
+                package_digest=package_digest,
+                findings=finding_tuple,
+            ),
+        )
+
+    @classmethod
     def create(
         cls,
         *,
@@ -5078,6 +5228,19 @@ class EngineeringReviewProposal:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT, "Review Proposal contains duplicate Findings"
             )
+        expected_decision = _review_decision_from_findings(finding_tuple)
+        expected_verification_request = _verification_request_from_findings(
+            package_digest=package_digest,
+            findings=finding_tuple,
+        )
+        if (
+            decision is not expected_decision
+            or verification_request != expected_verification_request
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Review decision and verification request must be derived from Finding remediations",
+            )
         if decision is EngineeringReviewDecision.APPROVED:
             if (
                 not quality_assessment.all_pass
@@ -5091,17 +5254,6 @@ class EngineeringReviewProposal:
                     ErrorCode.INVALID_ARGUMENT,
                     "APPROVED review requires all direction checks and no Finding or verification request",
                 )
-        elif decision is EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED:
-            if not finding_tuple or verification_request is None:
-                raise DomainError(
-                    ErrorCode.INVALID_ARGUMENT,
-                    "MORE_EVIDENCE_REQUIRED requires Findings and one specific request",
-                )
-        elif not finding_tuple or verification_request is not None:
-            raise DomainError(
-                ErrorCode.INVALID_ARGUMENT,
-                "rewrite/reject review requires Findings and no verification request",
-            )
         core = {
             "role_context_id": role_context_id.value,
             "package_digest": package_digest.value,
@@ -5123,7 +5275,7 @@ class EngineeringReviewProposal:
             checklist_assessment=checklist_assessment,
             findings=finding_tuple,
             verification_request=verification_request,
-            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@3", core]),
+            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@4", core]),
         )
 
 
@@ -5158,6 +5310,10 @@ class EngineeringAnswerReview:
                 checklist_item_id=item.checklist_item_id,
                 claim_id=item.claim_id,
                 description=item.description,
+                remediation=item.remediation,
+                existing_evidence_entry_ids=item.existing_evidence_entry_ids,
+                evidence_class=item.evidence_class,
+                evidence_need=item.evidence_need,
             )
             for item in proposal.findings
         )
@@ -5239,6 +5395,17 @@ class EngineeringAnswerReview:
                     ErrorCode.PROVIDER_RESPONSE_INVALID,
                     "Review Finding refers to an unknown answer Claim",
                 )
+            if (
+                finding.remediation
+                is EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                and not set(finding.existing_evidence_entry_ids).issubset(
+                    support_ids | boundary_ids
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "rewrite Finding cites evidence outside the current Package",
+                )
         if request is not None:
             if (
                 request.package_digest != package.digest
@@ -5250,11 +5417,15 @@ class EngineeringAnswerReview:
                     "verification request is not a specific gap on the current Package",
                 )
             if not any(
-                finding.checklist_item_id == request.checklist_item_id
+                finding.remediation
+                is EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+                and finding.checklist_item_id == request.checklist_item_id
                 and (
                     request.claim_id is None
                     or finding.claim_id == request.claim_id
                 )
+                and finding.evidence_class is request.evidence_class
+                and finding.evidence_need == request.evidence_need
                 for finding in proposal.findings
             ):
                 raise DomainError(
@@ -7100,6 +7271,7 @@ __all__ = [
     "EngineeringReviewProposal",
     "EngineeringReviewQualityAssessment",
     "EngineeringReviewQualityStatus",
+    "EngineeringReviewRemediation",
     "EvidenceLedger",
     "EvidenceLedgerEntry",
     "InitialInvestigationInput",

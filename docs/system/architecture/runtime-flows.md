@@ -120,7 +120,7 @@ Explicit ENGINEERING_QA request
   → seal one Question Evidence Package with admissible support/citation and retained boundary/audit partitions
   → fresh isolated conclusion-first Answer with claim citations
   → independent Review against original question and current package
-  → APPROVED Delivery, same-package rewrite/re-review, or Reviewer-specific Verification gap Request
+  → Application derives APPROVED Delivery, same-package rewrite/re-review, or one typed-Finding Verification gap Request
   → fresh independent Verification Investigation reads gap + current Package/Ledger and adaptively proposes through Broker/Worker
   → on supplemental evidence: new Ledger Revision → new Package → new Answer → new Review
 ```

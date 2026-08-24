@@ -5,11 +5,7 @@ import json
 from pathlib import Path
 import unittest
 
-from scripts.docs import (
-    canonical_fileset_digest,
-    manifest_resolved_sequence_items,
-    safe_load_manifest,
-)
+from scripts.docs import safe_load_manifest
 from validation.structure_world_model_iteration_007 import readiness_oracle
 
 
@@ -103,22 +99,15 @@ class Iteration007ReadinessOracleTests(unittest.TestCase):
         self.assertEqual(frontend["readiness_oracle_result_digest"], result_digest)
         result_path = REPOSITORY / str(frontend["readiness_oracle_result_path"])
         self.assertEqual(result_path.read_bytes(), rendered)
-        manifest_text = MANIFEST.read_text(encoding="utf-8")
-        contract_paths = manifest_resolved_sequence_items(
-            manifest_text,
-            "readiness_inputs",
-            "system_contract_set_paths",
+        # ITER-007 is historical evidence. Its input digest binds the contract
+        # bytes that existed at readiness time, not today's current documents.
+        self.assertEqual(
+            readiness_inputs["system_contract_set_schema"],
+            "ITER-007-SYSTEM-CONTRACT-SET@1",
         )
-        self.assertIsNotNone(contract_paths)
-        assert contract_paths is not None
-        self.assertEqual(contract_paths, sorted(contract_paths))
         self.assertEqual(
             readiness_inputs["system_contract_set_digest"],
-            canonical_fileset_digest(
-                str(readiness_inputs["system_contract_set_schema"]),
-                contract_paths,
-                repository=REPOSITORY,
-            ),
+            "sha256:5857ee235478c5e2b8f4d516dfdfcc99b4c6503e827b7ca23fbc5ae2a864e355",
         )
 
     def test_canonical_reference_shape_cannot_smuggle_source(self) -> None:

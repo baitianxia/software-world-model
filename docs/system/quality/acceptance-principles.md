@@ -14,7 +14,7 @@ tests: []
 1. **固定权威主线：** `WORLD_MODEL` 回答只能使用 exact Snapshot 的正式查询/View 与 Support Map；`DIRECT_INVESTIGATION` 只能使用与原问题和 exact 来源目标绑定的密封 Evidence Packet；`ENGINEERING_QA` 由独立 Investigation LLM 基于原问题、World Model Cognition Context 和 append-only Evidence Ledger 自适应调查，但 Answer/Reviewer 只能消费调查结束后密封的当前 Question Evidence Package。Package 的 `support/citation` 仅含可采信条目，`boundary/audit` 强制保留 Gap/Failure/Partial/Conflict/Unknown 且不能支持肯定 Claim；seal 证明完整性和来源，不使内容自动为真。模式在请求开始前固定，不得静默切换。
 2. **任务语义守恒：** 同步回答的每个 Question Checklist Item，以及正式查询的每个 Requirement Need 和 Joint Constraint，都必须被满足或明确报告对应的 Evidence Gap / Knowledge Gap / Limitation。
 3. **诚实状态：** Conflict、Unknown、Limitation、Partial Result 和 Outcome Unknown 不能被隐藏或猜测。
-4. **独立复核：** 生成者不能自证；Reviewer 使用不继承调查或回答会话的新上下文。Reviewer 只能提出绑定具体 Claim/evidence need 的 Verification Request；补证由另一个全新上下文的 Verification Investigation 读取 gap + current Package/Ledger，自适应提议并经 Broker/Worker 校验执行，形成新 Ledger/Package、Answer 和 Review，不回初始调查。
+4. **独立复核：** 生成者不能自证；Reviewer 使用不继承调查或回答会话的新上下文。Reviewer 只能返回绑定当前 Package 或具体 material Claim/evidence need 的 typed remediation Finding；可信 Application 派生 Review action 与 Verification Request。补证由另一个全新上下文的 Verification Investigation 读取 gap + current Package/Ledger，自适应提议并经 Broker/Worker 校验执行，形成新 Ledger/Package、Answer 和 Review，不回初始调查。
 5. **精确绑定：** 结果绑定实现提交、配置、模型、Prompt/Tool/Strategy、数据集和有效期；任一关键输入变化触发重新验证。
 6. **门禁分离：** 机械 Contract Conformance、业务 Capability Evaluation、Product Validation 与 Activation 互不替代。
 7. **严格超过当前 Codex：** 从 `ITER-010-PDR-002` 后首个新建产品迭代起，current Codex 作为精确冻结的强外部基线，不是 Oracle 或

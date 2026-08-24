@@ -346,7 +346,7 @@ hybrid_evidence_path:
   reviewer_direct_shell_network_credential_or_tool_access: denied
   answer_input: immutable-original-question-question-understanding-and-sealed-question-evidence-package-only
   reviewer_input: immutable-original-question-question-understanding-sealed-question-evidence-package-and-draft-only
-  reviewer_verification_request_role: versioned-gap-proposal-binding-checklist-claim-evidence-class-and-need
+  reviewer_verification_request_role: application-derived-versioned-gap-request-from-typed-finding-binding-checklist-claim-evidence-class-and-need
   reviewer_verification_returns_to_initial_investigation_model: false
   reviewer_more_evidence_route: specific-verifiable-gap-through-independent-verification-investigation-application-source-broker-worker-new-ledger-revision-new-package-new-answer-new-review
   knowledge_persistence: asynchronous-after-delivery-through-normal-admission-and-publication
@@ -497,9 +497,10 @@ answer_protocol:
   evidence_ledger_append_only: true
   question_evidence_package_sealed_after_investigation: true
   finish_material_observations_required: true
-  provider_finish_disposition_shape: structurally-exclusive-supported-and-non-supported-arrays
-  provider_finish_disposition_partition: disjoint-union-covers-each-checklist-item-exactly-once
-  supported_finish_dispositions_is-complete-checklist-copy: false
+  provider_finish_disposition_shape: single-outcome-tagged-finish-dispositions-array
+  provider_finish_disposition_partition: one-list-covers-each-checklist-item-exactly-once
+  provider_finish_parent-evidence-references-returned-by-provider: false
+  provider_finish_parent-evidence-reference-derivation: trusted-stable-first-occurrence-union-of-child-observation-references
   supported_finish_disposition_observation_kinds: process-stage,outcome,state-change,side-effect
   non_supported_finish_disposition_observation_kinds: limitation
   non-supported-finish-authorized-unread-material-gap-exhaustion-required: true
@@ -521,6 +522,12 @@ answer_protocol:
   evidence_requirement_reduction_due_to_remaining_calls_allowed: false
   review_skipping_due_to_remaining_calls_allowed: false
   reviewer_more_evidence_requires_specific_verifiable_gap: true
+  provider_review_returns-independent-decision-or-verification-request: false
+  provider_review_finding-remediation-vocabulary: rewrite-with-existing-evidence,investigate-missing-evidence,reject-unrecoverable
+  reviewer_rewrite-finding-requires-current-package-entry-ids: true
+  reviewer_missing-evidence-finding-requires-material-checklist-class-and-need: true
+  reviewer_action-and-verification-request-derivation: application-owned-reject-then-missing-evidence-then-rewrite-then-empty-approved
+  reviewer_draft-only-scope-expansion-may-trigger-new-evidence-investigation: false
   reviewer_verification_request_requires_application_and_source_broker_revalidation: true
   reviewer_verification_uses_independent_fresh_context_adaptive_investigation: true
   reviewer_verification_returns_to_initial_investigation_model: false
@@ -591,13 +598,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:6ba78729dcc73d87a79af81cf4fc3fde7081e3c448ed28f4f2e26667c0e9ccb8
+  system_contract_set_digest: sha256:b27209f986761d31d1b66cd51accce69775b2f48a538afcca44528d181f8cfeb
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:93a239de2b4f7d349cdf4f2e6f981a646ef8883ea9290209f169f347f2534a48
+  investigation_budget_digest: sha256:1f2ecf52703f748b4c8bccae16c34d602922431764b154f637da053051d1f059
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

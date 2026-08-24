@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@26"
+    "engineering-qa-adaptive-investigation-prompt@27"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -220,30 +220,26 @@ Profile checks. When this list is non-empty, choose READ or PARSE using one
 descriptor's exact locator_reference and evidence_class; do not SEARCH to
 rediscover its path. Obey the exact field combination for the chosen operation:
 SEARCH requires a non-null evidence_class and query, a null locator_reference,
-and empty supported_finish_dispositions and
-non_supported_finish_dispositions arrays; READ or PARSE requires a non-null
-evidence_class and one eligible locator_reference, a null query, and both arrays
-empty; FINISH requires evidence_class, query, and locator_reference all to be
-null and distributes every checklist item exactly once between the two arrays,
-with at least one total disposition. Do not carry an evidence_class from the
-preceding action into FINISH. supported_finish_dispositions may contain only
-SUPPORTED outcomes and affirmative PROCESS_STAGE, OUTCOME, STATE_CHANGE, or
-SIDE_EFFECT observations. non_supported_finish_dispositions may contain only
-UNKNOWN, CONFLICT, or FAILED outcomes and LIMITATION observations.
-The supported array is NOT the complete disposition list. Put each checklist
-item in exactly one array according to its outcome; never copy an UNKNOWN,
-CONFLICT, or FAILED item into supported_finish_dispositions, and never duplicate
-an item across both arrays. For example, one SUPPORTED item and one UNKNOWN item
-means one object in each corresponding array, not two objects in the supported
-array. Before returning FINISH, verify that the two arrays are disjoint and that
-their combined checklist_item_ids equal the requested checklist exactly once.
+and an empty finish_dispositions array; READ or PARSE requires a non-null
+evidence_class and one eligible locator_reference, a null query, and an empty
+finish_dispositions array; FINISH requires evidence_class, query, and
+locator_reference all to be null and returns every checklist item exactly once
+in the single finish_dispositions array, with at least one disposition. Do not
+carry an evidence_class from the preceding action into FINISH. Each disposition
+is one outcome-tagged variant: SUPPORTED permits only affirmative PROCESS_STAGE,
+OUTCOME, STATE_CHANGE, or SIDE_EFFECT observations; UNKNOWN, CONFLICT, or FAILED
+permit only LIMITATION observations. Never duplicate a checklist item. Before
+returning FINISH, verify that finish_dispositions checklist_item_ids equal the
+requested checklist exactly once.
 FINISH must disposition every checklist item against the current evidence;
-unknown, conflict, or failure is preferable to invented support. Every FINISH
-disposition must return a non-empty evidence_references array. SUPPORTED may
-copy only exact opaque values from admissible_support_references; UNKNOWN,
-CONFLICT, or FAILED may copy only exact opaque values from
+unknown, conflict, or failure is preferable to invented support. Do not return
+parent evidence_references: the trusted Adapter derives the parent closure as a
+stable union of child observation references. Every material observation must
+return non-empty unique evidence_references. SUPPORTED observations may copy
+only exact opaque values from admissible_support_references; UNKNOWN, CONFLICT,
+or FAILED observations may copy only exact opaque values from
 admissible_boundary_references. required_basis_entry_id binds the next action
-to the latest Ledger prefix; it is not disposition evidence and MUST NOT be
+to the latest Ledger prefix; it is not observation evidence and MUST NOT be
 copied into evidence_references unless that exact value also appears in the
 corresponding admissible list. After a search hit, prefer reading or parsing an
 issued locator before broadening the search when that result can reduce the
@@ -348,31 +344,28 @@ in this attempt. Never repeat the same SEARCH evidence_class plus query pair,
 and never reuse a READ/PARSE locator reference. If the newest progress_digest
 already appears in an earlier typed result, the newest action made no progress;
 change the evidence class, query, or eligible locator, or FINISH immediately. FINISH must
-disposition every requested checklist item honestly. Every disposition must
-return a non-empty evidence_references array. SUPPORTED may copy only exact
-opaque values from admissible_support_references; UNKNOWN, CONFLICT, or FAILED
-may copy only exact opaque values from admissible_boundary_references.
+disposition every requested checklist item honestly. Every child observation
+must return non-empty unique evidence_references. SUPPORTED observations may
+copy only exact opaque values from admissible_support_references; UNKNOWN,
+CONFLICT, or FAILED observations may copy only exact opaque values from
+admissible_boundary_references.
 required_basis_entry_id binds the next action to the latest Ledger prefix; it is
-not disposition evidence and MUST NOT be copied into evidence_references unless
+not observation evidence and MUST NOT be copied into evidence_references unless
 that exact value also appears in the corresponding admissible list.
 eligible_required_path_locators has the same Application/Broker-issued exact
 mandatory-path meaning as in initial investigation. Prefer one of those direct
 READ/PARSE capabilities before SEARCH. Obey the exact field combination for the
 chosen operation: SEARCH requires a non-null evidence_class and query, a null
-locator_reference, and empty supported_finish_dispositions and
-non_supported_finish_dispositions arrays; READ or PARSE requires a non-null
-evidence_class and one eligible locator_reference, a null query, and both arrays
-empty; FINISH requires evidence_class, query, and locator_reference all to be
-null and distributes every requested checklist item exactly once between the
-two arrays, with at least one total disposition. supported_finish_dispositions
-may contain only SUPPORTED outcomes and affirmative observations;
-non_supported_finish_dispositions may contain only UNKNOWN, CONFLICT, or FAILED
-outcomes and LIMITATION observations. Do not carry an evidence_class from the
-preceding action into FINISH.
-The supported array is not the complete disposition list or a checklist copy.
-Each checklist item must appear in exactly one array according to its outcome;
-the arrays must be disjoint, and their union must equal the requested checklist.
-Never duplicate a non-supported item into supported_finish_dispositions.
+locator_reference, and an empty finish_dispositions array; READ or PARSE requires
+a non-null evidence_class and one eligible locator_reference, a null query, and
+an empty finish_dispositions array; FINISH requires evidence_class, query, and
+locator_reference all to be null and returns every requested checklist item
+exactly once in the single finish_dispositions array, with at least one total
+disposition. SUPPORTED permits only affirmative observations; UNKNOWN, CONFLICT,
+or FAILED permit only LIMITATION observations. Do not carry an evidence_class
+from the preceding action into FINISH. Do not return parent evidence_references;
+the trusted Adapter derives them from the child observation references. Never
+duplicate a checklist item.
 Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the concrete gap's
 required evidence class and prior action intents. If that class remains untried
 and registered, investigate it; lack of detail in one modality is not global
@@ -543,13 +536,31 @@ actionable rewrite Finding bound to the affected Claim or checklist item. Then
 explicitly mark the five closed quality checks: direct answer first, abstraction
 fit, material checklist completeness including user-visible stages and side
 effects, cross-Claim and observation consistency, and implementation-detail
-budget. APPROVED requires PASS for all five. If the default answer is
-implementation-led, misses a material effect, contradicts itself, or does not
-answer the user's goal first, return an actionable rewrite Finding bound to a
-checklist item or claim. A rewrite uses existing Package evidence. A
-more-evidence request must name one checklist item or claim, one evidence class,
-and a concrete evidence need; it must not contain an operation, path, command,
-URL, or tool instruction.
+budget. Approval is represented only by PASS for all five and an empty findings
+array; do not return a separate decision or verification request.
+Every non-empty Finding must choose exactly one remediation variant. Use
+REWRITE_WITH_EXISTING_EVIDENCE only when the current Package already contains
+everything needed to repair, remove, narrow, reorganize, or recite the affected
+Claim; bind every exact Package evidence entry needed by that rewrite in
+existing_evidence_entry_ids, and leave evidence_class/evidence_need null. Never
+label a Finding as rewrite while its description says that decisive evidence or
+an implementation is absent from the current Package.
+Use INVESTIGATE_MISSING_EVIDENCE when a material conclusion required by the
+original question or accepted checklist cannot be established from the current
+Package. Bind a non-null checklist item, optional affected Claim, one controlled
+evidence class, and one concrete verifiable evidence need; keep
+existing_evidence_entry_ids empty. The need must not contain an operation, path,
+command, URL, tool instruction, or an implementation suggestion. If any material
+Finding needs evidence, use this variant even when other Findings can be fixed
+by rewrite; the Application deterministically starts one gap at a time.
+Use REJECT_UNRECOVERABLE only for a failure that neither current-Package rewrite
+nor bounded evidence investigation can repair, with empty evidence IDs and null
+gap fields. Do not broaden the material scope merely because the Draft mentions
+an unsupported external result: when that result was not required by the
+original question or accepted checklist, use existing Package evidence to
+remove or narrow the expansion instead of requesting new evidence. The trusted
+Application derives APPROVED, REWRITE_REQUIRED, MORE_EVIDENCE_REQUIRED, or
+REJECT and any Verification Request solely from these typed remediations.
 """,
 }
 
@@ -2162,17 +2173,24 @@ class EngineeringQuestionModelEgressPolicy:
             )
         if role is EngineeringQuestionModelRole.ANSWER:
             return {EngineeringQuestionModelRole.REVIEW}
-        decision = value.get("decision")
-        if decision == "REWRITE_REQUIRED":
-            return {EngineeringQuestionModelRole.ANSWER}
-        if decision == "MORE_EVIDENCE_REQUIRED":
-            return {EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION}
-        if decision in {"APPROVED", "REJECT"}:
+        findings = value.get("findings")
+        if not isinstance(findings, list):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "Engineering QA Review Result has no current Finding set",
+            )
+        remediations = {
+            item.get("remediation")
+            for item in findings
+            if isinstance(item, Mapping)
+        }
+        if "REJECT_UNRECOVERABLE" in remediations:
             return set()
-        raise DomainError(
-            ErrorCode.STRUCTURED_OUTPUT_INVALID,
-            "Engineering QA Review Result has no current decision",
-        )
+        if "INVESTIGATE_MISSING_EVIDENCE" in remediations:
+            return {EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION}
+        if findings:
+            return {EngineeringQuestionModelRole.ANSWER}
+        return set()
 
 
 class EngineeringQuestionModelGateway(Protocol):

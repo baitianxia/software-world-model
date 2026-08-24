@@ -3638,7 +3638,8 @@ class ReflectionGateTests(unittest.TestCase):
                 "new-package-new-answer-new-review"
             ),
             "reviewer_verification_request_role": (
-                "versioned-gap-proposal-binding-checklist-claim-evidence-class-and-need"
+                "application-derived-versioned-gap-request-from-typed-finding-binding-"
+                "checklist-claim-evidence-class-and-need"
             ),
             "reviewer_verification_returns_to_initial_investigation_model": False,
             "knowledge_persistence": (
@@ -3682,6 +3683,16 @@ class ReflectionGateTests(unittest.TestCase):
             "evidence_ledger_append_only": True,
             "question_evidence_package_sealed_after_investigation": True,
             "finish_material_observations_required": True,
+            "provider_finish_disposition_shape": (
+                "single-outcome-tagged-finish-dispositions-array"
+            ),
+            "provider_finish_disposition_partition": (
+                "one-list-covers-each-checklist-item-exactly-once"
+            ),
+            "provider_finish_parent-evidence-references-returned-by-provider": False,
+            "provider_finish_parent-evidence-reference-derivation": (
+                "trusted-stable-first-occurrence-union-of-child-observation-references"
+            ),
             "material_observation_identity_application_owned": True,
             "answer_claim_material_observation_and_evidence_closure_required": True,
             "reviewer_independent_package_and_draft_observation_audit_required": True,
@@ -3691,6 +3702,18 @@ class ReflectionGateTests(unittest.TestCase):
             "evidence_requirement_reduction_due_to_remaining_calls_allowed": False,
             "review_skipping_due_to_remaining_calls_allowed": False,
             "reviewer_more_evidence_requires_specific_verifiable_gap": True,
+            "provider_review_returns-independent-decision-or-verification-request": False,
+            "provider_review_finding-remediation-vocabulary": (
+                "rewrite-with-existing-evidence,investigate-missing-evidence,"
+                "reject-unrecoverable"
+            ),
+            "reviewer_rewrite-finding-requires-current-package-entry-ids": True,
+            "reviewer_missing-evidence-finding-requires-material-checklist-class-and-need": True,
+            "reviewer_action-and-verification-request-derivation": (
+                "application-owned-reject-then-missing-evidence-then-rewrite-"
+                "then-empty-approved"
+            ),
+            "reviewer_draft-only-scope-expansion-may-trigger-new-evidence-investigation": False,
             "reviewer_verification_request_requires_application_and_source_broker_revalidation": True,
             "reviewer_verification_uses_independent_fresh_context_adaptive_investigation": True,
             "reviewer_verification_returns_to_initial_investigation_model": False,
@@ -4267,6 +4290,36 @@ class ReflectionGateTests(unittest.TestCase):
                 "answer_protocol",
                 "reviewer_more_evidence_requires_specific_verifiable_gap",
                 False,
+            ),
+            (
+                "answer_protocol",
+                "provider_finish_disposition_shape",
+                "two-redundant-arrays",
+            ),
+            (
+                "answer_protocol",
+                "provider_finish_parent-evidence-references-returned-by-provider",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "provider_review_returns-independent-decision-or-verification-request",
+                True,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_rewrite-finding-requires-current-package-entry-ids",
+                False,
+            ),
+            (
+                "answer_protocol",
+                "reviewer_action-and-verification-request-derivation",
+                "provider-owned",
+            ),
+            (
+                "answer_protocol",
+                "reviewer_draft-only-scope-expansion-may-trigger-new-evidence-investigation",
+                True,
             ),
             (
                 "answer_protocol",

@@ -26,6 +26,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringReviewProposal,
     EngineeringReviewQualityAssessment,
     EngineeringReviewQualityStatus,
+    EngineeringReviewRemediation,
     EngineeringEvidenceClass,
     EvidenceLedger,
     InvestigationKind,
@@ -429,6 +430,13 @@ class ReviewerRole:
                 checklist_item_id="check-1",
                 claim_id="claim-1",
                 description="The package does not yet contain configuration evidence.",
+                remediation=(
+                    EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+                ),
+                evidence_class=EngineeringEvidenceClass.BUILD_CONFIGURATION,
+                evidence_need=(
+                    "Static build or runtime configuration defining the request timeout"
+                ),
             )
             verification = VerificationRequestProposal.create(
                 package_digest=package.digest,
@@ -2128,6 +2136,120 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                     draft_material_observation_omissions=(),
                 ),
             )
+
+    def test_review_action_and_verification_request_are_derived_from_findings(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        draft = result.current_draft
+        assessment = matching_review_checklist(result.understanding, package)
+        evidence_gap = EngineeringReviewFinding.create(
+            finding_code="AUTHORIZATION_IMPLEMENTATION_MISSING",
+            checklist_item_id="check-1",
+            claim_id="claim-1",
+            description="The current Package lacks the decisive implementation.",
+            remediation=(
+                EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+            ),
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            evidence_need="Decisive authorization comparison and result behavior",
+        )
+
+        proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "6"),
+            package_digest=package.digest,
+            draft_digest=draft.digest,
+            quality_assessment=passing_quality(),
+            checklist_assessment=assessment,
+            findings=(evidence_gap,),
+        )
+
+        self.assertEqual(
+            proposal.decision,
+            EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED,
+        )
+        self.assertIsNotNone(proposal.verification_request)
+        self.assertEqual(
+            proposal.verification_request.evidence_need,
+            evidence_gap.evidence_need,
+        )
+        with self.assertRaises(DomainError):
+            EngineeringReviewProposal.create(
+                role_context_id=sid("role_context", "6"),
+                package_digest=package.digest,
+                draft_digest=draft.digest,
+                decision=EngineeringReviewDecision.REWRITE_REQUIRED,
+                quality_assessment=passing_quality(),
+                checklist_assessment=assessment,
+                findings=(evidence_gap,),
+                verification_request=None,
+            )
+
+        rewrite = EngineeringReviewFinding.create(
+            finding_code="CLAIM_SCOPE_TOO_BROAD",
+            checklist_item_id="check-1",
+            claim_id="claim-1",
+            description="Narrow the claim to the existing Package evidence.",
+            remediation=(
+                EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+            ),
+            existing_evidence_entry_ids=(package.support_citation[0].entry_id,),
+        )
+        rewrite_proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "7"),
+            package_digest=package.digest,
+            draft_digest=draft.digest,
+            quality_assessment=passing_quality(),
+            checklist_assessment=assessment,
+            findings=(rewrite,),
+        )
+        self.assertEqual(
+            rewrite_proposal.decision,
+            EngineeringReviewDecision.REWRITE_REQUIRED,
+        )
+        self.assertIsNone(rewrite_proposal.verification_request)
+
+        unrecoverable = EngineeringReviewFinding.create(
+            finding_code="BOUNDARY_CONFLICT",
+            checklist_item_id="check-1",
+            description="The requested conclusion conflicts with an explicit boundary.",
+            remediation=EngineeringReviewRemediation.REJECT_UNRECOVERABLE,
+        )
+        rejected_proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "8"),
+            package_digest=package.digest,
+            draft_digest=draft.digest,
+            quality_assessment=passing_quality(),
+            checklist_assessment=assessment,
+            findings=(evidence_gap, unrecoverable),
+        )
+        self.assertEqual(
+            rejected_proposal.decision,
+            EngineeringReviewDecision.REJECT,
+        )
+        self.assertIsNone(rejected_proposal.verification_request)
+
+    def test_review_finding_remediation_fields_are_closed(self):
+        with self.assertRaises(DomainError):
+            EngineeringReviewFinding.create(
+                finding_code="UNSUPPORTED_REWRITE",
+                checklist_item_id="check-1",
+                description="A rewrite cannot repair absent evidence.",
+                remediation=(
+                    EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                ),
+            )
+        with self.assertRaises(DomainError) as caught:
+            EngineeringReviewFinding.create(
+                finding_code="EXECUTABLE_GAP",
+                checklist_item_id="check-1",
+                description="The Package lacks one implementation.",
+                remediation=(
+                    EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+                ),
+                evidence_class=EngineeringEvidenceClass.SOURCE,
+                evidence_need="read(src/Main.java)",
+            )
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_OUTPUT_FORBIDDEN)
 
     def test_review_cannot_approve_an_independently_observed_draft_omission(self):
         result = self.service(request_more_evidence=False).answer(request())

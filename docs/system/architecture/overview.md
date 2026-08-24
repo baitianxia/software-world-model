@@ -54,7 +54,7 @@ flowchart LR
 - 软件来源、模型 Provider、交付 Adapter 和 Telemetry Backend 都是不可信外部边界。
 - 来源访问必须由 Source Integration 的 Broker/Worker 边界执行；Investigation 或 Reviewer 模型不能直接执行来源或平台工具，只能提交由平台重新授权、编译的结构化 Proposal。
 - Provider 响应只能形成 Proposal 或评测输入，必须由领域所有者校验。
-- Direct Investigation 的 Evidence Packet 是任务级固定输入，不是正式知识；World Model Query 的答案 worker 只读取 exact Snapshot/Read Set 的 no-payload Read Bundle 和只读 View。Engineering Question Answering 先从 exact Snapshot 形成 World Model Cognition Context，再由独立 Investigation LLM 基于 append-only Evidence Ledger 自适应提议调查，Broker/Worker 在 exact revision 受控执行；调查结束后才密封含 `support/citation` 与 `boundary/audit` 分区的 Question Evidence Package。Answer/Reviewer 都只读当前固定包；Reviewer 只提出具体 Verification gap，新的独立 Verification Investigation 在全新上下文读取 gap + current Package/Ledger，再经 Application/Broker/Worker 多步形成新 Ledger/Package。Citation 展示不得回流答案链。三种回答结果必须显式区分，不能静默切换。
+- Direct Investigation 的 Evidence Packet 是任务级固定输入，不是正式知识；World Model Query 的答案 worker 只读取 exact Snapshot/Read Set 的 no-payload Read Bundle 和只读 View。Engineering Question Answering 先从 exact Snapshot 形成 World Model Cognition Context，再由独立 Investigation LLM 基于 append-only Evidence Ledger 自适应提议调查，Broker/Worker 在 exact revision 受控执行；调查结束后才密封含 `support/citation` 与 `boundary/audit` 分区的 Question Evidence Package。Answer/Reviewer 都只读当前固定包；Reviewer 只返回 typed remediation Finding，可信 Application 从 material gap 派生具体 Verification Request，新的独立 Verification Investigation 在全新上下文读取 gap + current Package/Ledger，再经 Application/Broker/Worker 多步形成新 Ledger/Package。Citation 展示不得回流答案链。三种回答结果必须显式区分，不能静默切换。
 - 当前系统规范不等于部署授权；任何环境启用都需要与 exact subject 匹配的独立证据和显式授权。
 
 ## 演进方式

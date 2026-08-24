@@ -2335,6 +2335,58 @@
       "tests"
     ]
   },
+  "FINDING-010-066": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-066.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py"
+    ]
+  },
+  "FINDING-010-067": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-067.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py"
+    ]
+  },
+  "FINDING-010-068": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-068.md",
+    "code": [],
+    "tests": [
+      "tests/test_iteration_007_readiness.py"
+    ]
+  },
+  "FINDING-010-069": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-069.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_engineering_qa_alpha_cli.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_iteration_007_readiness.py",
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

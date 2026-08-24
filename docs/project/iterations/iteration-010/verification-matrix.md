@@ -211,6 +211,17 @@ full-content ownership evidence，拒绝用 handler wiring/framework default 补
 7 ERROR，其中新增 1 FAIL + 6 ERROR 精确来自 AF_UNIX 禁止；允许 AF_UNIX 后同一 1168 项为 1163 PASS，raw 唯一 4 FAIL + 1 ERROR
 仍是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。新的 clean candidate/fresh live 仍待执行。
 
+该处置形成 clean `740c74a…` / run-024：fresh Conformance 2/2 PASS，同一 listener 完成 Q1/Q2/Q3 共 25 次 dispatch（6/14/5），
+retry/switch 0、逐题 verified TLS、private files、Production `NOT_EXECUTED`；66,000-byte UTF-8 输入在 Provider 前拒绝且 Gateway 根保持
+25。Q1 的 child observation 引用未被 Provider 完整重抄到 parent，Q3 把 UNKNOWN item 重复分装进两个 FINISH arrays；Q2 Reviewer
+两次明确识别 dynamic authorization implementation 缺证，却分别维护成 `REWRITE_REQUIRED + null request` 并触发 same-Package rewrite
+fuse。见 `FINDING-010-066/067`。现已将 FINISH 收敛为单一 outcome-tagged array 并由 trusted Adapter 派生 parent reference closure；Review
+只返回 typed Finding remediation，由 Application 派生 action 与 Verification Request。`FINDING-010-068` 同时校正历史 ITER-007 oracle
+把冻结摘要用 current System 文档重算的测试缺陷。最终 Engineering QA 106/106、current docs 463/463、含 docs Gate 139/139、compile/diff PASS；默认
+sandbox full 1172 项为 5 FAIL + 7 ERROR，其中额外 1 FAIL + 6 ERROR 精确属于 AF_UNIX 禁止；允许 AF_UNIX 的同一 full 为 1167 PASS，
+raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见 `FINDING-010-069`。deterministic Gate 已闭合，
+新的 clean candidate/fresh live 仍待执行。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-023 已真实完成同会话三题、66,000-byte Provider 前拒绝、private files 与 listener continuity；技术体验链成立，但 Q3 独立重大质量 FAIL，不能把体验运行等同答案质量 PASS | NOT-RUN / blocking |

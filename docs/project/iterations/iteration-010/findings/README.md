@@ -170,5 +170,15 @@ iteration: ITER-010
   response/exception mapper full-content owner evidence，handler wiring 只证明选择，并把 transport status 与 response-body code 分开。
 - [FINDING-010-065](FINDING-010-065.md)：上述修复后三模块 65/65、Engineering QA 102/102、docs/compile/diff PASS；允许 AF_UNIX 的
   full 1168 项中 1163 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-066](FINDING-010-066.md)：clean `740c74a…` / run-024 的 Q1 因 parent 漏抄一个 child reference、Q3 因把 UNKNOWN
+  重复分装进两个数组而失败；两者都是 Provider 重复维护 JSON Schema 无法表达的跨字段等式。现已改为单一 tagged disposition 数组，并由
+  trusted Adapter 从 child observations 稳定派生 parent reference closure。
+- [FINDING-010-067](FINDING-010-067.md)：run-024 Q2 的 Reviewer 两次明确指出当前 Package 缺少 dynamic authorization 实现，却两次
+  独立声明 `REWRITE_REQUIRED + null request`，最终触发同 Package rewrite fuse。现让每条 Finding 使用受控 remediation variant，由
+  Adapter/Application 派生 review action 与 Verification Request，并限制补证服务于原问题 material scope。
+- [FINDING-010-068](FINDING-010-068.md)：旧 ITER-007 readiness 单测把历史冻结 Contract 摘要用今天的 current System 文档重算，随合法
+  Contract 演进产生伪回归。现直接核对当时冻结的 schema/digest，不修改历史 Manifest，也不削弱活动 Iteration 的 current fileset Gate。
+- [FINDING-010-069](FINDING-010-069.md)：上述处置后 Engineering QA 106/106、current docs 463/463、含 docs Gate 139/139、compile/diff PASS；允许 AF_UNIX 的
+  full 1172 项中 1167 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

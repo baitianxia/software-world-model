@@ -41,7 +41,7 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
    终止本题，不 retry 或降级。
 10. `ENGINEERING_QA` 是独立的有界组合用例：Task 在执行前固定模式、protocol identity、original question、exact revision、World Model Read Authority、Source allowlist、Provider disclosure 和资源熔断。Question Understanding 与 Checklist 不可被后续证据缩减；World Model Cognition Context 提供持久的系统认知，但其缺失或 Coverage 不足不得否决 Checklist 驱动的受权 Source investigation。
 11. Engineering QA 的 Initial Investigation、Verification Investigation、Source Broker/Worker、Answer 和 Reviewer 是分离角色。初始调查根据原问题、Cognition Context 和已密封 Ledger prefix 自适应提议；补证调查在全新上下文根据具体 gap、current Package/Ledger 和每步新 Result 自适应提议，不回初始调查。Broker 逐步重新校验并编译，只有 Retrieval Worker 可执行 allowlisted exact-revision 只读操作，全部 Proposal/Decision/Result 追加到 Ledger。Answer/Reviewer 只读双分区 Package，不得访问 Repository、Source/World Model Tool、Ledger write port、shell、网络、credential 或未密封输入。
-12. Reviewer 可返回同包 `REWRITE_REQUIRED`，或绑定具体 Checklist/Claim 和 evidence need 的 `MORE_EVIDENCE_REQUIRED`，但不能形成操作 Proposal。正式协议不得永久固定一轮补证；预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减调查、Citation 或审核。
+12. Reviewer 只返回 typed Finding remediation：同包现有证据重写、绑定具体 Checklist/Claim/class/need 的缺证，或不可恢复拒绝；可信 Application 由此派生 `REWRITE_REQUIRED / MORE_EVIDENCE_REQUIRED / REJECT` 与 Verification Request，Reviewer 不能独立声明 action 或形成操作 Proposal。正式协议不得永久固定一轮补证；预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减调查、Citation 或审核。
 
 ## Failure and implementation boundary
 

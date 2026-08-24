@@ -5,6 +5,9 @@ import json
 import unittest
 from collections.abc import Mapping
 
+from software_world_model.ai_infrastructure import (
+    engineering_question_strategy as strategy_contract,
+)
 from software_world_model.ai_infrastructure.engineering_question_strategy import (
     ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF,
     ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
@@ -119,7 +122,6 @@ class AdaptiveStructuredOutputSource:
             review_observations = self._review_observations(body)
             if self.request_more_evidence and self.review_calls == 1:
                 output = {
-                    "decision": "MORE_EVIDENCE_REQUIRED",
                     "quality_assessment": {
                         "direct_answer": "PASS",
                         "abstraction_fit": "PASS",
@@ -144,20 +146,17 @@ class AdaptiveStructuredOutputSource:
                             "description": (
                                 "The package lacks static timeout configuration evidence."
                             ),
+                            "remediation": "INVESTIGATE_MISSING_EVIDENCE",
+                            "existing_evidence_entry_ids": [],
+                            "evidence_class": "BUILD_CONFIGURATION",
+                            "evidence_need": (
+                                "Static configuration defining the request timeout"
+                            ),
                         }
                     ],
-                    "verification_request": {
-                        "checklist_item_id": "check-1",
-                        "claim_id": "claim-1",
-                        "evidence_class": "BUILD_CONFIGURATION",
-                        "evidence_need": (
-                            "Static configuration defining the request timeout"
-                        ),
-                    },
                 }
             else:
                 output = {
-                    "decision": "APPROVED",
                     "quality_assessment": {
                         "direct_answer": "PASS",
                         "abstraction_fit": "PASS",
@@ -175,7 +174,6 @@ class AdaptiveStructuredOutputSource:
                         "draft_material_observation_omissions": [],
                     },
                     "findings": [],
-                    "verification_request": None,
                 }
         return EngineeringQuestionRoleOutput.create(
             manifest=manifest,
@@ -241,8 +239,7 @@ class AdaptiveStructuredOutputSource:
                 "locator_reference": None,
                 "basis_entry_ids": [last_entry_id],
                 "unknown_to_reduce": "Locate the next exact repository observation.",
-                "supported_finish_dispositions": [],
-                "non_supported_finish_dispositions": [],
+                "finish_dispositions": [],
             }
         if step == 2:
             evidence_class = (
@@ -258,8 +255,7 @@ class AdaptiveStructuredOutputSource:
                 "locator_reference": results[-1]["items"][0]["locator_reference"],
                 "basis_entry_ids": [last_entry_id],
                 "unknown_to_reduce": "Read the issued exact-revision locator.",
-                "supported_finish_dispositions": [],
-                "non_supported_finish_dispositions": [],
+                "finish_dispositions": [],
             }
         evidence_reference = results[-1]["items"][0]["item_id"]
         if evidence_reference not in body["admissible_support_references"]:
@@ -272,11 +268,10 @@ class AdaptiveStructuredOutputSource:
             "locator_reference": None,
             "basis_entry_ids": [last_entry_id],
             "unknown_to_reduce": "All checklist items have an explicit disposition.",
-            "supported_finish_dispositions": [
+            "finish_dispositions": [
                 {
                     "checklist_item_id": "check-1",
                     "outcome": "SUPPORTED",
-                    "evidence_references": [evidence_reference],
                     "explanation": "The exact package contains the required evidence.",
                     "material_observations": [
                         {
@@ -296,7 +291,6 @@ class AdaptiveStructuredOutputSource:
                     ],
                 }
             ],
-            "non_supported_finish_dispositions": [],
         }
 
 
@@ -708,6 +702,23 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         review = schemas[ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF].schema
         self.assertIn("quality_assessment", review["required"])
         self.assertIn("checklist_assessment", review["required"])
+        self.assertNotIn("decision", review["properties"])
+        self.assertNotIn("verification_request", review["properties"])
+        review_finding_variants = review["properties"]["findings"]["items"][
+            "anyOf"
+        ]
+        self.assertEqual(len(review_finding_variants), 3)
+        self.assertEqual(
+            {
+                item["properties"]["remediation"]["enum"][0]
+                for item in review_finding_variants
+            },
+            {
+                "REWRITE_WITH_EXISTING_EVIDENCE",
+                "INVESTIGATE_MISSING_EVIDENCE",
+                "REJECT_UNRECOVERABLE",
+            },
+        )
         self.assertEqual(
             set(
                 review["properties"]["quality_assessment"]["properties"]
@@ -725,25 +736,23 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF,
         ):
             properties = schemas[schema_ref].schema["properties"]
-            variants = (
-                properties["supported_finish_dispositions"]["items"],
-                properties["non_supported_finish_dispositions"]["items"],
-            )
+            variants = properties["finish_dispositions"]["items"]["anyOf"]
             self.assertIn(
-                "not the complete disposition list",
-                properties["supported_finish_dispositions"]["description"],
-            )
-            self.assertIn(
-                "UNKNOWN/CONFLICT/FAILED-only",
-                properties["non_supported_finish_dispositions"]["description"],
+                "only FINISH disposition list",
+                properties["finish_dispositions"]["description"],
             )
             for variant in variants:
-                references = variant["properties"]["evidence_references"]
-                self.assertEqual(references["minItems"], 1)
-                self.assertTrue(references["uniqueItems"])
+                self.assertNotIn(
+                    "evidence_references", variant["properties"]
+                )
                 observations = variant["properties"]["material_observations"]
                 self.assertEqual(observations["minItems"], 1)
                 self.assertEqual(observations["maxItems"], 16)
+                references = observations["items"]["properties"][
+                    "evidence_references"
+                ]
+                self.assertEqual(references["minItems"], 1)
+                self.assertTrue(references["uniqueItems"])
             self.assertEqual(
                 variants[0]["properties"]["outcome"]["enum"],
                 ["SUPPORTED"],
@@ -806,7 +815,6 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             disposition = {
                 "checklist_item_id": "check-1",
                 "outcome": outcome,
-                "evidence_references": ["evidence-1"],
                 "explanation": "The disposition is explicit.",
                 "material_observations": [
                     {
@@ -825,12 +833,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                     "locator_reference": None,
                     "basis_entry_ids": ["ledger-entry-1"],
                     "unknown_to_reduce": "The item has a final disposition.",
-                    "supported_finish_dispositions": (
-                        [disposition] if outcome == "SUPPORTED" else []
-                    ),
-                    "non_supported_finish_dispositions": (
-                        [] if outcome == "SUPPORTED" else [disposition]
-                    ),
+                    "finish_dispositions": [disposition],
                 }
             )
 
@@ -852,15 +855,43 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
             )
 
-        duplicated_unknown = json.loads(
+        legacy_partition = json.loads(
             output(outcome="UNKNOWN", observation_kind="LIMITATION")
         )
-        duplicated_unknown["supported_finish_dispositions"] = list(
-            duplicated_unknown["non_supported_finish_dispositions"]
-        )
+        legacy_partition["supported_finish_dispositions"] = []
         with self.assertRaises(DomainError) as caught:
-            schema.validate_output_text(json.dumps(duplicated_unknown))
+            schema.validate_output_text(json.dumps(legacy_partition))
         self.assertEqual(caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+    def test_finish_adapter_derives_parent_reference_closure_from_children(self):
+        disposition = strategy_contract._provider_finish_disposition(
+            {
+                "checklist_item_id": "check-1",
+                "outcome": "SUPPORTED",
+                "explanation": "Two observations require two exact sources.",
+                "material_observations": [
+                    {
+                        "kind": "PROCESS_STAGE",
+                        "statement": "The first stage is established.",
+                        "evidence_references": ["evidence-1"],
+                    },
+                    {
+                        "kind": "OUTCOME",
+                        "statement": "The outcome combines both sources.",
+                        "evidence_references": ["evidence-2", "evidence-1"],
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(
+            disposition.evidence_references,
+            ("evidence-1", "evidence-2"),
+        )
+        self.assertEqual(
+            [item.evidence_references for item in disposition.material_observations],
+            [("evidence-1",), ("evidence-2", "evidence-1")],
+        )
 
     def test_investigation_schema_rejects_empty_or_duplicate_binding_arrays(self):
         valid = {
@@ -871,8 +902,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "locator_reference": "required-path-locator-1",
             "basis_entry_ids": ["ledger-entry-1"],
             "unknown_to_reduce": "Read one decisive implementation path.",
-            "supported_finish_dispositions": [],
-            "non_supported_finish_dispositions": [],
+            "finish_dispositions": [],
         }
         for schema_ref in (
             ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
@@ -1187,7 +1217,6 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         package = self.result.current_package
         draft = self.result.current_draft
         output = {
-            "decision": "MORE_EVIDENCE_REQUIRED",
             "quality_assessment": {
                 "direct_answer": "PASS",
                 "abstraction_fit": "PASS",
@@ -1214,14 +1243,12 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                     "checklist_item_id": "check-1",
                     "claim_id": "claim-1",
                     "description": "The exact evidence is missing.",
+                    "remediation": "INVESTIGATE_MISSING_EVIDENCE",
+                    "existing_evidence_entry_ids": [],
+                    "evidence_class": "SOURCE",
+                    "evidence_need": "read(src/main.py)",
                 }
             ],
-            "verification_request": {
-                "checklist_item_id": "check-1",
-                "claim_id": "claim-1",
-                "evidence_class": "SOURCE",
-                "evidence_need": "read(src/main.py)",
-            },
         }
         role = StructuredEngineeringAnswerReviewerRole(
             FixedOutputSource(json.dumps(output))

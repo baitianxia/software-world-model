@@ -76,7 +76,7 @@ flowchart TD
 - **World Model Cognition Context** 是从独立于模型会话/隐藏状态的 exact Snapshot / Read Set 为当前任务形成的只读认知投影，包含实体、关系、行为、约束、状态、证据、Coverage、Conflict 与 Unknown；手册或地图只是它的展示子集。
 - **Evidence Ledger** 是 `ENGINEERING_QA` 调查的 append-only 记录，按顺序绑定模型 Proposal、Broker Decision、Source Operation/Result、失败、Coverage 和资源收据；它允许后续调查基于已密封前缀继续，但本身不赋予条目真值。
 - **Question Evidence Package** 是调查结束后从原问题、World Model Cognition Context 和完整 Ledger 密封的本题唯一证据与边界集合；`support/citation` 仅含 admissible entries 并独占肯定 Claim/Citation 支持权，`boundary/audit` 强制保留 Gap/Failure/Partial/Conflict/Unknown 等非支持记录；seal 证明身份、完整性、顺序、来源和版本，不使其中内容自动为真，也不赋予 Fact/Snapshot 资格。
-- **Answer Draft / Review Finding** 分别是可引用自然答案和独立审核意见；只有空 Finding 的 APPROVED Draft 可被授权。
+- **Answer Draft / Review Finding** 分别是可引用自然答案和带 closed remediation 的独立审核意见；可信 Application 从 Finding 派生 Review action/Verification Request，只有空 Finding 且全部质量检查通过时派生的 APPROVED Draft 可被授权。
 - **Entity** 提供稳定身份；属性和关系由 Fact 或 Inference 表达。
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。
 - **Inference** 从已发布前提形成受控结论；Conflict 证明语义不兼容但不擅自选赢家。

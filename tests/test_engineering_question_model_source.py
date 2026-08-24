@@ -335,10 +335,53 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 {EngineeringQuestionModelRole.ANSWER},
             )
 
+    def test_gateway_derives_review_progress_from_finding_remediation(self) -> None:
+        review = EngineeringQuestionModelRole.REVIEW
+        self.assertEqual(
+            EngineeringQuestionModelEgressPolicy._next_roles(
+                review, {"findings": []}
+            ),
+            set(),
+        )
+        self.assertEqual(
+            EngineeringQuestionModelEgressPolicy._next_roles(
+                review,
+                {
+                    "findings": [
+                        {"remediation": "REWRITE_WITH_EXISTING_EVIDENCE"}
+                    ]
+                },
+            ),
+            {EngineeringQuestionModelRole.ANSWER},
+        )
+        self.assertEqual(
+            EngineeringQuestionModelEgressPolicy._next_roles(
+                review,
+                {
+                    "findings": [
+                        {"remediation": "INVESTIGATE_MISSING_EVIDENCE"}
+                    ]
+                },
+            ),
+            {EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION},
+        )
+        self.assertEqual(
+            EngineeringQuestionModelEgressPolicy._next_roles(
+                review,
+                {
+                    "findings": [
+                        {"remediation": "INVESTIGATE_MISSING_EVIDENCE"},
+                        {"remediation": "REJECT_UNRECOVERABLE"},
+                    ]
+                },
+            ),
+            set(),
+        )
+
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@26",
+            "engineering-qa-adaptive-investigation-prompt@27",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -346,7 +389,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         ):
             prompt = " ".join(engineering_question_role_prompt(role).split())
             self.assertIn(
-                "must return a non-empty evidence_references array",
+                "must return non-empty unique evidence_references",
                 prompt,
             )
             self.assertIn(
@@ -376,10 +419,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 "FINISH requires evidence_class, query, and locator_reference all to be null",
                 prompt,
             )
-            self.assertIn("supported_finish_dispositions", prompt)
-            self.assertIn("non_supported_finish_dispositions", prompt)
-            self.assertIn("not the complete disposition list", prompt.lower())
-            self.assertIn("exactly one array", prompt)
+            self.assertIn("single finish_dispositions array", prompt)
+            self.assertNotIn("supported_finish_dispositions", prompt)
+            self.assertNotIn("non_supported_finish_dispositions", prompt)
+            self.assertIn("Never duplicate a checklist item", prompt)
             self.assertIn(
                 "Do not carry an evidence_class from the preceding action into FINISH",
                 prompt,
@@ -387,7 +430,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("admissible_support_references", prompt)
             self.assertIn("admissible_boundary_references", prompt)
             self.assertIn("required_basis_entry_id binds the next action", prompt)
-            self.assertIn("it is not disposition evidence", prompt)
+            self.assertIn("it is not observation evidence", prompt)
             self.assertIn(
                 "lack of detail in one modality is not global absence",
                 prompt,
@@ -504,7 +547,12 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("explicitly scan every relevant full-content", review_prompt)
         self.assertIn("empty-link affirmative DIRECT_ANSWER", review_prompt)
         self.assertIn("cross-Claim and observation consistency", review_prompt)
-        self.assertIn("APPROVED requires PASS for all five", review_prompt)
+        self.assertIn("Approval is represented only by PASS for all five", review_prompt)
+        self.assertIn("REWRITE_WITH_EXISTING_EVIDENCE", review_prompt)
+        self.assertIn("INVESTIGATE_MISSING_EVIDENCE", review_prompt)
+        self.assertIn("REJECT_UNRECOVERABLE", review_prompt)
+        self.assertIn("do not return a separate decision", review_prompt)
+        self.assertIn("merely because the Draft mentions", review_prompt)
         self.assertIn("mapping owner's implementation", review_prompt)
         self.assertIn("same local condition", review_prompt)
         self.assertIn("transport status", review_prompt)

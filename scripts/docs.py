@@ -4628,6 +4628,9 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "question_or_project_keyword_symbol_class_method_fixture_or_oracle_special_routing_allowed",
         "provider_request_retries_allowed",
         "provider_switch_after_dispatch_allowed",
+        "provider_finish_parent-evidence-references-returned-by-provider",
+        "provider_review_returns-independent-decision-or-verification-request",
+        "reviewer_draft-only-scope-expansion-may-trigger-new-evidence-investigation",
     ):
         if answer_protocol.get(field) is not False:
             errors.append(f"{label}: answer_protocol.{field} must be false")
@@ -4650,9 +4653,35 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "same_package_rewrite_requires_specific_reviewer_finding",
         "independent_rereview_after_any_answer_or_package_change_required",
         "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks",
+        "reviewer_rewrite-finding-requires-current-package-entry-ids",
+        "reviewer_missing-evidence-finding-requires-material-checklist-class-and-need",
     ):
         if answer_protocol.get(field) is not True:
             errors.append(f"{label}: answer_protocol.{field} must be true")
+    expected_structured_protocol_values = {
+        "provider_finish_disposition_shape": (
+            "single-outcome-tagged-finish-dispositions-array"
+        ),
+        "provider_finish_disposition_partition": (
+            "one-list-covers-each-checklist-item-exactly-once"
+        ),
+        "provider_finish_parent-evidence-reference-derivation": (
+            "trusted-stable-first-occurrence-union-of-child-observation-references"
+        ),
+        "provider_review_finding-remediation-vocabulary": (
+            "rewrite-with-existing-evidence,investigate-missing-evidence,"
+            "reject-unrecoverable"
+        ),
+        "reviewer_action-and-verification-request-derivation": (
+            "application-owned-reject-then-missing-evidence-then-rewrite-"
+            "then-empty-approved"
+        ),
+    }
+    for field, expected in expected_structured_protocol_values.items():
+        if answer_protocol.get(field) != expected:
+            errors.append(
+                f"{label}: answer_protocol.{field} must equal {expected}"
+            )
     if (
         answer_protocol.get("resource_exhaustion_behavior")
         != "answerable-fail-boundary-limitation-only-if-independently-approved-otherwise-fail-closed"
@@ -4794,7 +4823,8 @@ def validate_engineering_qa_hybrid_evidence_execution_readiness(
             "new-package-new-answer-new-review"
         ),
         "reviewer_verification_request_role": (
-            "versioned-gap-proposal-binding-checklist-claim-evidence-class-and-need"
+            "application-derived-versioned-gap-request-from-typed-finding-binding-"
+            "checklist-claim-evidence-class-and-need"
         ),
         "reviewer_verification_returns_to_initial_investigation_model": False,
         "knowledge_persistence": (

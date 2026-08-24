@@ -32,11 +32,11 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringQuestionRequest,
     EngineeringReviewChecklistAssessment,
     EngineeringReviewMaterialObservation,
-    EngineeringReviewDecision,
     EngineeringReviewFinding,
     EngineeringReviewProposal,
     EngineeringReviewQualityAssessment,
     EngineeringReviewQualityStatus,
+    EngineeringReviewRemediation,
     InitialInvestigationInput,
     InitialInvestigationRole,
     InvestigationKind,
@@ -52,7 +52,6 @@ from software_world_model.application_services.engineering_question_answering im
     QuestionUnderstandingRole,
     VerificationInvestigationInput,
     VerificationInvestigationRole,
-    VerificationRequestProposal,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -67,19 +66,19 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@16"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@17"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@8"
+    "engineering-qa-initial-investigation@9"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@8"
+    "engineering-qa-verification-investigation@9"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@4"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@5"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -204,7 +203,6 @@ def _finish_disposition_variant(
                 "type": "string",
                 "enum": [item.value for item in outcomes],
             },
-            "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
             "explanation": {"type": "string"},
             "material_observations": {
                 "type": "array",
@@ -216,7 +214,6 @@ def _finish_disposition_variant(
         "required": [
             "checklist_item_id",
             "outcome",
-            "evidence_references",
             "explanation",
             "material_observations",
         ],
@@ -249,22 +246,20 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
         "locator_reference": _NULLABLE_STRING_SCHEMA,
         "basis_entry_ids": _INVESTIGATION_BASIS_ENTRY_IDS_SCHEMA,
         "unknown_to_reduce": {"type": "string"},
-        "supported_finish_dispositions": {
+        "finish_dispositions": {
             "type": "array",
             "description": (
-                "The SUPPORTED-only partition, not the complete disposition list. "
-                "Every item here must have outcome SUPPORTED and must not appear "
-                "in non_supported_finish_dispositions."
+                "The only FINISH disposition list. Each checklist item appears "
+                "exactly once. The outcome-tagged variant mechanically selects "
+                "affirmative or limitation observations; parent evidence references "
+                "are derived from child observations by the trusted adapter."
             ),
-            "items": _SUPPORTED_FINISH_DISPOSITION_SCHEMA,
-        },
-        "non_supported_finish_dispositions": {
-            "type": "array",
-            "description": (
-                "The UNKNOWN/CONFLICT/FAILED-only partition. Every item here must "
-                "not appear in supported_finish_dispositions."
-            ),
-            "items": _NON_SUPPORTED_FINISH_DISPOSITION_SCHEMA,
+            "items": {
+                "anyOf": [
+                    _SUPPORTED_FINISH_DISPOSITION_SCHEMA,
+                    _NON_SUPPORTED_FINISH_DISPOSITION_SCHEMA,
+                ]
+            },
         },
     },
     "required": [
@@ -275,8 +270,7 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
         "locator_reference",
         "basis_entry_ids",
         "unknown_to_reduce",
-        "supported_finish_dispositions",
-        "non_supported_finish_dispositions",
+        "finish_dispositions",
     ],
     "additionalProperties": False,
 }
@@ -398,21 +392,81 @@ _ANSWER_OUTPUT_SCHEMA = {
     "required": ["response_language", "direct_answer", "claims"],
     "additionalProperties": False,
 }
+_EMPTY_UNIQUE_STRING_ARRAY_SCHEMA = {
+    "type": "array",
+    "items": {"type": "string"},
+    "maxItems": 0,
+    "uniqueItems": True,
+}
+_NULL_EVIDENCE_CLASS_SCHEMA = {"type": ["string", "null"], "enum": [None]}
+_NULL_STRING_SCHEMA = {"type": ["string", "null"], "enum": [None]}
+
+
+def _review_finding_variant(
+    *,
+    remediation: EngineeringReviewRemediation,
+    checklist_item_schema: Mapping[str, object],
+    existing_evidence_schema: Mapping[str, object],
+    evidence_class_schema: Mapping[str, object],
+    evidence_need_schema: Mapping[str, object],
+) -> dict[str, object]:
+    return {
+        "type": "object",
+        "properties": {
+            "finding_code": {"type": "string"},
+            "checklist_item_id": checklist_item_schema,
+            "claim_id": _NULLABLE_STRING_SCHEMA,
+            "description": {"type": "string"},
+            "remediation": {
+                "type": "string",
+                "enum": [remediation.value],
+            },
+            "existing_evidence_entry_ids": existing_evidence_schema,
+            "evidence_class": evidence_class_schema,
+            "evidence_need": evidence_need_schema,
+        },
+        "required": [
+            "finding_code",
+            "checklist_item_id",
+            "claim_id",
+            "description",
+            "remediation",
+            "existing_evidence_entry_ids",
+            "evidence_class",
+            "evidence_need",
+        ],
+        "additionalProperties": False,
+    }
+
+
 _REVIEW_FINDING_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "finding_code": {"type": "string"},
-        "checklist_item_id": _NULLABLE_STRING_SCHEMA,
-        "claim_id": _NULLABLE_STRING_SCHEMA,
-        "description": {"type": "string"},
-    },
-    "required": [
-        "finding_code",
-        "checklist_item_id",
-        "claim_id",
-        "description",
-    ],
-    "additionalProperties": False,
+    "anyOf": [
+        _review_finding_variant(
+            remediation=(
+                EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+            ),
+            checklist_item_schema=_NULLABLE_STRING_SCHEMA,
+            existing_evidence_schema=_NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+            evidence_class_schema=_NULL_EVIDENCE_CLASS_SCHEMA,
+            evidence_need_schema=_NULL_STRING_SCHEMA,
+        ),
+        _review_finding_variant(
+            remediation=(
+                EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+            ),
+            checklist_item_schema={"type": "string"},
+            existing_evidence_schema=_EMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+            evidence_class_schema=_REQUIRED_EVIDENCE_CLASS_SCHEMA,
+            evidence_need_schema={"type": "string"},
+        ),
+        _review_finding_variant(
+            remediation=EngineeringReviewRemediation.REJECT_UNRECOVERABLE,
+            checklist_item_schema=_NULLABLE_STRING_SCHEMA,
+            existing_evidence_schema=_EMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+            evidence_class_schema=_NULL_EVIDENCE_CLASS_SCHEMA,
+            evidence_need_schema=_NULL_STRING_SCHEMA,
+        ),
+    ]
 }
 _REVIEW_QUALITY_ASSESSMENT_SCHEMA = {
     "type": "object",
@@ -495,42 +549,21 @@ _REVIEW_CHECKLIST_ASSESSMENT_SCHEMA = {
     ],
     "additionalProperties": False,
 }
-_VERIFICATION_REQUEST_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "checklist_item_id": {"type": "string"},
-        "claim_id": _NULLABLE_STRING_SCHEMA,
-        "evidence_class": _REQUIRED_EVIDENCE_CLASS_SCHEMA,
-        "evidence_need": {"type": "string"},
-    },
-    "required": [
-        "checklist_item_id",
-        "claim_id",
-        "evidence_class",
-        "evidence_need",
-    ],
-    "additionalProperties": False,
-}
 _REVIEW_OUTPUT_SCHEMA = {
     "type": "object",
     "properties": {
-        "decision": {
-            "type": "string",
-            "enum": [item.value for item in EngineeringReviewDecision],
-        },
         "quality_assessment": _REVIEW_QUALITY_ASSESSMENT_SCHEMA,
         "checklist_assessment": _REVIEW_CHECKLIST_ASSESSMENT_SCHEMA,
-        "findings": {"type": "array", "items": _REVIEW_FINDING_SCHEMA},
-        "verification_request": {
-            "anyOf": [_VERIFICATION_REQUEST_SCHEMA, {"type": "null"}]
+        "findings": {
+            "type": "array",
+            "items": _REVIEW_FINDING_SCHEMA,
+            "maxItems": 64,
         },
     },
     "required": [
-        "decision",
         "quality_assessment",
         "checklist_assessment",
         "findings",
-        "verification_request",
     ],
     "additionalProperties": False,
 }
@@ -901,6 +934,11 @@ class EngineeringQuestionRoleInputBuilder:
                     "checklist_item_id": item.checklist_item_id,
                     "claim_id": item.claim_id,
                     "description": item.description,
+                    "remediation": item.remediation.value,
+                    "existing_evidence_entry_ids": [
+                        reference.value
+                        for reference in item.existing_evidence_entry_ids
+                    ],
                     "digest": item.digest.value,
                 }
                 for item in rewrite_findings
@@ -1329,33 +1367,33 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
                     checklist_item_id=cast(str | None, item["checklist_item_id"]),
                     claim_id=cast(str | None, item["claim_id"]),
                     description=cast(str, item["description"]),
+                    remediation=EngineeringReviewRemediation(
+                        cast(str, item["remediation"])
+                    ),
+                    existing_evidence_entry_ids=tuple(
+                        StableId(reference)
+                        for reference in cast(
+                            Sequence[str], item["existing_evidence_entry_ids"]
+                        )
+                    ),
+                    evidence_class=(
+                        EngineeringEvidenceClass(
+                            cast(str, item["evidence_class"])
+                        )
+                        if item["evidence_class"] is not None
+                        else None
+                    ),
+                    evidence_need=cast(str | None, item["evidence_need"]),
                 )
                 for item in cast(Sequence[Mapping[str, object]], value["findings"])
             )
-            request_value = value["verification_request"]
-            verification_request = None
-            if request_value is not None:
-                request_body = cast(Mapping[str, object], request_value)
-                verification_request = VerificationRequestProposal.create(
-                    package_digest=package.digest,
-                    checklist_item_id=cast(
-                        str, request_body["checklist_item_id"]
-                    ),
-                    claim_id=cast(str | None, request_body["claim_id"]),
-                    evidence_class=EngineeringEvidenceClass(
-                        cast(str, request_body["evidence_class"])
-                    ),
-                    evidence_need=cast(str, request_body["evidence_need"]),
-                )
-            return EngineeringReviewProposal.create(
+            return EngineeringReviewProposal.create_from_findings(
                 role_context_id=role_context_id,
                 package_digest=package.digest,
                 draft_digest=draft.digest,
-                decision=EngineeringReviewDecision(cast(str, value["decision"])),
                 quality_assessment=quality_assessment,
                 checklist_assessment=checklist_assessment,
                 findings=findings,
-                verification_request=verification_request,
             )
         except (DomainError, KeyError, TypeError, ValueError) as exc:
             _raise_output_contract_error("review", exc)
@@ -1401,45 +1439,11 @@ def _investigation_proposal(
     investigation_input: InitialInvestigationInput | VerificationInvestigationInput,
 ) -> InvestigationStepProposal:
     try:
-        raw_dispositions = (
-            *cast(
-                Sequence[Mapping[str, object]],
-                value["supported_finish_dispositions"],
-            ),
-            *cast(
-                Sequence[Mapping[str, object]],
-                value["non_supported_finish_dispositions"],
-            ),
-        )
         dispositions = tuple(
-            ChecklistDisposition.create(
-                checklist_item_id=cast(str, item["checklist_item_id"]),
-                outcome=ChecklistOutcome(cast(str, item["outcome"])),
-                evidence_references=cast(
-                    Sequence[str], item["evidence_references"]
-                ),
-                explanation=cast(str, item["explanation"]),
-                material_observations=tuple(
-                    MaterialObservation.create(
-                        checklist_item_id=cast(
-                            str, item["checklist_item_id"]
-                        ),
-                        kind=MaterialObservationKind(
-                            cast(str, observation["kind"])
-                        ),
-                        statement=cast(str, observation["statement"]),
-                        evidence_references=cast(
-                            Sequence[str],
-                            observation["evidence_references"],
-                        ),
-                    )
-                    for observation in cast(
-                        Sequence[Mapping[str, object]],
-                        item["material_observations"],
-                    )
-                ),
+            _provider_finish_disposition(item)
+            for item in cast(
+                Sequence[Mapping[str, object]], value["finish_dispositions"]
             )
-            for item in raw_dispositions
         )
         evidence_class_value = cast(str | None, value["evidence_class"])
         locator_value = cast(str | None, value["locator_reference"])
@@ -1481,6 +1485,41 @@ def _investigation_proposal(
         _raise_output_contract_error(
             f"{investigation_kind.value.casefold()} investigation", exc
         )
+
+
+def _provider_finish_disposition(
+    item: Mapping[str, object],
+) -> ChecklistDisposition:
+    """Build the Domain parent closure from the Provider's child observations."""
+
+    checklist_item_id = cast(str, item["checklist_item_id"])
+    observations = tuple(
+        MaterialObservation.create(
+            checklist_item_id=checklist_item_id,
+            kind=MaterialObservationKind(cast(str, observation["kind"])),
+            statement=cast(str, observation["statement"]),
+            evidence_references=cast(
+                Sequence[str], observation["evidence_references"]
+            ),
+        )
+        for observation in cast(
+            Sequence[Mapping[str, object]], item["material_observations"]
+        )
+    )
+    parent_references = tuple(
+        dict.fromkeys(
+            reference
+            for observation in observations
+            for reference in observation.evidence_references
+        )
+    )
+    return ChecklistDisposition.create(
+        checklist_item_id=checklist_item_id,
+        outcome=ChecklistOutcome(cast(str, item["outcome"])),
+        evidence_references=parent_references,
+        explanation=cast(str, item["explanation"]),
+        material_observations=observations,
+    )
 
 
 def _raise_output_contract_error(stage: str, exc: Exception) -> NoReturn:

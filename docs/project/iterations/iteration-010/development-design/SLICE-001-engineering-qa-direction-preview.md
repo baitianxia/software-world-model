@@ -208,9 +208,10 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   required class，不机械遍历无关 registered class，unregistered required 则保留为能力边界。
 - 每个 FINISH disposition 必须从完整引用内容列出有界原子 material observations，区分 process、outcome、state change、side effect 与
   limitation，并逐条绑定 admissible evidence；`SUPPORTED` 只能包含 affirmative observation，non-supported outcome 只能包含
-  `LIMITATION`。Provider-facing output 用结构互斥的 `supported_finish_dispositions / non_supported_finish_dispositions` 两数组，可信
-  adapter 只合并已验证数组；Application Domain 再独立拒绝混类。一个代表性事实不能闭合宽泛 checklist。Application 生成稳定
-  observation identity 并拒绝跨 checklist、重复、错误分区或证据不闭合。caller/configuration/wiring 只证明接线，不能替代被委托组件自身
+  `LIMITATION`。Provider-facing output 只用一个 outcome-tagged `finish_dispositions` 数组且不重复 parent references；可信 adapter 按
+  child observation 顺序稳定汇总 exact references，Application Domain 再独立拒绝混类、非 exact-once、错误证据分区或证据不闭合。
+  一个代表性事实不能闭合宽泛 checklist。Application 生成稳定 observation identity 并拒绝跨 checklist 或重复。
+  caller/configuration/wiring 只证明接线，不能替代被委托组件自身
   的条件、比较、状态变化、结果或失败语义；每个相关 full-content 实现 entry 中的 material side effect 必须单独观察。
 - Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
   校验通过的可采信条目，只有它们能支持肯定 Claim 与 Citation；`boundary/audit` 必须保留 Gap、Failure、Partial、Conflict、Unknown、
@@ -226,10 +227,12 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - Reviewer 在另一个新上下文中读取原问题、理解记录、当前 Package 和 Draft，无 repo/Source/World Model tool、FS、Shell、network 或
   credential。它从原问题独立重建 material conclusions、列出 Application checklist omission；再检查完整 Package evidence，独立形成带
   evidence entry 的原子 observations，分别列出 Package 与默认 Draft omission，并给 direct answer、abstraction fit、material
-  completeness、implementation-detail budget 返回 PASS/FAIL；对 flow/lifecycle 它逐 full-content entry 审核持久化/审计/缓存/通知/外部
-  交互，对多机制检查各决定性实现而非 caller/wiring。四项全 PASS、所有 omission 为空且无 Finding 才能批准。表达缺陷可请求同包
-  针对性重写；证据缺口只能输出绑定 Checklist/Claim/evidence class/need 的 versioned Verification Request，不能提出可执行
-  path/command/operation。
+  completeness、claim consistency、implementation-detail budget 返回 PASS/FAIL；对 flow/lifecycle 它逐 full-content entry 审核
+  持久化/审计/缓存/通知/外部交互，对多机制检查各决定性实现而非 caller/wiring。五项全 PASS、所有 omission 为空且无 Finding 才能
+  派生批准。Provider 不单独返回 decision/request：表达缺陷使用绑定 current-Package entries 的
+  `REWRITE_WITH_EXISTING_EVIDENCE`，material 证据缺口使用绑定 Checklist/Claim/evidence class/need 的
+  `INVESTIGATE_MISSING_EVIDENCE`，不可恢复失败使用 `REJECT_UNRECOVERABLE`；可信 Application 按固定优先级派生 action 与 versioned
+  Verification Request。Reviewer 不能提出可执行 path/command/operation，也不能因 Draft 扩张了原问题不要求的细节而扩大调查。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
   Result 自适应提出 search/read/parse/finish；每一步仍由 Application/Broker 校验编译、Worker 执行。它不回初始 Investigation LLM，
   不继承 Reviewer 会话，也无直接来源权限。完成后追加新 Ledger Revision、密封新 Package、完整生成新 Answer 并独立 Review；旧 Review
