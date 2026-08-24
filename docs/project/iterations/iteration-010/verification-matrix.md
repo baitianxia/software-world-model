@@ -123,6 +123,12 @@ closed mapping/跨 evidence-class 修复后的 clean candidate `c7e32b5…` 以 
 允许本机 AF_UNIX 的完整回归为 1148 项、1143 PASS，raw 唯一 4 FAIL + 1 ERROR 仍与既有 V-009/Codex historical hold 完全相同，见
 `FINDING-010-040`；默认沙箱额外 6 ERROR + 1 FAIL 精确属于 socket permission noise，不进入产品失败集合。
 
+clean candidate `31a9ccd…` 随后使用正确 DeepSeek CLI 发起新的 current Conformance；run
+`ccrun_717391edb4c6482d8809dd45be405626` 在第一次 dispatch 收到 HTTP 402，Result `sha256:44bf29b…` 为 FAIL、qualification
+`NOT_ISSUED`、request 1、retry 0、TLS/credential 成功。官方错误码将 402 定义为余额不足，见 `FINDING-010-041`。旧 run-008 adapter
+qualification 仍在有效期且 implementation/config digest 相同，但不证明当前账户可用或新候选三题质量；因此 live 保持 environment-blocked，
+不得重试、切 Provider 或用旧答案补齐。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `c7e32b5…` 已证明原题通过、private SQLite、连续题失败后 listener 存活和 Provider 前受控超限隔离；但两道后续题均为一次 `PROVIDER_HTTP_ERROR`，且旧错误展示/terminal audit 不保真，仍未完成三题答案 | NOT-RUN / blocking |

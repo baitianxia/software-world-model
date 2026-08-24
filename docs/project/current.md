@@ -87,7 +87,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development** | `V-WEB-000/V-WEB-001` 历史技术 PASS。`c7e32b5…` 已让原现场题的 Package/正文/独立 Review 完整覆盖登录主链与审计副作用，并证明 private SQLite 和受控超限请求隔离；同会话两道后续题却各收到一次 `PROVIDER_HTTP_ERROR`，旧页面/terminal audit 将其错标为 binding drift/outcome unknown。`FINDING-010-033` 至 `040` 已形成通用修复与回归证据；最新 full 1148/1143 只保留既有 4 FAIL + 1 ERROR historical hold。仍等待新的 clean freeze、current Conformance 和完整三题持续 run。`V-EXPERIENCE/V-ANSWER-REWORK` 不能 PASS；历史 `V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001`、`V-PREVIEW-001` FAIL 不变；Slice2/3、hidden、三臂、Acceptance 与 Production 未执行 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / live environment hold** | `c7e32b5…` 已让原现场题完整覆盖登录主链与审计副作用，并证明 private SQLite 和受控超限请求隔离；`FINDING-010-039/040` 修复 Provider 失败分类/terminal audit，full 1148/1143 只保留既有 4 FAIL + 1 ERROR。clean `31a9ccd…` 的新 DeepSeek Conformance 首次 dispatch 收到官方定义为余额不足的 HTTP 402，request 1、retry 0、qualification 未签发。旧 adapter qualification 仍有效且 digest 相同，但不能证明当前账户可用或新三题质量；live 等待账户余额恢复。`V-EXPERIENCE/V-ANSWER-REWORK` 不能 PASS；历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -123,6 +123,11 @@ unknown，`FINDING-010-039` 已以 exact-binding failure propagation 和密封 R
 
 上述失败分类/审计修复已通过 model-source 11/11、Engineering QA 87/87 和允许 AF_UNIX 的完整 1148/1143；raw 仍精确为既有
 4 FAIL + 1 ERROR，见 `FINDING-010-040`。这只允许形成新 clean candidate，不替代 current Conformance 或真实三题体验。
+
+clean candidate `31a9ccd…` 的正确 DeepSeek Conformance 随后在第一次 HTTP dispatch 收到 402；TLS、证书与 credential resolution 成功，
+request 1、retry 0、qualification `NOT_ISSUED`。DeepSeek 官方把 402 定义为余额不足。旧 run-008 qualification 的 adapter implementation/
+configuration digest 与当前相同且仍在有效期，但它不能冒充当前账户可用或新三题答案证据。按 `FINDING-010-041`，当前 live 环境 hold，
+不重试、不切 Provider；账户持有人恢复当前 API key 所属账户余额后，才以最终 clean candidate 和 fresh session 继续两道异质题。
 
 当前 worktree 继续保持 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的 process/outcome/state/side-effect/limitation observation closure，并按
 `FINDING-010-036` 收窄：只有末尾 coverage-only Limitation 可用空 observation links，其他 material-fact Claim 仍强制 observation/evidence

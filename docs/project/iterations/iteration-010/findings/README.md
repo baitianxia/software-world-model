@@ -102,5 +102,8 @@ iteration: ITER-010
   binding 成立时传播真实 terminal failure，并让 policy rejection 携带密封 Result 供外层准确审计；旧会话不追认为三题 PASS。
 - [FINDING-010-040](FINDING-010-040.md)：失败分类/审计修复后的完整 1148 项中 1143 PASS，raw 仍精确为冻结 V-009/Codex digest 的既有
   4 FAIL + 1 ERROR；沙箱 AF_UNIX 噪声已在允许本机 socket 的同命令重跑中消除，保持 historical hold 且不追认 live 质量。
+- [FINDING-010-041](FINDING-010-041.md)：clean `31a9ccd…` 的新 DeepSeek Conformance 只调用一次即收到官方定义为余额不足的 HTTP 402；
+  TLS/credential 成功、retry/switch 0。旧 adapter qualification 仍在有效期且 implementation/config digest 相同，但不能冒充当前账户可用
+  或新三题答案；live 保持环境 hold，等待账户持有人恢复余额后以 fresh session 继续。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
