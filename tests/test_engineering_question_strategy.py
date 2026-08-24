@@ -693,6 +693,7 @@ class SecurityConfig {
                 "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
                 "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
                 "FULL_CONTENT_MATERIAL_EFFECT_SCAN",
+                "ORIGINAL_QUESTION_FULFILLMENT_SCAN",
             ],
         )
         self.assertEqual(projected[0]["configuration_keys"], ["jwt.tokenHeader"])
@@ -709,17 +710,27 @@ class SecurityConfig {
             ],
         )
         self.assertEqual(
-            projected[-1]["package_entry_id"],
+            projected[-2]["package_entry_id"],
             entry.entry_id.value,
         )
         self.assertEqual(
-            projected[-1]["required_effect_categories"],
+            projected[-2]["required_effect_categories"],
             [
                 "PERSISTENCE_WRITE",
                 "AUDIT_WRITE",
                 "CACHE_MUTATION",
                 "NOTIFICATION",
                 "EXTERNAL_INTERACTION",
+            ],
+        )
+        self.assertEqual(
+            projected[-1]["required_fulfillment_dimensions"],
+            [
+                "DIRECT_USER_GOAL",
+                "ORDERED_USER_ACTIONS",
+                "INPUT_OUTPUT_HANDOFFS",
+                "KNOWN_UNKNOWN_BOUNDARY",
+                "MATERIAL_OUTCOMES",
             ],
         )
         review = EngineeringQuestionRoleInputBuilder.review(
@@ -832,6 +843,8 @@ class SecurityConfig {
                 disposition=(
                     EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
                     if item["kind"] == "FULL_CONTENT_MATERIAL_EFFECT_SCAN"
+                    else EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT
+                    if item["kind"] == "ORIGINAL_QUESTION_FULFILLMENT_SCAN"
                     else EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
                 ),
                 finding_code=findings[index].finding_code,
@@ -864,6 +877,52 @@ class SecurityConfig {
             {item["challenge_id"] for item in projected},
         )
         self.assertEqual(accepted.decision, EngineeringReviewDecision.REWRITE_REQUIRED)
+
+        wrong_specialized_assessments = tuple(
+            EngineeringEvidenceBoundaryAssessment.create(
+                challenge_id=StableId(item["challenge_id"]),
+                evidence_boundary=(
+                    "Only the cited visible relationship is supported."
+                ),
+                draft_scope=(
+                    "The Draft omits or expands a material relationship."
+                ),
+                disposition=(
+                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
+                    if item["kind"]
+                    == "ORIGINAL_QUESTION_FULFILLMENT_SCAN"
+                    else assessments[index].disposition
+                ),
+                finding_code=findings[index].finding_code,
+            )
+            for index, item in enumerate(projected)
+        )
+        wrong_specialized_proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "d"),
+            package_digest=challenged_package.digest,
+            draft_digest=draft.digest,
+            quality_assessment=fixtures.passing_quality(),
+            checklist_assessment=fixtures.matching_review_checklist(
+                self.result.understanding,
+                challenged_package,
+            ),
+            evidence_boundary_assessments=wrong_specialized_assessments,
+            findings=findings,
+        )
+        with self.assertRaises(DomainError) as wrong_specialized:
+            EngineeringAnswerReview.accept(
+                package=challenged_package,
+                draft=draft,
+                understanding=self.result.understanding,
+                expected_role_context_id=sid("role_context", "d"),
+                proposal=wrong_specialized_proposal,
+                attempt=2,
+                focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            )
+        self.assertEqual(
+            wrong_specialized.exception.code,
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+        )
 
         second_claim = replace(claim, claim_id="claim-2")
         two_claim_draft = replace(draft, claims=(claim, second_claim))
@@ -1255,7 +1314,7 @@ class SecurityConfig {
         boundary_assessment_variants = review["properties"][
             "evidence_boundary_assessments"
         ]["items"]["anyOf"]
-        self.assertEqual(len(boundary_assessment_variants), 3)
+        self.assertEqual(len(boundary_assessment_variants), 4)
         self.assertEqual(
             {
                 item["properties"]["disposition"]["enum"][0]
@@ -1265,6 +1324,7 @@ class SecurityConfig {
                 "WITHIN_EVIDENCE_BOUNDARY",
                 "DRAFT_EXCEEDS_EVIDENCE_BOUNDARY",
                 "DRAFT_OMITS_MATERIAL_EFFECT",
+                "DRAFT_OMITS_MATERIAL_REQUIREMENT",
             },
         )
         self.assertEqual(

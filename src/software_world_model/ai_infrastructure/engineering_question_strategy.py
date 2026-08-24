@@ -71,7 +71,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@22"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@23"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -83,7 +83,7 @@ ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@10"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@7"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@8"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -671,6 +671,29 @@ _REVIEW_EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA = {
             ],
             "additionalProperties": False,
         },
+        {
+            "type": "object",
+            "properties": {
+                "challenge_id": {"type": "string"},
+                "evidence_boundary": {"type": "string"},
+                "draft_scope": {"type": "string"},
+                "disposition": {
+                    "type": "string",
+                    "enum": [
+                        EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT.value
+                    ],
+                },
+                "finding_code": {"type": "string"},
+            },
+            "required": [
+                "challenge_id",
+                "evidence_boundary",
+                "draft_scope",
+                "disposition",
+                "finding_code",
+            ],
+            "additionalProperties": False,
+        },
     ]
 }
 _REVIEW_OUTPUT_SCHEMA = {
@@ -1223,6 +1246,9 @@ class EngineeringQuestionRoleInputBuilder:
                 ),
                 "omitted_material_effect_disposition": (
                     EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT.value
+                ),
+                "omitted_material_requirement_disposition": (
+                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT.value
                 ),
                 "non_passing_assessment_requires_returned_finding_code": True,
                 "finding_claim_id_must_be_one_of_challenge_claim_ids": True,

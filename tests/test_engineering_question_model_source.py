@@ -397,7 +397,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@32",
+            "engineering-qa-adaptive-investigation-prompt@33",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -506,6 +506,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("transport status", understanding_prompt)
         self.assertIn("concrete header name, token prefix", understanding_prompt)
         self.assertIn("unmounted DTO's fields", understanding_prompt)
+        self.assertIn("make the checklist operational rather than inventory-shaped", understanding_prompt)
+        self.assertIn("input/output handoff", understanding_prompt)
         initial_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.INITIAL_INVESTIGATION
@@ -573,6 +575,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             "removing one unsafe inference from a Claim never authorizes dropping",
             answer_prompt,
         )
+        self.assertIn("organize the supported observations into an executable user sequence", answer_prompt)
         review_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.REVIEW
@@ -609,6 +612,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("getter invocation in caller content", review_prompt)
         self.assertIn("FULL_CONTENT_MATERIAL_EFFECT_SCAN", review_prompt)
         self.assertIn("DRAFT_OMITS_MATERIAL_EFFECT", review_prompt)
+        self.assertIn("ORIGINAL_QUESTION_FULFILLMENT_SCAN", review_prompt)
+        self.assertIn("DRAFT_OMITS_MATERIAL_REQUIREMENT", review_prompt)
+        self.assertIn("input/output handoff", review_prompt)
         self.assertIn("required_effect_category", review_prompt)
         self.assertIn(
             "claim_id is one of that exact challenge's default_claim_ids",

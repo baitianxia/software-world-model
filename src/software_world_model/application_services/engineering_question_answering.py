@@ -307,12 +307,14 @@ class EngineeringEvidenceBoundaryChallengeKind(str, Enum):
         "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION"
     )
     FULL_CONTENT_MATERIAL_EFFECT_SCAN = "FULL_CONTENT_MATERIAL_EFFECT_SCAN"
+    ORIGINAL_QUESTION_FULFILLMENT_SCAN = "ORIGINAL_QUESTION_FULFILLMENT_SCAN"
 
 
 class EngineeringEvidenceBoundaryAssessmentDisposition(str, Enum):
     WITHIN_EVIDENCE_BOUNDARY = "WITHIN_EVIDENCE_BOUNDARY"
     DRAFT_EXCEEDS_EVIDENCE_BOUNDARY = "DRAFT_EXCEEDS_EVIDENCE_BOUNDARY"
     DRAFT_OMITS_MATERIAL_EFFECT = "DRAFT_OMITS_MATERIAL_EFFECT"
+    DRAFT_OMITS_MATERIAL_REQUIREMENT = "DRAFT_OMITS_MATERIAL_REQUIREMENT"
 
 
 _FINAL_ANSWER_ROLE_CALL_RESERVE = 3
@@ -5026,6 +5028,16 @@ class EngineeringEvidenceBoundaryChallenge:
                 and normalized_symbol is None
                 and not types
             )
+        elif (
+            kind
+            is EngineeringEvidenceBoundaryChallengeKind.ORIGINAL_QUESTION_FULFILLMENT_SCAN
+        ):
+            valid_shape = (
+                not keys
+                and normalized_literal is None
+                and normalized_symbol is None
+                and not types
+            )
         else:  # pragma: no cover - guarded by the closed Enum above
             valid_shape = False
         if not valid_shape:
@@ -5111,6 +5123,24 @@ class EngineeringEvidenceBoundaryChallenge:
                     "CACHE_MUTATION",
                     "NOTIFICATION",
                     "EXTERNAL_INTERACTION",
+                ],
+            }
+        if (
+            self.kind
+            is EngineeringEvidenceBoundaryChallengeKind.ORIGINAL_QUESTION_FULFILLMENT_SCAN
+        ):
+            return {
+                **common,
+                "package_entry_ids": [
+                    item.value for item in self.package_entry_ids
+                ],
+                "default_claim_ids": list(self.claim_ids),
+                "required_fulfillment_dimensions": [
+                    "DIRECT_USER_GOAL",
+                    "ORDERED_USER_ACTIONS",
+                    "INPUT_OUTPUT_HANDOFFS",
+                    "KNOWN_UNKNOWN_BOUNDARY",
+                    "MATERIAL_OUTCOMES",
                 ],
             }
         raise DomainError(
@@ -5257,6 +5287,28 @@ def project_evidence_boundary_challenges(
                     "SCAN_THE_COMPLETE_ENTRY_FOR_PERSISTENCE_AUDIT_CACHE_"
                     "NOTIFICATION_AND_EXTERNAL_INTERACTION_EFFECTS_AND_"
                     "REQUIRE_EVERY_MATERIAL_OMISSION_TO_BIND_A_FINDING"
+                ),
+            )
+        )
+    cited_package_entry_ids = tuple(
+        dict.fromkeys(
+            entry_id
+            for claim in default_claims
+            for entry_id in claim.evidence_entry_ids
+        )
+    )
+    if default_claims and cited_package_entry_ids:
+        challenges.append(
+            EngineeringEvidenceBoundaryChallenge.create(
+                kind=(
+                    EngineeringEvidenceBoundaryChallengeKind.ORIGINAL_QUESTION_FULFILLMENT_SCAN
+                ),
+                claim_ids=tuple(claim.claim_id for claim in default_claims),
+                package_entry_ids=cited_package_entry_ids,
+                rule=(
+                    "RECONSTRUCT_THE_LITERAL_USER_GOAL_AND_REQUIRE_ORDERED_"
+                    "ACTIONS_INPUT_OUTPUT_HANDOFFS_KNOWN_UNKNOWN_BOUNDARIES_"
+                    "AND_MATERIAL_OUTCOMES_WHEN_APPLICABLE"
                 ),
             )
         )
@@ -6110,11 +6162,27 @@ class EngineeringAnswerReview:
                 "evidence-boundary challenge Review must disposition every projected challenge exactly once",
             )
         for assessment in proposal.evidence_boundary_assessments:
+            challenge = expected_challenge_by_id[assessment.challenge_id]
+            specialized_disposition_kind = {
+                EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT: (
+                    EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
+                ),
+                EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT: (
+                    EngineeringEvidenceBoundaryChallengeKind.ORIGINAL_QUESTION_FULFILLMENT_SCAN
+                ),
+            }
+            required_kind = specialized_disposition_kind.get(
+                assessment.disposition
+            )
+            if required_kind is not None and challenge.kind is not required_kind:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "specialized non-passing disposition does not match its challenge kind",
+                )
             if (
                 assessment.disposition
                 is not EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
             ):
-                challenge = expected_challenge_by_id[assessment.challenge_id]
                 if not any(
                     finding.finding_code == assessment.finding_code
                     and finding.claim_id in challenge.claim_ids

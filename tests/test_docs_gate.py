@@ -3711,7 +3711,7 @@ class ReflectionGateTests(unittest.TestCase):
                 "cited-configuration-placeholders-plus-claim-status-literals-"
                 "absent-from-cited-content-plus-mentioned-same-application-types-"
                 "without-mounted-implementation-plus-cited-full-content-java-entry-"
-                "material-effect-scans"
+                "material-effect-scans-plus-original-question-fulfillment-scan"
             ),
             "reviewer_evidence_boundary_projection_is-semantic-verdict": False,
             "reviewer_full-content-material-effect-scan-unit": (
@@ -3721,10 +3721,16 @@ class ReflectionGateTests(unittest.TestCase):
                 "persistence-write,audit-write,cache-mutation,notification,"
                 "external-interaction"
             ),
+            "reviewer_original-question-fulfillment-scan-required": True,
+            "reviewer_original-question-fulfillment-dimensions": (
+                "direct-user-goal,ordered-user-actions,input-output-handoffs,"
+                "known-unknown-boundary,material-outcomes"
+            ),
             "challenge_review_disposition_vocabulary": (
                 "within-evidence-boundary,draft-exceeds-evidence-boundary,"
-                "draft-omits-material-effect"
+                "draft-omits-material-effect,draft-omits-material-requirement"
             ),
+            "challenge_review_specialized-disposition-kind-match-required": True,
             "challenge_review_non-passing-disposition-requires-finding-on-exact-challenged-claim": True,
             "challenge_review_shared-finding-code-requires-claim-in-every-bound-challenge": True,
             "package-material-effect-observation-omission-remediation": (

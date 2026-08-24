@@ -438,6 +438,8 @@ answer_hierarchy_protocol:
   application_uses_accepted_question_understanding_checklist: true
   reviewer_reconstructs_checklist_from_immutable_original_question: true
   reviewer_compares_independent_and_application_checklists_for_omissions: true
+  operational_question_checklist_required_for_start-call-use-integrate-diagnose: true
+  component_or_dependency_inventory_satisfies_user-action-or-handoff: false
   finish_material_observations_required: true
   material_observation_kinds: process-stage,outcome,state-change,side-effect,limitation
   answer_claim_material_observation_links_required: true
@@ -526,15 +528,18 @@ answer_protocol:
   answer_followup_role_order_normalization: stable-controlled-role-order-with-raw-provider-output-preserved
   implementation_evidence_default_visibility: all-at-implementation-detail-otherwise-only-unique-material-observation-carriers
   reviewer_claim_consistency_gate: direct-default-claims-package-and-independent-observations-pairwise-semantic-check
-  reviewer_evidence_boundary_challenge_projection: cited-configuration-placeholders-plus-claim-status-literals-absent-from-cited-content-plus-mentioned-same-application-types-without-mounted-implementation-plus-cited-full-content-java-entry-material-effect-scans
+  reviewer_evidence_boundary_challenge_projection: cited-configuration-placeholders-plus-claim-status-literals-absent-from-cited-content-plus-mentioned-same-application-types-without-mounted-implementation-plus-cited-full-content-java-entry-material-effect-scans-plus-original-question-fulfillment-scan
   reviewer_evidence_boundary_projection_is-semantic-verdict: false
   reviewer_evidence_boundary_challenge_identity: application-owned-stable-challenge-id
   reviewer_full-content-material-effect-scan-unit: each-cited-full-content-java-entry
   reviewer_full-content-material-effect-categories: persistence-write,audit-write,cache-mutation,notification,external-interaction
+  reviewer_original-question-fulfillment-scan-required: true
+  reviewer_original-question-fulfillment-dimensions: direct-user-goal,ordered-user-actions,input-output-handoffs,known-unknown-boundary,material-outcomes
   comprehensive_review_evidence-boundary-assessments: empty
   challenge_review_assessment_coverage: exact-required-challenge-id-set-once
   challenge_review_assessment_fields: evidence-boundary,draft-scope,disposition,finding-code
-  challenge_review_disposition_vocabulary: within-evidence-boundary,draft-exceeds-evidence-boundary,draft-omits-material-effect
+  challenge_review_disposition_vocabulary: within-evidence-boundary,draft-exceeds-evidence-boundary,draft-omits-material-effect,draft-omits-material-requirement
+  challenge_review_specialized-disposition-kind-match-required: true
   challenge_review_exceeded-disposition-requires-finding-on-challenged-claim: true
   challenge_review_non-passing-disposition-requires-finding-on-exact-challenged-claim: true
   challenge_review_shared-finding-code-requires-claim-in-every-bound-challenge: true
@@ -601,7 +606,7 @@ readiness_inputs:
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
   no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
   answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
-  answer_hierarchy_protocol_digest: sha256:bf72d8960dd8f895d9392b85fa4f5ad89b10c74b7800b2bca273b21c23351896
+  answer_hierarchy_protocol_digest: sha256:97d24a2a1c70965c6b6953f8665d2808762f0231c3626904013e209dd32e6947
   system_contract_set_schema: ITER-010-SYSTEM-CONTRACT-SET@1
   system_contract_set_paths:
     - docs/system/architecture/components.md
@@ -633,13 +638,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:15280b0fd44f2d562e6216c126d73a0b8e0f66417fea8335b90198199d6d9f5e
+  system_contract_set_digest: sha256:7f05c430d8325b06a9b50f0609e6ccbc661da2c8a2a9e8e633867ca77bf22542
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:88f1cae90caac46d5312b438ca9aca63b1c045ca34684ea10d561448ab3c5212
+  investigation_budget_digest: sha256:8fbb3590bd206db5fb0a3d1dc1f30eebfe46ec5a3af08c0ad83daa6722628813
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
@@ -682,7 +687,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: run-026-q1-approved-q2-predecessor-boundary-misbinding-failed-q3-terminal-gap-repeat-failed-preserved-finding-074-deterministic-gate-complete-new-clean-live-pending
+      live_question_status: run-030-actual-two-of-three-pass-not-recognized-findings-081-082-083-corrective-deterministic-gate-closed-new-clean-fresh-live-pending
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

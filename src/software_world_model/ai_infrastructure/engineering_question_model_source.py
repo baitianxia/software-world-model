@@ -62,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@32"
+    "engineering-qa-adaptive-investigation-prompt@33"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -142,6 +142,13 @@ Split independently supportable and intentionally unknown facets into distinct
 checklist items so each later disposition can have one coherent outcome.
 Checklist items may summarize the goal, but they do not waive the later atomic
 evidence-observation audit.
+When the question asks how someone starts, calls, uses, integrates, or diagnoses
+a system, make the checklist operational rather than inventory-shaped. Separately
+capture applicable prerequisites or build/start actions, the first request and
+its inputs, returned values, how those values are handed into the next request,
+the resulting access or failure outcome, and runtime parameters that remain
+unknown. A list of dependencies, classes, filters, or handlers does not satisfy
+an action or an input/output handoff.
 Identify the evidence needs, response language, and response constraints. Do not
 narrow the question based on currently available evidence. The requested
 abstraction level controls the delivered answer, not which evidence may be
@@ -517,6 +524,11 @@ required_evidence_entry_id. In rewrite_mode, removing one unsafe inference from
 a Claim never authorizes dropping a different supported observation that the
 old Claim happened to carry: split or narrow the prose while preserving every
 safe observation. Recount the exact IDs after rewriting before returning.
+For a startup, call, usage, integration, or diagnosis question, organize the
+supported observations into an executable user sequence. Explicitly bridge each
+material output into the next action's input, and separate concrete known values
+from configuration-backed values that remain unknown. Merely listing dependencies
+or participating components is not an actionable answer.
 Treat `${key}` and injection annotations as evidence of a configuration key and
 injection point only. Never turn them into a concrete header name, token prefix,
 port, URL, secret, profile, or other runtime value without directly cited value
@@ -598,6 +610,24 @@ application_material_observation_omissions and use
 INVESTIGATE_MISSING_EVIDENCE for that entry's evidence class and semantic need,
 so a successor gap delta can add the typed observation; a same-Package rewrite
 cannot invent a missing observation ID.
+ORIGINAL_QUESTION_FULFILLMENT_SCAN is a separate literal-goal challenge. Rebuild
+the user's requested result from original_question and compare it with the full
+default Draft, not merely with checklist IDs or component names. Check every
+required_fulfillment_dimension. For startup, call, usage, integration, or
+diagnosis questions, require an ordered sequence with concrete user actions,
+inputs, outputs, cross-step input/output handoffs, material outcomes, and an
+explicit split
+between known facts and authorization-bounded unknowns wherever applicable. A
+dependency or component inventory does not prove that the user can perform the
+requested flow. In particular, naming a produced credential, identifier, or
+artifact and separately naming its consumer is incomplete when the Draft omits
+how the user supplies that output to the next action. Use
+DRAFT_OMITS_MATERIAL_REQUIREMENT and a bound Finding for any material omission.
+If the current Package observations already contain the needed facts, use
+REWRITE_WITH_EXISTING_EVIDENCE. If cited full Package content supports a required
+fact or handoff that the Application observations omit, also report the exact
+independent observation under application_material_observation_omissions and use
+INVESTIGATE_MISSING_EVIDENCE so a successor Package can add its typed observation.
 Every non-passing assessment must reference a returned Finding whose claim_id
 is one of that exact challenge's default_claim_ids. A Finding code may be shared
 across assessments only when its single claim_id belongs to every challenge it

@@ -305,6 +305,8 @@ answer_hierarchy_protocol:
   application_uses_accepted_question_understanding_checklist: true
   reviewer_reconstructs_checklist_from_immutable_original_question: true
   reviewer_compares_independent_and_application_checklists_for_omissions: true
+  operational_question_checklist_required_for_start-call-use-integrate-diagnose: true
+  component_or_dependency_inventory_satisfies_user-action-or-handoff: false
   finish_material_observations_required: true
   material_observation_kinds: process-stage,outcome,state-change,side-effect,limitation
   answer_claim_material_observation_links_required: true

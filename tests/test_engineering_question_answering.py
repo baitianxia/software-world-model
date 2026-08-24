@@ -653,6 +653,9 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                     ),
                     remediation=EngineeringReviewRemediation.REJECT_UNRECOVERABLE,
                 )
+                challenges = project_evidence_boundary_challenges(
+                    kwargs["package"], kwargs["draft"]
+                )
                 return EngineeringReviewProposal.create(
                     role_context_id=kwargs["role_context_id"],
                     package_digest=kwargs["package"].digest,
@@ -662,6 +665,22 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                     checklist_assessment=matching_review_checklist(
                         kwargs["understanding"],
                         kwargs["package"],
+                    ),
+                    evidence_boundary_assessments=tuple(
+                        EngineeringEvidenceBoundaryAssessment.create(
+                            challenge_id=item.challenge_id,
+                            evidence_boundary=(
+                                "The current evidence cannot satisfy the literal user goal."
+                            ),
+                            draft_scope=(
+                                "The Draft omits a material requirement of that goal."
+                            ),
+                            disposition=(
+                                EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT
+                            ),
+                            finding_code=finding.finding_code,
+                        )
+                        for item in challenges
                     ),
                     findings=(finding,),
                 )
@@ -693,6 +712,193 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
             ],
         )
+
+    def test_original_question_fulfillment_scan_rewrites_component_inventory(self):
+        class InventoryThenActionableAnswer:
+            def __init__(self):
+                self.calls = 0
+
+            def generate(self, **kwargs):
+                self.calls += 1
+                if self.calls > 1:
+                    return AnswerRole().generate(**kwargs)
+                package = kwargs["package"]
+                observation_ids = tuple(
+                    observation.observation_id
+                    for disposition in package.checklist_dispositions
+                    for observation in disposition.material_observations
+                )
+                return EngineeringAnswerProposal.create(
+                    role_context_id=kwargs["role_context_id"],
+                    package_digest=package.digest,
+                    response_language=kwargs["understanding"].response_language,
+                    claims=(
+                        EngineeringAnswerClaimProposal.create(
+                            claim_id="claim-1",
+                            kind=AnswerClaimKind.AFFIRMATIVE,
+                            content_role=AnswerContentRole.DIRECT_ANSWER,
+                            checklist_item_ids=("check-1",),
+                            material_observation_ids=observation_ids,
+                            text=(
+                                "The service has a startup entry point and uses "
+                                "repository configuration."
+                            ),
+                            evidence_entry_ids=tuple(
+                                item.entry_id for item in package.support_citation
+                            ),
+                        ),
+                    ),
+                )
+
+        class FulfillmentReviewer:
+            def __init__(self):
+                self.challenge_calls = 0
+
+            def review(
+                self,
+                *,
+                original_question,
+                understanding,
+                package,
+                draft,
+                role_context_id,
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
+            ):
+                if review_focus is EngineeringReviewFocus.COMPREHENSIVE:
+                    return EngineeringReviewProposal.create(
+                        role_context_id=role_context_id,
+                        package_digest=package.digest,
+                        draft_digest=draft.digest,
+                        decision=EngineeringReviewDecision.APPROVED,
+                        quality_assessment=passing_quality(),
+                        checklist_assessment=matching_review_checklist(
+                            understanding, package
+                        ),
+                    )
+                self.challenge_calls += 1
+                challenges = project_evidence_boundary_challenges(package, draft)
+                fulfillment = next(
+                    item
+                    for item in challenges
+                    if item.kind
+                    is EngineeringEvidenceBoundaryChallengeKind.ORIGINAL_QUESTION_FULFILLMENT_SCAN
+                )
+                if self.challenge_calls == 1:
+                    finding = EngineeringReviewFinding.create(
+                        finding_code="USER_ACTION_SEQUENCE_OMITTED",
+                        checklist_item_id="check-1",
+                        claim_id=fulfillment.claim_ids[0],
+                        description=(
+                            "The Draft lists participating concepts but does not "
+                            "tell the user how to start the service or apply the control."
+                        ),
+                        remediation=(
+                            EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                        ),
+                        existing_evidence_entry_ids=tuple(
+                            item.entry_id for item in package.support_citation
+                        ),
+                    )
+                    quality = EngineeringReviewQualityAssessment.create(
+                        direct_answer=EngineeringReviewQualityStatus.PASS,
+                        abstraction_fit=EngineeringReviewQualityStatus.PASS,
+                        material_completeness=EngineeringReviewQualityStatus.FAIL,
+                        claim_consistency=EngineeringReviewQualityStatus.PASS,
+                        implementation_detail_budget=(
+                            EngineeringReviewQualityStatus.PASS
+                        ),
+                    )
+                    return EngineeringReviewProposal.create_from_findings(
+                        role_context_id=role_context_id,
+                        package_digest=package.digest,
+                        draft_digest=draft.digest,
+                        quality_assessment=quality,
+                        checklist_assessment=matching_review_checklist(
+                            understanding, package
+                        ),
+                        evidence_boundary_assessments=tuple(
+                            EngineeringEvidenceBoundaryAssessment.create(
+                                challenge_id=item.challenge_id,
+                                evidence_boundary=(
+                                    "The Package supports the requested user action."
+                                ),
+                                draft_scope=(
+                                    "The Draft omits the executable action sequence."
+                                    if item is fulfillment
+                                    else "The Draft stays within the cited evidence."
+                                ),
+                                disposition=(
+                                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT
+                                    if item is fulfillment
+                                    else EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+                                ),
+                                finding_code=(
+                                    finding.finding_code
+                                    if item is fulfillment
+                                    else None
+                                ),
+                            )
+                            for item in challenges
+                        ),
+                        findings=(finding,),
+                    )
+                return EngineeringReviewProposal.create(
+                    role_context_id=role_context_id,
+                    package_digest=package.digest,
+                    draft_digest=draft.digest,
+                    decision=EngineeringReviewDecision.APPROVED,
+                    quality_assessment=passing_quality(),
+                    checklist_assessment=matching_review_checklist(
+                        understanding, package
+                    ),
+                    evidence_boundary_assessments=tuple(
+                        EngineeringEvidenceBoundaryAssessment.create(
+                            challenge_id=item.challenge_id,
+                            evidence_boundary=(
+                                "The Package supports the requested user action."
+                            ),
+                            draft_scope=(
+                                "The Draft now states the executable user action."
+                            ),
+                            disposition=(
+                                EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+                            ),
+                            finding_code=None,
+                        )
+                        for item in challenges
+                    ),
+                )
+
+        answer = InventoryThenActionableAnswer()
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=UnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=InitialInvestigator(),
+            verification_investigation_role=VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=source_profile()),
+            retrieval_worker=ScriptedWorker(),
+            answer_role=answer,
+            reviewer_role=FulfillmentReviewer(),
+        )
+
+        result = service.answer(request())
+
+        self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
+        self.assertEqual(answer.calls, 2)
+        self.assertEqual(len(result.packages), 1)
+        self.assertEqual(result.usage.verification_investigations, 0)
+        first_challenge = result.reviews[1]
+        fulfillment_assessment = next(
+            item
+            for item in first_challenge.evidence_boundary_assessments
+            if item.disposition
+            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_REQUIREMENT
+        )
+        self.assertEqual(
+            fulfillment_assessment.finding_code,
+            "USER_ACTION_SEQUENCE_OMITTED",
+        )
+        self.assertIn("Start the service", result.authorized_answer.body)
 
     def test_non_supported_finish_reopens_untried_required_source_class(self):
         class PrematureFinishInvestigator:

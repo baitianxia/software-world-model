@@ -217,8 +217,10 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
   只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
 - Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合及 1—4 个 exact mandatory-read paths；多机制/
-  检查面选择各决定性实现，flow/lifecycle 把结果、状态变化与持久化/审计/缓存/通知/外部交互副作用拆成独立 checklist。4-path 上限与
-  12-call initial fuse 保证 4 次 direct READ/PARSE + 1 FINISH 后仍有 7 次自适应余量；可选佐证不得占用 mandatory capacity，也不能因
+  检查面选择各决定性实现，flow/lifecycle 把结果、状态变化与持久化/审计/缓存/通知/外部交互副作用拆成独立 checklist。
+  startup/call/use/integrate/diagnose 类问题还把 prerequisite/build-start、首个请求与输入、返回值、跨步骤 handoff、结果/失败和 runtime
+  unknown 拆成 operational checklist，不能以依赖或组件 inventory 代替。4-path 上限与 12-call initial fuse 保证 4 次 direct
+  READ/PARSE + 1 FINISH 后仍有 7 次自适应余量；可选佐证不得占用 mandatory capacity，也不能因
   evidence modality 可用或用户只要求“可核对依据”就引入无关 TEST/log/config need。
   Application 区分 registered/required/investigated/untried/unregistered classes 与 required/unread paths；向 Initial Investigation 投影 exact
   maximum/remaining calls，并在 unread required path 存在时投影 direct locator descriptor 且只暴露这些路径的 eligible locator；角色优先
@@ -248,7 +250,8 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   实现详情。
 - Answer input 在原问题与大型 Understanding/Package 对象之前提供 exact material-observation coverage table，逐项列出 observation ID、
   statement、kind、checklist 和 required evidence entry。初答与 rewrite 都必须在默认正文恰好覆盖每项；收窄一个越界推断不能删除同一
-  Claim 原先承载的其他安全 observation。
+  Claim 原先承载的其他安全 observation。startup/call/use/integrate/diagnose 类问题还必须按动作顺序连接 material output 与下一步
+  input，并分开已知值和 configuration-backed unknown；组件清单不能替代用户可执行 handoff。
 - Reviewer 在另一个新上下文中读取原问题、理解记录、当前 Package 和 Draft，无 repo/Source/World Model tool、FS、Shell、network 或
   credential。它从原问题独立重建 material conclusions、列出 Application checklist omission；再检查完整 Package evidence，独立形成带
   evidence entry 的原子 observations，分别列出 Package 与默认 Draft omission，并给 direct answer、abstraction fit、material
@@ -260,11 +263,14 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Verification Request。Reviewer 不能提出可执行 path/command/operation，也不能因 Draft 扩张了原问题不要求的细节而扩大调查。
 - 上述 finding-free Review 只是 `COMPREHENSIVE` provisional approval。Application 从当前 Package/Draft 投影 cited configuration
   placeholder、Claim 中 cited content 未出现的 HTTP status literal、Draft 提及但实现未挂载的 same-application type，以及每个被默认正文
-  Claim 引用的 full-content Java support entry 的独立 material-effect scan，随后使用另一个 fresh context 执行
+  Claim 引用的 full-content Java support entry 的独立 material-effect scan；此外每个有默认正文和引用 entry 的 Draft 投影一个
+  original-question fulfillment scan，检查 direct goal、ordered actions、input/output handoff、known/unknown boundary 与 material
+  outcomes，随后使用另一个 fresh context 执行
   `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、caller/getter/import 与 DTO
   fields/wire property/handler output、上游 local state 与下游 status，并逐 entry 检查 persistence/audit write、cache mutation、
   notification 和 external interaction。每项 lead 具有 Application-owned 稳定 `challenge_id`；challenge 必须恰好逐项返回 evidence
-  scope、Draft scope 与 `WITHIN_EVIDENCE_BOUNDARY / DRAFT_EXCEEDS_EVIDENCE_BOUNDARY / DRAFT_OMITS_MATERIAL_EFFECT`。所有非 passing
+  scope、Draft scope 与 `WITHIN_EVIDENCE_BOUNDARY / DRAFT_EXCEEDS_EVIDENCE_BOUNDARY / DRAFT_OMITS_MATERIAL_EFFECT /
+  DRAFT_OMITS_MATERIAL_REQUIREMENT`。后两种专用 disposition 必须与对应 challenge kind 匹配；所有非 passing
   assessment 都必须绑定同输出中作用于该 exact challenge Claim 的 Finding，只有 Claim 同时属于每个 challenge 时才允许复用 Finding
   code。Application 重算 exact ID 集合，Gateway 强制 focus 顺序；只有集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的
   challenge 才可 Authorization。Package 已有 observation 时的 Draft omission 走同包 rewrite；full entry 已证明但 sealed Package 缺少
@@ -466,4 +472,15 @@ Production 不执行。
 1182/1177 exact historical hold 闭合上述 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍是冻结历史 hold，没有 ITER-010 新失败。
 下一步只能从新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立
 复核；run-029 不追认，Production 不执行。
+`FINDING-010-081` 记录 clean `9ae982b…` / run-030：fresh Conformance 2/2 PASS，同一持续 Browser 三题共 36 dispatch
+（14/14/8），retry/switch/outcome-unknown 0；66,000-byte 输入在 Provider 前拒绝，private files、clean SQLite checkpoint、listener
+continuity 与 Production `NOT_EXECUTED` 成立。Q1/Q3 独立 PASS；Q2 虽被页面 `APPROVED`，却没有把登录响应 token/tokenHead 交接为
+受保护请求输入，也没有明确 configuration-backed header/prefix unknown，实际为 2 PASS + 1 FAIL。
+`FINDING-010-082` 已要求 startup/call/use/integrate/diagnose 的 operational checklist 与 Answer input/output handoff，并为每个可交付
+Draft 投影通用 `ORIGINAL_QUESTION_FULFILLMENT_SCAN`；缺 material 用户目标使用 `DRAFT_OMITS_MATERIAL_REQUIREMENT`，专用 disposition
+错配 challenge kind 时失败关闭。Strategy/Prompt/Review Schema 为 `@23/@33/@8`，focused 80/80、Engineering QA 117/117 PASS；
+`FINDING-010-083` 再以 docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178
+exact historical hold 闭合 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍为冻结历史 hold，没有 ITER-010 新失败。下一步只能从
+新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge-assessment 独立复核；
+run-030 不追认，Production 不执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

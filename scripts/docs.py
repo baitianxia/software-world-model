@@ -1631,6 +1631,8 @@ def validate_answer_hierarchy_protocol(
         "application_uses_accepted_question_understanding_checklist": True,
         "reviewer_reconstructs_checklist_from_immutable_original_question": True,
         "reviewer_compares_independent_and_application_checklists_for_omissions": True,
+        "operational_question_checklist_required_for_start-call-use-integrate-diagnose": True,
+        "component_or_dependency_inventory_satisfies_user-action-or-handoff": False,
         "finish_material_observations_required": True,
         "material_observation_kinds": "process-stage,outcome,state-change,side-effect,limitation",
         "answer_claim_material_observation_links_required": True,
@@ -4658,6 +4660,8 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "challenge_review_non-passing-disposition-requires-finding-on-exact-challenged-claim",
         "challenge_review_shared-finding-code-requires-claim-in-every-bound-challenge",
         "verification-successor-may-reuse-predecessor-support",
+        "reviewer_original-question-fulfillment-scan-required",
+        "challenge_review_specialized-disposition-kind-match-required",
     ):
         if answer_protocol.get(field) is not True:
             errors.append(f"{label}: answer_protocol.{field} must be true")
@@ -4686,7 +4690,7 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
             "cited-configuration-placeholders-plus-claim-status-literals-"
             "absent-from-cited-content-plus-mentioned-same-application-types-"
             "without-mounted-implementation-plus-cited-full-content-java-entry-"
-            "material-effect-scans"
+            "material-effect-scans-plus-original-question-fulfillment-scan"
         ),
         "answer_material_observation_coverage_contract": (
             "exact-id-statement-kind-checklist-and-required-evidence-entry-"
@@ -4699,9 +4703,13 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
             "persistence-write,audit-write,cache-mutation,notification,"
             "external-interaction"
         ),
+        "reviewer_original-question-fulfillment-dimensions": (
+            "direct-user-goal,ordered-user-actions,input-output-handoffs,"
+            "known-unknown-boundary,material-outcomes"
+        ),
         "challenge_review_disposition_vocabulary": (
             "within-evidence-boundary,draft-exceeds-evidence-boundary,"
-            "draft-omits-material-effect"
+            "draft-omits-material-effect,draft-omits-material-requirement"
         ),
         "package-material-effect-observation-omission-remediation": (
             "successor-gap-delta-with-predecessor-support-reuse"
