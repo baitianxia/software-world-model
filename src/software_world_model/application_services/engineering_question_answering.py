@@ -3722,13 +3722,20 @@ class EngineeringAnswerClaimProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "answer claim material observation references must be unique",
             )
-        if not observations and not (
+        coverage_only_limitation = (
             kind is AnswerClaimKind.LIMITATION
             and content_role is AnswerContentRole.LIMITATION
+        )
+        direct_answer_summary = (
+            kind is AnswerClaimKind.AFFIRMATIVE
+            and content_role is AnswerContentRole.DIRECT_ANSWER
+        )
+        if not observations and not (
+            coverage_only_limitation or direct_answer_summary
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "only a coverage-only limitation may omit material observation references",
+                "only a direct-answer summary or coverage-only limitation may omit material observation references",
             )
         if (
             content_role is AnswerContentRole.LIMITATION
@@ -3923,6 +3930,20 @@ class EngineeringAnswerDraft:
         disposition_by_checklist = {
             item.checklist_item_id: item for item in package.checklist_dispositions
         }
+        for claim in proposal.claims:
+            if (
+                claim.kind is AnswerClaimKind.AFFIRMATIVE
+                and not claim.material_observation_ids
+                and any(
+                    disposition_by_checklist[item].outcome
+                    is not ChecklistOutcome.SUPPORTED
+                    for item in claim.checklist_item_ids
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "an empty-link direct summary may cover only supported checklist items",
+                )
         observation_by_id = {
             observation.observation_id: (disposition, observation)
             for disposition in package.checklist_dispositions

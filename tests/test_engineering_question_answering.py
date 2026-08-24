@@ -1360,12 +1360,23 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             (),
         )
 
-    def test_affirmative_claim_cannot_omit_observation_links(self):
+    def test_only_affirmative_direct_summary_can_omit_observation_links(self):
+        summary = EngineeringAnswerClaimProposal.create(
+            claim_id="claim-empty-summary",
+            kind=AnswerClaimKind.AFFIRMATIVE,
+            content_role=AnswerContentRole.DIRECT_ANSWER,
+            checklist_item_ids=("check-1",),
+            material_observation_ids=(),
+            text="A concise summary expanded by later claims.",
+            evidence_entry_ids=(sid("support_entry", "e"),),
+        )
+
+        self.assertEqual(summary.material_observation_ids, ())
         with self.assertRaises(DomainError) as caught:
             EngineeringAnswerClaimProposal.create(
                 claim_id="claim-empty-observations",
                 kind=AnswerClaimKind.AFFIRMATIVE,
-                content_role=AnswerContentRole.DIRECT_ANSWER,
+                content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
                 checklist_item_ids=("check-1",),
                 material_observation_ids=(),
                 text="An unlinked fact.",
@@ -1373,6 +1384,56 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             )
 
         self.assertEqual(caught.exception.code, ErrorCode.INVALID_ARGUMENT)
+
+    def test_empty_link_direct_summary_is_expanded_by_later_default_claim(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        observations = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        support = tuple(item.entry_id for item in package.support_citation)
+        role_context = sid("role_context", "8")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct-summary",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=(),
+                    text="Use the documented startup flow and expect its effect.",
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-expanded-process",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observations,
+                    text="Use the documented entry point; startup also writes a local PID file.",
+                    evidence_entry_ids=support,
+                ),
+            ),
+        )
+
+        draft = EngineeringAnswerDraft.accept(
+            package=package,
+            understanding=result.understanding,
+            expected_role_context_id=role_context,
+            proposal=proposal,
+            revision=1,
+        )
+
+        self.assertEqual(
+            draft.default_body_claim_ids,
+            ("claim-direct-summary", "claim-expanded-process"),
+        )
+        self.assertIn("\n\n", draft.body)
 
     def test_coverage_limitation_cannot_attach_supported_observations(self):
         result = self.service(request_more_evidence=False).answer(request())

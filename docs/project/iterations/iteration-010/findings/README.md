@@ -114,5 +114,8 @@ iteration: ITER-010
 - [FINDING-010-044](FINDING-010-044.md)：clean `34f0496…` 原题的直答已完整自然，但模型追加的过程 Claim 完全重复同 7 个 observation，
   硬拒绝整题没有必要。Application 现按顺序保留首次覆盖、把全冗余后续 Claim 投影到开发者详情；部分交叠仍失败关闭且默认正文仍须覆盖
   精确 observation 全集。
+- [FINDING-010-045](FINDING-010-045.md)：clean `47a96b6…` 原题已返回短直答和无重复的逐事实 Claim，但短直答为避免重复使用空 observation
+  link，被旧 value rule 与 coverage Limitation 一并拒绝。现允许有 support 的 affirmative DIRECT_ANSWER 作为受控空-link 摘要；它不取得
+  observation coverage、只能链接 supported checklist，Reviewer 必须核对其未扩张后续事实。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

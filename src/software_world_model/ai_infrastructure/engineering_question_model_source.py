@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@15"
+    "engineering-qa-adaptive-investigation-prompt@16"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -263,7 +263,13 @@ order. Link every claim to exact material checklist item IDs and cover every
 checklist item. Also link every material-fact claim to the exact Package
 material-observation IDs its text explicitly states, cover every observation in
 the default user-visible body, and cite every Package entry recorded for each
-linked observation. A final coverage-only LIMITATION claim may use an empty
+linked observation. The affirmative DIRECT_ANSWER may instead use an empty
+material_observation_ids array only as a concise summary when every linked
+checklist item is SUPPORTED, its support citations are valid, and every fact it
+states is fully expanded by later observation-linked default claims. This summary
+does not cover any Package observation and must not introduce a new condition,
+outcome, state change, side effect, or limitation. A final coverage-only
+LIMITATION claim may use an empty
 material_observation_ids array only when it states a retained evidence scope or
 coverage boundary and cites boundary/audit entries; never attach supported
 observation IDs to such a limitation. A direct limitation that answers an
@@ -318,7 +324,10 @@ checklist item instead of approving a component name as its implementation.
 Audit a coverage-only LIMITATION claim with empty material_observation_ids for
 truth and boundary citations, but do not call that empty link an Application
 observation omission when the statement is not a material fact required by the
-original question. Then
+original question. Audit an empty-link affirmative DIRECT_ANSWER as a concise
+summary only: every linked checklist item must be supported, every summary fact
+must be fully present in later observation-linked default claims, and it must not
+expand those claims. Then
 explicitly mark the four closed quality checks:
 direct answer first, abstraction fit, material checklist completeness including
 user-visible stages and side effects, and implementation-detail budget. APPROVED

@@ -336,7 +336,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@15",
+            "engineering-qa-adaptive-investigation-prompt@16",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -406,6 +406,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             "each Package material-observation ID must appear exactly once",
             answer_prompt,
         )
+        self.assertIn(
+            "DIRECT_ANSWER may instead use an empty material_observation_ids array",
+            answer_prompt,
+        )
         self.assertIn("a partial overlap is rejected", answer_prompt)
         self.assertIn(
             "put their limitation observations in the one DIRECT_ANSWER limitation",
@@ -421,6 +425,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             review_prompt,
         )
         self.assertIn("delegation-only evidence", review_prompt)
+        self.assertIn("empty-link affirmative DIRECT_ANSWER", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:
