@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@20"
+    "engineering-qa-adaptive-investigation-prompt@21"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -389,8 +389,12 @@ Material process stages, outcomes, state changes, and side effects belong in
 the user-visible answer; they are not optional implementation detail. At DIRECT
 level, omit implementation evidence. At
 USER_VISIBLE_EXPLANATION level, add implementation evidence only when explicitly
-requested or necessary to support a material conclusion, and keep it outside the
-default user-visible body. Every affirmative claim must cite one or more
+requested or necessary to support a material conclusion. Keep it outside the
+default user-visible body only when later user-visible claims already cover all
+of its material observations. When explicitly requested implementation evidence
+is the sole carrier of a material observation, keep that concise claim visible;
+do not hide a requested verification basis in developer details. Every
+affirmative claim must cite one or more
 support/citation entry IDs that actually support it. Boundary/audit entries can
 justify only explicit limitations or unknowns. Do not expose pipeline diagnostics
 or claim completeness beyond the recorded coverage.

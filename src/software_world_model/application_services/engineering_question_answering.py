@@ -4329,6 +4329,12 @@ class EngineeringAnswerDraft:
                         ErrorCode.CONTROL_STATE_DENIED,
                         "answer claim does not cite every Package entry supporting its material observation",
                     )
+        non_implementation_observation_ids = {
+            observation_id
+            for claim in proposal.claims
+            if claim.content_role is not AnswerContentRole.IMPLEMENTATION_EVIDENCE
+            for observation_id in claim.material_observation_ids
+        }
         default_body_candidates = tuple(
             claim
             for claim in proposal.claims
@@ -4337,6 +4343,9 @@ class EngineeringAnswerDraft:
                 is AnswerDetailLevel.IMPLEMENTATION_DETAIL
                 or claim.content_role
                 is not AnswerContentRole.IMPLEMENTATION_EVIDENCE
+                or not set(claim.material_observation_ids).issubset(
+                    non_implementation_observation_ids
+                )
             )
         )
         projected_claims: list[EngineeringAnswerClaimProposal] = []
@@ -4382,7 +4391,7 @@ class EngineeringAnswerDraft:
             "body": body,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@4", core])
+        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@5", core])
         return cls(
             draft_id=_stable_id("engineering_draft", core),
             revision=revision,

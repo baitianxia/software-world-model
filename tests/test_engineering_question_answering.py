@@ -1943,6 +1943,70 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             "IMPLEMENTATION_EVIDENCE",
         )
 
+    def test_user_visible_answer_keeps_uniquely_material_implementation_visible(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        support = tuple(item.entry_id for item in package.support_citation)
+        observation_ids = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        self.assertGreaterEqual(len(observation_ids), 2)
+        role_context = sid("role_context", "0")
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=role_context,
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-direct-summary",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=(),
+                    text="Use the supported repository entry point.",
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-process",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observation_ids[:1],
+                    text="Follow the supported user-visible process.",
+                    evidence_entry_ids=support,
+                ),
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-requested-basis",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.IMPLEMENTATION_EVIDENCE,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=observation_ids[1:],
+                    text="Verify the requested basis in the cited implementation.",
+                    evidence_entry_ids=support,
+                ),
+            ),
+        )
+
+        draft = EngineeringAnswerDraft.accept(
+            package=package,
+            understanding=result.understanding,
+            expected_role_context_id=role_context,
+            proposal=proposal,
+            revision=1,
+        )
+
+        self.assertEqual(
+            draft.default_body_claim_ids,
+            (
+                "claim-direct-summary",
+                "claim-process",
+                "claim-requested-basis",
+            ),
+        )
+        self.assertIn("requested basis", draft.body)
+
     def test_approved_review_requires_all_direction_quality_checks(self):
         failed_quality = EngineeringReviewQualityAssessment.create(
             direct_answer=EngineeringReviewQualityStatus.FAIL,

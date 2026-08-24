@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-24
@@ -91,7 +91,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / Answer role-order normalization** | clean `d12223f…` / run-017 已证明 4-path/fuse 修复可达：三题调查均进入 Answer，构建/resources 题 14 次 dispatch 后 `APPROVED`；登录与 401/403 题分别 9/12 次 dispatch 后因 follow-up claims 的合法 role 非单调排序在 Answer Domain 前失败。`FINDING-010-051` 只稳定归一化 follow-up 展示顺序并保留 raw output/全部 Claim 语义；Engineering QA 98/98、docs 446/446、允许 AF_UNIX 的 full 1164/1159，且只保留既有 4 FAIL + 1 ERROR。新 clean/fresh live 仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / uniquely material implementation evidence visibility** | clean `88e33bd…` / run-018 的登录与构建/resources 题分别以 13/15 次 dispatch `APPROVED`；401/403 题以 8 次进入 Answer，正确的 `IMPLEMENTATION_EVIDENCE` 却因默认隐藏而成为 3 个 observations 的唯一不可见 carrier。`FINDING-010-053` 只让 uniquely material 的简洁实现核对依据保持用户可见，完全重复仍隐藏、部分交叠仍失败；Engineering QA 99/99、docs 448/448、compile/diff PASS，full 1165/1160 只保留既有 4 FAIL + 1 ERROR。新 clean/fresh live 仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -210,6 +210,21 @@ follow-up claims；同 role 原顺序及所有 Claim ID、kind、role、文本�
 继续失败关闭。Strategy 升为 `@11`，Engineering QA 组合 98/98、docs 446/446、compile/diff PASS；允许 AF_UNIX 的 full 1164 项中
 1159 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 historical hold，见 `FINDING-010-052`。确定性 Gate 已闭合；新 clean/fresh
 Conformance 和三题 live 仍须继续，本次 1 PASS + 2 FAIL 不追认为体验或答案质量 PASS。
+
+上述处置形成 clean candidate `88e33bdd40bcea4c3cbb9f2bb13b8a7f07cc1b6c` / tree
+`70f9a1fdc2125e8a776bac1208dea9c8513c647f`。run-018 fresh DeepSeek Conformance 2/2 PASS，Result
+`sha256:37e3a3485990acbbac13e30721745700494cfdd521d1f444b6bc24ffe8d72836`。同一持续会话中，原登录题与构建/
+resources unknown 题分别以 13/15 次 dispatch 取得 `APPROVED`；401/403 题以 8 次 dispatch 到达 Answer，三个检查面、401/403 区分和
+Citation 均已形成，但用户明确要求的源码核对依据被正确分类为 `IMPLEMENTATION_EVIDENCE` 后无条件移出默认正文，使其独自绑定的 3 个
+material observations 不可见并在 Review 前失败关闭。terminal receipt
+`sha256:08d8404580043c4c1e0a52aa78f46d785eef2b321e1b67b5c2ddbce49c2d609c` 记录 36 dispatch、retry/switch 0、
+private files、verified transport 与 Production `NOT_EXECUTED`；22,000 字符输入仍在 Provider 前拒绝且 call root 不增加。
+
+`FINDING-010-053` 现让 `USER_VISIBLE_EXPLANATION` 只隐藏 observations 已由其他用户可见 Claim 完整覆盖的 implementation evidence；
+uniquely material 的简洁核对依据必须进入默认正文，部分交叠仍失败关闭，`IMPLEMENTATION_DETAIL` 仍展开全部实现证据。Prompt/Strategy/
+Draft identity 升为 `@21/@12/@5`。Engineering QA 99/99、docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full 1165 项中 1160 PASS，
+raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见 `FINDING-010-054`。确定性 Gate 已闭合；新 clean/fresh Conformance 和三题 live
+仍须继续，本次 2 PASS + 1 FAIL 不追认为体验或答案质量 PASS。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

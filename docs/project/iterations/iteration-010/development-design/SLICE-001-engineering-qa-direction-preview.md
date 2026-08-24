@@ -129,6 +129,13 @@ dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；22,000
 现保留 Gateway raw output，只在可信 adapter 内按既有受控 role 稳定归一化 follow-up 展示顺序，不改写任何 Claim 语义或 links；旧会话仍是
 1 PASS + 2 FAIL 诊断证据。
 
+该处置形成 clean candidate `88e33bd…`，run-018 fresh DeepSeek Conformance 2/2 PASS。原登录题和构建/安全/resources unknown 题分别以
+13/15 次 dispatch 获得 `APPROVED`；401/403 题以 8 次 dispatch 进入 Answer，三个检查面、失败区分与 Citation 均已形成，但用户明确要求的
+源码核对依据被正确分类为 `IMPLEMENTATION_EVIDENCE` 后无条件移出 `USER_VISIBLE_EXPLANATION` 正文，使其独自承载的 3 个 observations
+不可见并在 Review 前失败。terminal receipt `sha256:08d84045…` 记录 3 题、36 dispatch、retry/switch 0、private files 和 Production
+`NOT_EXECUTED`；22,000 字符输入继续在 Provider 前拒绝。`FINDING-010-053` 现只隐藏 observations 已由其他可见 Claim 完整覆盖的实现
+证据，uniquely material 的简洁核对依据保持可见，部分交叠仍失败；旧会话保持 2 PASS + 1 FAIL。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -296,4 +303,8 @@ required-locator priority、remaining-fuse 投影和 exact terminal propagation 
 归一化 follow-up 展示顺序，Gateway raw 与 Claim 语义保持不变。Engineering QA 98/98 PASS。
 `FINDING-010-052` 记录 docs 446/446、compile/diff PASS 与允许 AF_UNIX 的 full 1164/1159；raw 唯一 4 FAIL + 1 ERROR 仍是冻结
 historical hold，没有新增失败。确定性 Gate 已闭合，新 clean/fresh live 仍待执行。
+`FINDING-010-053` 记录 `88e33bd…` / run-018 的两个真实 `APPROVED` 与一个 uniquely material implementation-evidence visibility FAIL；
+处置保留用户明确要求的简洁核对依据，同时继续隐藏完全冗余的实现详情并拒绝部分 observation overlap。Engineering QA 99/99 PASS，
+docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full 1165/1160 只保留既有 4 FAIL + 1 ERROR，见 `FINDING-010-054`。确定性 Gate
+已闭合，新 clean/fresh live 仍待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

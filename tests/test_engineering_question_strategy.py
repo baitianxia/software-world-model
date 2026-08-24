@@ -510,6 +510,11 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "LIMITATION": ("LIMITATION",),
             },
         )
+        self.assertTrue(
+            answer.body["answer_structure_contract"][
+                "implementation_evidence_unique_material_observation_visible"
+            ]
+        )
         self.assertEqual(
             review.body["answer_structure"]["first_content_role"],
             "DIRECT_ANSWER",

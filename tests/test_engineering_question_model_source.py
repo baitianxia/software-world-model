@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@20",
+            "engineering-qa-adaptive-investigation-prompt@21",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -453,6 +453,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             answer_prompt,
         )
         self.assertIn("direct_answer object", answer_prompt)
+        self.assertIn(
+            "do not hide a requested verification basis in developer details",
+            answer_prompt,
+        )
         self.assertIn("claims array must never contain DIRECT_ANSWER", answer_prompt)
         self.assertIn("exactly one DIRECT_ANSWER in the entire output", answer_prompt)
         self.assertIn("For a mixed Package", answer_prompt)

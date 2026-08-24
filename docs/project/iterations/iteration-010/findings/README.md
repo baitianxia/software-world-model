@@ -137,5 +137,10 @@ iteration: ITER-010
   raw output 保留；可信 adapter 现只按受控 role 稳定归一化展示顺序，不改写任何 Claim 语义、链接或同 role 原顺序。
 - [FINDING-010-052](FINDING-010-052.md)：上述修复后 Engineering QA 98/98、docs 446/446、compile/diff PASS；允许 AF_UNIX 的 full
   1164 项中 1159 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-053](FINDING-010-053.md)：clean `88e33bd…` / run-018 的登录与构建/resources 题均获 `APPROVED`，401/403 题却因用户
+  明确要求的源码核对依据被正确分类为 `IMPLEMENTATION_EVIDENCE` 后无条件移出默认正文而失败。现只隐藏 observation 已由其他可见 Claim
+  完整覆盖的实现证据；uniquely material 的简洁核对依据保持可见，部分交叠仍失败关闭。
+- [FINDING-010-054](FINDING-010-054.md)：上述修复后 Engineering QA 99/99、docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full
+  1165 项中 1160 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

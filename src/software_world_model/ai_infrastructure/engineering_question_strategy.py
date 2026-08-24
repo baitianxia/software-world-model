@@ -67,7 +67,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@11"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@12"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -925,6 +925,7 @@ class EngineeringQuestionRoleInputBuilder:
                     understanding.requested_abstraction_level
                     is AnswerDetailLevel.IMPLEMENTATION_DETAIL
                 ),
+                "implementation_evidence_unique_material_observation_visible": True,
             },
         }
         digests = [understanding.digest, package.digest]
