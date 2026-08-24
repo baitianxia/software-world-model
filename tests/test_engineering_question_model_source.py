@@ -14,6 +14,7 @@ from software_world_model.ai_infrastructure.engineering_question_model_source im
     EngineeringQuestionSessionRunDisclosureAuthorization,
     EngineeringQuestionSubmissionReceipt,
     ModelBackedEngineeringQuestionStructuredOutputSource,
+    PolicyEnforcingEngineeringQuestionModelGateway,
     SealedEngineeringQuestionRoleDisclosureAuthorizer,
     engineering_question_role_prompt,
 )
@@ -56,6 +57,7 @@ class LiveRoleAdapter:
         *,
         qualification_ref: str = _QUALIFICATION_REF,
         outcome_unknown: bool = False,
+        failure_code: ErrorCode | None = None,
     ) -> None:
         self.capabilities = ProviderAdapterCapabilities(
             no_external_access=True,
@@ -68,12 +70,15 @@ class LiveRoleAdapter:
             qualified_model_fingerprints=("engineering-qa-model@1",),
         )
         self.outcome_unknown = outcome_unknown
+        self.failure_code = failure_code
         self.requests = []
 
     def invoke(self, request):
         self.requests.append(request)
         if self.outcome_unknown:
             raise ProviderOutcomeUnknown("fixture response boundary lost")
+        if self.failure_code is not None:
+            raise DomainError(self.failure_code, "fixture Provider failure")
         role_input = json.loads(request.messages[1].content)
         question = role_input["input"]["original_question"]
         language = role_input["input"]["response_language"]
@@ -101,18 +106,6 @@ class LiveRoleAdapter:
             usage_complete=True,
             termination_reason="stop",
         )
-
-
-class PolicyGateway:
-    def __init__(self, *, delegate, policy) -> None:
-        self.delegate = delegate
-        self.policy = policy
-
-    def invoke(self, context):
-        self.policy.validate_context(context)
-        result = self.delegate.invoke(context)
-        self.policy.validate_result(result)
-        return result
 
 
 def request(*, question: str = "How does this system start?") -> EngineeringQuestionRequest:
@@ -172,13 +165,22 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             authorization_message_digest=message_digest,
         )
 
-    def source(self, adapter, *, grant=None):
+    def source(self, adapter, *, grant=None, policy_enforced=False):
         gateway = ModelGateway(
             SqliteModelGatewayRepository(self.database),
             (adapter,),
             clock=lambda: _NOW,
         )
         run_grant = grant or self.grant()
+        if policy_enforced:
+            gateway = PolicyEnforcingEngineeringQuestionModelGateway(
+                gateway=gateway,
+                policy=EngineeringQuestionModelEgressPolicy(
+                    run_authorization=run_grant,
+                    configuration=self.configuration,
+                    clock=lambda: _NOW,
+                ),
+            )
         authorizer = SealedEngineeringQuestionRoleDisclosureAuthorizer(
             run_authorization=run_grant,
             configuration=self.configuration,
@@ -444,6 +446,24 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertEqual(source.audits[0].model_call_state, "OUTCOME_UNKNOWN")
         self.assertEqual(source.audits[0].outcome, "REJECTED")
 
+    def test_exact_provider_http_failure_is_not_reclassified_as_binding_drift(self) -> None:
+        adapter = LiveRoleAdapter(failure_code=ErrorCode.PROVIDER_HTTP_ERROR)
+        source, _ = self.source(adapter, policy_enforced=True)
+
+        with self.assertRaises(DomainError) as raised:
+            source.output_for(**self.output_arguments())
+
+        self.assertEqual(raised.exception.code, ErrorCode.PROVIDER_HTTP_ERROR)
+        self.assertIn(
+            "current question was closed without retry", raised.exception.message
+        )
+        self.assertEqual(len(adapter.requests), 1)
+        self.assertEqual(source.dispatch_attempt_count, 1)
+        self.assertIsNotNone(source.audits[0].model_call_id)
+        self.assertEqual(source.audits[0].model_call_state, "FAILED")
+        self.assertEqual(source.audits[0].failure_code, "PROVIDER_HTTP_ERROR")
+        self.assertEqual(source.audits[0].outcome, "REJECTED")
+
     def test_conformance_identity_drift_is_rejected_after_one_dispatch(self) -> None:
         adapter = LiveRoleAdapter(
             qualification_ref="CC-ENGINEERING-QA-FIXTURE:sha256:" + "7" * 64
@@ -477,7 +497,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             clock=lambda: _NOW,
         )
         source = ModelBackedEngineeringQuestionStructuredOutputSource(
-            gateway=PolicyGateway(delegate=gateway, policy=policy),
+            gateway=PolicyEnforcingEngineeringQuestionModelGateway(
+                gateway=gateway,
+                policy=policy,
+            ),
             configuration=self.configuration,
             authorizer=authorizer,
             clock=lambda: _NOW,

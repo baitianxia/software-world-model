@@ -1926,6 +1926,18 @@ class EngineeringQuestionModelGateway(Protocol):
     def invoke(self, context: ModelExecutionContext) -> ModelGatewayResult: ...
 
 
+class _EngineeringQuestionModelResultRejected(DomainError):
+    def __init__(
+        self,
+        *,
+        error: DomainError,
+        result: ModelGatewayResult,
+    ) -> None:
+        super().__init__(error.code, error.message, error.details)
+        self.error = error
+        self.result = result
+
+
 class PolicyEnforcingEngineeringQuestionModelGateway:
     """Apply the exact egress policy around an in-process or socket Gateway."""
 
@@ -1942,8 +1954,17 @@ class PolicyEnforcingEngineeringQuestionModelGateway:
         self._policy.validate_context(context)
         try:
             result = self._gateway.invoke(context)
+        except BaseException:
+            self._policy.fail_pending()
+            raise
+        try:
             self._policy.validate_result(result)
             return result
+        except DomainError as exc:
+            raise _EngineeringQuestionModelResultRejected(
+                error=exc,
+                result=result,
+            ) from exc
         except BaseException:
             self._policy.fail_pending()
             raise
@@ -2167,6 +2188,21 @@ class ModelBackedEngineeringQuestionStructuredOutputSource(
                     gateway_manifest=gateway_manifest,
                     configuration=self._configuration,
                 )
+            except _EngineeringQuestionModelResultRejected as rejected:
+                exc = rejected.error
+                self._audits.append(
+                    EngineeringQuestionModelDispatchAudit.create(
+                        ordinal=ordinal,
+                        role=manifest.role,
+                        disclosure_request_digest=disclosure_request.digest,
+                        disclosure_authorization_digest=authorization.digest,
+                        gateway_manifest_digest=gateway_manifest.digest,
+                        result=rejected.result,
+                        outcome="REJECTED",
+                        failure_code=exc.code.value,
+                    )
+                )
+                raise exc from rejected
             except DomainError as exc:
                 result_value = locals().get("result")
                 self._audits.append(
@@ -2309,6 +2345,54 @@ def _require_eligible_result(
             "model_call_id": eligibility.model_call_id.value,
         }
     )
+    exact_terminal_failure = (
+        not result.replayed
+        and call.state is ModelCallState.FAILED
+        and call.failure_code is not None
+        and call.manifest_digest == gateway_manifest.digest
+        and call.provider_type == configuration.provider_type
+        and call.adapter_version == configuration.adapter_version
+        and call.requested_model_ref == configuration.model_ref
+        and response is None
+        and call.actual_model_fingerprint is None
+        and call.output_digest is None
+        and call.input_tokens is None
+        and call.output_tokens is None
+        and call.usage_complete is False
+        and call.isolation_receipt_id == receipt.receipt_id
+        and call.isolation_receipt_digest == receipt.digest
+        and receipt.manifest_digest == gateway_manifest.digest
+        and receipt.provider_type == configuration.provider_type
+        and receipt.adapter_version == configuration.adapter_version
+        and receipt.provider_configuration_fingerprint
+        == configuration.provider_configuration_fingerprint
+        and receipt.runtime_access_mode is RuntimeAccessMode.NO_EXTERNAL_ACCESS
+        and receipt.platform_proposal_mode is PlatformProposalMode.NONE
+        and receipt.conformance_result_ref == configuration.qualification_ref
+        and receipt.digest == expected_receipt_digest
+        and eligibility.eligible_for_production_domain_output is False
+        and eligibility.reason == f"MODEL_CALL_{call.state.value}"
+        and eligibility.actual_model_fingerprint is None
+        and eligibility.isolation_receipt_id == receipt.receipt_id
+        and eligibility.model_call_id == call.model_call_id
+        and eligibility.digest == expected_eligibility_digest
+    )
+    if exact_terminal_failure:
+        try:
+            failure_code = ErrorCode(call.failure_code)
+        except ValueError:
+            failure_code = ErrorCode.LIVE_INTEGRATION_HELD
+        raise DomainError(
+            failure_code,
+            (
+                "Engineering QA Provider call failed with "
+                f"{call.failure_code}; the current question was closed without retry"
+            ),
+            {
+                "model_call_id": call.model_call_id.value,
+                "model_call_state": call.state.value,
+            },
+        )
     if (
         result.replayed
         or call.state is not ModelCallState.COMPLETED

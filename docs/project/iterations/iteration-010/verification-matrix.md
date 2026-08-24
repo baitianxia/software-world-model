@@ -114,10 +114,19 @@ clean candidate `e15ec50…` 与 current Conformance `sha256:5ef04be6…` 的原
 process/impact roles，Domain 以 structured-output violation 失败关闭。`FINDING-010-038` 已形成 closed kind/role mapping 与跨 evidence-class
 unknown 消减规则，尚待新 clean candidate live 重验。
 
+closed mapping/跨 evidence-class 修复后的 clean candidate `c7e32b5…` 以 current Conformance `sha256:8802280…` 启动同一持续会话。原现场题
+用 7 次 dispatch 形成 `APPROVED` Result：固定 revision 的 Controller/Service Source、正文和独立 Reviewer 都覆盖登录主链、
+`SecurityContext`、JWT、失败分支与 `loginLogMapper.insert` 审计副作用，private SQLite 成立。随后两道异质题均在首个角色调用收到
+`PROVIDER_HTTP_ERROR`，每题一次调用、retry/switch 0，listener 继续；受控超限页面请求在 Provider 前拒绝，调用根不增加且 health 保持
+`READY`。旧实现却把已知 HTTP 失败在页面/terminal audit 重标为 binding drift/outcome unknown，见 `FINDING-010-039`。因此该会话只证明
+原题质量修复和请求隔离，不能取得三题 PASS；错误传播/审计修复的 Engineering QA 全组 87/87 PASS，仍须新 clean candidate live 重验。
+允许本机 AF_UNIX 的完整回归为 1148 项、1143 PASS，raw 唯一 4 FAIL + 1 ERROR 仍与既有 V-009/Codex historical hold 完全相同，见
+`FINDING-010-040`；默认沙箱额外 6 ERROR + 1 FAIL 精确属于 socket permission noise，不进入产品失败集合。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `b6e13eb…`、`fc827ce…`、`e15ec50…` 分别暴露答案/DB、coverage link、证据类/claim-pair 缺陷并失败关闭；后两者证明 private SQLite 和单题 fail-closed，但同会话三题 + 受控失败仍未完成 | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `fc827ce…` 已让 Package/正文覆盖副作用但 coverage link 失败；`e15ec50…` 采用该修复后又因过早 Unknown 与 illegal limitation pair 失败；`FINDING-010-038` 尚无新 clean candidate 三题 Result | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `c7e32b5…` 已证明原题通过、private SQLite、连续题失败后 listener 存活和 Provider 前受控超限隔离；但两道后续题均为一次 `PROVIDER_HTTP_ERROR`，且旧错误展示/terminal audit 不保真，仍未完成三题答案 | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `c7e32b5…` 的原题 Package/正文/Reviewer 已完整覆盖登录主链和审计副作用；两道异质题在 Answer 前因 Provider HTTP 失败，`FINDING-010-039` 修复失败分类后仍须新三题 Result | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

@@ -2016,6 +2016,24 @@
       "tests/test_engineering_question_strategy.py"
     ]
   },
+  "FINDING-010-039": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-039.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_model_source.py"
+    ]
+  },
+  "FINDING-010-040": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-040.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

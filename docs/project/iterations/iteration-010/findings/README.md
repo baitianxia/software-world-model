@@ -97,5 +97,10 @@ iteration: ITER-010
 - [FINDING-010-038](FINDING-010-038.md)：clean `e15ec50…` 原题已采用空-link coverage Limitation，但 Investigation 在只读 README 后过早
   FINISH，Answer 又把 limitation 错标为 process/impact role。保留 Domain fail-closed，并显式下发合法 kind/role mapping 与跨 evidence-class
   未知消减规则。
+- [FINDING-010-039](FINDING-010-039.md)：clean `c7e32b5…` 已使原题、登录审计副作用和独立 Review 通过，受控超限请求也保持 listener 与
+  零新增 dispatch；但两道后续题的真实 `PROVIDER_HTTP_ERROR` 被 UI/terminal audit 重标为 binding drift/outcome unknown。现仅在完整 exact
+  binding 成立时传播真实 terminal failure，并让 policy rejection 携带密封 Result 供外层准确审计；旧会话不追认为三题 PASS。
+- [FINDING-010-040](FINDING-010-040.md)：失败分类/审计修复后的完整 1148 项中 1143 PASS，raw 仍精确为冻结 V-009/Codex digest 的既有
+  4 FAIL + 1 ERROR；沙箱 AF_UNIX 噪声已在允许本机 socket 的同命令重跑中消除，保持 historical hold 且不追认 live 质量。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -87,7 +87,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development** | `V-WEB-000/V-WEB-001` 历史技术 PASS。`b6e13eb…` 漏掉登录审计副作用且假批准并暴露 DB `0644`；`fc827ce…` 已覆盖副作用/private DB，但 coverage Limitation 错绑 supported observations；`e15ec50…` 已正确采用空-link coverage Limitation，却在只读 README 后过早 FINISH，并把其他 limitation 错标为 process/impact role。三次均按实际结果失败关闭。`FINDING-010-033` 至 `038` 已形成通用修复与回归证据，仍等待新的 clean freeze、current Conformance 和原题 + 两道异质题 + 受控失败持续 run。`V-EXPERIENCE/V-ANSWER-REWORK` 不能 PASS；历史 `V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001`、`V-PREVIEW-001` FAIL 不变；Slice2/3、hidden、三臂、Acceptance 与 Production 未执行 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development** | `V-WEB-000/V-WEB-001` 历史技术 PASS。`c7e32b5…` 已让原现场题的 Package/正文/独立 Review 完整覆盖登录主链与审计副作用，并证明 private SQLite 和受控超限请求隔离；同会话两道后续题却各收到一次 `PROVIDER_HTTP_ERROR`，旧页面/terminal audit 将其错标为 binding drift/outcome unknown。`FINDING-010-033` 至 `040` 已形成通用修复与回归证据；最新 full 1148/1143 只保留既有 4 FAIL + 1 ERROR historical hold。仍等待新的 clean freeze、current Conformance 和完整三题持续 run。`V-EXPERIENCE/V-ANSWER-REWORK` 不能 PASS；历史 `V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001`、`V-PREVIEW-001` FAIL 不变；Slice2/3、hidden、三臂、Acceptance 与 Production 未执行 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -114,12 +114,23 @@ clean candidate `e15ec50…` 再绑定 current Conformance `sha256:5ef04be6…` 
 Investigation 只读 README 后把单一模态缺细节误作全局 Unknown，Answer 又把 limitation observations 错标为 process/impact roles，Domain
 以 structured-output violation 失败关闭。该会话 5 次 role dispatch、retry/switch 0、private DB 成立并已优雅停止，同样只作为失败证据。
 
+closed mapping/跨 evidence-class 修复后的 clean candidate `c7e32b5…` 已以 current Conformance `sha256:8802280…` 执行持续会话。原题用
+7 次 dispatch 得到 `APPROVED`，Controller/Service exact Source、正文与独立 Reviewer 均覆盖凭据、验证、`SecurityContext`、JWT、失败分支和
+`loginLogMapper.insert`；private SQLite 成立。随后两道异质题各在首个角色调用收到一次 `PROVIDER_HTTP_ERROR`，retry/switch 0，listener
+继续；22,000 字符的页面请求在 Provider 前拒绝且调用根不增加。旧页面与 terminal audit 把真实 HTTP 失败误标为 binding drift/outcome
+unknown，`FINDING-010-039` 已以 exact-binding failure propagation 和密封 Result rejection audit 修复。该旧会话已优雅停止，只证明原题与
+失败隔离，不能追认为三题 PASS。
+
+上述失败分类/审计修复已通过 model-source 11/11、Engineering QA 87/87 和允许 AF_UNIX 的完整 1148/1143；raw 仍精确为既有
+4 FAIL + 1 ERROR，见 `FINDING-010-040`。这只允许形成新 clean candidate，不替代 current Conformance 或真实三题体验。
+
 当前 worktree 继续保持 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的 process/outcome/state/side-effect/limitation observation closure，并按
 `FINDING-010-036` 收窄：只有末尾 coverage-only Limitation 可用空 observation links，其他 material-fact Claim 仍强制 observation/evidence
 闭包，Reviewer 仍独立比较 Package/Draft omissions；Gateway private-mode 不变。`FINDING-010-037` 已证明最终 1147 项中 1142 PASS、raw
 只保留既有 4 FAIL + 1 ERROR historical hold。下一步是形成 clean product freeze、重取 current Conformance，再以 root authority 收窄的
 新 exact session grants 执行原失败题、至少两个异质问题和受控失败。`FINDING-010-038` 保留既有 Domain，新增 closed kind/role mapping，
-并要求以 non-supported FINISH 前先尝试仍能直接减少 unknown 的已授权 evidence class；这些新增表达仍须 clean freeze 后 live 重验。
+并要求以 non-supported FINISH 前先尝试仍能直接减少 unknown 的已授权 evidence class；`FINDING-010-039` 只在完整 exact binding 成立时传播
+真实 Provider terminal failure，并保留 call identity 供 terminal audit。两项仍须新 clean freeze 后 live 重验。
 在此之前不把确定性测试写成真实答案 PASS，也不执行 hidden、三臂消融或 Production Activation。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
