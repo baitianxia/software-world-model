@@ -1,17 +1,21 @@
 ---
 id: ITER-011-INDEX
 kind: iteration-index
-status: proposed
-authority: project
+status: superseded
+authority: project-decision
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-011-PROPOSAL, ITER-011-READINESS, ITER-011-VERIFICATION, ITER-011-SLICE-001, ITER-011-SLICE-002, ITER-011-SLICE-003, ITER-011-SLICE-004]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PDR-001, ITER-011-PROPOSAL, ITER-011-READINESS, ITER-011-VERIFICATION, ITER-011-SLICE-001, ITER-011-SLICE-002, ITER-011-SLICE-003, ITER-011-SLICE-004]
 code: []
 tests: []
 iteration: ITER-011
 coding_input: false
+superseded_by: ITER-010-PDR-001
 ---
 
 # ITER-011：答案优先的工程问答快速验证与分阶段夯实
+
+`SUPERSEDED BEFORE EXECUTION / NO CODING INPUT`。本轮从未取得开发授权、没有活动 Slice、没有产品代码或运行结果。PDR-001 已把其中
+“尽快形成真实体验、通用修复后再夯实”的有效原则吸收回 ITER-010/Slice1；以下内容只保留为未执行计划的历史，不得再进入授权或开发。
 
 ## 本轮目标
 
@@ -34,7 +38,7 @@ coding_input: false
 
 ## Status and authorization
 
-`PROPOSED / ALL SLICES NOT AUTHORIZED / NO CODING INPUT`。
+`SUPERSEDED BEFORE EXECUTION / ALL SLICES NEVER AUTHORIZED / NO CODING INPUT`。
 
 用户规划反馈
 `codex-user-message:sha256:7711b359a33d13ac1dd4577dd316fd4bf49d04a05aef263cfc88ad9b3ad49af4` 要求“尽快提供可验证内容，

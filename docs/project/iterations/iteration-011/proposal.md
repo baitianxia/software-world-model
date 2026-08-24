@@ -13,6 +13,8 @@ coding_input: false
 
 # ITER-011 Proposal：答案优先的工程问答快速验证与分阶段夯实
 
+> 本 Proposal 在执行前已由 `ITER-010-PDR-001` 替代，从未获得开发授权。正文只保留当时的规划输入，不得作为当前开发方案。
+
 ## Trigger and evidence
 
 ITER-010 的真实 Web 证明了 World Model Cognition、结果驱动调查、Broker/Worker 只读执行、append-only Ledger、调查后 Package、Citation、

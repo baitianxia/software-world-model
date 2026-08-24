@@ -31,6 +31,18 @@ coding_input: false
 `codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc`（`2026-08-21T08:23:25Z`）
 只要求重新制定计划并更新文档，不构成新设计的产品编码授权。
 
+## PDR-001 amendment：从整轮拒绝改为同轮返工
+
+Slice1 后续真实运行证明调查、证据、Citation 与 Web 链能够工作，也暴露答案代码走读和 Reviewer 漏判。旧 Result 把用户要求“实现者自行
+复核已知错误”的消息推断为整轮 `REDIRECT`；[PDR-001](decisions/PDR-001-resume-as-rework.md) 已依据最新用户收据
+`codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e` 将当前决定修订为 `REWORK`。
+
+本 Proposal 的目标与核心认知—调查—证据架构不变，但执行顺序修订如下：不再另起 ITER-011，也不把另一组冻结 1+1 问题当作可体验版本；
+Slice1 首先把现有链恢复为可重复启动、同会话连续自由提问的 Web Alpha，然后在同轮按真实问题修复答案与审核的通用根因。单题失败只
+判该 Request 失败；只有多类问题共同证明核心架构无法有界修复，或用户实际体验后明确拒绝，才触发架构转向。
+
+该 PDR 只修订项目方向；Slice1 当前 `paused / coding_input=false`，旧授权与所有 live grant 已消费，恢复编码和外部调用必须另行授权。
+
 ## Product-goal alignment and cumulative delta
 
 - MVP target：`SYS-PRODUCT-SUCCESS`。目标仍是基于预构建软件世界模型的通用工程问答，不另立源码 Agent 产品。
@@ -40,16 +52,17 @@ coding_input: false
   提供方向反证而非 Acceptance。
 - Current gap：系统能展示代码行为，但不能按用户目标自适应调查并组织工程答案；一次性证据准备也可能过早限制 Answer 和 Review。
 - Cumulative integration：同一问题链使用 exact World Model Cognition Context 与本题 source/doc/config/test 调查证据，不建立平行答案。
-- Earliest Web checkpoint：Slice1 先让一条代表性跨来源问题跑通最小真实 Web 纵切；exact revision、只读、不可信来源、逐结论 Citation
-  和独立 Review 从这一刻起不可延后。微检查点通过后，再在同一真实工程用 4 条不同维度问题和至少一条现场题确认方向；至少 3 条
-  supported，至少 2 个非实现维度。两者都不是 Acceptance。
-- Later proof：只有方向 `CONTINUE` 后，Slice2 才做持久恢复、复杂冲突/去重/异常矩阵、第二工程、性能、安全、完整回归、early hidden
+- Earliest Web checkpoint：历史单题和 4+1 题检查点已执行，但只证明受控运行，不是持续体验。返工后的首个交付是在固定 loopback、工程和
+  exact revision 下可重复启动并连续自由提问的 Web Alpha；一次请求失败不关闭服务。原失败题加至少两个相邻或异质问题用于通用回归，
+  exact revision、只读、不可信来源、逐结论 Citation 和独立 Review 不可延后。
+- Later proof：只有持续 Alpha 经实际体验 `CONTINUE` 后，Slice2 才做持久恢复、复杂冲突/去重/异常矩阵、第二工程、性能、安全、完整回归、early hidden
   和三臂同题认知消融；Slice3 执行最终两个未见工程 10 answerable + 2 boundary、两条现场题和最终消融。
 - End capability：普通用户无需认证即可在本机 Web 询问用途、架构、运行、业务流程、配置、故障、影响和实现细节，获得直接、层级匹配、
   可核对 Citation 的答案或诚实 Limitation。
 - Next gap：第二语言、跨仓库、大型工程性能、持续后台认知更新和非本机部署。
+- Request fail：答案重大错误、物质遗漏、错误 Citation、审核漏判或资源熔断只使当前问题失败并进入同轮返工，不得冒充成功。
 - Stop/redirect：世界模型被降级为手册/缓存；调查不是先前结果驱动；模型取得直接 Source 权限；任何题目/工程/关键词/符号/类/方法/
-  fixture/Oracle 特判；Ledger/Package/Review 身份错配；答案错误；审核或安全降级；用户转向或拒绝。
+  fixture/Oracle 特判；Ledger/Package/Review 身份错配或安全边界失效；多个异质问题证明核心路径无法有界修复；用户在持续体验后明确转向或拒绝。
 
 ## Critical assumptions and falsification plan
 
@@ -84,9 +97,9 @@ LLM，也不继承 Reviewer 会话；补证后形成后继 Ledger Revision、Pac
 
 ## Scope / non-goals
 
-本轮范围是 loopback、普通用户无认证、一个统一 `ENGINEERING_QA` Web、授权本地 Git exact revision、Java 工程、预构建 World Model，
+本轮范围是 loopback、普通用户无认证、一个可重复启动并在同一会话连续自由提问的统一 `ENGINEERING_QA` Web、授权本地 Git exact revision、Java 工程、预构建 World Model，
 以及源码、仓库文档、构建/运行配置和测试的受控只读调查。Slice1 只做可体验的最小真实纵切；Slice2 做跨工程和工程化夯实；Slice3
-正式验收。
+正式验收。Slice1 的 Alpha 必须显示产品/工程版本、已知限制与请求级失败；一题失败不得终止服务或整轮。
 
 不包括公网、Production Activation、团队权限、多用户隔离、远程仓库写入、任意 shell、工程修改、第二语言、跨仓库知识、长期 Memory
 或同步知识发布。严格 `WORLD_MODEL` Source-off 模式和显式 `DIRECT_INVESTIGATION` 保留，但不能成为 ENGINEERING_QA 的静默 fallback。
@@ -100,10 +113,10 @@ Knowledge Update/Use、Response Control、Model Gateway、Capability Evaluation�
 
 ## Development slices and dependencies
 
-1. `SLICE-001`：最小真实纵切与方向体验。先实现认知上下文、自适应调查、Broker/Worker、请求内 append-only Ledger、双分区 Package、
-   Package-only Answer、独立 Reviewer 和 Citation，立即从同一 Web 跑一条代表问题；再闭合最多一次独立 Verification Investigation，执行
-   4 条跨维度问题和现场题。持久恢复、复杂冲突/去重和完整异常矩阵不阻塞最早体验。
-2. `SLICE-002`：跨工程和工程化夯实。方向 `CONTINUE` 且重新授权后，完成持久恢复、第二工程、来源冲突、复杂多步补证、去重、性能、
+1. `SLICE-001`：持续 Web Alpha 与答案质量返工。复用已实现的认知上下文、自适应调查、Broker/Worker、Ledger/Package、Answer/Review、
+   Citation 与页面；首先闭合固定工程/revision 会话中的连续自由提问、请求隔离、版本/限制展示，再对答案层级和 Reviewer 做最小通用修复。
+   同一会话回归原失败题和至少两个相邻或异质问题。持久恢复、第二工程和完整矩阵不阻塞首个持续体验。
+2. `SLICE-002`：跨工程和工程化夯实。持续 Alpha 方向 `CONTINUE` 且重新授权后，完成持久恢复、第二工程、来源冲突、复杂多步补证、去重、性能、
    安全、资格、完整异常/回归、early hidden、三臂同题消融、World Model 建模成本/复用周期计量和异步知识沉淀。固定一轮补证不是长期
    协议；以预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断控制。
 3. `SLICE-003`：正式验收。再次 `CONTINUE` 和重新授权后冻结产品，执行最终 10+2、现场题、三臂消融、价值、安全和 Reflection。
@@ -123,10 +136,9 @@ Knowledge Update/Use、Response Control、Model Gateway、Capability Evaluation�
 
 ## Verification and acceptance
 
-Slice1 用 deterministic Case 验证 World Model 定义、结果驱动调查、Broker/Worker 隔离、append-only Ledger、调查后 seal、双分区 Package、
-包内 Answer、Reviewer 具体 gap 与独立补证调查。最小链成立即从真实 Web 执行一条代表问题；随后再执行 4 条不同维度问题与现场题。
-至少 3 条 supported、至少 2 个非实现维度、重大错误 0；其余只能是准确 Limitation。answerable 因熔断耗尽而未回答计 `FAIL`，用户只
-裁决方向。
+Slice1 的历史 deterministic/Web 证据保留；返工新增持续启动、会话自由提问、请求隔离、版本/限制展示和通用答案/Reviewer 回归。
+原失败题与至少两个相邻或异质问题重大错误为 0，重要结论有 Citation，失败只能显示准确 Limitation 或请求级 fail-close；其中一题失败
+不影响后续问题。用户在实际持续体验后裁决方向。
 
 Slice2 运行第二工程 5+2 early canary、三臂同题消融、建模成本/复用周期、性能、安全和完整回归。三个 Arm 固定相同 revision、model、
 questions、模型与来源资源 budget、cache policy/state、rubric 和 evaluator；完整认知与成熟源码 Agent 的质量 Gate 先 PASS，完整认知
@@ -137,11 +149,11 @@ Investigation/Verification Investigation/Answer/Reviewer 直接 Source/FS/Shell/
 
 ## Authorization decision
 
-**ACCEPTED / SLICE-001 AUTHORIZED FOR PRODUCT DEVELOPMENT。** 收据 `d3b60bda…` 仍只记录重制计划和文档；用户随后以
+**ACCEPTED HISTORICAL PROPOSAL / CURRENT REWORK PAUSED / NO CODING INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
-接受本 Proposal 与 Readiness，并只授权 `ITER-010-SLICE-001` 成为产品编码输入。授权基于已冻结的 planning commit
+接受本 Proposal 与 Readiness，并曾授权 `ITER-010-SLICE-001` 成为产品编码输入。该历史授权基于已冻结的 planning commit
 `01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。
 
-此授权允许产品代码开发和本地确定性验证；不授权 credential、Provider/model call、live Web/browser、源码片段外发、hidden
-disclosure、`SLICE-002/003` 或 Production Activation。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的一次性检索/先封包设计。
+该授权及后续派生 grant 已消费或停止。PDR-001 只授权当前计划纠正，不恢复产品代码、确定性测试变更、credential、Provider/model call、
+live Web/browser、源码片段外发、hidden disclosure、`SLICE-002/003` 或 Production Activation。此前 `1b327024… + 5cdb7000…` 仍只绑定被取代的一次性检索/先封包设计。
 新三臂消融的 exact protocol、阈值和 digest 仍须在 Slice2 前由新的用户收据冻结。

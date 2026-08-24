@@ -19,6 +19,8 @@ coding_input: false
 
 # ITER-011 Readiness Review
 
+> 本 Readiness 在授权前已被替代，所有授权字段保持未完成；不得据此进入开发。
+
 ## Reviewed exact inputs
 
 计划的 exact predecessor/planning baseline 为 ITER-010 redirect closure commit `ff60e10521cabc4301bebc25672ea75c769b4def`、tree

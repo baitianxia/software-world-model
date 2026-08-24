@@ -58,6 +58,9 @@ canary_capsule_consumption_status: pending
 reflection_gate_case_id: pending
 reflection_gate_status: pending
 reflection_decision: pending
+reflection_redirect_basis: pending
+rework_attempt_number: pending
+rework_progress_measure: pending
 reflection_decision_owner: pending
 reflection_decision_ref: pending
 reflection_issue_class: pending
@@ -99,11 +102,12 @@ critical_assumption_catalog_digest: pending
 
 ### Decision and rationale
 
-必须先用独立三行 `Decision: CONTINUE / ACCEPT / REDIRECT / REJECT`、`Decision owner: <exact-owner>` 和
+必须先用独立三行 `Decision: CONTINUE / ACCEPT / REWORK / REDIRECT / REJECT`、`Decision owner: <exact-owner>` 和
 `Decision ref: codex-user-message:sha256:<exact-message-digest>` 记录唯一决定、Owner 与人工决策收据，再说明
 理由。正文决定、metadata 与 Manifest
-必须一致。`CONTINUE` 或 `ACCEPT` 要求本 Slice 绑定的全部假设均为 `SUPPORTED`；存在 `FALSIFIED` 或 `UNRESOLVED` 时只能
-`REDIRECT` 或 `REJECT`。复盘完成不等于方案通过。
+必须一致。`CONTINUE` 或 `ACCEPT` 要求本 Slice 绑定的全部假设均为 `SUPPORTED`；存在 `FALSIFIED` 或 `UNRESOLVED` 时默认
+`REWORK` 并暂停当前 Slice。`REDIRECT` 必须在 `reflection_redirect_basis` 绑定明确用户转向、核心架构证伪或预提交无进展上限已达到；
+问题报告、错误答案或复核要求不能作为依据。复盘完成不等于方案通过。
 
 每项假设的 `PASS Case IDs` 必须是本 Slice 所有、已执行并绑定该 Result Evidence 的 Verification Case；不得引用本身的
 `V-REFLECT-NNN` 自证。失败封存路径可引用已执行且 Evidence 已解析的 FAIL Case，以说明假设为何被证伪。

@@ -68,9 +68,9 @@ iteration: ITER-010
   角色输入却没有投影先前 query/locator intent。现将 attempt-scoped action intent 追加到 Ledger 并投影给角色，Broker 在 Worker 前机械拒绝
   重复 intent，Prompt 升级为 `@8`；旧题永久失败且不重试。
 - [FINDING-010-027](FINDING-010-027.md)：用户现场登录题的主链、3 个 Citation 和独立 Review 均成立，但正文仍主要按 Controller/Service/
-  Filter 方法调用顺序展开，并省略 `insertLoginLog` 副作用。用户已按该方向信号作出 `REDIRECT`，原运行不重试、不追认。
+  Filter 方法调用顺序展开，并省略 `insertLoginLog` 副作用。原运行不重试、不追认；PDR-001 将旧 `REDIRECT` 推断修订为同轮 `REWORK`。
 - [FINDING-010-028](FINDING-010-028.md)：Prompt 要求答案优先，但 Question Understanding 只提供自由文本层级，Answer 只有扁平 Claim，
-  Application 机械拼接正文，Reviewer 没有可执行的方向质量 invariant；根因处置回答案优先 Roadmap Candidate，要求新 Iteration 选择 typed
-  answer hierarchy 和共用 Review Gate，不在已拒绝的 ITER-010 中打题目特例补丁。
+  Application 机械拼接正文，Reviewer 没有可执行的方向质量 invariant；PDR-001 将根因处置回同轮持续 Web Alpha，先做最小通用
+  答案/Reviewer 修复。typed answer hierarchy 是待验证手段而非首次体验前置工程，仍禁止题目特例补丁。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

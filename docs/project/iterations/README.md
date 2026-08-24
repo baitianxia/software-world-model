@@ -22,7 +22,7 @@ tests: []
 - [Iteration 007](iteration-007/README.md) — `Rejected — Java Source Semantics + Fixed Single-method QA`；SLICE-001 技术链 PASS、产品效果 FAIL，后续 Slice 未授权，无 Acceptance。
 - [Iteration 008](iteration-008/README.md) — `Rejected / REDIRECT — Bounded Agentic World Model Answering`；真实 Web 正向题成功，边界答案交付失败，无 Acceptance。
 - [Iteration 009](iteration-009/README.md) — `Rejected / REDIRECT — Evidence-package Answering Direction Preview`；真实回答仍像代码走读，后续 Slice 未授权。
-- [Iteration 010](iteration-010/README.md) — `Rejected / REDIRECT — Adaptive Engineering QA`；调查、引用和 Web 技术链可运行，答案层级与审核方向 Gate 失败。
-- [Iteration 011](iteration-011/README.md) — `Proposed / Not Authorized — Answer-first Probe, Alpha, Hardening and Acceptance`；先做两次真实反馈，再决定是否工程夯实。
+- [Iteration 010](iteration-010/README.md) — `Paused / REWORK — Adaptive Engineering QA`；调查、引用和 Web 技术链可运行，答案层级与审核失败保留；下一出口为同轮持续 Web Alpha。
+- [Iteration 011](iteration-011/README.md) — `Superseded before execution`；从未授权或开发，有效原则已吸收回 ITER-010，不作为下一开发路径。
 
-当前没有活动 Iteration 或编码 Slice。ITER-011 只是候选计划，只有通过 System 设计、Readiness 和用户明确授权后才可进入开发。
+当前没有活动 Iteration 或编码 Slice。唯一后续路径是重新授权 ITER-010/Slice1，在同轮先交付持续 Web Alpha；ITER-011 不得进入开发。

@@ -31,19 +31,24 @@ coding_input: false
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受本 Readiness，并只授权 `ITER-010-SLICE-001` 开发。修正前设计的旧授权不会被当作本设计的授权。
 
+该历史开发授权及其派生 live grant 均已执行、消费或停止。最新 [PDR-001](decisions/PDR-001-resume-as-rework.md) 只把错误的整轮
+`REDIRECT` 解释纠正为 `REWORK`，没有自动恢复旧授权。当前 ITER-010/Slice1 为 `paused / coding_input=false`；持续 Web Alpha 的必要
+System Owner 变更、产品编码、Provider 调用、动态问题/源码披露和 live browser 仍须在恢复前单独完成 Readiness 差异复核并取得新授权。
+
 ## Product-goal alignment gate
 
 - Baseline gap：真实 Web 能运行但回答像代码走读；修正前一次性检索/先封包仍不能支持结果驱动的高级工程师式调查。
 - Product concept：World Model 始终是持久、版本化、可验证、可更新的软件外部认知，不是手册、缓存或关键词索引。
 - Capability path：继续 `ROADMAP-M-002` 最早未证明的 Step 1；提问期 Source 调查核实、补充或纠正认知，不取代问题前建模。
 - Cumulative integration：一个链路组合 exact World Model Cognition Context 与本题 source/doc/config/test Evidence。
-- Fast checkpoint：Slice1 最小纵切成立后立刻从真实 Web 跑一条跨来源代表问题，再做一个工程 4 条不同维度问题 + 现场题；方向确认后
-  才做持久恢复、复杂冲突/去重、完整异常矩阵、跨工程和性能 hardening。
+- Fast checkpoint：历史单题与 4+1 题已证明受控 Web 技术链，不再重复把固定运行当成体验。返工首交付是固定一个工程/revision、同一
+  loopback 服务连续接受自由问题的 Web Alpha；原失败题和至少两个相邻或异质问题在同一会话回归，一题失败不关闭服务。方向确认后才做
+  持久恢复、复杂冲突/去重、完整异常矩阵、跨工程和性能 hardening。
 - Later proof：Slice2 独立第二工程 5+2，并对完整 Cognition、locator-only/empty 同链、成熟源码 Agent 做三臂同题消融；Slice3 在最终
   两个工程 10+2 与两条现场题复验。新消融 protocol/阈值/digest 当前未授权，Slice2 前须新用户收据。
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
-结论：Outcome 直接服务通用工程问答 MVP，且首版体验早于大规模夯实；方向对齐材料完整并已由用户接受。
+结论：Outcome 直接服务通用工程问答 MVP。历史方向材料已接受；返工方向由 PDR-001 接受，但新的产品开发和 live 尚未授权。
 
 ## Architecture reflection gate readiness
 
@@ -78,9 +83,10 @@ Reviewer 补证必须由独立新上下文调查生成后继 Package 并重答�
 
 ## Slice, dependency and risk closure
 
-当前只有 Slice1 为 `authorized / coding_input=true`，顺序为：架构/门禁一致性 → 最小协议 → 最小真实
-纵切 → deterministic freeze → 独立 live grant → 一题 Web 微检查点 → 4 条跨维度问题和现场题 → Reflection。Slice2/3 继续分别需要前序
-exact Result 的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
+Slice1 的历史开发已执行完毕；当前为 `paused / rework / coding_input=false`。恢复后的最短顺序是：闭合持续自由提问必需的最小会话授权
+语义 → 复用现有调查链接通可重复启动的持续 Web → 同一会话运行原失败题和至少两个异质问题 → 通用修复答案与 Reviewer → 独立复核和
+用户实际体验。不得在首次持续体验前建设完整 Schema、持久化、第二工程、hidden、三臂或 full regression。Slice2/3 继续需要持续 Alpha
+的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
 
 首版必须保留 exact revision、allowlist、只读、Source untrusted、Ledger append-only、seal、证据分区、role isolation、Citation、独立
 Review、Secret 和失败真实性；持久恢复、复杂冲突/去重、跨工程、全面性能、完整异常矩阵、hidden/三臂 comparison 和正式验收可延后。
@@ -94,14 +100,14 @@ Verification Matrix 新增并前置 `V-COGNITION-001`、`V-INVESTIGATE-001`、`V
 Verification Investigation 基于 current Package/Ledger 自适应形成后继 Ledger/Package/Answer/Review，而不直接操作 Source 或回到初始
 Investigation。
 
-最早体验先跑 `V-WEB-000` 一条代表问题；方向体验再运行 4 条跨维度问题和现场题，不需要先完成持久恢复、复杂矩阵、第二工程、性能、
-完整回归、hidden 或三臂 comparison。所有 live Case 仍须在
-代码冻结和独立 live grant 后执行；计划或测试不能冒充真实 Web 结果。
+历史 `V-WEB-000/V-WEB-001` 已执行并保留。返工验证新增持续 Web、请求隔离和原题+至少两个异质问题的 Case；不需要先完成持久恢复、
+复杂矩阵、第二工程、性能、完整回归、hidden 或三臂 comparison。所有新 live Case 仍须在代码冻结和独立 live grant 后执行；计划或
+测试不能冒充真实 Web 结果。
 
 ## Authorization decision
 
-**ACCEPTED / SLICE-001 AUTHORIZED / DEVELOPMENT READY。** Readiness 的产品目标、架构边界、快速首版和验证输入已由收据
-`585f02c4…` 接受；`PROJECT-CURRENT` 只指向 `ITER-010-SLICE-001`。本授权覆盖产品代码修改和本地确定性测试，不覆盖
-credential、Provider/model call、live Web/browser、hidden disclosure 或 Production Activation。
-Slice2 的三臂消融与 hardening 高安全上限仍是 `proposed / not authorized / not frozen`，必须另取新用户收据，不能复用旧 positive-value
-收据。
+**HISTORICAL READINESS ACCEPTED / CURRENT REWORK PAUSED / NO CODING INPUT。** 原 Readiness 和 Slice1 开发曾由收据
+`585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，不是新的开发授权。`PROJECT-CURRENT` 当前不得
+指向活动 Slice；新的产品代码、确定性测试变更、credential、Provider/model call、动态问题/源码披露、live Web/browser、hidden 或
+Production Activation 均未获本次授权。
+恢复 Slice1 与后续 Slice2 的三臂消融、hardening 高安全上限均须另取适用的新用户授权，不能复用旧 positive-value 收据。

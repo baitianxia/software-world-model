@@ -1,10 +1,10 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: blocked
-authority: development-evidence
+status: paused
+authority: project-decision
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-001, FINDING-010-002, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -13,24 +13,40 @@ product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-XD-001]
 product_goal_web_checkpoint_id: V-WEB-000
-direction_preview_web_checkpoint_id: V-WEB-001
-product_goal_direction_preview_checkpoint_id: V-PREVIEW-001
+direction_preview_web_checkpoint_id: V-EXPERIENCE-001
+product_goal_direction_preview_checkpoint_id: V-PREVIEW-002
 product_goal_reflection_gate_case_id: V-REFLECT-001
-product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, V-QINTENT-001, V-INVESTIGATE-001, V-BROKER-001, V-LEDGER-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-000, V-WEB-001, V-PREVIEW-001, V-REFLECT-001]
+product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, V-QINTENT-001, V-INVESTIGATE-001, V-BROKER-001, V-LEDGER-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-000, V-WEB-001, V-PREVIEW-001, V-REFLECT-001, V-EXPERIENCE-001, V-ANSWER-REWORK-001, V-PREVIEW-002]
 ---
 
-# SLICE-001：最小自适应调查纵切与真实方向体验
+# SLICE-001：持续 Web Alpha 与答案质量返工
 
 ## Status and dependencies
 
-`BLOCKED / FAILED-PRESERVED / NO LONGER CODING INPUT`。用户曾以
+`PAUSED / REWORK / NO CODING INPUT`。用户曾以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
 
-公开题和现场题执行后，用户以
-`codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 决定
-`REDIRECT`：默认正文仍被类、方法和调用顺序主导，Reviewer 没有识别该方向失败。`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 保存 exact
-证据和反思；本 Slice 不得继续修补，后续方案只能在新 Iteration 重新授权。
+公开题和现场题执行后，旧记录把消息 `d746968f…` 解释为 `REDIRECT`：默认正文仍被类、方法和调用顺序主导，Reviewer 没有识别该质量
+失败。[PDR-001](../decisions/PDR-001-resume-as-rework.md) 已确认该消息没有明确拒绝方向，当前决定为同轮 `REWORK`。
+`ITER-010-RESULT-SLICE-001-STOP-REDIRECT` 继续保存 exact 执行事实；所有旧授权均已消费，当前规划纠正不授权任何新代码或 live。
+
+## Rework outcome：先交付持续 Web Alpha
+
+恢复开发后的首项交付必须是普通用户实际可持续使用的同一产品 Web，而不是固定 1+1 问题的评测运行器：
+
+1. 服务可通过一条固定、文档化的命令重复启动在 `http://127.0.0.1:8765/`，无需认证；普通体验者不需要拼装逐题 freeze、grant 或内部
+   run 参数。页面明确显示产品版本、工程精确版本、Alpha/非生产状态和已知限制。
+2. 启动时固定一个本地工程、精确 revision、世界模型认知、Source Profile、Provider/model 与只读范围；同一运行会话允许用户连续提出
+   任意自然语言工程问题，不得要求每题重启服务或重新走一次项目计划授权。
+3. 每个问题保持独立 Request、Ledger、Package、Answer、Review 和 Citation 身份。某题调查失败、审核拒绝或达到安全熔断时只关闭该题，
+   页面展示真实失败或 Limitation，服务仍可接受下一题；错误答案不得被标成已审核成功。
+4. 在同一 Slice 内对答案层级和 Reviewer 漏判做最小、通用修复，并以原现场登录题加至少两个相邻或异质问题回归。至少一个问题不是实现
+   走读题；不得加入工程名、问题文本、关键词、符号、类、方法、fixture 或 Oracle 特判。
+5. 用户可持续体验和独立技术复核完成前，不启动第二工程、持久恢复、完整异常矩阵、全面性能安全、hidden、三臂或 full regression。
+
+自由提问所需的会话级授权、动态问题披露和 System Owner 语义必须在编码前以最小变更闭合；这项必要安全工作不能扩张为先建设完整答案
+Schema 或评测体系。模型调用上限仍只作为安全熔断，不能为了减少调用而省略调查、Citation 或独立审核。
 
 开发 baseline 仍候选绑定 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
 `1369ce932c778c57a118123e8257ede476229d73`；冻结的 planning commit/tree 为
@@ -57,26 +73,23 @@ hidden 与 Production Activation 从未授权。
 
 ## Direction preview checkpoint
 
-在 4 题方向体验之前先执行 `V-WEB-000`：同一 product-owned 页面、一个真实工程、一条代表问题、完整最小后端链。它只回答“真实用户能否
-尽早摸到正确方向”，不要求先完成持久恢复、复杂冲突处理、跨轮去重或完整异常矩阵。微检查点失败立即修正主链，不以扩大 fixture 数量
-掩盖；通过也不代表方向或 Slice 验收。
+历史 `V-WEB-000/V-WEB-001` 已证明同一 product-owned 页面和完整最小后端链可以运行，但它们依赖启动前精确准备的一题，不能再被称为
+持续可体验版本。返工检查点 `V-EXPERIENCE-001` 必须从同一页面完成：一次启动、一次固定工程/revision、同一会话连续提交原失败题及至少
+两个相邻或异质问题，期间不重启服务、不更换产品路径，也不因其中一题失败停止后续提问。
 
-方向体验必须使用同一个 product-owned loopback Web，只监听 `127.0.0.1`，普通用户无需认证，持续显示“方向体验 / 非验收 / 非生产”。
-默认只展示问题、直接答案或 Limitation 和可打开 Citation；World Model Cognition、Ledger、Broker 操作、Package、调用数、Review Finding
-和授权诊断折叠到开发者详情。
-
-4 条代表问题从系统用途、整体架构、基本使用/启动、业务流程、故障定位、配置影响、变更影响、测试意图、实现机制和证据边界中选择不同
-维度。这些只是验证覆盖，不是题型 enum 或路由。用户判断答案是否像工程问答、是否直接有用、代码细节是否按需、Citation 与未知是否
-可信，并决定 `CONTINUE / REDIRECT / REJECT`。
+页面只监听 `127.0.0.1`，普通用户无需认证，持续显示“Alpha / 非验收 / 非生产”、产品与工程版本及已知限制。默认展示问题、直接答案或
+Limitation、可打开 Citation 和请求级状态；World Model Cognition、Ledger、Broker 操作、Package、调用数、Review Finding 和授权诊断折叠
+到开发者详情。只有实际持续体验达到这些条件，才允许用户判断是否进入工程夯实；单题失败本身只进入返工清单。
 
 ## Current vs expected behavior
 
-当前产品能在 World Model 上做有界调查并给出代码行为，但默认正文常机械展开方法、分支和调用顺序。初版 ITER-010 的一次性 upfront
-retrieval 又会在模型充分调查前封包。
+当前产品能在 World Model 上做有界调查并给出代码行为，但真实模型 launcher 只接受启动前精确准备的一道问题，尚不是持续聊天；默认
+正文还会机械展开方法、分支和调用顺序，Reviewer 可能漏判重要副作用。
 
-预期行为是：World Model 先提供 exact 系统认知；Investigation LLM 保留原问题全部约束，根据每一步 Ledger Result 自适应决定下一项
-抽象读操作或结束；Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读包、先回答目标；Reviewer 在
-独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。
+预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
+Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
+包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
+Web 服务。
 
 ## System contracts and invariants
 
@@ -157,19 +170,23 @@ Provider/model/role、fragment allowlist、redaction、configuration、secret re
    read-only exact-revision 操作，Application 重验 Result class/path；模型直接权限和分类权均为 0。
 7. `V-LEDGER-001`：Ledger append-only，调查后 seal；Package 的 support/citation 仅 admissible，boundary/audit 必须保留且不能支持肯定 Claim，
    seal 不等于真值，revision 身份不可混用。
-8. `V-ANSWER-001`：4 题至少 3 supported、至少 2 个非实现维度、重大错误 0、直接答案且逐结论 Citation。
-9. `V-REVIEW-001`：Reviewer 只给具体 gap；独立 Verification Investigation 在新上下文中多步自适应补证，经 Broker/Worker 形成新
+8. `V-ANSWER-001`：历史 4+1 题结果继续保留，其中现场题答案层级与完整性 FAIL，不因 PDR 改写为 PASS。
+9. `V-REVIEW-001`：历史 Reviewer 漏判继续为 FAIL；返工版 Reviewer 只给具体 gap，独立 Verification Investigation 在新上下文中多步自适应补证，经 Broker/Worker 形成新
    Ledger/Package/Answer/Review；不回初始 Investigation 且无直接 Source。
 10. `V-LIMIT-001`：证据或安全上限不足时准确 Limitation 或失败关闭，不伪造 absence/coverage；answerable 因上限耗尽计 FAIL。
-11. `V-XD-001`、`V-WEB-000`：最小纵切一成立，同一真实 Web 立即完成一条 World Model + query-time Source 代表问题。
-12. `V-WEB-001`、`V-PREVIEW-001`：微检查点之后在同一真实 Web 完成 4 题+现场题和用户方向决定。
-13. `V-SEC-001`：Source injection、path/write/exec/network/secret/disclosure、budget、no retry、loopback 全部符合边界。
-14. `V-REFLECT-001`：A1—A3 exact Verdict，A4/A5 early signal，全部 Finding 和用户新决定完整。
+11. `V-XD-001`、`V-WEB-000`：历史最小纵切技术 PASS 保留，不冒充持续体验或返工 PASS。
+12. `V-EXPERIENCE-001`：同一 Web 由一条固定命令重复启动，在固定工程/revision 的同一会话连续自由提问；受控坏题只失败该 Request，
+    服务继续接受下一题，状态不串扰；页面展示版本和限制，并证明答案来自真实世界模型—调查—证据链而非预制回放。
+13. `V-ANSWER-REWORK-001`：原失败题加至少两个相邻或异质问题完成通用修复回归；重大错误为 0、重要结论有 Citation、至少一题非实现走读，且无任何特判。
+14. `V-PREVIEW-002`：独立技术复核后，用户在持续 Web Alpha 上实际自由提问并决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
+15. `V-SEC-001`：Source injection、path/write/exec/network/secret/disclosure、budget、no retry、loopback 全部符合边界。
+16. `V-REFLECT-001`：历史反思事实保留；返工 Result 重新给出 A1—A3 证据、A4/A5 early signal、全部 Finding 和用户新决定。
 
 ## Architecture reflection checkpoint
 
-Slice Result 必须复核世界模型概念、调查自适应性、Broker/Worker 权限、Ledger/Package identity、补证独立性、4 题+现场题体验、安全、
-成本/复杂度和全部 Finding。只有 A1—A3 全部 `SUPPORTED`、Case PASS 且用户后续决定 `CONTINUE`，才可申请 Slice2。
+返工 Result 必须复核世界模型概念、调查自适应性、Broker/Worker 权限、Ledger/Package identity、补证独立性、持续 Web Alpha、安全、
+成本/复杂度和全部 Finding。历史失败不删除；新 Result 证明原题与至少两个异质问题的通用修复，并由用户在实际连续体验后决定。
+只有适用 Case PASS 且用户决定 `CONTINUE`，才可申请 Slice2；任一单题失败默认进入同 Slice `REWORK`，不会自动拒绝 Iteration。
 
 ## Findings
 

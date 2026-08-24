@@ -19,8 +19,8 @@ product_goal_result_id: pending
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合 | product / comparison | 未参与实现的真实工程；独立评测方/用户持有且实现阶段不可见的 held-out 自由问题；验收现场临时问题；旧+新知识跨域问题；成熟源码 Agent protocol；预提交差异化价值阈值 | 支持率提高；重大错误为 0；逐题完整性不退步；差异化价值阈值 PASS；提问时 Source/Update/Direct fallback=0；同一正式 Web 可人工验证 | pending | not-run / blocking |
-| V-PREVIEW-001 | 在全面加固前通过真实入口形成最小方向体验并取得方向结论 | product / directional-preview | <real-entry-and-small-representative-visible-cases> | 明确标记非验收/非生产；核心交互可体验；限制可见；用户/产品 Owner 给出 CONTINUE、REDIRECT 或 REJECT | pending | not-run / blocks hardening, not acceptance evidence |
-| V-PREVIEW-002 | 高方向风险变化在工程夯实前通过小而多样的可用 Alpha 再次判向 | product / directional-alpha | <same-real-entry-diverse-visible-cases-and-new-live-input> | 只做探针反馈要求的最小通用修正；用户再次给出 CONTINUE、REDIRECT 或 REJECT；非 CONTINUE 时禁止 hardening | pending | not-run / blocks hardening, not acceptance evidence |
+| V-EXPERIENCE-001 | 首次方向体验是真正可持续操作的版本 | product / browser | <exact-version-single-launch-command-fixed-loopback-address-diverse-visible-cases-and-controlled-failure> | 可重复启动；同一会话连续自由提问；版本和限制可见；问题真实经过产品链；单题失败后服务继续接受问题 | pending | not-run / blocking |
+| V-PREVIEW-001 | 用户在可持续 Alpha 上实际体验并决定是否进入夯实 | product / directional-preview | <V-EXPERIENCE-001-result-diverse-visible-cases-and-new-live-input> | 独立技术复核先通过；用户给出 CONTINUE、REWORK、REDIRECT 或 REJECT；非 CONTINUE 时禁止 hardening | pending | not-run / blocks hardening, not acceptance evidence |
 | V-XD-001 | `<prior-acceptance-id>` 与 `<current-slice-id>` 在同一问题中组合 | product / integration | <stage-appropriate-exact-cross-domain-case> | <evidence-bound-answer-or-honest-gap> | pending | not-run / blocking |
 | V-WEB-001 | `<current-slice-id>` 通过正式 Web 执行 `V-XD-001` | product / browser | <exact-web-subject> | <manual-user-visible-result> | pending | not-run / blocking |
 | V-ADHOC-001 | `<current-slice-id>` 通过正式 Web 接受现场临时问题并覆盖 `V-XD-001` | product / browser | <user-owned-live-question-protocol> | <manual-user-visible-result> | pending | not-run / blocking |

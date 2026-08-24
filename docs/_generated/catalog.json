@@ -3801,10 +3801,21 @@
     "path": "docs/project/iterations/iteration-009/verification-matrix.md"
   },
   {
+    "id": "ITER-010-DECISIONS",
+    "kind": "project-decision-index",
+    "status": "current",
+    "authority": "project",
+    "owners": [
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/README.md"
+  },
+  {
     "id": "ITER-010-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "rejected",
-    "authority": "development-evidence",
+    "status": "paused",
+    "authority": "project-decision",
     "owners": [
       "engineering",
       "architecture",
@@ -3830,7 +3841,7 @@
   {
     "id": "ITER-010-INDEX",
     "kind": "iteration-index",
-    "status": "rejected",
+    "status": "paused",
     "authority": "project-decision",
     "owners": [
       "product",
@@ -3841,6 +3852,21 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/README.md"
+  },
+  {
+    "id": "ITER-010-PDR-001",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-001-resume-as-rework.md"
   },
   {
     "id": "ITER-010-PROPOSAL",
@@ -3941,8 +3967,8 @@
   {
     "id": "ITER-010-SLICE-001",
     "kind": "development-slice",
-    "status": "blocked",
-    "authority": "development-evidence",
+    "status": "paused",
+    "authority": "project-decision",
     "owners": [
       "engineering",
       "architecture",
@@ -4022,8 +4048,8 @@
   {
     "id": "ITER-011-INDEX",
     "kind": "iteration-index",
-    "status": "proposed",
-    "authority": "project",
+    "status": "superseded",
+    "authority": "project-decision",
     "owners": [
       "product",
       "project",

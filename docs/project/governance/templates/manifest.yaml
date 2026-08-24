@@ -68,41 +68,33 @@ product_goal_alignment:
       new_slice_ref: <current-slice-id>
   first_product_web_checkpoint: <verification-case-id>
   direction_preview_checkpoint: <V-PREVIEW-NNN>
-  # 下列形状用于带 Alpha 的高方向风险计划。若 Proposal 论证不需要 Alpha，则使用 status_label=non-acceptance-non-production 和
-  # hardening_requires_continue=true，并删除 live_ad_hoc_question_count、next_slice_requires_continue 及整个 alpha_* binding。
   direction_preview_binding:
     case_id: <V-PREVIEW-NNN>
-    new_slice_ref: <direction-preview-slice-id>
+    web_case_id: <V-EXPERIENCE-NNN>
+    new_slice_ref: <first-experience-slice-id>
     real_product_entry: <entrypoint>
-    representative_task_count: <small-positive-integer>
-    live_ad_hoc_question_count: <positive-integer>
-    status_label: direction-probe-non-acceptance-non-production
+    representative_task_count: <small-diverse-positive-integer>
+    status_label: non-acceptance-non-production
     decision_owner: <user-or-product-owner>
-    allowed_decisions: CONTINUE,REDIRECT,REJECT
-    next_slice_requires_continue: true
-  # 可选但对高方向风险变化默认要求：第二个小型、多样、真实 Web 反馈段。它必须紧随方向探针，且其 CONTINUE 才能启动 hardening。
-  alpha_direction_checkpoint: <V-PREVIEW-NNN>
-  alpha_direction_binding:
-    case_id: <V-PREVIEW-NNN>
-    web_case_id: <V-WEB-NNN>
-    live_ad_hoc_case_id: <V-ADHOC-NNN>
-    new_slice_ref: <alpha-slice-id>
-    real_product_entry: same-loopback-product-owned-engineering-qa-web
-    prepared_cross_dimension_question_count_minimum: <small-positive-integer>
-    prepared_cross_dimension_question_count_maximum: <small-positive-integer>
-    live_ad_hoc_question_count_minimum: <positive-integer>
-    status_label: usable-alpha-non-acceptance-non-production
-    decision_owner: user
-    allowed_decisions: CONTINUE,REDIRECT,REJECT
-    engineering_hardening_requires_continue: true
-    excluded_before_continue: <deferred-hardening-list>
+    allowed_decisions: CONTINUE,REWORK,REDIRECT,REJECT
+    hardening_requires_continue: true
   web_checkpoint_binding:
     case_id: <V-WEB-NNN>
     new_slice_ref: <current-slice-id>
     executes_cross_domain_case_id: <V-XD-NNN>
+  experience_version_binding:
+    schema: USER_EXPERIENCE_VERSION@1
+    case_id: <V-EXPERIENCE-NNN>
+    new_slice_ref: <first-user-visible-slice-id>
+    exact_version_visible: true
+    repeatable_start: true
+    fixed_loopback_address: <http://127.0.0.1:port>
+    continuous_same_session_free_questions: true
+    limitations_visible: true
+    question_failure_scope: current-question-only-service-remains-available
   # 可选：后续 Slice 的正式 Web checkpoint；每项必须绑定同一 Slice 的跨域 Case。
   additional_web_checkpoint_bindings: {}
-  # 带 Alpha 时，只有 Alpha CONTINUE 后的适用 hardening Slice 才绑定独立持有的 early hidden canary；Probe/Alpha 不得被 hidden 阻断。
+  # 只有体验 Alpha CONTINUE 后的适用 hardening Slice 才绑定独立持有的 early hidden canary；首次体验不得被 hidden 阻断。
   # 每项冻结问题总数、answerable、两类互补 boundary 和关联的 early negative Case。
   early_hidden_canary_bindings: {}
   # 首个适用 hardening Slice 把同一 canary 绑定到成熟替代方案对照和逐层诊断；正向价值阈值在该 Slice 编码前冻结。
@@ -128,6 +120,16 @@ product_goal_alignment:
   live_ad_hoc_question_count: <positive-integer>
   live_ad_hoc_without_symbol_count_minimum: <positive-integer>
   stop_or_redirect_conditions: []
+
+rework_policy:
+  schema: SAME_SLICE_REWORK@1
+  failed_attempt_default_decision: REWORK
+  failed_attempt_blocks: slice-promotion-only
+  same_slice_reauthorization_allowed: true
+  problem_report_or_review_request_implies_redirect: false
+  redirect_bases: explicit-user-direction-change,core-architecture-falsified,precommitted-no-progress-limit-reached
+  no_progress_measure: <measurable-quality-or-user-capability-delta>
+  no_progress_attempt_limit: <positive-integer-at-least-two>
 
 source_scope:
   provider: <provider-id>
@@ -182,6 +184,8 @@ development:
       status: proposed
       coding_input: false
       result: not-executed
+      rework_result_refs: []
+      rework_prerequisite_result: none
       reflection_decision: not-executed
       reflection_prerequisite_result: <none-first-slice-or-not-executed>
       product_code_freeze_digest: not-executed

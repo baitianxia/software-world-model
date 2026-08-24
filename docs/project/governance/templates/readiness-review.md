@@ -39,9 +39,11 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 核对 Proposal 已冻结关键假设、最早反证、成熟替代方案对照和反证后的动作；Manifest 为每个 Slice 恰好绑定一个
 `V-REFLECT-NNN`。第一段必须优先验证最高风险架构假设，每个 Slice Result 必须形成独立复盘结论；没有 `CONTINUE` 决定和用户
 再次授权时，后续 Slice 不得进入开发。
+失败默认进入同一 Slice 的 `REWORK`。Proposal 必须冻结无进展定义和正整数尝试上限；只有明确用户转向、核心架构证伪或达到该上限
+才允许 `REDIRECT`。
 每段 Reflection 必须绑定 exact 用户决策消息收据；后续 Slice 的授权必须引用同一条前序 Reflection 决策消息，且不能复用更早
 授权。成熟替代方案 protocol/rubric/cache policy 和正向价值 metric/unit/direction/threshold/replay protocol、独立裁决 Owner
-必须在拥有该对照的夯实 Slice 授权前冻结；方向探针和 Alpha 只需冻结它们的后置状态与不得提前执行的边界。调查步数与模型调用上限
+必须在拥有该对照的夯实 Slice 授权前冻结；体验 Alpha 只需冻结其后置状态与不得提前执行的边界。调查步数与模型调用上限
 至少为 2，并结构化冻结 query/result 单步与总字节、总时长、Support、trace 和超限语义。
 
 ## Outcome, scope and non-goals
@@ -50,12 +52,15 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 
 ## Slice, dependency and risk closure
 
-核对第一个用户可感知 Slice 会先形成明确标注的非验收方向探针；高方向风险变化还必须在全面夯实前形成小而多样的可用 Alpha，并由
-用户再次判向。全面契约、回归、性能、资格和正式验收只能放在 Alpha `CONTINUE` 之后。早期真实运行仍需闭合安全、权限、Secret、
-外部披露和失败真实性；除此之外的加固不得被误列为方向探针或 Alpha 的阻断。
+核对第一个用户可感知 Slice 会直接形成明确标注、小而多样的非验收可体验 Alpha，并由用户实际使用后判向。全面契约、回归、性能、
+资格和正式验收只能放在 Alpha `CONTINUE` 之后。早期真实运行仍需闭合安全、权限、Secret、外部披露和失败真实性；除此之外的加固
+不得被误列为 Alpha 的阻断。
+
+核对首个体验 Slice 交付可重复启动、固定本地地址、同一会话连续自由提问、版本和限制可见、单题失败不关闭服务的真实版本，而不是
+一次性验证运行。
 
 同时核对输入持有者、独立技术评测方和用户方向决策者是不同职责：独立评测先裁决正确性、完整性、Citation、边界和特判；用户只根据
-已复核且限制可见的真实结果决定 `CONTINUE / REDIRECT / REJECT`。
+已复核且限制可见的真实结果决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
 
 ## Verification readiness
 

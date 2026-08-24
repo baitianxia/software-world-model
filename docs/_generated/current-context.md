@@ -4,9 +4,9 @@
 
 - Active iteration: `none`
 - Active slice: `none`
-- Worktree status: `iteration-011-plan-proposed-no-coding-input`
+- Worktree status: `iteration-010-paused-rework-plan-no-coding-input`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
-- Live model path: `stopped-direction-failure-production-not-activated`
+- Live model path: `paused-for-rework-no-live-authorization-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

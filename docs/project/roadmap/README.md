@@ -21,8 +21,9 @@ Roadmap 按产品或系统结果组织方向，不按组件列任务。它用于
 
 ## Candidates
 
-- [世界模型认知引导的自适应工程问答](candidates/engineering-question-answer-first.md) — ITER-010 技术链完成后因答案层级与审核方向失败而
-  `REDIRECT`；ITER-011 已 proposed，先以 1+1 真实探针和同工程小型 Alpha 两次判向，再决定是否跨工程夯实。
+- [世界模型认知引导的自适应工程问答](candidates/engineering-question-answer-first.md) — ITER-010 技术链完成后发现答案层级与审核缺陷；
+  PDR-001 将误判的整轮 `REDIRECT` 纠正为同轮 `REWORK`。下一出口直接是持续 Web Alpha，真实体验确认后才跨工程夯实；未执行的
+  ITER-011 已被替代。
 - [本机 Web 方向体验恢复](candidates/local-web-direction-preview-recovery.md) — ITER-009 已执行真实方向体验并以 `REDIRECT` 结束；Web、安全、Limitation 与 Citation 资产保留，代码走读式答案方向被拒绝。
 - [受限 Agent 驱动的 World Model 调查](candidates/bounded-agentic-world-model-investigation.md) — ITER-008 已以 `REDIRECT` 结束；正向 Web 与边界失败证据保留为 ITER-009 输入，不再作为活动开发授权。
 - [显式限定范围的生产启用](candidates/production-activation.md)

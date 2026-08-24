@@ -16,6 +16,8 @@ product_goal_result_id: pending
 
 # ITER-011 Verification Matrix
 
+> 本矩阵所属计划已在执行前被替代，全部 Case 保持 `NOT-RUN`，不得被解释为当前验收要求。
+
 ## Readiness and execution cases
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

@@ -1,8 +1,11 @@
 schema_version: 1
 iteration:
   id: ITER-011
-  status: proposed
+  status: superseded
   outcome_scope: answer-first-engineering-qa-direction-probe-alpha-hardening-and-formal-acceptance
+  current_decision: SUPERSEDED_BEFORE_EXECUTION
+  current_decision_ref: ITER-010-PDR-001
+  coding_input: false
 
 baseline:
   commit: ff60e10521cabc4301bebc25672ea75c769b4def
@@ -10,7 +13,7 @@ baseline:
   technical_product_subject_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
   technical_product_subject_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
   dirty_worktree_allowed: false
-  relation: exact-iteration-010-redirect-closure-with-technical-assets-preserved-and-product-direction-rejected
+  relation: unexecuted-plan-based-on-the-now-superseded-iteration-010-redirect-interpretation
 
 product_goal_alignment:
   target_ref: SYS-PRODUCT-SUCCESS

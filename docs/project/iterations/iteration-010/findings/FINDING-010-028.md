@@ -8,10 +8,10 @@ depends_on: [ITER-010-SLICE-001, ITER-010-VERIFICATION, ITER-010-RESULT-V-WEB-00
 code: [src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/ai_infrastructure/engineering_question_model_source.py, src/software_world_model/ai_infrastructure/engineering_question_strategy.py, src/software_world_model/interface/engineering_qa_browser_ui.py]
 tests: [tests/test_engineering_question_answering.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_browser.py]
 iteration: ITER-010
-classification: roadmap
+classification: iteration-design
 scope: systemic
-disposition: redirect-to-typed-answer-hierarchy-and-directional-review-gate
-target: ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST
+disposition: rework-answer-and-reviewer-through-sustained-web-alpha-in-same-iteration
+target: ITER-010-SLICE-001
 ---
 
 # FINDING-010-028：答案与审核只有扁平 Claim，无法执行“答案优先”方向约束
@@ -40,18 +40,21 @@ Application 交付的 `answer.body`，而该正文就是 Answer Proposal 中所�
   Review quality contract，范围跨 Application 与 Strategy，属于 systemic product/architecture direction，而不是现场题或模型随机性个案；
 - exact 现场 Result 为 `engineering_result_e5f3c335944de0f2f57e8f9fdd48b419` /
   `sha256:2aba0555d732282f5a925360c60f3a7e7ce383e55a49634bb4fd4a04dd992360`，Review
-  `engineering_review_8599387390a720f279c67844adf31033 / APPROVED` 且 findings 为空；用户方向决定收据为
-  `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0`。
+  `engineering_review_8599387390a720f279c67844adf31033 / APPROVED` 且 findings 为空；后续用户消息
+  `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 曾被旧记录误解为方向决定，
+  `ITER-010-PDR-001` 已明确它只要求自行复核和修复。
 
 ## Decision and disposition
 
-不在已被方向 Gate 否决的 ITER-010 中追加 Prompt 文案、登录题特判或对 Claim 字符串做启发式重排。该路线会让同一结构在新问题上继续
+不在 paused/rework 的 ITER-010 中追加 Prompt 文案、登录题特判或对 Claim 字符串做启发式重排。该路线会让同一结构在新问题上继续
 退化，而且无法证明不是项目、题目、符号、类或方法特判。
 
-主要处置回到 `ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST`。下一 Proposal 必须先选择并验证通用、typed 的答案层次表示：至少
-机械区分直接答案、用户可见流程/影响、诚实边界和仅在需要时展开的实现证据；Answer Proposal、Application acceptance、Reviewer rubric
-和页面投影必须消费同一结构。Reviewer 必须能因“默认正文被实现步骤主导”“没有先回答用户目标”或“关键流程副作用遗漏”而给出
-可执行的 rewrite/reject Finding，且要以跨题型真实问题证明，不允许问题/工程/关键词/符号/类/方法/fixture/Oracle 分支。
+主要处置由 `ITER-010-PDR-001` 修订回同轮 Slice1：先把现有产品恢复为可重复启动、同会话连续自由提问的 Web Alpha，再在真实问题上验证
+最小通用答案/Reviewer 修复。typed 答案层次仍可作为候选实现，但不得在体验前被预设为必须完整建设的新架构；最低要求是能区分直接
+答案、按需的用户可见流程/影响、诚实边界和必要实现证据，并让 Reviewer 对“默认正文被实现步骤主导”“没有先回答用户目标”或“关键
+流程副作用遗漏”给出可执行的 rewrite/reject Finding。
 
-该 Candidate 仍是 planning-only。`REDIRECT` 使 ITER-010 rejected、Slice1 blocked；任何新产品代码必须来自新的 Iteration Proposal、
-Readiness 和用户逐 Slice 授权，不能把本 Finding 当成编码许可。
+回归必须包含原失败题和至少两个相邻或异质问题，禁止问题/工程/关键词/符号/类/方法/fixture/Oracle 分支。单题失败只关闭当前 Request
+并继续同轮返工；只有多个异质问题共同证明核心路径无法有界修复，或用户持续体验后明确拒绝，才允许转向。
+
+本 Finding 与 PDR 仍不构成编码或 live 授权。ITER-010/Slice1 当前 paused/coding_input=false，旧 grant 不得复用。

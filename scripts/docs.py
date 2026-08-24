@@ -38,9 +38,16 @@ LIST_FIELDS = {
 LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 ACTIVE_ITERATION_STATUSES = {"authorized", "in-progress"}
 ACTIVE_SLICE_STATUSES = {"authorized", "in-progress"}
+PAUSED_ITERATION_STATUSES = {"paused"}
+PAUSED_SLICE_STATUSES = {"paused"}
 ACCEPTED_PROPOSAL_STATUSES = {"accepted", "authorized"}
 ACCEPTED_READINESS_STATUSES = {"accepted", "authorized"}
 FINAL_ITERATION_STATUSES = {"completed", "accepted"}
+REFLECTION_DECISIONS = {"CONTINUE", "ACCEPT", "REWORK", "REDIRECT", "REJECT"}
+DIRECTION_DECISION_SETS = {
+    "CONTINUE,REDIRECT,REJECT",  # Historical manifests before REWORK existed.
+    "CONTINUE,REWORK,REDIRECT,REJECT",
+}
 FINDING_CLASSIFICATIONS = {
     "local-implementation",
     "iteration-design",
@@ -64,6 +71,7 @@ PRODUCT_GOAL_ALIGNMENT_START_ITERATION = 7
 REFLECTION_GATE_START_ITERATION = 8
 DIRECTION_PREVIEW_START_ITERATION = 9
 ENGINEERING_QA_HYBRID_START_ITERATION = 10
+REWORK_LIFECYCLE_START_ITERATION = 10
 ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA = (
     "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@1"
 )
@@ -213,12 +221,15 @@ GOAL_ALIGNED_ITERATION_STATUSES = {
     "accepted",
     "completed",
     "rejected",
+    "paused",
+    "superseded",
 }
 GOAL_ALIGNED_SLICE_STATUSES = {
     "authorized",
     "in-progress",
     "completed",
     "blocked",
+    "paused",
 }
 PRODUCT_GOAL_V000_CLAIM = (
     "本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并与既有能力完成跨域组合"
@@ -843,6 +854,65 @@ def manifest_resolved_sequence_items(
     return items or None
 
 
+def manifest_resolved_nested_sequence_items(
+    text: str, keys: tuple[str, ...]
+) -> list[str] | None:
+    """Resolve a scalar block sequence at an exact nested safe-YAML key path."""
+
+    lines = text.splitlines()
+    search_start = 0
+    parent_indent = -1
+    field_index: int | None = None
+    field_indent: int | None = None
+    for key_index, key in enumerate(keys):
+        found = False
+        for index in range(search_start, len(lines)):
+            raw_line = lines[index]
+            if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+                continue
+            indentation = len(raw_line) - len(raw_line.lstrip(" "))
+            if parent_indent >= 0 and indentation <= parent_indent:
+                break
+            match = re.fullmatch(rf"{re.escape(key)}\s*:\s*(.*)", raw_line.strip())
+            if match is None or indentation <= parent_indent:
+                continue
+            if match.group(1):
+                return None
+            found = True
+            search_start = index + 1
+            parent_indent = indentation
+            if key_index == len(keys) - 1:
+                field_index = index
+                field_indent = indentation
+            break
+        if not found:
+            return None
+    if field_index is None or field_indent is None:
+        return None
+
+    item_indent: int | None = None
+    items: list[str] = []
+    for raw_line in lines[field_index + 1 :]:
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indentation = len(raw_line) - len(raw_line.lstrip(" "))
+        if indentation <= field_indent:
+            break
+        content = raw_line.strip()
+        if item_indent is None:
+            item_indent = indentation
+        if indentation != item_indent or not content.startswith("- "):
+            return None
+        try:
+            value = _parse_yaml_scalar(content[2:].strip(), 0)
+        except SafeYamlError:
+            return None
+        if not isinstance(value, str) or has_unresolved_placeholder(value):
+            return None
+        items.append(value)
+    return items or None
+
+
 def validate_product_goal_structured_bindings(
     alignment: dict[str, object],
     sequences: dict[str, list[str]],
@@ -1118,7 +1188,7 @@ def resolved_direction_preview_slice_ref(
         or representative_task_count < 1
         or binding.get("status_label") != status_label
         or decision_owner != "user"
-        or binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT"
+        or binding.get("allowed_decisions") not in DIRECTION_DECISION_SETS
         or binding.get(continuation_field) is not True
     ):
         return None
@@ -1144,7 +1214,7 @@ def resolved_alpha_direction_slice_ref(
         or re.fullmatch(r"V-PREVIEW-[0-9]{3,}", case_id) is None
         or alignment.get("alpha_direction_checkpoint") != case_id
         or binding.get("decision_owner") != "user"
-        or binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT"
+        or binding.get("allowed_decisions") not in DIRECTION_DECISION_SETS
         or binding.get("engineering_hardening_requires_continue") is not True
     ):
         return None
@@ -1218,9 +1288,9 @@ def validate_direction_preview_binding(
         errors.append(
             f"{label}: direction preview decision_owner must equal user"
         )
-    if binding.get("allowed_decisions") != "CONTINUE,REDIRECT,REJECT":
+    if binding.get("allowed_decisions") not in DIRECTION_DECISION_SETS:
         errors.append(
-            f"{label}: direction preview allowed_decisions must equal CONTINUE,REDIRECT,REJECT"
+            f"{label}: direction preview allowed_decisions must include CONTINUE, REWORK, REDIRECT and REJECT (legacy manifests may omit REWORK)"
         )
     continuation_field = (
         "next_slice_requires_continue" if has_alpha else "hardening_requires_continue"
@@ -1256,6 +1326,109 @@ def validate_alpha_direction_binding(
         value = binding.get(field)
         if not isinstance(value, str) or re.fullmatch(pattern, value) is None or value not in blocking_case_ids:
             errors.append(f"{label}: Alpha {field} must be a blocking Case matching {pattern}")
+    return errors
+
+
+def validate_experience_version_binding(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+    *,
+    required: bool = False,
+) -> list[str]:
+    """Validate the opt-in contract that distinguishes a usable Web version from a one-shot run."""
+
+    binding = alignment.get("experience_version_binding")
+    if binding is None:  # Historical manifests predate this contract.
+        return [f"{label}: experience_version_binding is required"] if required else []
+    if not isinstance(binding, dict):
+        return [f"{label}: experience_version_binding must be a mapping"]
+    errors: list[str] = []
+    if binding.get("schema") != "USER_EXPERIENCE_VERSION@1":
+        errors.append(
+            f"{label}: experience_version_binding.schema must equal USER_EXPERIENCE_VERSION@1"
+        )
+    case_id = binding.get("case_id")
+    if (
+        not isinstance(case_id, str)
+        or re.fullmatch(r"V-EXPERIENCE-[0-9]{3,}", case_id) is None
+        or case_id not in blocking_case_ids
+    ):
+        errors.append(
+            f"{label}: experience version case_id must be a blocking V-EXPERIENCE-NNN Case"
+        )
+    if not new_refs or binding.get("new_slice_ref") != new_refs[0]:
+        errors.append(
+            f"{label}: experience version must be delivered by the first new capability Slice"
+        )
+    for field in (
+        "exact_version_visible",
+        "repeatable_start",
+        "continuous_same_session_free_questions",
+        "limitations_visible",
+    ):
+        if binding.get(field) is not True:
+            errors.append(f"{label}: experience version {field} must equal true")
+    address = binding.get("fixed_loopback_address")
+    address_match = (
+        re.fullmatch(r"http://127\.0\.0\.1:([1-9][0-9]{0,4})/?", address)
+        if isinstance(address, str)
+        else None
+    )
+    if address_match is None or not (1 <= int(address_match.group(1)) <= 65535):
+        errors.append(
+            f"{label}: experience version fixed_loopback_address must be an explicit 127.0.0.1 HTTP address"
+        )
+    if (
+        binding.get("question_failure_scope")
+        != "current-question-only-service-remains-available"
+    ):
+        errors.append(
+            f"{label}: experience version must isolate a bad question without stopping the service"
+        )
+    return errors
+
+
+def validate_rework_policy(
+    manifest: dict[str, object], label: str, *, required: bool = False
+) -> list[str]:
+    """Validate the opt-in same-Slice repair policy used by new plans."""
+
+    policy = manifest.get("rework_policy")
+    if policy is None:  # Historical manifests predate this contract.
+        return [f"{label}: rework_policy is required"] if required else []
+    if not isinstance(policy, dict):
+        return [f"{label}: rework_policy must be a mapping"]
+    errors: list[str] = []
+    expected = {
+        "schema": "SAME_SLICE_REWORK@1",
+        "failed_attempt_default_decision": "REWORK",
+        "failed_attempt_blocks": "slice-promotion-only",
+        "same_slice_reauthorization_allowed": True,
+        "problem_report_or_review_request_implies_redirect": False,
+        "redirect_bases": (
+            "explicit-user-direction-change,core-architecture-falsified,"
+            "precommitted-no-progress-limit-reached"
+        ),
+    }
+    for field, value in expected.items():
+        if policy.get(field) != value:
+            errors.append(f"{label}: rework_policy.{field} must equal {value}")
+    measure = policy.get("no_progress_measure")
+    if (
+        not isinstance(measure, str)
+        or is_pending(measure)
+        or has_unresolved_placeholder(measure)
+    ):
+        errors.append(
+            f"{label}: rework_policy.no_progress_measure must be a resolved measurable outcome"
+        )
+    limit = policy.get("no_progress_attempt_limit")
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 2:
+        errors.append(
+            f"{label}: rework_policy.no_progress_attempt_limit must be an integer of at least two"
+        )
     return errors
 
 
@@ -2095,7 +2268,40 @@ def validate_product_goal_alignment_manifest(
         errors.append(
             f"{label}: blocking_case_ids must include every cross-domain, Web and ad-hoc Case"
         )
+    iteration_data = manifest.get("iteration")
+    iteration_status = (
+        iteration_data.get("status") if isinstance(iteration_data, dict) else None
+    )
+    development = manifest.get("development")
+    raw_slices = development.get("slices") if isinstance(development, dict) else None
+    has_rework_state = iteration_status == "paused" or (
+        isinstance(raw_slices, dict)
+        and any(
+            isinstance(slice_state, dict)
+            and any(
+                field in slice_state
+                for field in (
+                    "project_decision_ref",
+                    "rework_result_refs",
+                    "rework_attempt_number",
+                )
+            )
+            for slice_state in raw_slices.values()
+        )
+    )
+    # Iterations written after the repair-loop contract was introduced cannot
+    # opt back into the legacy three-way decision model merely by deleting the
+    # rework fields after a failed attempt.  Superseded, never-executed plans
+    # remain historical planning records and are validated separately.
+    rework_lifecycle_required = has_rework_state or (
+        isinstance(iteration_data, dict)
+        and (iteration_number(iteration) or -1) >= REWORK_LIFECYCLE_START_ITERATION
+        and iteration_status != "superseded"
+    )
     errors.extend(validate_answer_hierarchy_protocol(manifest, label))
+    errors.extend(
+        validate_rework_policy(manifest, label, required=rework_lifecycle_required)
+    )
     for case_id in blocking_case_ids:
         if re.fullmatch(r"V-(?:PRE-)?[A-Z0-9]+(?:-[A-Z0-9]+)*", case_id) is None:
             errors.append(
@@ -2116,6 +2322,15 @@ def validate_product_goal_alignment_manifest(
                 f"{label}: product_goal_alignment.{field} must be a verification case ID"
             )
     new_refs = sequences.get("new_capability_slice_refs", [])
+    errors.extend(
+        validate_experience_version_binding(
+            alignment,
+            new_refs,
+            blocking_case_ids,
+            label,
+            required=rework_lifecycle_required,
+        )
+    )
     if requires_direction_preview(iteration):
         errors.extend(
             validate_direction_preview_binding(
@@ -2133,6 +2348,25 @@ def validate_product_goal_alignment_manifest(
                 label,
             )
         )
+        if rework_lifecycle_required:
+            direction_binding = alignment.get("direction_preview_binding")
+            experience_binding = alignment.get("experience_version_binding")
+            if isinstance(direction_binding, dict) and isinstance(
+                experience_binding, dict
+            ):
+                if direction_binding.get("web_case_id") != experience_binding.get(
+                    "case_id"
+                ):
+                    errors.append(
+                        f"{label}: rework direction preview must use the sustained experience version Case"
+                    )
+                if (
+                    direction_binding.get("allowed_decisions")
+                    != "CONTINUE,REWORK,REDIRECT,REJECT"
+                ):
+                    errors.append(
+                        f"{label}: rework direction preview must include CONTINUE, REWORK, REDIRECT and REJECT"
+                    )
     if requires_reflection_gate(iteration):
         errors.extend(
             validate_reflection_gate_bindings(
@@ -3046,6 +3280,7 @@ def validate_active_manifest(
     *,
     allowed_statuses: set[str] | None = None,
     expected_status: str | None = None,
+    allow_unresolved_planning: bool = False,
 ) -> list[str]:
     label = _path_label(path)
     try:
@@ -3090,7 +3325,7 @@ def validate_active_manifest(
         )
     )
 
-    if (
+    if not allow_unresolved_planning and (
         has_unresolved_placeholder(manifest_text)
         or has_pending_marker(manifest)
         or MANIFEST_PENDING_RE.search(manifest_text)
@@ -5045,6 +5280,8 @@ def validate_product_goal_reference_targets(
     require_execution_slice_sequence: bool = False,
     require_completed_slice_sequence: bool = False,
     require_rejected_slice_sequence: bool = False,
+    require_paused_slice_sequence: bool = False,
+    require_superseded_slice_sequence: bool = False,
     verification: Document | None = None,
 ) -> list[str]:
     if not requires_product_goal_alignment(iteration):
@@ -5165,6 +5402,21 @@ def validate_product_goal_reference_targets(
     new_refs = manifest_resolved_sequence_items(
         text, "product_goal_alignment", "new_capability_slice_refs"
     ) or []
+    development = manifest.get("development")
+    raw_slices = development.get("slices") if isinstance(development, dict) else None
+    if isinstance(raw_slices, dict):
+        for reference in new_refs:
+            state = raw_slices.get(reference)
+            if not isinstance(state, dict) or not isinstance(
+                state.get("rework_result_refs"), dict
+            ):
+                continue
+            resolved_rework_refs = manifest_resolved_nested_sequence_items(
+                text,
+                ("development", "slices", reference, "rework_result_refs"),
+            )
+            if resolved_rework_refs is not None:
+                state["rework_result_refs"] = resolved_rework_refs
     if require_execution_slice_sequence:
         errors.extend(
             validate_product_goal_execution_readiness(
@@ -5178,7 +5430,17 @@ def validate_product_goal_reference_targets(
                 verify_current_contract_fileset=not (
                     require_completed_slice_sequence
                     or require_rejected_slice_sequence
+                    or require_paused_slice_sequence
                 ),
+            )
+        )
+    if require_superseded_slice_sequence:
+        errors.extend(
+            validate_superseded_iteration_plan(
+                new_refs,
+                by_id,
+                manifest,
+                label,
             )
         )
     cross_cases = manifest_resolved_sequence_items(
@@ -5276,6 +5538,14 @@ def validate_product_goal_reference_targets(
             continue
         owned = set(slice_gate_cases_by_ref.get(reference, []))
         required_owned = set(cases_by_new_ref.get(reference, []))
+        experience_binding = alignment.get("experience_version_binding")
+        if (
+            isinstance(experience_binding, dict)
+            and experience_binding.get("new_slice_ref") == reference
+        ):
+            experience_case = experience_binding.get("case_id")
+            if isinstance(experience_case, str):
+                required_owned.add(experience_case)
         direction_preview_binding = alignment.get("direction_preview_binding")
         if (
             isinstance(direction_preview_binding, dict)
@@ -5401,6 +5671,7 @@ def validate_product_goal_reference_targets(
                 verification=verification,
                 require_completed=require_completed_slice_sequence,
                 require_rejected=require_rejected_slice_sequence,
+                require_paused=require_paused_slice_sequence,
             )
         )
 
@@ -5420,6 +5691,8 @@ def validate_slice_reflection_result(
     blocked: bool,
     assumption_expectations: dict[str, str] | None = None,
     assumption_catalog_digest: str | None = None,
+    rework_policy: dict[str, object] | None = None,
+    enforce_manifest_decision: bool = True,
 ) -> list[str]:
     errors: list[str] = []
     reflection_catalog_required = requires_reflection_gate(
@@ -5499,15 +5772,75 @@ def validate_slice_reflection_result(
         )
     decision = result.metadata.get("reflection_decision")
     if blocked:
-        if decision not in {"REDIRECT", "REJECT"}:
+        if decision not in {"REWORK", "REDIRECT", "REJECT"}:
             errors.append(
-                f"{label}: blocked {target.identifier} reflection_decision must equal REDIRECT or REJECT"
+                f"{label}: non-success {target.identifier} reflection_decision must equal REWORK, REDIRECT or REJECT"
             )
     elif decision != binding.get("success_decision"):
         errors.append(
             f"{label}: completed {target.identifier} reflection_decision must equal its Manifest success_decision"
         )
-    if manifest_slice.get("reflection_decision") != decision:
+    if rework_policy is not None and decision == "REDIRECT":
+        redirect_basis = result.metadata.get("reflection_redirect_basis")
+        if redirect_basis not in {
+            "explicit-user-direction-change",
+            "core-architecture-falsified",
+            "precommitted-no-progress-limit-reached",
+        }:
+            errors.append(
+                f"{label}: {target.identifier} REDIRECT must bind an allowed explicit redirect basis"
+            )
+        elif redirect_basis == "core-architecture-falsified" and (
+            result.metadata.get("reflection_issue_class") != "architecture"
+            or result.metadata.get("reflection_issue_scope") != "systemic"
+        ):
+            errors.append(
+                f"{label}: {target.identifier} core-architecture REDIRECT requires an architecture/systemic diagnosis"
+            )
+        elif redirect_basis == "precommitted-no-progress-limit-reached":
+            attempt = result.metadata.get("rework_attempt_number")
+            limit = rework_policy.get("no_progress_attempt_limit")
+            history = manifest_slice.get("rework_result_refs")
+            history_count = len(history) if isinstance(history, list) else 0
+            if (
+                isinstance(attempt, bool)
+                or not isinstance(attempt, int)
+                or isinstance(limit, bool)
+                or not isinstance(limit, int)
+                or attempt < limit
+            ):
+                errors.append(
+                    f"{label}: {target.identifier} no-progress REDIRECT must reach the precommitted attempt limit"
+                )
+            if not isinstance(attempt, bool) and isinstance(attempt, int) and (
+                not isinstance(history, list)
+                or not history
+                or attempt != history_count
+            ):
+                errors.append(
+                    f"{label}: {target.identifier} no-progress REDIRECT attempt must equal its complete failed-Result history count"
+                )
+            progress = result.metadata.get("rework_progress_measure")
+            if progress != rework_policy.get("no_progress_measure"):
+                errors.append(
+                    f"{label}: {target.identifier} no-progress REDIRECT must bind the frozen no_progress_measure"
+                )
+    if rework_policy is not None and decision == "REWORK":
+        attempt = result.metadata.get("rework_attempt_number")
+        if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
+            errors.append(
+                f"{label}: {target.identifier} REWORK must record a positive rework_attempt_number"
+            )
+        progress = result.metadata.get("rework_progress_measure")
+        if (
+            not isinstance(progress, str)
+            or is_pending(progress)
+            or has_unresolved_placeholder(progress)
+        ):
+            errors.append(
+                f"{label}: {target.identifier} REWORK must record its measurable progress outcome"
+            )
+    if enforce_manifest_decision and manifest_slice.get("reflection_decision") != decision:
         errors.append(
             f"{label}: development.slices.{target.identifier}.reflection_decision must match its Result"
         )
@@ -5692,7 +6025,7 @@ def validate_slice_reflection_result(
         )
         body_decisions = (
             re.findall(
-                r"(?m)^[ ]{0,3}Decision:\s*(CONTINUE|ACCEPT|REDIRECT|REJECT)\s*$",
+                r"(?m)^[ ]{0,3}Decision:\s*(CONTINUE|ACCEPT|REWORK|REDIRECT|REJECT)\s*$",
                 decision_subsection,
             )
             if decision_subsection is not None
@@ -5707,7 +6040,7 @@ def validate_slice_reflection_result(
                 f"{label}: {target.identifier} reflection body Decision must match Result metadata and Manifest"
             )
         all_body_decisions = re.findall(
-            r"(?m)^[ ]{0,3}Decision:\s*(CONTINUE|ACCEPT|REDIRECT|REJECT)\s*$",
+            r"(?m)^[ ]{0,3}Decision:\s*(CONTINUE|ACCEPT|REWORK|REDIRECT|REJECT)\s*$",
             section,
         )
         if len(all_body_decisions) != 1:
@@ -5778,6 +6111,573 @@ def validate_slice_reflection_result(
     return errors
 
 
+def validate_paused_rework_slice(
+    target: Document,
+    manifest_slice: dict[str, object],
+    by_id: dict[str, Document],
+    reflection_binding: dict[str, object] | None,
+    verification: Document | None,
+    label: str,
+    *,
+    assumption_expectations: dict[str, str] | None = None,
+    assumption_catalog_digest: str | None = None,
+    rework_policy: dict[str, object] | None = None,
+) -> list[str]:
+    """Validate a non-coding same-Slice REWORK state without rewriting history."""
+
+    errors: list[str] = []
+    iteration = str(target.metadata.get("iteration", ""))
+    result_ref = manifest_slice.get("result")
+    result = by_id.get(result_ref) if isinstance(result_ref, str) else None
+    result_dependencies = (
+        result.metadata.get("depends_on", [])
+        if result is not None and isinstance(result.metadata.get("depends_on", []), list)
+        else []
+    )
+    valid_result = not (
+        result is None
+        or result.metadata.get("kind") != "iteration-result"
+        or str(result.metadata.get("iteration", "")) != iteration
+        or result.metadata.get("status") != "failed-preserved"
+        or result.metadata.get("authority") != "execution-evidence"
+        or target.identifier not in result_dependencies
+        or f"{iteration}-VERIFICATION" not in result_dependencies
+    )
+    if not valid_result:
+        errors.append(
+            f"{label}: paused {target.identifier} must preserve same-iteration failed execution evidence"
+        )
+    else:
+        assert result is not None
+        freeze_digest = manifest_slice.get("product_code_freeze_digest")
+        if not isinstance(freeze_digest, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", freeze_digest
+        ) is None:
+            errors.append(
+                f"{label}: paused {target.identifier} must bind an exact product_code_freeze_digest"
+            )
+        elif result.metadata.get("product_code_freeze_digest") != freeze_digest:
+            errors.append(
+                f"{label}: paused {target.identifier} must preserve the failed Result product code freeze"
+            )
+        errors.extend(
+            validate_slice_reflection_result(
+                target,
+                result,
+                reflection_binding,
+                manifest_slice,
+                verification,
+                label,
+                blocked=True,
+                assumption_expectations=assumption_expectations,
+                assumption_catalog_digest=assumption_catalog_digest,
+                rework_policy=None,
+                enforce_manifest_decision=False,
+            )
+        )
+        if (
+            manifest_slice.get("historical_reflection_decision")
+            != result.metadata.get("reflection_decision")
+            or manifest_slice.get("historical_reflection_decision_ref")
+            != result.metadata.get("reflection_decision_ref")
+        ):
+            errors.append(
+                f"{label}: paused {target.identifier} must preserve the historical Result decision and receipt separately from REWORK"
+            )
+
+    if manifest_slice.get("reflection_decision") != "REWORK":
+        errors.append(
+            f"{label}: paused {target.identifier} reflection_decision must equal REWORK"
+        )
+    decision_ref = manifest_slice.get("reflection_decision_ref")
+    if not isinstance(decision_ref, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", decision_ref
+    ) is None:
+        errors.append(
+            f"{label}: paused {target.identifier} must bind an exact REWORK decision receipt"
+        )
+
+    errors.extend(
+        validate_rework_result_history(target, manifest_slice, by_id, label)
+    )
+    rework_refs = manifest_slice.get("rework_result_refs")
+    if not isinstance(rework_refs, list) or not rework_refs or rework_refs[-1] != result_ref:
+        errors.append(
+            f"{label}: paused {target.identifier} must retain its failed Result as the latest rework prerequisite"
+        )
+    attempt = manifest_slice.get("rework_attempt_number")
+    progress = manifest_slice.get("rework_progress_measure")
+    if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
+        errors.append(
+            f"{label}: paused {target.identifier} must record a positive rework_attempt_number"
+        )
+    if (
+        not isinstance(progress, str)
+        or is_pending(progress)
+        or has_unresolved_placeholder(progress)
+    ):
+        errors.append(
+            f"{label}: paused {target.identifier} must freeze a measurable rework progress measure"
+        )
+    if isinstance(rework_policy, dict):
+        limit = rework_policy.get("no_progress_attempt_limit")
+        if (
+            isinstance(attempt, int)
+            and not isinstance(attempt, bool)
+            and isinstance(limit, int)
+            and not isinstance(limit, bool)
+            and attempt > limit
+        ):
+            errors.append(
+                f"{label}: paused {target.identifier} rework attempt cannot exceed the frozen no-progress limit without a direction review"
+            )
+
+    project_decision_ref = manifest_slice.get("project_decision_ref")
+    project_decision = (
+        by_id.get(project_decision_ref)
+        if isinstance(project_decision_ref, str)
+        else None
+    )
+    project_dependencies = (
+        project_decision.metadata.get("depends_on", [])
+        if project_decision is not None
+        and isinstance(project_decision.metadata.get("depends_on", []), list)
+        else []
+    )
+    if (
+        project_decision is None
+        or project_decision.metadata.get("kind") != "project-decision"
+        or str(project_decision.metadata.get("iteration", "")) != iteration
+        or project_decision.metadata.get("status") not in {"accepted", "completed"}
+        or project_decision.metadata.get("decision") != "REWORK"
+        or project_decision.metadata.get("decision_ref") != decision_ref
+        or project_decision.metadata.get("coding_input") not in {False, "false"}
+        or result_ref not in project_dependencies
+        or project_decision.metadata.get("decision_ref")
+        == (result.metadata.get("reflection_decision_ref") if result is not None else None)
+    ):
+        errors.append(
+            f"{label}: paused {target.identifier} must bind an accepted non-coding REWORK project decision that preserves its failed Result"
+        )
+    return errors
+
+
+def validate_historical_rework_result_integrity(
+    target: Document,
+    result: Document,
+    label: str,
+    *,
+    expected_product_freeze: object = None,
+    expected_reflection_digest: object = None,
+) -> list[str]:
+    """Recompute the immutable digests for every failed attempt in a repair loop."""
+
+    errors: list[str] = []
+    product_freeze = result.metadata.get("product_code_freeze_digest")
+    if not isinstance(product_freeze, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", product_freeze
+    ) is None:
+        errors.append(
+            f"{label}: historical {result.identifier} must bind an exact product_code_freeze_digest"
+        )
+    elif expected_product_freeze is not None and product_freeze != expected_product_freeze:
+        errors.append(
+            f"{label}: historical {result.identifier} product code freeze must match the frozen rework history"
+        )
+
+    report_digest = result.metadata.get("reflection_report_digest")
+    valid_report_digest = isinstance(report_digest, str) and re.fullmatch(
+        r"sha256:[0-9a-f]{64}", report_digest
+    ) is not None
+    if not valid_report_digest:
+        errors.append(
+            f"{label}: historical {result.identifier} must bind an exact reflection_report_digest"
+        )
+    elif (
+        expected_reflection_digest is not None
+        and report_digest != expected_reflection_digest
+    ):
+        errors.append(
+            f"{label}: historical {result.identifier} reflection digest must match the frozen rework history"
+        )
+
+    heading_count = len(
+        re.findall(
+            r"(?m)^[ ]{0,3}##[ \t]+Architecture reflection and continuation decision[ \t]*#*[ \t]*$",
+            result.body,
+        )
+    )
+    section = markdown_section_body(
+        result, "Architecture reflection and continuation decision"
+    )
+    if heading_count != 1 or not has_substantive_markdown_content(section):
+        errors.append(
+            f"{label}: historical {result.identifier} must retain one substantive reflection section"
+        )
+    elif valid_report_digest and report_digest != "sha256:" + hashlib.sha256(
+        section.encode("utf-8")
+    ).hexdigest():
+        errors.append(
+            f"{label}: historical {result.identifier} reflection_report_digest must bind the exact reflection section"
+        )
+
+    decision = result.metadata.get("reflection_decision")
+    if decision not in {"REWORK", "REDIRECT", "REJECT"}:
+        errors.append(
+            f"{label}: historical {result.identifier} must retain its failed reflection decision"
+        )
+    decision_ref = result.metadata.get("reflection_decision_ref")
+    if not isinstance(decision_ref, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", decision_ref
+    ) is None:
+        errors.append(
+            f"{label}: historical {result.identifier} must retain an exact reflection decision receipt"
+        )
+    return errors
+
+
+def validate_rework_result_history(
+    target: Document,
+    manifest_slice: dict[str, object],
+    by_id: dict[str, Document],
+    label: str,
+) -> list[str]:
+    """Preserve prior failed attempts when the same Slice is reauthorized."""
+
+    refs = manifest_slice.get("rework_result_refs")
+    history_required = any(
+        field in manifest_slice
+        for field in (
+            "project_decision_ref",
+            "rework_attempt_number",
+            "rework_prerequisite_result",
+        )
+    )
+    if refs is None:
+        return (
+            [
+                f"{label}: development.slices.{target.identifier}.rework_result_refs is required for same-Slice reauthorization"
+            ]
+            if history_required
+            else []
+        )
+    if not isinstance(refs, list):
+        return [
+            f"{label}: development.slices.{target.identifier}.rework_result_refs must be a sequence"
+        ]
+    normalized = [str(item) for item in refs]
+    errors: list[str] = []
+    if len(normalized) != len(set(normalized)):
+        errors.append(
+            f"{label}: development.slices.{target.identifier}.rework_result_refs must be unique"
+        )
+    attempt = manifest_slice.get("rework_attempt_number")
+    if (
+        isinstance(attempt, bool)
+        or not isinstance(attempt, int)
+        or attempt != len(normalized)
+    ):
+        errors.append(
+            f"{label}: development.slices.{target.identifier}.rework_attempt_number must equal the complete failed-Result history count"
+        )
+
+    history_freezes = manifest_slice.get("rework_history_freezes")
+    if len(normalized) > 1 and (
+        not isinstance(history_freezes, dict)
+        or set(history_freezes) != set(normalized)
+    ):
+        errors.append(
+            f"{label}: multi-attempt {target.identifier} must freeze every Result product and reflection digest"
+        )
+        history_freezes = None
+
+    iteration = str(target.metadata.get("iteration", ""))
+    for reference in normalized:
+        result = by_id.get(reference)
+        dependencies = (
+            result.metadata.get("depends_on", [])
+            if result is not None
+            and isinstance(result.metadata.get("depends_on", []), list)
+            else []
+        )
+        if (
+            result is None
+            or result.metadata.get("kind") != "iteration-result"
+            or result.metadata.get("status") != "failed-preserved"
+            or str(result.metadata.get("iteration", "")) != iteration
+            or target.identifier not in dependencies
+            or f"{iteration}-VERIFICATION" not in dependencies
+        ):
+            errors.append(
+                f"{label}: rework_result_refs item must preserve a failed attempt for the same Slice: {reference}"
+            )
+            continue
+        freeze_entry = (
+            history_freezes.get(reference)
+            if isinstance(history_freezes, dict)
+            else None
+        )
+        if len(normalized) > 1 and not isinstance(freeze_entry, dict):
+            errors.append(
+                f"{label}: multi-attempt {target.identifier} is missing frozen digests for {reference}"
+            )
+            freeze_entry = {}
+        errors.extend(
+            validate_historical_rework_result_integrity(
+                target,
+                result,
+                label,
+                expected_product_freeze=(
+                    freeze_entry.get("product_code_freeze_digest")
+                    if isinstance(freeze_entry, dict)
+                    else None
+                ),
+                expected_reflection_digest=(
+                    freeze_entry.get("reflection_report_digest")
+                    if isinstance(freeze_entry, dict)
+                    else None
+                ),
+            )
+        )
+    expected_prerequisite = normalized[-1] if normalized else "none"
+    if manifest_slice.get("rework_prerequisite_result") != expected_prerequisite:
+        errors.append(
+            f"{label}: development.slices.{target.identifier}.rework_prerequisite_result must equal {expected_prerequisite}"
+        )
+    return errors
+
+
+def validate_rework_authorization_receipt(
+    target: Document,
+    manifest_slice: dict[str, object],
+    by_id: dict[str, Document],
+    label: str,
+) -> list[str]:
+    """Require a new authorization after both the failed attempt and REWORK decision."""
+
+    rework_refs = manifest_slice.get("rework_result_refs")
+    if not isinstance(rework_refs, list) or not rework_refs:
+        return []
+    errors: list[str] = []
+    forbidden_receipts: set[str] = set()
+    iteration = str(target.metadata.get("iteration", ""))
+    readiness = by_id.get(f"{iteration}-READINESS")
+    initial_authorization = (
+        readiness.metadata.get("product_goal_alignment_review_ref")
+        if readiness is not None
+        else None
+    )
+    if isinstance(initial_authorization, str):
+        forbidden_receipts.add(initial_authorization)
+    project_decision_ref = manifest_slice.get("project_decision_ref")
+    project_decision = (
+        by_id.get(project_decision_ref)
+        if isinstance(project_decision_ref, str)
+        else None
+    )
+    if project_decision is not None and isinstance(
+        project_decision.metadata.get("decision_ref"), str
+    ):
+        forbidden_receipts.add(str(project_decision.metadata["decision_ref"]))
+    for rework_ref in rework_refs:
+        prior_result = by_id.get(str(rework_ref))
+        if prior_result is not None and isinstance(
+            prior_result.metadata.get("reflection_decision_ref"), str
+        ):
+            forbidden_receipts.add(
+                str(prior_result.metadata["reflection_decision_ref"])
+            )
+        if prior_result is not None and isinstance(
+            prior_result.metadata.get("slice_authorization_ref"), str
+        ):
+            forbidden_receipts.add(str(prior_result.metadata["slice_authorization_ref"]))
+
+    prior_authorizations = manifest_slice.get("prior_authorization_refs")
+    if (
+        not isinstance(prior_authorizations, list)
+        or len(prior_authorizations) != len(rework_refs)
+        or len(prior_authorizations) != len(set(map(str, prior_authorizations)))
+        or any(
+            not isinstance(reference, str)
+            or re.fullmatch(r"codex-user-message:sha256:[0-9a-f]{64}", reference)
+            is None
+            for reference in prior_authorizations
+        )
+    ):
+        errors.append(
+            f"{label}: reauthorized {target.identifier} must freeze one unique prior authorization receipt per failed Result"
+        )
+        prior_authorizations = []
+    if (
+        isinstance(initial_authorization, str)
+        and prior_authorizations
+        and prior_authorizations[0] != initial_authorization
+    ):
+        errors.append(
+            f"{label}: reauthorized {target.identifier} must preserve its initial Readiness authorization as the first prior receipt"
+        )
+    for index, rework_ref in enumerate(rework_refs[1:], start=1):
+        prior_result = by_id.get(str(rework_ref))
+        expected_authorization = (
+            prior_authorizations[index]
+            if index < len(prior_authorizations)
+            else None
+        )
+        if (
+            prior_result is None
+            or prior_result.metadata.get("slice_authorization_ref")
+            != expected_authorization
+        ):
+            errors.append(
+                f"{label}: reauthorized {target.identifier} must bind every later failed Result to its frozen prior authorization receipt"
+            )
+
+    authorization_ref = manifest_slice.get("authorization_ref")
+    if not isinstance(authorization_ref, str) or re.fullmatch(
+        r"codex-user-message:sha256:[0-9a-f]{64}", authorization_ref
+    ) is None:
+        errors.append(
+            f"{label}: reauthorized {target.identifier} must bind an exact new user authorization receipt"
+        )
+    elif authorization_ref in forbidden_receipts or authorization_ref in set(
+        map(str, prior_authorizations)
+    ):
+        errors.append(
+            f"{label}: reauthorized {target.identifier} must use a new user authorization receipt after the failed Result and REWORK decision"
+        )
+    return errors
+
+
+def rework_project_decision_refs_for_slice(
+    target: Document, by_id: dict[str, Document]
+) -> set[str]:
+    """Return accepted REWORK decisions whose preserved Result belongs to this Slice."""
+
+    iteration = str(target.metadata.get("iteration", ""))
+    references: set[str] = set()
+    for document in by_id.values():
+        if (
+            document.metadata.get("kind") != "project-decision"
+            or str(document.metadata.get("iteration", "")) != iteration
+            or document.metadata.get("decision") != "REWORK"
+            or document.metadata.get("status") not in {"accepted", "completed"}
+        ):
+            continue
+        dependencies = document.metadata.get("depends_on", [])
+        if not isinstance(dependencies, list):
+            continue
+        for dependency in dependencies:
+            result = by_id.get(str(dependency))
+            result_dependencies = (
+                result.metadata.get("depends_on", [])
+                if result is not None
+                and isinstance(result.metadata.get("depends_on", []), list)
+                else []
+            )
+            if (
+                result is not None
+                and result.metadata.get("kind") == "iteration-result"
+                and target.identifier in result_dependencies
+            ):
+                references.add(document.identifier)
+                break
+    return references
+
+
+def validate_superseded_iteration_plan(
+    new_refs: list[str],
+    by_id: dict[str, Document],
+    manifest: dict[str, object],
+    label: str,
+) -> list[str]:
+    """Ensure a pre-execution replacement cannot hide authorized or completed work."""
+
+    errors: list[str] = []
+    iteration_data = manifest.get("iteration")
+    iteration = (
+        str(iteration_data.get("id")) if isinstance(iteration_data, dict) else ""
+    )
+    development = manifest.get("development")
+    raw_slices = development.get("slices") if isinstance(development, dict) else None
+    if not isinstance(raw_slices, dict):
+        return [f"{label}: superseded iteration must preserve its planned Slice mapping"]
+    if set(raw_slices) != set(new_refs):
+        errors.append(
+            f"{label}: superseded iteration Slice mapping must exactly match new_capability_slice_refs"
+        )
+    for reference in new_refs:
+        target = by_id.get(reference)
+        state = raw_slices.get(reference)
+        if (
+            target is None
+            or target.metadata.get("kind") != "development-slice"
+            or str(target.metadata.get("iteration", "")) != iteration
+            or target.metadata.get("status") != "proposed"
+            or target.metadata.get("authority") != "proposed-development"
+            or is_true(target.metadata.get("coding_input", ""))
+        ):
+            errors.append(
+                f"{label}: superseded pre-execution Slice must remain proposed and non-coding: {reference}"
+            )
+        if not isinstance(state, dict):
+            errors.append(
+                f"{label}: superseded iteration is missing planned Slice state: {reference}"
+            )
+            continue
+        expected = {
+            "status": "proposed",
+            "coding_input": False,
+            "result": "not-executed",
+            "product_code_freeze_digest": "not-executed",
+            "authorized_by": "not-authorized",
+            "authorized_at": "not-authorized",
+            "authorization_ref": "not-authorized",
+        }
+        for field, value in expected.items():
+            if state.get(field) != value:
+                errors.append(
+                    f"{label}: superseded {reference} {field} must equal {value}"
+                )
+    authorization = manifest.get("authorization")
+    if not isinstance(authorization, dict) or authorization.get("active_slice") != "none":
+        errors.append(
+            f"{label}: superseded iteration must have authorization.active_slice none"
+        )
+    if not isinstance(authorization, dict) or (
+        authorization.get("authorized_by"),
+        authorization.get("authorized_at"),
+        authorization.get("authorization_ref"),
+    ) not in {
+        ("pending", "pending", "pending"),
+        ("not-authorized", "not-authorized", "not-authorized"),
+    }:
+        errors.append(
+            f"{label}: superseded pre-execution iteration must retain an unresolved top-level authorization"
+        )
+    if not isinstance(iteration_data, dict) or is_true(
+        iteration_data.get("coding_input", "")
+    ):
+        errors.append(
+            f"{label}: superseded pre-execution iteration must remain non-coding"
+        )
+    for document in by_id.values():
+        if str(document.metadata.get("iteration", "")) != iteration:
+            continue
+        kind = document.metadata.get("kind")
+        if kind not in {"iteration-result", "iteration-acceptance"}:
+            continue
+        if (
+            document.metadata.get("authority") == "execution-evidence"
+            or document.metadata.get("status")
+            in {"accepted", "completed", "failed-preserved"}
+            or kind == "iteration-acceptance"
+        ):
+            errors.append(
+                f"{label}: superseded pre-execution iteration must not contain execution or accepted Result evidence: {document.identifier}"
+            )
+    return errors
+
+
 def validate_product_goal_slice_sequence(
     new_refs: list[str],
     by_id: dict[str, Document],
@@ -5787,8 +6687,9 @@ def validate_product_goal_slice_sequence(
     verification: Document | None = None,
     require_completed: bool = False,
     require_rejected: bool = False,
+    require_paused: bool = False,
 ) -> list[str]:
-    """Require an active sequence or one of the two closed terminal sequences."""
+    """Require an active, paused, or terminal sequential-development state."""
 
     errors: list[str] = []
     slices: list[Document] = []
@@ -5809,6 +6710,8 @@ def validate_product_goal_slice_sequence(
             if isinstance(raw_slices, dict):
                 development_slices = raw_slices
     alignment = manifest.get("product_goal_alignment") if manifest is not None else None
+    raw_rework_policy = manifest.get("rework_policy") if manifest is not None else None
+    rework_policy = raw_rework_policy if isinstance(raw_rework_policy, dict) else None
     early_canary_by_slice: dict[str, dict[str, object]] = {}
     early_comparison_by_slice: dict[str, dict[str, object]] = {}
     reflection_by_slice: dict[str, dict[str, object]] = {}
@@ -5874,8 +6777,16 @@ def validate_product_goal_slice_sequence(
     blocked_indexes = [
         index for index, status in enumerate(statuses) if status == "blocked"
     ]
-    if require_completed and require_rejected:
-        errors.append(f"{label}: iteration cannot be both completed and rejected")
+    paused_indexes = [
+        index for index, status in enumerate(statuses) if status == "paused"
+    ]
+    terminal_mode_count = sum(
+        bool(item) for item in (require_completed, require_rejected, require_paused)
+    )
+    if terminal_mode_count > 1:
+        errors.append(
+            f"{label}: iteration cannot be completed, rejected and paused at the same time"
+        )
     elif require_completed:
         if any(status != "completed" for status in statuses):
             errors.append(
@@ -5898,6 +6809,29 @@ def validate_product_goal_slice_sequence(
                 )
         if active_indexes:
             errors.append(f"{label}: rejected iteration must not have an active slice")
+    elif require_paused:
+        if len(paused_indexes) != 1:
+            errors.append(
+                f"{label}: paused iteration requires exactly one paused new capability slice"
+            )
+        else:
+            paused_index = paused_indexes[0]
+            if any(status != "completed" for status in statuses[:paused_index]):
+                errors.append(
+                    f"{label}: slices before the paused slice must be completed in Manifest order"
+                )
+            if any(status != "proposed" for status in statuses[paused_index + 1 :]):
+                errors.append(
+                    f"{label}: slices after the paused slice must remain proposed"
+                )
+        if active_indexes or blocked_indexes:
+            errors.append(
+                f"{label}: paused iteration must not have an active or rejected slice"
+            )
+    elif paused_indexes:
+        errors.append(
+            f"{label}: a paused Slice requires the iteration index and Manifest to be paused"
+        )
     elif len(active_indexes) != 1:
         errors.append(
             f"{label}: execution requires exactly one authorized/in-progress new capability slice"
@@ -5920,7 +6854,10 @@ def validate_product_goal_slice_sequence(
         else:
             expected_active_slice = (
                 "none"
-                if require_completed or require_rejected or len(active_indexes) != 1
+                if require_completed
+                or require_rejected
+                or require_paused
+                or len(active_indexes) != 1
                 else slices[active_indexes[0]].identifier
             )
             if authorization.get("active_slice") != expected_active_slice:
@@ -6017,12 +6954,20 @@ def validate_product_goal_slice_sequence(
             errors.append(
                 f"{target.relative_path}: blocked slice must use development-evidence with coding_input false"
             )
+        elif status == "paused" and (
+            authority not in {"development-evidence", "project-decision"}
+            or coding_input
+        ):
+            errors.append(
+                f"{target.relative_path}: paused slice must use non-coding evidence or project-decision authority"
+            )
         elif status not in {
             "proposed",
             "authorized",
             "in-progress",
             "completed",
             "blocked",
+            "paused",
         }:
             errors.append(
                 f"{target.relative_path}: slice status is invalid for sequential development"
@@ -6034,6 +6979,7 @@ def validate_product_goal_slice_sequence(
             "in-progress",
             "completed",
             "blocked",
+            "paused",
         }:
             if manifest_slice.get("authorized_by") != "user":
                 errors.append(
@@ -6092,6 +7038,29 @@ def validate_product_goal_slice_sequence(
                 f"{label}: development.slices must define {target.identifier}"
             )
         elif isinstance(manifest_slice, dict):
+            slice_rework_decisions = rework_project_decision_refs_for_slice(
+                target, by_id
+            )
+            if slice_rework_decisions:
+                if manifest_slice.get("project_decision_ref") not in slice_rework_decisions:
+                    errors.append(
+                        f"{label}: {target.identifier} must retain its irreversible REWORK project decision"
+                    )
+                if not isinstance(
+                    manifest_slice.get("rework_result_refs"), list
+                ) or not manifest_slice.get("rework_result_refs"):
+                    errors.append(
+                        f"{label}: {target.identifier} must retain all failed rework Results"
+                    )
+                elif status in {"blocked", "completed"}:
+                    errors.extend(
+                        validate_rework_result_history(
+                            target,
+                            manifest_slice,
+                            by_id,
+                            label,
+                        )
+                    )
             if manifest_slice.get("status") != status:
                 errors.append(
                     f"{label}: development.slices.{target.identifier}.status must match the Slice document"
@@ -6144,6 +7113,47 @@ def validate_product_goal_slice_sequence(
                             f"{label}: proposed {target.identifier} reflection_prerequisite_result must equal {expected_prerequisite}"
                         )
             elif status in ACTIVE_SLICE_STATUSES:
+                iteration_state = manifest.get("iteration") if manifest is not None else None
+                manifest_rework_required = (
+                    isinstance(iteration_state, dict)
+                    and iteration_state.get("current_decision") == "REWORK"
+                ) or bool(slice_rework_decisions)
+                if manifest_rework_required:
+                    project_decision_ref = manifest_slice.get("project_decision_ref")
+                    project_decision = (
+                        by_id.get(project_decision_ref)
+                        if isinstance(project_decision_ref, str)
+                        else None
+                    )
+                    if (
+                        project_decision is None
+                        or project_decision.metadata.get("kind") != "project-decision"
+                        or project_decision.metadata.get("decision") != "REWORK"
+                        or project_decision_ref not in slice_rework_decisions
+                    ):
+                        errors.append(
+                            f"{label}: reauthorized {target.identifier} must retain its REWORK project decision"
+                        )
+                    if not isinstance(manifest_slice.get("rework_result_refs"), list) or not manifest_slice.get("rework_result_refs"):
+                        errors.append(
+                            f"{label}: reauthorized {target.identifier} must retain all failed rework Results"
+                        )
+                errors.extend(
+                    validate_rework_result_history(
+                        target,
+                        manifest_slice,
+                        by_id,
+                        label,
+                    )
+                )
+                errors.extend(
+                    validate_rework_authorization_receipt(
+                        target,
+                        manifest_slice,
+                        by_id,
+                        label,
+                    )
+                )
                 result_ref = manifest_slice.get("result")
                 if result_ref not in {"not-executed", "in-progress"}:
                     errors.append(
@@ -6256,8 +7266,23 @@ def validate_product_goal_slice_sequence(
                                 blocked=True,
                                 assumption_expectations=assumption_expectations,
                                 assumption_catalog_digest=assumption_catalog_digest,
+                                rework_policy=rework_policy,
                             )
                         )
+            elif status == "paused":
+                errors.extend(
+                    validate_paused_rework_slice(
+                        target,
+                        manifest_slice,
+                        by_id,
+                        reflection_by_slice.get(target.identifier),
+                        verification,
+                        label,
+                        assumption_expectations=assumption_expectations,
+                        assumption_catalog_digest=assumption_catalog_digest,
+                        rework_policy=rework_policy,
+                    )
+                )
             elif status == "completed":
                 result_ref = manifest_slice.get("result")
                 result = by_id.get(result_ref) if isinstance(result_ref, str) else None
@@ -6361,6 +7386,7 @@ def validate_product_goal_slice_sequence(
                                 blocked=False,
                                 assumption_expectations=assumption_expectations,
                                 assumption_catalog_digest=assumption_catalog_digest,
+                                rework_policy=rework_policy,
                             )
                         )
 
@@ -6532,6 +7558,14 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
             index is not None
             and str(index.metadata.get("status", "")) == "rejected"
         )
+        iteration_paused = (
+            index is not None
+            and str(index.metadata.get("status", "")) == "paused"
+        )
+        iteration_superseded = (
+            index is not None
+            and str(index.metadata.get("status", "")) == "superseded"
+        )
         selected_slices = [
             document
             for document in slice_candidates
@@ -6609,6 +7643,24 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
                 errors.append(
                     f"{index.relative_path}: rejected iteration must not have an accepted/completed Acceptance"
                 )
+        if iteration_paused:
+            if str(index.metadata.get("coding_input", "")).strip().lower() != "false":
+                errors.append(
+                    f"{index.relative_path}: paused iteration must use coding_input false"
+                )
+            if acceptances:
+                errors.append(
+                    f"{index.relative_path}: paused iteration must not have an accepted/completed Acceptance"
+                )
+        if iteration_superseded:
+            if str(index.metadata.get("coding_input", "")).strip().lower() != "false":
+                errors.append(
+                    f"{index.relative_path}: superseded iteration must use coding_input false"
+                )
+            if acceptances:
+                errors.append(
+                    f"{index.relative_path}: superseded iteration must not have an accepted/completed Acceptance"
+                )
 
         for required_document, expected_kind in (
             (proposal, "iteration-proposal"),
@@ -6635,7 +7687,11 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
             )
         )
         if proposal is not None:
-            if not proposal_selected:
+            if not proposal_selected and not (
+                iteration_superseded
+                and str(proposal.metadata.get("status", ""))
+                in {"proposed", "superseded"}
+            ):
                 errors.append(
                     f"{proposal.relative_path}: selected iteration proposal must be accepted/authorized/completed"
                 )
@@ -6643,7 +7699,7 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
 
         requires_readiness = bool(
             readiness_selected or iteration_selected or selected_slices or acceptances
-        )
+        ) and not iteration_superseded
         if requires_readiness:
             if readiness is None:
                 errors.append(f"{iteration}: selected iteration is missing readiness-review.md")
@@ -6678,7 +7734,16 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
                     manifest,
                     iteration,
                     allowed_statuses=allowed_statuses,
-                    expected_status="rejected" if iteration_rejected else None,
+                    expected_status=(
+                        "rejected"
+                        if iteration_rejected
+                        else "paused"
+                        if iteration_paused
+                        else "superseded"
+                        if iteration_superseded
+                        else None
+                    ),
+                    allow_unresolved_planning=iteration_superseded,
                 )
             )
             errors.extend(
@@ -6699,6 +7764,8 @@ def validate_product_goal_alignment_state(documents: list[Document]) -> list[str
                         )
                     ),
                     require_rejected_slice_sequence=iteration_rejected,
+                    require_paused_slice_sequence=iteration_paused,
+                    require_superseded_slice_sequence=iteration_superseded,
                     verification=verification,
                 )
             )

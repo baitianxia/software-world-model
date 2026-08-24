@@ -13,6 +13,8 @@ coding_input: false
 
 # ITER-011 Development Design
 
+> 本设计在任何 Slice 获得授权前已被替代。四个 Slice 均为未执行历史计划，不是编码输入。
+
 | Slice | 状态 | 独立可验证出口 | 进入条件 |
 |---|---|---|---|
 | [SLICE-001](SLICE-001-answer-first-direction-probe.md) | `proposed` | 同一产品 Web：1 代表题 + 1 现场题；用户独立判向 | Proposal/Readiness 接受后另行授权 Slice1 |

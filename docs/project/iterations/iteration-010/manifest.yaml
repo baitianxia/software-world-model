@@ -1,8 +1,11 @@
 schema_version: 1
 iteration:
   id: ITER-010
-  status: rejected
+  status: paused
   outcome_scope: world-model-cognition-guided-adaptive-engineering-investigation-direction-preview-generalization-and-formal-acceptance
+  current_decision: REWORK
+  current_decision_ref: ITER-010-PDR-001
+  coding_input: false
 
 baseline:
   commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
@@ -80,7 +83,10 @@ product_goal_alignment:
     - V-XD-001
     - V-WEB-000
     - V-WEB-001
+    - V-EXPERIENCE-001
+    - V-ANSWER-REWORK-001
     - V-PREVIEW-001
+    - V-PREVIEW-002
     - V-REFLECT-001
     - V-GENERAL-002
     - V-RERETRIEVE-002
@@ -127,17 +133,27 @@ product_goal_alignment:
       new_slice_ref: ITER-010-SLICE-003
   first_product_web_checkpoint: V-WEB-000
   earliest_web_micro_checkpoint: V-WEB-000
-  direction_preview_checkpoint: V-PREVIEW-001
+  direction_preview_checkpoint: V-PREVIEW-002
   direction_preview_binding:
-    case_id: V-PREVIEW-001
-    web_case_id: V-WEB-001
+    case_id: V-PREVIEW-002
+    web_case_id: V-EXPERIENCE-001
     new_slice_ref: ITER-010-SLICE-001
     real_product_entry: loopback-product-owned-engineering-qa-web
-    representative_task_count: 4
+    representative_task_count: 3
     status_label: non-acceptance-non-production
     decision_owner: user
-    allowed_decisions: CONTINUE,REDIRECT,REJECT
+    allowed_decisions: CONTINUE,REWORK,REDIRECT,REJECT
     hardening_requires_continue: true
+  experience_version_binding:
+    schema: USER_EXPERIENCE_VERSION@1
+    case_id: V-EXPERIENCE-001
+    new_slice_ref: ITER-010-SLICE-001
+    exact_version_visible: true
+    repeatable_start: true
+    continuous_same_session_free_questions: true
+    limitations_visible: true
+    fixed_loopback_address: http://127.0.0.1:8765/
+    question_failure_scope: current-question-only-service-remains-available
   web_checkpoint_binding:
     case_id: V-WEB-000
     new_slice_ref: ITER-010-SLICE-001
@@ -227,6 +243,11 @@ product_goal_alignment:
     executes_cross_domain_case_id: V-XD-003
   live_ad_hoc_question_count: 2
   live_ad_hoc_without_symbol_count_minimum: 1
+  request_failure_conditions:
+    - supported-answer-has-major-error-or-material-omission
+    - reviewer-approves-an-answer-with-major-error-material-omission-or-unsupported-claim
+    - citation-does-not-support-a-material-conclusion
+    - per-question-investigation-review-or-resource-fuse-fails
   stop_or_redirect_conditions:
     - system-contract-and-code-mode-boundaries-do-not-match
     - default-answer-remains-method-branch-call-order-or-internal-diagnostic-walkthrough
@@ -237,12 +258,46 @@ product_goal_alignment:
     - investigation-answer-or-reviewer-can-directly-read-repository-source-or-use-filesystem-shell-network-or-credential
     - evidence-ledger-is-rewritten-or-package-is-sealed-before-investigation-finishes
     - package-seal-is-treated-as-content-truth-or-old-review-approves-new-package
-    - citation-does-not-support-a-material-conclusion
     - reviewer-verification-bypasses-application-source-broker-or-new-package-answer-review
-    - supported-answer-has-major-error-or-material-omission
     - source-write-update-silent-mode-fallback-secret-exposure-or-non-loopback-listener-occurs
     - independent-review-is-removed-weakened-or-skipped-for-call-budget
-    - user-decides-redirect-or-reject
+    - repeated-heterogeneous-question-failures-prove-the-core-path-cannot-be-boundedly-reworked
+    - user-explicitly-decides-redirect-or-reject-after-sustained-web-experience
+
+rework:
+  decision: REWORK
+  decision_ref: ITER-010-PDR-001
+  user_receipt_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
+  historical_redirect_message_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
+  historical_redirect_message_was_explicit: false
+  authorization_status: not-authorized
+  coding_input: false
+  first_delivery: sustained-loopback-web-alpha
+  repeatable_start_required: true
+  listener: 127.0.0.1
+  authentication: none
+  fixed_repository_and_exact_revision_per_session: true
+  continuous_free_questions_in_same_session: true
+  restart_or-new-planning-authorization_per_question_required: false
+  page_must_show_version_and_known_limits: true
+  page_must_show_answer_citations_and_request_failure: true
+  failed_question_closes_only_that_request: true
+  server_remains_available_after_request_failure: true
+  answer_and_reviewer_general_rework_required: true
+  regression_original_failed_question_required: true
+  adjacent_or_heterogeneous_regression_question_minimum: 2
+  question_project_keyword_symbol_class_method_fixture_or_oracle_special_case_allowed: false
+  hardening_requires_sustained_alpha_direction_confirmation: true
+
+rework_policy:
+  schema: SAME_SLICE_REWORK@1
+  failed_attempt_default_decision: REWORK
+  failed_attempt_blocks: slice-promotion-only
+  same_slice_reauthorization_allowed: true
+  problem_report_or_review_request_implies_redirect: false
+  redirect_bases: explicit-user-direction-change,core-architecture-falsified,precommitted-no-progress-limit-reached
+  no_progress_measure: after-two-consecutive-rework-attempts-at-least-two-of-three-heterogeneous-supported-questions-still-have-a-major-answer-error-or-reviewer-miss
+  no_progress_attempt_limit: 2
 
 source_scope:
   provider: LOCAL_GIT
@@ -501,17 +556,25 @@ readiness_inputs:
 development:
   slices:
     ITER-010-SLICE-001:
-      status: blocked
+      status: paused
       coding_input: false
       result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
-      reflection_decision: REDIRECT
-      reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
+      reflection_decision: REWORK
+      reflection_decision_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
+      project_decision_ref: ITER-010-PDR-001
+      historical_reflection_decision: REDIRECT
+      historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
+      rework_attempt_number: 1
+      rework_progress_measure: major-answer-error-and-reviewer-miss-count-across-original-plus-two-heterogeneous-questions
+      rework_result_refs:
+        - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+      rework_prerequisite_result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
       reflection_prerequisite_result: none-first-slice
       product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
-      product_code_freeze_status: preserved-real-web-direction-failure
+      product_code_freeze_status: preserved-real-web-quality-failure-rework-baseline
       frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: public-and-onsite-web-results-preserved-user-redirect
+      live_question_status: public-and-onsite-web-results-preserved-rework-required
       authorized_by: user
       authorized_at: 2026-08-21T09:18:34Z
       authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
@@ -547,9 +610,10 @@ authorization:
   authorized_at: 2026-08-21T09:18:34Z
   authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
-  final_decision: REDIRECT
-  final_decision_at: 2026-08-22T06:26:02Z
-  final_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
+  final_decision: REWORK
+  final_decision_at: 2026-08-24
+  final_decision_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
+  project_decision_ref: ITER-010-PDR-001
   result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   slice1_needed_rights_root_authorization:
     status: authorized-root-exact-derived-grants-required

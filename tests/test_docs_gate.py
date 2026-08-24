@@ -6246,5 +6246,675 @@ class ReflectionGateTests(unittest.TestCase):
         )
 
 
+class ReworkPlanningGateTests(unittest.TestCase):
+    def _documents(self) -> tuple[list[docs_gate.Document], dict[str, docs_gate.Document]]:
+        documents, parse_errors = docs_gate.load_documents()
+        self.assertEqual(parse_errors, [])
+        return documents, {document.identifier: document for document in documents}
+
+    def test_paused_rework_validates_the_immutable_historical_result(self) -> None:
+        _, by_id = self._documents()
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        verification = by_id["ITER-010-VERIFICATION"]
+        self.assertEqual(
+            docs_gate.validate_product_goal_reference_targets(
+                manifest_path,
+                "ITER-010",
+                by_id,
+                require_execution_slice_sequence=True,
+                require_paused_slice_sequence=True,
+                verification=verification,
+            ),
+            [],
+        )
+
+        result = by_id["ITER-010-RESULT-SLICE-001-STOP-REDIRECT"]
+        tampered_body = result.body.replace(
+            "Decision: REDIRECT",
+            "Decision: REDIRECT\n\nTampered reflection evidence.",
+            1,
+        )
+        self.assertNotEqual(tampered_body, result.body)
+        tampered_by_id = {
+            **by_id,
+            result.identifier: docs_gate.Document(
+                result.path,
+                result.metadata,
+                tampered_body,
+            ),
+        }
+        errors = docs_gate.validate_product_goal_reference_targets(
+            manifest_path,
+            "ITER-010",
+            tampered_by_id,
+            require_execution_slice_sequence=True,
+            require_paused_slice_sequence=True,
+            verification=verification,
+        )
+        self.assertTrue(
+            any("reflection_report_digest" in error for error in errors), errors
+        )
+
+        # The sustained experience Case belongs to the first Slice.  Merely
+        # keeping the Manifest binding on Slice 1 while moving Case ownership
+        # to Slice 2 must not preserve a valid partition.
+        first_slice = by_id["ITER-010-SLICE-001"]
+        second_slice = by_id["ITER-010-SLICE-002"]
+        first_cases = list(
+            first_slice.metadata["product_goal_slice_gate_case_ids"]
+        )
+        second_cases = list(
+            second_slice.metadata["product_goal_slice_gate_case_ids"]
+        )
+        first_cases.remove("V-EXPERIENCE-001")
+        second_cases.append("V-EXPERIENCE-001")
+        transferred_by_id = {
+            **by_id,
+            first_slice.identifier: docs_gate.Document(
+                first_slice.path,
+                {
+                    **first_slice.metadata,
+                    "product_goal_slice_gate_case_ids": first_cases,
+                },
+                first_slice.body,
+            ),
+            second_slice.identifier: docs_gate.Document(
+                second_slice.path,
+                {
+                    **second_slice.metadata,
+                    "product_goal_slice_gate_case_ids": second_cases,
+                },
+                second_slice.body,
+            ),
+        }
+        transfer_errors = docs_gate.validate_product_goal_reference_targets(
+            manifest_path,
+            "ITER-010",
+            transferred_by_id,
+            require_execution_slice_sequence=True,
+            require_paused_slice_sequence=True,
+            verification=verification,
+        )
+        self.assertTrue(
+            any("Slice gate Cases must include" in error for error in transfer_errors),
+            transfer_errors,
+        )
+
+    def test_paused_rework_requires_policy_and_sustained_experience_binding(
+        self,
+    ) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+
+        without_policy = copy.deepcopy(manifest)
+        without_policy.pop("rework_policy")
+        policy_errors = docs_gate.validate_product_goal_alignment_manifest(
+            without_policy,
+            manifest_text,
+            "manifest.yaml",
+            "ITER-010",
+        )
+        self.assertTrue(
+            any("rework_policy is required" in error for error in policy_errors),
+            policy_errors,
+        )
+
+        without_experience = copy.deepcopy(manifest)
+        without_experience["product_goal_alignment"].pop(  # type: ignore[index]
+            "experience_version_binding"
+        )
+        experience_errors = docs_gate.validate_product_goal_alignment_manifest(
+            without_experience,
+            manifest_text,
+            "manifest.yaml",
+            "ITER-010",
+        )
+        self.assertTrue(
+            any(
+                "experience_version_binding is required" in error
+                for error in experience_errors
+            ),
+            experience_errors,
+        )
+
+        # Removing every visible repair field from a rejected current-version
+        # Manifest must not silently restore the legacy policy.
+        stripped_rejected = copy.deepcopy(manifest)
+        stripped_rejected.pop("rework_policy")
+        stripped_rejected["iteration"]["status"] = "rejected"  # type: ignore[index]
+        stripped_rejected["iteration"].pop("current_decision", None)  # type: ignore[index]
+        for state in stripped_rejected["development"]["slices"].values():  # type: ignore[index]
+            for field in (
+                "project_decision_ref",
+                "rework_result_refs",
+                "rework_attempt_number",
+                "rework_prerequisite_result",
+                "rework_progress_measure",
+            ):
+                state.pop(field, None)
+        stripped_errors = docs_gate.validate_product_goal_alignment_manifest(
+            stripped_rejected,
+            manifest_text,
+            "manifest.yaml",
+            "ITER-010",
+        )
+        self.assertTrue(
+            any("rework_policy is required" in error for error in stripped_errors),
+            stripped_errors,
+        )
+
+    def test_experience_binding_rejects_invalid_port_and_service_shutdown(
+        self,
+    ) -> None:
+        alignment = {
+            "experience_version_binding": {
+                "schema": "USER_EXPERIENCE_VERSION@1",
+                "case_id": "V-EXPERIENCE-001",
+                "new_slice_ref": "ITER-012-SLICE-001",
+                "exact_version_visible": True,
+                "repeatable_start": True,
+                "continuous_same_session_free_questions": True,
+                "limitations_visible": True,
+                "fixed_loopback_address": "http://127.0.0.1:8765/",
+                "question_failure_scope": (
+                    "current-question-only-service-remains-available"
+                ),
+            }
+        }
+        self.assertEqual(
+            docs_gate.validate_experience_version_binding(
+                alignment,
+                ["ITER-012-SLICE-001"],
+                ["V-EXPERIENCE-001"],
+                "manifest.yaml",
+                required=True,
+            ),
+            [],
+        )
+        invalid = copy.deepcopy(alignment)
+        invalid["experience_version_binding"][  # type: ignore[index]
+            "fixed_loopback_address"
+        ] = "http://127.0.0.1:70000/"
+        invalid["experience_version_binding"][  # type: ignore[index]
+            "question_failure_scope"
+        ] = "stop-the-service"
+        errors = docs_gate.validate_experience_version_binding(
+            invalid,
+            ["ITER-012-SLICE-001"],
+            ["V-EXPERIENCE-001"],
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(any("127.0.0.1" in error for error in errors), errors)
+        self.assertTrue(any("without stopping" in error for error in errors), errors)
+
+    def test_rework_marker_cannot_be_erased_before_same_slice_reauthorization(
+        self,
+    ) -> None:
+        _, by_id = self._documents()
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "product_goal_alignment",
+            "new_capability_slice_refs",
+        )
+        assert new_refs is not None
+
+        erased = copy.deepcopy(manifest)
+        erased["iteration"]["status"] = "authorized"  # type: ignore[index]
+        erased["iteration"].pop("current_decision", None)  # type: ignore[index]
+        state = erased["development"]["slices"]["ITER-010-SLICE-001"]  # type: ignore[index]
+        state.update(
+            {
+                "status": "authorized",
+                "coding_input": True,
+                "result": "not-executed",
+                "product_code_freeze_digest": "not-executed",
+                "authorized_by": "user",
+                "authorized_at": "2026-08-24T00:00:00Z",
+                "authorization_ref": "codex-user-message:sha256:" + "e" * 64,
+                "reflection_decision": "not-executed",
+            }
+        )
+        for field in (
+            "project_decision_ref",
+            "rework_result_refs",
+            "rework_attempt_number",
+            "rework_prerequisite_result",
+            "rework_progress_measure",
+        ):
+            state.pop(field, None)
+
+        target = by_id["ITER-010-SLICE-001"]
+        active_target = docs_gate.Document(
+            target.path,
+            {
+                **target.metadata,
+                "status": "authorized",
+                "authority": "current-development",
+                "coding_input": True,
+            },
+            target.body,
+        )
+        errors = docs_gate.validate_product_goal_slice_sequence(
+            new_refs,
+            {**by_id, target.identifier: active_target},
+            "manifest.yaml",
+            manifest=erased,
+            verification=by_id["ITER-010-VERIFICATION"],
+        )
+        self.assertTrue(
+            any("retain its REWORK project decision" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("retain all failed rework Results" in error for error in errors),
+            errors,
+        )
+
+    def test_redirect_requires_an_allowed_basis_and_completed_no_progress_limit(
+        self,
+    ) -> None:
+        _, by_id = self._documents()
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest = docs_gate.safe_load_manifest(
+            manifest_path.read_text(encoding="utf-8")
+        )
+        target = by_id["ITER-010-SLICE-001"]
+        result = by_id["ITER-010-RESULT-SLICE-001-STOP-REDIRECT"]
+        verification = by_id["ITER-010-VERIFICATION"]
+        proposal = by_id["ITER-010-PROPOSAL"]
+        catalog_digest, assumption_expectations, catalog_errors = (
+            docs_gate.critical_assumption_catalog(proposal)
+        )
+        self.assertEqual(catalog_errors, [])
+        binding = docs_gate.reflection_gate_bindings_by_slice(
+            manifest["product_goal_alignment"]  # type: ignore[arg-type]
+        )[target.identifier]
+        policy = manifest["rework_policy"]
+
+        invalid_result = docs_gate.Document(
+            result.path,
+            {**result.metadata, "reflection_redirect_basis": "user-reported-a-bug"},
+            result.body,
+        )
+        invalid_errors = docs_gate.validate_slice_reflection_result(
+            target,
+            invalid_result,
+            binding,
+            {"reflection_decision": "REDIRECT"},
+            verification,
+            "manifest.yaml",
+            blocked=True,
+            assumption_expectations=assumption_expectations,
+            assumption_catalog_digest=catalog_digest,
+            rework_policy=policy,  # type: ignore[arg-type]
+        )
+        self.assertTrue(
+            any("allowed explicit redirect basis" in error for error in invalid_errors),
+            invalid_errors,
+        )
+
+        misclassified_architecture_result = docs_gate.Document(
+            result.path,
+            {
+                **result.metadata,
+                "reflection_redirect_basis": "core-architecture-falsified",
+                "reflection_issue_class": "implementation",
+                "reflection_issue_scope": "individual",
+            },
+            result.body,
+        )
+        architecture_errors = docs_gate.validate_slice_reflection_result(
+            target,
+            misclassified_architecture_result,
+            binding,
+            {"reflection_decision": "REDIRECT"},
+            verification,
+            "manifest.yaml",
+            blocked=True,
+            assumption_expectations=assumption_expectations,
+            assumption_catalog_digest=catalog_digest,
+            rework_policy=policy,  # type: ignore[arg-type]
+        )
+        self.assertTrue(
+            any("architecture/systemic" in error for error in architecture_errors),
+            architecture_errors,
+        )
+
+        no_progress_result = docs_gate.Document(
+            result.path,
+            {
+                **result.metadata,
+                "reflection_redirect_basis": (
+                    "precommitted-no-progress-limit-reached"
+                ),
+                "rework_attempt_number": 2,
+                "rework_progress_measure": policy["no_progress_measure"],  # type: ignore[index]
+            },
+            result.body,
+        )
+        no_progress_errors = docs_gate.validate_slice_reflection_result(
+            target,
+            no_progress_result,
+            binding,
+            {
+                "reflection_decision": "REDIRECT",
+                "rework_result_refs": ["only-one-failed-result"],
+            },
+            verification,
+            "manifest.yaml",
+            blocked=True,
+            assumption_expectations=assumption_expectations,
+            assumption_catalog_digest=catalog_digest,
+            rework_policy=policy,  # type: ignore[arg-type]
+        )
+        self.assertTrue(
+            any("complete failed-Result history count" in error for error in no_progress_errors),
+            no_progress_errors,
+        )
+
+        wrong_measure_result = docs_gate.Document(
+            result.path,
+            {
+                **no_progress_result.metadata,
+                "rework_progress_measure": "a-different-unfrozen-measure",
+            },
+            result.body,
+        )
+        wrong_measure_errors = docs_gate.validate_slice_reflection_result(
+            target,
+            wrong_measure_result,
+            binding,
+            {
+                "reflection_decision": "REDIRECT",
+                "rework_result_refs": ["failed-result-1", "failed-result-2"],
+            },
+            verification,
+            "manifest.yaml",
+            blocked=True,
+            assumption_expectations=assumption_expectations,
+            assumption_catalog_digest=catalog_digest,
+            rework_policy=policy,  # type: ignore[arg-type]
+        )
+        self.assertTrue(
+            any("frozen no_progress_measure" in error for error in wrong_measure_errors),
+            wrong_measure_errors,
+        )
+
+    def test_rework_history_is_mandatory_and_superseded_plan_is_non_coding(
+        self,
+    ) -> None:
+        _, by_id = self._documents()
+        target = by_id["ITER-010-SLICE-001"]
+        valid_state = {
+            "project_decision_ref": "ITER-010-PDR-001",
+            "rework_attempt_number": 1,
+            "rework_result_refs": ["ITER-010-RESULT-SLICE-001-STOP-REDIRECT"],
+            "rework_prerequisite_result": (
+                "ITER-010-RESULT-SLICE-001-STOP-REDIRECT"
+            ),
+        }
+        self.assertEqual(
+            docs_gate.validate_rework_result_history(
+                target,
+                valid_state,
+                by_id,
+                "manifest.yaml",
+            ),
+            [],
+        )
+        authorized_state = {
+            **valid_state,
+            "prior_authorization_refs": [
+                by_id["ITER-010-READINESS"].metadata[
+                    "product_goal_alignment_review_ref"
+                ]
+            ],
+            "authorization_ref": "codex-user-message:sha256:" + "e" * 64,
+        }
+        self.assertEqual(
+            docs_gate.validate_rework_authorization_receipt(
+                target,
+                authorized_state,
+                by_id,
+                "manifest.yaml",
+            ),
+            [],
+        )
+        reused_decision_receipt = {
+            **authorized_state,
+            "authorization_ref": by_id["ITER-010-PDR-001"].metadata[
+                "decision_ref"
+            ],
+        }
+        receipt_errors = docs_gate.validate_rework_authorization_receipt(
+            target,
+            reused_decision_receipt,
+            by_id,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any("new user authorization receipt" in error for error in receipt_errors),
+            receipt_errors,
+        )
+        reused_initial_receipt = {
+            **authorized_state,
+            "authorization_ref": by_id["ITER-010-READINESS"].metadata[
+                "product_goal_alignment_review_ref"
+            ],
+        }
+        initial_receipt_errors = docs_gate.validate_rework_authorization_receipt(
+            target,
+            reused_initial_receipt,
+            by_id,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any(
+                "new user authorization receipt" in error
+                for error in initial_receipt_errors
+            ),
+            initial_receipt_errors,
+        )
+
+        wrong_attempt = {**valid_state, "rework_attempt_number": 2}
+        wrong_attempt_errors = docs_gate.validate_rework_result_history(
+            target,
+            wrong_attempt,
+            by_id,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any("history count" in error for error in wrong_attempt_errors),
+            wrong_attempt_errors,
+        )
+
+        first_result = by_id["ITER-010-RESULT-SLICE-001-STOP-REDIRECT"]
+        second_result_id = "ITER-010-RESULT-SLICE-001-REWORK-002"
+        second_result = docs_gate.Document(
+            first_result.path,
+            {**first_result.metadata, "id": second_result_id},
+            first_result.body,
+        )
+        multi_by_id = {**by_id, second_result_id: second_result}
+        multi_state = {
+            **valid_state,
+            "rework_attempt_number": 2,
+            "rework_result_refs": [first_result.identifier, second_result_id],
+            "rework_prerequisite_result": second_result_id,
+            "rework_history_freezes": {
+                first_result.identifier: {
+                    "product_code_freeze_digest": first_result.metadata[
+                        "product_code_freeze_digest"
+                    ],
+                    "reflection_report_digest": first_result.metadata[
+                        "reflection_report_digest"
+                    ],
+                },
+                second_result_id: {
+                    "product_code_freeze_digest": second_result.metadata[
+                        "product_code_freeze_digest"
+                    ],
+                    "reflection_report_digest": second_result.metadata[
+                        "reflection_report_digest"
+                    ],
+                },
+            },
+        }
+        self.assertEqual(
+            docs_gate.validate_rework_result_history(
+                target,
+                multi_state,
+                multi_by_id,
+                "manifest.yaml",
+            ),
+            [],
+        )
+        tampered_first = docs_gate.Document(
+            first_result.path,
+            first_result.metadata,
+            first_result.body.replace(
+                "Decision: REDIRECT",
+                "Decision: REDIRECT\n\nTampered older attempt.",
+                1,
+            ),
+        )
+        tampered_history_errors = docs_gate.validate_rework_result_history(
+            target,
+            multi_state,
+            {**multi_by_id, first_result.identifier: tampered_first},
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any(
+                "reflection_report_digest" in error
+                for error in tampered_history_errors
+            ),
+            tampered_history_errors,
+        )
+        missing_freeze_state = dict(multi_state)
+        missing_freeze_state.pop("rework_history_freezes")
+        missing_freeze_errors = docs_gate.validate_rework_result_history(
+            target,
+            missing_freeze_state,
+            multi_by_id,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any("freeze every Result" in error for error in missing_freeze_errors),
+            missing_freeze_errors,
+        )
+        missing_history = dict(valid_state)
+        missing_history.pop("rework_result_refs")
+        errors = docs_gate.validate_rework_result_history(
+            target,
+            missing_history,
+            by_id,
+            "manifest.yaml",
+        )
+        self.assertTrue(any("is required" in error for error in errors), errors)
+
+        superseded_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-011/manifest.yaml"
+        )
+        superseded_text = superseded_path.read_text(encoding="utf-8")
+        superseded_manifest = docs_gate.safe_load_manifest(superseded_text)
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            superseded_text,
+            "product_goal_alignment",
+            "new_capability_slice_refs",
+        )
+        assert new_refs is not None
+        self.assertEqual(
+            docs_gate.validate_superseded_iteration_plan(
+                new_refs,
+                by_id,
+                superseded_manifest,
+                "manifest.yaml",
+            ),
+            [],
+        )
+        unsafe_by_id = dict(by_id)
+        first = by_id[new_refs[0]]
+        unsafe_by_id[first.identifier] = docs_gate.Document(
+            first.path,
+            {
+                **first.metadata,
+                "status": "authorized",
+                "authority": "current-development",
+                "coding_input": True,
+            },
+            first.body,
+        )
+        unsafe_errors = docs_gate.validate_superseded_iteration_plan(
+            new_refs,
+            unsafe_by_id,
+            superseded_manifest,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any("proposed and non-coding" in error for error in unsafe_errors),
+            unsafe_errors,
+        )
+
+        authorized_superseded = copy.deepcopy(superseded_manifest)
+        authorized_superseded["authorization"].update(  # type: ignore[index]
+            {
+                "authorized_by": "user",
+                "authorized_at": "2026-08-24T00:00:00Z",
+                "authorization_ref": "codex-user-message:sha256:" + "f" * 64,
+            }
+        )
+        top_authorization_errors = docs_gate.validate_superseded_iteration_plan(
+            new_refs,
+            by_id,
+            authorized_superseded,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any("top-level authorization" in error for error in top_authorization_errors),
+            top_authorization_errors,
+        )
+
+        executed_result = docs_gate.Document(
+            superseded_path,
+            {
+                "id": "ITER-011-RESULT-UNSAFE",
+                "kind": "iteration-result",
+                "status": "accepted",
+                "authority": "execution-evidence",
+                "iteration": "ITER-011",
+            },
+            "",
+        )
+        result_errors = docs_gate.validate_superseded_iteration_plan(
+            new_refs,
+            {**by_id, executed_result.identifier: executed_result},
+            superseded_manifest,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any("execution or accepted Result" in error for error in result_errors),
+            result_errors,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

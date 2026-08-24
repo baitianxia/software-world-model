@@ -43,12 +43,14 @@ affirmative claim 都有同一 sealed Package 中的 exact Source support，3 �
 
 该观察不是 Source、Citation、隔离或实现正确性缺陷，也不足以把获批答案改写成重大错误；它是
   `verification / individual-direction-sensitive` 的真实产品质量信号。它直接对应 ITER-010 stop condition“默认答案仍为方法、分支、调用顺序或
-内部诊断走读”。实现者不应在已经识别该客观条件后要求用户重复确认问题是否存在；用户后续消息已按 `REDIRECT` 消费该信号。
+内部诊断走读”。实现者不应在已经识别该客观条件后要求用户重复确认问题是否存在。旧记录曾把用户后续消息按 `REDIRECT` 消费；
+`ITER-010-PDR-001` 已确认该消息没有明确拒绝方向，当前处置是同轮 `REWORK`。
 
 ## Decision and disposition
 
 - 不重试、不改写现场题，也不以独立 Review `APPROVED` 掩盖层级与完整性信号；
 - `V-WEB-001` 只按真实 Web、Citation、console、授权与安全交付事实取得技术 PASS；
-- 本观察已处置到 `ITER-010-VERIFICATION` 的 `V-PREVIEW-001` evidence；用户决定收据
-  `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 构成 `REDIRECT`；
-- 根因由 `FINDING-010-028` 处置到 Roadmap Candidate。本运行作为方向失败证据永久保留，不进入 Slice2，不执行 Production Activation。
+- 本观察已处置到 `ITER-010-VERIFICATION` 的 `V-PREVIEW-001` evidence；旧记录曾把
+  `codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 推断为 `REDIRECT`，
+  `ITER-010-PDR-001` 已确认它只要求实现者自行复核和修复，当前处置为同轮 `REWORK`；
+- 根因由 `FINDING-010-028` 处置回 Slice1 的持续 Web Alpha 返工。本运行作为质量失败证据永久保留，不进入 Slice2，不执行 Production Activation。

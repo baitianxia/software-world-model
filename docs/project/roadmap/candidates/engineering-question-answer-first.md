@@ -20,8 +20,9 @@ ITER-009 已证明本机 Web、World Model 调查、独立 Review、Limitation �
 
 ITER-010 随后真正实现了持久 World Model Cognition → 结果驱动 Investigation → Broker/Worker → append-only Ledger → 调查后 Package →
 Answer/Review，并从同一 loopback Web 完成公开题和现场题。调查、隔离、Citation 与失败关闭技术资产成立，但现场登录答案仍由
-Controller/Service/Filter 方法顺序主导，独立 Reviewer 无 Finding 批准；用户方向决定为 `REDIRECT`。`FINDING-010-028` 证明最早共同
-偏差不是回源或页面，而是自由文本抽象层级、扁平 Claim Answer 和没有可执行方向质量 invariant 的 Review 合同。
+Controller/Service/Filter 方法顺序主导，独立 Reviewer 无 Finding 批准。旧记录把用户要求自行复核和修复的消息推断为 `REDIRECT`；
+`ITER-010-PDR-001` 已纠正为同轮 `REWORK`。`FINDING-010-028` 证明最早共同偏差不是回源或页面，而是自由文本抽象层级、扁平 Claim
+Answer 和没有可执行方向质量 invariant 的 Review 合同。
 
 这包含两个必须分开的判断：
 
@@ -29,8 +30,9 @@ Controller/Service/Filter 方法顺序主导，独立 Reviewer 无 Finding 批�
   包含实体、关系、行为、约束、状态、证据、覆盖和未知边界；手册、地图只是投影；
 - 需要改变的是提问期职责：大模型主导自适应调查，平台控制实际读取，调查结束后才形成回答证据包。
 
-ITER-010 后还必须增加第三个判断：调查协议正确不等于答案协议正确。后续不能继续把“答案优先”只写在 Prompt 中；新的 Iteration 必须
-先冻结通用 typed Answer Hierarchy，并让 Understanding、Answer、Application acceptance、Reviewer 和页面投影共同消费。至少要区分：
+第三个判断是：调查协议正确不等于答案协议正确。返工不能继续把“答案优先”只写在 Prompt 中；同一 Slice 必须以最小通用机制让
+Understanding、Answer、Application acceptance、Reviewer 和页面对答案层级形成一致判断。typed Answer Hierarchy 是可选实现，不是
+体验前必须完整建设的新架构；行为上至少要区分：
 
 - 直接回答用户目标；
 - 用户可见流程、影响、条件或建议；
@@ -73,29 +75,23 @@ Shell、网络、credential 或直接 Source 工具，但可以指出具体、�
 
 ## Staged validation
 
-### Stage 1：最小真实方向探针
+### Stage 1：持续 Web Alpha
 
-复用但重新冻结 ITER-010 的 World Model Cognition → 自适应 Investigation → Broker/Worker → Ledger → Package 技术资产；新增最小 typed
-Answer Hierarchy、Application acceptance 和同结构 Reviewer Gate。先以最小确定性正反例证明 Reviewer/Application 会拒绝实现细节主导、
-未先回答和关键流程副作用遗漏，再从同一 product-owned loopback Web 在一个真实工程运行 1 条代表问题与 1 条用户现场问题。用户立即
-查看原始答案、Citation、限制和折叠诊断，并决定 `CONTINUE / REDIRECT / REJECT`。
+复用 ITER-010 已跑通的 World Model Cognition → 自适应 Investigation → Broker/Worker → Ledger → Package 技术资产，首先把同一产品变成
+一条固定命令可启动、固定本机地址、同一会话连续自由提问的 Alpha。普通体验者不需要拼装逐题 freeze、grant 或内部 run 参数；页面显示
+产品/工程精确版本和已知限制，坏题只关闭当前请求。自由问题必须真实经过世界模型与源码调查链，不能回放预制答案。
 
-探针只需要足以判断职责分工、答案层级和真实可用性的最小安全边界，不提前完成多题覆盖、第二工程、大规模性能、异常穷举、完整 hidden、
-成熟源码 Agent 对照和正式验收。没有 `CONTINUE` 不进入 Alpha。
+在这个出口内同时做答案和 Reviewer 的最小通用修复，以原失败题和至少两个相邻或异质问题回归，至少一题不是实现走读题，并加入受控失败
+证明服务继续可用。独立评测先裁决重大错误、遗漏、引用和特判；用户随后在同一持续版本自由体验并决定 `CONTINUE / REWORK / REDIRECT /
+REJECT`。非 `CONTINUE` 只暂停晋级并默认在同一 Slice 返工，不自动新建 Iteration。
 
-### Stage 2：跨维度可用 Alpha
-
-探针 `CONTINUE` 后只做其证据要求的最小通用修正，并立即在同一真实工程运行 3—5 条跨用途、架构、运行、流程、配置、故障、影响或实现
-维度的问题及至少 1 条新现场问题。至少两题不是实现细节题；仍不做 persistence、复杂补证、完整异常矩阵、第二工程、hidden、三臂或
-full regression。用户再次决定 `CONTINUE / REDIRECT / REJECT`；没有第二次 `CONTINUE` 不进入夯实。
-
-### Stage 3：跨工程和工程化夯实
+### Stage 2：跨工程和工程化夯实
 
 Alpha 确认后才验证第二工程、来源冲突、Ledger/Package 生命周期、复杂补证、资格、Provider disclosure、安全、性能、完整回归、early
 hidden canary、成熟源码 Agent 对照和 World Model 复用价值。修复必须落在通用表示、Broker policy、调查或审核合同，不能落在
 问题/工程分支。
 
-### Stage 4：正式验收
+### Stage 3：正式验收
 
 产品代码冻结后执行最终未见工程 10 answerable + 2 boundary、两条现场题和独立对照。重大错误为零、逐结论完整性不低于成熟源码 Agent、
 Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直接 Source/写/网络权限为零，用户最终决定是否接受。
@@ -109,6 +105,7 @@ Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直�
 - Answer 仍只有无法区分直接答案、用户可见解释、限制和可选实现证据的扁平 Claim，或 Reviewer/Application 无法拒绝实现细节主导；
 - Ledger 可被回写、包在调查完成前密封、旧 Review 批准新 Package，或 seal 被误当作内容真实性；
 - Reviewer 无法独立指出并触发具体补证，或调用上限被用于跳过调查、Citation 或审核；
-- supported 结论有重大错误，或用户决定 `REDIRECT / REJECT`。
+- supported 结论有重大错误时当前问题失败并进入 `REWORK`；只有用户明确改变方向、核心架构被异质问题证伪或达到预提交无进展上限，
+  才进入转向评审；用户明确决定 `REJECT` 时停止。
 
 本 Candidate 和本轮重制计划只属于规划输入，不授权产品代码、Provider/model 调用、Web 运行、隐藏披露或 Production Activation。

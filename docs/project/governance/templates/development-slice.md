@@ -24,9 +24,12 @@ product_goal_slice_gate_case_ids: []
 ## Status and dependencies
 
 同一 Iteration 有多个累积 Slice 时，本 Slice 必须依赖 accepted Readiness，并直接依赖前一个 Slice。Readiness 只授权第一个 Slice；
-后续 Slice 保持 proposed，直到前序人工 Web、该阶段适用的 hidden canary、停止 Gate 和方案复盘完成并形成 exact Slice Result。方向探针
-与可用 Alpha 使用可见真实输入判向，不因 hidden canary 延迟；Alpha `CONTINUE` 后的夯实 Slice 才承担 early hidden。后续授权时再把
+后续 Slice 保持 proposed，直到前序人工 Web、该阶段适用的 hidden canary、停止 Gate 和方案复盘完成并形成 exact Slice Result。可体验
+Alpha 使用可见真实输入判向，不因 hidden canary 延迟；Alpha `CONTINUE` 后的夯实 Slice 才承担 early hidden。后续授权时再把
 该 Result 加入 `depends_on`，并与 Manifest `reflection_prerequisite_result` 一致；不能先授权再补证据。
+
+本 Slice 的失败尝试默认进入 `paused / coding_input=false`，不授权下一 Slice。原 Result 由 Manifest/PDR 保留；用户用新的明确收据
+重新授权后，恢复本 Slice 而不是新建 Iteration。只有满足 Proposal 冻结的转向依据才使用 `blocked / REDIRECT`。
 
 ## Product-goal contribution and cumulative integration
 
@@ -38,15 +41,20 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 - Existing capabilities combined: <exact-capabilities>
 - User-visible Web questions at slice end: <held-out-and-cross-domain-cases>
 - Slice stop / redirect signal: <falsifiable-signal>
+- Same-Slice rework and no-progress limit: <progress-measure-attempt-limit-and-redirect-bases>
 - Critical assumptions tested: <assumption-ids-and-evidence>
 - Reflection gate and success decision: <V-REFLECT-NNN-and-CONTINUE-or-ACCEPT>
 
 ## Direction preview checkpoint
 
-若本 Slice 是方向探针或可用 Alpha，列出真实产品入口、最少代表性任务、仅为运行所必需的门禁、用户可见限制，以及体验后由谁作出
-`CONTINUE / REDIRECT / REJECT`。探针使用极少量输入；Alpha 使用小而多样的输入并只做探针证据要求的最小通用修正。两者都不得安排
-与方向判断无关的全面加固。技术质量必须由独立评测方先行裁决，用户只作产品方向决定。若本 Slice 属于工程夯实或正式验收，必须引用
-前一 Alpha 或方向体验的 `CONTINUE` 结果。
+若本 Slice 是可体验 Alpha，列出真实产品入口、小而多样的代表性任务、仅为运行所必需的门禁、用户可见限制，以及体验后由谁作出
+`CONTINUE / REWORK / REDIRECT / REJECT`。不得安排与方向判断无关的全面加固。技术质量必须由独立评测方先行裁决，用户只作产品方向
+决定。若本 Slice 属于工程夯实或正式验收，必须引用前一 Alpha 的 `CONTINUE` 结果。
+
+## Experience version checkpoint
+
+记录精确版本、可重复启动方式、固定本地地址、同一会话连续自由提问、版本/限制显示和单题故障隔离的验证 Case。单题错误必须显示
+真实失败或限制，同时服务继续接受下一题；一次性运行器不满足本检查点。
 
 ## Current vs expected behavior
 
@@ -65,6 +73,7 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 本 Slice 的产品 Gate 后必须形成 exact Result，逐项比较假设与证据、分类问题、复核知识表示/查询编排/Web 产品链/验证设计、
 对照成熟方案并处置相关 Finding。`V-REFLECT-NNN PASS` 只表示复盘完成；中间 Slice 只有明确决定 `CONTINUE` 才可申请下一段授权，
 最终 Slice 只有明确决定 `ACCEPT` 才可申请 Iteration Acceptance。方案被证伪时使用 `REDIRECT` 或 `REJECT`，不得继续堆叠实现。
+实现、答案、审核、配置或局部 Contract 缺陷使用 `REWORK`，只暂停当前 Slice；问题被指出或要求复核不得直接解释为方案被证伪。
 Manifest 只绑定本 Slice 已到期的假设；成功决定要求这些假设全部为 `SUPPORTED`。尚未到期的假设只能记录 early signal 与下一风险，
 不能伪装成已经证明；最终 Slice 必须覆盖全部关键假设。
 
