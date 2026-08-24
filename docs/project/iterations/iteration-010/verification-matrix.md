@@ -181,10 +181,19 @@ Request + attempt + Profile-bound direct locator、结构互斥 FINISH arrays �
 101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见
 `FINDING-010-059`。确定性 Gate 已闭合，新 clean/fresh live 尚未执行。
 
+该确定性处置形成 clean `dfba244…`，run-021 fresh Conformance 2/2 PASS。同一持续 Alpha 中，Q1/Q3 各以 8 次 dispatch 得到独立可接受的
+`APPROVED`；Q2 的 4 个 mandatory paths 已全部通过 direct locator READ，但第 5 个 Investigation call 在仍有 8 个含当前动作 call 时
+FINISH，并把 3 个 UNKNOWN 同时放入 supported 与 non-supported arrays，被本地 Schema 以 `STRUCTURED_OUTPUT_INVALID` 正确关闭。
+Q2 后 listener 继续接受 Q3；66,000-byte 输入在 Provider 前拒绝且 Gateway 根保持 22。terminal receipt `sha256:d38d94bb…` 记录
+8/6/8 dispatch、retry/switch 0、verified TLS、private files 和 Production `NOT_EXECUTED`。见 `FINDING-010-060`。当前 exact-once
+partition 与 post-mandatory material-gap exhaustion 的 Engineering QA 101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167 项中
+1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见 `FINDING-010-061`。deterministic Gate 已闭合，新 clean/fresh live
+尚待执行。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `274e5ea…` / run-020 已证明 Q2 fail 后同一 listener 接受 Q3、private files、retry/switch 0；但仅 Q1 独立可接受，Q2/Q3 分别 no-progress/structured-output FAIL，不能取得体验质量 PASS | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-020 暴露 mandatory-path rediscovery 与 FINISH mixed schema；`FINDING-010-057/058/059` 已闭合 deterministic Gate，仍须新 clean/fresh 三题 Result 与独立技术复核 | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | `dfba244…` / run-021 已证明 Q2 fail 后同一 listener 接受并批准 Q3、66,000-byte Provider 前拒绝、private files、retry/switch 0；但 Q2 仍为 structured-output/过早 FINISH FAIL，不能取得体验质量 PASS | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-021 的 Q1/Q3 独立可接受，Q2 暴露 duplicate FINISH partition 与 mandatory-minimum 过早结束；`FINDING-010-060/061` 已闭合 deterministic Gate，仍须新 clean/fresh 三题 Result 与独立技术复核 | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

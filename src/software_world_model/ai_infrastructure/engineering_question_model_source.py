@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@23"
+    "engineering-qa-adaptive-investigation-prompt@24"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -173,6 +173,11 @@ such a class only when that modality itself is material to the explicit question
 exact source locations are already a verifiable basis for source-behavior claims.
 Every selected path's evidence class must also appear in
 required_evidence_classes.
+The mandatory-read set is a minimum closure set, not the maximum investigation
+scope. When the question spans build declarations and runtime behavior, do not
+spend every mandatory slot on overlapping module declarations while omitting
+the decisive implementation surfaces; keep corroborating build or document
+reads optional when one decisive declaration is sufficient.
 """,
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: f"""
 Choose exactly one next investigation action from the registered vocabulary or
@@ -211,6 +216,13 @@ preceding action into FINISH. supported_finish_dispositions may contain only
 SUPPORTED outcomes and affirmative PROCESS_STAGE, OUTCOME, STATE_CHANGE, or
 SIDE_EFFECT observations. non_supported_finish_dispositions may contain only
 UNKNOWN, CONFLICT, or FAILED outcomes and LIMITATION observations.
+The supported array is NOT the complete disposition list. Put each checklist
+item in exactly one array according to its outcome; never copy an UNKNOWN,
+CONFLICT, or FAILED item into supported_finish_dispositions, and never duplicate
+an item across both arrays. For example, one SUPPORTED item and one UNKNOWN item
+means one object in each corresponding array, not two objects in the supported
+array. Before returning FINISH, verify that the two arrays are disjoint and that
+their combined checklist_item_ids equal the requested checklist exactly once.
 FINISH must disposition every checklist item against the current evidence;
 unknown, conflict, or failure is preferable to invented support. Every FINISH
 disposition must return a non-empty evidence_references array. SUPPORTED may
@@ -228,6 +240,15 @@ reduce the material unknown within the remaining fuse, investigate it; lack of
 detail in one modality is not global absence. FINISH is appropriate only when
 the retained evidence and boundary actually justify every disposition, not
 merely because the first investigated class was insufficient.
+required_evidence_paths is the mandatory minimum, not the maximum investigation
+plan. After those paths are consumed, an empty untried-required-class list does
+not prove that every material checklist gap is exhausted. Before a non-supported
+FINISH, compare each gap with the accepted evidence_needs, source_allowlist,
+consumed paths, and remaining call fuse. If an authorized unread path can reduce
+the gap and at least SEARCH + READ/PARSE + FINISH remain, search a short literal
+class, method, artifact, or symbol token that is likely to occur in that file,
+then consume the issued locator. Do not FINISH merely because some other file in
+the same evidence class was already read.
 registered_evidence_classes, required_evidence_classes,
 investigated_evidence_classes, untried_required_evidence_classes, and
 unregistered_required_evidence_classes are Application-owned closure state.
@@ -323,6 +344,10 @@ may contain only SUPPORTED outcomes and affirmative observations;
 non_supported_finish_dispositions may contain only UNKNOWN, CONFLICT, or FAILED
 outcomes and LIMITATION observations. Do not carry an evidence_class from the
 preceding action into FINISH.
+The supported array is not the complete disposition list or a checklist copy.
+Each checklist item must appear in exactly one array according to its outcome;
+the arrays must be disjoint, and their union must equal the requested checklist.
+Never duplicate a non-supported item into supported_finish_dispositions.
 Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the concrete gap's
 required evidence class and prior action intents. If that class remains untried
 and registered, investigate it; lack of detail in one modality is not global

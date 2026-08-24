@@ -155,5 +155,10 @@ iteration: ITER-010
   supported/non-supported 数组；Prompt 同时禁止因“可核对依据”擅自引入无关 TEST/log/config need。
 - [FINDING-010-059](FINDING-010-059.md)：上述修复后 Engineering QA 101/101、docs 453/453、compile/diff PASS；允许 AF_UNIX 的
   full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-060](FINDING-010-060.md)：clean `dfba244…` / run-021 的 Q1/Q3 各以 8 次 dispatch 获得独立可接受的
+  `APPROVED`，Q2 已用 direct locator 完整读取 4 个 mandatory paths，却把 3 个 UNKNOWN 同时放入 supported 与 non-supported arrays 而
+  正确失败关闭，且尚余 8 个含当前动作的调查 call。现要求 FINISH partition disjoint + exact-once，并明确 mandatory minimum 不是调查上限。
+- [FINDING-010-061](FINDING-010-061.md)：上述修复后 Engineering QA 101/101、docs 455/455、compile/diff PASS；允许 AF_UNIX 的
+  full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

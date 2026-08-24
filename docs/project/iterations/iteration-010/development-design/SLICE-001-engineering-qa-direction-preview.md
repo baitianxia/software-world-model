@@ -335,4 +335,10 @@ docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full 1165/1160 只保留�
 处置分别新增 Broker direct required-path locator 和结构互斥 FINISH arrays，并把“可核对依据”与无关 TEST/log/config need 分开。Engineering
 QA 101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167/1162 只保留既有 4 FAIL + 1 ERROR historical hold，见
 `FINDING-010-059`。确定性 Gate 已闭合，new clean/fresh live 仍待执行。
+`FINDING-010-060` 记录 clean `dfba244…` / run-021 的 Q1/Q3 独立可接受、Q2 direct mandatory reads 成功后又 duplicate mixed
+partition 并在 8 个 remaining-including-current calls 时过早 FINISH，以及真正 66,000-byte Provider 前拒绝。处置不重分区非法输出；
+Provider Schema/Prompt 要求 supported/non-supported arrays disjoint 且 union exact-once，Investigation 则把 required paths 视为
+mandatory minimum，并在授权未读来源和剩余 fuse 可达时继续缩小 material gap。Strategy/Initial+Verification/Prompt 升为
+`@15/@7/@24`；Engineering QA 101/101、docs/compile/diff 与允许 AF_UNIX 的 full 1167/1162 exact historical hold 由
+`FINDING-010-061` 闭合。deterministic Gate 已闭合，new clean/fresh live 待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

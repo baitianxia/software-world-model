@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@23",
+            "engineering-qa-adaptive-investigation-prompt@24",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -375,6 +375,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             )
             self.assertIn("supported_finish_dispositions", prompt)
             self.assertIn("non_supported_finish_dispositions", prompt)
+            self.assertIn("not the complete disposition list", prompt.lower())
+            self.assertIn("exactly one array", prompt)
             self.assertIn(
                 "Do not carry an evidence_class from the preceding action into FINISH",
                 prompt,
@@ -417,6 +419,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             "Do not introduce TEST, logs, configuration, or another evidence modality",
             understanding_prompt,
         )
+        self.assertIn(
+            "minimum closure set, not the maximum investigation scope",
+            understanding_prompt,
+        )
         self.assertIn("separate checklist items", understanding_prompt)
         self.assertIn("audit, cache, notification", understanding_prompt)
         initial_prompt = " ".join(
@@ -424,6 +430,11 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
                 EngineeringQuestionModelRole.INITIAL_INVESTIGATION
             ).split()
         )
+        self.assertIn(
+            "mandatory minimum, not the maximum investigation plan",
+            initial_prompt,
+        )
+        self.assertIn("Do not FINISH merely because", initial_prompt)
         self.assertIn(
             "remaining_initial_investigation_calls_including_current",
             initial_prompt,

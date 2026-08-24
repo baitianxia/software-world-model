@@ -729,6 +729,14 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 properties["supported_finish_dispositions"]["items"],
                 properties["non_supported_finish_dispositions"]["items"],
             )
+            self.assertIn(
+                "not the complete disposition list",
+                properties["supported_finish_dispositions"]["description"],
+            )
+            self.assertIn(
+                "UNKNOWN/CONFLICT/FAILED-only",
+                properties["non_supported_finish_dispositions"]["description"],
+            )
             for variant in variants:
                 references = variant["properties"]["evidence_references"]
                 self.assertEqual(references["minItems"], 1)
@@ -843,6 +851,16 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             self.assertEqual(
                 caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
             )
+
+        duplicated_unknown = json.loads(
+            output(outcome="UNKNOWN", observation_kind="LIMITATION")
+        )
+        duplicated_unknown["supported_finish_dispositions"] = list(
+            duplicated_unknown["non_supported_finish_dispositions"]
+        )
+        with self.assertRaises(DomainError) as caught:
+            schema.validate_output_text(json.dumps(duplicated_unknown))
+        self.assertEqual(caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
 
     def test_answer_schema_rejects_kind_and_content_role_mixing(self):
         schema = engineering_question_output_schemas()[

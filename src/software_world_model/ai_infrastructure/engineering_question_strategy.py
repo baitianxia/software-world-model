@@ -67,16 +67,16 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@14"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@15"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@6"
+    "engineering-qa-initial-investigation@7"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@6"
+    "engineering-qa-verification-investigation@7"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@4"
@@ -237,10 +237,19 @@ _INVESTIGATION_OUTPUT_SCHEMA = {
         "unknown_to_reduce": {"type": "string"},
         "supported_finish_dispositions": {
             "type": "array",
+            "description": (
+                "The SUPPORTED-only partition, not the complete disposition list. "
+                "Every item here must have outcome SUPPORTED and must not appear "
+                "in non_supported_finish_dispositions."
+            ),
             "items": _SUPPORTED_FINISH_DISPOSITION_SCHEMA,
         },
         "non_supported_finish_dispositions": {
             "type": "array",
+            "description": (
+                "The UNKNOWN/CONFLICT/FAILED-only partition. Every item here must "
+                "not appear in supported_finish_dispositions."
+            ),
             "items": _NON_SUPPORTED_FINISH_DISPOSITION_SCHEMA,
         },
     },
