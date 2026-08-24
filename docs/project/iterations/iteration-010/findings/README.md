@@ -165,5 +165,10 @@ iteration: ITER-010
   non-empty + unique，并保留 Application exact binding 重验。
 - [FINDING-010-063](FINDING-010-063.md)：上述修复后三模块 65/65、Engineering QA 102/102、docs/compile/diff PASS；允许 AF_UNIX 的
   full 1168 项中 1163 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
+- [FINDING-010-064](FINDING-010-064.md)：clean `656b549…` / run-023 的 Q1/Q2 独立可接受，Q3 却从上游 empty-context/deny 无据推导
+  最终 401/403，并把同一局部条件分配到互斥外部结果，Reviewer 仍误判 consistency PASS。现要求外部 status/error/body 回到下游
+  response/exception mapper full-content owner evidence，handler wiring 只证明选择，并把 transport status 与 response-body code 分开。
+- [FINDING-010-065](FINDING-010-065.md)：上述修复后三模块 65/65、Engineering QA 102/102、docs/compile/diff PASS；允许 AF_UNIX 的
+  full 1168 项中 1163 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

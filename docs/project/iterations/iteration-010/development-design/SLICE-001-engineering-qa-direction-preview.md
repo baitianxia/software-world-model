@@ -162,6 +162,13 @@ basis，却返回空 `checklist_item_ids`，被 Domain 正确关闭。根因是 
 non-empty + unique。会话在 2 次 dispatch 后停止，未提交其余问题；`FINDING-010-062` 现使 Initial/Verification Provider Schema、Prompt 与
 Domain 的两个 binding arrays 对齐，不用旧 run 补齐新 candidate 的体验证据。
 
+该处置形成 clean candidate `656b549…` / run-023；fresh Conformance 2/2 PASS，同一持续 Alpha 顺序完成三题 8/8/7 dispatch，
+retry/switch 0，66,000-byte UTF-8 输入继续在 Provider 前拒绝且 listener 可用。Q1/Q2 独立可接受；Q3 虽获模型 `APPROVED`，却从
+token filter 的 empty-context 与 authorization manager 的 deny decision 无据推出最终 401/403，把同一 unauthenticated 条件分配到互斥
+外部结果，Reviewer 仍误判 consistency PASS。`FINDING-010-064` 要求 externally visible status/error/body 由下游 response/exception
+mapper 的 full-content implementation 支持；custom-handler wiring 只证明选择，transport status 与 application/response-body code 分开。
+Prompt 升为 `@26`；run-023 永久保留为 Q1/Q2 可接受、Q3 独立重大质量 FAIL，不能取得三题 Gate。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -356,4 +363,11 @@ Schema 允许空/重复 checklist/basis binding arrays。处置将 Initial/Verif
 要求 exact current-input binding；三模块定向 65/65 PASS。
 `FINDING-010-063` 记录 Engineering QA 102/102、docs/compile/diff PASS 与允许 AF_UNIX 的 full 1168/1163；raw 唯一 4 FAIL + 1 ERROR
 仍是冻结 historical hold，没有 ITER-010 新失败。deterministic Gate 已闭合，new clean/fresh live 待执行。
+`FINDING-010-064` 记录 clean `656b549…` / run-023 的 Q1/Q2 独立可接受与 Q3 downstream-response ownership FAIL；处置要求外部
+status/error/body 回到 response/exception mapper full-content evidence，拒绝由 empty-context/deny/wiring 假定最终输出，并把 transport
+status 与 response-body code 分开。Prompt 升为 `@26`，定向 65/65、Engineering QA 102/102、compile/diff PASS；完整 Gate 与新
+clean/fresh live 待闭合。
+`FINDING-010-065` 记录上述修复的三模块 65/65、Engineering QA 102/102、docs 459/459、compile/diff PASS 与允许 AF_UNIX 的 full
+1168/1163；raw 唯一 4 FAIL + 1 ERROR 仍是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。deterministic Gate 已闭合，
+new clean/fresh live 待执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

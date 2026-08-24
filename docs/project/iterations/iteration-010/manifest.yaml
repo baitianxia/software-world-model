@@ -509,6 +509,11 @@ answer_protocol:
   answer_followup_role_order_normalization: stable-controlled-role-order-with-raw-provider-output-preserved
   implementation_evidence_default_visibility: all-at-implementation-detail-otherwise-only-unique-material-observation-carriers
   reviewer_claim_consistency_gate: direct-default-claims-package-and-independent-observations-pairwise-semantic-check
+  externally_visible_outcome_owner_evidence_required: full-content-response-or-exception-mapper
+  upstream_local_state_exception_or_deny_proves_downstream_status_error_or_body: false
+  custom_handler_registration_proves_handler_output: false
+  transport_status_and_application_response_body_code_distinct: true
+  reviewer_same_local_condition_dual_authentication-and-authorization-outcome_allowed: false
   reviewer_independent_package_and_draft_observation_audit_required: true
   sealed_package_mutation_allowed: false
   safety_budget_reserves_independent_review: true
@@ -586,13 +591,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:b060a2f24f9f86c1ec488fb71c2bcdceb4eb46e0a246d995d9a83b14d717c9f7
+  system_contract_set_digest: sha256:6ba78729dcc73d87a79af81cf4fc3fde7081e3c448ed28f4f2e26667c0e9ccb8
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:513a30303a15897c9c856ced0bfc24f3edaa0e71d41737b080928e783d49c02c
+  investigation_budget_digest: sha256:93a239de2b4f7d349cdf4f2e6f981a646ef8883ea9290209f169f347f2534a48
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

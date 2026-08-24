@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@25"
+    "engineering-qa-adaptive-investigation-prompt@26"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -163,6 +163,16 @@ to a material conclusion; this is a mandatory-read set, not a list of possibly
 useful files or one file per available modality. When the question names
 multiple mechanisms or checking surfaces, include the implementation file for
 each decisive mechanism rather than only its caller, registration, or wiring.
+When a material conclusion asks for an externally visible error category,
+status, or response produced after several stages, separate each upstream local
+state or decision from the final response mapping. A filter leaving an
+authentication context empty, an authorization manager returning deny, an
+exception being raised, or configuration selecting a custom handler proves only
+that local fact. Select full-content evidence owned by the response or exception
+mapper when it is authorized; if that decisive owner is unavailable, preserve
+the final external outcome as a distinct unknown instead of assuming a framework
+default. Treat a transport status and an application or response-body error code
+as separate conclusions unless exact evidence establishes both.
 Do not select a directory, an excluded or nonexistent path, a redundant test or
 document, or every authorized file. The set must remain executable within the
 sealed investigation fuse: prefer the smallest decisive implementation set and
@@ -286,6 +296,15 @@ semantics, or an adjacent application flow. When a material checklist item asks
 how, why, under what conditions, or how to troubleshoot behavior, inspect
 eligible implementation evidence that states those decisive details or assign
 an honest non-supported disposition.
+Likewise, an upstream local intermediate state, exception, or authorization
+decision does not prove a final HTTP or API status, error category, or response
+body. That downstream outcome requires full-content evidence from the response
+or exception mapper that owns it. Handler registration or a handler class name
+proves only selection, not the handler's output; never assume a framework default
+when a custom mapping is configured. If the mapping owner is not in the
+authorized evidence or cannot be read within the fuse, keep the local mechanism
+supported and disposition the external outcome as non-supported. Never conflate
+a transport status with an application or response-body error code.
 For every full-content implementation entry cited by a flow or lifecycle
 disposition, inspect success and failure branches for persistence, audit, cache
 mutation, notifications, or external interactions. Each distinct material
@@ -377,6 +396,14 @@ semantics, or an adjacent application flow. When a material checklist item asks
 how, why, under what conditions, or how to troubleshoot behavior, inspect
 eligible implementation evidence that states those decisive details or assign
 an honest non-supported disposition.
+An upstream local intermediate state, exception, or authorization decision also
+does not prove a final HTTP or API status, error category, or response body.
+Require full-content evidence from the response or exception mapper that owns
+the downstream outcome; custom-handler registration proves only selection. If
+that owner is outside the authorized evidence, keep the local fact supported and
+return an explicit non-supported external outcome rather than a framework
+default. Keep transport status and application or response-body error code
+separate.
 Each FINISH disposition must also return one to
 {MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION} atomic
 material_observations under the same rules as initial investigation: inspect
@@ -449,6 +476,14 @@ affirmative claim must cite one or more
 support/citation entry IDs that actually support it. Boundary/audit entries can
 justify only explicit limitations or unknowns. Do not expose pipeline diagnostics
 or claim completeness beyond the recorded coverage.
+Do not turn a Package observation about an upstream local state, exception, or
+authorization decision into a final HTTP or API status, error category, or
+response body unless the linked support evidence contains the response or
+exception mapper that owns that downstream result. Custom-handler registration
+alone is not the handler output. When the Package lacks that ownership evidence,
+state the supported local behavior and preserve the external result as a
+limitation; never fill it with a framework default or conflate transport status
+with an application or response-body error code.
 """,
     EngineeringQuestionModelRole.REVIEW: """
 Independently review the draft against the original question, accepted
@@ -476,6 +511,17 @@ that substitutes such adjacent or delegation-only evidence for requested
 behavioral conditions, comparisons, state changes, outcomes, or failure
 semantics as materially incomplete. Request concrete evidence for the missing
 checklist item instead of approving a component name as its implementation.
+For every externally visible HTTP or API status, error category, or response
+body, identify the full-content response or exception mapper that owns that
+downstream result. An upstream empty authentication context, thrown exception,
+or deny decision proves only a local state or outcome; custom-handler wiring or
+a class name proves only selection. If the Package lacks the mapping owner's
+implementation, mark the external-result observation unsupported and request
+evidence instead of supplying a framework default. Also reject any Draft that
+assigns the same local condition both an authentication-failure result and an
+authorization-denial result without evidence that distinguishes the downstream
+branches, or that conflates transport status with an application or response-body
+error code.
 When the original question names multiple mechanisms, participants, or checking
 surfaces, require direct implementation evidence for each requested mechanism's
 decisive branches, comparisons, state changes, or outcomes. Reject a Package

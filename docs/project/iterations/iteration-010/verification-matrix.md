@@ -200,10 +200,21 @@ Verification checklist/basis binding arrays 的 Provider Schema、Prompt 与 Dom
 7 ERROR，允许 AF_UNIX 后为 1163 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
 见 `FINDING-010-063`。deterministic Gate 已闭合，新 clean candidate/fresh live 仍待执行。
 
+该处置形成 clean `656b549…` / run-023：fresh Conformance 2/2 PASS，同一 listener 顺序完成三题 8/8/7 dispatch，retry/switch 0、
+verified TLS、private files、Production `NOT_EXECUTED`；66,000-byte UTF-8 输入在 Provider 前拒绝且 Gateway 根保持 23。Q1/Q2 独立
+可接受；Q3 虽获模型 `APPROVED`，却仅凭 empty authentication context 与 authorization deny 推导最终 401/403，把同一局部条件赋予
+互斥外部结果，Reviewer 仍误判 consistency PASS。见 `FINDING-010-064`。Prompt/Contract 现要求下游 response/exception mapper
+full-content ownership evidence，拒绝用 handler wiring/framework default 补写外部输出，并区分 transport status 与 response-body code；
+定向 65/65、Engineering QA 102/102、compile/diff PASS，完整 docs/full 与新 clean/fresh live 待闭合。
+
+`FINDING-010-065` 已闭合该修复的 deterministic Gate：current docs 459/459、compile/diff PASS；默认 sandbox full 1168 项为 5 FAIL +
+7 ERROR，其中新增 1 FAIL + 6 ERROR 精确来自 AF_UNIX 禁止；允许 AF_UNIX 后同一 1168 项为 1163 PASS，raw 唯一 4 FAIL + 1 ERROR
+仍是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。新的 clean candidate/fresh live 仍待执行。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-021 已证明单题失败隔离与 66,000-byte Provider 前拒绝；run-022 又在首题被 Schema/Domain mismatch 正确关闭并停止。两次均 private、retry/switch 0、Production `NOT_EXECUTED`，但都不能取得完整体验质量 PASS | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-021 的 Q1/Q3 独立可接受，Q2 暴露 duplicate partition/过早 FINISH；run-022 暴露 binding-array Schema/Domain mismatch。`FINDING-010-060—063` 已闭合 deterministic Gate，仍须新 clean/fresh 三题 Result 与独立复核 | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-023 已真实完成同会话三题、66,000-byte Provider 前拒绝、private files 与 listener continuity；技术体验链成立，但 Q3 独立重大质量 FAIL，不能把体验运行等同答案质量 PASS | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-023 的 Q1/Q2 独立可接受，Q3 暴露 upstream-local-state → downstream-status 无据推导与 Reviewer consistency 漏判。`FINDING-010-064/065` 已完成通用处置与 deterministic full Gate，仍须新 clean/fresh 三题独立复核 | FAIL / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

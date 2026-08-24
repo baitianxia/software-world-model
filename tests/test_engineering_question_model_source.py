@@ -338,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@25",
+            "engineering-qa-adaptive-investigation-prompt@26",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -400,6 +400,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             self.assertIn("one to 16 atomic material_observations", prompt)
             self.assertIn("A setup statement supports setup only", prompt)
             self.assertIn("wiring statement supports only that relationship", prompt)
+            self.assertIn("final HTTP or API status", prompt)
+            self.assertIn("framework default", prompt)
+            self.assertIn("transport status", prompt)
         understanding_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.QUESTION_UNDERSTANDING
@@ -428,6 +431,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         )
         self.assertIn("separate checklist items", understanding_prompt)
         self.assertIn("audit, cache, notification", understanding_prompt)
+        self.assertIn("externally visible error category", understanding_prompt)
+        self.assertIn("response or exception mapper", understanding_prompt)
+        self.assertIn("transport status", understanding_prompt)
         initial_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.INITIAL_INVESTIGATION
@@ -481,6 +487,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("claims array must never contain DIRECT_ANSWER", answer_prompt)
         self.assertIn("exactly one DIRECT_ANSWER in the entire output", answer_prompt)
         self.assertIn("For a mixed Package", answer_prompt)
+        self.assertIn("final HTTP or API status", answer_prompt)
+        self.assertIn("framework default", answer_prompt)
+        self.assertIn("transport status", answer_prompt)
         review_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.REVIEW
@@ -496,6 +505,9 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("empty-link affirmative DIRECT_ANSWER", review_prompt)
         self.assertIn("cross-Claim and observation consistency", review_prompt)
         self.assertIn("APPROVED requires PASS for all five", review_prompt)
+        self.assertIn("mapping owner's implementation", review_prompt)
+        self.assertIn("same local condition", review_prompt)
+        self.assertIn("transport status", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:
