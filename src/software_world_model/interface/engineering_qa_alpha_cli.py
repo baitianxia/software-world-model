@@ -71,10 +71,12 @@ from .engineering_qa_preview_cli import (
     _QuietLoopbackHandler,
     _aware_utc,
     _canonical_directory,
+    _create_new_private_database,
     _exact_source_revision,
     _git_oid,
     _new_database_path,
     _new_private_output_path,
+    _private_file_creation_mask,
     _sealed_document,
     _select_cognition_snapshot,
     _stable_id,
@@ -658,41 +660,43 @@ def main(
                 api_key_resolver=provider_configuration.resolve_api_key
             )
 
-        with SqliteDatabase(gateway_database) as database:
-            prepared = prepare_engineering_question_alpha(
-                session_config,
-                database=database,
-                transport_factory=transport_factory,
-                at=datetime.now(timezone.utc),
-            )
-            with make_server(
-                "127.0.0.1",
-                ENGINEERING_QA_ALPHA_PORT,
-                prepared.assembly.application,
-                handler_class=_QuietLoopbackHandler,
-            ) as server:
-                if server.server_port != ENGINEERING_QA_ALPHA_PORT:
-                    raise DomainError(
-                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                        "Engineering QA Alpha listener port drifted",
+        _create_new_private_database(gateway_database)
+        with _private_file_creation_mask():
+            with SqliteDatabase(gateway_database) as database:
+                prepared = prepare_engineering_question_alpha(
+                    session_config,
+                    database=database,
+                    transport_factory=transport_factory,
+                    at=datetime.now(timezone.utc),
+                )
+                with make_server(
+                    "127.0.0.1",
+                    ENGINEERING_QA_ALPHA_PORT,
+                    prepared.assembly.application,
+                    handler_class=_QuietLoopbackHandler,
+                ) as server:
+                    if server.server_port != ENGINEERING_QA_ALPHA_PORT:
+                        raise DomainError(
+                            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                            "Engineering QA Alpha listener port drifted",
+                        )
+                    _write_new_private_json(
+                        launch_receipt,
+                        prepared.launch_receipt(),
                     )
-                _write_new_private_json(
-                    launch_receipt,
-                    prepared.launch_receipt(),
-                )
-                output.write(
-                    canonical_json_bytes(prepared.public_status()).decode("utf-8")
-                    + "\n"
-                )
-                output.flush()
-                try:
-                    server.serve_forever()
-                except KeyboardInterrupt:
-                    pass
-                _write_new_private_json(
-                    terminal_receipt,
-                    prepared.terminal_receipt(),
-                )
+                    output.write(
+                        canonical_json_bytes(prepared.public_status()).decode("utf-8")
+                        + "\n"
+                    )
+                    output.flush()
+                    try:
+                        server.serve_forever()
+                    except KeyboardInterrupt:
+                        pass
+                    _write_new_private_json(
+                        terminal_receipt,
+                        prepared.terminal_receipt(),
+                    )
         return 0
     except (
         DomainError,

@@ -31,6 +31,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringEvidenceClass,
     EngineeringQuestionRequest,
     EngineeringReviewChecklistAssessment,
+    EngineeringReviewMaterialObservation,
     EngineeringReviewDecision,
     EngineeringReviewFinding,
     EngineeringReviewProposal,
@@ -41,6 +42,8 @@ from software_world_model.application_services.engineering_question_answering im
     InvestigationKind,
     InvestigationOperation,
     InvestigationStepProposal,
+    MaterialObservation,
+    MaterialObservationKind,
     QuestionEvidencePackage,
     QuestionUnderstanding,
     QuestionUnderstandingProposal,
@@ -62,19 +65,19 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@2"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@3"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@1"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@2"
+    "engineering-qa-initial-investigation@3"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@2"
+    "engineering-qa-verification-investigation@3"
 )
-ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@2"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@2"
+ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@3"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -130,6 +133,19 @@ _REQUIRED_EVIDENCE_CLASS_SCHEMA = {
         EngineeringEvidenceClass.TEST.value,
     ],
 }
+_MATERIAL_OBSERVATION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": [item.value for item in MaterialObservationKind],
+        },
+        "statement": {"type": "string"},
+        "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+    },
+    "required": ["kind", "statement", "evidence_references"],
+    "additionalProperties": False,
+}
 _FINISH_DISPOSITION_SCHEMA = {
     "type": "object",
     "properties": {
@@ -140,12 +156,19 @@ _FINISH_DISPOSITION_SCHEMA = {
         },
         "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
         "explanation": {"type": "string"},
+        "material_observations": {
+            "type": "array",
+            "items": _MATERIAL_OBSERVATION_SCHEMA,
+            "minItems": 1,
+            "maxItems": 8,
+        },
     },
     "required": [
         "checklist_item_id",
         "outcome",
         "evidence_references",
         "explanation",
+        "material_observations",
     ],
     "additionalProperties": False,
 }
@@ -219,6 +242,7 @@ _ANSWER_CLAIM_SCHEMA = {
             "enum": [item.value for item in AnswerContentRole],
         },
         "checklist_item_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+        "material_observation_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
         "text": {"type": "string"},
         "evidence_entry_ids": _STRING_ARRAY_SCHEMA,
     },
@@ -227,6 +251,7 @@ _ANSWER_CLAIM_SCHEMA = {
         "kind",
         "content_role",
         "checklist_item_ids",
+        "material_observation_ids",
         "text",
         "evidence_entry_ids",
     ],
@@ -288,10 +313,51 @@ _REVIEW_CHECKLIST_ASSESSMENT_SCHEMA = {
             "items": {"type": "string"},
             "uniqueItems": True,
         },
+        "independent_material_observations": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "checklist_item_id": {"type": "string"},
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            item.value for item in MaterialObservationKind
+                        ],
+                    },
+                    "statement": {"type": "string"},
+                    "evidence_entry_ids": (
+                        _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA
+                    ),
+                },
+                "required": [
+                    "checklist_item_id",
+                    "kind",
+                    "statement",
+                    "evidence_entry_ids",
+                ],
+                "additionalProperties": False,
+            },
+        },
+        "application_material_observation_omissions": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": True,
+        },
+        "draft_material_observation_omissions": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": True,
+        },
     },
     "required": [
         "independent_material_conclusions",
         "application_checklist_omissions",
+        "independent_material_observations",
+        "application_material_observation_omissions",
+        "draft_material_observation_omissions",
     ],
     "additionalProperties": False,
 }
@@ -708,6 +774,10 @@ class EngineeringQuestionRoleInputBuilder:
                 "ordered_roles": [item.value for item in AnswerContentRole],
                 "every_claim_links_material_checklist": True,
                 "every_material_checklist_item_covered": True,
+                "every_claim_links_material_observations": True,
+                "every_package_material_observation_covered": True,
+                "every_material_observation_visible_in_default_body": True,
+                "observation_link_requires_explicit_claim_text_and_all_evidence": True,
                 "implementation_evidence_is_optional": True,
                 "implementation_evidence_default_visible": (
                     understanding.requested_abstraction_level
@@ -765,6 +835,16 @@ class EngineeringQuestionRoleInputBuilder:
                         if item.item_id in claim.checklist_item_ids
                     ]
                     for item in understanding.checklist
+                },
+                "material_observation_coverage": {
+                    observation.observation_id.value: [
+                        claim.claim_id
+                        for claim in draft.claims
+                        if observation.observation_id
+                        in claim.material_observation_ids
+                    ]
+                    for disposition in package.checklist_dispositions
+                    for observation in disposition.material_observations
                 },
             },
             "review_dimensions": [
@@ -939,6 +1019,12 @@ class StructuredEngineeringAnswerRole(_StructuredRoleAdapter):
                     checklist_item_ids=cast(
                         Sequence[str], item["checklist_item_ids"]
                     ),
+                    material_observation_ids=tuple(
+                        StableId(reference)
+                        for reference in cast(
+                            Sequence[str], item["material_observation_ids"]
+                        )
+                    ),
                     text=cast(str, item["text"]),
                     evidence_entry_ids=tuple(
                         StableId(reference)
@@ -1008,6 +1094,35 @@ class StructuredEngineeringAnswerReviewerRole(_StructuredRoleAdapter):
                 application_checklist_omissions=cast(
                     Sequence[str],
                     checklist_value["application_checklist_omissions"],
+                ),
+                independent_material_observations=tuple(
+                    EngineeringReviewMaterialObservation.create(
+                        checklist_item_id=cast(
+                            str, item["checklist_item_id"]
+                        ),
+                        kind=MaterialObservationKind(cast(str, item["kind"])),
+                        statement=cast(str, item["statement"]),
+                        evidence_entry_ids=tuple(
+                            StableId(reference)
+                            for reference in cast(
+                                Sequence[str], item["evidence_entry_ids"]
+                            )
+                        ),
+                    )
+                    for item in cast(
+                        Sequence[Mapping[str, object]],
+                        checklist_value["independent_material_observations"],
+                    )
+                ),
+                application_material_observation_omissions=cast(
+                    Sequence[str],
+                    checklist_value[
+                        "application_material_observation_omissions"
+                    ],
+                ),
+                draft_material_observation_omissions=cast(
+                    Sequence[str],
+                    checklist_value["draft_material_observation_omissions"],
                 ),
             )
             findings = tuple(
@@ -1096,6 +1211,25 @@ def _investigation_proposal(
                     Sequence[str], item["evidence_references"]
                 ),
                 explanation=cast(str, item["explanation"]),
+                material_observations=tuple(
+                    MaterialObservation.create(
+                        checklist_item_id=cast(
+                            str, item["checklist_item_id"]
+                        ),
+                        kind=MaterialObservationKind(
+                            cast(str, observation["kind"])
+                        ),
+                        statement=cast(str, observation["statement"]),
+                        evidence_references=cast(
+                            Sequence[str],
+                            observation["evidence_references"],
+                        ),
+                    )
+                    for observation in cast(
+                        Sequence[Mapping[str, object]],
+                        item["material_observations"],
+                    )
+                ),
             )
             for item in cast(
                 Sequence[Mapping[str, object]], value["finish_dispositions"]

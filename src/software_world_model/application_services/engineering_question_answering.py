@@ -31,8 +31,8 @@ from software_world_model.cross_cutting import (
 
 
 ENGINEERING_QA_MODE = "ENGINEERING_QA"
-ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2"
-ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@1"
+ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
+ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@2"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
 ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@1"
 
@@ -227,6 +227,14 @@ class ChecklistOutcome(str, Enum):
     UNKNOWN = "UNKNOWN"
     CONFLICT = "CONFLICT"
     FAILED = "FAILED"
+
+
+class MaterialObservationKind(str, Enum):
+    PROCESS_STAGE = "PROCESS_STAGE"
+    OUTCOME = "OUTCOME"
+    STATE_CHANGE = "STATE_CHANGE"
+    SIDE_EFFECT = "SIDE_EFFECT"
+    LIMITATION = "LIMITATION"
 
 
 class PackageBoundaryKind(str, Enum):
@@ -1316,11 +1324,75 @@ class EvidenceLedger:
 
 
 @dataclass(frozen=True, slots=True)
+class MaterialObservation:
+    observation_id: StableId
+    checklist_item_id: str
+    kind: MaterialObservationKind
+    statement: str
+    evidence_references: tuple[str, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        checklist_item_id: str,
+        kind: MaterialObservationKind,
+        statement: str,
+        evidence_references: Sequence[str],
+    ) -> "MaterialObservation":
+        if not isinstance(kind, MaterialObservationKind):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "material observation kind must use the controlled vocabulary",
+            )
+        references = tuple(
+            _reference(value, "material observation evidence reference")
+            for value in evidence_references
+        )
+        if not references or len(references) != len(set(references)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "material observation requires unique evidence references",
+            )
+        core = {
+            "checklist_item_id": _reference(
+                checklist_item_id, "material observation checklist item ID"
+            ),
+            "kind": kind.value,
+            "statement": _text(
+                statement, "material observation statement", maximum_bytes=8_192
+            ),
+            "evidence_references": references,
+        }
+        digest = digest_of(["MATERIAL_OBSERVATION@1", core])
+        return cls(
+            observation_id=_stable_id("material_observation", core),
+            checklist_item_id=core["checklist_item_id"],
+            kind=kind,
+            statement=core["statement"],
+            evidence_references=references,
+            digest=digest,
+        )
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "observation_id": self.observation_id.value,
+            "checklist_item_id": self.checklist_item_id,
+            "kind": self.kind.value,
+            "statement": self.statement,
+            "evidence_references": list(self.evidence_references),
+            "digest": self.digest.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ChecklistDisposition:
     checklist_item_id: str
     outcome: ChecklistOutcome
     evidence_references: tuple[str, ...]
     explanation: str
+    material_observations: tuple[MaterialObservation, ...]
     digest: Digest
 
     @classmethod
@@ -1331,6 +1403,7 @@ class ChecklistDisposition:
         outcome: ChecklistOutcome,
         evidence_references: Sequence[str],
         explanation: str,
+        material_observations: Sequence[MaterialObservation],
     ) -> "ChecklistDisposition":
         references = tuple(
             _reference(value, "checklist evidence reference")
@@ -1346,14 +1419,62 @@ class ChecklistDisposition:
                 ErrorCode.INVALID_ARGUMENT,
                 "checklist disposition contains duplicate references",
             )
+        normalized_checklist_item_id = _reference(
+            checklist_item_id, "checklist item ID"
+        )
+        observations = tuple(material_observations)
+        if not observations or len(observations) > 8:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "checklist disposition requires one to eight material observations",
+            )
+        if len({item.observation_id for item in observations}) != len(observations):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "checklist disposition contains duplicate material observations",
+            )
+        for observation in observations:
+            expected_observation = MaterialObservation.create(
+                checklist_item_id=observation.checklist_item_id,
+                kind=observation.kind,
+                statement=observation.statement,
+                evidence_references=observation.evidence_references,
+            )
+            if observation != expected_observation:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "material observation identity is invalid",
+                )
+            if observation.checklist_item_id != normalized_checklist_item_id:
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "material observation crosses its checklist disposition",
+                )
+            if not set(observation.evidence_references).issubset(references):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "material observation evidence must be retained by its disposition",
+                )
+            if (
+                outcome is ChecklistOutcome.SUPPORTED
+                and observation.kind is MaterialObservationKind.LIMITATION
+            ) or (
+                outcome is not ChecklistOutcome.SUPPORTED
+                and observation.kind is not MaterialObservationKind.LIMITATION
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "material observation kind must agree with its checklist outcome",
+                )
         core = {
-            "checklist_item_id": _reference(
-                checklist_item_id, "checklist item ID"
-            ),
+            "checklist_item_id": normalized_checklist_item_id,
             "outcome": outcome.value,
             "evidence_references": references,
             "explanation": _text(
                 explanation, "checklist disposition explanation", maximum_bytes=8_192
+            ),
+            "material_observations": tuple(
+                item.digest.value for item in observations
             ),
         }
         return cls(
@@ -1361,7 +1482,8 @@ class ChecklistDisposition:
             outcome=outcome,
             evidence_references=references,
             explanation=core["explanation"],
-            digest=digest_of(["CHECKLIST_DISPOSITION@1", core]),
+            material_observations=observations,
+            digest=digest_of(["CHECKLIST_DISPOSITION@2", core]),
         )
 
 
@@ -3216,6 +3338,20 @@ class QuestionEvidencePackage:
                 ErrorCode.CONTROL_STATE_DENIED,
                 "FINISH contains duplicate checklist dispositions",
             )
+        material_observations = tuple(
+            observation
+            for disposition in dispositions
+            for observation in disposition.material_observations
+        )
+        if (
+            len(material_observations) > 64
+            or len({item.observation_id for item in material_observations})
+            != len(material_observations)
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "FINISH material observations must be globally unique and bounded",
+            )
         for disposition in dispositions:
             references = set(disposition.evidence_references)
             if disposition.outcome is ChecklistOutcome.SUPPORTED:
@@ -3344,6 +3480,10 @@ class QuestionEvidencePackage:
                     "outcome": item.outcome.value,
                     "evidence_references": list(item.evidence_references),
                     "explanation": item.explanation,
+                    "material_observations": [
+                        observation.model_view()
+                        for observation in item.material_observations
+                    ],
                     "digest": item.digest.value,
                 }
                 for item in self.checklist_dispositions
@@ -3539,6 +3679,7 @@ class EngineeringAnswerClaimProposal:
     kind: AnswerClaimKind
     content_role: AnswerContentRole
     checklist_item_ids: tuple[str, ...]
+    material_observation_ids: tuple[StableId, ...]
     text: str
     evidence_entry_ids: tuple[StableId, ...]
     digest: Digest
@@ -3551,6 +3692,7 @@ class EngineeringAnswerClaimProposal:
         kind: AnswerClaimKind,
         content_role: AnswerContentRole,
         checklist_item_ids: Sequence[str],
+        material_observation_ids: Sequence[StableId],
         text: str,
         evidence_entry_ids: Sequence[StableId],
     ) -> "EngineeringAnswerClaimProposal":
@@ -3569,6 +3711,12 @@ class EngineeringAnswerClaimProposal:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "answer claim requires unique material checklist references",
+            )
+        observations = tuple(material_observation_ids)
+        if not observations or len(observations) != len(set(observations)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "answer claim requires unique material observation references",
             )
         if (
             content_role is AnswerContentRole.LIMITATION
@@ -3596,6 +3744,9 @@ class EngineeringAnswerClaimProposal:
             "kind": kind.value,
             "content_role": content_role.value,
             "checklist_item_ids": checklist,
+            "material_observation_ids": tuple(
+                item.value for item in observations
+            ),
             "text": _text(text, "answer claim text", maximum_bytes=32_768),
             "evidence_entry_ids": tuple(item.value for item in references),
         }
@@ -3604,9 +3755,10 @@ class EngineeringAnswerClaimProposal:
             kind=kind,
             content_role=content_role,
             checklist_item_ids=checklist,
+            material_observation_ids=observations,
             text=core["text"],
             evidence_entry_ids=references,
-            digest=digest_of(["ENGINEERING_ANSWER_CLAIM_PROPOSAL@2", core]),
+            digest=digest_of(["ENGINEERING_ANSWER_CLAIM_PROPOSAL@3", core]),
         )
 
 
@@ -3673,7 +3825,7 @@ class EngineeringAnswerProposal:
             package_digest=package_digest,
             response_language=core["response_language"],
             claims=claim_tuple,
-            digest=digest_of(["ENGINEERING_ANSWER_PROPOSAL@2", core]),
+            digest=digest_of(["ENGINEERING_ANSWER_PROPOSAL@3", core]),
         )
 
 
@@ -3705,6 +3857,7 @@ class EngineeringAnswerDraft:
                 kind=item.kind,
                 content_role=item.content_role,
                 checklist_item_ids=item.checklist_item_ids,
+                material_observation_ids=item.material_observation_ids,
                 text=item.text,
                 evidence_entry_ids=item.evidence_entry_ids,
             )
@@ -3755,6 +3908,41 @@ class EngineeringAnswerDraft:
                 ErrorCode.PROVIDER_RESPONSE_INVALID,
                 "answer claim refers to an unknown material checklist item",
             )
+        disposition_by_checklist = {
+            item.checklist_item_id: item for item in package.checklist_dispositions
+        }
+        observation_by_id = {
+            observation.observation_id: (disposition, observation)
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        }
+        linked_observation_ids = {
+            observation_id
+            for claim in proposal.claims
+            for observation_id in claim.material_observation_ids
+        }
+        if linked_observation_ids != set(observation_by_id):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "answer claims must cover every Package material observation",
+            )
+        for claim in proposal.claims:
+            if not set(claim.material_observation_ids).issubset(observation_by_id):
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "answer claim refers to an unknown material observation",
+                )
+            if any(
+                observation.checklist_item_id not in claim.checklist_item_ids
+                for _, observation in (
+                    observation_by_id[observation_id]
+                    for observation_id in claim.material_observation_ids
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "answer claim material observations cross checklist links",
+                )
         implementation_claims = tuple(
             claim
             for claim in proposal.claims
@@ -3768,28 +3956,24 @@ class EngineeringAnswerDraft:
                 ErrorCode.CONTROL_STATE_DENIED,
                 "implementation evidence exceeds the accepted answer-detail level",
             )
-        disposition_by_checklist = {
-            item.checklist_item_id: item.outcome
-            for item in package.checklist_dispositions
-        }
         if set(disposition_by_checklist) != checklist_ids:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "answer Package checklist differs from the accepted understanding",
             )
-        for checklist_item_id, outcome in disposition_by_checklist.items():
+        for checklist_item_id, disposition in disposition_by_checklist.items():
             linked = tuple(
                 claim
                 for claim in proposal.claims
                 if checklist_item_id in claim.checklist_item_ids
             )
             if (
-                outcome is ChecklistOutcome.SUPPORTED
+                disposition.outcome is ChecklistOutcome.SUPPORTED
                 and not any(
                     claim.kind is AnswerClaimKind.AFFIRMATIVE for claim in linked
                 )
             ) or (
-                outcome is not ChecklistOutcome.SUPPORTED
+                disposition.outcome is not ChecklistOutcome.SUPPORTED
                 and not any(
                     claim.kind is AnswerClaimKind.LIMITATION for claim in linked
                 )
@@ -3800,6 +3984,12 @@ class EngineeringAnswerDraft:
                 )
         support_ids = {item.entry_id for item in package.support_citation}
         boundary_ids = {item.entry_id for item in package.boundary_audit}
+        support_entry_by_source = {
+            item.source_reference: item.entry_id for item in package.support_citation
+        }
+        boundary_entry_by_source = {
+            item.source_reference: item.entry_id for item in package.boundary_audit
+        }
         for claim in proposal.claims:
             references = set(claim.evidence_entry_ids)
             if claim.kind is AnswerClaimKind.AFFIRMATIVE:
@@ -3813,6 +4003,32 @@ class EngineeringAnswerDraft:
                     ErrorCode.CONTROL_STATE_DENIED,
                     "limitation claim must cite retained boundary/audit entries",
                 )
+            for observation_id in claim.material_observation_ids:
+                disposition, observation = observation_by_id[observation_id]
+                expected_kind = (
+                    AnswerClaimKind.AFFIRMATIVE
+                    if disposition.outcome is ChecklistOutcome.SUPPORTED
+                    else AnswerClaimKind.LIMITATION
+                )
+                if claim.kind is not expected_kind:
+                    raise DomainError(
+                        ErrorCode.CONTROL_STATE_DENIED,
+                        "answer claim kind differs from its material observation",
+                    )
+                source_map = (
+                    support_entry_by_source
+                    if expected_kind is AnswerClaimKind.AFFIRMATIVE
+                    else boundary_entry_by_source
+                )
+                required_entries = {
+                    source_map[reference]
+                    for reference in observation.evidence_references
+                }
+                if not required_entries.issubset(references):
+                    raise DomainError(
+                        ErrorCode.CONTROL_STATE_DENIED,
+                        "answer claim does not cite every Package entry supporting its material observation",
+                    )
         default_body_claims = tuple(
             claim
             for claim in proposal.claims
@@ -3826,6 +4042,16 @@ class EngineeringAnswerDraft:
         default_body_claim_ids = tuple(
             claim.claim_id for claim in default_body_claims
         )
+        default_body_observation_ids = {
+            observation_id
+            for claim in default_body_claims
+            for observation_id in claim.material_observation_ids
+        }
+        if default_body_observation_ids != set(observation_by_id):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "every material observation must appear in the default user-visible answer",
+            )
         body = "\n\n".join(item.text for item in default_body_claims)
         core = {
             "revision": revision,
@@ -3836,7 +4062,7 @@ class EngineeringAnswerDraft:
             "body": body,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@2", core])
+        digest = digest_of(["ENGINEERING_ANSWER_DRAFT@3", core])
         return cls(
             draft_id=_stable_id("engineering_draft", core),
             revision=revision,
@@ -3863,6 +4089,10 @@ class EngineeringAnswerDraft:
                     "kind": item.kind.value,
                     "content_role": item.content_role.value,
                     "checklist_item_ids": list(item.checklist_item_ids),
+                    "material_observation_ids": [
+                        reference.value
+                        for reference in item.material_observation_ids
+                    ],
                     "text": item.text,
                     "evidence_entry_ids": [
                         reference.value for reference in item.evidence_entry_ids
@@ -3993,9 +4223,72 @@ class EngineeringReviewQualityAssessment:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringReviewMaterialObservation:
+    checklist_item_id: str
+    kind: MaterialObservationKind
+    statement: str
+    evidence_entry_ids: tuple[StableId, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        checklist_item_id: str,
+        kind: MaterialObservationKind,
+        statement: str,
+        evidence_entry_ids: Sequence[StableId],
+    ) -> "EngineeringReviewMaterialObservation":
+        if not isinstance(kind, MaterialObservationKind):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer material observation kind must use the controlled vocabulary",
+            )
+        references = tuple(evidence_entry_ids)
+        if not references or len(references) != len(set(references)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer material observation requires unique Package evidence entries",
+            )
+        core = {
+            "checklist_item_id": _reference(
+                checklist_item_id, "Reviewer material observation checklist item"
+            ),
+            "kind": kind.value,
+            "statement": _text(
+                statement,
+                "Reviewer material observation statement",
+                maximum_bytes=8_192,
+            ),
+            "evidence_entry_ids": tuple(item.value for item in references),
+        }
+        return cls(
+            checklist_item_id=core["checklist_item_id"],
+            kind=kind,
+            statement=core["statement"],
+            evidence_entry_ids=references,
+            digest=digest_of(["ENGINEERING_REVIEW_MATERIAL_OBSERVATION@1", core]),
+        )
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "checklist_item_id": self.checklist_item_id,
+            "kind": self.kind.value,
+            "statement": self.statement,
+            "evidence_entry_ids": [item.value for item in self.evidence_entry_ids],
+            "digest": self.digest.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringReviewChecklistAssessment:
     independent_material_conclusions: tuple[str, ...]
     application_checklist_omissions: tuple[str, ...]
+    independent_material_observations: tuple[
+        EngineeringReviewMaterialObservation, ...
+    ]
+    application_material_observation_omissions: tuple[str, ...]
+    draft_material_observation_omissions: tuple[str, ...]
     digest: Digest
 
     @classmethod
@@ -4004,6 +4297,11 @@ class EngineeringReviewChecklistAssessment:
         *,
         independent_material_conclusions: Sequence[str],
         application_checklist_omissions: Sequence[str],
+        independent_material_observations: Sequence[
+            EngineeringReviewMaterialObservation
+        ],
+        application_material_observation_omissions: Sequence[str],
+        draft_material_observation_omissions: Sequence[str],
     ) -> "EngineeringReviewChecklistAssessment":
         independent = _unique_texts(
             independent_material_conclusions,
@@ -4027,15 +4325,78 @@ class EngineeringReviewChecklistAssessment:
                 ErrorCode.INVALID_ARGUMENT,
                 "Reviewer checklist omissions must be unique independent conclusions",
             )
+        observations = tuple(independent_material_observations)
+        if not observations or len(observations) > 64:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer must return one to sixty-four independent material observations",
+            )
+        expected_observations = tuple(
+            EngineeringReviewMaterialObservation.create(
+                checklist_item_id=item.checklist_item_id,
+                kind=item.kind,
+                statement=item.statement,
+                evidence_entry_ids=item.evidence_entry_ids,
+            )
+            for item in observations
+        )
+        if (
+            observations != expected_observations
+            or len({item.digest for item in observations}) != len(observations)
+            or len({item.statement for item in observations}) != len(observations)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer independent material observations must be valid and unique",
+            )
+        observation_statements = {item.statement for item in observations}
+
+        def observation_omissions(
+            values: Sequence[str], label: str
+        ) -> tuple[str, ...]:
+            normalized = tuple(
+                _text(item, label, maximum_bytes=8_192) for item in values
+            )
+            if (
+                len(normalized) > 64
+                or len(normalized) != len(set(normalized))
+                or not set(normalized).issubset(observation_statements)
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    f"{label} must be unique independent observation statements",
+                )
+            return normalized
+
+        application_observation_omissions = observation_omissions(
+            application_material_observation_omissions,
+            "Reviewer Application observation omission",
+        )
+        draft_observation_omissions = observation_omissions(
+            draft_material_observation_omissions,
+            "Reviewer Draft observation omission",
+        )
         core = {
             "independent_material_conclusions": independent,
             "application_checklist_omissions": omissions,
+            "independent_material_observations": tuple(
+                item.digest.value for item in observations
+            ),
+            "application_material_observation_omissions": (
+                application_observation_omissions
+            ),
+            "draft_material_observation_omissions": draft_observation_omissions,
         }
         return cls(
             independent_material_conclusions=independent,
             application_checklist_omissions=omissions,
+            independent_material_observations=observations,
+            application_material_observation_omissions=(
+                application_observation_omissions
+            ),
+            draft_material_observation_omissions=draft_observation_omissions,
             digest=digest_of(
-                ["ENGINEERING_REVIEW_CHECKLIST_ASSESSMENT@1", core]
+                ["ENGINEERING_REVIEW_CHECKLIST_ASSESSMENT@2", core]
             ),
         )
 
@@ -4046,6 +4407,15 @@ class EngineeringReviewChecklistAssessment:
             ),
             "application_checklist_omissions": list(
                 self.application_checklist_omissions
+            ),
+            "independent_material_observations": [
+                item.model_view() for item in self.independent_material_observations
+            ],
+            "application_material_observation_omissions": list(
+                self.application_material_observation_omissions
+            ),
+            "draft_material_observation_omissions": list(
+                self.draft_material_observation_omissions
             ),
             "digest": self.digest.value,
         }
@@ -4110,6 +4480,15 @@ class EngineeringReviewProposal:
             application_checklist_omissions=(
                 checklist_assessment.application_checklist_omissions
             ),
+            independent_material_observations=(
+                checklist_assessment.independent_material_observations
+            ),
+            application_material_observation_omissions=(
+                checklist_assessment.application_material_observation_omissions
+            ),
+            draft_material_observation_omissions=(
+                checklist_assessment.draft_material_observation_omissions
+            ),
         )
         if checklist_assessment != expected_checklist:
             raise DomainError(
@@ -4117,7 +4496,11 @@ class EngineeringReviewProposal:
                 "Review checklist assessment identity is invalid",
             )
         if (
-            checklist_assessment.application_checklist_omissions
+            (
+                checklist_assessment.application_checklist_omissions
+                or checklist_assessment.application_material_observation_omissions
+                or checklist_assessment.draft_material_observation_omissions
+            )
             and quality_assessment.material_completeness
             is not EngineeringReviewQualityStatus.FAIL
         ):
@@ -4134,6 +4517,8 @@ class EngineeringReviewProposal:
             if (
                 not quality_assessment.all_pass
                 or checklist_assessment.application_checklist_omissions
+                or checklist_assessment.application_material_observation_omissions
+                or checklist_assessment.draft_material_observation_omissions
                 or finding_tuple
                 or verification_request
             ):
@@ -4173,7 +4558,7 @@ class EngineeringReviewProposal:
             checklist_assessment=checklist_assessment,
             findings=finding_tuple,
             verification_request=verification_request,
-            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@2", core]),
+            digest=digest_of(["ENGINEERING_REVIEW_PROPOSAL@3", core]),
         )
 
 
@@ -4259,6 +4644,25 @@ class EngineeringAnswerReview:
             )
         checklist_ids = {item.item_id for item in understanding.checklist}
         claim_ids = {item.claim_id for item in draft.claims}
+        support_ids = {item.entry_id for item in package.support_citation}
+        boundary_ids = {item.entry_id for item in package.boundary_audit}
+        for observation in proposal.checklist_assessment.independent_material_observations:
+            if observation.checklist_item_id not in checklist_ids:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "Reviewer material observation refers to an unknown checklist item",
+                )
+            references = set(observation.evidence_entry_ids)
+            admissible = (
+                boundary_ids
+                if observation.kind is MaterialObservationKind.LIMITATION
+                else support_ids
+            )
+            if not references.issubset(admissible):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "Reviewer material observation cites the wrong Package partition",
+                )
         for finding in proposal.findings:
             if finding.checklist_item_id and finding.checklist_item_id not in checklist_ids:
                 raise DomainError(
@@ -4303,7 +4707,7 @@ class EngineeringAnswerReview:
             "verification_request": request.digest.value if request else None,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@2", core])
+        digest = digest_of(["ENGINEERING_ANSWER_REVIEW@3", core])
         return cls(
             review_id=_stable_id("engineering_review", core),
             attempt=attempt,
@@ -4356,6 +4760,8 @@ class AuthorizedEngineeringAnswer:
             review.decision is not EngineeringReviewDecision.APPROVED
             or not review.quality_assessment.all_pass
             or review.checklist_assessment.application_checklist_omissions
+            or review.checklist_assessment.application_material_observation_omissions
+            or review.checklist_assessment.draft_material_observation_omissions
             or review.findings
             or review.package_digest != package.digest
             or review.draft_digest != draft.digest
@@ -5615,6 +6021,7 @@ class EngineeringQuestionAnsweringService:
                 outcome=item.outcome,
                 evidence_references=item.evidence_references,
                 explanation=item.explanation,
+                material_observations=item.material_observations,
             )
             for item in proposal.finish_dispositions
         )
@@ -5815,6 +6222,14 @@ class EngineeringQuestionAnsweringService:
                 outcome=ChecklistOutcome.FAILED,
                 evidence_references=(stop_reference,),
                 explanation=reason,
+                material_observations=(
+                    MaterialObservation.create(
+                        checklist_item_id=item.item_id,
+                        kind=MaterialObservationKind.LIMITATION,
+                        statement=reason,
+                        evidence_references=(stop_reference,),
+                    ),
+                ),
             )
             for item in understanding.checklist
         )
@@ -5981,6 +6396,7 @@ __all__ = [
     "EngineeringReviewDecision",
     "EngineeringReviewChecklistAssessment",
     "EngineeringReviewFinding",
+    "EngineeringReviewMaterialObservation",
     "EngineeringReviewProposal",
     "EngineeringReviewQualityAssessment",
     "EngineeringReviewQualityStatus",
@@ -5993,6 +6409,8 @@ __all__ = [
     "InvestigationStepProposal",
     "LedgerEntryKind",
     "LedgerTerminalStatus",
+    "MaterialObservation",
+    "MaterialObservationKind",
     "PackageBoundaryKind",
     "QuestionChecklistItem",
     "QuestionEvidencePackage",

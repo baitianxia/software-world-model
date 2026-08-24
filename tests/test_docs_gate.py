@@ -3342,7 +3342,7 @@ class ReflectionGateTests(unittest.TestCase):
             "status": "frozen",
         }
         answer_protocol: dict[str, object] = {
-            "schema": "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2",
+            "schema": "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3",
             "contract_ref": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
             "mode": "adaptive-cognition-guided-engineering-investigation",
             "question_understanding_required_fields": (
@@ -3376,6 +3376,10 @@ class ReflectionGateTests(unittest.TestCase):
             "source_broker_policy_compilation_required": True,
             "evidence_ledger_append_only": True,
             "question_evidence_package_sealed_after_investigation": True,
+            "finish_material_observations_required": True,
+            "material_observation_identity_application_owned": True,
+            "answer_claim_material_observation_and_evidence_closure_required": True,
+            "reviewer_independent_package_and_draft_observation_audit_required": True,
             "sealed_package_mutation_allowed": False,
             "safety_budget_reserves_independent_review": True,
             "quality_checklist_reduction_due_to_remaining_calls_allowed": False,

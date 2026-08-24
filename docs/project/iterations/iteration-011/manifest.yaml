@@ -305,6 +305,12 @@ answer_hierarchy_protocol:
   application_uses_accepted_question_understanding_checklist: true
   reviewer_reconstructs_checklist_from_immutable_original_question: true
   reviewer_compares_independent_and_application_checklists_for_omissions: true
+  finish_material_observations_required: true
+  material_observation_kinds: process-stage,outcome,state-change,side-effect,limitation
+  answer_claim_material_observation_links_required: true
+  all_material_observations_default_visible_required: true
+  reviewer_independent_evidence_observation_audit_required: true
+  package_and_draft_observation_omissions_block_approval: true
   reviewer_context_and_verdict_independent: true
   question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed: false
 

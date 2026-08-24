@@ -322,7 +322,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@9",
+            "engineering-qa-adaptive-investigation-prompt@10",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,

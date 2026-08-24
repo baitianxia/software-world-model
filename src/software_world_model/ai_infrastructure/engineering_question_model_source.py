@@ -60,7 +60,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@9"
+    "engineering-qa-adaptive-investigation-prompt@10"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -132,6 +132,8 @@ choose implementation detail merely because the supplied system concerns code.
 List every material conclusion that must be answered. For a flow or lifecycle,
 include user-visible stages, outcomes, and material state changes or side effects
 in that checklist; do not substitute class or method names for those conclusions.
+Checklist items may summarize the goal, but they do not waive the later atomic
+evidence-observation audit.
 Identify the evidence needs, response language, and response constraints. Do not
 narrow the question based on currently available evidence.
 """,
@@ -170,6 +172,17 @@ copied into evidence_references unless that exact value also appears in the
 corresponding admissible list. After a search hit, prefer reading or parsing an
 issued locator before broadening the search when that result can reduce the
 current unknown.
+Each FINISH disposition must also return one to eight atomic
+material_observations. Inspect the complete content of every cited admissible
+entry and enumerate every distinct fact material to the original question at
+the accepted abstraction level; a broad summary or one representative effect
+cannot stand in for the rest. For a flow or lifecycle, separately capture
+material process stages, outcomes, state/context mutations, persistence or
+audit writes, external interactions, and failure outcomes when the evidence
+shows them. Use PROCESS_STAGE, OUTCOME, STATE_CHANGE, or SIDE_EFFECT only for a
+SUPPORTED disposition; use LIMITATION for every non-supported disposition.
+Each observation must be one explicit fact and cite every exact admissible
+reference needed to support it, all retained by its parent disposition.
 """,
     EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION: """
 Investigate only the concrete Reviewer gap using the current Package, successor
@@ -202,6 +215,14 @@ one eligible locator_reference, a null query, and an empty finish_dispositions
 array; FINISH requires evidence_class, query, and locator_reference all to be
 null and requires a non-empty finish_dispositions array. Do not carry an
 evidence_class from the preceding action into FINISH.
+Each FINISH disposition must also return one to eight atomic
+material_observations under the same rules as initial investigation: inspect
+complete cited content; do not let a broad summary or representative effect
+stand in for distinct process stages, outcomes, state/context mutations,
+persistence or audit writes, external interactions, or failure outcomes that
+are material to the question. Supported observations use PROCESS_STAGE,
+OUTCOME, STATE_CHANGE, or SIDE_EFFECT; non-supported observations use
+LIMITATION. Each observation cites every admissible reference it needs.
 """,
     EngineeringQuestionModelRole.ANSWER: """
 Answer from the sealed Question Evidence Package only. Return exactly one
@@ -210,7 +231,13 @@ claim may use LIMITATION kind and boundary/audit evidence instead of inventing
 an affirmative answer. Then, only as needed, use USER_VISIBLE_PROCESS,
 IMPACT_OR_SIDE_EFFECT, optional IMPLEMENTATION_EVIDENCE, and LIMITATION in that
 order. Link every claim to exact material checklist item IDs and cover every
-checklist item. At DIRECT level, omit implementation evidence. At
+checklist item. Also link every claim to the exact Package material-observation
+IDs its text explicitly states, cover every observation in the default
+user-visible body, and cite every Package entry recorded for each linked
+observation. Do not attach an observation ID to a merely representative or
+broader claim. Material process stages, outcomes, state changes, and side
+effects belong in the user-visible answer; they are not optional implementation
+detail. At DIRECT level, omit implementation evidence. At
 USER_VISIBLE_EXPLANATION level, add implementation evidence only when explicitly
 requested or necessary to support a material conclusion, and keep it outside the
 default user-visible body. Every affirmative claim must cite one or more
@@ -224,8 +251,16 @@ understanding, and current Package. Approve only a direct, correct, complete,
 well-scoped answer whose affirmative claims have valid support citations and
 whose limitations are honest. First reconstruct the material conclusions from
 the immutable original question without adopting the Application checklist;
-then list any reconstructed conclusion omitted by that checklist. Explicitly
-mark the four closed quality checks:
+then list any reconstructed conclusion omitted by that checklist. Inspect the
+complete content of relevant support/citation and boundary/audit entries and
+independently enumerate atomic material observations, each mapped to a
+checklist item, controlled observation kind, and exact Package evidence entry
+IDs. Compare that independent set both with the Application's Package
+observations and with the default Draft body. Report the exact independent
+observation statements omitted by either; a broad summary or one representative
+effect does not cover distinct stages, outcomes, state/context mutations,
+persistence or audit writes, external interactions, or failure outcomes. Then
+explicitly mark the four closed quality checks:
 direct answer first, abstraction fit, material checklist completeness including
 user-visible stages and side effects, and implementation-detail budget. APPROVED
 requires PASS for all four. If the default answer is implementation-led, misses

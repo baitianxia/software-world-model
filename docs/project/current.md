@@ -87,7 +87,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development** | `V-WEB-000/V-WEB-001` 技术 PASS；公开 4 题为 3 APPROVED / 1 fail-closed，现场题再形成 1 个 APPROVED Result，14 个 Citation 全部打开、console clean。现场正文仍由方法序列主导并省略登录日志副作用，Reviewer 错误批准；历史 `V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001`、`V-PREVIEW-001` FAIL 不变。PDR-001 将整轮结论改为同轮返工；新收据已恢复 Slice1，首交付为持续 Web Alpha。Slice2/3、hidden、三臂、Acceptance 与 Production 未执行 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development** | `V-WEB-000/V-WEB-001` 历史技术 PASS；持续 Alpha candidate `b6e13eb…` 已真实启动，但原现场题再次漏掉成功登录审计副作用且 Reviewer 错误批准，Gateway DB 还暴露 `0644` 权限，因此只把 `V-EXPERIENCE/V-ANSWER-REWORK` 推进为 IN-PROGRESS，不能 PASS。`FINDING-010-033/034` 已在 worktree 升级原子 evidence-observation contract 并 private-create SQLite/WAL/SHM；`FINDING-010-035` 证明 1144 项完整回归中 1139 PASS、raw 只保留既有 4 FAIL + 1 ERROR historical hold。当前等待 clean freeze、current Conformance 和原题 + 两道异质题 + 受控失败的新持续 run。历史 `V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001`、`V-PREVIEW-001` FAIL 不变；Slice2/3、hidden、三臂、Acceptance 与 Production 未执行 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -104,11 +104,13 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 Question Evidence Package → Answer → independent Reviewer` 技术纵切、公开题和现场题证据均已封存；当前项目决定为 `REWORK`，不是
 Acceptance，也不追认历史答案/审核 FAIL。
 
-当前 worktree 已完成持续 Alpha 的确定性产品组件和答案/Reviewer 通用 contract：Session Authority、逐题 server identity、固定
-`127.0.0.1:8765` 命令、失败隔离/same-origin ingress，以及 typed detail/content role、checklist/default projection、Reviewer 独立
-checklist 与四项 quality Gate。下一步是完整回归后形成 clean product freeze，再以新 exact session/live grant 执行原失败题和至少两个
-异质问题；在此之前不把组件测试写成 Web/答案真实 PASS，不发 Provider call、不启动 live Web，也不执行 hidden、三臂消融或 Production
-Activation。
+candidate `b6e13eb…` 的首次持续 Alpha 已证明 Session Authority、逐题 server identity、固定 `127.0.0.1:8765` 命令与真实 Provider/browser
+链可启动，也再次证明旧 checklist coverage 允许代表性事实伪闭合，并发现 Gateway SQLite mode `0644`。该会话已优雅停止，Result 只作为
+失败证据。当前 worktree 把协议升级为 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3`：FINISH 逐条形成有证据的 process/outcome/state/
+side-effect/limitation observations，Answer 对 observation 与所需 Package entries 做闭包且全部默认可见，Reviewer 从完整 evidence 独立比较
+Package/Draft observation omissions；Gateway 主文件与 live WAL/SHM 从创建起为 `0600`。下一步是完成 docs/full regression、形成 clean
+product freeze、重取 current Conformance，再以 root authority 收窄的新 exact session grants 执行原失败题、至少两个异质问题和受控失败。
+在此之前不把确定性测试写成真实答案 PASS，也不执行 hidden、三臂消融或 Production Activation。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

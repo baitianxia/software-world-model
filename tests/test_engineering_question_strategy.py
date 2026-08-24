@@ -83,7 +83,13 @@ class AdaptiveStructuredOutputSource:
         }:
             output = self._investigation_output(manifest)
         elif manifest.role is EngineeringQuestionModelRole.ANSWER:
-            support = body["question_evidence_package"]["support/citation"]
+            package = body["question_evidence_package"]
+            support = package["support/citation"]
+            observation_ids = [
+                observation["observation_id"]
+                for disposition in package["checklist_dispositions"]
+                for observation in disposition["material_observations"]
+            ]
             output = {
                 "response_language": body["question_understanding"][
                     "response_language"
@@ -94,8 +100,10 @@ class AdaptiveStructuredOutputSource:
                         "kind": "AFFIRMATIVE",
                         "content_role": "DIRECT_ANSWER",
                         "checklist_item_ids": ["check-1"],
+                        "material_observation_ids": observation_ids,
                         "text": (
                             "Start the service through its documented entry point; "
+                            "startup also writes a local PID file; "
                             "the request timeout is controlled by repository configuration."
                         ),
                         "evidence_entry_ids": [
@@ -106,6 +114,7 @@ class AdaptiveStructuredOutputSource:
             }
         else:
             self.review_calls += 1
+            review_observations = self._review_observations(body)
             if self.request_more_evidence and self.review_calls == 1:
                 output = {
                     "decision": "MORE_EVIDENCE_REQUIRED",
@@ -120,6 +129,9 @@ class AdaptiveStructuredOutputSource:
                             "Explain startup and the effective timeout control."
                         ],
                         "application_checklist_omissions": [],
+                        "independent_material_observations": review_observations,
+                        "application_material_observation_omissions": [],
+                        "draft_material_observation_omissions": [],
                     },
                     "findings": [
                         {
@@ -154,6 +166,9 @@ class AdaptiveStructuredOutputSource:
                             "Explain startup and the effective timeout control."
                         ],
                         "application_checklist_omissions": [],
+                        "independent_material_observations": review_observations,
+                        "application_material_observation_omissions": [],
+                        "draft_material_observation_omissions": [],
                     },
                     "findings": [],
                     "verification_request": None,
@@ -169,6 +184,28 @@ class AdaptiveStructuredOutputSource:
                 separators=(",", ":"),
             ),
         )
+
+    @staticmethod
+    def _review_observations(body):
+        package = body["question_evidence_package"]
+        entry_by_source = {
+            item["source_reference"]: item["entry_id"]
+            for partition in ("support/citation", "boundary/audit")
+            for item in package[partition]
+        }
+        return [
+            {
+                "checklist_item_id": observation["checklist_item_id"],
+                "kind": observation["kind"],
+                "statement": observation["statement"],
+                "evidence_entry_ids": [
+                    entry_by_source[reference]
+                    for reference in observation["evidence_references"]
+                ],
+            }
+            for disposition in package["checklist_dispositions"]
+            for observation in disposition["material_observations"]
+        ]
 
     @staticmethod
     def _investigation_output(manifest):
@@ -235,6 +272,22 @@ class AdaptiveStructuredOutputSource:
                     "outcome": "SUPPORTED",
                     "evidence_references": [evidence_reference],
                     "explanation": "The exact package contains the required evidence.",
+                    "material_observations": [
+                        {
+                            "kind": "PROCESS_STAGE",
+                            "statement": (
+                                "The repository evidence establishes the documented startup entry point."
+                            ),
+                            "evidence_references": [evidence_reference],
+                        },
+                        {
+                            "kind": "SIDE_EFFECT",
+                            "statement": (
+                                "Starting the service also writes a local PID file."
+                            ),
+                            "evidence_references": [evidence_reference],
+                        }
+                    ],
                 }
             ],
         }
@@ -506,6 +559,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         ].schema["properties"]["claims"]["items"]
         self.assertIn("content_role", answer_claim["required"])
         self.assertIn("checklist_item_ids", answer_claim["required"])
+        self.assertIn("material_observation_ids", answer_claim["required"])
         review = schemas[ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF].schema
         self.assertIn("quality_assessment", review["required"])
         self.assertIn("checklist_assessment", review["required"])
@@ -529,6 +583,20 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ]["items"]["properties"]["evidence_references"]
             self.assertEqual(references["minItems"], 1)
             self.assertTrue(references["uniqueItems"])
+            observations = schemas[schema_ref].schema["properties"][
+                "finish_dispositions"
+            ]["items"]["properties"]["material_observations"]
+            self.assertEqual(observations["minItems"], 1)
+            self.assertEqual(observations["maxItems"], 8)
+        review_checklist = review["properties"]["checklist_assessment"]
+        self.assertIn(
+            "independent_material_observations",
+            review_checklist["required"],
+        )
+        self.assertIn(
+            "draft_material_observation_omissions",
+            review_checklist["required"],
+        )
         self.assertEqual(
             engineering_question_output_contract_digest(),
             engineering_question_output_contract_digest(),
@@ -723,6 +791,15 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "checklist_assessment": {
                 "independent_material_conclusions": ["Explain startup."],
                 "application_checklist_omissions": [],
+                "independent_material_observations": (
+                    AdaptiveStructuredOutputSource._review_observations(
+                        {
+                            "question_evidence_package": package.model_view()
+                        }
+                    )
+                ),
+                "application_material_observation_omissions": [],
+                "draft_material_observation_omissions": [],
             },
             "findings": [
                 {

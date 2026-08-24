@@ -5,6 +5,7 @@ import tempfile
 from argparse import Namespace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import stat
 import unittest
 from unittest.mock import patch
 
@@ -27,7 +28,9 @@ from software_world_model.infrastructure.file_structure_read_bundle import (
     FileStructureReadBundleStore,
 )
 from software_world_model.interface.engineering_qa_preview_cli import (
+    _create_new_private_database,
     _new_database_path,
+    _private_file_creation_mask,
     _verify_product_candidate,
     engineering_question_preview_subject_digest,
     prepare_engineering_question_preview,
@@ -116,6 +119,30 @@ class EngineeringQuestionPreviewCliTests(unittest.TestCase):
         candidate.write_bytes(b"existing")
         with self.assertRaises(DomainError):
             _new_database_path(str(candidate))
+
+    def test_gateway_database_and_live_sqlite_sidecars_are_private(self):
+        candidate = _new_database_path(str(self.root / "private.sqlite3"))
+        _create_new_private_database(candidate)
+        self.assertEqual(stat.S_IMODE(candidate.stat().st_mode), 0o600)
+
+        with _private_file_creation_mask():
+            with SqliteDatabase(candidate) as database:
+                database.executescript(
+                    "CREATE TABLE private_value (value TEXT);"
+                    "INSERT INTO private_value VALUES ('sensitive');"
+                )
+                sidecars = tuple(
+                    path
+                    for path in (
+                        Path(str(candidate) + "-wal"),
+                        Path(str(candidate) + "-shm"),
+                    )
+                    if path.exists()
+                )
+                self.assertEqual(len(sidecars), 2)
+                self.assertTrue(
+                    all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in sidecars)
+                )
 
     def test_prepare_wires_exact_bundle_source_provider_and_run_authority(self):
         structure = structure_fixtures.StructureViewTests(methodName="runTest")

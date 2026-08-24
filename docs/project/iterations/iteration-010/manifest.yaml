@@ -438,11 +438,17 @@ answer_hierarchy_protocol:
   application_uses_accepted_question_understanding_checklist: true
   reviewer_reconstructs_checklist_from_immutable_original_question: true
   reviewer_compares_independent_and_application_checklists_for_omissions: true
+  finish_material_observations_required: true
+  material_observation_kinds: process-stage,outcome,state-change,side-effect,limitation
+  answer_claim_material_observation_links_required: true
+  all_material_observations_default_visible_required: true
+  reviewer_independent_evidence_observation_audit_required: true
+  package_and_draft_observation_omissions_block_approval: true
   reviewer_context_and_verdict_independent: true
   question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed: false
 
 answer_protocol:
-  schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2
+  schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
   contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
   mode: adaptive-cognition-guided-engineering-investigation
   question_understanding_required_fields: user-goal,audience,requested-abstraction-level,material-conclusion-checklist,evidence-needs,response-language-and-constraints
@@ -473,6 +479,10 @@ answer_protocol:
   source_broker_policy_compilation_required: true
   evidence_ledger_append_only: true
   question_evidence_package_sealed_after_investigation: true
+  finish_material_observations_required: true
+  material_observation_identity_application_owned: true
+  answer_claim_material_observation_and_evidence_closure_required: true
+  reviewer_independent_package_and_draft_observation_audit_required: true
   sealed_package_mutation_allowed: false
   safety_budget_reserves_independent_review: true
   quality_checklist_reduction_due_to_remaining_calls_allowed: false
@@ -516,7 +526,7 @@ readiness_inputs:
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
   no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
   answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
-  answer_hierarchy_protocol_digest: sha256:5be994c2bce0745eb6abf2202b3004e69c223d309f8a06f86c9f1a4c9c98a841
+  answer_hierarchy_protocol_digest: sha256:0ab7bdd1be966f8195255694bcadae6d289d3d03878ff4412a43e658020ad08a
   system_contract_set_schema: ITER-010-SYSTEM-CONTRACT-SET@1
   system_contract_set_paths:
     - docs/system/architecture/components.md
@@ -548,13 +558,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:8ee4e536112cd3b3e5717641556ec4a689dce1d7fbf24cb26b8be82765989828
+  system_contract_set_digest: sha256:ad1761834aef51dea35685a23e0b1421d3fd295ad6ebbdaed99620f4dc064340
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
-  investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-2.0.0
+  investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:f0edad17c8d56b1e5005f10609c19eadc4f78fe5571e351ba7c4b52f07ff9c4f
+  investigation_budget_digest: sha256:8416b56e1e7b66db2c1889f7ba85b3cc42c2d350ee3e0ca02db7dca166988809
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14

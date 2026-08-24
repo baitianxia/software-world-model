@@ -73,7 +73,7 @@ DIRECTION_PREVIEW_START_ITERATION = 9
 ENGINEERING_QA_HYBRID_START_ITERATION = 10
 REWORK_LIFECYCLE_START_ITERATION = 10
 ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA = (
-    "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2"
+    "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
 )
 ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE = (
     "adaptive-cognition-guided-engineering-investigation"
@@ -81,7 +81,7 @@ ENGINEERING_QA_ADAPTIVE_PROTOCOL_MODE = (
 ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA = (
     "ENGINEERING_QA_REVIEWER_VERIFICATION_INVESTIGATION@1"
 )
-ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA = "ENGINEERING_QA_ANSWER_HIERARCHY@1"
+ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA = "ENGINEERING_QA_ANSWER_HIERARCHY@2"
 ENGINEERING_QA_ABLATION_SCHEMA = "ENGINEERING_QA_COGNITION_ABLATION@1"
 ENGINEERING_QA_NOT_AUTHORIZED = "not-authorized"
 DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
@@ -1456,6 +1456,12 @@ def validate_answer_hierarchy_protocol(
         "application_uses_accepted_question_understanding_checklist": True,
         "reviewer_reconstructs_checklist_from_immutable_original_question": True,
         "reviewer_compares_independent_and_application_checklists_for_omissions": True,
+        "finish_material_observations_required": True,
+        "material_observation_kinds": "process-stage,outcome,state-change,side-effect,limitation",
+        "answer_claim_material_observation_links_required": True,
+        "all_material_observations_default_visible_required": True,
+        "reviewer_independent_evidence_observation_audit_required": True,
+        "package_and_draft_observation_omissions_block_approval": True,
         "reviewer_context_and_verdict_independent": True,
         "question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed": False,
     }
@@ -4228,6 +4234,10 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "source_broker_policy_compilation_required",
         "evidence_ledger_append_only",
         "question_evidence_package_sealed_after_investigation",
+        "finish_material_observations_required",
+        "material_observation_identity_application_owned",
+        "answer_claim_material_observation_and_evidence_closure_required",
+        "reviewer_independent_package_and_draft_observation_audit_required",
         "safety_budget_reserves_independent_review",
         "reviewer_more_evidence_requires_specific_verifiable_gap",
         "reviewer_verification_request_requires_application_and_source_broker_revalidation",

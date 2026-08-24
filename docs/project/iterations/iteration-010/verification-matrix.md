@@ -89,10 +89,22 @@ Citation 全部打开、console `[]`、retry/switch/outcome-unknown 0、resource
 表达 `REDIRECT`；后续 `32b298de…` 收据已恢复 ITER-010/Slice1 的编码，live 仍未获得新 freeze 后授权。当前必须先执行以下持续 Web
 Alpha Case，不能用旧的单题启动器、测试或固定 1+1 回放代替。
 
+用户随后提供的 root + exact mall/DeepSeek scope 已授权持续 Alpha。candidate `b6e13eb…` 的首次会话真实启动并以 8 次 role dispatch、
+retry/switch 0 回答现场登录题；完整 `UmsAdminServiceImpl` 已进入 Package/Reviewer，但正文再次遗漏成功登录审计写入，Reviewer 错误
+`APPROVED`。该 Result 只把 `V-EXPERIENCE/V-ANSWER-REWORK` 推进为 in-progress，并以 `FINDING-010-033` 保留失败，不能取得 PASS。会话还
+暴露 Gateway SQLite 主文件为 `0644`，见 `FINDING-010-034`。当前 worktree 已升级
+`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3`：FINISH 原子 evidence observations、Answer observation/evidence closure、Reviewer 独立
+Package/Draft observation audit，以及 SQLite 主文件/WAL/SHM `0600` 创建测试均通过；新协议仍须 clean freeze、current Conformance 和完整
+原题 + 两道异质题 + 受控失败的持续 browser run。
+
+Engineering QA 83/83、docs/freeze/browser 86/86、current docs 427/427 PASS；在允许 AF_UNIX 的本机执行面运行 full 1144 项得到 1139 PASS，
+raw 仍精确为既有 4 FAIL + 1 ERROR，见 `FINDING-010-035`。默认沙箱额外出现的 AF_UNIX denial 不属于产品回归，raw full suite 仍不写成
+PASS。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | Alpha CLI/session/browser deterministic tests：零 dispatch 启动顺序、多题 server identity、失败后继续、receipt replay 与跨站 POST 拒绝；没有 listener/Provider 运行 | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2` closed schema/Application tests：受控 detail/content role、checklist coverage、默认正文投影、独立 checklist 与四项 quality Gate；没有真实三题 Result | NOT-RUN / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | candidate `b6e13eb…` 首次持续 listener/browser 与现场题执行成立，但答案缺陷和 DB `0644` 使该 run 失败；Alpha deterministic tests 已覆盖零 dispatch 启动、多题 identity、失败继续、same-origin 与 private SQLite，完整新 candidate run 尚未执行 | NOT-RUN / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；Reviewer 阻断层级错配、物质遗漏、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | candidate `b6e13eb…` 原题仍遗漏副作用且假批准；`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` deterministic schema/Application tests 已阻断代表性观察替代副作用与 Reviewer observation omission；没有新协议真实三题 Result | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

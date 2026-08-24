@@ -22,6 +22,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringReviewDecision,
     EngineeringReviewChecklistAssessment,
     EngineeringReviewFinding,
+    EngineeringReviewMaterialObservation,
     EngineeringReviewProposal,
     EngineeringReviewQualityAssessment,
     EngineeringReviewQualityStatus,
@@ -32,6 +33,8 @@ from software_world_model.application_services.engineering_question_answering im
     InvestigationStepProposal,
     LedgerEntryKind,
     LedgerTerminalStatus,
+    MaterialObservation,
+    MaterialObservationKind,
     PackageBoundaryKind,
     QuestionEvidencePackage,
     QuestionUnderstanding,
@@ -73,12 +76,39 @@ def passing_quality() -> EngineeringReviewQualityAssessment:
 
 def matching_review_checklist(
     understanding: QuestionUnderstanding,
+    package: QuestionEvidencePackage,
 ) -> EngineeringReviewChecklistAssessment:
+    support_by_source = {
+        item.source_reference: item.entry_id for item in package.support_citation
+    }
+    boundary_by_source = {
+        item.source_reference: item.entry_id for item in package.boundary_audit
+    }
+    observations = tuple(
+        EngineeringReviewMaterialObservation.create(
+            checklist_item_id=observation.checklist_item_id,
+            kind=observation.kind,
+            statement=observation.statement,
+            evidence_entry_ids=tuple(
+                (
+                    support_by_source
+                    if disposition.outcome is ChecklistOutcome.SUPPORTED
+                    else boundary_by_source
+                )[reference]
+                for reference in observation.evidence_references
+            ),
+        )
+        for disposition in package.checklist_dispositions
+        for observation in disposition.material_observations
+    )
     return EngineeringReviewChecklistAssessment.create(
         independent_material_conclusions=tuple(
             item.conclusion for item in understanding.checklist
         ),
         application_checklist_omissions=(),
+        independent_material_observations=observations,
+        application_material_observation_omissions=(),
+        draft_material_observation_omissions=(),
     )
 
 
@@ -173,12 +203,27 @@ def step_proposal(
     )
     dispositions = ()
     if operation is InvestigationOperation.FINISH:
+        assert evidence_reference is not None
         dispositions = (
             ChecklistDisposition.create(
                 checklist_item_id="check-1",
                 outcome=ChecklistOutcome.SUPPORTED,
                 evidence_references=(evidence_reference,),
                 explanation="The exact package contains the required evidence.",
+                material_observations=(
+                    MaterialObservation.create(
+                        checklist_item_id="check-1",
+                        kind=MaterialObservationKind.PROCESS_STAGE,
+                        statement="The repository evidence establishes the documented startup entry point.",
+                        evidence_references=(evidence_reference,),
+                    ),
+                    MaterialObservation.create(
+                        checklist_item_id="check-1",
+                        kind=MaterialObservationKind.SIDE_EFFECT,
+                        statement="Starting the service also writes a local PID file.",
+                        evidence_references=(evidence_reference,),
+                    ),
+                ),
             ),
         )
     return InvestigationStepProposal.create(
@@ -277,7 +322,7 @@ class ScriptedWorker:
                 line_start=1,
                 line_end=1,
                 content=(
-                    "Use ./run-service to start the service."
+                    "Use ./run-service to start the service. Startup also writes a local PID file."
                     if path == "README.md"
                     else "request.timeout=30s"
                 ),
@@ -294,7 +339,7 @@ class ScriptedWorker:
                 coverage={"complete": "true"},
             )
         content = (
-            "Use ./run-service to start the service."
+            "Use ./run-service to start the service. Startup also writes a local PID file."
             if operation.path == "README.md"
             else "request.timeout=30s"
         )
@@ -329,6 +374,11 @@ class AnswerRole:
         rewrite_findings=(),
     ):
         support = tuple(item.entry_id for item in package.support_citation)
+        observation_ids = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
         return EngineeringAnswerProposal.create(
             role_context_id=role_context_id,
             package_digest=package.digest,
@@ -339,8 +389,10 @@ class AnswerRole:
                     kind=AnswerClaimKind.AFFIRMATIVE,
                     content_role=AnswerContentRole.DIRECT_ANSWER,
                     checklist_item_ids=("check-1",),
+                    material_observation_ids=observation_ids,
                     text=(
                         "Start the service through its documented entry point; "
+                        "startup also writes a local PID file; "
                         "the request timeout is controlled by the repository configuration."
                     ),
                     evidence_entry_ids=support,
@@ -384,7 +436,9 @@ class ReviewerRole:
                 draft_digest=draft.digest,
                 decision=EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED,
                 quality_assessment=passing_quality(),
-                checklist_assessment=matching_review_checklist(understanding),
+                checklist_assessment=matching_review_checklist(
+                    understanding, package
+                ),
                 findings=(finding,),
                 verification_request=verification,
             )
@@ -394,7 +448,7 @@ class ReviewerRole:
             draft_digest=draft.digest,
             decision=EngineeringReviewDecision.APPROVED,
             quality_assessment=passing_quality(),
-            checklist_assessment=matching_review_checklist(understanding),
+            checklist_assessment=matching_review_checklist(understanding, package),
         )
 
 
@@ -984,6 +1038,11 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         class BadAnswerRole(AnswerRole):
             def generate(self, **kwargs):
                 package = kwargs["package"]
+                observation_ids = tuple(
+                    observation.observation_id
+                    for disposition in package.checklist_dispositions
+                    for observation in disposition.material_observations
+                )
                 return EngineeringAnswerProposal.create(
                     role_context_id=kwargs["role_context_id"],
                     package_digest=package.digest,
@@ -994,6 +1053,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                             kind=AnswerClaimKind.AFFIRMATIVE,
                             content_role=AnswerContentRole.DIRECT_ANSWER,
                             checklist_item_ids=("check-1",),
+                            material_observation_ids=observation_ids,
                             text="This unsupported assertion must be rejected.",
                             evidence_entry_ids=(package.boundary_audit[0].entry_id,),
                         ),
@@ -1018,11 +1078,17 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         support = tuple(
             item.entry_id for item in result.current_package.support_citation
         )
+        observation_ids = tuple(
+            observation.observation_id
+            for disposition in result.current_package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
         process = EngineeringAnswerClaimProposal.create(
             claim_id="claim-process",
             kind=AnswerClaimKind.AFFIRMATIVE,
             content_role=AnswerContentRole.USER_VISIBLE_PROCESS,
             checklist_item_ids=("check-1",),
+            material_observation_ids=observation_ids,
             text="The user-visible process follows the documented entry point.",
             evidence_entry_ids=support,
         )
@@ -1031,6 +1097,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             kind=AnswerClaimKind.AFFIRMATIVE,
             content_role=AnswerContentRole.DIRECT_ANSWER,
             checklist_item_ids=("check-1",),
+            material_observation_ids=observation_ids,
             text="Use the documented entry point.",
             evidence_entry_ids=support,
         )
@@ -1043,12 +1110,57 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 claims=(process, direct),
             )
 
+    def test_answer_cannot_use_one_observation_as_a_proxy_for_a_side_effect(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        package = result.current_package
+        observations = tuple(
+            observation
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        self.assertEqual(
+            tuple(item.kind for item in observations),
+            (
+                MaterialObservationKind.PROCESS_STAGE,
+                MaterialObservationKind.SIDE_EFFECT,
+            ),
+        )
+        proposal = EngineeringAnswerProposal.create(
+            role_context_id=sid("role_context", "d"),
+            package_digest=package.digest,
+            response_language=result.understanding.response_language,
+            claims=(
+                EngineeringAnswerClaimProposal.create(
+                    claim_id="claim-partial",
+                    kind=AnswerClaimKind.AFFIRMATIVE,
+                    content_role=AnswerContentRole.DIRECT_ANSWER,
+                    checklist_item_ids=("check-1",),
+                    material_observation_ids=(observations[0].observation_id,),
+                    text="Start the service through its documented entry point.",
+                    evidence_entry_ids=tuple(
+                        item.entry_id for item in package.support_citation
+                    ),
+                ),
+            ),
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            EngineeringAnswerDraft.accept(
+                package=package,
+                understanding=result.understanding,
+                expected_role_context_id=sid("role_context", "d"),
+                proposal=proposal,
+                revision=1,
+            )
+        self.assertEqual(caught.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+
     def test_direct_answer_can_be_an_honest_boundary_limitation(self):
         claim = EngineeringAnswerClaimProposal.create(
             claim_id="claim-direct-boundary",
             kind=AnswerClaimKind.LIMITATION,
             content_role=AnswerContentRole.DIRECT_ANSWER,
             checklist_item_ids=("check-1",),
+            material_observation_ids=(sid("material_observation", "e"),),
             text="The available evidence cannot determine the requested behavior.",
             evidence_entry_ids=(sid("ledger_entry", "f"),),
         )
@@ -1060,6 +1172,11 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         result = self.service(request_more_evidence=False).answer(request())
         package = result.current_package
         support = tuple(item.entry_id for item in package.support_citation)
+        observation_ids = tuple(
+            observation.observation_id
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
         role_context = sid("role_context", "f")
         proposal = EngineeringAnswerProposal.create(
             role_context_id=role_context,
@@ -1071,6 +1188,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                     kind=AnswerClaimKind.AFFIRMATIVE,
                     content_role=AnswerContentRole.DIRECT_ANSWER,
                     checklist_item_ids=("check-1",),
+                    material_observation_ids=observation_ids,
                     text="Use the documented entry point.",
                     evidence_entry_ids=support,
                 ),
@@ -1079,6 +1197,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                     kind=AnswerClaimKind.AFFIRMATIVE,
                     content_role=AnswerContentRole.IMPLEMENTATION_EVIDENCE,
                     checklist_item_ids=("check-1",),
+                    material_observation_ids=observation_ids,
                     text=" ".join("implementation-detail" for _ in range(20)),
                     evidence_entry_ids=support,
                 ),
@@ -1117,7 +1236,49 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 checklist_assessment=EngineeringReviewChecklistAssessment.create(
                     independent_material_conclusions=("Explain the user goal.",),
                     application_checklist_omissions=(),
+                    independent_material_observations=(
+                        EngineeringReviewMaterialObservation.create(
+                            checklist_item_id="check-1",
+                            kind=MaterialObservationKind.OUTCOME,
+                            statement="The user goal has one material outcome.",
+                            evidence_entry_ids=(sid("package_entry", "8"),),
+                        ),
+                    ),
+                    application_material_observation_omissions=(),
+                    draft_material_observation_omissions=(),
                 ),
+            )
+
+    def test_review_cannot_approve_an_independently_observed_draft_omission(self):
+        result = self.service(request_more_evidence=False).answer(request())
+        assessment = matching_review_checklist(
+            result.understanding, result.current_package
+        )
+        omitted_statement = next(
+            item.statement
+            for item in assessment.independent_material_observations
+            if item.kind is MaterialObservationKind.SIDE_EFFECT
+        )
+        assessment_with_omission = EngineeringReviewChecklistAssessment.create(
+            independent_material_conclusions=(
+                assessment.independent_material_conclusions
+            ),
+            application_checklist_omissions=(),
+            independent_material_observations=(
+                assessment.independent_material_observations
+            ),
+            application_material_observation_omissions=(),
+            draft_material_observation_omissions=(omitted_statement,),
+        )
+
+        with self.assertRaises(DomainError):
+            EngineeringReviewProposal.create(
+                role_context_id=sid("role_context", "7"),
+                package_digest=result.current_package.digest,
+                draft_digest=result.current_draft.digest,
+                decision=EngineeringReviewDecision.APPROVED,
+                quality_assessment=passing_quality(),
+                checklist_assessment=assessment_with_omission,
             )
 
     def test_worker_cannot_return_another_profile_class_path(self):

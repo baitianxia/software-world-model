@@ -81,5 +81,13 @@ iteration: ITER-010
   现于 receipt/transport 前强制 exact same-origin、`application/json` 和可选 `Sec-Fetch-Site: same-origin`，跨站请求失败关闭。
 - [FINDING-010-032](FINDING-010-032.md)：返工后完整 1141 项中 1136 PASS，raw 仍为既有 4 FAIL + 1 ERROR；未通过项精确属于冻结的
   V-009 Adapter Conformance 与 Codex binary drift。保持 raw FAIL，只以 zero-new-failure historical hold 继续准备 candidate。
+- [FINDING-010-033](FINDING-010-033.md)：首次持续 Alpha 回归再次遗漏完整源码中已存在的成功路径副作用且 Reviewer 错误批准；根因是宽泛
+  checklist 可被一个代表性事实伪闭合。协议 `@3` 现要求 FINISH 原子 evidence observations、Answer observation/evidence closure，以及
+  Reviewer 从完整 Package evidence 独立比较 Package/Draft observation omission。
+- [FINDING-010-034](FINDING-010-034.md)：首次持续 Alpha 的 Gateway SQLite 主文件实际为 `0644`，WAL/SHM 同样没有 private-mode
+  创建保证。两个 launcher 现以 exclusive `0600` 创建主文件并在 `0077` mask 下运行 SQLite，测试核对 live sidecars 从创建起均为
+  `0600`。
+- [FINDING-010-035](FINDING-010-035.md)：协议 `@3` 与 private SQLite 回归后的完整 1144 项中 1139 PASS，raw 只保留既有
+  4 FAIL + 1 ERROR；本机 AF_UNIX 重跑消除沙箱额外错误。保持 exact historical hold，不追认冻结 runtime。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

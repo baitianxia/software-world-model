@@ -107,6 +107,9 @@ session configuration 必须是 canonical absolute path 上 mode `0600` 的 uniq
 ```
 
 `cognition_snapshot_id` 在单 Snapshot 时可为 JSON `null`，多 Snapshot 时必须是 exact ID。数据库与两份 receipt 路径必须互异且尚不存在；
+launcher 必须以 exclusive create 原子创建 Gateway SQLite 主文件并强制 mode `0600`，其整个存活期的 `-wal` / `-shm` sidecar 也必须在
+private creation mask 下保持 `0600`。不能先让 SQLite 按进程默认 umask 创建 `0644` 文件后再补 chmod，因为 role input、Source evidence、
+Ledger、Package 和 Review 可能已在窗口期落盘。并发占用或权限不满足必须在 listener 前失败关闭。
 配置不得包含 Secret value，DeepSeek credential 只在每题首个已授权 dispatch 前从冻结配置所指的环境引用解析。该配置必须绑定新 product
 freeze 与 post-freeze live 授权，且 launcher 不接受 host/port/question/request/run 参数。旧
 `engineering_qa_preview_cli` 是历史单题审计兼容面，不是当前 Alpha 或平行演示入口。

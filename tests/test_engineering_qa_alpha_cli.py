@@ -276,6 +276,10 @@ class EngineeringQuestionAlphaCliTests(unittest.TestCase):
 
         self.assertEqual(status, 0)
         self.assertEqual(stderr.getvalue(), "")
+        self.assertEqual(
+            os.stat(self.root / "gateway.sqlite3").st_mode & 0o777,
+            0o600,
+        )
         self.assertIn('"status":"READY"', stdout.getvalue())
         self.assertEqual(
             events,

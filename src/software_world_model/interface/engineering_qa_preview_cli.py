@@ -9,6 +9,7 @@ Source Profile, or disclosure scope from the question text.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import os
@@ -444,38 +445,40 @@ def main(
         transport = PersistentDeepSeekChatTransport(
             api_key_resolver=provider_configuration.resolve_api_key
         )
-        with SqliteDatabase(gateway_database) as database:
-            preview = prepare_engineering_question_preview(
-                arguments,
-                database=database,
-                transport=transport,
-                at=datetime.now(timezone.utc),
-            )
-            _write_new_private_json(
-                launch_receipt,
-                preview.launch_receipt(port=arguments.port),
-            )
-            with make_server(
-                "127.0.0.1",
-                arguments.port,
-                preview.assembly.application,
-                handler_class=_QuietLoopbackHandler,
-            ) as server:
-                output.write(
-                    canonical_json_bytes(
-                        preview.public_status(port=server.server_port)
-                    ).decode("utf-8")
-                    + "\n"
+        _create_new_private_database(gateway_database)
+        with _private_file_creation_mask():
+            with SqliteDatabase(gateway_database) as database:
+                preview = prepare_engineering_question_preview(
+                    arguments,
+                    database=database,
+                    transport=transport,
+                    at=datetime.now(timezone.utc),
                 )
-                output.flush()
-                try:
-                    server.serve_forever()
-                except KeyboardInterrupt:
-                    pass
                 _write_new_private_json(
-                    terminal_receipt,
-                    preview.terminal_receipt(transport=transport),
+                    launch_receipt,
+                    preview.launch_receipt(port=arguments.port),
                 )
+                with make_server(
+                    "127.0.0.1",
+                    arguments.port,
+                    preview.assembly.application,
+                    handler_class=_QuietLoopbackHandler,
+                ) as server:
+                    output.write(
+                        canonical_json_bytes(
+                            preview.public_status(port=server.server_port)
+                        ).decode("utf-8")
+                        + "\n"
+                    )
+                    output.flush()
+                    try:
+                        server.serve_forever()
+                    except KeyboardInterrupt:
+                        pass
+                    _write_new_private_json(
+                        terminal_receipt,
+                        preview.terminal_receipt(transport=transport),
+                    )
         return 0
     except (DomainError, OSError, ValueError, subprocess.SubprocessError) as exc:
         payload = {
@@ -623,6 +626,34 @@ def _new_database_path(value: str) -> Path:
             "Gateway database parent must be canonical",
         )
     return path
+
+
+def _create_new_private_database(path: Path) -> None:
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(
+            path,
+            os.O_RDWR | os.O_CREAT | os.O_EXCL,
+            0o600,
+        )
+        os.fchmod(descriptor, 0o600)
+    except FileExistsError as exc:
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "Gateway database path was concurrently occupied",
+        ) from exc
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+@contextmanager
+def _private_file_creation_mask():
+    previous_mask = os.umask(0o077)
+    try:
+        yield
+    finally:
+        os.umask(previous_mask)
 
 
 def _new_private_output_path(value: str) -> Path:
