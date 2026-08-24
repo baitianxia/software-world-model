@@ -119,6 +119,10 @@ iteration: ITER-010
   observation coverage、只能链接 supported checklist，Reviewer 必须核对其未扩张后续事实。
 - [FINDING-010-046](FINDING-010-046.md)：clean `8565fa5…` 的现场题再次只读 README 后把所有结论过早标成全局 Unknown，错误 limitation
   仍被 Reviewer 批准。现由 Source Profile 投影 registered/investigated/untried evidence classes；含 non-supported disposition 的 FINISH
-  在 untried 非空时由 Application 追加 required-class GAP 并继续调查，答案抽象层级不再排除 Source behavior evidence。
+  在 untried 非空时由 Application 追加 required-class GAP 并继续调查，答案抽象层级不再排除 Source behavior evidence；遍历全部
+  registered class 的处置已被 `FINDING-010-047` 收窄。
+- [FINDING-010-047](FINDING-010-047.md)：clean `8575517…` 已让原登录题读取源码并通过，但两道异质题暴露 registered registry 被误作
+  逐题语义最小集，以及 FINISH schema 未联动 outcome/observation kind。现由 Understanding 声明 required classes，Application 只闭合
+  untried required，并以条件化 schema 在 Provider 输出边界拒绝 supported/limitation 混类；新 clean candidate/fresh live 仍待执行。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

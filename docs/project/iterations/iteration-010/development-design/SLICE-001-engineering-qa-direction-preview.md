@@ -101,6 +101,12 @@ link；该修复尚未成为新的 clean frozen candidate，也没有原题加�
 `FINDING-010-038` 不放松 Domain，而是显式下发合法 kind/role mapping，并要求 UNKNOWN/CONFLICT/FAILED FINISH 前尝试仍可直接减少
 material unknown 的已授权 evidence class。该修复也尚无新的 clean/live 证据。
 
+后续 clean candidate `8575517…` 已使原现场登录题实际读取源码并以 8 次 dispatch 得到完整 `APPROVED`，但同会话两道异质题分别在 13/10
+次 dispatch 后失败关闭：Application 把全部 registered class 当作 non-supported FINISH 的必经闭包，挤占了决定性源码调查；Provider-facing
+FINISH schema 又允许 `SUPPORTED` disposition 混入 `LIMITATION` observation，直到 Domain 才拒绝。`FINDING-010-047` 现由 Question
+Understanding 声明逐题最小 `required_evidence_classes`，Application 只闭合 untried required，且 closed schema 与 Domain 同时强制
+supported/affirmative、non-supported/limitation 的一致组合。该修复仍须新 clean candidate、fresh Conformance 和持续三题现场执行。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -127,9 +133,13 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Application 再验证 Result class/path。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority 或来源分类权。
 - 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
   只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
+- Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合。Application 区分 Profile 的 registered classes、
+  逐题 required classes、已调查 classes、untried required 和 unregistered required；non-supported FINISH 只闭合仍可调查的 required class，
+  不机械遍历无关 registered class，unregistered required 则保留为能力边界。
 - 每个 FINISH disposition 必须从完整引用内容列出有界原子 material observations，区分 process、outcome、state change、side effect 与
-  limitation，并逐条绑定 admissible evidence；一个代表性事实不能闭合宽泛 checklist。Application 生成稳定 observation identity 并拒绝
-  跨 checklist、重复、错误分区或证据不闭合。
+  limitation，并逐条绑定 admissible evidence；`SUPPORTED` 只能包含 affirmative observation，non-supported outcome 只能包含
+  `LIMITATION`，output schema 与 Application Domain 均拒绝混类。一个代表性事实不能闭合宽泛 checklist。Application 生成稳定
+  observation identity 并拒绝跨 checklist、重复、错误分区或证据不闭合。
 - Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
   校验通过的可采信条目，只有它们能支持肯定 Claim 与 Citation；`boundary/audit` 必须保留 Gap、Failure、Partial、Conflict、Unknown、
   拒绝决定和资源收据，只能约束结论或形成标记清楚的边界说明，不能支持肯定 Claim。seal 不把任何条目或模型推断变成真。

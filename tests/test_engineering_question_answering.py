@@ -156,6 +156,10 @@ class UnderstandingRole:
             requested_abstraction_level=AnswerDetailLevel.USER_VISIBLE_EXPLANATION,
             material_conclusions=("Explain startup and the effective timeout control.",),
             evidence_needs=("published architecture and repository usage/configuration",),
+            required_evidence_classes=(
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                EngineeringEvidenceClass.SOURCE,
+            ),
             response_language=request.response_language,
             response_constraints=("conclusion first",),
         )
@@ -562,7 +566,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         )
         self.assertEqual(result.production_activation, "NOT_EXECUTED")
 
-    def test_non_supported_finish_reopens_untried_registered_source_class(self):
+    def test_non_supported_finish_reopens_untried_required_source_class(self):
         class PrematureFinishInvestigator:
             closure_state = None
 
@@ -616,8 +620,9 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 if investigation_input.step_index == 3:
                     self.closure_state = (
                         investigation_input.registered_evidence_classes,
+                        investigation_input.required_evidence_classes,
                         investigation_input.investigated_evidence_classes,
-                        investigation_input.untried_registered_evidence_classes,
+                        investigation_input.untried_required_evidence_classes,
                         investigation_input.ledger.entries[-1],
                     )
                     return step_proposal(
@@ -713,7 +718,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         result = service.answer(request())
 
         self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
-        registered, investigated, untried, gap = investigator.closure_state
+        registered, required, investigated, untried, gap = investigator.closure_state
         self.assertEqual(
             registered,
             (
@@ -724,22 +729,25 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
+            required,
+            (
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                EngineeringEvidenceClass.SOURCE,
+            ),
+        )
+        self.assertEqual(
             investigated,
             (EngineeringEvidenceClass.REPOSITORY_DOCUMENT,),
         )
         self.assertEqual(
             untried,
-            (
-                EngineeringEvidenceClass.SOURCE,
-                EngineeringEvidenceClass.BUILD_CONFIGURATION,
-                EngineeringEvidenceClass.TEST,
-            ),
+            (EngineeringEvidenceClass.SOURCE,),
         )
         self.assertEqual(gap.kind, LedgerEntryKind.GAP)
         self.assertEqual(dict(gap.details)["evidence_class"], "SOURCE")
         self.assertEqual(
             dict(gap.details)["reason"],
-            "NON_SUPPORTED_FINISH_REQUIRES_REGISTERED_EVIDENCE_CLASS",
+            "NON_SUPPORTED_FINISH_REQUIRES_DECLARED_EVIDENCE_CLASS",
         )
         self.assertEqual(result.usage.investigation_role_calls, 5)
         self.assertEqual(result.usage.source_operations, 3)

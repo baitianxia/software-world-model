@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@17"
+    "engineering-qa-adaptive-investigation-prompt@18"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -133,6 +133,8 @@ choose implementation detail merely because the supplied system concerns code.
 List every material conclusion that must be answered. For a flow or lifecycle,
 include user-visible stages, outcomes, and material state changes or side effects
 in that checklist; do not substitute class or method names for those conclusions.
+Split independently supportable and intentionally unknown facets into distinct
+checklist items so each later disposition can have one coherent outcome.
 Checklist items may summarize the goal, but they do not waive the later atomic
 evidence-observation audit.
 Identify the evidence needs, response language, and response constraints. Do not
@@ -143,6 +145,14 @@ lifecycle, authorization decision, or failure path works normally needs exact
 SOURCE behavior evidence even when the answer should remain user-visible. Record
 that evidence need; do not limit investigation to UI, documentation, or logs and
 do not use a presentation constraint to forbid implementation evidence.
+Return required_evidence_classes as the smallest unique set directly needed to
+answer the material checklist, independent of which classes may later be
+registered. Use SOURCE for implementation behavior, conditions, state changes,
+outcomes, or failure paths; REPOSITORY_DOCUMENT for behavior or usage documented
+by the repository; BUILD_CONFIGURATION for declared dependencies, plugins, build
+profiles, or toolchain settings; and TEST for behavior asserted by tests. Do not
+select every class merely because it exists, and do not omit SOURCE when the
+question's decisive flow semantics live in implementation code.
 """,
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: f"""
 Choose exactly one next investigation action from the registered vocabulary or
@@ -179,19 +189,26 @@ copied into evidence_references unless that exact value also appears in the
 corresponding admissible list. After a search hit, prefer reading or parsing an
 issued locator before broadening the search when that result can reduce the
 current unknown.
-Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the registered
-evidence classes and prior action intents. If an untried eligible class can
-directly reduce the material unknown within the remaining fuse, investigate it;
-lack of detail in one modality is not global absence. FINISH is appropriate only
-when the retained evidence and boundary actually justify every disposition, not
+Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect required evidence
+classes and prior action intents. If an untried required class can directly
+reduce the material unknown within the remaining fuse, investigate it; lack of
+detail in one modality is not global absence. FINISH is appropriate only when
+the retained evidence and boundary actually justify every disposition, not
 merely because the first investigated class was insufficient.
-registered_evidence_classes, investigated_evidence_classes, and
-untried_registered_evidence_classes are Application-owned closure state. Never
-claim that no other authorized evidence exists while the untried list is
-non-empty. A FINISH containing any non-supported disposition while that list is
-non-empty is rejected into a GAP naming the next required class; consume that
-GAP and investigate the named class instead of repeating FINISH. USER_VISIBLE
-presentation scope does not make SOURCE implementation behavior ineligible.
+registered_evidence_classes, required_evidence_classes,
+investigated_evidence_classes, untried_required_evidence_classes, and
+unregistered_required_evidence_classes are Application-owned closure state.
+Never claim that no other authorized required evidence exists while the untried
+required list is non-empty. A FINISH containing any non-supported disposition
+while that list is non-empty is rejected into a GAP naming the next required
+class; consume that GAP and investigate the named class instead of repeating
+FINISH. A required class listed as unregistered is a real boundary, not an
+investigation target. USER_VISIBLE presentation scope does not make SOURCE
+implementation behavior ineligible.
+Every path listed in request.source_allowlist is authorized by the bound Source
+Profile. Never call such a path unauthorized; when the Broker issues an eligible
+locator for a material allowlisted path, read or parse it before claiming that
+its details are unavailable. Do not infer authorization for unlisted paths.
 A setup statement supports setup only; a declaration, registration, dependency,
 or wiring statement supports only that relationship. None of them proves the
 delegated component's conditions, comparisons, state changes, outcomes, failure
@@ -209,6 +226,12 @@ material process stages, outcomes, state/context mutations, persistence or
 audit writes, external interactions, and failure outcomes when the evidence
 shows them. Use PROCESS_STAGE, OUTCOME, STATE_CHANGE, or SIDE_EFFECT only for a
 SUPPORTED disposition; use LIMITATION for every non-supported disposition.
+Do not mix these categories: a SUPPORTED disposition cannot contain a
+LIMITATION observation, and UNKNOWN, CONFLICT, or FAILED cannot contain an
+affirmative observation. Do not append an incidental coverage concern to a
+supported checklist item. When one conclusion is supportable and another is
+not, the accepted checklist must represent them as distinct items and each
+disposition must remain internally homogeneous.
 Each observation must be one explicit fact and cite every exact admissible
 reference needed to support it, all retained by its parent disposition.
 """,
@@ -243,19 +266,19 @@ one eligible locator_reference, a null query, and an empty finish_dispositions
 array; FINISH requires evidence_class, query, and locator_reference all to be
 null and requires a non-empty finish_dispositions array. Do not carry an
 evidence_class from the preceding action into FINISH.
-Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the registered
-evidence classes and prior action intents. If an untried eligible class can
-directly reduce the material unknown within the remaining fuse, investigate it;
-lack of detail in one modality is not global absence. FINISH is appropriate only
-when the retained evidence and boundary actually justify every disposition, not
-merely because the first investigated class was insufficient.
-registered_evidence_classes, investigated_evidence_classes, and
-untried_registered_evidence_classes are Application-owned closure state for the
-concrete verification gap. Never claim that no other authorized evidence exists
-while the untried list is non-empty. A FINISH containing any non-supported
-disposition while that list is non-empty is rejected into a GAP naming the next
-required class; consume that GAP and investigate the named class instead of
-repeating FINISH.
+Before FINISH assigns UNKNOWN, CONFLICT, or FAILED, inspect the concrete gap's
+required evidence class and prior action intents. If that class remains untried
+and registered, investigate it; lack of detail in one modality is not global
+absence. FINISH is appropriate only when retained evidence and its boundary
+justify every disposition.
+registered_evidence_classes, required_evidence_classes,
+investigated_evidence_classes, untried_required_evidence_classes, and
+unregistered_required_evidence_classes are Application-owned closure state for
+the concrete verification gap. A non-supported FINISH while the untried required
+list is non-empty is rejected into a GAP; consume it instead of repeating
+FINISH. A required class listed as unregistered is a real boundary. Every path
+listed in the bound request source_allowlist is authorized; do not call it
+unauthorized, and read or parse a Broker-issued eligible locator when material.
 A setup statement supports setup only; a declaration, registration, dependency,
 or wiring statement supports only that relationship. None of them proves the
 delegated component's conditions, comparisons, state changes, outcomes, failure
@@ -271,7 +294,11 @@ stand in for distinct process stages, outcomes, state/context mutations,
 persistence or audit writes, external interactions, or failure outcomes that
 are material to the question. Supported observations use PROCESS_STAGE,
 OUTCOME, STATE_CHANGE, or SIDE_EFFECT; non-supported observations use
-LIMITATION. Each observation cites every admissible reference it needs.
+LIMITATION. These categories are mutually exclusive within a disposition: never
+put LIMITATION under SUPPORTED or an affirmative kind under UNKNOWN, CONFLICT,
+or FAILED. Keep independently supported and unsupported conclusions in distinct
+checklist dispositions. Each observation cites every admissible reference it
+needs.
 """,
     EngineeringQuestionModelRole.ANSWER: """
 Answer from the sealed Question Evidence Package only. Return exactly one

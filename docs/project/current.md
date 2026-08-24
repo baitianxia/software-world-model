@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, ITER-010-PDR-001, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, ITER-010-PDR-001, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-24
@@ -87,7 +87,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / evidence-class closure candidate** | 余额恢复后 fresh DeepSeek Conformance 2/2 PASS；但 clean `8565fa5…` 的现场题仍只读 README 后把登录流程错误标成全局 Unknown，且 Reviewer 错误批准。`FINDING-010-046` 已把 registered/investigated/untried evidence-class closure 提升到 Application，定向 93/93 PASS，完整 1154/1149 只保留既有 4 FAIL + 1 ERROR historical hold。仍须 clean commit、fresh Conformance 和同一会话三题重跑；`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / required-evidence closure implementation** | clean `8575517…` 与 fresh run-014 Conformance 已让原登录题读取源码并完整 `APPROVED`，但两道异质题因全 registered-class 遍历和 supported/limitation 混类而失败关闭。`FINDING-010-047` 现以 Understanding required classes、Application untried-required closure 和条件化 FINISH schema 处置通用根因，定向 94/94 PASS；完整回归、clean commit、fresh Conformance 与同会话三题仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -145,6 +145,19 @@ required class 的 GAP 并继续，而全 SUPPORTED FINISH 不强迫读取无关
 `PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。下一步是形成 clean commit、重取 current Conformance，再以 root authority 收窄的新 exact
 session 执行原题、两个异质题和 Provider 前受控失败；在此之前不把确定性测试或旧 `APPROVED` 写成真实答案 PASS，也不执行 hidden、
 三臂消融或 Production Activation。
+
+上述修复形成 clean candidate `8575517…` 并通过 run-014 fresh DeepSeek Conformance 2/2，Result digest 为
+`sha256:85c52d9af857bcc3586c821edf9a500539d82de0a56b58bc2cf5beb39f94fefa`。同一持续会话的原登录题以 8 次 dispatch 实际读取
+Controller/Service 源码并完整 `APPROVED`；第二、第三题分别在 13/10 次 dispatch 后因 FINISH 把 `LIMITATION` observation 放入
+`SUPPORTED` disposition 而由 Domain 失败关闭，同时暴露 registered registry 被误作逐题最小证据集、以及已 allowlist 根 POM 被错称
+未授权。terminal receipt `sha256:3f68c27c30207861368da71e4f12ea6bb7ab7d389ef7e457dd8259ab3afbaa0f` 记录 3 题、31
+dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；受控超限输入仍在 Provider 前拒绝且 listener 保持 `READY`。
+
+`FINDING-010-047` 已取代 `FINDING-010-046` 的全 registered-class closure：Question Understanding closed output 声明回答 checklist
+直接需要的最小 `required_evidence_classes`；Application 分别投影 registered/required/investigated/untried-required/unregistered-required，
+只在 non-supported FINISH 尚有可调查 required class 时追加 GAP。Initial/Verification FINISH schema 同时按 outcome 条件化 observation kind，
+并明确 Source Profile allowlist 路径不得被声称为未授权。Prompt/Strategy 升为 `@18/@8`，定向 94/94 PASS；完整回归与新 clean/live 证据仍待
+闭合，旧第一题 PASS 和后两题 FAIL 都不追认为新候选结果。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

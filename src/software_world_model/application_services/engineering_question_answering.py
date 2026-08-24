@@ -477,6 +477,7 @@ class QuestionUnderstandingProposal:
     requested_abstraction_level: AnswerDetailLevel
     material_conclusions: tuple[str, ...]
     evidence_needs: tuple[str, ...]
+    required_evidence_classes: tuple[EngineeringEvidenceClass, ...]
     response_language: str
     response_constraints: tuple[str, ...]
     digest: Digest
@@ -493,6 +494,7 @@ class QuestionUnderstandingProposal:
         requested_abstraction_level: AnswerDetailLevel,
         material_conclusions: Sequence[str],
         evidence_needs: Sequence[str],
+        required_evidence_classes: Sequence[EngineeringEvidenceClass],
         response_language: str,
         response_constraints: Sequence[str] = (),
     ) -> "QuestionUnderstandingProposal":
@@ -500,6 +502,21 @@ class QuestionUnderstandingProposal:
             material_conclusions, "material conclusion checklist", maximum_items=12
         )
         needs = _unique_texts(evidence_needs, "evidence needs", maximum_items=24)
+        required_classes = tuple(required_evidence_classes)
+        if (
+            not required_classes
+            or len(required_classes) > len(_RETRIEVAL_EVIDENCE_CLASS_ORDER)
+            or len(set(required_classes)) != len(required_classes)
+            or any(
+                not isinstance(item, EngineeringEvidenceClass)
+                or item not in _RETRIEVAL_EVIDENCE_CLASSES
+                for item in required_classes
+            )
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "required evidence classes must be unique controlled retrieval classes",
+            )
         constraints = tuple(
             _text(value, "response constraint", maximum_bytes=4_096)
             for value in response_constraints
@@ -527,6 +544,9 @@ class QuestionUnderstandingProposal:
             "requested_abstraction_level": requested_abstraction_level.value,
             "material_conclusions": conclusions,
             "evidence_needs": needs,
+            "required_evidence_classes": tuple(
+                item.value for item in required_classes
+            ),
             "response_language": _text(
                 response_language, "proposal response language", maximum_bytes=128
             ),
@@ -541,9 +561,10 @@ class QuestionUnderstandingProposal:
             requested_abstraction_level=requested_abstraction_level,
             material_conclusions=conclusions,
             evidence_needs=needs,
+            required_evidence_classes=required_classes,
             response_language=core["response_language"],
             response_constraints=constraints,
-            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@2", core]),
+            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@3", core]),
         )
 
 
@@ -564,6 +585,7 @@ class QuestionUnderstanding:
     requested_abstraction_level: AnswerDetailLevel
     checklist: tuple[QuestionChecklistItem, ...]
     evidence_needs: tuple[str, ...]
+    required_evidence_classes: tuple[EngineeringEvidenceClass, ...]
     response_language: str
     response_constraints: tuple[str, ...]
     proposal_digest: Digest
@@ -586,6 +608,7 @@ class QuestionUnderstanding:
             requested_abstraction_level=proposal.requested_abstraction_level,
             material_conclusions=proposal.material_conclusions,
             evidence_needs=proposal.evidence_needs,
+            required_evidence_classes=proposal.required_evidence_classes,
             response_language=proposal.response_language,
             response_constraints=proposal.response_constraints,
         )
@@ -624,11 +647,14 @@ class QuestionUnderstanding:
                 (item.item_id, item.conclusion, item.digest.value) for item in checklist
             ),
             "evidence_needs": proposal.evidence_needs,
+            "required_evidence_classes": tuple(
+                item.value for item in proposal.required_evidence_classes
+            ),
             "response_language": proposal.response_language,
             "response_constraints": proposal.response_constraints,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["QUESTION_UNDERSTANDING@2", core])
+        digest = digest_of(["QUESTION_UNDERSTANDING@3", core])
         return cls(
             understanding_id=_stable_id("question_understanding", core),
             request_digest=request.digest,
@@ -638,6 +664,7 @@ class QuestionUnderstanding:
             requested_abstraction_level=proposal.requested_abstraction_level,
             checklist=checklist,
             evidence_needs=proposal.evidence_needs,
+            required_evidence_classes=proposal.required_evidence_classes,
             response_language=proposal.response_language,
             response_constraints=proposal.response_constraints,
             proposal_digest=proposal.digest,
@@ -656,6 +683,9 @@ class QuestionUnderstanding:
                 for item in self.checklist
             ],
             "evidence_needs": list(self.evidence_needs),
+            "required_evidence_classes": [
+                item.value for item in self.required_evidence_classes
+            ],
             "response_language": self.response_language,
             "response_constraints": list(self.response_constraints),
         }
@@ -2494,31 +2524,48 @@ def _eligible_locator_references(
     )
 
 
-def _untried_registered_evidence_classes(
+def _evidence_class_closure(
     *,
     registered: Sequence[EngineeringEvidenceClass],
+    required: Sequence[EngineeringEvidenceClass],
     investigated: Sequence[EngineeringEvidenceClass],
-) -> tuple[EngineeringEvidenceClass, ...]:
+) -> tuple[
+    tuple[EngineeringEvidenceClass, ...],
+    tuple[EngineeringEvidenceClass, ...],
+]:
     registered_tuple = tuple(registered)
+    required_tuple = tuple(required)
     investigated_tuple = tuple(investigated)
     if (
         len(set(registered_tuple)) != len(registered_tuple)
+        or len(set(required_tuple)) != len(required_tuple)
         or len(set(investigated_tuple)) != len(investigated_tuple)
         or any(
             not isinstance(item, EngineeringEvidenceClass)
             or item not in _RETRIEVAL_EVIDENCE_CLASSES
-            for item in (*registered_tuple, *investigated_tuple)
+            for item in (
+                *registered_tuple,
+                *required_tuple,
+                *investigated_tuple,
+            )
         )
         or not set(investigated_tuple).issubset(registered_tuple)
     ):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-            "investigation evidence-class registry is invalid",
+            "investigation evidence-class closure inputs are invalid",
         )
+    registered_set = set(registered_tuple)
     investigated_set = set(investigated_tuple)
-    return tuple(
-        item for item in registered_tuple if item not in investigated_set
+    untried = tuple(
+        item
+        for item in required_tuple
+        if item in registered_set and item not in investigated_set
     )
+    unregistered = tuple(
+        item for item in required_tuple if item not in registered_set
+    )
+    return untried, unregistered
 
 
 @dataclass(frozen=True, slots=True)
@@ -2657,6 +2704,7 @@ class InitialInvestigationInput:
     retrieval_results: tuple[RetrievalResult, ...]
     disposition_reference_eligibility: ChecklistDispositionReferenceEligibility
     registered_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
+    required_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
 
     @property
@@ -2679,13 +2727,24 @@ class InitialInvestigationInput:
         )
 
     @property
-    def untried_registered_evidence_classes(
+    def untried_required_evidence_classes(
         self,
     ) -> tuple[EngineeringEvidenceClass, ...]:
-        return _untried_registered_evidence_classes(
+        return _evidence_class_closure(
             registered=self.registered_evidence_classes,
+            required=self.required_evidence_classes,
             investigated=self.investigated_evidence_classes,
-        )
+        )[0]
+
+    @property
+    def unregistered_required_evidence_classes(
+        self,
+    ) -> tuple[EngineeringEvidenceClass, ...]:
+        return _evidence_class_closure(
+            registered=self.registered_evidence_classes,
+            required=self.required_evidence_classes,
+            investigated=self.investigated_evidence_classes,
+        )[1]
 
     def model_view(self) -> dict[str, object]:
         return {
@@ -2702,11 +2761,17 @@ class InitialInvestigationInput:
             "registered_evidence_classes": [
                 item.value for item in self.registered_evidence_classes
             ],
+            "required_evidence_classes": [
+                item.value for item in self.required_evidence_classes
+            ],
             "investigated_evidence_classes": [
                 item.value for item in self.investigated_evidence_classes
             ],
-            "untried_registered_evidence_classes": [
-                item.value for item in self.untried_registered_evidence_classes
+            "untried_required_evidence_classes": [
+                item.value for item in self.untried_required_evidence_classes
+            ],
+            "unregistered_required_evidence_classes": [
+                item.value for item in self.unregistered_required_evidence_classes
             ],
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
@@ -3633,6 +3698,7 @@ class VerificationInvestigationInput:
     retrieval_results: tuple[RetrievalResult, ...]
     disposition_reference_eligibility: ChecklistDispositionReferenceEligibility
     registered_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
+    required_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
 
     @property
@@ -3655,13 +3721,24 @@ class VerificationInvestigationInput:
         )
 
     @property
-    def untried_registered_evidence_classes(
+    def untried_required_evidence_classes(
         self,
     ) -> tuple[EngineeringEvidenceClass, ...]:
-        return _untried_registered_evidence_classes(
+        return _evidence_class_closure(
             registered=self.registered_evidence_classes,
+            required=self.required_evidence_classes,
             investigated=self.investigated_evidence_classes,
-        )
+        )[0]
+
+    @property
+    def unregistered_required_evidence_classes(
+        self,
+    ) -> tuple[EngineeringEvidenceClass, ...]:
+        return _evidence_class_closure(
+            registered=self.registered_evidence_classes,
+            required=self.required_evidence_classes,
+            investigated=self.investigated_evidence_classes,
+        )[1]
 
     def validate_new_result_closure(self) -> None:
         verification_positions = tuple(
@@ -3728,11 +3805,17 @@ class VerificationInvestigationInput:
             "registered_evidence_classes": [
                 item.value for item in self.registered_evidence_classes
             ],
+            "required_evidence_classes": [
+                item.value for item in self.required_evidence_classes
+            ],
             "investigated_evidence_classes": [
                 item.value for item in self.investigated_evidence_classes
             ],
-            "untried_registered_evidence_classes": [
-                item.value for item in self.untried_registered_evidence_classes
+            "untried_required_evidence_classes": [
+                item.value for item in self.untried_required_evidence_classes
+            ],
+            "unregistered_required_evidence_classes": [
+                item.value for item in self.unregistered_required_evidence_classes
             ],
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
@@ -5626,15 +5709,12 @@ class EngineeringQuestionAnsweringService:
         registered_evidence_classes = (
             self._source_broker.registered_evidence_classes(request=request)
         )
+        required_evidence_classes = understanding.required_evidence_classes
         if (
             investigation_kind is InvestigationKind.VERIFICATION
             and verification_request is not None
         ):
-            registered_evidence_classes = tuple(
-                item
-                for item in registered_evidence_classes
-                if item is verification_request.evidence_class
-            )
+            required_evidence_classes = (verification_request.evidence_class,)
         investigated_evidence_classes: set[EngineeringEvidenceClass] = set()
         step_index = 0
         local_calls = 0
@@ -5711,6 +5791,7 @@ class EngineeringQuestionAnsweringService:
                     retrieval_results=tuple(results),
                     disposition_reference_eligibility=disposition_reference_eligibility,
                     registered_evidence_classes=registered_evidence_classes,
+                    required_evidence_classes=required_evidence_classes,
                     investigated_evidence_classes=tuple(
                         item
                         for item in registered_evidence_classes
@@ -5736,6 +5817,7 @@ class EngineeringQuestionAnsweringService:
                     retrieval_results=tuple(results[attempt_result_start:]),
                     disposition_reference_eligibility=disposition_reference_eligibility,
                     registered_evidence_classes=registered_evidence_classes,
+                    required_evidence_classes=required_evidence_classes,
                     investigated_evidence_classes=tuple(
                         item
                         for item in registered_evidence_classes
@@ -5805,9 +5887,7 @@ class EngineeringQuestionAnsweringService:
                     for item in proposal.finish_dispositions
                     if item.outcome is not ChecklistOutcome.SUPPORTED
                 )
-                untried = (
-                    investigation_input.untried_registered_evidence_classes
-                )
+                untried = investigation_input.untried_required_evidence_classes
                 if non_supported and untried:
                     required_class = untried[0]
                     gap_core = {
@@ -5819,7 +5899,7 @@ class EngineeringQuestionAnsweringService:
                     }
                     gap_digest = digest_of(
                         [
-                            "ENGINEERING_QA_NON_SUPPORTED_FINISH_GAP@1",
+                            "ENGINEERING_QA_NON_SUPPORTED_FINISH_GAP@2",
                             gap_core,
                         ]
                     )
@@ -5831,7 +5911,7 @@ class EngineeringQuestionAnsweringService:
                         subject_digest=gap_digest,
                         references=(proposal.proposal_id.value,),
                         details={
-                            "reason": "NON_SUPPORTED_FINISH_REQUIRES_REGISTERED_EVIDENCE_CLASS",
+                            "reason": "NON_SUPPORTED_FINISH_REQUIRES_DECLARED_EVIDENCE_CLASS",
                             "evidence_class": required_class.value,
                             "evidence_need": (
                                 "Investigate the registered "

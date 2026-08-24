@@ -1,7 +1,7 @@
 ---
 id: FINDING-010-046
 kind: implementation-finding
-status: dispositioned
+status: superseded
 authority: execution-evidence
 owners: [application, ai-infrastructure, quality]
 depends_on: [ITER-010-SLICE-001, ITER-010-VERIFICATION, FINDING-010-038, FINDING-010-045]
@@ -12,6 +12,7 @@ classification: system-contract
 scope: systemic
 disposition: update-current-engineering-qa-contract
 target: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+superseded_by: FINDING-010-047
 ---
 
 # FINDING-010-046：Prompt 级跨 evidence-class 提醒不能阻止过早全局 Unknown

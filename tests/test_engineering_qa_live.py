@@ -76,6 +76,7 @@ class DeepSeekFixtureTransport:
                 "requested_abstraction_level": "USER_VISIBLE_EXPLANATION",
                 "material_conclusions": ["Explain how startup works."],
                 "evidence_needs": ["published cognition and exact repository evidence"],
+                "required_evidence_classes": ["SOURCE"],
                 "response_language": role_payload["input"]["response_language"],
                 "response_constraints": ["conclusion first"],
             },

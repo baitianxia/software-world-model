@@ -74,6 +74,7 @@ class AdaptiveStructuredOutputSource:
                 "evidence_needs": [
                     "published architecture and repository usage/configuration"
                 ],
+                "required_evidence_classes": ["REPOSITORY_DOCUMENT", "SOURCE"],
                 "response_language": body["response_language"],
                 "response_constraints": ["conclusion first"],
             }
@@ -363,6 +364,10 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 EngineeringEvidenceClass.SOURCE,
                 EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
             ),
+            required_evidence_classes=(
+                EngineeringEvidenceClass.SOURCE,
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+            ),
         )
         manifest = EngineeringQuestionRoleInputBuilder.initial_investigation(
             investigation_input
@@ -386,8 +391,16 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(manifest.body["investigated_evidence_classes"], ())
         self.assertEqual(
-            manifest.body["untried_registered_evidence_classes"],
+            manifest.body["required_evidence_classes"],
             ("SOURCE", "REPOSITORY_DOCUMENT"),
+        )
+        self.assertEqual(
+            manifest.body["untried_required_evidence_classes"],
+            ("SOURCE", "REPOSITORY_DOCUMENT"),
+        )
+        self.assertEqual(
+            manifest.body["unregistered_required_evidence_classes"],
+            (),
         )
         self.assertEqual(
             manifest.body["admissible_support_references"],
@@ -497,6 +510,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 )
             ),
             registered_evidence_classes=(EngineeringEvidenceClass.TEST,),
+            required_evidence_classes=(EngineeringEvidenceClass.TEST,),
         )
         manifest = EngineeringQuestionRoleInputBuilder.verification_investigation(
             investigation_input
@@ -517,8 +531,10 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "consumed_full_content_paths",
                 "prior_action_intents",
                 "registered_evidence_classes",
+                "required_evidence_classes",
                 "investigated_evidence_classes",
-                "untried_registered_evidence_classes",
+                "untried_required_evidence_classes",
+                "unregistered_required_evidence_classes",
                 "admissible_support_references",
                 "admissible_boundary_references",
                 "verification_request",
@@ -536,9 +552,10 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["consumed_full_content_paths"], ())
         self.assertEqual(
-            manifest.body["untried_registered_evidence_classes"],
+            manifest.body["untried_required_evidence_classes"],
             ("TEST",),
         )
+        self.assertEqual(manifest.body["unregistered_required_evidence_classes"], ())
         self.assertEqual(manifest.body["prior_action_intents"], ())
         self.assertEqual(
             set(manifest.body["admissible_support_references"]),
@@ -614,16 +631,41 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF,
             ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF,
         ):
-            references = schemas[schema_ref].schema["properties"][
+            variants = schemas[schema_ref].schema["properties"][
                 "finish_dispositions"
-            ]["items"]["properties"]["evidence_references"]
-            self.assertEqual(references["minItems"], 1)
-            self.assertTrue(references["uniqueItems"])
-            observations = schemas[schema_ref].schema["properties"][
-                "finish_dispositions"
-            ]["items"]["properties"]["material_observations"]
-            self.assertEqual(observations["minItems"], 1)
-            self.assertEqual(observations["maxItems"], 16)
+            ]["items"]["anyOf"]
+            self.assertEqual(len(variants), 2)
+            for variant in variants:
+                references = variant["properties"]["evidence_references"]
+                self.assertEqual(references["minItems"], 1)
+                self.assertTrue(references["uniqueItems"])
+                observations = variant["properties"]["material_observations"]
+                self.assertEqual(observations["minItems"], 1)
+                self.assertEqual(observations["maxItems"], 16)
+            self.assertEqual(
+                variants[0]["properties"]["outcome"]["enum"],
+                ["SUPPORTED"],
+            )
+            self.assertEqual(
+                variants[0]["properties"]["material_observations"]["items"]
+                ["properties"]["kind"]["enum"],
+                ["PROCESS_STAGE", "OUTCOME", "STATE_CHANGE", "SIDE_EFFECT"],
+            )
+            self.assertEqual(
+                variants[1]["properties"]["outcome"]["enum"],
+                ["UNKNOWN", "CONFLICT", "FAILED"],
+            )
+            self.assertEqual(
+                variants[1]["properties"]["material_observations"]["items"]
+                ["properties"]["kind"]["enum"],
+                ["LIMITATION"],
+            )
+        understanding_required = schemas[
+            ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF
+        ].schema["properties"]["required_evidence_classes"]
+        self.assertEqual(understanding_required["minItems"], 1)
+        self.assertEqual(understanding_required["maxItems"], 4)
+        self.assertTrue(understanding_required["uniqueItems"])
         review_checklist = review["properties"]["checklist_assessment"]
         self.assertIn(
             "independent_material_observations",
@@ -646,6 +688,57 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF
             ].schema["properties"],
         )
+
+    def test_finish_schema_rejects_outcome_observation_category_mixing(self):
+        schema = engineering_question_output_schemas()[
+            ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF
+        ]
+
+        def output(*, outcome, observation_kind):
+            return json.dumps(
+                {
+                    "operation": "FINISH",
+                    "checklist_item_ids": ["check-1"],
+                    "evidence_class": None,
+                    "query": None,
+                    "locator_reference": None,
+                    "basis_entry_ids": ["ledger-entry-1"],
+                    "unknown_to_reduce": "The item has a final disposition.",
+                    "finish_dispositions": [
+                        {
+                            "checklist_item_id": "check-1",
+                            "outcome": outcome,
+                            "evidence_references": ["evidence-1"],
+                            "explanation": "The disposition is explicit.",
+                            "material_observations": [
+                                {
+                                    "kind": observation_kind,
+                                    "statement": "One atomic observation.",
+                                    "evidence_references": ["evidence-1"],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            )
+
+        schema.validate_output_text(
+            output(outcome="SUPPORTED", observation_kind="PROCESS_STAGE")
+        )
+        schema.validate_output_text(
+            output(outcome="UNKNOWN", observation_kind="LIMITATION")
+        )
+        for outcome, observation_kind in (
+            ("SUPPORTED", "LIMITATION"),
+            ("UNKNOWN", "PROCESS_STAGE"),
+        ):
+            with self.assertRaises(DomainError) as caught:
+                schema.validate_output_text(
+                    output(outcome=outcome, observation_kind=observation_kind)
+                )
+            self.assertEqual(
+                caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
+            )
 
     def test_structured_roles_run_the_complete_local_state_machine(self):
         output_source = AdaptiveStructuredOutputSource(request_more_evidence=True)
@@ -758,6 +851,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                         "requested_abstraction_level": "DIRECT",
                         "material_conclusions": ["Explain startup."],
                         "evidence_needs": ["Exact startup evidence."],
+                        "required_evidence_classes": ["SOURCE"],
                         "response_language": req.response_language,
                         "response_constraints": [],
                     }
@@ -787,6 +881,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "requested_abstraction_level": "DIRECT",
             "material_conclusions": ["Explain startup."],
             "evidence_needs": ["Exact startup evidence."],
+            "required_evidence_classes": ["SOURCE"],
             "response_language": req.response_language,
             "response_constraints": [],
         }
@@ -889,6 +984,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "requested_abstraction_level": "DIRECT",
             "material_conclusions": ["Explain startup."],
             "evidence_needs": ["Exact startup evidence."],
+            "required_evidence_classes": ["SOURCE"],
             "response_language": req.response_language,
             "response_constraints": [],
         }

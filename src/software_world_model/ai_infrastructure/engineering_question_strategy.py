@@ -66,16 +66,16 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@7"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@8"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-question-understanding@1"
+    "engineering-qa-question-understanding@2"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-initial-investigation@4"
+    "engineering-qa-initial-investigation@5"
 )
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-verification-investigation@4"
+    "engineering-qa-verification-investigation@5"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@4"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
@@ -139,12 +139,17 @@ _REQUIRED_EVIDENCE_CLASS_SCHEMA = {
         EngineeringEvidenceClass.TEST.value,
     ],
 }
-_MATERIAL_OBSERVATION_SCHEMA = {
+_SUPPORTED_MATERIAL_OBSERVATION_SCHEMA = {
     "type": "object",
     "properties": {
         "kind": {
             "type": "string",
-            "enum": [item.value for item in MaterialObservationKind],
+            "enum": [
+                MaterialObservationKind.PROCESS_STAGE.value,
+                MaterialObservationKind.OUTCOME.value,
+                MaterialObservationKind.STATE_CHANGE.value,
+                MaterialObservationKind.SIDE_EFFECT.value,
+            ],
         },
         "statement": {"type": "string"},
         "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
@@ -152,31 +157,69 @@ _MATERIAL_OBSERVATION_SCHEMA = {
     "required": ["kind", "statement", "evidence_references"],
     "additionalProperties": False,
 }
-_FINISH_DISPOSITION_SCHEMA = {
+_LIMITATION_MATERIAL_OBSERVATION_SCHEMA = {
     "type": "object",
     "properties": {
-        "checklist_item_id": {"type": "string"},
-        "outcome": {
+        "kind": {
             "type": "string",
-            "enum": [item.value for item in ChecklistOutcome],
+            "enum": [MaterialObservationKind.LIMITATION.value],
         },
+        "statement": {"type": "string"},
         "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
-        "explanation": {"type": "string"},
-        "material_observations": {
-            "type": "array",
-            "items": _MATERIAL_OBSERVATION_SCHEMA,
-            "minItems": 1,
-            "maxItems": MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
-        },
     },
-    "required": [
-        "checklist_item_id",
-        "outcome",
-        "evidence_references",
-        "explanation",
-        "material_observations",
-    ],
+    "required": ["kind", "statement", "evidence_references"],
     "additionalProperties": False,
+}
+
+
+def _finish_disposition_variant(
+    *,
+    outcomes: Sequence[ChecklistOutcome],
+    observation_schema: Mapping[str, object],
+) -> dict[str, object]:
+    return {
+        "type": "object",
+        "properties": {
+            "checklist_item_id": {"type": "string"},
+            "outcome": {
+                "type": "string",
+                "enum": [item.value for item in outcomes],
+            },
+            "evidence_references": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+            "explanation": {"type": "string"},
+            "material_observations": {
+                "type": "array",
+                "items": observation_schema,
+                "minItems": 1,
+                "maxItems": MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION,
+            },
+        },
+        "required": [
+            "checklist_item_id",
+            "outcome",
+            "evidence_references",
+            "explanation",
+            "material_observations",
+        ],
+        "additionalProperties": False,
+    }
+
+
+_FINISH_DISPOSITION_SCHEMA = {
+    "anyOf": [
+        _finish_disposition_variant(
+            outcomes=(ChecklistOutcome.SUPPORTED,),
+            observation_schema=_SUPPORTED_MATERIAL_OBSERVATION_SCHEMA,
+        ),
+        _finish_disposition_variant(
+            outcomes=(
+                ChecklistOutcome.UNKNOWN,
+                ChecklistOutcome.CONFLICT,
+                ChecklistOutcome.FAILED,
+            ),
+            observation_schema=_LIMITATION_MATERIAL_OBSERVATION_SCHEMA,
+        ),
+    ]
 }
 _INVESTIGATION_OUTPUT_SCHEMA = {
     "type": "object",
@@ -220,6 +263,13 @@ _QUESTION_UNDERSTANDING_OUTPUT_SCHEMA = {
         },
         "material_conclusions": _STRING_ARRAY_SCHEMA,
         "evidence_needs": _STRING_ARRAY_SCHEMA,
+        "required_evidence_classes": {
+            "type": "array",
+            "items": _REQUIRED_EVIDENCE_CLASS_SCHEMA,
+            "minItems": 1,
+            "maxItems": 4,
+            "uniqueItems": True,
+        },
         "response_language": {"type": "string"},
         "response_constraints": _STRING_ARRAY_SCHEMA,
     },
@@ -230,6 +280,7 @@ _QUESTION_UNDERSTANDING_OUTPUT_SCHEMA = {
         "requested_abstraction_level",
         "material_conclusions",
         "evidence_needs",
+        "required_evidence_classes",
         "response_language",
         "response_constraints",
     ],
@@ -694,6 +745,7 @@ class EngineeringQuestionRoleInputBuilder:
                 "requested_abstraction_level",
                 "material_conclusions",
                 "evidence_needs",
+                "required_evidence_classes",
                 "response_language",
                 "response_constraints",
             ],
@@ -970,6 +1022,12 @@ class StructuredQuestionUnderstandingRole(_StructuredRoleAdapter):
                     Sequence[str], value["material_conclusions"]
                 ),
                 evidence_needs=cast(Sequence[str], value["evidence_needs"]),
+                required_evidence_classes=tuple(
+                    EngineeringEvidenceClass(item)
+                    for item in cast(
+                        Sequence[str], value["required_evidence_classes"]
+                    )
+                ),
                 response_language=cast(str, value["response_language"]),
                 response_constraints=cast(
                     Sequence[str], value["response_constraints"]

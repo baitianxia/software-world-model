@@ -2392,7 +2392,7 @@
   {
     "id": "FINDING-010-046",
     "kind": "implementation-finding",
-    "status": "dispositioned",
+    "status": "superseded",
     "authority": "execution-evidence",
     "owners": [
       "application",
@@ -2401,6 +2401,19 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-046.md"
+  },
+  {
+    "id": "FINDING-010-047",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-047.md"
   },
   {
     "id": "ITER-001-DECISIONS",
