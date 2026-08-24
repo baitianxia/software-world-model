@@ -94,6 +94,7 @@ class LiveRoleAdapter:
                 "material_conclusions": ["Explain the requested behavior."],
                 "evidence_needs": ["published cognition and exact source evidence"],
                 "required_evidence_classes": ["SOURCE"],
+                "required_evidence_paths": ["src/Service.java"],
                 "response_language": language,
                 "response_constraints": ["conclusion first"],
             },
@@ -337,7 +338,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@18",
+            "engineering-qa-adaptive-investigation-prompt@19",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -385,6 +386,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             )
             self.assertIn("untried_required_evidence_classes", prompt)
             self.assertIn("unregistered_required_evidence_classes", prompt)
+            self.assertIn("unread_required_evidence_paths", prompt)
+            self.assertIn("SEARCH alone does not consume a path", prompt)
             self.assertIn("is rejected into a GAP", prompt)
             self.assertIn("one to 16 atomic material_observations", prompt)
             self.assertIn("A setup statement supports setup only", prompt)
@@ -400,6 +403,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         )
         self.assertIn("normally needs exact SOURCE behavior evidence", understanding_prompt)
         self.assertIn("smallest unique set directly needed", understanding_prompt)
+        self.assertIn("required_evidence_paths", understanding_prompt)
+        self.assertIn("mandatory-read set", understanding_prompt)
+        self.assertIn("separate checklist items", understanding_prompt)
+        self.assertIn("audit, cache, notification", understanding_prompt)
         answer_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.ANSWER
@@ -430,6 +437,10 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             "put their limitation observations in the one DIRECT_ANSWER limitation",
             answer_prompt,
         )
+        self.assertIn("direct_answer object", answer_prompt)
+        self.assertIn("claims array must never contain DIRECT_ANSWER", answer_prompt)
+        self.assertIn("exactly one DIRECT_ANSWER in the entire output", answer_prompt)
+        self.assertIn("For a mixed Package", answer_prompt)
         review_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.REVIEW
@@ -440,6 +451,8 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             review_prompt,
         )
         self.assertIn("delegation-only evidence", review_prompt)
+        self.assertIn("multiple mechanisms, participants, or checking surfaces", review_prompt)
+        self.assertIn("explicitly scan every relevant full-content", review_prompt)
         self.assertIn("empty-link affirmative DIRECT_ANSWER", review_prompt)
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:

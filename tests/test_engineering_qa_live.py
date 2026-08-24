@@ -77,6 +77,7 @@ class DeepSeekFixtureTransport:
                 "material_conclusions": ["Explain how startup works."],
                 "evidence_needs": ["published cognition and exact repository evidence"],
                 "required_evidence_classes": ["SOURCE"],
+                "required_evidence_paths": ["src/Service.java"],
                 "response_language": role_payload["input"]["response_language"],
                 "response_constraints": ["conclusion first"],
             },

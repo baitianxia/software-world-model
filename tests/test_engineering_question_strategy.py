@@ -26,6 +26,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringQuestionResultStatus,
     EvidenceLedger,
     InitialInvestigationInput,
+    RetrievalItem,
     SourceBroker,
     VerificationInvestigationInput,
     VerificationRequestProposal,
@@ -75,6 +76,7 @@ class AdaptiveStructuredOutputSource:
                     "published architecture and repository usage/configuration"
                 ],
                 "required_evidence_classes": ["REPOSITORY_DOCUMENT", "SOURCE"],
+                "required_evidence_paths": ["README.md"],
                 "response_language": body["response_language"],
                 "response_constraints": ["conclusion first"],
             }
@@ -95,23 +97,20 @@ class AdaptiveStructuredOutputSource:
                 "response_language": body["question_understanding"][
                     "response_language"
                 ],
-                "claims": [
-                    {
-                        "claim_id": "claim-1",
-                        "kind": "AFFIRMATIVE",
-                        "content_role": "DIRECT_ANSWER",
-                        "checklist_item_ids": ["check-1"],
-                        "material_observation_ids": observation_ids,
-                        "text": (
-                            "Start the service through its documented entry point; "
-                            "startup also writes a local PID file; "
-                            "the request timeout is controlled by repository configuration."
-                        ),
-                        "evidence_entry_ids": [
-                            item["entry_id"] for item in support
-                        ],
-                    }
-                ],
+                "direct_answer": {
+                    "claim_id": "claim-1",
+                    "kind": "AFFIRMATIVE",
+                    "content_role": "DIRECT_ANSWER",
+                    "checklist_item_ids": ["check-1"],
+                    "material_observation_ids": observation_ids,
+                    "text": (
+                        "Start the service through its documented entry point; "
+                        "startup also writes a local PID file; "
+                        "the request timeout is controlled by repository configuration."
+                    ),
+                    "evidence_entry_ids": [item["entry_id"] for item in support],
+                },
+                "claims": [],
             }
         else:
             self.review_calls += 1
@@ -324,7 +323,17 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         self.assertEqual(
             set(manifest.body),
-            {"original_question", "response_language", "required_output_fields"},
+            {
+                "original_question",
+                "response_language",
+                "required_output_fields",
+                "authorized_evidence_paths",
+                "required_evidence_path_policy",
+            },
+        )
+        self.assertEqual(
+            manifest.body["authorized_evidence_paths"],
+            self.result.request.source_allowlist,
         )
         self.assertEqual(manifest.external_disclosure_status, "NOT_AUTHORIZED")
         with self.assertRaises(TypeError):
@@ -368,6 +377,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 EngineeringEvidenceClass.SOURCE,
                 EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
             ),
+            required_evidence_paths=("README.md",),
         )
         manifest = EngineeringQuestionRoleInputBuilder.initial_investigation(
             investigation_input
@@ -401,6 +411,31 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(
             manifest.body["unregistered_required_evidence_classes"],
             (),
+        )
+        self.assertEqual(manifest.body["required_evidence_paths"], ("README.md",))
+        self.assertEqual(
+            manifest.body["unread_required_evidence_paths"],
+            ("README.md",),
+        )
+        complete_result = self.result.retrieval_results[1]
+        complete_item = complete_result.items[0]
+        partial_item = RetrievalItem.create(
+            operation_id=complete_item.operation_id,
+            ordinal=complete_item.ordinal,
+            evidence_class=complete_item.evidence_class,
+            path=complete_item.path,
+            content=complete_item.content,
+            modality=complete_item.modality,
+            coverage_complete=False,
+        )
+        partial_input = replace(
+            investigation_input,
+            retrieval_results=(replace(complete_result, items=(partial_item,)),),
+        )
+        self.assertEqual(partial_input.consumed_full_content_paths, ())
+        self.assertEqual(
+            partial_input.unread_required_evidence_paths,
+            ("README.md",),
         )
         self.assertEqual(
             manifest.body["admissible_support_references"],
@@ -442,6 +477,18 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(
             answer.body["answer_structure_contract"]["required_first_role"],
             "DIRECT_ANSWER",
+        )
+        self.assertEqual(
+            answer.body["answer_structure_contract"][
+                "maximum_direct_answer_claims"
+            ],
+            1,
+        )
+        self.assertEqual(
+            answer.body["answer_structure_contract"][
+                "mixed_disposition_direct_answer_policy"
+            ],
+            "AFFIRMATIVE_DIRECT_SUMMARY_FOR_SUPPORTED_ITEMS_THEN_FINAL_LIMITATION_CLAIMS_FOR_NON_SUPPORTED_ITEMS",
         )
         self.assertEqual(
             answer.body["answer_structure_contract"][
@@ -535,6 +582,8 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                 "investigated_evidence_classes",
                 "untried_required_evidence_classes",
                 "unregistered_required_evidence_classes",
+                "required_evidence_paths",
+                "unread_required_evidence_paths",
                 "admissible_support_references",
                 "admissible_boundary_references",
                 "verification_request",
@@ -604,15 +653,22 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         )
         for definition in schemas.values():
             self.assertFalse(definition.schema["additionalProperties"])
-        answer_claim = schemas[
+        answer_claims = schemas[
             ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF
         ].schema["properties"]["claims"]["items"]
-        self.assertIn("content_role", answer_claim["required"])
-        self.assertIn("checklist_item_ids", answer_claim["required"])
-        self.assertIn("material_observation_ids", answer_claim["required"])
-        observation_links = answer_claim["properties"]["material_observation_ids"]
-        self.assertTrue(observation_links["uniqueItems"])
-        self.assertNotIn("minItems", observation_links)
+        self.assertEqual(len(answer_claims["anyOf"]), 2)
+        for answer_claim in answer_claims["anyOf"]:
+            self.assertIn("content_role", answer_claim["required"])
+            self.assertIn("checklist_item_ids", answer_claim["required"])
+            self.assertIn("material_observation_ids", answer_claim["required"])
+            observation_links = answer_claim["properties"][
+                "material_observation_ids"
+            ]
+            self.assertTrue(observation_links["uniqueItems"])
+            self.assertNotIn("minItems", observation_links)
+            evidence_links = answer_claim["properties"]["evidence_entry_ids"]
+            self.assertEqual(evidence_links["minItems"], 1)
+            self.assertTrue(evidence_links["uniqueItems"])
         review = schemas[ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF].schema
         self.assertIn("quality_assessment", review["required"])
         self.assertIn("checklist_assessment", review["required"])
@@ -666,6 +722,12 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
         self.assertEqual(understanding_required["minItems"], 1)
         self.assertEqual(understanding_required["maxItems"], 4)
         self.assertTrue(understanding_required["uniqueItems"])
+        understanding_paths = schemas[
+            ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF
+        ].schema["properties"]["required_evidence_paths"]
+        self.assertEqual(understanding_paths["minItems"], 1)
+        self.assertEqual(understanding_paths["maxItems"], 8)
+        self.assertTrue(understanding_paths["uniqueItems"])
         review_checklist = review["properties"]["checklist_assessment"]
         self.assertIn(
             "independent_material_observations",
@@ -735,6 +797,56 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             with self.assertRaises(DomainError) as caught:
                 schema.validate_output_text(
                     output(outcome=outcome, observation_kind=observation_kind)
+                )
+            self.assertEqual(
+                caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
+            )
+
+    def test_answer_schema_rejects_kind_and_content_role_mixing(self):
+        schema = engineering_question_output_schemas()[
+            ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF
+        ]
+
+        def claim(*, kind, content_role):
+            return {
+                "claim_id": "claim-1",
+                "kind": kind,
+                "content_role": content_role,
+                "checklist_item_ids": ["check-1"],
+                "material_observation_ids": [],
+                "text": "One closed claim.",
+                "evidence_entry_ids": ["support-entry-1"],
+            }
+
+        def output(*, direct_kind="AFFIRMATIVE", followup=None):
+            return json.dumps(
+                {
+                    "response_language": "en",
+                    "direct_answer": claim(
+                        kind=direct_kind,
+                        content_role="DIRECT_ANSWER",
+                    ),
+                    "claims": [] if followup is None else [followup],
+                }
+            )
+
+        schema.validate_output_text(output())
+        schema.validate_output_text(output(direct_kind="LIMITATION"))
+        schema.validate_output_text(output(followup=claim(
+            kind="AFFIRMATIVE", content_role="USER_VISIBLE_PROCESS"
+        )))
+        schema.validate_output_text(output(followup=claim(
+            kind="LIMITATION", content_role="LIMITATION"
+        )))
+        for kind, content_role in (
+            ("LIMITATION", "USER_VISIBLE_PROCESS"),
+            ("AFFIRMATIVE", "LIMITATION"),
+            ("AFFIRMATIVE", "DIRECT_ANSWER"),
+            ("LIMITATION", "DIRECT_ANSWER"),
+        ):
+            with self.assertRaises(DomainError) as caught:
+                schema.validate_output_text(
+                    output(followup=claim(kind=kind, content_role=content_role))
                 )
             self.assertEqual(
                 caught.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
@@ -852,6 +964,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
                         "material_conclusions": ["Explain startup."],
                         "evidence_needs": ["Exact startup evidence."],
                         "required_evidence_classes": ["SOURCE"],
+                        "required_evidence_paths": ["src/Service.java"],
                         "response_language": req.response_language,
                         "response_constraints": [],
                     }
@@ -882,6 +995,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "material_conclusions": ["Explain startup."],
             "evidence_needs": ["Exact startup evidence."],
             "required_evidence_classes": ["SOURCE"],
+            "required_evidence_paths": ["src/Service.java"],
             "response_language": req.response_language,
             "response_constraints": [],
         }
@@ -985,6 +1099,7 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             "material_conclusions": ["Explain startup."],
             "evidence_needs": ["Exact startup evidence."],
             "required_evidence_classes": ["SOURCE"],
+            "required_evidence_paths": ["src/Service.java"],
             "response_language": req.response_language,
             "response_constraints": [],
         }

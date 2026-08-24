@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-24
@@ -91,7 +91,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / required-evidence closure implementation** | clean `8575517…` 与 fresh run-014 Conformance 已让原登录题读取源码并完整 `APPROVED`，但两道异质题因全 registered-class 遍历和 supported/limitation 混类而失败关闭。`FINDING-010-047` 现以 Understanding required classes、Application untried-required closure 和条件化 FINISH schema 处置通用根因，定向 94/94 PASS；完整回归、clean commit、fresh Conformance 与同会话三题仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / required-path and answer-shape closure** | clean `5ce5ab0…` / run-015 的原始 SQLite 否定页面两个 `APPROVED`：原题漏登录审计副作用，401/403 题用 manager 接线代替内部行为；混合题又因两个直接回答失败关闭。`FINDING-010-048` 现以 mandatory-read path closure、唯一 `direct_answer` + follow-up schema 和独立 side-effect audit 处置根因；定向 96/96、docs 442/442，允许 AF_UNIX 的 full 1162/1157 且只保留既有 4 FAIL + 1 ERROR。clean commit、fresh Conformance 与同会话三题仍待执行，`V-EXPERIENCE/V-ANSWER-REWORK` 尚不能 PASS。历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -162,6 +162,21 @@ dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED`；受控
 只在 non-supported FINISH 尚有可调查 required class 时追加 GAP。Initial/Verification FINISH schema 同时按 outcome 条件化 observation kind，
 并明确 Source Profile allowlist 路径不得被声称为未授权。Prompt/Strategy 升为 `@18/@8`，定向 94/94 PASS；完整回归与新 clean/live 证据仍待
 闭合，旧第一题 PASS 和后两题 FAIL 都不追认为新候选结果。
+
+上述处置形成 clean candidate `5ce5ab0…`；run-015 fresh DeepSeek Conformance 2/2 PASS，Result
+`sha256:38706e7ced6108ea47b35662ac681c1ee25056521de16e8d489d02283f3733f8`。同一持续会话 3 题共 32 dispatch、
+retry/switch 0，但原始 Gateway SQLite 证明页面状态仍不可信：原登录题虽 9 次 dispatch 后 `APPROVED`，却再次漏掉
+`insertLoginLog` 持久化审计副作用；混合构建/安全/unknown 题在合法 Package 上输出两个 `DIRECT_ANSWER` 而由 Domain 失败关闭；
+401/403 题虽 12 次 dispatch 后 `APPROVED`，却只读 `SecurityConfig` 的 manager 接线而未读 manager 自身实现。terminal receipt
+`sha256:9ac1011c9348157a1e585fe6b346f95d542ba693687ca75ba4543f0c37939c79` 证明 private files、Provider 前超限拒绝和 Production
+`NOT_EXECUTED`，不能补救答案质量。
+
+`FINDING-010-048` 现把 Question Understanding 提升为 class + 1—8 个 exact mandatory-read paths；Application 唯一解析 path/class，任何
+FINISH 前都要求无行范围、coverage-complete 的 READ/PARSE，SEARCH/截断内容不消费义务。Answer closed output 改为唯一必填
+`direct_answer` 与禁止直答的 follow-up `claims`，混合 Package 只允许 affirmative direct summary + 末尾 limitation。flow/lifecycle 同时
+拆分并独立审核持久化、审计、缓存、通知和外部交互，多机制问题要求各决定性实现而非 caller/wiring。Prompt/Strategy 升为 `@19/@9`，
+定向 96/96、docs 442/442 PASS；允许 AF_UNIX 的 full 1162 项中 1157 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结历史 hold。
+新 clean/fresh 三题仍待执行，run-015 的两个错误批准与一个失败均不追认。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。
 

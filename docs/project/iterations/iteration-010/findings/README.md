@@ -124,5 +124,8 @@ iteration: ITER-010
 - [FINDING-010-047](FINDING-010-047.md)：clean `8575517…` 已让原登录题读取源码并通过，但两道异质题暴露 registered registry 被误作
   逐题语义最小集，以及 FINISH schema 未联动 outcome/observation kind。现由 Understanding 声明 required classes，Application 只闭合
   untried required，并以条件化 schema 在 Provider 输出边界拒绝 supported/limitation 混类；新 clean candidate/fresh live 仍待执行。
+- [FINDING-010-048](FINDING-010-048.md)：clean `5ce5ab0…` 的 run-015 三题证明 class 闭包仍会漏读被委托实现、扁平 Answer Schema 仍允许
+  两个直接回答，且 Reviewer 再次漏审持久化审计副作用。现由 Understanding 声明 exact mandatory-read paths，Application 在任何 FINISH 前
+  闭合完整读取，并把 Answer 改为唯一 `direct_answer` + 禁止直答的 follow-up claims；新 clean/fresh live 仍待执行。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

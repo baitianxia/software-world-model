@@ -61,7 +61,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@18"
+    "engineering-qa-adaptive-investigation-prompt@19"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -133,6 +133,10 @@ choose implementation detail merely because the supplied system concerns code.
 List every material conclusion that must be answered. For a flow or lifecycle,
 include user-visible stages, outcomes, and material state changes or side effects
 in that checklist; do not substitute class or method names for those conclusions.
+Use separate checklist items for success/failure outcomes, state changes, and
+persistence, audit, cache, notification, or external-interaction side effects;
+never let a generic state-change item silently absorb or omit those effects.
+Keep the side-effect item even when later evidence may establish only a boundary.
 Split independently supportable and intentionally unknown facets into distinct
 checklist items so each later disposition can have one coherent outcome.
 Checklist items may summarize the goal, but they do not waive the later atomic
@@ -153,6 +157,15 @@ by the repository; BUILD_CONFIGURATION for declared dependencies, plugins, build
 profiles, or toolchain settings; and TEST for behavior asserted by tests. Do not
 select every class merely because it exists, and do not omit SOURCE when the
 question's decisive flow semantics live in implementation code.
+Return required_evidence_paths as one to eight exact strings copied from
+authorized_evidence_paths. Select only files whose full content is indispensable
+to a material conclusion; this is a mandatory-read set, not a list of possibly
+useful files or one file per available modality. When the question names
+multiple mechanisms or checking surfaces, include the implementation file for
+each decisive mechanism rather than only its caller, registration, or wiring.
+Do not select a directory, an excluded or nonexistent path, a redundant test or
+document, or every authorized file. Every selected path's evidence class must
+also appear in required_evidence_classes.
 """,
     EngineeringQuestionModelRole.INITIAL_INVESTIGATION: f"""
 Choose exactly one next investigation action from the registered vocabulary or
@@ -205,6 +218,14 @@ class; consume that GAP and investigate the named class instead of repeating
 FINISH. A required class listed as unregistered is a real boundary, not an
 investigation target. USER_VISIBLE presentation scope does not make SOURCE
 implementation behavior ineligible.
+required_evidence_paths and unread_required_evidence_paths are also
+Application-owned closure state. Every required path must receive a full-content
+READ or PARSE before any FINISH, including a fully SUPPORTED FINISH; SEARCH alone
+does not consume a path. If an unread required path lacks an eligible locator,
+SEARCH its shortest distinctive filename or symbol token in that path's evidence
+class, then READ or PARSE the exact issued locator. A premature FINISH is rejected
+into a GAP naming the next required path; consume that GAP instead of repeating
+FINISH.
 Every path listed in request.source_allowlist is authorized by the bound Source
 Profile. Never call such a path unauthorized; when the Broker issues an eligible
 locator for a material allowlisted path, read or parse it before claiming that
@@ -216,6 +237,11 @@ semantics, or an adjacent application flow. When a material checklist item asks
 how, why, under what conditions, or how to troubleshoot behavior, inspect
 eligible implementation evidence that states those decisive details or assign
 an honest non-supported disposition.
+For every full-content implementation entry cited by a flow or lifecycle
+disposition, inspect success and failure branches for persistence, audit, cache
+mutation, notifications, or external interactions. Each distinct material
+effect must be its own SIDE_EFFECT observation under the dedicated checklist
+item; a return value or SecurityContext state change does not cover it.
 Each FINISH disposition must also return one to
 {MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION} atomic
 material_observations. Inspect the complete content of every cited admissible
@@ -279,6 +305,9 @@ list is non-empty is rejected into a GAP; consume it instead of repeating
 FINISH. A required class listed as unregistered is a real boundary. Every path
 listed in the bound request source_allowlist is authorized; do not call it
 unauthorized, and read or parse a Broker-issued eligible locator when material.
+required_evidence_paths and unread_required_evidence_paths have the same
+mandatory full-content rule when supplied: SEARCH alone does not consume a path,
+and FINISH is rejected until each unread required path is READ or PARSEd.
 A setup statement supports setup only; a declaration, registration, dependency,
 or wiring statement supports only that relationship. None of them proves the
 delegated component's conditions, comparisons, state changes, outcomes, failure
@@ -302,9 +331,10 @@ needs.
 """,
     EngineeringQuestionModelRole.ANSWER: """
 Answer from the sealed Question Evidence Package only. Return exactly one
-DIRECT_ANSWER claim first; when the Package proves only a boundary, that direct
-claim may use LIMITATION kind and boundary/audit evidence instead of inventing
-an affirmative answer. Then, only as needed, use USER_VISIBLE_PROCESS,
+DIRECT_ANSWER as the direct_answer object; the separate claims array must never
+contain DIRECT_ANSWER. When the Package proves only a boundary, direct_answer
+may use LIMITATION kind and boundary/audit evidence instead of inventing an
+affirmative answer. Then, only as needed, use USER_VISIBLE_PROCESS,
 IMPACT_OR_SIDE_EFFECT, optional IMPLEMENTATION_EVIDENCE, and LIMITATION in that
 order. Link every claim to exact material checklist item IDs and cover every
 checklist item. Also link every material-fact claim to the exact Package
@@ -334,6 +364,13 @@ The only legal kind/content_role pairs are AFFIRMATIVE with DIRECT_ANSWER,
 USER_VISIBLE_PROCESS, IMPACT_OR_SIDE_EFFECT, or IMPLEMENTATION_EVIDENCE; and
 LIMITATION with DIRECT_ANSWER or LIMITATION. Never assign LIMITATION kind to a
 USER_VISIBLE_PROCESS, IMPACT_OR_SIDE_EFFECT, or IMPLEMENTATION_EVIDENCE claim.
+There is exactly one DIRECT_ANSWER in the entire output, never one per checklist
+item or outcome. For a mixed Package containing both SUPPORTED and
+non-supported dispositions, the one first DIRECT_ANSWER must be AFFIRMATIVE and
+summarize only supported items; put every unknown, conflict, or failure in later
+final LIMITATION claims with content_role LIMITATION. In a mixed Package, never
+emit a LIMITATION claim with content_role DIRECT_ANSWER. A LIMITATION
+DIRECT_ANSWER is legal only when every checklist disposition is non-supported.
 When all checklist dispositions are non-supported, put their limitation
 observations in the one DIRECT_ANSWER limitation and, only if needed, additional
 final LIMITATION claims.
@@ -362,12 +399,22 @@ observations and with the default Draft body. Report the exact independent
 observation statements omitted by either; a broad summary or one representative
 effect does not cover distinct stages, outcomes, state/context mutations,
 persistence or audit writes, external interactions, or failure outcomes.
+A flow or lifecycle review must explicitly scan every relevant full-content
+implementation entry for persistence, audit, cache mutation, notification, and
+external-interaction effects. Report each material effect omitted from the
+Application checklist, Package observations, or default Draft; a return value
+or SecurityContext state change never proves that no additional effect occurs.
 A setup statement supports setup only, and a declaration, registration,
 dependency, or wiring statement supports only that relationship. Treat a Package
 that substitutes such adjacent or delegation-only evidence for requested
 behavioral conditions, comparisons, state changes, outcomes, or failure
 semantics as materially incomplete. Request concrete evidence for the missing
 checklist item instead of approving a component name as its implementation.
+When the original question names multiple mechanisms, participants, or checking
+surfaces, require direct implementation evidence for each requested mechanism's
+decisive branches, comparisons, state changes, or outcomes. Reject a Package
+that cites only a caller or configuration selecting a delegated component while
+omitting that component's own implementation, even if the draft names it.
 Audit a coverage-only LIMITATION claim with empty material_observation_ids for
 truth and boundary citations, but do not call that empty link an Application
 observation omission when the statement is not a material fact required by the

@@ -160,6 +160,7 @@ class UnderstandingRole:
                 EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
                 EngineeringEvidenceClass.SOURCE,
             ),
+            required_evidence_paths=("README.md",),
             response_language=request.response_language,
             response_constraints=("conclusion first",),
         )
@@ -569,6 +570,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
     def test_non_supported_finish_reopens_untried_required_source_class(self):
         class PrematureFinishInvestigator:
             closure_state = None
+            path_gap = None
 
             def propose(self, investigation_input):
                 if investigation_input.step_index == 1:
@@ -578,7 +580,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                         evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
                         query="start",
                     )
-                if investigation_input.step_index == 2:
+                if investigation_input.step_index in {2, 4}:
                     boundary = (
                         investigation_input.disposition_reference_eligibility
                         .boundary_references[0]
@@ -618,6 +620,19 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                         finish_dispositions=(disposition,),
                     )
                 if investigation_input.step_index == 3:
+                    self.path_gap = investigation_input.ledger.entries[-1]
+                    locator = (
+                        investigation_input.retrieval_results[0]
+                        .items[0]
+                        .locator_reference
+                    )
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.READ,
+                        evidence_class=EngineeringEvidenceClass.REPOSITORY_DOCUMENT,
+                        locator_reference=locator,
+                    )
+                if investigation_input.step_index == 5:
                     self.closure_state = (
                         investigation_input.registered_evidence_classes,
                         investigation_input.required_evidence_classes,
@@ -631,7 +646,7 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                         evidence_class=EngineeringEvidenceClass.SOURCE,
                         query="start",
                     )
-                if investigation_input.step_index == 4:
+                if investigation_input.step_index == 6:
                     locator = (
                         investigation_input.retrieval_results[-1]
                         .items[0]
@@ -718,6 +733,15 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         result = service.answer(request())
 
         self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
+        self.assertEqual(investigator.path_gap.kind, LedgerEntryKind.GAP)
+        self.assertEqual(
+            dict(investigator.path_gap.details)["reason"],
+            "FINISH_REQUIRES_DECLARED_EVIDENCE_PATH",
+        )
+        self.assertEqual(
+            dict(investigator.path_gap.details)["required_evidence_path"],
+            "README.md",
+        )
         registered, required, investigated, untried, gap = investigator.closure_state
         self.assertEqual(
             registered,
@@ -748,6 +772,159 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
         self.assertEqual(
             dict(gap.details)["reason"],
             "NON_SUPPORTED_FINISH_REQUIRES_DECLARED_EVIDENCE_CLASS",
+        )
+        self.assertEqual(result.usage.investigation_role_calls, 7)
+        self.assertEqual(result.usage.source_operations, 4)
+
+    def test_supported_finish_reopens_unread_required_delegate_path(self):
+        class DelegateUnderstandingRole:
+            def understand(self, *, request, role_context_id):
+                return QuestionUnderstandingProposal.create(
+                    role_context_id=role_context_id,
+                    request_digest=request.digest,
+                    preserved_original_question=request.original_question,
+                    user_goal="Trace the delegated decision behavior.",
+                    audience="maintainer",
+                    requested_abstraction_level=(
+                        AnswerDetailLevel.USER_VISIBLE_EXPLANATION
+                    ),
+                    material_conclusions=(
+                        "Explain the delegated decision and its outcome.",
+                    ),
+                    evidence_needs=(
+                        "The caller wiring and delegated implementation behavior.",
+                    ),
+                    required_evidence_classes=(EngineeringEvidenceClass.SOURCE,),
+                    required_evidence_paths=("src/Delegate.java",),
+                    response_language=request.response_language,
+                )
+
+        class PrematureSupportedInvestigator:
+            path_gap = None
+
+            def propose(self, investigation_input):
+                if investigation_input.step_index == 1:
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.SEARCH,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        query="Delegate",
+                    )
+                if investigation_input.step_index == 2:
+                    caller = next(
+                        item
+                        for item in investigation_input.retrieval_results[0].items
+                        if item.path == "src/Caller.java"
+                    )
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.READ,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        locator_reference=caller.locator_reference,
+                    )
+                if investigation_input.step_index == 3:
+                    evidence = (
+                        investigation_input.retrieval_results[-1].items[0].item_id.value
+                    )
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.FINISH,
+                        evidence_reference=evidence,
+                    )
+                if investigation_input.step_index == 4:
+                    self.path_gap = investigation_input.ledger.entries[-1]
+                    delegate = next(
+                        item
+                        for item in investigation_input.retrieval_results[0].items
+                        if item.path == "src/Delegate.java"
+                    )
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.READ,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        locator_reference=delegate.locator_reference,
+                    )
+                evidence = (
+                    investigation_input.retrieval_results[-1].items[0].item_id.value
+                )
+                return step_proposal(
+                    investigation_input,
+                    operation=InvestigationOperation.FINISH,
+                    evidence_reference=evidence,
+                )
+
+        class DelegateWorker:
+            def execute(self, operation):
+                if operation.operation is SourceReadOperation.SEARCH:
+                    paths = ("src/Caller.java", "src/Delegate.java")
+                    items = tuple(
+                        RetrievalItem.create(
+                            operation_id=operation.operation_id,
+                            ordinal=index,
+                            evidence_class=operation.evidence_class,
+                            path=path,
+                            line_start=1,
+                            line_end=1,
+                            content=(
+                                "Caller selects Delegate."
+                                if path == "src/Caller.java"
+                                else "Delegate compares authorities and denies a mismatch."
+                            ),
+                            modality=operation.result_modality,
+                            coverage_complete=True,
+                        )
+                        for index, path in enumerate(paths, 1)
+                    )
+                else:
+                    content = (
+                        "Caller selects Delegate."
+                        if operation.path == "src/Caller.java"
+                        else "Delegate compares authorities and denies a mismatch."
+                    )
+                    items = (
+                        RetrievalItem.create(
+                            operation_id=operation.operation_id,
+                            ordinal=1,
+                            evidence_class=operation.evidence_class,
+                            path=operation.path,
+                            content=content,
+                            modality=operation.result_modality,
+                            coverage_complete=True,
+                        ),
+                    )
+                return RetrievalResult.create(
+                    operation=operation,
+                    status=RetrievalStatus.COMPLETE,
+                    items=items,
+                    bytes_read=sum(len(item.content.encode()) for item in items),
+                    files_read=len(items),
+                    truncated=False,
+                    coverage={"complete": "true"},
+                )
+
+        investigator = PrematureSupportedInvestigator()
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=DelegateUnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=investigator,
+            verification_investigation_role=VerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=source_profile()),
+            retrieval_worker=DelegateWorker(),
+            answer_role=AnswerRole(),
+            reviewer_role=ReviewerRole(request_more_evidence=False),
+        )
+
+        result = service.answer(request())
+
+        self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
+        self.assertEqual(investigator.path_gap.kind, LedgerEntryKind.GAP)
+        self.assertEqual(
+            dict(investigator.path_gap.details)["reason"],
+            "FINISH_REQUIRES_DECLARED_EVIDENCE_PATH",
+        )
+        self.assertEqual(
+            dict(investigator.path_gap.details)["required_evidence_path"],
+            "src/Delegate.java",
         )
         self.assertEqual(result.usage.investigation_role_calls, 5)
         self.assertEqual(result.usage.source_operations, 3)

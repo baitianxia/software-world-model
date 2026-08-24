@@ -2107,6 +2107,20 @@
       "tests/test_engineering_qa_live.py"
     ]
   },
+  "FINDING-010-048": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-048.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_model_source.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_model_source.py",
+      "tests/test_engineering_question_strategy.py",
+      "tests/test_engineering_qa_live.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

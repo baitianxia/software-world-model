@@ -478,6 +478,7 @@ class QuestionUnderstandingProposal:
     material_conclusions: tuple[str, ...]
     evidence_needs: tuple[str, ...]
     required_evidence_classes: tuple[EngineeringEvidenceClass, ...]
+    required_evidence_paths: tuple[str, ...]
     response_language: str
     response_constraints: tuple[str, ...]
     digest: Digest
@@ -495,6 +496,7 @@ class QuestionUnderstandingProposal:
         material_conclusions: Sequence[str],
         evidence_needs: Sequence[str],
         required_evidence_classes: Sequence[EngineeringEvidenceClass],
+        required_evidence_paths: Sequence[str],
         response_language: str,
         response_constraints: Sequence[str] = (),
     ) -> "QuestionUnderstandingProposal":
@@ -516,6 +518,18 @@ class QuestionUnderstandingProposal:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "required evidence classes must be unique controlled retrieval classes",
+            )
+        required_paths = tuple(
+            _canonical_relative_path(path) for path in required_evidence_paths
+        )
+        if (
+            not required_paths
+            or len(required_paths) > 8
+            or len(set(required_paths)) != len(required_paths)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "required evidence paths must contain one to eight unique repository-relative paths",
             )
         constraints = tuple(
             _text(value, "response constraint", maximum_bytes=4_096)
@@ -547,6 +561,7 @@ class QuestionUnderstandingProposal:
             "required_evidence_classes": tuple(
                 item.value for item in required_classes
             ),
+            "required_evidence_paths": required_paths,
             "response_language": _text(
                 response_language, "proposal response language", maximum_bytes=128
             ),
@@ -562,9 +577,10 @@ class QuestionUnderstandingProposal:
             material_conclusions=conclusions,
             evidence_needs=needs,
             required_evidence_classes=required_classes,
+            required_evidence_paths=required_paths,
             response_language=core["response_language"],
             response_constraints=constraints,
-            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@3", core]),
+            digest=digest_of(["QUESTION_UNDERSTANDING_PROPOSAL@4", core]),
         )
 
 
@@ -586,6 +602,7 @@ class QuestionUnderstanding:
     checklist: tuple[QuestionChecklistItem, ...]
     evidence_needs: tuple[str, ...]
     required_evidence_classes: tuple[EngineeringEvidenceClass, ...]
+    required_evidence_paths: tuple[str, ...]
     response_language: str
     response_constraints: tuple[str, ...]
     proposal_digest: Digest
@@ -609,6 +626,7 @@ class QuestionUnderstanding:
             material_conclusions=proposal.material_conclusions,
             evidence_needs=proposal.evidence_needs,
             required_evidence_classes=proposal.required_evidence_classes,
+            required_evidence_paths=proposal.required_evidence_paths,
             response_language=proposal.response_language,
             response_constraints=proposal.response_constraints,
         )
@@ -622,6 +640,10 @@ class QuestionUnderstanding:
             or proposal.request_digest != request.digest
             or proposal.preserved_original_question != request.original_question
             or proposal.response_language != request.response_language
+            or any(
+                not _path_allowed(path, request.source_allowlist)
+                for path in proposal.required_evidence_paths
+            )
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -650,11 +672,12 @@ class QuestionUnderstanding:
             "required_evidence_classes": tuple(
                 item.value for item in proposal.required_evidence_classes
             ),
+            "required_evidence_paths": proposal.required_evidence_paths,
             "response_language": proposal.response_language,
             "response_constraints": proposal.response_constraints,
             "proposal_digest": proposal.digest.value,
         }
-        digest = digest_of(["QUESTION_UNDERSTANDING@3", core])
+        digest = digest_of(["QUESTION_UNDERSTANDING@4", core])
         return cls(
             understanding_id=_stable_id("question_understanding", core),
             request_digest=request.digest,
@@ -665,6 +688,7 @@ class QuestionUnderstanding:
             checklist=checklist,
             evidence_needs=proposal.evidence_needs,
             required_evidence_classes=proposal.required_evidence_classes,
+            required_evidence_paths=proposal.required_evidence_paths,
             response_language=proposal.response_language,
             response_constraints=proposal.response_constraints,
             proposal_digest=proposal.digest,
@@ -686,6 +710,7 @@ class QuestionUnderstanding:
             "required_evidence_classes": [
                 item.value for item in self.required_evidence_classes
             ],
+            "required_evidence_paths": list(self.required_evidence_paths),
             "response_language": self.response_language,
             "response_constraints": list(self.response_constraints),
         }
@@ -2177,6 +2202,34 @@ class SourceBroker:
             if self._source_profile.paths_for(evidence_class)
         )
 
+    def evidence_class_for_path(
+        self,
+        *,
+        request: EngineeringQuestionRequest,
+        path: str,
+    ) -> EngineeringEvidenceClass:
+        """Resolve one required exact path through the bound Source Profile."""
+
+        registered = self.registered_evidence_classes(request=request)
+        normalized = _canonical_relative_path(path)
+        matches = tuple(
+            evidence_class
+            for evidence_class in registered
+            if self._source_profile.permits(
+                evidence_class=evidence_class,
+                path=normalized,
+            )
+        )
+        if (
+            not _path_allowed(normalized, request.source_allowlist)
+            or len(matches) != 1
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "required evidence path is not bound to exactly one registered evidence class",
+            )
+        return matches[0]
+
     def compile(
         self,
         *,
@@ -2436,7 +2489,7 @@ def _consumed_full_content_paths(
                 item.path
                 for result in retrieval_results
                 for item in result.items
-                if item.line_start is None
+                if item.line_start is None and item.coverage_complete
             }
         )
     )
@@ -2706,6 +2759,7 @@ class InitialInvestigationInput:
     registered_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     required_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
+    required_evidence_paths: tuple[str, ...] = ()
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -2718,6 +2772,13 @@ class InitialInvestigationInput:
     @property
     def consumed_full_content_paths(self) -> tuple[str, ...]:
         return _consumed_full_content_paths(self.retrieval_results)
+
+    @property
+    def unread_required_evidence_paths(self) -> tuple[str, ...]:
+        consumed = set(self.consumed_full_content_paths)
+        return tuple(
+            path for path in self.required_evidence_paths if path not in consumed
+        )
 
     @property
     def prior_action_intents(self) -> tuple[dict[str, object], ...]:
@@ -2773,6 +2834,10 @@ class InitialInvestigationInput:
             "unregistered_required_evidence_classes": [
                 item.value for item in self.unregistered_required_evidence_classes
             ],
+            "required_evidence_paths": list(self.required_evidence_paths),
+            "unread_required_evidence_paths": list(
+                self.unread_required_evidence_paths
+            ),
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
             ),
@@ -3700,6 +3765,7 @@ class VerificationInvestigationInput:
     registered_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     required_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
     investigated_evidence_classes: tuple[EngineeringEvidenceClass, ...] = ()
+    required_evidence_paths: tuple[str, ...] = ()
 
     @property
     def required_basis_entry_id(self) -> StableId:
@@ -3712,6 +3778,13 @@ class VerificationInvestigationInput:
     @property
     def consumed_full_content_paths(self) -> tuple[str, ...]:
         return _consumed_full_content_paths(self.retrieval_results)
+
+    @property
+    def unread_required_evidence_paths(self) -> tuple[str, ...]:
+        consumed = set(self.consumed_full_content_paths)
+        return tuple(
+            path for path in self.required_evidence_paths if path not in consumed
+        )
 
     @property
     def prior_action_intents(self) -> tuple[dict[str, object], ...]:
@@ -3817,6 +3890,10 @@ class VerificationInvestigationInput:
             "unregistered_required_evidence_classes": [
                 item.value for item in self.unregistered_required_evidence_classes
             ],
+            "required_evidence_paths": list(self.required_evidence_paths),
+            "unread_required_evidence_paths": list(
+                self.unread_required_evidence_paths
+            ),
             "admissible_support_references": list(
                 self.disposition_reference_eligibility.support_references
             ),
@@ -5710,11 +5787,28 @@ class EngineeringQuestionAnsweringService:
             self._source_broker.registered_evidence_classes(request=request)
         )
         required_evidence_classes = understanding.required_evidence_classes
+        required_evidence_paths = understanding.required_evidence_paths
         if (
             investigation_kind is InvestigationKind.VERIFICATION
             and verification_request is not None
         ):
             required_evidence_classes = (verification_request.evidence_class,)
+            required_evidence_paths = ()
+        required_path_classes = tuple(
+            self._source_broker.evidence_class_for_path(
+                request=request,
+                path=path,
+            )
+            for path in required_evidence_paths
+        )
+        if any(
+            evidence_class not in required_evidence_classes
+            for evidence_class in required_path_classes
+        ):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "question understanding required path lacks its registered evidence class",
+            )
         investigated_evidence_classes: set[EngineeringEvidenceClass] = set()
         step_index = 0
         local_calls = 0
@@ -5797,6 +5891,7 @@ class EngineeringQuestionAnsweringService:
                         for item in registered_evidence_classes
                         if item in investigated_evidence_classes
                     ),
+                    required_evidence_paths=required_evidence_paths,
                 )
                 proposal = self._initial_investigation_role.propose(
                     investigation_input
@@ -5823,6 +5918,7 @@ class EngineeringQuestionAnsweringService:
                         for item in registered_evidence_classes
                         if item in investigated_evidence_classes
                     ),
+                    required_evidence_paths=required_evidence_paths,
                 )
                 verification_input.validate_new_result_closure()
                 proposal = self._verification_investigation_role.propose(
@@ -5882,6 +5978,45 @@ class EngineeringQuestionAnsweringService:
                 maximum_bytes=request.limits.maximum_ledger_bytes,
             )
             if proposal.operation is InvestigationOperation.FINISH:
+                unread_required_paths = (
+                    investigation_input.unread_required_evidence_paths
+                )
+                if unread_required_paths:
+                    required_path = unread_required_paths[0]
+                    required_class = self._source_broker.evidence_class_for_path(
+                        request=request,
+                        path=required_path,
+                    )
+                    gap_core = {
+                        "proposal_digest": proposal.digest.value,
+                        "evidence_class": required_class.value,
+                        "required_evidence_path": required_path,
+                    }
+                    gap_digest = digest_of(
+                        [
+                            "ENGINEERING_QA_REQUIRED_EVIDENCE_PATH_GAP@1",
+                            gap_core,
+                        ]
+                    )
+                    ledger = ledger.append(
+                        kind=LedgerEntryKind.GAP,
+                        subject_id=_stable_id(
+                            "investigation_gap", gap_core
+                        ).value,
+                        subject_digest=gap_digest,
+                        references=(proposal.proposal_id.value,),
+                        details={
+                            "reason": "FINISH_REQUIRES_DECLARED_EVIDENCE_PATH",
+                            "evidence_class": required_class.value,
+                            "required_evidence_path": required_path,
+                            "evidence_need": (
+                                "Read the declared, authorized evidence path "
+                                f"{required_path} before FINISH."
+                            ),
+                        },
+                        maximum_bytes=request.limits.maximum_ledger_bytes,
+                    )
+                    continue
                 non_supported = tuple(
                     item
                     for item in proposal.finish_dispositions

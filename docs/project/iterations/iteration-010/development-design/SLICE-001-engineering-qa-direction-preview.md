@@ -107,6 +107,13 @@ FINISH schema 又允许 `SUPPORTED` disposition 混入 `LIMITATION` observation�
 Understanding 声明逐题最小 `required_evidence_classes`，Application 只闭合 untried required，且 closed schema 与 Domain 同时强制
 supported/affirmative、non-supported/limitation 的一致组合。该修复仍须新 clean candidate、fresh Conformance 和持续三题现场执行。
 
+该处置形成 clean candidate `5ce5ab0…`，run-015 fresh DeepSeek Conformance 2/2 PASS；但原始 SQLite 复核否定了页面的两个
+`APPROVED`。原登录题再次漏掉 `insertLoginLog` 持久化审计副作用；混合构建/安全/unknown 题的 Answer 输出两个
+`DIRECT_ANSWER` 而失败关闭；401/403 题只读 manager 接线、未读 `DynamicAuthorizationManager` 自身实现，却错误声称动态权限行为已支持。
+`FINDING-010-048` 因而新增 exact mandatory-read path closure、结构上唯一的 `direct_answer` 与独立 side-effect checklist/audit；旧会话
+3 题、32 dispatch、retry/switch 0、private files 和 Production `NOT_EXECUTED` 只保留为失败诊断。定向 96/96、docs 442/442，允许
+AF_UNIX 的 full 1162/1157 且只保留既有 4 FAIL + 1 ERROR；新 clean/fresh live 仍待执行。
+
 预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
 Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
 包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
@@ -133,18 +140,22 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Application 再验证 Result class/path。两者都不生成答案；模型没有直接 FS/Shell/network/credential/write/source authority 或来源分类权。
 - 每次认知查询、提议、Broker decision、操作、Result、locator、digest、bytes、truncation 和 progress 只追加到本题 Evidence Ledger。
   只有合法 `FINISH` 或失败关闭 stop 后才能 seal；不得覆盖历史或在调查完成前密封。
-- Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合。Application 区分 Profile 的 registered classes、
-  逐题 required classes、已调查 classes、untried required 和 unregistered required；non-supported FINISH 只闭合仍可调查的 required class，
-  不机械遍历无关 registered class，unregistered required 则保留为能力边界。
+- Question Understanding 必须声明回答 checklist 直接需要的最小受控 evidence-class 集合及 1—8 个 exact mandatory-read paths；多机制/
+  检查面选择各决定性实现，flow/lifecycle 把结果、状态变化与持久化/审计/缓存/通知/外部交互副作用拆成独立 checklist。Application 区分
+  registered/required/investigated/untried/unregistered classes 与 required/unread paths；任何 FINISH 前都必须以无行范围、
+  `coverage_complete=true` 的 READ/PARSE 闭合 required paths，SEARCH/截断内容不消费义务；non-supported FINISH 只额外闭合仍可调查的
+  required class，不机械遍历无关 registered class，unregistered required 则保留为能力边界。
 - 每个 FINISH disposition 必须从完整引用内容列出有界原子 material observations，区分 process、outcome、state change、side effect 与
   limitation，并逐条绑定 admissible evidence；`SUPPORTED` 只能包含 affirmative observation，non-supported outcome 只能包含
   `LIMITATION`，output schema 与 Application Domain 均拒绝混类。一个代表性事实不能闭合宽泛 checklist。Application 生成稳定
-  observation identity 并拒绝跨 checklist、重复、错误分区或证据不闭合。
+  observation identity 并拒绝跨 checklist、重复、错误分区或证据不闭合。caller/configuration/wiring 只证明接线，不能替代被委托组件自身
+  的条件、比较、状态变化、结果或失败语义；每个相关 full-content 实现 entry 中的 material side effect 必须单独观察。
 - Question Evidence Package 保持一个 seal/identity，但内部严格分区：`support/citation` 只收经 modality、Context、Coverage 和 Support
   校验通过的可采信条目，只有它们能支持肯定 Claim 与 Citation；`boundary/audit` 必须保留 Gap、Failure、Partial、Conflict、Unknown、
   拒绝决定和资源收据，只能约束结论或形成标记清楚的边界说明，不能支持肯定 Claim。seal 不把任何条目或模型推断变成真。
-- Answer 在全新上下文中只读当前 sealed Package。Question Understanding 使用受控 detail level；每个 Claim 声明 direct/process/impact/
-  implementation/limitation role 并绑定 material checklist；表达 material fact 时还绑定文本实际表达的 observation IDs。仅末尾
+- Answer 在全新上下文中只读当前 sealed Package。closed output 由唯一必填 `direct_answer` 和禁止直答的 follow-up `claims` 组成；混合
+  Package 以 affirmative direct summary 回答 supported 部分，non-supported 部分只进末尾 limitation follow-up。Question Understanding
+  使用受控 detail level；每个 Claim 声明 role 并绑定 material checklist；表达 material fact 时还绑定文本实际表达的 observation IDs。仅末尾
   coverage-only Limitation 可以使用空 observation link 且只引用 boundary/audit，不能承载 affirmative fact、错绑 supported observation
   或替代 Package observation 覆盖。Application 强制直接答案排首位、全
   checklist/observation 覆盖、每条 observation 默认可见、disposition/证据分区一致且 Claim 引用 observation 所需全部 Package entries；
@@ -153,7 +164,8 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
 - Reviewer 在另一个新上下文中读取原问题、理解记录、当前 Package 和 Draft，无 repo/Source/World Model tool、FS、Shell、network 或
   credential。它从原问题独立重建 material conclusions、列出 Application checklist omission；再检查完整 Package evidence，独立形成带
   evidence entry 的原子 observations，分别列出 Package 与默认 Draft omission，并给 direct answer、abstraction fit、material
-  completeness、implementation-detail budget 返回 PASS/FAIL；四项全 PASS、所有 omission 为空且无 Finding 才能批准。表达缺陷可请求同包
+  completeness、implementation-detail budget 返回 PASS/FAIL；对 flow/lifecycle 它逐 full-content entry 审核持久化/审计/缓存/通知/外部
+  交互，对多机制检查各决定性实现而非 caller/wiring。四项全 PASS、所有 omission 为空且无 Finding 才能批准。表达缺陷可请求同包
   针对性重写；证据缺口只能输出绑定 Checklist/Claim/evidence class/need 的 versioned Verification Request，不能提出可执行
   path/command/operation。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新

@@ -66,10 +66,10 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@8"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@9"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
-    "engineering-qa-question-understanding@2"
+    "engineering-qa-question-understanding@3"
 )
 ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-initial-investigation@5"
@@ -77,7 +77,7 @@ ENGINEERING_QUESTION_INITIAL_INVESTIGATION_OUTPUT_SCHEMA_REF = (
 ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@5"
 )
-ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@4"
+ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
 ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@3"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
@@ -270,6 +270,13 @@ _QUESTION_UNDERSTANDING_OUTPUT_SCHEMA = {
             "maxItems": 4,
             "uniqueItems": True,
         },
+        "required_evidence_paths": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+            "maxItems": 8,
+            "uniqueItems": True,
+        },
         "response_language": {"type": "string"},
         "response_constraints": _STRING_ARRAY_SCHEMA,
     },
@@ -281,46 +288,85 @@ _QUESTION_UNDERSTANDING_OUTPUT_SCHEMA = {
         "material_conclusions",
         "evidence_needs",
         "required_evidence_classes",
+        "required_evidence_paths",
         "response_language",
         "response_constraints",
     ],
     "additionalProperties": False,
 }
-_ANSWER_CLAIM_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "claim_id": {"type": "string"},
-        "kind": {
-            "type": "string",
-            "enum": [item.value for item in AnswerClaimKind],
+def _answer_claim_variant(
+    *,
+    kind: AnswerClaimKind,
+    content_roles: Sequence[AnswerContentRole],
+) -> dict[str, object]:
+    return {
+        "type": "object",
+        "properties": {
+            "claim_id": {"type": "string"},
+            "kind": {"type": "string", "enum": [kind.value]},
+            "content_role": {
+                "type": "string",
+                "enum": [item.value for item in content_roles],
+            },
+            "checklist_item_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
+            "material_observation_ids": _UNIQUE_STRING_ARRAY_SCHEMA,
+            "text": {"type": "string"},
+            "evidence_entry_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
         },
-        "content_role": {
-            "type": "string",
-            "enum": [item.value for item in AnswerContentRole],
-        },
-        "checklist_item_ids": _NONEMPTY_UNIQUE_STRING_ARRAY_SCHEMA,
-        "material_observation_ids": _UNIQUE_STRING_ARRAY_SCHEMA,
-        "text": {"type": "string"},
-        "evidence_entry_ids": _STRING_ARRAY_SCHEMA,
-    },
-    "required": [
-        "claim_id",
-        "kind",
-        "content_role",
-        "checklist_item_ids",
-        "material_observation_ids",
-        "text",
-        "evidence_entry_ids",
-    ],
-    "additionalProperties": False,
+        "required": [
+            "claim_id",
+            "kind",
+            "content_role",
+            "checklist_item_ids",
+            "material_observation_ids",
+            "text",
+            "evidence_entry_ids",
+        ],
+        "additionalProperties": False,
+    }
+
+
+_ANSWER_DIRECT_CLAIM_SCHEMA = {
+    "anyOf": [
+        _answer_claim_variant(
+            kind=AnswerClaimKind.AFFIRMATIVE,
+            content_roles=(AnswerContentRole.DIRECT_ANSWER,),
+        ),
+        _answer_claim_variant(
+            kind=AnswerClaimKind.LIMITATION,
+            content_roles=(AnswerContentRole.DIRECT_ANSWER,),
+        ),
+    ]
+}
+_ANSWER_FOLLOWUP_CLAIM_SCHEMA = {
+    "anyOf": [
+        _answer_claim_variant(
+            kind=AnswerClaimKind.AFFIRMATIVE,
+            content_roles=(
+                AnswerContentRole.USER_VISIBLE_PROCESS,
+                AnswerContentRole.IMPACT_OR_SIDE_EFFECT,
+                AnswerContentRole.IMPLEMENTATION_EVIDENCE,
+            ),
+        ),
+        _answer_claim_variant(
+            kind=AnswerClaimKind.LIMITATION,
+            content_roles=(AnswerContentRole.LIMITATION,),
+        ),
+    ]
 }
 _ANSWER_OUTPUT_SCHEMA = {
     "type": "object",
     "properties": {
         "response_language": {"type": "string"},
-        "claims": {"type": "array", "items": _ANSWER_CLAIM_SCHEMA},
+        "direct_answer": _ANSWER_DIRECT_CLAIM_SCHEMA,
+        "claims": {
+            "type": "array",
+            "items": _ANSWER_FOLLOWUP_CLAIM_SCHEMA,
+            "minItems": 0,
+            "maxItems": 63,
+        },
     },
-    "required": ["response_language", "claims"],
+    "required": ["response_language", "direct_answer", "claims"],
     "additionalProperties": False,
 }
 _REVIEW_FINDING_SCHEMA = {
@@ -746,9 +792,15 @@ class EngineeringQuestionRoleInputBuilder:
                 "material_conclusions",
                 "evidence_needs",
                 "required_evidence_classes",
+                "required_evidence_paths",
                 "response_language",
                 "response_constraints",
             ],
+            "authorized_evidence_paths": list(request.source_allowlist),
+            "required_evidence_path_policy": (
+                "ONE_TO_EIGHT_EXACT_AUTHORIZED_PATHS_WHOSE_FULL_CONTENT_IS_"
+                "INDISPENSABLE_BEFORE_FINISH"
+            ),
         }
         return EngineeringQuestionRoleInputManifest.create(
             role=EngineeringQuestionModelRole.QUESTION_UNDERSTANDING,
@@ -829,7 +881,15 @@ class EngineeringQuestionRoleInputBuilder:
             "answer_structure_contract": {
                 "detail_level": understanding.requested_abstraction_level.value,
                 "required_first_role": AnswerContentRole.DIRECT_ANSWER.value,
+                "maximum_direct_answer_claims": 1,
                 "ordered_roles": [item.value for item in AnswerContentRole],
+                "mixed_disposition_direct_answer_policy": (
+                    "AFFIRMATIVE_DIRECT_SUMMARY_FOR_SUPPORTED_ITEMS_THEN_"
+                    "FINAL_LIMITATION_CLAIMS_FOR_NON_SUPPORTED_ITEMS"
+                ),
+                "limitation_direct_answer_policy": (
+                    "ALLOWED_ONLY_WHEN_EVERY_CHECKLIST_DISPOSITION_IS_NON_SUPPORTED"
+                ),
                 "every_claim_links_material_checklist": True,
                 "every_material_checklist_item_covered": True,
                 "every_material_fact_claim_links_material_observations": True,
@@ -1028,6 +1088,9 @@ class StructuredQuestionUnderstandingRole(_StructuredRoleAdapter):
                         Sequence[str], value["required_evidence_classes"]
                     )
                 ),
+                required_evidence_paths=cast(
+                    Sequence[str], value["required_evidence_paths"]
+                ),
                 response_language=cast(str, value["response_language"]),
                 response_constraints=cast(
                     Sequence[str], value["response_constraints"]
@@ -1092,6 +1155,10 @@ class StructuredEngineeringAnswerRole(_StructuredRoleAdapter):
         )
         value = self._output(manifest)
         try:
+            claim_values = (
+                cast(Mapping[str, object], value["direct_answer"]),
+                *cast(Sequence[Mapping[str, object]], value["claims"]),
+            )
             claims = tuple(
                 EngineeringAnswerClaimProposal.create(
                     claim_id=cast(str, item["claim_id"]),
@@ -1116,7 +1183,7 @@ class StructuredEngineeringAnswerRole(_StructuredRoleAdapter):
                         )
                     ),
                 )
-                for item in cast(Sequence[Mapping[str, object]], value["claims"])
+                for item in claim_values
             )
             return EngineeringAnswerProposal.create(
                 role_context_id=role_context_id,
