@@ -85,16 +85,22 @@ Shell、网络、credential 或直接 Source 工具，但可以指出具体、�
 证明服务继续可用。独立评测先裁决重大错误、遗漏、引用和特判；用户随后在同一持续版本自由体验并决定 `CONTINUE / REWORK / REDIRECT /
 REJECT`。非 `CONTINUE` 只暂停晋级并默认在同一 Slice 返工，不自动新建 Iteration。
 
+从 ITER-010 终态后新建的首个产品迭代起，上述至少三题同时作为 current Codex 小样本同题盲评，其中原失败题之外的至少两条相邻或异质题
+中，至少一条必须在产品冻结后由现场提出：冻结当前客户端/模型/reasoning/工具/
+权限与 exact revision，Codex fresh 任务答案先密封，系统不可见，独立评测方随机匿名裁决。系统必须先过绝对质量门、逐题无物质退步且
+总体答案质量严格高于 Codex；全体打平即 `REWORK`。它与 Web Alpha 同出口，不增加体验前 Slice。
+
 ### Stage 2：跨工程和工程化夯实
 
 Alpha 确认后才验证第二工程、来源冲突、Ledger/Package 生命周期、复杂补证、资格、Provider disclosure、安全、性能、完整回归、early
-hidden canary、成熟源码 Agent 对照和 World Model 复用价值。修复必须落在通用表示、Broker policy、调查或审核合同，不能落在
+hidden canary、扩大后的 current Codex 对照和 World Model 复用价值。修复必须落在通用表示、Broker policy、调查或审核合同，不能落在
 问题/工程分支。
 
 ### Stage 3：正式验收
 
-产品代码冻结后执行最终未见工程 10 answerable + 2 boundary、两条现场题和独立对照。重大错误为零、逐结论完整性不低于成熟源码 Agent、
-Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直接 Source/写/网络权限为零，用户最终决定是否接受。
+产品代码冻结后执行最终未见工程 10 answerable + 2 boundary、两条现场题和独立对照。重大错误、物质遗漏和无据结论为零，逐题不低于
+current Codex 且总体盲评答案质量严格更高，Citation 支持重要结论；所有 Source 操作与 Ledger 对账，模型直接 Source/写/网络权限为零，
+用户最终决定是否接受。成本、时延或复用优势不能补偿答案质量平局或退步。
 
 ## Stop conditions
 

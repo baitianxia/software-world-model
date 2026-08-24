@@ -4110,6 +4110,20 @@
     "path": "docs/project/iterations/iteration-010/decisions/PDR-001-resume-as-rework.md"
   },
   {
+    "id": "ITER-010-PDR-002",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-002-strict-current-codex-baseline-next-iteration.md"
+  },
+  {
     "id": "ITER-010-PROPOSAL",
     "kind": "iteration-proposal",
     "status": "accepted",

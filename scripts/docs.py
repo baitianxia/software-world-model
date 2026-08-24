@@ -72,6 +72,20 @@ REFLECTION_GATE_START_ITERATION = 8
 DIRECTION_PREVIEW_START_ITERATION = 9
 ENGINEERING_QA_HYBRID_START_ITERATION = 10
 REWORK_LIFECYCLE_START_ITERATION = 10
+STRICT_CODEX_BASELINE_START_ITERATION = 12
+STRICT_CODEX_BASELINE_ROLE = (
+    "strong-external-baseline-not-oracle-not-adjudicator"
+)
+STRICT_CODEX_BASELINE_EXECUTION_MODE = (
+    "fresh-isolated-same-question-answer-sealed-before-disclosure"
+)
+STRICT_CODEX_QUALITY_METRIC = "blind-paired-answer-quality-margin"
+STRICT_CODEX_QUALITY_UNIT = "quality-basis-points"
+STRICT_CODEX_QUALITY_COMPARISON = "at-least"
+STRICT_CODEX_ALPHA_PASS_RULE = (
+    "system-absolute-pass-no-per-question-regression-and-positive-blind-quality-margin"
+)
+STRICT_CODEX_RESULT_COMPARISON = "strict-answer-quality-superiority"
 ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA = (
     "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
 )
@@ -263,6 +277,17 @@ ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA = {
     "product_goal_outcome": "user-visible-general-engineering-qa-delta",
     "product_goal_evaluation": "independent-hidden-plus-live-ad-hoc",
 }
+STRICT_CODEX_PRODUCT_GOAL_V000_CLAIM = (
+    "本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并在答案质量上严格超过 current Codex"
+)
+STRICT_CODEX_PRODUCT_GOAL_V000_FROZEN_INPUT = (
+    "未参与实现的真实工程；独立持有的 held-out 和现场问题；exact current Codex identity/protocol；"
+    "双方密封答案；随机匿名映射；独立盲评量表"
+)
+STRICT_CODEX_PRODUCT_GOAL_V000_EXPECTED = (
+    "系统绝对质量 PASS；逐题无物质退步；总体答案质量差值严格为正；全体打平 FAIL；"
+    "次级效率指标不得补偿；同一正式 Web 可人工验证"
+)
 PRODUCT_GOAL_RESULT_DIGEST_FIELDS = (
     "evaluation_project_manifest_digest",
     "held_out_suite_digest",
@@ -615,6 +640,13 @@ def requires_engineering_qa_hybrid(identifier: object) -> bool:
     return iteration_number(identifier) == ENGINEERING_QA_HYBRID_START_ITERATION
 
 
+def requires_strict_codex_baseline(identifier: object) -> bool:
+    """Apply the strong external Codex baseline contract to new iterations only."""
+
+    number = iteration_number(identifier)
+    return number is not None and number >= STRICT_CODEX_BASELINE_START_ITERATION
+
+
 def is_engineering_qa_adaptive_protocol(
     answer_protocol: dict[str, object],
 ) -> bool:
@@ -631,6 +663,13 @@ def product_goal_v000_contract(
 ) -> tuple[dict[str, str], str, str, str]:
     """Return the exact user-visible product gate for the selected architecture."""
 
+    if requires_strict_codex_baseline(iteration):
+        return (
+            PRODUCT_GOAL_V000_METADATA,
+            STRICT_CODEX_PRODUCT_GOAL_V000_CLAIM,
+            STRICT_CODEX_PRODUCT_GOAL_V000_FROZEN_INPUT,
+            STRICT_CODEX_PRODUCT_GOAL_V000_EXPECTED,
+        )
     if requires_engineering_qa_hybrid(iteration):
         return (
             ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA,
@@ -1219,6 +1258,142 @@ def resolved_alpha_direction_slice_ref(
     ):
         return None
     return str(alpha_ref)
+
+
+def resolved_sustained_alpha_slice_ref(
+    alignment: dict[str, object], new_refs: list[str]
+) -> str | None:
+    """Resolve the first sustained Web Alpha that owns the Codex comparison."""
+
+    alpha_ref = resolved_alpha_direction_slice_ref(alignment, new_refs)
+    if alpha_ref is not None:
+        return alpha_ref
+    experience_binding = alignment.get("experience_version_binding")
+    if isinstance(experience_binding, dict):
+        experience_ref = experience_binding.get("new_slice_ref")
+        if isinstance(experience_ref, str) and experience_ref in new_refs:
+            return experience_ref
+    return resolved_direction_preview_slice_ref(alignment, new_refs)
+
+
+def validate_strict_codex_baseline_alignment(
+    alignment: dict[str, object], label: str
+) -> list[str]:
+    """Freeze a blind answer-quality gate that secondary metrics cannot replace."""
+
+    errors: list[str] = []
+    identity_digest = alignment.get("mature_source_agent_identity_digest")
+    if not isinstance(identity_digest, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", identity_digest
+    ) is None:
+        errors.append(
+            f"{label}: mature_source_agent_identity_digest must be an exact sha256 digest"
+        )
+    for field, expected in (
+        ("mature_source_agent_role", STRICT_CODEX_BASELINE_ROLE),
+        (
+            "mature_source_agent_execution_mode",
+            STRICT_CODEX_BASELINE_EXECUTION_MODE,
+        ),
+        ("positive_value_metric", STRICT_CODEX_QUALITY_METRIC),
+        ("positive_value_unit", STRICT_CODEX_QUALITY_UNIT),
+        ("positive_value_comparison", STRICT_CODEX_QUALITY_COMPARISON),
+        ("held_out_evaluation_owner", "independent-evaluator"),
+        ("positive_value_adjudication_owner", "independent-evaluator"),
+    ):
+        if alignment.get(field) != expected:
+            errors.append(f"{label}: {field} must equal {expected}")
+    threshold = alignment.get("positive_value_threshold")
+    if (
+        isinstance(threshold, bool)
+        or not isinstance(threshold, int)
+        or threshold < 1
+    ):
+        errors.append(
+            f"{label}: positive_value_threshold must be a positive integer so a tie cannot pass"
+        )
+    if alignment.get("secondary_metrics_can_compensate_answer_quality") is not False:
+        errors.append(
+            f"{label}: secondary_metrics_can_compensate_answer_quality must be false"
+        )
+    return errors
+
+
+def validate_alpha_agent_comparison_binding(
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+) -> list[str]:
+    """Bind a blocking blind Codex comparison to the first sustained Web Alpha."""
+
+    binding = alignment.get("alpha_agent_comparison_binding")
+    if not isinstance(binding, dict):
+        return [f"{label}: alpha_agent_comparison_binding must be a mapping"]
+    errors: list[str] = []
+    case_id = binding.get("case_id")
+    if (
+        not isinstance(case_id, str)
+        or re.fullmatch(r"V-COMP-ALPHA-[0-9]{3,}", case_id) is None
+        or case_id not in blocking_case_ids
+    ):
+        errors.append(
+            f"{label}: Alpha Agent comparison case_id must be a blocking V-COMP-ALPHA-NNN Case"
+        )
+    alpha_ref = resolved_sustained_alpha_slice_ref(alignment, new_refs)
+    if alpha_ref is None or binding.get("new_slice_ref") != alpha_ref:
+        errors.append(
+            f"{label}: Alpha Agent comparison must belong to the first sustained Web Alpha"
+        )
+    question_count = binding.get("question_count")
+    if (
+        isinstance(question_count, bool)
+        or not isinstance(question_count, int)
+        or question_count < 3
+    ):
+        errors.append(
+            f"{label}: Alpha Agent comparison question_count must be at least 3"
+        )
+    for field, expected in (
+        (
+            "question_set_rule",
+            "original-failure-plus-two-heterogeneous-including-post-freeze-live",
+        ),
+        ("protocol_digest_ref", "mature_source_agent_protocol_digest"),
+        ("rubric_digest_ref", "mature_source_agent_rubric_digest"),
+        ("identity_digest_ref", "mature_source_agent_identity_digest"),
+        ("pass_rule", STRICT_CODEX_ALPHA_PASS_RULE),
+        ("all_tie_outcome", "FAIL"),
+    ):
+        if binding.get(field) != expected:
+            errors.append(
+                f"{label}: alpha_agent_comparison_binding.{field} must equal {expected}"
+            )
+    if "tie_outcome" in binding:
+        errors.append(
+            f"{label}: alpha_agent_comparison_binding.tie_outcome is ambiguous; "
+            "use all_tie_outcome only"
+        )
+    post_freeze_live_question_count = binding.get(
+        "post_freeze_live_question_count"
+    )
+    if (
+        isinstance(post_freeze_live_question_count, bool)
+        or not isinstance(post_freeze_live_question_count, int)
+        or post_freeze_live_question_count < 1
+        or not isinstance(question_count, int)
+        or isinstance(question_count, bool)
+        or post_freeze_live_question_count > question_count
+    ):
+        errors.append(
+            f"{label}: alpha_agent_comparison_binding.post_freeze_live_question_count "
+            "must be a positive integer no greater than question_count"
+        )
+    if binding.get("secondary_metric_compensation_allowed") is not False:
+        errors.append(
+            f"{label}: Alpha Agent comparison cannot allow secondary metrics to compensate answer quality"
+        )
+    return errors
 
 
 def validate_direction_preview_binding(
@@ -2038,6 +2213,8 @@ def validate_product_goal_alignment_manifest(
         return [f"{label}: product_goal_alignment must be a mapping from ITER-007 onward"]
 
     errors: list[str] = []
+    if requires_strict_codex_baseline(iteration):
+        errors.extend(validate_strict_codex_baseline_alignment(alignment, label))
     if requires_reflection_gate(iteration):
         catalog_digest = alignment.get("critical_assumption_catalog_digest")
         if catalog_digest != "not-frozen-proposal-only" and (
@@ -2373,7 +2550,16 @@ def validate_product_goal_alignment_manifest(
                 ):
                     errors.append(
                         f"{label}: rework direction preview must include CONTINUE, REWORK, REDIRECT and REJECT"
-                    )
+                )
+        if requires_strict_codex_baseline(iteration):
+            errors.extend(
+                validate_alpha_agent_comparison_binding(
+                    alignment,
+                    new_refs,
+                    blocking_case_ids,
+                    label,
+                )
+            )
     if requires_reflection_gate(iteration):
         errors.extend(
             validate_reflection_gate_bindings(
@@ -2569,6 +2755,44 @@ def non_negative_metadata_integer(value: object) -> int | None:
     return None
 
 
+def strict_codex_frozen_question_count(
+    alignment: dict[str, object], case_id: object
+) -> int | None:
+    """Resolve the precommitted question count for a strict Codex comparison."""
+
+    raw_count: object = None
+    if case_id == "V-000":
+        raw_count = alignment.get("held_out_question_count")
+    else:
+        alpha_binding = alignment.get("alpha_agent_comparison_binding")
+        if (
+            isinstance(alpha_binding, dict)
+            and alpha_binding.get("case_id") == case_id
+        ):
+            raw_count = alpha_binding.get("question_count")
+        else:
+            early_binding = alignment.get("early_comparison_binding")
+            if (
+                isinstance(early_binding, dict)
+                and early_binding.get("case_id") == case_id
+            ):
+                canary_case_id = early_binding.get("canary_case_id")
+                canary_bindings = alignment.get("early_hidden_canary_bindings")
+                if isinstance(canary_bindings, dict):
+                    for canary in canary_bindings.values():
+                        if (
+                            isinstance(canary, dict)
+                            and canary.get("case_id") == canary_case_id
+                        ):
+                            raw_count = canary.get("question_count")
+                            break
+    return (
+        raw_count
+        if type(raw_count) is int and raw_count >= 1
+        else None
+    )
+
+
 def validate_positive_value_result(
     result: Document,
     alignment: dict[str, object],
@@ -2580,6 +2804,9 @@ def validate_positive_value_result(
     """Validate the measured value verdict against its precommitted threshold."""
 
     errors: list[str] = []
+    strict_codex_baseline = requires_strict_codex_baseline(
+        result.metadata.get("iteration", "")
+    )
     value_verdict = result.metadata.get("positive_value_verdict")
     if require_pass and value_verdict != "PASS":
         errors.append(f"{label}: positive_value_verdict must equal PASS")
@@ -2616,15 +2843,115 @@ def validate_positive_value_result(
     ):
         if result.metadata.get(result_field) != alignment.get(manifest_field):
             errors.append(f"{label}: {result_field} must match the frozen Manifest")
+    positive_value_case_id = result.metadata.get("positive_value_case_id")
+    strict_quality_gate_met: bool | None = None
+    if strict_codex_baseline:
+        if result.metadata.get(
+            "mature_source_agent_comparison"
+        ) != STRICT_CODEX_RESULT_COMPARISON:
+            errors.append(
+                f"{label}: mature_source_agent_comparison must equal {STRICT_CODEX_RESULT_COMPARISON}"
+            )
+        absolute_verdict = result.metadata.get("system_absolute_quality_verdict")
+        if absolute_verdict not in {"PASS", "FAIL"}:
+            errors.append(
+                f"{label}: system_absolute_quality_verdict must equal PASS or FAIL"
+            )
+        frozen_question_count = strict_codex_frozen_question_count(
+            alignment, positive_value_case_id
+        )
+        if frozen_question_count is None:
+            errors.append(
+                f"{label}: strict comparison Case must resolve an exact frozen question count"
+            )
+        raw_evaluated_question_count = result.metadata.get(
+            "evaluated_question_count"
+        )
+        evaluated_question_count = (
+            raw_evaluated_question_count
+            if type(raw_evaluated_question_count) is int
+            and raw_evaluated_question_count >= 1
+            else None
+        )
+        if evaluated_question_count is None:
+            errors.append(
+                f"{label}: evaluated_question_count must be a positive integer"
+            )
+        elif (
+            frozen_question_count is not None
+            and evaluated_question_count != frozen_question_count
+        ):
+            errors.append(
+                f"{label}: evaluated_question_count must equal the frozen question count"
+            )
+        count_values: dict[str, int | None] = {}
+        for field in (
+            "system_better_question_count",
+            "tie_question_count",
+            "codex_better_question_count",
+            "both_fail_question_count",
+            "unresolved_or_invalid_question_count",
+        ):
+            raw_value = result.metadata.get(field)
+            value = (
+                raw_value
+                if type(raw_value) is int and raw_value >= 0
+                else None
+            )
+            count_values[field] = value
+            if value is None:
+                errors.append(f"{label}: {field} must be a non-negative integer")
+        classification_count_matches = (
+            evaluated_question_count is not None
+            and all(value is not None for value in count_values.values())
+            and sum(
+                value for value in count_values.values() if value is not None
+            )
+            == evaluated_question_count
+        )
+        if not classification_count_matches:
+            errors.append(
+                f"{label}: five answer-quality classification counts must sum to evaluated_question_count"
+            )
+        strict_quality_gate_met = (
+            absolute_verdict == "PASS"
+            and frozen_question_count is not None
+            and evaluated_question_count == frozen_question_count
+            and classification_count_matches
+            and count_values["system_better_question_count"] is not None
+            and count_values["system_better_question_count"] >= 1
+            and count_values["codex_better_question_count"] == 0
+            and count_values["both_fail_question_count"] == 0
+            and count_values["unresolved_or_invalid_question_count"] == 0
+        )
+        if require_pass and absolute_verdict != "PASS":
+            errors.append(
+                f"{label}: system_absolute_quality_verdict must equal PASS for a passing comparison"
+            )
+        if require_pass and count_values["system_better_question_count"] in {None, 0}:
+            errors.append(
+                f"{label}: system_better_question_count must be at least 1 so an all-tie comparison cannot pass"
+            )
+        for field in (
+            "codex_better_question_count",
+            "both_fail_question_count",
+            "unresolved_or_invalid_question_count",
+        ):
+            if require_pass and count_values[field] not in {None, 0}:
+                errors.append(f"{label}: {field} must equal 0 for PASS")
     raw_positive_value_actual = result.metadata.get("positive_value_actual")
     positive_value_actual = (
         raw_positive_value_actual
         if type(raw_positive_value_actual) is int
-        and raw_positive_value_actual >= 0
+        and (strict_codex_baseline or raw_positive_value_actual >= 0)
         else None
     )
     if positive_value_actual is None:
-        errors.append(f"{label}: positive_value_actual must be a non-negative integer")
+        errors.append(
+            f"{label}: positive_value_actual must be an exact integer"
+            if strict_codex_baseline
+            else f"{label}: positive_value_actual must be a non-negative integer"
+        )
     else:
         threshold = alignment.get("positive_value_threshold")
         comparison = alignment.get("positive_value_comparison")
@@ -2637,9 +2964,13 @@ def validate_positive_value_result(
                 if comparison == "at-least"
                 else None
             )
+        if strict_codex_baseline and threshold_met is not None:
+            threshold_met = bool(threshold_met and strict_quality_gate_met)
         if require_pass and threshold_met is False:
             errors.append(
-                f"{label}: positive_value_actual does not satisfy the frozen threshold"
+                f"{label}: answer quality must satisfy the positive frozen margin; the frozen comparison protocol separately forbids per-question regression"
+                if strict_codex_baseline
+                else f"{label}: positive_value_actual does not satisfy the frozen threshold"
             )
         elif not require_pass and threshold_met is not None:
             expected_verdict = "PASS" if threshold_met else "FAIL"
@@ -2656,7 +2987,6 @@ def validate_positive_value_result(
         errors.append(
             f"{label}: positive_value_report_digest must be an exact sha256 digest"
         )
-    positive_value_case_id = result.metadata.get("positive_value_case_id")
     if (
         not isinstance(positive_value_case_id, str)
         or expected_case_id is not None
@@ -2672,14 +3002,31 @@ def validate_positive_value_result(
         errors.append(
             f"{label}: positive_value_adjudication_owner must match the frozen Manifest"
         )
+    if strict_codex_baseline:
+        if result.metadata.get(
+            "mature_source_agent_identity_digest"
+        ) != alignment.get("mature_source_agent_identity_digest"):
+            errors.append(
+                f"{label}: mature_source_agent_identity_digest must match the frozen Manifest"
+            )
     adjudication_receipt = result.metadata.get(
         "positive_value_adjudication_receipt_ref"
     )
+    adjudication_receipt_pattern = (
+        r"independent-evaluator-result:sha256:[0-9a-f]{64}"
+        if strict_codex_baseline
+        else r"codex-user-message:sha256:[0-9a-f]{64}"
+    )
     if not isinstance(adjudication_receipt, str) or re.fullmatch(
-        r"codex-user-message:sha256:[0-9a-f]{64}", adjudication_receipt
+        adjudication_receipt_pattern, adjudication_receipt
     ) is None:
         errors.append(
-            f"{label}: positive_value_adjudication_receipt_ref must bind an exact independent adjudication message"
+            f"{label}: positive_value_adjudication_receipt_ref must bind an exact "
+            + (
+                "independent-evaluator-result digest"
+                if strict_codex_baseline
+                else "independent adjudication message"
+            )
         )
     elif adjudication_receipt == result.metadata.get(
         "positive_value_freeze_receipt_ref"
@@ -2732,7 +3079,11 @@ def validate_positive_value_result(
 
     if report_data is not None:
         expected_report_fields: dict[str, object] = {
-            "schema": "software-world-model-positive-value-report/v1",
+            "schema": (
+                "software-world-model-positive-value-report/v2"
+                if strict_codex_baseline
+                else "software-world-model-positive-value-report/v1"
+            ),
             "result_id": result.identifier,
             "verification_case_id": positive_value_case_id,
             "metric": result.metadata.get("positive_value_metric"),
@@ -2761,15 +3112,57 @@ def validate_positive_value_result(
             "adjudication_owner": adjudication_owner,
             "adjudication_receipt_ref": adjudication_receipt,
         }
+        if strict_codex_baseline:
+            expected_report_fields.update(
+                {
+                    "mature_source_agent_identity_digest": result.metadata.get(
+                        "mature_source_agent_identity_digest"
+                    ),
+                    "system_absolute_quality_verdict": result.metadata.get(
+                        "system_absolute_quality_verdict"
+                    ),
+                    "evaluated_question_count": result.metadata.get(
+                        "evaluated_question_count"
+                    ),
+                    "system_better_question_count": result.metadata.get(
+                        "system_better_question_count"
+                    ),
+                    "tie_question_count": result.metadata.get(
+                        "tie_question_count"
+                    ),
+                    "codex_better_question_count": result.metadata.get(
+                        "codex_better_question_count"
+                    ),
+                    "both_fail_question_count": result.metadata.get(
+                        "both_fail_question_count"
+                    ),
+                    "unresolved_or_invalid_question_count": result.metadata.get(
+                        "unresolved_or_invalid_question_count"
+                    ),
+                }
+            )
         expected_report_field_names = {
             *expected_report_fields,
             "measurement_input_digest",
         }
         if set(report_data) != expected_report_field_names:
             errors.append(
-                f"{label}: positive value report must use only the exact v1 schema fields"
+                f"{label}: positive value report must use only the exact "
+                f"{'v2' if strict_codex_baseline else 'v1'} schema fields"
             )
-        for integer_field in ("actual", "threshold", "reuse_horizon_questions"):
+        integer_fields = ["actual", "threshold", "reuse_horizon_questions"]
+        if strict_codex_baseline:
+            integer_fields.extend(
+                (
+                    "system_better_question_count",
+                    "evaluated_question_count",
+                    "tie_question_count",
+                    "codex_better_question_count",
+                    "both_fail_question_count",
+                    "unresolved_or_invalid_question_count",
+                )
+            )
+        for integer_field in integer_fields:
             if type(report_data.get(integer_field)) is not int:
                 errors.append(
                     f"{label}: positive value report {integer_field} must be an exact JSON integer"
@@ -3009,8 +3402,15 @@ def validate_product_goal_result(
             and counts[result_field] != minimum
         ):
             errors.append(f"{label}: {result_field} must equal the frozen Manifest count")
-    if result.metadata.get("mature_source_agent_comparison") != "non-regression":
-        errors.append(f"{label}: mature_source_agent_comparison must equal non-regression")
+    expected_agent_comparison = (
+        STRICT_CODEX_RESULT_COMPARISON
+        if requires_strict_codex_baseline(iteration)
+        else "non-regression"
+    )
+    if result.metadata.get("mature_source_agent_comparison") != expected_agent_comparison:
+        errors.append(
+            f"{label}: mature_source_agent_comparison must equal {expected_agent_comparison}"
+        )
     if requires_reflection_gate(iteration):
         errors.extend(
             validate_positive_value_result(
@@ -3115,6 +3515,7 @@ def validate_product_goal_v000(
     if (
         requires_reflection_gate(iteration)
         and not requires_engineering_qa_hybrid(iteration)
+        and not requires_strict_codex_baseline(iteration)
     ):
         frozen_input += "；预提交差异化价值阈值"
         expected_outcome = (
@@ -4562,7 +4963,7 @@ def validate_answer_protocol_execution_readiness(
 
 
 def validate_positive_value_execution_readiness(
-    alignment: dict[str, object], label: str
+    alignment: dict[str, object], label: str, iteration: object = ""
 ) -> list[str]:
     """Require a precommitted, replayable value comparison before coding."""
 
@@ -4627,6 +5028,8 @@ def validate_positive_value_execution_readiness(
         errors.append(
             f"{label}: positive_value_adjudication_owner must be frozen as user or independent-evaluator before Slice execution"
         )
+    if requires_strict_codex_baseline(iteration):
+        errors.extend(validate_strict_codex_baseline_alignment(alignment, label))
     return errors
 
 
@@ -4635,6 +5038,7 @@ def validate_alpha_staged_execution_inputs(
     alignment: dict[str, object],
     new_refs: list[str],
     label: str,
+    iteration: object = "",
 ) -> list[str]:
     """Defer Alpha-only corpora and hidden/comparison freezes until their Slice."""
 
@@ -4662,26 +5066,36 @@ def validate_alpha_staged_execution_inputs(
     hardening_ordinal = (
         hardening_ref.rsplit("-", 1)[-1] if isinstance(hardening_ref, str) else "unknown"
     )
+    strict_codex_baseline = requires_strict_codex_baseline(iteration)
     if not hardening_started:
         deferred_value = (
             "not-frozen-requires-new-user-receipt-before-slice-" + hardening_ordinal
         )
-        for field in (
-            "positive_value_metric",
-            "positive_value_unit",
-            "positive_value_comparison",
-            "positive_value_threshold",
-            "positive_value_reuse_horizon_questions",
-        ):
-            if alignment.get(field) != deferred_value:
-                errors.append(f"{label}: {field} must remain deferred before hardening")
+        if strict_codex_baseline:
+            errors.extend(
+                validate_positive_value_execution_readiness(
+                    alignment, label, iteration
+                )
+            )
+        else:
+            for field in (
+                "positive_value_metric",
+                "positive_value_unit",
+                "positive_value_comparison",
+                "positive_value_threshold",
+                "positive_value_reuse_horizon_questions",
+            ):
+                if alignment.get(field) != deferred_value:
+                    errors.append(f"{label}: {field} must remain deferred before hardening")
         if readiness.get("hidden_freeze_protocol_digest") != f"pending-until-slice-{hardening_ordinal}-freeze":
             errors.append(f"{label}: hidden_freeze_protocol_digest must remain deferred before hardening")
         if readiness.get("hidden_freeze_receipt_ref") != ENGINEERING_QA_NOT_AUTHORIZED:
             errors.append(f"{label}: hidden_freeze_receipt_ref must remain not-authorized before hardening")
         return errors
 
-    errors.extend(validate_positive_value_execution_readiness(alignment, label))
+    errors.extend(
+        validate_positive_value_execution_readiness(alignment, label, iteration)
+    )
     hidden_digest = readiness.get("hidden_freeze_protocol_digest")
     if not isinstance(hidden_digest, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", hidden_digest) is None:
         errors.append(f"{label}: hidden_freeze_protocol_digest must be exact once hardening starts")
@@ -4776,6 +5190,13 @@ def validate_product_goal_execution_readiness(
                 )
             )
 
+    if requires_strict_codex_baseline(iteration):
+        errors.extend(
+            validate_positive_value_execution_readiness(
+                alignment, label, iteration
+            )
+        )
+
     defer_early_evaluation = direction_preview_hardening_is_deferred(
         manifest,
         alignment,
@@ -4786,7 +5207,7 @@ def validate_product_goal_execution_readiness(
     if alpha_ref is not None:
         errors.extend(
             validate_alpha_staged_execution_inputs(
-                manifest, alignment, new_refs, label
+                manifest, alignment, new_refs, label, iteration
             )
         )
     elif (
@@ -4794,7 +5215,11 @@ def validate_product_goal_execution_readiness(
         and len(new_refs) > 1
         and not defer_early_evaluation
     ):
-        errors.extend(validate_positive_value_execution_readiness(alignment, label))
+        errors.extend(
+            validate_positive_value_execution_readiness(
+                alignment, label, iteration
+            )
+        )
 
     source_scope = manifest.get("source_scope")
     if not isinstance(source_scope, dict):
@@ -5621,6 +6046,7 @@ def validate_product_goal_reference_targets(
                             if isinstance(early_case, str):
                                 required_owned.add(early_case)
             for early_field in (
+                "alpha_agent_comparison_binding",
                 "early_comparison_binding",
                 "early_diagnostic_binding",
             ):
@@ -5644,7 +6070,7 @@ def validate_product_goal_reference_targets(
                 required_owned.add(ad_hoc_case)
         if not required_owned.issubset(owned):
             errors.append(
-                f"{target.relative_path}: Slice gate Cases must include its owned cross-domain, Web, ad-hoc, early-evaluation, conditional-falsifier and reflection Cases"
+                f"{target.relative_path}: Slice gate Cases must include its owned cross-domain, Web, ad-hoc, Alpha Agent comparison, early-evaluation, conditional-falsifier and reflection Cases"
             )
 
     checkpoint_bindings: list[tuple[str, dict[str, object]]] = []
@@ -6745,6 +7171,16 @@ def validate_product_goal_slice_sequence(
             new_slice_ref = comparison_binding.get("new_slice_ref")
             if isinstance(new_slice_ref, str):
                 early_comparison_by_slice[new_slice_ref] = comparison_binding
+        alpha_comparison_binding = alignment.get("alpha_agent_comparison_binding")
+        if isinstance(alpha_comparison_binding, dict):
+            new_slice_ref = alpha_comparison_binding.get("new_slice_ref")
+            if isinstance(new_slice_ref, str):
+                if new_slice_ref in early_comparison_by_slice:
+                    errors.append(
+                        f"{label}: a Slice cannot own both Alpha and hidden Agent comparison bindings"
+                    )
+                else:
+                    early_comparison_by_slice[new_slice_ref] = alpha_comparison_binding
     assumption_catalog_digest: str | None = None
     assumption_expectations: dict[str, str] | None = None
     if slices and requires_reflection_gate(
@@ -7298,6 +7734,42 @@ def validate_product_goal_slice_sequence(
                         rework_policy=rework_policy,
                     )
                 )
+                comparison_binding = early_comparison_by_slice.get(
+                    target.identifier
+                )
+                comparison_case = (
+                    comparison_binding.get("case_id")
+                    if isinstance(comparison_binding, dict)
+                    else None
+                )
+                result_ref = manifest_slice.get("result")
+                result = by_id.get(result_ref) if isinstance(result_ref, str) else None
+                comparison_rows = (
+                    markdown_table_case_rows(verification.body, comparison_case)
+                    if verification is not None
+                    and isinstance(comparison_case, str)
+                    else []
+                )
+                comparison_verdict = (
+                    blocking_case_status_verdict(comparison_rows[0][6])
+                    if len(comparison_rows) == 1
+                    and len(comparison_rows[0]) == 7
+                    else None
+                )
+                if (
+                    result is not None
+                    and isinstance(alignment, dict)
+                    and comparison_verdict in {"PASS", "FAIL"}
+                ):
+                    errors.extend(
+                        validate_positive_value_result(
+                            result,
+                            alignment,
+                            label,
+                            require_pass=False,
+                            expected_case_id=str(comparison_case),
+                        )
+                    )
             elif status == "completed":
                 result_ref = manifest_slice.get("result")
                 result = by_id.get(result_ref) if isinstance(result_ref, str) else None
@@ -7455,7 +7927,7 @@ def validate_product_goal_slice_sequence(
                     "positive_value_adjudication_receipt_ref"
                 )
                 if isinstance(adjudication_receipt, str) and re.fullmatch(
-                    r"codex-user-message:sha256:[0-9a-f]{64}",
+                    r"(?:codex-user-message|independent-evaluator-result):sha256:[0-9a-f]{64}",
                     adjudication_receipt,
                 ) is not None:
                     decision_forbidden_refs.add(adjudication_receipt)

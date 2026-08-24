@@ -52,9 +52,9 @@ Iteration。只有用户明确改变产品方向、核心架构假设被证伪�
 5. **最早体验点：** 第一个 Slice 如何直接交付可重复启动、固定本地地址、持续服务、同会话自由提问且单题故障隔离的正式 Web Alpha；
 6. **停止或转向条件：** 若上游知识不足、只能依赖题型/关键词补丁、不能跨域组合或效果低于成熟源码 Agent，何时停止扩张
    并重新审视建模或查询架构。
-7. **差异化价值：** 若当前方案比成熟替代方案更复杂，在首个拥有正式对照的 hardening Slice 授权前冻结哪项可测的正向价值、PASS 阈值、
-   测量周期和基线复用政策；体验 Alpha 只记录 stage-applicable early signal；
-   “答案不退步”或只披露成本不足以证明值得继续。
+7. **差异化价值：** 从 `ITER-010-PDR-002` 后首个新建产品迭代起，在首个持续 Web Alpha 授权前冻结 current Codex 精确身份、同题隔离
+   协议、独立盲评量表和严格为正的答案质量差值阈值；Alpha 必须实际比较，不能只记录 early signal。成本、时延、调用数和复用可在
+   hardening 前另冻指标，但不能补偿质量打平或退步；“答案不退步”不再足以证明产品价值。
 8. **能力路径位置：** 本轮属于哪一个 Roadmap 能力步骤，哪些前置已被 Acceptance 证明，本轮正式 Web 验证会前进什么，
    以及成功后下一个阻断差距是什么。
 
@@ -92,8 +92,9 @@ Secret、授权和失败真实性边界始终生效。完整能力矩阵、全�
 
 本门禁从 `ITER-008` 开始强制执行。Proposal 必须在编码前写明少量决定方案能否成立的关键假设、每项假设的最早反证方式、
 反证后停止或换路的动作，以及被认真比较过的替代方案。第一个 Slice 必须优先验证风险最高、最可能导致整条路线无效的假设，
-不能只实现“基础组件”并把真实产品效果留到最后一段。体验 Alpha 可以只记录相对成熟方案的可观察 early signal 和暂不正式比较的
-理由；正式对照与正向价值阈值必须在拥有该对照的首个 hardening Slice 授权前冻结，而不是在首次体验前冻结。
+不能只实现“基础组件”并把真实产品效果留到最后一段。ITER-010 继续使用其已冻结的分阶段 Gate；从下一份新建产品迭代起，体验 Alpha
+必须在不增加独立阶段的前提下完成小样本 current Codex 同题盲评，严格答案质量阈值在该 Alpha 授权前冻结。完整 hidden、跨工程和统计
+复验仍在首个 hardening Slice 或最终验收执行。
 
 每个 Slice 必须恰好拥有一个 `V-REFLECT-NNN` 阻断 Case。本 Slice 适用的真实 Web、机械 Gate，以及仅对 hardening/验收适用的 hidden
 canary 与对照形成 exact Result 后，Result 必须新增“Architecture reflection and continuation decision”，至少回答：
@@ -101,8 +102,8 @@ canary 与对照形成 exact Result 后，Result 必须新增“Architecture ref
 1. 原方案假设是什么，实际证据与预期哪里一致、哪里不一致；
 2. 问题属于架构、实现、配置/环境、需求/使用还是验证设计，影响是个案还是系统性；
 3. 知识表示、查询/编排、产品 Web 链和验证方案各自是否仍成立；
-4. 若本 Slice 已拥有成熟直接源码 Agent 对照，比较正确性、完整性、无关证据、时延、成本和复杂度；体验 Alpha 则记录 early signal、
-   未正式比较的原因与明确后置阶段；
+4. 若本 Slice 已拥有成熟直接源码 Agent 对照，比较正确性、完整性、无关证据、时延、成本和复杂度；从下一份新建产品迭代起，首次持续
+   Web Alpha 必须拥有小样本 current Codex 对照并报告严格答案质量结论，不能再用后置理由替代；
 5. 本 Slice Finding 如何处置，当前最早未证明的风险是什么；
 6. 明确作出 `CONTINUE`、`ACCEPT`、`REWORK`、`REDIRECT` 或 `REJECT` 决策并说明理由。
 
@@ -129,9 +130,9 @@ FAIL Case，不能用全部假设 SUPPORTED、全部 Case PASS 的材料宣告�
 
 若某个 Slice 绑定成熟源码 Agent 的正向价值比较，completed Result 必须在唯一 `## Positive value report` 中记录冻结指标、数值
 actual、输入 digest、比较 Case 和独立裁决收据；docs gate 从该 exact JSON 章节重算 digest 并核对 metadata/Manifest。比较 Case
-已经执行但 Slice 被阻断时也必须保留同样的可重放报告，不能只写 `V-COMP FAIL`。裁决收据必须来自测量后的新消息，不得复用
-Readiness、当前/更早 Slice 授权或此前 Reflection 决策；允许用户用同一条事后消息同时裁决本次测量并作出本 Slice Reflection 决定。
-未达到预提交阈值不能 `CONTINUE/ACCEPT`。
+已经执行但 Slice 被阻断时也必须保留同样的可重放报告，不能只写 `V-COMP FAIL`。下一份新建产品迭代的裁决收据必须来自测量后密封的
+独立 evaluator Result，不得复用用户的 Readiness、当前/更早 Slice 授权或此前 Reflection 决策消息；技术裁决 Owner 必须是未参与双方答案生成的独立评测方；
+用户消息只作方向、授权或接受决定，不能冒充盲评 verdict。未达到严格为正的答案质量阈值不能 `CONTINUE/ACCEPT`。
 
 `V-REFLECT-NNN PASS` 只表示复盘完整、证据可审计，不表示产品方案本身 PASS。中间 Slice 只有产品 Gate 全部 PASS、复盘决定为
 `CONTINUE` 且用户再次明确授权时，下一 Slice 才能进入开发；最终 Slice 只有产品 Gate 全部 PASS 且复盘决定为 `ACCEPT` 时，
@@ -162,6 +163,9 @@ Roadmap 只提供候选。只有 Proposal 被明确接受、Manifest 闭合并�
 3. Readiness Review 记录用户的明确授权，把 Proposal 与 Readiness 状态改为 `accepted`；未授权字段不得用默认值代替。
 4. 把 Iteration Index、Manifest 与第一个 Slice 改为 authorized，把 Slice `authority` 改为 `current-development`，并将 Index/Slice 的 `coding_input` 改为 `true`；Manifest 已规划的后续 Slice 保持 `proposed / proposed-development / coding_input: false`。
 5. 最后更新 `project/current.md` 的 `active_iteration`、`active_slice` 与 `depends_on`。`scripts/docs.py check` 只有在这些对象属于同一 Iteration 且必需输入闭合时才通过。
+
+从 `ITER-010-PDR-002` 后首个新建产品迭代起，第 2 步还必须冻结当时 current Codex 的客户端/二进制、实际模型、reasoning、工具、权限、
+Source scope、fresh-task 与答案先密封协议，以及独立盲评协议；不得复制历史 Codex 身份或把 Codex、系统任一方指定为 Oracle/裁判。
 
 同一 Iteration 的累积 Slice 以 Manifest `new_capability_slice_refs` 的顺序推进：执行态必须为“零个或多个 `completed` + 恰好一个
 `authorized/in-progress` + 零个或多个 `proposed`”；修复等待态则为同样的 completed 前缀、恰好一个 `paused` 当前 Slice 和 proposed
@@ -205,7 +209,8 @@ roadmap candidate
   现场临时问题和停止条件均已冻结；
 - Proposal 已绑定 planning-only Roadmap 中的精确能力步骤，前置接受证据、本轮结束时的 Web 用户能力和成功后的下一阻断差距均已明确；
 - Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；可体验 Alpha 会尽早使用正式 Web 和现场输入判断架构
-  与用户价值，hidden 输入和成熟基线对照则在 Alpha `CONTINUE` 后的首个夯实 Slice 执行，不推迟到最终验收；
+  与用户价值。下一份新建产品迭代的 Alpha 同时执行轻量 current Codex 同题盲评；只有完整 hidden、跨工程和统计复验留到 Alpha
+  `CONTINUE` 后的首个夯实 Slice，不推迟到最终验收；
 - 一个明确 Outcome 和非目标；
 - 所引用 System 文档均 current，或先完成所需 System 设计；
 - 每个 Slice 有可验证退出条件和风险边界；
@@ -225,6 +230,8 @@ roadmap candidate
 
 声称产品能力前进的 Iteration 还必须报告相对 baseline 的目标差距变化：同一正式 Web 入口上的 held-out 自由问题支持率、
 重大错误、完整性、至少一个新旧知识跨域问题、提问时 Source/Update/Direct fallback 计数，以及与成熟源码 Agent 的逐题对照。
+从 `ITER-010-PDR-002` 后首个新建产品迭代起，该对照必须使用精确冻结的 current Codex 与独立盲评：系统自身绝对质量 PASS、逐题无物质
+退步且总体答案质量差值严格为正；全体打平、双方失败、无法裁决、盲化无效或只凭效率优势均不能完成产品 Gate。
 Manifest 绑定的每个跨域、正式 Web、隐藏 canary 和现场临时问题 Case 必须逐项 PASS，并以
 `<拥有该 Case 的 Slice Result ID>#<case-id>` 绑定不可变执行证据；最终 Product Result 必须依赖并聚合全部 Slice Result，不能改写
 逐 Case Evidence，也不能用 V-000 的 PASS 或汇总计数代替逐项执行。

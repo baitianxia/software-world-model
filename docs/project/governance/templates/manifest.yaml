@@ -34,15 +34,21 @@ product_goal_alignment:
   baseline_result_digest: <sha256-exact-baseline-result>
   mature_source_agent_protocol_digest: <sha256-exact-comparison-protocol>
   mature_source_agent_rubric_digest: <sha256-exact-rubric-and-adjudication-policy>
-  positive_value_metric: <precommitted-measurable-world-model-advantage>
-  positive_value_unit: <unit>
-  positive_value_comparison: <at-most-or-at-least>
-  positive_value_threshold: <non-negative-integer>
+  # 从下一份新产品 Iteration 起，current Codex 是强外部基线，不是 Oracle 或裁判；identity digest 必须覆盖实际
+  # client/binary/model/reasoning/tools/permissions/source-scope/revision/questions/run-time identity。
+  mature_source_agent_identity_digest: <sha256-exact-current-codex-identity>
+  mature_source_agent_role: strong-external-baseline-not-oracle-not-adjudicator
+  mature_source_agent_execution_mode: fresh-isolated-same-question-answer-sealed-before-disclosure
+  secondary_metrics_can_compensate_answer_quality: false
+  positive_value_metric: blind-paired-answer-quality-margin
+  positive_value_unit: quality-basis-points
+  positive_value_comparison: at-least
+  positive_value_threshold: <positive-integer-at-least-one>
   positive_value_reuse_horizon_questions: <positive-integer>
   mature_source_agent_cache_policy_digest: <sha256-exact-baseline-cache-policy>
   positive_value_protocol_digest: <sha256-exact-formula-input-and-replay-protocol>
   positive_value_freeze_receipt_ref: <codex-user-message-sha256>
-  positive_value_adjudication_owner: <user-or-independent-evaluator>
+  positive_value_adjudication_owner: independent-evaluator
   authorized_software_sources_digest: <sha256-source-scope-including-code-doc-config>
   held_out_question_count: <positive-integer>
   held_out_answerable_question_count: <positive-integer>
@@ -92,12 +98,25 @@ product_goal_alignment:
     continuous_same_session_free_questions: true
     limitations_visible: true
     question_failure_scope: current-question-only-service-remains-available
+  # 与首个持续 Web Alpha 同出口的小样本 current Codex 盲评；不是体验前的新阶段，完整 hidden 复验仍在 hardening/final。
+  alpha_agent_comparison_binding:
+    case_id: <V-COMP-ALPHA-NNN>
+    new_slice_ref: <first-sustained-web-alpha-slice-id>
+    question_count: <positive-integer-at-least-three>
+    post_freeze_live_question_count: <positive-integer-at-least-one-and-no-greater-than-question-count>
+    question_set_rule: original-failure-plus-two-heterogeneous-including-post-freeze-live
+    protocol_digest_ref: mature_source_agent_protocol_digest
+    rubric_digest_ref: mature_source_agent_rubric_digest
+    identity_digest_ref: mature_source_agent_identity_digest
+    pass_rule: system-absolute-pass-no-per-question-regression-and-positive-blind-quality-margin
+    all_tie_outcome: FAIL
+    secondary_metric_compensation_allowed: false
   # 可选：后续 Slice 的正式 Web checkpoint；每项必须绑定同一 Slice 的跨域 Case。
   additional_web_checkpoint_bindings: {}
   # 只有体验 Alpha CONTINUE 后的适用 hardening Slice 才绑定独立持有的 early hidden canary；首次体验不得被 hidden 阻断。
   # 每项冻结问题总数、answerable、两类互补 boundary 和关联的 early negative Case。
   early_hidden_canary_bindings: {}
-  # 首个适用 hardening Slice 把同一 canary 绑定到成熟替代方案对照和逐层诊断；正向价值阈值在该 Slice 编码前冻结。
+  # 首个适用 hardening Slice 把同一 canary 绑定到扩大后的成熟替代方案对照和逐层诊断；不得复用 Alpha Result 代替。
   early_comparison_binding: {}
   early_diagnostic_binding: {}
   # 每个 Slice 恰好一个。PASS 只表示复盘完成；success_decision 才表示方案可继续或可接受。

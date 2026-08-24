@@ -28,6 +28,10 @@ coding_input: false
 - Earliest product-owned Web checkpoint and live ad-hoc questions: <slice-and-gate>
 - Minimum direction-preview checkpoint, representative tasks and explicit non-goals: <preview-slice-entry-and-cases>
 - First usable-Alpha checkpoint before hardening: <first-slice-sustained-entry-diverse-inputs-and-cases>
+- Current Codex Alpha baseline checkpoint: <same-question-fresh-isolated-sealed-blind-comparison-in-first-sustained-alpha>
+- Baseline role and exact identity: <strong-external-baseline-not-oracle-not-adjudicator-and-client-model-reasoning-tools-permissions-digest>
+- Strict answer-quality superiority rule: <absolute-pass-per-question-no-regression-positive-blind-margin-tie-fails-no-secondary-compensation>
+- World Model causal ablation kept separate: <full-cognition-versus-locator-or-empty-under-same-system-model-chain-and-budget>
 - Direction decision owner and allowed outcomes before hardening: <owner-and-CONTINUE-REWORK-REDIRECT-REJECT>
 - Repeatable experience version: <exact-version-repeatable-launch-fixed-loopback-address-continuous-session-visible-limitations-question-failure-isolation>
 - Same-Slice rework policy and no-progress limit: <progress-measure-positive-attempt-limit-and-redirect-bases>
@@ -38,11 +42,12 @@ coding_input: false
 ## Critical assumptions and falsification plan
 
 列出决定本方案是否成立的少量关键假设。每项必须绑定最早验证 Slice、真实产品证据、反证条件和反证后的动作；第一段优先验证
-最高风险假设。体验 Alpha 记录相对成熟替代方案的 early signal 与正式比较后置理由；正式对照不晚于首个 hardening Slice。
+最高风险假设。首个持续 Web Alpha 必须并入至少三题的 current Codex 同题盲评：一条原失败题，另外至少两条相邻或异质题，且后两条中
+至少一条在产品冻结后由现场提出；完整 hidden/跨工程复验不晚于首个 hardening Slice。
 
-对照不能只要求“质量不退步”。若方案比成熟替代方案更复杂或更昂贵，必须在拥有该对照的首个 hardening Slice 授权前冻结至少一项可测的
-正向差异化价值指标、阈值、测量周期和基线缓存/复用政策；未达阈值时不得从该 Slice `CONTINUE` 或最终 `ACCEPT`。不得用该冻结动作阻塞
-体验 Alpha 的首次可见结果。
+对照不能只要求“质量不退步”。在首个 Alpha 授权前冻结当时 current Codex 的 exact client/binary/model/reasoning/tools/permissions、
+fresh 独立任务与答案先密封协议、独立盲评量表，以及严格大于零的答案质量差值阈值。系统还必须独立通过绝对质量门并逐题无物质性
+退步；全体打平、双方失败、无法裁决或盲化失效都不得 `CONTINUE`。成本、时延、调用数、缓存与复用另行报告，不能补偿答案质量。
 
 本节必须恰好使用一张三列表，第一列以 `A1：<完整假设原文>` 格式编号；第二、三列分别写最早反证和反证后的动作，均不得留空。
 
@@ -62,6 +67,9 @@ coding_input: false
 安排安全运行和判断核心价值所需工作，不把全面加固作为体验前置。Alpha 必须可重复启动、固定本地地址、同一会话连续自由提问、
 版本/限制可见且坏题不关闭服务；不得用一次性测试运行替代。每次失败默认暂停并在同一 Slice 修复，Proposal 必须冻结无进展的可测
 定义和尝试上限。
+
+Alpha 内的 current Codex 比较是同一体验出口的阻断 Case，不得拆成新的前置 Slice。产品替代价值对照不得与 full cognition 对
+locator-only/empty 的因果消融混为三臂：前者保留双方真实能力并统一问题/revision/Source scope/rubric，后者才统一系统模型、链路与预算。
 
 ## Risks and unknowns
 

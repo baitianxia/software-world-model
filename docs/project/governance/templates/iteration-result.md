@@ -18,6 +18,7 @@ evaluation_project_manifest_digest: pending
 held_out_suite_digest: pending
 baseline_result_digest: pending
 mature_source_agent_protocol_digest: pending
+mature_source_agent_identity_digest: pending
 authorized_software_sources_digest: pending
 held_out_question_count: pending
 held_out_baseline_supported_count: pending
@@ -32,6 +33,13 @@ cross_domain_pass_count: pending
 live_ad_hoc_pass_count: pending
 live_ad_hoc_without_symbol_pass_count: pending
 mature_source_agent_comparison: pending
+evaluated_question_count: pending
+system_better_question_count: pending
+tie_question_count: pending
+codex_better_question_count: pending
+both_fail_question_count: pending
+unresolved_or_invalid_question_count: pending
+system_absolute_quality_verdict: pending
 positive_value_verdict: pending
 positive_value_metric: pending
 positive_value_unit: pending
@@ -94,7 +102,9 @@ critical_assumption_catalog_digest: pending
 ### Layer diagnosis and mature-source-Agent comparison
 
 逐层记录 Source ground truth、Snapshot 表示/Coverage、typed query 可达性、investigation trace 使用、Draft/Review 和正式 Web 交付，
-并对照成熟源码 Agent 的正确性、完整性、无关证据、时延、成本与复杂度。
+并对照 current Codex 的正确性、完整性、无关证据、时延、成本与复杂度。记录 exact Codex identity、fresh task、双方答案 bundle、密封
+顺序、随机匿名 commitment/mapping、独立 evaluator identity/context 和 blind report digest。Codex 不是 Oracle 或裁判；产品质量对照与
+full cognition/locator-only 因果消融分开报告。
 
 ### Findings, alternatives and next risk
 
@@ -123,22 +133,30 @@ metadata 为 `pending`。
 ## Positive value report
 
 {
-  "actual": 0,
-  "adjudication_owner": "user",
-  "adjudication_receipt_ref": "codex-user-message:sha256:<exact-message-digest>",
-  "comparison": "at-most",
+  "actual": 1,
+  "adjudication_owner": "independent-evaluator",
+  "adjudication_receipt_ref": "independent-evaluator-result:sha256:<exact-result-digest>",
+  "comparison": "at-least",
+  "evaluated_question_count": 3,
   "freeze_receipt_ref": "codex-user-message:sha256:<exact-message-digest>",
   "mature_source_agent_cache_policy_digest": "sha256:<exact-digest>",
+  "codex_better_question_count": 0,
+  "both_fail_question_count": 0,
+  "mature_source_agent_identity_digest": "sha256:<exact-digest>",
   "mature_source_agent_protocol_digest": "sha256:<exact-digest>",
   "mature_source_agent_rubric_digest": "sha256:<exact-digest>",
+  "system_better_question_count": 1,
+  "unresolved_or_invalid_question_count": 0,
   "measurement_input_digest": "sha256:<exact-digest>",
-  "metric": "<frozen-metric>",
+  "metric": "blind-paired-answer-quality-margin",
   "positive_value_protocol_digest": "sha256:<exact-digest>",
   "result_id": "ITER-NNN-RESULT-<TYPE>",
   "reuse_horizon_questions": 1,
-  "schema": "software-world-model-positive-value-report/v1",
-  "threshold": 0,
-  "unit": "<frozen-unit>",
+  "schema": "software-world-model-positive-value-report/v2",
+  "system_absolute_quality_verdict": "PASS",
+  "tie_question_count": 2,
+  "threshold": 1,
+  "unit": "quality-basis-points",
   "verification_case_id": "<V-COMP-or-V-000>"
 }
 
@@ -146,10 +164,18 @@ metadata 为 `pending`。
 `user-visible-general-source-qa-delta`、`independent-hidden-plus-live-ad-hoc` 和实际 `PASS` / `FAIL`。只有 `PASS` Result 可被
 Verification 的 `product_goal_result_id` 与 V-000 Evidence 同时引用；普通机械 Result 保持 `pending`，不能充当产品证据。
 
-产品 `PASS` Result 还必须绑定 exact subject/report 与 Manifest 的五个冻结 digest，并报告 held-out 前后支持数、重大错误、
+产品 `PASS` Result 还必须绑定 exact subject/report 与 Manifest 的全部冻结 digest，并报告 held-out 前后支持数、重大错误、
 三类 fallback、跨域和现场问题计数，以及成熟源码 Agent 对照和正式 Web 人工验证结果。Verification 中每个 Manifest 绑定
 Case 的 Evidence 由拥有该 Case 的 Slice Result 持有，格式为 `<Slice Result ID>#<case-id>`，且该行必须为 `PASS / blocking`；
 最终 Product Result 依赖并聚合所有 Slice Result，不覆盖已经形成的逐 Case Evidence。
+
+从下一份新产品 Iteration 起，拥有 `V-COMP-ALPHA` 或 `V-000` 的 Result 必须把 `mature_source_agent_comparison` 写为
+`strict-answer-quality-superiority`，并使 `mature_source_agent_identity_digest` 与 Manifest 一致。`positive_value_actual` 是盲评量表上的
+系统答案质量减 Codex 答案质量；`PASS` 必须达到大于零的预提交阈值且逐题无物质退步；部分问题可判 tie，但总体质量差值为 `0` 或
+`system_better_question_count=0` 时必须 `FAIL`。失败封存可如实记录负值，
+`evaluated_question_count` 必须等于该 Case 冻结的题数，system-better、tie、Codex-better、both-fail 和 unresolved/invalid 五类计数之和
+必须等于 evaluated，不能省略未完成或不利问题。不能省略报告或以成本/时延/复用值替换。技术裁决收据必须来自独立 evaluator Result，不得复用用户授权或方向决定消息。Alpha Result
+只决定能否 hardening；最终 held-out `V-000` 必须重新运行。
 
 拥有 early hidden canary 的 Slice Result 还必须绑定所属 Slice 曝光前的 `product_code_freeze_digest`、canary project/suite digest、
 披露收据 digest，并证明曝光后产品变更次数为 0。任何曝光后产品变化都使该 Result 不能成为 completed Slice 的证据。

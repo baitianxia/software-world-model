@@ -4,7 +4,7 @@ kind: project-decision-index
 status: current
 authority: project
 owners: [project]
-depends_on: [ITER-010-PDR-001]
+depends_on: [ITER-010-PDR-001, ITER-010-PDR-002]
 code: []
 tests: []
 iteration: ITER-010
@@ -13,3 +13,4 @@ iteration: ITER-010
 # ITER-010 Decisions
 
 - [PDR-001：把整轮拒绝纠正为同轮返工](PDR-001-resume-as-rework.md)
+- [PDR-002：下一轮起必须在答案质量上严格超过当前 Codex](PDR-002-strict-current-codex-baseline-next-iteration.md)

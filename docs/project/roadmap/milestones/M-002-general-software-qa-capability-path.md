@@ -24,7 +24,7 @@ coding_input: false
 |---|---|---|---|---|
 | `step-0-version-fixed-baseline` | 用户选择本地项目，系统在无问题状态更新 Snapshot，并从正式 Web 查询窄范围结构和静态调用 | ITER-005/006 Acceptance | 已接受的 Workspace、Update、Snapshot、Web、Citation 与窄范围 `CALLS` | **achieved / narrow** |
 | `step-1-java-result-driven-world-model-investigation` | 用户用自由语言询问 Java 工程；World Model 提供 exact 持久系统认知，Investigation LLM 根据 prior Result 自适应决定下一步，Broker/Worker 受控只读源码，调查后密封证据并先回答用户目标 | `ITER-007-RESULT-SLICE-001-STOP-DECISION`、`ITER-009-RESULT-SLICE-001-STOP-REDIRECT`、`ITER-010-RESULT-SLICE-001-STOP-REDIRECT`、`ITER-010-PDR-001` | 一个真实工程的跨类型自然问题和现场题通过同一持续 Web；世界模型概念不降级，模型无直接 Source 权限，答案非默认代码走读且重要结论可引用 | **ITER-010 paused / REWORK；下一出口为持续 Web Alpha，尚未重新授权开发** |
-| `step-2-common-java-real-project-breadth` | 同一问答链在未参与实现的常见 Java 工程上处理跨类、多文件、常见语法与框架边界 | Step 1 Product Result | 独立 held-out 工程与源码 Agent 对照，不因换工程而回到固定题型或 Gap | planned after Step 1 |
+| `step-2-common-java-real-project-breadth` | 同一问答链在未参与实现的常见 Java 工程上处理跨类、多文件、常见语法与框架边界 | Step 1 Product Result | 独立 held-out 工程上严格优于 current Codex 的同题盲评，不因换工程而回到固定题型或 Gap | planned after Step 1 |
 | `step-3-revision-driven-update-and-reuse` | 项目从 R1 变为 R2 时无需先提问，系统能发现变更、更新或标记受影响知识，后续问答不把 R1 当当前事实 | Step 2 Product Result | 跨会话复用、R1→R2 失效/更新和无来源访问重建通过真实 Web 问题验证 | planned after Step 2 |
 | `step-4-repository-multi-source-composition` | 扩展 World Model 对 API、数据结构、部署、运行观察、跨模块语义及多来源冲突的正式认知；把已接受的调查证据按正常 Admission/Publication 形成可版本更新、跨题复用的认知，而不是简单保存答案 | Step 3 Product Result | 扩展认知可验证、更新、失效和复用；隐藏跨源题在同一 Web、Ledger/Package/Citation chain 通过，不按文件类型分叉入口 | planned after Step 3 |
 | `step-5-second-language-ecosystem` | 用户选择不同语言/构建生态的项目，仍获得同一问答、更新、证据和 Gap 体验 | Step 4 Product Result | 至少第二个语言/生态的未见项目通过同一产品 Gate，不复制独立问答入口 | planned after Step 4 |
@@ -38,5 +38,13 @@ coding_input: false
 
 下一个产品 Iteration 只能推进当前最早未通过的 Step。一轮可以缩小工程、语法或题目范围，但结束时必须交付该 Step 中
 可在正式 Web 人工验证的用户能力增量。只产出 parser、Schema、View、Agent 编排、CLI 或测试 PASS 的方案只能是技术实验，不能标记该 Step 前进。
+
+ITER-010 终态后的下一份新产品 Iteration（按顺序为 ITER-012）及其后续迭代，首个持续 Web Alpha 就必须用至少三条小而异质的同题
+输入对照运行时 current Codex：一条原失败题及另外至少两条相邻或异质题，后两条中至少一条在产品冻结后由现场提出，并由独立评测方
+盲评。系统绝对质量合格、逐题无物质退步且总体答案质量严格为正才可进入 hardening；
+全体打平不能以成本、时延或复用指标补偿。完整 hidden/跨工程复验留在 `CONTINUE` 后，不能反向延迟 Alpha。
+
+该产品基线与世界模型因果消融是两项不同证明：current Codex 保留自身实际模型、reasoning、工具和权限；full cognition 与
+locator-only/empty control 才共享系统模型、链路和预算。Codex、系统答案都不是 Oracle，也不得担任自身裁判。
 
 Step 内的方案被早期 Web 或隐藏 Gate 证伪时，保留失败证据并在同一 Step 重新选路；不得跳到后续知识域。Roadmap 只规划顺序，不授权任何编码。

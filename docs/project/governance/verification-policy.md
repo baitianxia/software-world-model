@@ -31,6 +31,22 @@ tests: [tests]
 6. 原始运行证据默认位于 `var/` 且不受 Git 管理；版本化 Result 必须明确它是摘要/attestation，并给出本机证据身份与保留限制。
 7. Result 不能反向定义 System Contract；发现契约错误时走 Implementation Finding 和 System 修订。
 
+## Current Codex 强基线协议
+
+从 `ITER-010-PDR-002` 后首个新建产品迭代起，产品问答最低门必须包含系统与运行时 current Codex 的同题独立盲评：
+
+1. Codex 只是强外部基线候选，不是 Oracle、rubric 作者或 adjudicator；事实边界是原问题与同一授权 exact revision 上可核验的软件证据。
+2. 对照前冻结 Codex 客户端/二进制、实际模型、reasoning、工具、权限、Source scope、问题与 revision；每题使用 fresh 隔离任务，答案在
+   向系统披露前密封。任一身份漂移烧毁并重跑基线。
+3. 系统不得读取 Codex 答案，Codex 不得读取世界模型产物、系统答案、本项目对话或既有 verdict。两份答案均先密封，再随机匿名为 A/B。
+4. 独立评测方不得参与任一答案生成，也不得看到来源标签、生成 trace 或先前 verdict；它读取原问题与 exact evidence，允许判定系统更好、
+   打平、Codex 更好、双方失败或无法裁决。
+5. `PASS` 要求冻结的全部问题均已完成并进入唯一逐题分类，分类计数与冻结题数严格相等；系统绝对质量门全部通过、逐题没有物质性退步，
+   且预提交盲评量表的总体答案质量差值严格为正。全体打平、双方失败、无法裁决或盲化无效均失败；成本、时延、调用次数、缓存与复用
+   指标只能另行报告，不能补偿答案质量。
+6. current Codex 产品基线不与世界模型因果消融混用。只有 full cognition 与 locator-only/empty control 才要求相同系统模型、链路、预算
+   和 cache。
+
 ## Verification Matrix
 
 每轮按 Outcome 列出 Case、级别、输入、预期、证据位置、执行状态和阻断含义。缺失、未运行或证据过期均不是 PASS。

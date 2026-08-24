@@ -32,8 +32,15 @@ def reflection_report_digest(body: str) -> str:
 def positive_value_report_section(
     metadata: dict[str, object], result_id: str, case_id: str
 ) -> tuple[str, str]:
+    strict_codex_report = docs_gate.requires_strict_codex_baseline(
+        metadata.get("iteration", "")
+    )
     report = {
-        "schema": "software-world-model-positive-value-report/v1",
+        "schema": (
+            "software-world-model-positive-value-report/v2"
+            if strict_codex_report
+            else "software-world-model-positive-value-report/v1"
+        ),
         "result_id": result_id,
         "verification_case_id": case_id,
         "metric": metadata["positive_value_metric"],
@@ -63,6 +70,33 @@ def positive_value_report_section(
         ],
         "measurement_input_digest": "sha256:" + "9" * 64,
     }
+    if strict_codex_report:
+        report.update(
+            {
+                "mature_source_agent_identity_digest": metadata[
+                    "mature_source_agent_identity_digest"
+                ],
+                "system_absolute_quality_verdict": metadata[
+                    "system_absolute_quality_verdict"
+                ],
+                "evaluated_question_count": metadata[
+                    "evaluated_question_count"
+                ],
+                "system_better_question_count": metadata[
+                    "system_better_question_count"
+                ],
+                "tie_question_count": metadata["tie_question_count"],
+                "codex_better_question_count": metadata[
+                    "codex_better_question_count"
+                ],
+                "both_fail_question_count": metadata[
+                    "both_fail_question_count"
+                ],
+                "unresolved_or_invalid_question_count": metadata[
+                    "unresolved_or_invalid_question_count"
+                ],
+            }
+        )
     body = "## Positive value report\n\n" + json.dumps(
         report, ensure_ascii=False, indent=2, sort_keys=True
     )
@@ -758,10 +792,10 @@ product_goal_alignment:
         document, parse_errors = docs_gate.parse_document(path)
         self.assertEqual(parse_errors, [])
         assert document is not None
-        metadata = {**document.metadata, "iteration": "ITER-008"}
+        metadata = {**document.metadata, "iteration": "ITER-012"}
         verification = docs_gate.Document(path, metadata, document.body)
         self.assertEqual(
-            docs_gate.validate_product_goal_v000(verification, "ITER-008"), []
+            docs_gate.validate_product_goal_v000(verification, "ITER-012"), []
         )
 
     def test_iter010_v000_uses_engineering_qa_source_isolation_contract(self) -> None:
@@ -800,6 +834,208 @@ product_goal_alignment:
             stale_source_off, "ITER-010"
         )
         self.assertTrue(any("product_goal_outcome" in error for error in errors), errors)
+
+    def test_iter012_v000_uses_strict_codex_quality_contract(self) -> None:
+        path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-012/verification-matrix.md"
+        )
+        metadata, claim, frozen_input, expected = docs_gate.product_goal_v000_contract(
+            "ITER-012"
+        )
+        verification = docs_gate.Document(
+            path,
+            {
+                "id": "ITER-012-VERIFICATION",
+                "kind": "iteration-verification",
+                "status": "not-run",
+                "iteration": "ITER-012",
+                **metadata,
+                "product_goal_result_id": "not-executed",
+            },
+            "| Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |\n"
+            "|---|---|---|---|---|---|---|\n"
+            f"| V-000 | {claim} | {docs_gate.PRODUCT_GOAL_V000_LEVEL} | "
+            f"{frozen_input} | {expected} | not-executed | NOT-RUN / blocking |\n",
+        )
+        self.assertEqual(
+            docs_gate.validate_product_goal_v000(verification, "ITER-012"), []
+        )
+        self.assertFalse(docs_gate.requires_strict_codex_baseline("ITER-011"))
+        self.assertTrue(docs_gate.requires_strict_codex_baseline("ITER-012"))
+
+        stale = docs_gate.Document(
+            path,
+            verification.metadata,
+            verification.body.replace(
+                docs_gate.STRICT_CODEX_PRODUCT_GOAL_V000_EXPECTED,
+                docs_gate.PRODUCT_GOAL_V000_EXPECTED,
+            ),
+        )
+        errors = docs_gate.validate_product_goal_v000(stale, "ITER-012")
+        self.assertTrue(any("expected" in error for error in errors), errors)
+
+    def test_iter012_codex_baseline_and_alpha_binding_are_strict(self) -> None:
+        new_refs = ["ITER-012-SLICE-001", "ITER-012-SLICE-002"]
+        alpha_case = "V-COMP-ALPHA-001"
+        alignment: dict[str, object] = {
+            "direction_preview_checkpoint": "V-PREVIEW-001",
+            "direction_preview_binding": {
+                "case_id": "V-PREVIEW-001",
+                "web_case_id": "V-EXPERIENCE-001",
+                "new_slice_ref": new_refs[0],
+                "real_product_entry": "loopback-product-owned-engineering-qa-web",
+                "representative_task_count": 3,
+                "status_label": "non-acceptance-non-production",
+                "decision_owner": "user",
+                "allowed_decisions": "CONTINUE,REWORK,REDIRECT,REJECT",
+                "hardening_requires_continue": True,
+            },
+            "experience_version_binding": {
+                "new_slice_ref": new_refs[0],
+            },
+            "held_out_evaluation_owner": "independent-evaluator",
+            "positive_value_adjudication_owner": "independent-evaluator",
+            "positive_value_metric": docs_gate.STRICT_CODEX_QUALITY_METRIC,
+            "positive_value_unit": docs_gate.STRICT_CODEX_QUALITY_UNIT,
+            "positive_value_comparison": docs_gate.STRICT_CODEX_QUALITY_COMPARISON,
+            "positive_value_threshold": 1,
+            "mature_source_agent_identity_digest": "sha256:" + "1" * 64,
+            "mature_source_agent_role": docs_gate.STRICT_CODEX_BASELINE_ROLE,
+            "mature_source_agent_execution_mode": docs_gate.STRICT_CODEX_BASELINE_EXECUTION_MODE,
+            "secondary_metrics_can_compensate_answer_quality": False,
+            "alpha_agent_comparison_binding": {
+                "case_id": alpha_case,
+                "new_slice_ref": new_refs[0],
+                "question_count": 3,
+                "post_freeze_live_question_count": 1,
+                "question_set_rule": "original-failure-plus-two-heterogeneous-including-post-freeze-live",
+                "protocol_digest_ref": "mature_source_agent_protocol_digest",
+                "rubric_digest_ref": "mature_source_agent_rubric_digest",
+                "identity_digest_ref": "mature_source_agent_identity_digest",
+                "pass_rule": docs_gate.STRICT_CODEX_ALPHA_PASS_RULE,
+                "all_tie_outcome": "FAIL",
+                "secondary_metric_compensation_allowed": False,
+            },
+        }
+        blocking = ["V-PREVIEW-001", "V-EXPERIENCE-001", alpha_case]
+        self.assertEqual(
+            docs_gate.validate_strict_codex_baseline_alignment(
+                alignment, "manifest.yaml"
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_alpha_agent_comparison_binding(
+                alignment, new_refs, blocking, "manifest.yaml"
+            ),
+            [],
+        )
+
+        invalid_cases = []
+        for field, value in (
+            ("held_out_evaluation_owner", "user"),
+            ("positive_value_metric", "normalized-reuse-cost"),
+            ("positive_value_threshold", 0),
+            ("secondary_metrics_can_compensate_answer_quality", True),
+        ):
+            candidate = copy.deepcopy(alignment)
+            candidate[field] = value
+            invalid_cases.extend(
+                docs_gate.validate_strict_codex_baseline_alignment(
+                    candidate, "manifest.yaml"
+                )
+            )
+        self.assertTrue(any("held_out_evaluation_owner" in error for error in invalid_cases))
+        self.assertTrue(any("positive_value_metric" in error for error in invalid_cases))
+        self.assertTrue(any("tie cannot pass" in error for error in invalid_cases))
+        self.assertTrue(any("cannot" in error or "must be false" in error for error in invalid_cases))
+
+        too_small = copy.deepcopy(alignment)
+        too_small["alpha_agent_comparison_binding"]["question_count"] = 2
+        missing_live = copy.deepcopy(alignment)
+        del missing_live["alpha_agent_comparison_binding"][
+            "post_freeze_live_question_count"
+        ]
+        excessive_live = copy.deepcopy(alignment)
+        excessive_live["alpha_agent_comparison_binding"][
+            "post_freeze_live_question_count"
+        ] = 4
+        legacy_tie_rule = copy.deepcopy(alignment)
+        legacy_tie_rule["alpha_agent_comparison_binding"]["tie_outcome"] = (
+            legacy_tie_rule["alpha_agent_comparison_binding"].pop(
+                "all_tie_outcome"
+            )
+        )
+        mixed_tie_rule = copy.deepcopy(alignment)
+        mixed_tie_rule["alpha_agent_comparison_binding"]["tie_outcome"] = "FAIL"
+        missing_all_tie_rule = copy.deepcopy(alignment)
+        del missing_all_tie_rule["alpha_agent_comparison_binding"][
+            "all_tie_outcome"
+        ]
+        wrong_slice = copy.deepcopy(alignment)
+        wrong_slice["alpha_agent_comparison_binding"]["new_slice_ref"] = new_refs[1]
+        aggregate_only = copy.deepcopy(alignment)
+        aggregate_only["alpha_agent_comparison_binding"]["pass_rule"] = (
+            "positive-blind-quality-margin-only"
+        )
+        self.assertTrue(
+            any(
+                "at least 3" in error
+                for error in docs_gate.validate_alpha_agent_comparison_binding(
+                    too_small, new_refs, blocking, "manifest.yaml"
+                )
+            )
+        )
+        self.assertTrue(
+            any(
+                "first sustained Web Alpha" in error
+                for error in docs_gate.validate_alpha_agent_comparison_binding(
+                    wrong_slice, new_refs, blocking, "manifest.yaml"
+                )
+            )
+        )
+        for candidate in (missing_live, excessive_live):
+            self.assertTrue(
+                any(
+                    "post_freeze_live_question_count" in error
+                    for error in docs_gate.validate_alpha_agent_comparison_binding(
+                        candidate, new_refs, blocking, "manifest.yaml"
+                    )
+                )
+            )
+        for candidate in (
+            legacy_tie_rule,
+            mixed_tie_rule,
+            missing_all_tie_rule,
+        ):
+            self.assertTrue(
+                any(
+                    "all_tie_outcome" in error
+                    for error in docs_gate.validate_alpha_agent_comparison_binding(
+                        candidate, new_refs, blocking, "manifest.yaml"
+                    )
+                )
+            )
+        self.assertTrue(
+            any(
+                "pass_rule" in error
+                for error in docs_gate.validate_alpha_agent_comparison_binding(
+                    aggregate_only, new_refs, blocking, "manifest.yaml"
+                )
+            )
+        )
+        self.assertTrue(
+            any(
+                "blocking" in error
+                for error in docs_gate.validate_alpha_agent_comparison_binding(
+                    alignment,
+                    new_refs,
+                    [item for item in blocking if item != alpha_case],
+                    "manifest.yaml",
+                )
+            )
+        )
 
     def test_v000_rejects_nonblocking_and_requires_pass_at_completion(self) -> None:
         path = (
@@ -866,6 +1102,75 @@ product_goal_alignment:
             ),
             [],
         )
+
+    def test_iter012_alpha_comparison_case_must_be_owned_by_bound_slice(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            manifest_path = Path(directory) / "manifest.yaml"
+            first_ref = "ITER-012-SLICE-001"
+            second_ref = "ITER-012-SLICE-002"
+            alpha_case = "V-COMP-ALPHA-001"
+            other_case = "V-OTHER-001"
+            manifest_path.write_text(
+                f"""product_goal_alignment:
+  new_capability_slice_refs:
+    - {first_ref}
+    - {second_ref}
+  blocking_case_ids:
+    - {alpha_case}
+    - {other_case}
+  alpha_agent_comparison_binding:
+    case_id: {alpha_case}
+    new_slice_ref: {first_ref}
+development:
+  slices: {{}}
+""",
+                encoding="utf-8",
+            )
+
+            def slice_document(reference: str, gate_case: str) -> docs_gate.Document:
+                return docs_gate.Document(
+                    docs_gate.REPOSITORY
+                    / f"docs/project/iterations/iteration-012/development-design/{reference}.md",
+                    {
+                        "id": reference,
+                        "kind": "development-slice",
+                        "iteration": "ITER-012",
+                        "product_goal_gate": "V-000",
+                        "product_goal_accepted_capability_refs": [],
+                        "product_goal_cross_domain_case_ids": [],
+                        "product_goal_slice_gate_case_ids": [gate_case],
+                        "depends_on": ["ITER-012-PROPOSAL"],
+                    },
+                    "# Slice\n",
+                )
+
+            wrong_owner = {
+                first_ref: slice_document(first_ref, other_case),
+                second_ref: slice_document(second_ref, alpha_case),
+            }
+            wrong_errors = docs_gate.validate_product_goal_reference_targets(
+                manifest_path,
+                "ITER-012",
+                wrong_owner,
+            )
+            self.assertTrue(
+                any("Alpha Agent comparison" in error for error in wrong_errors),
+                wrong_errors,
+            )
+
+            correct_owner = {
+                first_ref: slice_document(first_ref, alpha_case),
+                second_ref: slice_document(second_ref, other_case),
+            }
+            correct_errors = docs_gate.validate_product_goal_reference_targets(
+                manifest_path,
+                "ITER-012",
+                correct_owner,
+            )
+            self.assertFalse(
+                any("Alpha Agent comparison" in error for error in correct_errors),
+                correct_errors,
+            )
 
     def test_manifest_alignment_accepts_safe_yaml_key_whitespace(self) -> None:
         content = f"""iteration:
@@ -4447,6 +4752,358 @@ class ReflectionGateTests(unittest.TestCase):
             ),
             freeze_errors,
         )
+
+    def test_iter012_quality_margin_rejects_tie_and_records_negative_failure(
+        self,
+    ) -> None:
+        alignment: dict[str, object] = {
+            "held_out_evaluation_owner": "independent-evaluator",
+            "positive_value_adjudication_owner": "independent-evaluator",
+            "positive_value_metric": docs_gate.STRICT_CODEX_QUALITY_METRIC,
+            "positive_value_unit": docs_gate.STRICT_CODEX_QUALITY_UNIT,
+            "positive_value_comparison": docs_gate.STRICT_CODEX_QUALITY_COMPARISON,
+            "positive_value_threshold": 1,
+            "positive_value_reuse_horizon_questions": 3,
+            "mature_source_agent_identity_digest": "sha256:" + "0" * 64,
+            "mature_source_agent_role": docs_gate.STRICT_CODEX_BASELINE_ROLE,
+            "mature_source_agent_execution_mode": docs_gate.STRICT_CODEX_BASELINE_EXECUTION_MODE,
+            "secondary_metrics_can_compensate_answer_quality": False,
+            "mature_source_agent_protocol_digest": "sha256:" + "1" * 64,
+            "mature_source_agent_rubric_digest": "sha256:" + "2" * 64,
+            "mature_source_agent_cache_policy_digest": "sha256:" + "3" * 64,
+            "positive_value_protocol_digest": "sha256:" + "4" * 64,
+            "positive_value_freeze_receipt_ref": (
+                "codex-user-message:sha256:" + "5" * 64
+            ),
+            "alpha_agent_comparison_binding": {
+                "case_id": "V-COMP-ALPHA-001",
+                "question_count": 3,
+            },
+        }
+        self.assertEqual(
+            docs_gate.validate_positive_value_execution_readiness(
+                alignment, "manifest.yaml", "ITER-012"
+            ),
+            [],
+        )
+
+        result_id = "ITER-012-RESULT-ALPHA"
+
+        def make_result(
+            *,
+            actual: int,
+            verdict: str,
+            case_id: str = "V-COMP-ALPHA-001",
+            absolute_verdict: str = "PASS",
+            system_better: int = 1,
+            evaluated: int = 3,
+            tie: int | None = None,
+            codex_better: int = 0,
+            both_fail: int = 0,
+            unresolved_or_invalid: int = 0,
+        ) -> docs_gate.Document:
+            resolved_tie = (
+                evaluated
+                - system_better
+                - codex_better
+                - both_fail
+                - unresolved_or_invalid
+                if tie is None
+                else tie
+            )
+            metadata = {
+                "id": result_id,
+                "iteration": "ITER-012",
+                "positive_value_verdict": verdict,
+                "positive_value_actual": actual,
+                "mature_source_agent_comparison": docs_gate.STRICT_CODEX_RESULT_COMPARISON,
+                "system_absolute_quality_verdict": absolute_verdict,
+                "evaluated_question_count": evaluated,
+                "system_better_question_count": system_better,
+                "tie_question_count": resolved_tie,
+                "codex_better_question_count": codex_better,
+                "both_fail_question_count": both_fail,
+                "unresolved_or_invalid_question_count": unresolved_or_invalid,
+                "positive_value_case_id": case_id,
+                "positive_value_report_ref": f"{result_id}#positive-value-report",
+                "positive_value_adjudication_receipt_ref": (
+                    "independent-evaluator-result:sha256:" + "6" * 64
+                ),
+                **{
+                    field: alignment[field]
+                    for field in (
+                        "positive_value_metric",
+                        "positive_value_unit",
+                        "positive_value_comparison",
+                        "positive_value_threshold",
+                        "positive_value_reuse_horizon_questions",
+                        "mature_source_agent_identity_digest",
+                        "mature_source_agent_protocol_digest",
+                        "mature_source_agent_rubric_digest",
+                        "mature_source_agent_cache_policy_digest",
+                        "positive_value_protocol_digest",
+                        "positive_value_freeze_receipt_ref",
+                        "positive_value_adjudication_owner",
+                    )
+                },
+            }
+            report_body, report_digest = positive_value_report_section(
+                metadata, result_id, case_id
+            )
+            return docs_gate.Document(
+                docs_gate.REPOSITORY
+                / "docs/project/iterations/iteration-012/results/alpha.md",
+                {**metadata, "positive_value_report_digest": report_digest},
+                "# Result\n\n" + report_body,
+            )
+
+        passed = make_result(actual=1, verdict="PASS")
+        self.assertEqual(
+            docs_gate.validate_positive_value_result(
+                passed,
+                alignment,
+                "alpha.md",
+                expected_case_id="V-COMP-ALPHA-001",
+            ),
+            [],
+        )
+
+        tied = make_result(actual=0, verdict="FAIL", system_better=0)
+        self.assertEqual(
+            docs_gate.validate_positive_value_result(
+                tied,
+                alignment,
+                "alpha.md",
+                require_pass=False,
+                expected_case_id="V-COMP-ALPHA-001",
+            ),
+            [],
+        )
+        tied_as_pass = make_result(actual=0, verdict="PASS", system_better=0)
+        self.assertTrue(
+            docs_gate.validate_positive_value_result(
+                tied_as_pass,
+                alignment,
+                "alpha.md",
+                expected_case_id="V-COMP-ALPHA-001",
+            )
+        )
+
+        lost = make_result(
+            actual=-10, verdict="FAIL", system_better=0, codex_better=1
+        )
+        self.assertEqual(
+            docs_gate.validate_positive_value_result(
+                lost,
+                alignment,
+                "alpha.md",
+                require_pass=False,
+                expected_case_id="V-COMP-ALPHA-001",
+            ),
+            [],
+        )
+        aggregate_win_with_question_loss = make_result(
+            actual=10,
+            verdict="FAIL",
+            system_better=2,
+            codex_better=1,
+        )
+        self.assertEqual(
+            docs_gate.validate_positive_value_result(
+                aggregate_win_with_question_loss,
+                alignment,
+                "alpha.md",
+                require_pass=False,
+                expected_case_id="V-COMP-ALPHA-001",
+            ),
+            [],
+        )
+
+        under_evaluated = make_result(
+            actual=1,
+            verdict="PASS",
+            evaluated=2,
+            system_better=1,
+        )
+        under_evaluated_errors = docs_gate.validate_positive_value_result(
+            under_evaluated,
+            alignment,
+            "alpha.md",
+            expected_case_id="V-COMP-ALPHA-001",
+        )
+        self.assertTrue(
+            any("frozen question count" in error for error in under_evaluated_errors),
+            under_evaluated_errors,
+        )
+
+        category_mismatch = make_result(
+            actual=1,
+            verdict="PASS",
+            evaluated=3,
+            system_better=1,
+            tie=1,
+        )
+        category_errors = docs_gate.validate_positive_value_result(
+            category_mismatch,
+            alignment,
+            "alpha.md",
+            expected_case_id="V-COMP-ALPHA-001",
+        )
+        self.assertTrue(
+            any("classification counts" in error for error in category_errors),
+            category_errors,
+        )
+
+        final_alignment = {**alignment, "held_out_question_count": 5}
+        under_evaluated_final = make_result(
+            actual=1,
+            verdict="PASS",
+            case_id="V-000",
+            evaluated=3,
+            system_better=1,
+        )
+        final_count_errors = docs_gate.validate_positive_value_result(
+            under_evaluated_final,
+            final_alignment,
+            "product.md",
+            expected_case_id="V-000",
+        )
+        self.assertTrue(
+            any("frozen question count" in error for error in final_count_errors),
+            final_count_errors,
+        )
+
+        early_alignment = {
+            **alignment,
+            "early_comparison_binding": {
+                "case_id": "V-COMP-EARLY-001",
+                "canary_case_id": "V-CANARY-001",
+            },
+            "early_hidden_canary_bindings": {
+                "hardening": {
+                    "case_id": "V-CANARY-001",
+                    "question_count": 7,
+                }
+            },
+        }
+        self.assertEqual(
+            docs_gate.strict_codex_frozen_question_count(
+                early_alignment, "V-COMP-EARLY-001"
+            ),
+            7,
+        )
+        early_pass = make_result(
+            actual=1,
+            verdict="PASS",
+            case_id="V-COMP-EARLY-001",
+            evaluated=7,
+            system_better=1,
+        )
+        self.assertEqual(
+            docs_gate.validate_positive_value_result(
+                early_pass,
+                early_alignment,
+                "hardening.md",
+                expected_case_id="V-COMP-EARLY-001",
+            ),
+            [],
+        )
+        both_failed = make_result(
+            actual=1,
+            verdict="FAIL",
+            absolute_verdict="FAIL",
+            system_better=1,
+            both_fail=1,
+        )
+        self.assertEqual(
+            docs_gate.validate_positive_value_result(
+                both_failed,
+                alignment,
+                "alpha.md",
+                require_pass=False,
+                expected_case_id="V-COMP-ALPHA-001",
+            ),
+            [],
+        )
+
+        legacy_receipt = make_result(actual=1, verdict="PASS")
+        legacy_receipt_metadata = {
+            **legacy_receipt.metadata,
+            "positive_value_adjudication_receipt_ref": (
+                "codex-user-message:sha256:" + "6" * 64
+            ),
+        }
+        legacy_receipt_body, legacy_receipt_digest = positive_value_report_section(
+            legacy_receipt_metadata, result_id, "V-COMP-ALPHA-001"
+        )
+        legacy_receipt_result = docs_gate.Document(
+            legacy_receipt.path,
+            {
+                **legacy_receipt_metadata,
+                "positive_value_report_digest": legacy_receipt_digest,
+            },
+            "# Result\n\n" + legacy_receipt_body,
+        )
+        self.assertTrue(
+            any(
+                "independent-evaluator-result" in error
+                for error in docs_gate.validate_positive_value_result(
+                    legacy_receipt_result,
+                    alignment,
+                    "alpha.md",
+                    expected_case_id="V-COMP-ALPHA-001",
+                )
+            )
+        )
+    def test_iter012_final_result_rejects_non_regression_only(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            manifest_path = Path(directory) / "manifest.yaml"
+            manifest_path.write_text(
+                "product_goal_alignment: {}\ndevelopment:\n  slices: {}\n",
+                encoding="utf-8",
+            )
+            verification = docs_gate.Document(
+                docs_gate.REPOSITORY
+                / "docs/project/iterations/iteration-012/verification-matrix.md",
+                {"id": "ITER-012-VERIFICATION"},
+                "",
+            )
+            base_metadata = {
+                "id": "ITER-012-RESULT-PRODUCT",
+                "iteration": "ITER-012",
+                "mature_source_agent_comparison": "non-regression",
+            }
+            result = docs_gate.Document(
+                docs_gate.REPOSITORY
+                / "docs/project/iterations/iteration-012/results/product.md",
+                base_metadata,
+                "",
+            )
+            errors = docs_gate.validate_product_goal_result(
+                result, "ITER-012", manifest_path, verification
+            )
+            self.assertTrue(
+                any(
+                    docs_gate.STRICT_CODEX_RESULT_COMPARISON in error
+                    for error in errors
+                ),
+                errors,
+            )
+            strict_result = docs_gate.Document(
+                result.path,
+                {
+                    **base_metadata,
+                    "mature_source_agent_comparison": docs_gate.STRICT_CODEX_RESULT_COMPARISON,
+                },
+                result.body,
+            )
+            strict_errors = docs_gate.validate_product_goal_result(
+                strict_result, "ITER-012", manifest_path, verification
+            )
+            self.assertFalse(
+                any("mature_source_agent_comparison must equal" in error for error in strict_errors),
+                strict_errors,
+            )
 
     def test_early_evaluation_bindings_are_frozen_before_execution(self) -> None:
         new_refs = ["ITER-008-SLICE-001", "ITER-008-SLICE-002"]

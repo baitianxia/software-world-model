@@ -56,14 +56,23 @@ Alpha `CONTINUE` 后的 hardening 才承担 early hidden。缺少复盘，或中
 只有 Alpha 的 `CONTINUE` 后才安排全面契约、回归、性能、能力资格、hidden canary 和正式验收。安全、权限、Secret 与失败真实性不能
 延后，但不得把完备证明材料误作 Alpha 的前置目标。
 
+从下一份新产品 Iteration 起，第一个持续 Web Alpha 同时绑定小样本 current Codex 同题盲评，不增加前置 Slice。必须冻结当时实际
+Codex identity、fresh 隔离任务、答案先密封、系统不可见、随机匿名和独立 evaluator；绝对质量 PASS、逐题无物质退步且总体答案质量
+严格为正才可 `CONTINUE`。小样本至少是一条原失败题和另外两条相邻或异质题，后两条中至少一条在产品冻结后由现场提出。全体打平
+不能用成本、时延或复用补偿；完整 hidden/跨工程复验仍在 hardening/final。
+
 首次方向体验必须是真正可持续操作的版本：精确版本可重复启动、固定本地地址、同一会话连续自由提问、版本和限制可见，且单题失败不
 关闭服务。一次性验证运行或只能回答启动前冻结问题的页面不算体验版本。阻断失败默认记录为 `REWORK` 并暂停当前 Slice；同一目标和
 总体架构下使用新的用户授权恢复同一 Slice。只有明确用户转向、核心架构证伪或达到预提交无进展上限才允许 `REDIRECT`。
 
-Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、成熟源码 Agent protocol 和授权软件来源范围的 exact digest，
-以及前后支持题数。体验 Alpha 期间可使用明确、失败关闭的 deferred/user-held marker；最迟在拥有对应 hidden/对照的 hardening 或 final
-Slice 授权前替换为 exact freeze，不能反向阻塞早期可见结果。完成时 `V-000` Evidence 必须引用本轮一个带完整 `product_goal_*` 元数据的 PASS Result，不能填写
+Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、current Codex protocol/identity/rubric/cache policy 和授权软件来源
+范围的 exact digest，以及前后支持题数。Alpha 的 current Codex 小样本协议和严格答案质量阈值不得 deferred；只有完整 hidden suite 可
+使用明确、失败关闭的 deferred/user-held marker，并最迟在拥有正式复验的 hardening 或 final Slice 授权前替换为 exact freeze，不能反向
+阻塞早期可见结果。完成时 `V-000` Evidence 必须引用本轮一个带完整 `product_goal_*` 元数据的 PASS Result，不能填写
 普通文字、机械测试 Result 或风险实验 Result 代替。
+
+current Codex 是强外部基线，不是 Oracle 或 adjudicator；双方真实模型、reasoning、工具和权限分别冻结。full cognition 与
+locator-only/empty 的因果消融使用独立 binding，只有该消融要求相同系统模型、链路和预算。
 
 机械 Gate 只能验证这些对象之间的闭合关系。Readiness 仍必须由用户查看 exact 冻结输入和案例后作语义判断；随机 digest、
 看似正确的字段名或自报 PASS 不能证明候选真的形成通用源码问答增量。跨域 Case、正式 Web 和现场临时问题之间的关系以
