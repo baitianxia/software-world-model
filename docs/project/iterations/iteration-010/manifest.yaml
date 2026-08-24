@@ -487,7 +487,11 @@ answer_protocol:
   initial_finish_authorized_checklist_scope: complete-question-checklist
   verification_finish_authorized_checklist_scope: one-reviewer-gap
   verification_finish_disposition_role: single-gap-delta
-  verification_successor_disposition_merge: trusted-stable-replace-target-preserve-non-target
+  verification_successor_disposition_merge: trusted-stable-replace-target-preserve-non-target-and-monotonically-preserve-supported-target-observations
+  verification_target-disposition-preservation-contract-projected: true
+  verification_supported-predecessor-observations-required-exact-and-relative-order: true
+  verification_lossy-supported-target-replacement: provider-response-invalid-before-successor-seal
+  verification_non-supported-predecessor-boundary-replacement-allowed: true
   verification_predecessor-package-full-content-counts-consumed: true
   verification_predecessor-package-boundaries-admissible: false
   verification_gap-boundary-reference-projected: true
@@ -551,6 +555,8 @@ answer_protocol:
   challenge_review_missing-duplicate-unknown-or-misbound-assessment: fail-closed-before-authorization
   package-material-effect-observation-omission-remediation: successor-gap-delta-with-predecessor-support-reuse
   verification-successor-may-reuse-predecessor-support: true
+  application-package-effect-gap-scope: exact-caller-visible-helper-cache-write-notification-or-external-interaction
+  application-package-effect-gap-requires-unmounted-callee-internals: false
   configuration_placeholder_proves_concrete_runtime_value: false
   caller_getter-proves-unmounted-field-wire-property-or-validation: false
   caller-import-or-registration-proves-unmounted-fields-validation-or-output: false
@@ -643,13 +649,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:aec7d46872fcc0c8c5d16cd53ad8f28f8cc98fac1e39065a63dded40c9b7076f
+  system_contract_set_digest: sha256:825d01d9e4fc20777bb524820ba31fb846976faab6584abeeef58edcd58f0f31
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:1bb9290e27ff0faefc0da7cd6079ff3b9263d9fb53f9f27867e12f72aa4cebde
+  investigation_budget_digest: sha256:369be01ad3850ec2af5018c1ba316fd446ec19b0c4ee7f8284903dbdfc8865c7
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
@@ -692,7 +698,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: run-032-q1-pass-q2-fail-q3-outcome-unknown-negative-pass-findings-086-087-source-reference-resolution-corrective-deterministic-gate-closed-new-clean-fresh-live-pending
+      live_question_status: run-033-q1-fail-q2-fail-q3-outcome-unknown-negative-pass-findings-088-089-monotonic-verification-target-preservation-corrective-deterministic-gate-closed-new-clean-fresh-live-pending
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

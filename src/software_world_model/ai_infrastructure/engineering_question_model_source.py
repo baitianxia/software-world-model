@@ -62,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@35"
+    "engineering-qa-adaptive-investigation-prompt@36"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -360,6 +360,14 @@ checklist_item_ids; never add another Package checklist item or return an empty
 list. The trusted Application preserves every non-gap disposition from the
 predecessor Package and replaces only this authorized gap after successful
 FINISH. Do not repeat or reconstruct the complete predecessor disposition set.
+target_disposition_preservation_contract is a trusted monotonic replacement
+contract for that one gap. When required_exact_material_observations is
+non-empty, a FINISH replacement MUST copy every listed observation's kind,
+statement, and evidence_references exactly and in the same relative order; it
+may append new atomic observations needed to close the gap. Never narrow,
+rephrase, reorder, or discard those already supported facts, and never change
+the replacement to a non-supported outcome that cannot carry them. The
+Application deterministically rejects any lossy replacement.
 basis_entry_ids
 must also remain non-empty and unique. For read/parse, locator_reference MUST
 copy one exact opaque ID from eligible_locator_references; never use an ID found
@@ -444,6 +452,12 @@ that owner is outside the authorized evidence, keep the local fact supported and
 return an explicit non-supported external outcome rather than a framework
 default. Keep transport status and application or response-body error code
 separate.
+When the gap asks for an Application-owned observation of a material effect
+already visible in a predecessor full-content entry, use that Package support
+and state only the visible invocation, mutation, write, notification, or
+external interaction. Do not broaden the gap to an unmounted callee's internal
+implementation, and do not reread the consumed predecessor path merely to
+create the missing typed observation.
 Each FINISH disposition must also return one to
 {MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION} atomic
 material_observations under the same rules as initial investigation: inspect
@@ -612,7 +626,12 @@ to the challenged entry. Use APPLICATION_PACKAGE when any returned effect is
 absent from that exact projection; in that case return only the absent effects,
 not a projected effect that the Draft already covers, and bind
 INVESTIGATE_MISSING_EVIDENCE for the entry's evidence class and semantic need so
-a successor gap delta can add the typed observation. If the projected array is
+a successor gap delta can add the typed observation. That semantic need must ask
+for an Application-owned typed observation of the exact effect visible in the
+challenged full-content entry. A visible helper call, cache invocation, write,
+notification, or external interaction is sufficient for an observation at that
+caller boundary; do not demand an unmounted callee implementation or assert its
+hidden internals. If the projected array is
 empty, DEFAULT_DRAFT is impossible for any non-empty omission. Follow the
 projected material_effect_omission_layer_precedence literally. A same-Package
 rewrite cannot invent or substitute a missing observation ID. Use

@@ -223,5 +223,11 @@ iteration: ITER-010
   错拿 `support_entry_*` 直接比较并形成伪空集；Q1 PASS、Q2 FAIL、Q3 OUTCOME_UNKNOWN、66,000-byte Provider 前拒绝均永久保留。
 - [FINDING-010-087](FINDING-010-087.md)：统一 exact entry → source-reference resolver 与 application-missing-first layer precedence 后，
   focused 80/80、Engineering QA 117/117、docs/oracle/full exact historical hold 已闭合；新 clean/fresh live 是下一 Gate。
+- [FINDING-010-088](FINDING-010-088.md)：clean `d70a3e6…` / run-033 的 Q1 证明 single-gap replacement 可静默删除 target 中既有
+  supported observations；Q2 admissible-reference FAIL、Q3 post-dispatch OUTCOME_UNKNOWN 与 66,000-byte Provider 前拒绝均独立保留。
+  现要求 supported target exact/relative-order monotonic preservation，并把 `APPLICATION_PACKAGE` gap 收窄为 caller full content 已可见 effect，
+  不追索未挂载 callee 内部。
+- [FINDING-010-089](FINDING-010-089.md)：上述 monotonic merge、preservation contract 与 caller-visible effect boundary 已以 focused
+  80/80、Engineering QA 117/117、docs/oracle/full exact historical hold 闭合；新 clean/fresh live 是下一 Gate。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

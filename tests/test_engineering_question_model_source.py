@@ -397,7 +397,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@35",
+            "engineering-qa-adaptive-investigation-prompt@36",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -473,6 +473,16 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("excludes all predecessor-Package boundaries", verification_prompt)
         self.assertIn("preserves every non-gap disposition", verification_prompt)
         self.assertIn("entire authorized checklist scope", verification_prompt)
+        self.assertIn(
+            "target_disposition_preservation_contract",
+            verification_prompt,
+        )
+        self.assertIn(
+            "copy every listed observation's kind, statement, and evidence_references exactly",
+            verification_prompt,
+        )
+        self.assertIn("rejects any lossy replacement", verification_prompt)
+        self.assertIn("unmounted callee's internal implementation", verification_prompt)
         understanding_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.QUESTION_UNDERSTANDING
@@ -624,6 +634,11 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
             review_prompt,
         )
         self.assertIn("return only the absent effects", review_prompt)
+        self.assertIn(
+            "Application-owned typed observation of the exact effect visible",
+            review_prompt,
+        )
+        self.assertIn("do not demand an unmounted callee implementation", review_prompt)
         self.assertIn("same-Package rewrite cannot invent or substitute", review_prompt)
         self.assertIn("ORIGINAL_QUESTION_FULFILLMENT_SCAN", review_prompt)
         self.assertIn("DRAFT_OMITS_MATERIAL_REQUIREMENT", review_prompt)

@@ -504,4 +504,17 @@ Production 不执行，新的 deterministic 与 clean/fresh live Gate 待闭合�
 `FINDING-010-087` 再以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff
 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合 deterministic Gate；没有 ITER-010 新失败。下一步只能从新 clean candidate
 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立复核；run-032 不追认，Production 不执行。
+`FINDING-010-088` 记录 clean `d70a3e6…` / run-033：fresh Conformance 2/2 PASS；持续 Browser 的 Q1 15 dispatch 已正确进入
+`APPLICATION_PACKAGE` Verification，却把未挂载 cache callee 的内部实现当成新证据需求，并用单一 `UNKNOWN` replacement 覆盖 check-6，
+静默删除 predecessor 中仍有 support 的登录流程/审计 observations，最终 challenge 又错绑 Claim 而失败关闭。Q2 8 dispatch 因自造
+`cognition-unknown-*` 而由 admissible-reference Gate 正确关闭；Q3 第 8 次 Review dispatch 后发生 `NETWORK_FAILURE`，按零重试封存
+OUTCOME_UNKNOWN；66,000-byte 仍在 Provider 前拒绝，总 dispatch 31、retry/switch 0、private SQLite/clean stop 与 Production
+`NOT_EXECUTED` 成立。run-033 总体 FAIL，不追认。
+处置把 Verification target replacement 从任意覆盖收紧为 supported-observation 单调保留：角色输入获得 exact preservation contract，
+Application 在 successor seal 前机械拒绝删除、改写或重排旧 observation；non-supported predecessor boundary 仍可被真实新证据替换。
+`APPLICATION_PACKAGE` effect gap 只请求 challenged caller full content 已可见 interaction 的 typed observation，不要求未挂载 callee internals。
+Strategy/Prompt 升为 `@26/@36`，Review Schema 保持 `@9`；新的 deterministic Gate 与 clean/fresh live 仍须独立闭合。
+`FINDING-010-089` 已以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合 82/82、483 current docs、
+compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合该 deterministic Gate；没有 ITER-010 新失败。下一步只能从
+新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立复核。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

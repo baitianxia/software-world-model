@@ -223,26 +223,49 @@ def step_proposal(
     dispositions = ()
     if operation is InvestigationOperation.FINISH:
         assert evidence_reference is not None
+        if kind is InvestigationKind.VERIFICATION:
+            predecessor_observations = (
+                investigation_input.required_preserved_target_material_observations
+            )
+            material_observations = (
+                *predecessor_observations,
+                MaterialObservation.create(
+                    checklist_item_id="check-1",
+                    kind=MaterialObservationKind.PROCESS_STAGE,
+                    statement="Static configuration defines the effective request timeout.",
+                    evidence_references=(evidence_reference,),
+                ),
+            )
+            evidence_references = tuple(
+                dict.fromkeys(
+                    reference
+                    for observation in material_observations
+                    for reference in observation.evidence_references
+                )
+            )
+        else:
+            material_observations = (
+                MaterialObservation.create(
+                    checklist_item_id="check-1",
+                    kind=MaterialObservationKind.PROCESS_STAGE,
+                    statement="The repository evidence establishes the documented startup entry point.",
+                    evidence_references=(evidence_reference,),
+                ),
+                MaterialObservation.create(
+                    checklist_item_id="check-1",
+                    kind=MaterialObservationKind.SIDE_EFFECT,
+                    statement="Starting the service also writes a local PID file.",
+                    evidence_references=(evidence_reference,),
+                ),
+            )
+            evidence_references = (evidence_reference,)
         dispositions = (
             ChecklistDisposition.create(
                 checklist_item_id="check-1",
                 outcome=ChecklistOutcome.SUPPORTED,
-                evidence_references=(evidence_reference,),
+                evidence_references=evidence_references,
                 explanation="The exact package contains the required evidence.",
-                material_observations=(
-                    MaterialObservation.create(
-                        checklist_item_id="check-1",
-                        kind=MaterialObservationKind.PROCESS_STAGE,
-                        statement="The repository evidence establishes the documented startup entry point.",
-                        evidence_references=(evidence_reference,),
-                    ),
-                    MaterialObservation.create(
-                        checklist_item_id="check-1",
-                        kind=MaterialObservationKind.SIDE_EFFECT,
-                        statement="Starting the service also writes a local PID file.",
-                        evidence_references=(evidence_reference,),
-                    ),
-                ),
+                material_observations=material_observations,
             ),
         )
     return InvestigationStepProposal.create(
@@ -1776,6 +1799,7 @@ class Service {
             evidence_references=first.evidence_references,
             explanation="The verification evidence resolves the second conclusion.",
             material_observations=(
+                *second.material_observations,
                 MaterialObservation.create(
                     checklist_item_id="check-2",
                     kind=MaterialObservationKind.OUTCOME,
@@ -1800,6 +1824,29 @@ class Service {
                 verification_dispositions=(first, replacement),
             )
         self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+
+        lossy_replacement = ChecklistDisposition.create(
+            checklist_item_id="check-2",
+            outcome=ChecklistOutcome.SUPPORTED,
+            evidence_references=first.evidence_references,
+            explanation="The replacement silently drops predecessor support.",
+            material_observations=(
+                MaterialObservation.create(
+                    checklist_item_id="check-2",
+                    kind=MaterialObservationKind.OUTCOME,
+                    statement="Only the newly verified outcome remains.",
+                    evidence_references=first.evidence_references,
+                ),
+            ),
+        )
+        with self.assertRaises(DomainError) as caught:
+            _merge_verification_checklist_dispositions(
+                current_package=package,
+                verification_request=verification,
+                verification_dispositions=(lossy_replacement,),
+            )
+        self.assertEqual(caught.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+        self.assertIn("cannot discard", caught.exception.message)
 
     def test_verification_finish_validates_only_gap_checklist_scope(self):
         req = request()

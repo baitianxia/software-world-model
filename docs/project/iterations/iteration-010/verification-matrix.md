@@ -354,6 +354,15 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | V-010 | 本机验证和 Acceptance 不产生 Production Activation | activation | exact final Iteration Result | NOT_EXECUTED | not-executed | NOT-RUN / blocking |
 | V-REFLECT-003 | 最终复盘 A1—A5 并由用户裁决 | architecture / reflection | 三个 exact Slice Results、10+2、现场题、Agent/value、安全、Findings | A1—A5 exact Verdict；只有全部 SUPPORTED 与用户新 ACCEPT 才能申请 Acceptance | not-executed | NOT-RUN / blocking |
 
+### Current Slice1 rework evidence
+
+- run-033（clean `d70a3e6…`）保持 `V-ANSWER-001 / V-REVIEW-001 / V-LEDGER-001` blocking：Q1 的 single-gap Verification
+  replacement 删除了 supported predecessor target observations，Q2 被 admissible-reference Gate 正确关闭，Q3 为零重试
+  post-dispatch outcome unknown；66,000-byte Provider-before-call negative PASS。总体不是 live PASS。
+- `FINDING-010-088/089` 要求并以 focused/Engineering QA/docs/oracle/full exact historical hold 验证 supported target observation 的
+  exact/relative-order monotonic merge、caller-visible effect gap 与未挂载 callee boundary；deterministic Gate 已闭合，新 clean/fresh live
+  仍必须另行执行，不能以 run-033 或旧 run 补齐。
+
 ## Freeze and scoring rules
 
 - Slice1 先执行 V-WEB-000 一题最小真实纵切，再执行一个真实工程 4 条不同覆盖维度问题和至少一条现场题；至少 3 supported、至少 2 个

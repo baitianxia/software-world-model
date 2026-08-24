@@ -4200,6 +4200,21 @@ def _merge_verification_checklist_dispositions(
             "verification FINISH must disposition only its authorized gap exactly once",
         )
     replacement = delta[0]
+    predecessor = next(item for item in prior if item.checklist_item_id == target)
+    if predecessor.outcome is ChecklistOutcome.SUPPORTED:
+        required_observation_ids = {
+            item.observation_id for item in predecessor.material_observations
+        }
+        retained_predecessor_observations = tuple(
+            item
+            for item in replacement.material_observations
+            if item.observation_id in required_observation_ids
+        )
+        if retained_predecessor_observations != predecessor.material_observations:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "verification FINISH cannot discard or reorder supported predecessor material observations",
+            )
     return tuple(
         replacement if item.checklist_item_id == target else item
         for item in prior
@@ -4225,6 +4240,30 @@ class VerificationInvestigationInput:
     @property
     def required_basis_entry_id(self) -> StableId:
         return self.ledger.entries[-1].entry_id
+
+    @property
+    def predecessor_target_disposition(self) -> ChecklistDisposition:
+        target = self.verification_request.checklist_item_id
+        matches = tuple(
+            item
+            for item in self.current_package.checklist_dispositions
+            if item.checklist_item_id == target
+        )
+        if len(matches) != 1:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "verification investigation lacks one exact predecessor target disposition",
+            )
+        return matches[0]
+
+    @property
+    def required_preserved_target_material_observations(
+        self,
+    ) -> tuple[MaterialObservation, ...]:
+        predecessor = self.predecessor_target_disposition
+        if predecessor.outcome is not ChecklistOutcome.SUPPORTED:
+            return ()
+        return predecessor.material_observations
 
     @property
     def verification_gap_boundary_reference(self) -> StableId:
@@ -4385,6 +4424,7 @@ class VerificationInvestigationInput:
 
     def model_view(self) -> dict[str, object]:
         self.validate_new_result_closure()
+        predecessor_target = self.predecessor_target_disposition
         return {
             "role": "VERIFICATION_INVESTIGATION",
             "attempt_id": self.attempt_id.value,
@@ -4394,6 +4434,16 @@ class VerificationInvestigationInput:
             "verification_gap_boundary_reference": (
                 self.verification_gap_boundary_reference.value
             ),
+            "target_disposition_preservation_contract": {
+                "checklist_item_id": predecessor_target.checklist_item_id,
+                "predecessor_outcome": predecessor_target.outcome.value,
+                "required_exact_material_observations": [
+                    item.model_view()
+                    for item in self.required_preserved_target_material_observations
+                ],
+                "preserve_relative_order": True,
+                "replacement_may_append_new_material_observations": True,
+            },
             "eligible_locator_references": [
                 item.value for item in self.eligible_locator_references
             ],

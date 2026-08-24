@@ -40,6 +40,10 @@ tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test
   边界的页面明确提交 exact question 后，受信 ingress 才能签发 one-use submission receipt，System Owner 才能生成 server-owned
   Request/run identity；客户端不能提交这些权威字段。每题后续仍须 exact full-input role authorization。重复、跨题复用、边界漂移、过期
   或总熔断耗尽必须在 credential/HTTP 前拒绝；某题失败不得停止 listener 或使另一题继承其 Ledger/Package/Review/Citation。
+- Verification 的 target disposition replacement 不是任意覆盖：当 predecessor target 为 `SUPPORTED` 时，Application 必须投影 exact
+  observation preservation contract，并在 merge 时机械拒绝删除、改写或重排既有 supported facts 的 delta。caller full content 已可见的
+  cache/write/notification/external interaction 只补 caller-boundary typed observation，不借此取得未挂载 callee 内部；lossy replacement
+  必须在 successor Package seal 前失败关闭。
 - Engineering QA 的同包重写保持同一 Package Digest；Reviewer 具体证据缺口驱动全新 Verification Investigation，经 Broker/Worker 逐步校验执行。补证角色的 authorized checklist scope 只有 Request 指定的 gap，FINISH 只能返回该项 delta；可信 Application 才可按 predecessor 顺序替换唯一目标、保留非目标 disposition 并密封 successor Package。越权、多项 delta、目标/Package identity 不一致、非支持 observation 未绑定当前 gap 或失败关闭时均不得 merge；新 Package 必须重走 Answer/Review。Review 输入只把真实保留 gap boundary 的 non-supported disposition 投影为 terminal `verified_gap_outcome`；诚实 Limitation 不得被同一缺证的重复请求绕过 preview fuse，Draft 自行扩张的非 material 结果也不得扩大 Source scope。正式协议不得永久固定一轮；revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减 Checklist、调查需求、证据、Citation 或 Review dimension。wall-time 不仅在调用前检查；任何角色、Projector 或 Worker 返回后、其输出取得 Ledger/Package/Answer/Authorization 状态转换权之前必须重验，`elapsed >= maximum` 即耗尽。
 - `JAVA_SOURCE_SEMANTICS@1` 的 Investigation step、Draft 与 Review 是独立 Gateway workload：首个调查 step 不读取正式知识
   payload，后续 step 只能读取平台密封的 typed trace prefix；Draft 不得读取 Reviewer 或 Citation observation，Review 不得读取

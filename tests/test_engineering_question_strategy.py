@@ -301,6 +301,43 @@ class AdaptiveStructuredOutputSource:
         evidence_reference = results[-1]["items"][0]["item_id"]
         if evidence_reference not in body["admissible_support_references"]:
             raise AssertionError("full-content item must be admissible support")
+        if manifest.role is EngineeringQuestionModelRole.VERIFICATION_INVESTIGATION:
+            material_observations = [
+                {
+                    "kind": item["kind"],
+                    "statement": item["statement"],
+                    "evidence_references": list(item["evidence_references"]),
+                }
+                for item in body["target_disposition_preservation_contract"][
+                    "required_exact_material_observations"
+                ]
+            ]
+            material_observations.append(
+                {
+                    "kind": "PROCESS_STAGE",
+                    "statement": (
+                        "Static configuration defines the effective request timeout."
+                    ),
+                    "evidence_references": [evidence_reference],
+                }
+            )
+        else:
+            material_observations = [
+                {
+                    "kind": "PROCESS_STAGE",
+                    "statement": (
+                        "The repository evidence establishes the documented startup entry point."
+                    ),
+                    "evidence_references": [evidence_reference],
+                },
+                {
+                    "kind": "SIDE_EFFECT",
+                    "statement": (
+                        "Starting the service also writes a local PID file."
+                    ),
+                    "evidence_references": [evidence_reference],
+                },
+            ]
         return {
             "operation": "FINISH",
             "checklist_item_ids": ["check-1"],
@@ -314,22 +351,7 @@ class AdaptiveStructuredOutputSource:
                     "checklist_item_id": "check-1",
                     "outcome": "SUPPORTED",
                     "explanation": "The exact package contains the required evidence.",
-                    "material_observations": [
-                        {
-                            "kind": "PROCESS_STAGE",
-                            "statement": (
-                                "The repository evidence establishes the documented startup entry point."
-                            ),
-                            "evidence_references": [evidence_reference],
-                        },
-                        {
-                            "kind": "SIDE_EFFECT",
-                            "statement": (
-                                "Starting the service also writes a local PID file."
-                            ),
-                            "evidence_references": [evidence_reference],
-                        }
-                    ],
+                    "material_observations": material_observations,
                 }
             ],
         }
@@ -1323,6 +1345,7 @@ class SecurityConfig {
                 "step_index",
                 "required_basis_entry_id",
                 "verification_gap_boundary_reference",
+                "target_disposition_preservation_contract",
                 "eligible_locator_references",
                 "eligible_required_path_locators",
                 "consumed_full_content_paths",
@@ -1353,6 +1376,29 @@ class SecurityConfig {
             manifest.body["verification_gap_boundary_reference"],
             ledger.entries[-1].entry_id.value,
         )
+        preservation = manifest.body[
+            "target_disposition_preservation_contract"
+        ]
+        predecessor = next(
+            item
+            for item in package.checklist_dispositions
+            if item.checklist_item_id == "check-1"
+        )
+        self.assertEqual(preservation["checklist_item_id"], "check-1")
+        self.assertEqual(preservation["predecessor_outcome"], "SUPPORTED")
+        self.assertEqual(
+            tuple(
+                item["observation_id"]
+                for item in preservation[
+                    "required_exact_material_observations"
+                ]
+            ),
+            tuple(
+                item.observation_id.value
+                for item in predecessor.material_observations
+            ),
+        )
+        self.assertTrue(preservation["preserve_relative_order"])
         self.assertEqual(manifest.body["eligible_locator_references"], ())
         self.assertEqual(manifest.body["eligible_required_path_locators"], ())
         self.assertEqual(
