@@ -698,7 +698,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: run-033-q1-fail-q2-fail-q3-outcome-unknown-negative-pass-findings-088-089-monotonic-verification-target-preservation-corrective-deterministic-gate-closed-new-clean-fresh-live-pending
+      live_question_status: run-034-clean-fe6b6b6-fresh-conformance-http-402-fail-request-1-retry-switch-0-no-alpha-finding-090-current-key-account-balance-hold
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

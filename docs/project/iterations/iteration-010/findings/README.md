@@ -229,5 +229,8 @@ iteration: ITER-010
   不追索未挂载 callee 内部。
 - [FINDING-010-089](FINDING-010-089.md)：上述 monotonic merge、preservation contract 与 caller-visible effect boundary 已以 focused
   80/80、Engineering QA 117/117、docs/oracle/full exact historical hold 闭合；新 clean/fresh live 是下一 Gate。
+- [FINDING-010-090](FINDING-010-090.md)：新 clean `fe6b6b6…` / run-034 的第一条 fresh Conformance request 在 credential/TLS/HTTP
+  成功后仍收到 DeepSeek 402；request 1、retry/switch 0，无 Qualification/Alpha/Browser/Production。当前 key 所属账户余额恢复前保持
+  configuration-environment hold。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

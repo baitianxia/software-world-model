@@ -301,8 +301,8 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-030 证明同会话三题与 Provider 前负测但答案 2/3；run-031 Q1 正确安全关闭并保持 private/clean stop，却未完成持续三题与负测。持续运行不能替代答案质量 Gate | FAIL / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-030 实际 2/3；run-031 Q1 因 cache effect 错选 rewrite 而 FAIL，Q2/Q3 NOT-RUN。`FINDING-010-084/085` corrective deterministic Gate 已闭合，新 clean/fresh live 待执行 | FAIL / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-033 因 supported predecessor observations 被 replacement 删除而不通过；`FINDING-010-088/089` corrective deterministic Gate 已闭合。run-034 仅取得 HTTP 402 Conformance FAIL，未生成新答案证据 | FAIL / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
@@ -362,6 +362,9 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 - `FINDING-010-088/089` 要求并以 focused/Engineering QA/docs/oracle/full exact historical hold 验证 supported target observation 的
   exact/relative-order monotonic merge、caller-visible effect gap 与未挂载 callee boundary；deterministic Gate 已闭合，新 clean/fresh live
   仍必须另行执行，不能以 run-033 或旧 run 补齐。
+- run-034（clean `fe6b6b6…`）在用户表示充值后启动，第一条 fresh Conformance request 仍收到 DeepSeek HTTP 402；
+  request 1、token 0、retry/switch 0，第二条 canary 未发送，无 Qualification/Alpha/Browser。`FINDING-010-090` 因此
+  保持 configuration-environment hold；当前 key 所属账户恢复 Provider 可用性后必须启动新的 fresh run。
 
 ## Freeze and scoring rules
 

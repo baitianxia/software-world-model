@@ -517,4 +517,7 @@ Strategy/Prompt 升为 `@26/@36`，Review Schema 保持 `@9`；新的 determinis
 `FINDING-010-089` 已以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合 82/82、483 current docs、
 compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合该 deterministic Gate；没有 ITER-010 新失败。下一步只能从
 新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立复核。
+`FINDING-010-090` 记录新 clean `fe6b6b6…` / run-034：第一条 fresh Conformance request 已完成 credential resolution、verified TLS 与
+HTTP dispatch，但 DeepSeek 返回 402；request 1、token 0、retry/switch 0，第二条未发送，无 Qualification、Alpha、Browser 或 Production。
+run-034 永久 FAIL；当前 key 所属账户余额实际恢复前保持 configuration-environment hold，之后只能启动新的 fresh Conformance。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。
