@@ -267,10 +267,23 @@ PASS，扩展 deterministic 与新 clean/fresh live 待闭合。
 sandbox full 1181 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1176 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结
 V-009/Codex historical hold，没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-028 不追认。
 
+clean `e0ad3c8…` / run-029 的 fresh DeepSeek Conformance 2/2 PASS；同一持续 Browser 会话三题共 28 dispatch（9/11/8），retry/switch/
+outcome-unknown 0，66,000-byte 输入在 Provider 前拒绝且调用数不变，private files、console clean、listener continuity 与 Production
+`NOT_EXECUTED` 成立。答案质量为 0/3：Q1 被错误 `APPROVED` 但遗漏 Service full entry 中的登录审计持久化副作用；Q2 正确识别未挂载
+DTO 扩张后，rewrite 又丢掉另一个安全 material observation，并由 Application 失败关闭；Q3 正确识别 401/403 扩张，但 assessment 的
+Finding Claim 与 exact challenge scope 错绑并由 Application 失败关闭。`FINDING-010-079` 已投影逐 cited full-content Java entry 的
+material-effect scan，增加 `DRAFT_OMITS_MATERIAL_EFFECT`，为 Answer 提供 early exact observation coverage table，并明确所有非 passing
+assessment 的 exact challenged-Claim binding。focused 79/79、Engineering QA 116/116 PASS；扩展 deterministic 与新 clean/fresh live
+待闭合，run-029 不追认。
+
+`FINDING-010-080` 已闭合 deterministic Gate：docs 组合 149/149、历史 oracle 组合 81/81、current docs/compile/diff PASS；默认
+sandbox full 1182 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1177 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结
+V-009/Codex historical hold，没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-029 不追认。
+
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-028 再次证明同会话三题、Provider 前超限拒绝、private files、listener continuity 与问题隔离；但 Q2 被错误放行，持续运行不能替代答案质量 Gate | FAIL / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh evidence-boundary challenge 按 stable ID 逐项阻断层级错配、物质遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-028 Q1/Q3 PASS、Q2 错误 `APPROVED`。`FINDING-010-077/078` 的逐 challenge assessment deterministic Gate 已闭合，新 clean/fresh 三题独立复核待执行 | FAIL / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-029 再次证明同会话三题、Provider 前超限拒绝、private files、listener continuity 与问题隔离；但答案质量为 0/3，持续运行不能替代答案质量 Gate | FAIL / blocking |
+| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | 重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh evidence-boundary challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-029 Q1 错误 `APPROVED`、Q2/Q3 安全失败关闭，实际 0/3。`FINDING-010-079/080` 的 deterministic Gate 已闭合，新 clean/fresh 三题独立复核待执行 | FAIL / blocking |
 | V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |

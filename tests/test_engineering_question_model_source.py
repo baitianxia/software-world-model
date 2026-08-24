@@ -397,7 +397,7 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
     def test_current_investigation_prompt_requires_closed_operation_fields(self) -> None:
         self.assertEqual(
             ENGINEERING_QUESTION_MODEL_PROMPT_REF,
-            "engineering-qa-adaptive-investigation-prompt@31",
+            "engineering-qa-adaptive-investigation-prompt@32",
         )
         for role in (
             EngineeringQuestionModelRole.INITIAL_INVESTIGATION,
@@ -565,6 +565,14 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("transport status", answer_prompt)
         self.assertIn("configuration key and injection point", answer_prompt)
         self.assertIn("unmounted DTO's fields", answer_prompt)
+        self.assertIn(
+            "material_observation_coverage_contract is an exact output checklist",
+            answer_prompt,
+        )
+        self.assertIn(
+            "removing one unsafe inference from a Claim never authorizes dropping",
+            answer_prompt,
+        )
         review_prompt = " ".join(
             engineering_question_role_prompt(
                 EngineeringQuestionModelRole.REVIEW
@@ -599,6 +607,13 @@ class EngineeringQuestionModelSourceTests(unittest.TestCase):
         self.assertIn("evidence_boundary and the scope asserted", review_prompt)
         self.assertIn("DRAFT_EXCEEDS_EVIDENCE_BOUNDARY", review_prompt)
         self.assertIn("getter invocation in caller content", review_prompt)
+        self.assertIn("FULL_CONTENT_MATERIAL_EFFECT_SCAN", review_prompt)
+        self.assertIn("DRAFT_OMITS_MATERIAL_EFFECT", review_prompt)
+        self.assertIn("required_effect_category", review_prompt)
+        self.assertIn(
+            "claim_id is one of that exact challenge's default_claim_ids",
+            review_prompt,
+        )
 
     def test_request_with_no_external_disclosure_cannot_receive_run_grant(self) -> None:
         with self.assertRaises(DomainError) as raised:

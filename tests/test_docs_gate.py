@@ -3696,6 +3696,11 @@ class ReflectionGateTests(unittest.TestCase):
             ),
             "material_observation_identity_application_owned": True,
             "answer_claim_material_observation_and_evidence_closure_required": True,
+            "answer_material_observation_coverage_contract": (
+                "exact-id-statement-kind-checklist-and-required-evidence-entry-"
+                "table-before-large-role-inputs"
+            ),
+            "answer_rewrite_preserves_every-supported-material-observation": True,
             "reviewer_independent_package_and_draft_observation_audit_required": True,
             "sealed_package_mutation_allowed": False,
             "safety_budget_reserves_answer-comprehensive-review-and-challenge-review": True,
@@ -3705,9 +3710,27 @@ class ReflectionGateTests(unittest.TestCase):
             "reviewer_evidence_boundary_challenge_projection": (
                 "cited-configuration-placeholders-plus-claim-status-literals-"
                 "absent-from-cited-content-plus-mentioned-same-application-types-"
-                "without-mounted-implementation"
+                "without-mounted-implementation-plus-cited-full-content-java-entry-"
+                "material-effect-scans"
             ),
             "reviewer_evidence_boundary_projection_is-semantic-verdict": False,
+            "reviewer_full-content-material-effect-scan-unit": (
+                "each-cited-full-content-java-entry"
+            ),
+            "reviewer_full-content-material-effect-categories": (
+                "persistence-write,audit-write,cache-mutation,notification,"
+                "external-interaction"
+            ),
+            "challenge_review_disposition_vocabulary": (
+                "within-evidence-boundary,draft-exceeds-evidence-boundary,"
+                "draft-omits-material-effect"
+            ),
+            "challenge_review_non-passing-disposition-requires-finding-on-exact-challenged-claim": True,
+            "challenge_review_shared-finding-code-requires-claim-in-every-bound-challenge": True,
+            "package-material-effect-observation-omission-remediation": (
+                "successor-gap-delta-with-predecessor-support-reuse"
+            ),
+            "verification-successor-may-reuse-predecessor-support": True,
             "configuration_placeholder_proves_concrete_runtime_value": False,
             "caller-import-or-registration-proves-unmounted-fields-validation-or-output": False,
             "quality_checklist_reduction_due_to_remaining_calls_allowed": False,

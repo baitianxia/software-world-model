@@ -71,7 +71,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 ENGINEERING_QUESTION_ROLE_INPUT_SCHEMA = "ENGINEERING_QA_ROLE_INPUT@1"
 ENGINEERING_QUESTION_ROLE_OUTPUT_SCHEMA = "ENGINEERING_QA_ROLE_OUTPUT@1"
-ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@21"
+ENGINEERING_QUESTION_STRATEGY_REF = "engineering-qa-adaptive-investigation-local-contract@22"
 
 ENGINEERING_QUESTION_UNDERSTANDING_OUTPUT_SCHEMA_REF = (
     "engineering-qa-question-understanding@4"
@@ -83,7 +83,7 @@ ENGINEERING_QUESTION_VERIFICATION_INVESTIGATION_OUTPUT_SCHEMA_REF = (
     "engineering-qa-verification-investigation@10"
 )
 ENGINEERING_QUESTION_ANSWER_OUTPUT_SCHEMA_REF = "engineering-qa-answer@5"
-ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@6"
+ENGINEERING_QUESTION_REVIEW_OUTPUT_SCHEMA_REF = "engineering-qa-review@7"
 
 _MAXIMUM_ROLE_OUTPUT_BYTES = 1_048_576
 
@@ -648,6 +648,29 @@ _REVIEW_EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA = {
             ],
             "additionalProperties": False,
         },
+        {
+            "type": "object",
+            "properties": {
+                "challenge_id": {"type": "string"},
+                "evidence_boundary": {"type": "string"},
+                "draft_scope": {"type": "string"},
+                "disposition": {
+                    "type": "string",
+                    "enum": [
+                        EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT.value
+                    ],
+                },
+                "finding_code": {"type": "string"},
+            },
+            "required": [
+                "challenge_id",
+                "evidence_boundary",
+                "draft_scope",
+                "disposition",
+                "finding_code",
+            ],
+            "additionalProperties": False,
+        },
     ]
 }
 _REVIEW_OUTPUT_SCHEMA = {
@@ -1032,10 +1055,45 @@ class EngineeringQuestionRoleInputBuilder:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering QA Answer input crosses Request identities",
             )
+        support_by_source = {
+            item.source_reference: item.entry_id
+            for item in package.support_citation
+        }
+        boundary_by_source = {
+            item.source_reference: item.entry_id
+            for item in package.boundary_audit
+        }
+        observation_contract = tuple(
+            {
+                "observation_id": observation.observation_id.value,
+                "checklist_item_id": observation.checklist_item_id,
+                "kind": observation.kind.value,
+                "statement": observation.statement,
+                "required_evidence_entry_ids": [
+                    (
+                        support_by_source
+                        if disposition.outcome is ChecklistOutcome.SUPPORTED
+                        else boundary_by_source
+                    )[reference].value
+                    for reference in observation.evidence_references
+                ],
+            }
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
         body = {
             "original_question": original_question,
-            "question_understanding": understanding.model_view(),
-            "question_evidence_package": package.model_view(),
+            "material_observation_coverage_contract": {
+                "rewrite_mode": bool(rewrite_findings),
+                "required_exact_observation_ids": [
+                    item["observation_id"] for item in observation_contract
+                ],
+                "observations": observation_contract,
+                "each_observation_covered_exactly_once_in_default_body": True,
+                "claim_text_must_explicitly_state_every_linked_observation": True,
+                "claim_must_cite_every_required_evidence_entry": True,
+                "narrowing_one_unsafe_scope_must_preserve_every_safe_observation": True,
+            },
             "rewrite_findings": [
                 {
                     "finding_code": item.finding_code,
@@ -1051,6 +1109,8 @@ class EngineeringQuestionRoleInputBuilder:
                 }
                 for item in rewrite_findings
             ],
+            "question_understanding": understanding.model_view(),
+            "question_evidence_package": package.model_view(),
             "response_rule": (
                 "ONE_DIRECT_ANSWER_FIRST_THEN_USER_VISIBLE_PROCESS_IMPACT_"
                 "OPTIONAL_IMPLEMENTATION_EVIDENCE_AND_LIMITATION"
@@ -1161,7 +1221,12 @@ class EngineeringQuestionRoleInputBuilder:
                 "exceeded_boundary_disposition": (
                     EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY.value
                 ),
-                "exceeded_boundary_requires_returned_finding_code": True,
+                "omitted_material_effect_disposition": (
+                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT.value
+                ),
+                "non_passing_assessment_requires_returned_finding_code": True,
+                "finding_claim_id_must_be_one_of_challenge_claim_ids": True,
+                "shared_finding_code_allowed_only_when_its_claim_id_is_in_every_bound_challenge": True,
                 "comprehensive_review_requires_empty_assessments": True,
             },
             "original_question": original_question,

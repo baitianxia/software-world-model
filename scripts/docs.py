@@ -4654,6 +4654,10 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks",
         "reviewer_rewrite-finding-requires-current-package-entry-ids",
         "reviewer_missing-evidence-finding-requires-material-checklist-class-and-need",
+        "answer_rewrite_preserves_every-supported-material-observation",
+        "challenge_review_non-passing-disposition-requires-finding-on-exact-challenged-claim",
+        "challenge_review_shared-finding-code-requires-claim-in-every-bound-challenge",
+        "verification-successor-may-reuse-predecessor-support",
     ):
         if answer_protocol.get(field) is not True:
             errors.append(f"{label}: answer_protocol.{field} must be true")
@@ -4681,7 +4685,26 @@ def validate_engineering_qa_answer_protocol_execution_readiness(
         "reviewer_evidence_boundary_challenge_projection": (
             "cited-configuration-placeholders-plus-claim-status-literals-"
             "absent-from-cited-content-plus-mentioned-same-application-types-"
-            "without-mounted-implementation"
+            "without-mounted-implementation-plus-cited-full-content-java-entry-"
+            "material-effect-scans"
+        ),
+        "answer_material_observation_coverage_contract": (
+            "exact-id-statement-kind-checklist-and-required-evidence-entry-"
+            "table-before-large-role-inputs"
+        ),
+        "reviewer_full-content-material-effect-scan-unit": (
+            "each-cited-full-content-java-entry"
+        ),
+        "reviewer_full-content-material-effect-categories": (
+            "persistence-write,audit-write,cache-mutation,notification,"
+            "external-interaction"
+        ),
+        "challenge_review_disposition_vocabulary": (
+            "within-evidence-boundary,draft-exceeds-evidence-boundary,"
+            "draft-omits-material-effect"
+        ),
+        "package-material-effect-observation-omission-remediation": (
+            "successor-gap-delta-with-predecessor-support-reuse"
         ),
     }
     for field, expected in expected_structured_protocol_values.items():

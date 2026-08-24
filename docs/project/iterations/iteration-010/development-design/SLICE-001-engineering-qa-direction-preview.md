@@ -246,6 +246,9 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   checklist/observation 覆盖、每条 observation 默认可见、disposition/证据分区一致且 Claim 引用 observation 所需全部 Package entries；
   真实边界可直接回答 limitation。`USER_VISIBLE_EXPLANATION` 默认正文不展开实现证据，但流程阶段、结果、状态变化和副作用不能被归为可选
   实现详情。
+- Answer input 在原问题与大型 Understanding/Package 对象之前提供 exact material-observation coverage table，逐项列出 observation ID、
+  statement、kind、checklist 和 required evidence entry。初答与 rewrite 都必须在默认正文恰好覆盖每项；收窄一个越界推断不能删除同一
+  Claim 原先承载的其他安全 observation。
 - Reviewer 在另一个新上下文中读取原问题、理解记录、当前 Package 和 Draft，无 repo/Source/World Model tool、FS、Shell、network 或
   credential。它从原问题独立重建 material conclusions、列出 Application checklist omission；再检查完整 Package evidence，独立形成带
   evidence entry 的原子 observations，分别列出 Package 与默认 Draft omission，并给 direct answer、abstraction fit、material
@@ -256,12 +259,17 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   `INVESTIGATE_MISSING_EVIDENCE`，不可恢复失败使用 `REJECT_UNRECOVERABLE`；可信 Application 按固定优先级派生 action 与 versioned
   Verification Request。Reviewer 不能提出可执行 path/command/operation，也不能因 Draft 扩张了原问题不要求的细节而扩大调查。
 - 上述 finding-free Review 只是 `COMPREHENSIVE` provisional approval。Application 从当前 Package/Draft 投影 cited configuration
-  placeholder、Claim 中 cited content 未出现的 HTTP status literal、以及 Draft 提及但实现未挂载的 same-application type，随后使用另一个
-  fresh context 执行 `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、
-  caller/getter/import 与 DTO fields/wire property/handler output、上游 local state 与下游 status。每项 lead 具有 Application-owned 稳定
-  `challenge_id`；challenge 必须恰好逐项返回 evidence scope、Draft scope 与受控 disposition，越界项绑定同输出中作用于被挑战 Claim 的
-  Finding。Application 重算 exact ID 集合，Gateway 强制 focus 顺序；只有集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的
-  challenge 才可 Authorization。每题为 Answer + 双 Review 预留 3 calls，Review attempt 上限 4，hard 24-call fuse 不变。
+  placeholder、Claim 中 cited content 未出现的 HTTP status literal、Draft 提及但实现未挂载的 same-application type，以及每个被默认正文
+  Claim 引用的 full-content Java support entry 的独立 material-effect scan，随后使用另一个 fresh context 执行
+  `EVIDENCE_BOUNDARY_CHALLENGE`。lead 不自动判错，但 challenge 必须区分 placeholder/key 与 runtime value、caller/getter/import 与 DTO
+  fields/wire property/handler output、上游 local state 与下游 status，并逐 entry 检查 persistence/audit write、cache mutation、
+  notification 和 external interaction。每项 lead 具有 Application-owned 稳定 `challenge_id`；challenge 必须恰好逐项返回 evidence
+  scope、Draft scope 与 `WITHIN_EVIDENCE_BOUNDARY / DRAFT_EXCEEDS_EVIDENCE_BOUNDARY / DRAFT_OMITS_MATERIAL_EFFECT`。所有非 passing
+  assessment 都必须绑定同输出中作用于该 exact challenge Claim 的 Finding，只有 Claim 同时属于每个 challenge 时才允许复用 Finding
+  code。Application 重算 exact ID 集合，Gateway 强制 focus 顺序；只有集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的
+  challenge 才可 Authorization。Package 已有 observation 时的 Draft omission 走同包 rewrite；full entry 已证明但 sealed Package 缺少
+  observation 时走 successor gap delta，并允许复用 predecessor support。每题为 Answer + 双 Review 预留 3 calls，Review attempt 上限 4，
+  hard 24-call fuse 不变。
 - 合法 Request 启动独立 `Verification Investigation LLM`。它使用全新上下文，只读具体 gap、当前 Package 与 Ledger prefix，根据每步新
   Result 自适应提出 search/read/parse/finish；predecessor Package 已含的 full-content exact-source locators 与 gap 后 full reads 共同
   标记为 consumed，相应 locator 不再 eligible，旧 raw Result 不重新进入输入。当前 attempt 最近一次 Broker rejection 以受信控制状态
@@ -448,4 +456,14 @@ deterministic 与下一 clean/fresh live 待闭合，run-028 永久保持 Q1/Q3 
 1181/1176 exact historical hold 闭合上述 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍是冻结历史 hold，没有 ITER-010 新失败。
 下一步只能从新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw challenge assessment 独立复核；run-028
 不追认，Production 不执行。
+`FINDING-010-079` 记录 clean `e0ad3c8…` / run-029 的 0/3：Q1 被错误批准但遗漏完整 Service entry 中的登录审计持久化；Q2 的正确
+越界 rewrite 又丢掉另一个安全 observation，Application 失败关闭；Q3 的 assessment Finding code 存在但 Claim 不属于每个 exact
+challenge，Application 失败关闭。处置为逐 cited full-content Java entry 的 material-effect scan、`DRAFT_OMITS_MATERIAL_EFFECT`、
+Answer early exact observation coverage table，以及非 passing assessment 的 exact challenged-Claim binding。Strategy/Prompt/Review Schema
+为 `@22/@32/@7`，focused 79/79、Engineering QA 116/116 PASS；扩展 deterministic 与下一 clean/fresh live 待闭合。run-029 不追认，
+Production 不执行。
+`FINDING-010-080` 已以 docs 组合 149/149、历史 oracle 组合 81/81、current docs/compile/diff 与允许 AF_UNIX 的 full
+1182/1177 exact historical hold 闭合上述 deterministic Gate；raw 唯一 4 FAIL + 1 ERROR 仍是冻结历史 hold，没有 ITER-010 新失败。
+下一步只能从新 clean candidate 执行 fresh Conformance、持续三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立
+复核；run-029 不追认，Production 不执行。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

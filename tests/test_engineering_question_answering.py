@@ -15,6 +15,9 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringAnswerClaimProposal,
     EngineeringAnswerDraft,
     EngineeringAnswerProposal,
+    EngineeringEvidenceBoundaryAssessment,
+    EngineeringEvidenceBoundaryAssessmentDisposition,
+    EngineeringEvidenceBoundaryChallengeKind,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionRequest,
     EngineeringQuestionResourceLimits,
@@ -54,6 +57,7 @@ from software_world_model.application_services.engineering_question_answering im
     _eligible_locator_references,
     _merge_verification_checklist_dispositions,
     _verification_disposition_reference_eligibility,
+    project_evidence_boundary_challenges,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -433,6 +437,26 @@ class ReviewerRole:
     ):
         self.calls += 1
         self.focuses.append(review_focus)
+        boundary_assessments = ()
+        if review_focus is EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE:
+            boundary_assessments = tuple(
+                EngineeringEvidenceBoundaryAssessment.create(
+                    challenge_id=challenge.challenge_id,
+                    evidence_boundary=(
+                        "The complete cited entry contains no additional material "
+                        "effect beyond the Draft."
+                    ),
+                    draft_scope="The Draft stays within the complete cited entry.",
+                    disposition=(
+                        EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+                    ),
+                    finding_code=None,
+                )
+                for challenge in project_evidence_boundary_challenges(
+                    package=package,
+                    draft=draft,
+                )
+            )
         if self.request_more_evidence and self.calls == 1:
             finding = EngineeringReviewFinding.create(
                 finding_code="CONFIGURATION_EVIDENCE_MISSING",
@@ -473,6 +497,7 @@ class ReviewerRole:
             decision=EngineeringReviewDecision.APPROVED,
             quality_assessment=passing_quality(),
             checklist_assessment=matching_review_checklist(understanding, package),
+            evidence_boundary_assessments=boundary_assessments,
         )
 
 
@@ -1099,6 +1124,404 @@ class EngineeringQuestionAnsweringTests(unittest.TestCase):
                 for item in second.boundary_audit
             )
         )
+
+    def test_material_effect_scan_can_add_missing_observation_in_successor(self):
+        effect_statement = "The login helper persists an administrator login audit record."
+
+        class EffectUnderstandingRole:
+            def understand(self, *, request, role_context_id):
+                return QuestionUnderstandingProposal.create(
+                    role_context_id=role_context_id,
+                    request_digest=request.digest,
+                    preserved_original_question=request.original_question,
+                    user_goal="Trace the complete login flow and its material effects.",
+                    audience="maintainer",
+                    requested_abstraction_level=(
+                        AnswerDetailLevel.IMPLEMENTATION_DETAIL
+                    ),
+                    material_conclusions=(
+                        "Explain the login flow and every material effect.",
+                    ),
+                    evidence_needs=(
+                        "The complete implementation and its visible helper effects.",
+                    ),
+                    required_evidence_classes=(EngineeringEvidenceClass.SOURCE,),
+                    required_evidence_paths=("src/Service.java",),
+                    response_language=request.response_language,
+                )
+
+        class EffectInitialInvestigator:
+            def propose(self, investigation_input):
+                if investigation_input.step_index == 1:
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.SEARCH,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        query="login audit persistence",
+                    )
+                if investigation_input.step_index == 2:
+                    return step_proposal(
+                        investigation_input,
+                        operation=InvestigationOperation.READ,
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        locator_reference=(
+                            investigation_input.eligible_locator_references[0]
+                        ),
+                    )
+                evidence = (
+                    investigation_input.retrieval_results[-1].items[0].item_id.value
+                )
+                ledger = investigation_input.ledger
+                disposition = ChecklistDisposition.create(
+                    checklist_item_id="check-1",
+                    outcome=ChecklistOutcome.SUPPORTED,
+                    evidence_references=(evidence,),
+                    explanation="The implementation establishes the login stage.",
+                    material_observations=(
+                        MaterialObservation.create(
+                            checklist_item_id="check-1",
+                            kind=MaterialObservationKind.PROCESS_STAGE,
+                            statement="The service validates the administrator login.",
+                            evidence_references=(evidence,),
+                        ),
+                    ),
+                )
+                return InvestigationStepProposal.create(
+                    investigation_kind=InvestigationKind.INITIAL,
+                    attempt_id=investigation_input.attempt_id,
+                    role_context_id=investigation_input.role_context_id,
+                    request_digest=investigation_input.request.digest,
+                    step_index=investigation_input.step_index,
+                    ledger_id=ledger.ledger_id,
+                    ledger_generation=ledger.generation,
+                    ledger_revision=len(ledger.entries),
+                    ledger_prefix_digest=ledger.prefix_digest,
+                    operation=InvestigationOperation.FINISH,
+                    checklist_item_ids=("check-1",),
+                    basis_entry_ids=(ledger.entries[-1].entry_id,),
+                    unknown_to_reduce="The initial login evidence is dispositioned.",
+                    finish_dispositions=(disposition,),
+                )
+
+        class EffectVerificationInvestigator:
+            def propose(self, investigation_input):
+                evidence = next(
+                    item.source_reference
+                    for item in investigation_input.current_package.support_citation
+                    if item.locator == "src/Service.java"
+                )
+                ledger = investigation_input.ledger
+                disposition = ChecklistDisposition.create(
+                    checklist_item_id=(
+                        investigation_input.verification_request.checklist_item_id
+                    ),
+                    outcome=ChecklistOutcome.SUPPORTED,
+                    evidence_references=(evidence,),
+                    explanation=(
+                        "The retained full implementation supports both the flow "
+                        "and the previously omitted effect."
+                    ),
+                    material_observations=(
+                        MaterialObservation.create(
+                            checklist_item_id="check-1",
+                            kind=MaterialObservationKind.PROCESS_STAGE,
+                            statement="The service validates the administrator login.",
+                            evidence_references=(evidence,),
+                        ),
+                        MaterialObservation.create(
+                            checklist_item_id="check-1",
+                            kind=MaterialObservationKind.SIDE_EFFECT,
+                            statement=effect_statement,
+                            evidence_references=(evidence,),
+                        ),
+                    ),
+                )
+                return InvestigationStepProposal.create(
+                    investigation_kind=InvestigationKind.VERIFICATION,
+                    attempt_id=investigation_input.attempt_id,
+                    role_context_id=investigation_input.role_context_id,
+                    request_digest=(
+                        investigation_input.current_package.request_digest
+                    ),
+                    step_index=investigation_input.step_index,
+                    ledger_id=ledger.ledger_id,
+                    ledger_generation=ledger.generation,
+                    ledger_revision=len(ledger.entries),
+                    ledger_prefix_digest=ledger.prefix_digest,
+                    operation=InvestigationOperation.FINISH,
+                    checklist_item_ids=("check-1",),
+                    basis_entry_ids=(ledger.entries[-1].entry_id,),
+                    unknown_to_reduce=(
+                        "The missing material-effect observation is now explicit."
+                    ),
+                    finish_dispositions=(disposition,),
+                )
+
+        class EffectWorker:
+            content = """\
+class Service {
+  void login(String username) {
+    validate(username);
+    insertLoginLog(username);
+  }
+  void insertLoginLog(String username) {
+    loginLogMapper.insert(username);
+  }
+}
+"""
+
+            def execute(self, operation):
+                is_search = operation.operation is SourceReadOperation.SEARCH
+                item = RetrievalItem.create(
+                    operation_id=operation.operation_id,
+                    ordinal=1,
+                    evidence_class=operation.evidence_class,
+                    path="src/Service.java",
+                    line_start=1 if is_search else None,
+                    line_end=4 if is_search else None,
+                    content=self.content,
+                    modality=operation.result_modality,
+                    coverage_complete=not is_search,
+                )
+                return RetrievalResult.create(
+                    operation=operation,
+                    status=RetrievalStatus.COMPLETE,
+                    items=(item,),
+                    bytes_read=len(self.content.encode()),
+                    files_read=1,
+                    truncated=False,
+                    coverage={"complete": "true"},
+                )
+
+        class ObservationAnswerRole:
+            def generate(
+                self,
+                *,
+                original_question,
+                understanding,
+                package,
+                role_context_id,
+                rewrite_findings=(),
+            ):
+                observations = tuple(
+                    observation
+                    for disposition in package.checklist_dispositions
+                    for observation in disposition.material_observations
+                )
+                return EngineeringAnswerProposal.create(
+                    role_context_id=role_context_id,
+                    package_digest=package.digest,
+                    response_language=understanding.response_language,
+                    claims=(
+                        EngineeringAnswerClaimProposal.create(
+                            claim_id="claim-1",
+                            kind=AnswerClaimKind.AFFIRMATIVE,
+                            content_role=AnswerContentRole.DIRECT_ANSWER,
+                            checklist_item_ids=("check-1",),
+                            material_observation_ids=tuple(
+                                item.observation_id for item in observations
+                            ),
+                            text=" ".join(item.statement for item in observations),
+                            evidence_entry_ids=tuple(
+                                item.entry_id for item in package.support_citation
+                            ),
+                        ),
+                    ),
+                )
+
+        class EffectReviewer:
+            def __init__(self):
+                self.challenge_calls = 0
+
+            def review(
+                self,
+                *,
+                original_question,
+                understanding,
+                package,
+                draft,
+                role_context_id,
+                review_focus=EngineeringReviewFocus.COMPREHENSIVE,
+            ):
+                if review_focus is EngineeringReviewFocus.COMPREHENSIVE:
+                    return EngineeringReviewProposal.create(
+                        role_context_id=role_context_id,
+                        package_digest=package.digest,
+                        draft_digest=draft.digest,
+                        decision=EngineeringReviewDecision.APPROVED,
+                        quality_assessment=passing_quality(),
+                        checklist_assessment=matching_review_checklist(
+                            understanding,
+                            package,
+                        ),
+                    )
+                self.challenge_calls += 1
+                challenges = project_evidence_boundary_challenges(package, draft)
+                if self.challenge_calls == 1:
+                    effect_challenge = next(
+                        item
+                        for item in challenges
+                        if item.kind
+                        is EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
+                    )
+                    finding = EngineeringReviewFinding.create(
+                        finding_code="LOGIN_AUDIT_EFFECT_OBSERVATION_MISSING",
+                        checklist_item_id="check-1",
+                        claim_id=effect_challenge.claim_ids[0],
+                        description=(
+                            "The complete implementation persists a login audit "
+                            "record that the Package and Draft omit."
+                        ),
+                        remediation=(
+                            EngineeringReviewRemediation.INVESTIGATE_MISSING_EVIDENCE
+                        ),
+                        evidence_class=EngineeringEvidenceClass.SOURCE,
+                        evidence_need=(
+                            "A typed observation for the retained implementation's "
+                            "administrator login audit persistence"
+                        ),
+                    )
+                    assessments = tuple(
+                        EngineeringEvidenceBoundaryAssessment.create(
+                            challenge_id=item.challenge_id,
+                            evidence_boundary=(
+                                "The full implementation persists a login audit "
+                                "record through its visible helper."
+                                if item is effect_challenge
+                                else "The Draft stays within the cited evidence."
+                            ),
+                            draft_scope=(
+                                "The Draft omits that persistence effect."
+                                if item is effect_challenge
+                                else "The Draft stays within the cited evidence."
+                            ),
+                            disposition=(
+                                EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
+                                if item is effect_challenge
+                                else EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+                            ),
+                            finding_code=(
+                                finding.finding_code
+                                if item is effect_challenge
+                                else None
+                            ),
+                        )
+                        for item in challenges
+                    )
+                    base = matching_review_checklist(understanding, package)
+                    checklist = EngineeringReviewChecklistAssessment.create(
+                        independent_material_conclusions=(
+                            base.independent_material_conclusions
+                        ),
+                        application_checklist_omissions=(),
+                        independent_material_observations=(
+                            *base.independent_material_observations,
+                            EngineeringReviewMaterialObservation.create(
+                                checklist_item_id="check-1",
+                                kind=MaterialObservationKind.SIDE_EFFECT,
+                                statement=effect_statement,
+                                evidence_entry_ids=(
+                                    effect_challenge.package_entry_ids[0],
+                                ),
+                            ),
+                        ),
+                        application_material_observation_omissions=(
+                            effect_statement,
+                        ),
+                        draft_material_observation_omissions=(effect_statement,),
+                    )
+                    quality = EngineeringReviewQualityAssessment.create(
+                        direct_answer=EngineeringReviewQualityStatus.PASS,
+                        abstraction_fit=EngineeringReviewQualityStatus.PASS,
+                        material_completeness=EngineeringReviewQualityStatus.FAIL,
+                        claim_consistency=EngineeringReviewQualityStatus.PASS,
+                        implementation_detail_budget=(
+                            EngineeringReviewQualityStatus.PASS
+                        ),
+                    )
+                    return EngineeringReviewProposal.create_from_findings(
+                        role_context_id=role_context_id,
+                        package_digest=package.digest,
+                        draft_digest=draft.digest,
+                        quality_assessment=quality,
+                        checklist_assessment=checklist,
+                        evidence_boundary_assessments=assessments,
+                        findings=(finding,),
+                    )
+                return EngineeringReviewProposal.create(
+                    role_context_id=role_context_id,
+                    package_digest=package.digest,
+                    draft_digest=draft.digest,
+                    decision=EngineeringReviewDecision.APPROVED,
+                    quality_assessment=passing_quality(),
+                    checklist_assessment=matching_review_checklist(
+                        understanding,
+                        package,
+                    ),
+                    evidence_boundary_assessments=tuple(
+                        EngineeringEvidenceBoundaryAssessment.create(
+                            challenge_id=item.challenge_id,
+                            evidence_boundary=(
+                                "Every material effect in the full entry is now "
+                                "represented by a Package observation."
+                            ),
+                            draft_scope=(
+                                "The Draft states every Package material observation."
+                            ),
+                            disposition=(
+                                EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
+                            ),
+                            finding_code=None,
+                        )
+                        for item in challenges
+                    ),
+                )
+
+        reviewer = EffectReviewer()
+        service = EngineeringQuestionAnsweringService(
+            question_understanding_role=EffectUnderstandingRole(),
+            cognition_projector=CognitionProjector(),
+            initial_investigation_role=EffectInitialInvestigator(),
+            verification_investigation_role=EffectVerificationInvestigator(),
+            source_broker=SourceBroker(source_profile=source_profile()),
+            retrieval_worker=EffectWorker(),
+            answer_role=ObservationAnswerRole(),
+            reviewer_role=reviewer,
+        )
+
+        result = service.answer(request())
+
+        self.assertEqual(result.status, EngineeringQuestionResultStatus.APPROVED)
+        self.assertEqual(len(result.packages), 2)
+        first, second = result.packages
+        self.assertEqual(
+            len(first.checklist_dispositions[0].material_observations),
+            1,
+        )
+        successor_observations = (
+            second.checklist_dispositions[0].material_observations
+        )
+        self.assertEqual(len(successor_observations), 2)
+        self.assertIn(
+            effect_statement,
+            tuple(item.statement for item in successor_observations),
+        )
+        first_challenge_review = result.reviews[1]
+        self.assertEqual(
+            first_challenge_review.decision,
+            EngineeringReviewDecision.MORE_EVIDENCE_REQUIRED,
+        )
+        self.assertEqual(
+            first_challenge_review.evidence_boundary_assessments[0].disposition,
+            EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT,
+        )
+        self.assertEqual(
+            first_challenge_review.verification_request.evidence_class,
+            EngineeringEvidenceClass.SOURCE,
+        )
+        self.assertEqual(result.usage.verification_investigations, 1)
+        self.assertEqual(result.usage.source_operations, 2)
+        self.assertIn(effect_statement, result.authorized_answer.body)
 
     def test_verification_finish_delta_replaces_only_authorized_gap(self):
         package = self.service(request_more_evidence=False).answer(

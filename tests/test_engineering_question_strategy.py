@@ -536,6 +536,31 @@ class EngineeringQuestionRoleInputTests(unittest.TestCase):
             answer.body["question_evidence_package"]["package_digest"],
             package.digest.value,
         )
+        observation_contract = answer.body[
+            "material_observation_coverage_contract"
+        ]
+        expected_observation_ids = tuple(
+            observation.observation_id.value
+            for disposition in package.checklist_dispositions
+            for observation in disposition.material_observations
+        )
+        self.assertEqual(
+            observation_contract["required_exact_observation_ids"],
+            expected_observation_ids,
+        )
+        self.assertEqual(
+            tuple(
+                item["observation_id"]
+                for item in observation_contract["observations"]
+            ),
+            expected_observation_ids,
+        )
+        self.assertFalse(observation_contract["rewrite_mode"])
+        self.assertTrue(
+            observation_contract[
+                "narrowing_one_unsafe_scope_must_preserve_every_safe_observation"
+            ]
+        )
         self.assertEqual(review.body["draft"]["digest"], draft.digest.value)
         self.assertEqual(review.body["verified_gap_outcomes"], ())
         self.assertEqual(review.body["review_focus"], "COMPREHENSIVE")
@@ -667,19 +692,34 @@ class SecurityConfig {
                 "CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT",
                 "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
                 "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION",
+                "FULL_CONTENT_MATERIAL_EFFECT_SCAN",
             ],
         )
         self.assertEqual(projected[0]["configuration_keys"], ["jwt.tokenHeader"])
         self.assertEqual(projected[1]["literal"], "403")
         self.assertEqual(
-            [item["symbol"] for item in projected[2:]],
+            [item["symbol"] for item in projected[2:4]],
             ["AccessDeniedHandler", "LoginDto"],
         )
         self.assertEqual(
-            [item["qualified_types"] for item in projected[2:]],
+            [item["qualified_types"] for item in projected[2:4]],
             [
                 ["com.acme.security.AccessDeniedHandler"],
                 ["com.acme.security.LoginDto"],
+            ],
+        )
+        self.assertEqual(
+            projected[-1]["package_entry_id"],
+            entry.entry_id.value,
+        )
+        self.assertEqual(
+            projected[-1]["required_effect_categories"],
+            [
+                "PERSISTENCE_WRITE",
+                "AUDIT_WRITE",
+                "CACHE_MUTATION",
+                "NOTIFICATION",
+                "EXTERNAL_INTERACTION",
             ],
         )
         review = EngineeringQuestionRoleInputBuilder.review(
@@ -703,6 +743,11 @@ class SecurityConfig {
                 "required_challenge_ids"
             ],
             tuple(item["challenge_id"] for item in projected),
+        )
+        self.assertTrue(
+            review.body["evidence_boundary_assessment_contract"][
+                "finding_claim_id_must_be_one_of_challenge_claim_ids"
+            ]
         )
 
         missing_assessment_proposal = EngineeringReviewProposal.create(
@@ -767,13 +812,27 @@ class SecurityConfig {
             )
             for index, _ in enumerate(projected, start=1)
         )
+        rewrite_input = EngineeringQuestionRoleInputBuilder.answer(
+            original_question=self.result.request.original_question,
+            understanding=self.result.understanding,
+            package=challenged_package,
+            role_context_id=sid("role_context", "9"),
+            rewrite_findings=(findings[0],),
+        )
+        self.assertTrue(
+            rewrite_input.body["material_observation_coverage_contract"][
+                "rewrite_mode"
+            ]
+        )
         assessments = tuple(
             EngineeringEvidenceBoundaryAssessment.create(
                 challenge_id=StableId(item["challenge_id"]),
                 evidence_boundary="Only the cited visible relationship is supported.",
                 draft_scope="The Draft asserts a concrete value, type structure, or downstream output.",
                 disposition=(
-                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+                    EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_OMITS_MATERIAL_EFFECT
+                    if item["kind"] == "FULL_CONTENT_MATERIAL_EFFECT_SCAN"
+                    else EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
                 ),
                 finding_code=findings[index].finding_code,
             )
@@ -805,6 +864,51 @@ class SecurityConfig {
             {item["challenge_id"] for item in projected},
         )
         self.assertEqual(accepted.decision, EngineeringReviewDecision.REWRITE_REQUIRED)
+
+        second_claim = replace(claim, claim_id="claim-2")
+        two_claim_draft = replace(draft, claims=(claim, second_claim))
+        misbound_findings = (
+            EngineeringReviewFinding.create(
+                finding_code=findings[0].finding_code,
+                checklist_item_id=None,
+                claim_id="claim-2",
+                description=(
+                    "This Finding is deliberately bound to a different Draft Claim."
+                ),
+                remediation=(
+                    EngineeringReviewRemediation.REWRITE_WITH_EXISTING_EVIDENCE
+                ),
+                existing_evidence_entry_ids=(entry.entry_id,),
+            ),
+            *findings[1:],
+        )
+        misbound_proposal = EngineeringReviewProposal.create_from_findings(
+            role_context_id=sid("role_context", "d"),
+            package_digest=challenged_package.digest,
+            draft_digest=two_claim_draft.digest,
+            quality_assessment=fixtures.passing_quality(),
+            checklist_assessment=fixtures.matching_review_checklist(
+                self.result.understanding,
+                challenged_package,
+            ),
+            evidence_boundary_assessments=assessments,
+            findings=misbound_findings,
+        )
+        with self.assertRaises(DomainError) as misbound:
+            EngineeringAnswerReview.accept(
+                package=challenged_package,
+                draft=two_claim_draft,
+                understanding=self.result.understanding,
+                expected_role_context_id=sid("role_context", "d"),
+                proposal=misbound_proposal,
+                attempt=2,
+                focus=EngineeringReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            )
+        self.assertEqual(
+            misbound.exception.code,
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+        )
+        self.assertIn("challenged Claim", misbound.exception.message)
 
     def test_review_projects_terminal_verified_gap_outcome(self):
         package = self.result.current_package
@@ -1151,7 +1255,7 @@ class SecurityConfig {
         boundary_assessment_variants = review["properties"][
             "evidence_boundary_assessments"
         ]["items"]["anyOf"]
-        self.assertEqual(len(boundary_assessment_variants), 2)
+        self.assertEqual(len(boundary_assessment_variants), 3)
         self.assertEqual(
             {
                 item["properties"]["disposition"]["enum"][0]
@@ -1160,6 +1264,7 @@ class SecurityConfig {
             {
                 "WITHIN_EVIDENCE_BOUNDARY",
                 "DRAFT_EXCEEDS_EVIDENCE_BOUNDARY",
+                "DRAFT_OMITS_MATERIAL_EFFECT",
             },
         )
         self.assertEqual(

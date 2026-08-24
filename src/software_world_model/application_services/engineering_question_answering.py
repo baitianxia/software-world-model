@@ -306,11 +306,13 @@ class EngineeringEvidenceBoundaryChallengeKind(str, Enum):
     MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION = (
         "MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION"
     )
+    FULL_CONTENT_MATERIAL_EFFECT_SCAN = "FULL_CONTENT_MATERIAL_EFFECT_SCAN"
 
 
 class EngineeringEvidenceBoundaryAssessmentDisposition(str, Enum):
     WITHIN_EVIDENCE_BOUNDARY = "WITHIN_EVIDENCE_BOUNDARY"
     DRAFT_EXCEEDS_EVIDENCE_BOUNDARY = "DRAFT_EXCEEDS_EVIDENCE_BOUNDARY"
+    DRAFT_OMITS_MATERIAL_EFFECT = "DRAFT_OMITS_MATERIAL_EFFECT"
 
 
 _FINAL_ANSWER_ROLE_CALL_RESERVE = 3
@@ -4982,9 +4984,20 @@ class EngineeringEvidenceBoundaryChallenge:
             if symbol is not None
             else None
         )
-        if kind is EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE:
-            valid_shape = bool(keys) and normalized_literal is None and normalized_symbol is None and not types
-        elif kind is EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT:
+        if (
+            kind
+            is EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE
+        ):
+            valid_shape = (
+                bool(keys)
+                and normalized_literal is None
+                and normalized_symbol is None
+                and not types
+            )
+        elif (
+            kind
+            is EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT
+        ):
             valid_shape = (
                 len(normalized_claim_ids) == 1
                 and normalized_literal is not None
@@ -4992,13 +5005,29 @@ class EngineeringEvidenceBoundaryChallenge:
                 and normalized_symbol is None
                 and not types
             )
-        else:
+        elif (
+            kind
+            is EngineeringEvidenceBoundaryChallengeKind.MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION
+        ):
             valid_shape = (
                 normalized_symbol is not None
                 and bool(types)
                 and not keys
                 and normalized_literal is None
             )
+        elif (
+            kind
+            is EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
+        ):
+            valid_shape = (
+                len(entries) == 1
+                and not keys
+                and normalized_literal is None
+                and normalized_symbol is None
+                and not types
+            )
+        else:  # pragma: no cover - guarded by the closed Enum above
+            valid_shape = False
         if not valid_shape:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
@@ -5033,14 +5062,20 @@ class EngineeringEvidenceBoundaryChallenge:
             "kind": self.kind.value,
             "rule": self.rule,
         }
-        if self.kind is EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE:
+        if (
+            self.kind
+            is EngineeringEvidenceBoundaryChallengeKind.CONFIGURATION_PLACEHOLDER_WITHOUT_VALUE
+        ):
             return {
                 **common,
                 "package_entry_id": self.package_entry_ids[0].value,
                 "default_claim_ids": list(self.claim_ids),
                 "configuration_keys": list(self.configuration_keys),
             }
-        if self.kind is EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT:
+        if (
+            self.kind
+            is EngineeringEvidenceBoundaryChallengeKind.CONCRETE_HTTP_STATUS_ABSENT_FROM_CITED_CONTENT
+        ):
             return {
                 **common,
                 "claim_id": self.claim_ids[0],
@@ -5049,15 +5084,39 @@ class EngineeringEvidenceBoundaryChallenge:
                     item.value for item in self.package_entry_ids
                 ],
             }
-        return {
-            **common,
-            "symbol": self.symbol,
-            "qualified_types": list(self.qualified_types),
-            "default_claim_ids": list(self.claim_ids),
-            "importing_package_entry_ids": [
-                item.value for item in self.package_entry_ids
-            ],
-        }
+        if (
+            self.kind
+            is EngineeringEvidenceBoundaryChallengeKind.MENTIONED_APPLICATION_TYPE_WITHOUT_MOUNTED_IMPLEMENTATION
+        ):
+            return {
+                **common,
+                "symbol": self.symbol,
+                "qualified_types": list(self.qualified_types),
+                "default_claim_ids": list(self.claim_ids),
+                "importing_package_entry_ids": [
+                    item.value for item in self.package_entry_ids
+                ],
+            }
+        if (
+            self.kind
+            is EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
+        ):
+            return {
+                **common,
+                "package_entry_id": self.package_entry_ids[0].value,
+                "default_claim_ids": list(self.claim_ids),
+                "required_effect_categories": [
+                    "PERSISTENCE_WRITE",
+                    "AUDIT_WRITE",
+                    "CACHE_MUTATION",
+                    "NOTIFICATION",
+                    "EXTERNAL_INTERACTION",
+                ],
+            }
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Evidence-boundary challenge has an unknown closed kind",
+        )
 
 
 def project_evidence_boundary_challenges(
@@ -5183,6 +5242,24 @@ def project_evidence_boundary_challenges(
                 ),
             )
         )
+    for entry in package.support_citation:
+        claim_ids = cited_default_claim_ids_by_entry[entry.entry_id]
+        if not entry.locator.endswith(".java") or not claim_ids:
+            continue
+        challenges.append(
+            EngineeringEvidenceBoundaryChallenge.create(
+                kind=(
+                    EngineeringEvidenceBoundaryChallengeKind.FULL_CONTENT_MATERIAL_EFFECT_SCAN
+                ),
+                claim_ids=claim_ids,
+                package_entry_ids=(entry.entry_id,),
+                rule=(
+                    "SCAN_THE_COMPLETE_ENTRY_FOR_PERSISTENCE_AUDIT_CACHE_"
+                    "NOTIFICATION_AND_EXTERNAL_INTERACTION_EFFECTS_AND_"
+                    "REQUIRE_EVERY_MATERIAL_OMISSION_TO_BIND_A_FINDING"
+                ),
+            )
+        )
     return tuple(challenges)
 
 
@@ -5223,7 +5300,7 @@ class EngineeringEvidenceBoundaryAssessment:
             and normalized_finding_code is not None
         ) or (
             disposition
-            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+            is not EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
             and normalized_finding_code is None
         ):
             raise DomainError(
@@ -5846,13 +5923,13 @@ class EngineeringReviewProposal:
         finding_codes = {item.finding_code for item in finding_tuple}
         if any(
             item.disposition
-            is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+            is not EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
             and item.finding_code not in finding_codes
             for item in boundary_assessments
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "exceeded evidence-boundary assessment must bind a returned Finding",
+                "non-passing evidence-boundary assessment must bind a returned Finding",
             )
         expected_decision = _review_decision_from_findings(finding_tuple)
         expected_verification_request = _verification_request_from_findings(
@@ -6035,7 +6112,7 @@ class EngineeringAnswerReview:
         for assessment in proposal.evidence_boundary_assessments:
             if (
                 assessment.disposition
-                is EngineeringEvidenceBoundaryAssessmentDisposition.DRAFT_EXCEEDS_EVIDENCE_BOUNDARY
+                is not EngineeringEvidenceBoundaryAssessmentDisposition.WITHIN_EVIDENCE_BOUNDARY
             ):
                 challenge = expected_challenge_by_id[assessment.challenge_id]
                 if not any(
@@ -6045,7 +6122,7 @@ class EngineeringAnswerReview:
                 ):
                     raise DomainError(
                         ErrorCode.PROVIDER_RESPONSE_INVALID,
-                        "exceeded evidence-boundary assessment must bind a Finding on one challenged Claim",
+                        "non-passing evidence-boundary assessment must bind a Finding on one challenged Claim",
                     )
         for observation in proposal.checklist_assessment.independent_material_observations:
             if observation.checklist_item_id not in checklist_ids:

@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, FINDING-010-055, FINDING-010-056, FINDING-010-057, FINDING-010-058, FINDING-010-059, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, FINDING-010-073, FINDING-010-074, FINDING-010-075, FINDING-010-076, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, FINDING-010-055, FINDING-010-056, FINDING-010-057, FINDING-010-058, FINDING-010-059, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, FINDING-010-073, FINDING-010-074, FINDING-010-075, FINDING-010-076, FINDING-010-077, FINDING-010-078, FINDING-010-079, FINDING-010-080, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-25
@@ -91,11 +91,11 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / run-028 2 PASS + 1 FAIL / per-challenge deterministic Gate closed / fresh live pending** | clean `f832ceb…` / run-028 的 Q1/Q3 独立 PASS，Q2 虽保留具体配置值为未知，却仍把 caller getter 扩张为未挂载 DTO field/wire property；fresh challenge 收到 exact type lead 后仍复制断言并错误 `APPROVED`。`FINDING-010-077` 已为每项 lead 密封 stable `challenge_id`，要求逐项 evidence/Draft scope assessment、Application exact ID 集合重算与越界 Finding-on-challenged-Claim 绑定；Strategy/Prompt/Review Schema 为 `@21/@31/@6`。`FINDING-010-078` 已以 focused 78/78、Engineering QA 115/115、docs/oracle/full exact historical hold 闭合 deterministic Gate；新 clean/fresh live 尚待执行。`V-ANSWER-REWORK` 继续 blocking，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / Slice1 current development / run-029 0/3 PASS / corrective deterministic Gate closed / fresh live pending** | clean `e0ad3c8…` / run-029 的 Q1 错误批准并漏掉登录审计持久化；Q2 在正确边界 rewrite 后丢掉另一个安全 observation，Q3 的非 passing assessment Finding 错绑 Claim，两题由 Application 安全关闭，实际 0/3。`FINDING-010-079/080` 已增加逐 cited Java full-entry material-effect scan、exact rewrite observation table 和 exact challenged-Claim binding，并以 focused 79/79、Engineering QA 116/116、docs/oracle/full exact historical hold 闭合 deterministic Gate。Strategy/Prompt/Review Schema 为 `@22/@32/@7`；新 clean/fresh live 尚待执行。`V-ANSWER-REWORK` 继续 blocking，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
-| `local-browser` | Three non-fallback product identities | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面保持 Source-off 评测身份；Engineering QA 持续 Alpha 的 run-028 已完成同会话 live 但答案 Gate 为 2 PASS + 1 FAIL，三者不互相兜底 |
+| `local-browser` | Three non-fallback product identities | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面保持 Source-off 评测身份；Engineering QA 持续 Alpha 的 run-029 已完成同会话 live 但答案 Gate 为 0/3 PASS，三者不互相兜底 |
 | Production Activation | **NOT EXECUTED** | 不得由任何本机 PASS 自动推导 |
 
 精确产品边界见 [Iteration 006 Acceptance](iterations/iteration-006/results/acceptance.md)。原始 Provider、能力、产品和浏览器证据
@@ -353,6 +353,26 @@ Controller 的 `getUsername()/getPassword()` caller use 写成 `UmsAdminLoginPar
 `FINDING-010-078` 已以 Engineering QA 115/115、docs 组合 148/148、历史 oracle 组合 80/80、current docs/compile/diff 与允许
 AF_UNIX 的 full 1181/1176 exact historical hold 闭合 deterministic Gate；没有 ITER-010 新失败。下一步只能从新 clean candidate
 执行 fresh Conformance、持续 Browser 三题、Provider 前负测与 raw challenge assessment 独立复核；run-028 仍不追认，Production
+Activation 仍未执行。
+
+clean `e0ad3c8…` 的 run-029 fresh DeepSeek Conformance 2/2 PASS；同一持续 Browser 三题分别使用 9/11/8 次 dispatch，共 28 次，
+retry/switch/outcome-unknown 0。66,000-byte 输入在 Provider 前拒绝且调用数不变，private files、console clean、listener continuity 与
+Production `NOT_EXECUTED` 成立。Q1 `engineering_result_890ecfc…` 被错误 `APPROVED`，但完整 Service entry 中的
+`insertLoginLog` / `loginLogMapper.insert` 登录审计持久化仍被 Answer 和双 Review 漏掉。Q2 正确识别未挂载 DTO 扩张，rewrite 却丢掉
+另一个安全 observation，Application 失败关闭；Q3 正确识别 401/403 扩张，assessment Finding 的 Claim 却不属于每个 exact
+challenge，Application 失败关闭。因此 run-029 是 0/3 PASS，不因两项安全失败关闭而改写为通过。
+
+`FINDING-010-079` 已要求每个被默认正文引用的 cited full-content Java entry 独立执行 material-effect scan，新增
+`DRAFT_OMITS_MATERIAL_EFFECT`；Answer input 在大对象前投影 exact observation ID/statement/kind/checklist/evidence table，rewrite
+收窄一个推断时仍须保留其他安全 observation；所有非 passing assessment 都必须绑定 exact challenge Claim，Finding code 只有在同一 Claim
+属于每个 challenge 时才能复用。full entry 已证明但 sealed Package 缺 observation 时，通过 successor gap delta 复用 predecessor support
+补入原子 observation，再完整重答重审。Strategy/Prompt/Review Schema 为 `@22/@32/@7`，focused 79/79、Engineering QA 116/116 PASS；
+扩展 deterministic 与下一 clean/fresh live 尚待闭合，run-029 不追认，Production Activation 仍未执行。
+
+`FINDING-010-080` 已以 Engineering QA 116/116、docs 组合 149/149、历史 oracle 组合 81/81、current docs/compile/diff 与允许
+AF_UNIX 的 full 1182/1177 exact historical hold 闭合 deterministic Gate；默认 sandbox 额外 1 FAIL + 6 ERROR 精确属于 AF_UNIX
+权限噪声，raw 唯一 4 FAIL + 1 ERROR 仍是冻结 V-009/Codex hold，没有 ITER-010 新失败。下一步只能从新 clean candidate 执行 fresh
+Conformance、持续 Browser 三题、Provider 前负测与 raw Answer/Reviewer/challenge assessment 独立复核；run-029 不追认，Production
 Activation 仍未执行。
 
 以下内容是 `ITER-008` 的历史执行记录，用于追溯证据，不是当前开发指令。

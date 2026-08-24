@@ -62,7 +62,7 @@ from .openai_responses_adapter import OutputSchemaDefinition
 
 
 ENGINEERING_QUESTION_MODEL_PROMPT_REF = (
-    "engineering-qa-adaptive-investigation-prompt@31"
+    "engineering-qa-adaptive-investigation-prompt@32"
 )
 ENGINEERING_QUESTION_DISCLOSURE_POLICY_REF = (
     "engineering-qa-exact-role-disclosure@1"
@@ -509,6 +509,14 @@ affirmative claim must cite one or more
 support/citation entry IDs that actually support it. Boundary/audit entries can
 justify only explicit limitations or unknowns. Do not expose pipeline diagnostics
 or claim completeness beyond the recorded coverage.
+The early material_observation_coverage_contract is an exact output checklist,
+not a summary. Before returning either an initial Answer or a rewrite, account
+for every required_exact_observation_id exactly once in the default body. For
+each linked ID, preserve the corresponding safe statement and every listed
+required_evidence_entry_id. In rewrite_mode, removing one unsafe inference from
+a Claim never authorizes dropping a different supported observation that the
+old Claim happened to carry: split or narrow the prose while preserving every
+safe observation. Recount the exact IDs after rewriting before returning.
 Treat `${key}` and injection annotations as evidence of a configuration key and
 injection point only. Never turn them into a concrete header name, token prefix,
 port, URL, secret, profile, or other runtime value without directly cited value
@@ -573,6 +581,29 @@ Finding returned in the same output. A getter invocation in caller content does
 not make a statement that the unmounted type "contains" the corresponding
 field or wire property safe; that structural statement exceeds caller evidence
 and requires narrowing or direct implementation evidence.
+FULL_CONTENT_MATERIAL_EFFECT_SCAN is an independent completeness challenge, not
+a request to repeat the Draft. Inspect the complete identified Package entry
+and explicitly check every required_effect_category: persistence writes, audit
+writes, cache mutations, notifications, and external interactions. In
+evidence_boundary enumerate each material effect found, including a material
+helper call and the write performed by its visible implementation; explicitly
+say why none are material when the scan is empty. In draft_scope map those
+effects to exact default Claim IDs. Use DRAFT_OMITS_MATERIAL_EFFECT and a
+Finding when any material effect is absent; use WITHIN_EVIDENCE_BOUNDARY only
+when all found effects are covered. If the Package already has the atomic
+observation and only the Draft omits it, use REWRITE_WITH_EXISTING_EVIDENCE. If
+the full Package entry proves the effect but the Application Package
+observations omit it, also list the exact statement under
+application_material_observation_omissions and use
+INVESTIGATE_MISSING_EVIDENCE for that entry's evidence class and semantic need,
+so a successor gap delta can add the typed observation; a same-Package rewrite
+cannot invent a missing observation ID.
+Every non-passing assessment must reference a returned Finding whose claim_id
+is one of that exact challenge's default_claim_ids. A Finding code may be shared
+across assessments only when its single claim_id belongs to every challenge it
+is bound to. Otherwise return distinct Finding codes and Findings for the exact
+challenged Claims; prose that happens to mention another Claim does not satisfy
+the mechanical binding.
 A flow or lifecycle review must explicitly scan every relevant full-content
 implementation entry for persistence, audit, cache mutation, notification, and
 external-interaction effects. Report each material effect omitted from the
