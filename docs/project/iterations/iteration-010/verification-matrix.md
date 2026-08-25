@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098]
 code: []
 tests: []
 iteration: ITER-010
@@ -56,6 +56,19 @@ Agent/Conversation/Browser 与相邻旧 QA 定向组合实际 `48/48 PASS`，四
 没有 listener/browser、Provider/model、mall 源码/resources 或 Production 执行。因此这只把实现状态更新为
 `AGENT_EXECUTOR_LOCAL_CANDIDATE`；World Model/Source Broker/Worker、完整 Ledger/Citation、Provider driver/Reviewer、Disclosure/
 fallback、fixed launcher 与五轮 live Chat 仍未集成或资格化，下面所有 Chat/Quality/XD/Comparison/Preview verdict 保持不变。
+
+## Current local evidence-tool adapter evidence
+
+`FINDING-010-098` 在 executor 后复用现有 World Model projector、Source Broker 与 Local Git Retrieval Worker：一个工具动作可分别返回
+support/boundary Observation；每条 Observation 带 exact Turn/Tool/evidence Request/repository revision、可重算的完整 Ledger entry
+chain/prefix 与 Citation content digest。Source `search→read` 只能复制当前 Turn 已签发 opaque locator，raw path 与包含
+`src/main/resources` 的父 allowlist 都在 Worker 前拒绝。World Model fixture 同时产生 supported behavior 与 unknown boundary，分别进入
+Package 两个分区。
+
+新增 4 个 adapter 案例与 Agent/Conversation/Browser/旧 QA 相邻组合实际 `61/61 PASS`；Local Git 只读取测试生成的临时仓库。没有读取
+mall 源码/resources，没有 listener/browser、Provider/model、credential、外部网络或 Production Activation。因此状态只增加
+`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；Provider-backed Agent/Reviewer、Disclosure/fallback、Citation browser projection、fixed launcher 与
+五轮 mall Chat 仍未集成或资格化，下面所有 verdict 保持不变。
 
 ## Pre-freeze implementation evidence
 

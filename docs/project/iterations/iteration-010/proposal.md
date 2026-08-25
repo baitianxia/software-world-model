@@ -84,9 +84,11 @@ source-only、same-agent full World Model cognition + source、current Codex ext
 `CHAT_ACCESS_LOCAL_CANDIDATE`；其后一次 exact、零 Provider 的本机 listener/browser grant 已形成
 `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`，`V-ALPHA-ACCESS-001` 为 `PASS / access-only`。主 Agent、逐轮证据/审核和 Provider
 route 当时保持 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。`FINDING-010-097` 现已把 Application-owned bounded loop、跨 Turn Work
-State、Observation/Package、fresh Review Finding 与 Delivery binding 实现为 `AGENT_EXECUTOR_LOCAL_CANDIDATE`；真实 World Model/Source、
-完整 Ledger/Citation、Provider/Disclosure/fallback 和 launcher 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat
-仍须另行 clean freeze 和授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本规则全部继续有效。
+State、Observation/Package、fresh Review Finding 与 Delivery binding 实现为 `AGENT_EXECUTOR_LOCAL_CANDIDATE`；`FINDING-010-098` 又将
+现有 World Model projector、Source Broker/Worker 与可重算的逐 Turn Ledger/Citation receipt 接成 `EVIDENCE_TOOLS_LOCAL_CANDIDATE`。
+Provider-backed Agent/Reviewer、Disclosure/fallback、Citation browser projection 和 launcher 仍为
+`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和授权。PDR-003 的时间盒、根因、测试后置、
+Provider 和成本规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta
 

@@ -169,7 +169,15 @@ class RecordingResponseControl:
         )
 
 
-def _service(driver, *, tool=None, reviewer=None, response=None, limits=None):
+def _service(
+    driver,
+    *,
+    tool=None,
+    reviewer=None,
+    response=None,
+    limits=None,
+    require_receipts=False,
+):
     tool = tool or RecordingToolPort()
     reviewer = reviewer or ApprovingReviewer()
     response = response or RecordingResponseControl()
@@ -184,6 +192,7 @@ def _service(driver, *, tool=None, reviewer=None, response=None, limits=None):
             EngineeringAgentToolOperation.SOURCE_READ,
         ),
         limits=limits or EngineeringAgentLoopLimits(),
+        require_tool_authority_receipts=require_receipts,
         id_generator=SequentialIdGenerator(),
     )
     service = InMemoryEngineeringConversationService(
@@ -681,6 +690,34 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
         self.assertEqual(submission.turn.provider_dispatch_count, 1)
         self.assertEqual(submission.turn.delivery_state, "NOT_AUTHORIZED")
+        self.assertEqual(len(response.requests), 0)
+
+    def test_qualified_tool_mode_rejects_unreceipted_evidence(self) -> None:
+        class OneActionDriver:
+            def propose(self, invocation):
+                return _proposal(
+                    invocation,
+                    call_ref="agent-unreceipted-tool-1",
+                    phase=EngineeringAgentWorkPhase.INVESTIGATING,
+                    action=_action(
+                        EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                        query="trusted current state",
+                    ),
+                )
+
+        service, tool, _, response = _service(
+            OneActionDriver(), require_receipts=True
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="读取当前状态",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
+        self.assertEqual(len(tool.requests), 1)
         self.assertEqual(len(response.requests), 0)
 
     def test_source_operation_is_denied_when_binding_has_no_source_authority(self) -> None:

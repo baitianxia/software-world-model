@@ -44,8 +44,10 @@ FINDING-010-096` 已通过真实 fixed-command listener 和 in-app Browser 验�
 Provider dispatch 0，`V-ALPHA-ACCESS-001` 现为 `PASS / access-only`。下一动作只进入尚未实现/资格化的同一冻结五轮 Chat canary，不由
 Access PASS 推导 Agent、Provider、Chat 或 Quality PASS。`FINDING-010-097` 随后把下一纵切的 Application-owned bounded Agent executor、
 跨 Turn Work State、Observation/Package、fresh Review Finding 与 Delivery binding 闭合为 48/48 的本地确定性候选；它没有接入真实 World
-Model/Source/Provider、完整 Ledger/Citation 或 launcher，也没有执行五轮 canary，故下一动作收窄为 Adapter/wiring clean freeze，而不是
-追加 Access 或宣称 Chat PASS。
+Model/Source/Provider、完整 Ledger/Citation 或 launcher，也没有执行五轮 canary。`FINDING-010-098` 又以 temp Git 和确定性 model ports
+把现有 World Model projector、Source Broker/Worker、逐 Turn append-only Ledger prefix 与 Citation receipt 接成
+`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；它没有读取 mall 或执行 live。故下一动作进一步收窄为 Provider-backed Agent/Reviewer、Disclosure/
+failure receipt、fallback 与 launcher preflight/wiring clean freeze，而不是追加 Access 或宣称 Chat PASS。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为

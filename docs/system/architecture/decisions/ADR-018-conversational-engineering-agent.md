@@ -88,5 +88,7 @@ exact 代码、运行、对照与用户体验证据验证。
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的代码和运行证据继续作为可复用安全/证据资产和历史基线，但不能证明本 ADR 已实现。
 当前 Access scaffold 已通过真实浏览器验证。Application-owned 主工程 Agent bounded loop、跨 Turn Work State revision、closed-catalog
 工具 Proposal/Observation、双分区 Package、fresh Review Finding 回路和 exact Delivery binding 已形成
-`AGENT_EXECUTOR_LOCAL_CANDIDATE`；其证据仅来自确定性 fake ports。真实 World Model/Source Broker/Worker、完整 Ledger/Citation、
-Provider driver/Reviewer、Disclosure/fallback、产品 launcher wiring 与五轮 Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。
+`AGENT_EXECUTOR_LOCAL_CANDIDATE`；其 Agent/Reviewer 证据仅来自确定性 fake ports。trusted evidence-tool adapter 又复用现有 World Model
+projector 与 Source Broker/Worker，并把 support/boundary Observation、可重算的逐 Turn append-only Ledger prefix 和 Citation receipt 接成
+`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；该证据只来自确定性 World Model fixture 与临时 Git exact search/read。Provider-backed Agent/Reviewer、
+Disclosure/fallback、Citation browser projection、产品 launcher wiring 与五轮 Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。

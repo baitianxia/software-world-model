@@ -566,7 +566,8 @@ conversational_engineering_agent:
   access_execution_finding_ref: FINDING-010-096
   access_execution_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
   agent_executor_implementation_evidence_ref: FINDING-010-097
-  agent_execution_status: local-deterministic-candidate-adapters-not-integrated-not-qualified-not-live
+  evidence_tools_implementation_evidence_ref: FINDING-010-098
+  agent_execution_status: local-deterministic-agent-and-evidence-tools-candidates-provider-not-integrated-not-qualified-not-live
   status: implemented-not-qualified
 
 question_evidence_package_classes:
@@ -908,7 +909,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:7669377be17173c827d031d36692126c88daa308db02d862da4aee10288a4415
+  system_contract_set_digest: sha256:3be922091272d8b24b63d0b38df842a1fbe3b7f7ef14416db2455eaa916bface
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

@@ -197,6 +197,7 @@ from .engineering_conversation import (
 from .conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
     EngineeringAgentAnswerDraft,
+    EngineeringAgentCitation,
     EngineeringAgentClaimProposal,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentDeliveryRequest,
@@ -205,6 +206,7 @@ from .conversational_engineering_agent import (
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentEvidencePackage,
     EngineeringAgentInvocation,
+    EngineeringAgentLedgerEntryReceipt,
     EngineeringAgentLoopLimits,
     EngineeringAgentResponseControl,
     EngineeringAgentResponseKind,
@@ -215,6 +217,9 @@ from .conversational_engineering_agent import (
     EngineeringAgentReviewRequest,
     EngineeringAgentReviewer,
     EngineeringAgentToolActionProposal,
+    EngineeringAgentToolAuthorityKind,
+    EngineeringAgentToolAuthorityReceipt,
+    EngineeringAgentToolEvidence,
     EngineeringAgentToolObservation,
     EngineeringAgentToolOperation,
     EngineeringAgentToolPort,
@@ -223,6 +228,10 @@ from .conversational_engineering_agent import (
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkState,
     EngineeringAgentWorkStateProposal,
+)
+from .conversational_engineering_tools import (
+    EngineeringAgentEvidenceToolAdapter,
+    EngineeringAgentEvidenceToolConfiguration,
 )
 from .response_control import (
     AdapterDeliveryReceipt,

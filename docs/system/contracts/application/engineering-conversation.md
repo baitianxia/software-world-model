@@ -113,7 +113,9 @@ exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不�
 当前独立 Chat Access 已提供 Application-owned Conversation/Turn/Message、不可变 Revision、完整页面消息历史、“新对话”隔离与失败
 Turn 后 Conversation 继续，并已通过真实 browser Access Case。Application-owned bounded executor 也已在确定性 fake ports 上密封跨 Turn
 Work State revision、工具 Observation、support/boundary Package、Answer、fresh Review 与 Delivery Authorization；协议错绑、缺证后无新
-Observation 重写、无进展和资源熔断只关闭当前 Turn。状态为
-`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。真实 Context reducer、World Model/
-Source Broker/Worker、完整 Ledger/Citation、Provider/Disclosure/fallback 与产品 launcher 尚未闭合；旧
+Observation 重写、无进展和资源熔断只关闭当前 Turn。trusted evidence-tool adapter 已复用现有 World Model projector、Source Broker 与
+Retrieval Worker；同一动作可分别密封 support/boundary，每条 Observation 携带 exact Turn/Tool/revision、Application 可重算的完整
+append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 只接受本 Turn 先前签发的 opaque locator。状态为
+`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / NOT_QUALIFIED / NOT_LIVE`。真实 Provider-backed
+Context reducer/Agent/Reviewer、Disclosure/fallback、Citation browser projection 与产品 launcher 尚未闭合；旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

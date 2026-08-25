@@ -21,6 +21,7 @@ from software_world_model.cross_cutting import (
     Revision,
     StableId,
     Uuid4IdGenerator,
+    canonical_json_bytes,
     digest_of,
 )
 
@@ -43,6 +44,11 @@ class EngineeringAgentToolOperation(str, Enum):
 class EngineeringAgentEvidenceDisposition(str, Enum):
     SUPPORT = "SUPPORT"
     BOUNDARY = "BOUNDARY"
+
+
+class EngineeringAgentToolAuthorityKind(str, Enum):
+    WORLD_MODEL = "WORLD_MODEL"
+    SOURCE = "SOURCE"
 
 
 class EngineeringAgentResponseKind(str, Enum):
@@ -427,17 +433,317 @@ class EngineeringAgentToolRequest:
     turn_request_digest: Digest
     binding_digest: Digest
     work_state_digest: Digest
+    turn_request: EngineeringTurnExecutionRequest
     action: EngineeringAgentToolActionProposal
     digest: Digest
 
 
 @dataclass(frozen=True, slots=True)
-class EngineeringAgentToolResult:
+class EngineeringAgentCitation:
+    citation_ref: str
+    evidence_class: str
+    source_revision: str
+    locator: str
+    modality: str
+    content_digest: Digest
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        citation_ref: str,
+        evidence_class: str,
+        source_revision: str,
+        locator: str,
+        modality: str,
+        content_digest: Digest,
+    ) -> "EngineeringAgentCitation":
+        core = {
+            "schema": "ENGINEERING_AGENT_CITATION@1",
+            "citation_ref": _text(citation_ref, "Citation reference"),
+            "evidence_class": _text(evidence_class, "Citation evidence class"),
+            "source_revision": _repository_revision(source_revision),
+            "locator": _bounded_text(
+                locator, "Citation locator", maximum_bytes=4_096
+            ),
+            "modality": _text(modality, "Citation modality"),
+            "content_digest": content_digest.value,
+        }
+        return cls(
+            citation_ref=core["citation_ref"],
+            evidence_class=core["evidence_class"],
+            source_revision=core["source_revision"],
+            locator=core["locator"],
+            modality=core["modality"],
+            content_digest=content_digest,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentLedgerEntryReceipt:
+    sequence: int
+    kind: str
+    subject_ref: str
+    subject_digest: Digest
+    references: tuple[str, ...]
+    details: tuple[tuple[str, str], ...]
+    previous_entry_digest: Digest | None
+    source_entry_digest: Digest
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        sequence: int,
+        kind: str,
+        subject_ref: str,
+        subject_digest: Digest,
+        references: Sequence[str],
+        details: Sequence[tuple[str, str]],
+        previous_entry_digest: Digest | None,
+        source_entry_digest: Digest,
+    ) -> "EngineeringAgentLedgerEntryReceipt":
+        if type(sequence) is not int or sequence < 1:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ledger receipt sequence must be a positive integer",
+            )
+        normalized_references = tuple(
+            _text(item, "Ledger receipt reference") for item in references
+        )
+        if len(normalized_references) != len(set(normalized_references)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ledger receipt references must be unique",
+            )
+        normalized_details = tuple(
+            sorted(
+                (
+                    _text(key, "Ledger receipt detail key"),
+                    _bounded_text(
+                        value,
+                        "Ledger receipt detail value",
+                        maximum_bytes=8_192,
+                    ),
+                )
+                for key, value in details
+            )
+        )
+        if len({key for key, _ in normalized_details}) != len(normalized_details):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ledger receipt detail keys must be unique",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_LEDGER_ENTRY_RECEIPT@1",
+            "sequence": sequence,
+            "kind": _text(kind, "Ledger receipt kind"),
+            "subject_ref": _text(subject_ref, "Ledger receipt subject"),
+            "subject_digest": subject_digest.value,
+            "references": normalized_references,
+            "details": normalized_details,
+            "previous_entry_digest": (
+                previous_entry_digest.value
+                if previous_entry_digest is not None
+                else None
+            ),
+            "source_entry_digest": source_entry_digest.value,
+        }
+        return cls(
+            sequence=sequence,
+            kind=core["kind"],
+            subject_ref=core["subject_ref"],
+            subject_digest=subject_digest,
+            references=normalized_references,
+            details=normalized_details,
+            previous_entry_digest=previous_entry_digest,
+            source_entry_digest=source_entry_digest,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentToolAuthorityReceipt:
+    authority_kind: EngineeringAgentToolAuthorityKind
+    turn_request_digest: Digest
     tool_request_digest: Digest
+    evidence_request_digest: Digest
+    repository_revision: str
+    evidence_digest: Digest
+    ledger_ref: str
+    ledger_generation: int
+    ledger_parent_seal_digest: Digest | None
+    ledger_prefix_digest: Digest
+    ledger_entries: tuple[EngineeringAgentLedgerEntryReceipt, ...]
+    citations: tuple[EngineeringAgentCitation, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        authority_kind: EngineeringAgentToolAuthorityKind,
+        turn_request_digest: Digest,
+        tool_request_digest: Digest,
+        evidence_request_digest: Digest,
+        repository_revision: str,
+        evidence_digest: Digest,
+        ledger_ref: str,
+        ledger_generation: int,
+        ledger_parent_seal_digest: Digest | None,
+        ledger_prefix_digest: Digest,
+        ledger_entries: Sequence[EngineeringAgentLedgerEntryReceipt],
+        citations: Sequence[EngineeringAgentCitation] = (),
+    ) -> "EngineeringAgentToolAuthorityReceipt":
+        if not isinstance(authority_kind, EngineeringAgentToolAuthorityKind):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool authority receipt kind is invalid",
+            )
+        if (
+            type(ledger_generation) is not int
+            or ledger_generation < 1
+            or (ledger_generation == 1) != (ledger_parent_seal_digest is None)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool authority Ledger generation and parent seal are invalid",
+            )
+        ledger_ref = _text(ledger_ref, "tool authority Ledger reference")
+        try:
+            StableId(ledger_ref)
+        except ValueError as exc:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool authority Ledger reference must be a stable ID",
+            ) from exc
+        entries = tuple(ledger_entries)
+        previous: Digest | None = None
+        for sequence, entry in enumerate(entries, 1):
+            expected = EngineeringAgentLedgerEntryReceipt.create(
+                sequence=entry.sequence,
+                kind=entry.kind,
+                subject_ref=entry.subject_ref,
+                subject_digest=entry.subject_digest,
+                references=entry.references,
+                details=entry.details,
+                previous_entry_digest=entry.previous_entry_digest,
+                source_entry_digest=entry.source_entry_digest,
+            )
+            source_entry_core = {
+                "ledger_id": ledger_ref,
+                "sequence": entry.sequence,
+                "kind": entry.kind,
+                "subject_id": entry.subject_ref,
+                "subject_digest": entry.subject_digest.value,
+                "references": entry.references,
+                "details": entry.details,
+                "previous_entry_digest": (
+                    entry.previous_entry_digest.value
+                    if entry.previous_entry_digest is not None
+                    else None
+                ),
+            }
+            if (
+                entry != expected
+                or entry.sequence != sequence
+                or entry.previous_entry_digest != previous
+                or entry.source_entry_digest
+                != digest_of(["EVIDENCE_LEDGER_ENTRY@1", source_entry_core])
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "tool authority Ledger receipt chain is invalid",
+                )
+            previous = entry.source_entry_digest
+        normalized_citations = tuple(citations)
+        for citation in normalized_citations:
+            expected_citation = EngineeringAgentCitation.create(
+                citation_ref=citation.citation_ref,
+                evidence_class=citation.evidence_class,
+                source_revision=citation.source_revision,
+                locator=citation.locator,
+                modality=citation.modality,
+                content_digest=citation.content_digest,
+            )
+            if citation != expected_citation:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "tool authority Citation identity is invalid",
+                )
+        citation_refs = tuple(item.citation_ref for item in normalized_citations)
+        if len(citation_refs) != len(set(citation_refs)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool authority Citation references must be unique",
+            )
+        expected_prefix_digest = digest_of(
+            [
+                "EVIDENCE_LEDGER_PREFIX@1",
+                ledger_ref,
+                evidence_request_digest.value,
+                ledger_generation,
+                (
+                    ledger_parent_seal_digest.value
+                    if ledger_parent_seal_digest is not None
+                    else None
+                ),
+                tuple(item.source_entry_digest.value for item in entries),
+            ]
+        )
+        if ledger_prefix_digest != expected_prefix_digest:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "tool authority Ledger prefix digest is invalid",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_TOOL_AUTHORITY_RECEIPT@1",
+            "authority_kind": authority_kind.value,
+            "turn_request_digest": turn_request_digest.value,
+            "tool_request_digest": tool_request_digest.value,
+            "evidence_request_digest": evidence_request_digest.value,
+            "repository_revision": _repository_revision(repository_revision),
+            "evidence_digest": evidence_digest.value,
+            "ledger_ref": ledger_ref,
+            "ledger_generation": ledger_generation,
+            "ledger_parent_seal_digest": (
+                ledger_parent_seal_digest.value
+                if ledger_parent_seal_digest is not None
+                else None
+            ),
+            "ledger_prefix_digest": ledger_prefix_digest.value,
+            "ledger_entries": tuple(item.digest.value for item in entries),
+            "citations": tuple(item.digest.value for item in normalized_citations),
+        }
+        return cls(
+            authority_kind=authority_kind,
+            turn_request_digest=turn_request_digest,
+            tool_request_digest=tool_request_digest,
+            evidence_request_digest=evidence_request_digest,
+            repository_revision=core["repository_revision"],
+            evidence_digest=evidence_digest,
+            ledger_ref=core["ledger_ref"],
+            ledger_generation=ledger_generation,
+            ledger_parent_seal_digest=ledger_parent_seal_digest,
+            ledger_prefix_digest=ledger_prefix_digest,
+            ledger_entries=entries,
+            citations=normalized_citations,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentToolEvidence:
     result_ref: str
     content: str
     disposition: EngineeringAgentEvidenceDisposition
     progress: bool
+    citation_refs: tuple[str, ...]
+    authority_receipt: EngineeringAgentToolAuthorityReceipt | None
+    digest: Digest
 
     @classmethod
     def create(
@@ -448,7 +754,9 @@ class EngineeringAgentToolResult:
         content: str,
         disposition: EngineeringAgentEvidenceDisposition,
         progress: bool,
-    ) -> "EngineeringAgentToolResult":
+        citation_refs: Sequence[str] = (),
+        authority_receipt: EngineeringAgentToolAuthorityReceipt | None = None,
+    ) -> "EngineeringAgentToolEvidence":
         if not isinstance(disposition, EngineeringAgentEvidenceDisposition):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
@@ -459,12 +767,150 @@ class EngineeringAgentToolResult:
                 ErrorCode.INVALID_ARGUMENT,
                 "tool progress must be a boolean",
             )
+        citations = tuple(
+            _text(item, "tool evidence Citation reference")
+            for item in citation_refs
+        )
+        if len(citations) != len(set(citations)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool evidence Citation references must be unique",
+            )
+        if authority_receipt is not None:
+            expected_receipt = EngineeringAgentToolAuthorityReceipt.create(
+                authority_kind=authority_receipt.authority_kind,
+                turn_request_digest=authority_receipt.turn_request_digest,
+                tool_request_digest=authority_receipt.tool_request_digest,
+                evidence_request_digest=authority_receipt.evidence_request_digest,
+                repository_revision=authority_receipt.repository_revision,
+                evidence_digest=authority_receipt.evidence_digest,
+                ledger_ref=authority_receipt.ledger_ref,
+                ledger_generation=authority_receipt.ledger_generation,
+                ledger_parent_seal_digest=(
+                    authority_receipt.ledger_parent_seal_digest
+                ),
+                ledger_prefix_digest=authority_receipt.ledger_prefix_digest,
+                ledger_entries=authority_receipt.ledger_entries,
+                citations=authority_receipt.citations,
+            )
+            available = {item.citation_ref for item in authority_receipt.citations}
+            if (
+                authority_receipt != expected_receipt
+                or authority_receipt.tool_request_digest != tool_request_digest
+                or not set(citations).issubset(available)
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "tool evidence authority receipt or Citation binding is invalid",
+                )
+        elif citations:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "tool evidence Citations require an authority receipt",
+            )
+        result_ref = _text(result_ref, "tool result reference")
+        content = _observation_text(content)
+        core = {
+            "schema": "ENGINEERING_AGENT_TOOL_EVIDENCE@1",
+            "tool_request_digest": tool_request_digest.value,
+            "result_ref": result_ref,
+            "content": content,
+            "disposition": disposition.value,
+            "progress": progress,
+            "citation_refs": citations,
+            "authority_receipt_digest": (
+                authority_receipt.digest.value
+                if authority_receipt is not None
+                else None
+            ),
+        }
         return cls(
-            tool_request_digest=tool_request_digest,
-            result_ref=_text(result_ref, "tool result reference"),
-            content=_observation_text(content),
+            result_ref=result_ref,
+            content=content,
             disposition=disposition,
             progress=progress,
+            citation_refs=citations,
+            authority_receipt=authority_receipt,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentToolResult:
+    tool_request_digest: Digest
+    evidence: tuple[EngineeringAgentToolEvidence, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        tool_request_digest: Digest,
+        result_ref: str,
+        content: str,
+        disposition: EngineeringAgentEvidenceDisposition,
+        progress: bool,
+        citation_refs: Sequence[str] = (),
+        authority_receipt: EngineeringAgentToolAuthorityReceipt | None = None,
+    ) -> "EngineeringAgentToolResult":
+        return cls.create_many(
+            tool_request_digest=tool_request_digest,
+            evidence=(
+                EngineeringAgentToolEvidence.create(
+                    tool_request_digest=tool_request_digest,
+                    result_ref=result_ref,
+                    content=content,
+                    disposition=disposition,
+                    progress=progress,
+                    citation_refs=citation_refs,
+                    authority_receipt=authority_receipt,
+                ),
+            ),
+        )
+
+    @classmethod
+    def create_many(
+        cls,
+        *,
+        tool_request_digest: Digest,
+        evidence: Sequence[EngineeringAgentToolEvidence],
+    ) -> "EngineeringAgentToolResult":
+        normalized = tuple(evidence)
+        if not normalized:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "a tool result requires at least one evidence observation",
+            )
+        for item in normalized:
+            expected = EngineeringAgentToolEvidence.create(
+                tool_request_digest=tool_request_digest,
+                result_ref=item.result_ref,
+                content=item.content,
+                disposition=item.disposition,
+                progress=item.progress,
+                citation_refs=item.citation_refs,
+                authority_receipt=item.authority_receipt,
+            )
+            if item != expected:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "tool evidence identity is invalid",
+                )
+        references = tuple(item.result_ref for item in normalized)
+        if len(references) != len(set(references)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool evidence result references must be unique",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_TOOL_RESULT@2",
+            "tool_request_digest": tool_request_digest.value,
+            "evidence": tuple(item.digest.value for item in normalized),
+        }
+        return cls(
+            tool_request_digest=tool_request_digest,
+            evidence=normalized,
+            digest=digest_of(core),
         )
 
 
@@ -483,6 +929,9 @@ class EngineeringAgentToolObservation:
     content: str
     disposition: EngineeringAgentEvidenceDisposition
     progress: bool
+    citation_refs: tuple[str, ...]
+    authority_receipt: EngineeringAgentToolAuthorityReceipt | None
+    tool_evidence_digest: Digest
     digest: Digest
 
 
@@ -639,6 +1088,7 @@ class EngineeringAgentLoopLimits:
     maximum_tool_actions: int = 8
     maximum_reviews: int = 3
     maximum_consecutive_no_progress: int = 2
+    maximum_evidence_package_bytes: int = 4_194_304
 
     def __post_init__(self) -> None:
         for label, value in (
@@ -646,6 +1096,7 @@ class EngineeringAgentLoopLimits:
             ("maximum tool actions", self.maximum_tool_actions),
             ("maximum Reviews", self.maximum_reviews),
             ("maximum consecutive no-progress observations", self.maximum_consecutive_no_progress),
+            ("maximum evidence Package bytes", self.maximum_evidence_package_bytes),
         ):
             if type(value) is not int or value < 1:
                 raise DomainError(
@@ -678,6 +1129,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         response_control: EngineeringAgentResponseControl,
         available_operations: Sequence[EngineeringAgentToolOperation],
         limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
+        require_tool_authority_receipts: bool = False,
         id_generator: IdGenerator | None = None,
     ) -> None:
         operations = tuple(available_operations)
@@ -689,12 +1141,18 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.INVALID_ARGUMENT,
                 "Agent executor requires a unique non-empty closed tool catalog",
             )
+        if type(require_tool_authority_receipts) is not bool:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "tool authority receipt requirement must be a boolean",
+            )
         self._driver = driver
         self._tool_port = tool_port
         self._reviewer = reviewer
         self._response_control = response_control
         self._available_operations = operations
         self._limits = limits
+        self._require_tool_authority_receipts = require_tool_authority_receipts
         self._id_generator = id_generator or Uuid4IdGenerator()
         self._id_lock = Lock()
         self._model_call_lock = Lock()
@@ -791,14 +1249,17 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         provider_dispatch_count=audit.provider_dispatch_count,
                         failure_code="AGENT_TOOL_LIMIT_REACHED",
                     )
-                observation = self._execute_tool(
+                observation_batch = self._execute_tool(
                     request=request,
                     work_state=work_state,
                     action=proposal.action,
+                    prior_observations=observations,
                 )
-                observations = (*observations, observation)
+                observations = (*observations, *observation_batch)
                 consecutive_no_progress = (
-                    0 if observation.progress else consecutive_no_progress + 1
+                    0
+                    if any(item.progress for item in observation_batch)
+                    else consecutive_no_progress + 1
                 )
                 if (
                     consecutive_no_progress
@@ -1084,7 +1545,8 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         request: EngineeringTurnExecutionRequest,
         work_state: EngineeringAgentWorkState,
         action: EngineeringAgentToolActionProposal,
-    ) -> EngineeringAgentToolObservation:
+        prior_observations: tuple[EngineeringAgentToolObservation, ...],
+    ) -> tuple[EngineeringAgentToolObservation, ...]:
         if action.operation not in self._available_operations:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
@@ -1117,6 +1579,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             turn_request_digest=request.request_digest,
             binding_digest=request.binding.digest,
             work_state_digest=work_state.digest,
+            turn_request=request,
             action=action,
             digest=digest_of(core),
         )
@@ -1126,42 +1589,132 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Agent tool port returned an untyped result",
             )
-        if (
-            not isinstance(result.disposition, EngineeringAgentEvidenceDisposition)
-            or type(result.progress) is not bool
-        ):
-            raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Agent tool result violates the evidence disposition contract",
-            )
-        _text(result.result_ref, "tool result reference")
-        _observation_text(result.content)
         if result.tool_request_digest != tool_request.digest:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "tool result is bound to a different request",
             )
-        observation_id = self._new_id("agent_observation")
-        observation_core = {
-            "schema": "ENGINEERING_AGENT_TOOL_OBSERVATION@1",
-            "observation_id": observation_id.value,
-            "tool_request_id": tool_request_id.value,
-            "operation": action.operation.value,
-            "result_ref": result.result_ref,
-            "content": result.content,
-            "disposition": result.disposition.value,
-            "progress": result.progress,
-        }
-        return EngineeringAgentToolObservation(
-            observation_id=observation_id,
-            tool_request_id=tool_request_id,
-            operation=action.operation,
-            result_ref=result.result_ref,
-            content=result.content,
-            disposition=result.disposition,
-            progress=result.progress,
-            digest=digest_of(observation_core),
+        expected_result = EngineeringAgentToolResult.create_many(
+            tool_request_digest=result.tool_request_digest,
+            evidence=result.evidence,
         )
+        if result != expected_result:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Agent tool result identity is invalid",
+            )
+        receipts = tuple(
+            item.authority_receipt
+            for item in result.evidence
+            if item.authority_receipt is not None
+        )
+        if self._require_tool_authority_receipts and len(receipts) != len(
+            result.evidence
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "qualified Agent tools require an authority receipt for every evidence observation",
+            )
+        if receipts:
+            first_receipt = receipts[0]
+            if len(receipts) != len(result.evidence) or any(
+                receipt != first_receipt for receipt in receipts[1:]
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "one tool result cannot mix authority receipts or unreceipted evidence",
+                )
+            self._validate_tool_authority_receipt(
+                request=request,
+                tool_request=tool_request,
+                receipt=first_receipt,
+                prior_observations=prior_observations,
+            )
+        observations: list[EngineeringAgentToolObservation] = []
+        for evidence in result.evidence:
+            observation_id = self._new_id("agent_observation")
+            observation_core = {
+                "schema": "ENGINEERING_AGENT_TOOL_OBSERVATION@2",
+                "observation_id": observation_id.value,
+                "tool_request_id": tool_request_id.value,
+                "operation": action.operation.value,
+                "result_ref": evidence.result_ref,
+                "content": evidence.content,
+                "disposition": evidence.disposition.value,
+                "progress": evidence.progress,
+                "citation_refs": evidence.citation_refs,
+                "authority_receipt_digest": (
+                    evidence.authority_receipt.digest.value
+                    if evidence.authority_receipt is not None
+                    else None
+                ),
+                "tool_evidence_digest": evidence.digest.value,
+            }
+            observations.append(
+                EngineeringAgentToolObservation(
+                    observation_id=observation_id,
+                    tool_request_id=tool_request_id,
+                    operation=action.operation,
+                    result_ref=evidence.result_ref,
+                    content=evidence.content,
+                    disposition=evidence.disposition,
+                    progress=evidence.progress,
+                    citation_refs=evidence.citation_refs,
+                    authority_receipt=evidence.authority_receipt,
+                    tool_evidence_digest=evidence.digest,
+                    digest=digest_of(observation_core),
+                )
+            )
+        return tuple(observations)
+
+    @staticmethod
+    def _validate_tool_authority_receipt(
+        *,
+        request: EngineeringTurnExecutionRequest,
+        tool_request: EngineeringAgentToolRequest,
+        receipt: EngineeringAgentToolAuthorityReceipt,
+        prior_observations: tuple[EngineeringAgentToolObservation, ...],
+    ) -> None:
+        expected_authority_kind = (
+            EngineeringAgentToolAuthorityKind.WORLD_MODEL
+            if tool_request.action.operation
+            is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+            else EngineeringAgentToolAuthorityKind.SOURCE
+        )
+        if (
+            receipt.turn_request_digest != request.request_digest
+            or receipt.tool_request_digest != tool_request.digest
+            or receipt.repository_revision
+            != request.binding.repository_revision
+            or receipt.authority_kind is not expected_authority_kind
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "tool authority receipt is bound to another Turn or revision",
+            )
+        prior_receipts = tuple(
+            item.authority_receipt
+            for item in prior_observations
+            if item.authority_receipt is not None
+        )
+        if not prior_receipts:
+            return
+        previous = prior_receipts[-1]
+        if (
+            receipt.ledger_ref != previous.ledger_ref
+            or receipt.ledger_generation != previous.ledger_generation
+            or receipt.ledger_parent_seal_digest
+            != previous.ledger_parent_seal_digest
+            or receipt.evidence_request_digest
+            != previous.evidence_request_digest
+            or len(receipt.ledger_entries) < len(previous.ledger_entries)
+            or receipt.ledger_entries[: len(previous.ledger_entries)]
+            != previous.ledger_entries
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "tool authority Ledger snapshot does not extend the current Turn prefix",
+            )
 
     def _seal_package(
         self,
@@ -1193,6 +1746,22 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 (item.observation_id.value, item.digest.value) for item in boundary
             ),
         }
+        if (
+            len(
+                canonical_json_bytes(
+                    {
+                        "identity": core,
+                        "support_observations": support,
+                        "boundary_observations": boundary,
+                    }
+                )
+            )
+            > self._limits.maximum_evidence_package_bytes
+        ):
+            raise DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "Agent evidence Package byte fuse is exhausted",
+            )
         return EngineeringAgentEvidencePackage(
             package_id=package_id,
             turn_id=request.turn_id,
@@ -1645,6 +2214,18 @@ def _observation_text(value: str) -> str:
     return _bounded_text(value, "tool observation", maximum_bytes=256_000)
 
 
+def _repository_revision(value: str) -> str:
+    normalized = _text(value, "repository revision").casefold()
+    if len(normalized) != 40 or any(
+        character not in "0123456789abcdef" for character in normalized
+    ):
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "repository revision must be a full Git object ID",
+        )
+    return normalized
+
+
 def _unique_bounded_texts(values: Sequence[str], label: str) -> tuple[str, ...]:
     normalized = tuple(_bounded_text(item, label) for item in values)
     if len(normalized) != len(set(normalized)):
@@ -1678,6 +2259,7 @@ __all__ = [
     "ApplicationOwnedEngineeringAgentTurnExecutor",
     "EngineeringAgentAnswerDraft",
     "EngineeringAgentClaimProposal",
+    "EngineeringAgentCitation",
     "EngineeringAgentDeliveryAuthorization",
     "EngineeringAgentDeliveryRequest",
     "EngineeringAgentDraftProposal",
@@ -1685,6 +2267,7 @@ __all__ = [
     "EngineeringAgentEvidenceDisposition",
     "EngineeringAgentEvidencePackage",
     "EngineeringAgentInvocation",
+    "EngineeringAgentLedgerEntryReceipt",
     "EngineeringAgentLoopLimits",
     "EngineeringAgentResponseControl",
     "EngineeringAgentResponseKind",
@@ -1695,6 +2278,9 @@ __all__ = [
     "EngineeringAgentReviewRequest",
     "EngineeringAgentReviewer",
     "EngineeringAgentToolActionProposal",
+    "EngineeringAgentToolAuthorityKind",
+    "EngineeringAgentToolAuthorityReceipt",
+    "EngineeringAgentToolEvidence",
     "EngineeringAgentToolObservation",
     "EngineeringAgentToolOperation",
     "EngineeringAgentToolPort",
