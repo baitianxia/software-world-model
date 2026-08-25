@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102]
 code: []
 tests: []
 iteration: ITER-010
@@ -24,7 +24,8 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
-PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / CURRENT_QUALIFICATION_NOT_LOADED /
+PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
+SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / CURRENT_QUALIFICATION_NOT_LOADED /
 NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
@@ -119,6 +120,21 @@ credential-lazy direct transport、Model Gateway、Session-scoped Disclosure Aut
 Conformance 文件，也没有外部网络、Provider/model、credential、listener/browser、mall Source/resources 或 Production Activation。因此状态
 只增加 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；current qualification、published World Model、exact Source Profile/Worker、两个
 private Gateway repositories、fixed command Session 与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
+
+## Current local Session-runtime composition evidence
+
+`FINDING-010-102` 把两条生产 Provider runtime、exact Chat Binding/Evidence Tool Configuration、World Model projector identity、Source
+Broker/Worker、per-attempt fresh evidence Tool/Response Control、Application-owned committed Work State、Ark→DeepSeek route、Conversation
+Service 与 Browser Application 接入同一 non-starting Session runtime。两条 attempt 共享同一只读 Cognition/Source control plane，但各自持有
+独立 Tool Ledger/progress/locator state 与 one-use Response Control；失败 primary 的私有中间态不能进入 fallback。
+
+新增 2 个 Session 案例并纳入 Source runtime 相邻回归后的相关组合实际 `89/89 PASS`，其中一例在空临时目录上构造真实
+`LocalGitEvidenceClassProfile / SourceBroker /
+LocalGitRetrievalWorker`，并证明 preparation 不读取 Source 或投影 cognition。receipt 同时证明此时 attempt/tool、credential、Provider dispatch
+与 listener 均为 0/false，Production Activation 为 `NOT_EXECUTED`。测试仍使用本地构造的 typed qualification identity，没有加载 current
+sealed Conformance 或 canonical private artifact Session Configuration，也没有 mall Source/resources、外部网络、Provider/model、credential、
+listener/browser 或 Production 执行。因此状态只增加 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；artifact loader、fixed command wiring
+与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
 
 ## Pre-freeze implementation evidence
 

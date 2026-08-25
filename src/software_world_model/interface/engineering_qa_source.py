@@ -298,6 +298,30 @@ class LocalGitRetrievalWorker:
         self._source_profile = source_profile
         self._connector = LocalGitConnector(str(canonical))
 
+    @property
+    def repository_id(self) -> StableId:
+        """Return the exact repository identity accepted by this Worker."""
+
+        return self._repository_id
+
+    @property
+    def binding_id(self) -> StableId:
+        """Return the exact Source Binding accepted by this Worker."""
+
+        return self._binding_id
+
+    @property
+    def source_profile_ref(self) -> str:
+        """Return the versioned Source Profile accepted by this Worker."""
+
+        return self._source_profile.profile_ref
+
+    @property
+    def source_profile_digest(self) -> Digest:
+        """Return the exact Source Profile digest accepted by this Worker."""
+
+        return self._source_profile.profile_digest
+
     def execute(self, operation: CompiledSourceOperation) -> RetrievalResult:
         operation.validate_identity()
         self._source_profile.require_valid()

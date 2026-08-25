@@ -24,6 +24,10 @@ _EXPORT_MODULES = {
     "create_deepseek_engineering_chat_provider_model_runtime": ".engineering_chat_provider_runtime",
     "engineering_chat_ark_model_configuration": ".engineering_chat_provider_runtime",
     "engineering_chat_deepseek_model_configuration": ".engineering_chat_provider_runtime",
+    "EngineeringChatEvidenceToolFactory": ".engineering_chat_session_runtime",
+    "EngineeringChatSessionRuntimeReceipt": ".engineering_chat_session_runtime",
+    "PreparedEngineeringChatSessionRuntime": ".engineering_chat_session_runtime",
+    "prepare_engineering_chat_session_runtime": ".engineering_chat_session_runtime",
     "EngineeringChatBrowserApplication": ".engineering_chat_browser",
     "PreparedEngineeringChatAccess": ".engineering_chat_alpha_cli",
     "prepare_engineering_chat_access": ".engineering_chat_alpha_cli",
@@ -102,6 +106,12 @@ if TYPE_CHECKING:
         engineering_chat_ark_model_configuration,
         engineering_chat_deepseek_model_configuration,
     )
+    from .engineering_chat_session_runtime import (
+        EngineeringChatEvidenceToolFactory,
+        EngineeringChatSessionRuntimeReceipt,
+        PreparedEngineeringChatSessionRuntime,
+        prepare_engineering_chat_session_runtime,
+    )
     from .engineering_chat_alpha_cli import (
         PreparedEngineeringChatAccess,
         prepare_engineering_chat_access,
@@ -172,6 +182,10 @@ __all__ = [
     "create_deepseek_engineering_chat_provider_model_runtime",
     "engineering_chat_ark_model_configuration",
     "engineering_chat_deepseek_model_configuration",
+    "EngineeringChatEvidenceToolFactory",
+    "EngineeringChatSessionRuntimeReceipt",
+    "PreparedEngineeringChatSessionRuntime",
+    "prepare_engineering_chat_session_runtime",
     "PreparedEngineeringChatAccess",
     "prepare_engineering_chat_access",
     "EngineeringQuestionBrowserApplication",

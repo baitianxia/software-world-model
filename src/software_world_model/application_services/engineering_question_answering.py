@@ -2314,6 +2314,24 @@ class SourceBroker:
         source_profile.require_valid()
         self._source_profile = source_profile
 
+    @property
+    def binding_id(self) -> StableId:
+        """Return the exact Source Binding fixed for this Broker."""
+
+        return self._source_profile.binding_id
+
+    @property
+    def source_profile_ref(self) -> str:
+        """Return the versioned Source Profile reference fixed for this Broker."""
+
+        return self._source_profile.profile_ref
+
+    @property
+    def source_profile_digest(self) -> Digest:
+        """Return the exact Source Profile digest fixed for this Broker."""
+
+        return self._source_profile.profile_digest
+
     def registered_evidence_classes(
         self, *, request: EngineeringQuestionRequest
     ) -> tuple[EngineeringEvidenceClass, ...]:

@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -51,8 +51,10 @@ dispatch Disclosure/Gateway receipt、失败计数与不执行 I/O 的 launcher 
 `FINDING-010-100` 随后闭合 ADR-017 typed fallback classification、Ark→DeepSeek 隔离 full-chain attempts、committed Work State、logical
 Turn 分账与 fixed Browser composition，形成 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。`FINDING-010-101` 又将生产 Ark/DeepSeek
 Adapter、credential-lazy transport、Model Gateway、Session Disclosure 与 model boundary 接入为
-`PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。故下一动作进一步收窄为加载 current sealed Conformance、published World Model、exact
-Source Profile/Worker、两个 private Gateway repositories 与 Access-only fixed command Session wiring 的 exact clean freeze，而不是追加 Access、
+`PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。`FINDING-010-102` 再把两条 Provider runtime、exact evidence authority、每 attempt fresh
+Tool/Response Control、committed Work State、route、Conversation 与 Browser 接成 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。故下一动作
+进一步收窄为从 canonical private artifact Session Configuration 加载 current sealed Conformance、published World Model、exact Source
+Profile/Worker 与两个 private Gateway repositories，并让 Access-only fixed command 消费该组合的 exact clean freeze，而不是追加 Access、
 重复模型边界或宣称 Chat PASS。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`

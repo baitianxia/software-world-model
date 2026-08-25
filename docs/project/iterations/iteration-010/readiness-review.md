@@ -97,8 +97,10 @@ Application 重算；包含 temp Git exact search→opaque locator→read 的定
 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`：五类 typed fallback classification、Ark→DeepSeek 隔离 full-chain attempt、Application-owned
 committed Work State、logical Turn 分账/duplicate-cost risk/late quarantine 和 fixed Browser composition 的最新相关组合为 76/76。真实
 `FINDING-010-101` 又以生产 Ark/DeepSeek Adapter、credential-lazy transport、Model Gateway、Session Disclosure 与 model boundary 形成
-`PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`，最新相关组合为 79/79。current sealed Conformance、Source/World Model runtime、固定命令
-Session 接线、资格和 live Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`：
+`PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`，最新相关组合为 79/79。`FINDING-010-102` 又把两条 Provider runtime、exact evidence
+authority、per-attempt fresh Tool/Response Control、committed Work State、route、Conversation 与 Browser 接成
+`SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`，最新相关组合为 89/89。current artifact Session Configuration、固定命令接线、资格和
+live Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。

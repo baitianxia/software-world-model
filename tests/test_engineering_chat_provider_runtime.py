@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from software_world_model.ai_infrastructure.ark_chat_conformance import (
@@ -35,6 +37,10 @@ from software_world_model.application_services.conversational_engineering_routin
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
 )
+from software_world_model.application_services.engineering_question_answering import (
+    EngineeringEvidenceClass,
+    SourceBroker,
+)
 from software_world_model.application_services.engineering_conversation import (
     EngineeringChatBinding,
     RuntimeCapabilityStatus,
@@ -59,6 +65,15 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
 from software_world_model.interface.engineering_chat_provider_launcher import (
     EngineeringChatProviderAttemptFactory,
     prepare_engineering_chat_provider_launcher,
+)
+from software_world_model.interface.engineering_chat_session_runtime import (
+    ENGINEERING_CHAT_SESSION_RUNTIME_STATUS,
+    EngineeringChatEvidenceToolFactory,
+    prepare_engineering_chat_session_runtime,
+)
+from software_world_model.interface.engineering_qa_source import (
+    LocalGitEvidenceClassProfile,
+    LocalGitRetrievalWorker,
 )
 
 
@@ -86,6 +101,31 @@ class _UnusedModelGatewayRepository:
         raise AssertionError(
             f"preparation called get_manifest: {args!r} {kwargs!r}"
         )
+
+
+class _UnusedCognitionProjector:
+    def __init__(self, *, authority, revision, binding_id):
+        self.read_authority_digest = authority
+        self.source_revision = revision
+        self.binding_id = binding_id
+        self.calls = 0
+
+    def project(self, *, request):
+        self.calls += 1
+        raise AssertionError(f"Session preparation projected cognition: {request}")
+
+
+class _UnusedSourceBroker:
+    def registered_evidence_classes(self, *, request):
+        raise AssertionError(f"Session preparation queried Broker: {request}")
+
+    def compile(self, **kwargs):
+        raise AssertionError(f"Session preparation compiled Source: {kwargs}")
+
+
+class _UnusedRetrievalWorker:
+    def execute(self, operation):
+        raise AssertionError(f"Session preparation read Source: {operation}")
 
 
 class EngineeringChatProviderRuntimeTests(unittest.TestCase):
@@ -122,7 +162,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
             repository_revision="b" * 40,
             world_model_status=RuntimeCapabilityStatus.READY,
             world_model_authority_digest=digest_of("world-model-authority"),
-            source_profile_ref="mall-source-profile@1",
+            source_profile_ref="mall-source-profile:1",
             source_access_status=RuntimeCapabilityStatus.READY,
             provider_status=RuntimeCapabilityStatus.READY,
             provider_route_ref=route_ref,
@@ -395,6 +435,198 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
                 at=self.now,
                 clock=lambda: self.now,
             )
+
+    def test_full_session_runtime_composes_without_attempt_or_source_read(self) -> None:
+        ark = create_ark_engineering_chat_provider_model_runtime(
+            repository=_UnusedModelGatewayRepository(),
+            gateway_repository_ref="ark-gateway-db:sha256:one",
+            binding=self.binding,
+            provider_configuration=self.ark_provider,
+            qualification=self.ark_qualification,
+            configuration=self.ark_configuration,
+            session_authority=self.ark_authority,
+            at=self.now,
+            clock=lambda: self.now,
+        )
+        deepseek = create_deepseek_engineering_chat_provider_model_runtime(
+            repository=_UnusedModelGatewayRepository(),
+            gateway_repository_ref="deepseek-gateway-db:sha256:two",
+            binding=self.binding,
+            provider_configuration=self.deepseek_provider,
+            qualification=self.deepseek_qualification,
+            configuration=self.deepseek_configuration,
+            session_authority=self.deepseek_authority,
+            at=self.now,
+            clock=lambda: self.now,
+        )
+        self.addCleanup(deepseek.transport.close)
+        primary_route = self._route(
+            ordinal=1,
+            role=EngineeringProviderRouteRole.PRIMARY,
+            configuration=self.ark_configuration,
+            authority=self.ark_authority,
+        )
+        fallback_route = self._route(
+            ordinal=2,
+            role=EngineeringProviderRouteRole.FALLBACK,
+            configuration=self.deepseek_configuration,
+            authority=self.deepseek_authority,
+        )
+        plan = EngineeringProviderRoutePlan.create(
+            binding=self.binding,
+            primary=primary_route,
+            fallback=fallback_route,
+        )
+        binding_id = StableId("binding_" + "2" * 32)
+        profile = LocalGitEvidenceClassProfile.create(
+            profile_ref=self.binding.source_profile_ref,
+            binding_id=binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("src/main/java",),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("pom.xml",),
+                EngineeringEvidenceClass.TEST: ("src/test/java",),
+            },
+        )
+        evidence_tools = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name=self.binding.project_name,
+            response_language="zh-CN",
+            repository_id=StableId("repository_" + "1" * 32),
+            binding_id=binding_id,
+            repository_revision=self.binding.repository_revision,
+            source_profile_ref=profile.profile_ref,
+            source_profile_digest=profile.profile_digest,
+            world_model_read_authority_digest=(
+                self.binding.world_model_authority_digest
+            ),
+            source_allowlist=(
+                "README.md",
+                "pom.xml",
+                "src/main/java",
+                "src/test/java",
+            ),
+            provider_disclosure_policy=(
+                ENGINEERING_AGENT_DISCLOSURE_POLICY_REF
+            ),
+        )
+        cognition = _UnusedCognitionProjector(
+            authority=self.binding.world_model_authority_digest,
+            revision=self.binding.repository_revision,
+            binding_id=binding_id,
+        )
+        with TemporaryDirectory() as directory:
+            worker = LocalGitRetrievalWorker(
+                Path(directory),
+                repository_id=evidence_tools.repository_id,
+                binding_id=binding_id,
+                source_profile=profile,
+            )
+            prepared = prepare_engineering_chat_session_runtime(
+                binding=self.binding,
+                product_tree="c" * 40,
+                evidence_tools=evidence_tools,
+                cognition_projector=cognition,
+                source_broker=SourceBroker(source_profile=profile),
+                retrieval_worker=worker,
+                primary_provider_runtime=ark,
+                fallback_provider_runtime=deepseek,
+                route_plan=plan,
+                checked_at=self.now,
+            )
+            drifted_profile = LocalGitEvidenceClassProfile.create(
+                profile_ref=profile.profile_ref,
+                binding_id=binding_id,
+                evidence_class_paths={
+                    EngineeringEvidenceClass.SOURCE: ("src/main/java",),
+                },
+            )
+            with self.assertRaises(DomainError):
+                EngineeringChatEvidenceToolFactory(
+                    binding=self.binding,
+                    configuration=evidence_tools,
+                    cognition_projector=cognition,
+                    source_broker=SourceBroker(
+                        source_profile=drifted_profile
+                    ),
+                    retrieval_worker=worker,
+                )
+            with self.assertRaises(DomainError):
+                prepare_engineering_chat_session_runtime(
+                    binding=self.binding,
+                    product_tree="c" * 40,
+                    evidence_tools=evidence_tools,
+                    cognition_projector=cognition,
+                    source_broker=SourceBroker(source_profile=profile),
+                    retrieval_worker=worker,
+                    primary_provider_runtime=replace(
+                        ark,
+                        provider_dispatch_count_at_preparation=1,
+                    ),
+                    fallback_provider_runtime=deepseek,
+                    route_plan=plan,
+                    checked_at=self.now,
+                )
+
+        self.assertEqual(
+            prepared.receipt.status, ENGINEERING_CHAT_SESSION_RUNTIME_STATUS
+        )
+        self.assertEqual(prepared.evidence_tool_factory.created_tool_count, 0)
+        self.assertEqual(cognition.calls, 0)
+        self.assertFalse(prepared.receipt.artifact_session_config_loaded)
+        self.assertFalse(
+            prepared.receipt.attempt_runtime_created_at_preparation
+        )
+        self.assertFalse(
+            prepared.receipt.source_read_performed_at_preparation
+        )
+        self.assertFalse(
+            prepared.receipt.credential_resolved_at_preparation
+        )
+        self.assertEqual(
+            prepared.receipt.provider_dispatch_count_at_preparation, 0
+        )
+        self.assertFalse(prepared.receipt.listener_started_at_preparation)
+        self.assertEqual(prepared.launcher.service.statistics(), (0, 0))
+        self.assertEqual(ark.model_boundary.audits, ())
+        self.assertEqual(deepseek.model_boundary.audits, ())
+        status = json.dumps(prepared.receipt.public_status(), sort_keys=True)
+        self.assertNotIn("ITER010_TEST_ARK_KEY", status)
+        self.assertNotIn("ITER010_TEST_DEEPSEEK_KEY", status)
+        self.assertNotIn("secret_reference", status)
+
+    def test_session_runtime_rejects_drifted_cognition_before_attempt(self) -> None:
+        binding_id = StableId("binding_" + "2" * 32)
+        evidence_tools = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name=self.binding.project_name,
+            response_language="zh-CN",
+            repository_id=StableId("repository_" + "1" * 32),
+            binding_id=binding_id,
+            repository_revision=self.binding.repository_revision,
+            source_profile_ref=self.binding.source_profile_ref,
+            source_profile_digest=digest_of("source-profile"),
+            world_model_read_authority_digest=(
+                self.binding.world_model_authority_digest
+            ),
+            source_allowlist=("src/main/java",),
+            provider_disclosure_policy=(
+                ENGINEERING_AGENT_DISCLOSURE_POLICY_REF
+            ),
+        )
+        cognition = _UnusedCognitionProjector(
+            authority=digest_of("different-world-model"),
+            revision=self.binding.repository_revision,
+            binding_id=binding_id,
+        )
+
+        with self.assertRaises(DomainError):
+            EngineeringChatEvidenceToolFactory(
+                binding=self.binding,
+                configuration=evidence_tools,
+                cognition_projector=cognition,
+                source_broker=_UnusedSourceBroker(),
+                retrieval_worker=_UnusedRetrievalWorker(),
+            )
+        self.assertEqual(cognition.calls, 0)
 
     @staticmethod
     def _route(*, ordinal, role, configuration, authority):

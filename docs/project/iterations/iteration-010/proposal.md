@@ -90,8 +90,10 @@ State、Observation/Package、fresh Review Finding 与 Delivery binding 实现�
 non-dispatching candidate preflight 实现为 `MODEL_BOUNDARY_LOCAL_CANDIDATE`。`FINDING-010-100` 再将 ADR-017 的五类 trusted fallback
 classification、两个隔离 full-chain attempt、committed Work State、logical Turn 分账和 fixed Browser composition 实现为
 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。`FINDING-010-101` 又将生产 Ark/DeepSeek Adapter、credential-lazy transport、Model Gateway、
-Session Disclosure 与 model boundary 接入为 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。current sealed Conformance、Source/World Model
-runtime、固定命令 Session 接线与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和授权。PDR-003 的时间盒、
+Session Disclosure 与 model boundary 接入为 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。`FINDING-010-102` 再将两条 Provider runtime、
+exact evidence authority、per-attempt fresh Tool/Response Control、committed Work State、Conversation 与 Browser 接成
+`SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。current artifact Session Configuration、固定命令接线与五轮 Chat 仍为
+`NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和授权。PDR-003 的时间盒、
 根因、测试后置、Provider 和成本规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta

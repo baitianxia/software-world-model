@@ -259,5 +259,8 @@ iteration: ITER-010
 - [FINDING-010-101](FINDING-010-101.md)：生产 Ark/DeepSeek Adapter、credential-lazy transport、Model Gateway、Session Disclosure 与
   Conversational Agent model boundary 已接入双 route 的 non-starting composition；79/79 本地组合通过，但 current sealed Conformance、
   Source/World Model runtime、fixed command Session 和 live 尚未加载或执行。
+- [FINDING-010-102](FINDING-010-102.md)：Provider runtimes、exact evidence authority、per-attempt fresh Tool/Response Control、committed Work
+  State、route、Conversation 与 Browser 已形成完整 non-starting Session runtime composition；89/89 通过，artifact config/fixed command/live
+  仍未闭合。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
