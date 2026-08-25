@@ -97,6 +97,13 @@ EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION = (
 EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION = (
     "stop-external-reruns-and-return-to-local-diagnosis"
 )
+ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER = (
+    "runnable-access-handoff,sustained-direction-alpha-handoff,"
+    "direction-evidence-handoff,independent-comparison-and-user-decision"
+)
+ITER010_DIRECTION_CHECKPOINT_MISS_ACTION = (
+    "handoff-last-runnable-version-and-earliest-root-cause-stop-scope-expansion"
+)
 PROVIDER_ROUTE_PREFERENCE = ("VOLCENGINE_ARK", "DEEPSEEK")
 PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES = (
     "provider-unavailable",
@@ -167,6 +174,10 @@ ITER010_PDR004_ACTIVATION_RECEIPT = (
 ITER010_PDR004_ACTIVATION_TIMESTAMP = "2026-08-25T05:06:07Z"
 ITER010_PDR004_PLANNING_COMMIT = "b66ff9f058b92cebd78d5644ffef042753567b4d"
 ITER010_PDR004_PLANNING_TREE = "30e437eea83e048e3fb59ddd90a8d1b76242d82c"
+ITER010_DIRECTION_DISCOVERY_PRINCIPLE_REF = (
+    "codex-user-message:sha256:"
+    "27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f"
+)
 ITER010_HISTORICAL_ASSUMPTIONS: dict[str, str] = {
     "A1": "保持软件世界模型作为持久、版本化外部认知而非手册或缓存，同时可让提问期 Source 调查核实、补充或纠正本题认知，并能证明完整认知不只是 locator 装饰",
     "A2": "独立 Investigation LLM 可以依据不可变原问题、exact World Model Cognition Context 和先前 Ledger 结果自适应提出下一步，而 Source Broker/Worker 能在不授予模型直接权限的情况下执行",
@@ -203,11 +214,30 @@ ITER010_CURRENT_CHAT_GATE_CASES = frozenset(
 ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
     str, dict[str, tuple[str, ...]]
 ] = {
+    "V-ALPHA-ACCESS-001": {
+        "Expected": (
+            "Provider 未配置/未资格/失败如实显示而不阻塞页面",
+            "立即把命令、URL、版本和限制交给用户",
+            "不等待 Chat/Quality/Comparison",
+        ),
+    },
     "V-TIMEBOX-CHAT-001": {
         "Claim": ("逐 Turn live-attempt",),
-        "Frozen input / oracle": ("Conversation/Turn/provider dispatch",),
+        "Frozen input / oracle": (
+            "四个微检查点",
+            "Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付",
+            "Conversation/Turn/provider dispatch",
+        ),
         "Expected": (
-            "首个 live canary 是五轮 Conversation",
+            "60 分钟页面",
+            "180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL",
+            "181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据",
+            "240 分钟绝对停止",
+            "360 分钟五轮方向证据",
+            "480 分钟独立比较与用户判向",
+            "每个检查点立即交付用户",
+            "三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`",
+            "计划/测试/文档完成不算用户可见增量",
             "每个 Provider-dispatched Turn 分别计 live attempt",
         ),
     },
@@ -223,6 +253,7 @@ ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
             "只作强外部基线，不是 Oracle/裁判",
             "只有 source-only/full-cognition 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer",
             "独立评估者",
+            "不阻塞更早的用户交付",
         ),
     },
     "V-PREVIEW-002": {
@@ -233,6 +264,7 @@ ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
         "Expected": (
             "独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal",
             "用户实际追问、纠正、深入、总结并查看三臂方向信号后决定 CONTINUE/REWORK/REDIRECT/REJECT",
+            "只有 CONTINUE 解锁 hardening",
         ),
     },
 }
@@ -1612,7 +1644,6 @@ def validate_experience_first_delivery_policy(
             f"{label}: experience_delivery_policy.schema must equal "
             f"{EXPERIENCE_FIRST_DELIVERY_SCHEMA}"
         )
-
     historical_refs = policy.get("historical_pre_policy_result_refs")
     if isinstance(historical_refs, dict):
         # ``safe_load_manifest`` validates block-sequence syntax but leaves its
@@ -1704,6 +1735,38 @@ def validate_experience_first_delivery_policy(
         errors.append(
             f"{label}: experience access, timebox and quality Cases must be distinct"
         )
+    if policy.get("first_user_handoff_case_id") != resolved_cases.get(
+        "access_case_id"
+    ):
+        errors.append(
+            f"{label}: experience_delivery_policy.first_user_handoff_case_id must equal access_case_id"
+        )
+    if alignment.get("earliest_web_micro_checkpoint") != resolved_cases.get(
+        "access_case_id"
+    ):
+        errors.append(
+            f"{label}: product_goal_alignment.earliest_web_micro_checkpoint must equal the experience access Case"
+        )
+    direction_confirmation_case_id = policy.get("direction_confirmation_case_id")
+    if (
+        not isinstance(direction_confirmation_case_id, str)
+        or re.fullmatch(r"V-PREVIEW-[0-9]{3,}", direction_confirmation_case_id)
+        is None
+        or direction_confirmation_case_id not in blocking_case_ids
+    ):
+        errors.append(
+            f"{label}: experience_delivery_policy.direction_confirmation_case_id must be a blocking V-PREVIEW Case"
+        )
+    elif direction_confirmation_case_id != alignment.get(
+        "direction_preview_checkpoint"
+    ):
+        errors.append(
+            f"{label}: experience_delivery_policy.direction_confirmation_case_id must equal product_goal_alignment.direction_preview_checkpoint"
+        )
+    if direction_confirmation_case_id in set(resolved_cases.values()):
+        errors.append(
+            f"{label}: first handoff, timebox, quality, and direction confirmation Cases must remain distinct"
+        )
 
     exact_values: tuple[tuple[str, object], ...] = (
         (
@@ -1715,10 +1778,17 @@ def validate_experience_first_delivery_policy(
         ("hard_stop_deadline_minutes", 240),
         ("hard_stop_action", EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION),
         ("access_gate_scope", "user-operable-web-and-request-path-only"),
+        ("provider_readiness_blocks_first_user_handoff", False),
         ("quality_gate_scope", "user-visible-answer-quality-only"),
         ("access_pass_cannot_satisfy_quality_gate", True),
         ("availability_requires_quality_pass", False),
         ("hardening_requires_quality_pass", True),
+        ("user_handoff_required_at_each_checkpoint", True),
+        ("checkpoint_completion_requires_runnable_user_visible_artifact", True),
+        (
+            "plan_test_or_document_completion_counts_as_user_visible_increment",
+            False,
+        ),
         (
             "pre_first_experience_allowed_checks",
             EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK,
@@ -1742,7 +1812,7 @@ def validate_experience_first_delivery_policy(
         ("local_minimal_reproduction_required_before_live_retry", True),
         ("unseen_adjacent_local_case_count", 2),
         (
-            "live_canary_turn_count_after_local_pass"
+            "live_canary_conversation_count_after_local_pass"
             if chat_cutover
             else "live_canary_question_count_after_local_pass",
             1,
@@ -1771,6 +1841,10 @@ def validate_experience_first_delivery_policy(
                 f"{label}: experience_delivery_policy.{field} must equal {expected}"
             )
     if chat_cutover:
+        if policy.get("live_canary_turn_count") != 5:
+            errors.append(
+                f"{label}: experience_delivery_policy.live_canary_turn_count must equal 5 for Chat"
+            )
         for field, pattern in (
             ("chat_case_id", r"V-CHAT-[0-9]{3,}"),
             ("alpha_comparison_case_id", r"V-COMP-ALPHA-[0-9]{3,}"),
@@ -1784,9 +1858,14 @@ def validate_experience_first_delivery_policy(
                 errors.append(
                     f"{label}: experience_delivery_policy.{field} must be a matching blocking Case"
                 )
-        if "live_canary_question_count_after_local_pass" in policy:
+        for forbidden_field in (
+            "live_canary_question_count_after_local_pass",
+            "live_canary_turn_count_after_local_pass",
+        ):
+            if forbidden_field not in policy:
+                continue
             errors.append(
-                f"{label}: live_canary_question_count_after_local_pass cannot define a Chat live-attempt unit"
+                f"{label}: {forbidden_field} cannot define a Chat live-attempt unit"
             )
     return errors
 
@@ -2819,6 +2898,46 @@ def validate_conversational_architecture_cutover(
         if forbidden_field in readiness:
             errors.append(
                 f"{label}: readiness_inputs.{forbidden_field} ambiguously presents a legacy input as current"
+            )
+    return errors
+
+
+def validate_iter010_direction_checkpoint_policy(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Freeze ITER-010's concrete direction checkpoints without globalizing them."""
+
+    policy = manifest.get("experience_delivery_policy")
+    if not isinstance(policy, dict):
+        return [f"{label}: ITER-010 direction checkpoints require experience_delivery_policy"]
+
+    errors: list[str] = []
+    for field, expected in (
+        (
+            "direction_discovery_principle_ref",
+            ITER010_DIRECTION_DISCOVERY_PRINCIPLE_REF,
+        ),
+        ("micro_checkpoint_count", 4),
+        ("micro_checkpoint_order", ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER),
+        ("direction_alpha_prefix_turn_count", 3),
+        ("direction_alpha_is_prefix_of_frozen_live_canary", True),
+        ("direction_evidence_handoff_deadline_minutes", 360),
+        ("direction_decision_deadline_minutes", 480),
+        ("checkpoint_miss_action", ITER010_DIRECTION_CHECKPOINT_MISS_ACTION),
+    ):
+        if policy.get(field) != expected:
+            errors.append(
+                f"{label}: ITER-010 experience_delivery_policy.{field} must equal {expected}"
+            )
+    for ambiguous_field in (
+        "phase",
+        "hardening_unlocked",
+        "hardening_unlock_decision",
+        "local_checkpoint_requires_new_development_authorization",
+    ):
+        if ambiguous_field in policy:
+            errors.append(
+                f"{label}: ITER-010 experience_delivery_policy.{ambiguous_field} must not create a parallel lifecycle or authorization state"
             )
     return errors
 
@@ -3939,6 +4058,8 @@ def validate_product_goal_alignment_manifest(
             manifest, label, manifest_text=text
         )
     )
+    if iteration == "ITER-010":
+        errors.extend(validate_iter010_direction_checkpoint_policy(manifest, label))
     if requires_direction_preview(iteration):
         errors.extend(
             validate_direction_preview_binding(
@@ -4769,6 +4890,205 @@ def validate_experience_delivery_result(
         errors.append(
             f"{label}: provider_route_report_digest must be an exact sha256 digest"
         )
+    if result.metadata.get("iteration") == "ITER-010":
+        errors.extend(
+            validate_iter010_direction_checkpoint_result(
+                result,
+                experience_policy,
+                require_success=require_success,
+            )
+        )
+    return errors
+
+
+def validate_iter010_direction_checkpoint_result(
+    result: Document,
+    experience_policy: dict[str, object],
+    *,
+    require_success: bool,
+) -> list[str]:
+    """Audit ITER-010 checkpoint handoffs without turning them into new stages."""
+
+    label = result.relative_path
+    errors: list[str] = []
+    handoff_count = non_negative_metadata_integer(
+        result.metadata.get("experience_checkpoint_handoff_count")
+    )
+    if handoff_count is None or not 1 <= handoff_count <= 4:
+        errors.append(
+            f"{label}: experience_checkpoint_handoff_count must be between one and four"
+        )
+    report_digest = result.metadata.get("experience_checkpoint_handoff_report_digest")
+    if not isinstance(report_digest, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", report_digest
+    ) is None:
+        errors.append(
+            f"{label}: experience_checkpoint_handoff_report_digest must be an exact sha256 digest"
+        )
+    completed_turns = non_negative_metadata_integer(
+        result.metadata.get("completed_live_canary_turn_count")
+    )
+    if completed_turns is None or completed_turns > 5:
+        errors.append(
+            f"{label}: completed_live_canary_turn_count must be between zero and five"
+        )
+
+    milestone_values: dict[str, int | None] = {}
+    for field in (
+        "direction_evidence_handoff_elapsed_minutes",
+        "direction_decision_elapsed_minutes",
+    ):
+        raw_value = result.metadata.get(field)
+        value = non_negative_metadata_integer(raw_value)
+        if value is None and raw_value != "NOT_ACHIEVED":
+            errors.append(
+                f"{label}: {field} must be a non-negative integer or NOT_ACHIEVED"
+            )
+        milestone_values[field] = value
+
+    alpha_elapsed = non_negative_metadata_integer(
+        result.metadata.get("sustained_user_operable_alpha_elapsed_minutes")
+    )
+    evidence_elapsed = milestone_values["direction_evidence_handoff_elapsed_minutes"]
+    decision_elapsed = milestone_values["direction_decision_elapsed_minutes"]
+    evidence_deadline = non_negative_metadata_integer(
+        experience_policy.get("direction_evidence_handoff_deadline_minutes")
+    )
+    decision_deadline = non_negative_metadata_integer(
+        experience_policy.get("direction_decision_deadline_minutes")
+    )
+    alpha_on_time = alpha_elapsed is not None and alpha_elapsed <= 180
+    evidence_on_time = (
+        evidence_deadline is not None
+        and evidence_elapsed is not None
+        and evidence_elapsed <= evidence_deadline
+    )
+    decision_on_time = (
+        decision_deadline is not None
+        and decision_elapsed is not None
+        and decision_elapsed <= decision_deadline
+    )
+    if alpha_elapsed is not None and completed_turns is not None and completed_turns < 3:
+        errors.append(
+            f"{label}: delivered direction Alpha requires at least three completed live canary Turns"
+        )
+    if evidence_elapsed is not None:
+        if handoff_count is not None and handoff_count < 3:
+            errors.append(
+                f"{label}: direction evidence requires at least three checkpoint handoffs"
+            )
+        if completed_turns != 5:
+            errors.append(
+                f"{label}: completed_live_canary_turn_count must equal five when direction evidence is handed off"
+            )
+        if alpha_elapsed is None or evidence_elapsed < alpha_elapsed:
+            errors.append(
+                f"{label}: direction evidence handoff cannot precede the direction Alpha"
+            )
+    if decision_elapsed is not None:
+        if handoff_count != 4:
+            errors.append(
+                f"{label}: direction decision requires all four checkpoint handoffs"
+            )
+        if evidence_elapsed is None or decision_elapsed < evidence_elapsed:
+            errors.append(
+                f"{label}: direction decision cannot precede the direction evidence handoff"
+            )
+    elapsed_at_seal = non_negative_metadata_integer(
+        result.metadata.get("experience_elapsed_minutes_at_result_seal")
+    )
+    for field, value in milestone_values.items():
+        if (
+            value is not None
+            and elapsed_at_seal is not None
+            and value > elapsed_at_seal
+        ):
+            errors.append(f"{label}: {field} cannot occur after Result seal")
+
+    if not alpha_on_time:
+        if (
+            result.metadata.get("experience_delivery_verdict") != "FAIL"
+            or evidence_elapsed is not None
+            or decision_elapsed is not None
+            or (handoff_count is not None and handoff_count > 2)
+            or (completed_turns is not None and completed_turns > 3)
+        ):
+            errors.append(
+                f"{label}: a missing or late direction Alpha must fail and stop before direction evidence or decision work"
+            )
+        if (
+            elapsed_at_seal is not None
+            and elapsed_at_seal >= 240
+            and result.metadata.get("experience_hard_stop_triggered") is not True
+        ):
+            errors.append(
+                f"{label}: a missing or late direction Alpha must trigger the absolute stop at 240 minutes"
+            )
+    if not evidence_on_time and (
+        decision_elapsed is not None
+        or (handoff_count is not None and handoff_count > 3)
+    ):
+        errors.append(
+            f"{label}: missing or late direction evidence must stop before direction decision work"
+        )
+
+    claimed_continue = result.metadata.get("reflection_decision") == "CONTINUE"
+    if completed_turns is not None and completed_turns < 5 and (
+        result.metadata.get("experience_delivery_verdict") == "PASS"
+        or result.metadata.get("experience_quality_gate_verdict") == "PASS"
+    ):
+        errors.append(
+            f"{label}: an incomplete five-Turn canary cannot claim delivery or quality PASS"
+        )
+    if claimed_continue and not (
+        alpha_on_time
+        and evidence_on_time
+        and decision_on_time
+        and completed_turns == 5
+        and handoff_count == 4
+    ):
+        errors.append(
+            f"{label}: an incomplete or late direction path cannot claim PASS or CONTINUE"
+        )
+
+    if require_success:
+        if (
+            evidence_deadline is None
+            or evidence_elapsed is None
+            or evidence_elapsed > evidence_deadline
+        ):
+            errors.append(
+                f"{label}: successful ITER-010 Result must hand off direction evidence within 360 minutes"
+            )
+        if (
+            decision_deadline is None
+            or decision_elapsed is None
+            or decision_elapsed > decision_deadline
+        ):
+            errors.append(
+                f"{label}: successful ITER-010 Result must hand off the direction decision within 480 minutes"
+            )
+        if handoff_count != 4:
+            errors.append(
+                f"{label}: successful ITER-010 Result requires four checkpoint handoffs"
+            )
+        if (
+            result.metadata.get("reflection_gate_case_id")
+            != experience_policy.get("direction_confirmation_case_id")
+            or result.metadata.get("reflection_gate_status") != "PASS"
+            or result.metadata.get("reflection_decision") != "CONTINUE"
+            or result.metadata.get("reflection_decision_owner") != "user"
+        ):
+            errors.append(
+                f"{label}: successful ITER-010 Result requires a PASS direction Gate and user CONTINUE decision"
+            )
+        decision_ref = result.metadata.get("reflection_decision_ref")
+        if not isinstance(decision_ref, str) or re.fullmatch(
+            r"codex-user-message:sha256:[0-9a-f]{64}", decision_ref
+        ) is None:
+            errors.append(
+                f"{label}: successful ITER-010 Result must bind the exact user CONTINUE receipt"
+            )
     return errors
 
 
@@ -7116,6 +7436,10 @@ def validate_product_goal_execution_readiness(
                 manifest, label, manifest_text=manifest_text
             )
         )
+        if iteration == "ITER-010":
+            errors.extend(
+                validate_iter010_direction_checkpoint_policy(manifest, label)
+            )
         errors.extend(
             validate_conversational_engineering_agent(
                 manifest,

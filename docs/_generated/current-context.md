@@ -4,7 +4,7 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-authorized-agent-chat-alpha-development`
+- Worktree status: `iteration-010-slice-001-direction-exploration-first-user-handoff-pending`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
 - Live model path: `pdr-004-agent-chat-not-implemented-not-qualified-not-live-production-not-activated`
 - Normative source: `docs/system/`

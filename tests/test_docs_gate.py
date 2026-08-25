@@ -883,8 +883,10 @@ product_goal_alignment:
             "V-ALPHA-ACCESS-001",
             "V-TIMEBOX-001",
             "V-COMP-ALPHA-001",
+            "V-PREVIEW-001",
         ]
         alignment: dict[str, object] = {
+            "earliest_web_micro_checkpoint": "V-ALPHA-ACCESS-001",
             "direction_preview_checkpoint": "V-PREVIEW-001",
             "direction_preview_binding": {
                 "case_id": "V-PREVIEW-001",
@@ -905,18 +907,24 @@ product_goal_alignment:
             "historical_pre_policy_result_refs": [],
             "historical_results_do_not_satisfy_experience_gate": True,
             "access_case_id": "V-ALPHA-ACCESS-001",
+            "first_user_handoff_case_id": "V-ALPHA-ACCESS-001",
             "timebox_case_id": "V-TIMEBOX-001",
             "quality_case_id": "V-COMP-ALPHA-001",
+            "direction_confirmation_case_id": "V-PREVIEW-001",
             "start_event": "first-product-code-change-after-slice-authorization",
             "page_launchable_deadline_minutes": 60,
             "sustained_user_operable_alpha_deadline_minutes": 180,
             "hard_stop_deadline_minutes": 240,
             "hard_stop_action": docs_gate.EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION,
             "access_gate_scope": "user-operable-web-and-request-path-only",
+            "provider_readiness_blocks_first_user_handoff": False,
             "quality_gate_scope": "user-visible-answer-quality-only",
             "access_pass_cannot_satisfy_quality_gate": True,
             "availability_requires_quality_pass": False,
             "hardening_requires_quality_pass": True,
+            "user_handoff_required_at_each_checkpoint": True,
+            "checkpoint_completion_requires_runnable_user_visible_artifact": True,
+            "plan_test_or_document_completion_counts_as_user_visible_increment": False,
             "pre_first_experience_allowed_checks": docs_gate.EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK,
             "pre_first_experience_qualification_limit": 1,
             "pre_first_experience_smoke_question_limit": 1,
@@ -982,12 +990,18 @@ product_goal_alignment:
         )
 
         invalid_changes = (
+            ("first_user_handoff_case_id", "V-TIMEBOX-001"),
+            ("direction_confirmation_case_id", "V-COMP-ALPHA-001"),
             ("page_launchable_deadline_minutes", 61),
             ("sustained_user_operable_alpha_deadline_minutes", 181),
             ("hard_stop_deadline_minutes", 241),
+            ("provider_readiness_blocks_first_user_handoff", True),
             ("access_pass_cannot_satisfy_quality_gate", False),
             ("availability_requires_quality_pass", True),
             ("hardening_requires_quality_pass", False),
+            ("user_handoff_required_at_each_checkpoint", False),
+            ("checkpoint_completion_requires_runnable_user_visible_artifact", False),
+            ("plan_test_or_document_completion_counts_as_user_visible_increment", True),
             ("pre_first_experience_qualification_limit", 2),
             ("pre_first_experience_smoke_question_limit", 2),
             ("pre_first_experience_full_regression_allowed", True),
@@ -1034,6 +1048,38 @@ product_goal_alignment:
             required=True,
         )
         self.assertTrue(any("must be distinct" in error for error in aliased_errors))
+
+        late_access_alignment = copy.deepcopy(alignment)
+        late_access_alignment["earliest_web_micro_checkpoint"] = "V-TIMEBOX-001"
+        late_access_errors = docs_gate.validate_experience_first_delivery_policy(
+            manifest,
+            late_access_alignment,
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any("earliest_web_micro_checkpoint" in error for error in late_access_errors),
+            late_access_errors,
+        )
+
+        mismatched_direction = copy.deepcopy(manifest)
+        mismatched_direction["experience_delivery_policy"][
+            "direction_confirmation_case_id"
+        ] = "V-PREVIEW-002"
+        direction_errors = docs_gate.validate_experience_first_delivery_policy(
+            mismatched_direction,
+            alignment,
+            new_refs,
+            [*blocking, "V-PREVIEW-002"],
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any("direction_preview_checkpoint" in error for error in direction_errors),
+            direction_errors,
+        )
 
     def test_provider_route_policy_is_ark_first_transparent_and_quality_preserving(
         self,
@@ -1229,6 +1275,27 @@ product_goal_alignment:
             [],
         )
 
+        late_alpha = docs_gate.Document(
+            SCRIPT,
+            {
+                **metadata,
+                "experience_delivery_verdict": "FAIL",
+                "experience_quality_gate_verdict": "FAIL",
+                "experience_elapsed_minutes_at_result_seal": 210,
+                "sustained_user_operable_alpha_elapsed_minutes": 200,
+            },
+            "# Result\n",
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_delivery_result(
+                late_alpha,
+                experience_policy,
+                provider_policy,
+                require_success=False,
+            ),
+            [],
+        )
+
         invalid = docs_gate.Document(
             SCRIPT,
             {
@@ -1254,6 +1321,185 @@ product_goal_alignment:
         ):
             self.assertTrue(
                 any(expected in error for error in invalid_errors), invalid_errors
+            )
+
+        iter010_policy = {
+            **experience_policy,
+            "direction_discovery_principle_ref": docs_gate.ITER010_DIRECTION_DISCOVERY_PRINCIPLE_REF,
+            "direction_alpha_prefix_turn_count": 3,
+            "direction_evidence_handoff_deadline_minutes": 360,
+            "direction_decision_deadline_minutes": 480,
+            "direction_confirmation_case_id": "V-PREVIEW-002",
+        }
+        iter010_metadata = {
+            **metadata,
+            "iteration": "ITER-010",
+            "experience_elapsed_minutes_at_result_seal": 430,
+            "experience_checkpoint_handoff_count": 4,
+            "experience_checkpoint_handoff_report_digest": "sha256:" + "b" * 64,
+            "completed_live_canary_turn_count": 5,
+            "direction_evidence_handoff_elapsed_minutes": 320,
+            "direction_decision_elapsed_minutes": 430,
+            "reflection_gate_case_id": "V-PREVIEW-002",
+            "reflection_gate_status": "PASS",
+            "reflection_decision": "CONTINUE",
+            "reflection_decision_owner": "user",
+            "reflection_decision_ref": "codex-user-message:sha256:" + "c" * 64,
+        }
+        iter010_result = docs_gate.Document(
+            SCRIPT, iter010_metadata, "# Result\n"
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_delivery_result(
+                iter010_result,
+                iter010_policy,
+                provider_policy,
+                require_success=True,
+            ),
+            [],
+        )
+
+        stopped_after_prefix = docs_gate.Document(
+            SCRIPT,
+            {
+                **iter010_metadata,
+                "experience_delivery_verdict": "FAIL",
+                "experience_quality_gate_verdict": "FAIL",
+                "experience_elapsed_minutes_at_result_seal": 170,
+                "experience_checkpoint_handoff_count": 2,
+                "completed_live_canary_turn_count": 3,
+                "direction_evidence_handoff_elapsed_minutes": "NOT_ACHIEVED",
+                "direction_decision_elapsed_minutes": "NOT_ACHIEVED",
+                "reflection_gate_status": "PASS",
+                "reflection_decision": "REWORK",
+            },
+            "# Result\n",
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_delivery_result(
+                stopped_after_prefix,
+                iter010_policy,
+                provider_policy,
+                require_success=False,
+            ),
+            [],
+        )
+
+        incomplete_continue = docs_gate.Document(
+            SCRIPT,
+            {
+                **stopped_after_prefix.metadata,
+                "experience_quality_gate_verdict": "PASS",
+                "reflection_gate_status": "PASS",
+                "reflection_decision": "CONTINUE",
+            },
+            "# Result\n",
+        )
+        incomplete_errors = docs_gate.validate_experience_delivery_result(
+            incomplete_continue,
+            iter010_policy,
+            provider_policy,
+            require_success=False,
+        )
+        self.assertTrue(
+            any("cannot claim PASS or CONTINUE" in error for error in incomplete_errors),
+            incomplete_errors,
+        )
+        self.assertTrue(
+            any("cannot claim delivery or quality PASS" in error for error in incomplete_errors),
+            incomplete_errors,
+        )
+
+        late_alpha_follow_on = docs_gate.Document(
+            SCRIPT,
+            {
+                **stopped_after_prefix.metadata,
+                "experience_elapsed_minutes_at_result_seal": 330,
+                "sustained_user_operable_alpha_elapsed_minutes": 200,
+                "experience_checkpoint_handoff_count": 3,
+                "completed_live_canary_turn_count": 5,
+                "direction_evidence_handoff_elapsed_minutes": 320,
+            },
+            "# Result\n",
+        )
+        late_alpha_errors = docs_gate.validate_experience_delivery_result(
+            late_alpha_follow_on,
+            iter010_policy,
+            provider_policy,
+            require_success=False,
+        )
+        self.assertTrue(
+            any("missing or late direction Alpha" in error for error in late_alpha_errors),
+            late_alpha_errors,
+        )
+
+        late_alpha_without_stop = docs_gate.Document(
+            SCRIPT,
+            {
+                **stopped_after_prefix.metadata,
+                "experience_elapsed_minutes_at_result_seal": 240,
+                "sustained_user_operable_alpha_elapsed_minutes": 200,
+                "experience_hard_stop_triggered": False,
+            },
+            "# Result\n",
+        )
+        hard_stop_errors = docs_gate.validate_experience_delivery_result(
+            late_alpha_without_stop,
+            iter010_policy,
+            provider_policy,
+            require_success=False,
+        )
+        self.assertTrue(
+            any("absolute stop at 240 minutes" in error for error in hard_stop_errors),
+            hard_stop_errors,
+        )
+
+        late_evidence_follow_on = docs_gate.Document(
+            SCRIPT,
+            {
+                **iter010_metadata,
+                "experience_delivery_verdict": "FAIL",
+                "experience_quality_gate_verdict": "FAIL",
+                "direction_evidence_handoff_elapsed_minutes": 361,
+                "reflection_gate_status": "PASS",
+                "reflection_decision": "REWORK",
+            },
+            "# Result\n",
+        )
+        late_evidence_errors = docs_gate.validate_experience_delivery_result(
+            late_evidence_follow_on,
+            iter010_policy,
+            provider_policy,
+            require_success=False,
+        )
+        self.assertTrue(
+            any("late direction evidence" in error for error in late_evidence_errors),
+            late_evidence_errors,
+        )
+
+        for field, value in (
+            ("experience_checkpoint_handoff_count", 3),
+            ("experience_checkpoint_handoff_report_digest", "pending"),
+            ("completed_live_canary_turn_count", 4),
+            ("direction_evidence_handoff_elapsed_minutes", 361),
+            ("direction_decision_elapsed_minutes", 481),
+            ("reflection_decision", "REWORK"),
+            ("reflection_decision_ref", "pending"),
+        ):
+            invalid_checkpoint_result = docs_gate.Document(
+                SCRIPT,
+                {**iter010_metadata, field: value},
+                "# Result\n",
+            )
+            checkpoint_errors = docs_gate.validate_experience_delivery_result(
+                invalid_checkpoint_result,
+                iter010_policy,
+                provider_policy,
+                require_success=True,
+            )
+            self.assertTrue(
+                any(field in error or "successful ITER-010 Result" in error for error in checkpoint_errors),
+                (field, checkpoint_errors),
             )
 
     def test_iter012_codex_baseline_and_alpha_binding_are_strict(self) -> None:
@@ -8170,6 +8416,106 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 required=True,
             ),
             [],
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                manifest,
+                alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_iter010_direction_checkpoint_policy(
+                manifest, "manifest.yaml"
+            ),
+            [],
+        )
+
+        for field, value in (
+            ("direction_discovery_principle_ref", "codex-user-message:sha256:" + "b" * 64),
+            ("micro_checkpoint_count", 3),
+            ("micro_checkpoint_order", "runnable-access-handoff"),
+            ("direction_alpha_prefix_turn_count", 5),
+            ("direction_alpha_is_prefix_of_frozen_live_canary", False),
+            ("direction_evidence_handoff_deadline_minutes", 361),
+            ("direction_decision_deadline_minutes", 481),
+            ("checkpoint_miss_action", "continue-scope-expansion"),
+        ):
+            invalid_direction = copy.deepcopy(manifest)
+            invalid_direction["experience_delivery_policy"][field] = value
+            errors = docs_gate.validate_iter010_direction_checkpoint_policy(
+                invalid_direction, "manifest.yaml"
+            )
+            self.assertTrue(any(field in error for error in errors), (field, errors))
+
+        parallel_lifecycle = copy.deepcopy(manifest)
+        parallel_lifecycle["experience_delivery_policy"]["hardening_unlocked"] = True
+        parallel_errors = docs_gate.validate_iter010_direction_checkpoint_policy(
+            parallel_lifecycle, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("parallel lifecycle" in error for error in parallel_errors),
+            parallel_errors,
+        )
+
+        reusable_chat_cutover = copy.deepcopy(manifest)
+        for field in (
+            "direction_discovery_principle_ref",
+            "micro_checkpoint_count",
+            "micro_checkpoint_order",
+            "direction_alpha_prefix_turn_count",
+            "direction_alpha_is_prefix_of_frozen_live_canary",
+            "direction_evidence_handoff_deadline_minutes",
+            "direction_decision_deadline_minutes",
+            "checkpoint_miss_action",
+        ):
+            reusable_chat_cutover["experience_delivery_policy"].pop(field)
+        self.assertEqual(
+            docs_gate.validate_conversational_architecture_cutover(
+                reusable_chat_cutover,
+                "future-chat-manifest.yaml",
+            ),
+            [],
+        )
+
+        for field, value in (
+            ("live_canary_conversation_count_after_local_pass", 2),
+            ("live_canary_turn_count", 1),
+        ):
+            invalid_experience = copy.deepcopy(manifest)
+            invalid_experience["experience_delivery_policy"][field] = value
+            errors = docs_gate.validate_experience_first_delivery_policy(
+                invalid_experience,
+                invalid_experience["product_goal_alignment"],
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            )
+            self.assertTrue(any(field in error for error in errors), (field, errors))
+
+        legacy_attempt_unit = copy.deepcopy(manifest)
+        legacy_attempt_unit["experience_delivery_policy"][
+            "live_canary_turn_count_after_local_pass"
+        ] = 5
+        legacy_errors = docs_gate.validate_experience_first_delivery_policy(
+            legacy_attempt_unit,
+            legacy_attempt_unit["product_goal_alignment"],
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any(
+                "live_canary_turn_count_after_local_pass" in error
+                for error in legacy_errors
+            ),
+            legacy_errors,
         )
 
         invalid_policy_values = (

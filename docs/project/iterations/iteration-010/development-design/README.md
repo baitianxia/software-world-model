@@ -13,6 +13,9 @@ coding_input: true
 
 # ITER-010 Development Design
 
+当前处于 `direction-exploration`，hardening 未解锁。Slice1 的唯一下一出口是先把可启动 Chat 页面交给用户，而不是一次性闭合五轮质量、
+三臂比较和全部 Gate；其四个微检查点见 Slice1 文件顶部执行卡。
+
 | Slice | 状态 | 目的 | 进入条件 |
 |---|---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `authorized / active / rework / coding input` | 复用既有安全、证据和 Web 资产，改为主工程 Agent 驱动的真正多轮 Chat；五轮连续对话和新对话隔离后，产出小样本三臂方向信号 | `f76ba3e8…` 已接受 PDR-004 Readiness 并授权产品/System 编码与本地确定性验证；live/Provider 另行授权 |

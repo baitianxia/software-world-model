@@ -54,6 +54,10 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 `CONTINUE / REWORK / REDIRECT / REJECT`。不得安排与方向判断无关的全面加固。技术质量必须由独立评测方先行裁决，用户只作产品方向
 决定。若本 Slice 属于工程夯实或正式验收，必须引用前一 Alpha 的 `CONTINUE` 结果。
 
+方向探索 Slice 必须把本轮最小的有序用户交付点放在本文件最前部的一页执行卡中，至少区分可启动入口、可持续方向体验和最终判向。
+每一行都写明累计时限、用户可见出口、允许验证、停止条件和明确延后项。检查点完成后立即交付，不等待后续 Gate；它们不创建或恢复
+Slice/Readiness/开发授权，只能在当前授权仍 active 时执行。外部执行仍须 exact grant，且任何用户方向否定都会停止后续检查点。
+
 从下一份新产品 Iteration 起，Alpha 还必须在同一出口绑定 `V-COMP-ALPHA-NNN`：一条原失败题加另外至少两条相邻或异质题，后两条中至少
 一条是产品冻结后的现场输入；current Codex fresh 独立任务先密封、
 系统不可见、两份答案随机匿名、独立评测方依据 exact evidence 裁决。系统绝对质量 PASS、逐题无物质退步且总体答案质量严格为正才允许
@@ -65,8 +69,9 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 到 240 分钟仍未形成时，停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。首次体验前只允许页面启动、安全边界、
 失败真实性、一次 current Provider 资格确认和最多一个 Provider 前本地/Mock Access smoke；不得把全量回归、完整资格、hidden 或对照放在前面。
 
-`V-ALPHA-ACCESS-NNN` 只判断 credential/reference、endpoint/model、current exact Conformance、策略能力资格和 active hold，不能证明答案质量；
-页面 availability 不等待质量 PASS，但 `V-COMP-ALPHA-NNN` 或本 Slice 冻结的质量 Case 必须 PASS 后才可 hardening。一次 live attempt 是同一
+`V-ALPHA-ACCESS-NNN` 只判断真实产品页面和请求通路是否可操作；Provider 未配置、未资格或失败可以被如实显示，不能阻塞页面交付，也
+不能证明答案质量。页面 availability 不等待质量 PASS，但 `V-COMP-ALPHA-NNN` 或本 Slice 冻结的质量 Case 必须 PASS 后才可 hardening。
+一次 live attempt 是同一
 sealed version 中一个有界用户交互单元只要发生任一外部 dispatch 就计一次，不按单元内部模型/角色调用数放大；Chat 中每个已 dispatch Turn 分别计数；同一 failure signature 最多再试一次，
 连续两次没有用户可见增量后停止外部重跑，回到本地根因诊断。已经开始的问题仍执行完整质量链，成本不能删减调查、回答、引用或独立审核。
 

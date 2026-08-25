@@ -10,7 +10,7 @@ tests: []
 as_of: 2026-08-25
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-authorized-agent-chat-alpha-development
+worktree_status: iteration-010-slice-001-direction-exploration-first-user-handoff-pending
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
 live_model_path: pdr-004-agent-chat-not-implemented-not-qualified-not-live-production-not-activated
 ---
@@ -23,6 +23,10 @@ live_model_path: pdr-004-agent-chat-not-implemented-not-qualified-not-live-produ
 `codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
 接受 PDR-004 刷新后的 Readiness 并明确授权开发；授权范围是 Slice1 产品/System 代码和本地确定性验证。它不自动授权 credential、
 Provider/model call、动态源码披露、live browser、hidden、Slice2/3 或 Production Activation。
+
+用户随后以 `codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f`
+（`2026-08-25T06:20:03Z`）确认前期必须通过快速迭代调整方向，方向错误时不得继续夯实。该收据只修订同一已授权 Slice 的执行拆分，
+不重置开发授权，也不新增任何外部执行权限。当前阶段是 `direction-exploration`，hardening 保持锁定。
 
 PDR-004 此前暂停了旧编码权威。用户曾以
 `codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5`（`2026-08-24T02:55:16Z`）
@@ -128,9 +132,18 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 Question Evidence Package → Answer → independent Reviewer` 技术纵切、公开题和现场题证据均已封存，但它只是可复用历史/兼容资产；
 不能冒充主工程 Agent 或 Chat。当前项目决定为 `REWORK + AUTHORIZED SLICE1`，不是 Acceptance，也不追认历史答案/审核 FAIL。
 
-当前最短顺序由 PDR-003 的交付纪律与 PDR-004 的 Chat 目标共同约束：本地可操作 Chat 页面 Access →
-最多一次必要 qualification 与一个 Provider 前本地/Mock 单轮 Access smoke → 预授权 Ark/DeepSeek 双 route → 一个有界五轮 Conversation
-作为首次方向 live canary并执行新对话泄漏 probe → 用户已取得可操作 Chat 后运行小样本三臂方向比较 → 独立技术复核和用户裁决。
+当前最短顺序由 PDR-003 的交付纪律与 PDR-004 的 Chat 目标共同约束，但不再把全部 Gate 打包成一次交付：
+
+1. 60 分钟内交付可启动 Chat 页面和固定 URL；Provider 未配置或失败必须如实显示，不能阻塞页面交付。
+2. Turn1 前冻结同一份五轮 Conversation 脚本，180 分钟交付线先交其前三轮真实方向体验。180 分钟未交即 timebox FAIL 并停止新增范围；
+   181—239 分钟只允许收敛现有纵切，迟到 Alpha 立即交付但只作 `FAIL / REWORK` 证据；240 分钟绝对停止。仍是独立问答、代码走读或
+   特判时立即交用户判向并停止后续工作。
+3. 只有前三轮方向未被停止，才在 360 分钟前完成五轮 Chat、新对话隔离和失败 Turn 隔离。
+4. 只有五轮技术质量通过，才在 480 分钟前形成三臂盲化比较和独立技术判断，再由用户决定是否 hardening。
+
+三轮检查点只是同一冻结五轮 live canary 的中间交付，不是独立三轮 canary；若在此停止，五轮 canary 记为 `INCOMPLETE / FAIL`。
+每个检查点都是立即用户交付和停止点，不是新 Slice 或授权阶段，也不能恢复暂停或失效的授权。计划、测试、文档和内部 Gate 完成都不算用户可见增量；错过检查点时
+交付最后可运行版本、唯一最早阻塞点和可证伪根因并停止范围扩张。等待外部授权时也停止产品扩张，不用额外内部建设填满等待时间。
 孤立 live question 不能替代 Chat canary；每个到达 Provider dispatch 的 Turn 分别计 live attempt并保留完整 Evidence/Citation/Review。
 首次体验前禁止继续扩张 Prompt、Schema、Contract 或跑 full regression。每次失败必须先定位最早偏差并形成可证伪根因假设；同 signature
 修一次仍复现就停止规则累积并做架构职责评审。相同 identity 且仍有效的 Conformance 必须复用；DeepSeek 批量调用前重新核对官方峰谷
@@ -1080,7 +1093,8 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-当前 coding input 是 `ITER-010-SLICE-001`。已授权修改该 Slice 所需的产品/System 代码并执行本地确定性验证；首项出口是持续 Web
-Chat Alpha，技术质量先由独立复核裁决，用户实际体验后再决定 `CONTINUE / REWORK / REDIRECT / REJECT`。不得启动 live Web、调用
+当前 coding input 是 `ITER-010-SLICE-001`。已授权修改该 Slice 所需的产品/System 代码并执行本地确定性验证；唯一下一出口是先交付
+可启动 Chat 页面，而不是闭合全部五轮质量和比较 Gate。技术质量先由独立复核裁决，用户在每个检查点均可停止方向，最终再决定
+`CONTINUE / REWORK / REDIRECT / REJECT`。不得启动 live Web、调用
 Provider、进入 Slice2/3、披露或收集 hidden 输入、复用已消费 grant，亦不得执行 Production Activation。`src/main/resources`、配置凭据
 仍在授权范围外。

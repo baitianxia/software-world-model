@@ -70,6 +70,12 @@ experience_elapsed_minutes_at_result_seal: pending
 page_launchable_elapsed_minutes: pending
 sustained_user_operable_alpha_elapsed_minutes: pending
 experience_hard_stop_triggered: pending
+# 仅在当前 Iteration Manifest 冻结了方向探索微检查点时填写。
+experience_checkpoint_handoff_count: pending
+experience_checkpoint_handoff_report_digest: pending
+completed_live_canary_turn_count: pending
+direction_evidence_handoff_elapsed_minutes: pending
+direction_decision_elapsed_minutes: pending
 pre_first_experience_qualification_count: pending
 pre_first_experience_smoke_question_count: pending
 pre_first_experience_full_regression_count: pending
@@ -119,13 +125,15 @@ critical_assumption_catalog_digest: pending
 ## Experience-first delivery report
 
 首个持续 Alpha Slice 的成功或失败 Result 必须绑定 `EXPERIENCE_FIRST_DELIVERY@1`、三个 Case、计时起点和 actual。记录 60 分钟页面、
-180 分钟持续 Alpha 是否达成；若到 240 分钟仍未达成，必须记录 hard stop 后新增功能/hardening/外部 dispatch 为 0。首次体验前资格次数
-不得超过 1、Provider 前本地/Mock Access smoke 不得超过 1 个、full regression 必须为 0。
+180 分钟持续 Alpha 是否达成；180 分钟未交即记 timebox FAIL，181—239 分钟形成的迟到 Alpha 只能作为 `FAIL / REWORK` 证据；若到
+240 分钟仍未达成，必须记录 hard stop 后新增功能/hardening/外部 dispatch 为 0。首次体验前资格次数不得超过 1、Provider 前本地/Mock
+Access smoke 不得超过 1 个、full regression 必须为 0。Manifest 另行冻结方向探索微检查点时，Result 还须记录逐点交付次数、聚合报告
+digest、同一冻结 canary 的完成 Turn 数、后续方向证据/决定时间；成功 Result 必须绑定方向 Gate PASS 和用户 `CONTINUE` 收据。
 
 `live_attempt_count` 按“一份 sealed version 的一个有界用户交互单元只要触发任一外部 dispatch 就计一次”记录，不按单元内部模型/角色调用数累计；Chat 中每个已 dispatch Turn 分别计数。同一
 failure signature 最多重试一次；连续两次无用户可见增量后必须停止外部重跑。Access Case 与 Quality Case 分别报告：Access PASS
 只允许页面 availability，不能把质量改写为 PASS；只有质量 PASS 才允许 hardening。限制只能发生在问题之间，已开始问题的完整质量链
-截断数必须为 0。
+截断数必须为 0；实际进入 hardening 还必须具有用户 `CONTINUE` 决定。
 
 每个失败还必须记录 Source truth 到 Web 的 earliest divergence、可证伪 root-cause hypothesis、假设反证结果、Prompt/Schema/Contract
 变更是否发生在假设之后、本地最小复现、两个未参与修复的相邻案例和唯一 live canary。相同 signature 修复一次仍复现时，Result 必须

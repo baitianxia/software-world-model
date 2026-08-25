@@ -24,6 +24,20 @@ Development Design 是当前编码输入，不是长期详细设计百科。它�
 可以在 Alpha 内设置更早的内部检查点，但它不能成为独立晋级门槛，也不能用一次性运行、静态回放或启动前冻结问题代替可体验版本。
 用户可操作的真实结果必须先于与方向判断无关的全面夯实。
 
+### 方向探索检查点必须是用户交付出口
+
+方向尚未被用户确认时，Alpha 不能再被计划成“全部产品 Gate 通过后一次性交付”的大任务。当前 Slice 必须在最前面维护一张不超过一页的
+执行卡，用少量有序检查点依次交付可启动产品入口、可持续方向体验，以及本轮要求的方向证据和用户判向。具体检查点数量和 Alpha 后时限由
+当前 Iteration 按最小判向需要冻结，不作为所有未来工程的固定流程。
+
+检查点是当前 Slice 内的交付和停止点，不是新 Iteration、Slice、Readiness 或授权阶段。它们只能在当前 Slice 授权仍 active 时沿用该授权，
+不能恢复已暂停、消费或失效的授权；外部调用仍单独遵守 exact grant。每个检查点完成后必须立即把启动方式、地址、精确版本、已知限制和
+可操作结果交给用户，不得先继续后续开发。代码、测试、文档、Gate 数量或内部链路完成都不算用户可见增量。
+
+未达到检查点时，必须交付最后一个可运行版本、唯一最早阻塞点和可证伪根因，并停止范围扩张；不能用继续建设内部组件来掩盖没有体验
+出口。任何检查点上用户明确认为方向错误，都立即停止后续检查点和 hardening。减少的是场景数量，不是单个已开始交互的 Evidence、
+Citation、独立 Review 或失败关闭质量。完整回归、跨工程、hidden、性能、持久化和协议夯实只有质量通过且用户 `CONTINUE` 才能解锁。
+
 从 `ITER-010-PDR-002` 后首个新建产品迭代起，首个持续 Web Alpha 必须把小样本 current Codex 同题盲评并入同一体验出口，而不是把
 比较继续推迟到 hardening，也不是在体验前增加独立阶段。Alpha 至少覆盖一条原失败题和另外两条相邻或异质问题，后两条中至少一条是
 产品冻结后的现场输入；完整
@@ -37,16 +51,18 @@ Codex 时才能进入工程夯实；全体打平时使用 `REWORK`。
 从 `ITER-012` 起，第一个持续 Alpha Slice 采用固定体验时间盒；ITER-010 可以在 Manifest 显式 opt in。计时点是 Slice 授权后的第一次
 产品代码变更，而不是第一次 live 调用：60 分钟内页面必须可启动，180 分钟内必须形成用户可连续操作的持续 Alpha；到 240 分钟仍未
 形成时，硬停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。60/180 是交付检查点，不能等完整质量证明才开始计时；
-240 是停止边界，不能以“再跑一次”绕过。
+240 是首次持续 Alpha 的停止边界，不能以“再跑一次”绕过。180 分钟未交付持续 Alpha 即记 timebox FAIL、立即交付现状并停止新增范围；
+181—239 分钟只允许定位根因和收敛已有纵切。期间形成的迟到 Alpha 仍须立即交用户，但只能作为 `FAIL / REWORK` 证据，不能追认为按时
+成功或解锁后续夯实。当前 Iteration 对 Alpha 后方向证据和判向另有明确时限时，同样不得把它们拖成新的无界内循环。
 
 若该 policy 在一次失败 Result 密封后才被采用，Manifest 必须用 `historical_pre_policy_result_refs` 精确列出这些历史 Result，并声明它们
 不能满足新的体验 Gate。门禁继续验证其 failed-preserved 身份、所属 Slice、不可变摘要和后继非编码 REWORK 决定，但不得反向要求历史
 Result 补造当时尚不存在的体验或 Provider 字段。新授权后的任何 Result 均须完整遵守当前 policy，不能加入该历史列表绕过验证。
 
 首次体验前只允许最小启动、安全边界、失败真实性、一次 current Provider 资格确认和最多一个 Provider 前本地/Mock Access smoke。全量回归、完整能力矩阵、hidden、
-跨工程和统计对照都必须后置。Access 与 Quality 是两道不同的 Gate：Access 只证明 credential/reference、endpoint/model、current exact
-Conformance、策略能力资格和 active hold；它可以使页面 availability 成立，但不能证明答案正确。只有用户可见答案质量 Case PASS 后，
-才可进入 hardening。
+跨工程和统计对照都必须后置。Access 与 Quality 是两道不同的 Gate：Access 只证明真实产品页面和请求通路已经交给用户操作；Provider
+未配置、未资格或失败必须如实显示，但不能阻塞页面交付。Provider 资格只约束需要外部模型的方向体验，Access 不能证明答案正确。只有
+用户可见答案质量 Case PASS 且用户决定 `CONTINUE` 后，才可进入 hardening。
 
 live attempt 使用轻量计数：同一 sealed product version 中，每个触发任一外部 dispatch 的有界用户交互单元计一次 attempt，不按单元内部模型/
 角色调用数放大；对 Chat，这个单元是 Turn，一段 Conversation 中多个已 dispatch Turn 分别计数；纯本地诊断不计。相同 failure signature 最多重试一次；连续两次 live attempt 没有用户可见增量，立即停止外部重跑，

@@ -120,7 +120,7 @@ product_goal_alignment:
       accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
       new_slice_ref: ITER-010-SLICE-003
   first_product_web_checkpoint: V-CHAT-EXPERIENCE-001
-  earliest_web_micro_checkpoint: V-CHAT-EXPERIENCE-001
+  earliest_web_micro_checkpoint: V-ALPHA-ACCESS-001
   direction_preview_checkpoint: V-PREVIEW-002
   direction_preview_binding:
     case_id: V-PREVIEW-002
@@ -350,6 +350,17 @@ rework_policy:
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
+  direction_discovery_principle_ref: codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f
+  first_user_handoff_case_id: V-ALPHA-ACCESS-001
+  direction_confirmation_case_id: V-PREVIEW-002
+  micro_checkpoint_count: 4
+  micro_checkpoint_order: runnable-access-handoff,sustained-direction-alpha-handoff,direction-evidence-handoff,independent-comparison-and-user-decision
+  direction_alpha_prefix_turn_count: 3
+  direction_alpha_is_prefix_of_frozen_live_canary: true
+  user_handoff_required_at_each_checkpoint: true
+  checkpoint_completion_requires_runnable_user_visible_artifact: true
+  plan_test_or_document_completion_counts_as_user_visible_increment: false
+  checkpoint_miss_action: handoff-last-runnable-version-and-earliest-root-cause-stop-scope-expansion
   historical_pre_policy_result_refs:
     - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   historical_results_do_not_satisfy_experience_gate: true
@@ -362,8 +373,11 @@ experience_delivery_policy:
   page_launchable_deadline_minutes: 60
   sustained_user_operable_alpha_deadline_minutes: 180
   hard_stop_deadline_minutes: 240
+  direction_evidence_handoff_deadline_minutes: 360
+  direction_decision_deadline_minutes: 480
   hard_stop_action: stop-scope-expansion-and-external-calls-narrow-and-review
   access_gate_scope: user-operable-web-and-request-path-only
+  provider_readiness_blocks_first_user_handoff: false
   quality_gate_scope: user-visible-answer-quality-only
   access_pass_cannot_satisfy_quality_gate: true
   availability_requires_quality_pass: false
@@ -377,7 +391,8 @@ experience_delivery_policy:
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
   local_minimal_reproduction_required_before_live_retry: true
   unseen_adjacent_local_case_count: 2
-  live_canary_turn_count_after_local_pass: 1
+  live_canary_conversation_count_after_local_pass: 1
+  live_canary_turn_count: 5
   same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
   same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities
   pre_first_experience_test_scope: targeted-impact-startup-and-safety-only

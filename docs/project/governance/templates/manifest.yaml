@@ -73,6 +73,7 @@ product_goal_alignment:
       accepted_capability_ref: <prior-acceptance-id>
       new_slice_ref: <current-slice-id>
   first_product_web_checkpoint: <verification-case-id>
+  earliest_web_micro_checkpoint: <V-ALPHA-ACCESS-NNN>
   direction_preview_checkpoint: <V-PREVIEW-NNN>
   direction_preview_binding:
     case_id: <V-PREVIEW-NNN>
@@ -205,6 +206,11 @@ conversational_engineering_agent:
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: <first-sustained-web-alpha-slice-id>
+  first_user_handoff_case_id: <V-ALPHA-ACCESS-NNN>
+  direction_confirmation_case_id: <V-PREVIEW-NNN>
+  user_handoff_required_at_each_checkpoint: true
+  checkpoint_completion_requires_runnable_user_visible_artifact: true
+  plan_test_or_document_completion_counts_as_user_visible_increment: false
   # 仅在后置采用本 policy 且必须保留更早失败 Result 时填写；这些 Result 不追溯补字段，也不能满足本 Gate。
   historical_pre_policy_result_refs: []
   historical_results_do_not_satisfy_experience_gate: true
@@ -217,6 +223,7 @@ experience_delivery_policy:
   hard_stop_deadline_minutes: 240
   hard_stop_action: stop-scope-expansion-and-external-calls-narrow-and-review
   access_gate_scope: user-operable-web-and-request-path-only
+  provider_readiness_blocks_first_user_handoff: false
   quality_gate_scope: user-visible-answer-quality-only
   access_pass_cannot_satisfy_quality_gate: true
   availability_requires_quality_pass: false
@@ -234,8 +241,7 @@ experience_delivery_policy:
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
   local_minimal_reproduction_required_before_live_retry: true
   unseen_adjacent_local_case_count: 2
-  # 非 Chat 使用 question_count；Chat 必须把此 key 替换为 live_canary_turn_count_after_local_pass，
-  # 并在 conversation policy 中单独冻结最小多轮 Conversation 长度。
+  # 非 Chat 使用 question_count；Chat 必须把此 key 替换为 conversation_count + turn_count。
   live_canary_question_count_after_local_pass: 1
   same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
   same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities

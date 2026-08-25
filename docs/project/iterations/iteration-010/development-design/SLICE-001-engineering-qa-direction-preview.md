@@ -23,6 +23,25 @@ product_goal_slice_gate_case_ids: [V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHA
 
 ## Status and dependencies
 
+### 当前唯一执行卡
+
+用户以 `codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f`
+（`2026-08-25T06:20:03Z`）再次确认：前期工作的目的首先是快速验证方向；方向错误时，内部实现再完整也没有产品价值。下表是当前唯一
+执行顺序。每个检查点形成后立即把启动方式、地址、精确版本、已知限制和实际结果交给用户，不等待后续检查点或全部 Gate。
+
+| 检查点 | 累计交付时限 | 用户可见出口 | 只允许的工作与验证 | 到点停止条件 |
+|---|---:|---|---|---|
+| 可启动 Chat 页面 | 60 分钟 | 固定命令启动 `127.0.0.1:8765`；能发送消息、查看历史并新建对话；未接模型时如实显示未配置/未资格/失败和“质量未验收” | 最小页面、Conversation identity、新对话隔离、loopback/Origin/输入边界、改动模块测试；不得调用模型或跑 full regression | 仍不可操作时，交付最后可运行状态和唯一最早阻塞点，停止架构与范围扩张 |
+| 三轮真实方向体验 | 180 分钟交付线；240 分钟绝对停止 | 在 Turn1 前冻结一份五轮 Conversation 脚本，本检查点交付其“初始问题→指代追问→纠正前提”前三轮；每轮显示答案或诚实失败、Citation 和状态 | 每个已开始 Turn 保留完整主 Agent、Evidence、Answer、fresh Review 和失败关闭；外部 dispatch 前另取 exact grant；只跑定向测试和两个相邻非定制案例 | 180 分钟未交即记 timebox FAIL、交付现状并停止新增范围；181—239 分钟的迟到 Alpha 只作 `FAIL / REWORK` 证据；仍是独立问答、纠正不生效、答案像代码走读或需要特判时不继续后两轮、比较或夯实 |
+| 五轮 Chat 与新对话隔离 | 360 分钟 | 仅在上一检查点未被停止时，增加“进一步区分/深入→按当前 Context 总结”，并展示新对话不继承旧指代、失败 Turn 后会话可继续 | 同一冻结 Conversation 的后两轮、逐轮 Evidence/Citation/Review、新对话泄漏负测和 Turn 故障隔离；仍不跑 full regression | 上下文泄漏、prior Answer 成为事实、失败关闭会话、重大错误或审核误放行，停止比较和 hardening |
+| 小样本三臂比较与方向决定 | 480 分钟 | 展示盲化的 current Codex、同 Agent 仅源码、同 Agent 世界模型认知+源码结果及独立技术判断；用户作出 `CONTINUE / REWORK / REDIRECT / REJECT` | 同一 exact revision、同一代表性 Conversation 与 rubric；系统两臂共享 Agent/model/tool/budget/Reviewer，Codex 保持实际能力 | 完整认知臂有重大错误、弱于源码臂/Codex 或世界模型无可观察贡献时，方向未证明；成本和时延不得抵消质量失败 |
+
+这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
+授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为
+`INCOMPLETE / FAIL`，不能取得 Chat/Quality PASS。等待外部授权时立即交付当前可运行版本并停止产品范围扩张；本次计划收据不授权
+Provider/model、源码披露或 browser live。任何检查点上用户明确认为方向错误，都立即停止后续投入。下文的历史 run、旧协议和最终 Gate
+只作证据与边界引用，不能反向成为首个交付的前置任务。
+
 `AUTHORIZED / ACTIVE / REWORK / CODING INPUT`。用户曾以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
@@ -56,9 +75,9 @@ smoke 只允许本地或 Mock Access 探针，不能用孤立 live question 冒�
 1. 从未执行的 `V-ALPHA-ACCESS-001` 按 PDR-004 pre-execution revision 先交一个真实、可重复启动、普通用户可操作且明确标记“质量未验收 / 非生产”的 Chat Web。页面可以如实显示
    Provider 未资格、请求失败、答案或 Limitation；静态回放不算 Access。
 2. 新 `V-CHAT-QUALITY-001` 是独立 Quality Gate。Access PASS 不能补成 Quality PASS；Quality FAIL 也不删除可操作页面。已执行 FAIL 的 `V-ANSWER-REWORK-001` 仅保留历史原义。只有 Quality
-   PASS 才允许进入 hardening。
-3. 新 `V-TIMEBOX-CHAT-001` 对 PDR-004 恢复使用 60/180/240 分钟检查点。已执行 FAIL 的 `V-TIMEBOX-001` 仅保留 PDR-003 历史原义。历史 14 小时已经越过 hard stop，因此新授权后立即停止 scope expansion、外部批量调用和
-   首次体验前 full regression，收窄为页面启动、安全、失败真实性、最多一次 current Provider qualification 和一个本地或 Mock Access smoke。
+   PASS 且 `V-PREVIEW-002` 取得用户 `CONTINUE` 才允许进入 hardening。
+3. 新 `V-TIMEBOX-CHAT-001` 对 PDR-004 恢复使用四个用户交付检查点：60 分钟页面、180 分钟同一五轮脚本前三轮方向 Alpha 交付线、240 分钟绝对停止、360 分钟五轮方向证据、480 分钟独立比较与用户判向。180 分钟未交即记 timebox FAIL；181—239 分钟形成的迟到 Alpha 只能作为 `FAIL / REWORK` 证据。已执行 FAIL 的 `V-TIMEBOX-001` 仅保留 PDR-003 历史原义。历史 14 小时已经越过 hard stop，因此新授权后立即停止 scope expansion、外部批量调用和
+   首次体验前 full regression，收窄为页面启动、安全、失败真实性、最多一次 current Provider qualification 和一个本地或 Mock Access smoke；每到一个检查点立即交付，不等待后续 Gate。
 4. 每次失败先按 Source truth、World Model Cognition、Conversation/Task Understanding、Agent Work State/Plan、Tool Observation/Evidence、
    Answer、Independent Review、Web 定位
    最早偏差，并提出可证伪 root-cause hypothesis；没有该假设不得改 Prompt、Schema 或 Contract。修复先通过本地最小复现和两个未参与
@@ -405,8 +424,8 @@ loopback 就取得题目提交权。
 
 1. `V-ALPHA-ACCESS-001`（PDR-004 pre-execution revision；旧定义从未执行）：固定启动命令、loopback、无认证、消息历史、“新对话”、真实 Turn 提交、版本/限制/失败状态；
    明确标记“质量未验收 / 非生产”。Access PASS 不产生 Chat/Quality PASS。
-2. `V-TIMEBOX-CHAT-001`：新授权后 60/180/240 分钟检查点、qualification≤1、Provider 前本地或 Mock Access smoke≤1、首体验前 full regression=0；孤立 live question 不计 Chat canary，
-   每个 Provider-dispatched Turn 分别计 live attempt，不削减证据/Citation/Review。
+2. `V-TIMEBOX-CHAT-001`：新授权后按 60/180/240/360/480 分钟执行页面、同一冻结五轮脚本的前三轮方向 Alpha、绝对停止、五轮方向证据、独立比较与用户判向；180 分钟未交即 timebox FAIL，迟到 Alpha 只作 `FAIL / REWORK` 证据；每点立即交付。qualification≤1、Provider 前本地或 Mock Access smoke≤1、首体验前 full regression=0；孤立 live question 不计 Chat canary，
+   每个 Provider-dispatched Turn 分别计 live attempt，不削减证据/Citation/Review；计划、测试或文档完成不算用户可见增量。
 3. `V-CHAT-EXPERIENCE-001`：同一 Web/Conversation 完成五轮语义链，页面展示完整消息历史；失败只关闭当前 Turn，Conversation 继续可用；新 Conversation 泄漏负测要求澄清。
 4. `V-CHAT-001`：五轮依次为初始问题→省略指代追问→用户纠正→进一步区分/深入→按 current Context 总结；主 Agent 持续维护目标/假设/计划/观察/重规划，每 Turn 独立 Evidence/Answer/Review。
 5. `V-CHAT-QUALITY-001`：每 Turn 重大错误 0、重要结论有 Citation；prior Answer/Review 不作事实，旧 evidence 只在 exact identity/coverage 匹配后重绑当前 Package；
