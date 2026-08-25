@@ -2947,6 +2947,34 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-090.md"
   },
   {
+    "id": "FINDING-010-091",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "project",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-091.md"
+  },
+  {
+    "id": "FINDING-010-092",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "operations",
+      "project",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-092.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -4655,6 +4683,23 @@
     "path": "docs/project/iterations/iteration-010/decisions/PDR-002-strict-current-codex-baseline-next-iteration.md"
   },
   {
+    "id": "ITER-010-PDR-003",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-003-experience-first-provider-cost-recovery.md"
+  },
+  {
     "id": "ITER-010-PROPOSAL",
     "kind": "iteration-proposal",
     "status": "accepted",
@@ -5505,6 +5550,24 @@
     "path": "docs/system/architecture/decisions/ADR-016-engineering-question-answering.md"
   },
   {
+    "id": "SYS-ADR-017",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "ai",
+      "application",
+      "security",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [
+      "FINDING-010-092"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md"
+  },
+  {
     "id": "SYS-ADR-INDEX",
     "kind": "system-decision-index",
     "status": "current",
@@ -5573,7 +5636,8 @@
     ],
     "derived_from": [
       "FINDING-008-024",
-      "FINDING-008-036"
+      "FINDING-008-036",
+      "FINDING-010-092"
     ],
     "path": "docs/system/architecture/runtime-flows.md"
   },
@@ -5650,7 +5714,8 @@
       "FINDING-008-025",
       "FINDING-008-026",
       "FINDING-008-032",
-      "FINDING-008-036"
+      "FINDING-008-036",
+      "FINDING-010-092"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -6215,7 +6280,8 @@
       "FINDING-010-031",
       "FINDING-010-070",
       "FINDING-010-071",
-      "FINDING-010-073"
+      "FINDING-010-073",
+      "FINDING-010-092"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

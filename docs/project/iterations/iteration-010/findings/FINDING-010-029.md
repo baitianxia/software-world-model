@@ -35,6 +35,10 @@ prepared Request/run grant，并禁止浏览器提交不同问题。现有实现
 
 ## Decision and disposition
 
+Provider route 部分已由后续 `FINDING-010-092 / SYS-ADR-017` 取代：同 Provider retry 仍为 0，但用户的一次 logical question 可以在 Session
+预授权边界内透明启动一个独立、重跑完整链的 DeepSeek fallback attempt；无需重提或新建 Session。本文其余 Session Authority、逐输入
+授权和请求隔离处置继续有效。
+
 引入 `ENGINEERING_QA_SESSION_AUTHORITY@1`。listener 前由 operator/user 授权并密封 exact product candidate、loopback origin、工程/
 Binding/revision、World Model Read Authority、Source Profile/allowlist、Provider/model/configuration/qualification/secret reference、角色
 Prompt/schema、redaction、每题与整会话安全熔断、有效期和非生产状态。它只授权这个闭合边界，不授权任何尚未提交的问题或直接 dispatch。
@@ -43,7 +47,8 @@ Prompt/schema、redaction、每题与整会话安全熔断、有效期和非生�
 question bytes/digest、session authority digest、唯一 server-issued request/run identity、提交时刻和披露确认，形成不可伪造的
 `Question Submission Receipt`。Application/System Owner 只能从该 receipt 与固定会话模板编译一个 exact Request 和一次性 per-question
 run authorization；浏览器不提供 request ID、grant 或 Provider 参数。随后仍按既有规则为每个动态角色输入形成 full-input digest 的
-one-use disclosure authorization，零重试、dispatch 后不切 Provider。
+one-use disclosure authorization；同一 Provider request dispatch 后零重试。跨 Provider 只能按 `SYS-ADR-017` 在同一 logical question 下创建
+独立 fallback attempt，并从原问题与 exact Cognition 重跑完整链。
 
 每题拥有独立 Request、Ledger、Package、Answer、Review、Citation 和审计；重复提交 receipt、身份漂移、会话/题目预算耗尽或授权过期只
 失败关闭当前新请求，不得把旧 Result 当作新题结果。已开始的单题按其 exact 授权到终态；一个问题的调查或审核失败不得停止 listener，

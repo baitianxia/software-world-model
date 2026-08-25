@@ -14,6 +14,8 @@ product_goal_accepted_capability_refs: []
 product_goal_cross_domain_case_ids: []
 product_goal_web_checkpoint_id: pending
 product_goal_direction_preview_checkpoint_id: V-PREVIEW-NNN
+product_goal_alpha_access_checkpoint_id: V-ALPHA-ACCESS-NNN
+product_goal_experience_timebox_checkpoint_id: V-TIMEBOX-NNN
 product_goal_alpha_agent_comparison_checkpoint_id: V-COMP-ALPHA-NNN
 product_goal_live_ad_hoc_checkpoint_id: pending
 product_goal_reflection_gate_case_id: V-REFLECT-NNN
@@ -56,6 +58,28 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 一条是产品冻结后的现场输入；current Codex fresh 独立任务先密封、
 系统不可见、两份答案随机匿名、独立评测方依据 exact evidence 裁决。系统绝对质量 PASS、逐题无物质退步且总体答案质量严格为正才允许
 `CONTINUE`；全体打平或只具有效率优势时在同一 Slice `REWORK`。该 Case 不是体验前的新阶段。
+
+## Experience-first timebox and Access/Quality split
+
+首个持续 Alpha Slice 从授权后的第一次产品代码变更开始计时：60 分钟内页面可启动，180 分钟内形成用户可连续操作的持续 Alpha；
+到 240 分钟仍未形成时，停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。首次体验前只允许页面启动、安全边界、
+失败真实性、一次 current Provider 资格确认和一题真实 smoke；不得把全量回归、完整资格、hidden 或对照放在前面。
+
+`V-ALPHA-ACCESS-NNN` 只判断 credential/reference、endpoint/model、current exact Conformance、策略能力资格和 active hold，不能证明答案质量；
+页面 availability 不等待质量 PASS，但 `V-COMP-ALPHA-NNN` 或本 Slice 冻结的质量 Case 必须 PASS 后才可 hardening。一次 live attempt 是同一
+sealed version 的同一问题运行只要发生任一外部 dispatch 就计一次，不按内部角色调用数放大；同一 failure signature 最多再试一次，
+连续两次没有用户可见增量后停止外部重跑，回到本地根因诊断。已经开始的问题仍执行完整质量链，成本不能删减调查、回答、引用或独立审核。
+
+每次 live failure 先按 `Source truth → World Model cognition → question understanding → investigation → evidence package → answer → review → Web`
+记录 earliest divergence 和可证伪 root-cause hypothesis；在此之前禁止改 Prompt/Schema/Contract。修复先通过本地最小复现和至少两个未参与
+修复的相邻案例，再执行一题 live canary。同 signature 修复一次仍复现时，停止增加规则并评审架构职责。Alpha 前只做 targeted impact、
+startup、safety 测试；full regression 只能进入 `CONTINUE` 后 hardening 和正式验收前。
+
+记录 Ark-first ordered route 的 current 资格证据，并在 session 开始前预授权双方 disclosure scope。Ark attempt 以 Provider/模型能力原因
+终态结束且没有 authorized answer 时，可以对用户透明地启动最多一个 DeepSeek attempt；用户不用新建 session 或重提。fallback 必须从
+immutable original question 和 exact World Model cognition 重跑完整链，不能复用前次中间产物；迟到 Ark 结果只能隔离审计，不能覆盖已密封
+结果。同 Provider retry 为 0；Application、Source 或 Security 失败不得切 Provider 掩盖。DeepSeek 批量工作优先安排在执行时重新核对的
+官方非高峰窗口，紧急峰时启动必须有可审计显式 override。
 
 ## Experience version checkpoint
 

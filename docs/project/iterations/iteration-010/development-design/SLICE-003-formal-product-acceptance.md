@@ -77,7 +77,8 @@ Secret、raw hidden suite、Oracle、成熟 Agent 输出和未授权源码不进
 ## Open questions and implementation risks
 
 - 现场题可能超出 Java/static evidence 能力；诚实 limitation 是合法结果，但 answerable/boundary 分类由独立评测裁决，不能事后改分母。
-- Provider/network unknown 与产品能力失败必须分开；任何 request 可能发送后不 retry、不切换 Provider。
+- Provider/network unknown 与产品能力失败必须分开；同 Provider request 可能发送后不 retry。跨 Provider 只允许 ADR-017 预授权的同
+  logical question 独立全链 fallback attempt。
 - 若完整认知通过质量门但相对 locator-only/empty 同链既没有预提交质量增益，也没有预提交非 locator 调查成本增益，复杂混合方案不能
   接受。World Model 的建模、更新、存储与 Provider 成本必须按冻结复用周期摊入报告。
 
@@ -88,7 +89,7 @@ Secret、raw hidden suite、Oracle、成熟 Agent 输出和未授权源码不进
    boundary 正确且逐结论不退步的质量门，再证明相对 locator control 的预提交质量或 normalized non-locator cost 增益。精确报告计入
    World Model 建模/更新/存储/Provider 成本与冻结复用周期；旧 source-exposure 指标只作为历史输入，不代替新消融 Gate。
 3. `V-SEC-003`：source read 只经 Broker/Worker；Investigation/Answer/Reviewer direct source/FS/Shell/network=0；Update/write/silent
-   fallback/secret/hidden retry=0；loopback only。
+   unauthorized/silent-mode fallback、secret exposure、same-Provider hidden retry=0；ADR-017 fallback attempt 完整隔离；loopback only。
 4. `V-XD-003` 与 `V-WEB-003`：同一正式 Web 对最终问题组合 accepted Snapshot 与本轮多来源 Evidence，Citation 可人工核对。
 5. `V-ADHOC-001`：用户冻结后现场提出两题，至少一题无符号并执行跨域组合。
 6. `V-REGRESSION-003`：accepted scope、严格 WORLD_MODEL、显式 DIRECT、Slice1/2 ENGINEERING_QA 和完整回归无新增失败。

@@ -58,6 +58,35 @@ positive_value_adjudication_owner: pending
 positive_value_adjudication_receipt_ref: pending
 product_web_manual_verification: pending
 product_code_freeze_digest: pending
+experience_delivery_policy_schema: pending
+experience_delivery_access_case_id: pending
+experience_delivery_timebox_case_id: pending
+experience_delivery_quality_case_id: pending
+experience_delivery_verdict: pending
+experience_access_gate_verdict: pending
+experience_quality_gate_verdict: pending
+experience_timebox_started_at: pending
+experience_elapsed_minutes_at_result_seal: pending
+page_launchable_elapsed_minutes: pending
+sustained_user_operable_alpha_elapsed_minutes: pending
+experience_hard_stop_triggered: pending
+pre_first_experience_qualification_count: pending
+pre_first_experience_smoke_question_count: pending
+pre_first_experience_full_regression_count: pending
+live_attempt_count: pending
+same_failure_signature_maximum_retry_count: pending
+maximum_consecutive_no_user_visible_increment_count: pending
+external_dispatch_after_required_stop_count: pending
+started_question_quality_chain_truncation_count: pending
+provider_route_policy_schema: pending
+provider_route_report_digest: pending
+fallback_provider_attempt_count: pending
+same_provider_retry_count: pending
+cross_attempt_intermediate_artifact_reuse_count: pending
+user_resubmission_or_new_session_count: pending
+late_primary_result_overwrite_count: pending
+capability_failure_misclassified_as_unavailable_count: pending
+application_source_security_failure_fallback_count: pending
 canary_project_manifest_digest: pending
 canary_suite_digest: pending
 canary_disclosure_receipt_digest: pending
@@ -86,6 +115,27 @@ critical_assumption_catalog_digest: pending
 ## Execution and evidence
 
 ## Result, failures and limitations
+
+## Experience-first delivery report
+
+首个持续 Alpha Slice 的成功或失败 Result 必须绑定 `EXPERIENCE_FIRST_DELIVERY@1`、三个 Case、计时起点和 actual。记录 60 分钟页面、
+180 分钟持续 Alpha 是否达成；若到 240 分钟仍未达成，必须记录 hard stop 后新增功能/hardening/外部 dispatch 为 0。首次体验前资格次数
+不得超过 1、真实 smoke 不得超过 1 题、full regression 必须为 0。
+
+`live_attempt_count` 按“一份 sealed version 的一个问题运行只要触发任一外部 dispatch 就计一次”记录，不按内部角色调用数累计。同一
+failure signature 最多重试一次；连续两次无用户可见增量后必须停止外部重跑。Access Case 与 Quality Case 分别报告：Access PASS
+只允许页面 availability，不能把质量改写为 PASS；只有质量 PASS 才允许 hardening。限制只能发生在问题之间，已开始问题的完整质量链
+截断数必须为 0。
+
+每个失败还必须记录 Source truth 到 Web 的 earliest divergence、可证伪 root-cause hypothesis、假设反证结果、Prompt/Schema/Contract
+变更是否发生在假设之后、本地最小复现、两个未参与修复的相邻案例和唯一 live canary。相同 signature 修复一次仍复现时，Result 必须
+进入架构职责评审，不能继续追加规则。首次 Alpha 前列出的测试只能是 targeted impact/startup/safety，full regression 计数必须为 0；
+后者只在 Alpha `CONTINUE` 后 hardening 与正式验收前执行。
+
+Provider 报告还必须列出 ordered routes、每个独立 attempt 的 sealed identity、trigger/outcome 分类、fallback 是否从 immutable original
+question + World Model cognition 重跑完整链、中间产物复用数、迟到 primary 隔离收据、同 Provider retry 数和用户是否被要求重提。
+Provider 输出/schema/模型审核失败可以作为 capability fallback 原因，但不得伪称网络不可用；Application、Source 或 Security 失败不得
+通过切 Provider 掩盖。
 
 ## Architecture reflection and continuation decision
 

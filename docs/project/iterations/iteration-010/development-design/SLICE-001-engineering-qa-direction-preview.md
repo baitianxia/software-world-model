@@ -16,7 +16,7 @@ product_goal_web_checkpoint_id: V-WEB-000
 direction_preview_web_checkpoint_id: V-EXPERIENCE-001
 product_goal_direction_preview_checkpoint_id: V-PREVIEW-002
 product_goal_reflection_gate_case_id: V-REFLECT-001
-product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, V-QINTENT-001, V-INVESTIGATE-001, V-BROKER-001, V-LEDGER-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-000, V-WEB-001, V-PREVIEW-001, V-REFLECT-001, V-EXPERIENCE-001, V-ANSWER-REWORK-001, V-PREVIEW-002]
+product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, V-QINTENT-001, V-INVESTIGATE-001, V-BROKER-001, V-LEDGER-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-000, V-WEB-001, V-PREVIEW-001, V-REFLECT-001, V-EXPERIENCE-001, V-ALPHA-ACCESS-001, V-TIMEBOX-001, V-ANSWER-REWORK-001, V-PREVIEW-002]
 ---
 
 # SLICE-001：持续 Web Alpha 与答案质量返工
@@ -34,6 +34,35 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, 
 明确要求继续开发，恢复同一个 Slice 的产品/System 编码和本地确定性验证。该收据晚于失败 Result 与 PDR-001，不改写历史失败，也不授权
 Slice2/3、hidden、Production Activation 或复用旧 live grant。
 
+[PDR-003](../decisions/PDR-003-experience-first-provider-cost-recovery.md) 记录了当前恢复约束：用户报告本轮约 14 小时仍无新体验版本且
+DeepSeek token 消耗过多。既有授权不再允许继续无界扩张 Prompt、Schema 或 Contract；当前只做 Access、Provider route、失败真实性与
+一题 live canary 所需的最小工作。Ark 为 primary；同一 logical question 的 Ark attempt 在密封 terminal 后，仅可按预授权 route 自动启动
+一次独立 DeepSeek fallback attempt，用户无需选择模型、重提问题或重启 session。
+
+## PDR-003 recovery override：Access 先于 Quality
+
+本节覆盖下文历史返工顺序中任何要求“先把三题质量、完整回归或新协议全部闭合，再交页面”的表达；不改写已经发生的 run 或安全边界。
+
+1. `V-ALPHA-ACCESS-001` 先交一个真实、可重复启动、普通用户可操作且明确标记“质量未验收 / 非生产”的 Web。页面可以如实显示
+   Provider 未资格、请求失败、答案或 Limitation；静态回放不算 Access。
+2. `V-ANSWER-REWORK-001` 是独立 Quality Gate。Access PASS 不能补成 Quality PASS；Quality FAIL 也不删除可操作页面。只有 Quality
+   PASS 才允许进入 hardening。
+3. `V-TIMEBOX-001` 使用 60/180/240 分钟检查点。历史 14 小时已经越过 hard stop，因此现在立即停止 scope expansion、外部批量调用和
+   首次体验前 full regression，收窄为页面启动、安全、失败真实性、最多一次 current Provider qualification 和一个 live smoke。
+4. 每次失败先按 Source truth、World Model Cognition、Question Understanding、Investigation、Evidence Package、Answer、Review、Web 定位
+   最早偏差，并提出可证伪 root-cause hypothesis；没有该假设不得改 Prompt、Schema 或 Contract。修复先通过本地最小复现和两个未参与
+   修复的相邻案例，再只跑一题 live canary。
+5. 同一 failure signature 只允许修复一次；仍复现即停止规则累积并评审架构职责。一题 canary 失败时不运行三题集。首次体验前只跑
+   targeted impact、startup、safety 和失败真实性；full regression 仅在 Alpha `CONTINUE` 后 hardening 与正式验收前运行。
+6. 一个 sealed 版本的 question run 到达任何外部 dispatch 即计一次 live attempt。同一 failure signature 最多一个 successor attempt；
+   连续两次没有用户可见增量即停止外部重跑、回到本地诊断。内部 Prompt/Schema/Contract 或测试数量变化不算用户可见增量。
+7. Ark route 当前未闭合不能被当作 Ark 不可用证据。Session 在问题前预封 Ark→DeepSeek 有序 route 与双 Provider disclosure scope；
+   primary attempt 因 Provider unavailable/HTTP/outcome unknown/output invalid 或 Review reject 而密封为无 authorized answer 时，才可对
+   同一问题自动启动一次 DeepSeek attempt。Fallback 从原问题和同一 Cognition 重跑完整链，不复用 Ark 中间态；迟到 Ark 结果隔离且不覆盖。
+   相同且仍有效的 Conformance 必须复用。
+8. DeepSeek 批量运行默认安排在北京时间 `00:00–09:00`、`12:00–14:00`、`18:00–24:00`，并在开始前复核官方价格政策是否已经生效。
+   成本只决定是否在 dispatch 前开始，不能裁剪已经开始的问题的调查、Citation 或 Review。
+
 ## Rework outcome：先交付持续 Web Alpha
 
 恢复开发后的首项交付必须是普通用户实际可持续使用的同一产品 Web，而不是固定 1+1 问题的评测运行器：
@@ -46,7 +75,8 @@ Slice2/3、hidden、Production Activation 或复用旧 live grant。
    页面展示真实失败或 Limitation，服务仍可接受下一题；错误答案不得被标成已审核成功。
 4. 在同一 Slice 内对答案层级和 Reviewer 漏判做最小、通用修复，并以原现场登录题加至少两个相邻或异质问题回归。至少一个问题不是实现
    走读题；不得加入工程名、问题文本、关键词、符号、类、方法、fixture 或 Oracle 特判。
-5. 用户可持续体验和独立技术复核完成前，不启动第二工程、持久恢复、完整异常矩阵、全面性能安全、hidden、三臂或 full regression。
+5. 用户可持续体验和独立技术复核完成前，不启动第二工程、持久恢复、完整异常矩阵、全面性能安全、hidden、三臂或 full regression；
+   PDR-003 还禁止在 Access 前继续扩张 Prompt、Schema 或 Contract。
 
 自由提问所需的会话级授权、动态问题披露和 System Owner 语义必须在编码前以最小变更闭合；这项必要安全工作不能扩张为先建设完整答案
 Schema 或评测体系。模型调用上限仍只作为安全熔断，不能为了减少调用而省略调查、Citation 或独立审核。
@@ -350,10 +380,15 @@ loopback 就取得题目提交权。
 11. `V-XD-001`、`V-WEB-000`：历史最小纵切技术 PASS 保留，不冒充持续体验或返工 PASS。
 12. `V-EXPERIENCE-001`：同一 Web 由一条固定命令重复启动，在固定工程/revision 的同一会话连续自由提问；受控坏题只失败该 Request，
     服务继续接受下一题，状态不串扰；页面展示版本和限制，并证明答案来自真实世界模型—调查—证据链而非预制回放。
-13. `V-ANSWER-REWORK-001`：原失败题加至少两个相邻或异质问题完成通用修复回归；重大错误为 0、重要结论有 Citation、至少一题非实现走读，且无任何特判。
-14. `V-PREVIEW-002`：独立技术复核后，用户在持续 Web Alpha 上实际自由提问并决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
-15. `V-SEC-001`：Source injection、path/write/exec/network/secret/disclosure、budget、no retry、loopback 全部符合边界。
-16. `V-REFLECT-001`：历史反思事实保留；返工 Result 重新给出 A1—A3 证据、A4/A5 early signal、全部 Finding 和用户新决定。
+13. `V-ALPHA-ACCESS-001`：在答案质量验收前先交付可重复启动、普通用户可操作、如实显示 Provider/请求状态且标记“质量未验收”的 Web；
+    Access PASS 不产生 Quality PASS。
+14. `V-TIMEBOX-001`：60/180/240 分钟检查点、一次资格/一次 smoke、同签名一次 successor 和连续两次无用户可见增量停止规则均可审计；
+    本轮已超过 hard stop，当前 recovery 必须保持收窄。
+15. `V-ANSWER-REWORK-001`：一题 canary 独立复核通过后，原失败题加至少两个相邻或异质问题完成通用修复回归；重大错误为 0、重要结论有
+    Citation、至少一题非实现走读，且无任何特判。canary 失败时不得启动三题集。
+16. `V-PREVIEW-002`：独立技术复核后，用户在持续 Web Alpha 上实际自由提问并决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
+17. `V-SEC-001`：Source injection、path/write/exec/network/secret/disclosure、budget、no retry、loopback 全部符合边界。
+18. `V-REFLECT-001`：历史反思事实保留；返工 Result 重新给出 A1—A3 证据、A4/A5 early signal、全部 Finding 和用户新决定。
 
 ## Architecture reflection checkpoint
 
@@ -520,4 +555,9 @@ compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合�
 `FINDING-010-090` 记录新 clean `fe6b6b6…` / run-034：第一条 fresh Conformance request 已完成 credential resolution、verified TLS 与
 HTTP dispatch，但 DeepSeek 返回 402；request 1、token 0、retry/switch 0，第二条未发送，无 Qualification、Alpha、Browser 或 Production。
 run-034 永久 FAIL；当前 key 所属账户余额实际恢复前保持 configuration-environment hold，之后只能启动新的 fresh Conformance。
+`FINDING-010-091` 记录本轮约 14 小时没有新用户体验、却持续进行内部协议修复和 DeepSeek live 的交付反证；PDR-003 现将 Access、Quality
+和 hardening 分离，并用 60/180/240、一次资格/一次 smoke、同签名一次 successor 和两次无用户可见增量停止规则收窄恢复。
+`FINDING-010-092` 记录透明 Ark-primary/DeepSeek-fallback 尚未成为 current Engineering QA 可验证 route。下一执行不是继续修 Answer
+Schema 或 Prompt，而是本地页面 Access → 预封双 route → 一题 live canary；fallback 是同一 logical question 下完全隔离的新 attempt，
+用户无需重提，且相同有效 Conformance 必须复用。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

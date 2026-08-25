@@ -232,5 +232,10 @@ iteration: ITER-010
 - [FINDING-010-090](FINDING-010-090.md)：新 clean `fe6b6b6…` / run-034 的第一条 fresh Conformance request 在 credential/TLS/HTTP
   成功后仍收到 DeepSeek 402；request 1、retry/switch 0，无 Qualification/Alpha/Browser/Production。当前 key 所属账户余额恢复前保持
   configuration-environment hold。
+- [FINDING-010-091](FINDING-010-091.md)：用户报告 ITER-010 约 14 小时仍无新体验版本且 DeepSeek token 消耗过多；现把根因处置为
+  Access/Quality/hardening 串行化的迭代设计缺陷，并以 PDR-003 的体验优先、硬时限和轻量 live-attempt 规则恢复。
+- [FINDING-010-092](FINDING-010-092.md)：当前 Engineering QA 尚未落实对用户透明的 Ark-primary/DeepSeek 独立 fallback attempt；已处置到
+  ADR-017/Model Gateway，并要求同一 logical question 不重提、不共享中间态、late result 不覆盖、同 identity 有效 Conformance 复用，且
+  DeepSeek 批次价格状态逐次复核、成本不削弱质量。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

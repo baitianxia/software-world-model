@@ -875,6 +875,383 @@ product_goal_alignment:
         errors = docs_gate.validate_product_goal_v000(stale, "ITER-012")
         self.assertTrue(any("expected" in error for error in errors), errors)
 
+    def test_experience_first_delivery_policy_is_strict_and_iter010_can_opt_in(
+        self,
+    ) -> None:
+        new_refs = ["ITER-012-SLICE-001", "ITER-012-SLICE-002"]
+        blocking = [
+            "V-ALPHA-ACCESS-001",
+            "V-TIMEBOX-001",
+            "V-COMP-ALPHA-001",
+        ]
+        alignment: dict[str, object] = {
+            "direction_preview_checkpoint": "V-PREVIEW-001",
+            "direction_preview_binding": {
+                "case_id": "V-PREVIEW-001",
+                "web_case_id": "V-EXPERIENCE-001",
+                "new_slice_ref": new_refs[0],
+                "real_product_entry": "loopback-product-owned-engineering-qa-web",
+                "representative_task_count": 3,
+                "status_label": "non-acceptance-non-production",
+                "decision_owner": "user",
+                "allowed_decisions": "CONTINUE,REWORK,REDIRECT,REJECT",
+                "hardening_requires_continue": True,
+            },
+            "experience_version_binding": {"new_slice_ref": new_refs[0]},
+        }
+        policy: dict[str, object] = {
+            "schema": docs_gate.EXPERIENCE_FIRST_DELIVERY_SCHEMA,
+            "owner_slice_ref": new_refs[0],
+            "access_case_id": "V-ALPHA-ACCESS-001",
+            "timebox_case_id": "V-TIMEBOX-001",
+            "quality_case_id": "V-COMP-ALPHA-001",
+            "start_event": "first-product-code-change-after-slice-authorization",
+            "page_launchable_deadline_minutes": 60,
+            "sustained_user_operable_alpha_deadline_minutes": 180,
+            "hard_stop_deadline_minutes": 240,
+            "hard_stop_action": docs_gate.EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION,
+            "access_gate_scope": "user-operable-web-and-request-path-only",
+            "quality_gate_scope": "user-visible-answer-quality-only",
+            "access_pass_cannot_satisfy_quality_gate": True,
+            "availability_requires_quality_pass": False,
+            "hardening_requires_quality_pass": True,
+            "pre_first_experience_allowed_checks": docs_gate.EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK,
+            "pre_first_experience_qualification_limit": 1,
+            "pre_first_experience_smoke_question_limit": 1,
+            "pre_first_experience_full_regression_allowed": False,
+            "live_attempt_unit": docs_gate.EXPERIENCE_FIRST_DELIVERY_LIVE_ATTEMPT_UNIT,
+            "same_failure_signature_retry_limit": 1,
+            "consecutive_no_user_visible_increment_limit": 2,
+            "no_increment_action": docs_gate.EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION,
+            "failure_diagnosis_order": "source-truth-world-model-cognition-question-understanding-investigation-evidence-package-answer-review-web",
+            "earliest_divergence_required": True,
+            "falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change": True,
+            "local_minimal_reproduction_required_before_live_retry": True,
+            "unseen_adjacent_local_case_count": 2,
+            "live_canary_question_count_after_local_pass": 1,
+            "same_failure_signature_fix_limit_before_architecture_responsibility_review": 1,
+            "same_failure_signature_recurrence_action": "stop-rule-accumulation-and-review-architecture-responsibilities",
+            "pre_first_experience_test_scope": "targeted-impact-startup-and-safety-only",
+            "full_regression_before_alpha_continue_allowed": False,
+            "full_regression_allowed_stages": "alpha-continue-hardening-and-before-formal-acceptance",
+        }
+        manifest = {"experience_delivery_policy": policy}
+
+        self.assertFalse(
+            docs_gate.requires_experience_first_delivery_policy("ITER-010")
+        )
+        self.assertTrue(
+            docs_gate.requires_experience_first_delivery_policy("ITER-012")
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                manifest,
+                alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=False,
+            ),
+            [],
+        )
+        self.assertTrue(
+            any(
+                "is required" in error
+                for error in docs_gate.validate_experience_first_delivery_policy(
+                    {},
+                    alignment,
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
+                    required=True,
+                )
+            )
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                {},
+                alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=False,
+            ),
+            [],
+        )
+
+        invalid_changes = (
+            ("page_launchable_deadline_minutes", 61),
+            ("sustained_user_operable_alpha_deadline_minutes", 181),
+            ("hard_stop_deadline_minutes", 241),
+            ("access_pass_cannot_satisfy_quality_gate", False),
+            ("availability_requires_quality_pass", True),
+            ("hardening_requires_quality_pass", False),
+            ("pre_first_experience_qualification_limit", 2),
+            ("pre_first_experience_smoke_question_limit", 2),
+            ("pre_first_experience_full_regression_allowed", True),
+            ("same_failure_signature_retry_limit", 2),
+            ("consecutive_no_user_visible_increment_limit", 3),
+            ("earliest_divergence_required", False),
+            (
+                "falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change",
+                False,
+            ),
+            ("unseen_adjacent_local_case_count", 1),
+            ("live_canary_question_count_after_local_pass", 2),
+            (
+                "same_failure_signature_fix_limit_before_architecture_responsibility_review",
+                2,
+            ),
+            ("full_regression_before_alpha_continue_allowed", True),
+        )
+        for field, invalid_value in invalid_changes:
+            with self.subTest(field=field):
+                invalid_manifest = copy.deepcopy(manifest)
+                invalid_manifest["experience_delivery_policy"][field] = invalid_value
+                errors = docs_gate.validate_experience_first_delivery_policy(
+                    invalid_manifest,
+                    alignment,
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
+                    required=True,
+                )
+                self.assertTrue(any(field in error for error in errors), errors)
+
+        aliased_cases = copy.deepcopy(manifest)
+        aliased_cases["experience_delivery_policy"]["quality_case_id"] = (
+            "V-ALPHA-ACCESS-001"
+        )
+        aliased_errors = docs_gate.validate_experience_first_delivery_policy(
+            aliased_cases,
+            alignment,
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(any("must be distinct" in error for error in aliased_errors))
+
+    def test_provider_route_policy_is_ark_first_transparent_and_quality_preserving(
+        self,
+    ) -> None:
+        policy: dict[str, object] = {
+            "schema": docs_gate.PROVIDER_ROUTE_POLICY_SCHEMA,
+            "preference_order": list(docs_gate.PROVIDER_ROUTE_PREFERENCE),
+            "primary_provider": "VOLCENGINE_ARK",
+            "fallback_provider": "DEEPSEEK",
+            "fallback_requires_primary_attempt_terminal_without_authorized_answer": True,
+            "primary_unavailable_evidence_required": True,
+            "implementation_gap_counts_as_primary_unavailable": False,
+            "primary_availability_requires": "credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold",
+            "fallback_trigger": "sealed-primary-attempt-terminal-without-authorized-answer-for-provider-or-model-capability-reason",
+            "fallback_eligible_outcomes": list(
+                docs_gate.PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES
+            ),
+            "application_source_security_failure_allows_fallback": False,
+            "fallback_reason_classification_required": True,
+            "capability_failure_must_not_be_misclassified_as_unavailable": True,
+            "route_freeze_time": "before-session-start-and-before-any-question-dispatch",
+            "ordered_routes_preauthorized_at_session_start": True,
+            "ordered_route_disclosure_scopes_preauthorized_at_session_start": True,
+            "transparent_logical_question_fallback_allowed": True,
+            "user_resubmission_or_new_session_required": False,
+            "fallback_attempt_restarts_full_chain": True,
+            "fallback_attempt_inputs": "immutable-original-question-and-exact-cognition-context",
+            "cross_attempt_intermediate_state_reuse_allowed": False,
+            "late_primary_result_policy": "quarantine-audit-only",
+            "late_primary_result_overwrite_allowed": False,
+            "maximum_fallback_provider_attempts": 1,
+            "same_provider_retry_allowed": False,
+            "outcome_unknown_duplicate_cost_risk_recorded": True,
+            "post_dispatch_provider_switch_requires": "new-provider-attempt-under-same-logical-question-and-preauthorized-route",
+            "deepseek_batch_start_policy": "provider-declared-non-peak-preferred",
+            "deepseek_schedule_timezone": "Asia/Shanghai",
+            "deepseek_current_preferred_windows": list(
+                docs_gate.DEEPSEEK_PREFERRED_WINDOWS
+            ),
+            "deepseek_schedule_source": "https://api-docs.deepseek.com/quick_start/pricing/",
+            "deepseek_schedule_checked_at": "2026-08-25",
+            "deepseek_schedule_effective_status": "announced-not-yet-effective",
+            "peak_urgent_override_requires": "audited-explicit-override",
+            "cost_can_reduce_answer_quality": False,
+            "cost_gate_scope": "before-question-start-only",
+            "current_started_question_must_keep_full_quality_chain": True,
+            "unchanged_current_conformance_reuse_required": True,
+        }
+        manifest = {"provider_route_policy": policy}
+        self.assertFalse(docs_gate.requires_provider_route_policy("ITER-010"))
+        self.assertTrue(docs_gate.requires_provider_route_policy("ITER-012"))
+        self.assertEqual(
+            docs_gate.validate_provider_route_policy(
+                manifest, "manifest.yaml", required=False
+            ),
+            [],
+        )
+        self.assertTrue(
+            any(
+                "is required" in error
+                for error in docs_gate.validate_provider_route_policy(
+                    {}, "manifest.yaml", required=True
+                )
+            )
+        )
+        self.assertEqual(
+            docs_gate.validate_provider_route_policy(
+                {}, "manifest.yaml", required=False
+            ),
+            [],
+        )
+
+        invalid_changes = (
+            ("preference_order", ["DEEPSEEK", "VOLCENGINE_ARK"]),
+            ("implementation_gap_counts_as_primary_unavailable", True),
+            ("transparent_logical_question_fallback_allowed", False),
+            ("user_resubmission_or_new_session_required", True),
+            ("fallback_attempt_restarts_full_chain", False),
+            ("cross_attempt_intermediate_state_reuse_allowed", True),
+            ("late_primary_result_overwrite_allowed", True),
+            ("maximum_fallback_provider_attempts", 2),
+            ("same_provider_retry_allowed", True),
+            ("application_source_security_failure_allows_fallback", True),
+            ("capability_failure_must_not_be_misclassified_as_unavailable", False),
+            ("cost_can_reduce_answer_quality", True),
+            ("current_started_question_must_keep_full_quality_chain", False),
+        )
+        for field, invalid_value in invalid_changes:
+            with self.subTest(field=field):
+                invalid_manifest = copy.deepcopy(manifest)
+                invalid_manifest["provider_route_policy"][field] = invalid_value
+                errors = docs_gate.validate_provider_route_policy(
+                    invalid_manifest, "manifest.yaml", required=True
+                )
+                self.assertTrue(any(field in error for error in errors), errors)
+
+        invalid_outcomes = copy.deepcopy(manifest)
+        invalid_outcomes["provider_route_policy"]["fallback_eligible_outcomes"] = [
+            "provider-unavailable",
+            "application-failure",
+        ]
+        outcome_errors = docs_gate.validate_provider_route_policy(
+            invalid_outcomes, "manifest.yaml", required=True
+        )
+        self.assertTrue(
+            any("fallback_eligible_outcomes" in error for error in outcome_errors),
+            outcome_errors,
+        )
+        legacy = copy.deepcopy(manifest)
+        legacy["provider_route_policy"]["request_level_failover_allowed"] = False
+        legacy_errors = docs_gate.validate_provider_route_policy(
+            legacy, "manifest.yaml", required=True
+        )
+        self.assertTrue(
+            any("incompatible" in error for error in legacy_errors), legacy_errors
+        )
+        bad_date = copy.deepcopy(manifest)
+        bad_date["provider_route_policy"]["deepseek_schedule_checked_at"] = (
+            "2026-02-30"
+        )
+        date_errors = docs_gate.validate_provider_route_policy(
+            bad_date, "manifest.yaml", required=True
+        )
+        self.assertTrue(any("real ISO date" in error for error in date_errors))
+
+    def test_iter012_manifest_requires_experience_and_provider_policies(self) -> None:
+        manifest: dict[str, object] = {"product_goal_alignment": {}}
+        errors = docs_gate.validate_product_goal_alignment_manifest(
+            manifest,
+            "product_goal_alignment:\n",
+            "manifest.yaml",
+            "ITER-012",
+        )
+        self.assertTrue(
+            any("experience_delivery_policy is required" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("provider_route_policy is required" in error for error in errors),
+            errors,
+        )
+
+    def test_experience_delivery_result_audits_timebox_and_provider_attempts(
+        self,
+    ) -> None:
+        experience_policy = {
+            "schema": docs_gate.EXPERIENCE_FIRST_DELIVERY_SCHEMA,
+            "access_case_id": "V-ALPHA-ACCESS-001",
+            "timebox_case_id": "V-TIMEBOX-001",
+            "quality_case_id": "V-COMP-ALPHA-001",
+        }
+        provider_policy = {"schema": docs_gate.PROVIDER_ROUTE_POLICY_SCHEMA}
+        metadata: dict[str, object] = {
+            "experience_delivery_policy_schema": docs_gate.EXPERIENCE_FIRST_DELIVERY_SCHEMA,
+            "experience_delivery_access_case_id": "V-ALPHA-ACCESS-001",
+            "experience_delivery_timebox_case_id": "V-TIMEBOX-001",
+            "experience_delivery_quality_case_id": "V-COMP-ALPHA-001",
+            "experience_delivery_verdict": "PASS",
+            "experience_access_gate_verdict": "PASS",
+            "experience_quality_gate_verdict": "PASS",
+            "experience_timebox_started_at": "2026-08-25T01:00:00Z",
+            "experience_elapsed_minutes_at_result_seal": 170,
+            "page_launchable_elapsed_minutes": 45,
+            "sustained_user_operable_alpha_elapsed_minutes": 150,
+            "experience_hard_stop_triggered": False,
+            "pre_first_experience_qualification_count": 1,
+            "pre_first_experience_smoke_question_count": 1,
+            "pre_first_experience_full_regression_count": 0,
+            "live_attempt_count": 2,
+            "same_failure_signature_maximum_retry_count": 1,
+            "maximum_consecutive_no_user_visible_increment_count": 1,
+            "external_dispatch_after_required_stop_count": 0,
+            "started_question_quality_chain_truncation_count": 0,
+            "provider_route_policy_schema": docs_gate.PROVIDER_ROUTE_POLICY_SCHEMA,
+            "provider_route_report_digest": "sha256:" + "a" * 64,
+            "fallback_provider_attempt_count": 1,
+            "same_provider_retry_count": 0,
+            "cross_attempt_intermediate_artifact_reuse_count": 0,
+            "user_resubmission_or_new_session_count": 0,
+            "late_primary_result_overwrite_count": 0,
+            "capability_failure_misclassified_as_unavailable_count": 0,
+            "application_source_security_failure_fallback_count": 0,
+        }
+        result = docs_gate.Document(SCRIPT, metadata, "# Result\n")
+        self.assertEqual(
+            docs_gate.validate_experience_delivery_result(
+                result,
+                experience_policy,
+                provider_policy,
+                require_success=True,
+            ),
+            [],
+        )
+
+        invalid = docs_gate.Document(
+            SCRIPT,
+            {
+                **metadata,
+                "sustained_user_operable_alpha_elapsed_minutes": 181,
+                "same_provider_retry_count": 1,
+                "cross_attempt_intermediate_artifact_reuse_count": 1,
+                "experience_quality_gate_verdict": "FAIL",
+            },
+            "# Result\n",
+        )
+        invalid_errors = docs_gate.validate_experience_delivery_result(
+            invalid,
+            experience_policy,
+            provider_policy,
+            require_success=True,
+        )
+        for expected in (
+            "within 180 minutes",
+            "experience_quality_gate_verdict",
+            "same_provider_retry_count",
+            "cross_attempt_intermediate_artifact_reuse_count",
+        ):
+            self.assertTrue(
+                any(expected in error for error in invalid_errors), invalid_errors
+            )
+
     def test_iter012_codex_baseline_and_alpha_binding_are_strict(self) -> None:
         new_refs = ["ITER-012-SLICE-001", "ITER-012-SLICE-002"]
         alpha_case = "V-COMP-ALPHA-001"

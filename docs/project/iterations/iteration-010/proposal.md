@@ -44,6 +44,27 @@ Slice1 首先把现有链恢复为可重复启动、同会话连续自由提问�
 该 PDR 只修订项目方向；其接受时 Slice1 为 `paused / coding_input=false`，旧授权与所有 live grant 已消费。后续 `32b298de…` 收据已恢复
 编码，外部调用仍须在新 product freeze 后另行授权。
 
+## PDR-003 amendment：体验优先恢复与透明模型路由
+
+用户以 `codex-user-message:sha256:47a3421d48fe3f36000e45696ea9c41b49b7e362332bc724306c10ca42fe119c`
+指出 ITER-010 约 14 小时仍没有新的可体验结果，并消耗了大量 DeepSeek token。[PDR-003](decisions/PDR-003-experience-first-provider-cost-recovery.md)
+因此再次收窄 Slice1 执行顺序：Access 与答案 Quality 分开，先交明确标记“质量未验收”的可操作 Web；一题 canary 未通过时不运行三题集，
+首次体验前停止 Answer/Review Prompt、Schema、Contract 扩张和 full regression。
+
+Experience policy 使用 60/180/240 分钟检查点。历史经过已经越过 hard stop，当前恢复只允许页面启动、安全、失败真实性、一次必要资格和
+一次 live smoke。一个 sealed 版本的 question run 到达任一外部 dispatch 就计一次 live attempt；同 failure signature 最多一个 successor，
+连续两次没有用户可见增量即停止外部重跑。
+
+失败处理从 `answer-chasing` 改为 root-cause-first：按 Source truth 到 Web 的固定责任链定位最早偏差，先提出可证伪假设；没有假设和本地
+最小复现不得改 Prompt、Schema 或 Contract。修复需先通过最小复现与两个未参与修复的相邻案例，随后只跑一题 live canary；同 signature
+修一次仍复现即停止规则累积并做架构职责评审。首次体验前只跑 targeted impact/startup/safety，full regression 仅在 Alpha `CONTINUE`
+后的 hardening 与正式验收前执行。
+
+模型 route 按 ADR-017 对用户透明：Session 预授权 `VOLCENGINE_ARK → DEEPSEEK`。用户只提交一次 logical question；Ark attempt 仅在密封
+terminal、无 authorized answer 且属于允许的 Provider/model reason 时，才自动启动一次独立 DeepSeek attempt。Fallback 从原问题与 exact
+Cognition 重跑完整链，不复用 Ark 中间态；同 Provider retry 为 0，late Ark 结果 quarantine。当前实现尚未证明该 route，必须先以最小
+产品变化闭合，不能把文档目标写成运行 PASS。
+
 ## Product-goal alignment and cumulative delta
 
 - MVP target：`SYS-PRODUCT-SUCCESS`。目标仍是基于预构建软件世界模型的通用工程问答，不另立源码 Agent 产品。
@@ -115,8 +136,8 @@ Knowledge Update/Use、Response Control、Model Gateway、Capability Evaluation�
 ## Development slices and dependencies
 
 1. `SLICE-001`：持续 Web Alpha 与答案质量返工。复用已实现的认知上下文、自适应调查、Broker/Worker、Ledger/Package、Answer/Review、
-   Citation 与页面；首先闭合固定工程/revision 会话中的连续自由提问、请求隔离、版本/限制展示，再对答案层级和 Reviewer 做最小通用修复。
-   同一会话回归原失败题和至少两个相邻或异质问题。持久恢复、第二工程和完整矩阵不阻塞首个持续体验。
+   Citation 与页面；首先按 PDR-003 闭合可启动 Access 和透明 Ark→DeepSeek route，只跑一题 canary。canary 通过后才在同一冻结版本回归
+   原失败题和至少两个相邻或异质问题；否则回到本地诊断。持久恢复、第二工程、完整矩阵和 full regression 不阻塞首个持续体验。
 2. `SLICE-002`：跨工程和工程化夯实。持续 Alpha 方向 `CONTINUE` 且重新授权后，完成持久恢复、第二工程、来源冲突、复杂多步补证、去重、性能、
    安全、资格、完整异常/回归、early hidden、三臂同题消融、World Model 建模成本/复用周期计量和异步知识沉淀。固定一轮补证不是长期
    协议；以预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断控制。
@@ -134,12 +155,15 @@ Knowledge Update/Use、Response Control、Model Gateway、Capability Evaluation�
 - 自然答案可能掩盖错误；Citation 必须逐结论支持，未知不能扩张为不存在或完整性结论。
 - 架构比直接源码 Agent 更复杂；最终必须用完整认知、locator-only/empty 同链和成熟源码 Agent 三臂同题消融证明复杂度合理。新增消融的
   protocol、阈值和 digest 当前只是 proposed，不能复用旧 `6ca47f7d…` 收据，Slice2 前必须取得新的用户冻结收据。
+- Provider route 必须保持 logical question 与 provider attempt 双层身份；透明 fallback 若复用 primary Ledger/Package、允许 late response
+  覆盖，或把 Application/Source/Security failure 误分类成模型失败，将破坏证据与安全边界。当前实现缺口必须在一题 smoke 前闭合。
 
 ## Verification and acceptance
 
-Slice1 的历史 deterministic/Web 证据保留；返工新增持续启动、会话自由提问、请求隔离、版本/限制展示和通用答案/Reviewer 回归。
-原失败题与至少两个相邻或异质问题重大错误为 0，重要结论有 Citation，失败只能显示准确 Limitation 或请求级 fail-close；其中一题失败
-不影响后续问题。用户在实际持续体验后裁决方向。
+Slice1 的历史 deterministic/Web 证据保留；返工先以 `V-ALPHA-ACCESS-001/V-TIMEBOX-001` 证明持续启动、会话自由提问、请求隔离、
+版本/限制展示和 recovery 纪律。Access 不要求答案 Quality PASS，也不能替代它。一题 canary 通过后，原失败题与至少两个相邻或异质
+问题才进入 `V-ANSWER-REWORK-001`：重大错误为 0，重要结论有 Citation，失败只能显示准确 Limitation 或请求级 fail-close。用户在实际
+持续体验后裁决方向。
 
 Slice2 运行第二工程 5+2 early canary、三臂同题消融、建模成本/复用周期、性能、安全和完整回归。三个 Arm 固定相同 revision、model、
 questions、模型与来源资源 budget、cache policy/state、rubric 和 evaluator；完整认知与成熟源码 Agent 的质量 Gate 先 PASS，完整认知

@@ -132,6 +132,11 @@ deterministic Gate，新 clean/fresh live 仍是 blocking evidence，项目决�
 第二条 canary 未发送，没有 Qualification、Alpha、Browser 或 Production。`FINDING-010-090` 将 run-034 永久封存为
 FAIL；当前 key 所属账户恢复 Provider 可用性后，只能启动新的 fresh Conformance。项目决定仍为 `REWORK`。
 
+PDR-003 已取代上述“余额恢复后继续 DeepSeek”的当前下一步，但不改写 run-034 历史事实。用户报告本轮约 14 小时仍无新体验且 DeepSeek
+token 消耗过多后，当前进入 hard-stop recovery：先交质量未验收 Web Access，再执行预授权 Ark→DeepSeek route 的一题 live canary；
+失败不跑三题。Provider 对用户透明，fallback 是同一 logical question 下重跑完整链的新 attempt，不共享 Ark 中间态，用户无需重提或
+新建 Session。该 route 尚未实现/资格化；首次体验前停止 Prompt/Schema/Contract 扩张、外部批量调用和 full regression。
+
 本轮产品基线固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
 `1369ce932c778c57a118123e8257ede476229d73`；授权审核的 planning commit/tree 为
 `01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。ITER-009 的体验代码保留为技术资产，但其代码走读式产品方向已由

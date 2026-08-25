@@ -31,5 +31,7 @@ ADR 解释为什么选择当前架构；规范正文仍由 Architecture、Invari
 | [ADR-014](ADR-014-snapshot-first-world-model-answering.md) | 软件世界模型回答只读 exact Snapshot，禁止静默源码回退 |
 | [ADR-015](ADR-015-bounded-world-model-investigation.md) | Agent 只通过有界 typed 查询调查 exact World Model |
 | [ADR-016](ADR-016-engineering-question-answering.md) | 默认工程问答由世界模型认知驱动自适应、受控的 exact-revision 调查 |
+| [ADR-017](ADR-017-transparent-qualified-provider-routing.md) | Ark 优先、DeepSeek 备用，以隔离的完整 Provider attempt 对用户透明地处理同一 logical question |
 
-交付范围、暂停、某次 Provider 选择和环境激活不改变长期架构选择，因此不进入当前 ADR 集合。
+交付范围、暂停、某次运行实际选择哪个 Provider 和环境激活不改变长期架构选择，因此不进入当前 ADR 集合；Provider 路由协议本身由
+ADR-017 拥有。

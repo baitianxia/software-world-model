@@ -78,10 +78,10 @@ request bytes 可能已发送后的连接失败立即 outcome unknown，禁止 r
 Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题或跨 session 复用。每个实际调用仍拥有唯一 workload、manifest、receipt、
 request ID、body/result digest 和 transport audit；TLS attempt/success/reuse 与 Provider call count 分开闭合。
 
-当候选声明 Provider preference 时，偏好只用于 product freeze 前的资格 route 选择。每条 route 必须独立持有 current Adapter
-Conformance、同一 Strategy/Configuration 的 Capability Qualification、exact endpoint/secret reference 与隔离 transport；Application
-按偏好选择第一个完整 route，并把该单一 Provider subject 密封进 policy、grant、session 和连接审计。不得为判断“可用性”先调用
-资格不完整的首选 Provider；一旦任一 request 已分派或结果未知，也不得改向第二 Provider 重试。改选需要新的 product freeze 与授权。
+历史单 Provider Profile 继续在 product freeze 前选择一个 exact route，并保持同 Provider request 零重试。默认 `ENGINEERING_QA` 的
+多 Provider 高可用语义已由 ADR-017 收窄为 Session 预授权的 Ark→DeepSeek 有序 attempt：用户的一次 logical question 可在 primary
+attempt 密封 terminal 后透明启动一个完全隔离、从原问题与 exact Cognition 重跑全链的 fallback attempt。它不是同一外部 request 的
+retry，也不得复用 primary 中间态。本 ADR 不再拥有 Engineering QA 的跨 Provider 路由规则。
 
 progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle identity、评测期望或隐藏输入。负向结论必须分别拥有三个独立证明：
 
@@ -105,8 +105,8 @@ progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle
 并在编码前冻结可重放的正向价值阈值。若最小闭包仍低于成熟 Agent、必须读 Source、或不能在预算内组合多个方法，本方案应停止并
 记录为架构反证，而不是继续扩张语法或预算。
 
-Provider preference 因此增加的是可审计的部署选择，不是一次请求内的高可用 failover；每次候选仍只有一个已资格 Provider，且
-Conformance、Capability、Product 与 Activation 证据不能跨 Provider 继承。
+Provider Conformance、Capability、Product 与 Activation 证据始终不能跨 Provider 继承。采用 ADR-017 的 Engineering QA Session 必须
+分别冻结并审计两条 route；其他尚未采用该 ADR 的 Profile 仍是单 Provider。
 
 ## Supersedes / migration
 

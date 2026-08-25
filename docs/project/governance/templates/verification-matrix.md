@@ -19,6 +19,8 @@ product_goal_result_id: pending
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并在答案质量上严格超过 current Codex | product / comparison | 未参与实现的真实工程；独立持有的 held-out 和现场问题；exact current Codex identity/protocol；双方密封答案；随机匿名映射；独立盲评量表 | 系统绝对质量 PASS；逐题无物质退步；总体答案质量差值严格为正；全体打平 FAIL；次级效率指标不得补偿；同一正式 Web 可人工验证 | pending | not-run / blocking |
+| V-ALPHA-ACCESS-001 | 首选 Provider 的访问与策略能力当前可用；Access 不冒充答案质量 | integration / provider access | Session 前密封 Ark→DeepSeek ordered route、双方 disclosure scope；Ark/DeepSeek exact credential reference、endpoint/model/configuration、Conformance、策略能力资格和 active hold；独立 attempt ledger | Ark 优先；Ark attempt 因冻结的 Provider/模型能力结果终态结束且没有 authorized answer 时，最多透明启动 1 个 DeepSeek attempt；用户不重提；fallback 从原问题和 exact cognition 重跑完整链，不混中间产物；迟到 Ark 结果隔离；同 Provider retry=0；Access PASS 不能使质量 Case PASS | pending | not-run / blocking |
+| V-TIMEBOX-001 | 首个持续 Web Alpha 遵守时间盒、root-cause-first 和轻量 live-attempt 停止规则 | product / delivery | 从 Slice 授权后的第一次产品代码变更计时；exact commit、事件时间、页面/Alpha 收据、外部 dispatch、failure-signature ledger、earliest-divergence hypothesis、本地复现与相邻案例 | 60 分钟页面、180 分钟持续 Alpha、240 分钟硬停止；首次体验前资格≤1、smoke≤1、full regression=0；先定位 Source→cognition→understanding→investigation→package→answer→review→Web 最早偏差；无可证伪根因不得改 Prompt/Schema/Contract；本地最小复现+2 个未参与修复的相邻案例后仅 1 题 live canary；同签名修复一次仍复现即架构职责评审 | pending | not-run / blocking |
 | V-EXPERIENCE-001 | 首次方向体验是真正可持续操作的版本 | product / browser | <exact-version-single-launch-command-fixed-loopback-address-diverse-visible-cases-and-controlled-failure> | 可重复启动；同一会话连续自由提问；版本和限制可见；问题真实经过产品链；单题失败后服务继续接受问题 | pending | not-run / blocking |
 | V-COMP-ALPHA-001 | 首个持续 Web Alpha 的答案质量严格超过 current Codex | product / blind comparison | 一条原失败题及另外至少两个相邻或异质问题，后两题中至少一条为产品冻结后现场输入；fresh Codex 先密封；系统不可见；随机匿名 A/B；独立 evaluator 读取 exact evidence | 冻结问题全部完成并分类；系统绝对质量 PASS；每题不低于 Codex；blind-paired answer-quality margin > 0；部分题可打平但全体打平、both-fail、unresolved/invalid 均 FAIL；成本、时延或复用不得补偿 | pending | not-run / blocking |
 | V-PREVIEW-001 | 用户在可持续 Alpha 上实际体验并决定是否进入夯实 | product / directional-preview | <V-EXPERIENCE-001-and-V-COMP-ALPHA-001-results-diverse-visible-cases-and-new-live-input> | 独立技术复核和严格 Codex 对照先通过；用户给出 CONTINUE、REWORK、REDIRECT 或 REJECT；非 CONTINUE 时禁止 hardening | pending | not-run / blocks hardening, not acceptance evidence |
@@ -36,3 +38,7 @@ PASS 不算完成。`V-REFLECT PASS` 只表示复盘完整，不表示方案通�
 
 `V-COMP-ALPHA` 与首个持续 Web Alpha 属于同一 Slice，不能拆成体验前的新阶段，也不能用后续 hidden Result 回填。current Codex 是强基线
 候选，不是 Oracle 或裁判；事实来自同一 exact revision 的授权证据。最终 `V-000` 必须在 held-out 套件重跑严格比较，不能复用 Alpha。
+
+`V-ALPHA-ACCESS` 只证明当前 Provider 可访问且具备本策略要求的资格；页面 availability 不依赖答案质量 PASS，`V-TIMEBOX` 因此不能等待
+完整质量回归后才开始。Access 也不能替代 `V-COMP-ALPHA` 或本 Slice 的答案质量 Case；只有质量 PASS 才可进入 hardening。时间盒和
+live-attempt 限制发生在问题之间，已经开始的问题必须保留完整调查、答案、Citation 和独立审核链。

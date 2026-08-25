@@ -31,8 +31,36 @@ hidden、跨工程与统计复验仍在 `CONTINUE` 后执行。Alpha 只有在�
 Codex 时才能进入工程夯实；全体打平时使用 `REWORK`。
 
 方向体验版不是验收版，不得声称完整、稳定或可生产使用，但始终必须遵守数据/源码授权、只读和写入权限、Secret 隔离、外部调用
-披露、失败不伪造成功等不可推迟的安全边界。除非某项工作是安全运行或判断核心方向的必要条件，不得把完整 Schema、全量回归、
-全面能力资格、性能优化或完备证明材料放在首次体验之前。
+披露、失败不伪造成功等不可推迟的安全边界。首次体验前不得执行全量回归；安全运行或判断核心方向所需的验证只能收窄为聚焦测试。
+完整 Schema、全面能力资格、性能优化或完备证明材料同样不得放在首次体验之前。
+
+从 `ITER-012` 起，第一个持续 Alpha Slice 采用固定体验时间盒；ITER-010 可以在 Manifest 显式 opt in。计时点是 Slice 授权后的第一次
+产品代码变更，而不是第一次 live 调用：60 分钟内页面必须可启动，180 分钟内必须形成用户可连续操作的持续 Alpha；到 240 分钟仍未
+形成时，硬停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。60/180 是交付检查点，不能等完整质量证明才开始计时；
+240 是停止边界，不能以“再跑一次”绕过。
+
+首次体验前只允许最小启动、安全边界、失败真实性、一次 current Provider 资格确认和一题真实 smoke。全量回归、完整能力矩阵、hidden、
+跨工程和统计对照都必须后置。Access 与 Quality 是两道不同的 Gate：Access 只证明 credential/reference、endpoint/model、current exact
+Conformance、策略能力资格和 active hold；它可以使页面 availability 成立，但不能证明答案正确。只有用户可见答案质量 Case PASS 后，
+才可进入 hardening。
+
+live attempt 使用轻量计数：同一 sealed product version 的一个 logical question 只要触发任一外部 dispatch，就计一次 attempt，不按内部
+角色调用数放大；纯本地诊断不计。相同 failure signature 最多重试一次；连续两次 live attempt 没有用户可见增量，立即停止外部重跑，
+回到本地根因诊断。此停止规则发生在问题之间；已经开始的问题仍须执行完整调查、答案、Citation 与独立审核链，调用或成本不得成为
+质量裁剪理由。
+
+live failure 必须先沿 `Source truth → World Model cognition → question understanding → investigation → evidence package → answer → review → Web`
+定位最早偏差。没有可证伪 root-cause hypothesis，不得修改 Prompt、Schema 或 Contract。修复顺序固定为：本地最小复现，至少两个未参与
+修复的相邻案例通过，再执行一题 live canary；不能直接用下一次昂贵 live run 猜测修复。相同 failure signature 经过一次通用修复仍复现，
+必须停止堆规则并评审架构职责。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
+hardening 和正式验收前各运行，不得用它延迟首个体验。
+
+Provider route 默认 `VOLCENGINE_ARK → DEEPSEEK`，并在 session 开始前预授权 ordered route 与双方 disclosure scope。Ark attempt 因已冻结的
+Provider 或模型能力原因终态结束且未形成 authorized answer 时，可对同一 logical question 透明启动最多一个 DeepSeek attempt，用户无需
+重提或新建 session。两个 attempt 必须独立密封；fallback 从 immutable original question 与 exact World Model cognition 重跑完整链，禁止
+复用前次中间产物；迟到 primary 结果只允许隔离审计，不得覆盖已密封结果；同 Provider retry 为 0。Provider 输出/schema 或模型审核失败
+必须记录为能力失败，不能伪称网络不可用；Application、Source 或 Security 失败不得通过 fallback 掩盖。DeepSeek 批量运行优先使用执行时
+重新核对的官方非高峰窗口，峰时紧急启动需审计 override，但已开始问题仍不得降低质量。
 
 可体验 Alpha 必须记录 `CONTINUE`、`REWORK`、`REDIRECT` 或 `REJECT`；只有 `CONTINUE` 才能进入工程夯实。任一阻断项失败默认只阻止
 晋级：保留失败证据、暂停当前 Slice，并在同一 Slice 做通用修复和重新体验。

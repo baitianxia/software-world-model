@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, FINDING-010-055, FINDING-010-056, FINDING-010-057, FINDING-010-058, FINDING-010-059, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, FINDING-010-073, FINDING-010-074, FINDING-010-075, FINDING-010-076, FINDING-010-077, FINDING-010-078, FINDING-010-079, FINDING-010-080, FINDING-010-081, FINDING-010-082, FINDING-010-083, FINDING-010-084, FINDING-010-085, FINDING-010-086, FINDING-010-087, FINDING-010-088, FINDING-010-089, FINDING-010-090, ITER-010-PDR-001, ITER-010-PDR-002, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-046, FINDING-010-047, FINDING-010-048, FINDING-010-049, FINDING-010-050, FINDING-010-051, FINDING-010-052, FINDING-010-053, FINDING-010-054, FINDING-010-055, FINDING-010-056, FINDING-010-057, FINDING-010-058, FINDING-010-059, FINDING-010-060, FINDING-010-061, FINDING-010-062, FINDING-010-063, FINDING-010-064, FINDING-010-065, FINDING-010-066, FINDING-010-067, FINDING-010-068, FINDING-010-069, FINDING-010-070, FINDING-010-071, FINDING-010-072, FINDING-010-073, FINDING-010-074, FINDING-010-075, FINDING-010-076, FINDING-010-077, FINDING-010-078, FINDING-010-079, FINDING-010-080, FINDING-010-081, FINDING-010-082, FINDING-010-083, FINDING-010-084, FINDING-010-085, FINDING-010-086, FINDING-010-087, FINDING-010-088, FINDING-010-089, FINDING-010-090, FINDING-010-091, FINDING-010-092, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, SYS-ADR-017, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-25
@@ -12,7 +12,7 @@ active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
 worktree_status: iteration-010-slice-001-authorized-rework-in-progress
 strategy_relation: world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation
-live_model_path: deterministic-development-authorized-fresh-live-qualification-required-production-not-activated
+live_model_path: pdr-003-access-first-ark-primary-transparent-deepseek-fallback-not-implemented-production-not-activated
 ---
 
 # 当前工作上下文
@@ -34,6 +34,13 @@ Citation 和具体失败事实全部保留。旧消息 `d746968f…` 只是要�
 `ITER-010-PDR-002` 已冻结前瞻规则：ITER-010 仍按现有 Gate 执行，ITER-011 不复活；ITER-010 终态后的下一份新产品迭代（按顺序为
 ITER-012）必须从首个持续 Web Alpha 起，用相互隔离、答案来源盲化的同题对照证明系统答案质量严格超过当时实际可用的 current Codex。
 Codex 只是强外部基线，不是 Oracle 或裁判；质量全体打平也不得用成本、时延或复用优势改判通过。本规则不创建或授权下一迭代。
+
+`ITER-010-PDR-003` 现是 Slice1 的恢复执行约束：用户报告约 14 小时仍无新体验版本且 DeepSeek token 消耗过多。Access 与答案 Quality
+已经拆分；本轮超过 240 分钟 hard stop 后停止 scope expansion、外部批量调用和首次体验前 full regression，只先交质量未验收 Web，再跑
+一题 canary，失败即不跑三题。Provider 对用户透明：Session 预授权 Ark→DeepSeek；fallback 是同一 logical question 下从原问题和 exact
+Cognition 重跑完整链的独立 attempt，用户不重提或重启。失败处理改为 root-cause-first：先定位 Source truth 到 Web 责任链中的最早偏差
+并提出可证伪假设；无假设不得改 Prompt/Schema/Contract。修复先过本地最小复现与两个未参与修复的相邻案例，再跑一题 live canary；
+同 signature 修一次仍复现即评审架构职责。该 route 当前 `NOT_IMPLEMENTED / NOT_QUALIFIED`，不能冒充 live PASS。
 
 PDR 收据 `3112da25…` 只授权项目决定纠正；新的 `32b298de…` 收据已补足 Slice1 开发授权。所有旧 live grant 仍已消费或停止；当前开发
 不自动取得 credential、Provider/model call、动态源码披露或 live browser 权限。它们必须在新产品 freeze 后按 exact 会话、Provider、
@@ -91,11 +98,11 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / REWORK / Slice1 current development / deterministic Gate closed / run-034 fresh Conformance FAIL (HTTP 402) / no Alpha** | `FINDING-010-088/089` 已修复并验证 supported Verification target exact/relative-order monotonic preservation，clean candidate 为 `fe6b6b6…`。用户表示充值后启动的 run-034 在第一条 exact `deepseek-v4-pro` Conformance dispatch 收到 DeepSeek HTTP 402；credential resolution/TLS/HTTP dispatch 均为 1/1，token 0、retry/switch 0，第二条 canary 未发送，未签发 Qualification，未启动 Alpha/Browser。run-034 永久 FAIL，当前 key 所属账户恢复 Provider 可用性后只能新建 fresh run。`V-ANSWER-REWORK` 继续 blocking，项目决定仍为 REWORK，历史 FAIL、Slice2/3、hidden、三臂、Acceptance 与 Production 状态不变 |
+| Iteration 010 | **Authorized / REWORK / PDR-003 hard-stop recovery / no current Alpha** | run-034 DeepSeek 402 与全部历史失败保留。用户报告约 14 小时没有新体验后，当前只允许先交质量未验收 Access、透明 Ark→DeepSeek route 和一题 canary；Access/Quality 分离，canary 失败不跑三题。透明 route 尚未实现或资格化，`V-ALPHA-ACCESS/V-TIMEBOX/V-ANSWER-REWORK` blocking，Slice2/3、hidden、Acceptance 与 Production 不变 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
-| `local-browser` | Three non-fallback product identities | 原 `http_api` 仍是 ITER-002 Direct；World Model 页面保持 Source-off 评测身份；Engineering QA 最后完整 Alpha 仍是已封存的 run-033，run-034 因 fresh Conformance HTTP 402 没有启动 listener/Browser，三者不互相兜底 |
+| `local-browser` | Three mode identities / Engineering QA provider fallback target not implemented | Direct、strict World Model 与 Engineering QA 模式仍不互相 fallback；Engineering QA 内部目标 route 是对用户透明的 Ark→DeepSeek 独立 attempt。当前 Alpha CLI 仍为单 DeepSeek 配置，故 Access 未恢复 |
 | Production Activation | **NOT EXECUTED** | 不得由任何本机 PASS 自动推导 |
 
 精确产品边界见 [Iteration 006 Acceptance](iterations/iteration-006/results/acceptance.md)。原始 Provider、能力、产品和浏览器证据
@@ -107,6 +114,13 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 `World Model Cognition Context → Investigation LLM → Source Broker → Retrieval Worker → append-only Evidence Ledger → 调查后 seal
 Question Evidence Package → Answer → independent Reviewer` 技术纵切、公开题和现场题证据均已封存；当前项目决定为 `REWORK`，不是
 Acceptance，也不追认历史答案/审核 FAIL。
+
+当前最短顺序由 PDR-003 覆盖后续历史叙述：本地页面 Access → 预授权 Ark/DeepSeek 双 route → 最多一次必要 qualification → 一题 live
+canary → 独立复核。canary 失败停止外部调用并回到本地诊断；通过后才运行原失败题加两个异质题。首次体验前禁止继续扩张 Prompt、Schema、
+Contract 或跑 full regression。每次失败必须先定位最早偏差并形成可证伪根因假设；本地最小复现和两个未参与修复的相邻案例通过后才可
+跑一题 canary，同 signature 修一次仍复现就停止规则累积并做架构职责评审。首次体验前只跑 targeted impact/startup/safety；full
+regression 只在 Alpha `CONTINUE` 后 hardening 和正式验收前执行。相同 identity 且仍有效的 Conformance 必须复用；DeepSeek 批量调用前重新核对官方峰谷政策，成本只决定
+是否开始，不削减已开始问题的完整质量链。
 
 candidate `b6e13eb…` 的首次持续 Alpha 已证明 Session Authority、逐题 server identity、固定 `127.0.0.1:8765` 命令与真实 Provider/browser
 链可启动，也再次证明旧 checklist coverage 允许代表性事实伪闭合，并发现 Gateway SQLite mode `0644`。随后 clean candidate `fc827ce…`

@@ -45,6 +45,27 @@ coding_input: false
 逐次形成 one-use disclosure authorization。该变化不放宽 Source、Provider、zero-retry、loopback 或非生产边界，已同步 ADR-016、
 Engineering QA Contract、Security 和 Local Browser Operations。
 
+## PDR-003 recovery delta
+
+用户收据 `codex-user-message:sha256:47a3421d48fe3f36000e45696ea9c41b49b7e362332bc724306c10ca42fe119c`
+记录约 14 小时没有新体验版本和 DeepSeek token 消耗过多。`FINDING-010-091/092` 与 PDR-003 现把当前 Slice 收窄为 experience-first
+recovery：60 分钟页面可启动、180 分钟持续可操作、240 分钟 hard stop；本轮已超过 hard stop，停止 scope expansion、外部批量调用和
+首次体验前 full regression，只允许启动安全、失败真实性、一次必要 qualification 和一个 live smoke。
+
+Access 与 Quality 分开：`V-ALPHA-ACCESS-001` 可以在答案质量未验收时证明真实 Web 可操作；它不能通过
+`V-ANSWER-REWORK-001`。一题 canary 未通过时不运行三题集。同 failure signature 最多一个 successor live attempt，连续两次没有用户
+可见增量即停止外部重跑。
+
+本轮不再追逐答案表象：每次失败先沿 Source truth 到 Web 定位最早偏差并形成可证伪 root-cause hypothesis；没有假设和本地最小复现不得
+修改 Prompt、Schema 或 Contract。修复先通过最小复现与两个未参与修复的相邻案例，再只运行一题 live canary；同 signature 修一次仍复现
+则停止规则累积并评审架构职责。首次体验前测试仅限 targeted impact/startup/safety 和失败真实性；full regression 只在 Alpha
+`CONTINUE` 后 hardening 与正式验收前运行。
+
+ADR-017 将 Provider 路由改为 Session 预授权的 Ark→DeepSeek：用户一次提交同一 logical question；primary attempt 只有在密封 terminal、
+没有 authorized answer 且属于受控 Provider/model reason 后，才透明启动一个完全隔离的 fallback attempt。Fallback 从 original question
+与 exact Cognition 重跑完整链，不共享中间态；同 Provider retry 0、late primary quarantine。当前代码尚未证明该语义，Readiness 只接受
+它作为恢复开发输入，不把它写成 live PASS；外部调用继续需要 exact freeze/grant。
+
 ## Product-goal alignment gate
 
 - Baseline gap：真实 Web 能运行但回答像代码走读；修正前一次性检索/先封包仍不能支持结果驱动的高级工程师式调查。
@@ -52,13 +73,15 @@ Engineering QA Contract、Security 和 Local Browser Operations。
 - Capability path：继续 `ROADMAP-M-002` 最早未证明的 Step 1；提问期 Source 调查核实、补充或纠正认知，不取代问题前建模。
 - Cumulative integration：一个链路组合 exact World Model Cognition Context 与本题 source/doc/config/test Evidence。
 - Fast checkpoint：历史单题与 4+1 题已证明受控 Web 技术链，不再重复把固定运行当成体验。返工首交付是固定一个工程/revision、同一
-  loopback 服务连续接受自由问题的 Web Alpha；原失败题和至少两个相邻或异质问题在同一会话回归，一题失败不关闭服务。方向确认后才做
-  持久恢复、复杂冲突/去重、完整异常矩阵、跨工程和性能 hardening。
+  loopback 服务连续接受自由问题且明确标记“质量未验收”的 Web Alpha；随后只跑一题 canary。canary 通过后才运行原失败题和至少两个
+  相邻或异质问题，一题失败不关闭服务；未通过则停止外部重跑并回到本地诊断。方向确认后才做持久恢复、复杂冲突/去重、完整异常矩阵、
+  跨工程和性能 hardening。
 - Later proof：Slice2 独立第二工程 5+2，并对完整 Cognition、locator-only/empty 同链、成熟源码 Agent 做三臂同题消融；Slice3 在最终
   两个工程 10+2 与两条现场题复验。新消融 protocol/阈值/digest 当前未授权，Slice2 前须新用户收据。
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
-结论：Outcome 直接服务通用工程问答 MVP。历史方向材料已接受；返工方向由 PDR-001 接受，但新的产品开发和 live 尚未授权。
+结论：Outcome 直接服务通用工程问答 MVP。历史方向材料已接受；返工由 PDR-001 授权继续，PDR-003 进一步限制当前恢复顺序。透明 route
+仍待产品实现和验证；本 Readiness 不授权或追认新的外部调用。
 
 ## Architecture reflection gate readiness
 
@@ -98,9 +121,10 @@ Reviewer 补证必须由独立新上下文调查生成后继 Package 并重答�
 ## Slice, dependency and risk closure
 
 Slice1 的历史失败尝试已执行完毕；当前为 `authorized / rework / coding_input=true`。最短顺序是：闭合持续自由提问必需的最小会话授权
-语义 → 复用现有调查链接通可重复启动的持续 Web → 同一会话运行原失败题和至少两个异质问题 → 通用修复答案与 Reviewer → 独立复核和
-用户实际体验。不得在首次持续体验前建设完整 Schema、持久化、第二工程、hidden、三臂或 full regression。Slice2/3 继续需要持续 Alpha
-的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
+语义 → 复用现有调查链接通可重复启动且标明质量未验收的持续 Web → 冻结最小候选与预授权 Ark→DeepSeek route → 最多一次必要资格 →
+同一问题的一题 live canary → 独立复核。只有 canary 通过，才在同一冻结版本运行原失败题和至少两个异质问题并交用户实际体验；失败则
+停止外部重跑并回到本地诊断。不得在首次持续体验前建设完整 Schema、持久化、第二工程、hidden、三臂或 full regression。Slice2/3
+继续需要持续 Alpha 的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
 
 首版必须保留 exact revision、allowlist、只读、Source untrusted、Ledger append-only、seal、证据分区、role isolation、Citation、独立
 Review、Secret 和失败真实性；持久恢复、复杂冲突/去重、跨工程、全面性能、完整异常矩阵、hidden/三臂 comparison 和正式验收可延后。

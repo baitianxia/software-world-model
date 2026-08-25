@@ -82,8 +82,28 @@ binding；正文中仅仅出现相关 ID 不算绑定证据。
 
 可体验 Alpha 必须早于大规模加固和全面资格评估。它通过真实产品入口、小而多样的输入和新的现场输入尽早暴露核心方向，并确认结果
 不是单题偶然。Alpha 明确标记为非验收、非生产；安全、只读、
-Secret、授权和失败真实性边界始终生效。完整能力矩阵、全量回归、性能和异常穷举属于 Alpha `CONTINUE` 后的夯实阶段，除非它们是
-运行早期真实版本或判断核心方向不可缺少的最小条件。
+Secret、授权和失败真实性边界始终生效。完整能力矩阵、全量回归、性能和异常穷举属于 Alpha `CONTINUE` 后的夯实阶段。首次体验所需
+的安全或方向验证必须使用聚焦测试，不能以“必要条件”为由提前执行全量回归。
+
+从 `ITER-012` 起，Manifest 必须冻结 `EXPERIENCE_FIRST_DELIVERY@1`；ITER-010 只有显式写入该 policy 时才 opt in。其计时从当前 Slice
+授权后的第一次产品代码变更开始：60 分钟页面可启动、180 分钟持续 Alpha 可由用户连续操作；240 分钟尚未达到时硬停止新功能、
+hardening 与外部调用，密封 Result 并作缩围/恢复决定。首次体验前只运行启动、安全、失败真实性、一次 current Provider 资格确认和
+一题 smoke，不运行 full regression。`V-ALPHA-ACCESS` 与答案质量 Case 必须分离：availability 不等待质量 PASS，hardening 必须等待。
+
+每份 Result 以一个 sealed version + logical question + 至少一次外部 dispatch 为一条 live attempt，内部多角色调用不重复计数。相同 failure
+signature 最多一个 successor retry；连续两次 attempt 没有用户可见增量即停止外部重跑并回到本地诊断。240 分钟和无增量 stop 都发生在
+问题边界，不能中途删除调查、回答、Citation 或独立审核来省 token。
+
+诊断必须先找最早偏差：`Source truth → World Model cognition → question understanding → investigation → evidence package → answer → review → Web`。
+没有可证伪 root-cause hypothesis，不得动 Prompt、Schema 或 Contract。任何通用修复先通过本地最小复现和至少两个未参与修复的相邻案例，
+然后只用一题 live canary；同一 failure signature 修复一次仍复现，停止规则堆叠并进入架构职责评审。Alpha 前测试只允许 targeted impact、
+startup、safety；full regression 仅在 Alpha `CONTINUE` 后的 hardening 和正式验收前运行。
+
+Provider route 在 session 前按 `VOLCENGINE_ARK → DEEPSEEK` 预密封并预授权双方 disclosure scope。Ark 的独立 attempt 若以冻结的 Provider/
+模型能力 outcome 终态结束且没有 authorized answer，可在同一 logical question 内透明启动最多一个 DeepSeek attempt；用户不重新提交。
+fallback 从 immutable original question 与 exact cognition 重跑全链，不读取 primary attempt 的中间产物；迟到 primary 只隔离审计。同
+Provider retry 为 0；Application/Source/Security failure 不能触发 fallback。输出/schema 或 Reviewer 拒绝必须按 primary capability failure
+记录，而不是误标为网络不可用。DeepSeek 批量启动优先使用执行时由官方页面重新确认的非高峰窗口；调度和成本只在题目开始前决策。
 
 项目不得连续进行多轮 Prompt、Schema、Contract 或评测优化，却一直没有可供用户操作的真实体验。可供操作是指可重复启动、固定本地
 地址、同一会话连续自由提问、版本和限制可见，且单题失败不会关闭服务；一次性运行器或启动前冻结单题的页面不满足该定义。Alpha
@@ -159,7 +179,8 @@ Roadmap 只提供候选。只有 Proposal 被明确接受、Manifest 闭合并�
 ## 新一轮最小启动顺序
 
 1. 按[模板落位表](templates/README.md#最小落位)建立 Iteration Index、Proposal、Manifest、Verification Matrix、Readiness、Development Design 和 Findings Index；全部保持 proposed / non-coding。
-2. 冻结 baseline、System IDs、外部输入、风险、Acceptance 和第一个纵向 Slice，不复制上一轮运行身份。
+2. 冻结 baseline、System IDs、外部输入、风险、Acceptance 和第一个纵向 Slice，不复制上一轮运行身份；`ITER-012+` 同时冻结 60/180/240
+   体验时间盒、Access/Quality 分离、live-attempt stop rule 和 Ark→DeepSeek transparent-attempt route。
 3. Readiness Review 记录用户的明确授权，把 Proposal 与 Readiness 状态改为 `accepted`；未授权字段不得用默认值代替。
 4. 把 Iteration Index、Manifest 与第一个 Slice 改为 authorized，把 Slice `authority` 改为 `current-development`，并将 Index/Slice 的 `coding_input` 改为 `true`；Manifest 已规划的后续 Slice 保持 `proposed / proposed-development / coding_input: false`。
 5. 最后更新 `project/current.md` 的 `active_iteration`、`active_slice` 与 `depends_on`。`scripts/docs.py check` 只有在这些对象属于同一 Iteration 且必需输入闭合时才通过。
@@ -211,6 +232,10 @@ roadmap candidate
 - Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；可体验 Alpha 会尽早使用正式 Web 和现场输入判断架构
   与用户价值。下一份新建产品迭代的 Alpha 同时执行轻量 current Codex 同题盲评；只有完整 hidden、跨工程和统计复验留到 Alpha
   `CONTINUE` 后的首个夯实 Slice，不推迟到最终验收；
+- `ITER-012+` 的 Experience policy 已绑定首个持续 Alpha Slice、`V-ALPHA-ACCESS`、`V-TIMEBOX` 与独立质量 Case；首次体验前的资格/smoke
+  上限、full-regression 禁止、相同 failure signature 重试上限和连续无可见增量停止条件均已冻结；
+- Provider policy 已冻结 Ark-first ordered route、双方 session disclosure scope、transparent independent fallback attempt、eligible/ineligible
+  outcome、迟到结果隔离、零同 Provider retry、DeepSeek 官方窗口复核和“成本不得降低质量”；
 - 一个明确 Outcome 和非目标；
 - 所引用 System 文档均 current，或先完成所需 System 设计；
 - 每个 Slice 有可验证退出条件和风险边界；
@@ -227,6 +252,10 @@ roadmap candidate
 
 代码完成不是迭代完成。每个 Slice 都必须有实际 Result、失败/限制、方案复盘、相关 Finding disposition，以及明确的继续、接受、
 修复重试、转向或拒绝决策；最终还必须完成必要的 System 与能力路径回写。生产启用若不属于 Proposal，就不能被“剩余工作”自动推入下一轮。
+
+首个持续 Alpha Result 还必须报告时间盒 actual、首次体验前资格/smoke/full-regression 次数、轻量 live-attempt ledger、同签名最大重试数、
+连续无可见增量次数和 stop 后外部 dispatch 数。Provider Result 必须逐 attempt 报告 sealed identity、trigger/outcome 分类、是否重跑完整链、
+中间产物复用、迟到 primary 隔离、fallback 次数和用户重提次数；缺失或把 Access PASS 当 Quality PASS 都不能晋级 hardening。
 
 声称产品能力前进的 Iteration 还必须报告相对 baseline 的目标差距变化：同一正式 Web 入口上的 held-out 自由问题支持率、
 重大错误、完整性、至少一个新旧知识跨域问题、提问时 Source/Update/Direct fallback 计数，以及与成熟源码 Agent 的逐题对照。

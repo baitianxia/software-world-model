@@ -65,6 +65,22 @@ Codex identity、fresh 隔离任务、答案先密封、系统不可见、随机
 关闭服务。一次性验证运行或只能回答启动前冻结问题的页面不算体验版本。阻断失败默认记录为 `REWORK` 并暂停当前 Slice；同一目标和
 总体架构下使用新的用户授权恢复同一 Slice。只有明确用户转向、核心架构证伪或达到预提交无进展上限才允许 `REDIRECT`。
 
+从 ITER-012 起，首个持续 Alpha 还必须使用模板中的 `EXPERIENCE_FIRST_DELIVERY@1`：从授权后的第一次产品代码变更起，60 分钟页面可启动、
+180 分钟用户可连续操作，240 分钟仍未达到即停止扩张/hardening/外部调用并缩围复盘。首次体验前只允许启动、安全、失败真实性、一次
+current Provider 资格和一题 smoke，不做 full regression。Access PASS 只决定 availability，不替代答案 Quality PASS；后者才允许 hardening。
+ITER-010 只有显式加入同一 policy 时 opt in。
+
+live attempt 按“同一 sealed version 的一个 logical question 发生任一外部 dispatch”计一次。同 failure signature 最多重试一次，连续两次
+没有用户可见增量即停止外部重跑；已开始的问题仍保留完整质量链。Provider route 必须 Ark-first，并在 session 前预授权 Ark/DeepSeek
+ordered route 与双方 disclosure scope。Ark 因 Provider/模型能力 outcome 没有 authorized answer 时，可透明启动最多一个独立 DeepSeek
+attempt；用户不重提，fallback 从原问题与 exact cognition 重跑全链，不复用中间产物，迟到 Ark 只隔离审计。DeepSeek 批量运行优先使用
+执行时重新核对的官方非高峰窗口，峰时 override 可审计；成本不得降低答案质量。
+
+失败修复必须 root-cause-first：按 Source truth、World Model cognition、question understanding、investigation、evidence package、answer、
+review、Web 查找最早偏差；无可证伪假设不得改 Prompt/Schema/Contract。先本地最小复现并通过两个未参与修复的相邻案例，再用一题 live
+canary；同签名修一次仍复现即评审架构职责。Alpha 前只运行 targeted impact/startup/safety，full regression 只能在 `CONTINUE` 后
+hardening 和正式验收前运行。
+
 Manifest 还必须冻结评测工程/版本、held-out suite、baseline Result、current Codex protocol/identity/rubric/cache policy 和授权软件来源
 范围的 exact digest，以及前后支持题数。Alpha 的 current Codex 小样本协议和严格答案质量阈值不得 deferred；只有完整 hidden suite 可
 使用明确、失败关闭的 deferred/user-held marker，并最迟在拥有正式复验的 hardening 或 final Slice 授权前替换为 exact freeze，不能反向

@@ -71,7 +71,7 @@ Claim 的 Finding。Application 重算并要求 ID 集合恰好一致，漏项�
 
 不同类型的包内证据保留各自 modality：世界模型表达已发布的系统认知及其 Coverage，exact 源码/配置表达该 revision 的静态实现，文档表达记录的用法或意图，测试表达静态预期或已密封的执行观察，模型 Proposal 只表达调查或回答建议。某一来源类型不自动拥有对所有命题的优先级；当相同 Context 中出现不兼容且无受控解析规则时，Package 必须保留 Conflict，答案不得静默选边。
 
-任何把 World Model Cognition Context、Ledger 或 Package 片段发送给外部模型 Provider 的运行，都必须在 dispatch 前另行密封并授权 exact Provider/model/endpoint/configuration、角色、允许片段、redaction、secret reference 和输入 Digest。一个用户 run grant 只可绑定 exact Request/evaluation subject/Provider/Prompt/schema/角色集合与总上限；动态角色输入还须逐次形成 full-input/fragment digest 的一次性子授权，并由 Gateway 独立重验。任一 request 可能 dispatch 后失败或 outcome unknown 均不得 retry、replay 或切换 Provider。开发或文档接受不能推导该外部披露授权。
+任何把 World Model Cognition Context、Ledger 或 Package 片段发送给外部模型 Provider 的运行，都必须在 dispatch 前另行密封并授权 exact Provider/model/endpoint/configuration、角色、允许片段、redaction、secret reference 和输入 Digest。一个用户 run grant 绑定 exact logical question/evaluation subject、Session 预授权有序 route、Prompt/schema/角色集合与总上限；动态角色输入仍按 Provider attempt 逐次形成 full-input/fragment digest 的一次性子授权，并由 Gateway 独立重验。同一 Provider request dispatch 后失败或 outcome unknown 不得 retry/replay。ADR-017 允许的跨 Provider fallback 必须使用新 attempt identity，从原问题和 exact Cognition 重跑完整链，不能共享中间态；用户无需重提或新建 Session。开发或文档接受不能推导该外部披露授权。
 
 ## Alternatives
 

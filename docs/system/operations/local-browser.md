@@ -4,7 +4,7 @@ kind: system-operations
 status: current
 authority: operational
 owners: [operations, interface]
-depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-QUALITY-SECURITY]
 code: [pyproject.toml, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
@@ -53,12 +53,18 @@ audit 为 TLS handshake 1、reuse 9、HTTP/credential 10/10、retry/switch/outco
 `REWORK`，历史 `V-PREVIEW-001` 与答案/审核 FAIL 不改写。`FINDING-010-028` 定位答案层级根因，`FINDING-010-029` 定位单题 prepared
 launcher 与持续体验冲突；新收据已恢复 Slice1 开发，但旧 question/run grant 仍不可复用。
 
-当前 Alpha 目标在 listener 前固定一个 `ENGINEERING_QA_SESSION_AUTHORITY@1`，而不是固定一条问题。它绑定 clean product、exact 工程/
-revision、World Model、Source Profile/allowlist、Provider/model/configuration/qualification、披露边界、有效期和每题/整会话安全熔断。
+当前 Alpha 目标在 listener 前固定一个升级后的 Engineering QA Session Authority，而不是固定一条问题。它绑定 clean product、exact 工程/
+revision、World Model、Source Profile/allowlist、Ark→DeepSeek 有序 route、每条 route 的 model/configuration/qualification/credential reference/
+披露边界、有效期和 logical-question/provider-attempt 两级安全熔断。
 页面显示这些边界；体验者只输入问题并确认提交，服务签发 request/run identity 并由 System Owner 编译该题 exact grant。每题后续动态
-Ledger/Package 输入仍逐角色形成 one-use authorization。题目失败只关闭该请求，服务继续接受下一题；session authority 漂移、过期或总
-熔断耗尽则拒绝后续新题。问题 POST 仅接受当前 `http://127.0.0.1:8765` 页面发出的 same-origin `application/json`；跨站或
+Ledger/Package 输入仍逐角色、逐 Provider attempt 形成 one-use authorization。Ark attempt 无 authorized answer 且符合 ADR-017 的
+Provider/model reason 时，系统可对同一 logical question 自动启动一次完全隔离的 DeepSeek attempt；用户不重提问题或重启 Session。
+题目最终失败只关闭该 logical question，服务继续接受下一题；session authority 漂移、过期或总熔断耗尽则拒绝后续新题。问题 POST 仅接受当前 `http://127.0.0.1:8765` 页面发出的 same-origin `application/json`；跨站或
 `text/plain` 请求在 receipt 与 transport 前拒绝。当前实现与确定性证据闭合前，不得把该目标写成 live PASS。
+
+PDR-003 将 Access 与答案 Quality 分离：页面可启动、可提交问题、能如实显示 provider-attempt 进度/失败且标记“质量未验收”即可进入
+`V-ALPHA-ACCESS-001`；它不能取得 `V-ANSWER-REWORK-001`。当前 ITER-010 已超过 240 分钟 hard stop，首次新体验前只允许启动安全、失败
+真实性、一次 current Provider qualification 和一个 live smoke，不执行 full regression；一题 canary 失败时不运行三题集。
 
 持续 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：
@@ -68,7 +74,10 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_alpha_
   --session-config /absolute/frozen/engineering-qa-session.json
 ```
 
-session configuration 必须是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，并且根对象恰好包含下列字段；四类路径、
+下面的 `SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1` 是当前单 DeepSeek launcher 的已实现兼容格式，不符合 ADR-017 的透明双 route
+目标，不能用于宣称恢复版本 PASS。目标 Session Configuration 必须升级为新 schema，并把 Ark、DeepSeek 两条 route 的 exact
+Conformance、Qualification、credential reference、disclosure scope 和各自 audit output 作为有序 closed collection 密封；其产品实现与
+测试仍待 Slice1 闭合。现有 `@1` configuration 是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，并且根对象恰好包含下列字段；四类路径、
 排除项、Snapshot 和已知限制都必须是非空无重复数组：
 
 ```json
@@ -110,7 +119,8 @@ session configuration 必须是 canonical absolute path 上 mode `0600` 的 uniq
 launcher 必须以 exclusive create 原子创建 Gateway SQLite 主文件并强制 mode `0600`，其整个存活期的 `-wal` / `-shm` sidecar 也必须在
 private creation mask 下保持 `0600`。不能先让 SQLite 按进程默认 umask 创建 `0644` 文件后再补 chmod，因为 role input、Source evidence、
 Ledger、Package 和 Review 可能已在窗口期落盘。并发占用或权限不满足必须在 listener 前失败关闭。
-配置不得包含 Secret value，DeepSeek credential 只在每题首个已授权 dispatch 前从冻结配置所指的环境引用解析。该配置必须绑定新 product
+配置不得包含 Secret value；`@1` 的 DeepSeek credential 只在每题首个已授权 dispatch 前从冻结配置所指的环境引用解析。ADR-017 目标
+则要求每个 Provider attempt 只解析自身 route 的 credential，另一 route 的 secret reference 不能进入该 attempt。该配置必须绑定新 product
 freeze 与 post-freeze live 授权，且 launcher 不接受 host/port/question/request/run 参数。旧
 `engineering_qa_preview_cli` 是历史单题审计兼容面，不是当前 Alpha 或平行演示入口。
 
@@ -145,7 +155,7 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_previe
 
 - `WORLD_MODEL` 显示 source revision、exact Snapshot、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact 与 Evidence 引用；问题请求只读不含 Evidence payload 的 exact Snapshot Read Bundle，不得触发更新或访问 Source、权威数据库或 Evidence Store。点击引用由浏览器另行访问密封结果后的 Citation Projector，不把正文发送回问答进程。
 - `DIRECT_INVESTIGATION` 显示 exact Source Target 与 Evidence Packet；它按 ADR-013 调查源码，但不能标成世界模型回答。
-- `ENGINEERING_QA` 页面在 Session Authority 中固定模式、protocol identity、exact repository/revision、World Model Read Authority、Source allowlist 和 Source Profile identity。当前 Alpha 的浏览器只提交 question 与 disclosure acknowledgement，request/run ID 由服务签发；历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。默认主视图只展示原问题、结论优先答案、结论级 Citation 与用户可理解的 unknown/limitation；World Model Cognition Context、Investigation Step、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
+- `ENGINEERING_QA` 页面在 Session Authority 中固定模式、protocol identity、exact repository/revision、World Model Read Authority、Source allowlist、Source Profile identity 和预授权 Ark→DeepSeek route。当前 Alpha 的浏览器只提交 question 与 disclosure acknowledgement，request/run ID 由服务签发；历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。Provider 选择与 fallback 对普通用户透明；默认主视图只展示原问题、结论优先答案、结论级 Citation 与用户可理解的 unknown/limitation，开发者详情才展示 logical-question/provider-attempt identity、fallback reason、成本与 quarantine。World Model Cognition Context、Investigation Step、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
 - Engineering QA 页面不根据问题、项目、关键词、符号、fixture 或 Oracle 切换后端。World Model Cognition Context 缺失/无关不会切换为 Direct；Investigation LLM 的自适应源码调查是同一 `ENGINEERING_QA` Request 预先声明的部分，每个 Proposal 必须由 Broker 编译、Worker 只读执行并追加 Ledger，实际模式和证据来源必须可审计。
 
 人工更新是独立操作：即使从未提问也能构建新 Snapshot；计划或来源事件自动更新需要独立启用和运维证明。
@@ -162,7 +172,7 @@ held-out suite、independent evaluator、Provider subject 和确定性资格。�
 4—6 次调用顺序消费且不能复用，未消费 connection 在 terminal 后关闭并审计。页面必须展示 investigation step count、budget、
 Coverage/完整性 verdict、trace digest、实际 Provider 调用数和具体 Gap/Limitation，不能只显示最终正文。
 
-当前服务没有认证，所有现有入口与未来 Engineering QA 方向体验都必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一证明缺失、过期或漂移都拒绝该路径。Engineering QA 的真实模型运行还必须在 dispatch 前按 Question Understanding、Investigation、Answer、Review 分别密封并授权“哪些 World Model Cognition Context、Evidence Ledger 或 Question Evidence Package 字段/片段可发给哪个 exact Provider/model/role”及 redaction/input digest；开发或浏览器启动授权不能代替内容披露授权。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
+当前服务没有认证，所有现有入口与未来 Engineering QA 方向体验都必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要为 Session 中每条允许 route 显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一 route 的证明缺失、过期或漂移会使该 route 不可用，不能扩大到未授权 Provider。Engineering QA 的真实模型运行还必须在 dispatch 前按 Provider attempt 和 Question Understanding、Investigation、Answer、Review 分别密封并授权“哪些 World Model Cognition Context、Evidence Ledger 或 Question Evidence Package 字段/片段可发给哪个 exact Provider/model/role”及 redaction/input digest；开发或浏览器启动授权不能代替内容披露授权。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
 
 Capability Evaluation、Product Validation 和本机交互体验只允许在显式 `EVALUATION_ONLY` browser sink 中运行。
 页面必须持续显示不可关闭的评测标识，禁止生产 Delivery、用户会话复用和正式 Activation；输出只进入隔离验证目录。对现有 `WORLD_MODEL / EVALUATION_ONLY` 入口，自由文本只在用户选择的 exact、单一 Profile Read Set 与 Coverage 内求解：覆盖外问题应返回 Knowledge Gap；无法形成已验证 Result 时必须显示失败关闭，不能切换 Direct 或回源。未来 `ENGINEERING_QA / EVALUATION_ONLY` 入口则按其事先声明的 World Model Cognition Context + adaptive exact-revision investigation 边界，经 Broker/Worker 形成 append-only Ledger，并只在调查结束后密封 Question Evidence Package；它不受本段 World Model-only Coverage 规则限制，但仍必须失败关闭且不得切换模式。

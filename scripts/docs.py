@@ -73,6 +73,35 @@ DIRECTION_PREVIEW_START_ITERATION = 9
 ENGINEERING_QA_HYBRID_START_ITERATION = 10
 REWORK_LIFECYCLE_START_ITERATION = 10
 STRICT_CODEX_BASELINE_START_ITERATION = 12
+EXPERIENCE_FIRST_DELIVERY_START_ITERATION = 12
+PROVIDER_ROUTE_POLICY_START_ITERATION = 12
+EXPERIENCE_FIRST_DELIVERY_SCHEMA = "EXPERIENCE_FIRST_DELIVERY@1"
+PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
+EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK = (
+    "targeted-impact-startup-safety-failure-truth-one-qualification-one-smoke-only"
+)
+EXPERIENCE_FIRST_DELIVERY_LIVE_ATTEMPT_UNIT = (
+    "one-sealed-version-question-run-reaching-any-external-dispatch"
+)
+EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION = (
+    "stop-scope-expansion-and-external-calls-narrow-and-review"
+)
+EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION = (
+    "stop-external-reruns-and-return-to-local-diagnosis"
+)
+PROVIDER_ROUTE_PREFERENCE = ("VOLCENGINE_ARK", "DEEPSEEK")
+PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES = (
+    "provider-unavailable",
+    "provider-http-error",
+    "provider-outcome-unknown",
+    "provider-output-invalid",
+    "model-review-rejected",
+)
+DEEPSEEK_PREFERRED_WINDOWS = (
+    "00:00-09:00",
+    "12:00-14:00",
+    "18:00-24:00",
+)
 STRICT_CODEX_BASELINE_ROLE = (
     "strong-external-baseline-not-oracle-not-adjudicator"
 )
@@ -645,6 +674,23 @@ def requires_strict_codex_baseline(identifier: object) -> bool:
 
     number = iteration_number(identifier)
     return number is not None and number >= STRICT_CODEX_BASELINE_START_ITERATION
+
+
+def requires_experience_first_delivery_policy(identifier: object) -> bool:
+    """Require the experience-first timebox for newly planned product iterations."""
+
+    number = iteration_number(identifier)
+    return (
+        number is not None
+        and number >= EXPERIENCE_FIRST_DELIVERY_START_ITERATION
+    )
+
+
+def requires_provider_route_policy(identifier: object) -> bool:
+    """Require a qualified Ark-first provider route for newly planned iterations."""
+
+    number = iteration_number(identifier)
+    return number is not None and number >= PROVIDER_ROUTE_POLICY_START_ITERATION
 
 
 def is_engineering_qa_adaptive_protocol(
@@ -1274,6 +1320,293 @@ def resolved_sustained_alpha_slice_ref(
         if isinstance(experience_ref, str) and experience_ref in new_refs:
             return experience_ref
     return resolved_direction_preview_slice_ref(alignment, new_refs)
+
+
+def validate_experience_first_delivery_policy(
+    manifest: dict[str, object],
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+    *,
+    required: bool,
+) -> list[str]:
+    """Freeze an experience-first clock without confusing access and quality."""
+
+    policy = manifest.get("experience_delivery_policy")
+    if policy is None:
+        return (
+            [f"{label}: experience_delivery_policy is required"]
+            if required
+            else []
+        )
+    if not isinstance(policy, dict):
+        return [f"{label}: experience_delivery_policy must be a mapping"]
+
+    errors: list[str] = []
+    if policy.get("schema") != EXPERIENCE_FIRST_DELIVERY_SCHEMA:
+        errors.append(
+            f"{label}: experience_delivery_policy.schema must equal "
+            f"{EXPERIENCE_FIRST_DELIVERY_SCHEMA}"
+        )
+
+    alpha_ref = resolved_sustained_alpha_slice_ref(alignment, new_refs)
+    if alpha_ref is None or policy.get("owner_slice_ref") != alpha_ref:
+        errors.append(
+            f"{label}: experience_delivery_policy.owner_slice_ref must equal "
+            "the first sustained Web Alpha Slice"
+        )
+
+    case_contracts = (
+        ("access_case_id", r"V-ALPHA-ACCESS-[0-9]{3,}"),
+        ("timebox_case_id", r"V-TIMEBOX-[0-9]{3,}"),
+        ("quality_case_id", r"V-(?:PRE-)?[A-Z0-9]+(?:-[A-Z0-9]+)*"),
+    )
+    resolved_cases: dict[str, str] = {}
+    for field, pattern in case_contracts:
+        case_id = policy.get(field)
+        if (
+            not isinstance(case_id, str)
+            or re.fullmatch(pattern, case_id) is None
+            or case_id not in blocking_case_ids
+        ):
+            errors.append(
+                f"{label}: experience_delivery_policy.{field} must be a "
+                "matching blocking Case"
+            )
+        else:
+            resolved_cases[field] = case_id
+    if len(set(resolved_cases.values())) != len(resolved_cases):
+        errors.append(
+            f"{label}: experience access, timebox and quality Cases must be distinct"
+        )
+
+    exact_values: tuple[tuple[str, object], ...] = (
+        (
+            "start_event",
+            "first-product-code-change-after-slice-authorization",
+        ),
+        ("page_launchable_deadline_minutes", 60),
+        ("sustained_user_operable_alpha_deadline_minutes", 180),
+        ("hard_stop_deadline_minutes", 240),
+        ("hard_stop_action", EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION),
+        ("access_gate_scope", "user-operable-web-and-request-path-only"),
+        ("quality_gate_scope", "user-visible-answer-quality-only"),
+        ("access_pass_cannot_satisfy_quality_gate", True),
+        ("availability_requires_quality_pass", False),
+        ("hardening_requires_quality_pass", True),
+        (
+            "pre_first_experience_allowed_checks",
+            EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK,
+        ),
+        ("pre_first_experience_qualification_limit", 1),
+        ("pre_first_experience_smoke_question_limit", 1),
+        ("pre_first_experience_full_regression_allowed", False),
+        ("live_attempt_unit", EXPERIENCE_FIRST_DELIVERY_LIVE_ATTEMPT_UNIT),
+        ("same_failure_signature_retry_limit", 1),
+        ("consecutive_no_user_visible_increment_limit", 2),
+        ("no_increment_action", EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION),
+        (
+            "failure_diagnosis_order",
+            "source-truth-world-model-cognition-question-understanding-investigation-evidence-package-answer-review-web",
+        ),
+        ("earliest_divergence_required", True),
+        (
+            "falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change",
+            True,
+        ),
+        ("local_minimal_reproduction_required_before_live_retry", True),
+        ("unseen_adjacent_local_case_count", 2),
+        ("live_canary_question_count_after_local_pass", 1),
+        (
+            "same_failure_signature_fix_limit_before_architecture_responsibility_review",
+            1,
+        ),
+        (
+            "same_failure_signature_recurrence_action",
+            "stop-rule-accumulation-and-review-architecture-responsibilities",
+        ),
+        (
+            "pre_first_experience_test_scope",
+            "targeted-impact-startup-and-safety-only",
+        ),
+        ("full_regression_before_alpha_continue_allowed", False),
+        (
+            "full_regression_allowed_stages",
+            "alpha-continue-hardening-and-before-formal-acceptance",
+        ),
+    )
+    for field, expected in exact_values:
+        if policy.get(field) != expected:
+            errors.append(
+                f"{label}: experience_delivery_policy.{field} must equal {expected}"
+            )
+    return errors
+
+
+def validate_provider_route_policy(
+    manifest: dict[str, object],
+    text_or_label: str,
+    label: str | None = None,
+    *,
+    required: bool,
+) -> list[str]:
+    """Require an Ark-first route with isolated transparent fallback attempts."""
+
+    text = text_or_label if label is not None else None
+    label = label if label is not None else text_or_label
+
+    policy = manifest.get("provider_route_policy")
+    if policy is None:
+        return [f"{label}: provider_route_policy is required"] if required else []
+    if not isinstance(policy, dict):
+        return [f"{label}: provider_route_policy must be a mapping"]
+
+    errors: list[str] = []
+    if policy.get("schema") != PROVIDER_ROUTE_POLICY_SCHEMA:
+        errors.append(
+            f"{label}: provider_route_policy.schema must equal "
+            f"{PROVIDER_ROUTE_POLICY_SCHEMA}"
+        )
+    preference_order = policy.get("preference_order")
+    if not isinstance(preference_order, list) and text is not None:
+        preference_order = manifest_resolved_sequence_items(
+            text, "provider_route_policy", "preference_order"
+        )
+    if preference_order != list(PROVIDER_ROUTE_PREFERENCE):
+        errors.append(
+            f"{label}: provider_route_policy.preference_order must equal "
+            "VOLCENGINE_ARK then DEEPSEEK"
+        )
+
+    exact_values: tuple[tuple[str, object], ...] = (
+        ("primary_provider", "VOLCENGINE_ARK"),
+        ("fallback_provider", "DEEPSEEK"),
+        (
+            "fallback_requires_primary_attempt_terminal_without_authorized_answer",
+            True,
+        ),
+        ("primary_unavailable_evidence_required", True),
+        ("implementation_gap_counts_as_primary_unavailable", False),
+        (
+            "primary_availability_requires",
+            "credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold",
+        ),
+        (
+            "fallback_trigger",
+            "sealed-primary-attempt-terminal-without-authorized-answer-for-provider-or-model-capability-reason",
+        ),
+        ("application_source_security_failure_allows_fallback", False),
+        ("fallback_reason_classification_required", True),
+        (
+            "capability_failure_must_not_be_misclassified_as_unavailable",
+            True,
+        ),
+        (
+            "route_freeze_time",
+            "before-session-start-and-before-any-question-dispatch",
+        ),
+        ("ordered_routes_preauthorized_at_session_start", True),
+        (
+            "ordered_route_disclosure_scopes_preauthorized_at_session_start",
+            True,
+        ),
+        ("transparent_logical_question_fallback_allowed", True),
+        ("user_resubmission_or_new_session_required", False),
+        ("fallback_attempt_restarts_full_chain", True),
+        (
+            "fallback_attempt_inputs",
+            "immutable-original-question-and-exact-cognition-context",
+        ),
+        ("cross_attempt_intermediate_state_reuse_allowed", False),
+        ("late_primary_result_policy", "quarantine-audit-only"),
+        ("late_primary_result_overwrite_allowed", False),
+        ("maximum_fallback_provider_attempts", 1),
+        ("same_provider_retry_allowed", False),
+        ("outcome_unknown_duplicate_cost_risk_recorded", True),
+        (
+            "post_dispatch_provider_switch_requires",
+            "new-provider-attempt-under-same-logical-question-and-preauthorized-route",
+        ),
+        ("deepseek_batch_start_policy", "provider-declared-non-peak-preferred"),
+        ("deepseek_schedule_timezone", "Asia/Shanghai"),
+        ("peak_urgent_override_requires", "audited-explicit-override"),
+        ("cost_can_reduce_answer_quality", False),
+        ("cost_gate_scope", "before-question-start-only"),
+        ("current_started_question_must_keep_full_quality_chain", True),
+        ("unchanged_current_conformance_reuse_required", True),
+    )
+    for field, expected in exact_values:
+        if policy.get(field) != expected:
+            errors.append(
+                f"{label}: provider_route_policy.{field} must equal {expected}"
+            )
+    for legacy_field in (
+        "fallback_requires_primary_unavailable",
+        "quality_or_schema_failure_counts_as_primary_unavailable",
+        "selection_time",
+        "request_level_failover_allowed",
+        "same_question_redispatch_to_fallback_allowed",
+    ):
+        if legacy_field in policy:
+            errors.append(
+                f"{label}: provider_route_policy.{legacy_field} is incompatible "
+                "with isolated transparent fallback attempts"
+            )
+
+    preferred_windows = policy.get("deepseek_current_preferred_windows")
+    if not isinstance(preferred_windows, list) and text is not None:
+        preferred_windows = manifest_resolved_sequence_items(
+            text, "provider_route_policy", "deepseek_current_preferred_windows"
+        )
+    if preferred_windows != list(DEEPSEEK_PREFERRED_WINDOWS):
+        errors.append(
+            f"{label}: provider_route_policy.deepseek_current_preferred_windows "
+            "must equal the frozen provider-declared windows"
+        )
+    fallback_eligible_outcomes = policy.get("fallback_eligible_outcomes")
+    if not isinstance(fallback_eligible_outcomes, list) and text is not None:
+        fallback_eligible_outcomes = manifest_resolved_sequence_items(
+            text, "provider_route_policy", "fallback_eligible_outcomes"
+        )
+    if fallback_eligible_outcomes != list(PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES):
+        errors.append(
+            f"{label}: provider_route_policy.fallback_eligible_outcomes must "
+            "equal the frozen provider/model availability and capability outcomes"
+        )
+    schedule_source = policy.get("deepseek_schedule_source")
+    if not isinstance(schedule_source, str) or re.fullmatch(
+        r"https://api-docs\.deepseek\.com(?:/.*)?", schedule_source
+    ) is None:
+        errors.append(
+            f"{label}: provider_route_policy.deepseek_schedule_source must use "
+            "the official api-docs.deepseek.com domain"
+        )
+    checked_at = policy.get("deepseek_schedule_checked_at")
+    if not isinstance(checked_at, str) or re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}", checked_at
+    ) is None:
+        errors.append(
+            f"{label}: provider_route_policy.deepseek_schedule_checked_at must "
+            "be an ISO date"
+        )
+    else:
+        try:
+            datetime.strptime(checked_at, "%Y-%m-%d")
+        except ValueError:
+            errors.append(
+                f"{label}: provider_route_policy.deepseek_schedule_checked_at "
+                "must be a real ISO date"
+            )
+    if policy.get("deepseek_schedule_effective_status") not in {
+        "announced-not-yet-effective",
+        "effective",
+    }:
+        errors.append(
+            f"{label}: provider_route_policy.deepseek_schedule_effective_status "
+            "must record whether the provider-declared schedule is effective"
+        )
+    return errors
 
 
 def validate_strict_codex_baseline_alignment(
@@ -2215,6 +2548,14 @@ def validate_product_goal_alignment_manifest(
         return [f"{label}: product_goal_alignment must be a mapping from ITER-007 onward"]
 
     errors: list[str] = []
+    errors.extend(
+        validate_provider_route_policy(
+            manifest,
+            text,
+            label,
+            required=requires_provider_route_policy(iteration),
+        )
+    )
     if requires_strict_codex_baseline(iteration):
         errors.extend(validate_strict_codex_baseline_alignment(alignment, label))
     if requires_reflection_gate(iteration):
@@ -2508,6 +2849,16 @@ def validate_product_goal_alignment_manifest(
                 f"{label}: product_goal_alignment.{field} must be a verification case ID"
             )
     new_refs = sequences.get("new_capability_slice_refs", [])
+    errors.extend(
+        validate_experience_first_delivery_policy(
+            manifest,
+            alignment,
+            new_refs,
+            blocking_case_ids,
+            label,
+            required=requires_experience_first_delivery_policy(iteration),
+        )
+    )
     errors.extend(
         validate_experience_version_binding(
             alignment,
@@ -3181,6 +3532,162 @@ def validate_positive_value_result(
             errors.append(
                 f"{label}: positive value report must bind an exact measurement_input_digest"
             )
+    return errors
+
+
+def validate_experience_delivery_result(
+    result: Document,
+    experience_policy: dict[str, object],
+    provider_policy: dict[str, object],
+    *,
+    require_success: bool,
+) -> list[str]:
+    """Audit the first Alpha timebox and transparent Provider attempts."""
+
+    label = result.relative_path
+    errors: list[str] = []
+    for field, expected in (
+        ("experience_delivery_policy_schema", experience_policy.get("schema")),
+        ("experience_delivery_access_case_id", experience_policy.get("access_case_id")),
+        (
+            "experience_delivery_timebox_case_id",
+            experience_policy.get("timebox_case_id"),
+        ),
+        (
+            "experience_delivery_quality_case_id",
+            experience_policy.get("quality_case_id"),
+        ),
+        ("provider_route_policy_schema", provider_policy.get("schema")),
+    ):
+        if result.metadata.get(field) != expected:
+            errors.append(f"{label}: {field} must match the frozen Manifest policy")
+
+    started_at = result.metadata.get("experience_timebox_started_at")
+    if not isinstance(started_at, str) or re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[^\s]+(?:Z|[+-][0-9]{2}:[0-9]{2})",
+        started_at,
+    ) is None:
+        errors.append(
+            f"{label}: experience_timebox_started_at must be an ISO-8601 timestamp with timezone"
+        )
+    else:
+        try:
+            datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+        except ValueError:
+            errors.append(
+                f"{label}: experience_timebox_started_at must be a real ISO-8601 timestamp"
+            )
+
+    elapsed_at_seal = non_negative_metadata_integer(
+        result.metadata.get("experience_elapsed_minutes_at_result_seal")
+    )
+    if elapsed_at_seal is None:
+        errors.append(
+            f"{label}: experience_elapsed_minutes_at_result_seal must be a non-negative integer"
+        )
+
+    milestone_values: dict[str, int | None] = {}
+    for field in (
+        "page_launchable_elapsed_minutes",
+        "sustained_user_operable_alpha_elapsed_minutes",
+    ):
+        raw_value = result.metadata.get(field)
+        value = non_negative_metadata_integer(raw_value)
+        if value is None and raw_value != "NOT_ACHIEVED":
+            errors.append(
+                f"{label}: {field} must be a non-negative integer or NOT_ACHIEVED"
+            )
+        milestone_values[field] = value
+
+    delivery_verdict = result.metadata.get("experience_delivery_verdict")
+    access_verdict = result.metadata.get("experience_access_gate_verdict")
+    quality_verdict = result.metadata.get("experience_quality_gate_verdict")
+    if delivery_verdict not in {"PASS", "FAIL"}:
+        errors.append(f"{label}: experience_delivery_verdict must equal PASS or FAIL")
+    if access_verdict not in {"PASS", "FAIL", "NOT_RUN"}:
+        errors.append(
+            f"{label}: experience_access_gate_verdict must equal PASS, FAIL or NOT_RUN"
+        )
+    if quality_verdict not in {"PASS", "FAIL", "NOT_RUN"}:
+        errors.append(
+            f"{label}: experience_quality_gate_verdict must equal PASS, FAIL or NOT_RUN"
+        )
+
+    page_elapsed = milestone_values.get("page_launchable_elapsed_minutes")
+    alpha_elapsed = milestone_values.get(
+        "sustained_user_operable_alpha_elapsed_minutes"
+    )
+    if delivery_verdict == "PASS" or require_success:
+        if delivery_verdict != "PASS":
+            errors.append(
+                f"{label}: successful Alpha Result experience_delivery_verdict must equal PASS"
+            )
+        if page_elapsed is None or page_elapsed > 60:
+            errors.append(
+                f"{label}: successful Alpha Result must make the page launchable within 60 minutes"
+            )
+        if alpha_elapsed is None or alpha_elapsed > 180:
+            errors.append(
+                f"{label}: successful Alpha Result must be user-operable within 180 minutes"
+            )
+        if access_verdict != "PASS":
+            errors.append(
+                f"{label}: successful Alpha Result experience_access_gate_verdict must equal PASS"
+            )
+        if quality_verdict != "PASS":
+            errors.append(
+                f"{label}: successful Alpha Result experience_quality_gate_verdict must equal PASS before hardening"
+            )
+
+    hard_stop_triggered = result.metadata.get("experience_hard_stop_triggered")
+    if not isinstance(hard_stop_triggered, bool):
+        errors.append(f"{label}: experience_hard_stop_triggered must be a boolean")
+    elif (
+        elapsed_at_seal is not None
+        and elapsed_at_seal >= 240
+        and alpha_elapsed is None
+        and not hard_stop_triggered
+    ):
+        errors.append(
+            f"{label}: missing Alpha at 240 minutes must trigger the hard stop"
+        )
+
+    bounded_counts = (
+        ("pre_first_experience_qualification_count", 1),
+        ("pre_first_experience_smoke_question_count", 1),
+        ("same_failure_signature_maximum_retry_count", 1),
+        ("maximum_consecutive_no_user_visible_increment_count", 2),
+        ("fallback_provider_attempt_count", 1),
+    )
+    for field, upper_bound in bounded_counts:
+        value = non_negative_metadata_integer(result.metadata.get(field))
+        if value is None or value > upper_bound:
+            errors.append(
+                f"{label}: {field} must be a non-negative integer no greater than {upper_bound}"
+            )
+    for field in (
+        "pre_first_experience_full_regression_count",
+        "external_dispatch_after_required_stop_count",
+        "started_question_quality_chain_truncation_count",
+        "same_provider_retry_count",
+        "cross_attempt_intermediate_artifact_reuse_count",
+        "user_resubmission_or_new_session_count",
+        "late_primary_result_overwrite_count",
+        "capability_failure_misclassified_as_unavailable_count",
+        "application_source_security_failure_fallback_count",
+    ):
+        if non_negative_metadata_integer(result.metadata.get(field)) != 0:
+            errors.append(f"{label}: {field} must equal zero")
+    if non_negative_metadata_integer(result.metadata.get("live_attempt_count")) is None:
+        errors.append(f"{label}: live_attempt_count must be a non-negative integer")
+
+    provider_report_digest = result.metadata.get("provider_route_report_digest")
+    if not isinstance(provider_report_digest, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", provider_report_digest
+    ) is None:
+        errors.append(
+            f"{label}: provider_route_report_digest must be an exact sha256 digest"
+        )
     return errors
 
 
@@ -6065,6 +6572,22 @@ def validate_product_goal_reference_targets(
             continue
         owned = set(slice_gate_cases_by_ref.get(reference, []))
         required_owned = set(cases_by_new_ref.get(reference, []))
+        experience_delivery_policy = manifest.get("experience_delivery_policy")
+        delivery_owner_ref = resolved_sustained_alpha_slice_ref(
+            alignment, new_refs
+        )
+        if (
+            isinstance(experience_delivery_policy, dict)
+            and reference == delivery_owner_ref
+        ):
+            for field in (
+                "access_case_id",
+                "timebox_case_id",
+                "quality_case_id",
+            ):
+                delivery_case = experience_delivery_policy.get(field)
+                if isinstance(delivery_case, str):
+                    required_owned.add(delivery_case)
         experience_binding = alignment.get("experience_version_binding")
         if (
             isinstance(experience_binding, dict)
@@ -6157,7 +6680,7 @@ def validate_product_goal_reference_targets(
                 required_owned.add(ad_hoc_case)
         if not required_owned.issubset(owned):
             errors.append(
-                f"{target.relative_path}: Slice gate Cases must include its owned cross-domain, Web, ad-hoc, Alpha Agent comparison, early-evaluation, conditional-falsifier and reflection Cases"
+                f"{target.relative_path}: Slice gate Cases must include its owned cross-domain, Web, ad-hoc, experience access/timebox/quality, Alpha Agent comparison, early-evaluation, conditional-falsifier and reflection Cases"
             )
 
     checkpoint_bindings: list[tuple[str, dict[str, object]]] = []
@@ -7240,6 +7763,18 @@ def validate_product_goal_slice_sequence(
     alignment = manifest.get("product_goal_alignment") if manifest is not None else None
     raw_rework_policy = manifest.get("rework_policy") if manifest is not None else None
     rework_policy = raw_rework_policy if isinstance(raw_rework_policy, dict) else None
+    raw_experience_policy = (
+        manifest.get("experience_delivery_policy") if manifest is not None else None
+    )
+    experience_policy = (
+        raw_experience_policy if isinstance(raw_experience_policy, dict) else None
+    )
+    raw_provider_policy = (
+        manifest.get("provider_route_policy") if manifest is not None else None
+    )
+    provider_policy = (
+        raw_provider_policy if isinstance(raw_provider_policy, dict) else None
+    )
     early_canary_by_slice: dict[str, dict[str, object]] = {}
     early_comparison_by_slice: dict[str, dict[str, object]] = {}
     reflection_by_slice: dict[str, dict[str, object]] = {}
@@ -7977,6 +8512,33 @@ def validate_product_goal_slice_sequence(
                                 expected_evidence=f"{result.identifier}#{case_id}",
                             )
                         )
+
+            if (
+                status in {"blocked", "paused", "completed"}
+                and experience_policy is not None
+                and provider_policy is not None
+                and target.identifier == experience_policy.get("owner_slice_ref")
+                and isinstance(manifest_slice, dict)
+            ):
+                delivery_result_ref = manifest_slice.get("result")
+                delivery_result = (
+                    by_id.get(delivery_result_ref)
+                    if isinstance(delivery_result_ref, str)
+                    else None
+                )
+                if delivery_result is None:
+                    errors.append(
+                        f"{label}: {target.identifier} must bind an experience-first delivery Result"
+                    )
+                else:
+                    errors.extend(
+                        validate_experience_delivery_result(
+                            delivery_result,
+                            experience_policy,
+                            provider_policy,
+                            require_success=status == "completed",
+                        )
+                    )
 
             if (
                 requires_reflection_gate(target.metadata.get("iteration", ""))

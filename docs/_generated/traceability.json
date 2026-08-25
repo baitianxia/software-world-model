@@ -3997,6 +3997,25 @@
       "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
+  "SYS-ADR-017": {
+    "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "src/software_world_model/interface/engineering_qa_live.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_deepseek_chat_adapter.py",
+      "tests/test_engineering_qa_live.py",
+      "tests/test_engineering_qa_alpha_cli.py"
+    ]
+  },
   "SYS-ARCH-COMPONENTS": {
     "path": "docs/system/architecture/components.md",
     "code": [
@@ -4689,11 +4708,16 @@
     "path": "docs/system/operations/configuration.md",
     "code": [
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
-      "src/software_world_model/interface/provider_cli.py"
+      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "src/software_world_model/interface/provider_cli.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py"
     ],
     "tests": [
       "tests/test_volcengine_ark_chat_adapter.py",
-      "tests/test_ark_chat_conformance.py"
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_deepseek_chat_adapter.py",
+      "tests/test_deepseek_chat_conformance.py",
+      "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
   "SYS-OPS-INDEX": {

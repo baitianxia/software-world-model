@@ -4,8 +4,8 @@ kind: system-contract
 status: current
 authority: normative
 owners: [ai]
-depends_on: [SYS-ADR-015, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036]
+depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-092]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
 tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
@@ -50,11 +50,14 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    state 的非空受限子集。子集只能由 Application 从冻结 evidence ledger、前序 Result 和预算派生，并按 contract canonical order
    表达；Gateway 拒绝 universe 外 operation、空子集、乱序/重复项或调用方自行扩张。模型 response 中越出子集的 operation 仍作为
    untrusted raw output 记录，但不能由 Gateway 或 Adapter 获得查询/FINISH 权力。
-10. 多 Provider 偏好只能在 product freeze 与任何 request dispatch 之前，从分别持有 current Adapter Conformance、同一活动
-    Strategy/Configuration Capability Qualification、exact endpoint、secret reference 和隔离 transport 的 route 中选择。选择结果必须
-    作为单一 exact Provider subject 密封到 policy、grant、session、socket/TLS 与调用审计；未选择或资格不完整的 route 不能获得
-    credential、socket 或试探性调用。一旦任何 request 已分派或 outcome unknown，不得换 Provider 重试；新的 route 选择需要新的
-    product freeze 和外部披露授权。
+10. 多 Provider 路由按 ADR-017 在 Session 开始前冻结有序 route、每条 route 的 current Adapter Conformance、同一活动
+    Strategy/Configuration Capability Qualification、exact endpoint、secret reference、独立 disclosure scope、预算和 transport。当前
+    `ENGINEERING_QA` 顺序为 `VOLCENGINE_ARK → DEEPSEEK`。用户的一次提交只创建一个 logical question；每个 Provider 使用不同 attempt
+    identity、Manifest、grant、Ledger/Package/Answer/Review 和 transport audit。只有 Ark attempt 已密封 terminal、没有 authorized answer，
+    且可信分类为 provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected 时，才能透明启动最多一次
+    DeepSeek attempt。Application/Source/Security failure 不允许 fallback。DeepSeek 从原问题与同一 exact Cognition Context 重跑完整链，
+    不得读取 Ark 中间态；迟到 Ark response 必须 quarantine 且永不覆盖。每个 Provider 内 request retry 为 0，用户无需重提问题或新建
+    Session。Ark outcome unknown 后的 fallback 必须记录潜在重复计费风险。
 11. 一个 prompt program 可以为不同 Capability 定义不同 semantic authority，但每次调用只能在 Manifest 构造前按 sealed
     execution stage 确定性选择唯一 entry。Manifest 必须记录版本化 selection transformation，prompt program digest 必须绑定全部
     stage-entry-content，Gateway 必须校验 stage、transformation 与所选 content digest；仅在完整 monolithic prompt 中声明其他 section
@@ -62,8 +65,8 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 
 ## Security and compatibility
 
-Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatch 前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider-specific JSON mode 若要求 Adapter 注入 closed schema，schema authority 与 Gateway 的 leading semantic authority 必须按该 Adapter 已资格的 message rendering contract 组合，不能形成未经资格的相互竞争 system turns。当前 DeepSeek contract 将两者合并为恰好一个 leading system message，保持其余消息顺序，并由 live Conformance 同时验证单一 system、任务语义和 closed schema；该结论不自动适用于 Ark 或其他 OpenAI-format Provider。Provider preference 是资格 route 的确定性选择输入，不是 request-level failover 或绕过资格的可用性探测。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 request retry 都属于 Provider Configuration 与 Capability Qualification 身份；live Result 必须证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution 和 post-dispatch unknown 计数，而不只声明配置。
+Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatch 前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider-specific JSON mode 若要求 Adapter 注入 closed schema，schema authority 与 Gateway 的 leading semantic authority 必须按该 Adapter 已资格的 message rendering contract 组合，不能形成未经资格的相互竞争 system turns。当前 DeepSeek contract 将两者合并为恰好一个 leading system message，保持其余消息顺序，并由 live Conformance 同时验证单一 system、任务语义和 closed schema；该结论不自动适用于 Ark 或其他 OpenAI-format Provider。Provider preference 是预授权 attempt route，不是绕过资格的探测。相同 Adapter/Configuration/endpoint/model/transport/rendering identity 且仍有效的 Conformance 必须复用；领域 Prompt、答案 Schema 或不改变该 identity 的产品变化不能要求重复 Conformance。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 same-Provider request retry 都属于 Provider Configuration 与 Capability Qualification 身份；live Result 必须按 logical question 和 provider attempt 分别证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution、fallback reason、late quarantine、post-dispatch unknown 和潜在重复成本，而不只声明配置。
 
 ## Verification ownership
 
-Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。
+Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品实现尚未证明 logical-question/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine 和成本审计；在对应实现与测试闭合前，透明 fallback 状态为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。

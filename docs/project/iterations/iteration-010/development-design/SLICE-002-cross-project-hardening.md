@@ -65,7 +65,8 @@ Model 提供完整外部系统认知而不是 hint 集合；其覆盖不足不�
 - bounded absence 需要来源查询完整性、授权内容覆盖与业务发现 recall 三层证明；否则是具体 coverage limitation。
 - 高质量 Evidence/结论只可异步提议 Knowledge Update，正常 Admission/Publication 失败不影响已交付 Answer，也不取得自动资格。
 - Investigation/Answer/Reviewer 都无直接 Source/FS/Shell/network/credential 权限；只有 Broker/Worker 具有受控读能力。
-- current Provider/Strategy/role-disclosure 资格按 exact identity 重建；分派后不 retry、不切换 Provider。
+- current Provider/Strategy/role-disclosure 资格按 exact identity 重建；同 Provider 分派后不 retry。跨 Provider 只允许 ADR-017 预授权的
+  同 logical question 独立全链 fallback attempt，不共享中间态或 late result 权威。
 - 调用/资源上限只负责失败关闭，不降低 checklist、证据、Citation、Review 或 hidden Case 质量；Slice1 的一次 preview 补证上限不进入
   Slice2 正式协议。
 

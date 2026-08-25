@@ -4,8 +4,8 @@ kind: system-architecture
 status: current
 authority: normative
 owners: [architecture, application]
-depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
-derived_from: [FINDING-008-024, FINDING-008-036]
+depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-092]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -87,11 +87,17 @@ exact connected descriptor 候选；Gateway 在读取 credential 或发送 HTTP 
 per-session dispatch bound 与 `provisioned = attempts + unused_closed`。旧 `@1`、旧固定三调用资格、旧一请求一连接资格和 connection
 receipt 均不得复用；其他已接受 Profile 保持各自已资格的调用与连接协议。
 
-若候选配置声明多个 Provider 偏好，Application 必须在 product freeze 和任何 socket、credential 或 request dispatch 之前，按顺序
-选择第一个同时拥有 current exact Conformance、同 Strategy/Configuration Capability Qualification 与完整隔离 transport 的 route。
-选择结果作为单一 Provider subject 贯穿 evaluation grant、session receipt、supervisor DNS/TCP provisioning、Gateway TLS/SNI/path、
-Answer/Gateway role environment 和公开 Result；运行时只注入所选 Provider 的 credential。资格不完整的首选项只会被跳过，不会被
-试调用；任何 request 已分派或 outcome unknown 后都禁止切换 Provider，同一问题若要选择新 route 必须重新 freeze 并取得新授权。
+若候选配置声明多个 Provider，Application 必须在 Session 开始和任何问题 dispatch 前冻结有序 route，以及每条 route 的 current exact
+Conformance、同 Strategy/Configuration Capability Qualification、隔离 transport、credential reference 和 disclosure scope。当前
+Engineering QA 顺序为 Ark → DeepSeek；不能因 Ark 实现缺口直接跳过 primary。
+
+一次用户提交只产生一个 logical question。Ark primary attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有
+authorized answer，且原因为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected，才创建一次
+DeepSeek fallback attempt。后者从 immutable original question 与同一 exact Cognition Context 重新运行完整问答链，不能读取或拼接 Ark
+Ledger/Package/Draft/Review。Application、Source 或 Security failure 不 fallback；每个 Provider 内 retry 为 0。迟到 Ark 结果进入
+quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建 Session；页面和 Result 按 logical question 汇总，并保留两个 attempt 的
+独立身份、调用、Usage、成本、失败分类与 outcome-unknown 重复计费风险。当前实现尚未闭合该流程，运行状态必须标记
+`NOT_IMPLEMENTED / NOT_QUALIFIED`。
 
 ## 直接源码调查
 
@@ -111,6 +117,8 @@ Original Question
 
 ```text
 Explicit ENGINEERING_QA request
+  → one immutable logical question under a preauthorized Ark → DeepSeek route
+  → isolated Ark provider attempt
   → immutable original question + Question Understanding / Checklist
   → exact World Model Cognition Context
   → independent Investigation LLM proposes next search/read/parse from question + cognition + sealed ledger prefix

@@ -6,7 +6,7 @@
 - Active slice: `ITER-010-SLICE-001`
 - Worktree status: `iteration-010-slice-001-authorized-rework-in-progress`
 - Strategy relation: `world-model-external-cognition-guides-adaptive-model-led-broker-controlled-investigation`
-- Live model path: `deterministic-development-authorized-fresh-live-qualification-required-production-not-activated`
+- Live model path: `pdr-003-access-first-ark-primary-transparent-deepseek-fallback-not-implemented-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
