@@ -4647,7 +4647,7 @@
   {
     "id": "ITER-010-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "paused",
+    "status": "current",
     "authority": "project-plan",
     "owners": [
       "engineering",
@@ -4674,8 +4674,8 @@
   {
     "id": "ITER-010-INDEX",
     "kind": "iteration-index",
-    "status": "paused",
-    "authority": "project-plan",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "product",
       "project",
@@ -4849,8 +4849,8 @@
   {
     "id": "ITER-010-SLICE-001",
     "kind": "development-slice",
-    "status": "paused",
-    "authority": "project-decision",
+    "status": "authorized",
+    "authority": "current-development",
     "owners": [
       "engineering",
       "architecture",

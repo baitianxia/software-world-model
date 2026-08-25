@@ -9,11 +9,13 @@ code: []
 tests: []
 iteration: ITER-010
 authorized_by: user
-authorized_at: 2026-08-21T09:18:34Z
+authorized_at: 2026-08-25T05:06:07Z
 product_goal_alignment_verdict: accepted
 product_goal_alignment_reviewed_by: user
-product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
-critical_assumption_catalog_digest: sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82
+product_goal_alignment_review_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
+historical_product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
+historical_authorized_at: 2026-08-21T09:18:34Z
+critical_assumption_catalog_digest: sha256:2e53074115b08841a527fb7ba49e739eb2afd0473d20cacaa1a926338f8a8260
 coding_input: false
 ---
 
@@ -23,13 +25,19 @@ coding_input: false
 
 产品 baseline 固定为 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7`、tree
 `1369ce932c778c57a118123e8257ede476229d73`；本次授权复核的 planning commit 为
-`01dcfe2233625dfaa021495850fb18ae1323063b`、tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。ITER-009 技术资产保留，
+`b66ff9f058b92cebd78d5644ffef042753567b4d`、tree `30e437eea83e048e3fb59ddd90a8d1b76242d82c`。ITER-009 技术资产保留，
 但产品方向仍为 rejected/redirect。已复核重制后的 Candidate、Proposal、Manifest、Verification Matrix、三个 Slice 和
-`FINDING-010-002`，并把 World Model 定义与提问期调查职责明确分开。
+`FINDING-010-002/093/094`、ADR-018 和 Engineering Conversation Contract，并把 World Model、主 Agent、Conversation/Turn、平台与 Reviewer
+职责明确分开。
 
 用户收据 `d3b60bda…`（`2026-08-21T08:23:25Z`）确认重新制定计划并更新文档；新收据
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受本 Readiness，并只授权 `ITER-010-SLICE-001` 开发。修正前设计的旧授权不会被当作本设计的授权。
+
+上述 `585f02c4…` 是历史 Readiness 收据。用户现以
+`codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
+接受本文件的 PDR-004 refresh，并明确授权 `ITER-010-SLICE-001` 产品/System 编码与本地确定性验证。该收据不授权 Provider/model call、
+credential、动态源码披露、live browser、hidden、Slice2/3 或 Production Activation。
 
 该历史开发授权及其派生 live grant 均已执行、消费或停止。最新 [PDR-001](decisions/PDR-001-resume-as-rework.md) 只把错误的整轮
 `REDIRECT` 解释纠正为 `REWORK`，没有自动恢复旧授权。用户随后以
@@ -67,16 +75,17 @@ ADR-017 将 Provider 路由改为 Session 预授权的 Ark→DeepSeek：用户�
 该 Turn 密封的 exact Cognition 与 relevant sealed Conversation Context 重跑完整链，不共享中间态；同 Provider retry 0、late primary quarantine。当前代码尚未证明该语义，Readiness 只接受
 它作为恢复开发输入，不把它写成 live PASS；外部调用继续需要 exact freeze/grant。
 
-## PDR-004 readiness invalidation and refresh scope
+## PDR-004 readiness refresh and current acceptance
 
-本文件头部 `status: accepted` 只保存 `585f02c4…` 对旧单轮 Engineering QA 计划的历史 Readiness；它不再是当前产品编码权威。
+本文件头部 `status: accepted`、`product_goal_alignment_review_ref: f76ba3e8…` 与当前 A1—A6 digest 保存 PDR-004 刷新后的当前
+Readiness 权威；`585f02c4…` 对旧单轮 Engineering QA 计划的历史 Readiness 仅由 `historical_*` 字段保存。
 `FINDING-010-093/094` 和 PDR-004 已把目标修订为“软件世界模型 + 主工程 Agent”双核心及真正语义多轮 Chat。新默认 System Owner 是
 `SYS-ADR-018 / SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION`，旧 ADR-016/Engineering Question Answering 只保留历史与兼容边界。
 
 文档同步收据 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 只允许更新
-文档。当前 Readiness verdict 是 `REFRESH_REQUIRED`：Iteration/Slice1 暂停且 `coding_input=false`，没有 active Slice；Agent/Conversation
-实现、资格和 live 状态均为 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。只有下列内容被 current System docs、Proposal、Manifest、Slice
-和 Verification 一致冻结并由用户重新接受后，才可恢复编码：
+文档。此后 current System docs、Proposal、Manifest、Slice 和 Verification 已一致冻结下列内容，并由 `f76ba3e8…` 接受。当前 Readiness
+verdict 是 `ACCEPTED`，Iteration/Slice1 为 `authorized / coding_input=true`；Agent/Conversation 实现、资格和 live 状态仍是
+`NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。
@@ -108,8 +117,9 @@ reuse、DeepSeek 调度和成本不降质仍是恢复后的必要约束，不因
   current Codex”正式强制仍从 ITER-012 起；ITER-010 的 direction signal 不能冒充该正式 Gate。
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
-结论：Outcome 直接服务多轮工程 Chat MVP。历史 Readiness 已失去当前编码效力；PDR-004 暂停 Iteration/Slice1，等待新 Readiness 与用户
-重新授权。Agent/Conversation 与透明 route 都尚未实现或验证；本文件不授权或追认新的产品变化、测试扩展或外部调用。
+结论：Outcome 直接服务多轮工程 Chat MVP。历史 Readiness 已失去当前编码效力；PDR-004 refresh 已由 `f76ba3e8…` 接受并恢复
+Iteration/Slice1 编码。Agent/Conversation 与透明 route 都尚未实现或验证；本文件只授权 Slice1 产品/System 编码与本地确定性验证，
+不追认旧结果，也不授权外部调用、live 或后续 Slice。
 
 ## Architecture reflection gate readiness
 
@@ -149,7 +159,7 @@ Reviewer 必须在 fresh context 审查逐轮包与答案，其 Finding 只能�
 
 ## Slice, dependency and risk closure
 
-Slice1 的历史失败尝试已执行完毕；当前为 `paused / rework / coding_input=false`，没有 active Slice。新 Readiness 获接受后，最短顺序是：
+Slice1 的历史失败尝试已执行完毕；当前为 `authorized / active / rework / coding_input=true`。最短顺序是：
 闭合主 Agent 与 Conversation/Turn/Context 最小纵切 → 可重复启动且标记质量未验收的消息历史/新对话 Access → 最多一次本地或 Mock 单轮
 Access smoke → 冻结最小候选与 Ark→DeepSeek route → 一个有界五轮 Conversation 作为首次方向 live canary，并执行新对话泄漏 probe。
 不得用孤立 live question 代替 Chat canary；每个到达 Provider dispatch 的 Turn 分别计 live attempt并完成完整证据/审核。不得在此之前
@@ -170,12 +180,12 @@ V-PREVIEW-001/V-REFLECT-001` 保留原定义与 PASS/FAIL 证据，只是 histor
 current Slice1 Gate 是 `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002`：先交可操作 Chat，
 再运行一个五轮 Conversation 及新对话泄漏负测；每轮保留完整证据、Citation 和 fresh independent Review，Finding 回主 Agent 补证或重写。
 随后的 `V-COMP-ALPHA-001` 不增加产品交付前阶段：Codex 保留实际能力并只作强外部基线；系统两臂才共享同一 Agent/model/budget/cache。所有新 live Case
-仍须在重新授权、代码冻结和独立 live grant 后执行；计划、Mock 或旧单轮结果不能冒充真实 Chat。
+仍须在当前开发授权、后续代码冻结和独立 live grant 下执行；计划、Mock 或旧单轮结果不能冒充真实 Chat。
 
 ## Authorization decision
 
-**HISTORICAL READINESS ACCEPTED / CURRENT REFRESH REQUIRED / ITERATION AND SLICE1 PAUSED / NO CODING INPUT。** 原 Readiness 和 Slice1 开发曾由收据
+**CURRENT READINESS ACCEPTED / ITERATION AND SLICE1 AUTHORIZED / CODING INPUT TRUE。** 原 Readiness 和 Slice1 开发曾由收据
 `585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，后续 `32b298de…` 收据恢复当前 Slice1 的
 产品/System 代码与确定性测试；PDR-004 已以 docs-only 收据 `d8239ea7…` 暂停该旧权威，`PROJECT-CURRENT` 不再指向任何 active Slice。
-新的 Readiness 必须在 Agent/Conversation System Owner、Manifest 与五轮 Gate 一致后由用户明确接受；在此之前产品代码、测试扩展、
-credential、Provider/model call、动态源码披露、live browser、hidden、Production Activation 和 Slice2/3 均未授权。
+Agent/Conversation System Owner、Manifest 与五轮 Gate 现已一致，用户以 `f76ba3e8…` 明确接受并授权 Slice1 产品/System 代码与本地
+确定性验证。credential、Provider/model call、动态源码披露、live browser、hidden、Production Activation 和 Slice2/3 仍未授权。

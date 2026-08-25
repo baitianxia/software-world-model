@@ -1,14 +1,14 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: paused
-authority: project-decision
+status: authorized
+authority: current-development
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
-coding_input: false
+coding_input: true
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -23,7 +23,7 @@ product_goal_slice_gate_case_ids: [V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHA
 
 ## Status and dependencies
 
-`PAUSED / REWORK / NO CURRENT DEVELOPMENT / NOT CODING INPUT`。用户曾以
+`AUTHORIZED / ACTIVE / REWORK / CODING INPUT`。用户曾以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
 
@@ -39,9 +39,11 @@ DeepSeek token 消耗过多。既有授权不再允许继续无界扩张 Prompt�
 五轮 live Conversation 所需的最小工作。Ark 为 primary；同一 logical Turn 的 Ark attempt 在密封 terminal 后，仅可按预授权 route 自动启动
 一次独立 DeepSeek fallback attempt，用户无需选择模型、重提问题或重启 session。
 
-PDR-004 是当前最高优先级覆盖：旧授权已暂停，本 Slice 不再是编码输入。新目标是“软件世界模型 + 主工程 Agent”双核心与真正多轮 Chat；
-新默认 Owner 为 ADR-018/Engineering Conversation Contract。文档同步收据 `d8239ea7…` 不授权产品代码、测试扩展或 live。新的 Readiness
-获用户接受并重新授权前，任何 current plan 都不构成执行授权；下文标明“历史 / non-normative”的段落只保存已发生事实，其余 PDR-004 current plan 只能在新授权后执行。
+PDR-004 是当前最高优先级覆盖：旧授权已暂停，新目标是“软件世界模型 + 主工程 Agent”双核心与真正多轮 Chat；新默认 Owner 为
+ADR-018/Engineering Conversation Contract。文档同步收据 `d8239ea7…` 本身不授权产品代码或 live；用户现以
+`codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
+接受刷新 Readiness 并授权本 Slice 产品/System 编码与本地确定性验证。下文标明“历史 / non-normative”的段落只保存已发生事实；
+Provider/model、动态源码披露、live browser、hidden、Slice2/3 与 Production 仍未授权。
 
 恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、
 逐轮 Request/Evidence/Answer/Review/Delivery 和新对话隔离。首次方向 live canary 本身是一段五轮 Conversation；PDR-003 的体验前单次
@@ -91,8 +93,8 @@ smoke 只允许本地或 Mock Access 探针，不能用孤立 live question 冒�
 Schema 或评测体系。模型调用上限仍只作为安全熔断，不能为了减少调用而省略调查、Citation 或独立审核。
 
 开发 baseline 仍候选绑定 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
-`1369ce932c778c57a118123e8257ede476229d73`；冻结的 planning commit/tree 为
-`01dcfe2233625dfaa021495850fb18ae1323063b` / `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。本开发授权不允许
+`1369ce932c778c57a118123e8257ede476229d73`；本次刷新 Readiness 冻结的 planning commit/tree 为
+`b66ff9f058b92cebd78d5644ffef042753567b4d` / `30e437eea83e048e3fb59ddd90a8d1b76242d82c`。本开发授权不允许
 credential、Provider/model call、live Web/browser、源码片段外发、hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
 
 用户随后以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 授权完成本 Slice 所需权限；
@@ -363,10 +365,10 @@ Application/Broker/Worker 拥有 exact revision、授权、只读执行、证据
 
 ## Interfaces and affected code
 
-未来重新授权后的最小产品变更只能落在 Conversation/Turn/Application-owned Work State、主 Agent 工具循环、逐 Turn
+当前授权下的最小产品变更只能落在 Conversation/Turn/Application-owned Work State、主 Agent 工具循环、逐 Turn
 Ledger/Package/Review/Delivery 编排与现有 loopback Web 交互面。它应复用现有 World Model query、Source Broker/Worker、
-Citation、Provider Gateway 和 Response Control，不另建旁路。具体类、函数与迁移步骤由新 Readiness 通过后的实现调查决定；
-本次文档同步不授权修改任何产品代码。
+Citation、Provider Gateway 和 Response Control，不另建旁路。具体类、函数与迁移步骤由实现调查决定；不得把开发授权扩大为 live、
+外部披露、hidden、后续 Slice 或 Production 权限。
 
 ## Historical interfaces and affected code (non-normative)
 

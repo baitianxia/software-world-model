@@ -79,9 +79,10 @@ Conversation Context 只承载确认目标/约束、指代实体、开放问题�
 逐轮证据。
 
 首个 Chat canary 是一段五轮连续对话，而不是三道互不相关问题；另加“新对话后省略指代必须澄清”的泄漏负测。三臂更新为 same-agent
-source-only、same-agent full World Model cognition + source、current Codex external baseline。旧编码权威现已暂停；`d8239ea7…` 只授权
-文档同步，新架构保持 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，待本 Proposal/Manifest/System Owner 形成新 Readiness 并由用户重新
-授权后才能编码。PDR-003 的时间盒、根因、测试后置、Provider 和成本规则全部继续有效。
+source-only、same-agent full World Model cognition + source、current Codex external baseline。旧编码权威曾由 PDR-004 暂停，`d8239ea7…`
+只授权文档同步；用户现以 `f76ba3e8…` 接受刷新 Readiness 并授权 Slice1 产品/System 代码和本地确定性验证。新架构仍保持
+`NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，外部调用与 live 仍须另行冻结和授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本
+规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta
 
@@ -203,7 +204,7 @@ Slice2 运行第二工程 5+2 early canary、三臂同题复验、建模成本/�
 
 ## Authorization decision
 
-**ACCEPTED PROPOSAL / PDR-004 REVISION / ITERATION PAUSED / NO CODING INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
+**ACCEPTED PROPOSAL / PDR-004 REVISION / ITERATION AUTHORIZED / SLICE1 CODING INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受本 Proposal 与 Readiness，并曾授权 `ITER-010-SLICE-001` 成为产品编码输入。该历史授权基于已冻结的 planning commit
 `01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。
@@ -216,7 +217,10 @@ Activation 继续未授权。此前 `1b327024… + 5cdb7000…` 仍只绑定被�
 Slice1 小样本三臂只需在新 Readiness 中冻结可比输入、三条 Arm 和方向性判读，不作为正式优越性 Gate；Slice2/3 严格消融的 exact protocol、
 阈值和 digest 仍须在 Slice2 前由新的用户收据冻结。
 
-上述授权是历史事实。PDR-004 的新文档同步收据
+上述授权是历史事实。PDR-004 的文档同步收据
 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 不授权代码，已暂停旧
-Slice1 编码权威。新的 Agent/Conversation System Owner、Readiness 和用户明确重新授权全部完成前，Iteration/Slice1 保持
-`paused / coding_input=false`；Provider/model、live browser、hidden、Slice2/3 与 Production 仍未授权。
+Slice1 编码权威。用户现以
+`codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
+接受基于 planning commit `b66ff9f058b92cebd78d5644ffef042753567b4d` / tree
+`30e437eea83e048e3fb59ddd90a8d1b76242d82c` 的刷新 Readiness，并授权 `ITER-010-SLICE-001` 产品/System 编码与本地确定性验证。
+Provider/model、动态源码披露、live browser、hidden、Slice2/3 与 Production 仍未授权。

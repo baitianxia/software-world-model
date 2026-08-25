@@ -93,3 +93,11 @@ PDR-003 的体验前 `smoke≤1` 只约束上述本地/Mock Access 探针，不�
 项目文档、System Owner、Manifest 与 Verification Gate 一致并通过文档检查后，形成新的 Readiness review。只有用户明确接受该 Readiness
 并重新授权 Slice1，才能恢复产品开发。恢复后的第一项产品变化必须直接服务最小 Chat Alpha，不得再次先扩张完整 Agent 平台、长期
 Memory、多 Agent、完整异常矩阵或 full regression。
+
+## Revisit condition satisfied
+
+System Owner、Proposal、Manifest、Slice1 与五轮 Verification Gate 已在 planning commit
+`b66ff9f058b92cebd78d5644ffef042753567b4d` / tree `30e437eea83e048e3fb59ddd90a8d1b76242d82c` 一致冻结。用户以
+`codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
+接受刷新 Readiness 并授权 Slice1 产品/System 编码与本地确定性验证，因此暂停条件已解除，`REWORK` 决定不变。该收据不授权
+Provider/model、credential、动态源码披露、live browser、hidden、Slice2/3 或 Production Activation；旧 Result 和已消费 grant 继续保留。

@@ -160,6 +160,13 @@ ITER010_CURRENT_ASSUMPTIONS: dict[str, str] = {
 ITER010_HISTORICAL_ASSUMPTION_DIGEST = (
     "sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82"
 )
+ITER010_PDR004_ACTIVATION_RECEIPT = (
+    "codex-user-message:sha256:"
+    "f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5"
+)
+ITER010_PDR004_ACTIVATION_TIMESTAMP = "2026-08-25T05:06:07Z"
+ITER010_PDR004_PLANNING_COMMIT = "b66ff9f058b92cebd78d5644ffef042753567b4d"
+ITER010_PDR004_PLANNING_TREE = "30e437eea83e048e3fb59ddd90a8d1b76242d82c"
 ITER010_HISTORICAL_ASSUMPTIONS: dict[str, str] = {
     "A1": "保持软件世界模型作为持久、版本化外部认知而非手册或缓存，同时可让提问期 Source 调查核实、补充或纠正本题认知，并能证明完整认知不只是 locator 装饰",
     "A2": "独立 Investigation LLM 可以依据不可变原问题、exact World Model Cognition Context 和先前 Ledger 结果自适应提出下一步，而 Source Broker/Worker 能在不授予模型直接权限的情况下执行",
@@ -1637,6 +1644,26 @@ def validate_experience_first_delivery_policy(
             f"{label}: experience_delivery_policy."
             "historical_results_do_not_satisfy_experience_gate must be true"
         )
+    development = manifest.get("development")
+    slices = development.get("slices") if isinstance(development, dict) else None
+    required_historical_refs: set[str] = set()
+    if isinstance(slices, dict):
+        for state in slices.values():
+            if not isinstance(state, dict):
+                continue
+            rework_refs = state.get("rework_result_refs")
+            if isinstance(rework_refs, list):
+                required_historical_refs.update(map(str, rework_refs))
+    if isinstance(historical_refs, list):
+        missing_historical_refs = sorted(
+            required_historical_refs - set(map(str, historical_refs))
+        )
+        if missing_historical_refs:
+            errors.append(
+                f"{label}: experience_delivery_policy.historical_pre_policy_result_refs "
+                "must preserve every failed Result predating the current experience policy: "
+                + ", ".join(missing_historical_refs)
+            )
 
     alpha_ref = resolved_sustained_alpha_slice_ref(alignment, new_refs)
     if alpha_ref is None or policy.get("owner_slice_ref") != alpha_ref:
@@ -2446,7 +2473,10 @@ def validate_conversational_engineering_agent(
 
 
 def validate_conversational_architecture_cutover(
-    manifest: dict[str, object], label: str
+    manifest: dict[str, object],
+    label: str,
+    *,
+    manifest_text: str | None = None,
 ) -> list[str]:
     """Keep the @3 workflow auditable without authorizing it as the current Agent."""
 
@@ -2504,7 +2534,6 @@ def validate_conversational_architecture_cutover(
         ),
         ("current_protocol_schema", CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA),
         ("legacy_protocol_schema", ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA),
-        ("current_readiness_status", "refresh-required-not-accepted"),
         ("historical_readiness_ref", "ITER-010-READINESS"),
         (
             "historical_readiness_catalog_digest",
@@ -2513,6 +2542,276 @@ def validate_conversational_architecture_cutover(
     ):
         if readiness.get(field) != expected:
             errors.append(f"{label}: readiness_inputs.{field} must equal {expected}")
+
+    readiness_status = readiness.get("current_readiness_status")
+    if readiness_status not in {
+        "refresh-required-not-accepted",
+        "accepted-current",
+    }:
+        errors.append(
+            f"{label}: readiness_inputs.current_readiness_status must be a closed refresh or accepted state"
+        )
+    iteration_state = manifest.get("iteration")
+    rework = manifest.get("rework")
+    authorization = manifest.get("authorization")
+    baseline = manifest.get("baseline")
+    if readiness_status == "accepted-current":
+        acceptance_ref = readiness.get("current_readiness_acceptance_ref")
+        accepted_at = readiness.get("current_readiness_accepted_at")
+        planning_commit = readiness.get("current_readiness_planning_commit")
+        planning_tree = readiness.get("current_readiness_planning_tree")
+        if not isinstance(acceptance_ref, str) or re.fullmatch(
+            r"codex-user-message:sha256:[0-9a-f]{64}", acceptance_ref
+        ) is None:
+            errors.append(
+                f"{label}: accepted current Readiness must bind an exact user acceptance receipt"
+            )
+        elif acceptance_ref != ITER010_PDR004_ACTIVATION_RECEIPT:
+            errors.append(
+                f"{label}: accepted current Readiness receipt must equal the exact current PDR-004 activation receipt"
+            )
+        if not isinstance(accepted_at, str) or re.fullmatch(
+            r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:Z|[+-][0-9]{2}:[0-9]{2})",
+            accepted_at,
+        ) is None:
+            errors.append(
+                f"{label}: accepted current Readiness must bind an exact acceptance timestamp"
+            )
+        elif accepted_at != ITER010_PDR004_ACTIVATION_TIMESTAMP:
+            errors.append(
+                f"{label}: accepted current Readiness timestamp must equal the exact current PDR-004 activation timestamp"
+            )
+        for field_name, value in (
+            ("current_readiness_planning_commit", planning_commit),
+            ("current_readiness_planning_tree", planning_tree),
+        ):
+            if not isinstance(value, str) or re.fullmatch(
+                r"[0-9a-f]{40}", value
+            ) is None:
+                errors.append(
+                    f"{label}: readiness_inputs.{field_name} must be an exact Git object"
+                )
+        if (
+            planning_commit != ITER010_PDR004_PLANNING_COMMIT
+            or planning_tree != ITER010_PDR004_PLANNING_TREE
+        ):
+            errors.append(
+                f"{label}: accepted current Readiness must bind the exact PDR-004 planning commit/tree"
+            )
+        if not isinstance(baseline, dict) or (
+            planning_commit != baseline.get("planning_commit")
+            or planning_tree != baseline.get("planning_tree")
+        ):
+            errors.append(
+                f"{label}: accepted current Readiness planning identity must match baseline planning_commit/tree"
+            )
+        if not isinstance(iteration_state, dict) or (
+            iteration_state.get("status") not in ACTIVE_ITERATION_STATUSES
+            or iteration_state.get("coding_input") is not True
+        ):
+            errors.append(
+                f"{label}: accepted current Readiness requires an authorized coding iteration"
+            )
+        if not isinstance(rework, dict) or (
+            rework.get("authorization_status")
+            != "authorized-refreshed-readiness-accepted"
+            or rework.get("coding_input") is not True
+            or rework.get("current_reauthorization_ref") != acceptance_ref
+            or rework.get("authorization_ref") != acceptance_ref
+            or rework.get("authorized_at") != accepted_at
+        ):
+            errors.append(
+                f"{label}: accepted current Readiness must match the active rework authorization"
+            )
+        superseded_receipts: set[str] = set()
+        if isinstance(rework, dict):
+            for field in (
+                "user_receipt_ref",
+                "historical_redirect_message_ref",
+                "prior_rework_authorization_ref",
+            ):
+                value = rework.get(field)
+                if isinstance(value, str):
+                    superseded_receipts.add(value)
+        if isinstance(authorization, dict):
+            prior_design_refs = authorization.get("prior_design_authorization_refs")
+            if isinstance(prior_design_refs, list):
+                superseded_receipts.update(map(str, prior_design_refs))
+            for field in (
+                "docs_sync_authorization_ref",
+                "planning_request_ref",
+                "final_decision_ref",
+                "recovery_decision_ref_receipt",
+            ):
+                value = authorization.get(field)
+                if isinstance(value, str):
+                    superseded_receipts.add(value)
+            root_authorization = authorization.get(
+                "slice1_needed_rights_root_authorization"
+            )
+            if isinstance(root_authorization, dict):
+                root_authorization_ref = root_authorization.get("authorization_ref")
+                if isinstance(root_authorization_ref, str):
+                    superseded_receipts.add(root_authorization_ref)
+        if manifest_text is not None:
+            superseded_receipts.update(
+                manifest_resolved_sequence_items(
+                    manifest_text,
+                    "authorization",
+                    "prior_design_authorization_refs",
+                )
+                or []
+            )
+            superseded_receipts.update(
+                manifest_resolved_nested_sequence_items(
+                    manifest_text,
+                    (
+                        "development",
+                        "slices",
+                        "ITER-010-SLICE-001",
+                        "prior_authorization_refs",
+                    ),
+                )
+                or []
+            )
+        if isinstance(acceptance_ref, str) and acceptance_ref in superseded_receipts:
+            errors.append(
+                f"{label}: current Readiness acceptance must not reuse a prior, consumed, paused, or docs-only authorization receipt"
+            )
+        allowed_current_receipt_paths = {
+            ("readiness_inputs", "current_readiness_acceptance_ref"),
+            ("rework", "current_reauthorization_ref"),
+            ("rework", "authorization_ref"),
+            (
+                "development",
+                "slices",
+                "ITER-010-SLICE-001",
+                "authorization_ref",
+            ),
+            ("authorization", "authorization_ref"),
+        }
+        receipt_stack: list[tuple[tuple[object, ...], object]] = [((), manifest)]
+        unexpected_receipt_paths: list[str] = []
+        while receipt_stack:
+            path, value = receipt_stack.pop()
+            if isinstance(value, dict):
+                receipt_stack.extend(
+                    (path + (key,), nested) for key, nested in value.items()
+                )
+            elif isinstance(value, list):
+                receipt_stack.extend(
+                    (path + (index,), nested)
+                    for index, nested in enumerate(value)
+                )
+            elif (
+                isinstance(acceptance_ref, str)
+                and value == acceptance_ref
+                and path not in allowed_current_receipt_paths
+            ):
+                unexpected_receipt_paths.append(".".join(map(str, path)))
+        if unexpected_receipt_paths:
+            errors.append(
+                f"{label}: current Readiness receipt must be new and may appear only in current acceptance/authorization fields; also found at "
+                + ", ".join(sorted(unexpected_receipt_paths))
+            )
+        if not isinstance(authorization, dict) or (
+            authorization.get("active_slice") != "ITER-010-SLICE-001"
+            or authorization.get("authorization_ref") != acceptance_ref
+            or authorization.get("authorized_at") != accepted_at
+            or authorization.get("refreshed_readiness_required") is not False
+            or authorization.get("explicit_user_reauthorization_required") is not False
+        ):
+            errors.append(
+                f"{label}: accepted current Readiness must match the active Slice1 authorization"
+            )
+        if not isinstance(authorization, dict) or (
+            authorization.get("development_authorization_scope")
+            != "slice1-product-system-code-and-local-deterministic-verification-only"
+            or authorization.get("external_execution_authorization_status")
+            != "not-authorized"
+        ):
+            errors.append(
+                f"{label}: current development authorization must remain limited to Slice1 product/System code and local deterministic verification with external execution not authorized"
+            )
+        if not isinstance(authorization, dict) or (
+            authorization.get("docs_sync_authorizes_product_code") is not False
+        ):
+            errors.append(
+                f"{label}: docs-only synchronization receipt must not authorize product code"
+            )
+        development = manifest.get("development")
+        slices = (
+            development.get("slices")
+            if isinstance(development, dict)
+            else None
+        )
+        slice1 = (
+            slices.get("ITER-010-SLICE-001")
+            if isinstance(slices, dict)
+            else None
+        )
+        if not isinstance(slice1, dict) or (
+            slice1.get("status") != "authorized"
+            or slice1.get("coding_input") is not True
+            or slice1.get("authorization_ref") != acceptance_ref
+            or slice1.get("authorized_at") != accepted_at
+            or slice1.get("live_question_status")
+            != "not-authorized-conversational-five-turn-canary-not-executed"
+        ):
+            errors.append(
+                f"{label}: current Slice1 authorization must keep the conversational live canary not authorized and not executed"
+            )
+        if isinstance(slices, dict):
+            for slice_id in ("ITER-010-SLICE-002", "ITER-010-SLICE-003"):
+                state = slices.get(slice_id)
+                if not isinstance(state, dict) or (
+                    state.get("status") != "proposed"
+                    or state.get("coding_input") is not False
+                    or state.get("authorization_ref") != "not-authorized"
+                ):
+                    errors.append(
+                        f"{label}: accepted current Readiness must not authorize {slice_id}"
+                    )
+        root_authorization = (
+            authorization.get("slice1_needed_rights_root_authorization")
+            if isinstance(authorization, dict)
+            else None
+        )
+        if not isinstance(root_authorization, dict) or (
+            root_authorization.get("status")
+            != "historical-consumed-not-active"
+            or root_authorization.get("excludes")
+            != "slice2-slice3-hidden-and-production-activation"
+        ):
+            errors.append(
+                f"{label}: historical needed-rights grant must remain consumed and hidden/Production excluded"
+            )
+    elif readiness_status == "refresh-required-not-accepted":
+        for field in (
+            "current_readiness_acceptance_ref",
+            "current_readiness_accepted_at",
+            "current_readiness_planning_commit",
+            "current_readiness_planning_tree",
+        ):
+            if field in readiness:
+                errors.append(
+                    f"{label}: refresh-required Readiness must not claim {field}"
+                )
+        if (
+            not isinstance(iteration_state, dict)
+            or iteration_state.get("status") != "paused"
+            or iteration_state.get("coding_input") is not False
+            or not isinstance(rework, dict)
+            or rework.get("coding_input") is not False
+            or not isinstance(authorization, dict)
+            or authorization.get("active_slice") != "none"
+            or authorization.get("refreshed_readiness_required") is not True
+            or authorization.get("explicit_user_reauthorization_required")
+            is not True
+        ):
+            errors.append(
+                f"{label}: refresh-required Readiness requires a paused non-coding iteration with no active Slice"
+            )
     for forbidden_field in (
         "amended_architecture_decision",
         "investigation_budget_status",
@@ -2562,6 +2861,13 @@ def validate_historical_gate_catalog(
         if verdict != expected_verdict:
             errors.append(
                 f"{label}: historical Case {case_id} must preserve verdict {expected_verdict}"
+            )
+        expected_evidence = IMMUTABLE_HISTORICAL_CASE_EVIDENCE.get(
+            ("ITER-010-RESULT-SLICE-001-STOP-REDIRECT", case_id)
+        )
+        if expected_evidence is not None and rows[0][5] != expected_evidence:
+            errors.append(
+                f"{label}: historical Case {case_id} must preserve its immutable Evidence"
             )
     errors.extend(
         validate_iter010_current_verification_semantics(verification, label)
@@ -3628,7 +3934,11 @@ def validate_product_goal_alignment_manifest(
             required=chat_required,
         )
     )
-    errors.extend(validate_conversational_architecture_cutover(manifest, label))
+    errors.extend(
+        validate_conversational_architecture_cutover(
+            manifest, label, manifest_text=text
+        )
+    )
     if requires_direction_preview(iteration):
         errors.extend(
             validate_direction_preview_binding(
@@ -6801,7 +7111,11 @@ def validate_product_goal_execution_readiness(
     engineering_qa_mode = is_engineering_qa_adaptive_protocol(answer_protocol)
     chat_mode = conversational_agent_cutover_active(manifest)
     if chat_mode:
-        errors.extend(validate_conversational_architecture_cutover(manifest, label))
+        errors.extend(
+            validate_conversational_architecture_cutover(
+                manifest, label, manifest_text=manifest_text
+            )
+        )
         errors.extend(
             validate_conversational_engineering_agent(
                 manifest,
@@ -8528,13 +8842,20 @@ def validate_rework_authorization_receipt(
     forbidden_receipts: set[str] = set()
     iteration = str(target.metadata.get("iteration", ""))
     readiness = by_id.get(f"{iteration}-READINESS")
-    initial_authorization = (
+    current_readiness_authorization = (
         readiness.metadata.get("product_goal_alignment_review_ref")
         if readiness is not None
         else None
     )
-    if isinstance(initial_authorization, str):
-        forbidden_receipts.add(initial_authorization)
+    combined_readiness_authorization = (
+        manifest_slice.get("authorization_combines_current_readiness_acceptance")
+        is True
+    )
+    if (
+        isinstance(current_readiness_authorization, str)
+        and not combined_readiness_authorization
+    ):
+        forbidden_receipts.add(current_readiness_authorization)
     project_decision_ref = manifest_slice.get("project_decision_ref")
     project_decision = (
         by_id.get(project_decision_ref)
@@ -8574,10 +8895,22 @@ def validate_rework_authorization_receipt(
             f"{label}: reauthorized {target.identifier} must freeze one unique prior authorization receipt per failed Result"
         )
         prior_authorizations = []
+    historical_initial_authorization = (
+        readiness.metadata.get("historical_product_goal_alignment_review_ref")
+        if readiness is not None
+        else None
+    )
+    if not isinstance(historical_initial_authorization, str):
+        first_rework_result = by_id.get(str(rework_refs[0]))
+        historical_initial_authorization = (
+            first_rework_result.metadata.get("slice_authorization_ref")
+            if first_rework_result is not None
+            else None
+        )
     if (
-        isinstance(initial_authorization, str)
+        isinstance(historical_initial_authorization, str)
         and prior_authorizations
-        and prior_authorizations[0] != initial_authorization
+        and prior_authorizations[0] != historical_initial_authorization
     ):
         errors.append(
             f"{label}: reauthorized {target.identifier} must preserve its initial Readiness authorization as the first prior receipt"
@@ -8610,6 +8943,13 @@ def validate_rework_authorization_receipt(
     ):
         errors.append(
             f"{label}: reauthorized {target.identifier} must use a new user authorization receipt after the failed Result and REWORK decision"
+        )
+    if combined_readiness_authorization and (
+        not isinstance(current_readiness_authorization, str)
+        or authorization_ref != current_readiness_authorization
+    ):
+        errors.append(
+            f"{label}: combined Readiness acceptance and Slice reauthorization must use the same exact user receipt"
         )
     return errors
 

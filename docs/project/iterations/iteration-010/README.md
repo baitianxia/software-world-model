@@ -1,14 +1,14 @@
 ---
 id: ITER-010-INDEX
 kind: iteration-index
-status: paused
-authority: project-plan
+status: authorized
+authority: current-development
 owners: [product, project, architecture, engineering, quality]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
-coding_input: false
+coding_input: true
 ---
 
 # ITER-010：软件世界模型与主工程 Agent 驱动的多轮工程 Chat
@@ -37,11 +37,13 @@ coding_input: false
 
 ## Status and authorization
 
-`PAUSED / REWORK / NO ACTIVE SLICE / CODING INPUT FALSE / SLICE-002 AND SLICE-003 PROPOSED BUT NOT AUTHORIZED / NO ACCEPTANCE`。
+`AUTHORIZED / REWORK / SLICE-001 ACTIVE / CODING INPUT TRUE / SLICE-002 AND SLICE-003 PROPOSED BUT NOT AUTHORIZED / NO ACCEPTANCE`。
 
 [PDR-004](decisions/PDR-004-agent-first-conversational-recovery.md) 已依据 Agent 方向收据 `2f8b92d8…`、Chat 目标收据 `f164d65a…` 和本次
-文档同步收据 `d8239ea7…` 暂停旧编码权威。该收据只允许文档同步；新的 Agent/Chat 架构仍为
-`NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，需要新的 Readiness 和用户明确重新授权后才能恢复 Slice1 产品开发。
+文档同步收据 `d8239ea7…` 曾暂停旧编码权威。用户随后以
+`codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
+接受刷新后的 Readiness 并授权 Slice1 产品/System 编码与本地确定性验证。新的 Agent/Chat 架构仍为
+`NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`；Provider/model、动态源码披露、live browser、hidden、Slice2/3 和 Production 仍需独立授权。
 
 Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
 能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。
@@ -162,6 +164,6 @@ route 和有界 canary；PDR-004 又把孤立 live question 收窄为 Provider �
 - [Decisions](decisions/README.md)
 
 旧计划在 Slice1 的方向 Gate 失败：技术链能够运行，但答案/审核质量失败，随后又证明重流程、薄 Agent 和无状态连续问答不能实现目标
-Chat。Slice2/3、三臂、hidden、正式验收和 Production 均未执行。PDR-004 现暂停 Slice1；下一步不是继续旧三题 live，而是先完成新的
-Agent/Conversation System Owner、Readiness 和重新授权。恢复后先交五轮 Chat Alpha 与新对话隔离，再以 current Codex、same-agent
+Chat。Slice2/3、三臂、hidden、正式验收和 Production 均未执行。PDR-004 的 System Owner、Readiness 和重新授权现已完成；下一步不是
+继续旧三题 live，而是先交五轮 Chat Alpha 与新对话隔离，再以 current Codex、same-agent
 source-only、same-agent full-cognition 三臂判断方向。任何旧 Result 或本机 PASS 都不授权新架构编码、hidden、Slice2/3 或 Production。

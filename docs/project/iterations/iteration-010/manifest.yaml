@@ -1,17 +1,17 @@
 schema_version: 1
 iteration:
   id: ITER-010
-  status: paused
+  status: authorized
   outcome_scope: dual-core-world-model-cognition-and-lead-engineering-agent-semantic-multi-turn-chat-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
   current_decision_ref: ITER-010-PDR-004
-  coding_input: false
+  coding_input: true
 
 baseline:
   commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
   tree: 1369ce932c778c57a118123e8257ede476229d73
-  planning_commit: 01dcfe2233625dfaa021495850fb18ae1323063b
-  planning_tree: 8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f
+  planning_commit: b66ff9f058b92cebd78d5644ffef042753567b4d
+  planning_tree: 30e437eea83e048e3fb59ddd90a8d1b76242d82c
   dirty_worktree_allowed: false
   relation: exact-iteration-009-slice-001-technical-subject-with-rejected-product-direction-preserved-as-predecessor-evidence
 
@@ -99,12 +99,12 @@ product_goal_alignment:
     - V-010
     - V-REFLECT-003
   readiness_blocking_case_ids:
-    - V-PRE-001
-    - V-PRE-002
-    - V-PRE-003
-    - V-PRE-004
-    - V-PRE-005
-    - V-PRE-006
+    - V-PRE-CHAT-001
+    - V-PRE-CHAT-002
+    - V-PRE-CHAT-003
+    - V-PRE-CHAT-004
+    - V-PRE-CHAT-005
+    - V-PRE-CHAT-006
   cross_domain_case_count: 3
   cross_domain_bindings:
     binding_001:
@@ -313,10 +313,11 @@ rework:
   historical_redirect_message_was_explicit: false
   prior_rework_decision_ref: ITER-010-PDR-001
   prior_rework_authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
-  authorization_status: paused-pending-refreshed-readiness-and-explicit-user-reauthorization
-  coding_input: false
-  authorized_at: not-authorized
-  authorization_ref: not-authorized
+  current_reauthorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
+  authorization_status: authorized-refreshed-readiness-accepted
+  coding_input: true
+  authorized_at: 2026-08-25T05:06:07Z
+  authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
   first_delivery: usable-loopback-semantic-chat-before-hardening
   repeatable_start_required: true
   listener: 127.0.0.1
@@ -831,7 +832,11 @@ readiness_inputs:
   current_protocol_schema: CONVERSATIONAL_ENGINEERING_AGENT@1
   legacy_protocol_schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
   legacy_answer_hierarchy_protocol_digest: sha256:97d24a2a1c70965c6b6953f8665d2808762f0231c3626904013e209dd32e6947
-  current_readiness_status: refresh-required-not-accepted
+  current_readiness_status: accepted-current
+  current_readiness_acceptance_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
+  current_readiness_accepted_at: 2026-08-25T05:06:07Z
+  current_readiness_planning_commit: b66ff9f058b92cebd78d5644ffef042753567b4d
+  current_readiness_planning_tree: 30e437eea83e048e3fb59ddd90a8d1b76242d82c
   historical_readiness_ref: ITER-010-READINESS
   historical_readiness_catalog_digest: sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82
   system_contract_set_schema: ITER-010-SYSTEM-CONTRACT-SET@1
@@ -869,7 +874,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:0e466edbb0b7002aa29fcf5221fc9a82de3b55a0778b75c1ef7824c7dee19f2e
+  system_contract_set_digest: sha256:9c9155fdd4a87b6cafded633f2ecfffc2364a7550c7cca14ab836d4799f6c1de
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -898,11 +903,10 @@ readiness_inputs:
 development:
   slices:
     ITER-010-SLICE-001:
-      status: paused
-      coding_input: false
-      result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
-      reflection_decision: REWORK
-      reflection_decision_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
+      status: authorized
+      coding_input: true
+      result: in-progress
+      reflection_decision: in-progress
       project_decision_ref: ITER-010-PDR-004
       recovery_decision_ref: ITER-010-PDR-003
       historical_reflection_decision: REDIRECT
@@ -914,16 +918,17 @@ development:
       rework_prerequisite_result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
       prior_authorization_refs:
         - "codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
+      authorization_combines_current_readiness_acceptance: true
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
-      product_code_freeze_status: paused-new-architecture-not-implemented-not-qualified
+      product_code_freeze_digest: not-executed
+      product_code_freeze_status: authorized-awaiting-first-pdr-004-product-freeze
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
       live_question_status: not-authorized-conversational-five-turn-canary-not-executed
       authorized_by: user
-      authorized_at: 2026-08-24T02:55:16Z
-      authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
+      authorized_at: 2026-08-25T05:06:07Z
+      authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
     ITER-010-SLICE-002:
       status: proposed
       coding_input: false
@@ -951,14 +956,16 @@ verification:
 
 authorization:
   readiness_review_id: ITER-010-READINESS
-  active_slice: none
+  active_slice: ITER-010-SLICE-001
   authorized_by: user
-  authorized_at: 2026-08-21T09:18:34Z
-  authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
+  authorized_at: 2026-08-25T05:06:07Z
+  authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
   docs_sync_authorization_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
   docs_sync_authorizes_product_code: false
-  refreshed_readiness_required: true
-  explicit_user_reauthorization_required: true
+  refreshed_readiness_required: false
+  explicit_user_reauthorization_required: false
+  development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
+  external_execution_authorization_status: not-authorized
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24

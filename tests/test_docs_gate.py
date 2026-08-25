@@ -7440,7 +7440,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
                     "ITER-010",
                     {**by_id, verification.identifier: tampered},
                     require_execution_slice_sequence=True,
-                    require_paused_slice_sequence=True,
+                    require_paused_slice_sequence=False,
                     verification=tampered,
                 )
                 self.assertTrue(
@@ -7483,12 +7483,13 @@ class ReworkPlanningGateTests(unittest.TestCase):
             docs_gate.REPOSITORY
             / "docs/project/iterations/iteration-010/manifest.yaml"
         )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
         manifest = docs_gate.safe_load_manifest(
-            manifest_path.read_text(encoding="utf-8")
+            manifest_text
         )
         self.assertEqual(
             docs_gate.validate_conversational_architecture_cutover(
-                manifest, "manifest.yaml"
+                manifest, "manifest.yaml", manifest_text=manifest_text
             ),
             [],
         )
@@ -7501,12 +7502,266 @@ class ReworkPlanningGateTests(unittest.TestCase):
             tampered = copy.deepcopy(manifest)
             tampered[section_name]["protocol_role"] = "current"
             errors = docs_gate.validate_conversational_architecture_cutover(
-                tampered, "manifest.yaml"
+                tampered, "manifest.yaml", manifest_text=manifest_text
             )
             self.assertTrue(
                 any(section_name in error for error in errors),
                 (section_name, errors),
             )
+
+    def test_current_readiness_acceptance_is_bound_to_active_authorization(
+        self,
+    ) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(
+            manifest_text
+        )
+        self.assertEqual(
+            docs_gate.validate_conversational_architecture_cutover(
+                manifest, "manifest.yaml", manifest_text=manifest_text
+            ),
+            [],
+        )
+
+        stale = copy.deepcopy(manifest)
+        stale["readiness_inputs"][  # type: ignore[index]
+            "current_readiness_status"
+        ] = "refresh-required-not-accepted"
+        for field in (
+            "current_readiness_acceptance_ref",
+            "current_readiness_accepted_at",
+            "current_readiness_planning_commit",
+            "current_readiness_planning_tree",
+        ):
+            stale["readiness_inputs"].pop(field, None)  # type: ignore[index]
+        stale_errors = docs_gate.validate_conversational_architecture_cutover(
+            stale, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("paused non-coding iteration" in error for error in stale_errors),
+            stale_errors,
+        )
+
+        mismatched_receipt = copy.deepcopy(manifest)
+        mismatched_receipt["rework"][  # type: ignore[index]
+            "authorization_ref"
+        ] = "codex-user-message:sha256:" + "0" * 64
+        receipt_errors = docs_gate.validate_conversational_architecture_cutover(
+            mismatched_receipt, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("active rework authorization" in error for error in receipt_errors),
+            receipt_errors,
+        )
+
+        mismatched_current_reauthorization = copy.deepcopy(manifest)
+        mismatched_current_reauthorization["rework"][  # type: ignore[index]
+            "current_reauthorization_ref"
+        ] = "codex-user-message:sha256:" + "1" * 64
+        current_reauthorization_errors = (
+            docs_gate.validate_conversational_architecture_cutover(
+                mismatched_current_reauthorization, "manifest.yaml"
+            )
+        )
+        self.assertTrue(
+            any(
+                "active rework authorization" in error
+                for error in current_reauthorization_errors
+            ),
+            current_reauthorization_errors,
+        )
+
+        mismatched_planning = copy.deepcopy(manifest)
+        mismatched_planning["readiness_inputs"][  # type: ignore[index]
+            "current_readiness_planning_tree"
+        ] = "0" * 40
+        planning_errors = docs_gate.validate_conversational_architecture_cutover(
+            mismatched_planning, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("planning identity" in error for error in planning_errors),
+            planning_errors,
+        )
+
+        shifted_timestamp = copy.deepcopy(manifest)
+        other_timestamp = "2026-08-25T05:06:08Z"
+        shifted_timestamp["readiness_inputs"][  # type: ignore[index]
+            "current_readiness_accepted_at"
+        ] = other_timestamp
+        shifted_timestamp["rework"]["authorized_at"] = other_timestamp  # type: ignore[index]
+        shifted_timestamp["authorization"][  # type: ignore[index]
+            "authorized_at"
+        ] = other_timestamp
+        shifted_timestamp["development"]["slices"][  # type: ignore[index]
+            "ITER-010-SLICE-001"
+        ]["authorized_at"] = other_timestamp
+        timestamp_errors = docs_gate.validate_conversational_architecture_cutover(
+            shifted_timestamp, "manifest.yaml", manifest_text=manifest_text
+        )
+        self.assertTrue(
+            any(
+                "exact current PDR-004 activation timestamp" in error
+                for error in timestamp_errors
+            ),
+            timestamp_errors,
+        )
+
+        shifted_planning = copy.deepcopy(manifest)
+        other_commit = "a" * 40
+        other_tree = "b" * 40
+        shifted_planning["readiness_inputs"][  # type: ignore[index]
+            "current_readiness_planning_commit"
+        ] = other_commit
+        shifted_planning["readiness_inputs"][  # type: ignore[index]
+            "current_readiness_planning_tree"
+        ] = other_tree
+        shifted_planning["baseline"]["planning_commit"] = other_commit  # type: ignore[index]
+        shifted_planning["baseline"]["planning_tree"] = other_tree  # type: ignore[index]
+        shifted_planning_errors = (
+            docs_gate.validate_conversational_architecture_cutover(
+                shifted_planning, "manifest.yaml", manifest_text=manifest_text
+            )
+        )
+        self.assertTrue(
+            any(
+                "exact PDR-004 planning commit/tree" in error
+                for error in shifted_planning_errors
+            ),
+            shifted_planning_errors,
+        )
+
+        prior_design_receipts = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "authorization",
+            "prior_design_authorization_refs",
+        )
+        self.assertIsNotNone(prior_design_receipts)
+        historical_direction_receipts = (
+            "codex-user-message:sha256:"
+            "2f8b92d817ae111401eaaad959a5f786dd3a289763d9b258b38f5a12efd66a90",
+            "codex-user-message:sha256:"
+            "f164d65a815c67b86d427ee8057f41b20d47bbbd0e8febec8ec1e02c28448068",
+        )
+        old_receipts = (
+            manifest["rework"]["prior_rework_authorization_ref"],  # type: ignore[index]
+            manifest["authorization"]["planning_request_ref"],  # type: ignore[index]
+            manifest["product_goal_alignment"][  # type: ignore[index]
+                "positive_value_freeze_receipt_ref"
+            ],
+            *(prior_design_receipts or []),
+            *historical_direction_receipts,
+        )
+        for old_receipt in old_receipts:
+            reused_receipt = copy.deepcopy(manifest)
+            reused_receipt["readiness_inputs"][  # type: ignore[index]
+                "current_readiness_acceptance_ref"
+            ] = old_receipt
+            for section_name, field in (
+                ("rework", "current_reauthorization_ref"),
+                ("rework", "authorization_ref"),
+                ("authorization", "authorization_ref"),
+            ):
+                reused_receipt[section_name][field] = old_receipt  # type: ignore[index]
+            reused_receipt["development"]["slices"][  # type: ignore[index]
+                "ITER-010-SLICE-001"
+            ]["authorization_ref"] = old_receipt
+            reused_errors = docs_gate.validate_conversational_architecture_cutover(
+                reused_receipt,
+                "manifest.yaml",
+                manifest_text=manifest_text,
+            )
+            self.assertTrue(
+                any(
+                    "must not reuse" in error or "receipt must be new" in error
+                    or "exact current PDR-004 activation receipt" in error
+                    for error in reused_errors
+                ),
+                (old_receipt, reused_errors),
+            )
+
+        external_authorized = copy.deepcopy(manifest)
+        external_authorized["authorization"][  # type: ignore[index]
+            "external_execution_authorization_status"
+        ] = "authorized"
+        external_errors = docs_gate.validate_conversational_architecture_cutover(
+            external_authorized, "manifest.yaml"
+        )
+        self.assertTrue(
+            any(
+                "external execution not authorized" in error
+                for error in external_errors
+            ),
+            external_errors,
+        )
+
+        docs_sync_expanded = copy.deepcopy(manifest)
+        docs_sync_expanded["authorization"][  # type: ignore[index]
+            "docs_sync_authorizes_product_code"
+        ] = True
+        docs_sync_errors = docs_gate.validate_conversational_architecture_cutover(
+            docs_sync_expanded, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("docs-only synchronization" in error for error in docs_sync_errors),
+            docs_sync_errors,
+        )
+
+        expanded_scope = copy.deepcopy(manifest)
+        expanded_scope["authorization"][  # type: ignore[index]
+            "development_authorization_scope"
+        ] = "all"
+        scope_errors = docs_gate.validate_conversational_architecture_cutover(
+            expanded_scope, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("local deterministic verification" in error for error in scope_errors),
+            scope_errors,
+        )
+
+        live_authorized = copy.deepcopy(manifest)
+        live_authorized["development"]["slices"][  # type: ignore[index]
+            "ITER-010-SLICE-001"
+        ]["live_question_status"] = "authorized"
+        live_errors = docs_gate.validate_conversational_architecture_cutover(
+            live_authorized, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("live canary not authorized" in error for error in live_errors),
+            live_errors,
+        )
+
+        later_slice_authorized = copy.deepcopy(manifest)
+        later_slice_authorized["development"]["slices"][  # type: ignore[index]
+            "ITER-010-SLICE-002"
+        ]["status"] = "authorized"
+        later_slice_errors = (
+            docs_gate.validate_conversational_architecture_cutover(
+                later_slice_authorized, "manifest.yaml"
+            )
+        )
+        self.assertTrue(
+            any(
+                "must not authorize ITER-010-SLICE-002" in error
+                for error in later_slice_errors
+            ),
+            later_slice_errors,
+        )
+
+        reactivated_root_grant = copy.deepcopy(manifest)
+        reactivated_root_grant["authorization"][  # type: ignore[index]
+            "slice1_needed_rights_root_authorization"
+        ]["status"] = "active"
+        root_grant_errors = docs_gate.validate_conversational_architecture_cutover(
+            reactivated_root_grant, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("hidden/Production excluded" in error for error in root_grant_errors),
+            root_grant_errors,
+        )
 
     def test_current_timebox_chat_verification_freezes_per_turn_attempt_semantics(
         self,
@@ -7593,7 +7848,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 "ITER-010",
                 by_id,
                 require_execution_slice_sequence=True,
-                require_paused_slice_sequence=True,
+                require_paused_slice_sequence=False,
                 verification=verification,
             ),
             [],
@@ -7618,12 +7873,13 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "ITER-010",
             {**by_id, verification.identifier: rewritten_verification},
             require_execution_slice_sequence=True,
-            require_paused_slice_sequence=True,
+            require_paused_slice_sequence=False,
             verification=rewritten_verification,
         )
         self.assertTrue(
             any(
-                "completed V-REVIEW-001 Evidence must equal" in error
+                "historical Case V-REVIEW-001 must preserve its immutable Evidence"
+                in error
                 for error in rewritten_errors
             ),
             rewritten_errors,
@@ -7649,7 +7905,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "ITER-010",
             tampered_by_id,
             require_execution_slice_sequence=True,
-            require_paused_slice_sequence=True,
+            require_paused_slice_sequence=False,
             verification=verification,
         )
         self.assertTrue(
@@ -7693,7 +7949,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "ITER-010",
             transferred_by_id,
             require_execution_slice_sequence=True,
-            require_paused_slice_sequence=True,
+            require_paused_slice_sequence=False,
             verification=verification,
         )
         self.assertTrue(
@@ -7701,7 +7957,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             transfer_errors,
         )
 
-    def test_paused_rework_requires_policy_and_sustained_experience_binding(
+    def test_authorized_rework_requires_policy_and_sustained_experience_binding(
         self,
     ) -> None:
         _, by_id = self._documents()
@@ -7743,7 +7999,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 "manifest.yaml",
                 manifest=manifest,
                 verification=by_id["ITER-010-VERIFICATION"],
-                require_paused=True,
+                require_paused=False,
             ),
             [],
         )
@@ -7756,17 +8012,15 @@ class ReworkPlanningGateTests(unittest.TestCase):
         without_cutover["experience_delivery_policy"][  # type: ignore[index]
             "historical_pre_policy_result_refs"
         ] = []
-        cutover_errors = docs_gate.validate_product_goal_slice_sequence(
-            new_refs,
-            by_id,
+        cutover_errors = docs_gate.validate_product_goal_alignment_manifest(
+            without_cutover,
+            manifest_text,
             "manifest.yaml",
-            manifest=without_cutover,
-            verification=by_id["ITER-010-VERIFICATION"],
-            require_paused=True,
+            "ITER-010",
         )
         self.assertTrue(
             any(
-                "experience_delivery_policy_schema" in error
+                "historical_pre_policy_result_refs" in error
                 for error in cutover_errors
             ),
             cutover_errors,
@@ -8200,7 +8454,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             **valid_state,
             "prior_authorization_refs": [
                 by_id["ITER-010-READINESS"].metadata[
-                    "product_goal_alignment_review_ref"
+                    "historical_product_goal_alignment_review_ref"
                 ]
             ],
             "authorization_ref": "codex-user-message:sha256:" + "e" * 64,
@@ -8233,7 +8487,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
         reused_initial_receipt = {
             **authorized_state,
             "authorization_ref": by_id["ITER-010-READINESS"].metadata[
-                "product_goal_alignment_review_ref"
+                "historical_product_goal_alignment_review_ref"
             ],
         }
         initial_receipt_errors = docs_gate.validate_rework_authorization_receipt(
@@ -8248,6 +8502,41 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 for error in initial_receipt_errors
             ),
             initial_receipt_errors,
+        )
+
+        atomic_readiness_authorization = {
+            **authorized_state,
+            "authorization_combines_current_readiness_acceptance": True,
+            "authorization_ref": by_id["ITER-010-READINESS"].metadata[
+                "product_goal_alignment_review_ref"
+            ],
+        }
+        self.assertEqual(
+            docs_gate.validate_rework_authorization_receipt(
+                target,
+                atomic_readiness_authorization,
+                by_id,
+                "manifest.yaml",
+            ),
+            [],
+        )
+        mismatched_atomic = {
+            **atomic_readiness_authorization,
+            "authorization_ref": "codex-user-message:sha256:" + "f" * 64,
+        }
+        mismatched_atomic_errors = docs_gate.validate_rework_authorization_receipt(
+            target,
+            mismatched_atomic,
+            by_id,
+            "manifest.yaml",
+        )
+        self.assertTrue(
+            any(
+                "combined Readiness acceptance and Slice reauthorization"
+                in error
+                for error in mismatched_atomic_errors
+            ),
+            mismatched_atomic_errors,
         )
 
         wrong_attempt = {**valid_state, "rework_attempt_number": 2}

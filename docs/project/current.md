@@ -4,13 +4,13 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-25
-active_iteration: none
-active_slice: none
-worktree_status: iteration-010-paused-pdr-004-readiness-refresh-docs-only
+active_iteration: ITER-010-INDEX
+active_slice: ITER-010-SLICE-001
+worktree_status: iteration-010-slice-001-authorized-agent-chat-alpha-development
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
 live_model_path: pdr-004-agent-chat-not-implemented-not-qualified-not-live-production-not-activated
 ---
@@ -19,10 +19,15 @@ live_model_path: pdr-004-agent-chat-not-implemented-not-qualified-not-live-produ
 
 ## 当前规划与授权
 
-当前没有活动开发 Slice。`ITER-010 / ITER-010-SLICE-001` 的项目决定仍是 `REWORK`，不是 `REDIRECT`，但 PDR-004 已暂停旧编码权威。
-用户曾以
+当前活动开发段是 `ITER-010 / ITER-010-SLICE-001`，项目决定仍是 `REWORK`，不是 `REDIRECT`。用户以
+`codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
+接受 PDR-004 刷新后的 Readiness 并明确授权开发；授权范围是 Slice1 产品/System 代码和本地确定性验证。它不自动授权 credential、
+Provider/model call、动态源码披露、live browser、hidden、Slice2/3 或 Production Activation。
+
+PDR-004 此前暂停了旧编码权威。用户曾以
 `codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5`（`2026-08-24T02:55:16Z`）
-明确要求继续开发，当时恢复了同一个 Slice 的产品/System 编码与本地确定性验证；该权威现已被 PDR-004 暂停，Slice2/3 proposed 且从未授权。历史 Web、调查、证据、
+明确要求继续开发，当时恢复了同一个 Slice 的产品/System 编码与本地确定性验证；该旧权威随后被 PDR-004 暂停，并已由本次
+`f76ba3e8…` 授权取代。Slice2/3 proposed 且从未授权。历史 Web、调查、证据、
 Citation 和具体失败事实全部保留。旧消息 `d746968f…` 只是要求实现者自行复核并
 修复已知错误，并没有明确作出 `REDIRECT`；`3112da25…` 接受该项目决定纠正。最新文档同步收据
 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 只授权同步最新 Agent/Chat
@@ -45,12 +50,13 @@ PDR-004 收窄为一段冻结的五轮 Chat Conversation，不再执行孤立单
 
 `ITER-010-PDR-004` 是当前最高优先级规划决定。系统冻结“软件世界模型 + 主工程 Agent”双核心；默认交互冻结为 Conversation/Turn/
 Application-sealed Context 的语义多轮 Chat，每轮独立 Evidence/Answer/Review/Delivery，新对话隔离。旧固定多角色内容流水线不是目标 Agent，
-旧持续 Session QA 不是 Chat。新架构当前 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`；新的 Readiness 与用户重新授权前没有 active Slice。
+旧持续 Session QA 不是 Chat。新架构当前仍是 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`；Readiness 与重新授权现已完成，Slice1
+只能从最小 Chat Alpha 纵切开始，不能把旧实现或旧 Result 追认为新架构能力。
 PDR-003 的时间盒、根因、测试后置、Ark→DeepSeek 和成本规则继续有效；其孤立一题 canary 对 Chat 被收窄为一个五轮 Conversation，每个
 发生 Provider dispatch 的 Turn 分别计 live attempt。可在 Provider 前做最多一次本地/Mock Access smoke，但不能冒充 Chat canary。
 
-PDR 收据 `3112da25…` 只授权项目决定纠正；`32b298de…` 收据曾补足旧 Slice1 开发授权，但 PDR-004 已将其暂停。所有旧 live grant 仍已消费或停止；未来重新授权的开发也
-不自动取得 credential、Provider/model call、动态源码披露或 live browser 权限。它们必须在新产品 freeze 后按 exact Conversation/Turn、Provider、
+PDR 收据 `3112da25…` 只授权项目决定纠正；`32b298de…` 收据曾补足旧 Slice1 开发授权，但 PDR-004 已将其暂停。当前 `f76ba3e8…`
+开发授权不复用任何旧 live grant，也不自动取得 credential、Provider/model call、动态源码披露或 live browser 权限。它们必须在新产品 freeze 后按 exact Conversation/Turn、Provider、
 工程/revision、来源边界和逐输入披露重新授权。hidden 与 Production Activation 继续未授权。
 
 ITER-010 原规划由用户以
@@ -105,7 +111,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Paused / REWORK / PDR-004 readiness refresh / no active Slice** | run-034 与全部旧失败保留。旧编码权威已暂停；双核心主 Agent/Conversation 架构、五轮 Chat、新对话隔离和 Slice1 三臂方向信号尚未实现或资格化。`V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002` blocking；Slice2/3、hidden、Acceptance 与 Production 未授权 |
+| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-004 Chat Alpha** | `f76ba3e8…` 已接受刷新 Readiness 并授权 Slice1 产品/System 编码与本地确定性验证；新架构仍未实现或资格化，run-034 与全部旧失败保留。`V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002` blocking；live/Provider、Slice2/3、hidden、Acceptance 与 Production 未授权 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -117,12 +123,12 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-当前没有产品执行。ITER-010 正在进行 PDR-004 的 docs-only Readiness refresh；既有自适应
+当前已授权 ITER-010/Slice1 产品开发与本地确定性验证。PDR-004 的 Readiness refresh 已完成并由 `f76ba3e8…` 接受；既有自适应
 `World Model Cognition Context → Investigation LLM → Source Broker → Retrieval Worker → append-only Evidence Ledger → 调查后 seal
 Question Evidence Package → Answer → independent Reviewer` 技术纵切、公开题和现场题证据均已封存，但它只是可复用历史/兼容资产；
-不能冒充主工程 Agent 或 Chat。当前项目决定为 `REWORK + PAUSED`，不是 Acceptance，也不追认历史答案/审核 FAIL。
+不能冒充主工程 Agent 或 Chat。当前项目决定为 `REWORK + AUTHORIZED SLICE1`，不是 Acceptance，也不追认历史答案/审核 FAIL。
 
-当前最短顺序由 PDR-003 的交付纪律与 PDR-004 的 Chat 目标共同约束：新 Readiness 和显式再授权 → 本地可操作 Chat 页面 Access →
+当前最短顺序由 PDR-003 的交付纪律与 PDR-004 的 Chat 目标共同约束：本地可操作 Chat 页面 Access →
 最多一次必要 qualification 与一个 Provider 前本地/Mock 单轮 Access smoke → 预授权 Ark/DeepSeek 双 route → 一个有界五轮 Conversation
 作为首次方向 live canary并执行新对话泄漏 probe → 用户已取得可操作 Chat 后运行小样本三臂方向比较 → 独立技术复核和用户裁决。
 孤立 live question 不能替代 Chat canary；每个到达 Provider dispatch 的 Turn 分别计 live attempt并保留完整 Evidence/Citation/Review。
@@ -1074,7 +1080,7 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-当前没有 coding input。公开方向题和用户现场题的历史结果只作为证据；不得修改产品/System 代码、启动 live Web、调用 Provider、进入
-Slice2/3、披露或收集 hidden 输入、复用已消费 grant，亦不得执行 Production Activation。下一条开发路径只能在新的明确授权后恢复
-ITER-010/Slice1，首项出口是持续 Web Alpha；技术质量先由独立复核裁决，用户实际体验后再决定 `CONTINUE / REWORK / REDIRECT /
-REJECT`。`src/main/resources`、配置凭据仍在授权范围外。
+当前 coding input 是 `ITER-010-SLICE-001`。已授权修改该 Slice 所需的产品/System 代码并执行本地确定性验证；首项出口是持续 Web
+Chat Alpha，技术质量先由独立复核裁决，用户实际体验后再决定 `CONTINUE / REWORK / REDIRECT / REJECT`。不得启动 live Web、调用
+Provider、进入 Slice2/3、披露或收集 hidden 输入、复用已消费 grant，亦不得执行 Production Activation。`src/main/resources`、配置凭据
+仍在授权范围外。
