@@ -2926,6 +2926,29 @@
       "tests/test_engineering_chat_browser.py"
     ]
   },
+  "FINDING-010-104": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-104.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py",
+      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/interface/provider_cli.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "validation/structure_world_model_iteration_003/v009/inputs.py"
+    ],
+    "tests": [
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_model_gateway.py",
+      "tests/test_iteration_003_v009.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4388,7 +4411,9 @@
       "src/software_world_model/ai_infrastructure/model_gateway.py",
       "src/software_world_model/ai_infrastructure/openai_responses_adapter.py",
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py",
       "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
       "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
       "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
@@ -4400,7 +4425,9 @@
       "tests/test_model_gateway.py",
       "tests/test_openai_responses_adapter.py",
       "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py",
       "tests/test_deepseek_chat_adapter.py",
+      "tests/test_conversational_engineering_model.py",
       "tests/test_model_egress_gateway.py",
       "tests/test_pinned_ark_https.py",
       "tests/test_pinned_deepseek_https.py",

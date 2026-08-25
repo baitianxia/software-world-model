@@ -33,8 +33,10 @@ Ark→DeepSeek router 和 fixed Browser composition 已在不创建 attempt 的�
 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；Session runtime 又绑定 exact evidence authority、per-attempt fresh Tool/Response Control、route、
 Conversation 与 Browser。`FINDING-010-103` 进一步实现 owner-private artifact loader 和固定命令分支，加载 product/source identity、published
 World Model、Source Profile、Ark/DeepSeek qualification identity 与 distinct private Gateway repositories，状态为
-`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。该状态来自本地构造/patched typed artifacts 和 fake listener lifecycle；current actual sealed
-artifact、Ark transport Session audit、真实 Provider 和 Browser 五轮 Chat 均未执行，故仍为 `NOT_QUALIFIED / NOT_LIVE`。在 Adapter 资格、
+`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又把 Ark per-request verified TLS Session audit 接入 Conformance 与
+terminal receipt，并 owner-type HTTP 前 unavailable；状态增加 `ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。这些状态来自本地构造/
+patched typed artifacts 和 fake listener lifecycle；fresh Ark Conformance、current actual sealed artifact、真实 Provider 和 Browser 五轮 Chat
+均未执行，故仍为 `NOT_QUALIFIED / NOT_LIVE`。在 Adapter 资格、
 真实模型审计和人工体验均闭合前，页面不得把
 `ENGINEERING_CHAT_EXPERIENCE@1` 标成 PASS 或生产可用。
 
@@ -166,8 +168,9 @@ ordinal 2 DeepSeek。数据库与 receipt 路径必须是互异、尚不存在�
 
 launcher exclusive-create 两个 private SQLite repositories，在 listener 构造前写 launch receipt，固定绑定 `127.0.0.1:8765`，停止后写
 terminal receipt。launch receipt 必须仍是 attempt/tool/cognition/Source/credential/dispatch/listener 0；terminal receipt 密封两条 route 的
-Disclosure/model-boundary audits 与 DeepSeek transport Session audit。当前实现尚未把 Ark transport-level Session audit 接入 terminal receipt，也尚未用 current actual
-artifact 启动真实 Provider/browser，所以状态只是 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，不是 live PASS。
+Disclosure/model-boundary audits 与各自经过 strict verifier 的 Ark/DeepSeek transport Session audit。当前实现尚未在 clean freeze 上取得新
+Ark identity 的 fresh Conformance，也尚未用 current actual artifact 启动真实 Provider/browser，所以状态只是
+`ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`，不是 live PASS。
 
 已实现兼容 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：

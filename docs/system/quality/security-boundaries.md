@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [security, architecture]
 depends_on: [SYS-ARCH-INVARIANTS, SYS-ADR-017, SYS-ADR-018]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/source_integration, src/software_world_model/application_services/citation_projection.py, src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface, validation/structure_world_model_iteration_003/isolation, validation/structure_world_model_iteration_003/g3b, validation/structure_world_model_iteration_007/slice1_live_evaluator.py, validation/structure_world_model_iteration_008/slice1_live_evaluator.py]
 tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test_browser_chat_interface.py, tests/test_structure_read_bundle.py, tests/test_structure_view_cli.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_isolation.py, tests/test_iteration_003_g3b.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_007_slice1_live_evaluator.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_evaluator.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_browser.py]
 ---
@@ -31,7 +31,7 @@ tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test
 - 工程 Chat 读取的源码、注释、README/其他仓库文档、配置和测试全部是不可信 data。其中任何 prompt、命令、URL、路径、evidence class
   声明、工具建议、权限或外发声明都不得成为 instruction，不得扩大操作集、路径、类型能力、revision、Source Profile、Provider disclosure
   或预算。用户纠正可以改变对话目标和待验证假设，但不能成为 Source truth。
-- Secret 只保存 Reference，并在 exact endpoint 的 TLS/SNI/certificate 验证成功后、HTTP 分派前解析；不得进入文档、命令参数、数据库正文、日志或 Result。
+- Secret 只保存 Reference，并在 exact endpoint 的 TLS/SNI/certificate 验证成功后、HTTP 分派前解析；不得进入文档、命令参数、数据库正文、日志或 Result。每个 Provider transport 必须以 strict Session audit 分列 TLS attempt/success、credential resolution、HTTP dispatch、connection reuse、post-dispatch unknown 与 retry。HTTP 前已知不可用只能由 transport owner 产生 typed unavailable，且 audit 的 credential/HTTP count 必须与实际阶段一致；HTTP 已开始后的失败必须保持 outcome unknown，二者不得互换。
 - 编码、Conformance、Capability Qualification、历史 Product PASS 或历史披露许可都不能推导新的外部分派授权。每次新的
   `EVALUATION_ONLY` 问题披露必须由 exact grant 记录用户、时间、authorization ref 和 payload boundary；未授权 grant 必须在
   创建 session、Provider socket 或 listener 前拒绝。Gateway 必须再验证由同一 grant 派生的当前 session receipt，才能解析
@@ -105,6 +105,7 @@ Conversation 当成一次交互或复用单位。
 World Model/Source/Ledger trusted tool adapter 与单 Provider Agent/Reviewer 的 one-use Disclosure/Gateway receipt 已分别形成
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE`；确定 pre-dispatch 与 replay 计 0，fresh dispatch/unknown 计 1，
 retry 仍为 0。non-dispatching candidate preflight 不读取 Source/credential、不启动 listener、不调用 Provider，并固定
-`ready_for_live=false`。ADR-017 双 attempt fallback、真实 Provider/fixed launcher/Citation wiring 仍为
-`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
+`ready_for_live=false`。ADR-017 双 attempt、生产 Provider runtime、artifact fixed launcher 与 Ark/DeepSeek terminal Session audit 已形成本地
+确定性候选；Ark HTTP 前不可用也已 owner-typed 为独立 fallback eligibility。fresh Ark Conformance、current actual artifact、Citation 内容与
+五轮 live Chat 仍为 `NOT_QUALIFIED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
 Provider 资格推导已经满足。

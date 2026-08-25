@@ -10,7 +10,6 @@ from urllib.parse import urlsplit
 
 from software_world_model.ai_infrastructure import (
     ARK_CHAT_CONFORMANCE_FIXTURE_ID,
-    ARK_CHAT_CONFORMANCE_FIXTURE_VERSION,
     VolcengineArkModelConfiguration,
     current_ark_implementation_manifest,
     world_model_answer_output_contract_digest,
@@ -32,6 +31,7 @@ PINNED_INPUT_FREEZE_FILE_DIGEST = (
 EXPECTED_G3A_COMMIT = "f2269ecca5c1e85e69fafd93fe599c841227f3c7"
 EXPECTED_G3A_TREE = "936dc1fcab74f45c0342ad0e7055b9d4b314e2e1"
 EXPECTED_G3A_RESULT_COMMIT = "8caac3efaf97e169dac91a94a7c8ea2f8baa1b30"
+_HISTORICAL_ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.6.0"
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -174,7 +174,8 @@ def verify_input_freeze(value: Mapping[str, object]) -> None:
     conformance = _mapping(value.get("conformance"), "conformance")
     if (
         conformance.get("fixture_id") != ARK_CHAT_CONFORMANCE_FIXTURE_ID
-        or conformance.get("fixture_version") != ARK_CHAT_CONFORMANCE_FIXTURE_VERSION
+        or conformance.get("fixture_version")
+        != _HISTORICAL_ARK_CHAT_CONFORMANCE_FIXTURE_VERSION
         or conformance.get("operator") != "iter-003-v009-operator"
         or conformance.get("timeout_milliseconds") != 30_000
         or conformance.get("max_output_tokens") != 96
@@ -270,6 +271,12 @@ def verify_input_freeze_runtime(
         or repository_state.get("g3a_result_is_ancestor") is not True
     ):
         _invalid("V-009 requires a clean checkpoint descended from the G3a Result")
+    conformance = _mapping(value["conformance"], "conformance")
+    if (
+        current_ark_implementation_manifest().get("aggregate_digest")
+        != conformance["implementation_manifest_digest"]
+    ):
+        _invalid("V-009 Adapter Conformance implementation drifted")
     provider = _mapping(value["provider"], "provider")
     endpoint = urlsplit(configuration.endpoint)
     expected_endpoint = _mapping(provider["endpoint"], "provider endpoint")
@@ -292,12 +299,6 @@ def verify_input_freeze_runtime(
         or not configuration.credential_configured(environment)
     ):
         _invalid("V-009 live Provider runtime does not match the exact freeze")
-    conformance = _mapping(value["conformance"], "conformance")
-    if (
-        current_ark_implementation_manifest().get("aggregate_digest")
-        != conformance["implementation_manifest_digest"]
-    ):
-        _invalid("V-009 Adapter Conformance implementation drifted")
     strategy = _mapping(value["strategy"], "strategy")
     strategy_path = (
         REPOSITORY_ROOT

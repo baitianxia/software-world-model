@@ -93,8 +93,9 @@ classification、两个隔离 full-chain attempt、committed Work State、logica
 Session Disclosure 与 model boundary 接入为 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。`FINDING-010-102` 再将两条 Provider runtime、
 exact evidence authority、per-attempt fresh Tool/Response Control、committed Work State、Conversation 与 Browser 接成
 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。`FINDING-010-103` 又实现 owner-private artifact Session loader 与唯一
-`--session-config` 固定命令分支，形成 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。current actual artifact、Ark transport Session audit
-与五轮 Chat 仍为 `NOT_EXECUTED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和授权。PDR-003 的时间盒、
+`--session-config` 固定命令分支，形成 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又闭合 Ark TLS-before-credential、
+per-request Session audit、typed unavailable fallback 与新 Conformance identity。fresh Ark Conformance、current actual artifact 与五轮 Chat 仍为
+`NOT_EXECUTED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和授权。PDR-003 的时间盒、
 根因、测试后置、Provider 和成本规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta

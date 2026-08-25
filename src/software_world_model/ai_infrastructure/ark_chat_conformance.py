@@ -31,16 +31,23 @@ from software_world_model.cross_cutting import (
 from .model_gateway import ProviderRequest, RenderedMessage
 from .openai_responses_adapter import OutputSchemaDefinition, ProviderHTTPResponse
 from .volcengine_ark_chat_adapter import (
+    DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
+    DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
+    DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY,
+    DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION,
+    DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST,
     ChatCompletionsTransport,
     RecordingChatCompletionsTransport,
     VolcengineArkChatCompletionsNoToolsAdapter,
     VolcengineArkModelConfiguration,
+    ark_transport_session_audit,
+    verify_ark_transport_session_audit,
 )
 
 
 ARK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-ARK-CHAT-NO-TOOLS-001"
-ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.6.0"
-ARK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.ark-chat-conformance-result@1"
+ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.7.0"
+ARK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.ark-chat-conformance-result@2"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "ark-conformance-live"
 _WIRE_ALLOWLIST = frozenset(
@@ -111,15 +118,18 @@ def run_ark_chat_conformance(
 ) -> dict[str, object]:
     """Run and return one sanitized immutable-result candidate.
 
-    Provider-unknown outcomes deliberately escape this function: an unknown
-    dispatched call cannot be converted into PASS or FAIL evidence.
+    Provider transport exceptions deliberately escape this function: neither a
+    known pre-HTTP unavailability nor an unknown dispatched outcome can be
+    converted into PASS or FAIL evidence.
     """
 
     if not operator or operator != operator.strip():
         raise DomainError(ErrorCode.INVALID_ARGUMENT, "conformance operator is required")
     if timeout_milliseconds < 1 or max_output_tokens < 1:
         raise DomainError(ErrorCode.INVALID_ARGUMENT, "conformance resource bounds must be positive")
-    secret = configuration.resolve_api_key(environment)
+    # The credential map is intentionally not inspected here.  The live
+    # transport owns credential resolution after each verified TLS handshake.
+    _ = environment
     now = clock or (lambda: datetime.now(timezone.utc))
     monotonic_clock = monotonic or time.monotonic
     nonce = nonce_factory or (lambda: secrets.token_hex(16))
@@ -176,12 +186,13 @@ def run_ark_chat_conformance(
             failure = exc
             break
 
+    transport_session = ark_transport_session_audit(transport)
     cases = _evaluate_cases(
         configuration=configuration,
         recording=recording,
         responses=tuple(responses),
         canaries=canaries,
-        secret=secret,
+        transport_session=transport_session,
         live_failure=failure,
     )
     outcome = "PASS" if all(item["outcome"] == "PASS" for item in cases) else "FAIL"
@@ -219,7 +230,9 @@ def run_ark_chat_conformance(
             "endpoint": configuration.endpoint,
             "configuration_fingerprint": configuration.fingerprint.value,
             "secret_reference": configuration.secret_reference,
-            "credential_configured": True,
+            "credential_configured": (
+                transport_session["credential_resolution_success_count"] > 0
+            ),
         },
         "adapter": {
             "adapter_version": configuration.adapter_version,
@@ -244,6 +257,7 @@ def run_ark_chat_conformance(
             and all(response.usage_complete for response in responses),
             "raw_prompt_persisted": False,
             "raw_response_persisted": False,
+            "transport_session": transport_session,
         },
         "environment": {
             "python_implementation": platform.python_implementation(),
@@ -427,7 +441,7 @@ def verify_ark_chat_conformance_document(
         raise DomainError(ErrorCode.QUALIFICATION_INVALID, "Ark conformance digest does not verify")
     cases = document.get("cases")
     if not isinstance(cases, list) or [item.get("case_id") for item in cases if isinstance(item, dict)] != [
-        f"CC-ARK-{number:02d}" for number in range(1, 13)
+        f"CC-ARK-{number:02d}" for number in range(1, 14)
     ]:
         raise DomainError(ErrorCode.QUALIFICATION_INVALID, "Ark conformance case set is incomplete")
     for item in cases:
@@ -446,6 +460,109 @@ def verify_ark_chat_conformance_document(
                 "Ark conformance case evidence digest is invalid",
             ) from exc
     case_pass = all(item["outcome"] == "PASS" for item in cases)
+    provider = document.get("provider")
+    if (
+        not isinstance(provider, dict)
+        or set(provider)
+        != {
+            "provider_type",
+            "protocol",
+            "endpoint",
+            "configuration_fingerprint",
+            "secret_reference",
+            "credential_configured",
+        }
+        or provider.get("provider_type") != "VOLCENGINE_ARK"
+        or provider.get("protocol") != "OPENAI_COMPATIBLE_CHAT_COMPLETIONS"
+        or provider.get("endpoint")
+        != DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT
+        or not isinstance(provider.get("secret_reference"), str)
+        or not re.fullmatch(
+            r"env:[A-Z_][A-Z0-9_]*",
+            str(provider.get("secret_reference")),
+        )
+        or type(provider.get("credential_configured")) is not bool
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark conformance Provider evidence is invalid",
+        )
+    try:
+        Digest(str(provider.get("configuration_fingerprint")))
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark conformance Provider configuration digest is invalid",
+        ) from exc
+    execution = document.get("execution")
+    if not isinstance(execution, dict) or set(execution) != {
+        "request_count",
+        "provider_request_ids",
+        "request_body_digests",
+        "input_tokens",
+        "output_tokens",
+        "usage_complete",
+        "raw_prompt_persisted",
+        "raw_response_persisted",
+        "transport_session",
+    }:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark conformance execution evidence is invalid",
+        )
+    try:
+        transport_session = verify_ark_transport_session_audit(
+            execution.get("transport_session")
+        )
+    except DomainError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark conformance transport session evidence is invalid",
+        ) from exc
+    request_count = execution.get("request_count")
+    provider_request_ids = execution.get("provider_request_ids")
+    if (
+        type(request_count) is not int
+        or request_count < 0
+        or not isinstance(provider_request_ids, list)
+        or not isinstance(execution.get("request_body_digests"), list)
+        or len(execution["request_body_digests"]) != request_count
+        or execution.get("raw_prompt_persisted") is not False
+        or execution.get("raw_response_persisted") is not False
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark conformance request evidence is inconsistent",
+        )
+    try:
+        tuple(Digest(str(item)) for item in execution["request_body_digests"])
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark conformance request digest is invalid",
+        ) from exc
+    if document.get("outcome") == "PASS" and (
+        request_count != 2
+        or provider.get("credential_configured") is not True
+        or len(provider_request_ids) != 2
+        or any(
+            not isinstance(item, str) or not item
+            for item in provider_request_ids
+        )
+        or len(set(provider_request_ids)) != 2
+        or execution.get("usage_complete") is not True
+        or transport_session["tls_handshake_attempt_count"] != 2
+        or transport_session["tls_handshake_success_count"] != 2
+        or transport_session["http_dispatch_count"] != 2
+        or transport_session["connection_reuse_count"] != 0
+        or transport_session["post_dispatch_outcome_unknown_count"] != 0
+        or transport_session["credential_resolution_count"] != 2
+        or transport_session["credential_resolution_success_count"] != 2
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark PASS did not prove the one-request-per-TLS policy",
+        )
     validity = document.get("validity")
     if not isinstance(validity, dict):
         raise DomainError(ErrorCode.QUALIFICATION_INVALID, "Ark conformance validity is missing")
@@ -526,7 +643,7 @@ def _evaluate_cases(
     recording: RecordingChatCompletionsTransport,
     responses: tuple[object, ...],
     canaries: tuple[str, str],
-    secret: str,
+    transport_session: Mapping[str, object],
     live_failure: DomainError | None,
 ) -> list[dict[str, object]]:
     bodies: list[dict[str, object]] = []
@@ -584,10 +701,32 @@ def _evaluate_cases(
     request_ids = two_live and len(
         {getattr(response, "provider_request_id", None) for response in responses}
     ) == 2 and all(getattr(response, "provider_request_id", None) for response in responses)
-    serialized_public = canonical_json_bytes(configuration.public_status({configuration.api_key_environment_variable: secret}))
-    secret_clean = secret.encode() not in serialized_public and all(secret.encode() not in request.body for request in recording.requests)
+    secret_sentinel = "conformance-secret-sentinel-never-persist"
+    serialized_public = canonical_json_bytes(
+        configuration.public_status(
+            {configuration.api_key_environment_variable: secret_sentinel}
+        )
+    )
+    secret_clean = secret_sentinel.encode() not in serialized_public and all(
+        b"Authorization" not in request.body
+        and b"Bearer " not in request.body
+        and configuration.secret_reference.encode() not in request.body
+        for request in recording.requests
+    )
     admission_held = adapter_capabilities_offline(configuration) and all(
         local_denials.values()
+    )
+    transport_policy = (
+        two_live
+        and transport_session.get("tls_handshake_attempt_count") == 2
+        and transport_session.get("tls_handshake_success_count") == 2
+        and transport_session.get("pre_dispatch_tls_handshake_failure_count") == 0
+        and transport_session.get("http_dispatch_count") == 2
+        and transport_session.get("connection_reuse_count") == 0
+        and transport_session.get("post_dispatch_outcome_unknown_count") == 0
+        and transport_session.get("request_retry_count") == 0
+        and transport_session.get("credential_resolution_count") == 2
+        and transport_session.get("credential_resolution_success_count") == 2
     )
     return [
         case(1, exact_endpoint, "LIVE_WIRE", {"endpoint": configuration.endpoint, "count": len(recording.requests)}),
@@ -602,6 +741,7 @@ def _evaluate_cases(
         case(10, request_ids, "LIVE_RESPONSE", {"unique_request_ids": bool(request_ids)}),
         case(11, secret_clean, "LIVE_WIRE_AND_LOCAL_RESULT", {"secret_reference_only": secret_clean}),
         case(12, admission_held, "OFFLINE_ADMISSION_ORACLE", {"activation_held": admission_held}),
+        case(13, transport_policy, "LIVE_TRANSPORT_SESSION_AUDIT", {"policy_proved": transport_policy}),
     ]
 
 
@@ -795,9 +935,23 @@ def _fixture_manifest() -> Digest:
         {
             "fixture_id": ARK_CHAT_CONFORMANCE_FIXTURE_ID,
             "fixture_version": ARK_CHAT_CONFORMANCE_FIXTURE_VERSION,
-            "case_ids": [f"CC-ARK-{number:02d}" for number in range(1, 13)],
+            "case_ids": [f"CC-ARK-{number:02d}" for number in range(1, 14)],
             "live_call_count": 2,
             "wire_allowlist": sorted(_WIRE_ALLOWLIST),
+            "connection_policy": DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
+            "maximum_pre_dispatch_tls_handshakes_per_request": (
+                DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+            ),
+            "maximum_http_dispatches_per_tls_session": (
+                DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+            ),
+            "credential_resolution_policy": (
+                DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY
+            ),
+            "request_retry_allowed": False,
+            "transport_session_audit_schema": (
+                "SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1"
+            ),
             "result_schema": ARK_CHAT_CONFORMANCE_RESULT_SCHEMA,
         }
     )

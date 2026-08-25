@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -55,8 +55,9 @@ Adapter、credential-lazy transport、Model Gateway、Session Disclosure 与 mod
 Tool/Response Control、committed Work State、route、Conversation 与 Browser 接成 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。
 `FINDING-010-103` 已实现 canonical owner-private artifact loader、exact ordered Provider routes、fixed bounds/exclusions、两个 private Gateway
 repositories、launch/terminal receipt 和唯一 `--session-config` fixed-command lifecycle，形成
-`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。下一动作因此不再扩张 loader 或 Access：先形成 new clean current actual artifact，闭合 Ark
-transport-level Session audit 并按 Adapter identity 取得 fresh Conformance，再单独取得 exact Provider/source-disclosure/browser grant 执行冻结
+`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又闭合 Ark transport 的 per-request verified TLS Session audit、
+TLS-before-credential、typed unavailable fallback 和 fresh-Conformance identity。下一动作因此不再扩张 loader、Access 或 transport：先形成
+new clean freeze 并按新 identity 取得 fresh Ark Conformance，再生成 current actual artifact，最后单独取得 exact Provider/source-disclosure/browser grant 执行冻结
 五轮 Chat；任何一项缺失都不能宣称 `QUALIFIED / LIVE / PASS`。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`

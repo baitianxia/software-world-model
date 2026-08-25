@@ -10,6 +10,8 @@ import unittest
 
 from software_world_model.ai_infrastructure import (
     AdapterConformanceLevel,
+    ARK_CHAT_CONFORMANCE_FIXTURE_VERSION,
+    ARK_CHAT_CONFORMANCE_RESULT_SCHEMA,
     DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
     ProviderHTTPResponse,
     VolcengineArkChatCompletionsNoToolsAdapter,
@@ -18,7 +20,7 @@ from software_world_model.ai_infrastructure import (
     run_ark_chat_conformance,
     seal_ark_chat_conformance_result,
 )
-from software_world_model.cross_cutting import DomainError, ErrorCode
+from software_world_model.cross_cutting import DomainError, ErrorCode, digest_of
 from software_world_model.interface.provider_cli import main as provider_main
 
 
@@ -67,6 +69,34 @@ class EchoingArkTransport:
             ).encode(),
         )
 
+    def session_audit(self):
+        return {
+            "schema": "SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1",
+            "connection_policy": (
+                "DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1"
+            ),
+            "maximum_pre_dispatch_tls_handshake_attempts_per_request": 1,
+            "maximum_http_dispatches_per_tls_session": 1,
+            "tls_handshake_attempt_count": self.calls,
+            "tls_handshake_success_count": self.calls,
+            "pre_dispatch_tls_handshake_failure_count": 0,
+            "pre_dispatch_tls_failure_codes": [],
+            "http_dispatch_count": self.calls,
+            "connection_reuse_count": 0,
+            "verified_peer_certificate_sha256s": [
+                "sha256:" + f"{ordinal:064x}"
+                for ordinal in range(1, self.calls + 1)
+            ],
+            "post_dispatch_outcome_unknown_count": 0,
+            "post_dispatch_failure_codes": [],
+            "request_retry_count": 0,
+            "credential_resolution_count": self.calls,
+            "credential_resolution_success_count": self.calls,
+            "credential_resolution_policy": (
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+            ),
+        }
+
 
 class ArkChatConformanceTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -91,11 +121,26 @@ class ArkChatConformanceTests(unittest.TestCase):
         result = self.run_result()
 
         self.assertEqual(result["outcome"], "PASS")
-        self.assertEqual(len(result["cases"]), 12)
+        self.assertEqual(ARK_CHAT_CONFORMANCE_FIXTURE_VERSION, "1.7.0")
+        self.assertEqual(
+            ARK_CHAT_CONFORMANCE_RESULT_SCHEMA,
+            "swm.ark-chat-conformance-result@2",
+        )
+        self.assertEqual(len(result["cases"]), 13)
         self.assertTrue(all(case["outcome"] == "PASS" for case in result["cases"]))
         self.assertEqual(result["execution"]["request_count"], 2)
         self.assertEqual(result["execution"]["input_tokens"], 20)
         self.assertEqual(result["execution"]["output_tokens"], 10)
+        self.assertEqual(
+            result["execution"]["transport_session"][
+                "tls_handshake_success_count"
+            ],
+            2,
+        )
+        self.assertEqual(
+            result["execution"]["transport_session"]["connection_reuse_count"],
+            0,
+        )
         serialized = json.dumps(result)
         self.assertNotIn("fixture-secret-never-persist", serialized)
         self.assertNotIn("nonce-first", serialized)
@@ -160,6 +205,60 @@ class ArkChatConformanceTests(unittest.TestCase):
                     passed_path, self.configuration, now=self.clock_value
                 )
             self.assertEqual(tampered.exception.code, ErrorCode.QUALIFICATION_INVALID)
+
+            session_path = seal_ark_chat_conformance_result(
+                self.run_result(), Path(directory) / "session"
+            )
+            session_document = json.loads(session_path.read_text())
+            session_document["execution"]["transport_session"][
+                "connection_reuse_count"
+            ] = 1
+            session_document["result_digest"] = digest_of(
+                {
+                    key: value
+                    for key, value in session_document.items()
+                    if key != "result_digest"
+                }
+            ).value
+            session_path.write_text(
+                json.dumps(session_document), encoding="utf-8"
+            )
+            with self.assertRaises(DomainError) as session_tampered:
+                load_ark_chat_conformance_qualification(
+                    session_path,
+                    self.configuration,
+                    now=self.clock_value,
+                )
+            self.assertEqual(
+                session_tampered.exception.code,
+                ErrorCode.QUALIFICATION_INVALID,
+            )
+
+            credential_path = seal_ark_chat_conformance_result(
+                self.run_result(), Path(directory) / "credential"
+            )
+            credential_document = json.loads(credential_path.read_text())
+            credential_document["provider"]["credential_configured"] = False
+            credential_document["result_digest"] = digest_of(
+                {
+                    key: value
+                    for key, value in credential_document.items()
+                    if key != "result_digest"
+                }
+            ).value
+            credential_path.write_text(
+                json.dumps(credential_document), encoding="utf-8"
+            )
+            with self.assertRaises(DomainError) as credential_tampered:
+                load_ark_chat_conformance_qualification(
+                    credential_path,
+                    self.configuration,
+                    now=self.clock_value,
+                )
+            self.assertEqual(
+                credential_tampered.exception.code,
+                ErrorCode.QUALIFICATION_INVALID,
+            )
 
     def test_cli_seals_summary_without_secret_or_raw_content(self) -> None:
         output = StringIO()

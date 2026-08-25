@@ -266,5 +266,8 @@ iteration: ITER-010
   闭合 product/source identity、published World Model、Source Profile、ordered Ark→DeepSeek qualification identity、private Gateway/receipt
   paths 和固定 5×15/75 bounds；相关聚焦组合 117/117，通过 fake listener 证明 launch-before-listener/terminal-after-shutdown。current actual
   artifact、Ark transport Session audit 与五轮 live Chat 仍未执行或资格化。
+- [FINDING-010-104](FINDING-010-104.md)：Ark direct transport 现固定为每 request 一个 verified TLS session、TLS 后取 credential、每 session
+  一个 HTTP dispatch、retry 0，并以 strict Session audit 接入 Conformance 与 artifact terminal；HTTP 前不可用又经 Gateway owner-typed
+  classification 接入既有独立 fallback。旧 Ark Conformance 明确失效，fresh Conformance、current artifact 与五轮 live Chat 仍阻断。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

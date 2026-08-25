@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104]
 code: []
 tests: []
 iteration: ITER-010
@@ -26,6 +26,7 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
+ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
 NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
@@ -152,8 +153,23 @@ Structure 的聚焦组合实际 `117/117 PASS`，application/AI/interface compil
 
 测试通过 patched/local typed artifacts 与 fake listener 证明零 I/O composition，没有读取 mall Source/resources、解析 credential、访问网络、
 调用 Provider/model、启动真实 listener/browser 或执行 Production Activation。current actual artifact 未生成或执行；terminal receipt 当前有
-Disclosure/model-boundary/model-call audit、dispatch total 与 DeepSeek transport Session audit，但没有 Ark transport-level Session audit。因此状态只增加
+Disclosure/model-boundary/model-call audit、dispatch total 与 DeepSeek transport Session audit，但没有 Ark transport-level Session audit。因此在该 evidence point 状态只增加
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`；`V-CHAT-*`、资格、live 与 Acceptance verdict 均保持不变。
+
+## Current local Ark transport Session-audit evidence
+
+`FINDING-010-104` 将 Ark transport 固定为 exact host/path、每 request 一个 verified TLS session、certificate 验证后才解析 credential、
+每 session 一个 HTTP dispatch、`Connection: close` 与 request retry 0。`SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1` 分列 TLS、
+credential、HTTP、reuse、post-dispatch unknown 和 retry；terminal receipt 现在对 Ark/DeepSeek 都要求 strict transport audit。HTTP 前 TLS
+不可用通过 Model Gateway owner-typed `ProviderUnavailable` 密封为 fallback-eligible `PROVIDER_UNAVAILABLE`；HTTP 已开始后的失败仍单独是
+outcome unknown。
+
+Ark Conformance fixture/result identity 升级为 `1.7.0 / @2`，新增 `CC-ARK-13` 并把 Session audit 纳入 PASS verifier；configuration
+fingerprint 又绑定 connection/credential/retry policy，旧 qualification 因 fixture、implementation 与 configuration drift 失效。最小相关组合
+48/48、相邻聚焦组合 141/141、compileall 与 diff check 通过；V-009 定向模块仍保留既有 3 FAIL + 1 ERROR 的 exact implementation-drift
+historical hold。本证据没有真实 TLS、credential、Provider/model、Source、listener/browser 或 Activation，状态只增加
+`ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。下一 Gate 是 clean freeze 上执行 fresh Ark Conformance、生成 current actual artifact，再另取
+exact live grant；`V-CHAT-*` 与所有质量 verdict 继续 `NOT-RUN / blocking`。
 
 ## Pre-freeze implementation evidence
 

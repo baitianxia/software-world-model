@@ -40,7 +40,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ModelGatewayRepository,
 )
 from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
-    UrllibVolcengineArkChatTransport,
+    DirectVerifiedVolcengineArkChatTransport,
     VolcengineArkChatCompletionsNoToolsAdapter,
     VolcengineArkModelConfiguration,
 )
@@ -253,7 +253,7 @@ def create_ark_engineering_chat_provider_model_runtime(
             ErrorCode.QUALIFICATION_INVALID,
             "Engineering Chat Ark model configuration drifted from Conformance",
         )
-    transport = UrllibVolcengineArkChatTransport(
+    transport = DirectVerifiedVolcengineArkChatTransport(
         api_key_resolver=provider_configuration.resolve_api_key
     )
     adapter = VolcengineArkChatCompletionsNoToolsAdapter(

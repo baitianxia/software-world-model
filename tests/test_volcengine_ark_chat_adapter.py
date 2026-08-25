@@ -4,27 +4,28 @@ from datetime import datetime, timedelta, timezone
 import http.client
 import json
 from io import StringIO
-import socket
 from types import SimpleNamespace
 import unittest
-from urllib import error as urllib_error
 from unittest import mock
 
 from software_world_model.ai_infrastructure import (
     AdapterConformanceLevel,
     DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
     DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
+    DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
     DEFAULT_VOLCENGINE_ARK_MODEL,
     DEFAULT_VOLCENGINE_ARK_OPENAI_BASE_URL,
+    DirectVerifiedVolcengineArkChatTransport,
     OutputSchemaDefinition,
     ProviderHTTPResponse,
     ProviderOutcomeUnknown,
     ProviderOutputRejected,
+    ProviderUnavailable,
     RecordingChatCompletionsTransport,
     ReplayClassification,
     VolcengineArkChatCompletionsNoToolsAdapter,
     VolcengineArkModelConfiguration,
-    UrllibVolcengineArkChatTransport,
+    verify_ark_transport_session_audit,
 )
 from software_world_model.ai_infrastructure.model_gateway import ProviderRequest, RenderedMessage
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, digest_of
@@ -42,14 +43,40 @@ class StubTransport:
         return self.response
 
 
-class FailingOpener:
-    def open(self, request, timeout):
-        raise urllib_error.URLError(ConnectionRefusedError("fixture refusal"))
+class _Connection:
+    def __init__(self, *, response=None) -> None:
+        self.response = response or _ConnectionResponse()
+        self.sent = b""
+        self.closed = False
+
+    def getpeercert(self, *, binary_form=False):
+        return b"fixture-ark-certificate" if binary_form else {}
+
+    def sendall(self, value: bytes) -> None:
+        self.sent += value
+
+    def close(self) -> None:
+        self.closed = True
 
 
-class RemoteDisconnectingOpener:
-    def open(self, request, timeout):
-        raise http.client.RemoteDisconnected("fixture remote disconnect")
+class _ConnectionResponse:
+    status = 200
+
+    def __init__(self, *, body=b"{}", headers=None, begin_error=None) -> None:
+        self._body = body
+        self._headers = dict(headers or {"Connection": "close"})
+        self._begin_error = begin_error
+
+    def begin(self) -> None:
+        if self._begin_error is not None:
+            raise self._begin_error
+
+    def read(self, maximum) -> bytes:
+        self.maximum = maximum
+        return self._body
+
+    def getheaders(self):
+        return list(self._headers.items())
 
 
 class UnknownOutcomeTransport:
@@ -350,12 +377,62 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertFalse(probe["production_eligible"])
         self.assertNotIn("do-not-expose", probe_output.getvalue())
 
-    def test_transport_classifies_connection_failure(self) -> None:
-        transport = UrllibVolcengineArkChatTransport(
-            api_key_resolver=lambda: "fixture-key",
-            opener=FailingOpener(),
+    def test_transport_resolves_credential_only_after_verified_tls(self) -> None:
+        events = []
+        connection = _Connection()
+
+        def factory(_):
+            events.append("verified-tls")
+            return connection
+
+        def resolve_key():
+            events.append("credential")
+            return "fixture-key"
+
+        transport = DirectVerifiedVolcengineArkChatTransport(
+            api_key_resolver=resolve_key,
+            connection_factory=factory,
         )
-        with self.assertRaises(ProviderOutcomeUnknown) as raised:
+        with mock.patch(
+            "software_world_model.ai_infrastructure.volcengine_ark_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            response = transport.post_json(
+                endpoint=DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="fixture-request",
+                timeout_milliseconds=1000,
+            )
+
+        audit = verify_ark_transport_session_audit(transport.session_audit())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(events, ["verified-tls", "credential"])
+        self.assertTrue(connection.closed)
+        self.assertIn(b"Authorization: Bearer fixture-key\r\n", connection.sent)
+        self.assertIn(b"Connection: close\r\n", connection.sent)
+        self.assertEqual(audit["connection_policy"], DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY)
+        self.assertEqual(audit["tls_handshake_success_count"], 1)
+        self.assertEqual(audit["credential_resolution_success_count"], 1)
+        self.assertEqual(audit["http_dispatch_count"], 1)
+        self.assertEqual(audit["connection_reuse_count"], 0)
+        self.assertEqual(audit["request_retry_count"], 0)
+
+    def test_transport_pre_dispatch_tls_failure_never_reads_credential(self) -> None:
+        credential_reads = 0
+
+        def resolve_key():
+            nonlocal credential_reads
+            credential_reads += 1
+            return "fixture-key"
+
+        def fail_connection(_):
+            raise ConnectionRefusedError("fixture refusal")
+
+        transport = DirectVerifiedVolcengineArkChatTransport(
+            api_key_resolver=resolve_key,
+            connection_factory=fail_connection,
+        )
+        with self.assertRaises(ProviderUnavailable) as raised:
             transport.post_json(
                 endpoint=DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
                 body=b"{}",
@@ -363,13 +440,79 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
                 timeout_milliseconds=1000,
             )
         self.assertEqual(raised.exception.reason_code, "CONNECTION_REFUSED")
+        self.assertEqual(credential_reads, 0)
+        audit = verify_ark_transport_session_audit(transport.session_audit())
+        self.assertEqual(audit["tls_handshake_attempt_count"], 1)
+        self.assertEqual(audit["pre_dispatch_tls_handshake_failure_count"], 1)
+        self.assertEqual(audit["pre_dispatch_tls_failure_codes"], ["CONNECTION_REFUSED"])
+        self.assertEqual(audit["credential_resolution_count"], 0)
+        self.assertEqual(audit["http_dispatch_count"], 0)
+
+        output = StringIO()
+        code = provider_main(
+            ["probe"],
+            stdout=output,
+            environment={"ARK_API_KEY": "do-not-expose"},
+            transport=transport,
+        )
+        payload = json.loads(output.getvalue())
+        self.assertEqual(code, 3)
+        self.assertEqual(payload["error"], "PROVIDER_UNAVAILABLE")
+        self.assertEqual(payload["reason"], "CONNECTION_REFUSED")
+        self.assertNotIn("do-not-expose", output.getvalue())
+
+    def test_transport_uses_a_distinct_verified_session_for_each_request(self) -> None:
+        connections = [_Connection(), _Connection()]
+        created = []
+
+        def factory(_):
+            connection = connections[len(created)]
+            created.append(connection)
+            return connection
+
+        transport = DirectVerifiedVolcengineArkChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=factory,
+        )
+        with mock.patch(
+            "software_world_model.ai_infrastructure.volcengine_ark_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            for ordinal in range(2):
+                transport.post_json(
+                    endpoint=DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
+                    body=b"{}",
+                    client_request_id=f"fixture-request-{ordinal}",
+                    timeout_milliseconds=1000,
+                )
+
+        audit = verify_ark_transport_session_audit(transport.session_audit())
+        self.assertEqual(created, connections)
+        self.assertTrue(all(connection.closed for connection in connections))
+        self.assertEqual(audit["tls_handshake_attempt_count"], 2)
+        self.assertEqual(audit["tls_handshake_success_count"], 2)
+        self.assertEqual(audit["http_dispatch_count"], 2)
+        self.assertEqual(audit["connection_reuse_count"], 0)
 
     def test_transport_classifies_remote_disconnect_as_unknown_outcome(self) -> None:
-        transport = UrllibVolcengineArkChatTransport(
-            api_key_resolver=lambda: "fixture-key",
-            opener=RemoteDisconnectingOpener(),
+        connection = _Connection(
+            response=_ConnectionResponse(
+                begin_error=http.client.RemoteDisconnected(
+                    "fixture remote disconnect"
+                )
+            )
         )
-        with self.assertRaises(ProviderOutcomeUnknown) as raised:
+        transport = DirectVerifiedVolcengineArkChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=lambda _: connection,
+        )
+        with (
+            mock.patch(
+                "software_world_model.ai_infrastructure.volcengine_ark_chat_adapter.http.client.HTTPResponse",
+                side_effect=lambda active: active.response,
+            ),
+            self.assertRaises(ProviderOutcomeUnknown) as raised,
+        ):
             transport.post_json(
                 endpoint=DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
                 body=b"{}",
@@ -377,6 +520,24 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
                 timeout_milliseconds=1000,
             )
         self.assertEqual(raised.exception.reason_code, "REMOTE_DISCONNECTED")
+        self.assertTrue(connection.closed)
+        audit = verify_ark_transport_session_audit(transport.session_audit())
+        self.assertEqual(audit["http_dispatch_count"], 1)
+        self.assertEqual(audit["post_dispatch_outcome_unknown_count"], 1)
+        self.assertEqual(audit["post_dispatch_failure_codes"], ["REMOTE_DISCONNECTED"])
+
+    def test_transport_session_audit_rejects_dispatch_without_verified_tls(self) -> None:
+        audit = DirectVerifiedVolcengineArkChatTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=lambda _: _Connection(),
+        ).session_audit()
+        audit["http_dispatch_count"] = 1
+        audit["credential_resolution_success_count"] = 1
+
+        with self.assertRaises(DomainError) as raised:
+            verify_ark_transport_session_audit(audit)
+
+        self.assertEqual(raised.exception.code, ErrorCode.QUALIFICATION_INVALID)
 
     def test_direct_https_ignores_proxy_and_loads_system_ca_fallback(self) -> None:
         context = mock.Mock()

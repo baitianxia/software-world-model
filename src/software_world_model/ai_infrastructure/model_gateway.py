@@ -363,6 +363,19 @@ class ProviderOutcomeUnknown(RuntimeError):
         self.reason_code = reason_code
 
 
+class ProviderUnavailable(RuntimeError):
+    """Provider-owned pre-HTTP unavailability with a known zero-dispatch outcome."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason_code: str = "PROVIDER_PRE_DISPATCH_UNAVAILABLE",
+    ) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
+
+
 class ModelGatewayRepository(Protocol):
     def recover(
         self,
@@ -580,6 +593,16 @@ class ModelGateway:
         )
         try:
             response = adapter.invoke(request)
+        except ProviderUnavailable:
+            call = self._repository.transition(
+                model_call_id=call.model_call_id,
+                expected_revision=call.revision,
+                target=ModelCallState.FAILED,
+                response=None,
+                failure_code="PROVIDER_UNAVAILABLE",
+                occurred_at=self._now(),
+            )
+            return self._result(call, None, receipt, adapter.capabilities, context)
         except ProviderOutcomeUnknown:
             call = self._repository.transition(
                 model_call_id=call.model_call_id,

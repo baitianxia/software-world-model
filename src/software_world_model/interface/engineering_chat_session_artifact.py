@@ -38,6 +38,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
 )
 from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
     VolcengineArkModelConfiguration,
+    ark_transport_session_audit,
 )
 from software_world_model.application_services.conversational_engineering_routing import (
     EngineeringProviderRoutePlan,
@@ -106,7 +107,7 @@ ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@1"
 )
 ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS = (
-    "ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE"
+    "ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE"
 )
 _MAXIMUM_SESSION_CONFIG_BYTES = 1_048_576
 _SESSION_CONFIG_FIELDS = frozenset(
@@ -871,11 +872,17 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
     provider_dispatch_count = sum(
         item.receipt.provider_dispatch_count for item in audits
     )
-    transport_session_audit = (
-        deepseek_transport_session_audit(runtime.transport)
-        if runtime.provider_type == "DEEPSEEK"
-        else None
-    )
+    if runtime.provider_type == "DEEPSEEK":
+        transport_session_audit = deepseek_transport_session_audit(
+            runtime.transport
+        )
+    elif runtime.provider_type == "VOLCENGINE_ARK":
+        transport_session_audit = ark_transport_session_audit(runtime.transport)
+    else:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat Provider transport audit type is unsupported",
+        )
     return {
         "provider_type": runtime.provider_type,
         "runtime_digest": runtime.digest.value,

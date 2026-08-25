@@ -331,10 +331,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.assertTrue(prepared.runtime.receipt.fixed_command_wired)
         self.assertEqual(
             prepared.runtime.receipt.blocking_gaps,
-            (
-                "ARK_TRANSPORT_SESSION_AUDIT_NOT_WIRED",
-                "LIVE_PROVIDER_AND_BROWSER_NOT_EXECUTED",
-            ),
+            ("LIVE_PROVIDER_AND_BROWSER_NOT_EXECUTED",),
         )
         self.assertEqual(
             prepared.runtime.receipt.artifact_session_config_digest,
@@ -365,7 +362,14 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.assertEqual(terminal["status"], "STOPPED_WITHOUT_DISPATCH")
         self.assertEqual(terminal["provider_dispatch_count"], 0)
         ark_audit, deepseek_audit = terminal["provider_audits"]
-        self.assertIsNone(ark_audit["transport_session_audit"])
+        self.assertEqual(
+            ark_audit["transport_session_audit"]["http_dispatch_count"],
+            0,
+        )
+        self.assertEqual(
+            ark_audit["transport_session_audit"]["request_retry_count"],
+            0,
+        )
         self.assertEqual(
             deepseek_audit["transport_session_audit"]["http_dispatch_count"],
             0,

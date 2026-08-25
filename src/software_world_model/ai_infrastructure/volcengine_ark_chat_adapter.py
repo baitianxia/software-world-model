@@ -1,15 +1,16 @@
 """Volcengine Ark OpenAI-compatible Chat Completions no-tools adapter.
 
 Only non-secret provider settings are held by the configuration object.  The
-API key is resolved from its named environment variable immediately before an
-HTTPS dispatch and is never added to request recordings or configuration
-fingerprints.
+API key is resolved from its named environment variable only after the exact
+peer TLS certificate is verified and immediately before HTTP dispatch.  It is
+never added to request recordings or configuration fingerprints.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from hashlib import sha256
 import http.client
 import json
 import os
@@ -17,19 +18,18 @@ import re
 import socket
 import ssl
 from typing import Callable, Mapping, Protocol
-from urllib import error as urllib_error
-from urllib import request as urllib_request
 from urllib.parse import urlsplit
 
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, digest_of
 
-from .direct_https import build_direct_https_opener
+from .direct_https import build_verified_tls_context
 from .model_gateway import (
     AdapterConformanceLevel,
     AdapterResponse,
     ProviderAdapterCapabilities,
     ProviderOutputRejected,
     ProviderOutcomeUnknown,
+    ProviderUnavailable,
     ProviderRequest,
     ReplayClassification,
 )
@@ -45,7 +45,18 @@ DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT = (
 DEFAULT_VOLCENGINE_ARK_MODEL = "glm-5-2-260617"
 DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT = "glm-5.2"
 DEFAULT_VOLCENGINE_ARK_API_KEY_ENV = "ARK_API_KEY"
+DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY = (
+    "DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1"
+)
+DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY = (
+    "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+)
+DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST = 1
+DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION = 1
 _VOLCENGINE_ARK_HOST = "ark.cn-beijing.volces.com"
+_VOLCENGINE_ARK_PORT = 443
+_VOLCENGINE_ARK_PATH = "/api/coding/v3/chat/completions"
+_MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 _ENVIRONMENT_NAME = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 _MARKDOWN_JSON_FENCE = re.compile(
     r"\A(?P<prefix>[\s\S]*?)```json[ \t]*\r?\n(?P<body>[\s\S]*?)\r?\n```\Z"
@@ -111,6 +122,17 @@ class VolcengineArkModelConfiguration:
                 "endpoint": self.endpoint,
                 "model_ref": self.model_ref,
                 "actual_model_fingerprint": self.actual_model_fingerprint,
+                "connection_policy": DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
+                "maximum_pre_dispatch_tls_handshakes_per_request": (
+                    DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+                ),
+                "maximum_http_dispatches_per_tls_session": (
+                    DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+                ),
+                "credential_resolution_policy": (
+                    DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY
+                ),
+                "request_retry_allowed": False,
                 "secret_reference": self.secret_reference,
             }
         )
@@ -138,6 +160,17 @@ class VolcengineArkModelConfiguration:
             "endpoint": self.endpoint,
             "model_ref": self.model_ref,
             "actual_model_fingerprint": self.actual_model_fingerprint,
+            "connection_policy": DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
+            "maximum_pre_dispatch_tls_handshakes_per_request": (
+                DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+            ),
+            "maximum_http_dispatches_per_tls_session": (
+                DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+            ),
+            "credential_resolution_policy": (
+                DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY
+            ),
+            "request_retry_allowed": False,
             "secret_reference": self.secret_reference,
             "credential_configured": self.credential_configured(environment),
             "configuration_fingerprint": self.fingerprint.value,
@@ -202,16 +235,109 @@ class RecordingChatCompletionsTransport:
             timeout_milliseconds=timeout_milliseconds,
         )
 
+    def session_audit(self) -> dict[str, object]:
+        return ark_transport_session_audit(self._delegate)
 
-class UrllibVolcengineArkChatTransport:
-    """Bearer-authenticated Ark transport with an exact host boundary."""
 
-    def __init__(self, *, api_key_resolver: Callable[[], str], opener: object | None = None) -> None:
+class _VerifiedTLSSocket(Protocol):
+    def getpeercert(self, *, binary_form: bool = False) -> object: ...
+
+    def sendall(self, value: bytes) -> None: ...
+
+    def close(self) -> None: ...
+
+
+class DirectVerifiedVolcengineArkChatTransport:
+    """Direct exact-host HTTPS with one verified TLS session per request.
+
+    A request performs exactly one credential-free TLS acquisition.  The API
+    key is resolved only after the peer certificate has been verified, and the
+    verified session carries exactly one HTTP dispatch.  No connection or
+    request retry is performed.  A network failure after HTTP dispatch begins
+    is conservatively reported as outcome unknown.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key_resolver: Callable[[], str],
+        connection_factory: Callable[[float], _VerifiedTLSSocket] | None = None,
+        tls_context: ssl.SSLContext | None = None,
+        maximum_pre_dispatch_tls_handshakes_per_request: int = (
+            DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+        ),
+    ) -> None:
+        if (
+            type(maximum_pre_dispatch_tls_handshakes_per_request) is not int
+            or maximum_pre_dispatch_tls_handshakes_per_request
+            != DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ark transport requires exactly one pre-dispatch TLS attempt per request",
+            )
         self._api_key_resolver = api_key_resolver
-        # Direct HTTPS is part of the adapter boundary.  Ignoring ambient
-        # proxy variables also prevents bearer credentials from being sent to
-        # an unintended local or corporate proxy.
-        self._opener = opener or build_direct_https_opener()
+        self._tls_context = tls_context or build_verified_tls_context()
+        self._connection_factory = connection_factory or self._new_tls_socket
+        self._tls_handshake_attempt_count = 0
+        self._tls_handshake_success_count = 0
+        self._pre_dispatch_tls_failure_codes: list[str] = []
+        self._peer_certificate_sha256s: list[str] = []
+        self._http_dispatch_count = 0
+        self._post_dispatch_failure_codes: list[str] = []
+        self._credential_resolution_count = 0
+        self._credential_resolution_success_count = 0
+
+    @property
+    def tls_handshake_attempt_count(self) -> int:
+        return self._tls_handshake_attempt_count
+
+    @property
+    def tls_handshake_success_count(self) -> int:
+        return self._tls_handshake_success_count
+
+    @property
+    def http_dispatch_count(self) -> int:
+        return self._http_dispatch_count
+
+    def session_audit(self) -> dict[str, object]:
+        return {
+            "schema": "SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1",
+            "connection_policy": DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
+            "maximum_pre_dispatch_tls_handshake_attempts_per_request": (
+                DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+            ),
+            "maximum_http_dispatches_per_tls_session": (
+                DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+            ),
+            "tls_handshake_attempt_count": self._tls_handshake_attempt_count,
+            "tls_handshake_success_count": self._tls_handshake_success_count,
+            "pre_dispatch_tls_handshake_failure_count": len(
+                self._pre_dispatch_tls_failure_codes
+            ),
+            "pre_dispatch_tls_failure_codes": list(
+                self._pre_dispatch_tls_failure_codes
+            ),
+            "http_dispatch_count": self._http_dispatch_count,
+            "connection_reuse_count": 0,
+            "verified_peer_certificate_sha256s": list(
+                self._peer_certificate_sha256s
+            ),
+            "post_dispatch_outcome_unknown_count": len(
+                self._post_dispatch_failure_codes
+            ),
+            "post_dispatch_failure_codes": list(
+                self._post_dispatch_failure_codes
+            ),
+            "request_retry_count": 0,
+            "credential_resolution_count": self._credential_resolution_count,
+            "credential_resolution_success_count": (
+                self._credential_resolution_success_count
+            ),
+            "credential_resolution_policy": (
+                DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY
+            ),
+        }
 
     def post_json(
         self,
@@ -222,42 +348,253 @@ class UrllibVolcengineArkChatTransport:
         timeout_milliseconds: int,
     ) -> ProviderHTTPResponse:
         _require_ark_https_endpoint(endpoint)
-        api_key = self._api_key_resolver()
-        if not api_key:
-            raise DomainError(ErrorCode.LIVE_INTEGRATION_HELD, "Ark credential is not configured")
-        request = urllib_request.Request(
-            endpoint,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "X-Client-Request-Id": client_request_id,
-            },
-            method="POST",
-        )
+        if not isinstance(body, bytes) or not body:
+            raise DomainError(ErrorCode.INVALID_ARGUMENT, "Ark request body is empty")
+        if (
+            not isinstance(client_request_id, str)
+            or not client_request_id
+            or "\r" in client_request_id
+            or "\n" in client_request_id
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ark client request ID is invalid",
+            )
+        if type(timeout_milliseconds) is not int or timeout_milliseconds < 1:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ark timeout must be positive",
+            )
+
+        tls_socket = self._acquire_tls_socket(timeout_milliseconds / 1000)
+        self._credential_resolution_count += 1
         try:
-            with self._opener.open(request, timeout=timeout_milliseconds / 1000) as response:
-                return ProviderHTTPResponse(
-                    status_code=response.status,
-                    headers={key.lower(): value for key, value in response.headers.items()},
-                    body=response.read(),
+            api_key = self._api_key_resolver()
+        except Exception:
+            tls_socket.close()
+            raise
+        if (
+            not isinstance(api_key, str)
+            or not api_key
+            or "\r" in api_key
+            or "\n" in api_key
+        ):
+            tls_socket.close()
+            raise DomainError(
+                ErrorCode.LIVE_INTEGRATION_HELD,
+                "Ark credential is not configured",
+            )
+        try:
+            api_key_bytes = api_key.encode("ascii")
+            client_request_id_bytes = client_request_id.encode("ascii")
+        except UnicodeEncodeError as exc:
+            tls_socket.close()
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ark credential or client request ID is not ASCII",
+            ) from exc
+        self._credential_resolution_success_count += 1
+        self._http_dispatch_count += 1
+        try:
+            request_headers = (
+                f"POST {_VOLCENGINE_ARK_PATH} HTTP/1.1\r\n".encode("ascii")
+                + f"Host: {_VOLCENGINE_ARK_HOST}\r\n".encode("ascii")
+                + b"Authorization: Bearer "
+                + api_key_bytes
+                + b"\r\nContent-Type: application/json\r\n"
+                + b"X-Client-Request-Id: "
+                + client_request_id_bytes
+                + b"\r\n"
+                + f"Content-Length: {len(body)}\r\n".encode("ascii")
+                + b"Connection: close\r\n\r\n"
+            )
+            tls_socket.sendall(request_headers + body)
+            response = http.client.HTTPResponse(tls_socket)
+            response.begin()
+            response_body = response.read(_MAX_RESPONSE_BYTES + 1)
+            if len(response_body) > _MAX_RESPONSE_BYTES:
+                raise DomainError(
+                    ErrorCode.PROVIDER_OUTPUT_FORBIDDEN,
+                    "Ark response exceeds the closed size limit",
                 )
-        except urllib_error.HTTPError as exc:
             return ProviderHTTPResponse(
-                status_code=exc.code,
-                headers={key.lower(): value for key, value in exc.headers.items()},
-                body=exc.read(),
+                status_code=response.status,
+                headers={key.lower(): value for key, value in response.getheaders()},
+                body=response_body,
             )
         except (
-            urllib_error.URLError,
+            OSError,
             TimeoutError,
             socket.timeout,
+            ssl.SSLError,
+            http.client.HTTPException,
             http.client.RemoteDisconnected,
         ) as exc:
+            reason = _network_failure_reason(exc)
+            self._post_dispatch_failure_codes.append(reason)
             raise ProviderOutcomeUnknown(
                 "Ark Chat Completions outcome is unknown",
-                reason_code=_network_failure_reason(exc),
+                reason_code=reason,
             ) from exc
+        finally:
+            tls_socket.close()
+
+    def _new_tls_socket(self, timeout_seconds: float) -> _VerifiedTLSSocket:
+        raw_socket = socket.create_connection(
+            (_VOLCENGINE_ARK_HOST, _VOLCENGINE_ARK_PORT),
+            timeout=timeout_seconds,
+        )
+        try:
+            return self._tls_context.wrap_socket(
+                raw_socket,
+                server_hostname=_VOLCENGINE_ARK_HOST,
+            )
+        except Exception:
+            raw_socket.close()
+            raise
+
+    def _acquire_tls_socket(self, timeout_seconds: float) -> _VerifiedTLSSocket:
+        self._tls_handshake_attempt_count += 1
+        tls_socket: _VerifiedTLSSocket | None = None
+        try:
+            tls_socket = self._connection_factory(timeout_seconds)
+            certificate = tls_socket.getpeercert(binary_form=True)
+            if not isinstance(certificate, bytes) or not certificate:
+                raise ssl.SSLError("Ark peer did not provide a certificate")
+        except (
+            OSError,
+            TimeoutError,
+            socket.timeout,
+            ssl.SSLError,
+            http.client.HTTPException,
+        ) as exc:
+            if tls_socket is not None:
+                tls_socket.close()
+            reason = _network_failure_reason(exc)
+            self._pre_dispatch_tls_failure_codes.append(reason)
+            raise ProviderUnavailable(
+                "Ark credential-free TLS acquisition failed",
+                reason_code=reason,
+            ) from exc
+        self._tls_handshake_success_count += 1
+        self._peer_certificate_sha256s.append(
+            "sha256:" + sha256(certificate).hexdigest()
+        )
+        return tls_socket
+
+
+def ark_transport_session_audit(transport: object) -> dict[str, object]:
+    method = getattr(transport, "session_audit", None)
+    if not callable(method):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark transport does not expose the required session audit",
+        )
+    return verify_ark_transport_session_audit(method())
+
+
+def verify_ark_transport_session_audit(value: object) -> dict[str, object]:
+    required = {
+        "schema",
+        "connection_policy",
+        "maximum_pre_dispatch_tls_handshake_attempts_per_request",
+        "maximum_http_dispatches_per_tls_session",
+        "tls_handshake_attempt_count",
+        "tls_handshake_success_count",
+        "pre_dispatch_tls_handshake_failure_count",
+        "pre_dispatch_tls_failure_codes",
+        "http_dispatch_count",
+        "connection_reuse_count",
+        "verified_peer_certificate_sha256s",
+        "post_dispatch_outcome_unknown_count",
+        "post_dispatch_failure_codes",
+        "request_retry_count",
+        "credential_resolution_count",
+        "credential_resolution_success_count",
+        "credential_resolution_policy",
+    }
+    if not isinstance(value, Mapping) or set(value) != required:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark transport session audit shape is invalid",
+        )
+    integer_fields = (
+        "maximum_pre_dispatch_tls_handshake_attempts_per_request",
+        "maximum_http_dispatches_per_tls_session",
+        "tls_handshake_attempt_count",
+        "tls_handshake_success_count",
+        "pre_dispatch_tls_handshake_failure_count",
+        "http_dispatch_count",
+        "connection_reuse_count",
+        "post_dispatch_outcome_unknown_count",
+        "request_retry_count",
+        "credential_resolution_count",
+        "credential_resolution_success_count",
+    )
+    if any(type(value.get(field)) is not int for field in integer_fields):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark transport session audit counters are invalid",
+        )
+    attempts = int(value["tls_handshake_attempt_count"])
+    successes = int(value["tls_handshake_success_count"])
+    pre_dispatch_failures = int(
+        value["pre_dispatch_tls_handshake_failure_count"]
+    )
+    dispatches = int(value["http_dispatch_count"])
+    unknown = int(value["post_dispatch_outcome_unknown_count"])
+    credential_reads = int(value["credential_resolution_count"])
+    credential_successes = int(value["credential_resolution_success_count"])
+    pre_dispatch_codes = value["pre_dispatch_tls_failure_codes"]
+    post_dispatch_codes = value["post_dispatch_failure_codes"]
+    certificate_digests = value["verified_peer_certificate_sha256s"]
+    if (
+        value.get("schema")
+        != "SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1"
+        or value.get("connection_policy")
+        != DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY
+        or value.get("maximum_pre_dispatch_tls_handshake_attempts_per_request")
+        != DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
+        or value.get("maximum_http_dispatches_per_tls_session")
+        != DEFAULT_VOLCENGINE_ARK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION
+        or value.get("credential_resolution_policy")
+        != DEFAULT_VOLCENGINE_ARK_CREDENTIAL_RESOLUTION_POLICY
+        or value.get("request_retry_count") != 0
+        or value.get("connection_reuse_count") != 0
+        or not 0 <= successes <= attempts
+        or pre_dispatch_failures != attempts - successes
+        or credential_reads != successes
+        or not 0 <= credential_successes <= credential_reads
+        or dispatches != credential_successes
+        or not 0 <= unknown <= dispatches
+        or not isinstance(pre_dispatch_codes, list)
+        or len(pre_dispatch_codes) != pre_dispatch_failures
+        or not isinstance(post_dispatch_codes, list)
+        or len(post_dispatch_codes) != unknown
+        or not isinstance(certificate_digests, list)
+        or len(certificate_digests) != successes
+        or any(
+            not isinstance(code, str)
+            or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,127}", code)
+            for code in (*pre_dispatch_codes, *post_dispatch_codes)
+        )
+    ):
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark transport session audit is internally inconsistent",
+        )
+    try:
+        tuple(Digest(str(item)) for item in certificate_digests)
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.QUALIFICATION_INVALID,
+            "Ark transport certificate audit is invalid",
+        ) from exc
+    return dict(value)
+
+
+# Compatibility name retained for callers outside the active ITER-010 path.
+UrllibVolcengineArkChatTransport = DirectVerifiedVolcengineArkChatTransport
 
 
 class VolcengineArkChatCompletionsNoToolsAdapter:
@@ -598,15 +935,14 @@ def _usage(value: object) -> tuple[int | None, int | None, bool]:
 def _network_failure_reason(exc: BaseException) -> str:
     if isinstance(exc, (TimeoutError, socket.timeout)):
         return "TIMEOUT"
-    reason = exc.reason if isinstance(exc, urllib_error.URLError) else exc
-    if isinstance(reason, http.client.RemoteDisconnected):
+    if isinstance(exc, http.client.RemoteDisconnected):
         return "REMOTE_DISCONNECTED"
-    if isinstance(reason, socket.gaierror):
+    if isinstance(exc, socket.gaierror):
         return "DNS_RESOLUTION_FAILED"
-    if isinstance(reason, ConnectionRefusedError):
+    if isinstance(exc, ConnectionRefusedError):
         return "CONNECTION_REFUSED"
-    if isinstance(reason, ssl.SSLCertVerificationError):
+    if isinstance(exc, ssl.SSLCertVerificationError):
         return "TLS_CERTIFICATE_VERIFY_FAILED"
-    if isinstance(reason, ssl.SSLError):
+    if isinstance(exc, ssl.SSLError):
         return "TLS_FAILURE"
     return "NETWORK_FAILURE"

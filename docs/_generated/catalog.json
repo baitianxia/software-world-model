@@ -3154,6 +3154,23 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-103.md"
   },
   {
+    "id": "FINDING-010-104",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "security",
+      "application",
+      "interface",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-104.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5949,7 +5966,8 @@
       "FINDING-008-032",
       "FINDING-008-036",
       "FINDING-010-092",
-      "FINDING-010-099"
+      "FINDING-010-099",
+      "FINDING-010-104"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -5988,7 +6006,16 @@
       "quality",
       "security"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-010-097",
+      "FINDING-010-098",
+      "FINDING-010-099",
+      "FINDING-010-100",
+      "FINDING-010-101",
+      "FINDING-010-102",
+      "FINDING-010-103",
+      "FINDING-010-104"
+    ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },
   {
@@ -6414,7 +6441,10 @@
       "operations",
       "ai"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-010-103",
+      "FINDING-010-104"
+    ],
     "path": "docs/system/operations/configuration.md"
   },
   {
@@ -6530,7 +6560,8 @@
       "FINDING-010-071",
       "FINDING-010-073",
       "FINDING-010-092",
-      "FINDING-010-093"
+      "FINDING-010-093",
+      "FINDING-010-104"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

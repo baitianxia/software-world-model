@@ -9,9 +9,10 @@ import sys
 from typing import Mapping, Sequence, TextIO
 
 from software_world_model.ai_infrastructure import (
+    DirectVerifiedVolcengineArkChatTransport,
     OutputSchemaDefinition,
     ProviderOutcomeUnknown,
-    UrllibVolcengineArkChatTransport,
+    ProviderUnavailable,
     VolcengineArkChatCompletionsNoToolsAdapter,
     VolcengineArkModelConfiguration,
     run_ark_chat_conformance,
@@ -66,7 +67,7 @@ def main(
         elif arguments.command == "probe":
             if arguments.timeout_milliseconds < 1 or arguments.max_output_tokens < 1:
                 raise ValueError("probe resource bounds must be positive")
-            active_transport = transport or UrllibVolcengineArkChatTransport(
+            active_transport = transport or DirectVerifiedVolcengineArkChatTransport(
                 api_key_resolver=lambda: configuration.resolve_api_key(environment_values)
             )
             response = _probe(
@@ -88,7 +89,7 @@ def main(
             }
             exit_code = 0
         else:
-            active_transport = transport or UrllibVolcengineArkChatTransport(
+            active_transport = transport or DirectVerifiedVolcengineArkChatTransport(
                 api_key_resolver=lambda: configuration.resolve_api_key(environment_values)
             )
             result = run_ark_chat_conformance(
@@ -125,6 +126,15 @@ def main(
             "error": "PROVIDER_OUTCOME_UNKNOWN",
             "reason": exc.reason_code,
             "message": "provider request outcome is unknown; inspect network and retry as a new probe",
+        }
+        json.dump(payload, output, ensure_ascii=False, sort_keys=True)
+        output.write("\n")
+        return 3
+    except ProviderUnavailable as exc:
+        payload = {
+            "error": "PROVIDER_UNAVAILABLE",
+            "reason": exc.reason_code,
+            "message": "provider was unavailable before HTTP dispatch; no request retry was performed",
         }
         json.dump(payload, output, ensure_ascii=False, sort_keys=True)
         output.write("\n")

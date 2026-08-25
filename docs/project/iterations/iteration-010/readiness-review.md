@@ -101,8 +101,9 @@ committed Work State、logical Turn 分账/duplicate-cost risk/late quarantine �
 authority、per-attempt fresh Tool/Response Control、committed Work State、route、Conversation 与 Browser 接成
 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`，最新相关组合为 89/89。`FINDING-010-103` 又以 owner-private closed artifact、exact
 ordered Ark→DeepSeek routes、fixed 5-Turn bounds、private Gateway/receipt paths 与唯一 `--session-config` selector 形成
-`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，最新相关组合为 117/117。current actual artifact、Ark transport Session audit、资格和
-live Chat 仍为 `NOT_EXECUTED / NOT_QUALIFIED / NOT_LIVE`：
+`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，最新相关组合为 117/117。`FINDING-010-104` 又把 Ark TLS-before-credential、每 request
+一个 verified session、retry 0、typed unavailable fallback 和 terminal audit 闭合为本地候选，最新相邻组合为 141/141。fresh Ark
+Conformance、current actual artifact、资格和 live Chat 仍为 `NOT_EXECUTED / NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。

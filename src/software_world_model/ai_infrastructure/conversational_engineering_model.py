@@ -1689,6 +1689,8 @@ def _gateway_failure_kind(
 
     if failure_code == ErrorCode.PROVIDER_HTTP_ERROR.value:
         return EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR
+    if failure_code == "PROVIDER_UNAVAILABLE":
+        return EngineeringAgentModelFailureKind.PROVIDER_UNAVAILABLE
     if failure_code in {
         ErrorCode.PROVIDER_RESPONSE_INVALID.value,
         ErrorCode.PROVIDER_OUTPUT_FORBIDDEN.value,

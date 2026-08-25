@@ -227,7 +227,7 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
                 ),
             ),
             public_status=lambda: {
-                "status": "ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE",
+                "status": "ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE",
                 "production_activation": "NOT_EXECUTED",
             },
             launch_receipt=lambda: {"schema": "launch"},

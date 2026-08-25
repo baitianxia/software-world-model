@@ -20,6 +20,7 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ModelGateway,
     ProviderAdapterCapabilities,
     ProviderOutcomeUnknown,
+    ProviderUnavailable,
     ReplayClassification,
 )
 from software_world_model.application_services.conversational_engineering_agent import (
@@ -69,6 +70,7 @@ class OfflineAgentAdapter:
         self,
         *,
         outcome_unknown: bool = False,
+        provider_unavailable: bool = False,
         failure_code: ErrorCode | None = None,
     ) -> None:
         self.capabilities = ProviderAdapterCapabilities(
@@ -82,6 +84,7 @@ class OfflineAgentAdapter:
             qualified_model_fingerprints=(),
         )
         self.outcome_unknown = outcome_unknown
+        self.provider_unavailable = provider_unavailable
         self.failure_code = failure_code
         self.requests = []
 
@@ -89,6 +92,11 @@ class OfflineAgentAdapter:
         self.requests.append(request)
         if self.outcome_unknown:
             raise ProviderOutcomeUnknown("fixture connection outcome unknown")
+        if self.provider_unavailable:
+            raise ProviderUnavailable(
+                "fixture provider unavailable",
+                reason_code="CONNECTION_REFUSED",
+            )
         if self.failure_code is not None:
             raise DomainError(self.failure_code, "fixture Provider failure")
         return AdapterResponse.create(
@@ -206,6 +214,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self,
         *,
         outcome_unknown: bool = False,
+        provider_unavailable: bool = False,
         failure_code: ErrorCode | None = None,
         authority_binding_digest=None,
     ):
@@ -236,6 +245,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         adapter = OfflineAgentAdapter(
             outcome_unknown=outcome_unknown,
+            provider_unavailable=provider_unavailable,
             failure_code=failure_code,
         )
         gateway = ModelGateway(
@@ -421,6 +431,34 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             submission.turn.provider_failure_code,
             ErrorCode.PROVIDER_HTTP_ERROR.value,
+        )
+
+    def test_typed_provider_unavailable_is_fallback_eligible(self) -> None:
+        service, model, _, adapter, _, _ = self._service(
+            provider_unavailable=True
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 1)
+        self.assertEqual(len(adapter.requests), 1)
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_UNAVAILABLE,
+        )
+        self.assertEqual(
+            submission.turn.provider_failure_classification,
+            EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE,
+        )
+        self.assertEqual(
+            submission.turn.provider_failure_code,
+            "PROVIDER_UNAVAILABLE",
         )
 
     def test_gateway_owned_failure_cannot_masquerade_as_provider_unavailable(self) -> None:
