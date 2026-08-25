@@ -571,7 +571,8 @@ conversational_engineering_agent:
   provider_route_composition_implementation_evidence_ref: FINDING-010-100
   provider_runtime_composition_implementation_evidence_ref: FINDING-010-101
   session_runtime_composition_implementation_evidence_ref: FINDING-010-102
-  agent_execution_status: local-deterministic-session-runtime-composition-candidate-artifact-session-configuration-and-fixed-command-not-loaded-not-qualified-not-live
+  artifact_session_fixed_command_implementation_evidence_ref: FINDING-010-103
+  agent_execution_status: local-deterministic-artifact-session-fixed-command-candidate-current-actual-artifact-not-executed-ark-transport-session-audit-not-wired-not-qualified-not-live
   status: implemented-not-qualified
 
 question_evidence_package_classes:
@@ -913,7 +914,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:e57d8b6007efa433069a13a49cbad8e971a81bf228f09ca821308ff93a59c99e
+  system_contract_set_digest: sha256:22850c9ca0372336ce4a59713ed4031ef5c1c2502d3dbab97396afa649cfb8d7
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

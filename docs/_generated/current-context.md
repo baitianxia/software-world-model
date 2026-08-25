@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-session-runtime-composition-local-candidate-next-artifact-config-and-fixed-command-freeze`
+- Worktree status: `iteration-010-slice-001-artifact-session-fixed-command-local-candidate-next-current-freeze-transport-audit-and-live`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-access-pass-agent-evidence-route-provider-and-session-runtime-composition-local-candidates-artifact-config-not-loaded-not-qualified-not-live-production-not-activated`
+- Live model path: `pdr-004-access-pass-artifact-session-fixed-command-local-candidate-current-artifact-not-executed-ark-transport-audit-not-wired-not-qualified-not-live-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

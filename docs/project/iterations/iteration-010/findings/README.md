@@ -262,5 +262,9 @@ iteration: ITER-010
 - [FINDING-010-102](FINDING-010-102.md)：Provider runtimes、exact evidence authority、per-attempt fresh Tool/Response Control、committed Work
   State、route、Conversation 与 Browser 已形成完整 non-starting Session runtime composition；89/89 通过，artifact config/fixed command/live
   仍未闭合。
+- [FINDING-010-103](FINDING-010-103.md)：owner-private closed artifact Session loader 与唯一 `--session-config` fixed-command lifecycle 已
+  闭合 product/source identity、published World Model、Source Profile、ordered Ark→DeepSeek qualification identity、private Gateway/receipt
+  paths 和固定 5×15/75 bounds；相关聚焦组合 117/117，通过 fake listener 证明 launch-before-listener/terminal-after-shutdown。current actual
+  artifact、Ark transport Session audit 与五轮 live Chat 仍未执行或资格化。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -28,6 +28,11 @@ _EXPORT_MODULES = {
     "EngineeringChatSessionRuntimeReceipt": ".engineering_chat_session_runtime",
     "PreparedEngineeringChatSessionRuntime": ".engineering_chat_session_runtime",
     "prepare_engineering_chat_session_runtime": ".engineering_chat_session_runtime",
+    "EngineeringChatArtifactProviderRouteConfig": ".engineering_chat_session_artifact",
+    "EngineeringChatArtifactSessionConfig": ".engineering_chat_session_artifact",
+    "PreparedEngineeringChatArtifactSession": ".engineering_chat_session_artifact",
+    "load_engineering_chat_artifact_session_config": ".engineering_chat_session_artifact",
+    "prepare_engineering_chat_artifact_session": ".engineering_chat_session_artifact",
     "EngineeringChatBrowserApplication": ".engineering_chat_browser",
     "PreparedEngineeringChatAccess": ".engineering_chat_alpha_cli",
     "prepare_engineering_chat_access": ".engineering_chat_alpha_cli",
@@ -112,6 +117,13 @@ if TYPE_CHECKING:
         PreparedEngineeringChatSessionRuntime,
         prepare_engineering_chat_session_runtime,
     )
+    from .engineering_chat_session_artifact import (
+        EngineeringChatArtifactProviderRouteConfig,
+        EngineeringChatArtifactSessionConfig,
+        PreparedEngineeringChatArtifactSession,
+        load_engineering_chat_artifact_session_config,
+        prepare_engineering_chat_artifact_session,
+    )
     from .engineering_chat_alpha_cli import (
         PreparedEngineeringChatAccess,
         prepare_engineering_chat_access,
@@ -186,6 +198,11 @@ __all__ = [
     "EngineeringChatSessionRuntimeReceipt",
     "PreparedEngineeringChatSessionRuntime",
     "prepare_engineering_chat_session_runtime",
+    "EngineeringChatArtifactProviderRouteConfig",
+    "EngineeringChatArtifactSessionConfig",
+    "PreparedEngineeringChatArtifactSession",
+    "load_engineering_chat_artifact_session_config",
+    "prepare_engineering_chat_artifact_session",
     "PreparedEngineeringChatAccess",
     "prepare_engineering_chat_access",
     "EngineeringQuestionBrowserApplication",

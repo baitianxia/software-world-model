@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103]
 code: []
 tests: []
 iteration: ITER-010
@@ -25,7 +25,7 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
-SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / CURRENT_QUALIFICATION_NOT_LOADED /
+SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
@@ -135,6 +135,25 @@ LocalGitRetrievalWorker`，并证明 preparation 不读取 Source 或投影 cogn
 sealed Conformance 或 canonical private artifact Session Configuration，也没有 mall Source/resources、外部网络、Provider/model、credential、
 listener/browser 或 Production 执行。因此状态只增加 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；artifact loader、fixed command wiring
 与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
+
+## Current local artifact Session and fixed-command evidence
+
+`FINDING-010-103` 实现 `SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1` 的 owner-private closed loader：product/source Git identity、
+published ordered/snapshot World Model、exact Source Profile、mandatory `src/main/resources` exclusion、ordinal 1 Ark/ordinal 2 DeepSeek、两份
+Conformance result、两个 distinct private Gateway repositories、Session authority、5 Turns × 每 Turn 每 Provider 15 dispatch 与每 Provider
+总计 75 都由同一 artifact 密封。unknown/missing/duplicate/reordered field、公开权限、relative path、identity drift 与 profile/exclusion
+overlap 在外部活动前失败关闭。
+
+`swm-engineering-chat` 无参数继续是已验证 Access-only；唯一新增 selector `--session-config` 不暴露 host/port/project/revision/Provider/
+question/credential/authority。fake listener lifecycle 证明两个 private database exclusive-create 后，launch receipt 在 listener 构造前写入，
+terminal receipt 在 shutdown 后写入；固定 URL 仍是 `127.0.0.1:8765`。artifact/CLI/provider-runtime 直接组合实际 `13/13 PASS`；包含 Agent、
+Conversation、Tools、Model、Route、Candidate、Launcher、Provider runtime、artifact、Source、Browser、CLI、Gateway、Conformance、Cognition 与
+Structure 的聚焦组合实际 `117/117 PASS`，application/AI/interface compile 与 diff check 通过。
+
+测试通过 patched/local typed artifacts 与 fake listener 证明零 I/O composition，没有读取 mall Source/resources、解析 credential、访问网络、
+调用 Provider/model、启动真实 listener/browser 或执行 Production Activation。current actual artifact 未生成或执行；terminal receipt 当前有
+Disclosure/model-boundary/model-call audit、dispatch total 与 DeepSeek transport Session audit，但没有 Ark transport-level Session audit。因此状态只增加
+`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`；`V-CHAT-*`、资格、live 与 Acceptance verdict 均保持不变。
 
 ## Pre-freeze implementation evidence
 

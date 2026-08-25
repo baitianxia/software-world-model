@@ -67,13 +67,13 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
             "software_world_model.interface.engineering_qa_alpha_cli:main",
         )
 
-    def test_fixed_command_accepts_no_runtime_scope_arguments(self) -> None:
+    def test_fixed_command_accepts_only_one_sealed_session_artifact(self) -> None:
         parser = build_parser()
         self.assertEqual(parser.prog, "swm-engineering-chat")
         destinations = {
             action.dest for action in parser._actions if action.dest != "help"
         }
-        self.assertEqual(destinations, set())
+        self.assertEqual(destinations, {"session_config"})
 
     def test_prepare_binds_clean_exact_revisions_without_provider(self) -> None:
         prepared = prepare_engineering_chat_access(
@@ -170,6 +170,162 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
         self.assertEqual(json.loads(stdout.getvalue())["status"], "READY")
         self.assertEqual(events[0][0:3], ("127.0.0.1", 8765, application))
         self.assertEqual(events[1:], ["enter", "serve", "exit"])
+
+    def test_artifact_main_seals_launch_before_fixed_listener_and_terminal_after(self) -> None:
+        events: list[object] = []
+        application = object()
+        session_path = self.root / "session.json"
+        ark_database = self.root / "ark.sqlite3"
+        deepseek_database = self.root / "deepseek.sqlite3"
+        launch_path = self.root / "launch.json"
+        terminal_path = self.root / "terminal.json"
+        session_config = SimpleNamespace(
+            path=session_path,
+            provider_routes=(
+                SimpleNamespace(gateway_database=str(ark_database)),
+                SimpleNamespace(gateway_database=str(deepseek_database)),
+            ),
+            launch_receipt=str(launch_path),
+            terminal_receipt=str(terminal_path),
+        )
+
+        class FakeDatabase:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return False
+
+        class FakeServer:
+            server_port = ENGINEERING_CHAT_ALPHA_PORT
+
+            def __enter__(self):
+                events.append("listener-enter")
+                return self
+
+            def __exit__(self, *_):
+                events.append("listener-exit")
+                return False
+
+            def serve_forever(self):
+                events.append("serve")
+
+        primary_transport = object()
+
+        class FallbackTransport:
+            def close(self):
+                events.append("transport-close")
+
+        prepared = SimpleNamespace(
+            runtime=SimpleNamespace(
+                launcher=SimpleNamespace(application=application),
+                primary_provider_runtime=SimpleNamespace(
+                    transport=primary_transport
+                ),
+                fallback_provider_runtime=SimpleNamespace(
+                    transport=FallbackTransport()
+                ),
+            ),
+            public_status=lambda: {
+                "status": "ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE",
+                "production_activation": "NOT_EXECUTED",
+            },
+            launch_receipt=lambda: {"schema": "launch"},
+            terminal_receipt=lambda: {"schema": "terminal"},
+        )
+
+        def create_database(path):
+            events.append(("create-database", path.name))
+
+        def write_receipt(path, value):
+            events.append(("write", path.name, value["schema"]))
+
+        stdout = StringIO()
+        stderr = StringIO()
+        with (
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli.load_engineering_chat_artifact_session_config",
+                return_value=session_config,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli._new_database_path",
+                side_effect=(ark_database, deepseek_database),
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli._new_private_output_path",
+                side_effect=(launch_path, terminal_path),
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli._create_new_private_database",
+                side_effect=create_database,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli.SqliteDatabase",
+                side_effect=(FakeDatabase(), FakeDatabase()),
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli.SqliteModelGatewayRepository",
+                side_effect=(object(), object()),
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli.prepare_engineering_chat_artifact_session",
+                return_value=prepared,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli.make_server",
+                return_value=FakeServer(),
+            ) as make_server,
+            patch(
+                "software_world_model.interface.engineering_chat_alpha_cli._write_new_private_json",
+                side_effect=write_receipt,
+            ),
+        ):
+            outcome = main(
+                ["--session-config", str(session_path)],
+                stdout=stdout,
+                stderr=stderr,
+            )
+
+        self.assertEqual(outcome, 0)
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertTrue(json.loads(stdout.getvalue())["listener_started"])
+        self.assertEqual(
+            make_server.call_args.args[:3],
+            ("127.0.0.1", ENGINEERING_CHAT_ALPHA_PORT, application),
+        )
+        self.assertEqual(
+            events,
+            [
+                ("create-database", "ark.sqlite3"),
+                ("create-database", "deepseek.sqlite3"),
+                ("write", "launch.json", "launch"),
+                "listener-enter",
+                "serve",
+                "listener-exit",
+                ("write", "terminal.json", "terminal"),
+                "transport-close",
+            ],
+        )
+
+        failed_stdout = StringIO()
+        failed_stderr = StringIO()
+        with patch(
+            "software_world_model.interface.engineering_chat_alpha_cli.load_engineering_chat_artifact_session_config",
+            side_effect=DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "sealed artifact rejected",
+            ),
+        ):
+            failed_outcome = main(
+                ["--session-config", str(session_path)],
+                stdout=failed_stdout,
+                stderr=failed_stderr,
+            )
+        self.assertEqual(failed_outcome, 2)
+        self.assertEqual(failed_stdout.getvalue(), "")
+        self.assertIsNone(
+            json.loads(failed_stderr.getvalue())["model_call_authorized"]
+        )
 
 
 if __name__ == "__main__":

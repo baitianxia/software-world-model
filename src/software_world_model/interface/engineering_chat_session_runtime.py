@@ -54,14 +54,28 @@ from .engineering_chat_provider_runtime import (
 
 
 ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA = (
-    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@1"
+    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@2"
 )
 ENGINEERING_CHAT_SESSION_RUNTIME_STATUS = (
     "SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE"
 )
+ENGINEERING_CHAT_ARTIFACT_SESSION_RUNTIME_STATUS = (
+    "ARTIFACT_SESSION_COMPOSITION_LOCAL_CANDIDATE"
+)
+ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_STATUS = (
+    "ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE"
+)
 ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS = (
     "CURRENT_SEALED_ARTIFACT_SESSION_CONFIG_NOT_LOADED",
     "FIXED_COMMAND_NOT_WIRED",
+    "LIVE_PROVIDER_AND_BROWSER_NOT_EXECUTED",
+)
+ENGINEERING_CHAT_ARTIFACT_SESSION_RUNTIME_BLOCKING_GAPS = (
+    "FIXED_COMMAND_NOT_WIRED",
+    "LIVE_PROVIDER_AND_BROWSER_NOT_EXECUTED",
+)
+ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_BLOCKING_GAPS = (
+    "ARK_TRANSPORT_SESSION_AUDIT_NOT_WIRED",
     "LIVE_PROVIDER_AND_BROWSER_NOT_EXECUTED",
 )
 
@@ -212,6 +226,8 @@ class EngineeringChatSessionRuntimeReceipt:
     launcher_receipt_digest: Digest
     blocking_gaps: tuple[str, ...]
     artifact_session_config_loaded: bool
+    artifact_session_config_digest: Digest | None
+    fixed_command_wired: bool
     attempt_runtime_created_at_preparation: bool
     source_read_performed_at_preparation: bool
     credential_resolved_at_preparation: bool
@@ -240,6 +256,12 @@ class EngineeringChatSessionRuntimeReceipt:
             "launcher_receipt_digest": self.launcher_receipt_digest.value,
             "blocking_gaps": self.blocking_gaps,
             "artifact_session_config_loaded": self.artifact_session_config_loaded,
+            "artifact_session_config_digest": (
+                self.artifact_session_config_digest.value
+                if self.artifact_session_config_digest is not None
+                else None
+            ),
+            "fixed_command_wired": self.fixed_command_wired,
             "attempt_runtime_created_at_preparation": (
                 self.attempt_runtime_created_at_preparation
             ),
@@ -286,10 +308,38 @@ def prepare_engineering_chat_session_runtime(
     checked_at: datetime,
     loop_limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
     required_conversation_turns: int = 5,
+    artifact_session_config_digest: Digest | None = None,
+    fixed_command_wired: bool = False,
 ) -> PreparedEngineeringChatSessionRuntime:
     """Join prebuilt exact runtime assets without starting the product."""
 
     current = _aware_utc(checked_at)
+    if artifact_session_config_digest is not None and not isinstance(
+        artifact_session_config_digest, Digest
+    ):
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "artifact Session Configuration digest is invalid",
+        )
+    if not isinstance(fixed_command_wired, bool) or (
+        fixed_command_wired and artifact_session_config_digest is None
+    ):
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "fixed command wiring requires a loaded artifact Session Configuration",
+        )
+    artifact_loaded = artifact_session_config_digest is not None
+    if fixed_command_wired:
+        status = ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_STATUS
+        blocking_gaps = (
+            ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_BLOCKING_GAPS
+        )
+    elif artifact_loaded:
+        status = ENGINEERING_CHAT_ARTIFACT_SESSION_RUNTIME_STATUS
+        blocking_gaps = ENGINEERING_CHAT_ARTIFACT_SESSION_RUNTIME_BLOCKING_GAPS
+    else:
+        status = ENGINEERING_CHAT_SESSION_RUNTIME_STATUS
+        blocking_gaps = ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS
     primary_route, fallback_route = route_plan.routes
     if (
         primary_provider_runtime.provider_type != "VOLCENGINE_ARK"
@@ -386,7 +436,7 @@ def prepare_engineering_chat_session_runtime(
     )
     core = {
         "schema": ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA,
-        "status": ENGINEERING_CHAT_SESSION_RUNTIME_STATUS,
+        "status": status,
         "chat_binding_digest": binding.digest.value,
         "route_plan_digest": route_plan.digest.value,
         "evidence_tool_factory_digest": evidence_factory.digest.value,
@@ -397,8 +447,14 @@ def prepare_engineering_chat_session_runtime(
             fallback_provider_runtime.digest.value
         ),
         "launcher_receipt_digest": launcher.receipt.digest.value,
-        "blocking_gaps": ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS,
-        "artifact_session_config_loaded": False,
+        "blocking_gaps": blocking_gaps,
+        "artifact_session_config_loaded": artifact_loaded,
+        "artifact_session_config_digest": (
+            artifact_session_config_digest.value
+            if artifact_session_config_digest is not None
+            else None
+        ),
+        "fixed_command_wired": fixed_command_wired,
         "attempt_runtime_created_at_preparation": False,
         "source_read_performed_at_preparation": False,
         "credential_resolved_at_preparation": False,
@@ -410,15 +466,17 @@ def prepare_engineering_chat_session_runtime(
     }
     receipt = EngineeringChatSessionRuntimeReceipt(
         schema=ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA,
-        status=ENGINEERING_CHAT_SESSION_RUNTIME_STATUS,
+        status=status,
         chat_binding_digest=binding.digest,
         route_plan_digest=route_plan.digest,
         evidence_tool_factory_digest=evidence_factory.digest,
         primary_provider_runtime_digest=primary_provider_runtime.digest,
         fallback_provider_runtime_digest=fallback_provider_runtime.digest,
         launcher_receipt_digest=launcher.receipt.digest,
-        blocking_gaps=ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS,
-        artifact_session_config_loaded=False,
+        blocking_gaps=blocking_gaps,
+        artifact_session_config_loaded=artifact_loaded,
+        artifact_session_config_digest=artifact_session_config_digest,
+        fixed_command_wired=fixed_command_wired,
         attempt_runtime_created_at_preparation=False,
         source_read_performed_at_preparation=False,
         credential_resolved_at_preparation=False,
@@ -449,6 +507,10 @@ def _aware_utc(value: datetime) -> datetime:
 
 
 __all__ = [
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_RUNTIME_BLOCKING_GAPS",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_RUNTIME_STATUS",
+    "ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_BLOCKING_GAPS",
+    "ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_STATUS",
     "ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS",
     "ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA",
     "ENGINEERING_CHAT_SESSION_RUNTIME_STATUS",

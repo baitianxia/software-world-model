@@ -2910,6 +2910,22 @@
       "tests/test_engineering_chat_browser.py"
     ]
   },
+  "FINDING-010-103": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-103.md",
+    "code": [
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py",
+      "src/software_world_model/interface/__init__.py"
+    ],
+    "tests": [
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_provider_launcher.py",
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4438,6 +4454,7 @@
       "src/software_world_model/interface/engineering_chat_provider_launcher.py",
       "src/software_world_model/interface/engineering_chat_provider_runtime.py",
       "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_browser_ui.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py"
@@ -4450,6 +4467,7 @@
       "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_provider_launcher.py",
       "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
@@ -4961,6 +4979,8 @@
       "src/software_world_model/interface/provider_cli.py",
       "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_provider_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py",
       "src/software_world_model/interface/engineering_qa_alpha_cli.py"
     ],
@@ -4972,6 +4992,7 @@
       "tests/test_conversational_engineering_model.py",
       "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_chat_alpha_cli.py",
       "tests/test_engineering_qa_alpha_cli.py"
     ]
@@ -5003,6 +5024,7 @@
       "src/software_world_model/interface/engineering_chat_provider_launcher.py",
       "src/software_world_model/interface/engineering_chat_provider_runtime.py",
       "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_browser_ui.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py",
@@ -5025,11 +5047,13 @@
       "tests/test_world_model_product.py",
       "tests/test_engineering_question_model_source.py",
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
       "tests/test_conversational_engineering_model.py",
       "tests/test_conversational_engineering_routing.py",
       "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_provider_launcher.py",
       "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py",
       "tests/test_engineering_qa_live.py",

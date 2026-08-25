@@ -5,8 +5,8 @@ status: current
 authority: operational
 owners: [operations, interface]
 depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-code: [pyproject.toml, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
+code: [pyproject.toml, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
 
 # 本机浏览器体验
@@ -29,12 +29,13 @@ ADR-016 的固定 Understanding/Initial Investigation/Answer/双 Review/Verifica
 投影为 `AGENT_EXECUTOR_LOCAL_CANDIDATE`。World Model/Source/Ledger tool adapter 与单 Provider Agent/Reviewer model boundary 已分别达到
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE / PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。Application-owned
 Ark→DeepSeek router 和 fixed Browser composition 已在不创建 attempt 的预检中绑定；listener、credential、Source read、Provider dispatch
-仍全部为 0。现有公开 `swm-engineering-chat` 继续是 Access-only；Ark/DeepSeek model runtime 已以生产 Adapter/credential-lazy transport
-形成 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；non-starting Session runtime 已进一步绑定 exact evidence authority、per-attempt fresh
-Tool/Response Control、route、Conversation 与 Browser，形成 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。它仍未从 artifact 加载 current
-sealed qualification、published World Model、exact Source Profile/Worker 或 private Gateway repositories，也未切换 fixed command，故状态仍为
-`CURRENT_QUALIFICATION_NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`。在 Adapter 资格、真实模型审计和人工体验均闭合
-前，页面不得把
+仍全部为 0。Ark/DeepSeek model runtime 已以生产 Adapter/credential-lazy transport 形成
+`PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；Session runtime 又绑定 exact evidence authority、per-attempt fresh Tool/Response Control、route、
+Conversation 与 Browser。`FINDING-010-103` 进一步实现 owner-private artifact loader 和固定命令分支，加载 product/source identity、published
+World Model、Source Profile、Ark/DeepSeek qualification identity 与 distinct private Gateway repositories，状态为
+`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。该状态来自本地构造/patched typed artifacts 和 fake listener lifecycle；current actual sealed
+artifact、Ark transport Session audit、真实 Provider 和 Browser 五轮 Chat 均未执行，故仍为 `NOT_QUALIFIED / NOT_LIVE`。在 Adapter 资格、
+真实模型审计和人工体验均闭合前，页面不得把
 `ENGINEERING_CHAT_EXPERIENCE@1` 标成 PASS 或生产可用。
 
 ADR-016 曾接受第三个、面向普通用户的 `ENGINEERING_QA` 兼容入口。`ITER-010 / SLICE-001` 已实现 loopback WSGI 页面、本地
@@ -89,18 +90,84 @@ PDR-003 将 Access 与答案 Quality 分离：页面可启动、可提交 Turn�
 真实性、一次 current Provider qualification 和一个 Provider 前本地/Mock Access smoke，不执行 full regression。首次方向 live canary
 必须是 PDR-004 的一个五轮 Conversation；任一 Turn 失败即停止后续方向套件并回到本地根因诊断。
 
-新的本地 Chat Access 候选使用独立固定命令，不接受 host、port、project、revision、Provider、question 或授权参数：
+`swm-engineering-chat` 无参数模式保留独立 Chat Access，不接受 host、port、project、revision、Provider、question 或授权参数：
 
 ```bash
 PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_chat_alpha_cli
 ```
 
-安装后的命令名为 `swm-engineering-chat`。launcher 只在 product worktree 与固定
+launcher 只在 product worktree 与固定
 `validation-projects/mall@0504e86b1f1b6f1b8aa6a734d37a90fb67346be7` 都 clean 时绑定 `http://127.0.0.1:8765/`；页面显示 exact product/source revision、
 完整消息历史、“新对话”、Provider/World Model/Source 未配置状态和“质量未验收 / 非生产”。提交消息会创建真实 server-owned Turn；当前没有
 Provider executor，故 Turn 以 `PROVIDER_NOT_CONFIGURED`、dispatch/retry 0、Delivery `NOT_AUTHORIZED` 密封，Conversation 继续可用。状态只在
-进程内保存，停止服务后不恢复。该候选的 WSGI/CLI 定向证据已闭合，但真实 listener/browser handoff 尚未执行，`V-ALPHA-ACCESS-001` 仍为
-NOT-RUN；该命令不读取 credential、Provider/Source payload 或 `src/main/resources`，也不执行 Production Activation。
+进程内保存，停止服务后不恢复。该模式已在 exact `cf2883bef861e0345afc36415d4216f943d31cf4` 完成一次真实 listener/browser handoff，
+`V-ALPHA-ACCESS-001` 为 `PASS / access-only`；该次运行 dispatch 0，且没有读取 credential、Provider/Source payload 或
+`src/main/resources`，也没有执行 Production Activation。
+
+同一命令的 artifact-backed 模式只新增一个 operator selector；sealed artifact 是全部运行 scope 的唯一输入：
+
+```bash
+PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_chat_alpha_cli \
+  --session-config /absolute/private/engineering-chat-session.json
+```
+
+`SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1` 必须是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，根对象字段
+exact match。当前实现固定 5 Turns、每 Turn 每 Provider 15 dispatch、每 Provider 总计 75；Provider routes 必须恰好为 ordinal 1 Ark、
+ordinal 2 DeepSeek。数据库与 receipt 路径必须是互异、尚不存在的 absolute paths；product/source repositories 必须互异；
+`src/main/resources` 必须在排除项且不能与 Source Profile overlap：
+
+```json
+{
+  "schema": "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1",
+  "product_repository": "/absolute/clean/software-world-model",
+  "product_commit": "<exact-40-hex-product-commit>",
+  "product_tree": "<exact-40-hex-product-tree>",
+  "project_name": "mall",
+  "repository": "/absolute/exact/source-repository",
+  "repository_id": "<stable-repository-id>",
+  "binding_id": "<world-model-binding-id>",
+  "repository_revision": "<exact-40-hex-source-commit>",
+  "source_profile_ref": "<versioned-source-profile-ref>",
+  "source_paths": ["src/main/java"],
+  "document_paths": ["README.md"],
+  "build_paths": ["pom.xml"],
+  "test_paths": ["src/test/java"],
+  "excluded_source_paths": ["src/main/resources"],
+  "ordered_envelope": "/absolute/published/ordered.json",
+  "snapshot_bundles": ["/absolute/published/snapshot.json"],
+  "cognition_snapshot_id": null,
+  "response_language": "zh-CN",
+  "session_ref": "<unique-session-ref>",
+  "authorization_message_digest": "sha256:<post-freeze-user-session-authorization-digest>",
+  "authorized_at": "<canonical-UTC-time>",
+  "expires_at": "<canonical-UTC-time-not-after-both-conformance-expiries>",
+  "provider_routes": [
+    {
+      "ordinal": 1,
+      "provider_type": "VOLCENGINE_ARK",
+      "conformance_result": "/absolute/current/ark-conformance.json",
+      "gateway_database": "/absolute/new/ark-gateway.sqlite3"
+    },
+    {
+      "ordinal": 2,
+      "provider_type": "DEEPSEEK",
+      "conformance_result": "/absolute/current/deepseek-conformance.json",
+      "gateway_database": "/absolute/new/deepseek-gateway.sqlite3"
+    }
+  ],
+  "launch_receipt": "/absolute/new/chat-launch.json",
+  "terminal_receipt": "/absolute/new/chat-terminal.json",
+  "required_conversation_turns": 5,
+  "maximum_dispatches_per_turn": 15,
+  "maximum_total_dispatches_per_provider": 75,
+  "known_limitations": ["Alpha evaluation only", "src/main/resources is excluded"]
+}
+```
+
+launcher exclusive-create 两个 private SQLite repositories，在 listener 构造前写 launch receipt，固定绑定 `127.0.0.1:8765`，停止后写
+terminal receipt。launch receipt 必须仍是 attempt/tool/cognition/Source/credential/dispatch/listener 0；terminal receipt 密封两条 route 的
+Disclosure/model-boundary audits 与 DeepSeek transport Session audit。当前实现尚未把 Ark transport-level Session audit 接入 terminal receipt，也尚未用 current actual
+artifact 启动真实 Provider/browser，所以状态只是 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，不是 live PASS。
 
 已实现兼容 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：
@@ -111,9 +178,8 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_alpha_
 ```
 
 下面的 `SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1` 是当前单 DeepSeek launcher 的已实现兼容格式，不符合 ADR-017 的透明双 route
-目标，不能用于宣称恢复版本 PASS。目标 Session Configuration 必须升级为新 schema，并把 Ark、DeepSeek 两条 route 的 exact
-Conformance、Qualification、credential reference、disclosure scope 和各自 audit output 作为有序 closed collection 密封；其产品实现与
-测试仍待 Slice1 闭合。现有 `@1` configuration 是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，并且根对象恰好包含下列字段；四类路径、
+目标，不能用于宣称 Chat 恢复版本 PASS。新 Chat 必须使用上面的独立 artifact schema，不能把兼容 `@1` 追认为双 route Session。
+兼容 `@1` configuration 是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，并且根对象恰好包含下列字段；四类路径、
 排除项、Snapshot 和已知限制都必须是非空无重复数组：
 
 ```json
