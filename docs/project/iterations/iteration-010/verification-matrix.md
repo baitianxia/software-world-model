@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101]
 code: []
 tests: []
 iteration: ITER-010
@@ -24,7 +24,8 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
-PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / REAL_RUNTIME_NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / CURRENT_QUALIFICATION_NOT_LOADED /
+NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
 
@@ -103,8 +104,21 @@ non-starting fixed composition 将 exact product tree/commit、Chat Binding、ev
 factory、Conversation Service 和 Browser Application 绑定在一起。预检不创建 attempt，不解析 credential，不读取 Source，不启动 listener，也不
 调用 Provider；公开 `swm-engineering-chat` 仍是 Access-only launcher。相关定向命令实际 `76/76 PASS`，`compileall`、`py_compile` 与
 `git diff --check` 同时通过；没有外部网络、Provider/model、listener/browser、mall Source/resources、credential 或 Production Activation。
-因此状态只增加 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`；真实 Ark/DeepSeek Adapter/transport/credential-reference、Source/World Model
-runtime、fixed command Session wiring、资格与五轮 mall Chat 仍为 `NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
+因此在该 evidence point，状态只增加 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`；真实 Ark/DeepSeek Adapter/transport/credential-reference、
+Source/World Model runtime、fixed command Session wiring、资格与五轮 mall Chat 仍为 `NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`。下节记录
+随后形成的 Provider runtime composition；所有 live verdict 保持不变。
+
+## Current local Provider-runtime composition evidence
+
+`FINDING-010-101` 将已验证 typed Conformance identity 转换为 exact Agent model configuration，并使用生产 Ark/DeepSeek Adapter、
+credential-lazy direct transport、Model Gateway、Session-scoped Disclosure Authorizer 和 closed Agent/Reviewer model boundary。两条 runtime
+生成 distinct attempt dependencies 并接入上一节 non-starting route/Browser composition；构造不调用 credential resolver、不建 TLS/socket、
+不 prepare Gateway、不创建 Turn 或 Provider dispatch，公开 receipt 也不投影 secret reference。
+
+新增 3 个 runtime 案例后的相关组合实际 `79/79 PASS`。这些测试使用本地构造的 typed qualification identity，没有加载 current sealed
+Conformance 文件，也没有外部网络、Provider/model、credential、listener/browser、mall Source/resources 或 Production Activation。因此状态
+只增加 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；current qualification、published World Model、exact Source Profile/Worker、两个
+private Gateway repositories、fixed command Session 与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
 
 ## Pre-freeze implementation evidence
 

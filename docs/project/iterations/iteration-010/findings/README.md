@@ -256,5 +256,8 @@ iteration: ITER-010
 - [FINDING-010-100](FINDING-010-100.md)：Application-owned Ark→DeepSeek route 现以 typed owner classification、两个隔离 full-chain
   attempt、committed Work State repository、logical Turn 分账与 late quarantine 形成本地组合候选；固定组合预检保持全部 I/O 为 0，真实
   Adapter/transport/credential、Access-only 命令切换和五轮 live Chat 仍未资格化或执行。
+- [FINDING-010-101](FINDING-010-101.md)：生产 Ark/DeepSeek Adapter、credential-lazy transport、Model Gateway、Session Disclosure 与
+  Conversational Agent model boundary 已接入双 route 的 non-starting composition；79/79 本地组合通过，但 current sealed Conformance、
+  Source/World Model runtime、fixed command Session 和 live 尚未加载或执行。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

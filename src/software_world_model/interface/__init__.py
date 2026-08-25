@@ -19,6 +19,11 @@ _EXPORT_MODULES = {
     "EngineeringChatProviderLauncherReceipt": ".engineering_chat_provider_launcher",
     "PreparedEngineeringChatProviderLauncher": ".engineering_chat_provider_launcher",
     "prepare_engineering_chat_provider_launcher": ".engineering_chat_provider_launcher",
+    "EngineeringChatProviderModelRuntime": ".engineering_chat_provider_runtime",
+    "create_ark_engineering_chat_provider_model_runtime": ".engineering_chat_provider_runtime",
+    "create_deepseek_engineering_chat_provider_model_runtime": ".engineering_chat_provider_runtime",
+    "engineering_chat_ark_model_configuration": ".engineering_chat_provider_runtime",
+    "engineering_chat_deepseek_model_configuration": ".engineering_chat_provider_runtime",
     "EngineeringChatBrowserApplication": ".engineering_chat_browser",
     "PreparedEngineeringChatAccess": ".engineering_chat_alpha_cli",
     "prepare_engineering_chat_access": ".engineering_chat_alpha_cli",
@@ -90,6 +95,13 @@ if TYPE_CHECKING:
         PreparedEngineeringChatProviderLauncher,
         prepare_engineering_chat_provider_launcher,
     )
+    from .engineering_chat_provider_runtime import (
+        EngineeringChatProviderModelRuntime,
+        create_ark_engineering_chat_provider_model_runtime,
+        create_deepseek_engineering_chat_provider_model_runtime,
+        engineering_chat_ark_model_configuration,
+        engineering_chat_deepseek_model_configuration,
+    )
     from .engineering_chat_alpha_cli import (
         PreparedEngineeringChatAccess,
         prepare_engineering_chat_access,
@@ -155,6 +167,11 @@ __all__ = [
     "EngineeringChatProviderLauncherReceipt",
     "PreparedEngineeringChatProviderLauncher",
     "prepare_engineering_chat_provider_launcher",
+    "EngineeringChatProviderModelRuntime",
+    "create_ark_engineering_chat_provider_model_runtime",
+    "create_deepseek_engineering_chat_provider_model_runtime",
+    "engineering_chat_ark_model_configuration",
+    "engineering_chat_deepseek_model_configuration",
     "PreparedEngineeringChatAccess",
     "prepare_engineering_chat_access",
     "EngineeringQuestionBrowserApplication",

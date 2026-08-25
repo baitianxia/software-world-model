@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-provider-route-composition-local-candidate-next-real-runtime-freeze`
+- Worktree status: `iteration-010-slice-001-provider-runtime-composition-local-candidate-next-session-runtime-freeze`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-access-pass-agent-evidence-model-boundary-and-provider-route-composition-local-candidates-real-runtime-not-attested-not-qualified-not-live-production-not-activated`
+- Live model path: `pdr-004-access-pass-agent-evidence-route-and-provider-runtime-composition-local-candidates-current-qualification-not-loaded-not-qualified-not-live-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

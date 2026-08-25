@@ -5,8 +5,8 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
+code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # 非敏感模型配置
@@ -33,14 +33,13 @@ reference 和 disclosure scope。用户提交一个 Turn；Ark Agent attempt 无
 透明地以独立 DeepSeek attempt 从受信 Turn input、relevant Conversation Context 和 exact Cognition 重新执行完整 Agent 链。Provider 对
 用户和上层 Agent 语义透明；用户不选择 Provider、不重提问题或新建 Conversation，同一 attempt 内也不继承另一 Provider 的隐藏状态。
 
-**当前实现偏差：** 现有 Engineering QA Alpha Session Configuration 仍只接受一份 DeepSeek Conformance，并形成单 Provider session；
-透明双 route、双 attempt、late-result quarantine 和 Turn 汇总尚未实现或资格化。它也没有实现
-`CONVERSATIONAL_ENGINEERING_AGENT@1` 的产品接线和语义多轮 Chat。Ark Adapter 已存在不等于产品 route 可用，实现缺口也不算 Ark
-unavailable。Access 已为 `ACCESS_BROWSER_PASS`；Application-owned Agent executor、跨 Turn Work State 与 typed tool/Review/Delivery
-状态机为 `AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE`。单 Provider Agent/Reviewer 的 configuration、closed role
-input/output、逐调用 Disclosure/Gateway receipt 与 non-dispatching candidate preflight 已形成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`；该 preflight
-不解析 credential，也固定返回 `ready_for_live=false`。双 route/fallback、真实 Adapter/transport、fixed Provider launcher 仍为
-`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。在真实资格和 live audit 闭合前不得标成 PASS。
+**当前实现偏差：** 现有 Engineering QA Alpha Session Configuration 仍只接受一份 DeepSeek Conformance，并形成单 Provider session；它
+不定义 `CONVERSATIONAL_ENGINEERING_AGENT@1` 产品 Session。新 Chat 已有 Application-owned 双 route/attempt/late quarantine/Turn 汇总与
+non-starting Browser composition；`FINDING-010-101` 又把生产 Ark/DeepSeek Adapter、credential-lazy transport、Model Gateway、Disclosure
+Authorizer 和 Agent/Reviewer model boundary 接入，状态为 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。构造保持 credential/network/
+dispatch 0，但测试没有从 current sealed Conformance 文件加载 qualification，Source/World Model runtime 与 fixed command Session 也未接线，
+所以仍为 `CURRENT_QUALIFICATION_NOT_LOADED / FIXED_COMMAND_SESSION_NOT_WIRED / NOT_QUALIFIED / NOT_LIVE`。实现缺口不算 Ark unavailable，
+在真实资格和 live audit 闭合前不得标成 PASS。
 
 ```bash
 PYTHONPATH=src python3 -m software_world_model.interface.provider_cli status

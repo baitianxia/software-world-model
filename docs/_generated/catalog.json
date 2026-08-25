@@ -3102,6 +3102,22 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-100.md"
   },
   {
+    "id": "FINDING-010-101",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "security",
+      "interface",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-101.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5725,7 +5741,8 @@
     ],
     "derived_from": [
       "FINDING-010-092",
-      "FINDING-010-100"
+      "FINDING-010-100",
+      "FINDING-010-101"
     ],
     "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md"
   },

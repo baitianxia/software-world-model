@@ -5,9 +5,9 @@ status: accepted
 authority: normative
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
-derived_from: [FINDING-010-092, FINDING-010-100]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_provider_launcher.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
+derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # ADR-017：对用户透明的合格 Provider 有序路由
@@ -61,6 +61,10 @@ request 不重试；但既有规则把一次 Session 固定为单一 Provider，
   logical Turn 分账、duplicate-cost risk 和 non-starting fixed Browser composition 形成确定性本地候选。该候选没有执行真实 Adapter/transport、
   credential、Provider 或 Browser；Operations 必须标记为 `LOCAL_COMPOSITION_CANDIDATE / REAL_RUNTIME_NOT_ATTESTED / NOT_QUALIFIED /
   NOT_LIVE`，不得宣称透明 fallback 已可供用户使用。
+- `FINDING-010-101` 已把生产 Ark/DeepSeek Adapter、credential-lazy direct transport、Model Gateway、Session Disclosure Authorizer 和
+  Conversational Agent model boundary 接入同一 non-starting composition，形成 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。该证据只用
+  本地构造的 typed qualification identity，未加载 current sealed Conformance、Source/World Model Session 或执行 dispatch，故仍不得写成
+  qualified/live 产品 route。
 
 ## Rejected alternatives
 
