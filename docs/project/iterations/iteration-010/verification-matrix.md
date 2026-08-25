@@ -23,10 +23,11 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `V-ALPHA-ACCESS-001` PDR-004 pre-execution revision → `V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001` →
 `V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
-`CHAT_ACCESS_LOCAL_CANDIDATE / AGENT_NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，所有 current Case 均为 NOT-RUN，等待各自执行证据。开发授权不等于
-Provider/live、hidden、后续 Slice 或 Production 授权。
+`CHAT_ACCESS_ONLY / ACCESS_BROWSER_PASS / AGENT_NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
+Production 授权。
 
-## Current Chat Access local candidate evidence
+## Current Chat Access evidence
 
 `FINDING-010-095` 已把首个 Access 纵切实现为独立 `swm-engineering-chat`：Application 持有不可变 Conversation/Revision/Context、Message
 和 Turn，页面展示完整历史与“新对话”；Provider 未配置时提交仍形成真实失败 Turn，dispatch/retry 为 0，Conversation 保持 `ACTIVE`。
@@ -34,9 +35,13 @@ Provider/live、hidden、后续 Slice 或 Production 授权。
 `127.0.0.1:8765`，不装载 Provider/credential/Source/World Model payload。新 Access 定向 17/17、既有 QA 相邻兼容回归 18/18、Browser
 JavaScript syntax、四模块 compile 和 diff check 均 PASS。
 
-这些只是本地确定性候选证据：没有启动真实 listener、没有 browser handoff、没有 Provider/model call，也没有逐轮 Agent/Evidence/Answer/
-Review。因此 `V-ALPHA-ACCESS-001` 仍为 `NOT-RUN / blocking`；它必须在 clean product freeze 和新的 exact live/browser grant 后按真实固定命令
-执行。该执行即使 PASS 也不产生 Chat/Quality/XD PASS。
+`FINDING-010-096 / ITER-010-RESULT-V-ALPHA-ACCESS-001` 随后在 clean exact
+`cf2883bef861e0345afc36415d4216f943d31cf4` / tree `a720afbb36e05410d8e9e830b4f51f261e494852` 上按固定命令启动真实 listener，并用
+in-app Browser 完成普通用户交互。第一 Conversation 连续两个失败 Turn 后为 `revision 3 / ACTIVE` 且完整四条历史仍在；“新对话”产生不同
+identity、`EMPTY CONTEXT` 和空消息历史，隔离探针只显示新 Conversation 的两条消息。最终 health 为 Conversation 2、Turn 3、Provider
+dispatch 0，browser console 无 warning/error，Production Activation `NOT_EXECUTED`；listener exit 0 且端口已关闭。因此
+`V-ALPHA-ACCESS-001` 为 `PASS / access-only`。本次没有 Provider/model、Source/World Model、源码/resources 或主 Agent 执行，不能产生
+Chat/Quality/XD PASS。
 
 ## Pre-freeze implementation evidence
 
@@ -324,7 +329,7 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
-| V-ALPHA-ACCESS-001 | PDR-004 下在答案质量验收前先交付真实、可操作 Chat Web | product / access | 固定启动命令、loopback 页面、消息历史、“新对话”、Provider/失败状态；最多一个 Provider 前本地或 Mock Access smoke | 页面无需认证；能建立/继续/新建 Conversation 并真实提交 Turn；明确“质量未验收/非生产”；Provider 未配置/未资格/失败如实显示而不阻塞页面；完成后立即把命令、URL、版本和限制交给用户，不等待 Chat/Quality/Comparison；静态回放不通过 | `FINDING-010-095` local candidate：新 Access 17/17、相邻兼容 18/18 PASS；listener/browser 未执行，不能追认 Case | NOT-RUN / blocking |
+| V-ALPHA-ACCESS-001 | PDR-004 下在答案质量验收前先交付真实、可操作 Chat Web | product / access | 固定启动命令、loopback 页面、消息历史、“新对话”、Provider/失败状态；最多一个 Provider 前本地或 Mock Access smoke | 页面无需认证；能建立/继续/新建 Conversation 并真实提交 Turn；明确“质量未验收/非生产”；Provider 未配置/未资格/失败如实显示而不阻塞页面；完成后立即把命令、URL、版本和限制交给用户，不等待 Chat/Quality/Comparison；静态回放不通过 | `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`：clean `cf2883b…` 固定 listener + in-app Browser；同会话两次失败仍 ACTIVE/历史完整，新会话不同 identity/EMPTY CONTEXT/旧消息不泄漏；2 Conversation、3 Turn、Provider dispatch 0、console clean、Production 未执行；listener 已优雅停止 | PASS / blocking |
 | V-TIMEBOX-001 | 体验优先、根因优先与轻量 live-attempt 纪律成立 | project / delivery | Slice 授权后首个产品变化时间、page/alpha/hard-stop 时间、qualification/smoke/full-regression 计数、sealed version/question/provider dispatch audit、failure signatures、最早偏差层、可证伪根因假设、本地最小复现、两个未参与修复的相邻案例、用户可见增量 | 60/180/240 检查点可核对；本轮已超过 hard stop 并停止 scope expansion/external batch；首次体验前 qualification≤1、smoke≤1、full regression=0 且仅跑 targeted impact/startup/safety；无根因假设不得改 Prompt/Schema/Contract；本地最小复现与两个相邻案例通过后才跑一题 canary；同签名只修一次，复现则架构职责评审；连续两次无用户可见增量停止外部重跑；full regression 只在 Alpha CONTINUE 后 hardening 与正式验收前 | 用户报告约14小时无新体验；PDR-003 hard-stop/root-cause recovery active | FAIL / blocking |
 | V-TIMEBOX-CHAT-001 | PDR-004 下体验优先、根因优先与逐 Turn live-attempt 纪律成立 | project / delivery | 四个微检查点的 60/180/240/360/480 审计与逐点用户交付；Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付；qualification/Access-smoke/full-regression 计数；Conversation/Turn/provider dispatch、failure signature、根因与用户可见增量 | 60 分钟页面；180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL；181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据；240 分钟绝对停止；360 分钟五轮方向证据；480 分钟独立比较与用户判向；每个检查点立即交付用户；三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`；计划/测试/文档完成不算用户可见增量；错过时交付最后可运行版本与最早根因并停止扩张；每个 Provider-dispatched Turn 分别计 live attempt 且不削减证据/Citation/Review | PDR-004 current target；not-executed | NOT-RUN / blocking |
 | V-CHAT-EXPERIENCE-001 | 同一产品成为可持续体验的多轮 Chat Alpha | product / browser | 一条固定启动命令；loopback；固定工程/exact revision；一个冻结五轮 Conversation 脚本；“新对话”泄漏负测 | 无认证；体验者不拼装内部参数；消息历史显示语义 follow-up/correction/deepening/summary；失败只关闭当前 Turn；新 Conversation 必须澄清省略指代且不继承旧 Context/Evidence/provider memory；不得反向阻塞已完成的页面用户交付 | PDR-004 current target；not-executed | NOT-RUN / blocking |
@@ -350,6 +355,7 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | V-PRE-CHAT-004 | 本次用户收据只恢复 Slice1 开发而不扩大外部执行权限 | readiness / authorization | `codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`；Readiness；Manifest；Current | Slice1 是唯一 active/coding input；授权产品/System 代码与本地确定性验证；Provider/model、credential、动态源码披露、live browser、hidden、Slice2/3、Production 仍未授权 | Readiness/Manifest/Current/Slice1 exact authorization fields | PASS / readiness blocking |
 | V-PRE-CHAT-005 | Codex 外部基线与 World Model 因果消融已严格分开 | readiness / comparison | current Codex external baseline；same-agent source-only；same-agent full-cognition + source；盲化独立评估协议 | Codex 保留实际客户端/model/reasoning/tools/权限且不是 Oracle/裁判；仅两个系统臂共享 Agent/model/tool/budget/cache/Reviewer；独立评估者技术判读，用户决定产品方向 | Proposal A5、Manifest comparison bindings、V-COMP-ALPHA-001 | PASS / readiness blocking |
 | V-PRE-CHAT-006 | A1—A6、REWORK 历史、根因优先和体验后夯实边界机械一致 | readiness / architecture + delivery | current A1—A6 catalog；historical A1—A5/Case/Result；PDR-003/004；rework/experience policies | 历史证据不改写；新 Chat Gate 不复用历史 Case；失败先定位最早偏差；同签名一次修复上限；跨重启、第二工程、完整矩阵和 full regression 延至用户 CONTINUE 后 | Manifest cutover、Readiness、Verification、docs gate | PASS / readiness blocking |
+| V-PRE-CHAT-007 | Access browser grant 精确收窄且已消费 | execution / authorization | `codex-user-message:sha256:7256a886d863712b27a7012c1c791eaca91c98f7183f732b463ce98543a469b6`；exact `cf2883bef861e0345afc36415d4216f943d31cf4`；`ITER-010-RESULT-V-ALPHA-ACCESS-001` | 只启动 `127.0.0.1:8765` 并执行 V-ALPHA 本机浏览器；Provider/model、源码/resources、Production 均禁止；完成后 listener 停止；不扩展后续 live 权限 | Result、health counters、shutdown/port check | PASS / consumed |
 | V-BASELINE-001 | Slice1 实际开发 subject 仍是 exact baseline 且没有未记录产品变化 | development / baseline | Git ancestry/tree、worktree、predecessor Result | baseline 可复现；任何变化归属 Slice1；旧运行 identity 不继承 | not-executed | NOT-RUN / blocking |
 | V-ARCH-001 | 新模式先取得正式架构与 Contract Owner，世界模型概念及旧模式边界不被静默改写 | architecture / contract | FINDING-010-001/002、SYS-ADR-016、Product Success、runtime/Agentic/Evidence/World Model/Response/Source/Security/Browser、Manifest fileset、docs gate/tests | ENGINEERING_QA 明确为 adaptive investigation；World Model 保持持久外部认知；strict WORLD_MODEL source-off 与 DIRECT identity 保留 | not-executed | NOT-RUN / blocking |
 | V-QINTENT-001 | Question Understanding 忠实表达用户目标、受众、抽象层级、物质结论和证据需求 | application / contract | 用途/架构/运行/故障/影响/实现、多条件、改述、不同受众 fixture | 原问题约束不丢失/新增；无题型/工程/关键词/符号路由；输出 schema 可审计 | not-executed | NOT-RUN / blocking |

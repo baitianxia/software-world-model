@@ -244,5 +244,7 @@ iteration: ITER-010
 - [FINDING-010-095](FINDING-010-095.md)：新的独立 Chat Access 已以 server-owned Conversation/Turn/Context、消息历史、新对话隔离、
   0-dispatch Provider 失败真相和固定 loopback 命令形成本地确定性候选；真实 listener/browser 尚未执行，故 `V-ALPHA-ACCESS-001`
   继续为 NOT-RUN，旧 QA 入口保持兼容身份。
+- [FINDING-010-096](FINDING-010-096.md)：clean `cf2883b…` 上真实 fixed-command listener 和 in-app Browser 证明失败 Turn 隔离、完整历史、
+  新 Conversation 消息隔离及零 Provider 调度成立；`V-ALPHA-ACCESS-001` 更新为 `PASS / access-only`，所有 Chat/Quality 后续 Case 仍 NOT-RUN。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

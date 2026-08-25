@@ -3023,6 +3023,21 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-095.md"
   },
   {
+    "id": "FINDING-010-096",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "interface",
+      "security",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-096.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -4807,6 +4822,22 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/results/slice-001-stop-redirect.md"
+  },
+  {
+    "id": "ITER-010-RESULT-V-ALPHA-ACCESS-001",
+    "kind": "iteration-result",
+    "status": "passed-access-checkpoint",
+    "authority": "execution-evidence",
+    "owners": [
+      "product",
+      "application",
+      "interface",
+      "security",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-alpha-access-001-browser.md"
   },
   {
     "id": "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009",

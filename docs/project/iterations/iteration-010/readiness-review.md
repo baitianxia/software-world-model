@@ -85,7 +85,8 @@ Readiness 权威；`585f02c4…` 对旧单轮 Engineering QA 计划的历史 Rea
 文档同步收据 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 只允许更新
 文档。此后 current System docs、Proposal、Manifest、Slice 和 Verification 已一致冻结下列内容，并由 `f76ba3e8…` 接受。当前 Readiness
 verdict 是 `ACCEPTED`，Iteration/Slice1 为 `authorized / coding_input=true`。此后 `FINDING-010-095` 已形成
-`CHAT_ACCESS_LOCAL_CANDIDATE`；主 Agent、逐轮证据/审核、Provider route、资格和 live 状态仍是
+`CHAT_ACCESS_LOCAL_CANDIDATE`；再后一次仅限 exact Access 的 grant 形成 `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`，真实
+listener/browser 使 `V-ALPHA-ACCESS-001` 成为 `PASS / access-only`。主 Agent、逐轮证据/审核、Provider route、资格和 live Chat 状态仍是
 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
@@ -189,4 +190,6 @@ current Slice1 Gate 是 `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE
 `585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，后续 `32b298de…` 收据恢复当前 Slice1 的
 产品/System 代码与确定性测试；PDR-004 已以 docs-only 收据 `d8239ea7…` 暂停该旧权威，`PROJECT-CURRENT` 不再指向任何 active Slice。
 Agent/Conversation System Owner、Manifest 与五轮 Gate 现已一致，用户以 `f76ba3e8…` 明确接受并授权 Slice1 产品/System 代码与本地
-确定性验证。credential、Provider/model call、动态源码披露、live browser、hidden、Production Activation 和 Slice2/3 仍未授权。
+确定性验证。该收据不授权 credential、Provider/model call、动态源码披露、live browser、hidden、Production Activation 或 Slice2/3；
+后续 `7256a886…` 仅补充 exact `cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。Provider-dispatched Chat、
+源码披露、hidden、Production Activation 和 Slice2/3 仍未授权。

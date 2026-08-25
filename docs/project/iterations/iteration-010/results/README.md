@@ -4,7 +4,7 @@ kind: results-index
 status: completed
 authority: project-evidence
 owners: [quality, project]
-depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PDR-001]
+depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-PDR-001]
 code: []
 tests: []
 iteration: ITER-010
@@ -19,6 +19,9 @@ iteration: ITER-010
 - [V-WEB-001 User Onsite Question](v-web-001-user-onsite-question.md)：用户现场题“登录流程是怎样的？”形成 Review APPROVED Result，3 个
   Citation 全部打开、console clean、10 dispatch 且 retry/switch 0。与公开题合并后 `V-WEB-001` PASS；方法序列主导与登录日志遗漏信号由
   `FINDING-010-027` 保留；旧记录随后把用户要求自行修复的消息解释为 `REDIRECT`。
+- [V-ALPHA-ACCESS-001 Browser Result](v-alpha-access-001-browser.md)：clean `cf2883b…` 上的固定 loopback listener 与本机浏览器交互
+  PASS；同会话失败 Turn 保持 ACTIVE/历史完整，新会话 identity 与消息隔离成立，最终 2 Conversation、3 Turn、Provider dispatch 0、
+  console clean、Production 未执行。它只通过 Access，不通过 Chat/Quality/XD。
 - [SLICE-001 Historical Stop Result](slice-001-stop-redirect.md)：技术 Web/Citation/隔离资产永久保留；扁平 Claim/Review 合同再次产生代码
   走读式默认答案并被 Reviewer 批准，历史答案/审核 Gate FAIL 不变。[PDR-001](../decisions/PDR-001-resume-as-rework.md) 将迭代级决定修订
   为 `REWORK`；后续 `32b298de…` 收据已恢复 ITER-010/Slice1 开发，Slice2/3 未授权。

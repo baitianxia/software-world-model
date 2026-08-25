@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-direction-exploration-first-user-handoff-pending`
+- Worktree status: `iteration-010-slice-001-chat-access-browser-pass-next-chat-alpha-blocked`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-agent-chat-not-implemented-not-qualified-not-live-production-not-activated`
+- Live model path: `pdr-004-access-pass-agent-chat-not-implemented-not-qualified-not-live-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

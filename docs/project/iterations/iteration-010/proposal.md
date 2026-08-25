@@ -81,8 +81,9 @@ Conversation Context 只承载确认目标/约束、指代实体、开放问题�
 首个 Chat canary 是一段五轮连续对话，而不是三道互不相关问题；另加“新对话后省略指代必须澄清”的泄漏负测。三臂更新为 same-agent
 source-only、same-agent full World Model cognition + source、current Codex external baseline。旧编码权威曾由 PDR-004 暂停，`d8239ea7…`
 只授权文档同步；用户现以 `f76ba3e8…` 接受刷新 Readiness 并授权 Slice1 产品/System 代码和本地确定性验证。`FINDING-010-095` 已形成
-`CHAT_ACCESS_LOCAL_CANDIDATE`；主 Agent、逐轮证据/审核和 Provider route 仍保持 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，外部调用与 live
-仍须另行冻结和授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本
+`CHAT_ACCESS_LOCAL_CANDIDATE`；其后一次 exact、零 Provider 的本机 listener/browser grant 已形成
+`ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`，`V-ALPHA-ACCESS-001` 为 `PASS / access-only`。主 Agent、逐轮证据/审核和 Provider
+route 仍保持 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行冻结和授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本
 规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta
@@ -224,4 +225,5 @@ Slice1 编码权威。用户现以
 `codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
 接受基于 planning commit `b66ff9f058b92cebd78d5644ffef042753567b4d` / tree
 `30e437eea83e048e3fb59ddd90a8d1b76242d82c` 的刷新 Readiness，并授权 `ITER-010-SLICE-001` 产品/System 编码与本地确定性验证。
-Provider/model、动态源码披露、live browser、hidden、Slice2/3 与 Production 仍未授权。
+该收据不授权 Provider/model、动态源码披露、live browser、hidden、Slice2/3 或 Production；后续 `7256a886…` 仅补充 exact
+`cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。其余外部执行权限保持未授权。

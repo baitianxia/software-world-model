@@ -136,10 +136,12 @@ product_goal_alignment:
     schema: ENGINEERING_CHAT_EXPERIENCE@1
     case_id: V-CHAT-EXPERIENCE-001
     new_slice_ref: ITER-010-SLICE-001
-    access_scaffold_status: chat-access-local-candidate
+    access_scaffold_status: chat-access-browser-pass
     access_implementation_evidence_ref: FINDING-010-095
-    access_case_status: not-run-blocking
-    listener_browser_execution_status: not-executed
+    access_execution_finding_ref: FINDING-010-096
+    access_execution_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
+    access_case_status: pass-access-only
+    listener_browser_execution_status: passed-and-stopped
     exact_version_visible: true
     repeatable_start: true
     interaction_model: semantic-multi-turn-chat
@@ -369,6 +371,8 @@ experience_delivery_policy:
     - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   historical_results_do_not_satisfy_experience_gate: true
   access_case_id: V-ALPHA-ACCESS-001
+  access_case_status: pass-access-only
+  access_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
   quality_case_id: V-CHAT-QUALITY-001
   chat_case_id: V-CHAT-001
   alpha_comparison_case_id: V-COMP-ALPHA-001
@@ -390,6 +394,11 @@ experience_delivery_policy:
   pre_first_experience_qualification_limit: 1
   pre_first_experience_smoke_question_limit: 1
   pre_first_experience_full_regression_allowed: false
+  pre_first_experience_qualification_count: 0
+  pre_first_experience_access_smoke_run_count: 1
+  pre_first_experience_zero_provider_turn_submission_count: 3
+  pre_first_experience_full_regression_count: 0
+  pre_first_experience_access_smoke_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
   failure_diagnosis_order: source-truth-world-model-cognition-conversation-or-task-understanding-agent-work-state-and-plan-tool-observation-and-evidence-answer-independent-review-web
   earliest_divergence_required: true
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
@@ -552,8 +561,10 @@ conversational_engineering_agent:
   skill_market_before_direction_confirmation_required: false
   persistence_across_restart_before_direction_confirmation_required: false
   full_regression_before_direction_confirmation_allowed: false
-  access_scaffold_status: chat-access-local-candidate
+  access_scaffold_status: chat-access-browser-pass
   access_implementation_evidence_ref: FINDING-010-095
+  access_execution_finding_ref: FINDING-010-096
+  access_execution_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
   agent_execution_status: not-implemented-not-qualified-not-live
   status: target-not-implemented-not-qualified
 

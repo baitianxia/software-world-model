@@ -4,7 +4,7 @@ kind: project-decision
 status: accepted
 authority: project-decision
 owners: [product, project, architecture, engineering, quality, ai, interface, security]
-depends_on: [ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-093, FINDING-010-094, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
+depends_on: [ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, ITER-010-RESULT-V-ALPHA-ACCESS-001, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
@@ -106,4 +106,7 @@ Provider/model、credential、动态源码披露、live browser、hidden、Slice
 
 重新授权后，`FINDING-010-095` 已形成不接 Provider 的 `CHAT_ACCESS_LOCAL_CANDIDATE`：独立固定命令、server-owned
 Conversation/Turn/Context、消息历史、“新对话”和失败 Turn 隔离通过本地定向验证。它不改变本 PDR 对主 Agent、逐轮证据/审核、Provider
-route 和真实体验的要求；listener/browser 仍未执行，`V-ALPHA-ACCESS-001` 仍为 NOT-RUN，模型/live 权限仍须 freeze 后另取。
+route 和真实体验的要求。随后用户以仅限 exact `cf2883bef861e0345afc36415d4216f943d31cf4` 本机 Access 的 grant 执行 listener/browser；
+`ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096` 证明同会话连续失败、完整历史、新 Conversation 隔离、Provider dispatch 0 与非生产边界，
+因此 `V-ALPHA-ACCESS-001` 为 `PASS / access-only`。该 grant 没有授权或执行 Provider/model、源码/resources、五轮 Chat 或 Production，
+本 PDR 的 Agent/Quality/Provider 要求保持不变。

@@ -38,8 +38,11 @@ product_goal_slice_gate_case_ids: [V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHA
 
 `FINDING-010-095` 已形成第一检查点的本地候选：独立 `swm-engineering-chat` 固定命令、Application-owned Conversation/Turn/Context、完整
 消息历史、“新对话”、失败 Turn 隔离和 loopback/Origin/JSON/input 边界通过新 Access 17/17 与旧 QA 相邻兼容 18/18。该证据没有启动
-listener/browser，也没有 Provider/model/Source/World Model dispatch，故状态只是 `CHAT_ACCESS_LOCAL_CANDIDATE`，
-`V-ALPHA-ACCESS-001` 继续 NOT-RUN。下一动作是 clean freeze 后取得 exact live/browser grant 并立即交付，不增加内部范围。
+listener/browser，也没有 Provider/model/Source/World Model dispatch，因此当时状态只是 `CHAT_ACCESS_LOCAL_CANDIDATE`。随后 exact
+`cf2883bef861e0345afc36415d4216f943d31cf4` 获得仅限本机 Access 的一次性 grant；`ITER-010-RESULT-V-ALPHA-ACCESS-001 /
+FINDING-010-096` 已通过真实 fixed-command listener 和 in-app Browser 验证同会话失败 Turn 隔离、完整历史、新 Conversation 隔离与
+Provider dispatch 0，`V-ALPHA-ACCESS-001` 现为 `PASS / access-only`。下一动作只进入尚未实现/资格化的同一冻结五轮 Chat canary，不由
+Access PASS 推导 Agent、Provider、Chat 或 Quality PASS。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为
@@ -60,14 +63,16 @@ Slice2/3、hidden、Production Activation 或复用旧 live grant。
 
 [PDR-003](../decisions/PDR-003-experience-first-provider-cost-recovery.md) 记录了当前恢复约束：用户报告本轮约 14 小时仍无新体验版本且
 DeepSeek token 消耗过多。既有授权不再允许继续无界扩张 Prompt、Schema 或 Contract；PDR-004 恢复只做 Chat Access、Provider route、失败真实性、最多一次 Provider 前本地或 Mock Access smoke 与
-五轮 live Conversation 所需的最小工作。Ark 为 primary；同一 logical Turn 的 Ark attempt 在密封 terminal 后，仅可按预授权 route 自动启动
+五轮 live Conversation 所需的最小工作。该一次 Access smoke 额度已由 `V-ALPHA-ACCESS-001` 的 browser run 消费，不再追加。Ark 为
+primary；同一 logical Turn 的 Ark attempt 在密封 terminal 后，仅可按预授权 route 自动启动
 一次独立 DeepSeek fallback attempt，用户无需选择模型、重提问题或重启 session。
 
 PDR-004 是当前最高优先级覆盖：旧授权已暂停，新目标是“软件世界模型 + 主工程 Agent”双核心与真正多轮 Chat；新默认 Owner 为
 ADR-018/Engineering Conversation Contract。文档同步收据 `d8239ea7…` 本身不授权产品代码或 live；用户现以
 `codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
 接受刷新 Readiness 并授权本 Slice 产品/System 编码与本地确定性验证。下文标明“历史 / non-normative”的段落只保存已发生事实；
-Provider/model、动态源码披露、live browser、hidden、Slice2/3 与 Production 仍未授权。
+该收据不授权 Provider/model、动态源码披露、live browser、hidden、Slice2/3 或 Production；后续 `7256a886…` 只补充 exact
+`cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。Provider-dispatched Chat 与其余外部权限仍未授权。
 
 恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、
 逐轮 Request/Evidence/Answer/Review/Delivery 和新对话隔离。首次方向 live canary 本身是一段五轮 Conversation；PDR-003 的体验前单次

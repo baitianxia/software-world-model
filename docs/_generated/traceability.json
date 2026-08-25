@@ -3816,6 +3816,23 @@
       "tests"
     ]
   },
+  "ITER-010-RESULT-V-ALPHA-ACCESS-001": {
+    "path": "docs/project/iterations/iteration-010/results/v-alpha-access-001-browser.md",
+    "code": [
+      "pyproject.toml",
+      "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/interface/engineering_chat_browser.py",
+      "src/software_world_model/interface/engineering_chat_browser_ui.py",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_engineering_conversation.py",
+      "tests/test_engineering_chat_browser.py",
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_engineering_qa_alpha_cli.py"
+    ]
+  },
   "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009": {
     "path": "docs/project/iterations/iteration-010/results/v-web-000-live-run-009.md",
     "code": [
