@@ -113,5 +113,7 @@ route 和真实体验的要求。随后用户以仅限 exact `cf2883bef861e0345a
 
 `FINDING-010-097` 又在不调用 Provider/model 或来源的条件下形成 `AGENT_EXECUTOR_LOCAL_CANDIDATE`：Application-owned bounded loop、同一
 Conversation 跨 Turn Work State revision、typed tool Observation/Package、fresh Review Finding 路由和 exact Delivery binding 已通过
-确定性 Gate。该进展满足本 PDR 的实现方向但不满足 live Gate；真实 World Model/Source、完整 Ledger/Citation、Provider/Disclosure/
-fallback、launcher 与五轮 Chat 仍须 clean freeze、独立授权和执行。
+确定性 Gate。`FINDING-010-098` 随后接入 World Model/Source/Ledger/Citation trusted tools；`FINDING-010-099` 又为单 Provider
+Agent/Reviewer 闭合 separate closed inputs、逐 dispatch Disclosure/Gateway receipt、失败计数和 non-dispatching candidate preflight，状态为
+`EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE`。这些进展满足本 PDR 的实现方向但不满足 live Gate；ADR-017 fallback、
+真实 Provider/fixed launcher/Citation browser wiring 与五轮 Chat 仍须 clean freeze、独立授权和执行。

@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099]
 code: []
 tests: []
 iteration: ITER-010
@@ -23,7 +23,8 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `V-ALPHA-ACCESS-001` PDR-004 pre-execution revision → `V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001` →
 `V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
-`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / ADAPTERS_NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
+FALLBACK_NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
 
@@ -67,8 +68,26 @@ Package 两个分区。
 
 新增 4 个 adapter 案例与 Agent/Conversation/Browser/旧 QA 相邻组合实际 `61/61 PASS`；Local Git 只读取测试生成的临时仓库。没有读取
 mall 源码/resources，没有 listener/browser、Provider/model、credential、外部网络或 Production Activation。因此状态只增加
-`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；Provider-backed Agent/Reviewer、Disclosure/fallback、Citation browser projection、fixed launcher 与
-五轮 mall Chat 仍未集成或资格化，下面所有 verdict 保持不变。
+`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；当时 Provider-backed Agent/Reviewer、Disclosure/fallback、Citation browser projection、fixed launcher 与
+五轮 mall Chat 尚未集成或资格化；下节记录随后形成的单 Provider model-boundary 候选，所有 live verdict 仍保持不变。
+
+## Current local model-boundary and candidate-preflight evidence
+
+`FINDING-010-099` 为 primary Agent 与 independent Reviewer 分别密封 closed no-tools input/output。每个角色 input 绑定 current Turn、
+relevant Conversation Context、Work State/Observation 或 Package/Draft、exact tool proposal contract、Provider configuration、完整输入与逐 leaf
+Disclosure digest；session authority 不作为模型内容发送，credential reference 不进入 rendered message。Provider output 不能自报 call ID，
+Gateway call identity 由可信 Adapter 注入 proposal，并以 typed receipt 贯穿 Application Turn 与 Browser developer view。
+
+真实本地 `ModelGateway + SQLite + OFFLINE_FIXTURE Adapter` 证明：binding drift 在 dispatch 前计 0；fresh offline Adapter call 计 1 但不能
+取得 live eligibility；outcome unknown 计 1 且 retry 0；repository replay 计 0。Gateway `preflight` 不 prepare、不 dispatch、不读取 Secret。
+新的 candidate preflight 只核对调用者已解析的 product commit/tree、Chat binding、World Model/Source/evidence tools、单 Provider config 和
+Session Disclosure；listener、credential、Source read、Provider dispatch 均保持 0，且 `ready_for_live=false` 明示 fallback、fixed launcher
+和 live 尚未闭合。
+
+Model/Agent/candidate/Conversation/Browser 与旧 QA 相邻组合实际 `86/86 PASS`，相关 `py_compile` 与 `git diff --check` PASS。本次没有
+外部网络、Provider/model、listener/browser、mall Source/resources、credential 或 Production Activation。因此状态只增加
+`MODEL_BOUNDARY_LOCAL_CANDIDATE`；ADR-017 Ark→DeepSeek 独立 full-chain fallback、真实 Adapter/transport/fixed launcher、Citation browser
+projection 与五轮 mall Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
 
 ## Pre-freeze implementation evidence
 

@@ -203,7 +203,8 @@ Application 重算 observation membership、challenged entry/evidence class 与 
 run-032 保持 Q1 PASS、Q2 FAIL、Q3 post-dispatch OUTCOME_UNKNOWN、66,000-byte Provider-before-call PASS，不得追认。
 `FINDING-010-087` 已闭合 source-reference resolver 与 layer precedence 的 deterministic Gate；新的 clean/fresh live 仍须独立执行。
 
-ADR-018 所定义的新默认架构已有 `ACCESS_BROWSER_PASS` 与确定性 `AGENT_EXECUTOR_LOCAL_CANDIDATE`，但真实 World Model/Source、完整
-Ledger/Citation、Provider/Disclosure/fallback 和产品 wiring 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。迁移必须复用本合同已经证明的 exact revision、World Model Cognition、
+ADR-018 所定义的新默认架构已有 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE /
+MODEL_BOUNDARY_LOCAL_CANDIDATE`，但 ADR-017 fallback、真实 Provider/fixed launcher/Citation wiring 仍为
+`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。迁移必须复用本合同已经证明的 exact revision、World Model Cognition、
 Source Profile、Broker/Worker、Ledger/Package、Citation、Provider disclosure、安全和独立 Review 资产，但不得继续把固定五角色/双 focus
 工作流作为新 Agent 的产品合同。

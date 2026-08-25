@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-AGENTIC-TASK]
-code: [src/software_world_model/application_services/natural_task.py, src/software_world_model/application_services/task_control.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/interface/agentic_runtime.py]
-tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py, tests/test_conversational_engineering_agent.py, tests/test_engineering_conversation.py]
+code: [src/software_world_model/application_services/natural_task.py, src/software_world_model/application_services/task_control.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/agentic_runtime.py]
+tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_conversation.py]
 ---
 
 # Agentic Task
@@ -61,5 +61,7 @@ Task Control 是 Conversation/Task、Turn/Revision、Agent Work State、Invocati
 如实记录，不关闭整个 Conversation。Agent 调度和上下文压缩算法由代码与测试定义；工具目录、operation allowlist、trace/progress 语义
 和失败状态由 owning Contract 固定，不能只在 prompt 中声明。新 Chat Access 已通过真实 browser Case；对话式主 Agent 的 Application-owned
 bounded executor、跨 Turn Work State、typed tool/Review/Delivery ports 与 fail-closed 本地状态机已有确定性证据，状态为
-`AGENT_EXECUTOR_LOCAL_CANDIDATE`。真实 Provider、World Model/Source Broker/Worker、完整 Ledger/Citation 与产品 wiring 仍为
-`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，不能由本地 fake-port 或 Access 状态推导 Agent 已完成真实执行。
+`AGENT_EXECUTOR_LOCAL_CANDIDATE`。World Model/Source/Ledger tool adapter 与单 Provider Agent/Reviewer 的 closed role contract、one-use
+Disclosure/Gateway receipt 已分别形成 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE`。ADR-017 fallback、真实 Provider/
+fixed launcher/Citation wiring 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，不能由本地 fake/offline port 或 Access 状态推导 Agent 已
+完成真实执行。

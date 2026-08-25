@@ -427,11 +427,13 @@ class ModelGateway:
     ) -> AuthorizedInputManifest:
         return self._repository.get_manifest(model_call_id)
 
+    def preflight(self, context: ModelExecutionContext) -> None:
+        """Validate a no-tools call without preparing, dispatching, or reading a secret."""
+
+        self._preflight(context)
+
     def invoke(self, context: ModelExecutionContext) -> ModelGatewayResult:
-        adapter = self._adapters.get((context.provider_type, context.adapter_version))
-        if adapter is None:
-            raise DomainError(ErrorCode.LIVE_INTEGRATION_HELD, "model provider is not configured")
-        self._validate_context(context, adapter.capabilities)
+        adapter = self._preflight(context)
         messages = tuple(
             RenderedMessage(
                 role="system" if index == 0 else "user",
@@ -442,8 +444,7 @@ class ModelGateway:
             for index, item in enumerate(context.manifest.items)
             if item.disposition is InputDisposition.PROVIDED
         )
-        if not messages:
-            raise DomainError(ErrorCode.INVALID_ARGUMENT, "manifest has no renderable input")
+        assert messages
         request_core = {
             "manifest_digest": context.manifest.digest.value,
             "prompt_program_ref": context.prompt_program_ref,
@@ -719,6 +720,26 @@ class ModelGateway:
             )
         if context.max_output_tokens < 1 or context.timeout_milliseconds < 1:
             raise DomainError(ErrorCode.INVALID_ARGUMENT, "model resource bounds must be positive")
+
+    def _preflight(self, context: ModelExecutionContext) -> ProviderAdapter:
+        adapter = self._adapters.get(
+            (context.provider_type, context.adapter_version)
+        )
+        if adapter is None:
+            raise DomainError(
+                ErrorCode.LIVE_INTEGRATION_HELD,
+                "model provider is not configured",
+            )
+        self._validate_context(context, adapter.capabilities)
+        if not any(
+            item.disposition is InputDisposition.PROVIDED
+            for item in context.manifest.items
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "manifest has no renderable input",
+            )
+        return adapter
 
     def _now(self) -> datetime:
         value = self._clock()

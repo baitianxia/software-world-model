@@ -5,8 +5,8 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
+code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # 非敏感模型配置
@@ -37,8 +37,10 @@ reference 和 disclosure scope。用户提交一个 Turn；Ark Agent attempt 无
 透明双 route、双 attempt、late-result quarantine 和 Turn 汇总尚未实现或资格化。它也没有实现
 `CONVERSATIONAL_ENGINEERING_AGENT@1` 的产品接线和语义多轮 Chat。Ark Adapter 已存在不等于产品 route 可用，实现缺口也不算 Ark
 unavailable。Access 已为 `ACCESS_BROWSER_PASS`；Application-owned Agent executor、跨 Turn Work State 与 typed tool/Review/Delivery
-状态机为 `AGENT_EXECUTOR_LOCAL_CANDIDATE`。真实 Provider driver/Reviewer、Disclosure、World Model/Source ports、双 route/fallback 与
-产品 launcher 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。在真实确定性 Adapter 资格和 live audit 闭合前不得标成 PASS。
+状态机为 `AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE`。单 Provider Agent/Reviewer 的 configuration、closed role
+input/output、逐调用 Disclosure/Gateway receipt 与 non-dispatching candidate preflight 已形成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`；该 preflight
+不解析 credential，也固定返回 `ready_for_live=false`。双 route/fallback、真实 Adapter/transport、fixed Provider launcher 仍为
+`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。在真实资格和 live audit 闭合前不得标成 PASS。
 
 ```bash
 PYTHONPATH=src python3 -m software_world_model.interface.provider_cli status

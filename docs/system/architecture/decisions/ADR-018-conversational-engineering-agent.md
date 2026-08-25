@@ -6,8 +6,8 @@ authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
 derived_from: [FINDING-010-093]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_conversational_engineering_agent.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # ADR-018：世界模型增强的对话式主工程 Agent
@@ -90,5 +90,8 @@ exact 代码、运行、对照与用户体验证据验证。
 工具 Proposal/Observation、双分区 Package、fresh Review Finding 回路和 exact Delivery binding 已形成
 `AGENT_EXECUTOR_LOCAL_CANDIDATE`；其 Agent/Reviewer 证据仅来自确定性 fake ports。trusted evidence-tool adapter 又复用现有 World Model
 projector 与 Source Broker/Worker，并把 support/boundary Observation、可重算的逐 Turn append-only Ledger prefix 和 Citation receipt 接成
-`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；该证据只来自确定性 World Model fixture 与临时 Git exact search/read。Provider-backed Agent/Reviewer、
-Disclosure/fallback、Citation browser projection、产品 launcher wiring 与五轮 Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。
+`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；该证据只来自确定性 World Model fixture 与临时 Git exact search/read。单 Provider primary Agent/fresh
+Reviewer 的 separate no-tools Prompt、closed role input/output、逐 dispatch exact Disclosure/Gateway receipt、失败计数和 non-dispatching
+candidate preflight 又形成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`；成功输出仅由 pure decoder fixture 证明，真实 Gateway 测试使用的 offline
+Adapter 被明确拒绝为非 live。ADR-017 双 Provider fallback、真实 Adapter/transport、Citation browser projection、产品 fixed launcher
+wiring 与五轮 Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。

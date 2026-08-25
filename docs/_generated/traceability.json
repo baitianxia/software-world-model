@@ -2815,6 +2815,33 @@
       "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
+  "FINDING-010-099": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-099.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/ai_infrastructure/__init__.py",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/application_services/__init__.py",
+      "src/software_world_model/interface/engineering_chat_candidate.py",
+      "src/software_world_model/interface/engineering_chat_browser.py",
+      "src/software_world_model/interface/__init__.py"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_conversational_engineering_agent.py",
+      "tests/test_engineering_chat_candidate.py",
+      "tests/test_engineering_conversation.py",
+      "tests/test_engineering_chat_browser.py",
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_engineering_qa_alpha_cli.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4108,11 +4135,17 @@
     "code": [
       "src/software_world_model/application_services/engineering_conversation.py",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py"
     ],
     "tests": [
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
@@ -4290,12 +4323,16 @@
       "src/software_world_model/application_services/task_control.py",
       "src/software_world_model/application_services/engineering_conversation.py",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/interface/agentic_runtime.py"
     ],
     "tests": [
       "tests/test_agentic_runtime.py",
       "tests/test_natural_task.py",
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_conversational_engineering_model.py",
       "tests/test_engineering_conversation.py"
     ]
   },
@@ -4318,12 +4355,18 @@
     "code": [
       "src/software_world_model/application_services/engineering_conversation.py",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_browser_ui.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py"
     ],
     "tests": [
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
@@ -4831,7 +4874,9 @@
     "code": [
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
       "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/interface/provider_cli.py",
+      "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py",
       "src/software_world_model/interface/engineering_qa_alpha_cli.py"
     ],
@@ -4840,6 +4885,8 @@
       "tests/test_ark_chat_conformance.py",
       "tests/test_deepseek_chat_adapter.py",
       "tests/test_deepseek_chat_conformance.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_alpha_cli.py",
       "tests/test_engineering_qa_alpha_cli.py"
     ]
@@ -4858,6 +4905,7 @@
     "code": [
       "pyproject.toml",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/interface/http_api.py",
       "src/software_world_model/interface/browser_ui.py",
       "src/software_world_model/interface/world_model_browser.py",
@@ -4865,6 +4913,7 @@
       "src/software_world_model/interface/world_model_http.py",
       "src/software_world_model/interface/world_model_runtime.py",
       "src/software_world_model/interface/world_model_product.py",
+      "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_browser_ui.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py",
@@ -4887,6 +4936,8 @@
       "tests/test_world_model_product.py",
       "tests/test_engineering_question_model_source.py",
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py",
       "tests/test_engineering_qa_live.py",
@@ -4956,6 +5007,9 @@
       "tests/test_iteration_008_slice1_freeze.py",
       "tests/test_iteration_008_slice1_live_evaluator.py",
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py",

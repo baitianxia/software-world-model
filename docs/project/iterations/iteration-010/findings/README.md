@@ -249,5 +249,9 @@ iteration: ITER-010
 - [FINDING-010-097](FINDING-010-097.md)：Application-owned 主 Agent loop、跨 Turn Work State、密封 Observation/Package、fresh Review
   Finding 回路、exact Delivery binding 与失败 Turn 隔离已形成本地确定性候选并通过 48/48；真实 Provider/World Model/Source/Ledger/Citation、
   launcher wiring、五轮 live Chat 和 Production 仍未集成、资格化或执行。
+- [FINDING-010-098](FINDING-010-098.md)：现有 World Model projector、Source Broker/Worker 与逐 Turn Ledger/Citation authority receipt 已接成
+  trusted evidence-tool adapter；support/boundary 分区与 opaque locator search→read 在临时 Git 上通过，mall/live 未执行。
+- [FINDING-010-099](FINDING-010-099.md)：主 Agent/Reviewer 的 closed no-tools 模型输入输出、逐 dispatch Disclosure/Gateway receipt、
+  失败计数和非调度 candidate preflight 已形成本地候选；双 Provider fallback、fixed Provider launcher 与五轮 live Chat 仍阻断。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

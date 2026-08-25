@@ -10,6 +10,10 @@ from typing import TYPE_CHECKING, Any
 
 
 _EXPORT_MODULES = {
+    "EngineeringChatCandidatePreflightReceipt": ".engineering_chat_candidate",
+    "engineering_chat_product_candidate_digest": ".engineering_chat_candidate",
+    "engineering_chat_single_provider_route_ref": ".engineering_chat_candidate",
+    "prepare_engineering_chat_candidate_preflight": ".engineering_chat_candidate",
     "EngineeringChatBrowserApplication": ".engineering_chat_browser",
     "PreparedEngineeringChatAccess": ".engineering_chat_alpha_cli",
     "prepare_engineering_chat_access": ".engineering_chat_alpha_cli",
@@ -67,6 +71,12 @@ def __dir__() -> list[str]:
 
 
 if TYPE_CHECKING:
+    from .engineering_chat_candidate import (
+        EngineeringChatCandidatePreflightReceipt,
+        engineering_chat_product_candidate_digest,
+        engineering_chat_single_provider_route_ref,
+        prepare_engineering_chat_candidate_preflight,
+    )
     from .engineering_chat_browser import EngineeringChatBrowserApplication
     from .engineering_chat_alpha_cli import (
         PreparedEngineeringChatAccess,

@@ -435,6 +435,9 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
         ),
         "delivery_state": turn.delivery_state,
         "provider_dispatch_count": turn.provider_dispatch_count,
+        "model_dispatch_receipt_refs": list(
+            turn.model_dispatch_receipt_refs
+        ),
         "retry_count": turn.retry_count,
         "quality_status": turn.quality_status,
         "production_activation": turn.production_activation,

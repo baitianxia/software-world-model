@@ -69,6 +69,125 @@ class EngineeringAgentReviewDecision(str, Enum):
     FINDINGS = "FINDINGS"
 
 
+class EngineeringAgentModelRole(str, Enum):
+    PRIMARY_AGENT = "PRIMARY_AGENT"
+    INDEPENDENT_REVIEWER = "INDEPENDENT_REVIEWER"
+
+
+class EngineeringAgentModelDispatchState(str, Enum):
+    PRE_DISPATCH_REJECTED = "PRE_DISPATCH_REJECTED"
+    DISPATCHED_COMPLETED = "DISPATCHED_COMPLETED"
+    DISPATCHED_REJECTED = "DISPATCHED_REJECTED"
+    DISPATCHED_OUTCOME_UNKNOWN = "DISPATCHED_OUTCOME_UNKNOWN"
+    REPLAYED_COMPLETED = "REPLAYED_COMPLETED"
+    REPLAYED_REJECTED = "REPLAYED_REJECTED"
+    REPLAYED_OUTCOME_UNKNOWN = "REPLAYED_OUTCOME_UNKNOWN"
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentModelCallReceipt:
+    model_call_ref: str
+    gateway_call_ref: str | None
+    role: EngineeringAgentModelRole
+    state: EngineeringAgentModelDispatchState
+    provider_dispatch_count: int
+    failure_code: str | None
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        model_call_ref: str,
+        role: EngineeringAgentModelRole,
+        state: EngineeringAgentModelDispatchState,
+        gateway_call_ref: str | None = None,
+        failure_code: str | None = None,
+    ) -> "EngineeringAgentModelCallReceipt":
+        if not isinstance(role, EngineeringAgentModelRole) or not isinstance(
+            state, EngineeringAgentModelDispatchState
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Agent model call role or dispatch state is invalid",
+            )
+        dispatched = state in {
+            EngineeringAgentModelDispatchState.DISPATCHED_COMPLETED,
+            EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            EngineeringAgentModelDispatchState.DISPATCHED_OUTCOME_UNKNOWN,
+        }
+        successful = state in {
+            EngineeringAgentModelDispatchState.DISPATCHED_COMPLETED,
+            EngineeringAgentModelDispatchState.REPLAYED_COMPLETED,
+        }
+        gateway_call_ref = _optional_text(
+            gateway_call_ref, "Gateway model call reference"
+        )
+        failure_code = _optional_text(failure_code, "model call failure code")
+        if (
+            (gateway_call_ref is not None)
+            != (state is not EngineeringAgentModelDispatchState.PRE_DISPATCH_REJECTED)
+            or (failure_code is None) != successful
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Agent model dispatch state, Gateway reference, and failure disagree",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_MODEL_CALL_RECEIPT@1",
+            "model_call_ref": _text(
+                model_call_ref, "Agent model call reference"
+            ),
+            "gateway_call_ref": gateway_call_ref,
+            "role": role.value,
+            "state": state.value,
+            "provider_dispatch_count": 1 if dispatched else 0,
+            "failure_code": failure_code,
+        }
+        return cls(
+            model_call_ref=core["model_call_ref"],
+            gateway_call_ref=gateway_call_ref,
+            role=role,
+            state=state,
+            provider_dispatch_count=core["provider_dispatch_count"],
+            failure_code=failure_code,
+            digest=digest_of(core),
+        )
+
+    @property
+    def successful(self) -> bool:
+        return self.state in {
+            EngineeringAgentModelDispatchState.DISPATCHED_COMPLETED,
+            EngineeringAgentModelDispatchState.REPLAYED_COMPLETED,
+        }
+
+
+class EngineeringAgentModelCallFailure(DomainError):
+    """A sealed pre- or post-dispatch model failure with exact call accounting."""
+
+    def __init__(
+        self,
+        *,
+        receipt: EngineeringAgentModelCallReceipt,
+        code: ErrorCode,
+        message: str,
+    ) -> None:
+        expected = EngineeringAgentModelCallReceipt.create(
+            model_call_ref=receipt.model_call_ref,
+            gateway_call_ref=receipt.gateway_call_ref,
+            role=receipt.role,
+            state=receipt.state,
+            failure_code=receipt.failure_code,
+        )
+        if receipt != expected or receipt.successful:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "model call failure requires an exact non-success receipt",
+            )
+        super().__init__(code, message)
+        self.receipt = receipt
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentToolActionProposal:
     operation: EngineeringAgentToolOperation
@@ -424,7 +543,31 @@ class EngineeringAgentInvocation:
 class EngineeringAgentDriver(Protocol):
     def propose(
         self, invocation: EngineeringAgentInvocation
-    ) -> EngineeringAgentWorkStateProposal: ...
+    ) -> "EngineeringAgentWorkStateProposal | EngineeringAgentDriverModelResult": ...
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentDriverModelResult:
+    proposal: EngineeringAgentWorkStateProposal
+    receipt: EngineeringAgentModelCallReceipt
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        proposal: EngineeringAgentWorkStateProposal,
+        receipt: EngineeringAgentModelCallReceipt,
+    ) -> "EngineeringAgentDriverModelResult":
+        if (
+            receipt.role is not EngineeringAgentModelRole.PRIMARY_AGENT
+            or not receipt.successful
+            or receipt.model_call_ref != proposal.model_call_ref
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Agent proposal does not bind its successful model call receipt",
+            )
+        return cls(proposal=proposal, receipt=receipt)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1019,7 +1162,31 @@ class EngineeringAgentReviewProposal:
 class EngineeringAgentReviewer(Protocol):
     def review(
         self, request: EngineeringAgentReviewRequest
-    ) -> EngineeringAgentReviewProposal: ...
+    ) -> "EngineeringAgentReviewProposal | EngineeringAgentReviewerModelResult": ...
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentReviewerModelResult:
+    proposal: EngineeringAgentReviewProposal
+    receipt: EngineeringAgentModelCallReceipt
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        proposal: EngineeringAgentReviewProposal,
+        receipt: EngineeringAgentModelCallReceipt,
+    ) -> "EngineeringAgentReviewerModelResult":
+        if (
+            receipt.role is not EngineeringAgentModelRole.INDEPENDENT_REVIEWER
+            or not receipt.successful
+            or receipt.model_call_ref != proposal.model_call_ref
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer proposal does not bind its successful model call receipt",
+            )
+        return cls(proposal=proposal, receipt=receipt)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1108,6 +1275,8 @@ class EngineeringAgentLoopLimits:
 @dataclass(slots=True)
 class _EngineeringAgentExecutionAudit:
     model_call_refs: list[str]
+    model_call_receipts: list[EngineeringAgentModelCallReceipt]
+    expected_model_role: EngineeringAgentModelRole | None = None
     provider_dispatch_count: int = 0
     work_state: EngineeringAgentWorkState | None = None
     package: EngineeringAgentEvidencePackage | None = None
@@ -1130,6 +1299,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         available_operations: Sequence[EngineeringAgentToolOperation],
         limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
         require_tool_authority_receipts: bool = False,
+        require_model_call_receipts: bool = False,
         id_generator: IdGenerator | None = None,
     ) -> None:
         operations = tuple(available_operations)
@@ -1146,6 +1316,11 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.INVALID_ARGUMENT,
                 "tool authority receipt requirement must be a boolean",
             )
+        if type(require_model_call_receipts) is not bool:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "model call receipt requirement must be a boolean",
+            )
         self._driver = driver
         self._tool_port = tool_port
         self._reviewer = reviewer
@@ -1153,6 +1328,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         self._available_operations = operations
         self._limits = limits
         self._require_tool_authority_receipts = require_tool_authority_receipts
+        self._require_model_call_receipts = require_model_call_receipts
         self._id_generator = id_generator or Uuid4IdGenerator()
         self._id_lock = Lock()
         self._model_call_lock = Lock()
@@ -1164,10 +1340,33 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
     def execute(
         self, request: EngineeringTurnExecutionRequest
     ) -> EngineeringTurnExecutionOutcome:
-        audit = _EngineeringAgentExecutionAudit(model_call_refs=[])
+        audit = _EngineeringAgentExecutionAudit(
+            model_call_refs=[], model_call_receipts=[]
+        )
         try:
             initial_previous = self._load_previous_work_state(request)
             outcome = self._execute_bounded(request, audit, initial_previous)
+        except EngineeringAgentModelCallFailure as exc:
+            failure_code = _model_failure_code(exc.receipt)
+            if audit.expected_model_role is not exc.receipt.role:
+                failure_code = "AGENT_PROTOCOL_VIOLATION"
+            try:
+                _record_model_receipt(audit, exc.receipt)
+                self._record_model_call(
+                    audit.model_call_refs, exc.receipt.model_call_ref
+                )
+            except DomainError:
+                failure_code = "AGENT_PROTOCOL_VIOLATION"
+            outcome = self._failed_outcome(
+                request=request,
+                work_state=audit.work_state,
+                package=audit.package,
+                draft=audit.draft,
+                review=audit.review,
+                provider_dispatch_count=audit.provider_dispatch_count,
+                model_dispatch_receipt_refs=_model_receipt_refs(audit),
+                failure_code=failure_code,
+            )
         except DomainError:
             outcome = self._failed_outcome(
                 request=request,
@@ -1176,6 +1375,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 draft=audit.draft,
                 review=audit.review,
                 provider_dispatch_count=audit.provider_dispatch_count,
+                model_dispatch_receipt_refs=_model_receipt_refs(audit),
                 failure_code="AGENT_PROTOCOL_VIOLATION",
             )
         if (
@@ -1206,19 +1406,44 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         available_operations = self._authorized_operations(request)
 
         for _ in range(self._limits.maximum_agent_steps):
-            proposal = self._driver.propose(
-                EngineeringAgentInvocation(
-                    request=request,
-                    previous_work_state=previous,
-                    observations=observations,
-                    review_findings=review_findings,
-                    review_digest=(
-                        pending_review.digest if pending_review is not None else None
-                    ),
-                    available_operations=available_operations,
+            audit.expected_model_role = EngineeringAgentModelRole.PRIMARY_AGENT
+            try:
+                driver_output = self._driver.propose(
+                    EngineeringAgentInvocation(
+                        request=request,
+                        previous_work_state=previous,
+                        observations=observations,
+                        review_findings=review_findings,
+                        review_digest=(
+                            pending_review.digest if pending_review is not None else None
+                        ),
+                        available_operations=available_operations,
+                    )
                 )
-            )
-            audit.provider_dispatch_count += 1
+            except BaseException:
+                raise
+            else:
+                audit.expected_model_role = None
+            if isinstance(driver_output, EngineeringAgentDriverModelResult):
+                expected_driver_output = EngineeringAgentDriverModelResult.create(
+                    proposal=driver_output.proposal,
+                    receipt=driver_output.receipt,
+                )
+                if driver_output != expected_driver_output:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "Agent driver model result identity is invalid",
+                    )
+                proposal = driver_output.proposal
+                _record_model_receipt(audit, driver_output.receipt)
+            else:
+                if self._require_model_call_receipts:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "qualified Agent driver requires an exact model call receipt",
+                    )
+                proposal = driver_output
+                audit.provider_dispatch_count += 1
             if not isinstance(proposal, EngineeringAgentWorkStateProposal):
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -1247,6 +1472,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         draft=last_draft,
                         review=last_review,
                         provider_dispatch_count=audit.provider_dispatch_count,
+                        model_dispatch_receipt_refs=_model_receipt_refs(audit),
                         failure_code="AGENT_TOOL_LIMIT_REACHED",
                     )
                 observation_batch = self._execute_tool(
@@ -1272,6 +1498,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         draft=last_draft,
                         review=last_review,
                         provider_dispatch_count=audit.provider_dispatch_count,
+                        model_dispatch_receipt_refs=_model_receipt_refs(audit),
                         failure_code="AGENT_NO_PROGRESS_LIMIT_REACHED",
                     )
                 continue
@@ -1310,17 +1537,49 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     draft=draft,
                     review=last_review,
                     provider_dispatch_count=audit.provider_dispatch_count,
+                    model_dispatch_receipt_refs=_model_receipt_refs(audit),
                     failure_code="AGENT_REVIEW_LIMIT_REACHED",
                 )
-            review_proposal = self._reviewer.review(
-                EngineeringAgentReviewRequest(
-                    turn_request=request,
-                    work_state=work_state,
-                    package=package,
-                    draft=draft,
-                )
+            audit.expected_model_role = (
+                EngineeringAgentModelRole.INDEPENDENT_REVIEWER
             )
-            audit.provider_dispatch_count += 1
+            try:
+                reviewer_output = self._reviewer.review(
+                    EngineeringAgentReviewRequest(
+                        turn_request=request,
+                        work_state=work_state,
+                        package=package,
+                        draft=draft,
+                    )
+                )
+            except BaseException:
+                raise
+            else:
+                audit.expected_model_role = None
+            if isinstance(
+                reviewer_output, EngineeringAgentReviewerModelResult
+            ):
+                expected_reviewer_output = (
+                    EngineeringAgentReviewerModelResult.create(
+                        proposal=reviewer_output.proposal,
+                        receipt=reviewer_output.receipt,
+                    )
+                )
+                if reviewer_output != expected_reviewer_output:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "Reviewer model result identity is invalid",
+                    )
+                review_proposal = reviewer_output.proposal
+                _record_model_receipt(audit, reviewer_output.receipt)
+            else:
+                if self._require_model_call_receipts:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "qualified Agent Reviewer requires an exact model call receipt",
+                    )
+                review_proposal = reviewer_output
+                audit.provider_dispatch_count += 1
             if not isinstance(review_proposal, EngineeringAgentReviewProposal):
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -1377,6 +1636,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 review=review,
                 authorization=authorization,
                 provider_dispatch_count=audit.provider_dispatch_count,
+                model_dispatch_receipt_refs=_model_receipt_refs(audit),
             )
 
         return self._failed_outcome(
@@ -1386,6 +1646,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             draft=last_draft,
             review=last_review,
             provider_dispatch_count=audit.provider_dispatch_count,
+            model_dispatch_receipt_refs=_model_receipt_refs(audit),
             failure_code="AGENT_STEP_LIMIT_REACHED",
         )
 
@@ -1963,6 +2224,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         review: EngineeringAgentReview,
         authorization: EngineeringAgentDeliveryAuthorization,
         provider_dispatch_count: int,
+        model_dispatch_receipt_refs: tuple[str, ...],
     ) -> EngineeringTurnExecutionOutcome:
         kind = {
             EngineeringAgentResponseKind.ANSWER: ConversationMessageKind.ANSWER,
@@ -1998,6 +2260,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             review_ref=review.review_id.value,
             delivery_authorization_ref=authorization.authorization_ref,
             provider_dispatch_count=provider_dispatch_count,
+            model_dispatch_receipt_refs=model_dispatch_receipt_refs,
             quality_status=quality,
         )
 
@@ -2010,6 +2273,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         draft: EngineeringAgentAnswerDraft | None,
         review: EngineeringAgentReview | None,
         provider_dispatch_count: int,
+        model_dispatch_receipt_refs: tuple[str, ...],
         failure_code: str,
     ) -> EngineeringTurnExecutionOutcome:
         message = (
@@ -2061,6 +2325,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             answer_ref=(draft.answer_id.value if draft else None),
             review_ref=(review.review_id.value if review else None),
             provider_dispatch_count=provider_dispatch_count,
+            model_dispatch_receipt_refs=model_dispatch_receipt_refs,
         )
 
     def _new_id(self, kind: str) -> StableId:
@@ -2226,6 +2491,65 @@ def _repository_revision(value: str) -> str:
     return normalized
 
 
+def _optional_text(value: str | None, label: str) -> str | None:
+    return None if value is None else _text(value, label)
+
+
+def _model_receipt_refs(
+    audit: _EngineeringAgentExecutionAudit,
+) -> tuple[str, ...]:
+    references = tuple(item.digest.value for item in audit.model_call_receipts)
+    if len(references) != len(set(references)):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Agent model call receipts cannot be replayed",
+        )
+    return references
+
+
+def _record_model_receipt(
+    audit: _EngineeringAgentExecutionAudit,
+    receipt: EngineeringAgentModelCallReceipt,
+) -> None:
+    expected = EngineeringAgentModelCallReceipt.create(
+        model_call_ref=receipt.model_call_ref,
+        gateway_call_ref=receipt.gateway_call_ref,
+        role=receipt.role,
+        state=receipt.state,
+        failure_code=receipt.failure_code,
+    )
+    if receipt != expected or any(
+        item.digest == receipt.digest for item in audit.model_call_receipts
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Agent model call receipt identity is invalid or replayed",
+        )
+    audit.model_call_receipts.append(receipt)
+    audit.provider_dispatch_count += receipt.provider_dispatch_count
+
+
+def _model_failure_code(receipt: EngineeringAgentModelCallReceipt) -> str:
+    role = (
+        "AGENT"
+        if receipt.role is EngineeringAgentModelRole.PRIMARY_AGENT
+        else "REVIEWER"
+    )
+    outcome = {
+        EngineeringAgentModelDispatchState.PRE_DISPATCH_REJECTED: "PRE_DISPATCH_REJECTED",
+        EngineeringAgentModelDispatchState.DISPATCHED_REJECTED: "MODEL_CALL_REJECTED",
+        EngineeringAgentModelDispatchState.DISPATCHED_OUTCOME_UNKNOWN: "MODEL_OUTCOME_UNKNOWN",
+        EngineeringAgentModelDispatchState.REPLAYED_REJECTED: "MODEL_CALL_REJECTED",
+        EngineeringAgentModelDispatchState.REPLAYED_OUTCOME_UNKNOWN: "MODEL_OUTCOME_UNKNOWN",
+    }.get(receipt.state)
+    if outcome is None:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "a successful model receipt cannot produce a failure code",
+        )
+    return f"{role}_{outcome}"
+
+
 def _unique_bounded_texts(values: Sequence[str], label: str) -> tuple[str, ...]:
     normalized = tuple(_bounded_text(item, label) for item in values)
     if len(normalized) != len(set(normalized)):
@@ -2264,11 +2588,16 @@ __all__ = [
     "EngineeringAgentDeliveryRequest",
     "EngineeringAgentDraftProposal",
     "EngineeringAgentDriver",
+    "EngineeringAgentDriverModelResult",
     "EngineeringAgentEvidenceDisposition",
     "EngineeringAgentEvidencePackage",
     "EngineeringAgentInvocation",
     "EngineeringAgentLedgerEntryReceipt",
     "EngineeringAgentLoopLimits",
+    "EngineeringAgentModelCallFailure",
+    "EngineeringAgentModelCallReceipt",
+    "EngineeringAgentModelDispatchState",
+    "EngineeringAgentModelRole",
     "EngineeringAgentResponseControl",
     "EngineeringAgentResponseKind",
     "EngineeringAgentReview",
@@ -2277,6 +2606,7 @@ __all__ = [
     "EngineeringAgentReviewProposal",
     "EngineeringAgentReviewRequest",
     "EngineeringAgentReviewer",
+    "EngineeringAgentReviewerModelResult",
     "EngineeringAgentToolActionProposal",
     "EngineeringAgentToolAuthorityKind",
     "EngineeringAgentToolAuthorityReceipt",

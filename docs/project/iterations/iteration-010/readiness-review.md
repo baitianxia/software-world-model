@@ -91,8 +91,10 @@ listener/browser 使 `V-ALPHA-ACCESS-001` 成为 `PASS / access-only`。主 Agen
 `AGENT_EXECUTOR_LOCAL_CANDIDATE`：Application-owned loop、跨 Turn Work State、Observation/Package、fresh Review Finding 与 exact
 Delivery binding 有 48/48 本地确定性证据。`FINDING-010-098` 随后形成 `EVIDENCE_TOOLS_LOCAL_CANDIDATE`：现有 World Model projector 与
 Source Broker/Worker 经 trusted adapter 接入，support/boundary 可由同一动作分别密封，逐 Turn Ledger prefix 和 Citation receipt 可由
-Application 重算；包含 temp Git exact search→opaque locator→read 的定向组合为 61/61。Provider-backed Agent/Reviewer、Disclosure/
-fallback、Citation browser projection、launcher、资格和 live Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`：
+Application 重算；包含 temp Git exact search→opaque locator→read 的定向组合为 61/61。`FINDING-010-099` 随后形成
+`MODEL_BOUNDARY_LOCAL_CANDIDATE`：单 Provider 主 Agent/Reviewer 的 closed no-tools input/output、逐 dispatch Disclosure/Gateway receipt、
+失败计数与 non-dispatching candidate preflight 已有本地证据，扩展相关组合为 86/86。ADR-017 fallback、真实 Provider/fixed launcher、
+Citation browser projection、资格和 live Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。

@@ -173,6 +173,19 @@ class ModelGatewayTests(unittest.TestCase):
         self.assertEqual(result.call.provider_request_digest, request.digest)
         self.assertEqual(result.isolation_receipt.provider_request_digest, request.digest)
 
+    def test_preflight_does_not_prepare_or_dispatch_a_model_call(self) -> None:
+        adapter = RecordingAdapter()
+        gateway = ModelGateway(
+            self.repository, (adapter,), id_generator=self.ids, clock=self.clock
+        )
+        context = self.context(self.manifest())
+
+        gateway.preflight(context)
+
+        self.assertEqual(adapter.requests, [])
+        with self.assertRaises(DomainError):
+            self.repository.get(StableId("model_call_00000000000000000000000000000001"))
+
     def test_authorized_input_and_completed_output_are_recoverable_by_call_id(self) -> None:
         adapter = RecordingAdapter()
         gateway = ModelGateway(

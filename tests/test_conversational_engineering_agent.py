@@ -7,12 +7,18 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentClaimProposal,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentDraftProposal,
+    EngineeringAgentDriverModelResult,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentLoopLimits,
+    EngineeringAgentModelCallFailure,
+    EngineeringAgentModelCallReceipt,
+    EngineeringAgentModelDispatchState,
+    EngineeringAgentModelRole,
     EngineeringAgentResponseKind,
     EngineeringAgentReviewDecision,
     EngineeringAgentReviewFinding,
     EngineeringAgentReviewProposal,
+    EngineeringAgentReviewerModelResult,
     EngineeringAgentToolActionProposal,
     EngineeringAgentToolOperation,
     EngineeringAgentToolResult,
@@ -26,7 +32,12 @@ from software_world_model.application_services.engineering_conversation import (
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
 )
-from software_world_model.cross_cutting import Revision, StableId, digest_of
+from software_world_model.cross_cutting import (
+    ErrorCode,
+    Revision,
+    StableId,
+    digest_of,
+)
 
 
 class SequentialIdGenerator:
@@ -177,6 +188,7 @@ def _service(
     response=None,
     limits=None,
     require_receipts=False,
+    require_model_receipts=False,
 ):
     tool = tool or RecordingToolPort()
     reviewer = reviewer or ApprovingReviewer()
@@ -193,6 +205,7 @@ def _service(
         ),
         limits=limits or EngineeringAgentLoopLimits(),
         require_tool_authority_receipts=require_receipts,
+        require_model_call_receipts=require_model_receipts,
         id_generator=SequentialIdGenerator(),
     )
     service = InMemoryEngineeringConversationService(
@@ -719,6 +732,204 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
         self.assertEqual(len(tool.requests), 1)
         self.assertEqual(len(response.requests), 0)
+
+    def test_typed_model_receipts_drive_actual_dispatch_count(self) -> None:
+        class ReceiptedClarificationDriver:
+            def propose(self, invocation):
+                work_state = _proposal(
+                    invocation,
+                    call_ref="receipted-agent-call",
+                    phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+                    draft=EngineeringAgentDraftProposal.create(
+                        response_kind=EngineeringAgentResponseKind.CLARIFICATION,
+                        content="请明确你指的是哪个登录入口。",
+                    ),
+                )
+                return EngineeringAgentDriverModelResult.create(
+                    proposal=work_state,
+                    receipt=EngineeringAgentModelCallReceipt.create(
+                        model_call_ref=work_state.model_call_ref,
+                        gateway_call_ref="gateway-agent-call",
+                        role=EngineeringAgentModelRole.PRIMARY_AGENT,
+                        state=(
+                            EngineeringAgentModelDispatchState.REPLAYED_COMPLETED
+                        ),
+                    ),
+                )
+
+        class ReceiptedReviewer:
+            def review(self, request):
+                del request
+                review = EngineeringAgentReviewProposal.create(
+                    model_call_ref="receipted-review-call",
+                    decision=EngineeringAgentReviewDecision.APPROVED,
+                )
+                return EngineeringAgentReviewerModelResult.create(
+                    proposal=review,
+                    receipt=EngineeringAgentModelCallReceipt.create(
+                        model_call_ref=review.model_call_ref,
+                        gateway_call_ref="gateway-review-call",
+                        role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+                        state=(
+                            EngineeringAgentModelDispatchState.DISPATCHED_COMPLETED
+                        ),
+                    ),
+                )
+
+        service, _, _, _ = _service(
+            ReceiptedClarificationDriver(), reviewer=ReceiptedReviewer()
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="它是怎样登录的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 1)
+        self.assertEqual(len(submission.turn.model_dispatch_receipt_refs), 2)
+        self.assertEqual(service.provider_dispatch_count(), 1)
+
+    def test_post_dispatch_model_failure_retains_exact_receipt(self) -> None:
+        receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="failed-agent-call",
+            gateway_call_ref="gateway-failed-call",
+            role=EngineeringAgentModelRole.PRIMARY_AGENT,
+            state=EngineeringAgentModelDispatchState.DISPATCHED_OUTCOME_UNKNOWN,
+            failure_code="NETWORK_OUTCOME_UNKNOWN",
+        )
+
+        class FailingDriver:
+            def propose(self, invocation):
+                del invocation
+                raise EngineeringAgentModelCallFailure(
+                    receipt=receipt,
+                    code=ErrorCode.LIVE_INTEGRATION_HELD,
+                    message="Gateway outcome is unknown and cannot be retried",
+                )
+
+        service, _, reviewer, response = _service(FailingDriver())
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(
+            submission.turn.failure_code, "AGENT_MODEL_OUTCOME_UNKNOWN"
+        )
+        self.assertEqual(submission.turn.provider_dispatch_count, 1)
+        self.assertEqual(
+            submission.turn.model_dispatch_receipt_refs,
+            (receipt.digest.value,),
+        )
+        self.assertEqual(len(reviewer.requests), 0)
+        self.assertEqual(len(response.requests), 0)
+
+    def test_qualified_executor_rejects_unreceipted_model_proposal(self) -> None:
+        class BareDriver:
+            def propose(self, invocation):
+                return _proposal(
+                    invocation,
+                    call_ref="unreceipted-agent-call",
+                    phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+                    draft=EngineeringAgentDraftProposal.create(
+                        response_kind=EngineeringAgentResponseKind.CLARIFICATION,
+                        content="请明确登录入口。",
+                    ),
+                )
+
+        service, _, reviewer, response = _service(
+            BareDriver(), require_model_receipts=True
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="它怎样登录？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
+        self.assertEqual(submission.turn.provider_dispatch_count, 0)
+        self.assertEqual(submission.turn.model_dispatch_receipt_refs, ())
+        self.assertEqual(len(reviewer.requests), 0)
+        self.assertEqual(len(response.requests), 0)
+
+    def test_wrong_role_failure_is_protocol_violation_but_keeps_dispatch_audit(self) -> None:
+        receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="wrong-role-call",
+            gateway_call_ref="gateway-wrong-role-call",
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            failure_code="STRUCTURED_OUTPUT_INVALID",
+        )
+
+        class WrongRoleDriver:
+            def propose(self, invocation):
+                del invocation
+                raise EngineeringAgentModelCallFailure(
+                    receipt=receipt,
+                    code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    message="wrong role receipt",
+                )
+
+        service, _, reviewer, response = _service(WrongRoleDriver())
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
+        self.assertEqual(submission.turn.provider_dispatch_count, 1)
+        self.assertEqual(
+            submission.turn.model_dispatch_receipt_refs,
+            (receipt.digest.value,),
+        )
+        self.assertEqual(len(reviewer.requests), 0)
+        self.assertEqual(len(response.requests), 0)
+
+    def test_replayed_unknown_model_outcome_does_not_increment_dispatch_count(self) -> None:
+        receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="replayed-unknown-agent-call",
+            gateway_call_ref="gateway-replayed-unknown-call",
+            role=EngineeringAgentModelRole.PRIMARY_AGENT,
+            state=EngineeringAgentModelDispatchState.REPLAYED_OUTCOME_UNKNOWN,
+            failure_code="PROVIDER_OUTCOME_UNKNOWN",
+        )
+
+        class ReplayedUnknownDriver:
+            def propose(self, invocation):
+                del invocation
+                raise EngineeringAgentModelCallFailure(
+                    receipt=receipt,
+                    code=ErrorCode.LIVE_INTEGRATION_HELD,
+                    message="recovered terminal outcome-unknown call",
+                )
+
+        service, _, _, _ = _service(ReplayedUnknownDriver())
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(
+            submission.turn.failure_code, "AGENT_MODEL_OUTCOME_UNKNOWN"
+        )
+        self.assertEqual(submission.turn.provider_dispatch_count, 0)
+        self.assertEqual(
+            submission.turn.model_dispatch_receipt_refs,
+            (receipt.digest.value,),
+        )
 
     def test_source_operation_is_denied_when_binding_has_no_source_authority(self) -> None:
         class UnauthorizedSourceDriver:

@@ -319,6 +319,7 @@ class EngineeringConversationTurn:
     work_state_digest: Digest | None
     delivery_state: str
     provider_dispatch_count: int
+    model_dispatch_receipt_refs: tuple[str, ...]
     retry_count: int
     quality_status: str
     production_activation: str
@@ -388,6 +389,7 @@ class EngineeringTurnExecutionOutcome:
     review_ref: str | None
     delivery_authorization_ref: str | None
     provider_dispatch_count: int
+    model_dispatch_receipt_refs: tuple[str, ...]
     retry_count: int
     quality_status: str
 
@@ -412,6 +414,7 @@ class EngineeringTurnExecutionOutcome:
         delivery_authorization_ref: str,
         provider_dispatch_count: int,
         quality_status: str,
+        model_dispatch_receipt_refs: Sequence[str] = (),
     ) -> "EngineeringTurnExecutionOutcome":
         return cls(
             request_digest=request_digest,
@@ -435,6 +438,7 @@ class EngineeringTurnExecutionOutcome:
             review_ref=review_ref,
             delivery_authorization_ref=delivery_authorization_ref,
             provider_dispatch_count=provider_dispatch_count,
+            model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
             retry_count=0,
             quality_status=quality_status,
         )
@@ -459,6 +463,7 @@ class EngineeringTurnExecutionOutcome:
         answer_ref: str | None = None,
         review_ref: str | None = None,
         provider_dispatch_count: int = 0,
+        model_dispatch_receipt_refs: Sequence[str] = (),
     ) -> "EngineeringTurnExecutionOutcome":
         return cls(
             request_digest=request_digest,
@@ -482,6 +487,7 @@ class EngineeringTurnExecutionOutcome:
             review_ref=review_ref,
             delivery_authorization_ref=None,
             provider_dispatch_count=provider_dispatch_count,
+            model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
             retry_count=0,
             quality_status="NOT_ACCEPTED",
         )
@@ -964,6 +970,15 @@ def _validate_execution_outcome(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Provider dispatch count must be a non-negative integer",
         )
+    model_receipts = tuple(
+        _text(item, "model dispatch receipt reference")
+        for item in outcome.model_dispatch_receipt_refs
+    )
+    if len(model_receipts) != len(set(model_receipts)):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "model dispatch receipt references must be unique",
+        )
     available_user_messages = {
         item.message_id
         for item in request.snapshot_before.messages
@@ -1184,6 +1199,7 @@ def _turn(
             else "NOT_AUTHORIZED"
         ),
         "provider_dispatch_count": outcome.provider_dispatch_count,
+        "model_dispatch_receipt_refs": outcome.model_dispatch_receipt_refs,
         "retry_count": outcome.retry_count,
         "quality_status": outcome.quality_status,
         "production_activation": "NOT_EXECUTED",
@@ -1214,6 +1230,7 @@ def _turn(
         work_state_digest=outcome.work_state_digest,
         delivery_state=core["delivery_state"],
         provider_dispatch_count=outcome.provider_dispatch_count,
+        model_dispatch_receipt_refs=outcome.model_dispatch_receipt_refs,
         retry_count=outcome.retry_count,
         quality_status=outcome.quality_status,
         production_activation="NOT_EXECUTED",
