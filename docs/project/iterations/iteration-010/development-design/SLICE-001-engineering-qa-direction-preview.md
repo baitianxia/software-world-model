@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -35,6 +35,11 @@ product_goal_slice_gate_case_ids: [V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHA
 | 三轮真实方向体验 | 180 分钟交付线；240 分钟绝对停止 | 在 Turn1 前冻结一份五轮 Conversation 脚本，本检查点交付其“初始问题→指代追问→纠正前提”前三轮；每轮显示答案或诚实失败、Citation 和状态 | 每个已开始 Turn 保留完整主 Agent、Evidence、Answer、fresh Review 和失败关闭；外部 dispatch 前另取 exact grant；只跑定向测试和两个相邻非定制案例 | 180 分钟未交即记 timebox FAIL、交付现状并停止新增范围；181—239 分钟的迟到 Alpha 只作 `FAIL / REWORK` 证据；仍是独立问答、纠正不生效、答案像代码走读或需要特判时不继续后两轮、比较或夯实 |
 | 五轮 Chat 与新对话隔离 | 360 分钟 | 仅在上一检查点未被停止时，增加“进一步区分/深入→按当前 Context 总结”，并展示新对话不继承旧指代、失败 Turn 后会话可继续 | 同一冻结 Conversation 的后两轮、逐轮 Evidence/Citation/Review、新对话泄漏负测和 Turn 故障隔离；仍不跑 full regression | 上下文泄漏、prior Answer 成为事实、失败关闭会话、重大错误或审核误放行，停止比较和 hardening |
 | 小样本三臂比较与方向决定 | 480 分钟 | 展示盲化的 current Codex、同 Agent 仅源码、同 Agent 世界模型认知+源码结果及独立技术判断；用户作出 `CONTINUE / REWORK / REDIRECT / REJECT` | 同一 exact revision、同一代表性 Conversation 与 rubric；系统两臂共享 Agent/model/tool/budget/Reviewer，Codex 保持实际能力 | 完整认知臂有重大错误、弱于源码臂/Codex 或世界模型无可观察贡献时，方向未证明；成本和时延不得抵消质量失败 |
+
+`FINDING-010-095` 已形成第一检查点的本地候选：独立 `swm-engineering-chat` 固定命令、Application-owned Conversation/Turn/Context、完整
+消息历史、“新对话”、失败 Turn 隔离和 loopback/Origin/JSON/input 边界通过新 Access 17/17 与旧 QA 相邻兼容 18/18。该证据没有启动
+listener/browser，也没有 Provider/model/Source/World Model dispatch，故状态只是 `CHAT_ACCESS_LOCAL_CANDIDATE`，
+`V-ALPHA-ACCESS-001` 继续 NOT-RUN。下一动作是 clean freeze 后取得 exact live/browser grant 并立即交付，不增加内部范围。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为

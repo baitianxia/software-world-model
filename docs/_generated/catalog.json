@@ -3008,6 +3008,21 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-094.md"
   },
   {
+    "id": "FINDING-010-095",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "interface",
+      "security",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-095.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

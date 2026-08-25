@@ -80,8 +80,9 @@ Conversation Context 只承载确认目标/约束、指代实体、开放问题�
 
 首个 Chat canary 是一段五轮连续对话，而不是三道互不相关问题；另加“新对话后省略指代必须澄清”的泄漏负测。三臂更新为 same-agent
 source-only、same-agent full World Model cognition + source、current Codex external baseline。旧编码权威曾由 PDR-004 暂停，`d8239ea7…`
-只授权文档同步；用户现以 `f76ba3e8…` 接受刷新 Readiness 并授权 Slice1 产品/System 代码和本地确定性验证。新架构仍保持
-`NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，外部调用与 live 仍须另行冻结和授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本
+只授权文档同步；用户现以 `f76ba3e8…` 接受刷新 Readiness 并授权 Slice1 产品/System 代码和本地确定性验证。`FINDING-010-095` 已形成
+`CHAT_ACCESS_LOCAL_CANDIDATE`；主 Agent、逐轮证据/审核和 Provider route 仍保持 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，外部调用与 live
+仍须另行冻结和授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本
 规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta

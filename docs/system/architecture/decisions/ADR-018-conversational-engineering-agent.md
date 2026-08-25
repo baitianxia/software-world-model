@@ -6,8 +6,8 @@ authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
 derived_from: [FINDING-010-093]
-code: []
-tests: []
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # ADR-018：世界模型增强的对话式主工程 Agent
@@ -86,4 +86,5 @@ exact 代码、运行、对照与用户体验证据验证。
 
 系统需要新的 Conversation/Turn/Agent Work State 合同、Agent 工具协议、上下文选择与压缩策略，以及面向多轮对话的资格和产品验证。旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的代码和运行证据继续作为可复用安全/证据资产和历史基线，但不能证明本 ADR 已实现。
-当前状态为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。
+当前已实现不接 Provider 的 Conversation/Turn/Context Access scaffold 和独立 Chat 页面，状态为 `CHAT_ACCESS_LOCAL_CANDIDATE`；统一主工程
+Agent loop、逐轮 Evidence/Answer/fresh Review、World Model/Source 工具与 Provider route 仍为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。

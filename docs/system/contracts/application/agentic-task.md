@@ -6,8 +6,8 @@ authority: normative
 owners: [application]
 depends_on: [SYS-ADR-015, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
 derived_from: [DD-APP-AGENTIC-TASK]
-code: [src/software_world_model/application_services/natural_task.py, src/software_world_model/application_services/task_control.py, src/software_world_model/interface/agentic_runtime.py]
-tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py]
+code: [src/software_world_model/application_services/natural_task.py, src/software_world_model/application_services/task_control.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/interface/agentic_runtime.py]
+tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py, tests/test_engineering_conversation.py]
 ---
 
 # Agentic Task
@@ -59,4 +59,5 @@ Task Control 是 Conversation/Task、Turn/Revision、Agent Work State、Invocati
 
 授权失效、Conversation/Turn/Work State 错绑、重复动作输入不一致、结果未知、预算耗尽或 Revision 漂移均停止当前 Turn 的后续分派并
 如实记录，不关闭整个 Conversation。Agent 调度和上下文压缩算法由代码与测试定义；工具目录、operation allowlist、trace/progress 语义
-和失败状态由 owning Contract 固定，不能只在 prompt 中声明。新对话式主 Agent 当前为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。
+和失败状态由 owning Contract 固定，不能只在 prompt 中声明。新 Chat Access 已本地实现 Conversation/Turn/Context scaffold；对话式主 Agent
+执行仍为 `NOT_IMPLEMENTED / NOT_QUALIFIED`，不能由 Access 状态推导 Agent 已运行。

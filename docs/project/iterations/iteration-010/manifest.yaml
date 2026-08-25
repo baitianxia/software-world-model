@@ -136,6 +136,10 @@ product_goal_alignment:
     schema: ENGINEERING_CHAT_EXPERIENCE@1
     case_id: V-CHAT-EXPERIENCE-001
     new_slice_ref: ITER-010-SLICE-001
+    access_scaffold_status: chat-access-local-candidate
+    access_implementation_evidence_ref: FINDING-010-095
+    access_case_status: not-run-blocking
+    listener_browser_execution_status: not-executed
     exact_version_visible: true
     repeatable_start: true
     interaction_model: semantic-multi-turn-chat
@@ -548,6 +552,9 @@ conversational_engineering_agent:
   skill_market_before_direction_confirmation_required: false
   persistence_across_restart_before_direction_confirmation_required: false
   full_regression_before_direction_confirmation_allowed: false
+  access_scaffold_status: chat-access-local-candidate
+  access_implementation_evidence_ref: FINDING-010-095
+  agent_execution_status: not-implemented-not-qualified-not-live
   status: target-not-implemented-not-qualified
 
 question_evidence_package_classes:
@@ -889,7 +896,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:9c9155fdd4a87b6cafded633f2ecfffc2364a7550c7cca14ab836d4799f6c1de
+  system_contract_set_digest: sha256:0e86265708e124d3c5c18ed83216c00cd36e05b0e404d96a49a053e69df3af90
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

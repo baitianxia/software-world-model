@@ -5,8 +5,8 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_engineering_qa_alpha_cli.py]
+code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # 非敏感模型配置
@@ -36,8 +36,8 @@ reference 和 disclosure scope。用户提交一个 Turn；Ark Agent attempt 无
 **当前实现偏差：** 现有 Engineering QA Alpha Session Configuration 仍只接受一份 DeepSeek Conformance，并形成单 Provider session；
 透明双 route、双 attempt、late-result quarantine 和 Turn 汇总尚未实现或资格化。它也没有实现
 `CONVERSATIONAL_ENGINEERING_AGENT@1` 的主 Agent、Conversation/Turn/Work State 分离和语义多轮 Chat。Ark Adapter 已存在不等于产品
-route 可用，实现缺口也不算 Ark unavailable。新对话架构与目标 route 均为 `NOT_IMPLEMENTED / NOT_QUALIFIED`；在确定性测试和 live
-audit 闭合前不得标成 PASS。
+route 可用，实现缺口也不算 Ark unavailable。新对话的无 Provider Access scaffold 已是 `CHAT_ACCESS_LOCAL_CANDIDATE`；主 Agent 执行和
+目标双 Provider route 仍为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。在确定性测试和 live audit 闭合前不得标成 PASS。
 
 ```bash
 PYTHONPATH=src python3 -m software_world_model.interface.provider_cli status

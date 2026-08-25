@@ -101,3 +101,9 @@ System Owner、Proposal、Manifest、Slice1 与五轮 Verification Gate 已在 p
 `codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`（`2026-08-25T05:06:07Z`）
 接受刷新 Readiness 并授权 Slice1 产品/System 编码与本地确定性验证，因此暂停条件已解除，`REWORK` 决定不变。该收据不授权
 Provider/model、credential、动态源码披露、live browser、hidden、Slice2/3 或 Production Activation；旧 Result 和已消费 grant 继续保留。
+
+## Authorized implementation progress
+
+重新授权后，`FINDING-010-095` 已形成不接 Provider 的 `CHAT_ACCESS_LOCAL_CANDIDATE`：独立固定命令、server-owned
+Conversation/Turn/Context、消息历史、“新对话”和失败 Turn 隔离通过本地定向验证。它不改变本 PDR 对主 Agent、逐轮证据/审核、Provider
+route 和真实体验的要求；listener/browser 仍未执行，`V-ALPHA-ACCESS-001` 仍为 NOT-RUN，模型/live 权限仍须 freeze 后另取。

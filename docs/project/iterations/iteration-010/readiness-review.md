@@ -84,7 +84,8 @@ Readiness 权威；`585f02c4…` 对旧单轮 Engineering QA 计划的历史 Rea
 
 文档同步收据 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 只允许更新
 文档。此后 current System docs、Proposal、Manifest、Slice 和 Verification 已一致冻结下列内容，并由 `f76ba3e8…` 接受。当前 Readiness
-verdict 是 `ACCEPTED`，Iteration/Slice1 为 `authorized / coding_input=true`；Agent/Conversation 实现、资格和 live 状态仍是
+verdict 是 `ACCEPTED`，Iteration/Slice1 为 `authorized / coding_input=true`。此后 `FINDING-010-095` 已形成
+`CHAT_ACCESS_LOCAL_CANDIDATE`；主 Agent、逐轮证据/审核、Provider route、资格和 live 状态仍是
 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、

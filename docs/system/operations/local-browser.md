@@ -5,8 +5,8 @@ status: current
 authority: operational
 owners: [operations, interface]
 depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-code: [pyproject.toml, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
+code: [pyproject.toml, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
 
 # 本机浏览器体验
@@ -24,8 +24,9 @@ revision，答案继续绑定 Citation，并在显示为已审核结果前经过
 有效的 Conversation，也不允许旧答案授权、旧 Review、未密封工具结果或 Provider memory 跨 Turn 取得权威。
 
 ADR-016 的固定 Understanding/Initial Investigation/Answer/双 Review/Verification Investigation 拓扑和
-`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 页面属于已实现兼容路径与历史运行证据，不再定义默认 Agent 本体。新对话架构当前为
-`NOT_IMPLEMENTED / NOT_QUALIFIED`；在实现、确定性资格、真实模型审计和人工体验均闭合前，页面不得把
+`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 页面属于已实现兼容路径与历史运行证据，不再定义默认 Agent 本体。独立 Chat Access 当前为
+`CHAT_ACCESS_LOCAL_CANDIDATE`，已实现 Conversation/Turn/Context、消息历史和“新对话”；主 Agent、逐轮证据/审核和 Provider route 仍为
+`NOT_IMPLEMENTED / NOT_QUALIFIED`。在确定性资格、真实模型审计和人工体验均闭合前，页面不得把
 `ENGINEERING_CHAT_EXPERIENCE@1` 标成 PASS 或生产可用。
 
 ADR-016 曾接受第三个、面向普通用户的 `ENGINEERING_QA` 兼容入口。`ITER-010 / SLICE-001` 已实现 loopback WSGI 页面、本地
@@ -79,6 +80,19 @@ PDR-003 将 Access 与答案 Quality 分离：页面可启动、可提交 Turn�
 `V-ALPHA-ACCESS-001`；它不能取得 `V-CHAT-001` 或 `V-ANSWER-REWORK-001`。当前 ITER-010 已超过 240 分钟 hard stop，首次新体验前只允许启动安全、失败
 真实性、一次 current Provider qualification 和一个 Provider 前本地/Mock Access smoke，不执行 full regression。首次方向 live canary
 必须是 PDR-004 的一个五轮 Conversation；任一 Turn 失败即停止后续方向套件并回到本地根因诊断。
+
+新的本地 Chat Access 候选使用独立固定命令，不接受 host、port、project、revision、Provider、question 或授权参数：
+
+```bash
+PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_chat_alpha_cli
+```
+
+安装后的命令名为 `swm-engineering-chat`。launcher 只在 product worktree 与固定
+`validation-projects/mall@0504e86b1f1b6f1b8aa6a734d37a90fb67346be7` 都 clean 时绑定 `http://127.0.0.1:8765/`；页面显示 exact product/source revision、
+完整消息历史、“新对话”、Provider/World Model/Source 未配置状态和“质量未验收 / 非生产”。提交消息会创建真实 server-owned Turn；当前没有
+Provider executor，故 Turn 以 `PROVIDER_NOT_CONFIGURED`、dispatch/retry 0、Delivery `NOT_AUTHORIZED` 密封，Conversation 继续可用。状态只在
+进程内保存，停止服务后不恢复。该候选的 WSGI/CLI 定向证据已闭合，但真实 listener/browser handoff 尚未执行，`V-ALPHA-ACCESS-001` 仍为
+NOT-RUN；该命令不读取 credential、Provider/Source payload 或 `src/main/resources`，也不执行 Production Activation。
 
 已实现兼容 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：

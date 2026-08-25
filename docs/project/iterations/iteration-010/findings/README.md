@@ -241,5 +241,8 @@ iteration: ITER-010
   假设、计划、观察、重规划与完成判断；已处置为“软件世界模型 + 主工程 Agent”双核心和 ADR-018。
 - [FINDING-010-094](FINDING-010-094.md)：当前 Session 只共享工程、授权和资源熔断，每题仍是没有历史/指代/纠正的独立 Request；已处置为
   server-owned Conversation/Turn/Context、逐轮证据与 Review、新对话隔离和五轮 Chat canary。
+- [FINDING-010-095](FINDING-010-095.md)：新的独立 Chat Access 已以 server-owned Conversation/Turn/Context、消息历史、新对话隔离、
+  0-dispatch Provider 失败真相和固定 loopback 命令形成本地确定性候选；真实 listener/browser 尚未执行，故 `V-ALPHA-ACCESS-001`
+  继续为 NOT-RUN，旧 QA 入口保持兼容身份。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。
