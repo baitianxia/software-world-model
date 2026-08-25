@@ -91,11 +91,13 @@ receipt 均不得复用；其他已接受 Profile 保持各自已资格的调用
 Conformance、同 Strategy/Configuration Capability Qualification、隔离 transport、credential reference 和 disclosure scope。当前
 Engineering QA 顺序为 Ark → DeepSeek；不能因 Ark 实现缺口直接跳过 primary。
 
-一次用户提交只产生一个 logical question。Ark primary attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有
+一次用户提交只产生一个 logical interaction unit；Engineering Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。
+Ark primary attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有
 authorized answer，且原因为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected，才创建一次
-DeepSeek fallback attempt。后者从 immutable original question 与同一 exact Cognition Context 重新运行完整问答链，不能读取或拼接 Ark
-Ledger/Package/Draft/Review。Application、Source 或 Security failure 不 fallback；每个 Provider 内 retry 为 0。迟到 Ark 结果进入
-quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建 Session；页面和 Result 按 logical question 汇总，并保留两个 attempt 的
+DeepSeek fallback attempt。后者从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，
+以及同一 exact Cognition Context 重新运行完整链，不能读取或拼接 Ark Ledger/Package/Draft/Review。Application、Source 或 Security
+failure 不 fallback；每个 Provider 内 retry 为 0。迟到 Ark 结果进入 quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建
+Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的
 独立身份、调用、Usage、成本、失败分类与 outcome-unknown 重复计费风险。当前实现尚未闭合该流程，运行状态必须标记
 `NOT_IMPLEMENTED / NOT_QUALIFIED`。
 
@@ -113,43 +115,47 @@ Original Question
 
 生成角色和审核角色都不能访问来源工具。审核发现表达、遗漏或组织问题时，Response Control 把具体 Finding 和同一 Packet Digest 交给生成角色重写，不重新运行调查；审核证明现有包缺少物质性依据时，Application 才执行针对性来源调查并密封新 Packet。未通过、未知或达到安全熔断均不授权用户答案。调用次数限制只能触发失败关闭，不能取消检查项、引用或独立审核。
 
-## 工程问答
+## 工程 Chat
 
 ```text
-Explicit ENGINEERING_QA request
-  → one immutable logical question under a preauthorized Ark → DeepSeek route
-  → isolated Ark provider attempt
-  → immutable original question + Question Understanding / Checklist
-  → exact World Model Cognition Context
-  → independent Investigation LLM proposes next search/read/parse from question + cognition + sealed ledger prefix
-  → Source Broker validates and compiles one registered exact-revision read-only operation
-  → isolated Retrieval Worker executes; Application appends Proposal/Decision/Result to Evidence Ledger
-  → repeat adaptive investigation until a valid FINISH disposition or fail-closed fuse
-  → seal one Question Evidence Package with admissible support/citation and retained boundary/audit partitions
-  → fresh isolated conclusion-first Answer with claim citations
-  → fresh comprehensive Review against original question and current package
-  → on provisional approval, fresh evidence-boundary challenge Review over deterministic placeholder/status/unmounted-type leads
-  → Application derives APPROVED Delivery only from the challenge, or same-package rewrite/re-review, or one typed-Finding Verification gap Request
-  → fresh independent Verification Investigation reads gap + current Package/Ledger and adaptively proposes through Broker/Worker
-  → on supplemental evidence: new Ledger Revision → new Package → new Answer → new comprehensive + challenge Review
+Explicit Engineering Conversation
+  → fixed product / project / exact revision / World Model / tools / Provider route
+  → immutable User Turn + sealed relevant Conversation Context + current Agent Work State
+  → isolated primary Engineering Agent
+  → understand goal and references; form or revise hypotheses, plan and subtasks
+  → query exact World Model cognition or propose one registered source operation
+  → Application / Source Broker validates; isolated Worker executes read-only exact-revision operation
+  → append Proposal / Decision / Observation to Turn Evidence Ledger
+  → Agent observes and replans until evidence is sufficient, an honest limitation is reached, or a fuse closes the Turn
+  → seal current Question Evidence Package with support/citation and boundary/audit partitions
+  → same logical Agent synthesizes a cited conversational Draft
+  → fresh independent Reviewer checks current Turn, trusted conversation context, Package and Draft
+  → APPROVED Delivery, or specific Finding returned to a new Agent Work State Revision
+  → same-package targeted rewrite, or new evidence Attempt through World Model / Broker tools
+  → any new evidence creates a new Ledger / Package / Draft and fresh independent Review
 ```
 
-该流程的模式在任何读取和模型调用前已固定。软件世界模型为 Investigation LLM 提供持久的系统认知，不是手册、地图或 locator 缓存；这些都只是 World Model Cognition Context 的投影。认知缺失、无关或 Coverage 不足是 Ledger/Package 的显式状态，不阻断原 Checklist 在同一授权 exact revision 中驱动只读调查；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。
+Conversation 在任何读取和模型调用前固定 exact 工程边界。软件世界模型为主 Agent 提供持久的系统认知，不是手册、地图、聊天记录或
+locator 缓存；这些都只是认知的投影。认知缺失、无关或 Coverage 不足是 Ledger/Package 的显式状态，不阻断当前 Turn 在同一授权 exact
+revision 中按需驱动只读调查；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。
 
-Investigation LLM 根据每次已密封 Result 自适应决定下一步，但不直接拥有任何 Tool。Source Broker 把其 Proposal 重新校验、绑定 exact revision/allowlist/remaining fuse 并编译；只有 Retrieval Worker 读取来源。每一步只追加到 Evidence Ledger，已确认 prefix 不可改写。来源内容是不可信 data，不能成为权限或操作指令。
+主 Agent 根据每次已密封 Observation 决定下一步并更新 Application-owned Work State，但不直接拥有任何 Tool。Source Broker 把其 Proposal
+重新校验、绑定 exact revision/allowlist/remaining fuse 并编译；只有 Retrieval Worker 读取来源。每一步只追加到 Evidence Ledger，已确认
+prefix 不可改写。来源内容是不可信 data，不能成为权限或操作指令。
 
 Question Evidence Package 只有一个 seal/identity，但 `support/citation` 仅收可采信条目，`boundary/audit` 必须保留 Gap、Failure、Partial、
-Conflict、Unknown、拒绝和资源记录；后者不能支持肯定 Claim。Reviewer 不规划补证操作，只返回具体 gap；补证由另一个全新上下文的
-Verification Investigation 多步推进，不回到初始调查。非验收方向体验可以临时限制最多一次补证调查；正式 hardening/验收不得固定一轮，
-必须预密封 revision/call/operation/bytes/wall-time/no-progress 熔断，answerable 因熔断未获批准计失败。
+Conflict、Unknown、拒绝和资源记录；后者不能支持肯定 Claim。Reviewer 不规划或执行补证，只返回具体 gap；该 gap 由同一逻辑主 Agent 在
+新的受信 Work State/Attempt 中处理。正式资格必须预密封 revision/call/operation/bytes/wall-time/no-progress 熔断，answerable 因熔断
+未获批准计失败，但熔断不能削减证据、Citation 或独立审核。
 
-comprehensive Review 通过后不会直接 Delivery。Application 从当前 Package/Draft 投影配置 placeholder、引用内容中没有的具体 status
-literal 和未挂载 same-application type，并为每项生成稳定 `challenge_id`；Gateway 只允许另一个 fresh challenge Review。challenge 必须逐项
-比较 evidence scope 与 Draft scope，越界项绑定同输出中作用于被挑战 Claim 的 Finding；Application 重算 exact ID 集合，只有集合完整、全部
-`WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 才终止问答链。placeholder 只证明 key/injection，caller/getter/import 只证明可见关系，不证明
-未挂载 field/wire property；上游 local state 只证明局部结果，均不能自动扩张为 runtime value、DTO/handler behavior 或下游 HTTP mapping。
+至少一个 fresh Reviewer 必须比较 current Turn 目标、用户纠正、Conversation Context、evidence scope 与 Draft scope。配置 placeholder
+只证明 key/injection，caller/getter/import 只证明可见关系，上游 local state 只证明局部结果，均不能自动扩张为 runtime value、DTO/
+handler behavior 或下游 HTTP mapping。Reviewer Strategy 可以增加隔离 challenge，但固定双 focus 不是长期主流程。
 
-已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞本题。
+后续 Turn 可以追问、指代、纠正、深入或总结。Application 密封 relevant history 与当前 Work State；先前答案、摘要和 Provider hidden state
+不是证据。用户纠正形成新 Conversation Revision，一次 Turn 失败只结束该 Turn，listener 和会话历史继续有效。
+
+已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞当前 Turn。
 
 ## 正式知识使用
 

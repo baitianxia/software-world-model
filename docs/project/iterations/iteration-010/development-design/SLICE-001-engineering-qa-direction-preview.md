@@ -1,29 +1,29 @@
 ---
 id: ITER-010-SLICE-001
 kind: development-slice
-status: authorized
-authority: current-development
+status: paused
+authority: project-decision
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
-coding_input: true
+coding_input: false
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
-product_goal_cross_domain_case_ids: [V-XD-001]
-product_goal_web_checkpoint_id: V-WEB-000
-direction_preview_web_checkpoint_id: V-EXPERIENCE-001
+product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
+product_goal_web_checkpoint_id: V-CHAT-EXPERIENCE-001
+direction_preview_web_checkpoint_id: V-CHAT-EXPERIENCE-001
 product_goal_direction_preview_checkpoint_id: V-PREVIEW-002
-product_goal_reflection_gate_case_id: V-REFLECT-001
-product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, V-QINTENT-001, V-INVESTIGATE-001, V-BROKER-001, V-LEDGER-001, V-ISOLATION-001, V-ANSWER-001, V-REVIEW-001, V-LIMIT-001, V-SEC-001, V-XD-001, V-WEB-000, V-WEB-001, V-PREVIEW-001, V-REFLECT-001, V-EXPERIENCE-001, V-ALPHA-ACCESS-001, V-TIMEBOX-001, V-ANSWER-REWORK-001, V-PREVIEW-002]
+product_goal_reflection_gate_case_id: V-PREVIEW-002
+product_goal_slice_gate_case_ids: [V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHAT-EXPERIENCE-001, V-CHAT-001, V-CHAT-QUALITY-001, V-CHAT-XD-001, V-COMP-ALPHA-001, V-PREVIEW-002]
 ---
 
-# SLICE-001：持续 Web Alpha 与答案质量返工
+# SLICE-001：主工程 Agent 多轮 Chat Alpha 与逐轮质量返工
 
 ## Status and dependencies
 
-`AUTHORIZED / REWORK / CURRENT DEVELOPMENT / CODING INPUT`。用户曾以
+`PAUSED / REWORK / NO CURRENT DEVELOPMENT / NOT CODING INPUT`。用户曾以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受 Readiness 并只授权本 Slice。`SLICE-002/003` 不随之授权；此前绑定修正前一次性检索/先封包设计的收据不构成本 Slice 的权限来源。
 
@@ -35,48 +35,57 @@ product_goal_slice_gate_case_ids: [V-BASELINE-001, V-ARCH-001, V-COGNITION-001, 
 Slice2/3、hidden、Production Activation 或复用旧 live grant。
 
 [PDR-003](../decisions/PDR-003-experience-first-provider-cost-recovery.md) 记录了当前恢复约束：用户报告本轮约 14 小时仍无新体验版本且
-DeepSeek token 消耗过多。既有授权不再允许继续无界扩张 Prompt、Schema 或 Contract；当前只做 Access、Provider route、失败真实性与
-一题 live canary 所需的最小工作。Ark 为 primary；同一 logical question 的 Ark attempt 在密封 terminal 后，仅可按预授权 route 自动启动
+DeepSeek token 消耗过多。既有授权不再允许继续无界扩张 Prompt、Schema 或 Contract；PDR-004 恢复只做 Chat Access、Provider route、失败真实性、最多一次 Provider 前本地或 Mock Access smoke 与
+五轮 live Conversation 所需的最小工作。Ark 为 primary；同一 logical Turn 的 Ark attempt 在密封 terminal 后，仅可按预授权 route 自动启动
 一次独立 DeepSeek fallback attempt，用户无需选择模型、重提问题或重启 session。
+
+PDR-004 是当前最高优先级覆盖：旧授权已暂停，本 Slice 不再是编码输入。新目标是“软件世界模型 + 主工程 Agent”双核心与真正多轮 Chat；
+新默认 Owner 为 ADR-018/Engineering Conversation Contract。文档同步收据 `d8239ea7…` 不授权产品代码、测试扩展或 live。新的 Readiness
+获用户接受并重新授权前，任何 current plan 都不构成执行授权；下文标明“历史 / non-normative”的段落只保存已发生事实，其余 PDR-004 current plan 只能在新授权后执行。
+
+恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、
+逐轮 Request/Evidence/Answer/Review/Delivery 和新对话隔离。首次方向 live canary 本身是一段五轮 Conversation；PDR-003 的体验前单次
+smoke 只允许本地或 Mock Access 探针，不能用孤立 live question 冒充 Chat。每个发生 Provider dispatch 的 Turn 分别计 live attempt。
 
 ## PDR-003 recovery override：Access 先于 Quality
 
 本节覆盖下文历史返工顺序中任何要求“先把三题质量、完整回归或新协议全部闭合，再交页面”的表达；不改写已经发生的 run 或安全边界。
 
-1. `V-ALPHA-ACCESS-001` 先交一个真实、可重复启动、普通用户可操作且明确标记“质量未验收 / 非生产”的 Web。页面可以如实显示
+1. 从未执行的 `V-ALPHA-ACCESS-001` 按 PDR-004 pre-execution revision 先交一个真实、可重复启动、普通用户可操作且明确标记“质量未验收 / 非生产”的 Chat Web。页面可以如实显示
    Provider 未资格、请求失败、答案或 Limitation；静态回放不算 Access。
-2. `V-ANSWER-REWORK-001` 是独立 Quality Gate。Access PASS 不能补成 Quality PASS；Quality FAIL 也不删除可操作页面。只有 Quality
+2. 新 `V-CHAT-QUALITY-001` 是独立 Quality Gate。Access PASS 不能补成 Quality PASS；Quality FAIL 也不删除可操作页面。已执行 FAIL 的 `V-ANSWER-REWORK-001` 仅保留历史原义。只有 Quality
    PASS 才允许进入 hardening。
-3. `V-TIMEBOX-001` 使用 60/180/240 分钟检查点。历史 14 小时已经越过 hard stop，因此现在立即停止 scope expansion、外部批量调用和
-   首次体验前 full regression，收窄为页面启动、安全、失败真实性、最多一次 current Provider qualification 和一个 live smoke。
-4. 每次失败先按 Source truth、World Model Cognition、Question Understanding、Investigation、Evidence Package、Answer、Review、Web 定位
+3. 新 `V-TIMEBOX-CHAT-001` 对 PDR-004 恢复使用 60/180/240 分钟检查点。已执行 FAIL 的 `V-TIMEBOX-001` 仅保留 PDR-003 历史原义。历史 14 小时已经越过 hard stop，因此新授权后立即停止 scope expansion、外部批量调用和
+   首次体验前 full regression，收窄为页面启动、安全、失败真实性、最多一次 current Provider qualification 和一个本地或 Mock Access smoke。
+4. 每次失败先按 Source truth、World Model Cognition、Conversation/Task Understanding、Agent Work State/Plan、Tool Observation/Evidence、
+   Answer、Independent Review、Web 定位
    最早偏差，并提出可证伪 root-cause hypothesis；没有该假设不得改 Prompt、Schema 或 Contract。修复先通过本地最小复现和两个未参与
-   修复的相邻案例，再只跑一题 live canary。
-5. 同一 failure signature 只允许修复一次；仍复现即停止规则累积并评审架构职责。一题 canary 失败时不运行三题集。首次体验前只跑
+   修复的相邻案例，再运行一个五轮 Conversation 作为首次 live Chat canary。
+5. 同一 failure signature 只允许修复一次；仍复现即停止规则累积并评审架构职责。五轮 canary 任一 Turn 失败时停止后续方向套件。首次体验前只跑
    targeted impact、startup、safety 和失败真实性；full regression 仅在 Alpha `CONTINUE` 后 hardening 与正式验收前运行。
-6. 一个 sealed 版本的 question run 到达任何外部 dispatch 即计一次 live attempt。同一 failure signature 最多一个 successor attempt；
+6. 一个 sealed 版本的 Turn run 到达任何外部 dispatch 即计一次 live attempt。同一 failure signature 最多一个 successor attempt；
    连续两次没有用户可见增量即停止外部重跑、回到本地诊断。内部 Prompt/Schema/Contract 或测试数量变化不算用户可见增量。
 7. Ark route 当前未闭合不能被当作 Ark 不可用证据。Session 在问题前预封 Ark→DeepSeek 有序 route 与双 Provider disclosure scope；
    primary attempt 因 Provider unavailable/HTTP/outcome unknown/output invalid 或 Review reject 而密封为无 authorized answer 时，才可对
-   同一问题自动启动一次 DeepSeek attempt。Fallback 从原问题和同一 Cognition 重跑完整链，不复用 Ark 中间态；迟到 Ark 结果隔离且不覆盖。
+   同一 Turn 自动启动一次 DeepSeek attempt。Fallback 从 original Turn、该 Turn 密封的 Cognition 和 relevant sealed Conversation Context 重跑完整链，不复用 Ark 中间态；迟到 Ark 结果隔离且不覆盖。
    相同且仍有效的 Conformance 必须复用。
 8. DeepSeek 批量运行默认安排在北京时间 `00:00–09:00`、`12:00–14:00`、`18:00–24:00`，并在开始前复核官方价格政策是否已经生效。
    成本只决定是否在 dispatch 前开始，不能裁剪已经开始的问题的调查、Citation 或 Review。
 
 ## Rework outcome：先交付持续 Web Alpha
 
-恢复开发后的首项交付必须是普通用户实际可持续使用的同一产品 Web，而不是固定 1+1 问题的评测运行器：
+新 Readiness 与授权后的首项交付必须是普通用户实际可持续使用的同一产品 Chat Web，而不是固定 1+1 问题的评测运行器：
 
 1. 服务可通过一条固定、文档化的命令重复启动在 `http://127.0.0.1:8765/`，无需认证；普通体验者不需要拼装逐题 freeze、grant 或内部
    run 参数。页面明确显示产品版本、工程精确版本、Alpha/非生产状态和已知限制。
-2. 启动时固定一个本地工程、精确 revision、世界模型认知、Source Profile、Provider/model 与只读范围；同一运行会话允许用户连续提出
-   任意自然语言工程问题，不得要求每题重启服务或重新走一次项目计划授权。
-3. 每个问题保持独立 Request、Ledger、Package、Answer、Review 和 Citation 身份。某题调查失败、审核拒绝或达到安全熔断时只关闭该题，
-   页面展示真实失败或 Limitation，服务仍可接受下一题；错误答案不得被标成已审核成功。
-4. 在同一 Slice 内对答案层级和 Reviewer 漏判做最小、通用修复，并以原现场登录题加至少两个相邻或异质问题回归。至少一个问题不是实现
-   走读题；不得加入工程名、问题文本、关键词、符号、类、方法、fixture 或 Oracle 特判。
-5. 用户可持续体验和独立技术复核完成前，不启动第二工程、持久恢复、完整异常矩阵、全面性能安全、hidden、三臂或 full regression；
-   PDR-003 还禁止在 Access 前继续扩张 Prompt、Schema 或 Contract。
+2. 启动时固定一个本地工程、精确 revision、世界模型认知、Source Profile、Provider/model 与只读范围；服务拥有 Conversation/Turn/Context 和“新对话”，
+   用户能在同一 Conversation 追问、纠正、澄清、深入与总结，不得退化为同 Session 中互不相干的独立问题。
+3. 每个 Turn 保持独立 Request、Ledger、Package、Answer、Review 和 Citation 身份；Conversation Context 只保留有 provenance 的对话状态，prior Answer/Review 不成为源码事实。
+   某 Turn 失败只关闭当前 Turn，Conversation 仍可继续；新 Conversation 不继承旧 referent、Work State、Evidence 或 Provider memory。
+4. 主 Agent 使用受控 World Model/Source 工具，基于每次观察重规划并综合答案。fresh independent Reviewer 只返回 Finding；Finding 回主 Agent 补证或重写，
+   不启动固定的 Verification Investigation 角色、双 Review 或 `@3` 流水线。不得加入工程/问题/关键词/符号/类/方法/fixture/Oracle 特判。
+5. 页面 Access 后立即运行一个五轮 Conversation 及新对话泄漏负测，随后在本 Slice 内立即运行三臂方向信号；这不增加一个额外产品交付阶段。跨重启恢复、
+   第二工程、hidden、复杂异常矩阵和 full regression 仍延后到用户 `CONTINUE`。
 
 自由提问所需的会话级授权、动态问题披露和 System Owner 语义必须在编码前以最小变更闭合；这项必要安全工作不能扩张为先建设完整答案
 Schema 或评测体系。模型调用上限仍只作为安全熔断，不能为了减少调用而省略调查、Citation 或独立审核。
@@ -94,21 +103,21 @@ hidden 与 Production Activation 从未授权。
 
 - Product delta：把“固定调查后代码走读”推进为“世界模型认知引导、模型自适应读源码、答案优先”的真实纵切。
 - Existing capability：复用 ITER-006 exact Snapshot、declaration/`CALLS`、Citation、只读来源和 loopback Web，不复制 validation-only 入口。
-- New chain：World Model Cognition Context → Investigation LLM → Source Broker → Retrieval Worker → append-only Ledger → 双分区 Package →
-  Answer → Reviewer；审核给出具体 gap 后，新的 Verification Investigation 在新上下文中自适应补证，再形成后继 Package、重答、重审。
-- Earliest Web micro-checkpoint：最小链一旦完成，立即用一条需要 World Model 认知与 query-time Source 共同支持的代表问题跑真实 Web；
-  exact revision、只读、不可信来源、support/citation 分区、Citation 和独立 Review 在该检查点不可延后。
-- Fast checkpoint：一个真实工程 4 条不同维度自然问题，加至少一条现场题；至少 3 supported、至少 2 个非实现维度。
-- Deferred hardening：持久恢复、复杂冲突、跨轮去重、完整异常矩阵、第二工程、全面性能、完整回归、hidden 和三臂对照留到方向
-  `CONTINUE` 后。Slice1 仍须保留实际发生的 Conflict/Gap/Failure/Partial/Unknown，不得静默消解。
+- New chain：World Model Cognition + Conversation Context → 主 Agent 维护目标/计划并选择受控工具 → Source Broker/Worker → append-only Ledger →
+  逐轮双分区 Package → 主 Agent 自然综合 → fresh independent Reviewer；Finding 回到主 Agent 补证或重写，再形成后继 Package、答案与 Review。
+- Earliest Web micro-checkpoint：最小链一旦完成，立即交付能建立/继续/新建 Conversation 的真实 Web Access；此时可标记“质量未验收”，不用孤立 live question 冒充 Chat。
+- Fast checkpoint：一个真实工程上的一段五轮 Conversation，依次覆盖初始问题、省略指代追问、用户纠正、进一步区分/深入和按 current Context 总结；
+  同行执行新 Conversation 泄漏负测，然后立即形成三臂方向信号。
+- Deferred hardening：持久恢复、复杂冲突、跨轮去重、完整异常矩阵、第二工程、全面性能、完整回归和 hidden 留到方向 `CONTINUE` 后；
+  但小样本三臂方向信号在 Slice1 的可操作 Chat 与五轮 canary 之后完成。Slice1 仍须保留实际发生的 Conflict/Gap/Failure/Partial/Unknown。
 - Stop：世界模型被手册化；调查一次性固定；模型直接 Source；任何特判；Ledger/Package/Review 身份错配；答案仍是代码走读；错误、安全
   或审核降级；用户 REDIRECT/REJECT。
 
 ## Direction preview checkpoint
 
-历史 `V-WEB-000/V-WEB-001` 已证明同一 product-owned 页面和完整最小后端链可以运行，但它们依赖启动前精确准备的一题，不能再被称为
-持续可体验版本。返工检查点 `V-EXPERIENCE-001` 必须从同一页面完成：一次启动、一次固定工程/revision、同一会话连续提交原失败题及至少
-两个相邻或异质问题，期间不重启服务、不更换产品路径，也不因其中一题失败停止后续提问。
+历史 `V-WEB-000/V-WEB-001/V-EXPERIENCE-001` 已保存原单轮 Web PASS/FAIL 事实，但不证明 Chat，也不可改写为新 Gate。PDR-004 使用新
+`V-CHAT-EXPERIENCE-001`：同一页面一次启动、一次固定工程/revision，一个 Conversation 完成五轮语义追问/纠正/深入/总结；新 Conversation 负测必须澄清省略指代，
+不能继承旧 Context、Evidence 或 Provider memory。任一 Turn 失败只关闭该 Turn，不终止 Conversation。
 
 页面只监听 `127.0.0.1`，普通用户无需认证，持续显示“Alpha / 非验收 / 非生产”、产品与工程版本及已知限制。默认展示问题、直接答案或
 Limitation、可打开 Citation 和请求级状态；World Model Cognition、Ledger、Broker 操作、Package、调用数、Review Finding 和授权诊断折叠
@@ -218,20 +227,34 @@ Reviewer 却再次请求同一已穷尽 gap 并触发 preview Verification fuse�
 admissible 域排除，强制每个非支持 observation 绑定 current gap，并把 terminal verified gap 投影给独立 Reviewer。run-026 仍是 1
 PASS + 2 FAIL，不追认三题 Gate。
 
-预期行为是：固定工程会话持续接受自由问题；每题由 World Model 提供 exact 系统认知，Investigation LLM 保留原问题全部约束，根据每一步
-Ledger Result 自适应决定下一项抽象读操作或结束，Broker/Worker 控制 actual read。调查结束后才密封 Package，Answer 在新上下文中只读
-包、先回答目标；Reviewer 在独立新上下文中检查并可指出具体证据缺口，但不能自己读源码或执行工具。任一题失败不会污染后续题或关闭
-Web 服务。
+预期行为是：同一 Conversation 中，主工程 Agent 持续维护用户目标、假设、子任务、计划和完成判断；它组合 exact World Model Cognition、
+sealed Conversation Context 与每次受控工具观察，自适应选择下一步或结束。Broker/Worker 仍控制 actual read，Agent 没有直接 Source/FS/Shell/network/credential/write 权限。
+Application 每 Turn 密封 Package，主 Agent 综合答案；fresh independent Reviewer 只返回具体 Finding，Finding 回主 Agent 决定补证或重写。任一 Turn 失败不会污染后续 Turn 或关闭 Conversation。
 
-## System contracts and invariants
+## PDR-004 current system contracts and invariants
 
-### Phase 0：复核正式边界
+- ADR-018 和 Engineering Conversation Contract 是唯一默认主链 Owner。主 Agent 持续负责目标、假设、计划、工具选择、观察解释、重规划和答案综合；
+  Application/Control Plane 负责 exact revision、授权、Broker/Worker、证据身份、安全熔断和审计。
+- Application 拥有 Conversation/Turn/Context 与 Agent Work State。Context 只携带确认的目标/约束、指代实体/主题、开放问题、reviewed/superseded conclusion refs 和 exact provenance；
+  prior Answer/Review、用户陈述和 Provider hidden memory 不取得 Source truth 权威。
+- 主 Agent 只能通过注册的 World Model query 和 Broker/Worker source search/read 工具工作；每次观察、拒绝、资源收据、Gap/Conflict/Unknown 只追加到当前 Turn Ledger。
+- 每 Turn 完成后密封双分区 Evidence Package；主 Agent 仅基于当前可授权证据作答并为重要结论绑定 Citation。seal 只证明身份/完整性/来源/版本，不证明内容为真。
+- fresh independent Reviewer 审查 original Turn、Context Projection、Package 和 Answer，仅返回绑定 Claim/evidence class/need 的 Finding。Finding 交还主 Agent；任何补证都形成新 Ledger/Package/Answer/Review identity。
+- 旧 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3`、固定 Investigation/Verification Investigation 角色、双 Review 和 focus challenge 仅是历史/兼容资产，不是 current 主 Agent 拓扑或验收要求。
+- Ark→DeepSeek fallback 从 original Turn、relevant sealed Conversation Context 和 exact Cognition 启动完全隔离 attempt；不复用 primary 中间态，同 Provider retry 为 0，late result quarantine。
+- 模糊指代在 Source/Provider dispatch 前澄清；新 Conversation 不继承旧 Context/Work State/Evidence/Provider session。所有问题使用同一协议，禁止工程/问题/关键词/符号/类/方法/fixture/Oracle 特判。
+
+## Historical `@3` implementation contract (non-normative)
+
+本节至“Historical interfaces”只保留 PDR-004 前已执行单轮实现的 exact 证据和兼容约束。其中的“必须/不得”、固定角色、`@3`、双 Review 和 Verification Investigation 都只描述历史协议，不得用作 current 开发指令。
+
+### Historical Phase 0：当时的正式边界
 
 开发前必须确认 `FINDING-010-002`、`SYS-ADR-016`、Engineering Question Answering Contract、Product Success、runtime/Agentic/Evidence/
 World Model/Response/Source/Security/Browser 文档和治理门禁共同表达 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3`。严格 `WORLD_MODEL`
 Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback。任一 current Owner 或 Manifest digest 不一致即停止。
 
-### Phase 1：最小真实协议
+### Historical Phase 1：当时的最小真实协议
 
 - Request 固定 immutable original question、exact repository/revision、World Model Context/Scope/Schema/Snapshot、source allowlist、
   Binding-scoped versioned Source Profile ref/digest、Provider disclosure policy 和资源上限；问题或运行状态不能改变这些身份。
@@ -330,9 +353,24 @@ Source-off 和显式 `DIRECT_INVESTIGATION` 继续保留，不得静默 fallback
   Limitation，answerable 因上限耗尽未回答必须计 FAIL。不能删减调查、checklist、Evidence、Citation 或 Review。
 - 交付后的高质量证据/结论可异步提议 Knowledge Update，不能阻塞或追认本题答案。
 
+## System contracts and invariants
+
+current 目标由 `SYS-ADR-018` 和 `SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION` 拥有，并继续遵守
+`SYS-CONTRACT-APPLICATION-AGENTIC-TASK`、Response Control、Source Artifact 与 Security 边界。不可破坏的语义是：世界模型、
+Conversation Work State 和 Turn Evidence 三者分离；主 Agent 拥有目标、假设、计划、工具选择、观察解释、重规划和完成判断；
+Application/Broker/Worker 拥有 exact revision、授权、只读执行、证据身份和审计；每个 Turn 经 fresh independent Reviewer 后
+才能由 Response Control 放行。旧 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 只是历史兼容协议，不得覆盖这些 current 语义。
+
 ## Interfaces and affected code
 
-本 Slice 授权允许修改 Application orchestration、Investigation/Verification Investigation role、Source Broker port/policy、Retrieval Worker adapter、Evidence Ledger/Package、
+未来重新授权后的最小产品变更只能落在 Conversation/Turn/Application-owned Work State、主 Agent 工具循环、逐 Turn
+Ledger/Package/Review/Delivery 编排与现有 loopback Web 交互面。它应复用现有 World Model query、Source Broker/Worker、
+Citation、Provider Gateway 和 Response Control，不另建旁路。具体类、函数与迁移步骤由新 Readiness 通过后的实现调查决定；
+本次文档同步不授权修改任何产品代码。
+
+## Historical interfaces and affected code (non-normative)
+
+当时已消费的历史 Slice 授权曾允许修改 Application orchestration、Investigation/Verification Investigation role、Source Broker port/policy、Retrieval Worker adapter、Evidence Ledger/Package、
 Response Control、Answer/Review Strategy、role-specific Gateway input、product-owned HTTP/Web 及对应 tests。优先复用现有 World Model Query、
 Evidence Answering、Citation 和 Web 组件，不复制 ITER-009 pipeline。
 
@@ -346,8 +384,8 @@ Evidence Answering、Citation 和 Web 组件，不复制 ITER-009 pipeline。
 测试均视为不可信输入，其内容或模型声明不能获得 evidence class 权威；拒绝 Source Profile 漂移/类型重标、symlink escape、
 submodule/remote 自动获取、binary、oversize、path traversal、写、执行和网络。
 
-每个 original question、Cognition Context、Ledger Revision、Package、Draft、Review、补证请求和独立 Verification Investigation 保存稳定
-ID/digest。Slice1 的 request-scoped Ledger 必须只追加且能形成完整 Result；跨进程持久恢复与复杂幂等 replay 明确后移到 Slice2。live
+历史 original question/Cognition/Ledger/Package/Draft/Review/补证角色 identity 保留原 ID/digest，不作为 current 拓扑。PDR-004 的 Conversation、Turn、Context Projection、Agent Work State、
+Ledger Revision、Package、Answer、Review、Finding 和 Delivery 各自保存稳定 identity。Slice1 的 Turn-scoped Ledger 必须只追加且能形成完整 Result；跨进程持久恢复与复杂幂等 replay 明确后移到 Slice2。live
 前另行冻结 exact
 Provider/model/role、fragment allowlist、redaction、configuration、secret reference 和 audit；计划与开发授权都不允许自动外发。
 持续问题 POST 还必须在 receipt/transport/credential 前满足 exact same-origin `application/json`；跨站 simple request 不能仅因目标是
@@ -357,42 +395,31 @@ loopback 就取得题目提交权。
 
 - 调查模型可能循环或过早 FINISH；最小版保留基本 progress/no-progress 安全关闭与 Application FINISH 检查，完整循环/异常矩阵后移。
 - World Model 和 Source 冲突时必须把两者作为 `boundary/audit` 条目保留，不能默认源码或较新时间自动获胜；复杂冲突裁决留到 Slice2。
-- 独立补证可能重复初始调查；Slice1 只证明一轮全新上下文、结果驱动和后继 identity，复杂多轮、dedup/recovery 留到 Slice2。
-- 公开 4 题不能证明跨工程泛化；它只判断方向，不能替代 Slice2/3。
+- 主 Agent 依据 Reviewer Finding 补证时可能重复已有调查；Slice1 只证明 Work State 可基于 current Package/Ledger 重规划并形成后继 identity，复杂 dedup/recovery 留到 Slice2。
+- 一个五轮 Conversation 不能证明跨工程泛化；它只判断方向，不能替代 Slice2/3。
 - 更多模型调用可能增加成本；首版先证明正确职责和答案质量，随后测量，不因调用数目标删减工作。
 
 ## Acceptance scenarios
 
-1. `V-BASELINE-001`：exact baseline/tree 与 ITER-009 rejected 结论一致。
-2. `V-ARCH-001`：Finding、ADR/Contract、Manifest、docs gate 一致；严格 WORLD_MODEL/DIRECT 回归边界不变。
-3. `V-COGNITION-001`：World Model 以 exact、持久、版本化外部认知供模型使用，不退化为手册/缓存/keyword hints。
-4. `V-QINTENT-001`：原问题目标、受众、层级、结论、语言和约束不丢失；无特判路由。
-5. `V-INVESTIGATE-001`：至少两步由 prior Result 驱动；partial/zero cognition 不阻断必要 Source；FINISH 有证据与 progress 支持。
-6. `V-BROKER-001`：Broker 以 exact Source Profile 编译并审计抽象提议与 evidence class，Worker 仅执行 global/class allowlisted
-   read-only exact-revision 操作，Application 重验 Result class/path；模型直接权限和分类权均为 0。
-7. `V-LEDGER-001`：Ledger append-only，调查后 seal；Package 的 support/citation 仅 admissible，boundary/audit 必须保留且不能支持肯定 Claim，
-   seal 不等于真值，revision 身份不可混用。
-8. `V-ANSWER-001`：历史 4+1 题结果继续保留，其中现场题答案层级与完整性 FAIL，不因 PDR 改写为 PASS。
-9. `V-REVIEW-001`：历史 Reviewer 漏判继续为 FAIL；返工版 comprehensive Review 只形成 provisional approval，fresh evidence-boundary
-   challenge 可阻断配置/未挂载类型/下游 status 扩张；Reviewer 只给具体 gap，独立 Verification Investigation 在新上下文中多步自适应补证，
-   经 Broker/Worker 形成新 Ledger/Package/Answer/双 Review；不回初始 Investigation 且无直接 Source。
-10. `V-LIMIT-001`：证据或安全上限不足时准确 Limitation 或失败关闭，不伪造 absence/coverage；answerable 因上限耗尽计 FAIL。
-11. `V-XD-001`、`V-WEB-000`：历史最小纵切技术 PASS 保留，不冒充持续体验或返工 PASS。
-12. `V-EXPERIENCE-001`：同一 Web 由一条固定命令重复启动，在固定工程/revision 的同一会话连续自由提问；受控坏题只失败该 Request，
-    服务继续接受下一题，状态不串扰；页面展示版本和限制，并证明答案来自真实世界模型—调查—证据链而非预制回放。
-13. `V-ALPHA-ACCESS-001`：在答案质量验收前先交付可重复启动、普通用户可操作、如实显示 Provider/请求状态且标记“质量未验收”的 Web；
-    Access PASS 不产生 Quality PASS。
-14. `V-TIMEBOX-001`：60/180/240 分钟检查点、一次资格/一次 smoke、同签名一次 successor 和连续两次无用户可见增量停止规则均可审计；
-    本轮已超过 hard stop，当前 recovery 必须保持收窄。
-15. `V-ANSWER-REWORK-001`：一题 canary 独立复核通过后，原失败题加至少两个相邻或异质问题完成通用修复回归；重大错误为 0、重要结论有
-    Citation、至少一题非实现走读，且无任何特判。canary 失败时不得启动三题集。
-16. `V-PREVIEW-002`：独立技术复核后，用户在持续 Web Alpha 上实际自由提问并决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
-17. `V-SEC-001`：Source injection、path/write/exec/network/secret/disclosure、budget、no retry、loopback 全部符合边界。
-18. `V-REFLECT-001`：历史反思事实保留；返工 Result 重新给出 A1—A3 证据、A4/A5 early signal、全部 Finding 和用户新决定。
+1. `V-ALPHA-ACCESS-001`（PDR-004 pre-execution revision；旧定义从未执行）：固定启动命令、loopback、无认证、消息历史、“新对话”、真实 Turn 提交、版本/限制/失败状态；
+   明确标记“质量未验收 / 非生产”。Access PASS 不产生 Chat/Quality PASS。
+2. `V-TIMEBOX-CHAT-001`：新授权后 60/180/240 分钟检查点、qualification≤1、Provider 前本地或 Mock Access smoke≤1、首体验前 full regression=0；孤立 live question 不计 Chat canary，
+   每个 Provider-dispatched Turn 分别计 live attempt，不削减证据/Citation/Review。
+3. `V-CHAT-EXPERIENCE-001`：同一 Web/Conversation 完成五轮语义链，页面展示完整消息历史；失败只关闭当前 Turn，Conversation 继续可用；新 Conversation 泄漏负测要求澄清。
+4. `V-CHAT-001`：五轮依次为初始问题→省略指代追问→用户纠正→进一步区分/深入→按 current Context 总结；主 Agent 持续维护目标/假设/计划/观察/重规划，每 Turn 独立 Evidence/Answer/Review。
+5. `V-CHAT-QUALITY-001`：每 Turn 重大错误 0、重要结论有 Citation；prior Answer/Review 不作事实，旧 evidence 只在 exact identity/coverage 匹配后重绑当前 Package；
+   fresh independent Reviewer 只返回 Finding，Finding 回主 Agent 补证或重写并形成新 identity；无特判。
+6. `V-CHAT-XD-001`：五轮中至少一个 Turn 在同一主 Agent/Work State/Ledger/Package/Answer/Review 链组合 exact World Model Cognition 与 query-time Source 证据，各结论绑定正确 Citation，不产生两个平行答案或模式拼接。
+7. `V-COMP-ALPHA-001`：五轮 canary 后立即对同一 exact revision/Conversation 脚本/可比较输出/rubric 形成方向信号。Codex 保留真实客户端/model/reasoning/tools/权限，
+   只作强外部基线，不是 Oracle/裁判；same-agent source-only 与 full-cognition + source 两个系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer。
+8. `V-PREVIEW-002`（PDR-004 pre-execution revision；旧定义从未执行）：独立技术复核完成 A1—A3/A6 exact Verdict 与 A4/A5 early signal 后，用户结合真实多轮 Chat 和三臂方向信号决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
+
+历史 `V-ANSWER-001/V-REVIEW-001/V-EXPERIENCE-001/V-TIMEBOX-001/V-ANSWER-REWORK-001/V-XD-001/V-WEB-000/V-WEB-001/
+V-PREVIEW-001/V-REFLECT-001` 保留原定义、原证据和原 PASS/FAIL，不是上述 PDR-004 current Gate，也不能被新 Result 追溯改写。
 
 ## Architecture reflection checkpoint
 
-返工 Result 必须复核世界模型概念、调查自适应性、Broker/Worker 权限、Ledger/Package identity、补证独立性、持续 Web Alpha、安全、
+新 Result 必须复核 A1—A3/A6：世界模型概念、主 Agent 的目标/假设/计划/工具观察/重规划、Broker/Worker 权限、逐 Turn Ledger/Package identity、fresh independent Review、持续 Chat Alpha、新对话隔离、安全、
 成本/复杂度和全部 Finding。历史失败不删除；新 Result 证明原题与至少两个异质问题的通用修复，并由用户在实际连续体验后决定。
 只有适用 Case PASS 且用户决定 `CONTINUE`，才可申请 Slice2；任一单题失败默认进入同 Slice `REWORK`，不会自动拒绝 Iteration。
 
@@ -557,7 +584,6 @@ HTTP dispatch，但 DeepSeek 返回 402；request 1、token 0、retry/switch 0�
 run-034 永久 FAIL；当前 key 所属账户余额实际恢复前保持 configuration-environment hold，之后只能启动新的 fresh Conformance。
 `FINDING-010-091` 记录本轮约 14 小时没有新用户体验、却持续进行内部协议修复和 DeepSeek live 的交付反证；PDR-003 现将 Access、Quality
 和 hardening 分离，并用 60/180/240、一次资格/一次 smoke、同签名一次 successor 和两次无用户可见增量停止规则收窄恢复。
-`FINDING-010-092` 记录透明 Ark-primary/DeepSeek-fallback 尚未成为 current Engineering QA 可验证 route。下一执行不是继续修 Answer
-Schema 或 Prompt，而是本地页面 Access → 预封双 route → 一题 live canary；fallback 是同一 logical question 下完全隔离的新 attempt，
-用户无需重提，且相同有效 Conformance 必须复用。
+`FINDING-010-092` 记录当时透明 Ark-primary/DeepSeek-fallback 尚未成为可验证 route，以及 PDR-003 当时的“一题 live canary”计划。该步骤从未执行，已被 PDR-004 修订为“最多一次 Provider 前本地或 Mock Access smoke；
+首个 live canary 本身是五轮 Conversation + 新对话隔离负测”。fallback 必须从 original Turn、relevant sealed Conversation Context 和 exact Cognition 完全隔离重跑，用户无需重提，且相同有效 Conformance 必须复用。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

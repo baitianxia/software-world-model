@@ -14,11 +14,15 @@ tests: [tests/test_agentic_runtime.py, tests/test_natural_task.py]
 
 ## Purpose and scope
 
-Agentic Task 把自然语言请求转成有界的 Capability 调用、Engineering Question Answering、Evidence Answering、知识更新/使用和响应准备。普通同步工程聊天可以从事先声明的 `ENGINEERING_QA` 入口进入组合证据用例；严格 `WORLD_MODEL` 与 `DIRECT_INVESTIGATION` 保留独立显式入口。需要多能力编排时由 Orchestrator 提议和路由。Orchestrator 不执行业务 Core、不拥有最终答案或授权。
+Agentic Task 把自然语言目标转成有界的 Capability 调用、Engineering Conversation、Evidence Answering、知识更新/使用和响应准备。普通
+工程 Chat 由主工程 Agent 在 Application-owned Conversation/Work State 中理解目标、形成假设和计划、使用受控工具、观察后重规划并综合
+回答；严格 `WORLD_MODEL` 与 `DIRECT_INVESTIGATION` 保留独立显式入口。需要多能力编排时由 Agent 提议、Task Control 授权和分派。
+Agent 不执行业务 Core、不拥有正式知识、最终审核或响应授权。
 
 ## Ownership
 
-Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authorization 与 Dispatch 的唯一写者。Agent 只能通过 Application Services 调用能力，不能直接访问 Core、Repository 或 Source Tool。
+Task Control 是 Conversation/Task、Turn/Revision、Agent Work State、Invocation、Delegated Grant、Action Authorization 与 Dispatch 的唯一
+写者。Agent 只能通过 Application Services 调用能力，不能直接访问 Core、Repository 或 Source Tool；Provider hidden state 不是恢复机制。
 
 ## Invariants
 
@@ -39,12 +43,20 @@ Task Control 是 Task、Revision、Invocation、Delegated Grant、Action Authori
 9. Investigation、Draft 与 Review 是隔离角色。调查角色不能看到 Source/Repository/raw Evidence/Update/Direct/Citation
    observation；Draft 只消费 sealed trace；Reviewer 从原问题和同一 trace 独立重建检查项。任何角色失败、结果未知或预算耗尽都
    终止本题，不 retry 或降级。
-10. `ENGINEERING_QA` 是独立的有界组合用例：Task 在执行前固定模式、protocol identity、original question、exact revision、World Model Read Authority、Source allowlist、Provider disclosure 和资源熔断。Question Understanding 与 Checklist 不可被后续证据缩减；World Model Cognition Context 提供持久的系统认知，但其缺失或 Coverage 不足不得否决 Checklist 驱动的受权 Source investigation。
-11. Engineering QA 的 Initial Investigation、Verification Investigation、Source Broker/Worker、Answer 和 Reviewer 是分离角色。初始调查根据原问题、Cognition Context 和已密封 Ledger prefix 自适应提议；补证调查在全新上下文根据具体 gap、current Package/Ledger 和每步新 Result 自适应提议，不回初始调查。Broker 逐步重新校验并编译，只有 Retrieval Worker 可执行 allowlisted exact-revision 只读操作，全部 Proposal/Decision/Result 追加到 Ledger。Answer/Reviewer 只读双分区 Package，不得访问 Repository、Source/World Model Tool、Ledger write port、shell、网络、credential 或未密封输入。
-12. Reviewer 只返回 typed Finding remediation：同包现有证据重写、绑定具体 Checklist/Claim/class/need 的缺证，或不可恢复拒绝；可信 Application 由此派生 `REWRITE_REQUIRED / MORE_EVIDENCE_REQUIRED / REJECT` 与 Verification Request，Reviewer 不能独立声明 action 或形成操作 Proposal。正式协议不得永久固定一轮补证；预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减调查、Citation 或审核。
+10. Engineering Conversation 是独立的有界组合用例：Task 在 Conversation/Turn 执行前固定 protocol identity、exact revision、World Model
+    Read Authority、Source allowlist/tool catalog、Provider disclosure 和资源熔断。Application 密封 current User Turn、相关 Conversation
+    Revision 和 Work State；用户纠正形成新 Revision，先前答案和用户陈述不成为 Source truth。
+11. 主工程 Agent 的 Work State 至少表达目标、指代、用户约束、可证伪假设、计划/子任务、Observation、缺口和完成判断。它依据 World
+    Model/Source Observation 修改计划；Question Understanding、Investigation、Answer 和针对性修订是同一 Agent 的能力，不是固定模型角色。
+    Broker 逐步重新校验并编译，只有 Retrieval Worker 可执行 allowlisted exact-revision 只读操作，全部 Proposal/Decision/Result 追加到
+    Ledger。模型不得访问 Repository、Source Tool、Ledger write port、shell、网络、credential 或未密封输入。
+12. 独立 Reviewer 与主 Agent 使用隔离上下文，只读 current Turn、受信 Conversation Context、当前双分区 Package 和 Draft，并返回具体
+    Finding。可信 Application 把 Finding 路由为主 Agent 同包修订或绑定 evidence gap 的新 Agent Attempt；新证据形成新 Package 后重新
+    Review。预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，不得删减 Evidence、Citation 或至少一次
+    fresh 独立审核。固定角色数、固定双 Review focus 和独立 Verification Investigation 不是新合同的长期不变量。
 
 ## Failure and implementation boundary
 
-授权失效、重复动作输入不一致、结果未知、预算耗尽或 Task Revision 漂移均停止后续分派并如实记录。通用 Agent 类型和调度算法由
-代码与测试定义；`JAVA_SOURCE_SEMANTICS@1` 的调查上限、operation allowlist、trace/progress 语义和失败状态由 World Model
-Answering 与 Implementation Query Contract 固定，不能只在 prompt 中声明。
+授权失效、Conversation/Turn/Work State 错绑、重复动作输入不一致、结果未知、预算耗尽或 Revision 漂移均停止当前 Turn 的后续分派并
+如实记录，不关闭整个 Conversation。Agent 调度和上下文压缩算法由代码与测试定义；工具目录、operation allowlist、trace/progress 语义
+和失败状态由 owning Contract 固定，不能只在 prompt 中声明。新对话式主 Agent 当前为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。

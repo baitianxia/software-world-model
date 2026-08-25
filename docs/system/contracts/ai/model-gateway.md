@@ -52,11 +52,13 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    untrusted raw output 记录，但不能由 Gateway 或 Adapter 获得查询/FINISH 权力。
 10. 多 Provider 路由按 ADR-017 在 Session 开始前冻结有序 route、每条 route 的 current Adapter Conformance、同一活动
     Strategy/Configuration Capability Qualification、exact endpoint、secret reference、独立 disclosure scope、预算和 transport。当前
-    `ENGINEERING_QA` 顺序为 `VOLCENGINE_ARK → DEEPSEEK`。用户的一次提交只创建一个 logical question；每个 Provider 使用不同 attempt
+    `ENGINEERING_QA` 顺序为 `VOLCENGINE_ARK → DEEPSEEK`。用户的一次提交只创建一个 logical interaction unit；Engineering
+    Conversation 中该单位是一个密封 Turn，兼容单轮协议中是 logical question。每个 Provider 使用不同 attempt
     identity、Manifest、grant、Ledger/Package/Answer/Review 和 transport audit。只有 Ark attempt 已密封 terminal、没有 authorized answer，
     且可信分类为 provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected 时，才能透明启动最多一次
-    DeepSeek attempt。Application/Source/Security failure 不允许 fallback。DeepSeek 从原问题与同一 exact Cognition Context 重跑完整链，
-    不得读取 Ark 中间态；迟到 Ark response 必须 quarantine 且永不覆盖。每个 Provider 内 request retry 为 0，用户无需重提问题或新建
+    DeepSeek attempt。Application/Source/Security failure 不允许 fallback。DeepSeek 必须从 immutable original interaction input、Chat 时
+    exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，不得读取 Ark 中间态；迟到 Ark
+    response 必须 quarantine 且永不覆盖。每个 Provider 内 request retry 为 0，用户无需重提问题或新建
     Session。Ark outcome unknown 后的 fallback 必须记录潜在重复计费风险。
 11. 一个 prompt program 可以为不同 Capability 定义不同 semantic authority，但每次调用只能在 Manifest 构造前按 sealed
     execution stage 确定性选择唯一 entry。Manifest 必须记录版本化 selection transformation，prompt program digest 必须绑定全部
@@ -66,6 +68,9 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 ## Security and compatibility
 
 Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatch 前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider-specific JSON mode 若要求 Adapter 注入 closed schema，schema authority 与 Gateway 的 leading semantic authority 必须按该 Adapter 已资格的 message rendering contract 组合，不能形成未经资格的相互竞争 system turns。当前 DeepSeek contract 将两者合并为恰好一个 leading system message，保持其余消息顺序，并由 live Conformance 同时验证单一 system、任务语义和 closed schema；该结论不自动适用于 Ark 或其他 OpenAI-format Provider。Provider preference 是预授权 attempt route，不是绕过资格的探测。相同 Adapter/Configuration/endpoint/model/transport/rendering identity 且仍有效的 Conformance 必须复用；领域 Prompt、答案 Schema 或不改变该 identity 的产品变化不能要求重复 Conformance。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 same-Provider request retry 都属于 Provider Configuration 与 Capability Qualification 身份；live Result 必须按 logical question 和 provider attempt 分别证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution、fallback reason、late quarantine、post-dispatch unknown 和潜在重复成本，而不只声明配置。
+
+这里的单轮 `logical question` 审计术语在 Engineering Conversation 中必须投影为密封 Turn；live Result 按 logical interaction unit（Chat
+中为 Turn）和 provider attempt 分别闭合，不得把整段 Conversation 合并计为一次 live attempt。
 
 ## Verification ownership
 

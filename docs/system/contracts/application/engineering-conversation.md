@@ -1,0 +1,114 @@
+---
+id: SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION
+kind: system-contract
+status: current
+authority: normative
+owners: [application, source, quality, security]
+depends_on: [SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
+code: []
+tests: []
+---
+
+# Engineering Conversation
+
+## Purpose and scope
+
+本契约定义 `CONVERSATIONAL_ENGINEERING_AGENT@1`：普通用户默认的工程 Chat。主工程 Agent 在固定工程和 exact revision 上持续理解多轮
+对话，使用软件世界模型认知和受控只读来源工具解决用户问题，并以有引用的自然答案或诚实 Limitation 响应。它不是给单轮
+`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 页面增加历史消息，也不是开放 shell、仓库写入或任意网络的自治编码 Agent。
+
+本契约只改变 Agent 如何解决问题和维持对话。软件世界模型的正式知识路径、严格 `WORLD_MODEL` Source-off 模式、显式
+`DIRECT_INVESTIGATION`、exact revision、Broker/Worker、Evidence Ledger/Package、Citation、Provider 授权、安全隔离、独立审核和
+Response Control 放行边界继续由原 Owner 拥有。
+
+## Ownership and state separation
+
+- Conversational Task Control/Application 是 Conversation、Conversation Revision、Turn、User Message、Accepted Correction、Agent Work
+  State Revision、Agent Attempt、Tool Authorization/Observation、Evidence Ledger/Package reference 和不可变 Turn Result 的唯一写者。
+- 软件世界模型由 Knowledge Engine/Snapshot Owner 持有，可跨 Conversation 复用；对话工作状态不准写入 Snapshot 或冒充正式知识。
+- 主工程 Agent 只提交 Goal/Hypothesis/Plan/Tool/Answer Proposal。它对解决过程具有认知控制，但不拥有业务状态、权限、来源、证据、正式
+  知识、Review Decision 或 Delivery Authorization。
+- Source Broker/Worker 拥有只读来源 Proposal 的校验、编译和执行；Reviewer 只提交独立 Assessment/Finding；Response Control 独占最终
+  Authorization 与 Delivery。
+
+系统必须区分三类输入：
+
+1. **World Model Cognition**：exact Snapshot/Read Set 上可跨会话复用的软件认知及其 Coverage/Unknown；
+2. **Conversation Work State**：当前对话目标、已确认实体、用户约束、纠正、开放问题、假设、计划、已观察结果和未完成子任务；
+3. **Turn Evidence**：本 Turn 经受控世界模型查询或 Broker/Worker 取得、用于当前答案的 Ledger 与密封 Package。
+
+对话记录、工作状态和先前助手答案都不能自动成为 Turn Evidence。任何沿用结论必须由当前 exact revision 的 admissible evidence 重新支持。
+
+历史 Turn 的 Evidence 只有在 `repository revision + Binding + World Model authority + Source Profile + allowlist + content digest + coverage`
+全部 exact match 时才可作为本 Turn 的复用 candidate；Application 仍须按本 Turn 的问题、目标和证据需求重新校验，并把实际使用项重新绑定
+到本 Turn Package。旧 Answer Authorization、Review Decision、Limitation、未密封 Tool Result、Provider memory 或隐藏状态一律不可复用。
+用户陈述、纠正和偏好可以改变对话目标或待验证假设，但不能成为 Source truth 或支持软件事实。
+
+## Conversation and turn invariants
+
+1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Read Authority、Source Profile/allowlist、
+   工具目录、Provider route、披露范围、有效期和每 Turn/整会话高安全熔断。浏览器不能扩大这些边界。
+2. 每条 User Message 创建不可变 Turn。Application 从完整历史确定性选择满足本 Turn 所需的相关上下文，密封输入消息、被引用 Turn、有效
+   用户约束、当前工作状态和摘要的 identity/digest；不得直接依赖 Provider 会话记忆或无边界拼接全部历史。
+3. 主 Agent 必须处理追问、指代、纠正、深入、收窄和总结。若指代在密封上下文内仍不唯一，必须请求澄清或给出明确条件化解释，不能把
+   猜测写成事实。用户纠正形成新 Revision 并标记被取代的对话假设，不删除原消息、证据或失败结果。
+4. 一次 Turn 失败只密封该 Turn 的失败或 Limitation；Conversation 和 listener 继续可用。后续 Turn 不继承失败 Attempt 的未密封输出、
+   Provider 隐藏状态、临时授权或未审核答案。
+5. 新对话从空 Conversation Work State 开始，但仍可读取同一 exact World Model；跨对话偏好或长期 Memory 在独立合同接受前不启用。
+
+## Primary engineering Agent loop
+
+每个 Turn 使用一个逻辑主工程 Agent。模型调用可以因上下文窗口、恢复或 Provider attempt 分成多个 fresh invocation，但都必须消费并产生
+Application-owned Agent Work State Revision，不得把 Provider session 当作连续性来源。工作状态至少表达：
+
+- 当前用户目标、响应语言、受众与不可丢失约束；
+- 已确认对象和指代解析；
+- 可证伪假设、当前计划、子任务和优先级；
+- 已观察的 World Model/Source 结果、冲突、未知和证据缺口；
+- 下一动作理由、完成判断和仍未解决事项。
+
+Agent 循环为 `understand → hypothesize/plan → request tool → observe → replan → answer or limitation`。这描述认知能力而不是固定调用顺序；
+简单问题可以直接使用充分的 World Model cognition，复杂问题可以多步调查。Agent 必须根据新观察更新或放弃假设，不能在证据反驳后继续
+执行冻结计划，也不能把达到调用上限当作完成证明。
+
+允许的工具只有受信 Application 提供的 closed catalog：exact World Model query/view，以及由 Source Broker 编译的注册
+`search/read/parse` 等 exact-revision 只读操作。Agent 提交的 path、query、class、locator、命令、URL 或完成声明均是不可信 Proposal；
+Application/Broker 重新验证 authorization、Profile、allowlist、revision、modality、bytes、进度和剩余熔断。模型没有直接 Repository/
+Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
+
+每个 Proposal、Decision、Operation、Observation、Conflict、Unknown、Failure、Coverage 和资源收据按顺序追加到 Turn Evidence Ledger。
+主 Agent 可以读取本 Attempt 获准的密封 Ledger prefix 与工具 Observation，但隐藏 rationale 和未密封输出不进入权威状态。
+
+## Evidence, answer and review
+
+1. 主 Agent 准备回答时，Application 从 current Turn、exact Cognition、Work State 和完整 Ledger 密封当前 Question Evidence Package。
+   `support/citation` 只含经 modality/Context/Coverage/Support 验证的 admissible entries；`boundary/audit` 强制保留 Gap、Failure、Partial、
+   Conflict、Unknown、拒绝和资源收据。seal 只证明身份、完整性、来源与版本，不赋予内容真值。
+2. Draft 可以由同一主 Agent 综合多条证据自然回答，不要求把证据记录逐条变成答案句子。每个物质肯定结论必须绑定
+   `support/citation`；未知或限制必须绑定相应 `boundary/audit`。答案应延续相关对话目标、响应用户最新纠正，并区分本 Turn 新结论、
+   对先前答案的修订和仍未知范围。
+3. 每个可交付 Draft 至少经过一个 fresh、与主 Agent 隔离的独立 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
+   Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
+4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
+   它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查通过不能抵消重大错误。
+5. 现有 Package 足够时，Response Control 把 Finding 绑定到同一主 Agent 的新 Work State Revision，形成同包针对性重写；证据不足时，
+   Application 形成绑定具体缺口的新 Agent Attempt，主 Agent 继续经 World Model/Broker 工具调查。任何新 Observation 都形成新 Ledger/
+   Package Revision，旧 Review 不得放行新 Draft。生成者不能自审，Reviewer 不能自行执行工具或放行。
+6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
+   Verification Investigation Agent 不是长期架构不变量。任何 Strategy 都不得少于一次 fresh 独立审核，或取消逐结论 evidence closure。
+
+## Generality, evaluation and failure
+
+核心 Agent、Prompt、工具选择、Conversation reducer、Review 和 UI 不得按工程、问题、关键词、语言、框架、符号、类、方法、约定文件名、
+fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显式版本化 Source/Knowledge capability 注册。
+
+产品资格必须同时验证：多轮指代、追问、用户纠正、目标延续、观察驱动重规划、World Model 与 Source 工具组合、证据引用、Reviewer 缺口
+反馈和 Turn 故障隔离。系统与 current Codex 的比较用于证明产品替代价值；同一主 Agent 的 full Cognition 与 locator-only/empty 对照用于
+证明世界模型认知的独立贡献，二者不得混为 Oracle。
+
+授权/identity/revision 漂移、上下文错绑、工具越权、Ledger/Package 缺口、无依据结论、Reviewer 未通过、资源耗尽或 Provider outcome
+unknown 都使当前 provider attempt 或 Turn 失败关闭。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
+exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不得复用失败 Provider 的隐藏状态或未密封中间产物。
+
+当前旧 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 实现尚未提供本契约要求的 Application-owned Conversation Work State、统一主 Agent
+循环或语义多轮 Chat。实现与资格状态为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。

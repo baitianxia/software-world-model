@@ -33,7 +33,8 @@ coding_input: false
 - Strict answer-quality superiority rule: <absolute-pass-per-question-no-regression-positive-blind-margin-tie-fails-no-secondary-compensation>
 - World Model causal ablation kept separate: <full-cognition-versus-locator-or-empty-under-same-system-model-chain-and-budget>
 - Direction decision owner and allowed outcomes before hardening: <owner-and-CONTINUE-REWORK-REDIRECT-REJECT>
-- Repeatable experience version: <exact-version-repeatable-launch-fixed-loopback-address-continuous-session-visible-limitations-question-failure-isolation>
+- Repeatable experience version: <exact-version-repeatable-launch-fixed-loopback-address-semantic-chat-or-continuous-qa-visible-limitations-turn-failure-isolation>
+- Conversational Agent boundary: <lead-agent-goal-hypothesis-plan-observe-replan-complete-plus-platform-authority-and-independent-reviewer>
 - Same-Slice rework policy and no-progress limit: <progress-measure-positive-attempt-limit-and-redirect-bases>
 - End-of-iteration user-visible Web capability: <exact-capability-if-accepted>
 - Next blocking gap after success: <next-earliest-unproved-capability>
@@ -64,8 +65,9 @@ fresh 独立任务与答案先密封协议、独立盲评量表，以及严格�
 ## Development slices and dependencies
 
 至少明确区分：首个 Slice 直接形成小而多样的非验收可体验 Alpha；只有 Alpha `CONTINUE` 后才执行工程夯实与正式验收。首次体验前只
-安排安全运行和判断核心价值所需工作，不把全面加固作为体验前置。Alpha 必须可重复启动、固定本地地址、同一会话连续自由提问、
-版本/限制可见且坏题不关闭服务；不得用一次性测试运行替代。每次失败默认暂停并在同一 Slice 修复，Proposal 必须冻结无进展的可测
+安排安全运行和判断核心价值所需工作，不把全面加固作为体验前置。Alpha 必须可重复启动、固定本地地址、版本/限制可见且坏题不关闭
+服务；不得用一次性测试运行替代。若目标声明 Chat，必须用至少五轮语义链验证追问、纠正和总结，并用“新对话”负测隔离；连续独立问题
+不能冒充 Chat。每次失败默认暂停并在同一 Slice 修复，Proposal 必须冻结无进展的可测
 定义和尝试上限。
 
 Alpha 内的 current Codex 比较是同一体验出口的阻断 Case，不得拆成新的前置 Slice。产品替代价值对照不得与 full cognition 对

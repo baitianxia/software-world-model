@@ -22,5 +22,6 @@ Application Services 拥有用例编排和可恢复结果，但不复制 Source 
 - [World Model Answering](world-model-answering.md)
 - [Direct Evidence Answering](evidence-answering.md)
 - [Engineering Question Answering](engineering-question-answering.md)
+- [Engineering Conversation](engineering-conversation.md)
 - [Agentic Task](agentic-task.md)
 - [Response Control](response-control.md)

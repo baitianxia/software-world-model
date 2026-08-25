@@ -34,10 +34,20 @@ Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Clai
 10. 已满足 Need 仍可携带必须披露的 Application Limitation；该 Claim 绑定同一 Sufficiency Proof，但不是正式知识或 Knowledge Gap，不得获得 Formal Reference，也不得把 Need 改写为未满足。投影可以改善可读性，但不能改变这三类权威来源。
 11. Evidence Answer 重写必须绑定同一 Checklist、Packet Digest、prior Draft 和 exact Review Findings；Review 要求补证时必须返回 Application 形成新 Packet，Response Control 不能访问 Source Tool 或自行扩充证据。
 12. World Model Answer 的生成、审核和重写固定同一 Snapshot、View/Query Result、Coverage 与 Support Map；Response Control 不得访问 Source、启动 Knowledge Update 或切换 Direct Investigation。输入变化必须形成新的 Candidate，而不是改写旧授权。
-13. Engineering QA Reviewer 必须在不继承 Investigation/Answer 会话的独立新上下文中，从 original question 重建并检查直接回答、抽象层级、正确性、完整性、相关性、可用性、Citation 和 unknown 边界；任一失败必须有具体 Finding，不得因正文流畅或其他项通过而抵消。代码事件的机械完整不等于直接回答了用户问题。
-14. Engineering QA 的同包定向重写必须保持 Package Digest 并再次独立 Review。Response Control 和 Reviewer 都不得读 Source、写 Ledger 或自行扩充包；Reviewer 只返回 closed remediation Finding，`REWRITE_WITH_EXISTING_EVIDENCE` 必须绑定当前 Package entries，`INVESTIGATE_MISSING_EVIDENCE` 必须绑定具体 material Checklist/Claim、evidence class 与可验证 evidence need。可信 Application 派生 `REWRITE_REQUIRED / MORE_EVIDENCE_REQUIRED` 和 Verification Request；Reviewer 不独立声明 action 或提出操作。Application 启动全新上下文的 Verification Investigation，后者读取 gap + current Package/Ledger 并自适应经 Source Broker/Worker 形成新 Ledger Revision 和新 Package，再从头 Answer/Review。旧 Review 不能放行新包。
-15. 调查、重写、Package Revision、调用次数、成本和其他资源上限不得使 Response Control 删除 Checklist item、Claim Citation、Review dimension 或独立复核。正式协议不得永久固定一轮补证；预密封 revision/call/operation/bytes/wall-time/no-progress 熔断耗尽使 answerable 候选计失败，不使未通过正文取得授权。
-16. Engineering QA 的每个 Draft 必须先由 fresh comprehensive Review 完整审核，再由另一个 fresh evidence-boundary challenge Review 审核受信 Application 从当前 Package/Draft 投影的配置占位符、引用中缺失的具体 status literal 和未挂载 application type leads。lead 不自动构成缺陷，但 placeholder 不证明 runtime value、caller/getter/import 不证明 DTO fields、wire property 或 handler output，上游局部状态不证明下游 status。每项 lead 具有稳定 `challenge_id`；challenge 必须逐项返回 evidence scope、Draft scope 与受控 disposition，越界项绑定同输出中作用于被挑战 Claim 的 Finding。首审 `APPROVED` 只能放行 challenge；Application 必须重算 exact ID 集合，最终 Authorization 只能绑定集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的 challenge Review。Gateway 必须按 focus 顺序失败关闭，资源预算必须预留 Answer + 两个 Review，不能用调用上限跳过 challenge。
+13. Engineering Conversation Reviewer 必须在不继承主 Agent 会话的 fresh 独立上下文中，从 current User Turn 和受信 relevant Conversation
+    Context 重建目标，并检查 Draft 的直接性、对最新纠正的响应、正确性、完整性、相关性、可用性、Citation 和 unknown 边界；任一失败
+    必须有具体 Finding，不得因正文流畅、沿用先前答案或其他项通过而抵消。代码事件的机械完整不等于解决了用户当前问题。
+14. 同包定向重写必须保持 Package Digest 并再次独立 Review。Response Control 和 Reviewer 都不得读 Source、查询 World Model、写 Ledger
+    或自行扩充包；Reviewer 只返回绑定当前 Turn/Claim/Package entry 或具体 material evidence gap 的 Finding。可信 Application 把现有证据
+    问题路由为同一主 Agent 的新 Work State Revision，把缺证路由为绑定该 gap 的新 Agent Attempt；主 Agent 仍只能经 Broker/Worker 使用
+    工具。新 Observation 形成新 Ledger/Package，旧 Review 不能放行新包。
+15. Agent 调查、重写、Package Revision、调用次数、成本和其他资源上限不得使 Response Control 删除用户约束、Claim Citation、evidence
+    closure 或 fresh 独立复核。预密封 revision/call/operation/bytes/wall-time/no-progress 熔断耗尽使 answerable 候选计失败，不使未通过
+    正文取得授权。
+16. 每个 Engineering Conversation Draft 至少经过一个 fresh 独立 Reviewer，并且最终 Authorization 只能绑定 current Turn、Conversation
+    Revision、Package 与 finding-free Review。资格 Strategy 可以增加 comprehensive、evidence-boundary challenge 或其他隔离视角，但固定
+    focus 数量和顺序不是 Response Control 的长期公开语义。无论采用几个 Review，placeholder 不证明 runtime value、caller/getter/import
+    不证明未挂载实现、上游局部状态不证明下游输出；预算不足以完成冻结的独立审核 Strategy 时必须失败关闭。
 
 ## Failure and implementation boundary
 

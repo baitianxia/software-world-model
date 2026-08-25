@@ -88,25 +88,29 @@ Secret、授权和失败真实性边界始终生效。完整能力矩阵、全�
 从 `ITER-012` 起，Manifest 必须冻结 `EXPERIENCE_FIRST_DELIVERY@1`；ITER-010 只有显式写入该 policy 时才 opt in。其计时从当前 Slice
 授权后的第一次产品代码变更开始：60 分钟页面可启动、180 分钟持续 Alpha 可由用户连续操作；240 分钟尚未达到时硬停止新功能、
 hardening 与外部调用，密封 Result 并作缩围/恢复决定。首次体验前只运行启动、安全、失败真实性、一次 current Provider 资格确认和
-一题 smoke，不运行 full regression。`V-ALPHA-ACCESS` 与答案质量 Case 必须分离：availability 不等待质量 PASS，hardening 必须等待。
+最多一个 Provider 前本地/Mock Access smoke，不运行 full regression。`V-ALPHA-ACCESS` 与答案质量 Case 必须分离：availability 不等待质量 PASS，hardening 必须等待。
 
-每份 Result 以一个 sealed version + logical question + 至少一次外部 dispatch 为一条 live attempt，内部多角色调用不重复计数。相同 failure
+后置采用 policy 时不得改写更早的失败 Result。此类 Result 只能在 Manifest 的 `historical_pre_policy_result_refs` 中以 exact ID 登记，
+仍须作为 paused REWORK 的不可变前提，并且不取得新的体验 PASS；只有恢复授权后产生的 successor Result 才按新 policy 填写完整审计字段。
+
+每个 sealed version 中触发外部 dispatch 的有界用户交互单元计一条 live attempt，单元内部模型/角色调用不重复计数；Chat 按 Turn 计数，不按整段 Conversation 合并。相同 failure
 signature 最多一个 successor retry；连续两次 attempt 没有用户可见增量即停止外部重跑并回到本地诊断。240 分钟和无增量 stop 都发生在
 问题边界，不能中途删除调查、回答、Citation 或独立审核来省 token。
 
-诊断必须先找最早偏差：`Source truth → World Model cognition → question understanding → investigation → evidence package → answer → review → Web`。
+诊断必须先找最早偏差：`Source truth → World Model cognition → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer → independent review → Web`。
 没有可证伪 root-cause hypothesis，不得动 Prompt、Schema 或 Contract。任何通用修复先通过本地最小复现和至少两个未参与修复的相邻案例，
-然后只用一题 live canary；同一 failure signature 修复一次仍复现，停止规则堆叠并进入架构职责评审。Alpha 前测试只允许 targeted impact、
+然后只用一个有界 live canary 单元；Chat 目标必须使用最小多轮 Conversation，不得以孤立一题代替。同一 failure signature 修复一次仍复现，停止规则堆叠并进入架构职责评审。Alpha 前测试只允许 targeted impact、
 startup、safety；full regression 仅在 Alpha `CONTINUE` 后的 hardening 和正式验收前运行。
 
 Provider route 在 session 前按 `VOLCENGINE_ARK → DEEPSEEK` 预密封并预授权双方 disclosure scope。Ark 的独立 attempt 若以冻结的 Provider/
-模型能力 outcome 终态结束且没有 authorized answer，可在同一 logical question 内透明启动最多一个 DeepSeek attempt；用户不重新提交。
-fallback 从 immutable original question 与 exact cognition 重跑全链，不读取 primary attempt 的中间产物；迟到 primary 只隔离审计。同
+模型能力 outcome 终态结束且没有 authorized answer，可在同一 logical interaction unit 内透明启动最多一个 DeepSeek attempt；用户不重新提交。
+fallback 从 immutable original interaction input 与 exact cognition 重跑全链，不读取 primary attempt 的中间产物；Chat 还必须携带与当前 Turn 相关的 exact Application-sealed Conversation Context。迟到 primary 只隔离审计。同
 Provider retry 为 0；Application/Source/Security failure 不能触发 fallback。输出/schema 或 Reviewer 拒绝必须按 primary capability failure
 记录，而不是误标为网络不可用。DeepSeek 批量启动优先使用执行时由官方页面重新确认的非高峰窗口；调度和成本只在题目开始前决策。
 
 项目不得连续进行多轮 Prompt、Schema、Contract 或评测优化，却一直没有可供用户操作的真实体验。可供操作是指可重复启动、固定本地
-地址、同一会话连续自由提问、版本和限制可见，且单题失败不会关闭服务；一次性运行器或启动前冻结单题的页面不满足该定义。Alpha
+地址、同一会话连续自由提问、版本和限制可见，且单题失败不会关闭服务；一次性运行器或启动前冻结单题的页面不满足该定义。若目标是
+Chat，还必须冻结语义追问、纠正、总结、逐轮证据/审核和新对话隔离 Gate；仅共享 Runtime Session 的多个独立问题不能标成 Chat。Alpha
 发现缺陷时默认先 `REWORK`；只有满足本政策的转向条件时才 `REDIRECT` 或 `REJECT`。正式 Gate 不能成为延迟方向反馈的理由，
 方向体验的认可也不能替代最终正式 Gate。
 

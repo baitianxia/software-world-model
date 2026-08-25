@@ -1,11 +1,11 @@
 schema_version: 1
 iteration:
   id: ITER-010
-  status: authorized
-  outcome_scope: world-model-cognition-guided-adaptive-engineering-investigation-direction-preview-generalization-and-formal-acceptance
+  status: paused
+  outcome_scope: dual-core-world-model-cognition-and-lead-engineering-agent-semantic-multi-turn-chat-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
-  current_decision_ref: ITER-010-PDR-001
-  coding_input: true
+  current_decision_ref: ITER-010-PDR-004
+  coding_input: false
 
 baseline:
   commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
@@ -19,12 +19,12 @@ product_goal_alignment:
   target_ref: SYS-PRODUCT-SUCCESS
   capability_path_ref: ROADMAP-M-002
   capability_path_step: step-1-java-result-driven-world-model-investigation
-  critical_assumption_ids: A1,A2,A3,A4,A5
-  critical_assumption_catalog_digest: sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82
+  critical_assumption_ids: A1,A2,A3,A4,A5,A6
+  critical_assumption_catalog_digest: sha256:2e53074115b08841a527fb7ba49e739eb2afd0473d20cacaa1a926338f8a8260
   predecessor_result_refs:
     - ITER-006-RESULT-ACCEPTANCE
     - ITER-009-RESULT-SLICE-001-STOP-REDIRECT
-  end_of_iteration_web_capability: unauthenticated-loopback-engineering-qa-over-persistent-world-model-cognition-and-model-led-broker-controlled-adaptive-exact-revision-investigation-with-level-matched-answer-or-honest-limitation-independent-review-and-claim-citations
+  end_of_iteration_web_capability: unauthenticated-loopback-semantic-multi-turn-engineering-chat-with-persistent-world-model-cognition-lead-engineering-agent-controlled-read-only-source-tools-per-turn-evidence-citations-independent-review-and-new-conversation-isolation
   next_blocking_gap: second-language-cross-repository-large-project-performance-background-knowledge-update-and-controlled-nonlocal-deployment
   baseline_gap: real-web-chain-runs-but-default-answer-is-code-walkthrough-and-source-off-boundary-cannot-support-general-engineering-questions
   accepted_capability_refs:
@@ -64,32 +64,18 @@ product_goal_alignment:
   supported_count_denominator: answerable-only
   boundary_gap_counted_as_supported: false
   cross_domain_cases:
-    - V-XD-001
+    - V-CHAT-XD-001
     - V-XD-002
     - V-XD-003
   blocking_case_ids:
-    - V-BASELINE-001
-    - V-ARCH-001
-    - V-QINTENT-001
-    - V-COGNITION-001
-    - V-INVESTIGATE-001
-    - V-BROKER-001
-    - V-LEDGER-001
-    - V-ISOLATION-001
-    - V-ANSWER-001
-    - V-REVIEW-001
-    - V-LIMIT-001
-    - V-SEC-001
-    - V-XD-001
-    - V-WEB-000
-    - V-WEB-001
-    - V-EXPERIENCE-001
+    - V-CHAT-XD-001
     - V-ALPHA-ACCESS-001
-    - V-TIMEBOX-001
-    - V-ANSWER-REWORK-001
-    - V-PREVIEW-001
+    - V-CHAT-EXPERIENCE-001
+    - V-TIMEBOX-CHAT-001
+    - V-CHAT-001
+    - V-CHAT-QUALITY-001
+    - V-COMP-ALPHA-001
     - V-PREVIEW-002
-    - V-REFLECT-001
     - V-GENERAL-002
     - V-RERETRIEVE-002
     - V-ASYNC-002
@@ -122,7 +108,7 @@ product_goal_alignment:
   cross_domain_case_count: 3
   cross_domain_bindings:
     binding_001:
-      case_id: V-XD-001
+      case_id: V-CHAT-XD-001
       accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
       new_slice_ref: ITER-010-SLICE-001
     binding_002:
@@ -133,12 +119,12 @@ product_goal_alignment:
       case_id: V-XD-003
       accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
       new_slice_ref: ITER-010-SLICE-003
-  first_product_web_checkpoint: V-WEB-000
-  earliest_web_micro_checkpoint: V-WEB-000
+  first_product_web_checkpoint: V-CHAT-EXPERIENCE-001
+  earliest_web_micro_checkpoint: V-CHAT-EXPERIENCE-001
   direction_preview_checkpoint: V-PREVIEW-002
   direction_preview_binding:
     case_id: V-PREVIEW-002
-    web_case_id: V-EXPERIENCE-001
+    web_case_id: V-CHAT-EXPERIENCE-001
     new_slice_ref: ITER-010-SLICE-001
     real_product_entry: loopback-product-owned-engineering-qa-web
     representative_task_count: 3
@@ -147,19 +133,41 @@ product_goal_alignment:
     allowed_decisions: CONTINUE,REWORK,REDIRECT,REJECT
     hardening_requires_continue: true
   experience_version_binding:
-    schema: USER_EXPERIENCE_VERSION@1
-    case_id: V-EXPERIENCE-001
+    schema: ENGINEERING_CHAT_EXPERIENCE@1
+    case_id: V-CHAT-EXPERIENCE-001
     new_slice_ref: ITER-010-SLICE-001
     exact_version_visible: true
     repeatable_start: true
-    continuous_same_session_free_questions: true
+    interaction_model: semantic-multi-turn-chat
+    message_history_visible: true
+    new_conversation_control: true
+    semantic_follow_up: true
+    user_correction_updates_context: true
+    summary_honors_current_context: true
+    per_turn_evidence_and_review: true
+    new_conversation_context_isolation: true
+    minimum_conversation_turns: 5
     limitations_visible: true
     fixed_loopback_address: http://127.0.0.1:8765/
-    question_failure_scope: current-question-only-service-remains-available
-  web_checkpoint_binding:
-    case_id: V-WEB-000
+    turn_failure_scope: current-turn-only-conversation-remains-usable
+    long_term_memory_required: false
+  alpha_agent_comparison_binding:
+    case_id: V-COMP-ALPHA-001
     new_slice_ref: ITER-010-SLICE-001
-    executes_cross_domain_case_id: V-XD-001
+    occurs_after_chat_access_and_five_turn_canary: true
+    arms: same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline
+    current_codex_is_oracle_or_reviewer: false
+    system_arm_shared_runtime: same-lead-agent-model-tools-permissions-budget-cache-policy-and-state
+    external_codex_runtime: preserve-actual-model-reasoning-tools-permissions-and-budget
+    shared_evaluation_inputs: same-exact-revision-questions-authorized-source-scope-output-constraints-and-blind-rubric
+    forced_runtime_identity_across_all_three_arms: false
+    technical_adjudication_owner: independent-evaluator-not-answer-generator
+    product_direction_decision_owner: user
+    result_role: direction-signal-not-iteration-012-strict-superiority-gate
+  web_checkpoint_binding:
+    case_id: V-CHAT-EXPERIENCE-001
+    new_slice_ref: ITER-010-SLICE-001
+    executes_cross_domain_case_id: V-CHAT-XD-001
   additional_web_checkpoint_bindings:
     hardening_web:
       case_id: V-WEB-002
@@ -198,32 +206,34 @@ product_goal_alignment:
     positive_value_reuse_horizon_ref: positive_value_reuse_horizon_questions
     baseline_cache_policy_digest_ref: mature_source_agent_cache_policy_digest
     positive_value_protocol_digest_ref: positive_value_protocol_digest
-    positive_value_adjudication_owner_ref: positive_value_adjudication_owner
+    technical_adjudication_owner: independent-evaluator-not-answer-generator
+    product_direction_decision_owner: user
+    legacy_positive_value_adjudication_owner_ref: positive_value_adjudication_owner
     engineering_qa_ablation_ref: engineering_qa_ablation
   early_diagnostic_binding:
     case_id: V-DIAG-002
     canary_case_id: V-CANARY-002
     new_slice_ref: ITER-010-SLICE-002
-    layer_chain: source-observation-world-model-cognition-question-understanding-investigation-source-broker-retrieval-worker-evidence-ledger-question-evidence-package-answer-review-web
+    layer_chain: source-observation-world-model-cognition-conversation-or-task-understanding-agent-work-state-and-plan-source-broker-retrieval-worker-evidence-ledger-question-evidence-package-answer-independent-review-web
   reflection_gate_bindings:
     slice_001:
-      case_id: V-REFLECT-001
+      case_id: V-PREVIEW-002
       new_slice_ref: ITER-010-SLICE-001
-      assumption_ids: A1,A2,A3
+      assumption_ids: A1,A2,A3,A6
       conditional_falsifier_bindings:
         cross_project_generalization:
           assumption_id: A4
-          case_id: V-XD-001
+          case_id: V-CHAT-XD-001
         final_quality_and_value:
           assumption_id: A5
-          case_id: V-SEC-001
+          case_id: V-COMP-ALPHA-001
       success_decision: CONTINUE
       decision_owner: user
       required_before_next_authorization_or_acceptance: true
     slice_002:
       case_id: V-REFLECT-002
       new_slice_ref: ITER-010-SLICE-002
-      assumption_ids: A1,A2,A3,A4
+      assumption_ids: A1,A2,A3,A4,A6
       conditional_falsifier_bindings:
         final_quality_and_value:
           assumption_id: A5
@@ -234,7 +244,7 @@ product_goal_alignment:
     slice_003:
       case_id: V-REFLECT-003
       new_slice_ref: ITER-010-SLICE-003
-      assumption_ids: A1,A2,A3,A4,A5
+      assumption_ids: A1,A2,A3,A4,A5,A6
       success_decision: ACCEPT
       decision_owner: user
       required_before_next_authorization_or_acceptance: true
@@ -266,22 +276,55 @@ product_goal_alignment:
     - repeated-heterogeneous-question-failures-prove-the-core-path-cannot-be-boundedly-reworked
     - user-explicitly-decides-redirect-or-reject-after-sustained-web-experience
 
+critical_assumption_catalog_cutover:
+  schema: ITERATION_CRITICAL_ASSUMPTION_CATALOG_CUTOVER@1
+  current_catalog_schema: ITERATION_CRITICAL_ASSUMPTION_CATALOG@1
+  current_owner_ref: SYS-ADR-018
+  current_assumption_ids: A1,A2,A3,A4,A5,A6
+  current_assumptions:
+    A1: 软件世界模型保持为持久、版本化、可验证、可更新的软件外部认知，提问期 Source 调查只核实、补充或纠正本 Turn 认知
+    A2: 主工程 Agent 能持续维护目标、假设、子任务和计划，依据每次观察选择 World Model/Source 受控工具并重规划，不取得直接权限
+    A3: 每个 Turn 的 Evidence Package、自然答案与 fresh independent Review 同时保证直接答案、Citation、失败关闭和可返工性，Reviewer Finding 只回到主 Agent
+    A4: 相同 Conversation—主 Agent—受控工具—逐 Turn Evidence/Review 协议能跨第二工程、来源组合和复杂失败泛化
+    A5: 产品外部比较与 World Model 因果消融必须分开；current Codex 保留其真实客户端、model、reasoning、tools 和权限，只有系统的 source-only 与 full-cognition 两臂使用同一主 Agent/model/tool/budget/cache/Reviewer
+    A6: 产品具有真正语义多轮 Conversation，而不是同 Session 的独立问答
+  current_catalog_digest: sha256:2e53074115b08841a527fb7ba49e739eb2afd0473d20cacaa1a926338f8a8260
+  historical_owner_ref: ITER-010-PROPOSAL@pre-PDR-004
+  historical_assumption_ids: A1,A2,A3,A4,A5
+  historical_assumptions:
+    A1: 保持软件世界模型作为持久、版本化外部认知而非手册或缓存，同时可让提问期 Source 调查核实、补充或纠正本题认知，并能证明完整认知不只是 locator 装饰
+    A2: 独立 Investigation LLM 可以依据不可变原问题、exact World Model Cognition Context 和先前 Ledger 结果自适应提出下一步，而 Source Broker/Worker 能在不授予模型直接权限的情况下执行
+    A3: 调查后密封、包内 Answer 和 Reviewer 独立补证可以同时保证直接答案、正确 Citation、失败关闭与真实首版体验
+    A4: 相同认知—调查—Broker—Ledger—Package 协议能跨第二工程、来源组合和复杂失败模式泛化，不依赖问题、项目、关键词、符号、类、方法、fixture 或 Oracle 路由
+    A5: 在不因调用次数裁剪调查或审核质量的前提下，完整认知与成熟源码 Agent 先通过零重大错误、boundary 正确且完整认知逐结论不退步的质量门；再以 locator-only/empty 同链为消融 control，证明完整认知有预提交质量或非 locator 调查成本增益，并计入建模成本与复用周期
+  historical_catalog_digest: sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82
+  historical_readiness_ref: ITER-010-READINESS
+  historical_result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+  historical_case_ids: V-ANSWER-001,V-REVIEW-001,V-XD-001,V-EXPERIENCE-001,V-WEB-000,V-WEB-001,V-PREVIEW-001,V-REFLECT-001
+  historical_documents_immutable: true
+  current_gate_reuses_historical_case_ids: false
+  status: current-catalog-active-history-preserved
+
 rework:
   decision: REWORK
-  decision_ref: ITER-010-PDR-001
-  user_receipt_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
+  decision_ref: ITER-010-PDR-004
+  user_receipt_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
   historical_redirect_message_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
   historical_redirect_message_was_explicit: false
-  authorization_status: authorized
-  coding_input: true
-  authorized_at: 2026-08-24T02:55:16Z
-  authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
-  first_delivery: sustained-loopback-web-alpha
+  prior_rework_decision_ref: ITER-010-PDR-001
+  prior_rework_authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
+  authorization_status: paused-pending-refreshed-readiness-and-explicit-user-reauthorization
+  coding_input: false
+  authorized_at: not-authorized
+  authorization_ref: not-authorized
+  first_delivery: usable-loopback-semantic-chat-before-hardening
   repeatable_start_required: true
   listener: 127.0.0.1
   authentication: none
   fixed_repository_and_exact_revision_per_session: true
-  continuous_free_questions_in_same_session: true
+  continuous_free_questions_in_same_session: compatibility-only-not-chat-proof
+  server_owned_conversation_turn_and_context_required: true
+  five_turn_chat_canary_required: true
   restart_or-new-planning-authorization_per_question_required: false
   page_must_show_version_and_known_limits: true
   page_must_show_answer_citations_and_request_failure: true
@@ -306,9 +349,14 @@ rework_policy:
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
+  historical_pre_policy_result_refs:
+    - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+  historical_results_do_not_satisfy_experience_gate: true
   access_case_id: V-ALPHA-ACCESS-001
-  quality_case_id: V-ANSWER-REWORK-001
-  timebox_case_id: V-TIMEBOX-001
+  quality_case_id: V-CHAT-QUALITY-001
+  chat_case_id: V-CHAT-001
+  alpha_comparison_case_id: V-COMP-ALPHA-001
+  timebox_case_id: V-TIMEBOX-CHAT-001
   start_event: first-product-code-change-after-slice-authorization
   page_launchable_deadline_minutes: 60
   sustained_user_operable_alpha_deadline_minutes: 180
@@ -323,18 +371,18 @@ experience_delivery_policy:
   pre_first_experience_qualification_limit: 1
   pre_first_experience_smoke_question_limit: 1
   pre_first_experience_full_regression_allowed: false
-  failure_diagnosis_order: source-truth-world-model-cognition-question-understanding-investigation-evidence-package-answer-review-web
+  failure_diagnosis_order: source-truth-world-model-cognition-conversation-or-task-understanding-agent-work-state-and-plan-tool-observation-and-evidence-answer-independent-review-web
   earliest_divergence_required: true
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
   local_minimal_reproduction_required_before_live_retry: true
   unseen_adjacent_local_case_count: 2
-  live_canary_question_count_after_local_pass: 1
+  live_canary_turn_count_after_local_pass: 1
   same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
   same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities
   pre_first_experience_test_scope: targeted-impact-startup-and-safety-only
   full_regression_before_alpha_continue_allowed: false
   full_regression_allowed_stages: alpha-continue-hardening-and-before-formal-acceptance
-  live_attempt_unit: one-sealed-version-question-run-reaching-any-external-dispatch
+  live_attempt_unit: one-sealed-version-bounded-user-interaction-unit-reaching-any-external-dispatch-chat-counts-each-turn
   same_failure_signature_retry_limit: 1
   consecutive_no_user_visible_increment_limit: 2
   no_increment_action: stop-external-reruns-and-return-to-local-diagnosis
@@ -349,10 +397,10 @@ provider_route_policy:
   primary_unavailable_evidence_required: true
   implementation_gap_counts_as_primary_unavailable: false
   primary_availability_requires: credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold
-  route_freeze_time: before-session-start-and-before-any-question-dispatch
+  route_freeze_time: before-conversation-start-and-before-any-interaction-unit-dispatch
   ordered_routes_preauthorized_at_session_start: true
   ordered_route_disclosure_scopes_preauthorized_at_session_start: true
-  transparent_logical_question_fallback_allowed: true
+  transparent_logical_interaction_fallback_allowed: true
   user_resubmission_or_new_session_required: false
   fallback_requires_primary_attempt_terminal_without_authorized_answer: true
   fallback_trigger: sealed-primary-attempt-terminal-without-authorized-answer-for-provider-or-model-capability-reason
@@ -366,11 +414,11 @@ provider_route_policy:
   fallback_reason_classification_required: true
   capability_failure_must_not_be_misclassified_as_unavailable: true
   fallback_attempt_restarts_full_chain: true
-  fallback_attempt_inputs: immutable-original-question-and-exact-cognition-context
+  fallback_attempt_inputs: immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition
   cross_attempt_intermediate_state_reuse_allowed: false
   late_primary_result_policy: quarantine-audit-only
   late_primary_result_overwrite_allowed: false
-  post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-question-and-preauthorized-route
+  post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route
   maximum_fallback_provider_attempts: 1
   same_provider_retry_allowed: false
   outcome_unknown_duplicate_cost_risk_recorded: true
@@ -385,8 +433,8 @@ provider_route_policy:
   deepseek_schedule_effective_status: announced-not-yet-effective
   peak_urgent_override_requires: audited-explicit-override
   cost_can_reduce_answer_quality: false
-  cost_gate_scope: before-question-start-only
-  current_started_question_must_keep_full_quality_chain: true
+  cost_gate_scope: before-interaction-unit-start-only
+  current_started_interaction_unit_must_keep_full_quality_chain: true
   unchanged_current_conformance_reuse_required: true
 
 source_scope:
@@ -398,10 +446,15 @@ source_scope:
   question_time_read_only_retrieval_allowed: true
   repository_write_allowed: false
   verification_case_ids:
-    - V-BROKER-001
-    - V-ISOLATION-001
+    - V-CHAT-QUALITY-001
+    - V-CHAT-XD-001
 
 hybrid_evidence_path:
+  protocol_role: legacy-compatibility
+  legacy_protocol_schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
+  superseded_as_default_by: SYS-ADR-018
+  current_delivery_authorization_allowed: false
+  historical_result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   mode: ENGINEERING_QA
   strict_world_model_mode_preserved: true
   direct_investigation_mode_preserved: true
@@ -440,6 +493,47 @@ hybrid_evidence_path:
   knowledge_persistence: asynchronous-after-delivery-through-normal-admission-and-publication
   status: frozen
 
+conversational_engineering_agent:
+  schema: CONVERSATIONAL_ENGINEERING_AGENT@1
+  owner_slice_ref: ITER-010-SLICE-001
+  chat_case_id: V-CHAT-001
+  architecture_decision_ref: SYS-ADR-018
+  conversation_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION
+  interaction_model: semantic-multi-turn-chat
+  fixed_multi_role_content_workflow_is_target_agent: false
+  world_model_role: persistent-versioned-verifiable-software-cognition
+  lead_agent_owns: user-goal-hypotheses-subtasks-plan-revisions-context-selection-tool-choice-observation-interpretation-replanning-completion-and-answer-synthesis
+  control_plane_owns: exact-version-authorization-read-only-tool-execution-evidence-identity-budget-and-audit
+  independent_reviewer_required: true
+  lead_agent_direct_repository_filesystem_shell_network_or_write_access: false
+  tool_families_before_direction_confirmation: world-model-query-and-controlled-source-search-read
+  conversation_identity_pinned_to: exact-project-revision-world-model-authority-source-profile-and-session-authority
+  turn_intent_kinds: new,follow-up,correction,clarification,deepen,summary
+  context_required_fields: confirmed-goal-and-constraints,referenced-entities-and-topics,open-questions,reviewed-conclusions,contested-or-superseded-conclusions,exact-provenance
+  application_sealed_context_projection_required: true
+  provider_hidden_memory_is_authority: false
+  ambiguous_reference_action: clarify-before-source-or-provider-dispatch
+  user_statement_becomes_source_truth: false
+  prior_answer_or_review_reuse_as_fact_allowed: false
+  reused_evidence_status: candidate-only-until-rebound-and-reviewed-for-current-turn
+  evidence_reuse_requires: exact-revision-binding-world-model-authority-source-profile-allowlist-content-digest-and-coverage-match
+  evidence_reuse_forbidden_inputs: prior-answer-authorization,prior-review-decision,prior-limitation,unsealed-tool-result,provider-memory
+  reused_evidence_rebound_to_current_turn_package_required: true
+  per_turn_request_evidence_answer_review_and_delivery_identity_required: true
+  new_conversation_context_isolation_required: true
+  failed_turn_closes_conversation: false
+  first_chat_canary_conversation_count: 1
+  first_chat_canary_turn_count: 5
+  new_conversation_leakage_probe_required: true
+  alpha_comparison_arms: same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline
+  knowledge_admission_from_conversation: asynchronous-reviewed-only
+  long_term_memory_before_direction_confirmation_required: false
+  multi_agent_before_direction_confirmation_required: false
+  skill_market_before_direction_confirmation_required: false
+  persistence_across_restart_before_direction_confirmation_required: false
+  full_regression_before_direction_confirmation_allowed: false
+  status: target-not-implemented-not-qualified
+
 question_evidence_package_classes:
   support_and_citation:
     admission: modality-context-coverage-and-support-validated-only
@@ -456,6 +550,11 @@ question_evidence_package_classes:
   status: frozen
 
 reviewer_verification_investigation:
+  protocol_role: legacy-compatibility
+  legacy_protocol_schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
+  superseded_as_default_by: SYS-ADR-018
+  current_delivery_authorization_allowed: false
+  historical_result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   role: independent-verification-investigation-llm
   context: fresh-context-without-initial-investigation-answer-or-review-session-state
   inputs: immutable-specific-review-gap-current-package-and-current-ledger-prefix
@@ -484,34 +583,44 @@ reviewer_verification_investigation:
   status: frozen-slice-001-preview-boundary
 
 engineering_qa_ablation:
+  schema: CONVERSATIONAL_AGENT_ABLATION@1
   status: proposed-not-authorized
-  authorization_required_before: ITER-010-SLICE-002-coding-or-execution
+  authorization_required_before: ITER-010-SLICE-001-live-comparison
   authorization_ref: not-authorized
   frozen_protocol_digest: not-authorized
-  full_cognition_arm:
+  full_cognition_system_arm:
+    agent_runtime: shared-system-arm-runtime
     cognition_input: full-exact-world-model-cognition-context
-    investigation_chain: shared-adaptive-investigation-source-broker-worker-ledger-package-answer-review
-  locator_only_or_empty_arm:
-    cognition_input: predeclared-locator-only-projection-or-canonical-empty-when-no-locator-exists
-    investigation_chain: same-as-full-cognition-arm
-  mature_source_agent_arm:
-    protocol_ref: mature_source_agent_protocol_digest
+    source_access: controlled-read-only-source-tools
+  source_only_system_arm:
+    agent_runtime: shared-system-arm-runtime
     cognition_input: none
-    investigation_chain: frozen-mature-source-agent
-  controlled_inputs: same-exact-revision-model-questions-model-call-and-resource-budget-cache-policy-and-state-rubric-and-evaluator
-  quality_gate: full-cognition-and-mature-source-agent-zero-major-error-boundary-correct-and-full-cognition-no-material-claim-regression-versus-mature-source-agent
-  locator_control_quality_failure_effect: may-prove-quality-gain-but-cannot-lower-full-cognition-acceptance-threshold
-  gain_gate: full-cognition-must-have-precommitted-quality-gain-or-precommitted-normalized-non-locator-investigation-cost-gain-versus-locator-only-or-empty-arm
-  proposed_quality_gain_threshold: at-least-one-predeclared-material-checklist-gain-with-no-regression
-  proposed_non_locator_cost_ratio_threshold_ppm: 900000
+    source_access: controlled-read-only-source-tools
+  current_codex_external_baseline_arm:
+    runtime: preserve-actual-model-reasoning-tools-permissions-and-budget
+    cognition_input: none
+    role: external-baseline-not-oracle-not-reviewer
+  system_arm_shared_runtime: same-lead-agent-model-tools-permissions-budget-cache-policy-and-state
+  shared_evaluation_inputs: same-exact-revision-questions-authorized-source-scope-output-constraints-and-blind-rubric
+  forced_runtime_identity_across_all_three_arms: false
+  technical_adjudication_owner: independent-evaluator-not-answer-generator
+  product_direction_decision_owner: user
+  quality_gate: each-arm-zero-major-error-boundary-correct-and-full-cognition-no-material-claim-regression
+  gain_gate: full-cognition-must-have-precommitted-quality-or-normalized-cost-gain-versus-source-only-system-arm
   cost_dimensions: source-bytes-source-broker-operations-model-tokens-wall-time-provider-cost-and-world-model-build-update-storage-cost
   modeling_cost_accounting: exact-world-model-build-update-storage-and-provider-cost-amortized-over-frozen-reuse-horizon
   proposed_reuse_horizon_questions: 12
-  slice_001_required: false
+  slice_001_required: true
+  slice_001_case_id: V-COMP-ALPHA-001
   slice_002_case_id: V-COMP-EARLY-002
   slice_003_case_id: V-COMP-001
 
 answer_hierarchy_protocol:
+  protocol_role: legacy-compatibility
+  legacy_protocol_schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
+  superseded_as_default_by: SYS-ADR-018
+  current_delivery_authorization_allowed: false
+  historical_result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   status: frozen
   contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
   direct_user_goal_answer_required: true
@@ -539,6 +648,11 @@ answer_hierarchy_protocol:
   question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed: false
 
 answer_protocol:
+  protocol_role: legacy-compatibility
+  legacy_protocol_schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
+  superseded_as_default_by: SYS-ADR-018
+  current_delivery_authorization_allowed: false
+  historical_result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
   contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
   mode: adaptive-cognition-guided-engineering-investigation
@@ -688,9 +802,12 @@ answer_protocol:
   status: frozen
 
 readiness_inputs:
-  required_architecture_decision: SYS-ADR-016
+  required_architecture_decision: SYS-ADR-018
+  current_architecture_decision: SYS-ADR-018
   provider_route_architecture_decision: SYS-ADR-017
-  architecture_change_target: SYS-ADR-016
+  legacy_compatibility_architecture_decision: SYS-ADR-016
+  legacy_architecture_amended_by: SYS-ADR-018
+  architecture_change_target: SYS-ADR-018
   architecture_change_gate_case_id: V-ARCH-001
   required_system_contract_refs:
     - SYS-CONTRACT-AI-CAPABILITY-EVALUATION
@@ -698,6 +815,7 @@ readiness_inputs:
     - SYS-CONTRACT-APPLICATION-AGENTIC-TASK
     - SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING
     - SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+    - SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION
     - SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
     - SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE
     - SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
@@ -708,8 +826,14 @@ readiness_inputs:
   source_semantics_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
   no_payload_contract_ref: SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE
-  answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
-  answer_hierarchy_protocol_digest: sha256:97d24a2a1c70965c6b6953f8665d2808762f0231c3626904013e209dd32e6947
+  answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION
+  legacy_answer_protocol_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING
+  current_protocol_schema: CONVERSATIONAL_ENGINEERING_AGENT@1
+  legacy_protocol_schema: ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3
+  legacy_answer_hierarchy_protocol_digest: sha256:97d24a2a1c70965c6b6953f8665d2808762f0231c3626904013e209dd32e6947
+  current_readiness_status: refresh-required-not-accepted
+  historical_readiness_ref: ITER-010-READINESS
+  historical_readiness_catalog_digest: sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82
   system_contract_set_schema: ITER-010-SYSTEM-CONTRACT-SET@1
   system_contract_set_paths:
     - docs/system/architecture/components.md
@@ -719,6 +843,7 @@ readiness_inputs:
     - docs/system/architecture/decisions/ADR-015-bounded-world-model-investigation.md
     - docs/system/architecture/decisions/ADR-016-engineering-question-answering.md
     - docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md
+    - docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md
     - docs/system/architecture/domain-model.md
     - docs/system/architecture/invariants.md
     - docs/system/architecture/overview.md
@@ -726,6 +851,7 @@ readiness_inputs:
     - docs/system/contracts/ai/capability-evaluation.md
     - docs/system/contracts/ai/model-gateway.md
     - docs/system/contracts/application/agentic-task.md
+    - docs/system/contracts/application/engineering-conversation.md
     - docs/system/contracts/application/engineering-question-answering.md
     - docs/system/contracts/application/evidence-answering.md
     - docs/system/contracts/application/implementation-query.md
@@ -743,13 +869,13 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:0ffaee2b0bfa87f001e0311bd6237d746ec8e96a7cde928d12e41324a38ee681
+  system_contract_set_digest: sha256:0e466edbb0b7002aa29fcf5221fc9a82de3b55a0778b75c1ef7824c7dee19f2e
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
-  investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
+  legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
   hidden_evaluation_protocol_status: frozen-user-held-until-product-code-freeze
   hidden_freeze_protocol_digest: sha256:5936ab02f0c04cbb5b3656f18eb127cb77d9ba2b35c3ad18620d84b6139c9c01
-  investigation_budget_digest: sha256:53c632ecaaf91a3125f71b7e72a2f07d467822b9aea61160ab0c359c45ff2d2d
+  legacy_investigation_budget_digest: sha256:53c632ecaaf91a3125f71b7e72a2f07d467822b9aea61160ab0c359c45ff2d2d
   java_frontend:
     artifact_ref: TREE_SITTER_JAVA_FRONTEND@1
     version: tree-sitter==0.25.2+tree-sitter-java==0.23.5+abi14
@@ -772,11 +898,12 @@ readiness_inputs:
 development:
   slices:
     ITER-010-SLICE-001:
-      status: authorized
-      coding_input: true
-      result: in-progress
-      reflection_decision: in-progress
-      project_decision_ref: ITER-010-PDR-001
+      status: paused
+      coding_input: false
+      result: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
+      reflection_decision: REWORK
+      reflection_decision_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
+      project_decision_ref: ITER-010-PDR-004
       recovery_decision_ref: ITER-010-PDR-003
       historical_reflection_decision: REDIRECT
       historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
@@ -788,12 +915,12 @@ development:
       prior_authorization_refs:
         - "codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: not-executed
-      product_code_freeze_status: pending-rework-product-freeze
+      product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
+      product_code_freeze_status: paused-new-architecture-not-implemented-not-qualified
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: pdr-003-hard-stop-recovery-access-first-ark-primary-route-and-quality-canary-not-yet-executed
+      live_question_status: not-authorized-conversational-five-turn-canary-not-executed
       authorized_by: user
       authorized_at: 2026-08-24T02:55:16Z
       authorization_ref: codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5
@@ -824,25 +951,31 @@ verification:
 
 authorization:
   readiness_review_id: ITER-010-READINESS
-  active_slice: ITER-010-SLICE-001
+  active_slice: none
   authorized_by: user
   authorized_at: 2026-08-21T09:18:34Z
   authorization_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
+  docs_sync_authorization_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
+  docs_sync_authorizes_product_code: false
+  refreshed_readiness_required: true
+  explicit_user_reauthorization_required: true
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24
-  final_decision_ref: codex-user-message:sha256:3112da2512628a1beddf15117a8bd78ed484ad5c6ceece3feac7877e1d7ecf4e
-  project_decision_ref: ITER-010-PDR-001
+  final_decision_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
+  project_decision_ref: ITER-010-PDR-004
   recovery_decision_ref: ITER-010-PDR-003
   recovery_decision_ref_receipt: codex-user-message:sha256:47a3421d48fe3f36000e45696ea9c41b49b7e362332bc724306c10ca42fe119c
   result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   slice1_needed_rights_root_authorization:
-    status: authorized-root-exact-derived-grants-required
+    status: historical-consumed-not-active
     authorized_by: user
     authorization_ref: codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7
     scope: slice1-exact-product-freeze-current-provider-credential-reference-per-input-disclosure-live-model-and-loopback-web-browser-verification
     excludes: slice2-slice3-hidden-and-production-activation
-    dispatch_rule: no-dispatch-before-exact-candidate-request-provider-role-fragment-and-full-input-subgrant
+    dispatch_rule: no-new-dispatch-before-refreshed-readiness-explicit-user-reauthorization-and-exact-candidate-request-provider-role-fragment-and-full-input-subgrant
   prior_design_authorization_refs:
     - codex-user-message:sha256:1b3270242962b8d099ac9166304dc6188be22054cfc2a685b2ade5616d4cc2f4
     - codex-user-message:sha256:5cdb7000ba36328f5caa27727c6b689ad4e98e7ad13eca72837fa020d0c270c9
+    - codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
+    - codex-user-message:sha256:32b298dedd814a93d8dc0a086776090342f14856f032283fddb453061c1efeb5

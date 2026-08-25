@@ -61,23 +61,28 @@ Codex identity、fresh 隔离任务、答案先密封、系统不可见、随机
 严格为正才可 `CONTINUE`。小样本至少是一条原失败题和另外两条相邻或异质题，后两条中至少一条在产品冻结后由现场提出。全体打平
 不能用成本、时延或复用补偿；完整 hidden/跨工程复验仍在 hardening/final。
 
-首次方向体验必须是真正可持续操作的版本：精确版本可重复启动、固定本地地址、同一会话连续自由提问、版本和限制可见，且单题失败不
-关闭服务。一次性验证运行或只能回答启动前冻结问题的页面不算体验版本。阻断失败默认记录为 `REWORK` 并暂停当前 Slice；同一目标和
+首次方向体验必须是真正可持续操作的版本：精确版本可重复启动、固定本地地址、版本和限制可见，且单题失败不关闭服务。一次性验证
+运行或只能回答启动前冻结问题的页面不算体验版本。连续提交独立问题只证明持续 Q&A；若声明 Chat，Manifest 必须使用
+`ENGINEERING_CHAT_EXPERIENCE@1` 和 `CONVERSATIONAL_ENGINEERING_AGENT@1`，冻结追问、纠正、总结、逐轮证据/审核及新对话隔离，
+并用至少五轮语义链验证。阻断失败默认记录为 `REWORK` 并暂停当前 Slice；同一目标和
 总体架构下使用新的用户授权恢复同一 Slice。只有明确用户转向、核心架构证伪或达到预提交无进展上限才允许 `REDIRECT`。
 
 从 ITER-012 起，首个持续 Alpha 还必须使用模板中的 `EXPERIENCE_FIRST_DELIVERY@1`：从授权后的第一次产品代码变更起，60 分钟页面可启动、
 180 分钟用户可连续操作，240 分钟仍未达到即停止扩张/hardening/外部调用并缩围复盘。首次体验前只允许启动、安全、失败真实性、一次
-current Provider 资格和一题 smoke，不做 full regression。Access PASS 只决定 availability，不替代答案 Quality PASS；后者才允许 hardening。
+current Provider 资格和最多一个 Provider 前本地/Mock Access smoke，不做 full regression。Access PASS 只决定 availability，不替代答案 Quality PASS；后者才允许 hardening。
 ITER-010 只有显式加入同一 policy 时 opt in。
 
-live attempt 按“同一 sealed version 的一个 logical question 发生任一外部 dispatch”计一次。同 failure signature 最多重试一次，连续两次
+若 policy 是在既有失败 Result 密封后才采用，只能把这些 exact Result ID 写入 `historical_pre_policy_result_refs`。它们继续接受历史完整性
+和 paused REWORK 检查，但不追溯补造新字段，也不能满足新的体验 Gate；恢复授权后的 successor Result 不得列入该清单。
+
+live attempt 按“同一 sealed version 的一个有界用户交互单元发生任一外部 dispatch”计一次；Chat 按 Turn 分别计数。同 failure signature 最多重试一次，连续两次
 没有用户可见增量即停止外部重跑；已开始的问题仍保留完整质量链。Provider route 必须 Ark-first，并在 session 前预授权 Ark/DeepSeek
 ordered route 与双方 disclosure scope。Ark 因 Provider/模型能力 outcome 没有 authorized answer 时，可透明启动最多一个独立 DeepSeek
-attempt；用户不重提，fallback 从原问题与 exact cognition 重跑全链，不复用中间产物，迟到 Ark 只隔离审计。DeepSeek 批量运行优先使用
+attempt；用户不重提，fallback 从原交互输入与 exact cognition 重跑全链，Chat 同时携带当前 Turn 的 exact relevant Application-sealed Conversation Context，不复用中间产物，迟到 Ark 只隔离审计。DeepSeek 批量运行优先使用
 执行时重新核对的官方非高峰窗口，峰时 override 可审计；成本不得降低答案质量。
 
-失败修复必须 root-cause-first：按 Source truth、World Model cognition、question understanding、investigation、evidence package、answer、
-review、Web 查找最早偏差；无可证伪假设不得改 Prompt/Schema/Contract。先本地最小复现并通过两个未参与修复的相邻案例，再用一题 live
+失败修复必须 root-cause-first：按 Source truth、World Model cognition、conversation/task understanding、Agent work state/plan、tool
+observation/evidence、answer、independent review、Web 查找最早偏差；无可证伪假设不得改 Prompt/Schema/Contract。先本地最小复现并通过两个未参与修复的相邻案例，再用一个有界 live
 canary；同签名修一次仍复现即评审架构职责。Alpha 前只运行 targeted impact/startup/safety，full regression 只能在 `CONTINUE` 后
 hardening 和正式验收前运行。
 

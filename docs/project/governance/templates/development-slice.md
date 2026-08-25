@@ -63,28 +63,28 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 
 首个持续 Alpha Slice 从授权后的第一次产品代码变更开始计时：60 分钟内页面可启动，180 分钟内形成用户可连续操作的持续 Alpha；
 到 240 分钟仍未形成时，停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。首次体验前只允许页面启动、安全边界、
-失败真实性、一次 current Provider 资格确认和一题真实 smoke；不得把全量回归、完整资格、hidden 或对照放在前面。
+失败真实性、一次 current Provider 资格确认和最多一个 Provider 前本地/Mock Access smoke；不得把全量回归、完整资格、hidden 或对照放在前面。
 
 `V-ALPHA-ACCESS-NNN` 只判断 credential/reference、endpoint/model、current exact Conformance、策略能力资格和 active hold，不能证明答案质量；
 页面 availability 不等待质量 PASS，但 `V-COMP-ALPHA-NNN` 或本 Slice 冻结的质量 Case 必须 PASS 后才可 hardening。一次 live attempt 是同一
-sealed version 的同一问题运行只要发生任一外部 dispatch 就计一次，不按内部角色调用数放大；同一 failure signature 最多再试一次，
+sealed version 中一个有界用户交互单元只要发生任一外部 dispatch 就计一次，不按单元内部模型/角色调用数放大；Chat 中每个已 dispatch Turn 分别计数；同一 failure signature 最多再试一次，
 连续两次没有用户可见增量后停止外部重跑，回到本地根因诊断。已经开始的问题仍执行完整质量链，成本不能删减调查、回答、引用或独立审核。
 
-每次 live failure 先按 `Source truth → World Model cognition → question understanding → investigation → evidence package → answer → review → Web`
+每次 live failure 先按 `Source truth → World Model cognition → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer → independent review → Web`
 记录 earliest divergence 和可证伪 root-cause hypothesis；在此之前禁止改 Prompt/Schema/Contract。修复先通过本地最小复现和至少两个未参与
-修复的相邻案例，再执行一题 live canary。同 signature 修复一次仍复现时，停止增加规则并评审架构职责。Alpha 前只做 targeted impact、
+修复的相邻案例，再执行一个有界 live canary 单元；Chat 使用冻结的最小多轮 Conversation，不得以孤立一题代替。同 signature 修复一次仍复现时，停止增加规则并评审架构职责。Alpha 前只做 targeted impact、
 startup、safety 测试；full regression 只能进入 `CONTINUE` 后 hardening 和正式验收前。
 
 记录 Ark-first ordered route 的 current 资格证据，并在 session 开始前预授权双方 disclosure scope。Ark attempt 以 Provider/模型能力原因
 终态结束且没有 authorized answer 时，可以对用户透明地启动最多一个 DeepSeek attempt；用户不用新建 session 或重提。fallback 必须从
-immutable original question 和 exact World Model cognition 重跑完整链，不能复用前次中间产物；迟到 Ark 结果只能隔离审计，不能覆盖已密封
+当前交互的 immutable original input 和 exact World Model cognition 重跑完整链；Chat 还必须携带该 Turn 的 exact relevant Application-sealed Conversation Context。不能复用前次中间产物；迟到 Ark 结果只能隔离审计，不能覆盖已密封
 结果。同 Provider retry 为 0；Application、Source 或 Security 失败不得切 Provider 掩盖。DeepSeek 批量工作优先安排在执行时重新核对的
 官方非高峰窗口，紧急峰时启动必须有可审计显式 override。
 
 ## Experience version checkpoint
 
-记录精确版本、可重复启动方式、固定本地地址、同一会话连续自由提问、版本/限制显示和单题故障隔离的验证 Case。单题错误必须显示
-真实失败或限制，同时服务继续接受下一题；一次性运行器不满足本检查点。
+记录精确版本、可重复启动方式、固定本地地址、版本/限制显示和单题故障隔离的验证 Case。若产品声明 Chat，还必须记录完整消息历史、
+新对话、语义追问、纠正、总结、逐轮证据/审核和新对话隔离；仅在同一 Runtime Session 连续提交独立问题不满足本检查点。
 
 ## Current vs expected behavior
 

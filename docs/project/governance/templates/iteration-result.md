@@ -120,9 +120,9 @@ critical_assumption_catalog_digest: pending
 
 首个持续 Alpha Slice 的成功或失败 Result 必须绑定 `EXPERIENCE_FIRST_DELIVERY@1`、三个 Case、计时起点和 actual。记录 60 分钟页面、
 180 分钟持续 Alpha 是否达成；若到 240 分钟仍未达成，必须记录 hard stop 后新增功能/hardening/外部 dispatch 为 0。首次体验前资格次数
-不得超过 1、真实 smoke 不得超过 1 题、full regression 必须为 0。
+不得超过 1、Provider 前本地/Mock Access smoke 不得超过 1 个、full regression 必须为 0。
 
-`live_attempt_count` 按“一份 sealed version 的一个问题运行只要触发任一外部 dispatch 就计一次”记录，不按内部角色调用数累计。同一
+`live_attempt_count` 按“一份 sealed version 的一个有界用户交互单元只要触发任一外部 dispatch 就计一次”记录，不按单元内部模型/角色调用数累计；Chat 中每个已 dispatch Turn 分别计数。同一
 failure signature 最多重试一次；连续两次无用户可见增量后必须停止外部重跑。Access Case 与 Quality Case 分别报告：Access PASS
 只允许页面 availability，不能把质量改写为 PASS；只有质量 PASS 才允许 hardening。限制只能发生在问题之间，已开始问题的完整质量链
 截断数必须为 0。
@@ -133,7 +133,7 @@ failure signature 最多重试一次；连续两次无用户可见增量后必�
 后者只在 Alpha `CONTINUE` 后 hardening 与正式验收前执行。
 
 Provider 报告还必须列出 ordered routes、每个独立 attempt 的 sealed identity、trigger/outcome 分类、fallback 是否从 immutable original
-question + World Model cognition 重跑完整链、中间产物复用数、迟到 primary 隔离收据、同 Provider retry 数和用户是否被要求重提。
+interaction input + World Model cognition 重跑完整链，并在 Chat 中携带当前 Turn 的 exact relevant Application-sealed Conversation Context、中间产物复用数、迟到 primary 隔离收据、同 Provider retry 数和用户是否被要求重提。
 Provider 输出/schema/模型审核失败可以作为 capability fallback 原因，但不得伪称网络不可用；Application、Source 或 Security 失败不得
 通过切 Provider 掩盖。
 

@@ -902,6 +902,8 @@ product_goal_alignment:
         policy: dict[str, object] = {
             "schema": docs_gate.EXPERIENCE_FIRST_DELIVERY_SCHEMA,
             "owner_slice_ref": new_refs[0],
+            "historical_pre_policy_result_refs": [],
+            "historical_results_do_not_satisfy_experience_gate": True,
             "access_case_id": "V-ALPHA-ACCESS-001",
             "timebox_case_id": "V-TIMEBOX-001",
             "quality_case_id": "V-COMP-ALPHA-001",
@@ -923,7 +925,7 @@ product_goal_alignment:
             "same_failure_signature_retry_limit": 1,
             "consecutive_no_user_visible_increment_limit": 2,
             "no_increment_action": docs_gate.EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION,
-            "failure_diagnosis_order": "source-truth-world-model-cognition-question-understanding-investigation-evidence-package-answer-review-web",
+            "failure_diagnosis_order": docs_gate.EXPERIENCE_FIRST_FAILURE_DIAGNOSIS_ORDER,
             "earliest_divergence_required": True,
             "falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change": True,
             "local_minimal_reproduction_required_before_live_retry": True,
@@ -1003,6 +1005,7 @@ product_goal_alignment:
                 2,
             ),
             ("full_regression_before_alpha_continue_allowed", True),
+            ("historical_results_do_not_satisfy_experience_gate", False),
         )
         for field, invalid_value in invalid_changes:
             with self.subTest(field=field):
@@ -1051,20 +1054,20 @@ product_goal_alignment:
             "application_source_security_failure_allows_fallback": False,
             "fallback_reason_classification_required": True,
             "capability_failure_must_not_be_misclassified_as_unavailable": True,
-            "route_freeze_time": "before-session-start-and-before-any-question-dispatch",
+            "route_freeze_time": "before-conversation-start-and-before-any-interaction-unit-dispatch",
             "ordered_routes_preauthorized_at_session_start": True,
             "ordered_route_disclosure_scopes_preauthorized_at_session_start": True,
-            "transparent_logical_question_fallback_allowed": True,
+            "transparent_logical_interaction_fallback_allowed": True,
             "user_resubmission_or_new_session_required": False,
             "fallback_attempt_restarts_full_chain": True,
-            "fallback_attempt_inputs": "immutable-original-question-and-exact-cognition-context",
+            "fallback_attempt_inputs": "immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition",
             "cross_attempt_intermediate_state_reuse_allowed": False,
             "late_primary_result_policy": "quarantine-audit-only",
             "late_primary_result_overwrite_allowed": False,
             "maximum_fallback_provider_attempts": 1,
             "same_provider_retry_allowed": False,
             "outcome_unknown_duplicate_cost_risk_recorded": True,
-            "post_dispatch_provider_switch_requires": "new-provider-attempt-under-same-logical-question-and-preauthorized-route",
+            "post_dispatch_provider_switch_requires": "new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route",
             "deepseek_batch_start_policy": "provider-declared-non-peak-preferred",
             "deepseek_schedule_timezone": "Asia/Shanghai",
             "deepseek_current_preferred_windows": list(
@@ -1075,8 +1078,8 @@ product_goal_alignment:
             "deepseek_schedule_effective_status": "announced-not-yet-effective",
             "peak_urgent_override_requires": "audited-explicit-override",
             "cost_can_reduce_answer_quality": False,
-            "cost_gate_scope": "before-question-start-only",
-            "current_started_question_must_keep_full_quality_chain": True,
+            "cost_gate_scope": "before-interaction-unit-start-only",
+            "current_started_interaction_unit_must_keep_full_quality_chain": True,
             "unchanged_current_conformance_reuse_required": True,
         }
         manifest = {"provider_route_policy": policy}
@@ -1106,7 +1109,8 @@ product_goal_alignment:
         invalid_changes = (
             ("preference_order", ["DEEPSEEK", "VOLCENGINE_ARK"]),
             ("implementation_gap_counts_as_primary_unavailable", True),
-            ("transparent_logical_question_fallback_allowed", False),
+            ("transparent_logical_interaction_fallback_allowed", False),
+            ("fallback_attempt_inputs", "immutable-original-question-and-exact-cognition-context"),
             ("user_resubmission_or_new_session_required", True),
             ("fallback_attempt_restarts_full_chain", False),
             ("cross_attempt_intermediate_state_reuse_allowed", True),
@@ -1116,7 +1120,7 @@ product_goal_alignment:
             ("application_source_security_failure_allows_fallback", True),
             ("capability_failure_must_not_be_misclassified_as_unavailable", False),
             ("cost_can_reduce_answer_quality", True),
-            ("current_started_question_must_keep_full_quality_chain", False),
+            ("current_started_interaction_unit_must_keep_full_quality_chain", False),
         )
         for field, invalid_value in invalid_changes:
             with self.subTest(field=field):
@@ -5675,9 +5679,10 @@ class ReflectionGateTests(unittest.TestCase):
         adaptive_alignment["early_diagnostic_binding"][  # type: ignore[index]
             "layer_chain"
         ] = (
-            "source-observation-world-model-cognition-question-understanding-"
-            "investigation-source-broker-retrieval-worker-evidence-ledger-"
-            "question-evidence-package-answer-review-web"
+            "source-observation-world-model-cognition-conversation-or-task-"
+            "understanding-agent-work-state-and-plan-source-broker-retrieval-"
+            "worker-evidence-ledger-question-evidence-package-answer-"
+            "independent-review-web"
         )
         self.assertEqual(
             docs_gate.validate_early_evaluation_bindings(
@@ -7411,6 +7416,43 @@ class ReworkPlanningGateTests(unittest.TestCase):
         self.assertEqual(parse_errors, [])
         return documents, {document.identifier: document for document in documents}
 
+    def _assert_current_verification_mutations_rejected(
+        self,
+        case_id: str,
+        mutations: tuple[tuple[str, str, str], ...],
+    ) -> None:
+        _, by_id = self._documents()
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        verification = by_id["ITER-010-VERIFICATION"]
+        for field_name, original, replacement in mutations:
+            with self.subTest(case_id=case_id, field=field_name):
+                self.assertIn(original, verification.body)
+                tampered = docs_gate.Document(
+                    verification.path,
+                    verification.metadata,
+                    verification.body.replace(original, replacement, 1),
+                )
+                errors = docs_gate.validate_product_goal_reference_targets(
+                    manifest_path,
+                    "ITER-010",
+                    {**by_id, verification.identifier: tampered},
+                    require_execution_slice_sequence=True,
+                    require_paused_slice_sequence=True,
+                    verification=tampered,
+                )
+                self.assertTrue(
+                    any(
+                        case_id in error
+                        and field_name in error
+                        and "current semantic phrase" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
     def test_file_backed_rework_authorization_history_is_materialized(self) -> None:
         manifest_path = (
             docs_gate.REPOSITORY
@@ -7434,6 +7476,110 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ],
         )
 
+    def test_conversational_cutover_marks_every_fixed_role_section_legacy(
+        self,
+    ) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest = docs_gate.safe_load_manifest(
+            manifest_path.read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            docs_gate.validate_conversational_architecture_cutover(
+                manifest, "manifest.yaml"
+            ),
+            [],
+        )
+        for section_name in (
+            "hybrid_evidence_path",
+            "reviewer_verification_investigation",
+            "answer_hierarchy_protocol",
+            "answer_protocol",
+        ):
+            tampered = copy.deepcopy(manifest)
+            tampered[section_name]["protocol_role"] = "current"
+            errors = docs_gate.validate_conversational_architecture_cutover(
+                tampered, "manifest.yaml"
+            )
+            self.assertTrue(
+                any(section_name in error for error in errors),
+                (section_name, errors),
+            )
+
+    def test_current_timebox_chat_verification_freezes_per_turn_attempt_semantics(
+        self,
+    ) -> None:
+        self._assert_current_verification_mutations_rejected(
+            "V-TIMEBOX-CHAT-001",
+            (
+                (
+                    "Claim",
+                    "逐 Turn live-attempt 纪律成立",
+                    "Conversation 级 live-attempt 纪律成立",
+                ),
+                (
+                    "Frozen input / oracle",
+                    "Conversation/Turn/provider dispatch",
+                    "Conversation/provider dispatch",
+                ),
+                (
+                    "Expected",
+                    "每个 Provider-dispatched Turn 分别计 live attempt",
+                    "整个 Conversation 只计一次 live attempt",
+                ),
+            ),
+        )
+
+    def test_current_alpha_comparison_verification_freezes_codex_baseline_semantics(
+        self,
+    ) -> None:
+        self._assert_current_verification_mutations_rejected(
+            "V-COMP-ALPHA-001",
+            (
+                (
+                    "Claim",
+                    "主 Agent/World Model 方向信号",
+                    "统一标准答案",
+                ),
+                (
+                    "Frozen input / oracle",
+                    "current Codex external baseline",
+                    "current Codex oracle",
+                ),
+                (
+                    "Expected",
+                    "只作强外部基线，不是 Oracle/裁判",
+                    "必须作为 Oracle 和最终裁判",
+                ),
+            ),
+        )
+
+    def test_current_preview_verification_separates_technical_and_direction_owners(
+        self,
+    ) -> None:
+        self._assert_current_verification_mutations_rejected(
+            "V-PREVIEW-002",
+            (
+                (
+                    "Claim",
+                    "用户基于 A1—A3/A6 复盘、多轮 Chat 和三臂方向信号决定是否进入夯实",
+                    "独立评估者决定是否进入夯实",
+                ),
+                (
+                    "Frozen input / oracle",
+                    "真实 Result、限制、Findings 和假设证据",
+                    "模型最终结论",
+                ),
+                (
+                    "Expected",
+                    "独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal；用户实际追问、纠正、深入、总结并查看三臂方向信号后决定",
+                    "用户直接给出 A1—A3/A6 技术 Verdict；独立评估者随后决定",
+                ),
+            ),
+        )
+
     def test_rework_validates_the_immutable_historical_result(self) -> None:
         _, by_id = self._documents()
         manifest_path = (
@@ -7447,9 +7593,40 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 "ITER-010",
                 by_id,
                 require_execution_slice_sequence=True,
+                require_paused_slice_sequence=True,
                 verification=verification,
             ),
             [],
+        )
+
+        historical_evidence = (
+            "run-028 证明仅投影/focus 仍可跳过 lead；"
+            "`FINDING-010-077/078` deterministic regression closed，fresh live pending"
+        )
+        self.assertIn(historical_evidence, verification.body)
+        rewritten_verification = docs_gate.Document(
+            verification.path,
+            verification.metadata,
+            verification.body.replace(
+                historical_evidence,
+                "ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-REVIEW-001",
+                1,
+            ),
+        )
+        rewritten_errors = docs_gate.validate_product_goal_reference_targets(
+            manifest_path,
+            "ITER-010",
+            {**by_id, verification.identifier: rewritten_verification},
+            require_execution_slice_sequence=True,
+            require_paused_slice_sequence=True,
+            verification=rewritten_verification,
+        )
+        self.assertTrue(
+            any(
+                "completed V-REVIEW-001 Evidence must equal" in error
+                for error in rewritten_errors
+            ),
+            rewritten_errors,
         )
 
         result = by_id["ITER-010-RESULT-SLICE-001-STOP-REDIRECT"]
@@ -7472,6 +7649,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "ITER-010",
             tampered_by_id,
             require_execution_slice_sequence=True,
+            require_paused_slice_sequence=True,
             verification=verification,
         )
         self.assertTrue(
@@ -7489,8 +7667,8 @@ class ReworkPlanningGateTests(unittest.TestCase):
         second_cases = list(
             second_slice.metadata["product_goal_slice_gate_case_ids"]
         )
-        first_cases.remove("V-EXPERIENCE-001")
-        second_cases.append("V-EXPERIENCE-001")
+        first_cases.remove("V-CHAT-EXPERIENCE-001")
+        second_cases.append("V-CHAT-EXPERIENCE-001")
         transferred_by_id = {
             **by_id,
             first_slice.identifier: docs_gate.Document(
@@ -7526,12 +7704,73 @@ class ReworkPlanningGateTests(unittest.TestCase):
     def test_paused_rework_requires_policy_and_sustained_experience_binding(
         self,
     ) -> None:
+        _, by_id = self._documents()
         manifest_path = (
             docs_gate.REPOSITORY
             / "docs/project/iterations/iteration-010/manifest.yaml"
         )
         manifest_text = manifest_path.read_text(encoding="utf-8")
         manifest = docs_gate.safe_load_manifest(manifest_text)
+        manifest["experience_delivery_policy"][  # type: ignore[index]
+            "historical_pre_policy_result_refs"
+        ] = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "experience_delivery_policy",
+            "historical_pre_policy_result_refs",
+        ) or []
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "product_goal_alignment",
+            "new_capability_slice_refs",
+        )
+        assert new_refs is not None
+        for reference in new_refs:
+            state = manifest["development"]["slices"][reference]  # type: ignore[index]
+            for field in ("rework_result_refs", "prior_authorization_refs"):
+                if isinstance(state.get(field), dict):
+                    state[field] = (
+                        docs_gate.manifest_resolved_nested_sequence_items(
+                            manifest_text,
+                            ("development", "slices", reference, field),
+                        )
+                        or []
+                    )
+
+        self.assertEqual(
+            docs_gate.validate_product_goal_slice_sequence(
+                new_refs,
+                by_id,
+                "manifest.yaml",
+                manifest=manifest,
+                verification=by_id["ITER-010-VERIFICATION"],
+                require_paused=True,
+            ),
+            [],
+        )
+
+        # A Result sealed before the experience policy may remain immutable,
+        # but only through an exact, explicit cutover binding.  Removing the
+        # binding must reactivate the current-policy Result audit rather than
+        # silently treating the old Result as an experience PASS.
+        without_cutover = copy.deepcopy(manifest)
+        without_cutover["experience_delivery_policy"][  # type: ignore[index]
+            "historical_pre_policy_result_refs"
+        ] = []
+        cutover_errors = docs_gate.validate_product_goal_slice_sequence(
+            new_refs,
+            by_id,
+            "manifest.yaml",
+            manifest=without_cutover,
+            verification=by_id["ITER-010-VERIFICATION"],
+            require_paused=True,
+        )
+        self.assertTrue(
+            any(
+                "experience_delivery_policy_schema" in error
+                for error in cutover_errors
+            ),
+            cutover_errors,
+        )
 
         without_policy = copy.deepcopy(manifest)
         without_policy.pop("rework_policy")
@@ -7634,6 +7873,104 @@ class ReworkPlanningGateTests(unittest.TestCase):
         )
         self.assertTrue(any("127.0.0.1" in error for error in errors), errors)
         self.assertTrue(any("without stopping" in error for error in errors), errors)
+
+    def test_semantic_chat_requires_lead_agent_context_and_turn_isolation(
+        self,
+    ) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+        alignment = manifest["product_goal_alignment"]
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "product_goal_alignment",
+            "new_capability_slice_refs",
+        )
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "product_goal_alignment",
+            "blocking_case_ids",
+        )
+        assert new_refs is not None and blocking is not None
+
+        self.assertEqual(
+            docs_gate.validate_conversational_engineering_agent(
+                manifest,
+                alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_version_binding(
+                alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            ),
+            [],
+        )
+
+        invalid_policy_values = (
+            ("fixed_multi_role_content_workflow_is_target_agent", True),
+            ("provider_hidden_memory_is_authority", True),
+            ("prior_answer_or_review_reuse_as_fact_allowed", True),
+            ("first_chat_canary_turn_count", 4),
+            ("new_conversation_context_isolation_required", False),
+            ("full_regression_before_direction_confirmation_allowed", True),
+        )
+        for field, value in invalid_policy_values:
+            invalid = copy.deepcopy(manifest)
+            invalid["conversational_engineering_agent"][field] = value
+            errors = docs_gate.validate_conversational_engineering_agent(
+                invalid,
+                invalid["product_goal_alignment"],
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            )
+            self.assertTrue(any(field in error for error in errors), (field, errors))
+
+        missing = copy.deepcopy(manifest)
+        missing.pop("conversational_engineering_agent")
+        self.assertTrue(
+            any(
+                "is required" in error
+                for error in docs_gate.validate_conversational_engineering_agent(
+                    missing,
+                    missing["product_goal_alignment"],
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
+                    required=True,
+                )
+            )
+        )
+
+        for field in (
+            "semantic_follow_up",
+            "user_correction_updates_context",
+            "per_turn_evidence_and_review",
+            "new_conversation_context_isolation",
+        ):
+            invalid_alignment = copy.deepcopy(alignment)
+            invalid_alignment["experience_version_binding"][field] = False
+            errors = docs_gate.validate_experience_version_binding(
+                invalid_alignment,
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            )
+            self.assertTrue(any(field in error for error in errors), (field, errors))
 
     def test_rework_marker_cannot_be_erased_before_same_slice_reauthorization(
         self,

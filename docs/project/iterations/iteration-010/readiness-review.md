@@ -4,7 +4,7 @@ kind: iteration-readiness
 status: accepted
 authority: project-authorization
 owners: [project, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT]
+depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, FINDING-010-093, FINDING-010-094, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT]
 code: []
 tests: []
 iteration: ITER-010
@@ -37,9 +37,9 @@ coding_input: false
 明确要求继续开发，恢复同一个 Slice1 的产品/System 编码与本地确定性验证。Provider 调用、动态问题/源码披露和 live browser 不从该
 开发收据推导，仍须在新 product freeze 后按 exact Session Authority 单独授权。
 
-## Rework authorization delta
+## Historical PDR-001—003 authorization delta (non-normative)
 
-`FINDING-010-029` 已完成恢复前的最小 System Owner 差异复核：旧 prepared Request/run 只保留历史单题兼容身份；持续 Alpha 在 listener
+本节只解释 PDR-004 前已发生的授权和实现事实，不是 current 开发指令，也不恢复旧固定角色流程。`FINDING-010-029` 已完成当时恢复前的最小 System Owner 差异复核：旧 prepared Request/run 只保留历史单题兼容身份；持续 Alpha 在 listener
 前固定 exact product、工程/revision、World Model、Source Profile/allowlist、Provider/configuration/qualification、角色契约、有效期和
 每题/整会话熔断。用户提交动作密封 exact question receipt，System Owner 生成 server-owned per-question Request/run，动态角色输入仍
 逐次形成 one-use disclosure authorization。该变化不放宽 Source、Provider、zero-retry、loopback 或非生产边界，已同步 ADR-016、
@@ -50,81 +50,111 @@ Engineering QA Contract、Security 和 Local Browser Operations。
 用户收据 `codex-user-message:sha256:47a3421d48fe3f36000e45696ea9c41b49b7e362332bc724306c10ca42fe119c`
 记录约 14 小时没有新体验版本和 DeepSeek token 消耗过多。`FINDING-010-091/092` 与 PDR-003 现把当前 Slice 收窄为 experience-first
 recovery：60 分钟页面可启动、180 分钟持续可操作、240 分钟 hard stop；本轮已超过 hard stop，停止 scope expansion、外部批量调用和
-首次体验前 full regression，只允许启动安全、失败真实性、一次必要 qualification 和一个 live smoke。
+首次体验前 full regression，只允许启动安全、失败真实性、一次必要 qualification 和一个本地或 Mock 单轮 Access smoke。
 
-Access 与 Quality 分开：`V-ALPHA-ACCESS-001` 可以在答案质量未验收时证明真实 Web 可操作；它不能通过
-`V-ANSWER-REWORK-001`。一题 canary 未通过时不运行三题集。同 failure signature 最多一个 successor live attempt，连续两次没有用户
-可见增量即停止外部重跑。
+Access 与 Quality 分开：从未执行的 `V-ALPHA-ACCESS-001` 以 PDR-004 pre-execution revision 验证真实 Chat Web 可操作；它不能通过
+`V-CHAT-QUALITY-001`。已执行且 FAIL 的 `V-ANSWER-REWORK-001` 只保留旧单轮返工事实。PDR-004 以后不得再用孤立 live question 充当 Chat canary；首个方向 live canary 本身就是一个有界五轮
+Conversation，每个到达 Provider dispatch 的 Turn 分别计 live attempt。同 failure signature 最多一个 successor live attempt，连续两次
+没有用户可见增量即停止外部重跑。
 
 本轮不再追逐答案表象：每次失败先沿 Source truth 到 Web 定位最早偏差并形成可证伪 root-cause hypothesis；没有假设和本地最小复现不得
-修改 Prompt、Schema 或 Contract。修复先通过最小复现与两个未参与修复的相邻案例，再只运行一题 live canary；同 signature 修一次仍复现
-则停止规则累积并评审架构职责。首次体验前测试仅限 targeted impact/startup/safety 和失败真实性；full regression 只在 Alpha
+修改 Prompt、Schema 或 Contract。修复先通过最小复现与两个未参与修复的相邻案例，再进入 PDR-004 五轮 live Chat canary；同 signature
+修一次仍复现则停止规则累积并评审架构职责。首次体验前测试仅限 targeted impact/startup/safety 和失败真实性；full regression 只在 Alpha
 `CONTINUE` 后 hardening 与正式验收前运行。
 
 ADR-017 将 Provider 路由改为 Session 预授权的 Ark→DeepSeek：用户一次提交同一 logical question；primary attempt 只有在密封 terminal、
-没有 authorized answer 且属于受控 Provider/model reason 后，才透明启动一个完全隔离的 fallback attempt。Fallback 从 original question
-与 exact Cognition 重跑完整链，不共享中间态；同 Provider retry 0、late primary quarantine。当前代码尚未证明该语义，Readiness 只接受
+没有 authorized answer 且属于受控 Provider/model reason 后，才透明启动一个完全隔离的 fallback attempt。Fallback 从 original Turn、
+该 Turn 密封的 exact Cognition 与 relevant sealed Conversation Context 重跑完整链，不共享中间态；同 Provider retry 0、late primary quarantine。当前代码尚未证明该语义，Readiness 只接受
 它作为恢复开发输入，不把它写成 live PASS；外部调用继续需要 exact freeze/grant。
+
+## PDR-004 readiness invalidation and refresh scope
+
+本文件头部 `status: accepted` 只保存 `585f02c4…` 对旧单轮 Engineering QA 计划的历史 Readiness；它不再是当前产品编码权威。
+`FINDING-010-093/094` 和 PDR-004 已把目标修订为“软件世界模型 + 主工程 Agent”双核心及真正语义多轮 Chat。新默认 System Owner 是
+`SYS-ADR-018 / SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION`，旧 ADR-016/Engineering Question Answering 只保留历史与兼容边界。
+
+文档同步收据 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 只允许更新
+文档。当前 Readiness verdict 是 `REFRESH_REQUIRED`：Iteration/Slice1 暂停且 `coding_input=false`，没有 active Slice；Agent/Conversation
+实现、资格和 live 状态均为 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。只有下列内容被 current System docs、Proposal、Manifest、Slice
+和 Verification 一致冻结并由用户重新接受后，才可恢复编码：
+
+- 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
+  exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。
+- server-owned Conversation/Turn/Context，Context 至少包含确认目标/约束、指代实体/主题、开放问题、已审核结论、争议/被取代结论和
+  exact provenance；Application 密封每轮 Context Projection，Provider hidden memory 不掌权。
+- 模糊指代在 Source/Provider dispatch 前澄清；用户陈述和 prior Answer/Review 不成为 Source truth。旧 evidence 只有 exact revision、Binding、
+  World Model authority、Source Profile/allowlist、content digest 和 Coverage 全部匹配，并重新绑定当前 Turn Package 后才可复用。
+- 每轮独立 Request/Evidence/Answer/Review/Delivery；新 Conversation 不继承旧 Context；失败 Turn 不关闭 Conversation。
+- 首个方向 canary 为一段五轮 Conversation 和一个新对话泄漏 probe；随后的比较分开两个问题：current Codex external baseline
+  保留其真实客户端/model/reasoning/tools/权限，只作强基线而不是 Oracle/裁判；World Model 因果消融的 source-only 与
+  full-cognition + source 两臂才共享同一主 Agent/model/tool/budget/cache/Reviewer。
+
+PDR-003 的体验时间盒、Access/Quality、root-cause-first、首次体验前 full regression=0、Ark→DeepSeek transparent fallback、Conformance
+reuse、DeepSeek 调度和成本不降质仍是恢复后的必要约束，不因本次架构更新重置或放宽。
 
 ## Product-goal alignment gate
 
-- Baseline gap：真实 Web 能运行但回答像代码走读；修正前一次性检索/先封包仍不能支持结果驱动的高级工程师式调查。
+- Baseline gap：真实 Web 能运行但回答像代码走读；固定多角色流水线没有主工程 Agent，同一 Runtime Session 的独立问题也不具备 Chat 语义。
 - Product concept：World Model 始终是持久、版本化、可验证、可更新的软件外部认知，不是手册、缓存或关键词索引。
 - Capability path：继续 `ROADMAP-M-002` 最早未证明的 Step 1；提问期 Source 调查核实、补充或纠正认知，不取代问题前建模。
-- Cumulative integration：一个链路组合 exact World Model Cognition Context 与本题 source/doc/config/test Evidence。
-- Fast checkpoint：历史单题与 4+1 题已证明受控 Web 技术链，不再重复把固定运行当成体验。返工首交付是固定一个工程/revision、同一
-  loopback 服务连续接受自由问题且明确标记“质量未验收”的 Web Alpha；随后只跑一题 canary。canary 通过后才运行原失败题和至少两个
-  相邻或异质问题，一题失败不关闭服务；未通过则停止外部重跑并回到本地诊断。方向确认后才做持久恢复、复杂冲突/去重、完整异常矩阵、
-  跨工程和性能 hardening。
-- Later proof：Slice2 独立第二工程 5+2，并对完整 Cognition、locator-only/empty 同链、成熟源码 Agent 做三臂同题消融；Slice3 在最终
-  两个工程 10+2 与两条现场题复验。新消融 protocol/阈值/digest 当前未授权，Slice2 前须新用户收据。
+- Cumulative integration：一个主工程 Agent 在 Conversation 中组合 exact World Model Cognition、受控 source/doc/config/test Evidence 和
+  prior reviewed Delivery references，但 prior Answer 不取得事实权威。
+- Fast checkpoint：历史单题与 4+1 题只证明受控 Web 技术链。返工首交付是固定工程/revision、消息历史、“新对话”和真实 Turn 提交的
+  Access；Chat 专项 canary 是一个有界五轮 Conversation，每个到达 Provider dispatch 的 Turn 分别计 live attempt并保持完整证据/审核。
+  新对话泄漏 probe 必须同行执行；失败回到本地根因诊断，不启动独立三题套件。
+- Direction signal：Slice1 在用户先取得可操作 Chat、五轮 canary 与泄漏负测后，立即以同一 exact revision/Conversation 脚本/可比较输出/rubric
+  运行 current Codex 强外部基线与系统两臂消融；Codex 保留实际能力，系统两臂才固定同 Agent/model/budget/cache。它是方向信号，不阻塞页面交付，也不把 Codex 当 Oracle/裁判。
+- Later proof：Slice2 在第二工程复验多轮 Chat、持久恢复和三臂，Slice3 在最终隐藏工程和现场 Conversation 复验。PDR-002 的“严格超过
+  current Codex”正式强制仍从 ITER-012 起；ITER-010 的 direction signal 不能冒充该正式 Gate。
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
-结论：Outcome 直接服务通用工程问答 MVP。历史方向材料已接受；返工由 PDR-001 授权继续，PDR-003 进一步限制当前恢复顺序。透明 route
-仍待产品实现和验证；本 Readiness 不授权或追认新的外部调用。
+结论：Outcome 直接服务多轮工程 Chat MVP。历史 Readiness 已失去当前编码效力；PDR-004 暂停 Iteration/Slice1，等待新 Readiness 与用户
+重新授权。Agent/Conversation 与透明 route 都尚未实现或验证；本文件不授权或追认新的产品变化、测试扩展或外部调用。
 
 ## Architecture reflection gate readiness
 
-Proposal 重新冻结 A1—A5：A1 检查世界模型认知概念、提问期调查与认知消融贡献；A2 检查 Investigation LLM 自适应决策和 Broker/Worker
-权限；A3 检查调查后 seal、双分区 Package、Answer 与独立 Verification Investigation；A4 检查跨工程泛化；A5 检查三臂质量、完整
-Cognition 的预提交增益、建模成本与复用周期。
+Proposal 重新冻结 A1—A6：A1 检查世界模型认知概念、提问期调查与认知消融贡献；A2 检查主 Agent 自适应决策和 Broker/Worker
+权限；A3 检查每轮密封 Evidence Package、主 Agent 自然综合、fresh independent Reviewer，以及 Finding 返回主 Agent 后的补证或重写；
+A4 检查跨工程泛化；A5 检查三臂质量、完整
+Cognition 的预提交增益、建模成本与复用周期；A6 检查语义追问、指代、纠正、总结、逐轮证据和新对话隔离。
 
-Slice1 到期 A1—A3，Slice2 累积到 A4，Slice3 覆盖 A1—A5。每个阶段仍以用户新 `CONTINUE/ACCEPT` 作为下一段条件；安全上限只触发
+Slice1 到期 A1—A3/A6，Slice2 累积到 A4/A6，Slice3 覆盖 A1—A6。每个阶段仍以用户新 `CONTINUE/ACCEPT` 作为下一段条件；安全上限只触发
 失败关闭，不能裁剪调查、Evidence、Citation 或 Review。
 
 ## Outcome, scope and non-goals
 
-计划 Outcome 是本机 `ENGINEERING_QA`：Investigation LLM 使用不可变原问题、exact World Model Cognition Context 和 append-only
-Evidence Ledger 自适应提出下一步；Source Broker 校验/编译，Retrieval Worker 仅执行 exact-revision、allowlisted、read-only、audited
-操作；调查结束后 Application 密封双分区 Question Evidence Package。support/citation 仅收 admissible entries；boundary/audit 强制保留
-gap/failure/partial/conflict/unknown 且不能支持肯定 Claim。Answer 只读包；Reviewer 无直接 Source 权限，只提出具体可验证缺口；独立
-Verification Investigation 在新上下文读取 gap + current Package/Ledger，多步自适应地经 Application/Broker/Worker 形成后继 Ledger、
-Package、Answer、Review，不回初始 Investigation。
+计划 Outcome 是本机多轮工程 Chat：主工程 Agent 使用 Application 密封的 Conversation Context、exact World Model Cognition 和受控工具
+观察持续维护用户目标、假设、计划与完成判断；Broker/Worker 只执行 exact-revision、allowlisted、read-only、audited 操作。每个 Turn
+独立形成 append-only Ledger、双分区 Package、Answer、Citation、Review 和 Delivery；prior Answer/Review 不是事实证据，旧 evidence 只有
+exact identity 全匹配并重新绑定当前 Package 后才可复用。新 Conversation 不继承旧工作状态或逐轮证据。
 
 范围限 loopback、无认证、本地 Git exact revision、Java、World Model 与仓库源码/文档/配置/测试。非目标包括公网、Production、写仓库、
-任意 shell、第二语言、跨仓库、长期 Memory 和同步知识发布。严格 `WORLD_MODEL` 与显式 `DIRECT_INVESTIGATION` 保留且不可静默 fallback。
+任意 shell、第二语言、跨仓库、跨重启长期 Memory、多 Agent/技能市场和同步知识发布。会话内工作状态不可延后；严格 `WORLD_MODEL` 与
+显式 `DIRECT_INVESTIGATION` 保留且不可静默 fallback。
 
 ## System contracts and unresolved decisions
 
-系统 Owner 沿用 `SYS-ADR-016` 与 Engineering Question Answering Contract。原 planning commit 与授权时 Manifest 冻结的是
-`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2`；同一已授权 Slice 的 `FINDING-010-033` 根据真实失败把 current System Contract/Manifest 升级为
-`@3` 的 evidence-grounded atomic observation closure；`FINDING-010-036` 再闭合 coverage-only Limitation 与 material-fact observation link
-之间的组合缺口，只允许末尾 coverage limitation 使用空 link，不放松其他 Claim 的 observation/evidence closure。两项变更均不扩大模式、
-Source 或 live 权限，current system fileset 与 answer hierarchy digest 必须随实现重新计算并通过 docs gate；原 readiness receipt 继续只证明
-Slice1 授权，不证明新 candidate 或 live PASS。
+新的默认 System Owner 是 `SYS-ADR-018` 与 `SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION`。`SYS-ADR-016` 与 Engineering
+Question Answering Contract 仅作为历史/兼容实现边界。原 planning commit 与授权时 Manifest 冻结的是
+`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@2`；同一已授权 Slice 的 `FINDING-010-033` 曾把当时历史单轮 Contract/Manifest 升级为
+`@3` 的 evidence-grounded atomic observation closure，`FINDING-010-036` 再闭合其 coverage-only Limitation 缺口。这些只是已执行 PDR-004 前实现的兼容与
+证据记录，不得被解读为恢复 `@3`、双 Review 或固定 Verification Investigation 拓扑的 current 命令。原 readiness receipt 也不证明新 candidate 或 live PASS。
 
-DTO、Broker port、抽象 read operation、Ledger storage 和 UI 折叠是实现细节；以下不是实现选择：World Model 不得缩窄为手册；调查必须
-由先前结果驱动；模型无直接 FS/Shell/network/credential/source authority；Ledger append-only；调查后才 seal；Package seal 不等于真值；
-Reviewer 补证必须由独立新上下文调查生成后继 Package 并重答重审；Slice1 的一次补证上限不得成为 Slice2/3 永久协议；禁止任何题目/
+DTO、Broker port、抽象 read operation、Ledger storage 和 UI 折叠是实现细节；以下不是实现选择：World Model 不得缩窄为手册；主 Agent 的工具选择与重规划必须
+由先前观察驱动；模型无直接 FS/Shell/network/credential/source authority；Ledger append-only；调查后才 seal；Package seal 不等于真值；
+Reviewer 必须在 fresh context 审查逐轮包与答案，其 Finding 只能返回主 Agent，由主 Agent 决定在 Control Plane 约束下补证或重写，再形成
+新的 Package/Answer/Review identity；旧 `Verification Investigation` 固定角色只保留兼容资产，不是目标 Agent 本体。Slice1 的一次补证
+上限不得成为 Slice2/3 永久协议；禁止任何题目/
 工程/关键词/符号/类/方法/fixture/Oracle 特判。
 
 ## Slice, dependency and risk closure
 
-Slice1 的历史失败尝试已执行完毕；当前为 `authorized / rework / coding_input=true`。最短顺序是：闭合持续自由提问必需的最小会话授权
-语义 → 复用现有调查链接通可重复启动且标明质量未验收的持续 Web → 冻结最小候选与预授权 Ark→DeepSeek route → 最多一次必要资格 →
-同一问题的一题 live canary → 独立复核。只有 canary 通过，才在同一冻结版本运行原失败题和至少两个异质问题并交用户实际体验；失败则
-停止外部重跑并回到本地诊断。不得在首次持续体验前建设完整 Schema、持久化、第二工程、hidden、三臂或 full regression。Slice2/3
-继续需要持续 Alpha 的 `CONTINUE` 和新授权；Slice2 还须取得新三臂消融及补证 hardening protocol 的用户冻结收据。
+Slice1 的历史失败尝试已执行完毕；当前为 `paused / rework / coding_input=false`，没有 active Slice。新 Readiness 获接受后，最短顺序是：
+闭合主 Agent 与 Conversation/Turn/Context 最小纵切 → 可重复启动且标记质量未验收的消息历史/新对话 Access → 最多一次本地或 Mock 单轮
+Access smoke → 冻结最小候选与 Ark→DeepSeek route → 一个有界五轮 Conversation 作为首次方向 live canary，并执行新对话泄漏 probe。
+不得用孤立 live question 代替 Chat canary；每个到达 Provider dispatch 的 Turn 分别计 live attempt并完成完整证据/审核。不得在此之前
+建设跨重启持久化、第二工程、hidden、多 Agent、三臂或 full regression；但五轮 canary 与泄漏负测通过后，Slice1 必须运行不阻塞页面
+交付的小样本三臂方向比较，再交给用户决定。Slice2/3 继续需要 Chat Alpha `CONTINUE` 和新授权。
 
 首版必须保留 exact revision、allowlist、只读、Source untrusted、Ledger append-only、seal、证据分区、role isolation、Citation、独立
 Review、Secret 和失败真实性；持久恢复、复杂冲突/去重、跨工程、全面性能、完整异常矩阵、hidden/三臂 comparison 和正式验收可延后。
@@ -133,19 +163,19 @@ disclosure 必须在 live 前另行冻结和授权。
 
 ## Verification readiness
 
-Verification Matrix 新增并前置 `V-COGNITION-001`、`V-INVESTIGATE-001`、`V-BROKER-001`、`V-LEDGER-001`：它们分别阻断世界模型概念
-漂移、非结果驱动调查、模型越权和调查前封包/包身份错误。Slice1 还必须以 `V-REVIEW-001` 证明 Reviewer 只提交具体缺口，并由全新
-Verification Investigation 基于 current Package/Ledger 自适应形成后继 Ledger/Package/Answer/Review，而不直接操作 Source 或回到初始
-Investigation。
+已执行的 `V-ANSWER-001/V-REVIEW-001/V-EXPERIENCE-001/V-TIMEBOX-001/V-ANSWER-REWORK-001/V-WEB-000/V-WEB-001/
+V-PREVIEW-001/V-REFLECT-001` 保留原定义与 PASS/FAIL 证据，只是 historical，不是 PDR-004 的 current Gate。从未执行的
+`V-ALPHA-ACCESS-001/V-PREVIEW-002` 以明确的 PDR-004 pre-execution revision 复用；没有旧执行证据可被追认。
 
-历史 `V-WEB-000/V-WEB-001` 已执行并保留。返工验证新增持续 Web、请求隔离和原题+至少两个异质问题的 Case；不需要先完成持久恢复、
-复杂矩阵、第二工程、性能、完整回归、hidden 或三臂 comparison。所有新 live Case 仍须在代码冻结和独立 live grant 后执行；计划或
-测试不能冒充真实 Web 结果。
+current Slice1 Gate 是 `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002`：先交可操作 Chat，
+再运行一个五轮 Conversation 及新对话泄漏负测；每轮保留完整证据、Citation 和 fresh independent Review，Finding 回主 Agent 补证或重写。
+随后的 `V-COMP-ALPHA-001` 不增加产品交付前阶段：Codex 保留实际能力并只作强外部基线；系统两臂才共享同一 Agent/model/budget/cache。所有新 live Case
+仍须在重新授权、代码冻结和独立 live grant 后执行；计划、Mock 或旧单轮结果不能冒充真实 Chat。
 
 ## Authorization decision
 
-**HISTORICAL READINESS ACCEPTED / CURRENT REWORK AUTHORIZED / SLICE1 CODING INPUT。** 原 Readiness 和 Slice1 开发曾由收据
+**HISTORICAL READINESS ACCEPTED / CURRENT REFRESH REQUIRED / ITERATION AND SLICE1 PAUSED / NO CODING INPUT。** 原 Readiness 和 Slice1 开发曾由收据
 `585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，后续 `32b298de…` 收据恢复当前 Slice1 的
-产品/System 代码与确定性测试，`PROJECT-CURRENT` 已重新指向该 Slice。credential、Provider/model call、动态问题/源码披露与 live
-Web/browser 仍需新 freeze 后的 exact session grant；hidden、Production Activation 和 Slice2 未授权。Slice2 的三臂消融、hardening
-高安全上限仍须另取适用的新用户授权，不能复用旧 positive-value 收据。
+产品/System 代码与确定性测试；PDR-004 已以 docs-only 收据 `d8239ea7…` 暂停该旧权威，`PROJECT-CURRENT` 不再指向任何 active Slice。
+新的 Readiness 必须在 Agent/Conversation System Owner、Manifest 与五轮 Gate 一致后由用户明确接受；在此之前产品代码、测试扩展、
+credential、Provider/model call、动态源码披露、live browser、hidden、Production Activation 和 Slice2/3 均未授权。

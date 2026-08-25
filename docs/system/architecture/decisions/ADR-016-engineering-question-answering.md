@@ -5,6 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015]
+amended_by: [SYS-ADR-018]
 derived_from: [FINDING-010-001, FINDING-010-002, FINDING-010-005, FINDING-010-011, FINDING-010-028, FINDING-010-029, FINDING-010-031, FINDING-010-057, FINDING-010-058, FINDING-010-060, FINDING-010-062, FINDING-010-064, FINDING-010-070, FINDING-010-071, FINDING-010-073]
 code: [src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/engineering_question_strategy.py, src/software_world_model/ai_infrastructure/engineering_question_model_source.py, src/software_world_model/interface/engineering_qa_source.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_browser.py, tests/test_engineering_qa_alpha_cli.py]
@@ -88,3 +89,8 @@ Claim 的 Finding。Application 重算并要求 ID 集合恰好一致，漏项�
 ## Adoption state
 
 本 ADR 从接受时起是 `ENGINEERING_QA` 的规范目标。`ITER-010 / SLICE-001` 已产生本地确定性的 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 协议、持久 World Model Cognition Adapter、Source Profile-bound Broker/Worker、mandatory-path direct locator、Ledger/Package、Answer、comprehensive + evidence-boundary challenge Review、五角色 closed input/output receipt、逐输入 disclosure/Gateway role-focus policy、DeepSeek 组合、Session Authority、逐题 server-owned Request/run 和固定 `8765` 的持续 Alpha launcher。返工还加入受控答案层级、逐 Claim checklist/observation links、默认正文投影、结构互斥 FINISH arrays、Reviewer 独立 checklist + evidence-observation comparison、配置/未挂载类型/status literal challenge leads 与五项方向质量 Gate，其中 `claim_consistency` 显式阻断内部矛盾，下游 response ownership rule 阻断由上游局部状态推导最终 status/body。以上只有本地确定性验证；在新 product freeze 和单独授权的真实持续 browser 运行前，不证明真实 Provider、Capability Qualification、Product Validation、Slice Acceptance 或 Activation 已完成。旧 prepared launcher 仅保留历史运行兼容身份，不得标为当前 Alpha 产品。
+
+`SYS-ADR-018` 已修订本 ADR 的默认 Agent 本体：Question Understanding、Initial Investigation、Answer 与 Verification Investigation 不再
+是长期固定的独立模型角色，comprehensive + challenge 也不再是唯一允许的审核编排。exact revision、World Model Cognition、Broker/
+Worker、Ledger/Package、Citation、安全与至少一次 fresh 独立 Reviewer 边界继续有效。本 ADR 所述 `@3` 实现只作为历史兼容和迁移
+基础，不能证明新的对话式主工程 Agent 已实现或取得资格。

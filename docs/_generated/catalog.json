@@ -2975,6 +2975,39 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-092.md"
   },
   {
+    "id": "FINDING-010-093",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "architecture",
+      "application",
+      "ai",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-093.md"
+  },
+  {
+    "id": "FINDING-010-094",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "product",
+      "architecture",
+      "application",
+      "interface",
+      "security",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-094.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -4614,7 +4647,7 @@
   {
     "id": "ITER-010-DEVELOPMENT-DESIGN",
     "kind": "development-design-index",
-    "status": "current",
+    "status": "paused",
     "authority": "project-plan",
     "owners": [
       "engineering",
@@ -4641,8 +4674,8 @@
   {
     "id": "ITER-010-INDEX",
     "kind": "iteration-index",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "paused",
+    "authority": "project-plan",
     "owners": [
       "product",
       "project",
@@ -4698,6 +4731,24 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/decisions/PDR-003-experience-first-provider-cost-recovery.md"
+  },
+  {
+    "id": "ITER-010-PDR-004",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai",
+      "interface",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-004-agent-first-conversational-recovery.md"
   },
   {
     "id": "ITER-010-PROPOSAL",
@@ -4798,8 +4849,8 @@
   {
     "id": "ITER-010-SLICE-001",
     "kind": "development-slice",
-    "status": "authorized",
-    "authority": "current-development",
+    "status": "paused",
+    "authority": "project-decision",
     "owners": [
       "engineering",
       "architecture",
@@ -5568,6 +5619,24 @@
     "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md"
   },
   {
+    "id": "SYS-ADR-018",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "product",
+      "application",
+      "source",
+      "quality",
+      "security"
+    ],
+    "derived_from": [
+      "FINDING-010-093"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md"
+  },
+  {
     "id": "SYS-ADR-INDEX",
     "kind": "system-decision-index",
     "status": "current",
@@ -5742,6 +5811,20 @@
     ],
     "derived_from": [],
     "path": "docs/system/contracts/application/behavior-view.md"
+  },
+  {
+    "id": "SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION",
+    "kind": "system-contract",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "application",
+      "source",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/system/contracts/application/engineering-conversation.md"
   },
   {
     "id": "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
@@ -6281,7 +6364,8 @@
       "FINDING-010-070",
       "FINDING-010-071",
       "FINDING-010-073",
-      "FINDING-010-092"
+      "FINDING-010-092",
+      "FINDING-010-093"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

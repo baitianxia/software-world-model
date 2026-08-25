@@ -77,11 +77,19 @@ EXPERIENCE_FIRST_DELIVERY_START_ITERATION = 12
 PROVIDER_ROUTE_POLICY_START_ITERATION = 12
 EXPERIENCE_FIRST_DELIVERY_SCHEMA = "EXPERIENCE_FIRST_DELIVERY@1"
 PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
+ENGINEERING_CHAT_EXPERIENCE_SCHEMA = "ENGINEERING_CHAT_EXPERIENCE@1"
+CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA = "CONVERSATIONAL_ENGINEERING_AGENT@1"
+EXPERIENCE_FIRST_FAILURE_DIAGNOSIS_ORDER = (
+    "source-truth-world-model-cognition-conversation-or-task-understanding-"
+    "agent-work-state-and-plan-tool-observation-and-evidence-answer-"
+    "independent-review-web"
+)
 EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK = (
     "targeted-impact-startup-safety-failure-truth-one-qualification-one-smoke-only"
 )
 EXPERIENCE_FIRST_DELIVERY_LIVE_ATTEMPT_UNIT = (
-    "one-sealed-version-question-run-reaching-any-external-dispatch"
+    "one-sealed-version-bounded-user-interaction-unit-reaching-any-external-"
+    "dispatch-chat-counts-each-turn"
 )
 EXPERIENCE_FIRST_DELIVERY_HARD_STOP_ACTION = (
     "stop-scope-expansion-and-external-calls-narrow-and-review"
@@ -126,6 +134,13 @@ ENGINEERING_QA_REVIEWER_VERIFICATION_SCHEMA = (
 )
 ENGINEERING_QA_ANSWER_HIERARCHY_SCHEMA = "ENGINEERING_QA_ANSWER_HIERARCHY@3"
 ENGINEERING_QA_ABLATION_SCHEMA = "ENGINEERING_QA_COGNITION_ABLATION@1"
+CONVERSATIONAL_AGENT_ABLATION_SCHEMA = "CONVERSATIONAL_AGENT_ABLATION@1"
+CRITICAL_ASSUMPTION_CUTOVER_SCHEMA = (
+    "ITERATION_CRITICAL_ASSUMPTION_CATALOG_CUTOVER@1"
+)
+CRITICAL_ASSUMPTION_CURRENT_SCHEMA = (
+    "ITERATION_CRITICAL_ASSUMPTION_CATALOG@1"
+)
 ENGINEERING_QA_NOT_AUTHORIZED = "not-authorized"
 DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
     {
@@ -133,6 +148,87 @@ DIRECTION_PREVIEW_PRODUCT_ENTRIES = frozenset(
         "loopback-product-owned-engineering-qa-web",
     }
 )
+
+ITER010_CURRENT_ASSUMPTIONS: dict[str, str] = {
+    "A1": "软件世界模型保持为持久、版本化、可验证、可更新的软件外部认知，提问期 Source 调查只核实、补充或纠正本 Turn 认知",
+    "A2": "主工程 Agent 能持续维护目标、假设、子任务和计划，依据每次观察选择 World Model/Source 受控工具并重规划，不取得直接权限",
+    "A3": "每个 Turn 的 Evidence Package、自然答案与 fresh independent Review 同时保证直接答案、Citation、失败关闭和可返工性，Reviewer Finding 只回到主 Agent",
+    "A4": "相同 Conversation—主 Agent—受控工具—逐 Turn Evidence/Review 协议能跨第二工程、来源组合和复杂失败泛化",
+    "A5": "产品外部比较与 World Model 因果消融必须分开；current Codex 保留其真实客户端、model、reasoning、tools 和权限，只有系统的 source-only 与 full-cognition 两臂使用同一主 Agent/model/tool/budget/cache/Reviewer",
+    "A6": "产品具有真正语义多轮 Conversation，而不是同 Session 的独立问答",
+}
+ITER010_HISTORICAL_ASSUMPTION_DIGEST = (
+    "sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82"
+)
+ITER010_HISTORICAL_ASSUMPTIONS: dict[str, str] = {
+    "A1": "保持软件世界模型作为持久、版本化外部认知而非手册或缓存，同时可让提问期 Source 调查核实、补充或纠正本题认知，并能证明完整认知不只是 locator 装饰",
+    "A2": "独立 Investigation LLM 可以依据不可变原问题、exact World Model Cognition Context 和先前 Ledger 结果自适应提出下一步，而 Source Broker/Worker 能在不授予模型直接权限的情况下执行",
+    "A3": "调查后密封、包内 Answer 和 Reviewer 独立补证可以同时保证直接答案、正确 Citation、失败关闭与真实首版体验",
+    "A4": "相同认知—调查—Broker—Ledger—Package 协议能跨第二工程、来源组合和复杂失败模式泛化，不依赖问题、项目、关键词、符号、类、方法、fixture 或 Oracle 路由",
+    "A5": "在不因调用次数裁剪调查或审核质量的前提下，完整认知与成熟源码 Agent 先通过零重大错误、boundary 正确且完整认知逐结论不退步的质量门；再以 locator-only/empty 同链为消融 control，证明完整认知有预提交质量或非 locator 调查成本增益，并计入建模成本与复用周期",
+}
+ITER010_HISTORICAL_GATE_CASES: dict[str, str] = {
+    "V-ANSWER-001": "FAIL",
+    "V-REVIEW-001": "FAIL",
+    "V-XD-001": "FAIL",
+    "V-EXPERIENCE-001": "FAIL",
+    "V-WEB-000": "PASS",
+    "V-WEB-001": "PASS",
+    "V-PREVIEW-001": "FAIL",
+    "V-REFLECT-001": "PASS",
+}
+IMMUTABLE_HISTORICAL_CASE_EVIDENCE: dict[tuple[str, str], str] = {
+    (
+        "ITER-010-RESULT-SLICE-001-STOP-REDIRECT",
+        "V-REVIEW-001",
+    ): (
+        "run-028 证明仅投影/focus 仍可跳过 lead；"
+        "`FINDING-010-077/078` deterministic regression closed，fresh live pending"
+    ),
+}
+ITER010_CURRENT_CHAT_GATE_CASES = frozenset(
+    {
+        "V-CHAT-EXPERIENCE-001",
+        "V-TIMEBOX-CHAT-001",
+        "V-CHAT-QUALITY-001",
+    }
+)
+ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
+    str, dict[str, tuple[str, ...]]
+] = {
+    "V-TIMEBOX-CHAT-001": {
+        "Claim": ("逐 Turn live-attempt",),
+        "Frozen input / oracle": ("Conversation/Turn/provider dispatch",),
+        "Expected": (
+            "首个 live canary 是五轮 Conversation",
+            "每个 Provider-dispatched Turn 分别计 live attempt",
+        ),
+    },
+    "V-COMP-ALPHA-001": {
+        "Claim": ("主 Agent/World Model 方向信号",),
+        "Frozen input / oracle": (
+            "current Codex external baseline",
+            "same-agent source-only",
+            "same-agent full World Model cognition + source",
+        ),
+        "Expected": (
+            "Codex 保留实际客户端/model/reasoning/tools/权限",
+            "只作强外部基线，不是 Oracle/裁判",
+            "只有 source-only/full-cognition 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer",
+            "独立评估者",
+        ),
+    },
+    "V-PREVIEW-002": {
+        "Claim": (
+            "用户基于 A1—A3/A6 复盘、多轮 Chat 和三臂方向信号决定是否进入夯实",
+        ),
+        "Frozen input / oracle": ("真实 Result、限制、Findings 和假设证据",),
+        "Expected": (
+            "独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal",
+            "用户实际追问、纠正、深入、总结并查看三臂方向信号后决定 CONTINUE/REWORK/REDIRECT/REJECT",
+        ),
+    },
+}
 ACTIVE_REQUIRED_SECTIONS = {
     "iteration-index": ("Status and authorization", "Required inputs"),
     "iteration-proposal": (
@@ -1214,6 +1310,164 @@ def critical_assumption_catalog(
     return digest, expectations, errors
 
 
+def conversational_agent_cutover_active(manifest: dict[str, object]) -> bool:
+    policy = manifest.get("conversational_engineering_agent")
+    return (
+        isinstance(policy, dict)
+        and policy.get("schema") == CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA
+        and policy.get("architecture_decision_ref") == "SYS-ADR-018"
+    )
+
+
+def resolved_csv_values(value: object) -> list[str]:
+    if isinstance(value, str):
+        values = [item.strip() for item in value.split(",")]
+    elif isinstance(value, list):
+        values = [str(item).strip() for item in value]
+    else:
+        return []
+    if not values or any(not item for item in values) or len(values) != len(set(values)):
+        return []
+    return values
+
+
+def critical_assumption_catalogs(
+    proposal: Document | None,
+    manifest: dict[str, object],
+    label: str,
+) -> tuple[
+    str | None,
+    dict[str, str],
+    str | None,
+    dict[str, str],
+    list[str],
+]:
+    """Resolve current and historical catalogs without rewriting prior evidence."""
+
+    proposal_digest, proposal_expectations, errors = critical_assumption_catalog(proposal)
+    cutover = manifest.get("critical_assumption_catalog_cutover")
+    if cutover is None:
+        return (
+            proposal_digest,
+            proposal_expectations,
+            proposal_digest,
+            proposal_expectations,
+            errors,
+        )
+    if not isinstance(cutover, dict):
+        errors.append(
+            f"{label}: critical_assumption_catalog_cutover must be a mapping"
+        )
+        return None, {}, proposal_digest, proposal_expectations, errors
+
+    expected_keys = {
+        "schema",
+        "current_catalog_schema",
+        "current_owner_ref",
+        "current_assumption_ids",
+        "current_assumptions",
+        "current_catalog_digest",
+        "historical_owner_ref",
+        "historical_assumption_ids",
+        "historical_assumptions",
+        "historical_catalog_digest",
+        "historical_readiness_ref",
+        "historical_result_ref",
+        "historical_case_ids",
+        "historical_documents_immutable",
+        "current_gate_reuses_historical_case_ids",
+        "status",
+    }
+    errors.extend(
+        validate_exact_mapping_keys(
+            cutover,
+            expected_keys,
+            f"{label}: critical_assumption_catalog_cutover",
+        )
+    )
+    exact_values: tuple[tuple[str, object], ...] = (
+        ("schema", CRITICAL_ASSUMPTION_CUTOVER_SCHEMA),
+        ("current_catalog_schema", CRITICAL_ASSUMPTION_CURRENT_SCHEMA),
+        ("current_owner_ref", "SYS-ADR-018"),
+        ("historical_owner_ref", "ITER-010-PROPOSAL@pre-PDR-004"),
+        ("historical_readiness_ref", "ITER-010-READINESS"),
+        (
+            "historical_result_ref",
+            "ITER-010-RESULT-SLICE-001-STOP-REDIRECT",
+        ),
+        ("historical_documents_immutable", True),
+        ("current_gate_reuses_historical_case_ids", False),
+        ("status", "current-catalog-active-history-preserved"),
+    )
+    for field, expected in exact_values:
+        if cutover.get(field) != expected:
+            errors.append(
+                f"{label}: critical_assumption_catalog_cutover.{field} must equal {expected}"
+            )
+
+    current_assumptions = cutover.get("current_assumptions")
+    if not isinstance(current_assumptions, dict):
+        errors.append(
+            f"{label}: critical_assumption_catalog_cutover.current_assumptions must be a mapping"
+        )
+        parsed_current: dict[str, str] = {}
+    else:
+        parsed_current = {
+            str(key): str(value) for key, value in current_assumptions.items()
+        }
+        if (
+            parsed_current != ITER010_CURRENT_ASSUMPTIONS
+            or parsed_current != proposal_expectations
+        ):
+            errors.append(
+                f"{label}: current assumption catalog must equal the frozen A1-A6 conversational architecture catalog"
+            )
+    current_ids = resolved_assumption_ids(cutover.get("current_assumption_ids"))
+    if current_ids != list(ITER010_CURRENT_ASSUMPTIONS):
+        errors.append(
+            f"{label}: critical_assumption_catalog_cutover.current_assumption_ids must equal A1,A2,A3,A4,A5,A6"
+        )
+    current_digest = proposal_digest
+    if cutover.get("current_catalog_digest") != current_digest:
+        errors.append(
+            f"{label}: critical_assumption_catalog_cutover.current_catalog_digest must bind the exact current A1-A6 catalog"
+        )
+
+    historical_assumptions = cutover.get("historical_assumptions")
+    if not isinstance(historical_assumptions, dict) or {
+        str(key): str(value) for key, value in historical_assumptions.items()
+    } != ITER010_HISTORICAL_ASSUMPTIONS:
+        errors.append(
+            f"{label}: historical_assumptions must preserve the exact pre-PDR-004 A1-A5 catalog"
+        )
+    historical_ids = resolved_assumption_ids(
+        cutover.get("historical_assumption_ids")
+    )
+    if historical_ids != list(ITER010_HISTORICAL_ASSUMPTIONS):
+        errors.append(
+            f"{label}: historical_assumption_ids must exactly match the preserved Proposal catalog"
+        )
+    if (
+        cutover.get("historical_catalog_digest")
+        != ITER010_HISTORICAL_ASSUMPTION_DIGEST
+    ):
+        errors.append(
+            f"{label}: historical_catalog_digest must exactly match the preserved Proposal catalog"
+        )
+    historical_case_ids = resolved_csv_values(cutover.get("historical_case_ids"))
+    if historical_case_ids != list(ITER010_HISTORICAL_GATE_CASES):
+        errors.append(
+            f"{label}: historical_case_ids must preserve the exact executed ITER-010 Case catalog"
+        )
+    return (
+        current_digest,
+        ITER010_CURRENT_ASSUMPTIONS.copy(),
+        ITER010_HISTORICAL_ASSUMPTION_DIGEST,
+        ITER010_HISTORICAL_ASSUMPTIONS.copy(),
+        errors,
+    )
+
+
 def validate_planned_assumption_catalog(
     proposal: Document | None,
     manifest: dict[str, object],
@@ -1221,7 +1475,9 @@ def validate_planned_assumption_catalog(
 ) -> list[str]:
     """Reject malformed or drifting assumptions while an iteration is still proposed."""
 
-    digest, expectations, errors = critical_assumption_catalog(proposal)
+    digest, expectations, _, _, errors = critical_assumption_catalogs(
+        proposal, manifest, label
+    )
     alignment = manifest.get("product_goal_alignment")
     if not isinstance(alignment, dict):
         return errors
@@ -1230,12 +1486,12 @@ def validate_planned_assumption_catalog(
     )
     if critical_assumption_ids != list(expectations):
         errors.append(
-            f"{label}: critical_assumption_ids must exactly match the Proposal assumption catalog order"
+            f"{label}: critical_assumption_ids must exactly match the current assumption catalog order"
         )
     supplied_digest = alignment.get("critical_assumption_catalog_digest")
     if supplied_digest != "not-frozen-proposal-only" and supplied_digest != digest:
         errors.append(
-            f"{label}: proposed critical_assumption_catalog_digest must match the exact Proposal catalog or remain the proposal-only marker"
+            f"{label}: proposed critical_assumption_catalog_digest must match the exact current catalog or remain the proposal-only marker"
         )
     return errors
 
@@ -1350,6 +1606,38 @@ def validate_experience_first_delivery_policy(
             f"{EXPERIENCE_FIRST_DELIVERY_SCHEMA}"
         )
 
+    historical_refs = policy.get("historical_pre_policy_result_refs")
+    if isinstance(historical_refs, dict):
+        # ``safe_load_manifest`` validates block-sequence syntax but leaves its
+        # values opaque. File-backed validation resolves them from inert text
+        # before the Result boundary is evaluated.
+        pass
+    elif not isinstance(historical_refs, list):
+        errors.append(
+            f"{label}: experience_delivery_policy.historical_pre_policy_result_refs "
+            "must be a sequence"
+        )
+    elif len(historical_refs) != len(set(map(str, historical_refs))):
+        errors.append(
+            f"{label}: experience_delivery_policy.historical_pre_policy_result_refs "
+            "must be unique"
+        )
+    else:
+        for reference in historical_refs:
+            if not isinstance(reference, str) or re.fullmatch(
+                r"ITER-[0-9]{3}-RESULT-[A-Z0-9]+(?:-[A-Z0-9]+)*", reference
+            ) is None:
+                errors.append(
+                    f"{label}: experience_delivery_policy.historical_pre_policy_result_refs "
+                    "must contain exact Iteration Result IDs"
+                )
+                break
+    if policy.get("historical_results_do_not_satisfy_experience_gate") is not True:
+        errors.append(
+            f"{label}: experience_delivery_policy."
+            "historical_results_do_not_satisfy_experience_gate must be true"
+        )
+
     alpha_ref = resolved_sustained_alpha_slice_ref(alignment, new_refs)
     if alpha_ref is None or policy.get("owner_slice_ref") != alpha_ref:
         errors.append(
@@ -1357,10 +1645,19 @@ def validate_experience_first_delivery_policy(
             "the first sustained Web Alpha Slice"
         )
 
+    chat_cutover = conversational_agent_cutover_active(manifest)
     case_contracts = (
         ("access_case_id", r"V-ALPHA-ACCESS-[0-9]{3,}"),
-        ("timebox_case_id", r"V-TIMEBOX-[0-9]{3,}"),
-        ("quality_case_id", r"V-(?:PRE-)?[A-Z0-9]+(?:-[A-Z0-9]+)*"),
+        (
+            "timebox_case_id",
+            r"V-TIMEBOX-CHAT-[0-9]{3,}" if chat_cutover else r"V-TIMEBOX-[0-9]{3,}",
+        ),
+        (
+            "quality_case_id",
+            r"V-CHAT-QUALITY-[0-9]{3,}"
+            if chat_cutover
+            else r"V-(?:PRE-)?[A-Z0-9]+(?:-[A-Z0-9]+)*",
+        ),
     )
     resolved_cases: dict[str, str] = {}
     for field, pattern in case_contracts:
@@ -1408,7 +1705,7 @@ def validate_experience_first_delivery_policy(
         ("no_increment_action", EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION),
         (
             "failure_diagnosis_order",
-            "source-truth-world-model-cognition-question-understanding-investigation-evidence-package-answer-review-web",
+            EXPERIENCE_FIRST_FAILURE_DIAGNOSIS_ORDER,
         ),
         ("earliest_divergence_required", True),
         (
@@ -1417,7 +1714,12 @@ def validate_experience_first_delivery_policy(
         ),
         ("local_minimal_reproduction_required_before_live_retry", True),
         ("unseen_adjacent_local_case_count", 2),
-        ("live_canary_question_count_after_local_pass", 1),
+        (
+            "live_canary_turn_count_after_local_pass"
+            if chat_cutover
+            else "live_canary_question_count_after_local_pass",
+            1,
+        ),
         (
             "same_failure_signature_fix_limit_before_architecture_responsibility_review",
             1,
@@ -1440,6 +1742,24 @@ def validate_experience_first_delivery_policy(
         if policy.get(field) != expected:
             errors.append(
                 f"{label}: experience_delivery_policy.{field} must equal {expected}"
+            )
+    if chat_cutover:
+        for field, pattern in (
+            ("chat_case_id", r"V-CHAT-[0-9]{3,}"),
+            ("alpha_comparison_case_id", r"V-COMP-ALPHA-[0-9]{3,}"),
+        ):
+            case_id = policy.get(field)
+            if (
+                not isinstance(case_id, str)
+                or re.fullmatch(pattern, case_id) is None
+                or case_id not in blocking_case_ids
+            ):
+                errors.append(
+                    f"{label}: experience_delivery_policy.{field} must be a matching blocking Case"
+                )
+        if "live_canary_question_count_after_local_pass" in policy:
+            errors.append(
+                f"{label}: live_canary_question_count_after_local_pass cannot define a Chat live-attempt unit"
             )
     return errors
 
@@ -1504,19 +1824,19 @@ def validate_provider_route_policy(
         ),
         (
             "route_freeze_time",
-            "before-session-start-and-before-any-question-dispatch",
+            "before-conversation-start-and-before-any-interaction-unit-dispatch",
         ),
         ("ordered_routes_preauthorized_at_session_start", True),
         (
             "ordered_route_disclosure_scopes_preauthorized_at_session_start",
             True,
         ),
-        ("transparent_logical_question_fallback_allowed", True),
+        ("transparent_logical_interaction_fallback_allowed", True),
         ("user_resubmission_or_new_session_required", False),
         ("fallback_attempt_restarts_full_chain", True),
         (
             "fallback_attempt_inputs",
-            "immutable-original-question-and-exact-cognition-context",
+            "immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition",
         ),
         ("cross_attempt_intermediate_state_reuse_allowed", False),
         ("late_primary_result_policy", "quarantine-audit-only"),
@@ -1526,14 +1846,14 @@ def validate_provider_route_policy(
         ("outcome_unknown_duplicate_cost_risk_recorded", True),
         (
             "post_dispatch_provider_switch_requires",
-            "new-provider-attempt-under-same-logical-question-and-preauthorized-route",
+            "new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route",
         ),
         ("deepseek_batch_start_policy", "provider-declared-non-peak-preferred"),
         ("deepseek_schedule_timezone", "Asia/Shanghai"),
         ("peak_urgent_override_requires", "audited-explicit-override"),
         ("cost_can_reduce_answer_quality", False),
-        ("cost_gate_scope", "before-question-start-only"),
-        ("current_started_question_must_keep_full_quality_chain", True),
+        ("cost_gate_scope", "before-interaction-unit-start-only"),
+        ("current_started_interaction_unit_must_keep_full_quality_chain", True),
         ("unchanged_current_conformance_reuse_required", True),
     )
     for field, expected in exact_values:
@@ -1547,6 +1867,10 @@ def validate_provider_route_policy(
         "selection_time",
         "request_level_failover_allowed",
         "same_question_redispatch_to_fallback_allowed",
+        "transparent_logical_question_fallback_allowed",
+        "transparent_logical_turn_fallback_allowed",
+        "current_started_question_must_keep_full_quality_chain",
+        "current_started_turn_must_keep_full_quality_chain",
     ):
         if legacy_field in policy:
             errors.append(
@@ -1678,6 +2002,41 @@ def validate_alpha_agent_comparison_binding(
         errors.append(
             f"{label}: Alpha Agent comparison must belong to the first sustained Web Alpha"
         )
+    if binding.get("result_role") == (
+        "direction-signal-not-iteration-012-strict-superiority-gate"
+    ):
+        exact_values: tuple[tuple[str, object], ...] = (
+            ("occurs_after_chat_access_and_five_turn_canary", True),
+            (
+                "arms",
+                "same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline",
+            ),
+            ("current_codex_is_oracle_or_reviewer", False),
+            (
+                "system_arm_shared_runtime",
+                "same-lead-agent-model-tools-permissions-budget-cache-policy-and-state",
+            ),
+            (
+                "external_codex_runtime",
+                "preserve-actual-model-reasoning-tools-permissions-and-budget",
+            ),
+            (
+                "shared_evaluation_inputs",
+                "same-exact-revision-questions-authorized-source-scope-output-constraints-and-blind-rubric",
+            ),
+            ("forced_runtime_identity_across_all_three_arms", False),
+            (
+                "technical_adjudication_owner",
+                "independent-evaluator-not-answer-generator",
+            ),
+            ("product_direction_decision_owner", "user"),
+        )
+        for field, expected in exact_values:
+            if binding.get(field) != expected:
+                errors.append(
+                    f"{label}: alpha_agent_comparison_binding.{field} must equal {expected}"
+                )
+        return errors
     question_count = binding.get("question_count")
     if (
         isinstance(question_count, bool)
@@ -1853,31 +2212,60 @@ def validate_experience_version_binding(
     if not isinstance(binding, dict):
         return [f"{label}: experience_version_binding must be a mapping"]
     errors: list[str] = []
-    if binding.get("schema") != "USER_EXPERIENCE_VERSION@1":
+    schema = binding.get("schema")
+    if schema not in {"USER_EXPERIENCE_VERSION@1", ENGINEERING_CHAT_EXPERIENCE_SCHEMA}:
         errors.append(
-            f"{label}: experience_version_binding.schema must equal USER_EXPERIENCE_VERSION@1"
+            f"{label}: experience_version_binding.schema must equal "
+            "USER_EXPERIENCE_VERSION@1 or ENGINEERING_CHAT_EXPERIENCE@1"
         )
     case_id = binding.get("case_id")
+    case_pattern = (
+        r"V-CHAT-EXPERIENCE-[0-9]{3,}"
+        if schema == ENGINEERING_CHAT_EXPERIENCE_SCHEMA
+        else r"V-EXPERIENCE-[0-9]{3,}"
+    )
     if (
         not isinstance(case_id, str)
-        or re.fullmatch(r"V-EXPERIENCE-[0-9]{3,}", case_id) is None
+        or re.fullmatch(case_pattern, case_id) is None
         or case_id not in blocking_case_ids
     ):
         errors.append(
-            f"{label}: experience version case_id must be a blocking V-EXPERIENCE-NNN Case"
+            f"{label}: experience version case_id must be a matching blocking experience Case"
         )
     if not new_refs or binding.get("new_slice_ref") != new_refs[0]:
         errors.append(
             f"{label}: experience version must be delivered by the first new capability Slice"
         )
-    for field in (
-        "exact_version_visible",
-        "repeatable_start",
-        "continuous_same_session_free_questions",
-        "limitations_visible",
-    ):
+    for field in ("exact_version_visible", "repeatable_start", "limitations_visible"):
         if binding.get(field) is not True:
             errors.append(f"{label}: experience version {field} must equal true")
+    if schema == "USER_EXPERIENCE_VERSION@1":
+        if binding.get("continuous_same_session_free_questions") is not True:
+            errors.append(
+                f"{label}: experience version continuous_same_session_free_questions must equal true"
+            )
+    elif schema == ENGINEERING_CHAT_EXPERIENCE_SCHEMA:
+        for field in (
+            "message_history_visible",
+            "new_conversation_control",
+            "semantic_follow_up",
+            "user_correction_updates_context",
+            "summary_honors_current_context",
+            "per_turn_evidence_and_review",
+            "new_conversation_context_isolation",
+        ):
+            if binding.get(field) is not True:
+                errors.append(
+                    f"{label}: engineering Chat experience {field} must equal true"
+                )
+        if binding.get("minimum_conversation_turns") != 5:
+            errors.append(
+                f"{label}: engineering Chat experience minimum_conversation_turns must equal 5"
+            )
+        if binding.get("long_term_memory_required") is not False:
+            errors.append(
+                f"{label}: engineering Chat Alpha must not require long-term memory"
+            )
     address = binding.get("fixed_loopback_address")
     address_match = (
         re.fullmatch(r"http://127\.0\.0\.1:([1-9][0-9]{0,4})/?", address)
@@ -1888,13 +2276,326 @@ def validate_experience_version_binding(
         errors.append(
             f"{label}: experience version fixed_loopback_address must be an explicit 127.0.0.1 HTTP address"
         )
-    if (
+    if schema == ENGINEERING_CHAT_EXPERIENCE_SCHEMA:
+        if (
+            binding.get("turn_failure_scope")
+            != "current-turn-only-conversation-remains-usable"
+        ):
+            errors.append(
+                f"{label}: engineering Chat experience must isolate a failed turn without closing the conversation"
+            )
+    elif (
         binding.get("question_failure_scope")
         != "current-question-only-service-remains-available"
     ):
         errors.append(
             f"{label}: experience version must isolate a bad question without stopping the service"
         )
+    return errors
+
+
+def validate_conversational_engineering_agent(
+    manifest: dict[str, object],
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+    *,
+    required: bool = False,
+) -> list[str]:
+    """Validate the opt-in semantic Chat and lead engineering-Agent boundary."""
+
+    policy = manifest.get("conversational_engineering_agent")
+    if policy is None:
+        return [f"{label}: conversational_engineering_agent is required"] if required else []
+    if not isinstance(policy, dict):
+        return [f"{label}: conversational_engineering_agent must be a mapping"]
+
+    errors: list[str] = []
+    exact_values: tuple[tuple[str, object], ...] = (
+        ("schema", CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA),
+        ("architecture_decision_ref", "SYS-ADR-018"),
+        (
+            "conversation_contract_ref",
+            "SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION",
+        ),
+        ("interaction_model", "semantic-multi-turn-chat"),
+        ("fixed_multi_role_content_workflow_is_target_agent", False),
+        (
+            "world_model_role",
+            "persistent-versioned-verifiable-software-cognition",
+        ),
+        (
+            "lead_agent_owns",
+            "user-goal-hypotheses-subtasks-plan-revisions-context-selection-"
+            "tool-choice-observation-interpretation-replanning-completion-and-"
+            "answer-synthesis",
+        ),
+        (
+            "control_plane_owns",
+            "exact-version-authorization-read-only-tool-execution-evidence-"
+            "identity-budget-and-audit",
+        ),
+        ("independent_reviewer_required", True),
+        (
+            "lead_agent_direct_repository_filesystem_shell_network_or_write_access",
+            False,
+        ),
+        (
+            "tool_families_before_direction_confirmation",
+            "world-model-query-and-controlled-source-search-read",
+        ),
+        (
+            "conversation_identity_pinned_to",
+            "exact-project-revision-world-model-authority-source-profile-and-"
+            "session-authority",
+        ),
+        (
+            "turn_intent_kinds",
+            "new,follow-up,correction,clarification,deepen,summary",
+        ),
+        (
+            "context_required_fields",
+            "confirmed-goal-and-constraints,referenced-entities-and-topics,"
+            "open-questions,reviewed-conclusions,contested-or-superseded-"
+            "conclusions,exact-provenance",
+        ),
+        ("application_sealed_context_projection_required", True),
+        ("provider_hidden_memory_is_authority", False),
+        (
+            "ambiguous_reference_action",
+            "clarify-before-source-or-provider-dispatch",
+        ),
+        ("user_statement_becomes_source_truth", False),
+        ("prior_answer_or_review_reuse_as_fact_allowed", False),
+        (
+            "reused_evidence_status",
+            "candidate-only-until-rebound-and-reviewed-for-current-turn",
+        ),
+        (
+            "evidence_reuse_requires",
+            "exact-revision-binding-world-model-authority-source-profile-"
+            "allowlist-content-digest-and-coverage-match",
+        ),
+        (
+            "evidence_reuse_forbidden_inputs",
+            "prior-answer-authorization,prior-review-decision,prior-limitation,"
+            "unsealed-tool-result,provider-memory",
+        ),
+        ("reused_evidence_rebound_to_current_turn_package_required", True),
+        (
+            "per_turn_request_evidence_answer_review_and_delivery_identity_required",
+            True,
+        ),
+        ("new_conversation_context_isolation_required", True),
+        ("failed_turn_closes_conversation", False),
+        ("first_chat_canary_conversation_count", 1),
+        ("first_chat_canary_turn_count", 5),
+        ("new_conversation_leakage_probe_required", True),
+        (
+            "alpha_comparison_arms",
+            "same-agent-source-only,same-agent-full-world-model-cognition-and-"
+            "source,current-codex-external-baseline",
+        ),
+        ("knowledge_admission_from_conversation", "asynchronous-reviewed-only"),
+        ("long_term_memory_before_direction_confirmation_required", False),
+        ("multi_agent_before_direction_confirmation_required", False),
+        ("skill_market_before_direction_confirmation_required", False),
+        (
+            "persistence_across_restart_before_direction_confirmation_required",
+            False,
+        ),
+        ("full_regression_before_direction_confirmation_allowed", False),
+    )
+    for field, expected in exact_values:
+        if policy.get(field) != expected:
+            errors.append(
+                f"{label}: conversational_engineering_agent.{field} must equal {expected}"
+            )
+
+    if not new_refs or policy.get("owner_slice_ref") != new_refs[0]:
+        errors.append(
+            f"{label}: conversational engineering Agent must belong to the first capability Slice"
+        )
+    chat_case_id = policy.get("chat_case_id")
+    if (
+        not isinstance(chat_case_id, str)
+        or re.fullmatch(r"V-CHAT-[0-9]{3,}", chat_case_id) is None
+        or chat_case_id not in blocking_case_ids
+    ):
+        errors.append(
+            f"{label}: conversational engineering Agent chat_case_id must be a blocking V-CHAT-NNN Case"
+        )
+    if policy.get("status") not in {
+        "target-not-implemented-not-qualified",
+        "implemented-not-qualified",
+        "qualified-candidate",
+    }:
+        errors.append(
+            f"{label}: conversational_engineering_agent.status must be a closed pre-production state"
+        )
+    experience = alignment.get("experience_version_binding")
+    if (
+        not isinstance(experience, dict)
+        or experience.get("schema") != ENGINEERING_CHAT_EXPERIENCE_SCHEMA
+    ):
+        errors.append(
+            f"{label}: conversational engineering Agent requires ENGINEERING_CHAT_EXPERIENCE@1"
+        )
+    return errors
+
+
+def validate_conversational_architecture_cutover(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Keep the @3 workflow auditable without authorizing it as the current Agent."""
+
+    if not conversational_agent_cutover_active(manifest):
+        return []
+    errors: list[str] = []
+    legacy_markers: tuple[tuple[str, str], ...] = (
+        ("hybrid_evidence_path", "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"),
+        (
+            "reviewer_verification_investigation",
+            "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3",
+        ),
+        (
+            "answer_hierarchy_protocol",
+            "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3",
+        ),
+        ("answer_protocol", "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"),
+    )
+    for section_name, schema in legacy_markers:
+        section = manifest.get(section_name)
+        if not isinstance(section, dict):
+            errors.append(f"{label}: {section_name} must remain a legacy mapping")
+            continue
+        for field, expected in (
+            ("protocol_role", "legacy-compatibility"),
+            ("legacy_protocol_schema", schema),
+            ("superseded_as_default_by", "SYS-ADR-018"),
+            ("current_delivery_authorization_allowed", False),
+            (
+                "historical_result_ref",
+                "ITER-010-RESULT-SLICE-001-STOP-REDIRECT",
+            ),
+        ):
+            if section.get(field) != expected:
+                errors.append(
+                    f"{label}: {section_name}.{field} must equal {expected}"
+                )
+
+    readiness = manifest.get("readiness_inputs")
+    if not isinstance(readiness, dict):
+        return errors + [f"{label}: readiness_inputs must be a mapping"]
+    for field, expected in (
+        ("required_architecture_decision", "SYS-ADR-018"),
+        ("current_architecture_decision", "SYS-ADR-018"),
+        ("architecture_change_target", "SYS-ADR-018"),
+        ("legacy_compatibility_architecture_decision", "SYS-ADR-016"),
+        ("legacy_architecture_amended_by", "SYS-ADR-018"),
+        (
+            "answer_protocol_contract_ref",
+            "SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION",
+        ),
+        (
+            "legacy_answer_protocol_contract_ref",
+            "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING",
+        ),
+        ("current_protocol_schema", CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA),
+        ("legacy_protocol_schema", ENGINEERING_QA_ADAPTIVE_PROTOCOL_SCHEMA),
+        ("current_readiness_status", "refresh-required-not-accepted"),
+        ("historical_readiness_ref", "ITER-010-READINESS"),
+        (
+            "historical_readiness_catalog_digest",
+            "sha256:26769498135692067597a1f59e0fbbc8b82502ebd5336f7fdb033a80e3baff82",
+        ),
+    ):
+        if readiness.get(field) != expected:
+            errors.append(f"{label}: readiness_inputs.{field} must equal {expected}")
+    for forbidden_field in (
+        "amended_architecture_decision",
+        "investigation_budget_status",
+    ):
+        if forbidden_field in readiness:
+            errors.append(
+                f"{label}: readiness_inputs.{forbidden_field} ambiguously presents a legacy input as current"
+            )
+    return errors
+
+
+def validate_historical_gate_catalog(
+    manifest: dict[str, object],
+    blocking_case_ids: list[str],
+    verification: Document | None,
+    label: str,
+) -> list[str]:
+    """Separate immutable executed Case semantics from the current Chat gates."""
+
+    cutover = manifest.get("critical_assumption_catalog_cutover")
+    if not isinstance(cutover, dict):
+        return []
+    errors: list[str] = []
+    historical_ids = resolved_csv_values(cutover.get("historical_case_ids"))
+    reused = sorted(set(historical_ids).intersection(blocking_case_ids))
+    if reused:
+        errors.append(
+            f"{label}: current blocking_case_ids must not reuse historical executed Cases: "
+            + ", ".join(reused)
+        )
+    missing_current = sorted(ITER010_CURRENT_CHAT_GATE_CASES - set(blocking_case_ids))
+    if missing_current:
+        errors.append(
+            f"{label}: current blocking_case_ids must include the new Chat Gate catalog: "
+            + ", ".join(missing_current)
+        )
+    if verification is None:
+        return errors + [f"{label}: historical Gate cutover requires Verification"]
+    for case_id, expected_verdict in ITER010_HISTORICAL_GATE_CASES.items():
+        rows = markdown_table_case_rows(verification.body, case_id)
+        if len(rows) != 1 or len(rows[0]) != 7:
+            errors.append(
+                f"{label}: historical Case {case_id} must remain exactly once in Verification"
+            )
+            continue
+        verdict = blocking_case_status_verdict(rows[0][6])
+        if verdict != expected_verdict:
+            errors.append(
+                f"{label}: historical Case {case_id} must preserve verdict {expected_verdict}"
+            )
+    errors.extend(
+        validate_iter010_current_verification_semantics(verification, label)
+    )
+    return errors
+
+
+def validate_iter010_current_verification_semantics(
+    verification: Document | None, label: str
+) -> list[str]:
+    """Freeze the non-interchangeable semantics of the current ITER-010 gates."""
+
+    if verification is None:
+        return [f"{label}: current ITER-010 Gate contracts require Verification"]
+    verification_label = verification.relative_path
+    column_indexes = {"Claim": 1, "Frozen input / oracle": 3, "Expected": 4}
+    errors: list[str] = []
+    for case_id, field_contracts in (
+        ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES.items()
+    ):
+        rows = markdown_table_case_rows(verification.body, case_id)
+        if len(rows) != 1 or len(rows[0]) != 7:
+            errors.append(
+                f"{verification_label}: {case_id} must remain exactly once with the seven-column schema"
+            )
+            continue
+        row = rows[0]
+        for field_name, required_phrases in field_contracts.items():
+            value = row[column_indexes[field_name]]
+            for phrase in required_phrases:
+                if phrase not in value:
+                    errors.append(
+                        f"{verification_label}: {case_id} {field_name} must preserve current semantic phrase {phrase!r}"
+                    )
     return errors
 
 
@@ -1976,8 +2677,18 @@ def validate_answer_hierarchy_protocol(
         "reviewer_context_and_verdict_independent": True,
         "question-project-keyword-symbol-class-method-fixture-or-oracle-routing_allowed": False,
     }
+    marker_fields = {
+        "protocol_role",
+        "legacy_protocol_schema",
+        "superseded_as_default_by",
+        "current_delivery_authorization_allowed",
+        "historical_result_ref",
+    }
+    allowed_fields = {"status", *expected}
+    if protocol.get("protocol_role") == "legacy-compatibility":
+        allowed_fields.update(marker_fields)
     errors = validate_exact_mapping_keys(
-        protocol, {"status", *expected}, f"{label}: answer_hierarchy_protocol"
+        protocol, allowed_fields, f"{label}: answer_hierarchy_protocol"
     )
     for field, value in expected.items():
         if protocol.get(field) != value:
@@ -2291,10 +3002,6 @@ def validate_early_evaluation_bindings(
                 "positive_value_protocol_digest_ref",
                 "positive_value_protocol_digest",
             ),
-            (
-                "positive_value_adjudication_owner_ref",
-                "positive_value_adjudication_owner",
-            ),
         ):
             if comparison.get(reference_field) != target_field:
                 errors.append(
@@ -2304,6 +3011,29 @@ def validate_early_evaluation_bindings(
                 errors.append(
                     f"{label}: early comparison referenced field is missing: {target_field}"
                 )
+        if "technical_adjudication_owner" in comparison:
+            for field, expected in (
+                (
+                    "technical_adjudication_owner",
+                    "independent-evaluator-not-answer-generator",
+                ),
+                ("product_direction_decision_owner", "user"),
+                (
+                    "legacy_positive_value_adjudication_owner_ref",
+                    "positive_value_adjudication_owner",
+                ),
+            ):
+                if comparison.get(field) != expected:
+                    errors.append(
+                        f"{label}: early comparison {field} must equal {expected}"
+                    )
+        elif comparison.get("positive_value_adjudication_owner_ref") != (
+            "positive_value_adjudication_owner"
+        ):
+            errors.append(
+                f"{label}: early comparison positive_value_adjudication_owner_ref "
+                "must equal positive_value_adjudication_owner"
+            )
 
     diagnostic = alignment.get("early_diagnostic_binding")
     if not isinstance(diagnostic, dict):
@@ -2328,14 +3058,20 @@ def validate_early_evaluation_bindings(
             errors.append(
                 f"{label}: early diagnostic, comparison and canary must bind the same Slice"
             )
-        expected_layer_chain = (
-            "source-observation-world-model-cognition-question-understanding-"
-            "investigation-source-broker-retrieval-worker-evidence-ledger-"
-            "question-evidence-package-answer-review-web"
+        expected_layer_chains = (
+            {
+                "source-observation-world-model-cognition-question-understanding-"
+                "investigation-source-broker-retrieval-worker-evidence-ledger-"
+                "question-evidence-package-answer-review-web",
+                "source-observation-world-model-cognition-conversation-or-task-"
+                "understanding-agent-work-state-and-plan-source-broker-retrieval-"
+                "worker-evidence-ledger-question-evidence-package-answer-"
+                "independent-review-web",
+            }
             if adaptive_engineering_qa
-            else "source-snapshot-query-trace-draft-review-web"
+            else {"source-snapshot-query-trace-draft-review-web"}
         )
-        if diagnostic.get("layer_chain") != expected_layer_chain:
+        if diagnostic.get("layer_chain") not in expected_layer_chains:
             errors.append(f"{label}: early diagnostic layer_chain is invalid")
     return errors
 
@@ -2395,12 +3131,16 @@ def validate_reflection_gate_bindings(
         new_slice_ref = binding.get("new_slice_ref")
         success_decision = binding.get("success_decision")
         assumption_ids = resolved_assumption_ids(binding.get("assumption_ids"))
+        if "historical_owned_case_ids" in binding:
+            errors.append(
+                f"{label}: reflection_gate_bindings.{binding_name} cannot declare historical Case ownership"
+            )
         if (
             not isinstance(case_id, str)
-            or re.fullmatch(r"V-REFLECT-[0-9]{3,}", case_id) is None
+            or re.fullmatch(r"V-(?:REFLECT|PREVIEW)-[0-9]{3,}", case_id) is None
         ):
             errors.append(
-                f"{label}: reflection_gate_bindings.{binding_name}.case_id must match V-REFLECT-NNN"
+                f"{label}: reflection_gate_bindings.{binding_name}.case_id must match V-REFLECT-NNN or a combined V-PREVIEW-NNN decision Gate"
             )
         elif case_id in seen_cases:
             errors.append(f"{label}: reflection Gate Case IDs must be unique: {case_id}")
@@ -2769,9 +3509,9 @@ def validate_product_goal_alignment_manifest(
             f"{label}: cross_domain_cases count must equal cross_domain_case_count"
         )
     for case_id in sequences.get("cross_domain_cases", []):
-        if re.fullmatch(r"V-XD-[0-9]{3,}", case_id) is None:
+        if re.fullmatch(r"V-(?:CHAT-)?XD-[0-9]{3,}", case_id) is None:
             errors.append(
-                f"{label}: cross_domain_cases item must match V-XD-NNN: {case_id}"
+                f"{label}: cross_domain_cases item must match V-XD-NNN or V-CHAT-XD-NNN: {case_id}"
             )
     blocking_case_ids = sequences.get("blocking_case_ids", [])
     required_blocking_cases = set(sequences.get("cross_domain_cases", []))
@@ -2835,7 +3575,12 @@ def validate_product_goal_alignment_manifest(
                 f"{label}: blocking_case_ids item is not a valid verification case ID: {case_id}"
             )
     checkpoint_fields = [
-        ("first_product_web_checkpoint", r"V-WEB-[0-9]{3,}"),
+        (
+            "first_product_web_checkpoint",
+            r"V-(?:ALPHA-ACCESS|CHAT-EXPERIENCE)-[0-9]{3,}"
+            if conversational_agent_cutover_active(manifest)
+            else r"V-WEB-[0-9]{3,}",
+        ),
         ("live_ad_hoc_question_checkpoint", r"V-ADHOC-[0-9]{3,}"),
     ]
     if requires_direction_preview(iteration):
@@ -2868,6 +3613,22 @@ def validate_product_goal_alignment_manifest(
             required=rework_lifecycle_required,
         )
     )
+    experience_binding = alignment.get("experience_version_binding")
+    chat_required = (
+        isinstance(experience_binding, dict)
+        and experience_binding.get("schema") == ENGINEERING_CHAT_EXPERIENCE_SCHEMA
+    )
+    errors.extend(
+        validate_conversational_engineering_agent(
+            manifest,
+            alignment,
+            new_refs,
+            blocking_case_ids,
+            label,
+            required=chat_required,
+        )
+    )
+    errors.extend(validate_conversational_architecture_cutover(manifest, label))
     if requires_direction_preview(iteration):
         errors.extend(
             validate_direction_preview_binding(
@@ -2904,7 +3665,7 @@ def validate_product_goal_alignment_manifest(
                     errors.append(
                         f"{label}: rework direction preview must include CONTINUE, REWORK, REDIRECT and REJECT"
                 )
-        if requires_strict_codex_baseline(iteration):
+        if requires_strict_codex_baseline(iteration) or chat_required:
             errors.extend(
                 validate_alpha_agent_comparison_binding(
                     alignment,
@@ -3074,6 +3835,16 @@ def validate_blocking_verification_case(
                 f"{label}: {case_id} must cite cumulative capability reference {reference}"
             )
     return errors
+
+
+def expected_verification_case_evidence(
+    result_identifier: str, case_id: str
+) -> str:
+    """Return immutable historical evidence or the normal Result anchor."""
+
+    return IMMUTABLE_HISTORICAL_CASE_EVIDENCE.get(
+        (result_identifier, case_id), f"{result_identifier}#{case_id}"
+    )
 
 
 def blocking_case_status_verdict(value: str) -> str | None:
@@ -4537,6 +5308,16 @@ def validate_engineering_qa_reviewer_verification_investigation(
         "hardening_freeze_receipt_ref",
         "status",
     }
+    if verification.get("protocol_role") == "legacy-compatibility":
+        expected_keys.update(
+            {
+                "protocol_role",
+                "legacy_protocol_schema",
+                "superseded_as_default_by",
+                "current_delivery_authorization_allowed",
+                "historical_result_ref",
+            }
+        )
     errors = validate_exact_mapping_keys(verification, expected_keys, section_label)
     expected_values: dict[str, object] = {
         "role": "independent-verification-investigation-llm",
@@ -4710,6 +5491,147 @@ def validate_engineering_qa_ablation(
     """Freeze a fair three-arm cognition ablation before hardening starts."""
 
     section_label = f"{label}: engineering_qa_ablation"
+    if ablation.get("schema") == CONVERSATIONAL_AGENT_ABLATION_SCHEMA:
+        expected_keys = {
+            "schema",
+            "status",
+            "authorization_required_before",
+            "authorization_ref",
+            "frozen_protocol_digest",
+            "full_cognition_system_arm",
+            "source_only_system_arm",
+            "current_codex_external_baseline_arm",
+            "system_arm_shared_runtime",
+            "shared_evaluation_inputs",
+            "forced_runtime_identity_across_all_three_arms",
+            "technical_adjudication_owner",
+            "product_direction_decision_owner",
+            "quality_gate",
+            "gain_gate",
+            "cost_dimensions",
+            "modeling_cost_accounting",
+            "proposed_reuse_horizon_questions",
+            "slice_001_required",
+            "slice_001_case_id",
+            "slice_002_case_id",
+            "slice_003_case_id",
+        }
+        errors = validate_exact_mapping_keys(ablation, expected_keys, section_label)
+        arm_expectations: dict[str, dict[str, object]] = {
+            "full_cognition_system_arm": {
+                "agent_runtime": "shared-system-arm-runtime",
+                "cognition_input": "full-exact-world-model-cognition-context",
+                "source_access": "controlled-read-only-source-tools",
+            },
+            "source_only_system_arm": {
+                "agent_runtime": "shared-system-arm-runtime",
+                "cognition_input": "none",
+                "source_access": "controlled-read-only-source-tools",
+            },
+            "current_codex_external_baseline_arm": {
+                "runtime": (
+                    "preserve-actual-model-reasoning-tools-permissions-and-budget"
+                ),
+                "cognition_input": "none",
+                "role": "external-baseline-not-oracle-not-reviewer",
+            },
+        }
+        for arm, expected in arm_expectations.items():
+            supplied = ablation.get(arm)
+            if not isinstance(supplied, dict):
+                errors.append(f"{section_label}.{arm} must be a mapping")
+                continue
+            errors.extend(
+                validate_exact_mapping_keys(
+                    supplied, set(expected), f"{section_label}.{arm}"
+                )
+            )
+            for field, expected_value in expected.items():
+                if supplied.get(field) != expected_value:
+                    errors.append(
+                        f"{section_label}.{arm}.{field} must equal {expected_value}"
+                    )
+        for field, expected in (
+            (
+                "authorization_required_before",
+                "ITER-010-SLICE-001-live-comparison",
+            ),
+            (
+                "system_arm_shared_runtime",
+                "same-lead-agent-model-tools-permissions-budget-cache-policy-and-state",
+            ),
+            (
+                "shared_evaluation_inputs",
+                "same-exact-revision-questions-authorized-source-scope-output-constraints-and-blind-rubric",
+            ),
+            ("forced_runtime_identity_across_all_three_arms", False),
+            (
+                "technical_adjudication_owner",
+                "independent-evaluator-not-answer-generator",
+            ),
+            ("product_direction_decision_owner", "user"),
+            (
+                "quality_gate",
+                "each-arm-zero-major-error-boundary-correct-and-full-cognition-no-material-claim-regression",
+            ),
+            (
+                "gain_gate",
+                "full-cognition-must-have-precommitted-quality-or-normalized-cost-gain-versus-source-only-system-arm",
+            ),
+            (
+                "cost_dimensions",
+                "source-bytes-source-broker-operations-model-tokens-wall-time-provider-cost-and-world-model-build-update-storage-cost",
+            ),
+            (
+                "modeling_cost_accounting",
+                "exact-world-model-build-update-storage-and-provider-cost-amortized-over-frozen-reuse-horizon",
+            ),
+            ("slice_001_required", True),
+            ("slice_001_case_id", "V-COMP-ALPHA-001"),
+            ("slice_002_case_id", "V-COMP-EARLY-002"),
+            ("slice_003_case_id", "V-COMP-001"),
+        ):
+            if ablation.get(field) != expected:
+                errors.append(f"{section_label}.{field} must equal {expected}")
+        reuse_horizon = ablation.get("proposed_reuse_horizon_questions")
+        if type(reuse_horizon) is not int or reuse_horizon < 1:
+            errors.append(
+                f"{section_label}.proposed_reuse_horizon_questions must be a positive integer"
+            )
+        if not hardening_started:
+            for field, expected in (
+                ("status", "proposed-not-authorized"),
+                ("authorization_ref", ENGINEERING_QA_NOT_AUTHORIZED),
+                ("frozen_protocol_digest", ENGINEERING_QA_NOT_AUTHORIZED),
+            ):
+                if ablation.get(field) != expected:
+                    errors.append(f"{section_label}.{field} must equal {expected}")
+        else:
+            if ablation.get("status") != "frozen":
+                errors.append(f"{section_label}.status must equal frozen before hardening")
+            authorization_ref = ablation.get("authorization_ref")
+            if not isinstance(authorization_ref, str) or re.fullmatch(
+                r"codex-user-message:sha256:[0-9a-f]{64}", authorization_ref
+            ) is None:
+                errors.append(
+                    f"{section_label}.authorization_ref must bind an exact user receipt before hardening"
+                )
+            frozen_protocol = {
+                field: value
+                for field, value in ablation.items()
+                if field not in {"status", "authorization_ref", "frozen_protocol_digest"}
+            }
+            expected_digest = canonical_mapping_digest(
+                CONVERSATIONAL_AGENT_ABLATION_SCHEMA,
+                "engineering_qa_ablation",
+                frozen_protocol,
+            )
+            if ablation.get("frozen_protocol_digest") != expected_digest:
+                errors.append(
+                    f"{section_label}.frozen_protocol_digest must bind the exact conversational three-arm protocol"
+                )
+        return errors
+
     hardening_case_field = f"slice_{hardening_ref.rsplit('-', 1)[-1]}_case_id"
     final_case_field = f"slice_{final_ref.rsplit('-', 1)[-1]}_case_id"
     expected_keys = {
@@ -5730,8 +6652,16 @@ def validate_product_goal_execution_readiness(
 
     if requires_reflection_gate(iteration):
         proposal = by_id.get(f"{iteration}-PROPOSAL")
-        catalog_digest, assumption_expectations, catalog_errors = (
-            critical_assumption_catalog(proposal)
+        (
+            catalog_digest,
+            assumption_expectations,
+            historical_catalog_digest,
+            _,
+            catalog_errors,
+        ) = critical_assumption_catalogs(
+            proposal,
+            manifest,
+            label,
         )
         errors.extend(catalog_errors)
         supplied_catalog_digest = alignment.get(
@@ -5739,21 +6669,30 @@ def validate_product_goal_execution_readiness(
         )
         if supplied_catalog_digest != catalog_digest:
             errors.append(
-                f"{label}: critical_assumption_catalog_digest must match the exact Proposal assumption catalog"
+                f"{label}: critical_assumption_catalog_digest must match the exact current assumption catalog"
             )
         critical_assumption_ids = resolved_assumption_ids(
             alignment.get("critical_assumption_ids")
         )
         if critical_assumption_ids != list(assumption_expectations):
             errors.append(
-                f"{label}: critical_assumption_ids must exactly match the Proposal assumption catalog order"
+                f"{label}: critical_assumption_ids must exactly match the current assumption catalog order"
             )
         readiness = by_id.get(f"{iteration}-READINESS")
+        iteration_data = manifest.get("iteration")
+        paused_cutover = (
+            conversational_agent_cutover_active(manifest)
+            and isinstance(iteration_data, dict)
+            and iteration_data.get("status") == "paused"
+        )
+        expected_readiness_catalog = (
+            historical_catalog_digest if paused_cutover else catalog_digest
+        )
         if readiness is None or readiness.metadata.get(
             "critical_assumption_catalog_digest"
-        ) != catalog_digest:
+        ) != expected_readiness_catalog:
             errors.append(
-                f"{label}: accepted Readiness must bind the exact critical_assumption_catalog_digest"
+                f"{label}: Readiness must bind the catalog applicable to its historical or current authorization"
             )
 
     blocking_case_ids = _execution_manifest_sequence(
@@ -5860,7 +6799,20 @@ def validate_product_goal_execution_readiness(
         errors.append(f"{label}: answer_protocol must be a mapping before Slice execution")
         answer_protocol = {}
     engineering_qa_mode = is_engineering_qa_adaptive_protocol(answer_protocol)
-    if requires_engineering_qa_hybrid(iteration) or engineering_qa_mode:
+    chat_mode = conversational_agent_cutover_active(manifest)
+    if chat_mode:
+        errors.extend(validate_conversational_architecture_cutover(manifest, label))
+        errors.extend(
+            validate_conversational_engineering_agent(
+                manifest,
+                alignment,
+                new_refs,
+                blocking_case_ids,
+                label,
+                required=True,
+            )
+        )
+    elif requires_engineering_qa_hybrid(iteration) or engineering_qa_mode:
         hybrid_evidence_path = manifest.get("hybrid_evidence_path")
         if not isinstance(hybrid_evidence_path, dict):
             errors.append(
@@ -5885,7 +6837,7 @@ def validate_product_goal_execution_readiness(
                 answer_protocol, label, iteration
             )
         )
-    if requires_direction_preview(iteration):
+    if requires_direction_preview(iteration) and not chat_mode:
         errors.extend(
             validate_direction_preview_answer_entry(
                 alignment, answer_protocol, label
@@ -5896,7 +6848,29 @@ def validate_product_goal_execution_readiness(
     if not isinstance(readiness_inputs, dict):
         errors.append(f"{label}: readiness_inputs must be a mapping before Slice execution")
         readiness_inputs = {}
-    if engineering_qa_mode:
+    if chat_mode:
+        architecture_decision = readiness_inputs.get(
+            "required_architecture_decision"
+        )
+        if architecture_decision != "SYS-ADR-018":
+            errors.append(
+                f"{label}: conversational Agent required_architecture_decision must equal SYS-ADR-018"
+            )
+        target_decision = (
+            by_id.get(architecture_decision)
+            if isinstance(architecture_decision, str)
+            else None
+        )
+        if (
+            target_decision is None
+            or target_decision.metadata.get("kind") != "system-decision"
+            or target_decision.metadata.get("status") != "accepted"
+            or target_decision.metadata.get("authority") != "normative"
+        ):
+            errors.append(
+                f"{label}: conversational Agent architecture decision must resolve to an accepted normative system-decision"
+            )
+    elif engineering_qa_mode:
         errors.extend(
             validate_answer_hierarchy_protocol(manifest, label, require_frozen=True)
         )
@@ -5959,7 +6933,12 @@ def validate_product_goal_execution_readiness(
             errors.append(
                 f"{label}: readiness_inputs.{field} must reference required_system_contract_refs"
             )
-    for reference in (source_scope.get("contract_ref"), answer_protocol.get("contract_ref")):
+    current_answer_contract = (
+        readiness_inputs.get("answer_protocol_contract_ref")
+        if chat_mode
+        else answer_protocol.get("contract_ref")
+    )
+    for reference in (source_scope.get("contract_ref"), current_answer_contract):
         if not isinstance(reference, str) or reference not in contract_ids:
             errors.append(
                 f"{label}: source and answer protocol Contracts must be listed in required_system_contract_refs"
@@ -6432,6 +7411,22 @@ def validate_product_goal_reference_targets(
     new_refs = manifest_resolved_sequence_items(
         text, "product_goal_alignment", "new_capability_slice_refs"
     ) or []
+    experience_delivery_policy = manifest.get("experience_delivery_policy")
+    if (
+        isinstance(experience_delivery_policy, dict)
+        and isinstance(
+            experience_delivery_policy.get("historical_pre_policy_result_refs"),
+            dict,
+        )
+    ):
+        experience_delivery_policy["historical_pre_policy_result_refs"] = (
+            manifest_resolved_sequence_items(
+                text,
+                "experience_delivery_policy",
+                "historical_pre_policy_result_refs",
+            )
+            or []
+        )
     development = manifest.get("development")
     raw_slices = development.get("slices") if isinstance(development, dict) else None
     if isinstance(raw_slices, dict):
@@ -6546,6 +7541,14 @@ def validate_product_goal_reference_targets(
     blocking_case_ids = manifest_resolved_sequence_items(
         text, "product_goal_alignment", "blocking_case_ids"
     ) or []
+    errors.extend(
+        validate_historical_gate_catalog(
+            manifest,
+            blocking_case_ids,
+            verification,
+            label,
+        )
+    )
     reflection_by_slice: dict[str, dict[str, object]] = {}
     if requires_reflection_gate(iteration):
         errors.extend(
@@ -6596,6 +7599,13 @@ def validate_product_goal_reference_targets(
             experience_case = experience_binding.get("case_id")
             if isinstance(experience_case, str):
                 required_owned.add(experience_case)
+        conversational_agent = manifest.get("conversational_engineering_agent")
+        if (
+            isinstance(conversational_agent, dict)
+            and conversational_agent.get("owner_slice_ref") == reference
+            and isinstance(conversational_agent.get("chat_case_id"), str)
+        ):
+            required_owned.add(str(conversational_agent["chat_case_id"]))
         direction_preview_binding = alignment.get("direction_preview_binding")
         if (
             isinstance(direction_preview_binding, dict)
@@ -6927,6 +7937,9 @@ def validate_slice_reflection_result(
             str(item)
             for item in target.metadata.get("product_goal_slice_gate_case_ids", [])
         }
+        historical_owned_case_ids = binding.get("historical_owned_case_ids")
+        if isinstance(historical_owned_case_ids, list):
+            owned_case_ids.update(str(item) for item in historical_owned_case_ids)
         for subsection_name in REFLECTION_RESULT_REQUIRED_SUBSECTIONS:
             subsection = markdown_subsection_body(section, subsection_name)
             if not has_substantive_markdown_content(subsection):
@@ -7058,8 +8071,8 @@ def validate_slice_reflection_result(
                                 evidence_case_id,
                                 require_pass=not blocked,
                                 require_executed=True,
-                                expected_evidence=(
-                                    f"{result.identifier}#{evidence_case_id}"
+                                expected_evidence=expected_verification_case_evidence(
+                                    result.identifier, evidence_case_id
                                 ),
                             )
                         )
@@ -7156,7 +8169,9 @@ def validate_slice_reflection_result(
             verification,
             case_id,
             require_pass=True,
-            expected_evidence=f"{result.identifier}#{case_id}",
+            expected_evidence=expected_verification_case_evidence(
+                result.identifier, case_id
+            ),
         )
     )
     return errors
@@ -7775,6 +8790,39 @@ def validate_product_goal_slice_sequence(
     provider_policy = (
         raw_provider_policy if isinstance(raw_provider_policy, dict) else None
     )
+    historical_pre_policy_result_refs: set[str] = set()
+    if experience_policy is not None:
+        raw_historical_refs = experience_policy.get(
+            "historical_pre_policy_result_refs"
+        )
+        if isinstance(raw_historical_refs, list):
+            historical_pre_policy_result_refs = {
+                str(reference) for reference in raw_historical_refs
+            }
+            owner_slice_ref = experience_policy.get("owner_slice_ref")
+            for reference in historical_pre_policy_result_refs:
+                historical_result = by_id.get(reference)
+                historical_dependencies = (
+                    historical_result.metadata.get("depends_on", [])
+                    if historical_result is not None
+                    and isinstance(
+                        historical_result.metadata.get("depends_on", []), list
+                    )
+                    else []
+                )
+                if (
+                    historical_result is None
+                    or historical_result.metadata.get("kind") != "iteration-result"
+                    or historical_result.metadata.get("status") != "failed-preserved"
+                    or owner_slice_ref not in historical_dependencies
+                    or "experience_delivery_policy_schema"
+                    in historical_result.metadata
+                ):
+                    errors.append(
+                        f"{label}: historical pre-policy experience Result "
+                        f"{reference} must be a failed-preserved Result for the owner "
+                        "Slice without successor-policy audit fields"
+                    )
     early_canary_by_slice: dict[str, dict[str, object]] = {}
     early_comparison_by_slice: dict[str, dict[str, object]] = {}
     reflection_by_slice: dict[str, dict[str, object]] = {}
@@ -7805,22 +8853,44 @@ def validate_product_goal_slice_sequence(
                     early_comparison_by_slice[new_slice_ref] = alpha_comparison_binding
     assumption_catalog_digest: str | None = None
     assumption_expectations: dict[str, str] | None = None
+    historical_assumption_catalog_digest: str | None = None
+    historical_assumption_expectations: dict[str, str] | None = None
+    historical_result_ref: str | None = None
     if slices and requires_reflection_gate(
         str(slices[0].metadata.get("iteration", ""))
     ):
         proposal_id = f"{slices[0].metadata.get('iteration')}-PROPOSAL"
-        (
-            assumption_catalog_digest,
-            parsed_assumption_expectations,
-            catalog_errors,
-        ) = critical_assumption_catalog(by_id.get(proposal_id))
+        if manifest is not None:
+            (
+                assumption_catalog_digest,
+                parsed_assumption_expectations,
+                historical_assumption_catalog_digest,
+                parsed_historical_expectations,
+                catalog_errors,
+            ) = critical_assumption_catalogs(
+                by_id.get(proposal_id), manifest, label
+            )
+            cutover = manifest.get("critical_assumption_catalog_cutover")
+            if isinstance(cutover, dict) and isinstance(
+                cutover.get("historical_result_ref"), str
+            ):
+                historical_result_ref = str(cutover["historical_result_ref"])
+        else:
+            (
+                assumption_catalog_digest,
+                parsed_assumption_expectations,
+                catalog_errors,
+            ) = critical_assumption_catalog(by_id.get(proposal_id))
+            historical_assumption_catalog_digest = assumption_catalog_digest
+            parsed_historical_expectations = parsed_assumption_expectations
         errors.extend(catalog_errors)
         assumption_expectations = parsed_assumption_expectations
+        historical_assumption_expectations = parsed_historical_expectations
         if not isinstance(alignment, dict) or alignment.get(
             "critical_assumption_catalog_digest"
         ) != assumption_catalog_digest:
             errors.append(
-                f"{label}: critical_assumption_catalog_digest must match the exact Proposal assumption catalog"
+                f"{label}: critical_assumption_catalog_digest must match the exact current assumption catalog"
             )
         critical_assumption_ids = (
             resolved_assumption_ids(alignment.get("critical_assumption_ids"))
@@ -7829,8 +8899,57 @@ def validate_product_goal_slice_sequence(
         )
         if critical_assumption_ids != list(parsed_assumption_expectations):
             errors.append(
-                f"{label}: critical_assumption_ids must exactly match the Proposal assumption catalog order"
+                f"{label}: critical_assumption_ids must exactly match the current assumption catalog order"
             )
+
+    def reflection_inputs_for_result(
+        slice_ref: str, result_ref: object
+    ) -> tuple[dict[str, object] | None, dict[str, str] | None, str | None]:
+        binding = reflection_by_slice.get(slice_ref)
+        if result_ref != historical_result_ref:
+            return binding, assumption_expectations, assumption_catalog_digest
+        historical_binding = dict(binding) if isinstance(binding, dict) else None
+        if historical_binding is not None and historical_assumption_expectations:
+            historical_result = (
+                by_id.get(historical_result_ref)
+                if isinstance(historical_result_ref, str)
+                else None
+            )
+            historical_case_id = (
+                historical_result.metadata.get("reflection_gate_case_id")
+                if historical_result is not None
+                else None
+            )
+            if isinstance(historical_case_id, str):
+                historical_binding["case_id"] = historical_case_id
+            historical_binding["historical_owned_case_ids"] = list(
+                ITER010_HISTORICAL_GATE_CASES
+            )
+            current_ids = resolved_assumption_ids(
+                historical_binding.get("assumption_ids")
+            )
+            historical_binding["assumption_ids"] = ",".join(
+                assumption_id
+                for assumption_id in current_ids
+                if assumption_id in historical_assumption_expectations
+            )
+            conditional = historical_binding.get("conditional_falsifier_bindings")
+            if isinstance(conditional, dict):
+                historical_binding["conditional_falsifier_bindings"] = {
+                    "cross_project_generalization": {
+                        "assumption_id": "A4",
+                        "case_id": "V-XD-001",
+                    },
+                    "final_quality_and_value": {
+                        "assumption_id": "A5",
+                        "case_id": "V-ANSWER-001",
+                    },
+                }
+        return (
+            historical_binding,
+            historical_assumption_expectations,
+            historical_assumption_catalog_digest,
+        )
     completed_result_refs = [
         manifest_slice.get("result")
         for target, status in zip(slices, statuses, strict=True)
@@ -8328,31 +9447,47 @@ def validate_product_goal_slice_sequence(
                     if requires_reflection_gate(
                         target.metadata.get("iteration", "")
                     ):
+                        (
+                            result_binding,
+                            result_assumptions,
+                            result_catalog_digest,
+                        ) = reflection_inputs_for_result(
+                            target.identifier,
+                            manifest_slice.get("result"),
+                        )
                         errors.extend(
                             validate_slice_reflection_result(
                                 target,
                                 result,
-                                reflection_by_slice.get(target.identifier),
+                                result_binding,
                                 manifest_slice,
                                 verification,
                                 label,
                                 blocked=True,
-                                assumption_expectations=assumption_expectations,
-                                assumption_catalog_digest=assumption_catalog_digest,
+                                assumption_expectations=result_assumptions,
+                                assumption_catalog_digest=result_catalog_digest,
                                 rework_policy=rework_policy,
                             )
                         )
             elif status == "paused":
+                (
+                    paused_binding,
+                    paused_assumptions,
+                    paused_catalog_digest,
+                ) = reflection_inputs_for_result(
+                    target.identifier,
+                    manifest_slice.get("result"),
+                )
                 errors.extend(
                     validate_paused_rework_slice(
                         target,
                         manifest_slice,
                         by_id,
-                        reflection_by_slice.get(target.identifier),
+                        paused_binding,
                         verification,
                         label,
-                        assumption_expectations=assumption_expectations,
-                        assumption_catalog_digest=assumption_catalog_digest,
+                        assumption_expectations=paused_assumptions,
+                        assumption_catalog_digest=paused_catalog_digest,
                         rework_policy=rework_policy,
                     )
                 )
@@ -8484,17 +9619,25 @@ def validate_product_goal_slice_sequence(
                     if requires_reflection_gate(
                         target.metadata.get("iteration", "")
                     ):
+                        (
+                            result_binding,
+                            result_assumptions,
+                            result_catalog_digest,
+                        ) = reflection_inputs_for_result(
+                            target.identifier,
+                            manifest_slice.get("result"),
+                        )
                         errors.extend(
                             validate_slice_reflection_result(
                                 target,
                                 result,
-                                reflection_by_slice.get(target.identifier),
+                                result_binding,
                                 manifest_slice,
                                 verification,
                                 label,
                                 blocked=False,
-                                assumption_expectations=assumption_expectations,
-                                assumption_catalog_digest=assumption_catalog_digest,
+                                assumption_expectations=result_assumptions,
+                                assumption_catalog_digest=result_catalog_digest,
                                 rework_policy=rework_policy,
                             )
                         )
@@ -8509,7 +9652,9 @@ def validate_product_goal_slice_sequence(
                                 verification,
                                 str(case_id),
                                 require_pass=True,
-                                expected_evidence=f"{result.identifier}#{case_id}",
+                                expected_evidence=expected_verification_case_evidence(
+                                    result.identifier, str(case_id)
+                                ),
                             )
                         )
 
@@ -8530,7 +9675,14 @@ def validate_product_goal_slice_sequence(
                     errors.append(
                         f"{label}: {target.identifier} must bind an experience-first delivery Result"
                     )
-                else:
+                elif not (
+                    status == "paused"
+                    and delivery_result_ref in historical_pre_policy_result_refs
+                    and experience_policy.get(
+                        "historical_results_do_not_satisfy_experience_gate"
+                    )
+                    is True
+                ):
                     errors.extend(
                         validate_experience_delivery_result(
                             delivery_result,

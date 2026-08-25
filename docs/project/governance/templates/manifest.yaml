@@ -89,15 +89,25 @@ product_goal_alignment:
     new_slice_ref: <current-slice-id>
     executes_cross_domain_case_id: <V-XD-NNN>
   experience_version_binding:
-    schema: USER_EXPERIENCE_VERSION@1
+    # USER_EXPERIENCE_VERSION@1 is continuous independent Q&A. A product
+    # claiming Chat uses ENGINEERING_CHAT_EXPERIENCE@1 and the semantic fields below.
+    schema: ENGINEERING_CHAT_EXPERIENCE@1
     case_id: <V-EXPERIENCE-NNN>
     new_slice_ref: <first-user-visible-slice-id>
     exact_version_visible: true
     repeatable_start: true
     fixed_loopback_address: <http://127.0.0.1:port>
-    continuous_same_session_free_questions: true
+    message_history_visible: true
+    new_conversation_control: true
+    semantic_follow_up: true
+    user_correction_updates_context: true
+    summary_honors_current_context: true
+    per_turn_evidence_and_review: true
+    new_conversation_context_isolation: true
+    minimum_conversation_turns: 5
+    turn_failure_scope: current-turn-only-conversation-remains-usable
+    long_term_memory_required: false
     limitations_visible: true
-    question_failure_scope: current-question-only-service-remains-available
   # 与首个持续 Web Alpha 同出口的小样本 current Codex 盲评；不是体验前的新阶段，完整 hidden 复验仍在 hardening/final。
   alpha_agent_comparison_binding:
     case_id: <V-COMP-ALPHA-NNN>
@@ -150,11 +160,54 @@ rework_policy:
   no_progress_measure: <measurable-quality-or-user-capability-delta>
   no_progress_attempt_limit: <positive-integer-at-least-two>
 
+# Required when experience_version_binding declares ENGINEERING_CHAT_EXPERIENCE@1.
+conversational_engineering_agent:
+  schema: CONVERSATIONAL_ENGINEERING_AGENT@1
+  owner_slice_ref: <first-sustained-web-alpha-slice-id>
+  chat_case_id: <V-CHAT-NNN>
+  architecture_decision_ref: SYS-ADR-018
+  conversation_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION
+  interaction_model: semantic-multi-turn-chat
+  fixed_multi_role_content_workflow_is_target_agent: false
+  world_model_role: persistent-versioned-verifiable-software-cognition
+  lead_agent_owns: user-goal-hypotheses-subtasks-plan-revisions-context-selection-tool-choice-observation-interpretation-replanning-completion-and-answer-synthesis
+  control_plane_owns: exact-version-authorization-read-only-tool-execution-evidence-identity-budget-and-audit
+  independent_reviewer_required: true
+  lead_agent_direct_repository_filesystem_shell_network_or_write_access: false
+  tool_families_before_direction_confirmation: world-model-query-and-controlled-source-search-read
+  conversation_identity_pinned_to: exact-project-revision-world-model-authority-source-profile-and-session-authority
+  turn_intent_kinds: new,follow-up,correction,clarification
+  context_required_fields: confirmed-goal-and-constraints,referenced-entities-and-topics,open-questions,reviewed-conclusions,contested-or-superseded-conclusions,exact-provenance
+  application_sealed_context_projection_required: true
+  provider_hidden_memory_is_authority: false
+  ambiguous_reference_action: clarify-before-source-or-provider-dispatch
+  user_statement_becomes_source_truth: false
+  prior_answer_or_review_reuse_as_fact_allowed: false
+  evidence_reuse_requires: exact-revision-binding-world-model-authority-source-profile-allowlist-content-digest-and-coverage-match
+  reused_evidence_rebound_to_current_turn_package_required: true
+  per_turn_request_evidence_answer_review_and_delivery_identity_required: true
+  new_conversation_context_isolation_required: true
+  failed_turn_closes_conversation: false
+  first_chat_canary_conversation_count: 1
+  first_chat_canary_turn_count: 5
+  new_conversation_leakage_probe_required: true
+  alpha_comparison_arms: same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline
+  knowledge_admission_from_conversation: asynchronous-reviewed-only
+  long_term_memory_before_direction_confirmation_required: false
+  multi_agent_before_direction_confirmation_required: false
+  skill_market_before_direction_confirmation_required: false
+  persistence_across_restart_before_direction_confirmation_required: false
+  full_regression_before_direction_confirmation_allowed: false
+  status: target-not-implemented-not-qualified
+
 # 从 ITER-012 起强制；ITER-010 可显式 opt in。计时从授权后的第一次产品代码变更开始，
 # availability/access 与答案 quality 分开；quality PASS 仍是 hardening 前置。
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: <first-sustained-web-alpha-slice-id>
+  # 仅在后置采用本 policy 且必须保留更早失败 Result 时填写；这些 Result 不追溯补字段，也不能满足本 Gate。
+  historical_pre_policy_result_refs: []
+  historical_results_do_not_satisfy_experience_gate: true
   access_case_id: <V-ALPHA-ACCESS-NNN>
   timebox_case_id: <V-TIMEBOX-NNN>
   quality_case_id: <blocking-answer-quality-case-id>
@@ -172,15 +225,17 @@ experience_delivery_policy:
   pre_first_experience_qualification_limit: 1
   pre_first_experience_smoke_question_limit: 1
   pre_first_experience_full_regression_allowed: false
-  live_attempt_unit: one-sealed-version-question-run-reaching-any-external-dispatch
+  live_attempt_unit: one-sealed-version-bounded-user-interaction-unit-reaching-any-external-dispatch-chat-counts-each-turn
   same_failure_signature_retry_limit: 1
   consecutive_no_user_visible_increment_limit: 2
   no_increment_action: stop-external-reruns-and-return-to-local-diagnosis
-  failure_diagnosis_order: source-truth-world-model-cognition-question-understanding-investigation-evidence-package-answer-review-web
+  failure_diagnosis_order: source-truth-world-model-cognition-conversation-or-task-understanding-agent-work-state-and-plan-tool-observation-and-evidence-answer-independent-review-web
   earliest_divergence_required: true
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
   local_minimal_reproduction_required_before_live_retry: true
   unseen_adjacent_local_case_count: 2
+  # 非 Chat 使用 question_count；Chat 必须把此 key 替换为 live_canary_turn_count_after_local_pass，
+  # 并在 conversation policy 中单独冻结最小多轮 Conversation 长度。
   live_canary_question_count_after_local_pass: 1
   same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
   same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities
@@ -188,7 +243,7 @@ experience_delivery_policy:
   full_regression_before_alpha_continue_allowed: false
   full_regression_allowed_stages: alpha-continue-hardening-and-before-formal-acceptance
 
-# Session 开始前密封 Ark→DeepSeek ordered route 和双方 disclosure scope。用户只提交一个 logical question；
+# Session 开始前密封 Ark→DeepSeek ordered route 和双方 disclosure scope。用户只提交一个 logical interaction unit；Chat 按 Turn 独立密封；
 # fallback 是内部独立 provider attempt，不要求重提，不混用两个 attempt 的中间产物，也不因成本删减完整质量链。
 provider_route_policy:
   schema: QUALIFIED_PROVIDER_PREFERENCE@1
@@ -211,20 +266,20 @@ provider_route_policy:
   application_source_security_failure_allows_fallback: false
   fallback_reason_classification_required: true
   capability_failure_must_not_be_misclassified_as_unavailable: true
-  route_freeze_time: before-session-start-and-before-any-question-dispatch
+  route_freeze_time: before-conversation-start-and-before-any-interaction-unit-dispatch
   ordered_routes_preauthorized_at_session_start: true
   ordered_route_disclosure_scopes_preauthorized_at_session_start: true
-  transparent_logical_question_fallback_allowed: true
+  transparent_logical_interaction_fallback_allowed: true
   user_resubmission_or_new_session_required: false
   fallback_attempt_restarts_full_chain: true
-  fallback_attempt_inputs: immutable-original-question-and-exact-cognition-context
+  fallback_attempt_inputs: immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition
   cross_attempt_intermediate_state_reuse_allowed: false
   late_primary_result_policy: quarantine-audit-only
   late_primary_result_overwrite_allowed: false
   maximum_fallback_provider_attempts: 1
   same_provider_retry_allowed: false
   outcome_unknown_duplicate_cost_risk_recorded: true
-  post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-question-and-preauthorized-route
+  post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route
   deepseek_batch_start_policy: provider-declared-non-peak-preferred
   deepseek_schedule_timezone: Asia/Shanghai
   deepseek_current_preferred_windows:

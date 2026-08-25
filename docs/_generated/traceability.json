@@ -2745,6 +2745,23 @@
       "tests"
     ]
   },
+  "FINDING-010-093": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-093.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/ai_infrastructure/engineering_question_strategy.py"
+    ],
+    "tests": []
+  },
+  "FINDING-010-094": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-094.md",
+    "code": [
+      "src/software_world_model/interface/engineering_qa_browser.py",
+      "src/software_world_model/interface/engineering_qa_browser_ui.py",
+      "src/software_world_model/application_services/engineering_question_answering.py"
+    ],
+    "tests": []
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

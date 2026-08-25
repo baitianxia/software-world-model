@@ -21,27 +21,26 @@ flowchart TD
     DA --> RV
     EP --> RV
     RV --> AA["Authorized synchronous answer"]
-    EQ["Engineering Question + Understanding / Checklist"] --> IL["Independent Investigation LLM"]
+    CV["Conversation + Revision"] --> TR["Immutable User Turn"]
+    TR --> WS["Agent Work State Revision"]
+    WS --> EA["Primary Engineering Agent"]
     SN --> WMC["World Model Cognition Context"]
-    WMC --> IL
-    EL["Append-only Evidence Ledger"] -->|"sealed prefix"| IL
-    IL -->|"search / read / parse proposal"| AC["Application Control"]
+    WMC --> EA
+    EL["Append-only Turn Evidence Ledger"] -->|"sealed observations"| EA
+    EA -->|"world-model query or source proposal"| AC["Application Control"]
     AC -->|"validated operation proposal"| SB["Source Broker"]
     SB -->|"compiled read-only operation"| RW["Retrieval Worker"]
     RW -->|"typed result"| EL
-    EL -->|"investigation finished"| QEP["Sealed Question Evidence Package"]
+    EA -->|"work-state proposal"| WS
+    EL -->|"answer candidate boundary"| QEP["Sealed Question Evidence Package"]
     WMC --> QEP
-    EQ --> QEP
-    QEP --> EQA["Cited conclusion-first Draft"]
-    EQ --> EQR["Independent Engineering Answer Review"]
-    EQA --> EQR
+    TR --> QEP
+    EA --> EQA["Cited conversational Draft"]
+    EQA --> EQR["Fresh Independent Reviewer"]
+    TR --> EQR
     QEP --> EQR
-    EQR -. "specific verification gap" .-> AC
-    AC -->|"fresh verification attempt"| VI["Independent Verification Investigation"]
-    QEP -->|"current package"| VI
-    EL -->|"current ledger prefix"| VI
-    VI -->|"next verification operation proposal"| AC
-    EQR --> EQD["Authorized engineering answer"]
+    EQR -. "specific Finding" .-> WS
+    EQR --> EQD["Authorized Turn answer"]
     AR --> EV["Evidence"]
     EV --> CC["Entity / Fact / Inference Candidate Closure"]
     PS["Exact published premises / base Snapshot"] -.-> CC
@@ -66,7 +65,11 @@ flowchart TD
     AS --> KA["Reviewed formal-knowledge query result"]
 ```
 
-该图表达四条不同边界：Direct Investigation 把 Artifact 内容密封为只对当前问题有效的 Evidence Packet；Knowledge Update 把受审核 Candidate 原子发布为 Snapshot；World Model Query 只读 exact Snapshot/View 并返回受支持答案或 Knowledge Gap；Engineering Question Answering 从 exact Snapshot 投影 World Model Cognition Context，独立 Investigation LLM 根据 append-only Ledger 的每一步发现自适应提议调查，Source Broker/Worker 受控执行，调查结束后才密封 Question Evidence Package。四者不能静默互换。Candidate 内的 Inference 只能使用 exact Snapshot 中已发布的正式前提；同批 Candidate 之间的局部引用不会获得正式前提资格。
+该图表达四条不同边界：Direct Investigation 把 Artifact 内容密封为只对当前问题有效的 Evidence Packet；Knowledge Update 把受审核
+Candidate 原子发布为 Snapshot；World Model Query 只读 exact Snapshot/View 并返回受支持答案或 Knowledge Gap；Engineering
+Conversation 由主工程 Agent 在 Application-owned Conversation/Work State 中使用 World Model Cognition 和 Broker/Worker 受控工具，
+根据 Observation 重规划，并为每个候选答案密封 Question Evidence Package、独立审核。四者不能静默互换。Candidate 内的 Inference
+只能使用 exact Snapshot 中已发布的正式前提；对话工作状态和同批 Candidate 的局部引用都不会获得正式知识资格。
 
 ## 概念边界
 
@@ -74,9 +77,17 @@ flowchart TD
 - **Evidence** 是 Artifact 中有界且可定位的观察，不表达全局真假。
 - **Evidence Packet** 是绑定原问题、检查清单、exact Target、来源操作和 Artifact 内容的不可变任务输入；它没有跨任务正式知识资格。
 - **World Model Cognition Context** 是从独立于模型会话/隐藏状态的 exact Snapshot / Read Set 为当前任务形成的只读认知投影，包含实体、关系、行为、约束、状态、证据、Coverage、Conflict 与 Unknown；手册或地图只是它的展示子集。
-- **Evidence Ledger** 是 `ENGINEERING_QA` 调查的 append-only 记录，按顺序绑定模型 Proposal、Broker Decision、Source Operation/Result、失败、Coverage 和资源收据；它允许后续调查基于已密封前缀继续，但本身不赋予条目真值。
-- **Question Evidence Package** 是调查结束后从原问题、World Model Cognition Context 和完整 Ledger 密封的本题唯一证据与边界集合；`support/citation` 仅含 admissible entries 并独占肯定 Claim/Citation 支持权，`boundary/audit` 强制保留 Gap/Failure/Partial/Conflict/Unknown 等非支持记录；seal 证明身份、完整性、顺序、来源和版本，不使其中内容自动为真，也不赋予 Fact/Snapshot 资格。
-- **Answer Draft / Evidence Boundary Challenge / Review Finding** 分别是可引用自然答案、Application 从当前 Package/Draft 机械投影且具有稳定 ID 的证据所有权审计 lead，以及带 closed remediation 的独立审核意见。challenge Review 对每个 ID 密封 evidence scope、Draft scope 与受控 disposition；越界 disposition 必须绑定作用于被挑战 Claim 的 Finding。可信 Application 从 Finding 派生 Review action/Verification Request，只有 exact challenge-ID 集合完整、全部在边界内、Finding 为空且全部质量检查通过时派生的 APPROVED Draft 可被授权。
+- **Conversation / Turn** 是有序、不可变的用户和系统交互历史及其 Revision；它保存语义连续性，但不自动成为软件事实或答案证据。
+- **Agent Work State** 是 Application-owned 的当前目标、指代、约束、假设、计划、子任务、Observation、缺口和完成判断 Revision；它可恢复
+  Agent 工作，但不是正式知识，也不允许隐藏 rationale 取得权威。
+- **Evidence Ledger** 是当前 Turn 的 append-only 记录，按顺序绑定 Agent Tool Proposal、Broker Decision、World Model/Source
+  Operation/Result、失败、Coverage 和资源收据；它允许同一主 Agent 基于已密封前缀继续，但本身不赋予条目真值。
+- **Question Evidence Package** 是每个候选答案从 current Turn、World Model Cognition Context 和完整 Ledger 密封的唯一证据与边界集合；
+  `support/citation` 仅含 admissible entries 并独占肯定 Claim/Citation 支持权，`boundary/audit` 强制保留 Gap/Failure/Partial/Conflict/
+  Unknown 等非支持记录；seal 证明身份、完整性、顺序、来源和版本，不使其中内容自动为真，也不赋予 Fact/Snapshot 资格。
+- **Answer Draft / Review Finding** 分别是主 Agent 综合形成的可引用自然答案和独立 Reviewer 针对正确性、完整性、Citation 或 Unknown
+  边界的具体审核意见。可信 Application 把 Finding 路由为同包修订或新证据 Attempt；新 Package 必须产生新 Draft 和 fresh Review，只有
+  finding-free 的当前 Review 才可授权。
 - **Entity** 提供稳定身份；属性和关系由 Fact 或 Inference 表达。
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。
 - **Inference** 从已发布前提形成受控结论；Conflict 证明语义不兼容但不擅自选赢家。

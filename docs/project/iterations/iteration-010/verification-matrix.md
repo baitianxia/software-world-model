@@ -16,6 +16,13 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 
 # ITER-010 Verification Matrix
 
+## PDR-004 current verification target
+
+本 Matrix 的既有 FAIL/PASS 行保存旧单轮 Engineering QA 执行事实与原 Case 定义，不因新方向改写。当前 Iteration/Slice1 已暂停；PDR-004 current Gate 只是：
+`V-ALPHA-ACCESS-001` PDR-004 pre-execution revision → `V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001` →
+`V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。首个发生 Provider dispatch 的 live canary 本身就是五轮 Conversation 及新对话隔离负测；随后的三臂不新增产品交付前阶段。新架构为 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`，所有 current Case 均为 NOT-RUN，
+待新 Readiness 与用户重新授权。
+
 ## Pre-freeze implementation evidence
 
 截至 `2026-08-22`，candidate `b8360a3…` 的 focused 58/58、docs 389/389、full 1108/1103，以及修复
@@ -302,10 +309,16 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
-| V-ALPHA-ACCESS-001 | 答案质量验收前先交付真实、可操作 Web | product / access | 一条固定启动命令、loopback 页面、预授权 Ark→DeepSeek route、一个 live smoke、Provider/失败状态 | 页面可启动且用户无需认证/内部参数即可只提交一次问题；Provider 对用户透明；答案、Limitation 或失败如实显示；明确“质量未验收/非生产”；静态回放不通过；Access PASS 不产生 Quality PASS | PDR-003 recovery；not-executed | NOT-RUN / blocking |
+| V-ALPHA-ACCESS-001 | PDR-004 下在答案质量验收前先交付真实、可操作 Chat Web | product / access | 固定启动命令、loopback 页面、消息历史、“新对话”、Provider/失败状态；最多一个 Provider 前本地或 Mock Access smoke | 页面无需认证；能建立/继续/新建 Conversation 并真实提交 Turn；明确“质量未验收/非生产”；静态回放不通过；Access PASS 不产生 Chat/Quality PASS | PDR-004 pre-execution revision；旧定义从未执行，无证据可追认 | NOT-RUN / blocking |
 | V-TIMEBOX-001 | 体验优先、根因优先与轻量 live-attempt 纪律成立 | project / delivery | Slice 授权后首个产品变化时间、page/alpha/hard-stop 时间、qualification/smoke/full-regression 计数、sealed version/question/provider dispatch audit、failure signatures、最早偏差层、可证伪根因假设、本地最小复现、两个未参与修复的相邻案例、用户可见增量 | 60/180/240 检查点可核对；本轮已超过 hard stop 并停止 scope expansion/external batch；首次体验前 qualification≤1、smoke≤1、full regression=0 且仅跑 targeted impact/startup/safety；无根因假设不得改 Prompt/Schema/Contract；本地最小复现与两个相邻案例通过后才跑一题 canary；同签名只修一次，复现则架构职责评审；连续两次无用户可见增量停止外部重跑；full regression 只在 Alpha CONTINUE 后 hardening 与正式验收前 | 用户报告约14小时无新体验；PDR-003 hard-stop/root-cause recovery active | FAIL / blocking |
+| V-TIMEBOX-CHAT-001 | PDR-004 下体验优先、根因优先与逐 Turn live-attempt 纪律成立 | project / delivery | 新授权后 60/180/240 审计、qualification/Access-smoke/full-regression 计数、Conversation/Turn/provider dispatch、failure signature、根因与用户可见增量 | 首体验前 qualification≤1、Provider 前本地或 Mock Access smoke≤1、full regression=0；孤立 live question 不作 Chat canary；首个 live canary 是五轮 Conversation，每个 Provider-dispatched Turn 分别计 live attempt 且不削减证据/Citation/Review | PDR-004 current target；not-executed | NOT-RUN / blocking |
+| V-CHAT-EXPERIENCE-001 | 同一产品成为可持续体验的多轮 Chat Alpha | product / browser | 一条固定启动命令；loopback；固定工程/exact revision；一个冻结五轮 Conversation 脚本；“新对话”泄漏负测 | 无认证；体验者不拼装内部参数；消息历史显示语义 follow-up/correction/deepening/summary；失败只关闭当前 Turn；新 Conversation 必须澄清省略指代且不继承旧 Context/Evidence/provider memory | PDR-004 current target；not-executed | NOT-RUN / blocking |
+| V-CHAT-001 | 主 Agent 完成真正语义多轮 Chat 且新对话不泄漏 | product / chat | 一个 Conversation 的五轮脚本：初始问题→省略指代追问→用户纠正前提→进一步区分/深入→按当前 Context 总结；随后新 Conversation 省略指代 probe | Context 维护确认目标/约束、实体/主题、开放问题、reviewed/superseded conclusion refs 与 provenance；模糊指代先澄清；每轮独立 Evidence/Answer/Review；新对话 probe 必须澄清且不继承旧 Context/evidence/provider memory | not-executed | NOT-RUN / blocking |
 | V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 一题 live canary 独立 PASS；原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | canary 失败不启动三题；重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-033 因 supported predecessor observations 被 replacement 删除而不通过；`FINDING-010-088/089` corrective deterministic Gate 已闭合。run-034 仅取得 HTTP 402 Conformance FAIL，未生成新答案证据 | FAIL / blocking |
-| V-PREVIEW-002 | 用户基于持续自由提问版本决定是否进入夯实 | product / direction | V-EXPERIENCE-001、V-ANSWER-REWORK-001 的真实 Result 与已知限制 | 独立评测先裁决技术质量；用户实际连续提问后决定 CONTINUE/REWORK/REDIRECT/REJECT；单题失败默认 REWORK，不自动 REDIRECT | not-executed | NOT-RUN / blocking |
+| V-CHAT-QUALITY-001 | 五轮每个 Turn 的答案与独立审核以主 Agent 通用机制满足质量 | product / quality | `V-CHAT-001` 五轮逐 Turn Context/Work State/Ledger/Package/Answer/Review；fresh independent Reviewer | 每 Turn 重大错误 0、重要结论有 Citation；prior Answer/Review 不作事实；旧 evidence 仅 exact identity/coverage 匹配且重绑当前 Package；Reviewer 只返回 Finding，Finding 回主 Agent 补证或重写并形成全新 identity；主 Agent/Reviewer 无直接 Source/FS/Shell/network/credential/write 权限；无特判 | PDR-004 current target；not-executed | NOT-RUN / blocking |
+| V-CHAT-XD-001 | 主 Agent 在同一多轮答案链中组合 World Model Cognition 与 query-time Source 证据 | product / integration | 五轮 Conversation 中至少一个需要 accepted World Model 认知与 repository source/doc/config/test 证据的 Turn；exact Context/Work State/Ledger/Package/Answer/Review | 一个主 Agent 在同一 Turn 组合两类认知，结论分别绑定正确 Citation；World Model 不退化为 locator，Source 不绕过 Broker/Worker；无两个平行答案、模式拼接或旧 `V-XD-001` 证据追认 | PDR-004 current target；not-executed | NOT-RUN / blocking |
+| V-COMP-ALPHA-001 | Chat canary 后立即产出主 Agent/World Model 方向信号 | product / comparison | 同一 exact revision、冻结 Conversation 脚本、可比较输出和 rubric；current Codex external baseline；same-agent source-only；same-agent full World Model cognition + source；各臂输出预先密封 | Codex 保留实际客户端/model/reasoning/tools/权限，只作强外部基线，不是 Oracle/裁判；只有 source-only/full-cognition 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer；不同能力完整披露；独立评估者在不知臂身份时用同一 rubric 判读；只作 ITER-010 方向信号，不冒充 ITER-012 严格优越性 Gate | not-executed | NOT-RUN / blocking |
+| V-PREVIEW-002 | 用户基于 A1—A3/A6 复盘、多轮 Chat 和三臂方向信号决定是否进入夯实 | product / direction + architecture / reflection | `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001` 的真实 Result、限制、Findings 和假设证据 | 独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal；用户实际追问、纠正、深入、总结并查看三臂方向信号后决定 CONTINUE/REWORK/REDIRECT/REJECT；单 Turn 失败默认 REWORK，不自动 REDIRECT | PDR-004 pre-execution revision；旧定义从未执行，无证据可追认 | NOT-RUN / blocking |
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
@@ -334,27 +347,27 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-PREVIEW-001 | FAIL / blocking |
 | V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-REFLECT-001 | PASS / blocking |
 | V-GENERAL-002 | 同一协议跨第二工程、不同命名/结构/来源仍不依赖特判 | product / generalization | 第二真实工程、改述、不同目录/框架、source/doc/config/test mixes | 问题层级正确；无 project/question/keyword/symbol/class/method/fixture/oracle branch | not-executed | NOT-RUN / blocking |
-| V-RERETRIEVE-002 | 独立补证调查在复杂 gap、冲突、重复和 no-progress 上机械夯实 | application / contract | omission、unsupported inference、citation gap、specific/duplicate/conflicting gap、持久恢复、no-progress cases | 新上下文读 gap+Package/Ledger 并多步结果驱动；不回初始调查；同包 rewrite/新包严格区分；去重恢复正确；不可修复关闭 | not-executed | NOT-RUN / blocking |
+| V-RERETRIEVE-002 | 主工程 Agent 根据 Reviewer Finding 在复杂 gap、冲突、重复和 no-progress 上可重规划并收敛 | application / contract | current Conversation Context/Work State/Package/Ledger、omission、unsupported inference、citation gap、specific/duplicate/conflicting gap、持久恢复和 no-progress cases | Reviewer 只返回具体 Finding；主 Agent 依观察决定同包重写或继续受控调查；新证据形成新 Ledger/Package/Answer/fresh Review identity；去重/恢复正确；不可修复时失败关闭；不启动固定 Verification Investigation 角色 | not-executed | NOT-RUN / blocking |
 | V-ASYNC-002 | 知识沉淀不阻塞或改写当前问答 | application / knowledge | approved Package/Answer、async proposal success/reject/failure | Delivery 独立完成；异步路径重新走 Update/Admission/Publication；任何结果不追认/撤销原答案 | not-executed | NOT-RUN / blocking |
-| V-HARDEN-002 | Investigation/Verification Investigation、持久 Ledger/Package、coverage/conflict/dedup 和安全熔断闭合 | application / reliability | recovery/truncation/pagination/conflict/oversize/cycle/no-progress/drift/stale package；revision/call/ops/bytes/wall-time/no-progress fuses | 无漏页、越权、无界循环、历史回写、旧包审批或伪完整；无永久一轮补证 cap；answerable 超限 FAIL，boundary 准确 limitation 或 fail closed | not-executed | NOT-RUN / blocking |
+| V-HARDEN-002 | Conversation/Turn/Agent Work State、持久 Ledger/Package、coverage/conflict/dedup 和安全熔断闭合 | application / reliability | 追问/纠正恢复、recovery/truncation/pagination/conflict/oversize/cycle/no-progress/drift/stale context/package；revision/call/ops/bytes/wall-time/no-progress fuses | 无跨对话泄漏、漏页、越权、无界循环、历史回写、旧包/旧 Review 放行或伪完整；不固定补证轮数；answerable 超限 FAIL，boundary 只交付准确 limitation 或 fail closed | not-executed | NOT-RUN / blocking |
 | V-SEC-002 | 第二段保持 Source/role/Provider/Secret/loopback 与 no-retry 隔离 | security / integration | 合法/非法 end-to-end probes、Gateway disclosure/transport audit | 合法路径完成；非法全部失败关闭；模型 direct source/FS/Shell/network=0，write/update/unauthorized fallback/same-Provider retry/secret exposure=0；授权 fallback attempt 独立全链 | not-executed | NOT-RUN / blocking |
 | V-XD-002 | 第二工程同一答案组合 accepted Snapshot 与本轮多来源 Evidence | product / integration | accepted declaration/`CALLS` + new doc/config/test/source evidence、无符号题 | 同一 answer/limitation 和 Citation 完成真实组合 | not-executed | NOT-RUN / blocking |
 | V-WEB-002 | Slice2 从同一真实 Web 执行 V-XD-002 | product / browser | product-owned loopback Web、第二工程、exact qualification/run grant | answerable/boundary 用户可见；Citation 可核对；无平行入口 | not-executed | NOT-RUN / blocking |
 | V-CANARY-002 | Slice2 通过独立第二工程 5 answerable + 2 boundary canary | product / independent-hidden | Slice2 code freeze 后用户披露 exact project/suite；burn rule | 5/5 supported、2/2 boundary、重大错误 0、无特判；披露后产品变化=0 | not-executed | NOT-RUN / blocking |
 | V-NEG-EARLY-002 | bounded absence 与 coverage limitation 在第二工程保持区分 | product / early falsification | canary 两类 boundary、不同命名/入口/同义改述 | 三层完整才 absence；否则具体 limitation；无关证据 FAIL | not-executed | NOT-RUN / blocking |
-| V-COMP-EARLY-002 | 正式验收前用三臂同题消融判断完整 World Model Cognition 的独立价值 | product / comparison | 新用户收据冻结 protocol；完整 Cognition、locator-only/empty 同链、成熟 Agent；same revision/model/questions/budget/cache/rubric；Agent first sealed | 完整认知与成熟 Agent 零重大错误/boundary 正确且完整认知逐结论不退步；再相对 locator control 达预提交质量或 non-locator cost 增益；计建模成本/复用周期 | not-executed | NOT-RUN / blocking |
-| V-DIAG-002 | 对同一问题逐层定位首次偏差 | architecture / diagnostic | Source observation、World Model Cognition、Question Understanding、Investigation、Broker/Worker、Ledger/Package、Draft、Review、Web exact refs | 每层独立 verdict；首次偏差决定分类；不从最终答案猜根因 | not-executed | NOT-RUN / blocking |
+| V-COMP-EARLY-002 | 正式验收前分开复验产品外部强基线与 World Model 因果消融 | product / comparison | 新用户收据冻结 protocol；current Codex 保留实际 model/reasoning/tools/permissions/budget；same-agent source-only 和 same-agent full-cognition + source 共享系统 runtime；同 exact revision/Conversation 脚本/输出约束/盲评 rubric；各臂先密封 | 独立评测分别报告系统对 Codex 的产品质量差异，以及 full-cognition 相对 source-only 的预提交质量或 normalized non-locator cost 增益；Codex 不是 Oracle/裁判，不强制三臂 runtime identity；计建模成本/复用周期 | not-executed | NOT-RUN / blocking |
+| V-DIAG-002 | 对同一 Turn 逐层定位首次偏差 | architecture / diagnostic | Source truth、World Model Cognition、Conversation Context/Turn goal、Agent Work State/plan/tool observation/replan、Broker/Worker、Ledger/Package、Answer、independent Review、Web exact refs | 每层独立 verdict；首次偏差决定分类；不从最终答案猜根因 | not-executed | NOT-RUN / blocking |
 | V-REGRESSION-002 | accepted scope、strict WORLD_MODEL、DIRECT 与 Preview 主线无退步 | regression / product | ITER-003—006 accepted oracles、Slice1 Result、current full suite | accepted behavior与三模式隔离保持；无新增 fallback/入口分叉 | not-executed | NOT-RUN / blocking |
-| V-REFLECT-002 | Slice2 复盘跨工程、合同、安全、Agent/value 与 A1—A4 | architecture / reflection | Slice1/2 Results、A1—A5、Findings、用户新 decision receipt | A1—A4 exact Verdict；A5 early verdict；CONTINUE/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |
+| V-REFLECT-002 | Slice2 复盘跨工程、多轮 Chat、主 Agent、合同、安全与 value | architecture / reflection | Slice1/2 Results、A1—A6、Findings、用户新 decision receipt | A1—A4/A6 exact Verdict；A5 early verdict；CONTINUE/REWORK/REDIRECT/REJECT | not-executed | NOT-RUN / blocking |
 | V-HIDDEN-003 | 最终两个未见工程 10 answerable + 2 boundary 验证泛化 | product / independent-hidden | final code freeze 后用户披露 exact projects/suite；至少 8 no-symbol、每工程至少 3 | answerable 10/10、boundary 2/2、重大错误 0、披露后产品变化=0 | not-executed | NOT-RUN / blocking |
-| V-COMP-001 | 最终三臂消融证明 ENGINEERING_QA 质量与完整 Cognition 增益 | product / comparison | final same revision/model/questions/budget/cache/rubric；完整 Cognition、locator-only/empty 同链、成熟 Agent；frozen ablation protocol | 完整认知与成熟 Agent 先过质量门；完整认知再相对 locator control 达质量或 non-locator cost 增益；建模成本按冻结复用周期摊销；exact report 可重放 | not-executed | NOT-RUN / blocking |
+| V-COMP-001 | 最终分开证明工程 Chat 产品质量与完整 Cognition 增益 | product / comparison | current Codex 保留实际 model/reasoning/tools/permissions/budget；same-agent source-only 与 full-cognition + source 系统臂共享 runtime；final same exact revision/Conversation 脚本/输出约束/盲评 rubric；frozen comparison + ablation protocol | 系统与 Codex 各自先过质量门并由独立评测报告产品差异；full-cognition 再相对 source-only 达预提交质量或 normalized non-locator cost 增益；Codex 非 Oracle/裁判；建模成本按冻结复用周期摊销；exact report 可重放 | not-executed | NOT-RUN / blocking |
 | V-SEC-003 | 最终产品链保持全部授权、安全、role 和 disclosure 边界 | security / product | final hidden/live sessions、source/Gateway/transport/Ledger/package/Citation audit | Source only via Broker/Worker；所有模型 direct source/FS/Shell/network=0；write/update/unauthorized fallback/secret/same-Provider hidden retry=0；ADR-017 fallback 完整隔离；loopback | not-executed | NOT-RUN / blocking |
 | V-XD-003 | 最终问题在同一答案链组合 accepted Snapshot 与多来源 Evidence | product / integration | final hidden no-symbol cross-source question、accepted Result、新 protocol | 同一正式答案和 Citation 支持旧+新能力 | not-executed | NOT-RUN / blocking |
 | V-WEB-003 | Slice3 从同一正式 ENGINEERING_QA Web 执行 final suite | product / browser | exact frozen Web、final 10+2、run grant | 页面交付答案/limitation/Citation；console clean；与内部链相同 | not-executed | NOT-RUN / blocking |
 | V-ADHOC-001 | 用户从正式 Web 提出两条现场问题 | product / browser | product freeze 后现场题；至少一条 no-symbol 且跨域 | answerable supported；真实 boundary 正确；Citation 可核对；无 silent mode fallback；Provider fallback 仅按 ADR-017 对用户透明且完整审计 | not-executed | NOT-RUN / blocking |
 | V-REGRESSION-003 | 最终候选保持 accepted scope与 Slice1/2 结果 | regression / product | prior oracles、两个 Slice Results、full suite | 无新增失败、能力降级、source leak 或三模式分叉 | not-executed | NOT-RUN / blocking |
 | V-010 | 本机验证和 Acceptance 不产生 Production Activation | activation | exact final Iteration Result | NOT_EXECUTED | not-executed | NOT-RUN / blocking |
-| V-REFLECT-003 | 最终复盘 A1—A5 并由用户裁决 | architecture / reflection | 三个 exact Slice Results、10+2、现场题、Agent/value、安全、Findings | A1—A5 exact Verdict；只有全部 SUPPORTED 与用户新 ACCEPT 才能申请 Acceptance | not-executed | NOT-RUN / blocking |
+| V-REFLECT-003 | 最终复盘 A1—A6 并由用户裁决 | architecture / reflection | 三个 exact Slice Results、10+2、现场多轮对话、Agent/value、安全、Findings | A1—A6 exact Verdict；只有全部 SUPPORTED 与用户新 ACCEPT 才能申请 Acceptance | not-executed | NOT-RUN / blocking |
 
 ### Current Slice1 rework evidence
 
@@ -370,18 +383,16 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 
 ## Freeze and scoring rules
 
-- Slice1 先执行 V-WEB-000 一题最小真实纵切，再执行一个真实工程 4 条不同覆盖维度问题和至少一条现场题；至少 3 supported、至少 2 个
-  非实现维度。exact revision、只读、不可信 Source、Citation、独立 Review 在微检查点不可延后；持久恢复、复杂冲突/去重和完整异常矩阵
-  在 `CONTINUE` 后进入 Slice2。
+- Slice1 先交付真实可操作的 Chat Access；Provider 前最多执行一个本地/Mock Access smoke。首次 live canary 本身就是一段冻结五轮
+  Conversation 和新对话隔离负测，每个已 Provider-dispatched Turn 分别计 live attempt。exact revision、只读、不可信 Source、Citation、
+  fresh independent Review 和失败真实性不可延后；五轮通过后立即执行 `V-COMP-ALPHA-001`，再由用户决定是否 `CONTINUE`。
 - Slice2 early canary 与最终 10+2 互不复用，在所属 Slice code freeze 后由用户披露；披露后任何产品/Prompt/schema/route/disclosure 改动
-  烧毁输入并保留失败 Result。
-- 最终 10 条 answerable 是 supported 分母，Gap 不计 PASS；2 条 boundary 单独要求 2/2。
-- 新三臂消融当前 `proposed / not authorized`；旧 `6ca47f7d…` 只保留成熟 Agent/rubric/cache/source-bytes 历史输入，不能冻结新增 Arm、
-  protocol、digest 或阈值。Slice2 前须新用户收据。执行时三臂同 revision/model/questions、模型与来源 budget、cache policy/state、rubric/
-  evaluator；完整认知与成熟 Agent 先过质量 Gate，locator control 失败不能降低完整认知门。增益再按预提交质量或 normalized non-locator
-  investigation cost 判定，并单列 World Model build/update/storage/Provider 成本及冻结复用周期。
-- Slice1 每题最多一次独立 Verification Investigation 只服务快速 preview。Slice2/3 禁止永久固定一轮，以预密封 package revision、model
-  call、Broker operations、source bytes、wall-time、no-progress 熔断控制；answerable 因熔断未答计 FAIL。
-- 调用次数和成本不构成质量裁剪目标；高安全上限触发失败关闭，不能删除 checklist、Evidence、Citation 或独立 Review。
-- 每个 `V-REFLECT` PASS 只表示复盘完整。Slice1/2 需要新的 `CONTINUE` 才能授权下一段；最终需要新的 `ACCEPT` 才能接受迭代。
+  烧毁输入并保留失败 Result。最终 10 条 answerable 是 supported 分母，Gap 不计 PASS；2 条 boundary 单独要求 2/2。
+- 比较必须拆成两个问题：current Codex 保留其实际客户端、model、reasoning、tools、permissions 和 budget，只固定 exact revision、
+  Conversation 脚本、可比输出约束和盲评 rubric；因果消融仅比较 same-agent source-only 与 same-agent full-cognition + source，这两个系统臂
+  才共享 Agent/model/tools/permissions/budget/cache/Reviewer。Codex 不是 Oracle 或裁判；独立评测先评绝对质量，再分别报告产品差异和 World Model 增益。
+- Reviewer Finding 只返回主工程 Agent；主 Agent 选择同包重写或继续受控取证。current 协议不固定 Verification Investigation 角色、补证轮数或双 Review，
+  而用预密封 package revision、model call、Broker operations、source bytes、wall-time 和 no-progress 高安全熔断防止失控；answerable 因熔断未答计 FAIL。
+- 调用次数和成本不构成质量裁剪目标；高安全上限触发失败关闭，不能删除用户目标、Evidence、Citation 或独立 Review。
+- `V-PREVIEW-002/V-REFLECT-002/V-REFLECT-003` PASS 只表示复盘完整。Slice1/2 需要新的 `CONTINUE` 才能授权下一段；最终需要新的 `ACCEPT` 才能接受迭代。
 - Product Result 必须聚合三个唯一 Slice Result；测试数量、模型调用成功、旧 Web result 或旧资格不能替代。

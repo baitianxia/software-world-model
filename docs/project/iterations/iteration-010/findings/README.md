@@ -237,5 +237,9 @@ iteration: ITER-010
 - [FINDING-010-092](FINDING-010-092.md)：当前 Engineering QA 尚未落实对用户透明的 Ark-primary/DeepSeek 独立 fallback attempt；已处置到
   ADR-017/Model Gateway，并要求同一 logical question 不重提、不共享中间态、late result 不覆盖、同 identity 有效 Conformance 复用，且
   DeepSeek 批次价格状态逐次复核、成本不削弱质量。
+- [FINDING-010-093](FINDING-010-093.md)：当前多层固定内容流水线保留了安全与证据边界，却没有正式的主工程 Agent 来持续拥有用户目标、
+  假设、计划、观察、重规划与完成判断；已处置为“软件世界模型 + 主工程 Agent”双核心和 ADR-018。
+- [FINDING-010-094](FINDING-010-094.md)：当前 Session 只共享工程、授权和资源熔断，每题仍是没有历史/指代/纠正的独立 Request；已处置为
+  server-owned Conversation/Turn/Context、逐轮证据与 Review、新对话隔离和五轮 Chat canary。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

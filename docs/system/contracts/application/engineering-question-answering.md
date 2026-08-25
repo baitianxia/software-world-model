@@ -5,19 +5,29 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-016, SYS-ADR-017, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
+amended_by: [SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: [src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/engineering_question_strategy.py, src/software_world_model/ai_infrastructure/engineering_question_model_source.py, src/software_world_model/interface/engineering_qa_source.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py]
 tests: [tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
 
-# Engineering Question Answering
+# Engineering Question Answering（兼容协议）
 
 ## Purpose and scope
 
-本契约定义 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3`：默认工程问答从 exact 软件世界模型取得持久的系统认知，由独立 Investigation LLM 根据原问题和每一步调查结果自适应决定下一步来源调查，再由受控 Source Broker / Retrieval Worker 执行。调查结束后才密封 Question Evidence Package，Answer 与 Reviewer 在隔离新上下文中只使用该包完成回答与审核。`@3` 在原 checklist 之下增加逐证据的 material observation closure，防止宽泛检查项被一个代表性事实伪闭合。
+本契约保存并约束已实现的 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 兼容协议：它由独立 Investigation LLM 根据原问题和每一步调查
+结果提出来源操作，经 Source Broker / Retrieval Worker 执行，调查后密封 Question Evidence Package，再由独立 Answer 与 Reviewer
+处理。其详细角色、Schema、双 Review focus 和 Verification Investigation 规则只适用于显式选择该 exact protocol identity 的历史运行、
+迁移和回归，不再定义普通用户默认产品的 Agent 本体。
+
+`SYS-ADR-018` 已将默认产品修订为 `CONVERSATIONAL_ENGINEERING_AGENT@1`，由
+`SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION` 拥有：同一逻辑主工程 Agent 持续维护目标、假设、计划、Observation 和回答，
+并在受控 World Model/Source 工具与 fresh 独立 Reviewer 边界内提供语义多轮 Chat。本文件后续所有 `ENGINEERING_QA`、Investigation、
+Answer、comprehensive/challenge Review 和 Verification Investigation 条款都应读作 `@3` 兼容范围，不能用来否定或覆盖新合同。
 
 软件世界模型是软件系统在精确 Scope、Context、Schema 和 Snapshot 上持久、版本化、可验证、可更新的外部认知模型，独立于任何 LLM 会话或隐藏状态。它不是手册、地图或缓存；这些只是面向人、UI 或特定任务的投影。本契约改变的是问答使用认知和来源的方式，不改变世界模型的定义、正式知识路径或 `WORLD_MODEL` 的 Source-off 语义。
 
-`ENGINEERING_QA` 是独立 Application 用例，不是 `WORLD_MODEL` 的回源分支，也不是 Knowledge Gap 后静默调用 `DIRECT_INVESTIGATION`。严格世界模型问答和直接调查继续由各自契约拥有。
+`@3` 是独立 Application 兼容用例，不是 `WORLD_MODEL` 的回源分支，也不是 Knowledge Gap 后静默调用 `DIRECT_INVESTIGATION`。严格世界
+模型问答、直接调查和新的 Engineering Conversation 继续由各自合同拥有。
 
 ## Ownership
 
@@ -39,6 +49,9 @@ tests: [tests/test_engineering_question_answering.py, tests/test_engineering_que
 4. World Model source revision 与 Request repository revision 必须 exact 相等。显式版本比较问题可以使用分区的 exact Read Set，但每个分区必须独立绑定对应 Source revision。未对齐或无法证明相等的 Result 只能标记 `UNALIGNED_REVISION` 并作为候选导航，不能直接支持当前 revision 的 Claim；相关内容必须在 Request revision 上重新核实。
 5. Question Understanding、Investigation、Answer 和 Review 是分离角色。每个模型步骤使用精确输入 allowlist、closed output schema、Strategy/Prompt 身份和独立收据；输出收据必须绑定当前 role、fresh role context、input Manifest digest 与 output schema ref/digest。Review 角色在同一 closed output schema 下使用受信 `COMPREHENSIVE / EVIDENCE_BOUNDARY_CHALLENGE` focus；两个 attempt 必须使用不同 fresh context，后者不能继承或假定前者的 provisional approval。每个投影 lead 具有 Application-owned 稳定 `challenge_id`；comprehensive 输出必须返回空 challenge assessment，challenge 输出必须对 required ID 恰好逐项返回 evidence scope、Draft scope 与受控 disposition。每个非 passing assessment 还必须绑定同一输出中、其单一 Claim 属于该 exact challenge scope 的 Finding；Finding code 存在或 Claim 属于另一个 challenge 都不能满足绑定。模型只提交 schema 允许的语义字段，request/package/draft digest、attempt、focus、Ledger ID/generation/revision/prefix 等权威坐标由可信适配层从当前状态补入并由 Application 重验，不能由模型回显取得权威。Provider 会话记忆、隐藏 rationale、未密封工具结果或上一角色私有输出不得成为正式输入。
 6. 在任何真实 Provider dispatch 前，Application/Gateway 必须验证 current exact Provider、model、endpoint、configuration、role、secret reference、允许外发的 Cognition Context/Ledger/Package 字段或片段、redaction 和完整 input digest 已单独密封并授权。用户级 run grant 必须绑定 exact immutable logical question/evaluation subject、Session 预授权的 Ark→DeepSeek ordered route、Prompt/output contract、角色集合、primary + fallback 最坏总调用上限和授权消息；它本身不能直接 dispatch。每个运行时动态形成的角色输入还必须按 provider attempt 密封完整 Gateway Manifest、所有 model-visible 字段路径与片段摘要、payload bytes、schema/Prompt 和 full input digest，并由受信边界把 run grant 收窄为恰好一次 dispatch 的 role disclosure authorization。Gateway 在 credential resolution/HTTP 前独立重验同一 run grant、root Request、完整 role payload、Provider/qualification 和由前一结构化 Result 决定的角色/focus 顺序：Answer 后只允许 comprehensive Review；其空 Finding Result 只允许 evidence-boundary challenge；challenge 空 Finding 才进入 terminal。真实 Web launcher 还必须在 listener 前证明自身从 clean exact product candidate 加载，绑定 published Bundle semantic/file digest、exact Source/Profile/Request/run authority，并先密封零分派 launch receipt；退出时按 logical question/provider attempt 密封逐角色、Gateway 与 transport terminal audit。任一授权、输入或 Result 只能消费一次；同一 Provider dispatch 后异常、outcome unknown、identity drift 或 replay 不 retry。仅当 primary attempt 已密封为无 authorized answer 且属于 ADR-017 的 Provider/model reason，Application 才可透明创建一次 fallback attempt；它从 original question 与 exact Cognition 重跑全链，不复用前一 attempt 中间态。Secret value、secret reference 和授权 receipt 都不得进入模型消息。历史开发、Conformance、Capability、Product 或浏览器授权不能推导这次来源内容披露。
+这里的 fallback 输入只适用于本 `@3` 单轮兼容协议。Engineering Conversation 必须改从 original Turn、exact relevant
+Application-sealed Conversation Context 与 exact Cognition 重跑，且每个到达 Provider dispatch 的 Turn 分别计一次 live attempt。
+
 7. 持续本机 Web 必须在 listener 前密封升级后的 Engineering QA Session Authority：固定 clean exact product candidate、loopback origin、工程/
 Binding/revision、World Model Read Authority、Source Profile/global + class allowlist、registered operations、Ark→DeepSeek ordered route 及每条 route 的 model/endpoint/
 configuration/qualification/secret reference/disclosure scope、角色 Prompt/schema、redaction、有效期、每题及整会话 logical-question/provider-attempt/dispatch/bytes/wall-time 熔断和
@@ -173,6 +186,9 @@ Question Understanding、World Model Cognition Context、Investigation Proposal�
 
 ## Failure and implementation state
 
+本节的 failure 与 implementation state 只陈述 `@3` 兼容实现。它不能证明 `CONVERSATIONAL_ENGINEERING_AGENT@1` 的 Conversation/
+Turn/Agent Work State、统一主 Agent 循环、语义多轮 Chat 或相应资格。
+
 未授权模式或外发、revision/allowlist/Source Profile 漂移、越界文件、evidence class 重标、Source instruction 注入、Ledger 覆盖或缺口、未密封输入、无依据结论、无关 Citation、Package seal 被误当真值、冲突静默消解、任一模型直接取得来源权限、静默模式切换、审核未通过或资源耗尽均使当前 provider attempt 失败关闭。若 Provider 已完成响应但 closed output schema 拒绝其内容，Gateway 必须保留 completed response identity/usage 供审计，产品边界只在 exact Manifest/Provider/model/configuration/receipt/eligibility 绑定全部成立时传播真实 structured-output failure；同样，dispatch 后 outcome unknown 只有在 exact request digest、isolation receipt、qualification 和 ineligible terminal state 全部重验成立时才传播为 outcome unknown，并明确当前 provider attempt 关闭、same-Provider retry 0。两者都不得泛化成 qualification/binding drift、同 Provider 重试或继续消费输出；真正 identity 不一致仍保持 qualification failure。只有可信分类满足 ADR-017 时，logical question 才可进入一次完全隔离的 fallback attempt；迟到 primary 结果 quarantine 且不能覆盖。具体 DTO、注册操作目录、其余高安全数值上限和 UI 投影由代码与测试定义，但不得改变本契约的认知定义、权威、角色、Ledger/Package 边界和失败语义。
 
 `ITER-010 / SLICE-001` 已提供本地确定性的 Request、持久 Structure Read Bundle → bounded Cognition Adapter、Profile-bound Broker/Worker、request/attempt/profile-bound mandatory-path direct locator、append-only Ledger、双分区 Package、Answer、comprehensive + evidence-boundary challenge Review、一次独立 Verification Investigation、五类 closed role-input/output contract、input/schema-bound output receipt、可信坐标补入、exact run → one-use role disclosure narrowing、Gateway-side role/focus/config/qualification policy、current DeepSeek composition、Session Authority、逐题 server-owned Request/run 与持续 Alpha launcher。返工还实现了受控答案层级、逐 Claim checklist links、默认正文投影、单一 outcome-tagged FINISH dispositions 与 trusted parent-reference derivation、逐 disposition material observations、Claim observation/evidence closure、Answer exact observation coverage table、Reviewer 独立 checklist + observation comparison、typed Finding remediation → derived action/request、配置/未挂载类型/status literal challenge leads、逐 Java full-entry material-effect scan、非 passing assessment 的 exact challenged-Claim binding 和五项方向质量 Gate，其中独立 `claim_consistency` 明确阻断跨 Claim/observation 的互斥结果。确定性 fake transport 不读取 credential、不建立网络且不把 secret/authorization ref 放入 wire；这些证据不构成真实 Provider dispatch、外发执行证据、listener/browser 运行、Capability Qualification、Product Validation、Slice Result、Acceptance 或 Activation 证据。
@@ -186,3 +202,7 @@ Application 重算 observation membership、challenged entry/evidence class 与 
 导致 challenge projection 与 membership Gate 同时得到伪空集。统一 resolver 与 application-missing-first layer precedence 是本契约的一部分；
 run-032 保持 Q1 PASS、Q2 FAIL、Q3 post-dispatch OUTCOME_UNKNOWN、66,000-byte Provider-before-call PASS，不得追认。
 `FINDING-010-087` 已闭合 source-reference resolver 与 layer precedence 的 deterministic Gate；新的 clean/fresh live 仍须独立执行。
+
+ADR-018 所定义的新默认架构为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。迁移必须复用本合同已经证明的 exact revision、World Model Cognition、
+Source Profile、Broker/Worker、Ledger/Package、Citation、Provider disclosure、安全和独立 Review 资产，但不得继续把固定五角色/双 focus
+工作流作为新 Agent 的产品合同。

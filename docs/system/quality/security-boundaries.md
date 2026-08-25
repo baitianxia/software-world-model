@@ -4,8 +4,8 @@ kind: system-quality
 status: current
 authority: normative
 owners: [security, architecture]
-depends_on: [SYS-ARCH-INVARIANTS, SYS-ADR-017]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092]
+depends_on: [SYS-ARCH-INVARIANTS, SYS-ADR-017, SYS-ADR-018]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/source_integration, src/software_world_model/application_services/citation_projection.py, src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface, validation/structure_world_model_iteration_003/isolation, validation/structure_world_model_iteration_003/g3b, validation/structure_world_model_iteration_007/slice1_live_evaluator.py, validation/structure_world_model_iteration_008/slice1_live_evaluator.py]
 tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test_browser_chat_interface.py, tests/test_structure_read_bundle.py, tests/test_structure_view_cli.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_isolation.py, tests/test_iteration_003_g3b.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_007_slice1_live_evaluator.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_evaluator.py, tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_browser.py]
 ---
@@ -20,46 +20,84 @@ tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test
 
 - 模型不能获得 shell、Web、MCP、文件或来源工具；领域 Tool Proposal 由平台授权执行。
 - Source Operation 必须绑定当前授权、精确 Binding、Target 和预算，且只读。
-- `ENGINEERING_QA` 在任何执行前固定 exact repository/Binding/revision、World Model Read Authority、source path/content allowlist、Binding-scoped versioned Source Profile ref/digest、注册只读操作集和文件/字节/时间/调查轮次/Package Revision 熔断。Source Profile 由受信配置拥有 evidence class → path capability 以及 class + operation → Result modality；模型、问题、来源内容或 Worker 均无分类权威。Investigation LLM 只读取原问题、World Model Cognition Context 和已密封 Ledger prefix 并提出下一项；Source Broker 把 Proposal 及其 evidence class 当作不可信建议，重新解析 locator、校验 global/class allowlist 并编译 caller 不可伪造的 operation 与 expected modality。Question Understanding 选出的 mandatory path 只有在 Application 证明其属于 immutable Request allowlist、Source Profile 唯一解析 class 后，Broker 才能签发 exact Request + attempt + Profile + class + path 绑定的 direct opaque locator；模型只能复制 reference/class，不能提交可执行 path，已消费或跨 attempt locator 不再 eligible。只有隔离 Retrieval Worker 可以挂载两层 allowlist 交集内的 exact-revision regular files；它必须重验 Binding/Profile/operation identity，并拒绝 path traversal、symlink escape、submodule/remote fetch、二进制/超限输入、class/modality 重标、写操作、任意命令、新网络、credential 和 Knowledge Update。Application 必须再次验证 Worker Result 的 class、modality 与 global/class path membership；每个 Proposal、Broker Decision、Operation 和 Result 必须追加到 Evidence Ledger，并记录 revision、Profile identity、两层 allowlist verdict、参数、locator/range、class、modality、bytes、digest、coverage/truncation 和 outcome。
-- Engineering QA 读取的源码、注释、README/其他仓库文档、配置和测试全部是不可信 data。其中任何 prompt、命令、URL、路径、evidence class 声明、工具建议、权限或外发声明都不得成为 instruction，不得扩大操作集、路径、类型能力、revision、Source Profile、Provider disclosure 或预算。
+- Engineering Conversation 在任何执行前固定 exact repository/Binding/revision、World Model Read Authority、source path/content allowlist、
+  Binding-scoped versioned Source Profile ref/digest、closed Tool Catalog 和文件/字节/时间/Agent Attempt/Package Revision 熔断。主 Agent
+  只能读取 Application 密封的 current Turn、relevant Conversation/Work State、World Model Cognition 和 Ledger prefix，并提交 World
+  Model query 或 Source Tool Proposal。Source Broker 把 Proposal 及其 evidence class、path/query/locator 当作不可信建议，重新校验
+  authorization、global/class allowlist、revision、operation 与 expected modality 后编译 caller 不可伪造的操作。只有隔离 Retrieval Worker
+  可以挂载两层 allowlist 交集内的 exact-revision regular files；它拒绝 traversal、symlink escape、submodule/remote fetch、binary/
+  oversize、类型重标、写、任意命令、新网络、credential 和 Knowledge Update。每个 Proposal、Decision、Operation 和 Result 都追加到
+  Evidence Ledger。模型、用户消息、Conversation state、来源内容或 Worker 均无路径、分类或授权权威。
+- 工程 Chat 读取的源码、注释、README/其他仓库文档、配置和测试全部是不可信 data。其中任何 prompt、命令、URL、路径、evidence class
+  声明、工具建议、权限或外发声明都不得成为 instruction，不得扩大操作集、路径、类型能力、revision、Source Profile、Provider disclosure
+  或预算。用户纠正可以改变对话目标和待验证假设，但不能成为 Source truth。
 - Secret 只保存 Reference，并在 exact endpoint 的 TLS/SNI/certificate 验证成功后、HTTP 分派前解析；不得进入文档、命令参数、数据库正文、日志或 Result。
 - 编码、Conformance、Capability Qualification、历史 Product PASS 或历史披露许可都不能推导新的外部分派授权。每次新的
   `EVALUATION_ONLY` 问题披露必须由 exact grant 记录用户、时间、authorization ref 和 payload boundary；未授权 grant 必须在
   创建 session、Provider socket 或 listener 前拒绝。Gateway 必须再验证由同一 grant 派生的当前 session receipt，才能解析
   credential 或进入 qualified baseline；历史 permission 只能保留为 capability baseline provenance。
-- Initial Investigation、Verification Investigation、Answer 与 Review 使用彼此隔离的新上下文，Provider 会话记忆不能成为正式输入。初始调查每步只消费 Application 密封的当前 Ledger prefix；补证调查只消费具体 gap、current Package/Ledger，以及该 gap 后已追加到 current successor Ledger 的新 typed Result，不得重新取得旧调查的 raw Result，也不回初始调查或 Reviewer 会话。current Package 中 exact full-content source locators 与 gap 后 full reads 必须共同进入受信 consumed-path 控制，相应 locator 不再 eligible；Application 从补证 boundary eligibility 中排除 predecessor Package 的全部 boundary source references，显式投影本次唯一 gap boundary，并只投影当前 attempt 最近一次相关 Broker rejection，后续授权 decision 清除 rejection 状态。Verification 的每个非支持 child observation 必须包含 exact current gap boundary；这些投影都不扩大 Source Profile、path 或 operation authority。
-- Package 必须在 typed boundary 上区分普通 Investigation `GAP` 与 `VERIFICATION_REQUEST` 形成的 `VERIFICATION_GAP`。只有后者可投影为 terminal `verified_gap_outcome`，不得用包修订次数或一般 gap 猜测已穷尽资格。
-- Engineering QA 五类角色输出必须通过 closed schema 与 exact receipt：receipt 绑定当前 role、fresh role context、input Manifest digest、output schema ref/digest 和 output-text digest，并拒绝额外/缺失字段、错误类型、重复 JSON key、旧 Manifest 重放及 receipt 篡改。模型输出只能提供语义 Proposal 字段；request/package/draft digest、attempt、role context 和 Ledger 坐标必须由可信适配层从当前状态补入，再由 Application 重验，不能因模型回显获得权威。
-- `ENGINEERING_QA` 的 Answer 与 Reviewer 只挂载当前密封 Question Evidence Package 和各自角色所需的不可变输入。它们均不能挂载 Repository/Source workspace、World Model database/Bundle query port、Source Tool、Evidence Ledger write port、shell、网络、credential、未密封内容或另一角色的私有输出。Reviewer 只提出 typed remediation Finding；可信 Adapter/Application 校验现有 Package reference 或从 material evidence-gap Finding 派生版本化 gap Request，Reviewer 不能独立声明 action、提出操作或调用 Broker/Worker。Application/Broker 必须把 Verification Investigation Proposal 当作不可信建议逐步校验编译。包内冲突、部分或未知必须留在 boundary/audit 分区，不得通过模型记忆或临时工具补齐。
-- `ENGINEERING_QA` 的 Review role 还必须使用两个不同 fresh context 和受信 focus 顺序。Answer 后只允许 `COMPREHENSIVE`；其 finding-free provisional approval 只允许 `EVIDENCE_BOUNDARY_CHALLENGE`。Application 投影的配置 placeholder、引用中缺失的具体 status literal 与未按 package-qualified import identity 挂载的 same-application type 只是只读 review leads；异包同名 Java 文件不能消除 type lead。它们不授予 Source/path/operation authority，也不自动判错。每项 lead 具有稳定 `challenge_id`，challenge 必须恰好逐项返回 evidence/Draft scope 与受控 disposition；越界项必须绑定同输出中作用于被挑战 Claim 的 Finding。Gateway 在 credential/HTTP 前重验 focus 顺序；Application 重算 exact ID 集合，Authorization 必须绑定集合完整、全部 `WITHIN_EVIDENCE_BOUNDARY` 且 finding-free 的 challenge Review，且调用 fuse 必须预留 Answer + 两个 Review。focus 缺失/乱序、challenge 漏项/重复/错绑、reserve 不足或试图用首审放行都失败关闭。
-- 把 World Model Cognition Context、Evidence Ledger 或 Question Evidence Package 中的任何片段发送到外部 Provider 之前，必须另行授权并密封 exact Provider/model/endpoint/configuration、role、允许字段/片段、redaction、secret reference 和完整 input digest。用户 run grant 必须先绑定一个本身选择当前 disclosure policy 的 exact immutable Request、evaluation subject、Prompt/output contract、角色集合与总调用上限；每个动态角色输入再密封完整 Gateway Manifest、model-visible JSON leaf paths/fragment digest、payload bytes、schema/Prompt 和 full input digest，并收窄为一次性子授权。Gateway 必须在 credential/HTTP 前独立重验 root Request、run grant、完整 payload、Provider qualification 和由前一 closed Result 决定的角色顺序；secret reference 与 grant/receipt 不进入模型消息。Question Understanding、Investigation、Answer 和 Review 各自只能获得该角色的披露范围；开发授权、历史 Provider PASS 或同一内容对另一角色的披露不能推导本次外发。授权或 input 一经越过 Gateway 即消费；同一 Provider 的异常、outcome unknown、drift 或 replay 均不得 retry。跨 Provider 只允许 ADR-017 中 Session 预授权的同 logical question fallback：新的 attempt 使用自己的完整授权与输入，从原问题和 exact Cognition 重跑全链，不能复用前一 attempt 中间态。未授权时必须在 credential resolution、socket 和 request dispatch 前拒绝。
-- `ENGINEERING_QA` trusted launcher 必须证明正在执行的 launcher 文件是 clean exact product candidate 中被 HEAD 跟踪的文件，不能用另一 clean repository 为 dirty/未冻结实现背书。listener 前还必须重验 exact Source commit、published ordered/snapshot Bundle semantic + file digest、Cognition Binding/revision/read authority、四类 versioned Source Profile、prepared Request、current Conformance 与 user run grant，并以新 canonical `0600` 文件密封零分派 launch receipt；任一失败不得 serve。Gateway database、launch receipt、terminal receipt 必须是互不相同的新路径。Gateway SQLite 主文件必须 exclusive-create 为 `0600`，且 server 存活期的 `-wal` / `-shm` sidecar 也必须在 `0077` 或更窄的 creation mask 下为 `0600`；不得先按默认 umask 暴露再事后收紧。terminal receipt 必须按 logical question/provider attempt 密封逐角色一次性 disclosure/Gateway audit、TLS/credential/session 计数、同 Provider retry 0、fallback reason/次数、late quarantine、潜在重复成本和 `NOT_EXECUTED` Activation；receipt 不得包含 Secret value。
-- 持续 Engineering QA Web 不得把一个 prepared Request grant 当成整会话授权，也不得允许任意 POST 扩大旧 grant。listener 前的
-  `ENGINEERING_QA_SESSION_AUTHORITY@1` 必须固定 clean product、loopback origin、工程/Binding/revision、World Model authority、Source
-  Profile/allowlist、有序 Provider routes 及各自 configuration/qualification/secret reference/disclosure scope、角色契约、redaction、有效期和每题/整会话熔断。用户在显示该
-  边界的页面明确提交 exact question 后，受信 ingress 才能签发 one-use submission receipt，System Owner 才能生成 server-owned
-  Request/run identity；客户端不能提交这些权威字段。每题后续仍须 exact full-input role authorization。重复、跨题复用、边界漂移、过期
-  或总熔断耗尽必须在 credential/HTTP 前拒绝；某题失败不得停止 listener 或使另一题继承其 Ledger/Package/Review/Citation。
+- 主工程 Agent 与独立 Reviewer 使用彼此隔离的上下文，Provider 会话记忆不能成为正式输入或恢复状态。主 Agent 只消费 Application
+  密封的 current Turn、Conversation/Work State、Cognition 与 Ledger prefix；Reviewer 只消费 current Turn、受信 relevant Conversation
+  Context、当前 Package 和 Draft。Reviewer 无 World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限；具体 Finding
+  只能由 Application 路由为同包 Agent 修订或新 Agent evidence Attempt。包内冲突、部分或未知必须留在 boundary/audit 分区，不得通过
+  模型记忆、用户陈述或临时工具补齐。
+- `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 兼容运行仍须执行其 Initial/Verification Investigation、Answer、双 focus Review、typed
+  `VERIFICATION_GAP`、五类 closed schema/receipt 和 consumed-path/gap-boundary 规则；这些规则不能被复用为
+  `CONVERSATIONAL_ENGINEERING_AGENT@1` 的固定角色拓扑，也不能证明新协议已实现。
+- 把 Conversation Context、Agent Work State、World Model Cognition、Evidence Ledger 或 Question Evidence Package 的任何片段发送到外部
+  Provider 前，必须另行授权并密封 exact Provider/model/endpoint/configuration、Agent/Reviewer purpose、允许字段/片段、redaction、secret
+  reference 和完整 input digest。每个动态模型输入都形成一次性授权，Gateway 在 credential/HTTP 前独立重验 root Turn、Conversation/
+  Work State Revision、run grant、完整 payload 和 Provider qualification；secret reference 与 grant/receipt 不进入模型消息。开发授权、
+  历史 Provider PASS 或同一内容对另一 invocation 的披露不能推导本次外发。授权或 input 越过 Gateway 即消费；同 Provider 异常、outcome
+  unknown、drift 或 replay 均不 retry。ADR-017 fallback 使用新 Agent attempt，从受信 original Turn input、exact Conversation Context 和
+  Cognition 重跑完整链，不能复用前一 Provider 的隐藏状态或未密封中间产物。
+- Engineering Conversation trusted launcher 必须证明自身来自 clean exact product candidate；listener 前重验 exact Source commit、published
+  World Model Bundle digest/read authority、Source Profile/allowlist、Tool Catalog、Provider qualification 与 Conversation authority，并用新
+  `0600` 文件密封零分派 launch receipt。Gateway database/sidecar 和 launch/terminal receipt 从创建起保持 private mode。terminal receipt
+  按 Conversation/Turn/provider attempt 密封一次性 disclosure、Gateway/TLS/credential 计数、同 Provider retry 0、fallback/quarantine、
+  潜在重复成本和 `NOT_EXECUTED` Activation，不得包含 Secret value。
+- 持续 Engineering Chat 不得把 prepared Turn/Request grant 当成整段 Conversation 授权，也不得允许浏览器 POST 扩大 session authority。
+  listener 前必须固定 clean product、loopback origin、工程/Binding/revision、World Model authority、Source Profile/allowlist、Tool Catalog、
+  有序 Provider routes、disclosure scope、redaction、有效期和每 Turn/整 Conversation 熔断。用户提交 exact message 后，受信 ingress 才能
+  签发 one-use Turn receipt 和 server-owned identity；后续动态 Agent/Reviewer input 仍须 exact one-use authorization。重复、跨 Turn 复用、
+  边界漂移、过期或总熔断耗尽必须在 credential/HTTP 前拒绝；某 Turn 失败不得停止 listener 或使另一 Turn 继承未密封状态。
 - Verification 的 target disposition replacement 不是任意覆盖：当 predecessor target 为 `SUPPORTED` 时，Application 必须投影 exact
   observation preservation contract，并在 merge 时机械拒绝删除、改写或重排既有 supported facts 的 delta。caller full content 已可见的
   cache/write/notification/external interaction 只补 caller-boundary typed observation，不借此取得未挂载 callee 内部；lossy replacement
   必须在 successor Package seal 前失败关闭。
-- Engineering QA 的同包重写保持同一 Package Digest；Reviewer 具体证据缺口驱动全新 Verification Investigation，经 Broker/Worker 逐步校验执行。补证角色的 authorized checklist scope 只有 Request 指定的 gap，FINISH 只能返回该项 delta；可信 Application 才可按 predecessor 顺序替换唯一目标、保留非目标 disposition 并密封 successor Package。越权、多项 delta、目标/Package identity 不一致、非支持 observation 未绑定当前 gap 或失败关闭时均不得 merge；新 Package 必须重走 Answer/Review。Review 输入只把真实保留 gap boundary 的 non-supported disposition 投影为 terminal `verified_gap_outcome`；诚实 Limitation 不得被同一缺证的重复请求绕过 preview fuse，Draft 自行扩张的非 material 结果也不得扩大 Source scope。正式协议不得永久固定一轮；revision/call/operation/bytes/wall-time/no-progress 高安全熔断只能失败关闭，answerable 超限计失败，不得删减 Checklist、调查需求、证据、Citation 或 Review dimension。wall-time 不仅在调用前检查；任何角色、Projector 或 Worker 返回后、其输出取得 Ledger/Package/Answer/Authorization 状态转换权之前必须重验，`elapsed >= maximum` 即耗尽。
+- Engineering Conversation 的同包重写保持同一 Package Digest；Reviewer 的具体 evidence gap 只能驱动绑定该 gap 的新主 Agent Attempt，
+  并继续经 Broker/Worker 逐步校验执行。越权、Turn/Package/Work State identity 不一致、未密封 Observation 或失败关闭时均不得 merge；新
+  Package 必须重走独立 Review。诚实 verified Limitation 不得被同一缺证反复请求绕过熔断，Draft 自行扩张的 non-material 结果也不得扩大
+  Source scope。revision/call/operation/bytes/wall-time/no-progress 熔断只能失败关闭，answerable 超限计失败，不得删减用户目标、证据、
+  Citation 或 Review。wall-time 不仅在调用前检查；任何 Agent、Reviewer、Projector 或 Worker 返回后、其输出取得权威状态转换权前都必须
+  重验，`elapsed >= maximum` 即耗尽。`@3` 的 single-gap delta/preservation 规则继续只约束兼容运行。
 - `JAVA_SOURCE_SEMANTICS@1` 的 Investigation step、Draft 与 Review 是独立 Gateway workload：首个调查 step 不读取正式知识
   payload，后续 step 只能读取平台密封的 typed trace prefix；Draft 不得读取 Reviewer 或 Citation observation，Review 不得读取
   Provider 会话记忆或 Source。角色只能通过平台密封的 Requirement/trace/Assessment/Draft 逐阶段传递；role package、model call、
   socket/session receipt 与调用审计不可复用。每题调查 2—4 次，随后 Draft/Review 各一次，无 retry。
 - 多 Provider route 只能在 Session 开始与任何问题 dispatch 前预授权；每条 route 都必须分别具有 current exact Conformance、Capability
   Qualification、endpoint、secret reference、disclosure scope 和隔离 transport。当前顺序为 Ark → DeepSeek。一次用户提交创建一个
-  logical question；primary attempt 只有在密封 terminal、没有 authorized answer且可信分类为 Provider unavailable/HTTP error/outcome
+  logical interaction unit；Engineering Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。primary attempt 只有在
+  密封 terminal、没有 authorized answer且可信分类为 Provider unavailable/HTTP error/outcome
   unknown/output invalid 或 model Review rejected 后，才可创建最多一个 fallback attempt。Application/Source/Security failure 不得
-  fallback。Fallback 从 immutable original question 与同一 exact Cognition Context 重跑完整链，两个 attempt 的 Ledger/Package/Draft/
-  Review/Provider session 不得交叉；同 Provider retry 为 0，late primary response 必须 quarantine 且不得覆盖。用户无需选择 Provider、
+  fallback。Fallback 从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact
+  Cognition Context 重跑完整链；两个 attempt 的 Ledger/Package/Draft/Review/Provider session 不得交叉；同 Provider retry 为 0，late
+  primary response 必须 quarantine 且不得覆盖。用户无需选择 Provider、
   重提问题或新建 Session。
 - `WORLD_MODEL` 答案进程的应用输入只能读取 package 与不含 Evidence payload 的 exact Snapshot Read Bundle；解释器、系统 runtime、精确 ancestor directory traversal 和独立输出 capability 必须单列，且不得包含目标来源、工作树、权威/旧数据库、Evidence/Citation Store 或另一角色输出。其网络默认拒绝：无模型阶段禁止全部出站；真实模型阶段只能连接 evaluator-owned exact Model Egress Gateway，由网关校验 Manifest 固定的 Provider scheme/host/port/path 并注入 credential。答案进程不能直连 DNS、公网、Source remote 或 Citation Projector。若本机 OS 不能按单一公网 IP 过滤 Gateway connect，允许由无 credential、无请求/响应 payload port 的 Gateway supervisor 预解析，并按已资格 connection policy 建立有界 exact peer TCP descriptor set，再把这些 descriptor 与 evaluator 已绑定的 exact `0600` AF_UNIX listener 交给 sandboxed Gateway child。默认一请求一连接的 transport 必须明确发送 `Connection: close`；显式取得资格的 persistent verified TLS transport 才能在同一授权 run 内发送 `Connection: keep-alive` 并复用 session。当前 DeepSeek bounded policy 预置 3 个 descriptor，读取 credential/Authorization/HTTP bytes 前最多进行 3 次 credential-free TLS acquisition，且每条 verified session 最多 20 次 HTTP dispatch；达到上限后的轮换发生在下一次 credential resolution 前。HTTP bytes 可能已发送后绝不重发 request。每个逻辑调用仍按 Investigation* → Draft → Review 拥有独立 Manifest、receipt、request/response audit。未使用 descriptor 在 Answer terminal 后关闭并审计为 `UNUSED_CLOSED`，且 `provisioned = TLS attempts + unused_closed`；Provider call、TLS attempt/success、reuse、per-session dispatch bound、post-dispatch unknown 与 request retry 必须分列，`request_retry_count` 必须为 0。少于、多于、交换、未资格复用或跨题/session 复用均失败关闭。地址 scope 必须如实区分标准 public unicast 与 executor 明确提供的 synthetic external peer，loopback、普通 private、link-local 与其他 reserved 地址仍拒绝，不能把 synthetic 地址误报成公网 IP。若 Seatbelt 对继承 TCP 数据面仍要求 remote-port `network-outbound`，该规则只能与拒绝 `SYS_socket`/`SYS_socketpair`/`SYS_socket_delegate` 的 syscall firewall 联合使用；child 必须无法创建任何新 AF_UNIX/INET/INET6 socket，并在解析 credential 前复核 peer、TLS certificate/SNI 与 exact HTTP scheme/Host/port/path。该组合只证明 digest-sealed 闭合 workload 的新 socket 创建被 OS 拒绝：它不是抵抗任意 native code execution 的 exact destination firewall，因为 Darwin `disconnectx`/`connectx` 可重定向既有 descriptor。正常 workload 必须另以 digest seal、禁止 fork 与 `connect`/`bind` 零计数审计闭合；若威胁模型包含任意 native code execution，必须改用 VM/container/per-process network namespace 或等价的 exact destination enforcement。preflight 必须真实执行继承 descriptor 已连接 exact peer、继承 listener 往返、继承 TLS 和新 socket denial；审计必须分列 supervisor connection provisioning、credential-free TLS acquisition、unused close、listener handoff 与 child Provider dispatch，并验证数量、复用关系与角色顺序，不能把 remote-port 规则单独描述为 endpoint allowlist，也不能声称 OS 提供了实际不存在的 remote-IP filter。
 - Evidence observation 只由 trusted broker 在密封 Result 后通过窄 Knowledge owner Port 读取，并按该 Result allowlist 物化新的 disposable Citation Store。独立 Projector 只能读取 package、Result seal 与这个 exact Store；不能直接挂载权威数据库或完整 Evidence Store，不出网，没有模型、Query、Update 或答案回传端口。Store 缺失、额外、重复、换序或 digest 不匹配均失败关闭。
 - OS 隔离证据必须区分应用输入、runtime/ancestor traversal、输出与拒绝目标，绑定实际 policy 和 capability 参数。若 exact ancestor directory capability 可枚举其直接条目名，必须把名称披露作为 executor limitation，不能误称为 metadata-only；这不等于允许读取子文件内容。使用 capability sandbox 时只能声称相关操作被 OS 拒绝，不能声称未实际建立的 mount/network namespace；固定探针、产品 workload 必须分进程，计划、Mock、probe-only 或进程自报不是执行证据。候选冻结还必须在 role 实际使用的隔离解释器 flags、环境和 package root 下导入每个真实 entrypoint；普通测试环境可见的 `site-packages` 不能充当隔离 role dependency closure。source-off Answer 的包初始化不得因无关的 Update/export convenience import 获得 parser 或 Source dependency。
-- 无认证 HTTP 服务只能绑定回环地址；非本机部署必须先补认证、授权和威胁模型。HTTP ingress 必须在产品路由前验证声明的 byte count、完整读取、UTF-8、unique-key JSON、closed root fields 和字段类型；重复 key、短读或 trailing/ambiguous body 均失败关闭。持续 Engineering QA 页面只接受 question 与显式 disclosure acknowledgement；request/run ID 由服务签发。问题 POST 还必须在 receipt/transport/credential 前要求 `Origin` 精确等于已验证的当前 loopback Host、media type 为 `application/json`，且存在的 `Sec-Fetch-Site` 只能是 `same-origin`；CORS 不可读不能防止 cross-site simple request 的副作用。旧 prepared 模式只能接受其 exact Request，二者不得混用。
+- 无认证 HTTP 服务只能绑定回环地址；非本机部署必须先补认证、授权和威胁模型。HTTP ingress 必须在产品路由前验证声明的 byte count、
+  完整读取、UTF-8、unique-key JSON、closed root fields 和字段类型；重复 key、短读或 trailing/ambiguous body 均失败关闭。持续
+  Engineering Chat 页面只接受 current conversation identity、user message 与显式 disclosure acknowledgement；Turn/run ID 由服务签发。
+  POST 还必须在 receipt/transport/credential 前要求 `Origin` 精确等于已验证的 loopback Host、media type 为 `application/json`，且存在的
+  `Sec-Fetch-Site` 只能是 `same-origin`。旧 prepared `@3` 模式只能接受其 exact Request，二者不得混用。
 
 失败、配置缺失、资格过期、身份漂移、输入截断或结果未知都对当前 provider attempt 采用 fail-closed 行为，且不得把未知伪装成确定失败。
 只有 ADR-017 明确允许、预授权且重新执行完整链的 fallback attempt 可以继续同一 logical question；它不能追认或修改已失败 attempt。
+
+Engineering Conversation 中上述 `logical question` 必须解释为密封 Turn；只有同一 Turn 的预授权 fallback 可以继续，不能把整段
+Conversation 当成一次交互或复用单位。
+
+`CONVERSATIONAL_ENGINEERING_AGENT@1` 与 `ENGINEERING_CHAT_EXPERIENCE@1` 当前为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。以上新边界是实现和
+验收前提，不能由旧 `@3` 运行、浏览器连续提交外观或既有 Provider 资格推导已经满足。

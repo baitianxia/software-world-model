@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [source]
-depends_on: [SYS-CONTRACT-SOURCE-DATA-SOURCE, SYS-CONTRACT-X-CAPABILITY-EXECUTION]
+depends_on: [SYS-CONTRACT-SOURCE-DATA-SOURCE, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-ADR-018]
 derived_from: [DD-SRC-SOURCE-ARTIFACT]
 code: [src/software_world_model/source_integration/operations.py, src/software_world_model/source_integration/local_git.py, src/software_world_model/source_integration/artifact_processing.py, src/software_world_model/source_integration/artifact_use.py, src/software_world_model/infrastructure/sqlite_source_operation_repository.py, src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py]
 tests: [tests/test_source_operations.py, tests/test_artifact_processing.py, tests/test_artifact_use_authority.py, tests/test_structure_publication.py, tests/test_maven_structure_update.py]
@@ -14,7 +14,7 @@ tests: [tests/test_source_operations.py, tests/test_artifact_processing.py, test
 
 ## Purpose and scope
 
-本契约定义受授权、可回放的来源访问，以及把观察保存为中立 Artifact 的边界。Artifact 是来源载体，不是 Fact、Inference 或任务答案；同步问答只能由 Application 将 exact Artifact/Operation Result 密封为 `DIRECT_INVESTIGATION` 的 Evidence Packet，或先经 `ENGINEERING_QA` 的 Source Broker/Worker 写入 append-only Evidence Ledger，再与 exact World Model Cognition Context 一起密封为 Question Evidence Package 后使用。
+本契约定义受授权、可回放的来源访问，以及把观察保存为中立 Artifact 的边界。Artifact 是来源载体，不是 Fact、Inference 或任务答案；同步问答只能由 Application 将 exact Artifact/Operation Result 密封为 `DIRECT_INVESTIGATION` 的 Evidence Packet，或让 Engineering Conversation 的主 Agent 提交只读 Proposal，经 Source Broker/Worker 写入 append-only Evidence Ledger，再与 exact World Model Cognition Context 一起密封为 current Turn Evidence Package 后使用。
 
 ## Owner and public contract
 
@@ -36,7 +36,7 @@ Source Integration 独占 Source Operation、Read Session、Artifact、Payload �
 4. 每次读取都要求当前授权，以及与 retention mode 相匹配的 read protection；`NO_EVICTION` 可以明确证明无需 Guard。只有跨模块持久使用才要求与 exact Package、Closure、Protection、用途和 downstream request 绑定的一次性 use confirmation；历史成功不能替代当前权限。
 5. Knowledge Engine 不直接读取来源；Evidence 必须保存足以在 Payload 淘汰后独立复核 exact observed content、Context 与 Provenance 的最小自包含快照。
 6. Tool Loop 由平台授权和执行，预算耗尽、重复无进展、权限失败或截断必须显式停止。
-7. Engineering QA 的初始 Investigation 与独立 Verification Investigation 只能提出来源 operation Proposal；Reviewer 只能提出 typed remediation Finding，由可信 Application 从 material evidence gap 派生具体 Verification Request。三者都不能执行操作。Source Broker 必须把调查 Proposal 当作不可信建议，逐步重新校验并编译；Question Understanding 选出的 exact mandatory path 经 Application 的 Request allowlist 与 Broker 的 Source Profile/class 唯一绑定验证后，可以获得 Request + attempt + Profile + class + path 绑定的 direct opaque read/parse locator，模型仍不能提交 path authority。Retrieval Worker 只能对请求固定的 exact repository/revision 中 allowlisted regular file 执行 Broker 已批准、注册的只读 list/search/read/parse 操作。补证调查使用全新上下文读取 gap + current Package/Ledger，不回初始调查。每次 Proposal、Decision、Operation 和 Result 都必须追加到 Evidence Ledger，并记录 allowlist verdict、actual locator/range、bytes、digest、coverage/truncation 和 outcome；path traversal、symlink escape、submodule/remote fetch、写入、命令、新网络、credential 和 Knowledge Update 必须拒绝。
+7. Engineering Conversation 的主 Agent 只能提交只读 source operation Proposal；Reviewer 只能提出 typed remediation Finding，由可信 Application 把 material evidence gap 路由为绑定当前 Turn/Package 的新 Agent evidence Attempt。Agent 和 Reviewer 都不能执行操作。Source Broker 独占对 Proposal 的不可信输入校验与操作编译，Retrieval Worker 独占执行；Broker 必须逐步重验 authorization、Request allowlist、Source Profile/class、exact repository/revision、operation 与预算。Application/Broker 验证后的 exact mandatory path 可以获得 Request + attempt + Profile + class + path 绑定的 direct opaque read/parse locator，模型仍不能提交 path authority。Retrieval Worker 只能对 allowlisted regular file 执行 Broker 已批准、注册的只读 list/search/read/parse 操作。每次 Proposal、Decision、Operation 和 Result 都必须追加到 Evidence Ledger，并记录 allowlist verdict、actual locator/range、bytes、digest、coverage/truncation 和 outcome；path traversal、symlink escape、submodule/remote fetch、写入、命令、新网络、credential 和 Knowledge Update 必须拒绝。`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的 Initial/Verification Investigation 与旧 fresh-context 补证条款继续约束兼容运行，但不定义 `CONVERSATIONAL_ENGINEERING_AGENT@1` 的固定角色拓扑。
 8. Source Payload 及其中的注释、文档、配置和测试文本都是不可信 data。其中的指令、URL、路径、工具建议或权限声明不得改变授权、Target、allowlist、操作集、Provider disclosure 或资源上限。
 
 ## 目标命名

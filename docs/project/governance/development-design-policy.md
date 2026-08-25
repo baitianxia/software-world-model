@@ -39,26 +39,30 @@ Codex 时才能进入工程夯实；全体打平时使用 `REWORK`。
 形成时，硬停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。60/180 是交付检查点，不能等完整质量证明才开始计时；
 240 是停止边界，不能以“再跑一次”绕过。
 
-首次体验前只允许最小启动、安全边界、失败真实性、一次 current Provider 资格确认和一题真实 smoke。全量回归、完整能力矩阵、hidden、
+若该 policy 在一次失败 Result 密封后才被采用，Manifest 必须用 `historical_pre_policy_result_refs` 精确列出这些历史 Result，并声明它们
+不能满足新的体验 Gate。门禁继续验证其 failed-preserved 身份、所属 Slice、不可变摘要和后继非编码 REWORK 决定，但不得反向要求历史
+Result 补造当时尚不存在的体验或 Provider 字段。新授权后的任何 Result 均须完整遵守当前 policy，不能加入该历史列表绕过验证。
+
+首次体验前只允许最小启动、安全边界、失败真实性、一次 current Provider 资格确认和最多一个 Provider 前本地/Mock Access smoke。全量回归、完整能力矩阵、hidden、
 跨工程和统计对照都必须后置。Access 与 Quality 是两道不同的 Gate：Access 只证明 credential/reference、endpoint/model、current exact
 Conformance、策略能力资格和 active hold；它可以使页面 availability 成立，但不能证明答案正确。只有用户可见答案质量 Case PASS 后，
 才可进入 hardening。
 
-live attempt 使用轻量计数：同一 sealed product version 的一个 logical question 只要触发任一外部 dispatch，就计一次 attempt，不按内部
-角色调用数放大；纯本地诊断不计。相同 failure signature 最多重试一次；连续两次 live attempt 没有用户可见增量，立即停止外部重跑，
+live attempt 使用轻量计数：同一 sealed product version 中，每个触发任一外部 dispatch 的有界用户交互单元计一次 attempt，不按单元内部模型/
+角色调用数放大；对 Chat，这个单元是 Turn，一段 Conversation 中多个已 dispatch Turn 分别计数；纯本地诊断不计。相同 failure signature 最多重试一次；连续两次 live attempt 没有用户可见增量，立即停止外部重跑，
 回到本地根因诊断。此停止规则发生在问题之间；已经开始的问题仍须执行完整调查、答案、Citation 与独立审核链，调用或成本不得成为
 质量裁剪理由。
 
-live failure 必须先沿 `Source truth → World Model cognition → question understanding → investigation → evidence package → answer → review → Web`
+live failure 必须先沿 `Source truth → World Model cognition → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer → independent review → Web`
 定位最早偏差。没有可证伪 root-cause hypothesis，不得修改 Prompt、Schema 或 Contract。修复顺序固定为：本地最小复现，至少两个未参与
-修复的相邻案例通过，再执行一题 live canary；不能直接用下一次昂贵 live run 猜测修复。相同 failure signature 经过一次通用修复仍复现，
+修复的相邻案例通过，再执行一个有界 live canary 单元；Chat 目标必须把该单元冻结为最小多轮 Conversation，不得用孤立一题代替。不能直接用下一次昂贵 live run 猜测修复。相同 failure signature 经过一次通用修复仍复现，
 必须停止堆规则并评审架构职责。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
 hardening 和正式验收前各运行，不得用它延迟首个体验。
 
 Provider route 默认 `VOLCENGINE_ARK → DEEPSEEK`，并在 session 开始前预授权 ordered route 与双方 disclosure scope。Ark attempt 因已冻结的
-Provider 或模型能力原因终态结束且未形成 authorized answer 时，可对同一 logical question 透明启动最多一个 DeepSeek attempt，用户无需
-重提或新建 session。两个 attempt 必须独立密封；fallback 从 immutable original question 与 exact World Model cognition 重跑完整链，禁止
-复用前次中间产物；迟到 primary 结果只允许隔离审计，不得覆盖已密封结果；同 Provider retry 为 0。Provider 输出/schema 或模型审核失败
+Provider 或模型能力原因终态结束且未形成 authorized answer 时，可对同一 logical interaction unit 透明启动最多一个 DeepSeek attempt，用户无需
+重提或新建 session。两个 attempt 必须独立密封；fallback 从 immutable original interaction input 与 exact World Model cognition 重跑完整链，禁止
+复用前次中间产物；对 Chat，fallback 输入必须是 immutable original Turn Request、与该 Turn 相关的 exact Application-sealed Conversation Context 和 exact World Model Cognition，不得退化为只重放孤立问句；迟到 primary 结果只允许隔离审计，不得覆盖已密封结果；同 Provider retry 为 0。Provider 输出/schema 或模型审核失败
 必须记录为能力失败，不能伪称网络不可用；Application、Source 或 Security 失败不得通过 fallback 掩盖。DeepSeek 批量运行优先使用执行时
 重新核对的官方非高峰窗口，峰时紧急启动需审计 override，但已开始问题仍不得降低质量。
 
@@ -77,6 +81,11 @@ Proposal 预先冻结的无进展上限，才可以转向；否则使用 `REWORK
 - 用户可以在同一浏览器会话连续自由提问，不需要每题重启、重新构建或理解内部运行编号；
 - 页面明确显示版本、实验性质和已知限制；
 - 单题失败只结束该题并显示真实失败或限制，服务仍可接受后续问题。
+
+“同一浏览器会话连续自由提问”只证明持续问答，不自动证明产品已经是 Chat。若产品目标声明语义多轮 Chat，首个体验版本还必须显示有序
+消息历史和“新对话”，能够解析追问与指代、接受用户纠正、按当前上下文总结，并证明每轮都有独立 Request/Evidence/Review 身份且新对话
+不会继承旧指代或工作状态。上一轮答案和 Provider 隐藏记忆只能作为受信 Application 密封的对话上下文候选，不能直接成为本轮事实证据。
+首次 Chat Alpha 可使用进程内短期状态；跨重启长期记忆、分支和多 Agent 不是方向确认前置条件。
 
 完整 hidden、跨工程对照、性能证明和全量回归不是可体验版本的前置条件。首次体验 Slice 必须直接交付上述版本；不得把它拆成若干
 只有内部组件或一次性运行证据、却没有持续可操作页面的前置 Slice。
@@ -108,6 +117,9 @@ current Codex 对照是强外部基线参赛者，不是事实来源或评测方
 - 可执行的验收场景和 Finding 回写入口。
 - 最小方向体验的真实入口、代表性任务、明确不做项、可见限制和体验后方向决策点。
 - 可体验版本的重复启动方式、固定本地地址、连续自由提问、版本/限制显示和单题故障隔离证明。
+- 若目标是 Chat，增加追问、纠正、总结、逐轮证据/审核、新对话隔离和最小五轮语义链证明。
+- 若目标是 Agent，明确主 Agent 拥有目标、假设、计划、工具选择、观察解释、重规划和完成判断；平台继续拥有权限、执行、证据与审计，
+  独立 Reviewer 继续拥有放行前技术复核。
 - 同一 Slice 的修复记录、重新授权边界，以及预提交的无进展定义和尝试上限。
 
 ## 不应预写
