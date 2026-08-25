@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100]
 code: []
 tests: []
 iteration: ITER-010
@@ -24,7 +24,7 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
-FALLBACK_NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / REAL_RUNTIME_NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
 
@@ -86,8 +86,25 @@ Session Disclosure；listener、credential、Source read、Provider dispatch 均
 
 Model/Agent/candidate/Conversation/Browser 与旧 QA 相邻组合实际 `86/86 PASS`，相关 `py_compile` 与 `git diff --check` PASS。本次没有
 外部网络、Provider/model、listener/browser、mall Source/resources、credential 或 Production Activation。因此状态只增加
-`MODEL_BOUNDARY_LOCAL_CANDIDATE`；ADR-017 Ark→DeepSeek 独立 full-chain fallback、真实 Adapter/transport/fixed launcher、Citation browser
-projection 与五轮 mall Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
+`MODEL_BOUNDARY_LOCAL_CANDIDATE`；在该证据点，ADR-017 Ark→DeepSeek 独立 full-chain fallback、真实 Adapter/transport/fixed launcher、
+Citation browser projection 与五轮 mall Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。下节记录随后形成的 route composition
+本地候选；所有 live verdict 保持不变。
+
+## Current local Provider-route composition evidence
+
+`FINDING-010-100` 将 raw Provider failure code 与 trusted owner classification 分开；只有已验证 Gateway terminal Result 或 closed output decoder
+产生的五类 ADR-017 outcome 可触发 fallback，Application/Source/Security、qualification、Gateway identity 和 runtime creation failure 均失败
+关闭。Ark primary 与 DeepSeek fallback 从 immutable original Turn、relevant sealed Context、exact World Model authority 和 Source Profile 启动
+独立 full-chain attempt；同 Provider retry 为 0，fallback 至多一次，primary 临时 Work State 不写入 Application-owned committed repository。
+logical Turn 聚合两个 attempt 的 dispatch/receipt audit，只投影最后完整 attempt 的 Outcome；outcome unknown 后 fallback 会记录潜在重复计费，
+late primary 固定 quarantine 且没有 overwrite/merge API。
+
+non-starting fixed composition 将 exact product tree/commit、Chat Binding、evidence tools、双 route/configuration/Session Disclosure、lazy attempt
+factory、Conversation Service 和 Browser Application 绑定在一起。预检不创建 attempt，不解析 credential，不读取 Source，不启动 listener，也不
+调用 Provider；公开 `swm-engineering-chat` 仍是 Access-only launcher。相关定向命令实际 `76/76 PASS`，`compileall`、`py_compile` 与
+`git diff --check` 同时通过；没有外部网络、Provider/model、listener/browser、mall Source/resources、credential 或 Production Activation。
+因此状态只增加 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`；真实 Ark/DeepSeek Adapter/transport/credential-reference、Source/World Model
+runtime、fixed command Session wiring、资格与五轮 mall Chat 仍为 `NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
 
 ## Pre-freeze implementation evidence
 

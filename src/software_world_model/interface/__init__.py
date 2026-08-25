@@ -14,6 +14,11 @@ _EXPORT_MODULES = {
     "engineering_chat_product_candidate_digest": ".engineering_chat_candidate",
     "engineering_chat_single_provider_route_ref": ".engineering_chat_candidate",
     "prepare_engineering_chat_candidate_preflight": ".engineering_chat_candidate",
+    "EngineeringChatProviderAttemptDependencies": ".engineering_chat_provider_launcher",
+    "EngineeringChatProviderAttemptFactory": ".engineering_chat_provider_launcher",
+    "EngineeringChatProviderLauncherReceipt": ".engineering_chat_provider_launcher",
+    "PreparedEngineeringChatProviderLauncher": ".engineering_chat_provider_launcher",
+    "prepare_engineering_chat_provider_launcher": ".engineering_chat_provider_launcher",
     "EngineeringChatBrowserApplication": ".engineering_chat_browser",
     "PreparedEngineeringChatAccess": ".engineering_chat_alpha_cli",
     "prepare_engineering_chat_access": ".engineering_chat_alpha_cli",
@@ -78,6 +83,13 @@ if TYPE_CHECKING:
         prepare_engineering_chat_candidate_preflight,
     )
     from .engineering_chat_browser import EngineeringChatBrowserApplication
+    from .engineering_chat_provider_launcher import (
+        EngineeringChatProviderAttemptDependencies,
+        EngineeringChatProviderAttemptFactory,
+        EngineeringChatProviderLauncherReceipt,
+        PreparedEngineeringChatProviderLauncher,
+        prepare_engineering_chat_provider_launcher,
+    )
     from .engineering_chat_alpha_cli import (
         PreparedEngineeringChatAccess,
         prepare_engineering_chat_access,
@@ -134,6 +146,15 @@ if TYPE_CHECKING:
 
 __all__ = [
     "EngineeringChatBrowserApplication",
+    "EngineeringChatCandidatePreflightReceipt",
+    "engineering_chat_product_candidate_digest",
+    "engineering_chat_single_provider_route_ref",
+    "prepare_engineering_chat_candidate_preflight",
+    "EngineeringChatProviderAttemptDependencies",
+    "EngineeringChatProviderAttemptFactory",
+    "EngineeringChatProviderLauncherReceipt",
+    "PreparedEngineeringChatProviderLauncher",
+    "prepare_engineering_chat_provider_launcher",
     "PreparedEngineeringChatAccess",
     "prepare_engineering_chat_access",
     "EngineeringQuestionBrowserApplication",

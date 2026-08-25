@@ -13,6 +13,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelCallFailure,
     EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
+    EngineeringAgentModelFailureKind,
     EngineeringAgentModelRole,
     EngineeringAgentResponseKind,
     EngineeringAgentReviewDecision,
@@ -24,6 +25,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentToolResult,
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
+    InMemoryEngineeringAgentWorkStateRepository,
+    SealedEngineeringAgentResponseControl,
 )
 from software_world_model.application_services.engineering_conversation import (
     ConversationMessageKind,
@@ -33,6 +36,7 @@ from software_world_model.application_services.engineering_conversation import (
     RuntimeCapabilityStatus,
 )
 from software_world_model.cross_cutting import (
+    DomainError,
     ErrorCode,
     Revision,
     StableId,
@@ -797,6 +801,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             gateway_call_ref="gateway-failed-call",
             role=EngineeringAgentModelRole.PRIMARY_AGENT,
             state=EngineeringAgentModelDispatchState.DISPATCHED_OUTCOME_UNKNOWN,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN
+            ),
             failure_code="NETWORK_OUTCOME_UNKNOWN",
         )
 
@@ -865,6 +872,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             gateway_call_ref="gateway-wrong-role-call",
             role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
             state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID
+            ),
             failure_code="STRUCTURED_OUTPUT_INVALID",
         )
 
@@ -901,6 +911,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             gateway_call_ref="gateway-replayed-unknown-call",
             role=EngineeringAgentModelRole.PRIMARY_AGENT,
             state=EngineeringAgentModelDispatchState.REPLAYED_OUTCOME_UNKNOWN,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN
+            ),
             failure_code="PROVIDER_OUTCOME_UNKNOWN",
         )
 
@@ -1111,6 +1124,138 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         self.assertEqual(len(second.snapshot.messages), 4)
         self.assertEqual(second.snapshot.messages[0].content, "先说明默认登录行为")
         self.assertEqual(second.snapshot.conversation.revision, Revision(3))
+
+    def test_fresh_attempt_executors_share_only_committed_conversation_state(self) -> None:
+        repository = InMemoryEngineeringAgentWorkStateRepository()
+        initial_previous_revisions = {}
+
+        class PerTurnDriver:
+            def __init__(self, sequence):
+                self.sequence = sequence
+                self.calls = 0
+
+            def propose(self, invocation):
+                self.calls += 1
+                if self.calls == 1:
+                    initial_previous_revisions[self.sequence] = (
+                        invocation.previous_work_state.revision
+                        if invocation.previous_work_state is not None
+                        else None
+                    )
+                    return _proposal(
+                        invocation,
+                        call_ref=f"fresh-{self.sequence}-1",
+                        phase=EngineeringAgentWorkPhase.INVESTIGATING,
+                        action=_action(
+                            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                            query=f"turn {self.sequence}",
+                        ),
+                    )
+                if self.sequence == 2:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "failed attempt must not commit its intermediate Work State",
+                    )
+                observation_id = invocation.observations[0].observation_id
+                return _proposal(
+                    invocation,
+                    call_ref=f"fresh-{self.sequence}-2",
+                    phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+                    draft=EngineeringAgentDraftProposal.create(
+                        response_kind=EngineeringAgentResponseKind.ANSWER,
+                        content=f"第 {self.sequence} 轮答案。",
+                        claims=(
+                            EngineeringAgentClaimProposal.create(
+                                statement=f"第 {self.sequence} 轮有密封证据。",
+                                support_observation_ids=(observation_id,),
+                            ),
+                        ),
+                    ),
+                )
+
+        class FreshExecutorPerTurn:
+            def execute(self, request):
+                executor = ApplicationOwnedEngineeringAgentTurnExecutor(
+                    driver=PerTurnDriver(request.sequence),
+                    tool_port=RecordingToolPort(),
+                    reviewer=ApprovingReviewer(),
+                    response_control=RecordingResponseControl(),
+                    available_operations=(
+                        EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    ),
+                    work_state_repository=repository,
+                    id_generator=SequentialIdGenerator(),
+                )
+                return executor.execute(request)
+
+        service = InMemoryEngineeringConversationService(
+            _ready_binding(),
+            turn_executor=FreshExecutorPerTurn(),
+            id_generator=SequentialIdGenerator(),
+        )
+        conversation = service.create_conversation()
+        first = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="先说明登录流程",
+        )
+        failed = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(2),
+            message="这轮模拟失败",
+        )
+        third = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(3),
+            message="继续上一条已提交结论",
+        )
+
+        self.assertEqual(first.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(failed.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(third.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertIsNone(initial_previous_revisions[1])
+        self.assertEqual(
+            initial_previous_revisions[2],
+            first.snapshot.context.work_state_revision,
+        )
+        self.assertEqual(
+            initial_previous_revisions[3],
+            first.snapshot.context.work_state_revision,
+        )
+        self.assertEqual(
+            failed.snapshot.context.work_state_digest,
+            first.snapshot.context.work_state_digest,
+        )
+        self.assertGreater(
+            third.snapshot.context.work_state_revision.value,
+            first.snapshot.context.work_state_revision.value,
+        )
+
+    def test_sealed_response_control_authorizes_exact_approved_chain_once(self) -> None:
+        response = RecordingResponseControl()
+        service, _, _, _ = _service(
+            ReplanningAnswerDriver(),
+            response=response,
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+        request = response.requests[0]
+        control = SealedEngineeringAgentResponseControl()
+
+        authorization = control.authorize(request)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(
+            authorization.turn_request_digest,
+            request.turn_request_digest,
+        )
+        self.assertEqual(authorization.review_digest, request.review.digest)
+        with self.assertRaises(DomainError):
+            control.authorize(request)
 
 
 if __name__ == "__main__":

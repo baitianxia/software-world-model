@@ -253,5 +253,8 @@ iteration: ITER-010
   trusted evidence-tool adapter；support/boundary 分区与 opaque locator search→read 在临时 Git 上通过，mall/live 未执行。
 - [FINDING-010-099](FINDING-010-099.md)：主 Agent/Reviewer 的 closed no-tools 模型输入输出、逐 dispatch Disclosure/Gateway receipt、
   失败计数和非调度 candidate preflight 已形成本地候选；双 Provider fallback、fixed Provider launcher 与五轮 live Chat 仍阻断。
+- [FINDING-010-100](FINDING-010-100.md)：Application-owned Ark→DeepSeek route 现以 typed owner classification、两个隔离 full-chain
+  attempt、committed Work State repository、logical Turn 分账与 late quarantine 形成本地组合候选；固定组合预检保持全部 I/O 为 0，真实
+  Adapter/transport/credential、Access-only 命令切换和五轮 live Chat 仍未资格化或执行。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

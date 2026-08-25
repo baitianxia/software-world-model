@@ -26,6 +26,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelCallFailure,
     EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
+    EngineeringAgentModelFailureKind,
     EngineeringAgentModelRole,
     EngineeringAgentResponseKind,
     EngineeringAgentReviewDecision,
@@ -1297,6 +1298,9 @@ class ModelBackedConversationalEngineeringAgent(
                 model_call_ref=local_attempt_ref,
                 role=role,
                 state=EngineeringAgentModelDispatchState.PRE_DISPATCH_REJECTED,
+                failure_kind=(
+                    EngineeringAgentModelFailureKind.PRE_DISPATCH_REJECTED
+                ),
                 failure_code=error.code.value,
             )
             self._record_failure_audit(
@@ -1329,6 +1333,11 @@ class ModelBackedConversationalEngineeringAgent(
                 ),
                 role=role,
                 state=state,
+                failure_kind=(
+                    EngineeringAgentModelFailureKind.GATEWAY_FAILURE
+                    if crossed_gateway_boundary
+                    else EngineeringAgentModelFailureKind.PRE_DISPATCH_REJECTED
+                ),
                 failure_code=exc.code.value,
             )
             self._record_failure_audit(
@@ -1361,6 +1370,11 @@ class ModelBackedConversationalEngineeringAgent(
                 ),
                 role=role,
                 state=state,
+                failure_kind=(
+                    EngineeringAgentModelFailureKind.GATEWAY_FAILURE
+                    if crossed_gateway_boundary
+                    else EngineeringAgentModelFailureKind.PRE_DISPATCH_REJECTED
+                ),
                 failure_code=type(exc).__name__,
             )
             self._record_failure_audit(
@@ -1389,23 +1403,46 @@ class ModelBackedConversationalEngineeringAgent(
                 gateway_manifest=gateway_manifest,
                 configuration=self._configuration,
             )
-        except DomainError as exc:
+        except Exception as exc:
+            replayed = (
+                isinstance(result, ModelGatewayResult)
+                and type(result.replayed) is bool
+                and result.replayed
+            )
+            result_call_ref = local_attempt_ref
+            if isinstance(result, ModelGatewayResult) and isinstance(
+                getattr(result.call, "model_call_id", None), StableId
+            ):
+                result_call_ref = result.call.model_call_id.value
+            error_code = (
+                exc.code
+                if isinstance(exc, DomainError)
+                else ErrorCode.AUTHORITY_RECORD_INCONSISTENT
+            )
+            error_message = (
+                exc.message
+                if isinstance(exc, DomainError)
+                else "Engineering Agent Gateway Result shape is invalid"
+            )
             rejected = EngineeringAgentModelCallReceipt.create(
-                model_call_ref=result.call.model_call_id.value,
-                gateway_call_ref=result.call.model_call_id.value,
+                model_call_ref=result_call_ref,
+                gateway_call_ref=result_call_ref,
                 role=role,
                 state=(
                     EngineeringAgentModelDispatchState.REPLAYED_REJECTED
-                    if result.replayed
+                    if replayed
                     else EngineeringAgentModelDispatchState.DISPATCHED_REJECTED
                 ),
-                failure_code=exc.code.value,
+                failure_kind=(
+                    EngineeringAgentModelFailureKind.GATEWAY_RESULT_INVALID
+                ),
+                failure_code=error_code.value,
             )
             self._append_audit(disclosure_request, authorization, rejected)
             raise EngineeringAgentModelCallFailure(
                 receipt=rejected,
-                code=exc.code,
-                message=exc.message,
+                code=error_code,
+                message=error_message,
             ) from exc
         if not receipt.successful:
             self._append_audit(disclosure_request, authorization, receipt)
@@ -1429,6 +1466,9 @@ class ModelBackedConversationalEngineeringAgent(
                 gateway_call_ref=receipt.gateway_call_ref,
                 role=role,
                 state=rejected_state,
+                failure_kind=(
+                    EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID
+                ),
                 failure_code=exc.code.value,
             )
             self._append_audit(disclosure_request, authorization, rejected)
@@ -1637,6 +1677,28 @@ def _validate_gateway_context(
         )
 
 
+def _gateway_failure_kind(
+    failure_code: str,
+) -> EngineeringAgentModelFailureKind:
+    """Classify only outcomes sealed by a valid Model Gateway result.
+
+    Missing adapters, configuration drift, qualification failure, and other
+    implementation gaps deliberately remain Gateway failures.  They must not
+    be relabeled as Provider unavailability by string matching.
+    """
+
+    if failure_code == ErrorCode.PROVIDER_HTTP_ERROR.value:
+        return EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR
+    if failure_code in {
+        ErrorCode.PROVIDER_RESPONSE_INVALID.value,
+        ErrorCode.PROVIDER_OUTPUT_FORBIDDEN.value,
+        ErrorCode.PROVIDER_REFUSAL.value,
+        ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+    }:
+        return EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID
+    return EngineeringAgentModelFailureKind.GATEWAY_FAILURE
+
+
 def _receipt_for_gateway_result(
     *,
     role: EngineeringAgentModelRole,
@@ -1739,6 +1801,9 @@ def _receipt_for_gateway_result(
             gateway_call_ref=model_call_ref,
             role=role,
             state=state,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN
+            ),
             failure_code=call.failure_code,
         )
     if call.state is ModelCallState.FAILED:
@@ -1762,6 +1827,7 @@ def _receipt_for_gateway_result(
             gateway_call_ref=model_call_ref,
             role=role,
             state=state,
+            failure_kind=_gateway_failure_kind(call.failure_code),
             failure_code=call.failure_code,
         )
     if response is None or not response.usage_complete:
@@ -1788,6 +1854,9 @@ def _receipt_for_gateway_result(
             gateway_call_ref=model_call_ref,
             role=role,
             state=state,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID
+            ),
             failure_code=call.failure_code,
         )
     if (
@@ -1808,6 +1877,9 @@ def _receipt_for_gateway_result(
             gateway_call_ref=model_call_ref,
             role=role,
             state=state,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.QUALIFICATION_REJECTED
+            ),
             failure_code=ErrorCode.QUALIFICATION_INVALID.value,
         )
     state = (

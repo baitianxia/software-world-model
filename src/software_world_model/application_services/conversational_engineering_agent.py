@@ -31,6 +31,7 @@ from .engineering_conversation import (
     EngineeringConversationTurnExecutor,
     EngineeringTurnExecutionOutcome,
     EngineeringTurnExecutionRequest,
+    EngineeringProviderFailureClassification,
     RuntimeCapabilityStatus,
 )
 
@@ -84,6 +85,24 @@ class EngineeringAgentModelDispatchState(str, Enum):
     REPLAYED_OUTCOME_UNKNOWN = "REPLAYED_OUTCOME_UNKNOWN"
 
 
+class EngineeringAgentModelFailureKind(str, Enum):
+    """Trusted ownership classification for one failed model boundary call.
+
+    ``failure_code`` preserves the raw owner outcome.  This enum records which
+    boundary established that outcome so routing never infers fallback
+    eligibility from an ambiguous string alone.
+    """
+
+    PRE_DISPATCH_REJECTED = "PRE_DISPATCH_REJECTED"
+    PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
+    PROVIDER_HTTP_ERROR = "PROVIDER_HTTP_ERROR"
+    PROVIDER_OUTCOME_UNKNOWN = "PROVIDER_OUTCOME_UNKNOWN"
+    PROVIDER_OUTPUT_INVALID = "PROVIDER_OUTPUT_INVALID"
+    QUALIFICATION_REJECTED = "QUALIFICATION_REJECTED"
+    GATEWAY_RESULT_INVALID = "GATEWAY_RESULT_INVALID"
+    GATEWAY_FAILURE = "GATEWAY_FAILURE"
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentModelCallReceipt:
     model_call_ref: str
@@ -91,6 +110,7 @@ class EngineeringAgentModelCallReceipt:
     role: EngineeringAgentModelRole
     state: EngineeringAgentModelDispatchState
     provider_dispatch_count: int
+    failure_kind: EngineeringAgentModelFailureKind | None
     failure_code: str | None
     digest: Digest
 
@@ -102,6 +122,7 @@ class EngineeringAgentModelCallReceipt:
         role: EngineeringAgentModelRole,
         state: EngineeringAgentModelDispatchState,
         gateway_call_ref: str | None = None,
+        failure_kind: EngineeringAgentModelFailureKind | None = None,
         failure_code: str | None = None,
     ) -> "EngineeringAgentModelCallReceipt":
         if not isinstance(role, EngineeringAgentModelRole) or not isinstance(
@@ -124,17 +145,58 @@ class EngineeringAgentModelCallReceipt:
             gateway_call_ref, "Gateway model call reference"
         )
         failure_code = _optional_text(failure_code, "model call failure code")
+        if failure_kind is not None and not isinstance(
+            failure_kind, EngineeringAgentModelFailureKind
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Agent model failure kind is invalid",
+            )
         if (
             (gateway_call_ref is not None)
             != (state is not EngineeringAgentModelDispatchState.PRE_DISPATCH_REJECTED)
             or (failure_code is None) != successful
+            or (failure_kind is None) != successful
+            or (
+                state is EngineeringAgentModelDispatchState.PRE_DISPATCH_REJECTED
+                and failure_kind
+                is not EngineeringAgentModelFailureKind.PRE_DISPATCH_REJECTED
+            )
+            or (
+                state
+                in {
+                    EngineeringAgentModelDispatchState.DISPATCHED_OUTCOME_UNKNOWN,
+                    EngineeringAgentModelDispatchState.REPLAYED_OUTCOME_UNKNOWN,
+                }
+                and failure_kind
+                not in {
+                    EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN,
+                    EngineeringAgentModelFailureKind.GATEWAY_FAILURE,
+                }
+            )
+            or (
+                state
+                in {
+                    EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+                    EngineeringAgentModelDispatchState.REPLAYED_REJECTED,
+                }
+                and failure_kind
+                not in {
+                    EngineeringAgentModelFailureKind.PROVIDER_UNAVAILABLE,
+                    EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR,
+                    EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+                    EngineeringAgentModelFailureKind.QUALIFICATION_REJECTED,
+                    EngineeringAgentModelFailureKind.GATEWAY_RESULT_INVALID,
+                    EngineeringAgentModelFailureKind.GATEWAY_FAILURE,
+                }
+            )
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Agent model dispatch state, Gateway reference, and failure disagree",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_MODEL_CALL_RECEIPT@1",
+            "schema": "ENGINEERING_AGENT_MODEL_CALL_RECEIPT@2",
             "model_call_ref": _text(
                 model_call_ref, "Agent model call reference"
             ),
@@ -142,6 +204,9 @@ class EngineeringAgentModelCallReceipt:
             "role": role.value,
             "state": state.value,
             "provider_dispatch_count": 1 if dispatched else 0,
+            "failure_kind": (
+                failure_kind.value if failure_kind is not None else None
+            ),
             "failure_code": failure_code,
         }
         return cls(
@@ -150,6 +215,7 @@ class EngineeringAgentModelCallReceipt:
             role=role,
             state=state,
             provider_dispatch_count=core["provider_dispatch_count"],
+            failure_kind=failure_kind,
             failure_code=failure_code,
             digest=digest_of(core),
         )
@@ -177,6 +243,7 @@ class EngineeringAgentModelCallFailure(DomainError):
             gateway_call_ref=receipt.gateway_call_ref,
             role=receipt.role,
             state=receipt.state,
+            failure_kind=receipt.failure_kind,
             failure_code=receipt.failure_code,
         )
         if receipt != expected or receipt.successful:
@@ -494,6 +561,49 @@ class EngineeringAgentWorkState:
     review_input_digest: Digest | None
     proposal_digest: Digest
     digest: Digest
+
+
+class EngineeringAgentWorkStateRepository(Protocol):
+    """Application-owned store for only the last successfully committed state."""
+
+    def load(self, conversation_id: StableId) -> EngineeringAgentWorkState | None: ...
+
+    def commit(self, work_state: EngineeringAgentWorkState) -> None: ...
+
+
+class InMemoryEngineeringAgentWorkStateRepository:
+    """Share sealed Conversation state without sharing failed-attempt intermediates."""
+
+    def __init__(self) -> None:
+        self._states: dict[StableId, EngineeringAgentWorkState] = {}
+        self._lock = Lock()
+
+    def load(self, conversation_id: StableId) -> EngineeringAgentWorkState | None:
+        if not isinstance(conversation_id, StableId):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Agent Work State lookup requires a Conversation ID",
+            )
+        with self._lock:
+            return self._states.get(conversation_id)
+
+    def commit(self, work_state: EngineeringAgentWorkState) -> None:
+        if not isinstance(work_state, EngineeringAgentWorkState):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Agent Work State repository accepts only sealed Work State",
+            )
+        with self._lock:
+            current = self._states.get(work_state.conversation_id)
+            if current is not None and (
+                work_state.work_state_id != current.work_state_id
+                or work_state.revision.value <= current.revision.value
+            ):
+                raise DomainError(
+                    ErrorCode.REVISION_CONFLICT,
+                    "Agent Work State successor does not extend committed Conversation state",
+                )
+            self._states[work_state.conversation_id] = work_state
 
 
 @dataclass(frozen=True, slots=True)
@@ -1249,6 +1359,64 @@ class EngineeringAgentResponseControl(Protocol):
     ) -> EngineeringAgentDeliveryAuthorization: ...
 
 
+class SealedEngineeringAgentResponseControl:
+    """Authorize only one exact independently approved attempt result."""
+
+    def __init__(self) -> None:
+        self._issued: set[Digest] = set()
+        self._lock = Lock()
+
+    def authorize(
+        self, request: EngineeringAgentDeliveryRequest
+    ) -> EngineeringAgentDeliveryAuthorization:
+        if (
+            not isinstance(request, EngineeringAgentDeliveryRequest)
+            or request.review.decision
+            is not EngineeringAgentReviewDecision.APPROVED
+            or request.review.findings
+            or request.work_state.digest != request.package.origin_work_state_digest
+            or request.work_state.digest != request.draft.work_state_digest
+            or request.package.digest != request.draft.package_digest
+            or request.work_state.digest != request.review.work_state_digest
+            or request.package.digest != request.review.package_digest
+            or request.draft.digest != request.review.answer_digest
+            or request.work_state.turn_id != request.package.turn_id
+            or request.work_state.turn_id != request.draft.turn_id
+            or request.work_state.turn_id != request.review.turn_id
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Response Control requires one exact independently approved result chain",
+            )
+        request_digest = digest_of(
+            {
+                "schema": "ENGINEERING_AGENT_DELIVERY_REQUEST@1",
+                "turn_request_digest": request.turn_request_digest.value,
+                "work_state_digest": request.work_state.digest.value,
+                "package_digest": request.package.digest.value,
+                "answer_digest": request.draft.digest.value,
+                "review_digest": request.review.digest.value,
+            }
+        )
+        with self._lock:
+            if request_digest in self._issued:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "Response Control cannot authorize the same result twice",
+                )
+            self._issued.add(request_digest)
+        return EngineeringAgentDeliveryAuthorization.create(
+            authorization_ref=(
+                f"engineering-agent-delivery:{request_digest.value}"
+            ),
+            turn_request_digest=request.turn_request_digest,
+            work_state_digest=request.work_state.digest,
+            package_digest=request.package.digest,
+            answer_digest=request.draft.digest,
+            review_digest=request.review.digest,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentLoopLimits:
     maximum_agent_steps: int = 12
@@ -1300,6 +1468,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
         require_tool_authority_receipts: bool = False,
         require_model_call_receipts: bool = False,
+        work_state_repository: EngineeringAgentWorkStateRepository | None = None,
         id_generator: IdGenerator | None = None,
     ) -> None:
         operations = tuple(available_operations)
@@ -1329,13 +1498,15 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         self._limits = limits
         self._require_tool_authority_receipts = require_tool_authority_receipts
         self._require_model_call_receipts = require_model_call_receipts
+        self._work_state_repository = (
+            work_state_repository
+            or InMemoryEngineeringAgentWorkStateRepository()
+        )
         self._id_generator = id_generator or Uuid4IdGenerator()
         self._id_lock = Lock()
         self._model_call_lock = Lock()
-        self._state_lock = Lock()
         self._issued_ids: set[StableId] = set()
         self._issued_model_call_refs: set[str] = set()
-        self._current_work_states: dict[StableId, EngineeringAgentWorkState] = {}
 
     def execute(
         self, request: EngineeringTurnExecutionRequest
@@ -1348,7 +1519,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             outcome = self._execute_bounded(request, audit, initial_previous)
         except EngineeringAgentModelCallFailure as exc:
             failure_code = _model_failure_code(exc.receipt)
-            if audit.expected_model_role is not exc.receipt.role:
+            provider_failure_classification = None
+            provider_failure_code = None
+            role_matches = audit.expected_model_role is exc.receipt.role
+            if not role_matches:
                 failure_code = "AGENT_PROTOCOL_VIOLATION"
             try:
                 _record_model_receipt(audit, exc.receipt)
@@ -1357,6 +1531,15 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
             except DomainError:
                 failure_code = "AGENT_PROTOCOL_VIOLATION"
+            else:
+                if role_matches:
+                    provider_failure_classification = (
+                        _provider_fallback_classification(
+                            exc.receipt.failure_kind
+                        )
+                    )
+                    if provider_failure_classification is not None:
+                        provider_failure_code = exc.receipt.failure_code
             outcome = self._failed_outcome(
                 request=request,
                 work_state=audit.work_state,
@@ -1366,6 +1549,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 provider_dispatch_count=audit.provider_dispatch_count,
                 model_dispatch_receipt_refs=_model_receipt_refs(audit),
                 failure_code=failure_code,
+                provider_failure_classification=(
+                    provider_failure_classification
+                ),
+                provider_failure_code=provider_failure_code,
             )
         except DomainError:
             outcome = self._failed_outcome(
@@ -1539,6 +1726,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     provider_dispatch_count=audit.provider_dispatch_count,
                     model_dispatch_receipt_refs=_model_receipt_refs(audit),
                     failure_code="AGENT_REVIEW_LIMIT_REACHED",
+                    provider_failure_classification=(
+                        EngineeringProviderFailureClassification.MODEL_REVIEW_REJECTED
+                    ),
+                    provider_failure_code="AGENT_REVIEW_LIMIT_REACHED",
                 )
             audit.expected_model_role = (
                 EngineeringAgentModelRole.INDEPENDENT_REVIEWER
@@ -2275,6 +2466,8 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         provider_dispatch_count: int,
         model_dispatch_receipt_refs: tuple[str, ...],
         failure_code: str,
+        provider_failure_classification: EngineeringProviderFailureClassification | None = None,
+        provider_failure_code: str | None = None,
     ) -> EngineeringTurnExecutionOutcome:
         message = (
             "主工程 Agent 在本 Turn 的高安全熔断内未形成可授权结果；"
@@ -2326,6 +2519,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             review_ref=(review.review_id.value if review else None),
             provider_dispatch_count=provider_dispatch_count,
             model_dispatch_receipt_refs=model_dispatch_receipt_refs,
+            provider_failure_classification=(
+                provider_failure_classification
+            ),
+            provider_failure_code=provider_failure_code,
         )
 
     def _new_id(self, kind: str) -> StableId:
@@ -2373,8 +2570,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
     ) -> EngineeringAgentWorkState | None:
         conversation_id = request.snapshot_before.conversation.conversation_id
         context = request.snapshot_before.context
-        with self._state_lock:
-            previous = self._current_work_states.get(conversation_id)
+        previous = self._work_state_repository.load(conversation_id)
         if context.work_state_ref is None:
             if previous is not None:
                 raise DomainError(
@@ -2399,17 +2595,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         return previous
 
     def _remember_work_state(self, work_state: EngineeringAgentWorkState) -> None:
-        with self._state_lock:
-            current = self._current_work_states.get(work_state.conversation_id)
-            if current is not None and (
-                work_state.work_state_id != current.work_state_id
-                or work_state.revision.value <= current.revision.value
-            ):
-                raise DomainError(
-                    ErrorCode.REVISION_CONFLICT,
-                    "Agent Work State successor does not extend the current revision",
-                )
-            self._current_work_states[work_state.conversation_id] = work_state
+        self._work_state_repository.commit(work_state)
 
 
 def _validate_delivery_authorization(
@@ -2516,6 +2702,7 @@ def _record_model_receipt(
         gateway_call_ref=receipt.gateway_call_ref,
         role=receipt.role,
         state=receipt.state,
+        failure_kind=receipt.failure_kind,
         failure_code=receipt.failure_code,
     )
     if receipt != expected or any(
@@ -2548,6 +2735,25 @@ def _model_failure_code(receipt: EngineeringAgentModelCallReceipt) -> str:
             "a successful model receipt cannot produce a failure code",
         )
     return f"{role}_{outcome}"
+
+
+def _provider_fallback_classification(
+    failure_kind: EngineeringAgentModelFailureKind | None,
+) -> EngineeringProviderFailureClassification | None:
+    return {
+        EngineeringAgentModelFailureKind.PROVIDER_UNAVAILABLE: (
+            EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE
+        ),
+        EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR: (
+            EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+        ),
+        EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN: (
+            EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN
+        ),
+        EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID: (
+            EngineeringProviderFailureClassification.PROVIDER_OUTPUT_INVALID
+        ),
+    }.get(failure_kind)
 
 
 def _unique_bounded_texts(values: Sequence[str], label: str) -> tuple[str, ...]:
@@ -2597,6 +2803,7 @@ __all__ = [
     "EngineeringAgentModelCallFailure",
     "EngineeringAgentModelCallReceipt",
     "EngineeringAgentModelDispatchState",
+    "EngineeringAgentModelFailureKind",
     "EngineeringAgentModelRole",
     "EngineeringAgentResponseControl",
     "EngineeringAgentResponseKind",
@@ -2617,6 +2824,9 @@ __all__ = [
     "EngineeringAgentToolRequest",
     "EngineeringAgentToolResult",
     "EngineeringAgentWorkPhase",
+    "EngineeringAgentWorkStateRepository",
     "EngineeringAgentWorkState",
     "EngineeringAgentWorkStateProposal",
+    "InMemoryEngineeringAgentWorkStateRepository",
+    "SealedEngineeringAgentResponseControl",
 ]

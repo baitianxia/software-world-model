@@ -438,6 +438,20 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
         "model_dispatch_receipt_refs": list(
             turn.model_dispatch_receipt_refs
         ),
+        "provider_failure_classification": (
+            turn.provider_failure_classification.value
+            if turn.provider_failure_classification is not None
+            else None
+        ),
+        "provider_failure_code": turn.provider_failure_code,
+        "provider_route_receipt_ref": turn.provider_route_receipt_ref,
+        "provider_attempt_receipt_refs": list(
+            turn.provider_attempt_receipt_refs
+        ),
+        "fallback_provider_attempt_count": (
+            turn.fallback_provider_attempt_count
+        ),
+        "provider_duplicate_cost_risk": turn.provider_duplicate_cost_risk,
         "retry_count": turn.retry_count,
         "quality_status": turn.quality_status,
         "production_activation": turn.production_activation,

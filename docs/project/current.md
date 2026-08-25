@@ -4,15 +4,15 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-25
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-model-boundary-local-candidate-next-fallback-launcher-freeze
+worktree_status: iteration-010-slice-001-provider-route-composition-local-candidate-next-real-runtime-freeze
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
-live_model_path: pdr-004-access-pass-agent-evidence-tools-and-model-boundary-local-candidates-fallback-not-integrated-not-qualified-not-live-production-not-activated
+live_model_path: pdr-004-access-pass-agent-evidence-model-boundary-and-provider-route-composition-local-candidates-real-runtime-not-attested-not-qualified-not-live-production-not-activated
 ---
 
 # 当前工作上下文
@@ -65,8 +65,10 @@ Application-sealed Context 的语义多轮 Chat，每轮独立 Evidence/Answer/R
 Review Finding 与 Delivery binding。`FINDING-010-098` 再形成 `EVIDENCE_TOOLS_LOCAL_CANDIDATE`：复用现有 World Model projector 与 Source
 Broker/Worker，并把可重算的逐 Turn append-only Ledger prefix 和 Citation receipt 密封进双分区 Observation/Package。Provider-backed 主
 Agent/Reviewer 的 sealed no-tools input/output、逐 dispatch Disclosure/Gateway receipt、失败计数和 non-dispatching candidate preflight 又由
-`FINDING-010-099` 形成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`。ADR-017 双 Provider fallback、真实 Adapter/transport 与 fixed launcher wiring
-仍是 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`；不能把 offline fixture、temp Git、Access、旧实现或旧 Result 追认为 mall 五轮 Chat
+`FINDING-010-099` 形成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`；`FINDING-010-100` 又以 typed owner classification、两个隔离 full-chain attempt、
+committed Work State repository、logical Turn 分账/duplicate-cost risk/late quarantine 和 non-starting fixed Browser composition 形成
+`PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。真实 Ark/DeepSeek Adapter/transport/credential、current runtime/session 与 Access-only fixed
+command 仍是 `NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`；不能把 offline fixture、temp Git、Access、旧实现或旧 Result 追认为 mall 五轮 Chat
 或答案质量能力。
 PDR-003 的时间盒、根因、测试后置、Ark→DeepSeek 和成本规则继续有效；其孤立一题 canary 对 Chat 被收窄为一个五轮 Conversation，每个
 发生 Provider dispatch 的 Turn 分别计 live attempt。Provider 前最多一次本地/Mock Access smoke 的额度已由
@@ -129,7 +131,7 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-004 Chat Alpha** | `V-ALPHA-ACCESS-001` 已在 clean `cf2883b…` 上通过真实 browser；`FINDING-010-097—099` 又形成 Application-owned Agent、evidence tools 与 sealed model boundary 本地候选，当前定向组合 86/86。双 Provider fallback、真实 Provider/fixed launcher 与 mall 五轮 Chat 仍未集成、资格化或 live；后续 Chat/Quality/XD/Comparison/Preview 继续 blocking，Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
+| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-004 Chat Alpha** | `V-ALPHA-ACCESS-001` 已在 clean `cf2883b…` 上通过真实 browser；`FINDING-010-097—100` 又形成 Application-owned Agent、evidence tools、sealed model boundary 与 Ark→DeepSeek route/fixed Browser composition 本地候选，最新相关组合 76/76。真实 Adapter/transport/credential/runtime、Access-only command 切换与 mall 五轮 Chat 仍未 attested、资格化或 live；后续 Chat/Quality/XD/Comparison/Preview 继续 blocking，Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
@@ -162,7 +164,10 @@ Question Evidence Package → Answer → independent Reviewer` 技术纵切、�
 `FINDING-010-098` 又把现有 World Model projector、Source Broker/Worker、逐 Turn Ledger prefix 与 Citation receipt 接入该端口，定向组合
 61/61。`FINDING-010-099` 进一步闭合单 Provider 主 Agent/fresh Reviewer 的 closed input/output、逐 dispatch Disclosure/Gateway receipt、
 pre-dispatch/replay/fresh dispatch 计数以及不触发 listener/credential/Source/Provider 的 candidate preflight，当前相关组合为 86/86。下一最早
-缺口因此收窄为 ADR-017 双 route/fallback isolation、真实 Adapter/transport 与 fixed launcher wiring 的 clean freeze；在此之前不取 live grant。
+`FINDING-010-100` 随后闭合 ADR-017 双 route/fallback isolation 与 fixed Browser Application composition：只有五类 trusted classification 可
+fallback，两个 attempt 从 immutable original Turn/Context 独立运行、分账并保持 retry 0，outcome unknown 标记重复计费风险，失败 primary
+中间态不进入 committed Work State。最新相关组合 76/76；下一最早缺口收窄为真实 Ark/DeepSeek Adapter/transport/credential-reference、
+Source/World Model runtime 与 Access-only fixed command 的 exact clean freeze；在此之前不取 live grant。
 
 三轮检查点只是同一冻结五轮 live canary 的中间交付，不是独立三轮 canary；若在此停止，五轮 canary 记为 `INCOMPLETE / FAIL`。
 每个检查点都是立即用户交付和停止点，不是新 Slice 或授权阶段，也不能恢复暂停或失效的授权。计划、测试、文档和内部 Gate 完成都不算用户可见增量；错过检查点时

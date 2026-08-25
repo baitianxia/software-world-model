@@ -28,11 +28,13 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentInvocation,
     EngineeringAgentLoopLimits,
     EngineeringAgentModelDispatchState,
+    EngineeringAgentModelFailureKind,
     EngineeringAgentToolOperation,
 )
 from software_world_model.application_services.engineering_conversation import (
     ConversationTurnState,
     EngineeringChatBinding,
+    EngineeringProviderFailureClassification,
     EngineeringTurnExecutionOutcome,
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
@@ -63,7 +65,12 @@ class OfflineAgentAdapter:
     provider_type = "AGENT_OFFLINE_FIXTURE"
     adapter_version = "1"
 
-    def __init__(self, *, outcome_unknown: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        outcome_unknown: bool = False,
+        failure_code: ErrorCode | None = None,
+    ) -> None:
         self.capabilities = ProviderAdapterCapabilities(
             no_external_access=True,
             hidden_context_disabled=True,
@@ -75,12 +82,15 @@ class OfflineAgentAdapter:
             qualified_model_fingerprints=(),
         )
         self.outcome_unknown = outcome_unknown
+        self.failure_code = failure_code
         self.requests = []
 
     def invoke(self, request):
         self.requests.append(request)
         if self.outcome_unknown:
             raise ProviderOutcomeUnknown("fixture connection outcome unknown")
+        if self.failure_code is not None:
+            raise DomainError(self.failure_code, "fixture Provider failure")
         return AdapterResponse.create(
             provider_request_id="agent-fixture-request-1",
             actual_model_fingerprint="agent-fixture-model@1",
@@ -196,6 +206,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self,
         *,
         outcome_unknown: bool = False,
+        failure_code: ErrorCode | None = None,
         authority_binding_digest=None,
     ):
         binding = _binding()
@@ -223,7 +234,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             configuration=configuration,
             clock=lambda: self.now,
         )
-        adapter = OfflineAgentAdapter(outcome_unknown=outcome_unknown)
+        adapter = OfflineAgentAdapter(
+            outcome_unknown=outcome_unknown,
+            failure_code=failure_code,
+        )
         gateway = ModelGateway(
             SqliteModelGatewayRepository(
                 self.database,
@@ -292,6 +306,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model.audits[0].receipt.failure_code,
             ErrorCode.QUALIFICATION_INVALID.value,
         )
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.QUALIFICATION_REJECTED,
+        )
+        self.assertIsNone(submission.turn.provider_failure_classification)
         self.assertEqual(len(authorizer.disclosure_requests), 1)
         self.assertIn(
             "$.turn.user_message.content",
@@ -335,6 +354,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model.audits[0].receipt.state,
             EngineeringAgentModelDispatchState.PRE_DISPATCH_REJECTED,
         )
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PRE_DISPATCH_REJECTED,
+        )
+        self.assertIsNone(submission.turn.provider_failure_classification)
         self.assertIsNone(model.audits[0].disclosure_authorization_digest)
 
     def test_outcome_unknown_is_one_dispatch_and_zero_retry(self) -> None:
@@ -358,6 +382,67 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model.audits[0].receipt.state,
             EngineeringAgentModelDispatchState.DISPATCHED_OUTCOME_UNKNOWN,
         )
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN,
+        )
+        self.assertEqual(
+            submission.turn.provider_failure_classification,
+            EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN,
+        )
+        self.assertEqual(
+            submission.turn.provider_failure_code,
+            "PROVIDER_OUTCOME_UNKNOWN",
+        )
+
+    def test_sealed_http_failure_is_fallback_eligible(self) -> None:
+        service, model, _, adapter, _, _ = self._service(
+            failure_code=ErrorCode.PROVIDER_HTTP_ERROR
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 1)
+        self.assertEqual(len(adapter.requests), 1)
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR,
+        )
+        self.assertEqual(
+            submission.turn.provider_failure_classification,
+            EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR,
+        )
+        self.assertEqual(
+            submission.turn.provider_failure_code,
+            ErrorCode.PROVIDER_HTTP_ERROR.value,
+        )
+
+    def test_gateway_owned_failure_cannot_masquerade_as_provider_unavailable(self) -> None:
+        service, model, _, adapter, _, _ = self._service(
+            failure_code=ErrorCode.AUTHORITY_RECORD_INCONSISTENT
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 1)
+        self.assertEqual(len(adapter.requests), 1)
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.GATEWAY_FAILURE,
+        )
+        self.assertIsNone(submission.turn.provider_failure_classification)
 
     def test_closed_decoders_inject_trusted_call_identity_and_reject_extra_fields(self) -> None:
         binding = _binding()

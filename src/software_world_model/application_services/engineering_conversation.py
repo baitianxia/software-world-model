@@ -64,6 +64,16 @@ class ConversationTurnState(str, Enum):
     FAILED = "FAILED"
 
 
+class EngineeringProviderFailureClassification(str, Enum):
+    """Closed ADR-017 reasons that may authorize one fallback attempt."""
+
+    PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
+    PROVIDER_HTTP_ERROR = "PROVIDER_HTTP_ERROR"
+    PROVIDER_OUTCOME_UNKNOWN = "PROVIDER_OUTCOME_UNKNOWN"
+    PROVIDER_OUTPUT_INVALID = "PROVIDER_OUTPUT_INVALID"
+    MODEL_REVIEW_REJECTED = "MODEL_REVIEW_REJECTED"
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringChatBinding:
     product_version: str
@@ -320,6 +330,12 @@ class EngineeringConversationTurn:
     delivery_state: str
     provider_dispatch_count: int
     model_dispatch_receipt_refs: tuple[str, ...]
+    provider_failure_classification: EngineeringProviderFailureClassification | None
+    provider_failure_code: str | None
+    provider_route_receipt_ref: str | None
+    provider_attempt_receipt_refs: tuple[str, ...]
+    fallback_provider_attempt_count: int
+    provider_duplicate_cost_risk: bool
     retry_count: int
     quality_status: str
     production_activation: str
@@ -390,6 +406,12 @@ class EngineeringTurnExecutionOutcome:
     delivery_authorization_ref: str | None
     provider_dispatch_count: int
     model_dispatch_receipt_refs: tuple[str, ...]
+    provider_failure_classification: EngineeringProviderFailureClassification | None
+    provider_failure_code: str | None
+    provider_route_receipt_ref: str | None
+    provider_attempt_receipt_refs: tuple[str, ...]
+    fallback_provider_attempt_count: int
+    provider_duplicate_cost_risk: bool
     retry_count: int
     quality_status: str
 
@@ -415,6 +437,10 @@ class EngineeringTurnExecutionOutcome:
         provider_dispatch_count: int,
         quality_status: str,
         model_dispatch_receipt_refs: Sequence[str] = (),
+        provider_route_receipt_ref: str | None = None,
+        provider_attempt_receipt_refs: Sequence[str] = (),
+        fallback_provider_attempt_count: int = 0,
+        provider_duplicate_cost_risk: bool = False,
     ) -> "EngineeringTurnExecutionOutcome":
         return cls(
             request_digest=request_digest,
@@ -439,6 +465,12 @@ class EngineeringTurnExecutionOutcome:
             delivery_authorization_ref=delivery_authorization_ref,
             provider_dispatch_count=provider_dispatch_count,
             model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
+            provider_failure_classification=None,
+            provider_failure_code=None,
+            provider_route_receipt_ref=provider_route_receipt_ref,
+            provider_attempt_receipt_refs=tuple(provider_attempt_receipt_refs),
+            fallback_provider_attempt_count=fallback_provider_attempt_count,
+            provider_duplicate_cost_risk=provider_duplicate_cost_risk,
             retry_count=0,
             quality_status=quality_status,
         )
@@ -464,6 +496,12 @@ class EngineeringTurnExecutionOutcome:
         review_ref: str | None = None,
         provider_dispatch_count: int = 0,
         model_dispatch_receipt_refs: Sequence[str] = (),
+        provider_failure_classification: EngineeringProviderFailureClassification | None = None,
+        provider_failure_code: str | None = None,
+        provider_route_receipt_ref: str | None = None,
+        provider_attempt_receipt_refs: Sequence[str] = (),
+        fallback_provider_attempt_count: int = 0,
+        provider_duplicate_cost_risk: bool = False,
     ) -> "EngineeringTurnExecutionOutcome":
         return cls(
             request_digest=request_digest,
@@ -488,6 +526,12 @@ class EngineeringTurnExecutionOutcome:
             delivery_authorization_ref=None,
             provider_dispatch_count=provider_dispatch_count,
             model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
+            provider_failure_classification=provider_failure_classification,
+            provider_failure_code=provider_failure_code,
+            provider_route_receipt_ref=provider_route_receipt_ref,
+            provider_attempt_receipt_refs=tuple(provider_attempt_receipt_refs),
+            fallback_provider_attempt_count=fallback_provider_attempt_count,
+            provider_duplicate_cost_risk=provider_duplicate_cost_risk,
             retry_count=0,
             quality_status="NOT_ACCEPTED",
         )
@@ -906,7 +950,11 @@ def _execution_error_outcome(
         ),
         reducer_status="AGENT_EXECUTION_FAILED_CLOSED",
         work_state_ref=request.snapshot_before.context.work_state_ref,
-        work_state_revision=request.snapshot_before.context.work_state_revision,
+        work_state_revision=(
+            request.snapshot_before.context.work_state_revision
+            if request.snapshot_before.context.work_state_ref is not None
+            else None
+        ),
         work_state_digest=request.snapshot_before.context.work_state_digest,
         failure_code=failure_code,
         failure_message=failure_message,
@@ -978,6 +1026,60 @@ def _validate_execution_outcome(
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "model dispatch receipt references must be unique",
+        )
+    classification = outcome.provider_failure_classification
+    provider_failure_code = _optional_text(
+        outcome.provider_failure_code, "Provider failure code"
+    )
+    if classification is not None and not isinstance(
+        classification, EngineeringProviderFailureClassification
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider failure classification is invalid",
+        )
+    if (classification is None) != (provider_failure_code is None):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider failure classification and raw code must be present together",
+        )
+    route_receipt_ref = _optional_text(
+        outcome.provider_route_receipt_ref, "Provider route receipt reference"
+    )
+    attempt_receipts = tuple(
+        _text(item, "Provider attempt receipt reference")
+        for item in outcome.provider_attempt_receipt_refs
+    )
+    if len(attempt_receipts) != len(set(attempt_receipts)):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider attempt receipt references must be unique",
+        )
+    if (
+        type(outcome.fallback_provider_attempt_count) is not int
+        or outcome.fallback_provider_attempt_count not in {0, 1}
+        or type(outcome.provider_duplicate_cost_risk) is not bool
+        or (
+            route_receipt_ref is None
+            and (
+                attempt_receipts
+                or outcome.fallback_provider_attempt_count != 0
+                or outcome.provider_duplicate_cost_risk
+            )
+        )
+        or (
+            route_receipt_ref is not None
+            and len(attempt_receipts)
+            != 1 + outcome.fallback_provider_attempt_count
+        )
+        or (
+            outcome.provider_duplicate_cost_risk
+            and outcome.fallback_provider_attempt_count != 1
+        )
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider route, attempt count, and duplicate-cost audit disagree",
         )
     available_user_messages = {
         item.message_id
@@ -1083,6 +1185,11 @@ def _validate_execution_outcome(
             "only conclusions reviewed before this Turn can be newly superseded",
         )
     if outcome.state is ConversationTurnState.SUCCEEDED:
+        if classification is not None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "successful Turn cannot carry a Provider failure classification",
+            )
         if outcome.assistant_kind not in {
             ConversationMessageKind.ANSWER,
             ConversationMessageKind.CLARIFICATION,
@@ -1153,6 +1260,15 @@ def _validate_execution_outcome(
             )
 
 
+def validate_engineering_turn_execution_outcome(
+    request: EngineeringTurnExecutionRequest,
+    outcome: EngineeringTurnExecutionOutcome,
+) -> None:
+    """Validate a Turn executor result before another Application owner trusts it."""
+
+    _validate_execution_outcome(request, outcome)
+
+
 def _turn(
     *,
     request: EngineeringTurnExecutionRequest,
@@ -1163,7 +1279,7 @@ def _turn(
     completed_at: datetime,
 ) -> EngineeringConversationTurn:
     core = {
-        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@1",
+        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@2",
         "turn_id": request.turn_id.value,
         "result_id": request.result_id.value,
         "conversation_id": request.snapshot_before.conversation.conversation_id.value,
@@ -1200,6 +1316,18 @@ def _turn(
         ),
         "provider_dispatch_count": outcome.provider_dispatch_count,
         "model_dispatch_receipt_refs": outcome.model_dispatch_receipt_refs,
+        "provider_failure_classification": (
+            outcome.provider_failure_classification.value
+            if outcome.provider_failure_classification is not None
+            else None
+        ),
+        "provider_failure_code": outcome.provider_failure_code,
+        "provider_route_receipt_ref": outcome.provider_route_receipt_ref,
+        "provider_attempt_receipt_refs": outcome.provider_attempt_receipt_refs,
+        "fallback_provider_attempt_count": (
+            outcome.fallback_provider_attempt_count
+        ),
+        "provider_duplicate_cost_risk": outcome.provider_duplicate_cost_risk,
         "retry_count": outcome.retry_count,
         "quality_status": outcome.quality_status,
         "production_activation": "NOT_EXECUTED",
@@ -1231,6 +1359,14 @@ def _turn(
         delivery_state=core["delivery_state"],
         provider_dispatch_count=outcome.provider_dispatch_count,
         model_dispatch_receipt_refs=outcome.model_dispatch_receipt_refs,
+        provider_failure_classification=(
+            outcome.provider_failure_classification
+        ),
+        provider_failure_code=outcome.provider_failure_code,
+        provider_route_receipt_ref=outcome.provider_route_receipt_ref,
+        provider_attempt_receipt_refs=outcome.provider_attempt_receipt_refs,
+        fallback_provider_attempt_count=outcome.fallback_provider_attempt_count,
+        provider_duplicate_cost_risk=outcome.provider_duplicate_cost_risk,
         retry_count=outcome.retry_count,
         quality_status=outcome.quality_status,
         production_activation="NOT_EXECUTED",

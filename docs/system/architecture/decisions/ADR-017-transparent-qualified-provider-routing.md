@@ -5,9 +5,9 @@ status: accepted
 authority: normative
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
-derived_from: [FINDING-010-092]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
+derived_from: [FINDING-010-092, FINDING-010-100]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_provider_launcher.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # ADR-017：对用户透明的合格 Provider 有序路由
@@ -57,8 +57,10 @@ request 不重试；但既有规则把一次 Session 固定为单一 Provider，
   关系和相关 Context 摘要。两条完整链分别计量成本；fallback 可能增加成本，
   特别是 primary outcome unknown 时。
 - 不能以 fallback 掩盖应用、Source 或安全缺陷，也不能把两个 attempt 的“最好部分”拼成答案。
-- `FINDING-010-092` 记录当前实现只支持单 Provider frozen session，尚未证明本决定。ADR/Contract 是目标 System 语义；在产品代码、测试和
-  live audit 闭合前，Operations 必须标记为 `NOT_IMPLEMENTED / NOT_QUALIFIED`，不得宣称透明 fallback 已可用。
+- `FINDING-010-100` 已以 Application-owned typed classification、两个独立 attempt authority/runtime/receipt、committed Work State 隔离、
+  logical Turn 分账、duplicate-cost risk 和 non-starting fixed Browser composition 形成确定性本地候选。该候选没有执行真实 Adapter/transport、
+  credential、Provider 或 Browser；Operations 必须标记为 `LOCAL_COMPOSITION_CANDIDATE / REAL_RUNTIME_NOT_ATTESTED / NOT_QUALIFIED /
+  NOT_LIVE`，不得宣称透明 fallback 已可供用户使用。
 
 ## Rejected alternatives
 

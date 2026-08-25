@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -48,8 +48,10 @@ Model/Source/Provider、完整 Ledger/Citation 或 launcher，也没有执行五
 把现有 World Model projector、Source Broker/Worker、逐 Turn append-only Ledger prefix 与 Citation receipt 接成
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE`；它没有读取 mall 或执行 live。`FINDING-010-099` 又将单 Provider Agent/Reviewer 的 closed input/output、逐
 dispatch Disclosure/Gateway receipt、失败计数与不执行 I/O 的 launcher candidate preflight 接成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`。
-故下一动作进一步收窄为 ADR-017 双 Provider fallback isolation、真实 Adapter/transport 与 fixed launcher wiring clean freeze，而不是追加
-Access、重复模型边界或宣称 Chat PASS。
+`FINDING-010-100` 随后闭合 ADR-017 typed fallback classification、Ark→DeepSeek 隔离 full-chain attempts、committed Work State、logical
+Turn 分账与 fixed Browser composition，形成 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。故下一动作进一步收窄为真实
+Ark/DeepSeek Adapter/transport/credential-reference、Source/World Model runtime 与 Access-only fixed command Session wiring 的 exact clean
+freeze，而不是追加 Access、重复模型边界或宣称 Chat PASS。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为

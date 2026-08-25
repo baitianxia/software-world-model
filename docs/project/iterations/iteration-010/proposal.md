@@ -87,9 +87,11 @@ route 当时保持 `NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。`FINDING-010-0
 State、Observation/Package、fresh Review Finding 与 Delivery binding 实现为 `AGENT_EXECUTOR_LOCAL_CANDIDATE`；`FINDING-010-098` 又将
 现有 World Model projector、Source Broker/Worker 与可重算的逐 Turn Ledger/Citation receipt 接成 `EVIDENCE_TOOLS_LOCAL_CANDIDATE`。
 `FINDING-010-099` 现又把单 Provider 主 Agent/Reviewer 的 closed no-tools input/output、逐 dispatch Disclosure/Gateway receipt、失败计数与
-non-dispatching candidate preflight 实现为 `MODEL_BOUNDARY_LOCAL_CANDIDATE`。ADR-017 双 Provider fallback、真实 Adapter/transport、Citation
-browser projection 和 fixed launcher 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和
-授权。PDR-003 的时间盒、根因、测试后置、Provider 和成本规则全部继续有效。
+non-dispatching candidate preflight 实现为 `MODEL_BOUNDARY_LOCAL_CANDIDATE`。`FINDING-010-100` 再将 ADR-017 的五类 trusted fallback
+classification、两个隔离 full-chain attempt、committed Work State、logical Turn 分账和 fixed Browser composition 实现为
+`PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。真实 Adapter/transport/credential、Source/World Model runtime、固定命令 Session 接线与
+五轮 Chat 仍为 `NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`，外部 Provider/live Chat 仍须另行 clean freeze 和授权。PDR-003 的时间盒、
+根因、测试后置、Provider 和成本规则全部继续有效。
 
 ## Product-goal alignment and cumulative delta
 

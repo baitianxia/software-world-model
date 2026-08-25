@@ -4,9 +4,9 @@ kind: system-contract
 status: current
 authority: normative
 owners: [application, source, quality, security]
-depends_on: [SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # Engineering Conversation
@@ -25,6 +25,9 @@ Response Control 放行边界继续由原 Owner 拥有。
 
 - Conversational Task Control/Application 是 Conversation、Conversation Revision、Turn、User Message、Accepted Correction、Agent Work
   State Revision、Agent Attempt、Tool Authorization/Observation、Evidence Ledger/Package reference 和不可变 Turn Result 的唯一写者。
+- Application-owned committed Work State repository 只保存成功 Turn 已密封的 Conversation successor。每个 Provider attempt 的 executor、
+  Ledger、Package、Draft 与 Review 是 attempt-local；失败 attempt 不写 committed repository。fresh executor 可从 exact sealed Context 读取
+  已提交 predecessor，但不能从 primary executor 私有内存取得 fallback 输入。
 - 软件世界模型由 Knowledge Engine/Snapshot Owner 持有，可跨 Conversation 复用；对话工作状态不准写入 Snapshot 或冒充正式知识。
 - 主工程 Agent 只提交 Goal/Hypothesis/Plan/Tool/Answer Proposal。它对解决过程具有认知控制，但不拥有业务状态、权限、来源、证据、正式
   知识、Review Decision 或 Delivery Authorization。
@@ -110,6 +113,13 @@ fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显�
 unknown 都使当前 provider attempt 或 Turn 失败关闭。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
 exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不得复用失败 Provider 的隐藏状态或未密封中间产物。
 
+Fallback eligibility 不得从 raw error string 推断。model boundary receipt 必须同时保存原始 owner code 和 trusted failure kind；Application
+只能把 `PROVIDER_UNAVAILABLE / PROVIDER_HTTP_ERROR / PROVIDER_OUTCOME_UNKNOWN / PROVIDER_OUTPUT_INVALID / MODEL_REVIEW_REJECTED`
+五类投影为 route classification。pre-dispatch、qualification、Gateway/repository/result identity、Application、Source、authorization 或
+Security failure 均保持 non-eligible。每个 attempt authority/receipt 绑定 logical Turn parent、route/configuration/session、dispatch/model
+receipts 和 retry 0；logical Turn Result 只取最后一个完整 attempt 的 Outcome，但汇总全部 attempt dispatch。outcome unknown 后启动 fallback
+必须标记 duplicate-cost risk；late primary 固定 `QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
+
 当前独立 Chat Access 已提供 Application-owned Conversation/Turn/Message、不可变 Revision、完整页面消息历史、“新对话”隔离与失败
 Turn 后 Conversation 继续，并已通过真实 browser Access Case。Application-owned bounded executor 也已在确定性 fake ports 上密封跨 Turn
 Work State revision、工具 Observation、support/boundary Package、Answer、fresh Review 与 Delivery Authorization；协议错绑、缺证后无新
@@ -117,8 +127,10 @@ Observation 重写、无进展和资源熔断只关闭当前 Turn。trusted evid
 Retrieval Worker；同一动作可分别密封 support/boundary，每条 Observation 携带 exact Turn/Tool/revision、Application 可重算的完整
 append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 只接受本 Turn 先前签发的 opaque locator。状态为
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
-FALLBACK_NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
+PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / REAL_RUNTIME_NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
 Disclosure 和 typed Gateway receipt；pre-dispatch、fresh dispatch、outcome unknown 与 replay 的计数由 Application 重验，Turn/Browser 只保存
-receipt digest reference。该证据只来自 pure decoder 与 offline Adapter，ADR-017 双 attempt fallback、真实 Provider/fixed launcher、Citation
-browser projection 仍未闭合；旧
+receipt digest reference。Application-owned Ark→DeepSeek router、committed Work State repository、两 attempt receipt、logical Turn 汇总与
+non-starting fixed Browser composition 已通过本地确定性 Gate；预检没有创建 attempt、启动 listener、解析 credential、读取 Source 或 dispatch。
+该证据仍只来自 fake/offline runtime，真实 Ark/DeepSeek Adapter/transport/credential、当前 qualification、Access-only 命令切换、Citation
+内容与五轮 Browser Chat 尚未闭合；旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。
