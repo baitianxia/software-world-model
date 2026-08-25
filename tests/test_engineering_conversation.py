@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from threading import Event, Thread
 import unittest
 
 from software_world_model.application_services.engineering_conversation import (
@@ -9,10 +10,17 @@ from software_world_model.application_services.engineering_conversation import (
     ConversationNotFoundError,
     ConversationTurnState,
     EngineeringChatBinding,
+    EngineeringTurnExecutionOutcome,
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
 )
-from software_world_model.cross_cutting import DomainError, ErrorCode, Revision, StableId
+from software_world_model.cross_cutting import (
+    DomainError,
+    ErrorCode,
+    Revision,
+    StableId,
+    digest_of,
+)
 
 
 class SequentialIdGenerator:
@@ -172,6 +180,172 @@ class EngineeringConversationTests(unittest.TestCase):
         with self.assertRaises(DomainError) as failure:
             InMemoryEngineeringConversationService(ready)
         self.assertEqual(failure.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+
+    def test_same_conversation_rejects_parallel_turn_while_executor_is_running(self) -> None:
+        started = Event()
+        release = Event()
+
+        class BlockingExecutor:
+            def execute(self, request):
+                started.set()
+                if not release.wait(1):
+                    raise RuntimeError("test executor was not released")
+                work_state_digest = digest_of(
+                    {"request": request.request_digest.value}
+                )
+                return EngineeringTurnExecutionOutcome.succeeded(
+                    request_digest=request.request_digest,
+                    assistant_kind=ConversationMessageKind.ANSWER,
+                    assistant_content="已完成当前 Turn。",
+                    included_user_message_ids=(request.user_message.message_id,),
+                    accepted_correction_message_ids=(),
+                    reviewed_conclusion_refs=("answer-ref",),
+                    superseded_conclusion_refs=(),
+                    reducer_status="EXECUTED_APPLICATION_SEALED",
+                    work_state_ref="work-state-ref",
+                    work_state_revision=Revision(1),
+                    work_state_digest=work_state_digest,
+                    evidence_package_ref="package-ref",
+                    answer_ref="answer-ref",
+                    review_ref="review-ref",
+                    delivery_authorization_ref="delivery-ref",
+                    provider_dispatch_count=2,
+                    quality_status="ACCEPTED",
+                )
+
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of({"world_model": "exact"}),
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route",
+            known_limitations=("Alpha only",),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=BlockingExecutor(),
+            id_generator=SequentialIdGenerator(),
+        )
+        conversation = service.create_conversation()
+        result: dict[str, object] = {}
+
+        def submit() -> None:
+            try:
+                result["submission"] = service.submit_turn(
+                    conversation_id=conversation.conversation.conversation_id,
+                    expected_revision=Revision(1),
+                    message="第一个 Turn",
+                )
+            except Exception as exc:  # pragma: no cover - assertion reports it
+                result["error"] = exc
+
+        thread = Thread(target=submit)
+        thread.start()
+        self.assertTrue(started.wait(1))
+        with self.assertRaises(DomainError) as parallel:
+            service.submit_turn(
+                conversation_id=conversation.conversation.conversation_id,
+                expected_revision=Revision(1),
+                message="并行 Turn",
+            )
+        self.assertEqual(parallel.exception.code, ErrorCode.CONTROL_STATE_DENIED)
+        release.set()
+        thread.join(1)
+
+        self.assertFalse(thread.is_alive())
+        self.assertNotIn("error", result)
+        submission = result["submission"]
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.snapshot.conversation.revision, Revision(2))
+
+    def test_invalid_executor_outcome_fails_turn_and_preserves_reviewed_context(self) -> None:
+        class DroppingExecutor:
+            def __init__(self):
+                self.calls = 0
+
+            def execute(self, request):
+                self.calls += 1
+                before = request.snapshot_before.context
+                work_state_digest = digest_of(
+                    {
+                        "request": request.request_digest.value,
+                        "call": self.calls,
+                    }
+                )
+                return EngineeringTurnExecutionOutcome.succeeded(
+                    request_digest=request.request_digest,
+                    assistant_kind=ConversationMessageKind.ANSWER,
+                    assistant_content=f"候选答案 {self.calls}",
+                    included_user_message_ids=(
+                        *before.included_user_message_ids,
+                        request.user_message.message_id,
+                    ),
+                    accepted_correction_message_ids=(
+                        before.accepted_correction_message_ids
+                    ),
+                    reviewed_conclusion_refs=(f"answer-{self.calls}",),
+                    superseded_conclusion_refs=before.superseded_conclusion_refs,
+                    reducer_status="EXECUTED_APPLICATION_SEALED",
+                    work_state_ref=before.work_state_ref or "work-state-ref",
+                    work_state_revision=(
+                        Revision(1)
+                        if before.work_state_ref is None
+                        else before.work_state_revision.next()
+                    ),
+                    work_state_digest=work_state_digest,
+                    evidence_package_ref=f"package-{self.calls}",
+                    answer_ref=f"answer-{self.calls}",
+                    review_ref=f"review-{self.calls}",
+                    delivery_authorization_ref=f"delivery-{self.calls}",
+                    provider_dispatch_count=2,
+                    quality_status="ACCEPTED",
+                )
+
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of({"world_model": "exact"}),
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route",
+            known_limitations=("Alpha only",),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=DroppingExecutor(),
+            id_generator=SequentialIdGenerator(),
+        )
+        conversation = service.create_conversation()
+        first = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="第一个问题",
+        )
+        second = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(2),
+            message="第二个问题",
+        )
+
+        self.assertEqual(first.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(second.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(
+            second.turn.failure_code,
+            "TURN_EXECUTOR_PROTOCOL_VIOLATION",
+        )
+        self.assertEqual(second.turn.provider_dispatch_count, 2)
+        self.assertEqual(
+            second.snapshot.context.reviewed_conclusion_refs,
+            first.snapshot.context.reviewed_conclusion_refs,
+        )
+        self.assertEqual(
+            second.snapshot.context.work_state_digest,
+            first.snapshot.context.work_state_digest,
+        )
+        self.assertEqual(second.snapshot.conversation.revision, Revision(3))
 
 
 if __name__ == "__main__":

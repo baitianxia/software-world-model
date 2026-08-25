@@ -246,5 +246,8 @@ iteration: ITER-010
   继续为 NOT-RUN，旧 QA 入口保持兼容身份。
 - [FINDING-010-096](FINDING-010-096.md)：clean `cf2883b…` 上真实 fixed-command listener 和 in-app Browser 证明失败 Turn 隔离、完整历史、
   新 Conversation 消息隔离及零 Provider 调度成立；`V-ALPHA-ACCESS-001` 更新为 `PASS / access-only`，所有 Chat/Quality 后续 Case 仍 NOT-RUN。
+- [FINDING-010-097](FINDING-010-097.md)：Application-owned 主 Agent loop、跨 Turn Work State、密封 Observation/Package、fresh Review
+  Finding 回路、exact Delivery binding 与失败 Turn 隔离已形成本地确定性候选并通过 48/48；真实 Provider/World Model/Source/Ledger/Citation、
+  launcher wiring、五轮 live Chat 和 Production 仍未集成、资格化或执行。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

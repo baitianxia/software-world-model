@@ -18,9 +18,9 @@ ENGINEERING_CHAT_BROWSER_HTML = r'''<!doctype html>
   </header>
   <main>
     <aside class="sidebar">
-      <p class="eyebrow">CHAT ACCESS</p>
+      <p id="experience-label" class="eyebrow">CHAT ACCESS</p>
       <h1>持续对话入口</h1>
-      <p class="lede">本版本先验证 Conversation、Turn、消息历史和失败隔离。Provider 与工程 Agent 尚未接通时，每个 Turn 会如实失败，不会伪造答案。</p>
+      <p id="experience-scope" class="lede">正在读取当前运行的实际能力边界…</p>
       <button id="new-conversation" class="secondary" type="button">＋ 新对话</button>
       <div class="status"><span id="status-dot" class="dot"></span><div><strong id="runtime-status">正在读取运行状态…</strong><p id="provider-status" class="small"></p></div></div>
       <div class="facts">
@@ -82,6 +82,11 @@ function setNotice(message, error=false) {
 
 function renderHealth(value) {
   health=value;
+  const agentEnabled=value.capabilities.semantic_agent_execution;
+  byId("experience-label").textContent=agentEnabled?"ENGINEERING CHAT":"CHAT ACCESS";
+  byId("experience-scope").textContent=agentEnabled
+    ?"本运行已接入受控主工程 Agent 执行器；只有经过当前 Evidence、fresh Review 和 Delivery Authorization 的 Turn 才会显示为成功。答案质量仍待真实验收。"
+    :"本运行只验证 Conversation、Turn、消息历史和失败隔离。Provider 与工程 Agent 未接通，每个 Turn 会如实失败，不会伪造答案。";
   byId("runtime-status").textContent=`${value.status} · ${value.implementation_scope}`;
   byId("provider-status").textContent=`Provider ${value.provider.status} · dispatch ${value.provider.external_dispatch?"ENABLED":"DISABLED"}`;
   byId("product-version").textContent=`${value.product.version} @ ${value.product.revision}`;
@@ -106,12 +111,15 @@ function messageNode(message, turns) {
   body.className="message-body";
   body.textContent=message.content;
   article.append(head,body);
-  if (message.kind==="LIMITATION") {
+  if (message.role==="ASSISTANT") {
     const turn=turns.find(item=>item.turn_id===message.turn_id);
     if (turn) {
       const state=document.createElement("p");
-      state.className="small turn-failure";
-      state.textContent=`Turn ${turn.sequence} · ${turn.state} · ${turn.failure.code} · Provider dispatch ${turn.provider_dispatch_count}`;
+      const failed=turn.state==="FAILED";
+      state.className=`small${failed?" turn-failure":""}`;
+      state.textContent=failed
+        ?`Turn ${turn.sequence} · FAILED · ${turn.failure.code} · Provider dispatch ${turn.provider_dispatch_count}`
+        :`Turn ${turn.sequence} · ${turn.state} · ${turn.quality_status} · Provider dispatch ${turn.provider_dispatch_count}`;
       article.append(state);
     }
   }
@@ -125,7 +133,7 @@ function renderProjection(value) {
   byId("conversation-meta").textContent=`revision ${conversation.revision} · ${conversation.state} · Context ${conversation.context_digest}`;
   const lastTurn=value.turns[value.turns.length-1];
   byId("turn-status").textContent=lastTurn?`TURN ${lastTurn.sequence} · ${lastTurn.state}`:"NO TURN";
-  byId("turn-status").classList.toggle("warning",Boolean(lastTurn&&lastTurn.state!=="COMPLETED"));
+  byId("turn-status").classList.toggle("warning",Boolean(lastTurn&&lastTurn.state==="FAILED"));
   const transcript=byId("transcript");
   transcript.replaceChildren();
   if (value.messages.length===0) {
@@ -174,7 +182,11 @@ byId("composer").addEventListener("submit",async event=>{
     renderProjection(value);
     byId("message").value="";
     const turn=value.submitted_turn;
-    setNotice(`Turn ${turn.sequence} 已记录：${turn.state} / ${turn.failure.code}。Conversation 保持 ${value.conversation.state}。`,turn.state!=="COMPLETED");
+    if (turn.state==="SUCCEEDED") {
+      setNotice(`Turn ${turn.sequence} 已交付：${turn.state} / ${turn.quality_status}。Conversation 保持 ${value.conversation.state}。`,false);
+    } else {
+      setNotice(`Turn ${turn.sequence} 已记录：${turn.state} / ${turn.failure.code}。Conversation 保持 ${value.conversation.state}。`,true);
+    }
   } catch (error) {
     setNotice(`Turn 提交失败：${error.message}`,true);
     setBusy(false);

@@ -6,10 +6,13 @@ import json
 import unittest
 
 from software_world_model.application_services.engineering_conversation import (
+    ConversationMessageKind,
     EngineeringChatBinding,
+    EngineeringTurnExecutionOutcome,
     InMemoryEngineeringConversationService,
+    RuntimeCapabilityStatus,
 )
-from software_world_model.cross_cutting import StableId
+from software_world_model.cross_cutting import Revision, StableId, digest_of
 from software_world_model.interface.engineering_chat_browser import (
     ENGINEERING_CHAT_MAXIMUM_REQUEST_BYTES,
     EngineeringChatBrowserApplication,
@@ -115,6 +118,11 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertIn(
             "/v1/engineering-chat/conversations", script["body"].decode()
         )
+        self.assertIn('turn.state==="SUCCEEDED"', script["body"].decode())
+        self.assertIn(
+            "value.capabilities.semantic_agent_execution",
+            script["body"].decode(),
+        )
 
         value = self.value(health)
         self.assertEqual(value["status"], "READY")
@@ -124,6 +132,72 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertEqual(value["provider"]["status"], "NOT_CONFIGURED")
         self.assertFalse(value["provider"]["external_dispatch"])
         self.assertEqual(value["statistics"]["provider_dispatch_count"], 0)
+
+    def test_qualified_executor_projection_exposes_reviewed_success(self) -> None:
+        class SuccessfulExecutor:
+            def execute(self, request):
+                work_state_digest = digest_of(
+                    {"work_state": request.request_digest.value}
+                )
+                return EngineeringTurnExecutionOutcome.succeeded(
+                    request_digest=request.request_digest,
+                    assistant_kind=ConversationMessageKind.ANSWER,
+                    assistant_content="当前答案经过独立审核和交付授权。",
+                    included_user_message_ids=(request.user_message.message_id,),
+                    accepted_correction_message_ids=(),
+                    reviewed_conclusion_refs=("answer-ref",),
+                    superseded_conclusion_refs=(),
+                    reducer_status="EXECUTED_APPLICATION_SEALED",
+                    work_state_ref="work-state-ref",
+                    work_state_revision=Revision(1),
+                    work_state_digest=work_state_digest,
+                    evidence_package_ref="package-ref",
+                    answer_ref="answer-ref",
+                    review_ref="review-ref",
+                    delivery_authorization_ref="delivery-ref",
+                    provider_dispatch_count=2,
+                    quality_status="ACCEPTED",
+                )
+
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of({"world_model": "exact"}),
+            source_profile_ref="source-profile@1",
+            source_access_status=RuntimeCapabilityStatus.READY,
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route@1",
+            known_limitations=("Alpha only",),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=SuccessfulExecutor(),
+            id_generator=SequentialIdGenerator(),
+        )
+        self.app = EngineeringChatBrowserApplication(service)
+        health = self.value(self.call("GET", "/health"))
+        created = self.create_conversation()
+        conversation_id = created["conversation"]["conversation_id"]
+        response = self.call(
+            "POST",
+            f"/v1/engineering-chat/conversations/{conversation_id}/turns",
+            {"conversation_revision": 1, "message": "当前行为是什么？"},
+        )
+        value = self.value(response)
+
+        self.assertEqual(health["implementation_scope"], "CONVERSATIONAL_AGENT_EXECUTOR")
+        self.assertTrue(health["capabilities"]["semantic_agent_execution"])
+        self.assertTrue(health["provider"]["external_dispatch"])
+        self.assertEqual(value["submitted_turn"]["state"], "SUCCEEDED")
+        self.assertEqual(value["submitted_turn"]["quality_status"], "ACCEPTED")
+        self.assertEqual(value["submitted_turn"]["delivery_state"], "AUTHORIZED")
+        self.assertEqual(value["messages"][-1]["kind"], "ANSWER")
+        self.assertEqual(value["context"]["work_state_ref"], "work-state-ref")
+        self.assertEqual(value["submitted_turn"]["work_state_revision"], 1)
+        after = self.value(self.call("GET", "/health"))
+        self.assertEqual(after["statistics"]["provider_dispatch_count"], 2)
 
     def test_server_creates_conversation_and_records_real_failed_turn(self) -> None:
         created = self.create_conversation()

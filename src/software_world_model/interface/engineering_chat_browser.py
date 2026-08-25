@@ -14,6 +14,7 @@ from software_world_model.application_services.engineering_conversation import (
     EngineeringConversationSnapshot,
     EngineeringConversationTurn,
     InMemoryEngineeringConversationService,
+    RuntimeCapabilityStatus,
 )
 from software_world_model.cross_cutting import (
     DomainError,
@@ -172,7 +173,7 @@ class EngineeringChatBrowserApplication:
             "mode": "ENGINEERING_CHAT",
             "protocol": ENGINEERING_CHAT_PROTOCOL,
             "experience": ENGINEERING_CHAT_EXPERIENCE,
-            "implementation_scope": "CHAT_ACCESS_ONLY",
+            "implementation_scope": self._service.implementation_scope,
             "quality": "NOT_ACCEPTED",
             "environment": "ALPHA_EVALUATION_ONLY",
             "production": "NOT_PRODUCTION",
@@ -203,13 +204,20 @@ class EngineeringChatBrowserApplication:
                 "status": binding.source_access_status.value,
                 "profile_ref": binding.source_profile_ref,
                 "read_only": True,
-                "dispatch_enabled": False,
+                "dispatch_enabled": (
+                    self._service.semantic_agent_execution
+                    and binding.source_access_status is RuntimeCapabilityStatus.READY
+                ),
             },
             "provider": {
                 "status": binding.provider_status.value,
                 "route_ref": binding.provider_route_ref,
-                "external_dispatch": False,
-                "qualification": "NOT_EXECUTED",
+                "external_dispatch": self._service.semantic_agent_execution,
+                "qualification": (
+                    "READY"
+                    if self._service.semantic_agent_execution
+                    else "NOT_EXECUTED"
+                ),
             },
             "capabilities": {
                 "message_history": True,
@@ -218,14 +226,14 @@ class EngineeringChatBrowserApplication:
                 "turn_submission": True,
                 "failed_turn_keeps_conversation_active": True,
                 "new_conversation_context_isolation": True,
-                "semantic_agent_execution": False,
+                "semantic_agent_execution": self._service.semantic_agent_execution,
             },
             "storage": "PROCESS_MEMORY_ONLY",
             "known_limitations": list(binding.known_limitations),
             "statistics": {
                 "conversation_count": conversation_count,
                 "turn_count": turn_count,
-                "provider_dispatch_count": 0,
+                "provider_dispatch_count": self._service.provider_dispatch_count(),
             },
         }
 
@@ -358,6 +366,15 @@ def _snapshot_view(
             "reviewed_conclusion_refs": list(
                 snapshot.context.reviewed_conclusion_refs
             ),
+            "superseded_conclusion_refs": list(
+                snapshot.context.superseded_conclusion_refs
+            ),
+            "work_state_ref": snapshot.context.work_state_ref,
+            "work_state_digest": (
+                snapshot.context.work_state_digest.value
+                if snapshot.context.work_state_digest is not None
+                else None
+            ),
             "reducer_status": snapshot.context.reducer_status,
             "digest": snapshot.context.digest.value,
         },
@@ -404,6 +421,18 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
         "evidence_package_ref": turn.evidence_package_ref,
         "answer_ref": turn.answer_ref,
         "review_ref": turn.review_ref,
+        "delivery_authorization_ref": turn.delivery_authorization_ref,
+        "work_state_ref": turn.work_state_ref,
+        "work_state_revision": (
+            turn.work_state_revision.value
+            if turn.work_state_revision is not None
+            else None
+        ),
+        "work_state_digest": (
+            turn.work_state_digest.value
+            if turn.work_state_digest is not None
+            else None
+        ),
         "delivery_state": turn.delivery_state,
         "provider_dispatch_count": turn.provider_dispatch_count,
         "retry_count": turn.retry_count,

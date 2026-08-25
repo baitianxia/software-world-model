@@ -4,15 +4,15 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-WEB-001-USER-ONSITE-QUESTION, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-25
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-chat-access-browser-pass-next-chat-alpha-blocked
+worktree_status: iteration-010-slice-001-agent-executor-local-candidate-next-adapter-freeze
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
-live_model_path: pdr-004-access-pass-agent-chat-not-implemented-not-qualified-not-live-production-not-activated
+live_model_path: pdr-004-access-pass-agent-executor-local-candidate-adapters-not-integrated-not-qualified-not-live-production-not-activated
 ---
 
 # 当前工作上下文
@@ -60,9 +60,10 @@ PDR-004 收窄为一段冻结的五轮 Chat Conversation，不再执行孤立单
 
 `ITER-010-PDR-004` 是当前最高优先级规划决定。系统冻结“软件世界模型 + 主工程 Agent”双核心；默认交互冻结为 Conversation/Turn/
 Application-sealed Context 的语义多轮 Chat，每轮独立 Evidence/Answer/Review/Delivery，新对话隔离。旧固定多角色内容流水线不是目标 Agent，
-旧持续 Session QA 不是 Chat。新的独立 Chat Access 已形成 `CHAT_ACCESS_LOCAL_CANDIDATE`；主 Agent、逐轮证据/审核和 Provider route 仍是
-`NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。当前 Access 执行状态已由真实 listener/browser 更新为 `CHAT_ACCESS_BROWSER_PASS`；Readiness
-与重新授权现已完成，不能把 Access、旧实现或旧 Result 追认为主 Agent 能力。
+旧持续 Session QA 不是 Chat。独立 Chat Access 已为 `CHAT_ACCESS_BROWSER_PASS`；`FINDING-010-097` 又形成
+`AGENT_EXECUTOR_LOCAL_CANDIDATE`，在确定性 fake ports 上闭合 Application-owned loop、跨 Turn Work State、Observation/Package、fresh
+Review Finding 与 Delivery binding。真实 World Model/Source/Provider、完整 Ledger/Citation、Disclosure/fallback 和 launcher wiring 仍是
+`NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`；不能把本地协议测试、Access、旧实现或旧 Result 追认为五轮 Chat 或答案质量能力。
 PDR-003 的时间盒、根因、测试后置、Ark→DeepSeek 和成本规则继续有效；其孤立一题 canary 对 Chat 被收窄为一个五轮 Conversation，每个
 发生 Provider dispatch 的 Turn 分别计 live attempt。Provider 前最多一次本地/Mock Access smoke 的额度已由
 `V-ALPHA-ACCESS-001` 这一个 browser run 消费，不能再追加，也不能冒充 Chat canary。
@@ -124,11 +125,11 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-004 Chat Alpha** | `V-ALPHA-ACCESS-001` 已在 clean `cf2883b…` 上通过真实 fixed-command listener/browser：2 Conversation、3 Turn、Provider dispatch 0、新对话隔离、Production 未执行；`FINDING-010-095/096` 与 Access Result 保留。`V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002` 仍 blocking；主 Agent/Provider、Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
+| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-004 Chat Alpha** | `V-ALPHA-ACCESS-001` 已在 clean `cf2883b…` 上通过真实 browser；`FINDING-010-097` 又以 48/48 定向测试形成 Application-owned Agent executor 本地候选。真实 World Model/Source/Provider、完整 Ledger/Citation、launcher 与五轮 Chat 仍未集成、资格化或 live；后续 Chat/Quality/XD/Comparison/Preview 继续 blocking，Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
-| `local-browser` | **Chat Access browser PASS / Agent and Provider route not implemented** | Direct、strict World Model、旧 Engineering QA 与新 Engineering Chat identity 不混用；`swm-engineering-chat` 已通过 exact 本机 browser handoff，失败 Turn/历史/新对话隔离成立且 dispatch 0。主 Agent 与对用户透明的 Ark→DeepSeek 独立 attempt 仍未实现或资格化 |
+| `local-browser` | **Chat Access browser PASS / Agent executor local candidate** | Direct、strict World Model、旧 Engineering QA 与新 Engineering Chat identity 不混用；`swm-engineering-chat` Access 已通过 exact browser handoff。Browser 可投影已授权成功 Turn，但现有固定 launcher 尚未接入真实 Agent/World Model/Source/Provider；Ark→DeepSeek attempt 与五轮 Chat 未资格化或 live |
 | Production Activation | **NOT EXECUTED** | 不得由任何本机 PASS 自动推导 |
 
 精确产品边界见 [Iteration 006 Acceptance](iterations/iteration-006/results/acceptance.md)。原始 Provider、能力、产品和浏览器证据
@@ -153,7 +154,9 @@ Question Evidence Package → Answer → independent Reviewer` 技术纵切、�
 检查点 1 已完成：`FINDING-010-095` 的本地候选在 exact `cf2883b…` grant 下真实启动 `swm-engineering-chat`，
 `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096` 证明 Conversation/Turn/Context、完整消息历史、新对话隔离、0-dispatch 失败真相和
 固定 loopback 安全边界，`V-ALPHA-ACCESS-001` 为 `PASS / access-only`；listener 已优雅停止。下一步不是继续扩张 Access，而是先实现并冻结
-同一五轮 Conversation 所需的主 Agent/Provider 纵切，再为 Provider-dispatched Chat 另取 exact grant。
+同一五轮 Conversation 所需的主 Agent/Provider 纵切。`FINDING-010-097` 已完成其中不调用外部系统的 Application-owned executor 候选：
+跨 Turn Work State、Observation/Package、fresh Review Finding 路由、Delivery binding 和失败关闭通过 48/48。下一最早缺口是把 exact World
+Model/Source Broker、完整 Ledger/Citation 与 qualified Provider/Reviewer/Disclosure 接到该端口并形成 clean freeze；在此之前不取 live grant。
 
 三轮检查点只是同一冻结五轮 live canary 的中间交付，不是独立三轮 canary；若在此停止，五轮 canary 记为 `INCOMPLETE / FAIL`。
 每个检查点都是立即用户交付和停止点，不是新 Slice 或授权阶段，也不能恢复暂停或失效的授权。计划、测试、文档和内部 Gate 完成都不算用户可见增量；错过检查点时

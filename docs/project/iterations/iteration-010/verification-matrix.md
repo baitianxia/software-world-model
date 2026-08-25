@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097]
 code: []
 tests: []
 iteration: ITER-010
@@ -23,7 +23,7 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 `V-ALPHA-ACCESS-001` PDR-004 pre-execution revision → `V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001` →
 `V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
 首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
-`CHAT_ACCESS_ONLY / ACCESS_BROWSER_PASS / AGENT_NOT_IMPLEMENTED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / ADAPTERS_NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
 
@@ -42,6 +42,20 @@ identity、`EMPTY CONTEXT` 和空消息历史，隔离探针只显示新 Convers
 dispatch 0，browser console 无 warning/error，Production Activation `NOT_EXECUTED`；listener exit 0 且端口已关闭。因此
 `V-ALPHA-ACCESS-001` 为 `PASS / access-only`。本次没有 Provider/model、Source/World Model、源码/resources 或主 Agent 执行，不能产生
 Chat/Quality/XD PASS。
+
+## Current local Agent executor evidence
+
+`FINDING-010-097` 在 Access 之后闭合了不接外部系统的 Application-owned bounded executor：同一 Conversation 的 Work State identity 跨
+Turn 稳定且 revision 递增；主 Agent 只提交 full Work State 与 closed-catalog action/Draft；工具 Result、support/boundary Observation、
+Package、Claim、fresh Review、Finding 和 Delivery Authorization 均按 exact digest 绑定。Reviewer 要求补证后，没有新 Observation 就不能
+重交 Draft；同包重写复用 Package，新 Observation 形成 successor Package 与 fresh Review。伪造 Tool/Delivery binding、Source authority
+缺失、malformed executor outcome、并发同 Conversation、无进展及资源熔断都只关闭当前 Turn并保留既有 Context。
+
+Agent/Conversation/Browser 与相邻旧 QA 定向组合实际 `48/48 PASS`，四模块 `py_compile`、Browser JavaScript `node --check` 和
+`git diff --check` PASS。测试只使用 fake ports，
+没有 listener/browser、Provider/model、mall 源码/resources 或 Production 执行。因此这只把实现状态更新为
+`AGENT_EXECUTOR_LOCAL_CANDIDATE`；World Model/Source Broker/Worker、完整 Ledger/Citation、Provider driver/Reviewer、Disclosure/
+fallback、fixed launcher 与五轮 live Chat 仍未集成或资格化，下面所有 Chat/Quality/XD/Comparison/Preview verdict 保持不变。
 
 ## Pre-freeze implementation evidence
 

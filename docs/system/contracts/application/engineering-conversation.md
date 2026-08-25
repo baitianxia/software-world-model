@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_conversational_engineering_agent.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # Engineering Conversation
@@ -110,8 +110,10 @@ fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显�
 unknown 都使当前 provider attempt 或 Turn 失败关闭。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
 exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不得复用失败 Provider 的隐藏状态或未密封中间产物。
 
-当前独立 Chat Access 已提供 Application-owned Conversation/Turn/Message、不可变 Revision、空/递增 Context identity、完整页面消息历史、
-“新对话”隔离与失败 Turn 后 Conversation 继续；它在 Provider 未配置时以 0 dispatch 的明确失败密封 Turn。该 Access scaffold 不执行语义
-Context reducer、主 Agent loop、World Model/Source 工具、Evidence/Answer/fresh Review 或 Delivery Authorization，状态为
-`CHAT_ACCESS_LOCAL_CANDIDATE / AGENT_NOT_IMPLEMENTED / NOT_QUALIFIED`。旧 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，
-不能作为本契约主 Agent 或 Chat 资格证据。
+当前独立 Chat Access 已提供 Application-owned Conversation/Turn/Message、不可变 Revision、完整页面消息历史、“新对话”隔离与失败
+Turn 后 Conversation 继续，并已通过真实 browser Access Case。Application-owned bounded executor 也已在确定性 fake ports 上密封跨 Turn
+Work State revision、工具 Observation、support/boundary Package、Answer、fresh Review 与 Delivery Authorization；协议错绑、缺证后无新
+Observation 重写、无进展和资源熔断只关闭当前 Turn。状态为
+`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。真实 Context reducer、World Model/
+Source Broker/Worker、完整 Ledger/Citation、Provider/Disclosure/fallback 与产品 launcher 尚未闭合；旧
+`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

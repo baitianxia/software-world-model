@@ -4,7 +4,7 @@ kind: project-decision
 status: accepted
 authority: project-decision
 owners: [product, project, architecture, engineering, quality, ai, interface, security]
-depends_on: [ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, ITER-010-RESULT-V-ALPHA-ACCESS-001, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
+depends_on: [ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, ITER-010-RESULT-V-ALPHA-ACCESS-001, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
@@ -110,3 +110,8 @@ route 和真实体验的要求。随后用户以仅限 exact `cf2883bef861e0345a
 `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096` 证明同会话连续失败、完整历史、新 Conversation 隔离、Provider dispatch 0 与非生产边界，
 因此 `V-ALPHA-ACCESS-001` 为 `PASS / access-only`。该 grant 没有授权或执行 Provider/model、源码/resources、五轮 Chat 或 Production，
 本 PDR 的 Agent/Quality/Provider 要求保持不变。
+
+`FINDING-010-097` 又在不调用 Provider/model 或来源的条件下形成 `AGENT_EXECUTOR_LOCAL_CANDIDATE`：Application-owned bounded loop、同一
+Conversation 跨 Turn Work State revision、typed tool Observation/Package、fresh Review Finding 路由和 exact Delivery binding 已通过
+确定性 Gate。该进展满足本 PDR 的实现方向但不满足 live Gate；真实 World Model/Source、完整 Ledger/Citation、Provider/Disclosure/
+fallback、launcher 与五轮 Chat 仍须 clean freeze、独立授权和执行。

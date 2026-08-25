@@ -2779,6 +2779,24 @@
       "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
+  "FINDING-010-097": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-097.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/application_services/__init__.py",
+      "src/software_world_model/interface/engineering_chat_browser.py",
+      "src/software_world_model/interface/engineering_chat_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_agent.py",
+      "tests/test_engineering_conversation.py",
+      "tests/test_engineering_chat_browser.py",
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_engineering_qa_browser.py",
+      "tests/test_engineering_qa_alpha_cli.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4071,10 +4089,12 @@
     "path": "docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md",
     "code": [
       "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py"
     ],
     "tests": [
+      "tests/test_conversational_engineering_agent.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
@@ -4251,11 +4271,13 @@
       "src/software_world_model/application_services/natural_task.py",
       "src/software_world_model/application_services/task_control.py",
       "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/interface/agentic_runtime.py"
     ],
     "tests": [
       "tests/test_agentic_runtime.py",
       "tests/test_natural_task.py",
+      "tests/test_conversational_engineering_agent.py",
       "tests/test_engineering_conversation.py"
     ]
   },
@@ -4277,11 +4299,13 @@
     "path": "docs/system/contracts/application/engineering-conversation.md",
     "code": [
       "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_browser_ui.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py"
     ],
     "tests": [
+      "tests/test_conversational_engineering_agent.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
@@ -4815,6 +4839,7 @@
     "path": "docs/system/operations/local-browser.md",
     "code": [
       "pyproject.toml",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/interface/http_api.py",
       "src/software_world_model/interface/browser_ui.py",
       "src/software_world_model/interface/world_model_browser.py",
@@ -4843,6 +4868,7 @@
       "tests/test_iteration_008_slice1_live_authorize.py",
       "tests/test_world_model_product.py",
       "tests/test_engineering_question_model_source.py",
+      "tests/test_conversational_engineering_agent.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py",
       "tests/test_engineering_qa_live.py",
@@ -4883,6 +4909,7 @@
       "src/software_world_model/source_integration",
       "src/software_world_model/application_services/citation_projection.py",
       "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/infrastructure/file_structure_read_bundle.py",
       "src/software_world_model/infrastructure/file_citation_observation_store.py",
       "src/software_world_model/interface",
@@ -4910,6 +4937,7 @@
       "tests/test_iteration_007_slice1_live_evaluator.py",
       "tests/test_iteration_008_slice1_freeze.py",
       "tests/test_iteration_008_slice1_live_evaluator.py",
+      "tests/test_conversational_engineering_agent.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py",

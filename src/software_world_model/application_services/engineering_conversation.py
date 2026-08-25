@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from enum import Enum
 import re
 from threading import Lock
-from typing import Callable, Sequence
+from typing import Callable, Protocol, Sequence
 
 from software_world_model.cross_cutting import (
     Digest,
@@ -54,10 +54,13 @@ class ConversationMessageRole(str, Enum):
 
 class ConversationMessageKind(str, Enum):
     USER_INPUT = "USER_INPUT"
+    ANSWER = "ANSWER"
+    CLARIFICATION = "CLARIFICATION"
     LIMITATION = "LIMITATION"
 
 
 class ConversationTurnState(str, Enum):
+    SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
 
 
@@ -181,6 +184,9 @@ class ConversationContext:
     included_user_message_ids: tuple[StableId, ...]
     accepted_correction_message_ids: tuple[StableId, ...]
     reviewed_conclusion_refs: tuple[str, ...]
+    superseded_conclusion_refs: tuple[str, ...]
+    work_state_ref: str | None
+    work_state_digest: Digest | None
     reducer_status: str
     digest: Digest
 
@@ -192,27 +198,84 @@ class ConversationContext:
         work_state_revision: Revision,
         included_user_message_ids: Sequence[StableId],
     ) -> "ConversationContext":
+        return cls.seal(
+            conversation_id=conversation_id,
+            work_state_revision=work_state_revision,
+            included_user_message_ids=included_user_message_ids,
+            reducer_status="NOT_EXECUTED_ACCESS_ONLY",
+        )
+
+    @classmethod
+    def seal(
+        cls,
+        *,
+        conversation_id: StableId,
+        work_state_revision: Revision,
+        included_user_message_ids: Sequence[StableId],
+        accepted_correction_message_ids: Sequence[StableId] = (),
+        reviewed_conclusion_refs: Sequence[str] = (),
+        superseded_conclusion_refs: Sequence[str] = (),
+        work_state_ref: str | None = None,
+        work_state_digest: Digest | None = None,
+        reducer_status: str,
+    ) -> "ConversationContext":
         included = tuple(included_user_message_ids)
         if len(included) != len(set(included)):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Conversation Context user message references must be unique",
             )
+        corrections = tuple(accepted_correction_message_ids)
+        if len(corrections) != len(set(corrections)) or not set(corrections).issubset(
+            included
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "accepted corrections must be unique included user messages",
+            )
+        reviewed = _unique_texts(
+            reviewed_conclusion_refs, "reviewed conclusion reference"
+        )
+        superseded = _unique_texts(
+            superseded_conclusion_refs, "superseded conclusion reference"
+        )
+        if not set(superseded).issubset(reviewed):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "superseded conclusions must remain in reviewed conclusions",
+            )
+        work_state_ref = _optional_text(work_state_ref, "Agent Work State reference")
+        if (work_state_ref is None) != (work_state_digest is None):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Agent Work State reference and digest must be present together",
+            )
+        reducer_status = _text(reducer_status, "Context reducer status")
         core = {
             "schema": "ENGINEERING_CONVERSATION_CONTEXT@1",
             "conversation_id": conversation_id.value,
             "work_state_revision": work_state_revision.value,
             "included_user_message_ids": tuple(item.value for item in included),
-            "accepted_correction_message_ids": (),
-            "reviewed_conclusion_refs": (),
-            "reducer_status": "NOT_EXECUTED_ACCESS_ONLY",
+            "accepted_correction_message_ids": tuple(
+                item.value for item in corrections
+            ),
+            "reviewed_conclusion_refs": reviewed,
+            "superseded_conclusion_refs": superseded,
+            "work_state_ref": work_state_ref,
+            "work_state_digest": (
+                work_state_digest.value if work_state_digest is not None else None
+            ),
+            "reducer_status": reducer_status,
         }
         return cls(
             conversation_id=conversation_id,
             work_state_revision=work_state_revision,
             included_user_message_ids=included,
-            accepted_correction_message_ids=(),
-            reviewed_conclusion_refs=(),
+            accepted_correction_message_ids=corrections,
+            reviewed_conclusion_refs=reviewed,
+            superseded_conclusion_refs=superseded,
+            work_state_ref=work_state_ref,
+            work_state_digest=work_state_digest,
             reducer_status=core["reducer_status"],
             digest=digest_of(core),
         )
@@ -245,11 +308,15 @@ class EngineeringConversationTurn:
     user_message_id: StableId
     assistant_message_id: StableId
     state: ConversationTurnState
-    failure_code: str
-    failure_message: str
+    failure_code: str | None
+    failure_message: str | None
     evidence_package_ref: str | None
     answer_ref: str | None
     review_ref: str | None
+    delivery_authorization_ref: str | None
+    work_state_ref: str | None
+    work_state_revision: Revision | None
+    work_state_digest: Digest | None
     delivery_state: str
     provider_dispatch_count: int
     retry_count: int
@@ -288,6 +355,144 @@ class EngineeringTurnSubmission:
     turn: EngineeringConversationTurn
 
 
+@dataclass(frozen=True, slots=True)
+class EngineeringTurnExecutionRequest:
+    binding: EngineeringChatBinding
+    snapshot_before: EngineeringConversationSnapshot
+    turn_id: StableId
+    result_id: StableId
+    sequence: int
+    user_message: EngineeringConversationMessage
+    request_digest: Digest
+    requested_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringTurnExecutionOutcome:
+    request_digest: Digest
+    state: ConversationTurnState
+    assistant_kind: ConversationMessageKind
+    assistant_content: str
+    included_user_message_ids: tuple[StableId, ...]
+    accepted_correction_message_ids: tuple[StableId, ...]
+    reviewed_conclusion_refs: tuple[str, ...]
+    superseded_conclusion_refs: tuple[str, ...]
+    reducer_status: str
+    work_state_ref: str | None
+    work_state_revision: Revision | None
+    work_state_digest: Digest | None
+    failure_code: str | None
+    failure_message: str | None
+    evidence_package_ref: str | None
+    answer_ref: str | None
+    review_ref: str | None
+    delivery_authorization_ref: str | None
+    provider_dispatch_count: int
+    retry_count: int
+    quality_status: str
+
+    @classmethod
+    def succeeded(
+        cls,
+        *,
+        request_digest: Digest,
+        assistant_kind: ConversationMessageKind,
+        assistant_content: str,
+        included_user_message_ids: Sequence[StableId],
+        accepted_correction_message_ids: Sequence[StableId],
+        reviewed_conclusion_refs: Sequence[str],
+        superseded_conclusion_refs: Sequence[str],
+        reducer_status: str,
+        work_state_ref: str,
+        work_state_revision: Revision,
+        work_state_digest: Digest,
+        evidence_package_ref: str,
+        answer_ref: str,
+        review_ref: str,
+        delivery_authorization_ref: str,
+        provider_dispatch_count: int,
+        quality_status: str,
+    ) -> "EngineeringTurnExecutionOutcome":
+        return cls(
+            request_digest=request_digest,
+            state=ConversationTurnState.SUCCEEDED,
+            assistant_kind=assistant_kind,
+            assistant_content=assistant_content,
+            included_user_message_ids=tuple(included_user_message_ids),
+            accepted_correction_message_ids=tuple(
+                accepted_correction_message_ids
+            ),
+            reviewed_conclusion_refs=tuple(reviewed_conclusion_refs),
+            superseded_conclusion_refs=tuple(superseded_conclusion_refs),
+            reducer_status=reducer_status,
+            work_state_ref=work_state_ref,
+            work_state_revision=work_state_revision,
+            work_state_digest=work_state_digest,
+            failure_code=None,
+            failure_message=None,
+            evidence_package_ref=evidence_package_ref,
+            answer_ref=answer_ref,
+            review_ref=review_ref,
+            delivery_authorization_ref=delivery_authorization_ref,
+            provider_dispatch_count=provider_dispatch_count,
+            retry_count=0,
+            quality_status=quality_status,
+        )
+
+    @classmethod
+    def failed(
+        cls,
+        *,
+        request_digest: Digest,
+        assistant_content: str,
+        included_user_message_ids: Sequence[StableId],
+        accepted_correction_message_ids: Sequence[StableId] = (),
+        reviewed_conclusion_refs: Sequence[str] = (),
+        superseded_conclusion_refs: Sequence[str] = (),
+        reducer_status: str = "EXECUTION_FAILED",
+        work_state_ref: str | None = None,
+        work_state_revision: Revision | None = None,
+        work_state_digest: Digest | None = None,
+        failure_code: str,
+        failure_message: str,
+        evidence_package_ref: str | None = None,
+        answer_ref: str | None = None,
+        review_ref: str | None = None,
+        provider_dispatch_count: int = 0,
+    ) -> "EngineeringTurnExecutionOutcome":
+        return cls(
+            request_digest=request_digest,
+            state=ConversationTurnState.FAILED,
+            assistant_kind=ConversationMessageKind.LIMITATION,
+            assistant_content=assistant_content,
+            included_user_message_ids=tuple(included_user_message_ids),
+            accepted_correction_message_ids=tuple(
+                accepted_correction_message_ids
+            ),
+            reviewed_conclusion_refs=tuple(reviewed_conclusion_refs),
+            superseded_conclusion_refs=tuple(superseded_conclusion_refs),
+            reducer_status=reducer_status,
+            work_state_ref=work_state_ref,
+            work_state_revision=work_state_revision,
+            work_state_digest=work_state_digest,
+            failure_code=failure_code,
+            failure_message=failure_message,
+            evidence_package_ref=evidence_package_ref,
+            answer_ref=answer_ref,
+            review_ref=review_ref,
+            delivery_authorization_ref=None,
+            provider_dispatch_count=provider_dispatch_count,
+            retry_count=0,
+            quality_status="NOT_ACCEPTED",
+        )
+
+
+class EngineeringConversationTurnExecutor(Protocol):
+    def execute(
+        self, request: EngineeringTurnExecutionRequest
+    ) -> EngineeringTurnExecutionOutcome: ...
+
+
 class ConversationNotFoundError(LookupError):
     def __init__(self, conversation_id: StableId) -> None:
         super().__init__(f"Conversation {conversation_id.value} was not found")
@@ -295,21 +500,31 @@ class ConversationNotFoundError(LookupError):
 
 
 class InMemoryEngineeringConversationService:
-    """Ephemeral Application authority for the pre-Provider access checkpoint."""
+    """Ephemeral Application authority for Access and qualified Turn execution."""
 
     def __init__(
         self,
         binding: EngineeringChatBinding,
         *,
+        turn_executor: EngineeringConversationTurnExecutor | None = None,
         id_generator: IdGenerator | None = None,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
-        if binding.provider_status is RuntimeCapabilityStatus.READY:
+        if binding.provider_status is RuntimeCapabilityStatus.READY and turn_executor is None:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
-                "the access-only Conversation service cannot dispatch a Provider",
+                "a ready Provider binding requires a qualified Turn executor",
+            )
+        if turn_executor is not None and (
+            binding.provider_status is not RuntimeCapabilityStatus.READY
+            or binding.world_model_status is not RuntimeCapabilityStatus.READY
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Turn execution requires ready Provider and World Model bindings",
             )
         self.binding = binding
+        self._turn_executor = turn_executor
         self._id_generator = id_generator or Uuid4IdGenerator()
         self._clock = clock or (lambda: datetime.now(timezone.utc))
         self._lock = Lock()
@@ -317,7 +532,21 @@ class InMemoryEngineeringConversationService:
             StableId, tuple[EngineeringConversationSnapshot, ...]
         ] = {}
         self._issued_ids: set[StableId] = set()
+        self._inflight: set[StableId] = set()
         self._turn_count = 0
+        self._provider_dispatch_count = 0
+
+    @property
+    def semantic_agent_execution(self) -> bool:
+        return self._turn_executor is not None
+
+    @property
+    def implementation_scope(self) -> str:
+        return (
+            "CONVERSATIONAL_AGENT_EXECUTOR"
+            if self.semantic_agent_execution
+            else "CHAT_ACCESS_ONLY"
+        )
 
     def create_conversation(self) -> EngineeringConversationSnapshot:
         with self._lock:
@@ -372,6 +601,11 @@ class InMemoryEngineeringConversationService:
                         "actual_revision": current.conversation.revision.value,
                     },
                 )
+            if conversation_id in self._inflight:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "Conversation already has an executing Turn",
+                )
             now = self._now()
             turn_id = self._new_id("turn")
             result_id = self._new_id("turn_result")
@@ -388,35 +622,6 @@ class InMemoryEngineeringConversationService:
                 content=message,
                 created_at=now,
             )
-            failure_code = (
-                "PROVIDER_NOT_QUALIFIED"
-                if self.binding.provider_status
-                is RuntimeCapabilityStatus.NOT_QUALIFIED
-                else "PROVIDER_NOT_CONFIGURED"
-            )
-            failure_message = (
-                "当前 Chat Access 尚未配置或取得 Provider 资格；本 Turn 已失败关闭，"
-                "没有生成或授权工程答案。Conversation 仍可继续使用。"
-            )
-            assistant_message = _message(
-                message_id=assistant_message_id,
-                conversation_id=conversation_id,
-                turn_id=turn_id,
-                sequence=len(current.messages) + 2,
-                role=ConversationMessageRole.ASSISTANT,
-                kind=ConversationMessageKind.LIMITATION,
-                content=failure_message,
-                created_at=now,
-            )
-            context = ConversationContext.create(
-                conversation_id=conversation_id,
-                work_state_revision=current.context.work_state_revision.next(),
-                included_user_message_ids=(
-                    *current.context.included_user_message_ids,
-                    user_message_id,
-                ),
-            )
-            next_revision = current.conversation.revision.next()
             request_digest = digest_of(
                 {
                     "schema": "ENGINEERING_CONVERSATION_TURN_REQUEST@1",
@@ -428,50 +633,140 @@ class InMemoryEngineeringConversationService:
                     "binding_digest": self.binding.digest.value,
                 }
             )
-            turn = _failed_turn(
+            execution_request = EngineeringTurnExecutionRequest(
+                binding=self.binding,
+                snapshot_before=current,
                 turn_id=turn_id,
                 result_id=result_id,
-                conversation_id=conversation_id,
                 sequence=turn_sequence,
-                conversation_revision_before=expected_revision,
-                conversation_revision_after=next_revision,
-                context_digest_before=current.context.digest,
-                context_digest_after=context.digest,
+                user_message=user_message,
                 request_digest=request_digest,
-                user_message_id=user_message_id,
-                assistant_message_id=assistant_message_id,
-                failure_code=failure_code,
-                failure_message=failure_message,
-                at=now,
+                requested_at=now,
             )
-            messages = (*current.messages, user_message, assistant_message)
-            turns = (*current.turns, turn)
-            conversation = _conversation(
-                conversation_id=conversation_id,
-                revision=next_revision,
-                binding_digest=self.binding.digest,
-                context_digest=context.digest,
-                turn_ids=tuple(item.turn_id for item in turns),
-                message_ids=tuple(item.message_id for item in messages),
-                created_at=current.conversation.created_at,
-                revised_at=now,
-            )
-            snapshot = EngineeringConversationSnapshot(
-                conversation=conversation,
-                context=context,
-                messages=messages,
-                turns=turns,
-            )
-            self._history[conversation_id] = (
-                *self._history[conversation_id],
-                snapshot,
-            )
-            self._turn_count += 1
-            return EngineeringTurnSubmission(snapshot=snapshot, turn=turn)
+            if self._turn_executor is None:
+                return self._commit_outcome(
+                    request=execution_request,
+                    assistant_message_id=assistant_message_id,
+                    outcome=_access_failure_outcome(execution_request),
+                )
+            self._inflight.add(conversation_id)
+
+        try:
+            outcome = self._turn_executor.execute(execution_request)
+        except Exception:
+            outcome = _execution_error_outcome(execution_request)
+
+        with self._lock:
+            try:
+                current = self._current(conversation_id)
+                if current.conversation.revision != expected_revision:
+                    raise DomainError(
+                        ErrorCode.REVISION_CONFLICT,
+                        "Conversation changed while its Turn was executing",
+                    )
+                outcome = _fail_closed_invalid_outcome(execution_request, outcome)
+                return self._commit_outcome(
+                    request=execution_request,
+                    assistant_message_id=assistant_message_id,
+                    outcome=outcome,
+                )
+            finally:
+                self._inflight.discard(conversation_id)
+
+    def _commit_outcome(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        assistant_message_id: StableId,
+        outcome: EngineeringTurnExecutionOutcome,
+    ) -> EngineeringTurnSubmission:
+        current = request.snapshot_before
+        _validate_execution_outcome(request, outcome)
+        completed_at = self._now()
+        commits_agent_state = outcome.state is ConversationTurnState.SUCCEEDED
+        context = ConversationContext.seal(
+            conversation_id=current.conversation.conversation_id,
+            work_state_revision=(
+                outcome.work_state_revision
+                if commits_agent_state and outcome.work_state_revision is not None
+                else current.context.work_state_revision
+            ),
+            included_user_message_ids=outcome.included_user_message_ids,
+            accepted_correction_message_ids=(
+                outcome.accepted_correction_message_ids
+                if commits_agent_state
+                else current.context.accepted_correction_message_ids
+            ),
+            reviewed_conclusion_refs=outcome.reviewed_conclusion_refs,
+            superseded_conclusion_refs=(
+                outcome.superseded_conclusion_refs
+                if commits_agent_state
+                else current.context.superseded_conclusion_refs
+            ),
+            work_state_ref=(
+                outcome.work_state_ref
+                if commits_agent_state
+                else current.context.work_state_ref
+            ),
+            work_state_digest=(
+                outcome.work_state_digest
+                if commits_agent_state
+                else current.context.work_state_digest
+            ),
+            reducer_status=outcome.reducer_status,
+        )
+        assistant_message = _message(
+            message_id=assistant_message_id,
+            conversation_id=current.conversation.conversation_id,
+            turn_id=request.turn_id,
+            sequence=len(current.messages) + 2,
+            role=ConversationMessageRole.ASSISTANT,
+            kind=outcome.assistant_kind,
+            content=outcome.assistant_content,
+            created_at=completed_at,
+        )
+        next_revision = current.conversation.revision.next()
+        turn = _turn(
+            request=request,
+            outcome=outcome,
+            assistant_message_id=assistant_message_id,
+            context_after=context,
+            conversation_revision_after=next_revision,
+            completed_at=completed_at,
+        )
+        messages = (*current.messages, request.user_message, assistant_message)
+        turns = (*current.turns, turn)
+        conversation = _conversation(
+            conversation_id=current.conversation.conversation_id,
+            revision=next_revision,
+            binding_digest=self.binding.digest,
+            context_digest=context.digest,
+            turn_ids=tuple(item.turn_id for item in turns),
+            message_ids=tuple(item.message_id for item in messages),
+            created_at=current.conversation.created_at,
+            revised_at=completed_at,
+        )
+        snapshot = EngineeringConversationSnapshot(
+            conversation=conversation,
+            context=context,
+            messages=messages,
+            turns=turns,
+        )
+        self._history[current.conversation.conversation_id] = (
+            *self._history[current.conversation.conversation_id],
+            snapshot,
+        )
+        self._turn_count += 1
+        self._provider_dispatch_count += outcome.provider_dispatch_count
+        return EngineeringTurnSubmission(snapshot=snapshot, turn=turn)
 
     def statistics(self) -> tuple[int, int]:
         with self._lock:
             return len(self._history), self._turn_count
+
+    def provider_dispatch_count(self) -> int:
+        with self._lock:
+            return self._provider_dispatch_count
 
     def revision_history(
         self, conversation_id: StableId
@@ -543,75 +838,387 @@ def _message(
     )
 
 
-def _failed_turn(
+def _access_failure_outcome(
+    request: EngineeringTurnExecutionRequest,
+) -> EngineeringTurnExecutionOutcome:
+    failure_code = (
+        "PROVIDER_NOT_QUALIFIED"
+        if request.binding.provider_status is RuntimeCapabilityStatus.NOT_QUALIFIED
+        else "PROVIDER_NOT_CONFIGURED"
+    )
+    failure_message = (
+        "当前 Chat Access 尚未配置或取得 Provider 资格；本 Turn 已失败关闭，"
+        "没有生成或授权工程答案。Conversation 仍可继续使用。"
+    )
+    return EngineeringTurnExecutionOutcome.failed(
+        request_digest=request.request_digest,
+        assistant_content=failure_message,
+        included_user_message_ids=(
+            *request.snapshot_before.context.included_user_message_ids,
+            request.user_message.message_id,
+        ),
+        accepted_correction_message_ids=(
+            request.snapshot_before.context.accepted_correction_message_ids
+        ),
+        reviewed_conclusion_refs=(
+            request.snapshot_before.context.reviewed_conclusion_refs
+        ),
+        superseded_conclusion_refs=(
+            request.snapshot_before.context.superseded_conclusion_refs
+        ),
+        reducer_status="NOT_EXECUTED_ACCESS_ONLY",
+        failure_code=failure_code,
+        failure_message=failure_message,
+    )
+
+
+def _execution_error_outcome(
+    request: EngineeringTurnExecutionRequest,
     *,
-    turn_id: StableId,
-    result_id: StableId,
-    conversation_id: StableId,
-    sequence: int,
-    conversation_revision_before: Revision,
-    conversation_revision_after: Revision,
-    context_digest_before: Digest,
-    context_digest_after: Digest,
-    request_digest: Digest,
-    user_message_id: StableId,
+    failure_code: str = "AGENT_EXECUTION_FAILED",
+    provider_dispatch_count: int = 0,
+) -> EngineeringTurnExecutionOutcome:
+    failure_message = (
+        "主工程 Agent 执行未能形成可审核、可授权的本 Turn 结果；"
+        "本 Turn 已失败关闭，Conversation 仍可继续使用。"
+    )
+    return EngineeringTurnExecutionOutcome.failed(
+        request_digest=request.request_digest,
+        assistant_content=failure_message,
+        included_user_message_ids=(
+            *request.snapshot_before.context.included_user_message_ids,
+            request.user_message.message_id,
+        ),
+        accepted_correction_message_ids=(
+            request.snapshot_before.context.accepted_correction_message_ids
+        ),
+        reviewed_conclusion_refs=(
+            request.snapshot_before.context.reviewed_conclusion_refs
+        ),
+        superseded_conclusion_refs=(
+            request.snapshot_before.context.superseded_conclusion_refs
+        ),
+        reducer_status="AGENT_EXECUTION_FAILED_CLOSED",
+        work_state_ref=request.snapshot_before.context.work_state_ref,
+        work_state_revision=request.snapshot_before.context.work_state_revision,
+        work_state_digest=request.snapshot_before.context.work_state_digest,
+        failure_code=failure_code,
+        failure_message=failure_message,
+        provider_dispatch_count=provider_dispatch_count,
+    )
+
+
+def _fail_closed_invalid_outcome(
+    request: EngineeringTurnExecutionRequest,
+    outcome: object,
+) -> EngineeringTurnExecutionOutcome:
+    if isinstance(outcome, EngineeringTurnExecutionOutcome):
+        try:
+            _validate_execution_outcome(request, outcome)
+        except DomainError:
+            pass
+        else:
+            return outcome
+        dispatch_count = (
+            outcome.provider_dispatch_count
+            if type(outcome.provider_dispatch_count) is int
+            and outcome.provider_dispatch_count >= 0
+            else 0
+        )
+    else:
+        dispatch_count = 0
+    return _execution_error_outcome(
+        request,
+        failure_code="TURN_EXECUTOR_PROTOCOL_VIOLATION",
+        provider_dispatch_count=dispatch_count,
+    )
+
+
+def _validate_execution_outcome(
+    request: EngineeringTurnExecutionRequest,
+    outcome: EngineeringTurnExecutionOutcome,
+) -> None:
+    if not isinstance(outcome.state, ConversationTurnState) or not isinstance(
+        outcome.assistant_kind, ConversationMessageKind
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Turn executor outcome uses an invalid state or message kind",
+        )
+    if outcome.request_digest != request.request_digest:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Turn executor outcome is bound to a different request",
+        )
+    _chat_message(outcome.assistant_content)
+    if outcome.retry_count != 0:
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "Engineering Conversation does not permit same-Provider retries",
+        )
+    if (
+        type(outcome.provider_dispatch_count) is not int
+        or outcome.provider_dispatch_count < 0
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider dispatch count must be a non-negative integer",
+        )
+    available_user_messages = {
+        item.message_id
+        for item in request.snapshot_before.messages
+        if item.role is ConversationMessageRole.USER
+    }
+    available_user_messages.add(request.user_message.message_id)
+    included = tuple(outcome.included_user_message_ids)
+    if (
+        not included
+        or request.user_message.message_id not in included
+        or len(included) != len(set(included))
+        or not set(included).issubset(available_user_messages)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "executed Context must uniquely include the current User Message and only known history",
+        )
+    work_state_parts = (
+        outcome.work_state_ref,
+        outcome.work_state_revision,
+        outcome.work_state_digest,
+    )
+    if any(item is None for item in work_state_parts) and any(
+        item is not None for item in work_state_parts
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "executed Agent Work State reference, revision, and digest must be present together",
+        )
+    if outcome.work_state_revision is not None and not isinstance(
+        outcome.work_state_revision, Revision
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "executed Agent Work State revision is invalid",
+        )
+    if outcome.work_state_digest is not None and not isinstance(
+        outcome.work_state_digest, Digest
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "executed Agent Work State digest is invalid",
+        )
+    for value, label in (
+        (outcome.work_state_ref, "Agent Work State reference"),
+        (outcome.evidence_package_ref, "Evidence Package reference"),
+        (outcome.answer_ref, "Answer reference"),
+        (outcome.review_ref, "Review reference"),
+        (outcome.delivery_authorization_ref, "Delivery authorization reference"),
+        (outcome.failure_code, "failure code"),
+        (outcome.failure_message, "failure message"),
+    ):
+        _optional_text(value, label)
+    _text(outcome.reducer_status, "Context reducer status")
+    _text(outcome.quality_status, "quality status")
+
+    before = request.snapshot_before.context
+    if outcome.work_state_revision is not None:
+        if before.work_state_ref is not None and (
+            outcome.work_state_ref != before.work_state_ref
+            or outcome.work_state_revision.value < before.work_state_revision.value
+            or (
+                (outcome.work_state_digest == before.work_state_digest)
+                != (outcome.work_state_revision == before.work_state_revision)
+            )
+        ):
+            raise DomainError(
+                ErrorCode.REVISION_CONFLICT,
+                "Agent Work State identity or revision does not continue the sealed Conversation state",
+            )
+    elif before.work_state_ref is not None:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "an existing Agent Work State cannot be dropped",
+        )
+    corrections = tuple(outcome.accepted_correction_message_ids)
+    if corrections[: len(before.accepted_correction_message_ids)] != (
+        before.accepted_correction_message_ids
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "accepted Conversation corrections cannot be dropped",
+        )
+    reviewed = tuple(outcome.reviewed_conclusion_refs)
+    superseded = tuple(outcome.superseded_conclusion_refs)
+    if not set(before.reviewed_conclusion_refs).issubset(reviewed):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "reviewed Conversation conclusions cannot be dropped",
+        )
+    if superseded[: len(before.superseded_conclusion_refs)] != (
+        before.superseded_conclusion_refs
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "superseded Conversation conclusions cannot be restored silently",
+        )
+    newly_superseded = set(superseded) - set(before.superseded_conclusion_refs)
+    if not newly_superseded.issubset(before.reviewed_conclusion_refs):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "only conclusions reviewed before this Turn can be newly superseded",
+        )
+    if outcome.state is ConversationTurnState.SUCCEEDED:
+        if outcome.assistant_kind not in {
+            ConversationMessageKind.ANSWER,
+            ConversationMessageKind.CLARIFICATION,
+            ConversationMessageKind.LIMITATION,
+        }:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "successful Turn requires an answer, clarification, or reviewed limitation",
+            )
+        required = (
+            outcome.work_state_ref,
+            outcome.work_state_revision,
+            outcome.work_state_digest,
+            outcome.evidence_package_ref,
+            outcome.answer_ref,
+            outcome.review_ref,
+            outcome.delivery_authorization_ref,
+        )
+        if any(item is None for item in required):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "successful Turn requires Work State, Package, Answer, Review, and Delivery authorization",
+            )
+        if outcome.failure_code is not None or outcome.failure_message is not None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "successful Turn cannot carry a failure",
+            )
+        expected_quality = {
+            ConversationMessageKind.ANSWER: "ACCEPTED",
+            ConversationMessageKind.CLARIFICATION: "REVIEWED_CLARIFICATION",
+            ConversationMessageKind.LIMITATION: "REVIEWED_LIMITATION",
+        }[outcome.assistant_kind]
+        if outcome.quality_status != expected_quality:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "successful Turn quality status does not match its reviewed response kind",
+            )
+        expected_reviewed = before.reviewed_conclusion_refs
+        if outcome.assistant_kind is ConversationMessageKind.ANSWER:
+            if outcome.answer_ref in before.reviewed_conclusion_refs:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "a successful answer requires a fresh Answer reference",
+                )
+            expected_reviewed = (*expected_reviewed, outcome.answer_ref)
+        if reviewed != expected_reviewed:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "reviewed conclusions must preserve history and append only the current reviewed Answer",
+            )
+    else:
+        if (
+            outcome.assistant_kind is not ConversationMessageKind.LIMITATION
+            or not outcome.failure_code
+            or not outcome.failure_message
+            or outcome.delivery_authorization_ref is not None
+            or outcome.quality_status != "NOT_ACCEPTED"
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "failed Turn must be an un-authorized explicit limitation",
+            )
+        if reviewed != before.reviewed_conclusion_refs:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "a failed Turn cannot add a reviewed conclusion",
+            )
+
+
+def _turn(
+    *,
+    request: EngineeringTurnExecutionRequest,
+    outcome: EngineeringTurnExecutionOutcome,
     assistant_message_id: StableId,
-    failure_code: str,
-    failure_message: str,
-    at: datetime,
+    context_after: ConversationContext,
+    conversation_revision_after: Revision,
+    completed_at: datetime,
 ) -> EngineeringConversationTurn:
     core = {
         "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@1",
-        "turn_id": turn_id.value,
-        "result_id": result_id.value,
-        "conversation_id": conversation_id.value,
-        "sequence": sequence,
-        "conversation_revision_before": conversation_revision_before.value,
+        "turn_id": request.turn_id.value,
+        "result_id": request.result_id.value,
+        "conversation_id": request.snapshot_before.conversation.conversation_id.value,
+        "sequence": request.sequence,
+        "conversation_revision_before": request.snapshot_before.conversation.revision.value,
         "conversation_revision_after": conversation_revision_after.value,
-        "context_digest_before": context_digest_before.value,
-        "context_digest_after": context_digest_after.value,
-        "request_digest": request_digest.value,
-        "user_message_id": user_message_id.value,
+        "context_digest_before": request.snapshot_before.context.digest.value,
+        "context_digest_after": context_after.digest.value,
+        "request_digest": request.request_digest.value,
+        "user_message_id": request.user_message.message_id.value,
         "assistant_message_id": assistant_message_id.value,
-        "state": ConversationTurnState.FAILED.value,
-        "failure_code": failure_code,
-        "failure_message": failure_message,
-        "evidence_package_ref": None,
-        "answer_ref": None,
-        "review_ref": None,
-        "delivery_state": "NOT_AUTHORIZED",
-        "provider_dispatch_count": 0,
-        "retry_count": 0,
-        "quality_status": "NOT_ACCEPTED",
+        "state": outcome.state.value,
+        "failure_code": outcome.failure_code,
+        "failure_message": outcome.failure_message,
+        "evidence_package_ref": outcome.evidence_package_ref,
+        "answer_ref": outcome.answer_ref,
+        "review_ref": outcome.review_ref,
+        "delivery_authorization_ref": outcome.delivery_authorization_ref,
+        "work_state_ref": outcome.work_state_ref,
+        "work_state_revision": (
+            outcome.work_state_revision.value
+            if outcome.work_state_revision is not None
+            else None
+        ),
+        "work_state_digest": (
+            outcome.work_state_digest.value
+            if outcome.work_state_digest is not None
+            else None
+        ),
+        "delivery_state": (
+            "AUTHORIZED"
+            if outcome.delivery_authorization_ref is not None
+            else "NOT_AUTHORIZED"
+        ),
+        "provider_dispatch_count": outcome.provider_dispatch_count,
+        "retry_count": outcome.retry_count,
+        "quality_status": outcome.quality_status,
         "production_activation": "NOT_EXECUTED",
-        "created_at": at,
-        "completed_at": at,
+        "created_at": request.requested_at,
+        "completed_at": completed_at,
     }
     return EngineeringConversationTurn(
-        turn_id=turn_id,
-        result_id=result_id,
-        conversation_id=conversation_id,
-        sequence=sequence,
-        conversation_revision_before=conversation_revision_before,
+        turn_id=request.turn_id,
+        result_id=request.result_id,
+        conversation_id=request.snapshot_before.conversation.conversation_id,
+        sequence=request.sequence,
+        conversation_revision_before=request.snapshot_before.conversation.revision,
         conversation_revision_after=conversation_revision_after,
-        context_digest_before=context_digest_before,
-        context_digest_after=context_digest_after,
-        request_digest=request_digest,
-        user_message_id=user_message_id,
+        context_digest_before=request.snapshot_before.context.digest,
+        context_digest_after=context_after.digest,
+        request_digest=request.request_digest,
+        user_message_id=request.user_message.message_id,
         assistant_message_id=assistant_message_id,
-        state=ConversationTurnState.FAILED,
-        failure_code=failure_code,
-        failure_message=failure_message,
-        evidence_package_ref=None,
-        answer_ref=None,
-        review_ref=None,
-        delivery_state="NOT_AUTHORIZED",
-        provider_dispatch_count=0,
-        retry_count=0,
-        quality_status="NOT_ACCEPTED",
+        state=outcome.state,
+        failure_code=outcome.failure_code,
+        failure_message=outcome.failure_message,
+        evidence_package_ref=outcome.evidence_package_ref,
+        answer_ref=outcome.answer_ref,
+        review_ref=outcome.review_ref,
+        delivery_authorization_ref=outcome.delivery_authorization_ref,
+        work_state_ref=outcome.work_state_ref,
+        work_state_revision=outcome.work_state_revision,
+        work_state_digest=outcome.work_state_digest,
+        delivery_state=core["delivery_state"],
+        provider_dispatch_count=outcome.provider_dispatch_count,
+        retry_count=outcome.retry_count,
+        quality_status=outcome.quality_status,
         production_activation="NOT_EXECUTED",
-        created_at=at,
-        completed_at=at,
+        created_at=request.requested_at,
+        completed_at=completed_at,
         digest=digest_of(core),
     )
 
@@ -724,7 +1331,10 @@ __all__ = [
     "EngineeringConversation",
     "EngineeringConversationMessage",
     "EngineeringConversationSnapshot",
+    "EngineeringConversationTurnExecutor",
     "EngineeringConversationTurn",
+    "EngineeringTurnExecutionOutcome",
+    "EngineeringTurnExecutionRequest",
     "EngineeringTurnSubmission",
     "InMemoryEngineeringConversationService",
     "RuntimeCapabilityStatus",

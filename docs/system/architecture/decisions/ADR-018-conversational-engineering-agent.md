@@ -6,8 +6,8 @@ authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
 derived_from: [FINDING-010-093]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_conversational_engineering_agent.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # ADR-018：世界模型增强的对话式主工程 Agent
@@ -86,5 +86,7 @@ exact 代码、运行、对照与用户体验证据验证。
 
 系统需要新的 Conversation/Turn/Agent Work State 合同、Agent 工具协议、上下文选择与压缩策略，以及面向多轮对话的资格和产品验证。旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的代码和运行证据继续作为可复用安全/证据资产和历史基线，但不能证明本 ADR 已实现。
-当前已实现不接 Provider 的 Conversation/Turn/Context Access scaffold 和独立 Chat 页面，状态为 `CHAT_ACCESS_LOCAL_CANDIDATE`；统一主工程
-Agent loop、逐轮 Evidence/Answer/fresh Review、World Model/Source 工具与 Provider route 仍为 `NOT_IMPLEMENTED / NOT_QUALIFIED`。
+当前 Access scaffold 已通过真实浏览器验证。Application-owned 主工程 Agent bounded loop、跨 Turn Work State revision、closed-catalog
+工具 Proposal/Observation、双分区 Package、fresh Review Finding 回路和 exact Delivery binding 已形成
+`AGENT_EXECUTOR_LOCAL_CANDIDATE`；其证据仅来自确定性 fake ports。真实 World Model/Source Broker/Worker、完整 Ledger/Citation、
+Provider driver/Reviewer、Disclosure/fallback、产品 launcher wiring 与五轮 Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。
