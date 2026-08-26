@@ -4,7 +4,7 @@ kind: iteration-readiness
 status: accepted
 authority: project-authorization
 owners: [project, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, FINDING-010-093, FINDING-010-094, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT]
+depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, FINDING-010-093, FINDING-010-094, FINDING-010-107, FINDING-010-108, FINDING-010-109, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT]
 code: []
 tests: []
 iteration: ITER-010
@@ -72,8 +72,9 @@ Conversation，每个到达 Provider dispatch 的 Turn 分别计 live attempt。
 
 ADR-017 将 Provider 路由改为 Session 预授权的 Ark→DeepSeek：用户一次提交同一 logical question；primary attempt 只有在密封 terminal、
 没有 authorized answer 且属于受控 Provider/model reason 后，才透明启动一个完全隔离的 fallback attempt。Fallback 从 original Turn、
-该 Turn 密封的 exact Cognition 与 relevant sealed Conversation Context 重跑完整链，不共享中间态；同 Provider retry 0、late primary quarantine。当前代码尚未证明该语义，Readiness 只接受
-它作为恢复开发输入，不把它写成 live PASS；外部调用继续需要 exact freeze/grant。
+该 Turn 密封的 exact Cognition 与 relevant sealed Conversation Context 重跑完整链，不共享中间态；同 Provider retry 0、late primary
+quarantine。PDR-003 refresh 时代码尚未证明该语义，Readiness 当时只接受它作为恢复开发输入；后续实现与 live 事实由本文件 PDR-004
+current 段及 Findings 更新。
 
 ## PDR-004 readiness refresh and current acceptance
 
@@ -104,8 +105,10 @@ ordered Ark→DeepSeek routes、fixed 5-Turn bounds、private Gateway/receipt pa
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，最新相关组合为 117/117。`FINDING-010-104` 又把 Ark TLS-before-credential、每 request
 一个 verified session、retry 0、typed unavailable fallback 和 terminal audit 闭合为本地候选，最新相邻组合为 141/141。
 `FINDING-010-105/106` 已分别在 clean `1e99e9b…` / `653eff3…` 上取得 fresh Ark 2/2、13/13 与 DeepSeek 2/2、12/12
-Conformance PASS，两条 route 的 current qualification 同时可用。current actual artifact 和 live Chat 仍为
-`SESSION_AUTHORITY_REQUIRED / NOT_EXECUTED / NOT_LIVE`：
+Conformance PASS，两条 route 的 current qualification 同时可用。此后 `FINDING-010-107` 已记录 exact `eb835f5…` 的 owner-private
+artifact 与五轮 live Chat：5/5 Turn 失败且没有 Answer/Citation/Review/Delivery；新 Conversation 的 transcript 隔离成立，但省略指代
+probe 没有澄清。`FINDING-010-108/109` 已形成 bounded literal Search 与 Binding-owned pre-dispatch clarification 的本地修复候选。
+当前状态是 `FIRST_LIVE_CHAT_FAILED / LOCAL_REMEDIATION_CANDIDATE / NEW_EXACT_SESSION_AUTHORITY_REQUIRED`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。
@@ -206,8 +209,9 @@ current Slice1 Gate 是 `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE
 
 **CURRENT READINESS ACCEPTED / ITERATION AND SLICE1 AUTHORIZED / CODING INPUT TRUE。** 原 Readiness 和 Slice1 开发曾由收据
 `585f02c4…` 接受并执行；该授权及派生 grant 已消费或停止。PDR-001 接受的是计划纠正，后续 `32b298de…` 收据恢复当前 Slice1 的
-产品/System 代码与确定性测试；PDR-004 已以 docs-only 收据 `d8239ea7…` 暂停该旧权威，`PROJECT-CURRENT` 不再指向任何 active Slice。
-Agent/Conversation System Owner、Manifest 与五轮 Gate 现已一致，用户以 `f76ba3e8…` 明确接受并授权 Slice1 产品/System 代码与本地
+产品/System 代码与确定性测试；PDR-004 曾以 docs-only 收据 `d8239ea7…` 暂停该旧权威。Agent/Conversation System Owner、Manifest 与
+五轮 Gate 随后已一致，用户以 `f76ba3e8…` 明确接受并授权 Slice1 产品/System 代码与本地
 确定性验证。该收据不授权 credential、Provider/model call、动态源码披露、live browser、hidden、Production Activation 或 Slice2/3；
-后续 `7256a886…` 仅补充 exact `cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。Provider-dispatched Chat、
-源码披露、hidden、Production Activation 和 Slice2/3 仍未授权。
+后续 `7256a886…` 补充 exact `cf2883b…` 的 Access 权限并已消费，`bec7f079…` 又补充 exact `eb835f5…` 的五轮 Chat/受限 Source
+disclosure/browser 权限并在失败 run-035 中消费。修复后 Provider-dispatched Chat、源码披露和 browser 当前没有授权；hidden、Production
+Activation 和 Slice2/3 始终未授权。

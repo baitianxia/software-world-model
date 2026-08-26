@@ -97,6 +97,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         query=None,
         path=None,
         maximum_source_bytes=4096,
+        maximum_files=16,
         evidence_class=EngineeringEvidenceClass.SOURCE,
     ):
         request_digest = Digest("sha256:" + "1" * 64)
@@ -131,7 +132,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             "locator_reference": (
                 locator_reference.value if locator_reference else None
             ),
-            "maximum_files": 16,
+            "maximum_files": maximum_files,
             "maximum_source_bytes": maximum_source_bytes,
             "maximum_result_items": 32,
         }
@@ -162,7 +163,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             query=query,
             path=path,
             locator_reference=locator_reference,
-            maximum_files=16,
+            maximum_files=maximum_files,
             maximum_source_bytes=maximum_source_bytes,
             maximum_result_items=32,
             digest=digest_of(["COMPILED_SOURCE_OPERATION@1", core]),
@@ -248,6 +249,54 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         self.assertEqual(result.status, RetrievalStatus.PARTIAL)
         self.assertEqual(result.failure_code, "UNSUPPORTED_SOURCE_ENTRY")
         self.assertTrue(result.truncated)
+
+    def test_search_prioritizes_literal_path_candidates_before_file_fuse(self):
+        search_root = self.repository / "search"
+        search_root.mkdir()
+        for index in range(20):
+            (search_root / f"unrelated-{index:02d}.txt").write_text(
+                "no matching token\n", encoding="utf-8"
+            )
+        target = search_root / "LoginService.java"
+        target.write_text("public interface LoginService {}\n", encoding="utf-8")
+        self.git("add", "search")
+        self.git("commit", "-q", "-m", "search ranking fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-path-ranked-search-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("search",),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("search",),
+                query="LoginService",
+                maximum_files=2,
+            )
+        )
+
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(result.failure_code, "SOURCE_FILE_FUSE_EXHAUSTED")
+        self.assertEqual(result.files_read, 2)
+        self.assertEqual(len(result.items), 1)
+        self.assertEqual(result.items[0].path, "search/LoginService.java")
+        self.assertEqual(
+            dict(result.coverage)["candidate_ordering"],
+            "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
+        )
 
     def test_worker_rejects_another_repository_identity(self):
         operation = replace(

@@ -2472,6 +2472,17 @@ def validate_conversational_engineering_agent(
             "ambiguous_reference_action",
             "clarify-before-source-or-provider-dispatch",
         ),
+        ("conversation_binding_schema", "ENGINEERING_CHAT_BINDING@2"),
+        (
+            "conversation_input_policy_ref",
+            "EMPTY_CONTEXT_REFERENT_CLARIFICATION_ZH_CN@1",
+        ),
+        (
+            "conversation_input_policy_scope",
+            "empty-context-referent-clarification-before-world-model-source-"
+            "credential-or-provider",
+        ),
+        ("conversation_input_policy_engineering_claim_authority", "none"),
         ("user_statement_becomes_source_truth", False),
         ("prior_answer_or_review_reuse_as_fact_allowed", False),
         (
@@ -2536,10 +2547,87 @@ def validate_conversational_engineering_agent(
         "target-not-implemented-not-qualified",
         "implemented-not-qualified",
         "qualified-candidate",
+        "implemented-live-failed-remediation-local-candidate",
     }:
         errors.append(
             f"{label}: conversational_engineering_agent.status must be a closed pre-production state"
         )
+    if policy.get("status") == "implemented-live-failed-remediation-local-candidate":
+        for field, expected in (
+            ("first_live_chat_execution_evidence_ref", "FINDING-010-107"),
+            (
+                "first_live_chat_turn_result",
+                "five-of-five-failed-no-answer-citation-review-or-delivery",
+            ),
+            (
+                "first_live_new_conversation_probe_result",
+                "transcript-isolated-but-required-clarification-failed",
+            ),
+            ("source_search_remediation_evidence_ref", "FINDING-010-108"),
+            (
+                "conversation_input_clarification_remediation_evidence_ref",
+                "FINDING-010-109",
+            ),
+        ):
+            if policy.get(field) != expected:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must equal {expected}"
+                )
+        for field in (
+            "first_live_chat_product_commit",
+            "first_live_chat_product_tree",
+            "first_live_chat_source_commit",
+            "first_live_chat_source_tree",
+        ):
+            value = policy.get(field)
+            if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must be an exact Git object"
+                )
+        for field in (
+            "first_live_chat_session_authorization_digest",
+            "first_live_chat_session_config_file_digest",
+            "first_live_chat_terminal_receipt_digest",
+        ):
+            value = policy.get(field)
+            if not isinstance(value, str) or re.fullmatch(
+                r"sha256:[0-9a-f]{64}", value
+            ) is None:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must be an exact sha256 digest"
+                )
+        authorization = manifest.get("authorization")
+        first_live = (
+            authorization.get("first_live_session_authorization")
+            if isinstance(authorization, dict)
+            else None
+        )
+        if not isinstance(first_live, dict) or any(
+            policy.get(policy_field) != first_live.get(authorization_field)
+            for policy_field, authorization_field in (
+                ("first_live_chat_product_commit", "exact_product_commit"),
+                ("first_live_chat_product_tree", "exact_product_tree"),
+                ("first_live_chat_source_commit", "source_commit"),
+                ("first_live_chat_source_tree", "source_tree"),
+            )
+        ):
+            errors.append(
+                f"{label}: first live Chat identity must match the consumed Session authorization"
+            )
+        authorization_ref = (
+            first_live.get("authorization_ref")
+            if isinstance(first_live, dict)
+            else None
+        )
+        if (
+            not isinstance(authorization_ref, str)
+            or not authorization_ref.startswith("codex-user-message:")
+            or policy.get("first_live_chat_session_authorization_digest")
+            != authorization_ref.removeprefix("codex-user-message:")
+        ):
+            errors.append(
+                f"{label}: first live Chat authority digest must match the consumed user receipt"
+            )
     experience = alignment.get("experience_version_binding")
     if (
         not isinstance(experience, dict)
@@ -2803,14 +2891,77 @@ def validate_conversational_architecture_cutover(
             errors.append(
                 f"{label}: accepted current Readiness must match the active Slice1 authorization"
             )
+        external_execution_status = (
+            authorization.get("external_execution_authorization_status")
+            if isinstance(authorization, dict)
+            else None
+        )
         if not isinstance(authorization, dict) or (
             authorization.get("development_authorization_scope")
             != "slice1-product-system-code-and-local-deterministic-verification-only"
-            or authorization.get("external_execution_authorization_status")
-            != "not-authorized"
         ):
             errors.append(
-                f"{label}: current development authorization must remain limited to Slice1 product/System code and local deterministic verification with external execution not authorized"
+                f"{label}: current development authorization must remain limited to Slice1 product/System code and local deterministic verification"
+            )
+        first_live_authorization = (
+            authorization.get("first_live_session_authorization")
+            if isinstance(authorization, dict)
+            else None
+        )
+        if external_execution_status == "not-authorized":
+            if first_live_authorization is not None:
+                errors.append(
+                    f"{label}: an unexecuted external state must not contain a first live Session authorization receipt"
+                )
+        elif (
+            external_execution_status
+            == "first-live-session-grant-consumed-no-current-live-authority"
+        ):
+            if (
+                authorization.get("external_execution_reauthorization_required")
+                is not True
+            ):
+                errors.append(
+                    f"{label}: consumed first live Session authority must require new exact external reauthorization"
+                )
+            if not isinstance(first_live_authorization, dict):
+                errors.append(
+                    f"{label}: consumed first live Session authority must retain its exact receipt"
+                )
+            else:
+                authorization_ref = first_live_authorization.get("authorization_ref")
+                if (
+                    first_live_authorization.get("status") != "consumed"
+                    or not isinstance(authorization_ref, str)
+                    or re.fullmatch(
+                        r"codex-user-message:sha256:[0-9a-f]{64}",
+                        authorization_ref,
+                    )
+                    is None
+                    or first_live_authorization.get("excludes")
+                    != "src-main-resources,credential-values,hidden,slice2,slice3,production-activation"
+                    or first_live_authorization.get("execution_finding_ref")
+                    != "FINDING-010-107"
+                ):
+                    errors.append(
+                        f"{label}: consumed first live Session authority must remain exact, excluded and evidence-bound"
+                    )
+                for field in (
+                    "exact_product_commit",
+                    "exact_product_tree",
+                    "source_commit",
+                    "source_tree",
+                ):
+                    value = first_live_authorization.get(field)
+                    if not isinstance(value, str) or re.fullmatch(
+                        r"[0-9a-f]{40}", value
+                    ) is None:
+                        errors.append(
+                            f"{label}: first_live_session_authorization.{field} must be an exact Git object"
+                        )
+        else:
+            errors.append(
+                f"{label}: current development authorization must have no active external authority; only not-authorized or a consumed first live Session grant is allowed"
             )
         if not isinstance(authorization, dict) or (
             authorization.get("docs_sync_authorizes_product_code") is not False
@@ -2829,16 +2980,23 @@ def validate_conversational_architecture_cutover(
             if isinstance(slices, dict)
             else None
         )
+        expected_live_question_status = (
+            "authorized-executed-failed-run-035-remediation-local-candidate-"
+            "new-exact-grant-required"
+            if external_execution_status
+            == "first-live-session-grant-consumed-no-current-live-authority"
+            else "not-authorized-conversational-five-turn-canary-not-executed"
+        )
         if not isinstance(slice1, dict) or (
             slice1.get("status") != "authorized"
             or slice1.get("coding_input") is not True
             or slice1.get("authorization_ref") != acceptance_ref
             or slice1.get("authorized_at") != accepted_at
             or slice1.get("live_question_status")
-            != "not-authorized-conversational-five-turn-canary-not-executed"
+            != expected_live_question_status
         ):
             errors.append(
-                f"{label}: current Slice1 authorization must keep the conversational live canary not authorized and not executed"
+                f"{label}: current Slice1 authorization must preserve the exact unexecuted or consumed failed conversational live canary evidence state"
             )
         if isinstance(slices, dict):
             for slice_id in ("ITER-010-SLICE-002", "ITER-010-SLICE-003"):

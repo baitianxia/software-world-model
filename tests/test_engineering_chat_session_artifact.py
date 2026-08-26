@@ -23,6 +23,9 @@ from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
 from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
     VolcengineArkModelConfiguration,
 )
+from software_world_model.application_services.engineering_conversation import (
+    ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN,
+)
 from software_world_model.cross_cutting import (
     Digest,
     DomainError,
@@ -339,6 +342,10 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         )
         self.assertEqual(cognition.calls, 0)
         self.assertEqual(prepared.runtime.launcher.service.statistics(), (0, 0))
+        self.assertEqual(
+            prepared.runtime.launcher.service.binding.conversation_input_policy_ref,
+            ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN,
+        )
         self.assertEqual(
             prepared.runtime.launcher.service.provider_dispatch_count(), 0
         )

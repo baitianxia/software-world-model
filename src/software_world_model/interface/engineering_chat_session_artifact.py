@@ -50,6 +50,7 @@ from software_world_model.application_services.conversational_engineering_tools 
     EngineeringAgentEvidenceToolConfiguration,
 )
 from software_world_model.application_services.engineering_conversation import (
+    ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN,
     EngineeringChatBinding,
     RuntimeCapabilityStatus,
 )
@@ -465,6 +466,11 @@ def prepare_engineering_chat_artifact_session(
     """Compose all configured assets without listener, credential, or dispatch."""
 
     current = _aware_utc(at)
+    if session_config.response_language != "zh-CN":
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "current Engineering Chat artifact requires the registered zh-CN input policy",
+        )
     if ark_gateway_repository is deepseek_gateway_repository:
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -603,6 +609,9 @@ def prepare_engineering_chat_artifact_session(
         source_access_status=RuntimeCapabilityStatus.READY,
         provider_status=RuntimeCapabilityStatus.READY,
         provider_route_ref=route_ref,
+        conversation_input_policy_ref=(
+            ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN
+        ),
         excluded_source_paths=session_config.excluded_source_paths,
         known_limitations=session_config.known_limitations,
     )

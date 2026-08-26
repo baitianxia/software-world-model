@@ -168,7 +168,7 @@ class EngineeringChatBrowserApplication:
         binding = self._service.binding
         conversation_count, turn_count = self._service.statistics()
         return {
-            "schema": "ENGINEERING_CHAT_HEALTH@1",
+            "schema": "ENGINEERING_CHAT_HEALTH@2",
             "status": "READY",
             "mode": "ENGINEERING_CHAT",
             "protocol": ENGINEERING_CHAT_PROTOCOL,
@@ -226,6 +226,12 @@ class EngineeringChatBrowserApplication:
                 "turn_submission": True,
                 "failed_turn_keeps_conversation_active": True,
                 "new_conversation_context_isolation": True,
+                "pre_dispatch_empty_context_referent_clarification": (
+                    binding.conversation_input_policy_ref is not None
+                ),
+                "conversation_input_policy_ref": (
+                    binding.conversation_input_policy_ref
+                ),
                 "semantic_agent_execution": self._service.semantic_agent_execution,
             },
             "storage": "PROCESS_MEMORY_ONLY",

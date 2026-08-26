@@ -5,6 +5,8 @@ from threading import Event, Thread
 import unittest
 
 from software_world_model.application_services.engineering_conversation import (
+    ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY,
+    ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN,
     ConversationLifecycleState,
     ConversationMessageKind,
     ConversationNotFoundError,
@@ -140,6 +142,136 @@ class EngineeringConversationTests(unittest.TestCase):
         self.assertEqual(second.context.included_user_message_ids, ())
         self.assertEqual(second.messages, ())
         self.assertEqual(second.turns, ())
+
+    def test_empty_new_conversation_requests_referent_before_executor_dispatch(self) -> None:
+        class RecordingExecutor:
+            def __init__(self):
+                self.requests = []
+
+            def execute(self, request):
+                self.requests.append(request)
+                return EngineeringTurnExecutionOutcome.failed(
+                    request_digest=request.request_digest,
+                    assistant_content="fixture executor reached",
+                    included_user_message_ids=(request.user_message.message_id,),
+                    failure_code="FIXTURE_EXECUTOR_REACHED",
+                    failure_message="fixture executor reached",
+                )
+
+        executor = RecordingExecutor()
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of({"world_model": "exact"}),
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route",
+            conversation_input_policy_ref=(
+                ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN
+            ),
+            known_limitations=("Alpha only",),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=executor,
+            id_generator=SequentialIdGenerator(),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="它失败时会记录什么？",
+        )
+
+        self.assertEqual(executor.requests, [])
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(
+            submission.snapshot.messages[-1].kind,
+            ConversationMessageKind.CLARIFICATION,
+        )
+        self.assertIn("请明确", submission.snapshot.messages[-1].content)
+        self.assertEqual(submission.turn.provider_dispatch_count, 0)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(submission.turn.delivery_state, "NOT_AUTHORIZED")
+        self.assertEqual(
+            submission.turn.quality_status,
+            ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY,
+        )
+        self.assertIsNone(submission.turn.work_state_ref)
+        self.assertEqual(
+            submission.snapshot.context.included_user_message_ids,
+            (submission.turn.user_message_id,),
+        )
+
+        explicit = service.create_conversation()
+        explicit_submission = service.submit_turn(
+            conversation_id=explicit.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+        self.assertEqual(len(executor.requests), 1)
+        self.assertEqual(
+            explicit_submission.turn.failure_code,
+            "FIXTURE_EXECUTOR_REACHED",
+        )
+
+    def test_binding_rejects_unregistered_conversation_input_policy(self) -> None:
+        with self.assertRaises(DomainError) as failure:
+            EngineeringChatBinding.create(
+                product_revision="a" * 40,
+                project_name="mall",
+                repository_revision="b" * 40,
+                conversation_input_policy_ref="UNREGISTERED_INPUT_POLICY@1",
+                known_limitations=("Alpha only",),
+            )
+        self.assertEqual(failure.exception.code, ErrorCode.INVALID_ARGUMENT)
+
+    def test_executor_cannot_claim_application_clarification_for_explicit_input(self) -> None:
+        class ForgedClarificationExecutor:
+            def execute(self, request):
+                return EngineeringTurnExecutionOutcome.application_clarification(
+                    request_digest=request.request_digest,
+                    assistant_content="请明确对象。",
+                    included_user_message_ids=(request.user_message.message_id,),
+                    accepted_correction_message_ids=(),
+                    reviewed_conclusion_refs=(),
+                    superseded_conclusion_refs=(),
+                )
+
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of({"world_model": "exact"}),
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route",
+            conversation_input_policy_ref=(
+                ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN
+            ),
+            known_limitations=("Alpha only",),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=ForgedClarificationExecutor(),
+            id_generator=SequentialIdGenerator(),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(
+            submission.turn.failure_code,
+            "TURN_EXECUTOR_PROTOCOL_VIOLATION",
+        )
+        self.assertEqual(submission.turn.provider_dispatch_count, 0)
 
     def test_stale_revision_and_invalid_messages_do_not_mutate_state(self) -> None:
         created = self.service.create_conversation()

@@ -2949,6 +2949,33 @@
       "tests/test_iteration_003_v009.py"
     ]
   },
+  "FINDING-010-108": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-108.md",
+    "code": [
+      "src/software_world_model/interface/engineering_qa_source.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_source.py",
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
+  "FINDING-010-109": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-109.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_browser.py",
+      "src/software_world_model/application_services/__init__.py"
+    ],
+    "tests": [
+      "tests/test_engineering_conversation.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_browser.py",
+      "tests/test_engineering_chat_provider_launcher.py",
+      "tests/test_engineering_chat_provider_runtime.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4924,14 +4951,18 @@
       "src/software_world_model/source_integration/artifact_processing.py",
       "src/software_world_model/source_integration/artifact_use.py",
       "src/software_world_model/infrastructure/sqlite_source_operation_repository.py",
-      "src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py"
+      "src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py",
+      "src/software_world_model/interface/engineering_qa_source.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
     ],
     "tests": [
       "tests/test_source_operations.py",
       "tests/test_artifact_processing.py",
       "tests/test_artifact_use_authority.py",
       "tests/test_structure_publication.py",
-      "tests/test_maven_structure_update.py"
+      "tests/test_maven_structure_update.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_conversational_engineering_model.py"
     ]
   },
   "SYS-CONTRACT-SOURCE-DATA-SOURCE": {

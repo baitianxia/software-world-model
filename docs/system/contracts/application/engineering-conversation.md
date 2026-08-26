@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -51,11 +51,16 @@ Response Control 放行边界继续由原 Owner 拥有。
 ## Conversation and turn invariants
 
 1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Read Authority、Source Profile/allowlist、
-   工具目录、Provider route、披露范围、有效期和每 Turn/整会话高安全熔断。浏览器不能扩大这些边界。
+   工具目录、versioned Conversation input policy、Provider route、披露范围、有效期和每 Turn/整会话高安全熔断。浏览器不能扩大这些边界。
 2. 每条 User Message 创建不可变 Turn。Application 从完整历史确定性选择满足本 Turn 所需的相关上下文，密封输入消息、被引用 Turn、有效
    用户约束、当前工作状态和摘要的 identity/digest；不得直接依赖 Provider 会话记忆或无边界拼接全部历史。
 3. 主 Agent 必须处理追问、指代、纠正、深入、收窄和总结。若指代在密封上下文内仍不唯一，必须请求澄清或给出明确条件化解释，不能把
-   猜测写成事实。用户纠正形成新 Revision 并标记被取代的对话假设，不删除原消息、证据或失败结果。
+   猜测写成事实。对于没有 message、Turn、Work State 或 reviewed conclusion 的新 Conversation，Binding-owned、按语言显式版本化的 input
+   policy 必须先识别依赖先行对象的表达；命中时由 Application 在任何 World Model、Source、credential 或 Provider attempt 前要求用户明确
+   对象。这个响应只是 input clarification，不含工程事实，不创建 Evidence Package/Review/Delivery，也不能用于非空 Context 或普通显式首问。
+   Application 必须从密封 Request 与 Binding 重新计算 policy 命中和澄清文本；Turn executor 或 Provider 自报 clarification quality 不能取得该
+   例外。
+   用户纠正形成新 Revision 并标记被取代的对话假设，不删除原消息、证据或失败结果。
 4. 一次 Turn 失败只密封该 Turn 的失败或 Limitation；Conversation 和 listener 继续可用。后续 Turn 不继承失败 Attempt 的未密封输出、
    Provider 隐藏状态、临时授权或未审核答案。
 5. 新对话从空 Conversation Work State 开始，但仍可读取同一 exact World Model；跨对话偏好或长期 Memory 在独立合同接受前不启用。
@@ -91,7 +96,8 @@ Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
 2. Draft 可以由同一主 Agent 综合多条证据自然回答，不要求把证据记录逐条变成答案句子。每个物质肯定结论必须绑定
    `support/citation`；未知或限制必须绑定相应 `boundary/audit`。答案应延续相关对话目标、响应用户最新纠正，并区分本 Turn 新结论、
    对先前答案的修订和仍未知范围。
-3. 每个可交付 Draft 至少经过一个 fresh、与主 Agent 隔离的独立 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
+3. 每个可交付工程 Draft 至少经过一个 fresh、与主 Agent 隔离的独立 Reviewer。前述 deterministic empty-context input clarification 不是
+   工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
    它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查通过不能抵消重大错误。
@@ -104,7 +110,8 @@ Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
 ## Generality, evaluation and failure
 
 核心 Agent、Prompt、工具选择、Conversation reducer、Review 和 UI 不得按工程、问题、关键词、语言、框架、符号、类、方法、约定文件名、
-fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显式版本化 Source/Knowledge capability 注册。
+fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显式版本化 capability 注册；Conversation input policy 必须进入 Binding identity，
+只能决定是否要求澄清，不能生成工程结论或切换 Agent/Provider/Source 路径。
 
 产品资格必须同时验证：多轮指代、追问、用户纠正、目标延续、观察驱动重规划、World Model 与 Source 工具组合、证据引用、Reviewer 缺口
 反馈和 Turn 故障隔离。系统与 current Codex 的比较用于证明产品替代价值；同一主 Agent 的 full Cognition 与 locator-only/empty 对照用于

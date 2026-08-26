@@ -9,7 +9,7 @@ credential.  Model roles never receive this object.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 from typing import Mapping, Sequence
@@ -106,6 +106,30 @@ def _paths_overlap(left: str, right: str) -> bool:
         or left.startswith(right + "/")
         or right.startswith(left + "/")
     )
+
+
+def _search_entry_rank(path: str, query: str) -> tuple[int, str]:
+    """Prefer authorized path names that contain the literal search token.
+
+    SEARCH remains a case-sensitive content operation.  This ordering only
+    uses already-authorized tree metadata so a bounded scan can inspect the
+    most plausible files before the file fuse, while preserving a canonical
+    fallback order for every other entry.
+    """
+
+    folded_query = query.casefold()
+    folded_path = path.casefold()
+    name = PurePosixPath(path).name.casefold()
+    stem = PurePosixPath(path).stem.casefold()
+    if stem == folded_query or name == folded_query:
+        priority = 0
+    elif folded_query in name:
+        priority = 1
+    elif folded_query in folded_path:
+        priority = 2
+    else:
+        priority = 3
+    return priority, path
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,7 +418,10 @@ class LocalGitRetrievalWorker:
         binary_entries = 0
         truncated = False
         failure_code: str | None = None
-        for entry in entries:
+        ordered_entries = tuple(
+            sorted(entries, key=lambda entry: _search_entry_rank(entry.path, operation.query))
+        )
+        for entry in ordered_entries:
             if entry.object_type != "blob" or entry.mode not in _REGULAR_GIT_MODES:
                 unsafe_entries += 1
                 continue
@@ -468,6 +495,7 @@ class LocalGitRetrievalWorker:
                     "query_digest": digest_of(
                         ["ENGINEERING_QA_LITERAL_QUERY@1", operation.query]
                     ).value,
+                    "candidate_ordering": "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
                 },
             ),
             failure_code=failure_code,

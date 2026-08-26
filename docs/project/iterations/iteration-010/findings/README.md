@@ -275,5 +275,13 @@ iteration: ITER-010
 - [FINDING-010-106](FINDING-010-106.md)：clean `653eff3…` 的 fresh DeepSeek Conformance 已以 2/2 request、12/12 Case、TLS
   `1/1`、credential `2/2`、connection reuse 1、retry/unknown 0 PASS；结合 fresh Ark Result，双 Provider qualification 当前同时可用。
   Conformance grant 不授权 Source/World Model disclosure、artifact Session 或 Browser，下一 Gate 是 exact five-Turn Session authorization。
+- [FINDING-010-107](FINDING-010-107.md)：exact `eb835f5…` / `run-035-chat-alpha` 已执行 owner-private 五轮 Chat 与新对话
+  leakage probe；五轮 5/5 失败且没有 Answer/Citation/Review/Delivery。新 Conversation transcript 隔离成立，但省略指代返回通用
+  pre-dispatch failure 而非澄清；20 logical dispatch、retry 0、private files、clean stop 与 Production `NOT_EXECUTED` 已密封。
+- [FINDING-010-108](FINDING-010-108.md)：首次 live 的最早 Source 偏差是 model-facing semantic-search 许诺与 Worker 大小写敏感 literal
+  semantics 不一致；现将 query 收紧为短 literal token，并只用授权 path metadata 在固定 file/byte/result fuses 前确定性排序候选。
+- [FINDING-010-109](FINDING-010-109.md)：空新 Conversation 的省略指代不能依赖 Provider 或 Session budget；现由
+  `ENGINEERING_CHAT_BINDING@2` 固定 versioned zh-CN input policy，在 World Model/Source/credential/Provider 前返回非事实澄清。该修复与
+  FINDING-010-108 均只是 local candidate，必须在新 exact product/session grant 下重验。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

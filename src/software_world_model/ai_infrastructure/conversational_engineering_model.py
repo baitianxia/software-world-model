@@ -123,8 +123,11 @@ exact SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs.
 For a tool action, use exactly the argument names in the sealed tool_catalog.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation, never a path. SOURCE_SEARCH evidence_class is only a
-proposal vocabulary; the trusted Broker independently enforces the exact Source
-Profile and may reject a class or query.
+proposal vocabulary; its query must be one short case-sensitive literal token
+that may appear verbatim in the selected evidence, never a semantic description
+or natural-language search request. Prefer a source-native identifier from the
+question, Conversation, World Model, or prior observation. The trusted Broker
+independently enforces the exact Source Profile and may reject a class or query.
 Do not expose hidden rationale, invent IDs, add fields, or grant yourself any
 authority.
 """
@@ -1954,7 +1957,11 @@ def _tool_contract_view(
                     for item in EngineeringEvidenceClass
                     if item is not EngineeringEvidenceClass.WORLD_MODEL
                 ),
-                "query": "non-empty literal or semantic search proposal",
+                "query": (
+                    "one short case-sensitive literal token expected verbatim in selected "
+                    "evidence; semantic descriptions and natural-language search requests "
+                    "are forbidden"
+                ),
             },
         }
     if operation is EngineeringAgentToolOperation.SOURCE_READ:

@@ -4,15 +4,15 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-26
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-dual-provider-conformance-pass-next-session-authority-artifact-and-live
+worktree_status: iteration-010-slice-001-first-live-chat-failed-source-search-and-input-clarification-remediation-local-candidate
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
-live_model_path: pdr-004-access-pass-dual-provider-qualification-current-session-authority-required-artifact-not-executed-not-live-production-not-activated
+live_model_path: pdr-004-access-pass-first-live-chat-failed-remediation-local-candidate-new-exact-session-authority-required-production-not-activated
 ---
 
 # 当前工作上下文
@@ -40,6 +40,14 @@ current artifact Session、五轮 Chat 或 Source disclosure。
 HTTP request retry 0，并允许最多 3 次 credential-free pre-dispatch TLS acquisition；同时禁止 mall Source/resources、
 Browser 与 Production Activation。`FINDING-010-106` 已记录该 grant 恰好消费为 2/2、12/12 PASS，TLS `1/1`、
 connection reuse 1、retry/outcome unknown 0。它不授权 current artifact Session、五轮 Chat 或 Source disclosure。
+
+用户随后以 `codex-user-message:sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662` 精确授权
+product `eb835f58b75831fc6f2c5a2513a13f32bdb3f7fe`、`mall@0504e86b1f1b6f1b8aa6a734d37a90fb67346be7` 的 owner-private
+artifact、固定五轮 Chat 与新对话泄漏负测，并允许按 Ark→DeepSeek 披露明列的 World Model/Conversation/Work State/Ledger 和受限
+Java/README/POM/Test evidence；resources、credential values、hidden、Slice2/3 与 Production Activation 排除。`FINDING-010-107` 已记录
+`run-035-chat-alpha`：五轮 5/5 失败，没有 Answer/Citation/Review/Delivery；新 Conversation 没有旧消息，但省略指代 probe 返回通用
+pre-dispatch failure 而非澄清。20 logical dispatch、retry 0、private artifact、console clean、listener 正常停止与 Production
+`NOT_EXECUTED` 均已密封。该 live grant 已消费，不能用于当前修复后的代码。
 
 在这次 Ark grant 之前，用户曾以 `codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f`
 （`2026-08-25T06:20:03Z`）确认前期必须通过快速迭代调整方向，方向错误时不得继续夯实。该收据只修订同一已授权 Slice 的执行拆分，
@@ -86,14 +94,15 @@ Session loader 和 `swm-engineering-chat --session-config` 固定命令分支，
 ordered Ark→DeepSeek qualification identity、private Gateway repositories 与 launch/terminal receipt，形成
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又将 Ark transport 改为每 request 独立 verified TLS、TLS 后取
 credential、每 session 一个 HTTP dispatch、retry 0，并把 strict Session audit 接入 Conformance 与 terminal receipt；HTTP 前不可用也由
-Gateway owner-typed 为 fallback-eligible `PROVIDER_UNAVAILABLE`。在该本地 evidence point，旧 Ark Conformance 已明确失效，current actual
-artifact 尚未生成或执行，dual-route 状态仍是 `NOT_QUALIFIED / NOT_LIVE`；不能把 offline
-fixture、temp Git、Access、旧实现或旧 Result 追认为 mall 五轮 Chat
-或答案质量能力。
+Gateway owner-typed 为 fallback-eligible `PROVIDER_UNAVAILABLE`。该历史 evidence point 的旧 Ark Conformance 已明确失效，不能把 offline
+fixture、temp Git、Access、旧实现或旧 Result 追认为 mall 五轮 Chat 或答案质量能力。
 `FINDING-010-105` 随后记录 clean `1e99e9b…` 的 fresh Ark Conformance：2/2 dispatch、13/13 Case、TLS/credential `2/2`、reuse/retry/
 outcome unknown 0，current Ark qualification 已可用。`FINDING-010-106` 又记录 clean `653eff3…` 的 fresh DeepSeek
-Conformance：2/2 dispatch、12/12 Case、TLS `1/1`、credential `2/2`、connection reuse 1、retry/outcome unknown 0。两条 route 的
-current qualification 现在同时可用；下一 Gate 是取得 exact five-Turn Session authorization，再生成 current owner-private artifact 并执行五轮 Chat。
+Conformance：2/2 dispatch、12/12 Case、TLS `1/1`、credential `2/2`、connection reuse 1、retry/outcome unknown 0。两条 route 随后同时
+qualified；`FINDING-010-107` 的 exact owner-private Session 已真正执行，但五轮全部失败，新 Conversation probe 也没有澄清。
+`FINDING-010-108` 将 model-facing search 收紧为短、大小写敏感 literal token，并在不放宽 fuses/allowlist 的前提下按授权 path metadata 对候选
+排序；`FINDING-010-109` 将空新 Conversation 的省略指代澄清固定为 Binding-owned、Provider/Source/credential 前的 Application policy。
+这些只是修复后的 local candidate；下一 Gate 是新 exact product commit/tree、artifact 与 Session Authority 下重新执行同一 canary。
 PDR-003 的时间盒、根因、测试后置、Ark→DeepSeek 和成本规则继续有效；其孤立一题 canary 对 Chat 被收窄为一个五轮 Conversation，每个
 发生 Provider dispatch 的 Turn 分别计 live attempt。Provider 前最多一次本地/Mock Access smoke 的额度已由
 `V-ALPHA-ACCESS-001` 这一个 browser run 消费，不能再追加，也不能冒充 Chat canary。
@@ -155,11 +164,11 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-004 Chat Alpha** | `V-ALPHA-ACCESS-001` 已在 clean `cf2883b…` 上通过真实 browser；`FINDING-010-097—104` 形成 Application-owned Agent、evidence tools、sealed model boundary、Ark→DeepSeek route、生产 Provider runtime、artifact Session loader、固定命令与 Ark transport Session audit 本地候选，最新相关组合 141/141。`FINDING-010-105/106` 分别在 clean `1e99e9b…` / `653eff3…` 上取得 fresh Ark 2/2、13/13 与 DeepSeek 2/2、12/12 Conformance PASS，两条 route 的 current qualification 同时可用；current artifact 与 mall 五轮 Chat 仍未授权、执行或 live。后续 Chat/Quality/XD/Comparison/Preview 继续 blocking，Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
+| Iteration 010 | **Authorized / active Slice1 / REWORK / first live Chat FAIL** | `V-ALPHA-ACCESS-001` 已在 clean `cf2883b…` 上通过真实 browser；`FINDING-010-105/106` 的 Ark/DeepSeek Conformance 均 PASS。`FINDING-010-107 / run-035-chat-alpha` 随后在 exact `eb835f5…` 上执行五轮与新对话 probe：五轮 5/5 无 Answer，新 Conversation 隔离但没有澄清，故 Timebox/Chat/Quality/XD 均 FAIL。`FINDING-010-108/109` 已形成 literal-search/path-ranked candidate 与 Binding-owned 空上下文澄清的本地修复候选；必须在新 exact commit/tree 与新 Session Authority 下重验。Comparison/Preview 仍 blocking，Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
-| `local-browser` | **Chat Access browser PASS / dual Provider qualified / Session authority required** | Direct、strict World Model、旧 Engineering QA 与新 Engineering Chat identity 不混用；`swm-engineering-chat` 无参数 Access 已通过 exact browser handoff，`--session-config` 又在零外部 I/O 测试中接入完整 artifact-backed Session，Ark/DeepSeek terminal transport audit 均已本地闭合。fresh Ark 与 DeepSeek Conformance 均已 PASS；current actual artifact、Citation 内容与五轮 Chat 尚未授权、执行或 live |
+| `local-browser` | **Chat Access PASS / first artifact-backed Chat FAIL / remediation local candidate** | Direct、strict World Model、旧 Engineering QA 与新 Engineering Chat identity 不混用；`swm-engineering-chat --session-config` 已在 exact browser Session 真正执行。五轮均失败，新 Conversation 隔离但 probe 未澄清；listener 已正常停止。修复后还没有新的 browser/Provider 授权或 live 证据 |
 | Production Activation | **NOT EXECUTED** | 不得由任何本机 PASS 自动推导 |
 
 精确产品边界见 [Iteration 006 Acceptance](iterations/iteration-006/results/acceptance.md)。原始 Provider、能力、产品和浏览器证据
@@ -198,9 +207,10 @@ Configuration 加载 current sealed Conformance、published World Model、exact 
 Access-only fixed command 消费该组合。`FINDING-010-103` 已闭合该 loader 与 fixed-command 生命周期的本地实现，相关聚焦组合为 117/117；
 `FINDING-010-104` 又闭合 Ark TLS-before-credential、每 request 独立 TLS、typed unavailable fallback 和 terminal Session audit，本地相邻组合
 为 141/141。`FINDING-010-105` 已在 clean `1e99e9b…` 上取得 current Ark Conformance 2/2、13/13 PASS；`FINDING-010-106`
-又在 clean `653eff3…` 上取得 current DeepSeek Conformance 2/2、12/12 PASS。两条 route 现在同时 qualified；下一最早缺口是
-另行取得 exact five-Turn Session authorization，再生成 current owner-private artifact 并执行五轮 live Chat。当前没有执行 mall Source、
-listener/browser 或 Production Activation。
+又在 clean `653eff3…` 上取得 current DeepSeek Conformance 2/2、12/12 PASS。两条 route 同时 qualified 后，exact `eb835f5…` 的
+`run-035-chat-alpha` 已真正执行 mall Source、Provider 与 browser，但 `FINDING-010-107` 证明五轮全部失败，新 Conversation 只隔离而没有
+澄清。`FINDING-010-108/109` 已完成两个最早根因的本地修复；当前最早缺口是提交新的 exact product candidate，并取得只绑定该 commit/tree
+和同一 canary 的新 Session Authority。Production Activation 始终未执行。
 
 三轮检查点只是同一冻结五轮 live canary 的中间交付，不是独立三轮 canary；若在此停止，五轮 canary 记为 `INCOMPLETE / FAIL`。
 每个检查点都是立即用户交付和停止点，不是新 Slice 或授权阶段，也不能恢复暂停或失效的授权。计划、测试、文档和内部 Gate 完成都不算用户可见增量；错过检查点时

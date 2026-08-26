@@ -7938,10 +7938,41 @@ class ReworkPlanningGateTests(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                "external execution not authorized" in error
+                "no active external authority" in error
                 for error in external_errors
             ),
             external_errors,
+        )
+
+        missing_consumed_receipt = copy.deepcopy(manifest)
+        missing_consumed_receipt["authorization"].pop(  # type: ignore[index]
+            "first_live_session_authorization"
+        )
+        missing_consumed_errors = (
+            docs_gate.validate_conversational_architecture_cutover(
+                missing_consumed_receipt, "manifest.yaml"
+            )
+        )
+        self.assertTrue(
+            any("retain its exact receipt" in error for error in missing_consumed_errors),
+            missing_consumed_errors,
+        )
+
+        reactivated_consumed_grant = copy.deepcopy(manifest)
+        reactivated_consumed_grant["authorization"][  # type: ignore[index]
+            "first_live_session_authorization"
+        ]["status"] = "active"
+        reactivated_consumed_errors = (
+            docs_gate.validate_conversational_architecture_cutover(
+                reactivated_consumed_grant, "manifest.yaml"
+            )
+        )
+        self.assertTrue(
+            any(
+                "remain exact, excluded and evidence-bound" in error
+                for error in reactivated_consumed_errors
+            ),
+            reactivated_consumed_errors,
         )
 
         docs_sync_expanded = copy.deepcopy(manifest)
@@ -7976,7 +8007,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             live_authorized, "manifest.yaml"
         )
         self.assertTrue(
-            any("live canary not authorized" in error for error in live_errors),
+            any("consumed failed conversational live canary" in error for error in live_errors),
             live_errors,
         )
 
@@ -8521,10 +8552,13 @@ class ReworkPlanningGateTests(unittest.TestCase):
         invalid_policy_values = (
             ("fixed_multi_role_content_workflow_is_target_agent", True),
             ("provider_hidden_memory_is_authority", True),
+            ("conversation_binding_schema", "ENGINEERING_CHAT_BINDING@1"),
+            ("conversation_input_policy_ref", "UNREGISTERED@1"),
             ("prior_answer_or_review_reuse_as_fact_allowed", True),
             ("first_chat_canary_turn_count", 4),
             ("new_conversation_context_isolation_required", False),
             ("full_regression_before_direction_confirmation_allowed", True),
+            ("first_live_chat_turn_result", "passed"),
         )
         for field, value in invalid_policy_values:
             invalid = copy.deepcopy(manifest)

@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093]
+derived_from: [FINDING-010-093, FINDING-010-109]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -54,6 +54,10 @@ Package/Draft；新候选必须重新独立审核。架构不再要求单独的 
 
 默认 Web 是语义多轮 Chat，而不是单轮接口的历史列表。后续 Turn 可以引用、追问、纠正、收窄、深入或总结此前讨论；Application 必须
 密封相关对话上下文与当前工作状态，Agent 必须基于用户最新 Revision 解释指代。一次 Turn 失败只结束该 Turn，不删除会话历史或关闭服务。
+
+新 Conversation 在尚无任何可解析先行对象时，不应为判断一个指代词而调用 Source 或 Provider。Conversation Binding 必须固定显式版本化的
+语言 input policy；该可信 policy 只可返回无工程事实的澄清请求，不能回答问题、创建证据、选择 Provider 或替代独立 Reviewer。普通显式首问
+和非空 Conversation 仍进入同一主 Agent 路径。
 
 模型和 Provider 对该协议透明。可以使用任何通过同一 Agent 能力、工具、隔离和质量资格的模型 Strategy；current Codex 是强外部产品
 基线，不是系统运行时依赖、Oracle 或 Reviewer。系统还必须以同一主 Agent 的完整世界模型认知与 locator-only/empty 控制做因果消融，

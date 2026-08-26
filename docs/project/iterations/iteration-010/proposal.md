@@ -4,7 +4,7 @@ kind: iteration-proposal
 status: accepted
 authority: project-proposal
 owners: [product, project, architecture, engineering, quality]
-depends_on: [SYS-PRODUCT-SUCCESS, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-SECURITY, SYS-OPS-LOCAL-BROWSER]
+depends_on: [SYS-PRODUCT-SUCCESS, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-107, FINDING-010-108, FINDING-010-109, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-SECURITY, SYS-OPS-LOCAL-BROWSER]
 code: []
 tests: []
 iteration: ITER-010
@@ -64,8 +64,8 @@ Experience policy 使用 60/180/240 分钟检查点。历史经过已经越过 h
 
 模型 route 按 ADR-017 对用户透明：Session 预授权 `VOLCENGINE_ARK → DEEPSEEK`。用户只提交一次 logical question；Ark attempt 仅在密封
 terminal、无 authorized answer 且属于允许的 Provider/model reason 时，才自动启动一次独立 DeepSeek attempt。Fallback 从原 Turn、该 Turn 密封的 exact
-Cognition 以及与当前 Turn 有关的 sealed Conversation Context 重跑完整链，不复用 Ark 中间态；同 Provider retry 为 0，late Ark 结果 quarantine。当前实现尚未证明该 route，必须先以最小
-产品变化闭合，不能把文档目标写成运行 PASS。
+Cognition 以及与当前 Turn 有关的 sealed Conversation Context 重跑完整链，不复用 Ark 中间态；同 Provider retry 为 0，late Ark 结果
+quarantine。PDR-003 作出决定时尚未证明该 route，因此当时只能作为开发目标；后续实现与 live 事实由 PDR-004 段及 Findings 更新。
 
 ## PDR-004 amendment：主工程 Agent 与真正多轮 Chat
 
@@ -96,9 +96,12 @@ exact evidence authority、per-attempt fresh Tool/Response Control、committed W
 `--session-config` 固定命令分支，形成 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又闭合 Ark TLS-before-credential、
 per-request Session audit、typed unavailable fallback 与新 Conformance identity。`FINDING-010-105/106` 已分别在 clean `1e99e9b…` /
 `653eff3…` 上取得 fresh Ark 2/2、13/13 与 DeepSeek 2/2、12/12 Conformance PASS，两条 route 的 current qualification 同时可用。
-current actual artifact 与五轮 Chat 仍为 `SESSION_AUTHORITY_REQUIRED / NOT_EXECUTED / NOT_LIVE`，后续 artifact preparation、外部
-Provider/source disclosure 与 live Chat 须另行 exact freeze 和授权。PDR-003 的时间盒、
-根因、测试后置、Provider 和成本规则全部继续有效。
+`FINDING-010-107` 随后记录 exact `eb835f5…` / `run-035-chat-alpha` 的首次 artifact-backed 五轮 Chat：五轮全部失败，没有
+Answer/Citation/Review/Delivery；新 Conversation 没有旧消息，却把省略指代作为通用 pre-dispatch failure，而不是澄清。
+`FINDING-010-108/109` 已分别将 Source Search 的 model/Worker contract 对齐为 bounded literal semantics，并将空新 Conversation 的指代
+澄清归属到 Binding-owned Application policy。修复状态只是 `LOCAL_CANDIDATE`，后续 Provider/source disclosure 与 live Chat 必须绑定新的
+exact product freeze、artifact 和 Session Authority；不能追认首次失败 run。PDR-003 的时间盒、根因、测试后置、Provider 和成本规则全部
+继续有效。
 
 ## Product-goal alignment and cumulative delta
 

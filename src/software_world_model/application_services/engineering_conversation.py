@@ -33,6 +33,12 @@ ENGINEERING_CHAT_EXPERIENCE = "ENGINEERING_CHAT_EXPERIENCE@1"
 ENGINEERING_CHAT_ACCESS_VERSION = "ITER-010-CHAT-ACCESS@1"
 ENGINEERING_CHAT_MAXIMUM_MESSAGE_CHARACTERS = 16_000
 ENGINEERING_CHAT_MAXIMUM_MESSAGE_BYTES = 48_000
+ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN = (
+    "EMPTY_CONTEXT_REFERENT_CLARIFICATION_ZH_CN@1"
+)
+ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY = (
+    "APPLICATION_INPUT_CLARIFICATION"
+)
 
 _GIT_REVISION = re.compile(r"^[0-9a-f]{40}$")
 
@@ -86,6 +92,7 @@ class EngineeringChatBinding:
     source_access_status: RuntimeCapabilityStatus
     provider_status: RuntimeCapabilityStatus
     provider_route_ref: str | None
+    conversation_input_policy_ref: str | None
     excluded_source_paths: tuple[str, ...]
     known_limitations: tuple[str, ...]
     digest: Digest
@@ -103,6 +110,7 @@ class EngineeringChatBinding:
         source_access_status: RuntimeCapabilityStatus = RuntimeCapabilityStatus.NOT_CONFIGURED,
         provider_status: RuntimeCapabilityStatus = RuntimeCapabilityStatus.NOT_CONFIGURED,
         provider_route_ref: str | None = None,
+        conversation_input_policy_ref: str | None = None,
         excluded_source_paths: Sequence[str] = ("src/main/resources",),
         known_limitations: Sequence[str],
         product_version: str = ENGINEERING_CHAT_ACCESS_VERSION,
@@ -115,6 +123,11 @@ class EngineeringChatBinding:
         )
         source_profile_ref = _optional_text(source_profile_ref, "Source Profile")
         provider_route_ref = _optional_text(provider_route_ref, "Provider route")
+        conversation_input_policy_ref = _optional_text(
+            conversation_input_policy_ref, "Conversation input policy"
+        )
+        if conversation_input_policy_ref is not None:
+            _conversation_input_policy(conversation_input_policy_ref)
         exclusions = _unique_texts(excluded_source_paths, "excluded source path")
         limitations = _unique_texts(known_limitations, "known limitation")
         if "src/main/resources" not in exclusions:
@@ -152,7 +165,7 @@ class EngineeringChatBinding:
                 "ready Provider status requires an exact Provider route",
             )
         core = {
-            "schema": "ENGINEERING_CHAT_BINDING@1",
+            "schema": "ENGINEERING_CHAT_BINDING@2",
             "product_version": product_version,
             "product_revision": product_revision,
             "project_name": project_name,
@@ -167,6 +180,7 @@ class EngineeringChatBinding:
             "source_access_status": source_access_status.value,
             "provider_status": provider_status.value,
             "provider_route_ref": provider_route_ref,
+            "conversation_input_policy_ref": conversation_input_policy_ref,
             "excluded_source_paths": exclusions,
             "known_limitations": limitations,
         }
@@ -181,6 +195,7 @@ class EngineeringChatBinding:
             source_access_status=source_access_status,
             provider_status=provider_status,
             provider_route_ref=provider_route_ref,
+            conversation_input_policy_ref=conversation_input_policy_ref,
             excluded_source_paths=exclusions,
             known_limitations=limitations,
             digest=digest_of(core),
@@ -366,6 +381,71 @@ class EngineeringConversationSnapshot:
     turns: tuple[EngineeringConversationTurn, ...]
 
 
+class EngineeringConversationInputPolicy(Protocol):
+    """Versioned, binding-owned guard for non-semantic input clarification."""
+
+    policy_ref: str
+
+    def clarification_for(
+        self,
+        *,
+        snapshot: EngineeringConversationSnapshot,
+        message: str,
+    ) -> str | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class _EmptyContextZhCnReferentPolicy:
+    policy_ref: str = ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN
+
+    _ANAPHORIC_MARKERS = (
+        "它",
+        "它们",
+        "前者",
+        "后者",
+        "上述",
+        "前述",
+        "前面那个",
+        "上面那个",
+    )
+
+    def clarification_for(
+        self,
+        *,
+        snapshot: EngineeringConversationSnapshot,
+        message: str,
+    ) -> str | None:
+        context = snapshot.context
+        if (
+            snapshot.messages
+            or snapshot.turns
+            or context.included_user_message_ids
+            or context.work_state_ref is not None
+            or context.reviewed_conclusion_refs
+        ):
+            return None
+        compact = re.sub(r"\s+", "", message)
+        if not any(marker in compact for marker in self._ANAPHORIC_MARKERS):
+            return None
+        return (
+            "当前新对话没有可解析的先行对象。请明确你指的是哪个组件、"
+            "流程或请求，我再继续调查。"
+        )
+
+
+def _conversation_input_policy(
+    policy_ref: str | None,
+) -> EngineeringConversationInputPolicy | None:
+    if policy_ref is None:
+        return None
+    if policy_ref == ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN:
+        return _EmptyContextZhCnReferentPolicy()
+    raise DomainError(
+        ErrorCode.INVALID_ARGUMENT,
+        "Engineering Chat Conversation input policy is not registered",
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringTurnSubmission:
     snapshot: EngineeringConversationSnapshot
@@ -536,6 +616,52 @@ class EngineeringTurnExecutionOutcome:
             quality_status="NOT_ACCEPTED",
         )
 
+    @classmethod
+    def application_clarification(
+        cls,
+        *,
+        request_digest: Digest,
+        assistant_content: str,
+        included_user_message_ids: Sequence[StableId],
+        accepted_correction_message_ids: Sequence[StableId],
+        reviewed_conclusion_refs: Sequence[str],
+        superseded_conclusion_refs: Sequence[str],
+    ) -> "EngineeringTurnExecutionOutcome":
+        """Seal a deterministic input clarification before evidence/model dispatch."""
+
+        return cls(
+            request_digest=request_digest,
+            state=ConversationTurnState.SUCCEEDED,
+            assistant_kind=ConversationMessageKind.CLARIFICATION,
+            assistant_content=assistant_content,
+            included_user_message_ids=tuple(included_user_message_ids),
+            accepted_correction_message_ids=tuple(
+                accepted_correction_message_ids
+            ),
+            reviewed_conclusion_refs=tuple(reviewed_conclusion_refs),
+            superseded_conclusion_refs=tuple(superseded_conclusion_refs),
+            reducer_status="PRE_DISPATCH_CLARIFICATION_REQUIRED",
+            work_state_ref=None,
+            work_state_revision=None,
+            work_state_digest=None,
+            failure_code=None,
+            failure_message=None,
+            evidence_package_ref=None,
+            answer_ref=None,
+            review_ref=None,
+            delivery_authorization_ref=None,
+            provider_dispatch_count=0,
+            model_dispatch_receipt_refs=(),
+            provider_failure_classification=None,
+            provider_failure_code=None,
+            provider_route_receipt_ref=None,
+            provider_attempt_receipt_refs=(),
+            fallback_provider_attempt_count=0,
+            provider_duplicate_cost_risk=False,
+            retry_count=0,
+            quality_status=ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY,
+        )
+
 
 class EngineeringConversationTurnExecutor(Protocol):
     def execute(
@@ -575,6 +701,9 @@ class InMemoryEngineeringConversationService:
             )
         self.binding = binding
         self._turn_executor = turn_executor
+        self._input_policy = _conversation_input_policy(
+            binding.conversation_input_policy_ref
+        )
         self._id_generator = id_generator or Uuid4IdGenerator()
         self._clock = clock or (lambda: datetime.now(timezone.utc))
         self._lock = Lock()
@@ -693,6 +822,30 @@ class InMemoryEngineeringConversationService:
                 request_digest=request_digest,
                 requested_at=now,
             )
+            if self._input_policy is not None:
+                clarification = self._input_policy.clarification_for(
+                    snapshot=current,
+                    message=message,
+                )
+                if clarification is not None:
+                    return self._commit_outcome(
+                        request=execution_request,
+                        assistant_message_id=assistant_message_id,
+                        outcome=EngineeringTurnExecutionOutcome.application_clarification(
+                            request_digest=request_digest,
+                            assistant_content=clarification,
+                            included_user_message_ids=(user_message_id,),
+                            accepted_correction_message_ids=(
+                                current.context.accepted_correction_message_ids
+                            ),
+                            reviewed_conclusion_refs=(
+                                current.context.reviewed_conclusion_refs
+                            ),
+                            superseded_conclusion_refs=(
+                                current.context.superseded_conclusion_refs
+                            ),
+                        ),
+                    )
             if self._turn_executor is None:
                 return self._commit_outcome(
                     request=execution_request,
@@ -1136,6 +1289,36 @@ def _validate_execution_outcome(
         _optional_text(value, label)
     _text(outcome.reducer_status, "Context reducer status")
     _text(outcome.quality_status, "quality status")
+    application_clarification = (
+        outcome.quality_status
+        == ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY
+    )
+    input_policy = _conversation_input_policy(
+        request.binding.conversation_input_policy_ref
+    )
+    expected_application_clarification = (
+        input_policy.clarification_for(
+            snapshot=request.snapshot_before,
+            message=request.user_message.content,
+        )
+        if input_policy is not None
+        else None
+    )
+    if application_clarification != (
+        expected_application_clarification is not None
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Application input clarification must be authorized by the exact Binding policy",
+        )
+    if (
+        application_clarification
+        and outcome.assistant_content != expected_application_clarification
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Application input clarification must use the Binding policy result",
+        )
 
     before = request.snapshot_before.context
     if outcome.work_state_revision is not None:
@@ -1199,6 +1382,49 @@ def _validate_execution_outcome(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "successful Turn requires an answer, clarification, or reviewed limitation",
             )
+        if application_clarification:
+            empty_context = (
+                request.sequence == 1
+                and not request.snapshot_before.messages
+                and not request.snapshot_before.turns
+                and not before.included_user_message_ids
+                and before.work_state_ref is None
+                and not before.reviewed_conclusion_refs
+            )
+            forbidden = (
+                outcome.work_state_ref,
+                outcome.work_state_revision,
+                outcome.work_state_digest,
+                outcome.evidence_package_ref,
+                outcome.answer_ref,
+                outcome.review_ref,
+                outcome.delivery_authorization_ref,
+                outcome.failure_code,
+                outcome.failure_message,
+                route_receipt_ref,
+            )
+            if (
+                outcome.assistant_kind
+                is not ConversationMessageKind.CLARIFICATION
+                or not empty_context
+                or any(item is not None for item in forbidden)
+                or included != (request.user_message.message_id,)
+                or corrections != before.accepted_correction_message_ids
+                or reviewed != before.reviewed_conclusion_refs
+                or superseded != before.superseded_conclusion_refs
+                or outcome.reducer_status
+                != "PRE_DISPATCH_CLARIFICATION_REQUIRED"
+                or outcome.provider_dispatch_count != 0
+                or model_receipts
+                or attempt_receipts
+                or outcome.fallback_provider_attempt_count != 0
+                or outcome.provider_duplicate_cost_risk
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Application input clarification must remain empty-context and pre-dispatch",
+                )
+            return
         required = (
             outcome.work_state_ref,
             outcome.work_state_revision,
@@ -1279,7 +1505,7 @@ def _turn(
     completed_at: datetime,
 ) -> EngineeringConversationTurn:
     core = {
-        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@2",
+        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@3",
         "turn_id": request.turn_id.value,
         "result_id": request.result_id.value,
         "conversation_id": request.snapshot_before.conversation.conversation_id.value,

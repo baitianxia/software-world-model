@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-dual-provider-conformance-pass-next-session-authority-artifact-and-live`
+- Worktree status: `iteration-010-slice-001-first-live-chat-failed-source-search-and-input-clarification-remediation-local-candidate`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-access-pass-dual-provider-qualification-current-session-authority-required-artifact-not-executed-not-live-production-not-activated`
+- Live model path: `pdr-004-access-pass-first-live-chat-failed-remediation-local-candidate-new-exact-session-authority-required-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

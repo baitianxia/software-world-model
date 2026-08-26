@@ -542,6 +542,10 @@ conversational_engineering_agent:
   application_sealed_context_projection_required: true
   provider_hidden_memory_is_authority: false
   ambiguous_reference_action: clarify-before-source-or-provider-dispatch
+  conversation_binding_schema: ENGINEERING_CHAT_BINDING@2
+  conversation_input_policy_ref: EMPTY_CONTEXT_REFERENT_CLARIFICATION_ZH_CN@1
+  conversation_input_policy_scope: empty-context-referent-clarification-before-world-model-source-credential-or-provider
+  conversation_input_policy_engineering_claim_authority: none
   user_statement_becomes_source_truth: false
   prior_answer_or_review_reuse_as_fact_allowed: false
   reused_evidence_status: candidate-only-until-rebound-and-reviewed-for-current-turn
@@ -579,8 +583,20 @@ conversational_engineering_agent:
   deepseek_conformance_execution_evidence_ref: FINDING-010-106
   deepseek_conformance_result_digest: sha256:3e43921a5e0ebf00d0805b7c66f609c29b0d29a3fd8b848a8b3e491e641e6a4d
   deepseek_conformance_valid_until: "2026-09-25T01:22:41.700955Z"
-  agent_execution_status: dual-provider-conformance-pass-current-qualifications-available-session-authority-required-current-actual-artifact-not-executed-not-live
-  status: implemented-not-qualified
+  first_live_chat_execution_evidence_ref: FINDING-010-107
+  first_live_chat_product_commit: eb835f58b75831fc6f2c5a2513a13f32bdb3f7fe
+  first_live_chat_product_tree: e5508f17f99201876ecf932550e1bd30f67127d0
+  first_live_chat_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  first_live_chat_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+  first_live_chat_session_authorization_digest: sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662
+  first_live_chat_session_config_file_digest: sha256:5af6357921029e168039678d1921246cb4421bd0d6557ef2004cd976caed567d
+  first_live_chat_terminal_receipt_digest: sha256:7bf6a2553cb952db281e56d8c15924476359e522f26148fff082178a8d0ac1ba
+  first_live_chat_turn_result: five-of-five-failed-no-answer-citation-review-or-delivery
+  first_live_new_conversation_probe_result: transcript-isolated-but-required-clarification-failed
+  source_search_remediation_evidence_ref: FINDING-010-108
+  conversation_input_clarification_remediation_evidence_ref: FINDING-010-109
+  agent_execution_status: first-live-five-turn-chat-failed-remediation-local-candidate-new-exact-product-session-authority-required
+  status: implemented-live-failed-remediation-local-candidate
 
 question_evidence_package_classes:
   support_and_citation:
@@ -921,7 +937,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:78a9fe5be453fb2b02556e3f95a3d6bc304a5672e5b51efaf29070a5d8483442
+  system_contract_set_digest: sha256:724e755873eed837619bd4b0ee879d6c105f50102cdc85d1e774b9aecb6555b6
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -967,12 +983,12 @@ development:
         - "codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
       authorization_combines_current_readiness_acceptance: true
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: not-executed
-      product_code_freeze_status: authorized-awaiting-first-pdr-004-product-freeze
+      product_code_freeze_digest: sha256:5af6357921029e168039678d1921246cb4421bd0d6557ef2004cd976caed567d
+      product_code_freeze_status: first-pdr-004-artifact-session-config-freeze-executed-live-failed-successor-freeze-required
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: not-authorized-conversational-five-turn-canary-not-executed
+      live_question_status: authorized-executed-failed-run-035-remediation-local-candidate-new-exact-grant-required
       authorized_by: user
       authorized_at: 2026-08-25T05:06:07Z
       authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
@@ -1011,8 +1027,18 @@ authorization:
   docs_sync_authorizes_product_code: false
   refreshed_readiness_required: false
   explicit_user_reauthorization_required: false
+  external_execution_reauthorization_required: true
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
-  external_execution_authorization_status: not-authorized
+  external_execution_authorization_status: first-live-session-grant-consumed-no-current-live-authority
+  first_live_session_authorization:
+    status: consumed
+    authorization_ref: codex-user-message:sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662
+    exact_product_commit: eb835f58b75831fc6f2c5a2513a13f32bdb3f7fe
+    exact_product_tree: e5508f17f99201876ecf932550e1bd30f67127d0
+    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+    execution_finding_ref: FINDING-010-107
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24

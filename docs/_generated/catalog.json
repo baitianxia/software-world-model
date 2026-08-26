@@ -3199,6 +3199,55 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-106.md"
   },
   {
+    "id": "FINDING-010-107",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "interface",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-107.md"
+  },
+  {
+    "id": "FINDING-010-108",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "source",
+      "ai",
+      "application",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-108.md"
+  },
+  {
+    "id": "FINDING-010-109",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "product",
+      "architecture",
+      "security",
+      "interface",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-109.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5841,7 +5890,8 @@
       "security"
     ],
     "derived_from": [
-      "FINDING-010-093"
+      "FINDING-010-093",
+      "FINDING-010-109"
     ],
     "path": "docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md"
   },
@@ -6046,7 +6096,8 @@
       "FINDING-010-103",
       "FINDING-010-104",
       "FINDING-010-105",
-      "FINDING-010-106"
+      "FINDING-010-106",
+      "FINDING-010-109"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },
@@ -6388,7 +6439,8 @@
       "source"
     ],
     "derived_from": [
-      "DD-SRC-SOURCE-ARTIFACT"
+      "DD-SRC-SOURCE-ARTIFACT",
+      "FINDING-010-108"
     ],
     "path": "docs/system/contracts/source/source-artifact.md"
   },
