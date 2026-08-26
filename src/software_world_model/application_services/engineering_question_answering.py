@@ -352,6 +352,7 @@ class EngineeringQuestionResourceLimits:
     maximum_verification_investigations: int = 1
     maximum_source_operations: int = 128
     maximum_source_files: int = 64
+    maximum_source_search_files: int = 56
     maximum_source_bytes: int = 2_097_152
     maximum_repository_document_bytes: int = 1_048_576
     maximum_build_configuration_bytes: int = 524_288
@@ -372,6 +373,11 @@ class EngineeringQuestionResourceLimits:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "engineering question resource limits must all be positive",
+            )
+        if self.maximum_source_search_files > self.maximum_source_files:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "source search file fuse cannot exceed the total source file fuse",
             )
 
     @property
@@ -2594,19 +2600,23 @@ class SourceBroker:
             )
         remaining_files = request.limits.maximum_source_files - usage.source_files
         maximum_files = min(remaining_files, 64)
-        if (
-            source_operation is SourceReadOperation.SEARCH
-            and remaining_files > 1
-            and any(
+        if source_operation is SourceReadOperation.SEARCH:
+            # A directory scan and a whole-Turn read budget are different fuses.
+            # Bound each SEARCH independently so a useful locator set cannot
+            # consume the capacity required for a bounded multi-file flow.
+            maximum_files = min(
+                maximum_files,
+                request.limits.maximum_source_search_files,
+            )
+            if remaining_files > 1 and any(
                 operation
                 in {SourceReadOperation.READ, SourceReadOperation.PARSE}
                 for operation in request.registered_operations
-            )
-        ):
-            # SEARCH locators are capabilities for a later exact read.  Keep one
-            # slot inside the same total file fuse so a truncated directory scan
-            # cannot consume the capability before the Agent can exercise it.
-            maximum_files = min(maximum_files, remaining_files - 1)
+            ):
+                # A later SEARCH can run after earlier reads have reduced the
+                # remaining budget.  Preserve at least one exact locator use in
+                # that case without increasing the total file fuse.
+                maximum_files = min(maximum_files, remaining_files - 1)
         operation_core = {
             "broker_policy": ENGINEERING_QA_BROKER_POLICY,
             "request_digest": request.digest.value,

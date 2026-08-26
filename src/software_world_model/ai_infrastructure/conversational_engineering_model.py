@@ -68,11 +68,11 @@ from .model_gateway import (
 from .openai_responses_adapter import OutputSchemaDefinition
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@1"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@2"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@1"
+    "conversational-engineering-agent-no-tools-prompt@2"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@1"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@2"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@1"
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
@@ -120,6 +120,9 @@ return a CLARIFICATION before any tool action. Treat prior user statements and
 assistant messages as conversation context, never as software facts. Revise
 hypotheses and plan when observations conflict. An ANSWER claim may cite only
 exact SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs.
+Copy those IDs only from the corresponding arrays in draft_reference_policy;
+never use a BOUNDARY ID as affirmative claim support or a SUPPORT ID as a
+limitation boundary.
 For a tool action, use exactly the argument names in the sealed tool_catalog.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation, never a path. SOURCE_SEARCH evidence_class is only a
@@ -1913,6 +1916,20 @@ def _primary_input_view(
         "current_turn_observations": tuple(
             _observation_view(item) for item in invocation.observations
         ),
+        "draft_reference_policy": {
+            "answer_claim_support_observation_ids": tuple(
+                item.observation_id.value
+                for item in invocation.observations
+                if item.disposition.value == "SUPPORT"
+            ),
+            "limitation_boundary_observation_ids": tuple(
+                item.observation_id.value
+                for item in invocation.observations
+                if item.disposition.value == "BOUNDARY"
+            ),
+            "cross_disposition_references_forbidden": True,
+            "unknown_observation_references_forbidden": True,
+        },
         "review_feedback": {
             "review_digest": (
                 invocation.review_digest.value

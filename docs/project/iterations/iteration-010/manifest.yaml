@@ -596,10 +596,27 @@ conversational_engineering_agent:
   source_search_remediation_evidence_ref: FINDING-010-108
   conversation_input_clarification_remediation_evidence_ref: FINDING-010-109
   source_search_read_budget_remediation_evidence_ref: FINDING-010-110
-  deterministic_successor_canary_status: five-turn-and-new-conversation-pass-with-fake-model-temp-git-no-live-authority-consumed
-  deterministic_successor_canary_source_file_budget: search-63-plus-read-1-equals-unchanged-total-64
-  agent_execution_status: first-live-five-turn-chat-failed-combined-deterministic-successor-pass-new-exact-product-session-authority-required
-  status: implemented-live-failed-remediation-local-candidate
+  second_live_chat_execution_evidence_ref: FINDING-010-111
+  second_live_chat_product_commit: 999616d24f793e139f20ea821c3069fdaff57a39
+  second_live_chat_product_tree: ec3179c1efb5df02c77f4be1d60a5e694dcc7380
+  second_live_chat_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  second_live_chat_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+  second_live_chat_session_authorization_digest: sha256:096a1bc724f89db2fd2ca59e47ad4807a0981209e27d13fca6884062a097de03
+  second_live_chat_session_config_file_digest: sha256:015c05246de48d7b7e2b05ce89a0fe7938af37e0c05a91395cbd6663f24f89a8
+  second_live_chat_terminal_receipt_digest: sha256:77988477bc8143658c78211761bd5b072b69ea7cc8f839eac806009b869ac0a7
+  second_live_chat_turn_result: five-of-five-failed-no-answer-citation-review-or-delivery
+  second_live_chat_dispatches_by_turn: 6,6,7,3,2
+  second_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
+  source_search_dual_file_fuse_evidence_ref: FINDING-010-112
+  model_draft_reference_domain_evidence_ref: FINDING-010-113
+  current_agent_model_strategy_ref: conversational-engineering-agent@2
+  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@2
+  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@2
+  current_dual_provider_qualification_status: stale-after-model-strategy-prompt-input-change-fresh-conformance-required
+  deterministic_successor_canary_status: five-turn-and-new-conversation-pass-plus-three-read-adjacent-pass-with-fake-model-temp-git-no-live-authority-consumed
+  deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
+  agent_execution_status: second-live-five-turn-chat-failed-leakage-pass-architecture-successor-local-candidate-fresh-conformance-required
+  status: implemented-second-live-failed-leakage-pass-v2-remediation-local-candidate
 
 question_evidence_package_classes:
   support_and_citation:
@@ -940,7 +957,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:e4a51e8b05ef80679490b0bc0e9e975b57cb0eb7d8a796fc2482979814c322a6
+  system_contract_set_digest: sha256:c52bd19d05198ac422a8ead8e99590d7febc330a534ab6a9a4fb647f7b90e169
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -986,12 +1003,12 @@ development:
         - "codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
       authorization_combines_current_readiness_acceptance: true
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: sha256:5af6357921029e168039678d1921246cb4421bd0d6557ef2004cd976caed567d
-      product_code_freeze_status: first-pdr-004-artifact-session-config-freeze-executed-live-failed-successor-freeze-required
+      product_code_freeze_digest: sha256:015c05246de48d7b7e2b05ce89a0fe7938af37e0c05a91395cbd6663f24f89a8
+      product_code_freeze_status: second-pdr-004-artifact-session-config-freeze-executed-live-failed-v2-successor-freeze-required
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: authorized-executed-failed-run-035-remediation-local-candidate-new-exact-grant-required
+      live_question_status: authorized-executed-failed-run-036-leakage-pass-v2-remediation-local-candidate-fresh-conformance-and-new-exact-grant-required
       authorized_by: user
       authorized_at: 2026-08-25T05:06:07Z
       authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
@@ -1032,7 +1049,7 @@ authorization:
   explicit_user_reauthorization_required: false
   external_execution_reauthorization_required: true
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
-  external_execution_authorization_status: first-live-session-grant-consumed-no-current-live-authority
+  external_execution_authorization_status: second-live-session-grant-consumed-no-current-live-authority
   first_live_session_authorization:
     status: consumed
     authorization_ref: codex-user-message:sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662
@@ -1042,6 +1059,15 @@ authorization:
     source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
     excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
     execution_finding_ref: FINDING-010-107
+  second_live_session_authorization:
+    status: consumed
+    authorization_ref: codex-user-message:sha256:096a1bc724f89db2fd2ca59e47ad4807a0981209e27d13fca6884062a097de03
+    exact_product_commit: 999616d24f793e139f20ea821c3069fdaff57a39
+    exact_product_tree: ec3179c1efb5df02c77f4be1d60a5e694dcc7380
+    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+    execution_finding_ref: FINDING-010-111
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24

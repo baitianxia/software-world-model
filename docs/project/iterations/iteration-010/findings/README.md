@@ -286,5 +286,12 @@ iteration: ITER-010
 - [FINDING-010-110](FINDING-010-110.md)：组合审计发现大目录 SEARCH 即使先命中目标，仍会消费全部 64 个总文件名额，使签发的 locator
   无法 READ。Broker 现在在不提高总熔断的前提下为后续 exact READ/PARSE 保留 1 个名额；71 文件、同一固定五轮与新对话负测的
   deterministic successor canary 已闭合，真实 Provider/browser 仍须新 exact Session Authority。
+- [FINDING-010-111](FINDING-010-111.md)：exact `999616d…` / `run-036-chat-alpha` 第二次真实五轮仍 5/5 失败，24 logical dispatch、retry 0；
+  新 Conversation 的“它呢？”首次真实通过 Application clarification、Context 隔离与零 dispatch。证据分离了 Source 多 READ 容量、Draft
+  跨 disposition 引用和独立 transport failure，run 永久保持 FAIL。
+- [FINDING-010-112](FINDING-010-112.md)：同 signature 复现触发架构职责评审；Source 资源契约现把 per-SEARCH scan fuse 56 与 whole-Turn
+  actual file fuse 64 显式分开。73 文件相邻案例在 PARTIAL Coverage 下继续完成 3 个不同 locator READ，累计 59/64，不增加任何总上限。
+- [FINDING-010-113](FINDING-010-113.md)：Primary input/strategy/prompt 升级到 v2，由可信 Application 投影 ANSWER SUPPORT 与 LIMITATION
+  BOUNDARY 的 closed ID domains；decoder 继续重算并 fail closed，不修补模型输出。旧双 Provider Conformance 因 identity 改变而失效。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

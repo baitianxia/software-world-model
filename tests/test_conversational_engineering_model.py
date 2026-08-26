@@ -11,6 +11,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     ModelBackedConversationalEngineeringAgent,
     PolicyEnforcingEngineeringAgentModelGateway,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
+    _primary_input_view,
     decode_engineering_agent_primary_output,
     decode_engineering_agent_review_output,
 )
@@ -26,11 +27,13 @@ from software_world_model.ai_infrastructure.model_gateway import (
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
     EngineeringAgentDeliveryAuthorization,
+    EngineeringAgentEvidenceDisposition,
     EngineeringAgentInvocation,
     EngineeringAgentLoopLimits,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
     EngineeringAgentToolOperation,
+    EngineeringAgentToolObservation,
 )
 from software_world_model.application_services.engineering_conversation import (
     ConversationTurnState,
@@ -339,6 +342,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("BUILD_CONFIGURATION", rendered)
         self.assertIn("one short case-sensitive literal token", rendered)
         self.assertIn("semantic descriptions", rendered)
+        self.assertIn("draft_reference_policy", rendered)
+        self.assertIn("answer_claim_support_observation_ids", rendered)
+        self.assertIn("limitation_boundary_observation_ids", rendered)
+        self.assertIn("cross_disposition_references_forbidden", rendered)
         self.assertNotIn("literal or semantic search proposal", rendered)
         self.assertNotIn("AGENT_FIXTURE_API_KEY", rendered)
         self.assertNotIn(authorizer.session_authority.digest.value, rendered)
@@ -507,6 +514,57 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             review_findings=(),
             review_digest=None,
             available_operations=(EngineeringAgentToolOperation.WORLD_MODEL_QUERY,),
+        )
+        support_observation = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'1' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'2' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="support-result",
+            content="supported current-Turn evidence",
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("support-evidence"),
+            digest=digest_of("support-observation"),
+        )
+        boundary_observation = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'3' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'4' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="boundary-result",
+            content="current-Turn evidence boundary",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("boundary-evidence"),
+            digest=digest_of("boundary-observation"),
+        )
+        policy_view = _primary_input_view(
+            EngineeringAgentInvocation(
+                request=capture.request,
+                previous_work_state=None,
+                observations=(support_observation, boundary_observation),
+                review_findings=(),
+                review_digest=None,
+                available_operations=(
+                    EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                ),
+            )
+        )["draft_reference_policy"]
+        self.assertEqual(
+            policy_view,
+            {
+                "answer_claim_support_observation_ids": (
+                    support_observation.observation_id.value,
+                ),
+                "limitation_boundary_observation_ids": (
+                    boundary_observation.observation_id.value,
+                ),
+                "cross_disposition_references_forbidden": True,
+                "unknown_observation_references_forbidden": True,
+            },
         )
         payload = {
             "goal": "澄清登录入口",

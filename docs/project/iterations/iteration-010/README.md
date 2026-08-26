@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: current-development
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
@@ -61,11 +61,17 @@ Provider routes、fixed 5×15/75 bounds、mandatory resources exclusion、privat
 credential、retry 0、typed unavailable fallback 与双 route terminal Session audit，最新相邻组合 141/141。`FINDING-010-105` 随后在
 clean `1e99e9b…` 上取得 fresh Ark Conformance 2/2、13/13 PASS；`FINDING-010-106` 又在 clean `653eff3…` 上取得
 fresh DeepSeek Conformance 2/2、12/12 PASS，TLS `1/1`、connection reuse 1、retry/outcome unknown 0。两条 route 的 current
-qualification 同时可用。`FINDING-010-107` 随后记录 exact `eb835f5…` / `run-035-chat-alpha`：首次 owner-private artifact-backed 五轮
+qualification 当时同时可用。`FINDING-010-107` 随后记录 exact `eb835f5…` / `run-035-chat-alpha`：首次 owner-private artifact-backed 五轮
 Chat 已执行，但五轮 5/5 失败且没有 Answer/Citation/Review/Delivery；新 Conversation transcript 隔离成立，省略指代却没有澄清。
 `FINDING-010-108/109/110` 已形成 literal/path-ranked Search、同一 64 文件总熔断内的 follow-up read reserve、Binding-owned 空上下文
-澄清和同一固定五轮 deterministic successor canary。run-035 grant 已消费；修复后必须绑定新 exact commit/tree、artifact 与 Session
-Authority 重验。hidden、Slice2/3 与 Production 始终未授权或未执行。
+澄清和同一固定五轮 deterministic successor canary。`FINDING-010-111` 又记录 exact `999616d…` / `run-036-chat-alpha`：第二次五轮仍
+5/5 失败、24 logical dispatch、retry 0，但新 Conversation 的“它呢？”已真实通过 clarification、Context isolation 与零 dispatch。
+同 signature 复现后，`FINDING-010-112/113` 已把 per-SEARCH scan 56 与 whole-Turn file total 64 分开，并以
+`draft_reference_policy` 密封 SUPPORT/BOUNDARY 两个可复制 ID 域；73 文件相邻案例完成 3 个不同 READ，累计 59/64。model
+strategy/prompt/input 已升级到 v2；聚焦 63/63、相邻组合 217/217、docs gate 80/80 和 513-document check 均通过，full discovery
+1277 项中 1271 PASS，既有 ITER-003 frozen/Codex binary drift 保持 5 failures + 1 error。旧双 Provider Conformance 因而只保留为历史
+证据。run-036 grant 已消费；下一 Gate 是 fresh Ark/DeepSeek Conformance，再冻结新 exact commit/tree、artifact 与 Session Authority。
+hidden、Slice2/3 与 Production 始终未授权或未执行。
 
 Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
 能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。

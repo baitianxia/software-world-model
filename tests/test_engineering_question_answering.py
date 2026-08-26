@@ -2418,6 +2418,15 @@ class Service {
         self.assertFalse(result.drafts)
         self.assertFalse(result.reviews)
 
+    def test_search_file_fuse_cannot_exceed_total_file_fuse(self):
+        with self.assertRaises(DomainError) as caught:
+            EngineeringQuestionResourceLimits(
+                maximum_source_files=4,
+                maximum_source_search_files=5,
+            )
+
+        self.assertEqual(caught.exception.code, ErrorCode.INVALID_ARGUMENT)
+
     def test_repeated_identical_intent_is_rejected_before_repeated_worker_reads(self):
         class RepeatingInvestigator:
             def propose(self, investigation_input):

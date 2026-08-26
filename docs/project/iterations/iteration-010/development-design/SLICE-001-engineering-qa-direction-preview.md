@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -62,14 +62,18 @@ TLS-before-credential、typed unavailable fallback 和 fresh-Conformance identit
 Conversation 没有旧消息，但省略指代未澄清。最早偏差是 semantic search 提示与 literal Worker 不一致，以及空上下文指代没有可信的
 Provider 前所有者。`FINDING-010-108/109` 已完成 bounded literal/path-ranked Search 和 Binding-owned Application clarification 的本地修复。
 组合审计又发现截断 Search 会先耗尽 locator Read 的总文件预算；`FINDING-010-110` 在不提高 64 文件总熔断的前提下保留一个 follow-up
-read 名额，并用 71 文件、同一固定五轮和新对话 probe 闭合 deterministic successor Gate。下一动作是提交新的 exact candidate；只有新的
-Session Authority 才能生成 successor artifact 并重跑同一
-五轮 canary。任何一项缺失都不能宣称修复已 `LIVE / PASS`，run-035 永久保持 FAIL。
+read 名额，并用 71 文件、同一固定五轮和新对话 probe 闭合 deterministic successor Gate。`FINDING-010-111` 随后记录 exact
+`999616d…` / `run-036-chat-alpha`：五轮再次 5/5 失败、24 logical dispatch、retry 0；新 Conversation clarification/隔离/零 dispatch
+首次真实 PASS。第二次失败证明单 READ reservation 是同 signature 的架构缺口，且 Ark Draft 还发生 BOUNDARY→SUPPORT 跨域引用。
+`FINDING-010-112/113` 因而把 SEARCH scan 56 与 whole-Turn total 64 显式分开，并由 Application 投影 sealed Draft reference domains；
+73 文件相邻案例完成三个不同 READ，累计 59/64。model strategy/prompt/input 已升级到 v2，旧双 Provider Conformance 不再资格化当前
+successor。下一动作是 fresh Ark/DeepSeek Conformance；只有随后新的 exact commit/tree、artifact 与 Session Authority 才能重跑同一五轮
+canary。任何一项缺失都不能宣称修复已 `LIVE / PASS`，run-035/run-036 永久保持 FAIL。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为
 `INCOMPLETE / FAIL`，不能取得 Chat/Quality PASS。等待外部授权时立即交付当前可运行版本并停止产品范围扩张；本次计划收据不授权
-Provider/model、源码披露或 browser live；run-035 的授权已消费。任何检查点上用户明确认为方向错误，都立即停止后续投入。下文的历史 run、旧协议和最终 Gate
+Provider/model、源码披露或 browser live；run-035/run-036 的授权均已消费。任何检查点上用户明确认为方向错误，都立即停止后续投入。下文的历史 run、旧协议和最终 Gate
 只作证据与边界引用，不能反向成为首个交付的前置任务。
 
 `AUTHORIZED / ACTIVE / REWORK / CODING INPUT`。用户曾以
@@ -95,7 +99,8 @@ ADR-018/Engineering Conversation Contract。文档同步收据 `d8239ea7…` 本
 接受刷新 Readiness 并授权本 Slice 产品/System 编码与本地确定性验证。下文标明“历史 / non-normative”的段落只保存已发生事实；
 该收据不授权 Provider/model、动态源码披露、live browser、hidden、Slice2/3 或 Production；后续 `7256a886…` 补充 exact
 `cf2883b…` 的 Access 权限并已消费，`bec7f079…` 又补充 exact `eb835f5…` 五轮 Chat、受限 Source disclosure 与 browser 权限并在失败
-run-035 中消费。修复后的 Provider/Source/browser 当前没有 live 授权，hidden、Slice2/3 与 Production 始终未授权。
+run-035 中消费；`096a1bc…` 最后补充 exact `999616d…` 的同一五轮与泄漏负测并在失败 run-036 中消费。v2 model boundary 需要 fresh
+Conformance；当前没有新的 Provider/Source/browser live 授权，hidden、Slice2/3 与 Production 始终未授权。
 
 恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、
 逐轮 Request/Evidence/Answer/Review/Delivery 和新对话隔离。首次方向 live canary 本身是一段五轮 Conversation；PDR-003 的体验前单次

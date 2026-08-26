@@ -244,9 +244,10 @@ class SearchReadAnswerDriver:
 
 
 class FiveTurnLiteralSearchDriver:
-    def __init__(self) -> None:
+    def __init__(self, *, read_count: int = 1) -> None:
         self.calls_by_turn = {}
         self.previous_state_revisions = []
+        self.read_count = read_count
 
     def propose(self, invocation):
         turn_ref = invocation.request.turn_id.value
@@ -284,17 +285,19 @@ class FiveTurnLiteralSearchDriver:
                     evidence_need="locate the exact login service declaration",
                 ),
             )
-        if step == 1:
-            locator = next(
-                reference
+        if 1 <= step <= self.read_count:
+            locators = next(
+                observation.citation_refs
                 for observation in invocation.observations
-                if observation.disposition
+                if observation.operation
+                is EngineeringAgentToolOperation.SOURCE_SEARCH
+                and observation.disposition
                 is EngineeringAgentEvidenceDisposition.SUPPORT
-                for reference in observation.citation_refs
             )
+            locator = locators[step - 1]
             return proposal(
                 invocation,
-                call_ref=f"five-turn-{turn_ref}-read",
+                call_ref=f"five-turn-{turn_ref}-read-{step}",
                 resolved_referents=("fixture login and authentication flow",),
                 accepted_correction_message_ids=corrections,
                 action=EngineeringAgentToolActionProposal.create(
@@ -607,8 +610,8 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
                 .authority_receipt.ledger_entries[-1]
                 .details
             )
-            self.assertEqual(search_usage["source_files"], "63")
-            self.assertEqual(read_usage["source_files"], "64")
+            self.assertEqual(search_usage["source_files"], "56")
+            self.assertEqual(read_usage["source_files"], "57")
             current = submission.snapshot
 
         self.assertEqual(driver.previous_state_revisions, [None, 3, 6, 9, 12])
@@ -651,6 +654,77 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             ).conversation.digest,
             sealed_conversation_digest,
         )
+
+    def test_large_search_preserves_multiple_exact_reads_for_one_agent_turn(
+        self,
+    ) -> None:
+        source_root = self.repository / "src/main/java/example"
+        source_root.mkdir(parents=True)
+        for index in range(70):
+            (source_root / f"AUnrelated{index:02d}.java").write_text(
+                f"final class AUnrelated{index:02d} {{}}\n",
+                encoding="utf-8",
+            )
+        for name, declaration in (
+            ("LoginService.java", "interface LoginService {}"),
+            ("LoginServiceAudit.java", "final class LoginServiceAudit {}"),
+            ("LoginServiceToken.java", "final class LoginServiceToken {}"),
+        ):
+            (source_root / name).write_text(declaration + "\n", encoding="utf-8")
+        self.git("add", "src/main/java")
+        self.git("commit", "-q", "-m", "multi-read source fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.configuration = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name="fixture",
+            response_language="zh-CN",
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.profile.profile_ref,
+            source_profile_digest=self.profile.profile_digest,
+            world_model_read_authority_digest=self.world_authority,
+            source_allowlist=("README.md", "src/main/java"),
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.profile,
+        )
+        reviewer = RecordingReviewer()
+        service = self.service(
+            FiveTurnLiteralSearchDriver(read_count=3),
+            reviewer,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 6)
+        package = reviewer.requests[-1].package
+        self.assertEqual(len(package.support_observations), 4)
+        self.assertEqual(len(package.boundary_observations), 1)
+        self.assertIn(
+            "SOURCE_FILE_FUSE_EXHAUSTED",
+            package.boundary_observations[0].content,
+        )
+        search_usage = dict(
+            package.support_observations[0]
+            .authority_receipt.ledger_entries[-1]
+            .details
+        )
+        final_read_usage = dict(
+            package.support_observations[-1]
+            .authority_receipt.ledger_entries[-1]
+            .details
+        )
+        self.assertEqual(search_usage["source_files"], "56")
+        self.assertEqual(final_read_usage["source_files"], "59")
 
     def test_configuration_rejects_allowlist_that_contains_resources(self) -> None:
         with self.assertRaises(DomainError):
