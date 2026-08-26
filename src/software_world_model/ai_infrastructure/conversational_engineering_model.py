@@ -68,17 +68,17 @@ from .model_gateway import (
 from .openai_responses_adapter import OutputSchemaDefinition
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@2"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@3"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@2"
+    "conversational-engineering-agent-no-tools-prompt@3"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@2"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@1"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@3"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@1"
+    "engineering-agent-independent-review-proposal@2"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -123,14 +123,22 @@ exact SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs.
 Copy those IDs only from the corresponding arrays in draft_reference_policy;
 never use a BOUNDARY ID as affirmative claim support or a SUPPORT ID as a
 limitation boundary.
+The first non-whitespace output character must be { and the last must be }.
+Never emit analysis, narration, a Markdown fence, or any text outside that one
+JSON object.
 For a tool action, use exactly the argument names in the sealed tool_catalog.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
-current-Turn observation, never a path. SOURCE_SEARCH evidence_class is only a
-proposal vocabulary; its query must be one short case-sensitive literal token
-that may appear verbatim in the selected evidence, never a semantic description
-or natural-language search request. Prefer a source-native identifier from the
-question, Conversation, World Model, or prior observation. The trusted Broker
-independently enforces the exact Source Profile and may reject a class or query.
+current-Turn observation, never a path. Copy it only from an unused entry in
+tool_reference_policy.source_read_options. Never repeat an entry in
+tool_reference_policy.prior_actions. If a prior search was insufficient, choose
+a different source-native literal from the question, World Model, observation,
+or Review Finding; if no legal action can improve the evidence, return an honest
+LIMITATION rather than repeating or inventing an argument. SOURCE_SEARCH
+evidence_class is only a proposal vocabulary; its query must be one short
+case-sensitive literal token that may appear verbatim in the selected evidence,
+never a semantic description or natural-language search request. The trusted
+Broker independently enforces the exact Source Profile and may reject a class or
+query.
 Do not expose hidden rationale, invent IDs, add fields, or grant yourself any
 authority.
 """
@@ -143,6 +151,14 @@ memory or the primary Agent's confidence.
 
 Use only the sealed current Turn, relevant Conversation Context, current sealed
 Package, and Draft. Return exactly one JSON object matching the closed schema.
+The first non-whitespace output character must be { and the last must be }.
+Never emit analysis, narration, a Markdown fence, or any text outside that one
+JSON object. Return one claim_assessment for every exact claim index in
+review_reference_policy.claim_indices. Mark a claim SUPPORTED when its cited
+SUPPORT observations establish it; a SUPPORTED claim must not receive a Finding.
+Mark it DEFECT only when an actual claim defect exists, and bind at least one
+Finding to that claim index. Do not create a Finding that merely restates that a
+claim is supported or that no defect exists.
 Check correctness, completeness, relevance, user corrections and constraints,
 claim-to-support closure, honest unknown boundaries, material conditions,
 ordering, outcomes, state changes, and side effects. APPROVED requires an empty
@@ -282,12 +298,23 @@ _FINDING_SCHEMA = _closed_object(
     }
 )
 
+_CLAIM_ASSESSMENT_SCHEMA = _closed_object(
+    {
+        "claim_index": {"type": "integer", "minimum": 0, "maximum": 63},
+        "verdict": {"type": "string", "enum": ["SUPPORTED", "DEFECT"]},
+    }
+)
+
 _REVIEW_OUTPUT_SCHEMA = _closed_object(
     {
         "decision": {
             "type": "string",
             "enum": [item.value for item in EngineeringAgentReviewDecision],
         },
+        "claim_assessments": _array(
+            _CLAIM_ASSESSMENT_SCHEMA,
+            maximum=64,
+        ),
         "findings": _array(_FINDING_SCHEMA, maximum=32),
     }
 )
@@ -1930,6 +1957,7 @@ def _primary_input_view(
             "cross_disposition_references_forbidden": True,
             "unknown_observation_references_forbidden": True,
         },
+        "tool_reference_policy": _tool_reference_policy(invocation),
         "review_feedback": {
             "review_digest": (
                 invocation.review_digest.value
@@ -1997,6 +2025,98 @@ def _tool_contract_view(
     )
 
 
+def _tool_reference_policy(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    prior_actions = tuple(
+        _trusted_action_view(item) for item in invocation.action_history
+    )
+    attempted_reads = tuple(
+        value
+        for item in invocation.action_history
+        if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+        for value in (_action_argument(item, "locator_reference"),)
+        if value is not None
+    )
+    attempted_read_set = set(attempted_reads)
+    options: dict[str, dict[str, object]] = {}
+    for observation in invocation.observations:
+        if (
+            observation.operation is not EngineeringAgentToolOperation.SOURCE_SEARCH
+            or observation.disposition.value != "SUPPORT"
+            or observation.authority_receipt is None
+        ):
+            continue
+        citations = {
+            item.citation_ref: item
+            for item in observation.authority_receipt.citations
+        }
+        for reference in observation.citation_refs:
+            if reference in attempted_read_set or reference in options:
+                continue
+            citation = citations.get(reference)
+            if citation is None:
+                continue
+            options[reference] = {
+                "locator_reference": reference,
+                "locator": citation.locator,
+                "evidence_class": citation.evidence_class,
+                "modality": citation.modality,
+                "source_observation_id": observation.observation_id.value,
+            }
+    return {
+        "prior_actions": prior_actions,
+        "source_search_queries_already_attempted": tuple(
+            value
+            for item in invocation.action_history
+            if item.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+            for value in (_action_argument(item, "query"),)
+            if value is not None
+        ),
+        "world_model_queries_already_attempted": tuple(
+            value
+            for item in invocation.action_history
+            if item.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+            for value in (_action_argument(item, "query"),)
+            if value is not None
+        ),
+        "source_read_locator_references_already_attempted": attempted_reads,
+        "source_read_options": tuple(options.values()),
+        "exact_action_repetition_forbidden": True,
+        "unlisted_source_read_reference_forbidden": True,
+    }
+
+
+def _trusted_action_view(
+    action: EngineeringAgentToolActionProposal,
+) -> dict[str, object]:
+    expected = EngineeringAgentToolActionProposal.create(
+        operation=action.operation,
+        arguments=action.arguments,
+        evidence_need=action.evidence_need,
+    )
+    if action != expected:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Agent action history contains an invalid proposal identity",
+        )
+    return {
+        "operation": action.operation.value,
+        "arguments": tuple(
+            {"name": name, "value": value}
+            for name, value in action.arguments
+        ),
+        "digest": action.digest.value,
+    }
+
+
+def _action_argument(
+    action: EngineeringAgentToolActionProposal,
+    name: str,
+) -> str | None:
+    return dict(action.arguments).get(name)
+
+
 def _review_input_view(
     request: EngineeringAgentReviewRequest,
 ) -> dict[str, object]:
@@ -2041,6 +2161,13 @@ def _review_input_view(
                 item.value for item in request.draft.boundary_observation_ids
             ),
             "digest": request.draft.digest.value,
+        },
+        "review_reference_policy": {
+            "claim_indices": tuple(range(len(request.draft.claims))),
+            "complete_claim_assessments_required": True,
+            "supported_claim_findings_forbidden": True,
+            "defect_claim_finding_required": True,
+            "approved_findings_must_be_empty": True,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,
@@ -2372,6 +2499,7 @@ def _validate_primary_proposal(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent output drifted from the sealed Context or observation prefix",
         )
+    _validate_primary_action(proposal.action, invocation)
     by_id = {item.observation_id: item for item in observations}
     if proposal.draft is None:
         return
@@ -2396,6 +2524,58 @@ def _validate_primary_proposal(
         )
 
 
+def _validate_primary_action(
+    action: EngineeringAgentToolActionProposal | None,
+    invocation: EngineeringAgentInvocation,
+) -> None:
+    if action is None:
+        return
+    expected_argument_names = {
+        EngineeringAgentToolOperation.WORLD_MODEL_QUERY: ("query",),
+        EngineeringAgentToolOperation.SOURCE_SEARCH: ("evidence_class", "query"),
+        EngineeringAgentToolOperation.SOURCE_READ: ("locator_reference",),
+    }[action.operation]
+    arguments = dict(action.arguments)
+    if set(arguments) != set(expected_argument_names):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent action arguments do not match the sealed tool catalog",
+        )
+    signature = (action.operation, tuple(sorted(arguments.items())))
+    for previous in invocation.action_history:
+        _trusted_action_view(previous)
+        previous_signature = (
+            previous.operation,
+            tuple(sorted(previous.arguments)),
+        )
+        if signature == previous_signature:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "Engineering Agent repeated an exact current-Turn tool action",
+            )
+    if action.operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
+        permitted_classes = {
+            item.value
+            for item in EngineeringEvidenceClass
+            if item is not EngineeringEvidenceClass.WORLD_MODEL
+        }
+        if arguments["evidence_class"] not in permitted_classes:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "Engineering Agent Source search class is outside the sealed catalog",
+            )
+    if action.operation is EngineeringAgentToolOperation.SOURCE_READ:
+        available = {
+            item["locator_reference"]
+            for item in _tool_reference_policy(invocation)["source_read_options"]
+        }
+        if arguments["locator_reference"] not in available:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "Engineering Agent Source read reference is outside the trusted current-Turn copy domain",
+            )
+
+
 def _decode_review_output(
     output: Mapping[str, object],
     *,
@@ -2403,6 +2583,21 @@ def _decode_review_output(
     model_call_ref: str,
 ) -> EngineeringAgentReviewProposal:
     try:
+        claim_assessments = tuple(
+            (
+                _integer(
+                    _mapping(item, "claim assessment")["claim_index"],
+                    "claim assessment index",
+                ),
+                _string(
+                    _mapping(item, "claim assessment")["verdict"],
+                    "claim assessment verdict",
+                ),
+            )
+            for item in _sequence(
+                output["claim_assessments"], "claim assessments"
+            )
+        )
         findings = tuple(
             EngineeringAgentReviewFinding.create(
                 code=_string(
@@ -2436,6 +2631,18 @@ def _decode_review_output(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer output violates the typed contract",
         ) from exc
+    expected_claim_indices = tuple(range(len(request.draft.claims)))
+    if (
+        tuple(index for index, _ in claim_assessments) != expected_claim_indices
+        or any(
+            verdict not in {"SUPPORTED", "DEFECT"}
+            for _, verdict in claim_assessments
+        )
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer did not assess the exact ordered Claim set",
+        )
     if any(
         item.claim_index is not None
         and item.claim_index >= len(request.draft.claims)
@@ -2444,6 +2651,32 @@ def _decode_review_output(
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer references an unknown Draft Claim",
+        )
+    verdicts = dict(claim_assessments)
+    claim_findings = {
+        item.claim_index
+        for item in proposal.findings
+        if item.claim_index is not None
+    }
+    if any(
+        verdicts[item.claim_index] != "DEFECT"
+        for item in proposal.findings
+        if item.claim_index is not None
+    ) or any(
+        verdict == "DEFECT" and index not in claim_findings
+        for index, verdict in claim_assessments
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer Claim assessments and Findings disagree",
+        )
+    if (
+        proposal.decision is EngineeringAgentReviewDecision.APPROVED
+        and any(verdict != "SUPPORTED" for _, verdict in claim_assessments)
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer approved a Claim assessed as defective",
         )
     return proposal
 
@@ -2674,6 +2907,15 @@ def _boolean(value: object, label: str) -> bool:
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             f"{label} must be a boolean",
+        )
+    return value
+
+
+def _integer(value: object, label: str) -> int:
+    if type(value) is not int or value < 0:
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            f"{label} must be a non-negative integer",
         )
     return value
 

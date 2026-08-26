@@ -2549,6 +2549,7 @@ def validate_conversational_engineering_agent(
         "qualified-candidate",
         "implemented-live-failed-remediation-local-candidate",
         "implemented-second-live-failed-leakage-pass-v2-remediation-local-candidate",
+        "implemented-third-live-failed-leakage-pass-v3-remediation-local-candidate",
     }:
         errors.append(
             f"{label}: conversational_engineering_agent.status must be a closed pre-production state"
@@ -2724,6 +2725,164 @@ def validate_conversational_engineering_agent(
                     )
         authorization = manifest.get("authorization")
         for prefix in ("first", "second"):
+            live = (
+                authorization.get(f"{prefix}_live_session_authorization")
+                if isinstance(authorization, dict)
+                else None
+            )
+            if not isinstance(live, dict) or any(
+                policy.get(f"{prefix}_live_chat_{policy_suffix}")
+                != live.get(authorization_field)
+                for policy_suffix, authorization_field in (
+                    ("product_commit", "exact_product_commit"),
+                    ("product_tree", "exact_product_tree"),
+                    ("source_commit", "source_commit"),
+                    ("source_tree", "source_tree"),
+                )
+            ):
+                errors.append(
+                    f"{label}: {prefix} live Chat identity must match the consumed Session authorization"
+                )
+            authorization_ref = (
+                live.get("authorization_ref") if isinstance(live, dict) else None
+            )
+            if (
+                not isinstance(authorization_ref, str)
+                or not authorization_ref.startswith("codex-user-message:")
+                or policy.get(f"{prefix}_live_chat_session_authorization_digest")
+                != authorization_ref.removeprefix("codex-user-message:")
+            ):
+                errors.append(
+                    f"{label}: {prefix} live Chat authority digest must match the consumed user receipt"
+                )
+    if policy.get("status") == (
+        "implemented-third-live-failed-leakage-pass-v3-remediation-local-candidate"
+    ):
+        for field, expected in (
+            ("first_live_chat_execution_evidence_ref", "FINDING-010-107"),
+            (
+                "first_live_chat_turn_result",
+                "five-of-five-failed-no-answer-citation-review-or-delivery",
+            ),
+            (
+                "first_live_new_conversation_probe_result",
+                "transcript-isolated-but-required-clarification-failed",
+            ),
+            ("source_search_remediation_evidence_ref", "FINDING-010-108"),
+            (
+                "conversation_input_clarification_remediation_evidence_ref",
+                "FINDING-010-109",
+            ),
+            (
+                "source_search_read_budget_remediation_evidence_ref",
+                "FINDING-010-110",
+            ),
+            ("second_live_chat_execution_evidence_ref", "FINDING-010-111"),
+            (
+                "second_live_chat_turn_result",
+                "five-of-five-failed-no-answer-citation-review-or-delivery",
+            ),
+            ("second_live_chat_dispatches_by_turn", "6,6,7,3,2"),
+            (
+                "second_live_new_conversation_probe_result",
+                "pass-empty-context-clarification-zero-dispatch-no-inheritance",
+            ),
+            ("source_search_dual_file_fuse_evidence_ref", "FINDING-010-112"),
+            ("model_draft_reference_domain_evidence_ref", "FINDING-010-113"),
+            ("third_live_conformance_execution_evidence_ref", "FINDING-010-114"),
+            (
+                "third_live_ark_conformance_result_digest",
+                "sha256:bbaf5611a46d68400d0ee4da4f5994deeb8bffecbeead07b7db26b40cbe4b114",
+            ),
+            (
+                "third_live_deepseek_conformance_result_digest",
+                "sha256:5fe0a06f253a3865325738a63c00f9fd659cd96c25aa764c76a3ec2914646b6c",
+            ),
+            ("third_live_chat_execution_evidence_ref", "FINDING-010-115"),
+            (
+                "third_live_chat_turn_result",
+                "five-of-five-failed-no-user-visible-answer-citation-or-delivery",
+            ),
+            ("third_live_chat_dispatches_by_turn", "10,8,4,4,5"),
+            (
+                "third_live_new_conversation_probe_result",
+                "pass-empty-context-clarification-zero-dispatch-no-inheritance",
+            ),
+            ("model_tool_reference_domain_evidence_ref", "FINDING-010-116"),
+            (
+                "model_review_claim_assessment_evidence_ref",
+                "FINDING-010-117",
+            ),
+            (
+                "current_agent_model_strategy_ref",
+                "conversational-engineering-agent@3",
+            ),
+            (
+                "current_agent_model_prompt_ref",
+                "conversational-engineering-agent-no-tools-prompt@3",
+            ),
+            (
+                "current_agent_primary_input_schema",
+                "ENGINEERING_AGENT_PRIMARY_INPUT@3",
+            ),
+            (
+                "current_agent_review_input_schema",
+                "ENGINEERING_AGENT_REVIEW_INPUT@2",
+            ),
+            (
+                "current_agent_review_output_schema",
+                "engineering-agent-independent-review-proposal@2",
+            ),
+            (
+                "current_dual_provider_qualification_status",
+                "stale-after-v3-strategy-prompt-input-output-change-fresh-"
+                "conformance-required",
+            ),
+            (
+                "deterministic_successor_canary_status",
+                "v3-tool-copy-and-review-contract-70-of-70-pass-plus-prior-five-"
+                "turn-and-three-read-canaries-no-live-authority-consumed",
+            ),
+            (
+                "deterministic_successor_canary_source_file_budget",
+                "five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-"
+                "search-56-plus-read-3-equals-59-of-64",
+            ),
+        ):
+            if policy.get(field) != expected:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must equal {expected}"
+                )
+        for prefix in ("first", "second", "third"):
+            for suffix in (
+                "product_commit",
+                "product_tree",
+                "source_commit",
+                "source_tree",
+            ):
+                field = f"{prefix}_live_chat_{suffix}"
+                value = policy.get(field)
+                if not isinstance(value, str) or re.fullmatch(
+                    r"[0-9a-f]{40}", value
+                ) is None:
+                    errors.append(
+                        f"{label}: conversational_engineering_agent.{field} must be an exact Git object"
+                    )
+            for suffix in (
+                "session_authorization_digest",
+                "session_config_file_digest",
+                "terminal_receipt_digest",
+            ):
+                field = f"{prefix}_live_chat_{suffix}"
+                value = policy.get(field)
+                if not isinstance(value, str) or re.fullmatch(
+                    r"sha256:[0-9a-f]{64}", value
+                ) is None:
+                    errors.append(
+                        f"{label}: conversational_engineering_agent.{field} must be an exact sha256 digest"
+                    )
+        authorization = manifest.get("authorization")
+        for prefix in ("first", "second", "third"):
             live = (
                 authorization.get(f"{prefix}_live_session_authorization")
                 if isinstance(authorization, dict)
@@ -3039,10 +3198,16 @@ def validate_conversational_architecture_cutover(
             if isinstance(authorization, dict)
             else None
         )
+        third_live_authorization = (
+            authorization.get("third_live_session_authorization")
+            if isinstance(authorization, dict)
+            else None
+        )
         if external_execution_status == "not-authorized":
             if (
                 first_live_authorization is not None
                 or second_live_authorization is not None
+                or third_live_authorization is not None
             ):
                 errors.append(
                     f"{label}: an unexecuted external state must not contain live Session authorization receipts"
@@ -3150,6 +3315,83 @@ def validate_conversational_architecture_cutover(
                         errors.append(
                             f"{label}: {name}.{field} must be an exact Git object"
                         )
+        elif external_execution_status == (
+            "third-live-session-grant-consumed-no-current-live-authority"
+        ):
+            if (
+                authorization.get("external_execution_reauthorization_required")
+                is not True
+            ):
+                errors.append(
+                    f"{label}: consumed third live Session authority must require new exact external reauthorization"
+                )
+            for name, live_authorization, finding_ref in (
+                (
+                    "first_live_session_authorization",
+                    first_live_authorization,
+                    "FINDING-010-107",
+                ),
+                (
+                    "second_live_session_authorization",
+                    second_live_authorization,
+                    "FINDING-010-111",
+                ),
+                (
+                    "third_live_session_authorization",
+                    third_live_authorization,
+                    "FINDING-010-115",
+                ),
+            ):
+                if not isinstance(live_authorization, dict):
+                    errors.append(
+                        f"{label}: consumed third live state must retain its exact receipt: {name}"
+                    )
+                    continue
+                authorization_ref = live_authorization.get("authorization_ref")
+                if (
+                    live_authorization.get("status") != "consumed"
+                    or not isinstance(authorization_ref, str)
+                    or re.fullmatch(
+                        r"codex-user-message:sha256:[0-9a-f]{64}",
+                        authorization_ref,
+                    )
+                    is None
+                    or live_authorization.get("excludes")
+                    != "src-main-resources,credential-values,hidden,slice2,slice3,production-activation"
+                    or live_authorization.get("execution_finding_ref")
+                    != finding_ref
+                ):
+                    errors.append(
+                        f"{label}: {name} must remain exact, excluded and evidence-bound"
+                    )
+                for field in (
+                    "exact_product_commit",
+                    "exact_product_tree",
+                    "source_commit",
+                    "source_tree",
+                ):
+                    value = live_authorization.get(field)
+                    if not isinstance(value, str) or re.fullmatch(
+                        r"[0-9a-f]{40}", value
+                    ) is None:
+                        errors.append(
+                            f"{label}: {name}.{field} must be an exact Git object"
+                        )
+            if not isinstance(third_live_authorization, dict) or (
+                third_live_authorization.get("conformance_execution_finding_ref")
+                != "FINDING-010-114"
+                or third_live_authorization.get(
+                    "ark_tls_supplemental_authorization_ref"
+                )
+                != "codex-user-message:sha256:e89640faf226ce069216ba40c71448dac0d8e09faf898aacbe74577067d540b3"
+                or third_live_authorization.get(
+                    "ark_tls_cap_raise_authorization_ref"
+                )
+                != "codex-user-message:sha256:21786af7d671472735a0cf7f064a26a7e19030b8ca6291c14f83ca1c1bfdfae1"
+            ):
+                errors.append(
+                    f"{label}: third live Session authority must retain exact conditional Conformance and Ark TLS receipts"
+                )
         else:
             errors.append(
                 f"{label}: current development authorization must have no active external authority; only not-authorized or consumed live Session grants are allowed"
@@ -3172,6 +3414,13 @@ def validate_conversational_architecture_cutover(
             else None
         )
         if external_execution_status == (
+            "third-live-session-grant-consumed-no-current-live-authority"
+        ):
+            expected_live_question_status = (
+                "authorized-executed-failed-run-037-leakage-pass-v3-remediation-"
+                "local-candidate-fresh-conformance-and-new-exact-grant-required"
+            )
+        elif external_execution_status == (
             "second-live-session-grant-consumed-no-current-live-authority"
         ):
             expected_live_question_status = (

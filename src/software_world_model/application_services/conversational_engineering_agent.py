@@ -648,6 +648,7 @@ class EngineeringAgentInvocation:
     review_findings: tuple[EngineeringAgentReviewFinding, ...]
     review_digest: Digest | None
     available_operations: tuple[EngineeringAgentToolOperation, ...]
+    action_history: tuple[EngineeringAgentToolActionProposal, ...] = ()
 
 
 class EngineeringAgentDriver(Protocol):
@@ -1586,6 +1587,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         tool_actions = 0
         review_count = 0
         consecutive_no_progress = 0
+        action_history: tuple[EngineeringAgentToolActionProposal, ...] = ()
         minimum_observations_for_draft = 0
         last_package: EngineeringAgentEvidencePackage | None = None
         last_draft: EngineeringAgentAnswerDraft | None = None
@@ -1605,6 +1607,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                             pending_review.digest if pending_review is not None else None
                         ),
                         available_operations=available_operations,
+                        action_history=action_history,
                     )
                 )
             except BaseException:
@@ -1668,6 +1671,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     action=proposal.action,
                     prior_observations=observations,
                 )
+                action_history = (*action_history, proposal.action)
                 observations = (*observations, *observation_batch)
                 consecutive_no_progress = (
                     0

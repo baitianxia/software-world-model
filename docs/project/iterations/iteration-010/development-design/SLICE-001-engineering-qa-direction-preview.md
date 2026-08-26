@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -67,13 +67,19 @@ read 名额，并用 71 文件、同一固定五轮和新对话 probe 闭合 det
 首次真实 PASS。第二次失败证明单 READ reservation 是同 signature 的架构缺口，且 Ark Draft 还发生 BOUNDARY→SUPPORT 跨域引用。
 `FINDING-010-112/113` 因而把 SEARCH scan 56 与 whole-Turn total 64 显式分开，并由 Application 投影 sealed Draft reference domains；
 73 文件相邻案例完成三个不同 READ，累计 59/64。model strategy/prompt/input 已升级到 v2，旧双 Provider Conformance 不再资格化当前
-successor。下一动作是 fresh Ark/DeepSeek Conformance；只有随后新的 exact commit/tree、artifact 与 Session Authority 才能重跑同一五轮
-canary。任何一项缺失都不能宣称修复已 `LIVE / PASS`，run-035/run-036 永久保持 FAIL。
+successor。`FINDING-010-114` 随后在 exact `d429be6…` / `400d579…` 上取得 fresh DeepSeek 2/2、12/12 与补充 Ark 2/2、13/13
+Conformance PASS；Ark 补充 TLS acquisition 使用 4/10，只有 credential/HTTP 均为 0 的失败 run 被重新启动。条件满足后，
+`FINDING-010-115 / run-037-chat-alpha` 执行同一五轮，仍为 0/5，dispatch `10/8/4/4/5`、retry 0；新 Conversation
+clarification/隔离/零 dispatch 继续 PASS。最早产品偏差变为 Tool action/locator 没有受信 copy domain，以及 Reviewer 明知 Claim 已支持却
+仍编码 FINDINGS。`FINDING-010-116/117` 现以 Primary input v3 的 current-attempt action/locator policy 和 Review input/output v2 的完整
+Claim assessments 处置；所有 role output 还显式禁止 JSON 外叙述，closed adapter 不抽取 substring。下一动作再次是 fresh Ark/DeepSeek
+Conformance；只有随后新的 exact commit/tree、artifact 与 Session Authority 才能重跑同一五轮 canary。任何一项缺失都不能宣称修复已
+`LIVE / PASS`，run-035/run-036/run-037 永久保持 FAIL。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为
 `INCOMPLETE / FAIL`，不能取得 Chat/Quality PASS。等待外部授权时立即交付当前可运行版本并停止产品范围扩张；本次计划收据不授权
-Provider/model、源码披露或 browser live；run-035/run-036 的授权均已消费。任何检查点上用户明确认为方向错误，都立即停止后续投入。下文的历史 run、旧协议和最终 Gate
+Provider/model、源码披露或 browser live；run-035/run-036/run-037 的授权均已消费。任何检查点上用户明确认为方向错误，都立即停止后续投入。下文的历史 run、旧协议和最终 Gate
 只作证据与边界引用，不能反向成为首个交付的前置任务。
 
 `AUTHORIZED / ACTIVE / REWORK / CODING INPUT`。用户曾以
@@ -100,7 +106,9 @@ ADR-018/Engineering Conversation Contract。文档同步收据 `d8239ea7…` 本
 该收据不授权 Provider/model、动态源码披露、live browser、hidden、Slice2/3 或 Production；后续 `7256a886…` 补充 exact
 `cf2883b…` 的 Access 权限并已消费，`bec7f079…` 又补充 exact `eb835f5…` 五轮 Chat、受限 Source disclosure 与 browser 权限并在失败
 run-035 中消费；`096a1bc…` 最后补充 exact `999616d…` 的同一五轮与泄漏负测并在失败 run-036 中消费。v2 model boundary 需要 fresh
-Conformance；当前没有新的 Provider/Source/browser live 授权，hidden、Slice2/3 与 Production 始终未授权。
+Conformance；`8ebd3650…` 又在 exact `d429be6…` 上授权条件式双 Conformance、artifact 和同一 Live，Ark TLS acquisition 补充授权
+`e89640fa…` 与上限提升 `21786af7…` 也已按 `FINDING-010-114` 消费，最终失败 run-037 由 `FINDING-010-115` 密封。v3
+strategy/prompt/input/output 已使该资格再次 stale；当前没有新的 Provider/Source/browser live 授权，hidden、Slice2/3 与 Production 始终未授权。
 
 恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、
 逐轮 Request/Evidence/Answer/Review/Delivery 和新对话隔离。首次方向 live canary 本身是一段五轮 Conversation；PDR-003 的体验前单次

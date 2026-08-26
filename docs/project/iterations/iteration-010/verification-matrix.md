@@ -99,6 +99,30 @@ PASS；允许 AF_UNIX 的 full discovery 1277 项中 1271 PASS，余下 5 failur
 Codex binary digest drift。所以旧 Ark/DeepSeek Conformance 失效；下一外部 Gate 是 fresh 双 Provider Conformance，之后才是新 exact
 artifact/session 和同一五轮重验。
 
+## Third live five-Turn Chat failure, leakage PASS and v3 successor
+
+`FINDING-010-114` 记录 exact product `d429be6c7e5e43342bf427e394ca5babcc55bcdb` / tree
+`400d5791e4c443c201765da5f488519093136738` 的 fresh qualification。DeepSeek 为 2/2 request、12/12 Case、TLS 1/1、reuse 1、
+retry/unknown 0；Ark 补充授权只在 credential/HTTP 0 的 TLS failure 后启动 fresh run，补充 acquisition 使用 4/10，最终成功 run 为
+2/2 request、13/13 Case、TLS/credential/HTTP 2/2、retry/unknown 0。两条 PASS 后才生成 owner-private run-037 artifact。
+
+`FINDING-010-115 / run-037-chat-alpha` 的五轮终态依次为 `REVIEW_LIMIT / NO_PROGRESS / OUTCOME_UNKNOWN / NO_PROGRESS /
+OUTCOME_UNKNOWN`，logical dispatch 为 `10/8/4/4/5`，五轮仍无用户可见 Answer/Citation/Delivery，Chat/Quality/XD 保持 FAIL。terminal
+密封 2 Conversation、6 Turn、31 logical dispatch、request retry 0 和 Production `NOT_EXECUTED`；Ark 11 logical（8 HTTP + 3
+pre-dispatch TLS failure），DeepSeek 20 HTTP（含 2 post-dispatch outcome unknown）。private files 0600、Browser console clean、listener
+clean stop 和端口关闭均成立。新 Conversation 仍以独立 empty Context 对“它呢？”返回
+`APPLICATION_INPUT_CLARIFICATION / dispatch 0`，旧 Conversation digest 不变。
+
+最早产品偏差不是资源上限：Turn 1 Reviewer 的 Finding message 自己确认 Claim 已被证据完全支持；Turn 2/4 主 Agent 分别重复 exact
+Search、伪造未签发 locator 和重复 `401`。`FINDING-010-116` 因此把 current-attempt typed action history 与 authority-receipt Citation
+catalog 投影为 `ENGINEERING_AGENT_PRIMARY_INPUT@3.tool_reference_policy`，decoder 重算并拒绝重复 action、参数漂移和未列 locator。
+`FINDING-010-117` 又以 `ENGINEERING_AGENT_REVIEW_INPUT@2` /
+`engineering-agent-independent-review-proposal@2` 强制 exact ordered Claim 的 `SUPPORTED/DEFECT` assessments 与 Finding/decision 一致；
+role prompt 禁止 JSON 外叙述，closed adapter 不增加 substring 修复。current strategy/prompt 为
+`conversational-engineering-agent@3` / `conversational-engineering-agent-no-tools-prompt@3`。v3 Model/Agent 27/27、七组相邻组合
+43/43 与 `py_compile` 已通过；旧 run-037 qualification/artifact 因 identity 改变而 stale，下一 Gate 再次是 fresh 双 Provider
+Conformance 和新的 exact Live Authority。
+
 ## Current local Agent executor evidence
 
 `FINDING-010-097` 在 Access 之后闭合了不接外部系统的 Application-owned bounded executor：同一 Conversation 的 Work State identity 跨

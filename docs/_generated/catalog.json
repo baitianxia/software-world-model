@@ -3308,6 +3308,68 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-113.md"
   },
   {
+    "id": "FINDING-010-114",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "security",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-114.md"
+  },
+  {
+    "id": "FINDING-010-115",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "interface",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-115.md"
+  },
+  {
+    "id": "FINDING-010-116",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-116.md"
+  },
+  {
+    "id": "FINDING-010-117",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "ai",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-117.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -6158,7 +6220,9 @@
       "FINDING-010-105",
       "FINDING-010-106",
       "FINDING-010-109",
-      "FINDING-010-113"
+      "FINDING-010-113",
+      "FINDING-010-116",
+      "FINDING-010-117"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },

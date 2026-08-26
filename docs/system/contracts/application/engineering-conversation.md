@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -98,13 +98,21 @@ Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
    对先前答案的修订和仍未知范围。Primary model input 必须由可信 Application 从 exact current-Turn observations 投影两个 closed
    reference domain：affirmative Claim 只能复制 SUPPORT ID，Limitation 只能复制 BOUNDARY ID；cross-disposition 和 unknown ID 禁止。
    Decoder 必须从原 Observation 重算并 fail closed，不能删除错误 Claim、替换引用、提升 Boundary 或自动授权 Draft。current model
-   strategy/prompt/input identity 为 `conversational-engineering-agent@2`、`conversational-engineering-agent-no-tools-prompt@2` 和
-   `ENGINEERING_AGENT_PRIMARY_INPUT@2`；产品 Conversation protocol 仍为 `CONVERSATIONAL_ENGINEERING_AGENT@1`。
+   input 还必须由可信 Application 从 current isolated attempt 的 typed action history 与 Source authority-receipt Citations 投影
+   `tool_reference_policy`：列出已执行 exact action、已尝试 query/read 和未使用的 `source_read_options`；Provider 只能复制列出的 opaque
+   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。Decoder 从原 action/Observation/receipt 重算，fallback
+   attempt 不继承 primary 的中间 action 或 locator catalog。current model strategy/prompt/Primary input identity 为
+   `conversational-engineering-agent@3`、`conversational-engineering-agent-no-tools-prompt@3` 和
+   `ENGINEERING_AGENT_PRIMARY_INPUT@3`；产品 Conversation protocol 仍为 `CONVERSATIONAL_ENGINEERING_AGENT@1`。
 3. 每个可交付工程 Draft 至少经过一个 fresh、与主 Agent 隔离的独立 Reviewer。前述 deterministic empty-context input clarification 不是
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查通过不能抵消重大错误。
+   `ENGINEERING_AGENT_REVIEW_INPUT@2` 必须投影 exact ordered Claim indices；Reviewer output 必须为每个 Claim 返回一个
+   `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
+   Finding；`APPROVED` 只允许全 SUPPORTED + empty Findings。global completeness/relevance Finding 可用 `claim_index=null`，但不能把
+   “证据已支持/没有 defect”编码为 claim Finding。它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查
+   通过不能抵消重大错误。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取 substring 追认。
 5. 现有 Package 足够时，Response Control 把 Finding 绑定到同一主 Agent 的新 Work State Revision，形成同包针对性重写；证据不足时，
    Application 形成绑定具体缺口的新 Agent Attempt，主 Agent 继续经 World Model/Broker 工具调查。任何新 Observation 都形成新 Ledger/
    Package Revision，旧 Review 不得放行新 Draft。生成者不能自审，Reviewer 不能自行执行工具或放行。

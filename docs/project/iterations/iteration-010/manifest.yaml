@@ -609,14 +609,34 @@ conversational_engineering_agent:
   second_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
   source_search_dual_file_fuse_evidence_ref: FINDING-010-112
   model_draft_reference_domain_evidence_ref: FINDING-010-113
-  current_agent_model_strategy_ref: conversational-engineering-agent@2
-  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@2
-  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@2
-  current_dual_provider_qualification_status: stale-after-model-strategy-prompt-input-change-fresh-conformance-required
-  deterministic_successor_canary_status: five-turn-and-new-conversation-pass-plus-three-read-adjacent-pass-with-fake-model-temp-git-no-live-authority-consumed
+  third_live_conformance_execution_evidence_ref: FINDING-010-114
+  third_live_ark_conformance_result_digest: sha256:bbaf5611a46d68400d0ee4da4f5994deeb8bffecbeead07b7db26b40cbe4b114
+  third_live_ark_conformance_valid_until: "2026-09-25T08:55:23.155945Z"
+  third_live_deepseek_conformance_result_digest: sha256:5fe0a06f253a3865325738a63c00f9fd659cd96c25aa764c76a3ec2914646b6c
+  third_live_deepseek_conformance_valid_until: "2026-09-25T08:18:50.616197Z"
+  third_live_chat_execution_evidence_ref: FINDING-010-115
+  third_live_chat_product_commit: d429be6c7e5e43342bf427e394ca5babcc55bcdb
+  third_live_chat_product_tree: 400d5791e4c443c201765da5f488519093136738
+  third_live_chat_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  third_live_chat_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+  third_live_chat_session_authorization_digest: sha256:8ebd3650ea8c82ad43dc5015f633cd4e9b0dd3a39a81a6ddfb1566dc6c80d13a
+  third_live_chat_session_config_file_digest: sha256:c0d1bffe494f7e248379dfba5be7071491cdfca062ae2bc183d8acf6e13fa0c0
+  third_live_chat_terminal_receipt_digest: sha256:4ce07cbeca13665f5367992cd7d99509c5143d37c618e4d34bfb59ca1860c8a6
+  third_live_chat_turn_result: five-of-five-failed-no-user-visible-answer-citation-or-delivery
+  third_live_chat_dispatches_by_turn: 10,8,4,4,5
+  third_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
+  model_tool_reference_domain_evidence_ref: FINDING-010-116
+  model_review_claim_assessment_evidence_ref: FINDING-010-117
+  current_agent_model_strategy_ref: conversational-engineering-agent@3
+  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@3
+  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@3
+  current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@2
+  current_agent_review_output_schema: engineering-agent-independent-review-proposal@2
+  current_dual_provider_qualification_status: stale-after-v3-strategy-prompt-input-output-change-fresh-conformance-required
+  deterministic_successor_canary_status: v3-tool-copy-and-review-contract-70-of-70-pass-plus-prior-five-turn-and-three-read-canaries-no-live-authority-consumed
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: second-live-five-turn-chat-failed-leakage-pass-architecture-successor-local-candidate-fresh-conformance-required
-  status: implemented-second-live-failed-leakage-pass-v2-remediation-local-candidate
+  agent_execution_status: third-live-five-turn-chat-failed-leakage-pass-v3-contract-successor-local-candidate-fresh-conformance-required
+  status: implemented-third-live-failed-leakage-pass-v3-remediation-local-candidate
 
 question_evidence_package_classes:
   support_and_citation:
@@ -957,7 +977,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:c52bd19d05198ac422a8ead8e99590d7febc330a534ab6a9a4fb647f7b90e169
+  system_contract_set_digest: sha256:60a2fa1d61f6b600774edf6268109319e294eb840677f357eedc5bc6b6f96f94
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -1008,7 +1028,7 @@ development:
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: authorized-executed-failed-run-036-leakage-pass-v2-remediation-local-candidate-fresh-conformance-and-new-exact-grant-required
+      live_question_status: authorized-executed-failed-run-037-leakage-pass-v3-remediation-local-candidate-fresh-conformance-and-new-exact-grant-required
       authorized_by: user
       authorized_at: 2026-08-25T05:06:07Z
       authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
@@ -1049,7 +1069,7 @@ authorization:
   explicit_user_reauthorization_required: false
   external_execution_reauthorization_required: true
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
-  external_execution_authorization_status: second-live-session-grant-consumed-no-current-live-authority
+  external_execution_authorization_status: third-live-session-grant-consumed-no-current-live-authority
   first_live_session_authorization:
     status: consumed
     authorization_ref: codex-user-message:sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662
@@ -1068,6 +1088,18 @@ authorization:
     source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
     excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
     execution_finding_ref: FINDING-010-111
+  third_live_session_authorization:
+    status: consumed
+    authorization_ref: codex-user-message:sha256:8ebd3650ea8c82ad43dc5015f633cd4e9b0dd3a39a81a6ddfb1566dc6c80d13a
+    exact_product_commit: d429be6c7e5e43342bf427e394ca5babcc55bcdb
+    exact_product_tree: 400d5791e4c443c201765da5f488519093136738
+    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+    conformance_execution_finding_ref: FINDING-010-114
+    execution_finding_ref: FINDING-010-115
+    ark_tls_supplemental_authorization_ref: codex-user-message:sha256:e89640faf226ce069216ba40c71448dac0d8e09faf898aacbe74577067d540b3
+    ark_tls_cap_raise_authorization_ref: codex-user-message:sha256:21786af7d671472735a0cf7f064a26a7e19030b8ca6291c14f83ca1c1bfdfae1
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24

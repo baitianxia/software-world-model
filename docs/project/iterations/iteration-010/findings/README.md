@@ -293,5 +293,16 @@ iteration: ITER-010
   actual file fuse 64 显式分开。73 文件相邻案例在 PARTIAL Coverage 下继续完成 3 个不同 locator READ，累计 59/64，不增加任何总上限。
 - [FINDING-010-113](FINDING-010-113.md)：Primary input/strategy/prompt 升级到 v2，由可信 Application 投影 ANSWER SUPPORT 与 LIMITATION
   BOUNDARY 的 closed ID domains；decoder 继续重算并 fail closed，不修补模型输出。旧双 Provider Conformance 因 identity 改变而失效。
+- [FINDING-010-114](FINDING-010-114.md)：exact `d429be6…` / `400d579…` 的 fresh DeepSeek 与补充 Ark Conformance 均以固定 2/2
+  request、12/12 与 13/13 Case、retry/unknown 0 PASS；Ark 补充 TLS acquisition 使用 4/10，只有 credential/HTTP 均为 0 的失败 run
+  被重新启动。两份资格只允许条件式 run-037，不证明答案质量。
+- [FINDING-010-115](FINDING-010-115.md)：`run-037-chat-alpha` 固定五轮再次 0/5，终态为 Review limit / No progress /
+  Outcome unknown / No progress / Outcome unknown，总 logical dispatch 31、retry 0；新 Conversation 继续以空 Context、零 dispatch
+  clarification PASS。最早产品偏差是缺失 Tool proposal copy domain 与 Reviewer 正负判断合同，transport/JSON failure 均按策略关闭。
+- [FINDING-010-116](FINDING-010-116.md)：Primary input v3 现在由 Application 密封 current-attempt `prior_actions`、已尝试 query/read 和
+  authority-receipt 派生的未使用 `source_read_options`；decoder 拒绝 exact action 重复、参数漂移和未签发 locator，不增加任何资源熔断。
+- [FINDING-010-117](FINDING-010-117.md)：Review input/output 升级到 v2，对 exact ordered Claim set 强制完整 `SUPPORTED/DEFECT`
+  assessments，并重算 assessment↔Finding↔decision 一致性；role prompt v3 明确禁止 JSON 外叙述，closed adapter 不增加 substring 修复。
+  v3 successor 仍需 fresh 双 Provider Conformance 与新 Live Authority。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

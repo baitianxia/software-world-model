@@ -300,6 +300,14 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 EngineeringAgentToolOperation.SOURCE_READ,
             ],
         )
+        self.assertEqual(
+            tuple(len(item.action_history) for item in driver.invocations),
+            (0, 1, 2),
+        )
+        self.assertEqual(
+            driver.invocations[-1].action_history,
+            tuple(request.action for request in tool.requests),
+        )
         self.assertIn("WORLD_MODEL_QUERY", driver.asserted_first_observation)
         self.assertEqual(len(reviewer.requests), 1)
         self.assertEqual(

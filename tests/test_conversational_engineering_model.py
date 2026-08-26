@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import json
 from types import SimpleNamespace
@@ -26,12 +27,16 @@ from software_world_model.ai_infrastructure.model_gateway import (
 )
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
+    EngineeringAgentCitation,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentInvocation,
     EngineeringAgentLoopLimits,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
+    EngineeringAgentToolActionProposal,
+    EngineeringAgentToolAuthorityKind,
+    EngineeringAgentToolAuthorityReceipt,
     EngineeringAgentToolOperation,
     EngineeringAgentToolObservation,
 )
@@ -343,9 +348,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("one short case-sensitive literal token", rendered)
         self.assertIn("semantic descriptions", rendered)
         self.assertIn("draft_reference_policy", rendered)
+        self.assertIn("tool_reference_policy", rendered)
         self.assertIn("answer_claim_support_observation_ids", rendered)
         self.assertIn("limitation_boundary_observation_ids", rendered)
         self.assertIn("cross_disposition_references_forbidden", rendered)
+        self.assertIn("source_read_options", rendered)
+        self.assertIn("exact_action_repetition_forbidden", rendered)
         self.assertNotIn("literal or semantic search proposal", rendered)
         self.assertNotIn("AGENT_FIXTURE_API_KEY", rendered)
         self.assertNotIn(authorizer.session_authority.digest.value, rendered)
@@ -492,6 +500,281 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIsNone(submission.turn.provider_failure_classification)
 
+    def test_primary_input_projects_closed_tool_copy_domains_and_rejects_drift(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录失败时记录什么？",
+        )
+        locator_reference = "source_locator_" + "5" * 32
+        citation = EngineeringAgentCitation.create(
+            citation_ref=locator_reference,
+            evidence_class="SOURCE",
+            source_revision=capture.request.binding.repository_revision,
+            locator="src/main/java/example/LoginService.java",
+            modality="JAVA_SOURCE",
+            content_digest=digest_of("login-source"),
+        )
+        evidence_request_digest = digest_of("source-evidence-request")
+        ledger_ref = "evidence_ledger_" + "9" * 32
+        authority_receipt = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=EngineeringAgentToolAuthorityKind.SOURCE,
+            turn_request_digest=capture.request.request_digest,
+            tool_request_digest=digest_of("source-tool-request"),
+            evidence_request_digest=evidence_request_digest,
+            repository_revision=capture.request.binding.repository_revision,
+            evidence_digest=digest_of("source-result"),
+            ledger_ref=ledger_ref,
+            ledger_generation=1,
+            ledger_parent_seal_digest=None,
+            ledger_prefix_digest=digest_of(
+                [
+                    "EVIDENCE_LEDGER_PREFIX@1",
+                    ledger_ref,
+                    evidence_request_digest.value,
+                    1,
+                    None,
+                    (),
+                ]
+            ),
+            ledger_entries=(),
+            citations=(citation,),
+        )
+        observation = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'6' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'7' * 32}"),
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            result_ref="search-support",
+            content="sealed search evidence",
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(locator_reference,),
+            authority_receipt=authority_receipt,
+            tool_evidence_digest=digest_of("search-evidence"),
+            digest=digest_of("search-observation"),
+        )
+        prior_search = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            arguments=(("evidence_class", "SOURCE"), ("query", "login")),
+            evidence_need="locate login behavior",
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(observation,),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ),
+            action_history=(prior_search,),
+        )
+        policy = _primary_input_view(invocation)["tool_reference_policy"]
+
+        self.assertEqual(policy["source_search_queries_already_attempted"], ("login",))
+        self.assertEqual(
+            tuple(item["locator_reference"] for item in policy["source_read_options"]),
+            (locator_reference,),
+        )
+        self.assertTrue(policy["exact_action_repetition_forbidden"])
+        self.assertTrue(policy["unlisted_source_read_reference_forbidden"])
+        unreceipted_policy = _primary_input_view(
+            replace(
+                invocation,
+                observations=(replace(observation, authority_receipt=None),),
+            )
+        )["tool_reference_policy"]
+        self.assertEqual(unreceipted_policy["source_read_options"], ())
+
+        payload = {
+            "goal": "确认登录失败记录",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [observation.observation_id.value],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_READ",
+                "arguments": [
+                    {"name": "locator_reference", "value": locator_reference}
+                ],
+                "evidence_need": "read the exact selected artifact",
+            },
+            "draft": None,
+        }
+        proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(payload),
+            invocation=invocation,
+            model_call_ref="trusted-read-call",
+        )
+        self.assertEqual(
+            dict(proposal.action.arguments)["locator_reference"],
+            locator_reference,
+        )
+
+        payload["action"]["arguments"][0]["value"] = (
+            "source_locator_" + "8" * 32
+        )
+        with self.assertRaises(DomainError) as forged:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="forged-read-call",
+            )
+        self.assertEqual(forged.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+        payload["action"]["arguments"] = [
+            {"name": "path", "value": "src/main/java/example/LoginService.java"}
+        ]
+        with self.assertRaises(DomainError) as argument_drift:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="drifted-read-call",
+            )
+        self.assertEqual(
+            argument_drift.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        payload["action"] = {
+            "operation": "SOURCE_SEARCH",
+            "arguments": [
+                {"name": "evidence_class", "value": "SOURCE"},
+                {"name": "query", "value": "login"},
+            ],
+            "evidence_need": "repeat the same search",
+        }
+        with self.assertRaises(DomainError) as repeated:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="repeated-search-call",
+            )
+        self.assertEqual(repeated.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+    def test_review_decoder_requires_complete_consistent_claim_assessments(self) -> None:
+        request = SimpleNamespace(
+            draft=SimpleNamespace(claims=(object(), object()))
+        )
+        approved = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "APPROVED",
+                    "claim_assessments": [
+                        {"claim_index": 0, "verdict": "SUPPORTED"},
+                        {"claim_index": 1, "verdict": "SUPPORTED"},
+                    ],
+                    "findings": [],
+                }
+            ),
+            request=request,
+            model_call_ref="review-approved",
+        )
+        self.assertEqual(approved.decision.value, "APPROVED")
+
+        contradictory = {
+            "decision": "FINDINGS",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"},
+                {"claim_index": 1, "verdict": "SUPPORTED"},
+            ],
+            "findings": [
+                {
+                    "code": "UNSUPPORTED_CLAIM",
+                    "message": "The cited evidence fully supports this claim.",
+                    "requires_evidence": False,
+                    "claim_index": 0,
+                }
+            ],
+        }
+        with self.assertRaises(DomainError) as mismatch:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(contradictory),
+                request=request,
+                model_call_ref="review-contradictory",
+            )
+        self.assertEqual(mismatch.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+        contradictory["claim_assessments"][0]["verdict"] = "DEFECT"
+        finding = decode_engineering_agent_review_output(
+            output_text=json.dumps(contradictory),
+            request=request,
+            model_call_ref="review-finding",
+        )
+        self.assertEqual(finding.decision.value, "FINDINGS")
+
+        defect_without_finding = {
+            "decision": "APPROVED",
+            "claim_assessments": contradictory["claim_assessments"],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as missing_finding:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(defect_without_finding),
+                request=request,
+                model_call_ref="review-missing-finding",
+            )
+        self.assertEqual(
+            missing_finding.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        contradictory["claim_assessments"] = [
+            {"claim_index": 0, "verdict": "DEFECT"}
+        ]
+        with self.assertRaises(DomainError) as incomplete:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(contradictory),
+                request=request,
+                model_call_ref="review-incomplete",
+            )
+        self.assertEqual(incomplete.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+        contradictory["claim_assessments"] = [
+            {"claim_index": 0, "verdict": "DEFECT"},
+            {"claim_index": 2, "verdict": "SUPPORTED"},
+        ]
+        with self.assertRaises(DomainError) as unknown:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(contradictory),
+                request=request,
+                model_call_ref="review-unknown-claim",
+            )
+        self.assertEqual(unknown.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+        approved_with_extra = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"},
+                {"claim_index": 1, "verdict": "SUPPORTED"},
+            ],
+            "findings": [],
+            "rationale": "not in the closed schema",
+        }
+        with self.assertRaises(DomainError) as extra:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(approved_with_extra),
+                request=request,
+                model_call_ref="review-extra-field",
+            )
+        self.assertEqual(extra.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
     def test_closed_decoders_inject_trusted_call_identity_and_reject_extra_fields(self) -> None:
         binding = _binding()
         capture = CapturingTurnExecutor()
@@ -594,7 +877,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model_call_ref="trusted-gateway-call",
         )
         review = decode_engineering_agent_review_output(
-            output_text='{"decision":"APPROVED","findings":[]}',
+            output_text=(
+                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}'
+            ),
             request=SimpleNamespace(draft=SimpleNamespace(claims=())),
             model_call_ref="trusted-review-call",
         )
