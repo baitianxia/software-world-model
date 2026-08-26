@@ -304,5 +304,16 @@ iteration: ITER-010
 - [FINDING-010-117](FINDING-010-117.md)：Review input/output 升级到 v2，对 exact ordered Claim set 强制完整 `SUPPORTED/DEFECT`
   assessments，并重算 assessment↔Finding↔decision 一致性；role prompt v3 明确禁止 JSON 外叙述，closed adapter 不增加 substring 修复。
   v3 successor 仍需 fresh 双 Provider Conformance 与新 Live Authority。
+- [FINDING-010-118](FINDING-010-118.md)：exact `743942d…` / `748902c…` 的 fresh Ark 与 DeepSeek Conformance 分别以固定
+  2/2 request、13/13 与 12/12 Case、retry/unknown 0 PASS；资格只允许条件式 run-038，不证明答案质量。
+- [FINDING-010-119](FINDING-010-119.md)：`run-038-chat-alpha` 四轮失败，仅 Turn 5 形成 `REVIEWED_LIMITATION`，整体仍为
+  1/5 / Quality FAIL；29 logical dispatch、retry 0、private artifact、clean stop 与 Production `NOT_EXECUTED` 已密封，新 Conversation
+  clarification/隔离/零 dispatch 继续 PASS。
+- [FINDING-010-120](FINDING-010-120.md)：Primary input v4 的 Source Read copy domain 现在按 canonical resource 去重；任意 line
+  reference 已读即移除同资源全部 option，terminal Source operation/file/byte fuse 后 Source Search/Read 退出 effective catalog。
+- [FINDING-010-121](FINDING-010-121.md)：连续无进展不再继续调查，而是进入无工具的 `EVIDENCE_ONLY_SYNTHESIS`；只允许基于已有
+  SUPPORT/BOUNDARY 的 Answer/Limitation，并仍须 fresh Review/Response Control，Reviewer 要求新证据时 fail closed。
+- [FINDING-010-122](FINDING-010-122.md)：Artifact preparation 测试的 qualification validity 现绑定 Adapter 实际 UTC clock，消除固定
+  测试日期自然过期造成的伪 `QUALIFICATION_INVALID`；产品资格规则没有变化。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

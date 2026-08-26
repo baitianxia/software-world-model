@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -88,6 +88,12 @@ Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
 每个 Proposal、Decision、Operation、Observation、Conflict、Unknown、Failure、Coverage 和资源收据按顺序追加到 Turn Evidence Ledger。
 主 Agent 可以读取本 Attempt 获准的密封 Ledger prefix 与工具 Observation，但隐藏 rationale 和未密封输出不进入权威状态。
 
+达到连续无进展熔断时，Application 必须终止进一步调查并撤销本 Attempt 的全部可提议工具；不得把同义 query、同资源其他 line locator 或
+提高资源上限当作 progress。若 bounded Agent step 仍允许完成，Application 可以给同一主 Agent 一次
+`EVIDENCE_ONLY_SYNTHESIS` completion opportunity：只可基于 current sealed SUPPORT/BOUNDARY 提交 Answer 或 Limitation，不能请求工具、
+澄清或声称取得新 Evidence。该 Draft 仍须 fresh Review 与 Response Control；Reviewer 要求新 Evidence 时不恢复工具权限，当前 Turn 按
+no-progress failure 关闭。
+
 ## Evidence, answer and review
 
 1. 主 Agent 准备回答时，Application 从 current Turn、exact Cognition、Work State 和完整 Ledger 密封当前 Question Evidence Package。
@@ -100,10 +106,14 @@ Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
    Decoder 必须从原 Observation 重算并 fail closed，不能删除错误 Claim、替换引用、提升 Boundary 或自动授权 Draft。current model
    input 还必须由可信 Application 从 current isolated attempt 的 typed action history 与 Source authority-receipt Citations 投影
    `tool_reference_policy`：列出已执行 exact action、已尝试 query/read 和未使用的 `source_read_options`；Provider 只能复制列出的 opaque
-   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。Decoder 从原 action/Observation/receipt 重算，fallback
-   attempt 不继承 primary 的中间 action 或 locator catalog。current model strategy/prompt/Primary input identity 为
-   `conversational-engineering-agent@3`、`conversational-engineering-agent-no-tools-prompt@3` 和
-   `ENGINEERING_AGENT_PRIMARY_INPUT@3`；产品 Conversation protocol 仍为 `CONVERSATIONAL_ENGINEERING_AGENT@1`。
+   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。每个 canonical Source resource 至多暴露一个 read option；
+   任一 line reference 被读取后，同一 resource 的全部 reference 都离开 legal domain；没有未使用 option 时 `SOURCE_READ` 不得出现在
+   effective tool catalog。受信 Ledger 已出现 operation/file/byte terminal fuse rejection 时，Source Search/Read 也必须离开 effective
+   tool catalog；World Model operation 不被 Source terminal state 连带撤销。
+   Decoder 从原 action/Observation/receipt 重算，fallback attempt 不继承 primary 的中间 action 或 resource catalog。current model
+   strategy/prompt/Primary input identity 为 `conversational-engineering-agent@4`、
+   `conversational-engineering-agent-no-tools-prompt@4` 和 `ENGINEERING_AGENT_PRIMARY_INPUT@4`；产品 Conversation protocol 仍为
+   `CONVERSATIONAL_ENGINEERING_AGENT@1`。
 3. 每个可交付工程 Draft 至少经过一个 fresh、与主 Agent 隔离的独立 Reviewer。前述 deterministic empty-context input clarification 不是
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
@@ -150,23 +160,25 @@ append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
-FIRST_AND_SECOND_LIVE_CHAT_FAIL / NEW_CONVERSATION_LEAKAGE_PASS /
-SEARCH_DUAL_FILE_FUSE_LOCAL_CANDIDATE / MODEL_REFERENCE_DOMAIN_V2_LOCAL_CANDIDATE /
+FOURTH_LIVE_CHAT_ONE_OF_FIVE_LIMITATION_OVERALL_FAIL / NEW_CONVERSATION_LEAKAGE_PASS /
+SOURCE_RESOURCE_DOMAIN_AND_EVIDENCE_ONLY_COMPLETION_V4_LOCAL_CANDIDATE /
 FRESH_DUAL_PROVIDER_CONFORMANCE_REQUIRED / SESSION_AUTHORITY_REQUIRED / NOT_PRODUCTION`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
 Disclosure 和 typed Gateway receipt；pre-dispatch、fresh dispatch、outcome unknown 与 replay 的计数由 Application 重验，Turn/Browser 只保存
 receipt digest reference。Application-owned Ark→DeepSeek router、committed Work State repository、两 attempt receipt、logical Turn 汇总与
 non-starting fixed Browser composition 已通过本地确定性 Gate；预检没有创建 attempt、启动 listener、解析 credential、读取 Source 或 dispatch。
 Provider runtime composition 已使用生产 Ark/DeepSeek Adapter 与 credential-lazy transport，但只消费本地构造的 typed qualification identity。
 non-starting Session runtime 又把两条 Provider runtime、exact evidence authority、per-attempt fresh Tool/Response Control、共享 committed
-Work State、Conversation 与 Browser 组合成一个对象图；preparation 没有创建 attempt、读取 Source、解析 credential、dispatch 或启动 listener。
+   Work State、Conversation 与 Browser 组合成一个对象图；preparation 没有创建 attempt、读取 Source、解析 credential、dispatch 或启动 listener。
 artifact Session loader 现可从一个 owner-private closed document 绑定 product/source Git identity、published World Model、Source Profile、
 Ark→DeepSeek qualification identity、两个 private Gateway repositories 与 Session authority；唯一 `--session-config` selector 让固定
 `127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
 Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
-exact clean identity、2/2 request 和 strict Session audit PASS，并用于两个 owner-private mall artifact Session。`run-035-chat-alpha` 与
+exact clean identity、2/2 request 和 strict Session audit PASS，并按各自 exact identity 用于多个 owner-private mall artifact Session。`run-035-chat-alpha` 与
 `run-036-chat-alpha` 均真实启动 listener、执行 Browser 五轮 Chat、消费受限 Source/Provider 并优雅停止，但五轮各自 5/5 失败；run-036 的
-新 Conversation probe 已以 Application clarification、零 dispatch 和空 Context 通过泄漏负测。run-036 又证明单 READ reservation 不足且
-model Draft 会跨 SUPPORT/BOUNDARY 引用；current successor 已采用 search/whole-Turn 双文件熔断和 model reference domain v2。因为 model
-strategy/prompt/input identity 改变，历史双 Provider Conformance 只保留为执行证据，不再资格化 successor；fresh Conformance、new exact
-artifact/Session Authority 和五轮重验仍是 blocking Gate。旧
+新 Conversation probe 已以 Application clarification、零 dispatch 和空 Context 通过泄漏负测。run-037 在 fresh 双资格后仍为 0/5；v3
+tool copy domain 与 Reviewer assessment 随后形成。`run-038-chat-alpha` 再次取得 fresh 双资格并执行五轮，其中仅 Turn 5 以 reviewed
+Limitation 技术成功，整体仍为 1/5 / Quality FAIL；新 Conversation 泄漏负测继续 PASS。current v4 successor 已把 Source read domain 按
+canonical resource 去重、在 terminal Source fuse 后撤销 Source operations，并把连续无进展转换为一次 response-only、仍须审核的
+completion opportunity。因为 strategy/prompt/Primary input identity 再次改变，run-038 Conformance 只保留为执行证据，不资格化 v4；fresh
+Conformance、new exact artifact/Session Authority 和五轮重验仍是 blocking Gate。旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

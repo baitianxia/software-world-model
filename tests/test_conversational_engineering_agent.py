@@ -9,6 +9,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentDraftProposal,
     EngineeringAgentDriverModelResult,
     EngineeringAgentEvidenceDisposition,
+    EngineeringAgentInvocationMode,
     EngineeringAgentLoopLimits,
     EngineeringAgentModelCallFailure,
     EngineeringAgentModelCallReceipt,
@@ -32,6 +33,7 @@ from software_world_model.application_services.engineering_conversation import (
     ConversationMessageKind,
     ConversationTurnState,
     EngineeringChatBinding,
+    EngineeringProviderFailureClassification,
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
 )
@@ -616,13 +618,38 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         self.assertEqual(len(response.requests), 1)
         self.assertEqual(submission.turn.provider_dispatch_count, 2)
 
-    def test_no_progress_fuse_fails_only_the_turn(self) -> None:
+    def test_no_progress_switches_to_reviewed_evidence_only_limitation(self) -> None:
         class NoProgressDriver:
             def __init__(self):
                 self.calls = 0
+                self.modes = []
 
             def propose(self, invocation):
                 self.calls += 1
+                self.modes.append(invocation.mode)
+                if (
+                    invocation.mode
+                    is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+                ):
+                    return _proposal(
+                        invocation,
+                        call_ref=f"agent-no-progress-{self.calls}",
+                        phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+                        draft=EngineeringAgentDraftProposal.create(
+                            response_kind=EngineeringAgentResponseKind.LIMITATION,
+                            content=(
+                                "现有证据边界不足以确认该行为，不能继续补证。"
+                            ),
+                            boundary_observation_ids=tuple(
+                                item.observation_id
+                                for item in invocation.observations
+                                if item.disposition
+                                is EngineeringAgentEvidenceDisposition.BOUNDARY
+                            ),
+                        ),
+                        plan=("synthesize only the sealed evidence boundary",),
+                        open_items=(),
+                    )
                 return _proposal(
                     invocation,
                     call_ref=f"agent-no-progress-{self.calls}",
@@ -633,8 +660,65 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     ),
                 )
 
+        driver = NoProgressDriver()
         service, tool, reviewer, response = _service(
-            NoProgressDriver(),
+            driver,
+            tool=RecordingToolPort(progress=False),
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=4,
+                maximum_tool_actions=4,
+                maximum_reviews=1,
+                maximum_consecutive_no_progress=2,
+            ),
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="查找不存在的证据",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertIsNone(submission.turn.failure_code)
+        self.assertEqual(submission.turn.delivery_state, "AUTHORIZED")
+        self.assertEqual(submission.turn.quality_status, "REVIEWED_LIMITATION")
+        self.assertEqual(submission.turn.provider_dispatch_count, 4)
+        self.assertEqual(len(tool.requests), 2)
+        self.assertEqual(len(reviewer.requests), 1)
+        self.assertEqual(len(response.requests), 1)
+        self.assertEqual(
+            driver.modes,
+            [
+                EngineeringAgentInvocationMode.STANDARD,
+                EngineeringAgentInvocationMode.STANDARD,
+                EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS,
+            ],
+        )
+        self.assertEqual(
+            submission.snapshot.conversation.state.value,
+            "ACTIVE",
+        )
+        self.assertIsNotNone(submission.snapshot.context.work_state_ref)
+
+    def test_evidence_only_synthesis_rejects_more_tool_actions(self) -> None:
+        class NoncompliantDriver:
+            def __init__(self):
+                self.calls = 0
+
+            def propose(self, invocation):
+                self.calls += 1
+                return _proposal(
+                    invocation,
+                    call_ref=f"agent-terminal-action-{self.calls}",
+                    phase=EngineeringAgentWorkPhase.INVESTIGATING,
+                    action=_action(
+                        EngineeringAgentToolOperation.SOURCE_SEARCH,
+                        query=f"still searching {self.calls}",
+                    ),
+                )
+
+        service, tool, reviewer, response = _service(
+            NoncompliantDriver(),
             tool=RecordingToolPort(progress=False),
             limits=EngineeringAgentLoopLimits(
                 maximum_agent_steps=4,
@@ -651,32 +735,102 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         )
 
         self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
-        self.assertEqual(
-            submission.turn.failure_code, "AGENT_NO_PROGRESS_LIMIT_REACHED"
-        )
+        self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
         self.assertEqual(submission.turn.delivery_state, "NOT_AUTHORIZED")
-        self.assertEqual(submission.turn.provider_dispatch_count, 2)
+        self.assertEqual(submission.turn.provider_dispatch_count, 3)
         self.assertEqual(len(tool.requests), 2)
         self.assertEqual(len(reviewer.requests), 0)
         self.assertEqual(len(response.requests), 0)
-        self.assertEqual(
-            submission.snapshot.conversation.state.value,
-            "ACTIVE",
-        )
+        self.assertEqual(submission.snapshot.conversation.state.value, "ACTIVE")
         self.assertIsNone(submission.snapshot.context.work_state_ref)
 
-        next_submission = service.submit_turn(
-            conversation_id=conversation.conversation.conversation_id,
-            expected_revision=Revision(2),
-            message="换一个方向继续",
+    def test_evidence_only_synthesis_does_not_reopen_tools_for_review(self) -> None:
+        class BoundaryDriver:
+            def __init__(self):
+                self.calls = 0
+
+            def propose(self, invocation):
+                self.calls += 1
+                if (
+                    invocation.mode
+                    is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+                ):
+                    return _proposal(
+                        invocation,
+                        call_ref=f"agent-terminal-review-{self.calls}",
+                        phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+                        draft=EngineeringAgentDraftProposal.create(
+                            response_kind=EngineeringAgentResponseKind.LIMITATION,
+                            content="现有证据边界不足以确认该行为。",
+                            boundary_observation_ids=tuple(
+                                item.observation_id
+                                for item in invocation.observations
+                            ),
+                        ),
+                        open_items=(),
+                    )
+                return _proposal(
+                    invocation,
+                    call_ref=f"agent-terminal-review-{self.calls}",
+                    phase=EngineeringAgentWorkPhase.INVESTIGATING,
+                    action=_action(
+                        EngineeringAgentToolOperation.SOURCE_SEARCH,
+                        query=f"missing evidence {self.calls}",
+                    ),
+                )
+
+        class EvidenceRequiredReviewer:
+            def __init__(self):
+                self.requests = []
+
+            def review(self, request):
+                self.requests.append(request)
+                return EngineeringAgentReviewProposal.create(
+                    model_call_ref="review-terminal-evidence-required",
+                    decision=EngineeringAgentReviewDecision.FINDINGS,
+                    findings=(
+                        EngineeringAgentReviewFinding.create(
+                            code="MORE_EVIDENCE_REQUIRED",
+                            message="当前 Package 不能支持该结论。",
+                            requires_evidence=True,
+                        ),
+                    ),
+                )
+
+        reviewer = EvidenceRequiredReviewer()
+        service, tool, _, response = _service(
+            BoundaryDriver(),
+            tool=RecordingToolPort(progress=False),
+            reviewer=reviewer,
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=4,
+                maximum_tool_actions=4,
+                maximum_reviews=1,
+                maximum_consecutive_no_progress=2,
+            ),
         )
-        self.assertEqual(next_submission.turn.state, ConversationTurnState.FAILED)
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="查找不存在的证据",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
         self.assertEqual(
-            next_submission.turn.failure_code,
+            submission.turn.failure_code,
             "AGENT_NO_PROGRESS_LIMIT_REACHED",
         )
-        self.assertIsNone(next_submission.snapshot.context.work_state_ref)
-        self.assertEqual(next_submission.snapshot.conversation.revision, Revision(3))
+        self.assertEqual(
+            submission.turn.provider_failure_classification,
+            EngineeringProviderFailureClassification.MODEL_REVIEW_REJECTED,
+        )
+        self.assertEqual(submission.turn.provider_dispatch_count, 4)
+        self.assertEqual(len(tool.requests), 2)
+        self.assertEqual(len(reviewer.requests), 1)
+        self.assertEqual(len(response.requests), 0)
+        self.assertEqual(submission.snapshot.conversation.state.value, "ACTIVE")
+        self.assertIsNone(submission.snapshot.context.work_state_ref)
 
     def test_forged_tool_result_binding_fails_closed_with_dispatch_audit(self) -> None:
         class OneActionDriver:

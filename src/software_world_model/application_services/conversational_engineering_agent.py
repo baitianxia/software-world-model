@@ -75,6 +75,11 @@ class EngineeringAgentModelRole(str, Enum):
     INDEPENDENT_REVIEWER = "INDEPENDENT_REVIEWER"
 
 
+class EngineeringAgentInvocationMode(str, Enum):
+    STANDARD = "STANDARD"
+    EVIDENCE_ONLY_SYNTHESIS = "EVIDENCE_ONLY_SYNTHESIS"
+
+
 class EngineeringAgentModelDispatchState(str, Enum):
     PRE_DISPATCH_REJECTED = "PRE_DISPATCH_REJECTED"
     DISPATCHED_COMPLETED = "DISPATCHED_COMPLETED"
@@ -649,6 +654,7 @@ class EngineeringAgentInvocation:
     review_digest: Digest | None
     available_operations: tuple[EngineeringAgentToolOperation, ...]
     action_history: tuple[EngineeringAgentToolActionProposal, ...] = ()
+    mode: EngineeringAgentInvocationMode = EngineeringAgentInvocationMode.STANDARD
 
 
 class EngineeringAgentDriver(Protocol):
@@ -1588,6 +1594,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         review_count = 0
         consecutive_no_progress = 0
         action_history: tuple[EngineeringAgentToolActionProposal, ...] = ()
+        invocation_mode = EngineeringAgentInvocationMode.STANDARD
         minimum_observations_for_draft = 0
         last_package: EngineeringAgentEvidencePackage | None = None
         last_draft: EngineeringAgentAnswerDraft | None = None
@@ -1608,6 +1615,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         ),
                         available_operations=available_operations,
                         action_history=action_history,
+                        mode=invocation_mode,
                     )
                 )
             except BaseException:
@@ -1639,6 +1647,19 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "Agent driver returned an untyped Work State proposal",
                 )
+            if invocation_mode is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS:
+                if proposal.action is not None or (
+                    proposal.draft is not None
+                    and proposal.draft.response_kind
+                    not in {
+                        EngineeringAgentResponseKind.ANSWER,
+                        EngineeringAgentResponseKind.LIMITATION,
+                    }
+                ):
+                    raise DomainError(
+                        ErrorCode.CONTROL_STATE_DENIED,
+                        "evidence-only synthesis requires an Answer or Limitation draft",
+                    )
             self._record_model_call(model_call_refs, proposal.model_call_ref)
             work_state = self._seal_work_state(
                 request=request,
@@ -1682,16 +1703,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     consecutive_no_progress
                     >= self._limits.maximum_consecutive_no_progress
                 ):
-                    return self._failed_outcome(
-                        request=request,
-                        work_state=work_state,
-                        package=last_package,
-                        draft=last_draft,
-                        review=last_review,
-                        provider_dispatch_count=audit.provider_dispatch_count,
-                        model_dispatch_receipt_refs=_model_receipt_refs(audit),
-                        failure_code="AGENT_NO_PROGRESS_LIMIT_REACHED",
+                    invocation_mode = (
+                        EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
                     )
+                    available_operations = ()
                 continue
 
             assert proposal.draft is not None
@@ -1796,6 +1811,23 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 review_findings = review.findings
                 pending_review = review
                 if any(item.requires_evidence for item in review.findings):
+                    if invocation_mode is (
+                        EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+                    ):
+                        return self._failed_outcome(
+                            request=request,
+                            work_state=work_state,
+                            package=package,
+                            draft=draft,
+                            review=review,
+                            provider_dispatch_count=audit.provider_dispatch_count,
+                            model_dispatch_receipt_refs=_model_receipt_refs(audit),
+                            failure_code="AGENT_NO_PROGRESS_LIMIT_REACHED",
+                            provider_failure_classification=(
+                                EngineeringProviderFailureClassification.MODEL_REVIEW_REJECTED
+                            ),
+                            provider_failure_code="AGENT_NO_PROGRESS_LIMIT_REACHED",
+                        )
                     minimum_observations_for_draft = len(observations) + 1
                 continue
 
@@ -2802,6 +2834,7 @@ __all__ = [
     "EngineeringAgentEvidenceDisposition",
     "EngineeringAgentEvidencePackage",
     "EngineeringAgentInvocation",
+    "EngineeringAgentInvocationMode",
     "EngineeringAgentLedgerEntryReceipt",
     "EngineeringAgentLoopLimits",
     "EngineeringAgentModelCallFailure",

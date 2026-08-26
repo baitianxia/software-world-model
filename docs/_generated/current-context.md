@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-third-live-chat-failed-leakage-pass-v3-contract-successor-local-candidate`
+- Worktree status: `iteration-010-slice-001-fourth-live-one-of-five-limitation-leakage-pass-v4-contract-successor-local-candidate`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-third-live-chat-failed-leakage-pass-tool-copy-review-claim-v3-fresh-conformance-required-production-not-activated`
+- Live model path: `pdr-004-fourth-live-one-of-five-limitation-leakage-pass-source-resource-domain-evidence-only-v4-fresh-conformance-required-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

@@ -242,7 +242,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             ),
             adapter_version=ark_provider.adapter_version,
             provider_configuration_fingerprint=ark_provider.fingerprint,
-            valid_until=self.now + timedelta(days=1),
+            valid_until=datetime.now(timezone.utc) + timedelta(days=1),
         )
         deepseek_qualification = DeepSeekChatConformanceQualification(
             result_ref=(
@@ -255,7 +255,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             ),
             adapter_version=deepseek_provider.adapter_version,
             provider_configuration_fingerprint=deepseek_provider.fingerprint,
-            valid_until=self.now + timedelta(days=1),
+            valid_until=datetime.now(timezone.utc) + timedelta(days=1),
         )
         ordered_bundle_digest = digest_of("ordered-bundle")
         ordered_file_digest = digest_of("ordered-file")

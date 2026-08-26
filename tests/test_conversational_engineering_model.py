@@ -31,6 +31,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentInvocation,
+    EngineeringAgentInvocationMode,
+    EngineeringAgentLedgerEntryReceipt,
     EngineeringAgentLoopLimits,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
@@ -515,13 +517,31 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             message="登录失败时记录什么？",
         )
         locator_reference = "source_locator_" + "5" * 32
+        same_resource_reference = "source_locator_" + "4" * 32
+        other_resource_reference = "source_locator_" + "3" * 32
         citation = EngineeringAgentCitation.create(
             citation_ref=locator_reference,
             evidence_class="SOURCE",
             source_revision=capture.request.binding.repository_revision,
-            locator="src/main/java/example/LoginService.java",
+            locator="src/main/java/example/LoginService.java:L10",
             modality="JAVA_SOURCE",
             content_digest=digest_of("login-source"),
+        )
+        same_resource_citation = EngineeringAgentCitation.create(
+            citation_ref=same_resource_reference,
+            evidence_class="SOURCE",
+            source_revision=capture.request.binding.repository_revision,
+            locator="src/main/java/example/LoginService.java:L20-L24",
+            modality="JAVA_SOURCE",
+            content_digest=digest_of("same-login-source"),
+        )
+        other_resource_citation = EngineeringAgentCitation.create(
+            citation_ref=other_resource_reference,
+            evidence_class="SOURCE",
+            source_revision=capture.request.binding.repository_revision,
+            locator="src/main/java/example/AuthConfig.java:L5",
+            modality="JAVA_SOURCE",
+            content_digest=digest_of("auth-config-source"),
         )
         evidence_request_digest = digest_of("source-evidence-request")
         ledger_ref = "evidence_ledger_" + "9" * 32
@@ -546,7 +566,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 ]
             ),
             ledger_entries=(),
-            citations=(citation,),
+            citations=(citation, same_resource_citation, other_resource_citation),
         )
         observation = EngineeringAgentToolObservation(
             observation_id=StableId(f"observation_{'6' * 32}"),
@@ -556,7 +576,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             content="sealed search evidence",
             disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
             progress=True,
-            citation_refs=(locator_reference,),
+            citation_refs=(
+                locator_reference,
+                same_resource_reference,
+                other_resource_reference,
+            ),
             authority_receipt=authority_receipt,
             tool_evidence_digest=digest_of("search-evidence"),
             digest=digest_of("search-observation"),
@@ -578,22 +602,43 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             action_history=(prior_search,),
         )
-        policy = _primary_input_view(invocation)["tool_reference_policy"]
+        rendered_invocation = _primary_input_view(invocation)
+        policy = rendered_invocation["tool_reference_policy"]
 
         self.assertEqual(policy["source_search_queries_already_attempted"], ("login",))
         self.assertEqual(
             tuple(item["locator_reference"] for item in policy["source_read_options"]),
-            (locator_reference,),
+            (locator_reference, other_resource_reference),
+        )
+        self.assertEqual(
+            tuple(item["resource_locator"] for item in policy["source_read_options"]),
+            (
+                "src/main/java/example/LoginService.java",
+                "src/main/java/example/AuthConfig.java",
+            ),
+        )
+        self.assertEqual(
+            policy["source_read_options"][0]["content_digest"],
+            citation.content_digest.value,
         )
         self.assertTrue(policy["exact_action_repetition_forbidden"])
         self.assertTrue(policy["unlisted_source_read_reference_forbidden"])
-        unreceipted_policy = _primary_input_view(
+        self.assertEqual(
+            tuple(item["operation"] for item in rendered_invocation["tool_catalog"]),
+            ("SOURCE_SEARCH", "SOURCE_READ"),
+        )
+        unreceipted_view = _primary_input_view(
             replace(
                 invocation,
                 observations=(replace(observation, authority_receipt=None),),
             )
-        )["tool_reference_policy"]
+        )
+        unreceipted_policy = unreceipted_view["tool_reference_policy"]
         self.assertEqual(unreceipted_policy["source_read_options"], ())
+        self.assertEqual(
+            tuple(item["operation"] for item in unreceipted_view["tool_catalog"]),
+            ("SOURCE_SEARCH",),
+        )
 
         payload = {
             "goal": "确认登录失败记录",
@@ -625,6 +670,41 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             dict(proposal.action.arguments)["locator_reference"],
             locator_reference,
+        )
+
+        prior_read = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.SOURCE_READ,
+            arguments=(("locator_reference", locator_reference),),
+            evidence_need="read the selected login resource",
+        )
+        after_read_invocation = replace(
+            invocation,
+            action_history=(prior_search, prior_read),
+        )
+        after_read_policy = _primary_input_view(after_read_invocation)[
+            "tool_reference_policy"
+        ]
+        self.assertEqual(
+            after_read_policy["source_read_resource_locators_already_attempted"],
+            ("src/main/java/example/LoginService.java",),
+        )
+        self.assertEqual(
+            tuple(
+                item["locator_reference"]
+                for item in after_read_policy["source_read_options"]
+            ),
+            (other_resource_reference,),
+        )
+        payload["action"]["arguments"][0]["value"] = same_resource_reference
+        with self.assertRaises(DomainError) as same_resource_read:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=after_read_invocation,
+                model_call_ref="same-resource-read-call",
+            )
+        self.assertEqual(
+            same_resource_read.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
 
         payload["action"]["arguments"][0]["value"] = (
@@ -667,6 +747,197 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 model_call_ref="repeated-search-call",
             )
         self.assertEqual(repeated.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+    def test_evidence_only_synthesis_is_a_response_only_model_contract(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="说明现有证据边界",
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ),
+            mode=EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS,
+        )
+
+        rendered = _primary_input_view(invocation)
+        self.assertEqual(rendered["tool_catalog"], ())
+        self.assertEqual(
+            rendered["completion_policy"],
+            {
+                "mode": "EVIDENCE_ONLY_SYNTHESIS",
+                "tool_action_allowed": False,
+                "draft_required": True,
+                "allowed_response_kinds": ("ANSWER", "LIMITATION"),
+                "new_evidence_claim_forbidden": True,
+            },
+        )
+        payload = {
+            "goal": "说明现有证据边界",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": [{"name": "query", "value": "more evidence"}],
+                "evidence_need": "continue investigating",
+            },
+            "draft": None,
+        }
+        with self.assertRaises(DomainError) as tool_action:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="terminal-action-call",
+            )
+        self.assertEqual(
+            tool_action.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        payload["phase"] = "RESPONSE_READY"
+        payload["action"] = None
+        payload["draft"] = {
+            "response_kind": "CLARIFICATION",
+            "content": "你还希望我查哪一部分？",
+            "claims": [],
+            "boundary_observation_ids": [],
+        }
+        with self.assertRaises(DomainError) as clarification:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="terminal-clarification-call",
+            )
+        self.assertEqual(
+            clarification.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+    def test_terminal_source_fuse_denial_removes_source_operations(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="继续读取认证源码",
+        )
+        ledger_ref = "evidence_ledger_" + "2" * 32
+        entry_details = (
+            ("reason", "SOURCE_FILE_FUSE_EXHAUSTED"),
+            ("status", "REJECTED"),
+        )
+        entry_core = {
+            "ledger_id": ledger_ref,
+            "sequence": 1,
+            "kind": "BROKER_DECISION",
+            "subject_id": "broker_decision_" + "1" * 32,
+            "subject_digest": digest_of("broker-denial").value,
+            "references": (),
+            "details": entry_details,
+            "previous_entry_digest": None,
+        }
+        source_entry_digest = digest_of(
+            ["EVIDENCE_LEDGER_ENTRY@1", entry_core]
+        )
+        ledger_entry = EngineeringAgentLedgerEntryReceipt.create(
+            sequence=1,
+            kind="BROKER_DECISION",
+            subject_ref=entry_core["subject_id"],
+            subject_digest=digest_of("broker-denial"),
+            references=(),
+            details=entry_details,
+            previous_entry_digest=None,
+            source_entry_digest=source_entry_digest,
+        )
+        evidence_request_digest = digest_of("terminal-source-request")
+        receipt = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=EngineeringAgentToolAuthorityKind.SOURCE,
+            turn_request_digest=capture.request.request_digest,
+            tool_request_digest=digest_of("terminal-source-tool-request"),
+            evidence_request_digest=evidence_request_digest,
+            repository_revision=capture.request.binding.repository_revision,
+            evidence_digest=digest_of("terminal-source-evidence"),
+            ledger_ref=ledger_ref,
+            ledger_generation=1,
+            ledger_parent_seal_digest=None,
+            ledger_prefix_digest=digest_of(
+                [
+                    "EVIDENCE_LEDGER_PREFIX@1",
+                    ledger_ref,
+                    evidence_request_digest.value,
+                    1,
+                    None,
+                    (source_entry_digest.value,),
+                ]
+            ),
+            ledger_entries=(ledger_entry,),
+        )
+        observation = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'1' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'2' * 32}"),
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            result_ref="terminal-source-denial",
+            content="Source file fuse is exhausted",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=receipt,
+            tool_evidence_digest=digest_of("terminal-tool-evidence"),
+            digest=digest_of("terminal-observation"),
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(observation,),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ),
+        )
+
+        rendered = _primary_input_view(invocation)
+        self.assertEqual(
+            rendered["tool_reference_policy"]["terminal_source_denial_reason"],
+            "SOURCE_FILE_FUSE_EXHAUSTED",
+        )
+        self.assertEqual(
+            tuple(item["operation"] for item in rendered["tool_catalog"]),
+            ("WORLD_MODEL_QUERY",),
+        )
 
     def test_review_decoder_requires_complete_consistent_claim_assessments(self) -> None:
         request = SimpleNamespace(

@@ -3370,6 +3370,79 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-117.md"
   },
   {
+    "id": "FINDING-010-118",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "security",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-118.md"
+  },
+  {
+    "id": "FINDING-010-119",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "interface",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-119.md"
+  },
+  {
+    "id": "FINDING-010-120",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-120.md"
+  },
+  {
+    "id": "FINDING-010-121",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "ai",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-121.md"
+  },
+  {
+    "id": "FINDING-010-122",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-122.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -6222,7 +6295,9 @@
       "FINDING-010-109",
       "FINDING-010-113",
       "FINDING-010-116",
-      "FINDING-010-117"
+      "FINDING-010-117",
+      "FINDING-010-120",
+      "FINDING-010-121"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },

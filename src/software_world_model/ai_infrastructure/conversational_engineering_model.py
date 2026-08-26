@@ -18,11 +18,13 @@ from typing import Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
 from software_world_model.application_services.conversational_engineering_agent import (
+    EngineeringAgentCitation,
     EngineeringAgentClaimProposal,
     EngineeringAgentDraftProposal,
     EngineeringAgentDriver,
     EngineeringAgentDriverModelResult,
     EngineeringAgentInvocation,
+    EngineeringAgentInvocationMode,
     EngineeringAgentModelCallFailure,
     EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
@@ -36,6 +38,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentReviewer,
     EngineeringAgentReviewerModelResult,
     EngineeringAgentToolActionProposal,
+    EngineeringAgentToolAuthorityKind,
+    EngineeringAgentToolObservation,
     EngineeringAgentToolOperation,
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
@@ -68,11 +72,11 @@ from .model_gateway import (
 from .openai_responses_adapter import OutputSchemaDefinition
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@3"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@4"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@3"
+    "conversational-engineering-agent-no-tools-prompt@4"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@3"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@4"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
@@ -103,6 +107,16 @@ _ENVIRONMENT = "DIRECTION_PREVIEW"
 _PRODUCTION_ACTIVATION = "NOT_EXECUTED"
 _LOOPBACK_ORIGIN = "http://127.0.0.1:8765/"
 _SECRET_REFERENCE = re.compile(r"^env:[A-Z_][A-Z0-9_]*$")
+_SOURCE_LINE_LOCATOR = re.compile(
+    r"^(?P<resource>.+):L[1-9][0-9]*(?:-L?[1-9][0-9]*)?$"
+)
+_TERMINAL_SOURCE_DENIAL_REASONS = frozenset(
+    {
+        "SOURCE_OPERATION_FUSE_EXHAUSTED",
+        "SOURCE_FILE_FUSE_EXHAUSTED",
+        "SOURCE_BYTE_FUSE_EXHAUSTED",
+    }
+)
 
 
 _PRIMARY_PROMPT = """You are the primary engineering Agent for one sealed Chat Turn.
@@ -123,13 +137,19 @@ exact SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs.
 Copy those IDs only from the corresponding arrays in draft_reference_policy;
 never use a BOUNDARY ID as affirmative claim support or a SUPPORT ID as a
 limitation boundary.
+Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
+has ended: return an ANSWER supported by current evidence or an honest
+LIMITATION bound to current boundaries. In that mode never return a tool action
+or CLARIFICATION, and never imply that more evidence was obtained.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
 For a tool action, use exactly the argument names in the sealed tool_catalog.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation, never a path. Copy it only from an unused entry in
-tool_reference_policy.source_read_options. Never repeat an entry in
+tool_reference_policy.source_read_options. That catalog exposes at most one
+opaque locator for each canonical Source resource; choose a different resource,
+not another matching line from a resource already read. Never repeat an entry in
 tool_reference_policy.prior_actions. If a prior search was insufficient, choose
 a different source-native literal from the question, World Model, observation,
 or Review Finding; if no legal action can improve the evidence, return an honest
@@ -1934,6 +1954,11 @@ def _primary_input_view(
     invocation: EngineeringAgentInvocation,
 ) -> dict[str, object]:
     request = invocation.request
+    tool_reference_policy = _tool_reference_policy(invocation)
+    effective_operations = _effective_available_operations(
+        invocation,
+        tool_reference_policy=tool_reference_policy,
+    )
     return {
         "schema": ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA,
         "protocol": ENGINEERING_AGENT_MODEL_STRATEGY_REF,
@@ -1957,7 +1982,8 @@ def _primary_input_view(
             "cross_disposition_references_forbidden": True,
             "unknown_observation_references_forbidden": True,
         },
-        "tool_reference_policy": _tool_reference_policy(invocation),
+        "completion_policy": _completion_policy(invocation),
+        "tool_reference_policy": tool_reference_policy,
         "review_feedback": {
             "review_digest": (
                 invocation.review_digest.value
@@ -1968,7 +1994,7 @@ def _primary_input_view(
         },
         "tool_catalog": tuple(
             _tool_contract_view(item)
-            for item in invocation.available_operations
+            for item in effective_operations
         ),
         "authority_boundary": {
             "conversation_is_not_source_truth": True,
@@ -2038,8 +2064,7 @@ def _tool_reference_policy(
         for value in (_action_argument(item, "locator_reference"),)
         if value is not None
     )
-    attempted_read_set = set(attempted_reads)
-    options: dict[str, dict[str, object]] = {}
+    citation_catalog: dict[str, tuple[EngineeringAgentCitation, str]] = {}
     for observation in invocation.observations:
         if (
             observation.operation is not EngineeringAgentToolOperation.SOURCE_SEARCH
@@ -2052,18 +2077,38 @@ def _tool_reference_policy(
             for item in observation.authority_receipt.citations
         }
         for reference in observation.citation_refs:
-            if reference in attempted_read_set or reference in options:
-                continue
             citation = citations.get(reference)
             if citation is None:
                 continue
-            options[reference] = {
-                "locator_reference": reference,
-                "locator": citation.locator,
-                "evidence_class": citation.evidence_class,
-                "modality": citation.modality,
-                "source_observation_id": observation.observation_id.value,
-            }
+            citation_catalog.setdefault(
+                reference,
+                (citation, observation.observation_id.value),
+            )
+
+    attempted_resources = {
+        _source_resource_locator(citation_catalog[reference][0].locator)
+        for reference in attempted_reads
+        if reference in citation_catalog
+    }
+    options: dict[str, dict[str, object]] = {}
+    for reference, (citation, source_observation_id) in citation_catalog.items():
+        resource_locator = _source_resource_locator(citation.locator)
+        if resource_locator in attempted_resources or resource_locator in options:
+            continue
+        options[resource_locator] = {
+            "locator_reference": reference,
+            "locator": citation.locator,
+            "resource_locator": resource_locator,
+            "evidence_class": citation.evidence_class,
+            "modality": citation.modality,
+            "content_digest": citation.content_digest.value,
+            "source_observation_id": source_observation_id,
+        }
+    terminal_source_denial_reason = _terminal_source_denial_reason(
+        invocation.observations
+    )
+    if terminal_source_denial_reason is not None:
+        options = {}
     return {
         "prior_actions": prior_actions,
         "source_search_queries_already_attempted": tuple(
@@ -2081,10 +2126,115 @@ def _tool_reference_policy(
             if value is not None
         ),
         "source_read_locator_references_already_attempted": attempted_reads,
+        "source_read_resource_locators_already_attempted": tuple(
+            sorted(attempted_resources)
+        ),
         "source_read_options": tuple(options.values()),
+        "terminal_source_denial_reason": terminal_source_denial_reason,
         "exact_action_repetition_forbidden": True,
         "unlisted_source_read_reference_forbidden": True,
+        "same_resource_read_repetition_forbidden": True,
     }
+
+
+def _source_resource_locator(locator: str) -> str:
+    match = _SOURCE_LINE_LOCATOR.fullmatch(locator)
+    return match.group("resource") if match is not None else locator
+
+
+def _terminal_source_denial_reason(
+    observations: Sequence[EngineeringAgentToolObservation],
+) -> str | None:
+    terminal_reason: str | None = None
+    for observation in observations:
+        receipt = observation.authority_receipt
+        if (
+            receipt is None
+            or receipt.authority_kind
+            is not EngineeringAgentToolAuthorityKind.SOURCE
+        ):
+            continue
+        for entry in receipt.ledger_entries:
+            if entry.kind != "BROKER_DECISION":
+                continue
+            details = dict(entry.details)
+            reason = details.get("reason")
+            if (
+                details.get("status") == "REJECTED"
+                and reason in _TERMINAL_SOURCE_DENIAL_REASONS
+            ):
+                terminal_reason = reason
+    return terminal_reason
+
+
+def _completion_policy(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    if not isinstance(invocation.mode, EngineeringAgentInvocationMode):
+        raise DomainError(
+            ErrorCode.STRATEGY_CONTRACT_MISMATCH,
+            "Engineering Agent invocation mode is invalid",
+        )
+    evidence_only = (
+        invocation.mode
+        is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+    )
+    return {
+        "mode": invocation.mode.value,
+        "tool_action_allowed": not evidence_only,
+        "draft_required": evidence_only,
+        "allowed_response_kinds": tuple(
+            item.value
+            for item in EngineeringAgentResponseKind
+            if not evidence_only
+            or item
+            in {
+                EngineeringAgentResponseKind.ANSWER,
+                EngineeringAgentResponseKind.LIMITATION,
+            }
+        ),
+        "new_evidence_claim_forbidden": evidence_only,
+    }
+
+
+def _effective_available_operations(
+    invocation: EngineeringAgentInvocation,
+    *,
+    tool_reference_policy: Mapping[str, object] | None = None,
+) -> tuple[EngineeringAgentToolOperation, ...]:
+    if not isinstance(invocation.mode, EngineeringAgentInvocationMode):
+        raise DomainError(
+            ErrorCode.STRATEGY_CONTRACT_MISMATCH,
+            "Engineering Agent invocation mode is invalid",
+        )
+    if (
+        invocation.mode
+        is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+    ):
+        return ()
+    policy = (
+        tool_reference_policy
+        if tool_reference_policy is not None
+        else _tool_reference_policy(invocation)
+    )
+    terminal_source_denial = policy["terminal_source_denial_reason"] is not None
+    source_read_available = bool(policy["source_read_options"])
+    return tuple(
+        operation
+        for operation in invocation.available_operations
+        if not (
+            operation
+            in {
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            }
+            and terminal_source_denial
+        )
+        and not (
+            operation is EngineeringAgentToolOperation.SOURCE_READ
+            and not source_read_available
+        )
+    )
 
 
 def _trusted_action_view(
@@ -2492,7 +2642,8 @@ def _validate_primary_proposal(
         or not set(proposal.superseded_conclusion_refs).issubset(reviewed)
         or (
             proposal.action is not None
-            and proposal.action.operation not in invocation.available_operations
+            and proposal.action.operation
+            not in _effective_available_operations(invocation)
         )
     ):
         raise DomainError(
@@ -2503,6 +2654,19 @@ def _validate_primary_proposal(
     by_id = {item.observation_id: item for item in observations}
     if proposal.draft is None:
         return
+    if (
+        invocation.mode
+        is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+        and proposal.draft.response_kind
+        not in {
+            EngineeringAgentResponseKind.ANSWER,
+            EngineeringAgentResponseKind.LIMITATION,
+        }
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "evidence-only synthesis requires an Answer or Limitation draft",
+        )
     for claim in proposal.draft.claims:
         if any(
             observation_id not in by_id
@@ -2530,6 +2694,11 @@ def _validate_primary_action(
 ) -> None:
     if action is None:
         return
+    if action.operation not in _effective_available_operations(invocation):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent action is outside the effective sealed tool catalog",
+        )
     expected_argument_names = {
         EngineeringAgentToolOperation.WORLD_MODEL_QUERY: ("query",),
         EngineeringAgentToolOperation.SOURCE_SEARCH: ("evidence_class", "query"),
