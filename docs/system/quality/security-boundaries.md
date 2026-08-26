@@ -106,6 +106,7 @@ World Model/Source/Ledger trusted tool adapter 与单 Provider Agent/Reviewer �
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE`；确定 pre-dispatch 与 replay 计 0，fresh dispatch/unknown 计 1，
 retry 仍为 0。non-dispatching candidate preflight 不读取 Source/credential、不启动 listener、不调用 Provider，并固定
 `ready_for_live=false`。ADR-017 双 attempt、生产 Provider runtime、artifact fixed launcher 与 Ark/DeepSeek terminal Session audit 已形成本地
-确定性候选；Ark HTTP 前不可用也已 owner-typed 为独立 fallback eligibility。fresh Ark Conformance、current actual artifact、Citation 内容与
-五轮 live Chat 仍为 `NOT_QUALIFIED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
+确定性候选；Ark HTTP 前不可用也已 owner-typed 为独立 fallback eligibility。fresh Ark Conformance 已 PASS，但旧 DeepSeek qualification
+因共享 Gateway implementation drift stale；fresh DeepSeek Conformance、current actual artifact、Citation 内容与五轮 live Chat 仍为
+`DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
 Provider 资格推导已经满足。

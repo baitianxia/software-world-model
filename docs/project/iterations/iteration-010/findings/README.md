@@ -269,5 +269,8 @@ iteration: ITER-010
 - [FINDING-010-104](FINDING-010-104.md)：Ark direct transport 现固定为每 request 一个 verified TLS session、TLS 后取 credential、每 session
   一个 HTTP dispatch、retry 0，并以 strict Session audit 接入 Conformance 与 artifact terminal；HTTP 前不可用又经 Gateway owner-typed
   classification 接入既有独立 fallback。旧 Ark Conformance 明确失效，fresh Conformance、current artifact 与五轮 live Chat 仍阻断。
+- [FINDING-010-105](FINDING-010-105.md)：clean `1e99e9b…` 的 fresh Ark Conformance 已以 2/2 request、13/13 Case、TLS/credential
+  `2/2`、reuse/retry/unknown 0 PASS；current Ark qualification 可用。artifact Gate 复核同时证明旧 DeepSeek qualification 因共享
+  Gateway implementation drift stale，故下一步先取得 fresh DeepSeek Conformance，再生成 current artifact。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

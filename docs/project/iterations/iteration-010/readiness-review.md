@@ -102,8 +102,10 @@ authority、per-attempt fresh Tool/Response Control、committed Work State、rou
 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`，最新相关组合为 89/89。`FINDING-010-103` 又以 owner-private closed artifact、exact
 ordered Ark→DeepSeek routes、fixed 5-Turn bounds、private Gateway/receipt paths 与唯一 `--session-config` selector 形成
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，最新相关组合为 117/117。`FINDING-010-104` 又把 Ark TLS-before-credential、每 request
-一个 verified session、retry 0、typed unavailable fallback 和 terminal audit 闭合为本地候选，最新相邻组合为 141/141。fresh Ark
-Conformance、current actual artifact、资格和 live Chat 仍为 `NOT_EXECUTED / NOT_QUALIFIED / NOT_LIVE`：
+一个 verified session、retry 0、typed unavailable fallback 和 terminal audit 闭合为本地候选，最新相邻组合为 141/141。
+`FINDING-010-105` 已在 clean `1e99e9b…` 上取得 fresh Ark Conformance 2/2、13/13 PASS；current Ark qualification 可用，但旧 DeepSeek
+qualification 因共享 Gateway implementation drift stale。fresh DeepSeek Conformance、current actual artifact 和 live Chat 仍为
+`NOT_EXECUTED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。

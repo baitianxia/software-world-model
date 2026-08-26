@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105]
 code: []
 tests: []
 iteration: ITER-010
@@ -27,7 +27,7 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
-NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+ARK_CONFORMANCE_PASS / DEEPSEEK_REQUALIFICATION_REQUIRED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
 
@@ -168,8 +168,20 @@ Ark Conformance fixture/result identity 升级为 `1.7.0 / @2`，新增 `CC-ARK-
 fingerprint 又绑定 connection/credential/retry policy，旧 qualification 因 fixture、implementation 与 configuration drift 失效。最小相关组合
 48/48、相邻聚焦组合 141/141、compileall 与 diff check 通过；V-009 定向模块仍保留既有 3 FAIL + 1 ERROR 的 exact implementation-drift
 historical hold。本证据没有真实 TLS、credential、Provider/model、Source、listener/browser 或 Activation，状态只增加
-`ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。下一 Gate 是 clean freeze 上执行 fresh Ark Conformance、生成 current actual artifact，再另取
-exact live grant；`V-CHAT-*` 与所有质量 verdict 继续 `NOT-RUN / blocking`。
+`ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。
+
+## Current fresh Ark Conformance evidence
+
+`FINDING-010-105` 记录用户精确授权的 clean `1e99e9b…` fresh run：`CC-ARK-CHAT-NO-TOOLS-001 / 1.7.0 / @2` 以 2/2
+request、13/13 Case PASS，actual model `glm-5.2`，Result digest 为
+`sha256:d0e9d49f234b770f9c22ad38276622f04168cbb17e1cada3b18586431ba40a15`。strict audit 为 TLS/credential `2/2`、HTTP 2、
+reuse/retry/post-dispatch unknown 0；sealed file mode `0600`，raw prompt/response persistence false。没有 mall Source/resources、DeepSeek、
+listener/browser 或 Activation 活动。current Ark qualification 有效到 `2026-09-25T01:00:39.148494Z`。
+
+artifact Gate 仍要求 current DeepSeek qualification。由于 DeepSeek implementation manifest 也包含本次变化的 `model_gateway.py`，current
+digest `sha256:a680b0c8…bb07` 与旧 PASS Result 的 `sha256:1022fdd1…3d4b` 不同；current loader 实际以
+`QUALIFICATION_INVALID` 拒绝旧 Result。下一 Gate 因此是另行授权的 fresh DeepSeek Conformance；PASS 后才生成 current actual artifact，
+再另取 exact live grant。`V-CHAT-*` 与所有质量 verdict 继续 `NOT-RUN / blocking`。
 
 ## Pre-freeze implementation evidence
 

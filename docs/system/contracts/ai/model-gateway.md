@@ -80,4 +80,4 @@ Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatc
 
 ## Verification ownership
 
-Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；状态只是 `LOCAL_CANDIDATE / NOT_QUALIFIED / NOT_LIVE`。fresh Ark Conformance、current actual artifact 与五轮 live Chat 仍必须单独取得执行证据。
+Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；fresh Ark Conformance 又已在 exact clean identity 上 PASS。当前状态是 `ARK_QUALIFIED / DEEPSEEK_REQUALIFICATION_REQUIRED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`；fresh DeepSeek Conformance、current actual artifact 与五轮 live Chat 仍必须单独取得执行证据。

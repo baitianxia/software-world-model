@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-ark-transport-session-audit-local-candidate-next-clean-freeze-fresh-conformance-current-artifact-and-live`
+- Worktree status: `iteration-010-slice-001-fresh-ark-conformance-pass-next-deepseek-requalification-current-artifact-and-live`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-access-pass-ark-transport-audit-wired-fresh-ark-conformance-required-current-artifact-not-executed-not-qualified-not-live-production-not-activated`
+- Live model path: `pdr-004-access-pass-fresh-ark-conformance-current-deepseek-qualification-stale-current-artifact-not-executed-not-live-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

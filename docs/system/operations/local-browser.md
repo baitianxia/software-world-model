@@ -35,8 +35,9 @@ Conversation 与 Browser。`FINDING-010-103` 进一步实现 owner-private artif
 World Model、Source Profile、Ark/DeepSeek qualification identity 与 distinct private Gateway repositories，状态为
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又把 Ark per-request verified TLS Session audit 接入 Conformance 与
 terminal receipt，并 owner-type HTTP 前 unavailable；状态增加 `ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。这些状态来自本地构造/
-patched typed artifacts 和 fake listener lifecycle；fresh Ark Conformance、current actual sealed artifact、真实 Provider 和 Browser 五轮 Chat
-均未执行，故仍为 `NOT_QUALIFIED / NOT_LIVE`。在 Adapter 资格、
+patched typed artifacts 和 fake listener lifecycle；fresh Ark Conformance 随后已以 2/2 request、strict Session audit PASS，但旧 DeepSeek
+qualification 因共享 Gateway implementation drift stale。fresh DeepSeek Conformance、current actual sealed artifact 和 Browser 五轮 Chat
+均未执行，故仍为 `DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`。在双 route Adapter 资格、
 真实模型审计和人工体验均闭合前，页面不得把
 `ENGINEERING_CHAT_EXPERIENCE@1` 标成 PASS 或生产可用。
 
@@ -168,9 +169,9 @@ ordinal 2 DeepSeek。数据库与 receipt 路径必须是互异、尚不存在�
 
 launcher exclusive-create 两个 private SQLite repositories，在 listener 构造前写 launch receipt，固定绑定 `127.0.0.1:8765`，停止后写
 terminal receipt。launch receipt 必须仍是 attempt/tool/cognition/Source/credential/dispatch/listener 0；terminal receipt 密封两条 route 的
-Disclosure/model-boundary audits 与各自经过 strict verifier 的 Ark/DeepSeek transport Session audit。当前实现尚未在 clean freeze 上取得新
-Ark identity 的 fresh Conformance，也尚未用 current actual artifact 启动真实 Provider/browser，所以状态只是
-`ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`，不是 live PASS。
+Disclosure/model-boundary audits 与各自经过 strict verifier 的 Ark/DeepSeek transport Session audit。current Ark identity 的 fresh
+Conformance 已 PASS；current DeepSeek qualification 因 implementation drift stale，且尚未用 current actual artifact 启动真实
+Provider/browser，所以状态只是 `ARK_CONFORMANCE_PASS / DUAL_ROUTE_NOT_QUALIFIED`，不是 live PASS。
 
 已实现兼容 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：
