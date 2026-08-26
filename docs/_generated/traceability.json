@@ -2976,6 +2976,22 @@
       "tests/test_engineering_chat_provider_runtime.py"
     ]
   },
+  "FINDING-010-110": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-110.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "scripts/docs.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_question_answering.py",
+      "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_conversation.py",
+      "tests/test_docs_gate.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4952,6 +4968,8 @@
       "src/software_world_model/source_integration/artifact_use.py",
       "src/software_world_model/infrastructure/sqlite_source_operation_repository.py",
       "src/software_world_model/infrastructure/sqlite_artifact_use_authority_repository.py",
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
       "src/software_world_model/interface/engineering_qa_source.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
     ],
@@ -4962,6 +4980,7 @@
       "tests/test_structure_publication.py",
       "tests/test_maven_structure_update.py",
       "tests/test_engineering_qa_source.py",
+      "tests/test_conversational_engineering_tools.py",
       "tests/test_conversational_engineering_model.py"
     ]
   },

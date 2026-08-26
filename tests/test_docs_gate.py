@@ -8559,6 +8559,10 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ("new_conversation_context_isolation_required", False),
             ("full_regression_before_direction_confirmation_allowed", True),
             ("first_live_chat_turn_result", "passed"),
+            (
+                "deterministic_successor_canary_source_file_budget",
+                "search-64-plus-read-1",
+            ),
         )
         for field, value in invalid_policy_values:
             invalid = copy.deepcopy(manifest)

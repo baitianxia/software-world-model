@@ -2592,6 +2592,21 @@ class SourceBroker:
                 ledger=ledger,
                 reason="EVIDENCE_CLASS_BYTE_FUSE_EXHAUSTED",
             )
+        remaining_files = request.limits.maximum_source_files - usage.source_files
+        maximum_files = min(remaining_files, 64)
+        if (
+            source_operation is SourceReadOperation.SEARCH
+            and remaining_files > 1
+            and any(
+                operation
+                in {SourceReadOperation.READ, SourceReadOperation.PARSE}
+                for operation in request.registered_operations
+            )
+        ):
+            # SEARCH locators are capabilities for a later exact read.  Keep one
+            # slot inside the same total file fuse so a truncated directory scan
+            # cannot consume the capability before the Agent can exercise it.
+            maximum_files = min(maximum_files, remaining_files - 1)
         operation_core = {
             "broker_policy": ENGINEERING_QA_BROKER_POLICY,
             "request_digest": request.digest.value,
@@ -2611,9 +2626,7 @@ class SourceBroker:
             "locator_reference": (
                 locator_reference.value if locator_reference else None
             ),
-            "maximum_files": min(
-                request.limits.maximum_source_files - usage.source_files, 64
-            ),
+            "maximum_files": maximum_files,
             "maximum_source_bytes": min(remaining_bytes, per_class_limit),
             "maximum_result_items": min(
                 request.limits.maximum_support_items, 1_024

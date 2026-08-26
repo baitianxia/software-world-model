@@ -2568,6 +2568,19 @@ def validate_conversational_engineering_agent(
                 "conversation_input_clarification_remediation_evidence_ref",
                 "FINDING-010-109",
             ),
+            (
+                "source_search_read_budget_remediation_evidence_ref",
+                "FINDING-010-110",
+            ),
+            (
+                "deterministic_successor_canary_status",
+                "five-turn-and-new-conversation-pass-with-fake-model-temp-git-"
+                "no-live-authority-consumed",
+            ),
+            (
+                "deterministic_successor_canary_source_file_budget",
+                "search-63-plus-read-1-equals-unchanged-total-64",
+            ),
         ):
             if policy.get(field) != expected:
                 errors.append(

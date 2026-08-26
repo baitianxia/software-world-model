@@ -283,5 +283,8 @@ iteration: ITER-010
 - [FINDING-010-109](FINDING-010-109.md)：空新 Conversation 的省略指代不能依赖 Provider 或 Session budget；现由
   `ENGINEERING_CHAT_BINDING@2` 固定 versioned zh-CN input policy，在 World Model/Source/credential/Provider 前返回非事实澄清。该修复与
   FINDING-010-108 均只是 local candidate，必须在新 exact product/session grant 下重验。
+- [FINDING-010-110](FINDING-010-110.md)：组合审计发现大目录 SEARCH 即使先命中目标，仍会消费全部 64 个总文件名额，使签发的 locator
+  无法 READ。Broker 现在在不提高总熔断的前提下为后续 exact READ/PARSE 保留 1 个名额；71 文件、同一固定五轮与新对话负测的
+  deterministic successor canary 已闭合，真实 Provider/browser 仍须新 exact Session Authority。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

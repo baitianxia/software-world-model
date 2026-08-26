@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-107, FINDING-010-108, FINDING-010-109, ITER-010-PDR-001, ITER-010-PDR-004]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, ITER-010-PDR-001, ITER-010-PDR-004]
 code: []
 tests: []
 iteration: ITER-010
@@ -14,12 +14,13 @@ coding_input: true
 # ITER-010 Development Design
 
 当前处于 `direction-exploration`，hardening 未解锁。可启动 Chat 页面已经交付；首次 artifact-backed 五轮 Chat 在 run-035 中 5/5 失败，
-新 Conversation 只完成 transcript 隔离而没有省略指代澄清。当前出口是完成已定位根因的本地 Gate、提交新 exact candidate，并在新 Session
-Authority 下重跑同一 canary；三臂比较和 hardening 继续阻断。四个微检查点见 Slice1 文件顶部执行卡。
+新 Conversation 只完成 transcript 隔离而没有省略指代澄清。`FINDING-010-110` 已在同一总文件熔断内闭合 Search→Read 预算并通过
+固定五轮与新对话的 deterministic successor canary。当前出口是提交新 exact candidate，并在新 Session Authority 下重跑同一 canary；
+三臂比较和 hardening 继续阻断。四个微检查点见 Slice1 文件顶部执行卡。
 
 | Slice | 状态 | 目的 | 进入条件 |
 |---|---|---|---|
-| [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `authorized / active / rework / first live failed / coding input` | 复用既有安全、证据和 Web 资产，改为主工程 Agent 驱动的真正多轮 Chat；五轮连续对话和新对话隔离后，产出小样本三臂方向信号 | run-035 失败与本地修复候选已记录；修复后 live/Provider 必须绑定新 exact commit/tree 另行授权 |
+| [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `authorized / active / rework / first live failed / deterministic successor pass / coding input` | 复用既有安全、证据和 Web 资产，改为主工程 Agent 驱动的真正多轮 Chat；五轮连续对话和新对话隔离后，产出小样本三臂方向信号 | run-035 失败与本地 successor 已记录；修复后 live/Provider 必须绑定新 exact commit/tree 另行授权 |
 | [SLICE-002](SLICE-002-cross-project-hardening.md) | `proposed` | Conversation 持久恢复、复杂冲突/去重/异常、跨工程与三臂正式复验 | Slice1 Chat Alpha 经真实体验与方向比较后 `CONTINUE`；再取开发授权及消融/hardening 新冻结收据 |
 | [SLICE-003](SLICE-003-formal-product-acceptance.md) | `proposed` | 未见工程、多轮现场对话、三臂、安全和最终验收 | Slice2 exact Result=`CONTINUE`，再取得新授权 |
 

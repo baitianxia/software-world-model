@@ -595,7 +595,10 @@ conversational_engineering_agent:
   first_live_new_conversation_probe_result: transcript-isolated-but-required-clarification-failed
   source_search_remediation_evidence_ref: FINDING-010-108
   conversation_input_clarification_remediation_evidence_ref: FINDING-010-109
-  agent_execution_status: first-live-five-turn-chat-failed-remediation-local-candidate-new-exact-product-session-authority-required
+  source_search_read_budget_remediation_evidence_ref: FINDING-010-110
+  deterministic_successor_canary_status: five-turn-and-new-conversation-pass-with-fake-model-temp-git-no-live-authority-consumed
+  deterministic_successor_canary_source_file_budget: search-63-plus-read-1-equals-unchanged-total-64
+  agent_execution_status: first-live-five-turn-chat-failed-combined-deterministic-successor-pass-new-exact-product-session-authority-required
   status: implemented-live-failed-remediation-local-candidate
 
 question_evidence_package_classes:
@@ -937,7 +940,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:724e755873eed837619bd4b0ee879d6c105f50102cdc85d1e774b9aecb6555b6
+  system_contract_set_digest: sha256:e4a51e8b05ef80679490b0bc0e9e975b57cb0eb7d8a796fc2482979814c322a6
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

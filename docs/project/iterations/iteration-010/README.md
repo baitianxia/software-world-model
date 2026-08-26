@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: current-development
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
@@ -63,8 +63,9 @@ clean `1e99e9b…` 上取得 fresh Ark Conformance 2/2、13/13 PASS；`FINDING-0
 fresh DeepSeek Conformance 2/2、12/12 PASS，TLS `1/1`、connection reuse 1、retry/outcome unknown 0。两条 route 的 current
 qualification 同时可用。`FINDING-010-107` 随后记录 exact `eb835f5…` / `run-035-chat-alpha`：首次 owner-private artifact-backed 五轮
 Chat 已执行，但五轮 5/5 失败且没有 Answer/Citation/Review/Delivery；新 Conversation transcript 隔离成立，省略指代却没有澄清。
-`FINDING-010-108/109` 已形成 literal/path-ranked Search 与 Binding-owned 空上下文澄清的本地修复候选。run-035 grant 已消费；修复后
-必须绑定新 exact commit/tree、artifact 与 Session Authority 重验。hidden、Slice2/3 与 Production 始终未授权或未执行。
+`FINDING-010-108/109/110` 已形成 literal/path-ranked Search、同一 64 文件总熔断内的 follow-up read reserve、Binding-owned 空上下文
+澄清和同一固定五轮 deterministic successor canary。run-035 grant 已消费；修复后必须绑定新 exact commit/tree、artifact 与 Session
+Authority 重验。hidden、Slice2/3 与 Production 始终未授权或未执行。
 
 Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
 能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。

@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-first-live-chat-failed-source-search-and-input-clarification-remediation-local-candidate`
+- Worktree status: `iteration-010-slice-001-first-live-chat-failed-combined-deterministic-successor-pass`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-access-pass-first-live-chat-failed-remediation-local-candidate-new-exact-session-authority-required-production-not-activated`
+- Live model path: `pdr-004-access-pass-first-live-chat-failed-combined-local-successor-new-exact-session-authority-required-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

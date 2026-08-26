@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110]
 code: []
 tests: []
 iteration: ITER-010
@@ -28,7 +28,7 @@ PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
 ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT /
-FIRST_LIVE_CHAT_FAILED / SOURCE_SEARCH_AND_INPUT_CLARIFICATION_REMEDIATION_LOCAL_CANDIDATE /
+FIRST_LIVE_CHAT_FAILED / COMBINED_FIVE_TURN_DETERMINISTIC_SUCCESSOR_PASS /
 NEW_EXACT_PRODUCT_SESSION_AUTHORITY_REQUIRED / NOT_ACCEPTED / NOT_PRODUCTION`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；首次五轮
 Chat 与新对话 probe 也已有失败执行证据，不能再标记为 NOT-RUN。一次 Access/browser 或已消费的 live Session grant 不等于修复后
 Provider/live Chat、hidden、后续 Slice 或 Production 授权。
@@ -66,6 +66,15 @@ match；519 个授权 Java entry 又按 canonical 顺序在 64-file fuse 前扫�
 
 `FINDING-010-108/109` 已分别形成 literal-search contract + authorized-path candidate ordering，以及 binding-owned 空上下文指代澄清的本地
 修复候选。它们不能追认 run-035；新的真实验证必须绑定修复后的 exact commit/tree、owner-private artifact 与新 Session Authority。
+
+组合审计随后发现，默认 64 文件总预算下的截断 SEARCH 会在 locator READ 前耗尽全部预算。`FINDING-010-110` 让 Broker 只在同一总熔断
+内为后续 READ/PARSE 保留 1 个名额，不提高任何资源上限。新增 deterministic successor canary 使用 71 个授权临时 Java 文件和 run-035
+同一固定五轮：每轮 SEARCH 读取 63 个文件并保留 `PARTIAL / SOURCE_FILE_FUSE_EXHAUSTED` boundary，随后 opaque locator READ 使用第 64
+个名额，五轮均形成 Package、fresh Review 和 Delivery；Work State revision 为 `3/6/9/12/15`，fake Agent/Reviewer logical dispatch
+合计 20。空的新 Conversation probe 又以 0 dispatch 返回 Application clarification，旧 Conversation digest 不变。六个相邻模块合计
+`99/99 PASS`；允许本机 socket 的完整 1275 项为 1269 PASS，剩余 5 FAIL + 1 ERROR 精确属于既有 V-009/Codex drift hold，没有本次模块
+新增失败。该 canary 不验证五个答案的产品质量或 World Model + Source 组合质量，也没有 mall、外部 Provider/model、credential、
+listener/browser 或 Production 活动，因此所有 live Chat/Quality/XD verdict 仍为 FAIL，下一 Gate 不变。
 
 ## Current local Agent executor evidence
 

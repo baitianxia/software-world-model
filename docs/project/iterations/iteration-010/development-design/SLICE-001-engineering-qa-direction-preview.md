@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -61,7 +61,9 @@ TLS-before-credential、typed unavailable fallback 和 fresh-Conformance identit
 `FINDING-010-107` 随后记录 exact `eb835f5…` / `run-035-chat-alpha`：五轮真实 Chat 全部失败且没有 Answer/Citation/Review/Delivery；新
 Conversation 没有旧消息，但省略指代未澄清。最早偏差是 semantic search 提示与 literal Worker 不一致，以及空上下文指代没有可信的
 Provider 前所有者。`FINDING-010-108/109` 已完成 bounded literal/path-ranked Search 和 Binding-owned Application clarification 的本地修复。
-下一动作是完成本地 deterministic Gate 与提交新的 exact candidate；只有新的 Session Authority 才能生成 successor artifact 并重跑同一
+组合审计又发现截断 Search 会先耗尽 locator Read 的总文件预算；`FINDING-010-110` 在不提高 64 文件总熔断的前提下保留一个 follow-up
+read 名额，并用 71 文件、同一固定五轮和新对话 probe 闭合 deterministic successor Gate。下一动作是提交新的 exact candidate；只有新的
+Session Authority 才能生成 successor artifact 并重跑同一
 五轮 canary。任何一项缺失都不能宣称修复已 `LIVE / PASS`，run-035 永久保持 FAIL。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
