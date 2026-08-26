@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -76,10 +76,14 @@ Claim assessments 处置；所有 role output 还显式禁止 JSON 外叙述，c
 `743942d…` / `748902c…` 取得 fresh Ark 2/2、13/13 与 DeepSeek 2/2、12/12 Conformance PASS。条件满足后的
 `FINDING-010-119 / run-038-chat-alpha` 仍只有 Turn 5 形成 `REVIEWED_LIMITATION`，其余四轮失败，dispatch `8/6/2/8/5`、retry 0；新
 Conversation clarification/隔离/零 dispatch 继续 PASS。根因是同一 canonical Source resource 的多个 line locator 仍可分别读取，以及
-no-progress threshold 直接失败而不能基于现有边界受审完成。`FINDING-010-120/121` 现以 Primary input v4 的 resource-level legal domain、
-terminal Source operation removal 和 `EVIDENCE_ONLY_SYNTHESIS` 处置，Model/Agent 31/31、相邻组合 84/84 与 compile PASS。下一动作再次是
-fresh Ark/DeepSeek Conformance；只有随后新的 exact commit/tree、artifact 与 Session Authority 才能重跑同一五轮 canary。任何一项缺失
-都不能宣称修复已 `LIVE / PASS`，run-035—038 永久保留各自真实 FAIL/limitation 证据。
+no-progress threshold 直接失败而不能基于现有边界受审完成。`FINDING-010-120/121` 以 Primary input v4 的 resource-level legal domain、
+terminal Source operation removal 和 `EVIDENCE_ONLY_SYNTHESIS` 处置。`FINDING-010-123` 随后在 exact `34d98ae…` / `b9100b1…`
+取得 fresh Ark 2/2、13/13 与 DeepSeek 2/2、12/12 Conformance PASS；条件满足后的 `FINDING-010-124 / run-040-chat-alpha` 仍只有
+Turn 2 形成 `REVIEWED_LIMITATION`，其余四轮失败，dispatch `11/8/2/5/2`、retry 0，新 Conversation clarification/隔离/零 dispatch 继续
+PASS。根因是 previous Work State 暴露 prior-Turn Observation IDs，以及 evidence-required Review successor 仍允许普通 Draft。
+`FINDING-010-125` 现以 Primary input v5 的 current-Turn reference policy 与 required tool transition 处置，Model/Agent 31/31、相邻组合
+84/84 与 compile PASS。下一动作再次是 fresh Ark/DeepSeek Conformance；只有随后新的 exact commit/tree、artifact 与 Session Authority
+才能重跑同一五轮 canary。任何一项缺失都不能宣称修复已 `LIVE / PASS`，run-035—038 与 run-040 永久保留各自真实 FAIL/limitation 证据。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为
@@ -114,7 +118,9 @@ run-035 中消费；`096a1bc…` 最后补充 exact `999616d…` 的同一五轮
 Conformance；`8ebd3650…` 又在 exact `d429be6…` 上授权条件式双 Conformance、artifact 和同一 Live，Ark TLS acquisition 补充授权
 `e89640fa…` 与上限提升 `21786af7…` 也已按 `FINDING-010-114` 消费，最终失败 run-037 由 `FINDING-010-115` 密封。v3
 strategy/prompt/input/output 随后在 `338979f8…` 授权下取得 fresh 双资格并执行 run-038；`FINDING-010-118/119` 已密封 1/5 reviewed
-Limitation / overall FAIL 与 leakage PASS。该授权也已消费；v4 strategy/prompt/Primary input 又使 run-038 资格 stale。当前没有新的
+Limitation / overall FAIL 与 leakage PASS。v4 随后由用户授权在 exact `34d98ae…` 上取得 fresh 双资格并执行 run-040；本地密封的
+user-message UTF-8 digest 为 `6834f685…`，`FINDING-010-123/124` 再次密封 1/5 reviewed Limitation / overall FAIL 与 leakage PASS。
+该授权也已消费；v5 strategy/prompt/Primary input 又使 run-040 资格 stale。当前没有新的
 Provider/Source/browser live 授权，hidden、Slice2/3 与 Production 始终未授权。
 
 恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、

@@ -36,6 +36,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentLoopLimits,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
+    EngineeringAgentReviewFinding,
     EngineeringAgentToolActionProposal,
     EngineeringAgentToolAuthorityKind,
     EngineeringAgentToolAuthorityReceipt,
@@ -350,6 +351,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("one short case-sensitive literal token", rendered)
         self.assertIn("semantic descriptions", rendered)
         self.assertIn("draft_reference_policy", rendered)
+        self.assertIn("work_state_reference_policy", rendered)
+        self.assertIn("tool_action_required", rendered)
         self.assertIn("tool_reference_policy", rendered)
         self.assertIn("answer_claim_support_observation_ids", rendered)
         self.assertIn("limitation_boundary_observation_ids", rendered)
@@ -604,8 +607,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         rendered_invocation = _primary_input_view(invocation)
         policy = rendered_invocation["tool_reference_policy"]
+        work_state_policy = rendered_invocation["work_state_reference_policy"]
 
         self.assertEqual(policy["source_search_queries_already_attempted"], ("login",))
+        self.assertEqual(
+            work_state_policy["required_current_turn_observation_ids"],
+            (observation.observation_id.value,),
+        )
+        self.assertFalse(
+            work_state_policy["prior_turn_observation_ids_authorized"]
+        )
+        self.assertEqual(
+            work_state_policy["current_user_message_id"],
+            capture.request.user_message.message_id.value,
+        )
         self.assertEqual(
             tuple(item["locator_reference"] for item in policy["source_read_options"]),
             (locator_reference, other_resource_reference),
@@ -748,6 +763,116 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             )
         self.assertEqual(repeated.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
 
+        evidence_required_invocation = replace(
+            invocation,
+            review_findings=(
+                EngineeringAgentReviewFinding.create(
+                    code="INCOMPLETE_EVIDENCE",
+                    message="The current Package cannot support claim 0.",
+                    requires_evidence=True,
+                    claim_index=0,
+                ),
+            ),
+            review_digest=digest_of("evidence-required-review"),
+        )
+        evidence_required_policy = _primary_input_view(
+            evidence_required_invocation
+        )["completion_policy"]
+        self.assertTrue(evidence_required_policy["tool_action_required"])
+        self.assertFalse(evidence_required_policy["draft_required"])
+        self.assertEqual(evidence_required_policy["allowed_response_kinds"], ())
+        evidence_required_draft = {
+            "goal": "确认登录失败记录",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [observation.observation_id.value],
+            "open_items": [],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "ANSWER",
+                "content": "当前证据支持这一条登录结论。",
+                "claims": [
+                    {
+                        "statement": "当前证据支持这一条登录结论。",
+                        "support_observation_ids": [
+                            observation.observation_id.value
+                        ],
+                    }
+                ],
+                "boundary_observation_ids": [],
+            },
+        }
+        with self.assertRaises(DomainError) as review_redraft:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(evidence_required_draft),
+                invocation=evidence_required_invocation,
+                model_call_ref="review-redraft-without-evidence-call",
+            )
+        self.assertEqual(
+            review_redraft.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        prior_observation_id = StableId(f"observation_{'2' * 32}")
+        previous_work_state = SimpleNamespace(
+            work_state_id=StableId(f"work_state_{'1' * 32}"),
+            conversation_id=capture.request.snapshot_before.conversation.conversation_id,
+            turn_id=StableId(f"turn_{'1' * 32}"),
+            revision=Revision(1),
+            previous_digest=None,
+            context_digest=capture.request.snapshot_before.context.digest,
+            goal="prior turn goal",
+            response_language="zh-CN",
+            audience="software engineer",
+            constraints=(),
+            resolved_referents=("登录流程",),
+            accepted_correction_message_ids=(),
+            superseded_conclusion_refs=(),
+            hypotheses=(),
+            plan=(),
+            observation_ids=(prior_observation_id,),
+            open_items=(),
+            phase=SimpleNamespace(value="RESPONSE_READY"),
+            review_input_digest=None,
+            proposal_digest=digest_of("prior proposal"),
+            digest=digest_of("prior work state"),
+        )
+        next_turn_view = _primary_input_view(
+            replace(
+                invocation,
+                previous_work_state=previous_work_state,
+                observations=(),
+                action_history=(),
+            )
+        )
+        self.assertNotIn(
+            "observation_ids", next_turn_view["previous_work_state"]
+        )
+        self.assertEqual(
+            next_turn_view["previous_work_state"][
+                "prior_turn_observation_count"
+            ],
+            1,
+        )
+        self.assertFalse(
+            next_turn_view["previous_work_state"][
+                "prior_turn_observation_ids_disclosed"
+            ]
+        )
+        self.assertEqual(
+            next_turn_view["work_state_reference_policy"][
+                "required_current_turn_observation_ids"
+            ],
+            (),
+        )
+
     def test_evidence_only_synthesis_is_a_response_only_model_contract(self) -> None:
         capture = CapturingTurnExecutor()
         service = InMemoryEngineeringConversationService(
@@ -783,6 +908,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             {
                 "mode": "EVIDENCE_ONLY_SYNTHESIS",
                 "tool_action_allowed": False,
+                "tool_action_required": False,
                 "draft_required": True,
                 "allowed_response_kinds": ("ANSWER", "LIMITATION"),
                 "new_evidence_claim_forbidden": True,

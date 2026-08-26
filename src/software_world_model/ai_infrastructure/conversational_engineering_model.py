@@ -72,11 +72,11 @@ from .model_gateway import (
 from .openai_responses_adapter import OutputSchemaDefinition
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@4"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@5"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@4"
+    "conversational-engineering-agent-no-tools-prompt@5"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@4"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@5"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
@@ -128,7 +128,13 @@ source-tool, evidence-write, review, or delivery authority.
 Use only the sealed input and return exactly one JSON object matching the
 closed schema. Return the complete Application-owned Work State proposal and
 exactly one registered tool action or one response draft. Preserve the complete
-ordered observation_ids prefix. Resolve follow-up references from the sealed
+ordered observation_ids prefix by copying exactly
+work_state_reference_policy.required_current_turn_observation_ids. Prior-Turn
+Observation IDs are not disclosed or authorized for the current Turn. Preserve
+the exact accepted-correction and superseded-conclusion prefixes from
+work_state_reference_policy. If the current User Message explicitly corrects
+earlier Conversation context, append only the sealed current_user_message_id to
+accepted_correction_message_ids. Resolve follow-up references from the sealed
 conversation and previous Work State; if a material referent remains ambiguous,
 return a CLARIFICATION before any tool action. Treat prior user statements and
 assistant messages as conversation context, never as software facts. Revise
@@ -141,10 +147,14 @@ Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
 or CLARIFICATION, and never imply that more evidence was obtained.
+When completion_policy.tool_action_required is true, a Reviewer has established
+that the current Package cannot support a correction: return one legal tool
+action and no Draft. Do not merely rewrite the rejected Draft.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
-For a tool action, use exactly the argument names in the sealed tool_catalog.
+For a tool action, use exactly the argument names and count in the sealed
+tool_catalog; never add, omit, or duplicate an argument.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation, never a path. Copy it only from an unused entry in
 tool_reference_policy.source_read_options. That catalog exposes at most one
@@ -1968,6 +1978,7 @@ def _primary_input_view(
         "current_turn_observations": tuple(
             _observation_view(item) for item in invocation.observations
         ),
+        "work_state_reference_policy": _work_state_reference_policy(invocation),
         "draft_reference_policy": {
             "answer_claim_support_observation_ids": tuple(
                 item.observation_id.value
@@ -2179,19 +2190,26 @@ def _completion_policy(
         invocation.mode
         is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
     )
+    tool_action_required = not evidence_only and any(
+        item.requires_evidence for item in invocation.review_findings
+    )
     return {
         "mode": invocation.mode.value,
         "tool_action_allowed": not evidence_only,
+        "tool_action_required": tool_action_required,
         "draft_required": evidence_only,
         "allowed_response_kinds": tuple(
             item.value
             for item in EngineeringAgentResponseKind
-            if not evidence_only
-            or item
-            in {
-                EngineeringAgentResponseKind.ANSWER,
-                EngineeringAgentResponseKind.LIMITATION,
-            }
+            if not tool_action_required
+            and (
+                not evidence_only
+                or item
+                in {
+                    EngineeringAgentResponseKind.ANSWER,
+                    EngineeringAgentResponseKind.LIMITATION,
+                }
+            )
         ),
         "new_evidence_claim_forbidden": evidence_only,
     }
@@ -2436,7 +2454,9 @@ def _work_state_view(value) -> dict[str, object] | None:
         "superseded_conclusion_refs": value.superseded_conclusion_refs,
         "hypotheses": value.hypotheses,
         "plan": value.plan,
-        "observation_ids": tuple(item.value for item in value.observation_ids),
+        "prior_turn_observation_count": len(value.observation_ids),
+        "prior_turn_observation_ids_disclosed": False,
+        "prior_turn_observation_reuse_authorized": False,
         "open_items": value.open_items,
         "phase": value.phase.value,
         "review_input_digest": (
@@ -2466,6 +2486,54 @@ def _observation_view(value) -> dict[str, object]:
         ),
         "tool_evidence_digest": value.tool_evidence_digest.value,
         "digest": value.digest.value,
+    }
+
+
+def _work_state_reference_policy(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    previous_corrections = (
+        invocation.previous_work_state.accepted_correction_message_ids
+        if invocation.previous_work_state is not None
+        else invocation.request.snapshot_before.context.accepted_correction_message_ids
+    )
+    previous_superseded = (
+        invocation.previous_work_state.superseded_conclusion_refs
+        if invocation.previous_work_state is not None
+        else invocation.request.snapshot_before.context.superseded_conclusion_refs
+    )
+    known_user_message_ids = tuple(
+        dict.fromkeys(
+            (
+                *(
+                    item.message_id.value
+                    for item in invocation.request.snapshot_before.messages
+                    if item.role.value == "USER"
+                ),
+                invocation.request.user_message.message_id.value,
+            )
+        )
+    )
+    return {
+        "required_current_turn_observation_ids": tuple(
+            item.observation_id.value for item in invocation.observations
+        ),
+        "prior_turn_observation_ids_authorized": False,
+        "accepted_correction_message_id_prefix": tuple(
+            item.value for item in previous_corrections
+        ),
+        "current_user_message_id": (
+            invocation.request.user_message.message_id.value
+        ),
+        "known_user_message_ids": known_user_message_ids,
+        "current_user_message_append_rule": (
+            "append only when the current User Message explicitly corrects earlier context"
+        ),
+        "superseded_conclusion_ref_prefix": tuple(previous_superseded),
+        "known_reviewed_conclusion_refs": tuple(
+            invocation.request.snapshot_before.context.reviewed_conclusion_refs
+        ),
+        "unlisted_references_forbidden": True,
     }
 
 
@@ -2649,6 +2717,14 @@ def _validate_primary_proposal(
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent output drifted from the sealed Context or observation prefix",
+        )
+    if (
+        _completion_policy(invocation)["tool_action_required"]
+        and proposal.action is None
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "an evidence-required Review Finding requires one legal tool action",
         )
     _validate_primary_action(proposal.action, invocation)
     by_id = {item.observation_id: item for item in observations}

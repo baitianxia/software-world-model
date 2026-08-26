@@ -315,5 +315,14 @@ iteration: ITER-010
   SUPPORT/BOUNDARY 的 Answer/Limitation，并仍须 fresh Review/Response Control，Reviewer 要求新证据时 fail closed。
 - [FINDING-010-122](FINDING-010-122.md)：Artifact preparation 测试的 qualification validity 现绑定 Adapter 实际 UTC clock，消除固定
   测试日期自然过期造成的伪 `QUALIFICATION_INVALID`；产品资格规则没有变化。
+- [FINDING-010-123](FINDING-010-123.md)：exact `34d98ae…` / `b9100b1…` 的 fresh Ark 与 DeepSeek Conformance 分别以固定
+  2/2 request、13/13 与 12/12 Case、retry/unknown 0 PASS；一次 Ark credential/HTTP 前 TLS failure 按授权 fresh restart，资格只允许
+  条件式 run-040，不证明答案质量。
+- [FINDING-010-124](FINDING-010-124.md)：`run-040-chat-alpha` 四轮失败，仅 Turn 2 形成 `REVIEWED_LIMITATION`，整体仍为
+  1/5 / Quality FAIL；28 logical dispatch、retry 0、private artifact、clean stop 与 Production `NOT_EXECUTED` 已密封，新 Conversation
+  clarification/隔离/零 dispatch 继续 PASS。run-039 的 Binding mismatch 在 listener/credential/Source/Provider 前失败，不是 live attempt。
+- [FINDING-010-125](FINDING-010-125.md)：Primary input v5 以 `work_state_reference_policy` 只授权 exact current-Turn Observation 和
+  correction/superseded prefixes，不再披露 prior-Turn Observation IDs；Reviewer 要求新 Evidence 时 successor 只能提交一个 exact tool
+  action。decoder/fuses 不放宽，v5 仍需 fresh 双 Provider Conformance 与新 Live Authority。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

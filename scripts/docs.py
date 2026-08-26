@@ -2551,6 +2551,7 @@ def validate_conversational_engineering_agent(
         "implemented-second-live-failed-leakage-pass-v2-remediation-local-candidate",
         "implemented-third-live-failed-leakage-pass-v3-remediation-local-candidate",
         "implemented-fourth-live-one-of-five-limitation-leakage-pass-v4-remediation-local-candidate",
+        "implemented-fifth-live-one-of-five-limitation-leakage-pass-v5-remediation-local-candidate",
     }:
         errors.append(
             f"{label}: conversational_engineering_agent.status must be a closed pre-production state"
@@ -2915,7 +2916,7 @@ def validate_conversational_engineering_agent(
                     f"{label}: {prefix} live Chat authority digest must match the consumed user receipt"
                 )
     if policy.get("status") == (
-        "implemented-fourth-live-one-of-five-limitation-leakage-pass-v4-remediation-local-candidate"
+        "implemented-fifth-live-one-of-five-limitation-leakage-pass-v5-remediation-local-candidate"
     ):
         for field, expected in (
             ("first_live_chat_execution_evidence_ref", "FINDING-010-107"),
@@ -2950,17 +2951,37 @@ def validate_conversational_engineering_agent(
             ("source_read_resource_domain_evidence_ref", "FINDING-010-120"),
             ("evidence_only_completion_evidence_ref", "FINDING-010-121"),
             ("artifact_session_fixture_clock_evidence_ref", "FINDING-010-122"),
+            ("fifth_live_conformance_execution_evidence_ref", "FINDING-010-123"),
+            (
+                "fifth_live_ark_conformance_result_digest",
+                "sha256:8c179dd2e7d00fb4a8177557b3716c254ccfab7911e8ed46e78df6ebd8f728cd",
+            ),
+            (
+                "fifth_live_deepseek_conformance_result_digest",
+                "sha256:a61f7eafa4d6caa42b33d54fd41386d065abb14dd0302b16f665dfb725a54e92",
+            ),
+            ("fifth_live_chat_execution_evidence_ref", "FINDING-010-124"),
+            (
+                "fifth_live_chat_turn_result",
+                "one-of-five-succeeded-reviewed-limitation-four-failed-no-answer-delivery",
+            ),
+            ("fifth_live_chat_dispatches_by_turn", "11,8,2,5,2"),
+            (
+                "fifth_live_new_conversation_probe_result",
+                "pass-empty-context-clarification-zero-dispatch-no-inheritance",
+            ),
+            ("work_state_reference_domain_evidence_ref", "FINDING-010-125"),
             (
                 "current_agent_model_strategy_ref",
-                "conversational-engineering-agent@4",
+                "conversational-engineering-agent@5",
             ),
             (
                 "current_agent_model_prompt_ref",
-                "conversational-engineering-agent-no-tools-prompt@4",
+                "conversational-engineering-agent-no-tools-prompt@5",
             ),
             (
                 "current_agent_primary_input_schema",
-                "ENGINEERING_AGENT_PRIMARY_INPUT@4",
+                "ENGINEERING_AGENT_PRIMARY_INPUT@5",
             ),
             (
                 "current_agent_review_input_schema",
@@ -2972,13 +2993,13 @@ def validate_conversational_engineering_agent(
             ),
             (
                 "current_dual_provider_qualification_status",
-                "stale-after-v4-strategy-prompt-primary-input-change-fresh-"
+                "stale-after-v5-strategy-prompt-primary-input-change-fresh-"
                 "conformance-required",
             ),
             (
                 "deterministic_successor_canary_status",
-                "v4-source-resource-domain-and-evidence-only-completion-84-of-84-"
-                "pass-no-live-authority-consumed",
+                "v5-current-turn-work-state-reference-domain-and-evidence-required-"
+                "tool-transition-84-of-84-pass-no-live-authority-consumed",
             ),
             (
                 "deterministic_successor_canary_source_file_budget",
@@ -2991,7 +3012,7 @@ def validate_conversational_engineering_agent(
                     f"{label}: conversational_engineering_agent.{field} must equal {expected}"
                 )
         authorization = manifest.get("authorization")
-        for prefix in ("first", "second", "third", "fourth"):
+        for prefix in ("first", "second", "third", "fourth", "fifth"):
             for suffix in (
                 "product_commit",
                 "product_tree",
@@ -3040,11 +3061,16 @@ def validate_conversational_engineering_agent(
             authorization_ref = (
                 live.get("authorization_ref") if isinstance(live, dict) else None
             )
+            receipt_prefix = (
+                "local-user-message-utf8:"
+                if prefix == "fifth"
+                else "codex-user-message:"
+            )
             if (
                 not isinstance(authorization_ref, str)
-                or not authorization_ref.startswith("codex-user-message:")
+                or not authorization_ref.startswith(receipt_prefix)
                 or policy.get(f"{prefix}_live_chat_session_authorization_digest")
-                != authorization_ref.removeprefix("codex-user-message:")
+                != authorization_ref.removeprefix(receipt_prefix)
             ):
                 errors.append(
                     f"{label}: {prefix} live Chat authority digest must match the consumed user receipt"
@@ -3344,12 +3370,18 @@ def validate_conversational_architecture_cutover(
             if isinstance(authorization, dict)
             else None
         )
+        fifth_live_authorization = (
+            authorization.get("fifth_live_session_authorization")
+            if isinstance(authorization, dict)
+            else None
+        )
         if external_execution_status == "not-authorized":
             if (
                 first_live_authorization is not None
                 or second_live_authorization is not None
                 or third_live_authorization is not None
                 or fourth_live_authorization is not None
+                or fifth_live_authorization is not None
             ):
                 errors.append(
                     f"{label}: an unexecuted external state must not contain live Session authorization receipts"
@@ -3611,6 +3643,90 @@ def validate_conversational_architecture_cutover(
                 errors.append(
                     f"{label}: fourth live Session authority must retain exact conditional Conformance receipt"
                 )
+        elif external_execution_status == (
+            "fifth-live-session-grant-consumed-no-current-live-authority"
+        ):
+            if (
+                authorization.get("external_execution_reauthorization_required")
+                is not True
+            ):
+                errors.append(
+                    f"{label}: consumed fifth live Session authority must require new exact external reauthorization"
+                )
+            for name, live_authorization, finding_ref in (
+                (
+                    "first_live_session_authorization",
+                    first_live_authorization,
+                    "FINDING-010-107",
+                ),
+                (
+                    "second_live_session_authorization",
+                    second_live_authorization,
+                    "FINDING-010-111",
+                ),
+                (
+                    "third_live_session_authorization",
+                    third_live_authorization,
+                    "FINDING-010-115",
+                ),
+                (
+                    "fourth_live_session_authorization",
+                    fourth_live_authorization,
+                    "FINDING-010-119",
+                ),
+                (
+                    "fifth_live_session_authorization",
+                    fifth_live_authorization,
+                    "FINDING-010-124",
+                ),
+            ):
+                if not isinstance(live_authorization, dict):
+                    errors.append(
+                        f"{label}: consumed fifth live state must retain its exact receipt: {name}"
+                    )
+                    continue
+                authorization_ref = live_authorization.get("authorization_ref")
+                expected_receipt_pattern = (
+                    r"local-user-message-utf8:sha256:[0-9a-f]{64}"
+                    if name == "fifth_live_session_authorization"
+                    else r"codex-user-message:sha256:[0-9a-f]{64}"
+                )
+                if (
+                    live_authorization.get("status") != "consumed"
+                    or not isinstance(authorization_ref, str)
+                    or re.fullmatch(expected_receipt_pattern, authorization_ref)
+                    is None
+                    or live_authorization.get("excludes")
+                    != "src-main-resources,credential-values,hidden,slice2,slice3,production-activation"
+                    or live_authorization.get("execution_finding_ref")
+                    != finding_ref
+                ):
+                    errors.append(
+                        f"{label}: {name} must remain exact, excluded and evidence-bound"
+                    )
+                for field in (
+                    "exact_product_commit",
+                    "exact_product_tree",
+                    "source_commit",
+                    "source_tree",
+                ):
+                    value = live_authorization.get(field)
+                    if not isinstance(value, str) or re.fullmatch(
+                        r"[0-9a-f]{40}", value
+                    ) is None:
+                        errors.append(
+                            f"{label}: {name}.{field} must be an exact Git object"
+                        )
+            if (
+                not isinstance(fifth_live_authorization, dict)
+                or fifth_live_authorization.get(
+                    "conformance_execution_finding_ref"
+                )
+                != "FINDING-010-123"
+            ):
+                errors.append(
+                    f"{label}: fifth live Session authority must retain exact conditional Conformance receipt"
+                )
         else:
             errors.append(
                 f"{label}: current development authorization must have no active external authority; only not-authorized or consumed live Session grants are allowed"
@@ -3633,6 +3749,14 @@ def validate_conversational_architecture_cutover(
             else None
         )
         if external_execution_status == (
+            "fifth-live-session-grant-consumed-no-current-live-authority"
+        ):
+            expected_live_question_status = (
+                "authorized-executed-failed-run-040-one-of-five-limitation-"
+                "leakage-pass-v5-remediation-local-candidate-fresh-conformance-"
+                "and-new-exact-grant-required"
+            )
+        elif external_execution_status == (
             "fourth-live-session-grant-consumed-no-current-live-authority"
         ):
             expected_live_question_status = (
