@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, FINDING-010-126, FINDING-010-127, FINDING-010-128]
 code: []
 tests: []
 iteration: ITER-010
@@ -27,11 +27,11 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
-FIFTH_LIVE_CHAT_ONE_OF_FIVE_LIMITATION_OVERALL_FAILED / NEW_CONVERSATION_LEAKAGE_PASS /
-CURRENT_TURN_WORK_STATE_REFERENCE_DOMAIN_V5_LOCAL_CANDIDATE /
+SIXTH_LIVE_CHAT_THREE_OF_FIVE_RESPONSES_OVERALL_FAILED / NEW_CONVERSATION_LEAKAGE_PASS /
+CURRENT_TURN_RESPONSE_AND_TOOL_ARGUMENT_DOMAIN_V6_LOCAL_CANDIDATE /
 FRESH_DUAL_PROVIDER_CONFORMANCE_REQUIRED / NEW_EXACT_PRODUCT_SESSION_AUTHORITY_REQUIRED /
-NOT_ACCEPTED / NOT_PRODUCTION`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；五次五轮 canary 均已有执行证据，run-040 仅一个
-reviewed Limitation 且新对话 probe 单独通过，不能把局部 PASS 扩张为 Chat/Quality PASS。一次 Access/browser 或已消费的 live Session grant 不等于修复后
+NOT_ACCEPTED / NOT_PRODUCTION`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；六次五轮 canary 均已有执行证据，run-041 有一个
+Answer 与两个 reviewed Limitation，但仍有两轮失败；新对话 probe 单独通过，不能把局部 PASS 扩张为 Chat/Quality PASS。一次 Access/browser 或已消费的 live Session grant 不等于修复后
 Provider/live Chat、hidden、后续 Slice 或 Production 授权。
 
 ## Current Chat Access evidence
@@ -169,6 +169,29 @@ Observation count；evidence-required Review successor 只能提交一个 effect
 Agent/Review/Provider/retry/fallback/wall-time fuses 均不放宽。Model/Agent 31/31、Session/Tool/Route/Browser 相邻组合 84/84 与
 `py_compile` 通过。run-040 qualification 因 v5 identity 改变而 stale；下一 Gate 是 fresh 双 Provider Conformance 与新的 exact Live
 Authority，未授权 Production Activation。
+
+## Sixth live three-of-five responses, leakage PASS and v6 successor
+
+`FINDING-010-126` 记录 exact product `6e97bc1c0c02be858212c39da11ac42e099c365e` / tree
+`fd54821e212b3022e318436d9e96b93af11505c6` 的 fresh Ark→DeepSeek qualification。Ark 前两个 attempt 均在 credential/HTTP 前 TLS
+失败，按授权 fresh restart 后第三个 run 完成 2/2 request、13/13 Case；DeepSeek 随后一次完成 2/2 request、12/12 Case。两个成功 run
+的 request retry、post-dispatch outcome unknown 均为 0。只有双 PASS 后才生成 owner-private run-041 artifact。
+
+`FINDING-010-127 / run-041-chat-alpha` 的五轮终态依次为 `ACCEPTED / MODEL_CALL_REJECTED / REVIEWED_LIMITATION /
+REVIEWED_LIMITATION / MODEL_CALL_REJECTED`，logical dispatch 为 `8/3/8/7/2`。Turn 1 首次交付经 fresh Review/Delivery 的登录流程 Answer；
+Turn 3/4 诚实密封本次证据不能确认的认证失败日志与 401/403 producer。相对 run-040 的 3/5 技术响应是可见增量，但固定脚本仍有 Turn 2/5
+失败，最终用户可见总结也未交付，所以 Chat/Quality/XD 继续 FAIL。terminal 密封 2 Conversation、6 Turn、28 logical dispatch、retry
+和 outcome unknown 0、Production `NOT_EXECUTED`；Ark 12 logical 中 7 HTTP + 5 pre-dispatch TLS failure，DeepSeek 16 HTTP 并复用
+connection 15 次。private files 0600、listener clean stop 和端口关闭均成立。新 Conversation 继续以独立 empty Context 对“它呢？”返回
+`APPLICATION_INPUT_CLARIFICATION / dispatch 0`，泄漏负测 PASS。
+
+earliest deviation 有两个：Turn 2 在已有未用 Source Read options 时重复 exact `SOURCE_SEARCH(SOURCE, login)`；Turn 5 的 current
+SUPPORT domain 为空，`allowed_response_kinds` 却仍展示 `ANSWER`，模型因而复述 prior Answer 并提交三个无 SUPPORT 的 Claim。可信
+decoder 均正确失败关闭。`FINDING-010-128` 因此升级 Primary strategy/prompt/input 到 v6：Answer/Limitation 只在 current SUPPORT/
+BOUNDARY 存在时进入 exhaustive response domain；每个 tool entry 又把已用 query 与未用 locator 就地投影为 forbidden/allowed exact
+values，Application 仍从原 observations/action history 重算。相关 Chat contract 84/84、`py_compile` 与 diff check 通过。run-041
+qualification 因 v6 identity 改变而 stale；下一 Gate 是 fresh 双 Provider Conformance 与新的 exact Live Authority，未授权 Production
+Activation。
 
 ## Current local Agent executor evidence
 
@@ -606,12 +629,12 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
 | V-ALPHA-ACCESS-001 | PDR-004 下在答案质量验收前先交付真实、可操作 Chat Web | product / access | 固定启动命令、loopback 页面、消息历史、“新对话”、Provider/失败状态；最多一个 Provider 前本地或 Mock Access smoke | 页面无需认证；能建立/继续/新建 Conversation 并真实提交 Turn；明确“质量未验收/非生产”；Provider 未配置/未资格/失败如实显示而不阻塞页面；完成后立即把命令、URL、版本和限制交给用户，不等待 Chat/Quality/Comparison；静态回放不通过 | `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`：clean `cf2883b…` 固定 listener + in-app Browser；同会话两次失败仍 ACTIVE/历史完整，新会话不同 identity/EMPTY CONTEXT/旧消息不泄漏；2 Conversation、3 Turn、Provider dispatch 0、console clean、Production 未执行；listener 已优雅停止 | PASS / blocking |
 | V-TIMEBOX-001 | 体验优先、根因优先与轻量 live-attempt 纪律成立 | project / delivery | Slice 授权后首个产品变化时间、page/alpha/hard-stop 时间、qualification/smoke/full-regression 计数、sealed version/question/provider dispatch audit、failure signatures、最早偏差层、可证伪根因假设、本地最小复现、两个未参与修复的相邻案例、用户可见增量 | 60/180/240 检查点可核对；本轮已超过 hard stop 并停止 scope expansion/external batch；首次体验前 qualification≤1、smoke≤1、full regression=0 且仅跑 targeted impact/startup/safety；无根因假设不得改 Prompt/Schema/Contract；本地最小复现与两个相邻案例通过后才跑一题 canary；同签名只修一次，复现则架构职责评审；连续两次无用户可见增量停止外部重跑；full regression 只在 Alpha CONTINUE 后 hardening 与正式验收前 | 用户报告约14小时无新体验；PDR-003 hard-stop/root-cause recovery active | FAIL / blocking |
-| V-TIMEBOX-CHAT-001 | PDR-004 下体验优先、根因优先与逐 Turn live-attempt 纪律成立 | project / delivery | 四个微检查点的 60/180/240/360/480 审计与逐点用户交付；Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付；qualification/Access-smoke/full-regression 计数；Conversation/Turn/provider dispatch、failure signature、根因与用户可见增量 | 60 分钟页面；180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL；181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据；240 分钟绝对停止；360 分钟五轮方向证据；480 分钟独立比较与用户判向；每个检查点立即交付用户；三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`；计划/测试/文档完成不算用户可见增量；错过时交付最后可运行版本与最早根因并停止扩张；每个 Provider-dispatched Turn 分别计 live attempt 且不削减证据/Citation/Review | `FINDING-010-124 / run-040-chat-alpha`：第五次固定五轮仍只有 1 个 reviewed Limitation、四轮失败、28 logical dispatch；比较未启动 | FAIL / blocking |
-| V-CHAT-EXPERIENCE-001 | 同一产品成为可持续体验的多轮 Chat Alpha | product / browser | 一条固定启动命令；loopback；固定工程/exact revision；一个冻结五轮 Conversation 脚本；“新对话”泄漏负测 | 无认证；体验者不拼装内部参数；消息历史显示语义 follow-up/correction/deepening/summary；失败只关闭当前 Turn；新 Conversation 必须澄清省略指代且不继承旧 Context/Evidence/provider memory；不得反向阻塞已完成的页面用户交付 | `FINDING-010-124 / run-040-chat-alpha`：四轮失败，Turn 2 仅交付诚实 Limitation；新 Conversation clarification/Context isolation/零 dispatch PASS，不能抵消主 Chat 失败 | FAIL / blocking |
-| V-CHAT-001 | 主 Agent 完成真正语义多轮 Chat 且新对话不泄漏 | product / chat | 一个 Conversation 的五轮脚本：初始问题→省略指代追问→用户纠正前提→进一步区分/深入→按当前 Context 总结；随后新 Conversation 省略指代 probe | Context 维护确认目标/约束、实体/主题、开放问题、reviewed/superseded conclusion refs 与 provenance；模糊指代先澄清；每轮独立 Evidence/Answer/Review；新对话 probe 必须澄清且不继承旧 Context/evidence/provider memory；不得反向阻塞首次用户交付 | `FINDING-010-124 / run-040-chat-alpha`：4/5 Turn 无响应，1/5 为 reviewed Limitation 而非所需流程答案；新 Conversation leakage 子 Case PASS | FAIL / blocking |
+| V-TIMEBOX-CHAT-001 | PDR-004 下体验优先、根因优先与逐 Turn live-attempt 纪律成立 | project / delivery | 四个微检查点的 60/180/240/360/480 审计与逐点用户交付；Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付；qualification/Access-smoke/full-regression 计数；Conversation/Turn/provider dispatch、failure signature、根因与用户可见增量 | 60 分钟页面；180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL；181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据；240 分钟绝对停止；360 分钟五轮方向证据；480 分钟独立比较与用户判向；每个检查点立即交付用户；三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`；计划/测试/文档完成不算用户可见增量；错过时交付最后可运行版本与最早根因并停止扩张；每个 Provider-dispatched Turn 分别计 live attempt 且不削减证据/Citation/Review | `FINDING-010-127 / run-041-chat-alpha`：第六次固定五轮有 1 个 Answer、2 个 reviewed Limitation、2 轮失败、28 logical dispatch；比较未启动 | FAIL / blocking |
+| V-CHAT-EXPERIENCE-001 | 同一产品成为可持续体验的多轮 Chat Alpha | product / browser | 一条固定启动命令；loopback；固定工程/exact revision；一个冻结五轮 Conversation 脚本；“新对话”泄漏负测 | 无认证；体验者不拼装内部参数；消息历史显示语义 follow-up/correction/deepening/summary；失败只关闭当前 Turn；新 Conversation 必须澄清省略指代且不继承旧 Context/Evidence/provider memory；不得反向阻塞已完成的页面用户交付 | `FINDING-010-127 / run-041-chat-alpha`：Turn 1/3/4 技术响应成功，Turn 2/5 失败且最终总结未交付；新 Conversation clarification/Context isolation/零 dispatch PASS，不能抵消主 Chat 失败 | FAIL / blocking |
+| V-CHAT-001 | 主 Agent 完成真正语义多轮 Chat 且新对话不泄漏 | product / chat | 一个 Conversation 的五轮脚本：初始问题→省略指代追问→用户纠正前提→进一步区分/深入→按当前 Context 总结；随后新 Conversation 省略指代 probe | Context 维护确认目标/约束、实体/主题、开放问题、reviewed/superseded conclusion refs 与 provenance；模糊指代先澄清；每轮独立 Evidence/Answer/Review；新对话 probe 必须澄清且不继承旧 Context/evidence/provider memory；不得反向阻塞首次用户交付 | `FINDING-010-127 / run-041-chat-alpha`：3/5 Turn 形成受审技术响应，Turn 2/5 仍失败；新 Conversation leakage 子 Case PASS | FAIL / blocking |
 | V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 一题 live canary 独立 PASS；原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | canary 失败不启动三题；重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-033 因 supported predecessor observations 被 replacement 删除而不通过；`FINDING-010-088/089` corrective deterministic Gate 已闭合。run-034 仅取得 HTTP 402 Conformance FAIL，未生成新答案证据 | FAIL / blocking |
-| V-CHAT-QUALITY-001 | 五轮每个 Turn 的答案与独立审核以主 Agent 通用机制满足质量 | product / quality | `V-CHAT-001` 五轮逐 Turn Context/Work State/Ledger/Package/Answer/Review；fresh independent Reviewer | 每 Turn 重大错误 0、重要结论有 Citation；prior Answer/Review 不作事实；旧 evidence 仅 exact identity/coverage 匹配且重绑当前 Package；Reviewer 只返回 Finding，Finding 回主 Agent 补证或重写并形成全新 identity；主 Agent/Reviewer 无直接 Source/FS/Shell/network/credential/write 权限；无特判；不得反向阻塞首次用户交付 | `FINDING-010-124 / run-040-chat-alpha`：只有 Turn 2 Limitation 经 fresh Review/Delivery，仍未回答完整用户流程；其余四轮失败 | FAIL / blocking |
-| V-CHAT-XD-001 | 主 Agent 在同一多轮答案链中组合 World Model Cognition 与 query-time Source 证据 | product / integration | 五轮 Conversation 中至少一个需要 accepted World Model 认知与 repository source/doc/config/test 证据的 Turn；exact Context/Work State/Ledger/Package/Answer/Review | 一个主 Agent 在同一 Turn 组合两类认知，结论分别绑定正确 Citation；World Model 不退化为 locator，Source 不绕过 Broker/Worker；无两个平行答案、模式拼接或旧 `V-XD-001` 证据追认；不得反向阻塞首次用户交付 | `FINDING-010-124 / run-040-chat-alpha`：World Model + Source observations 没有形成五轮可交付组合答案，唯一交付仍是边界 Limitation | FAIL / blocking |
+| V-CHAT-QUALITY-001 | 五轮每个 Turn 的答案与独立审核以主 Agent 通用机制满足质量 | product / quality | `V-CHAT-001` 五轮逐 Turn Context/Work State/Ledger/Package/Answer/Review；fresh independent Reviewer | 每 Turn 重大错误 0、重要结论有 Citation；prior Answer/Review 不作事实；旧 evidence 仅 exact identity/coverage 匹配且重绑当前 Package；Reviewer 只返回 Finding，Finding 回主 Agent 补证或重写并形成全新 identity；主 Agent/Reviewer 无直接 Source/FS/Shell/network/credential/write 权限；无特判；不得反向阻塞首次用户交付 | `FINDING-010-127 / run-041-chat-alpha`：Turn 1 Answer 与 Turn 3/4 Limitation 经 fresh Review/Delivery；Turn 2/5 失败，五轮全体质量仍未通过 | FAIL / blocking |
+| V-CHAT-XD-001 | 主 Agent 在同一多轮答案链中组合 World Model Cognition 与 query-time Source 证据 | product / integration | 五轮 Conversation 中至少一个需要 accepted World Model 认知与 repository source/doc/config/test 证据的 Turn；exact Context/Work State/Ledger/Package/Answer/Review | 一个主 Agent 在同一 Turn 组合两类认知，结论分别绑定正确 Citation；World Model 不退化为 locator，Source 不绕过 Broker/Worker；无两个平行答案、模式拼接或旧 `V-XD-001` 证据追认；不得反向阻塞首次用户交付 | `FINDING-010-127 / run-041-chat-alpha`：Turn 1 首次形成 World Model + Source 的受审流程 Answer，但固定五轮仍有两轮失败，不能取得整体 XD Gate | FAIL / blocking |
 | V-COMP-ALPHA-001 | Chat canary 后立即产出主 Agent/World Model 方向信号 | product / comparison | 同一 exact revision、冻结 Conversation 脚本、可比较输出和 rubric；current Codex external baseline；same-agent source-only；same-agent full World Model cognition + source；各臂输出预先密封 | Codex 保留实际客户端/model/reasoning/tools/权限，只作强外部基线，不是 Oracle/裁判；只有 source-only/full-cognition 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer；不同能力完整披露；独立评估者在不知臂身份时用同一 rubric 判读；只作 ITER-010 方向信号，不冒充 ITER-012 严格优越性 Gate；不阻塞更早的用户交付 | not-executed | NOT-RUN / blocking |
 | V-PREVIEW-002 | 用户基于 A1—A3/A6 复盘、多轮 Chat 和三臂方向信号决定是否进入夯实 | product / direction + architecture / reflection | `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001` 的真实 Result、限制、Findings 和假设证据 | 独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal；用户实际追问、纠正、深入、总结并查看三臂方向信号后决定 CONTINUE/REWORK/REDIRECT/REJECT；只有 CONTINUE 解锁 hardening；单 Turn 失败默认 REWORK，不自动 REDIRECT | PDR-004 pre-execution revision；旧定义从未执行，无证据可追认 | NOT-RUN / blocking |
 

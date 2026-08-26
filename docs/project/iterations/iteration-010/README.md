@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: current-development
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, FINDING-010-126, FINDING-010-127, FINDING-010-128, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
@@ -76,11 +76,13 @@ strategy/prompt/input 已升级到 v2；聚焦 63/63、相邻组合 217/217、do
 dispatch、retry 0，整体 1/5 / Quality FAIL；新 Conversation clarification/Context isolation/零 dispatch 继续 PASS。
 `FINDING-010-120/121` 把 canonical-resource Source legal domain、terminal Source operation removal 与 evidence-only completion 写入 v4；
 `FINDING-010-123` 随后在 exact `34d98ae…` 上取得 fresh 双资格。`FINDING-010-124 / run-040-chat-alpha` 仍只有 Turn 2 的
-`REVIEWED_LIMITATION`，其余四轮失败，28 logical dispatch、retry 0，整体 1/5 / Quality FAIL；新 Conversation clarification/Context
-isolation/零 dispatch 继续 PASS。`FINDING-010-125` 已把 prior-Turn Observation IDs 移出 current Turn copy domain，并要求
-evidence-required Review successor 只能提交 exact tool action；Model/Agent 31/31、相邻组合 84/84 与 compile PASS。run-040 grant 已消费且
-资格因 v5 identity 变化 stale；下一 Gate 是 fresh Ark/DeepSeek Conformance，再冻结新 exact commit/tree、artifact 与 Session Authority。
-hidden、Slice2/3 与 Production 始终未授权或未执行。
+`REVIEWED_LIMITATION`，其余四轮失败。`FINDING-010-125` 把 prior-Turn Observation IDs 移出 current Turn copy domain，并要求
+evidence-required Review successor 只能提交 exact tool action。`FINDING-010-126` 又在 exact `6e97bc1…` 上取得 fresh 双资格；
+`FINDING-010-127 / run-041-chat-alpha` 首次让 Turn 1 Answer 与 Turn 3/4 reviewed Limitation 技术成功，提升到 3/5，但 Turn 2/5 仍失败，
+28 logical dispatch、retry/unknown 0，整体 Quality FAIL；新 Conversation clarification/Context isolation/零 dispatch 继续 PASS。
+`FINDING-010-128` 现把 current SUPPORT/BOUNDARY 可行的 response kinds 与 tool argument forbidden/allowed exact values 写入 Primary input
+v6，相关 Chat contract 84/84 与 compile PASS。run-041 grant 已消费且资格因 v6 identity 变化 stale；下一 Gate 是 fresh Ark/DeepSeek
+Conformance，再冻结新 exact commit/tree、artifact 与 Session Authority。hidden、Slice2/3 与 Production 始终未授权或未执行。
 
 Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
 能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。

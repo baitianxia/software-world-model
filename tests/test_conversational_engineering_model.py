@@ -348,7 +348,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("登录流程是怎样的？", rendered)
         self.assertIn("locator_reference", rendered)
         self.assertIn("BUILD_CONFIGURATION", rendered)
-        self.assertIn("one short case-sensitive literal token", rendered)
+        self.assertIn("one new short case-sensitive literal token", rendered)
         self.assertIn("semantic descriptions", rendered)
         self.assertIn("draft_reference_policy", rendered)
         self.assertIn("work_state_reference_policy", rendered)
@@ -359,6 +359,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("cross_disposition_references_forbidden", rendered)
         self.assertIn("source_read_options", rendered)
         self.assertIn("exact_action_repetition_forbidden", rendered)
+        self.assertIn("forbidden_exact_values", rendered)
+        self.assertIn("allowed_exact_values", rendered)
+        self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertNotIn("literal or semantic search proposal", rendered)
         self.assertNotIn("AGENT_FIXTURE_API_KEY", rendered)
         self.assertNotIn(authorizer.session_authority.digest.value, rendered)
@@ -642,6 +645,25 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             tuple(item["operation"] for item in rendered_invocation["tool_catalog"]),
             ("SOURCE_SEARCH", "SOURCE_READ"),
         )
+        rendered_tools = {
+            item["operation"]: item for item in rendered_invocation["tool_catalog"]
+        }
+        self.assertEqual(
+            rendered_invocation["completion_policy"]["allowed_response_kinds"],
+            ("ANSWER", "CLARIFICATION"),
+        )
+        self.assertEqual(
+            rendered_tools["SOURCE_SEARCH"]["value_constraints"][
+                "forbidden_exact_values"
+            ],
+            ("login",),
+        )
+        self.assertEqual(
+            rendered_tools["SOURCE_READ"]["value_constraints"][
+                "allowed_exact_values"
+            ],
+            (locator_reference, other_resource_reference),
+        )
         unreceipted_view = _primary_input_view(
             replace(
                 invocation,
@@ -763,6 +785,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             )
         self.assertEqual(repeated.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
 
+        payload["action"]["arguments"][0]["value"] = "TEST"
+        with self.assertRaises(DomainError) as repeated_query:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="repeated-search-query-call",
+            )
+        self.assertEqual(
+            repeated_query.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
         evidence_required_invocation = replace(
             invocation,
             review_findings=(
@@ -872,6 +906,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ],
             (),
         )
+        self.assertEqual(
+            next_turn_view["completion_policy"]["allowed_response_kinds"],
+            ("CLARIFICATION",),
+        )
+        self.assertTrue(
+            next_turn_view["completion_policy"][
+                "answer_requires_current_turn_support"
+            ]
+        )
+        self.assertTrue(
+            next_turn_view["completion_policy"][
+                "prior_answer_restatement_requires_current_turn_evidence"
+            ]
+        )
 
     def test_evidence_only_synthesis_is_a_response_only_model_contract(self) -> None:
         capture = CapturingTurnExecutor()
@@ -910,8 +958,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "tool_action_allowed": False,
                 "tool_action_required": False,
                 "draft_required": True,
-                "allowed_response_kinds": ("ANSWER", "LIMITATION"),
+                "allowed_response_kinds": (),
                 "new_evidence_claim_forbidden": True,
+                "answer_requires_current_turn_support": True,
+                "limitation_requires_current_turn_boundary": True,
+                "prior_answer_restatement_requires_current_turn_evidence": True,
             },
         )
         payload = {
@@ -1063,6 +1114,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             tuple(item["operation"] for item in rendered["tool_catalog"]),
             ("WORLD_MODEL_QUERY",),
+        )
+        self.assertEqual(
+            rendered["completion_policy"]["allowed_response_kinds"],
+            ("CLARIFICATION", "LIMITATION"),
         )
 
     def test_review_decoder_requires_complete_consistent_claim_assessments(self) -> None:

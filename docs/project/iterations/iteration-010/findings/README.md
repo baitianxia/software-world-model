@@ -324,5 +324,14 @@ iteration: ITER-010
 - [FINDING-010-125](FINDING-010-125.md)：Primary input v5 以 `work_state_reference_policy` 只授权 exact current-Turn Observation 和
   correction/superseded prefixes，不再披露 prior-Turn Observation IDs；Reviewer 要求新 Evidence 时 successor 只能提交一个 exact tool
   action。decoder/fuses 不放宽，v5 仍需 fresh 双 Provider Conformance 与新 Live Authority。
+- [FINDING-010-126](FINDING-010-126.md)：exact `6e97bc1…` / `fd54821…` 的 fresh Ark 与 DeepSeek Conformance 分别以固定
+  2/2 request、13/13 与 12/12 Case、retry/unknown 0 PASS；两个 Ark credential/HTTP 前 TLS failure 按授权 fresh restart，资格只允许
+  条件式 run-041，不证明答案质量。
+- [FINDING-010-127](FINDING-010-127.md)：`run-041-chat-alpha` 的 Turn 1 Answer 与 Turn 3/4 reviewed Limitation 技术成功，提升到
+  3/5，但 Turn 2/5 仍为 model-call rejection，整体 Quality FAIL；28 logical dispatch、retry/unknown 0、private artifact、clean stop 与
+  Production `NOT_EXECUTED` 已密封，新 Conversation clarification/隔离/零 dispatch 继续 PASS。
+- [FINDING-010-128](FINDING-010-128.md)：Primary input v6 让 `allowed_response_kinds` 只列 current SUPPORT/BOUNDARY 实际支持的
+  Answer/Limitation，并把已用 query 与未用 locator 直接投影为对应工具参数的 forbidden/allowed exact values；decoder 继续从原 Evidence 与
+  action history 重算。相关 Chat contract 84/84 PASS，v6 仍需 fresh 双 Provider Conformance 与新 Live Authority。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

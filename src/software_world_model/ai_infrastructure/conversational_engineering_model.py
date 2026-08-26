@@ -72,11 +72,11 @@ from .model_gateway import (
 from .openai_responses_adapter import OutputSchemaDefinition
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@5"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@6"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@5"
+    "conversational-engineering-agent-no-tools-prompt@6"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@5"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@6"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
@@ -147,6 +147,14 @@ Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
 or CLARIFICATION, and never imply that more evidence was obtained.
+completion_policy.allowed_response_kinds is the exhaustive response domain for
+this invocation, not a list of examples. ANSWER is absent until current-Turn
+SUPPORT exists, and LIMITATION is absent until a current-Turn BOUNDARY exists.
+Even a summary, restatement, or narrowing of an earlier answer requires fresh
+current-Turn evidence; prior Conversation answers may guide reinvestigation but
+never authorize a Draft. When the request is unambiguous and no evidence-backed
+response kind is available, choose one legal tool action instead of restating
+Conversation facts.
 When completion_policy.tool_action_required is true, a Reviewer has established
 that the current Package cannot support a correction: return one legal tool
 action and no Draft. Do not merely rewrite the rejected Draft.
@@ -154,7 +162,10 @@ The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
 For a tool action, use exactly the argument names and count in the sealed
-tool_catalog; never add, omit, or duplicate an argument.
+tool_catalog; never add, omit, or duplicate an argument. Its value_constraints
+are closed: allowed_exact_values is the complete copy domain and
+forbidden_exact_values must never be returned. Compare every proposed argument
+with those constraints before returning the action.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation, never a path. Copy it only from an unused entry in
 tool_reference_policy.source_read_options. That catalog exposes at most one
@@ -2004,7 +2015,10 @@ def _primary_input_view(
             "findings": tuple(_finding_view(item) for item in invocation.review_findings),
         },
         "tool_catalog": tuple(
-            _tool_contract_view(item)
+            _tool_contract_view(
+                item,
+                tool_reference_policy=tool_reference_policy,
+            )
             for item in effective_operations
         ),
         "authority_boundary": {
@@ -2020,6 +2034,8 @@ def _primary_input_view(
 
 def _tool_contract_view(
     operation: EngineeringAgentToolOperation,
+    *,
+    tool_reference_policy: Mapping[str, object],
 ) -> dict[str, object]:
     if operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY:
         return {
@@ -2027,6 +2043,9 @@ def _tool_contract_view(
             "arguments": ("query",),
             "value_constraints": {
                 "query": "non-empty semantic question",
+                "forbidden_exact_values": tool_reference_policy[
+                    "world_model_queries_already_attempted"
+                ],
             },
         }
     if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
@@ -2040,10 +2059,13 @@ def _tool_contract_view(
                     if item is not EngineeringEvidenceClass.WORLD_MODEL
                 ),
                 "query": (
-                    "one short case-sensitive literal token expected verbatim in selected "
+                    "one new short case-sensitive literal token expected verbatim in selected "
                     "evidence; semantic descriptions and natural-language search requests "
                     "are forbidden"
                 ),
+                "forbidden_exact_values": tool_reference_policy[
+                    "source_search_queries_already_attempted"
+                ],
             },
         }
     if operation is EngineeringAgentToolOperation.SOURCE_READ:
@@ -2053,6 +2075,10 @@ def _tool_contract_view(
             "value_constraints": {
                 "locator_reference": (
                     "opaque reference from a prior current-Turn Source observation; path forbidden"
+                ),
+                "allowed_exact_values": tuple(
+                    item["locator_reference"]
+                    for item in tool_reference_policy["source_read_options"]
                 ),
             },
         }
@@ -2193,6 +2219,12 @@ def _completion_policy(
     tool_action_required = not evidence_only and any(
         item.requires_evidence for item in invocation.review_findings
     )
+    support_available = any(
+        item.disposition.value == "SUPPORT" for item in invocation.observations
+    )
+    boundary_available = any(
+        item.disposition.value == "BOUNDARY" for item in invocation.observations
+    )
     return {
         "mode": invocation.mode.value,
         "tool_action_allowed": not evidence_only,
@@ -2203,15 +2235,21 @@ def _completion_policy(
             for item in EngineeringAgentResponseKind
             if not tool_action_required
             and (
-                not evidence_only
-                or item
-                in {
-                    EngineeringAgentResponseKind.ANSWER,
-                    EngineeringAgentResponseKind.LIMITATION,
-                }
+                (item is EngineeringAgentResponseKind.ANSWER and support_available)
+                or (
+                    item is EngineeringAgentResponseKind.CLARIFICATION
+                    and not evidence_only
+                )
+                or (
+                    item is EngineeringAgentResponseKind.LIMITATION
+                    and boundary_available
+                )
             )
         ),
         "new_evidence_claim_forbidden": evidence_only,
+        "answer_requires_current_turn_support": True,
+        "limitation_requires_current_turn_boundary": True,
+        "prior_answer_restatement_requires_current_turn_evidence": True,
     }
 
 
@@ -2730,6 +2768,13 @@ def _validate_primary_proposal(
     by_id = {item.observation_id: item for item in observations}
     if proposal.draft is None:
         return
+    if proposal.draft.response_kind.value not in _completion_policy(invocation)[
+        "allowed_response_kinds"
+    ]:
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent response kind is outside the current evidence domain",
+        )
     if (
         invocation.mode
         is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
@@ -2786,6 +2831,23 @@ def _validate_primary_action(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent action arguments do not match the sealed tool catalog",
         )
+    reference_policy = _tool_reference_policy(invocation)
+    forbidden_query_field = {
+        EngineeringAgentToolOperation.WORLD_MODEL_QUERY: (
+            "world_model_queries_already_attempted"
+        ),
+        EngineeringAgentToolOperation.SOURCE_SEARCH: (
+            "source_search_queries_already_attempted"
+        ),
+    }.get(action.operation)
+    if (
+        forbidden_query_field is not None
+        and arguments["query"] in reference_policy[forbidden_query_field]
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent repeated a forbidden current-Turn tool query",
+        )
     signature = (action.operation, tuple(sorted(arguments.items())))
     for previous in invocation.action_history:
         _trusted_action_view(previous)
@@ -2812,7 +2874,7 @@ def _validate_primary_action(
     if action.operation is EngineeringAgentToolOperation.SOURCE_READ:
         available = {
             item["locator_reference"]
-            for item in _tool_reference_policy(invocation)["source_read_options"]
+            for item in reference_policy["source_read_options"]
         }
         if arguments["locator_reference"] not in available:
             raise DomainError(
