@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-092, FINDING-010-099, FINDING-010-104]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/ark_chat_conformance.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
 tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_conversational_engineering_model.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
@@ -80,4 +80,4 @@ Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatc
 
 ## Verification ownership
 
-Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；fresh Ark Conformance 又已在 exact clean identity 上 PASS。当前状态是 `ARK_QUALIFIED / DEEPSEEK_REQUALIFICATION_REQUIRED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`；fresh DeepSeek Conformance、current actual artifact 与五轮 live Chat 仍必须单独取得执行证据。
+Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact clean identity 上 PASS。当前状态是 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / SESSION_AUTHORITY_REQUIRED / NOT_LIVE`；current actual artifact 与五轮 live Chat 仍必须单独取得授权与执行证据。

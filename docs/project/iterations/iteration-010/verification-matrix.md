@@ -4,7 +4,7 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105]
+depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106]
 code: []
 tests: []
 iteration: ITER-010
@@ -27,7 +27,8 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
-ARK_CONFORMANCE_PASS / DEEPSEEK_REQUALIFICATION_REQUIRED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
+ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT /
+SESSION_AUTHORITY_REQUIRED / NOT_LIVE`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；
 所有后续 current Case 仍为 NOT-RUN，等待各自执行证据。一次 Access browser grant 不等于 Provider/live Chat、hidden、后续 Slice 或
 Production 授权。
 
@@ -178,10 +179,22 @@ request、13/13 Case PASS，actual model `glm-5.2`，Result digest 为
 reuse/retry/post-dispatch unknown 0；sealed file mode `0600`，raw prompt/response persistence false。没有 mall Source/resources、DeepSeek、
 listener/browser 或 Activation 活动。current Ark qualification 有效到 `2026-09-25T01:00:39.148494Z`。
 
-artifact Gate 仍要求 current DeepSeek qualification。由于 DeepSeek implementation manifest 也包含本次变化的 `model_gateway.py`，current
+artifact Gate 同时要求 current DeepSeek qualification。由于 DeepSeek implementation manifest 也包含本次变化的 `model_gateway.py`，current
 digest `sha256:a680b0c8…bb07` 与旧 PASS Result 的 `sha256:1022fdd1…3d4b` 不同；current loader 实际以
-`QUALIFICATION_INVALID` 拒绝旧 Result。下一 Gate 因此是另行授权的 fresh DeepSeek Conformance；PASS 后才生成 current actual artifact，
-再另取 exact live grant。`V-CHAT-*` 与所有质量 verdict 继续 `NOT-RUN / blocking`。
+`QUALIFICATION_INVALID` 拒绝旧 Result。下节记录另行授权的 fresh DeepSeek Conformance。
+
+## Current fresh DeepSeek Conformance evidence
+
+`FINDING-010-106` 记录用户精确授权的 clean `653eff3…` / tree `d0cab3a…` fresh run：
+`CC-DEEPSEEK-CHAT-NO-TOOLS-001 / fixture 1.2.0 / result @2` 以 2/2 request、12/12 Case PASS，actual model
+`deepseek-v4-pro`，Result digest 为 `sha256:3e43921a5e0ebf00d0805b7c66f609c29b0d29a3fd8b848a8b3e491e641e6a4d`。
+strict persistent transport audit 为 TLS attempts/successes `1/1`、credential resolutions `2/2`、HTTP dispatch 2、connection reuse 1、
+request retry/post-dispatch unknown 0；sealed file mode `0600`，raw prompt/response persistence false。current DeepSeek qualification 有效到
+`2026-09-25T01:22:41.700955Z`。本次没有 mall Source/resources、Ark、listener/browser 或 Activation 活动。
+
+结合 `FINDING-010-105`，Ark 与 DeepSeek current qualification 现在同时可用。Conformance grant 不授权 artifact 中的 Source/
+World Model disclosure 或五轮 Browser Session；下一 Gate 是 exact five-Turn Session authorization，之后才生成 current owner-private
+artifact 并执行 fixed canary。`V-CHAT-*` 与所有质量 verdict 继续 `NOT-RUN / blocking`。
 
 ## Pre-freeze implementation evidence
 

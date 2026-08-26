@@ -4,7 +4,7 @@ kind: development-slice
 status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-QUALITY-SECURITY]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests]
 iteration: ITER-010
@@ -56,10 +56,10 @@ Tool/Response Control、committed Work State、route、Conversation 与 Browser 
 `FINDING-010-103` 已实现 canonical owner-private artifact loader、exact ordered Provider routes、fixed bounds/exclusions、两个 private Gateway
 repositories、launch/terminal receipt 和唯一 `--session-config` fixed-command lifecycle，形成
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又闭合 Ark transport 的 per-request verified TLS Session audit、
-TLS-before-credential、typed unavailable fallback 和 fresh-Conformance identity。`FINDING-010-105` 已在 clean `1e99e9b…` 上取得 fresh
-Ark Conformance 2/2、13/13 PASS；current Ark qualification 已可用，但旧 DeepSeek qualification 因共享 Gateway implementation drift
-stale。下一动作因此不再扩张 loader、Access 或 transport，而是取得 fresh DeepSeek Conformance；PASS 后生成 current actual artifact，
-最后单独取得 exact Provider/source-disclosure/browser grant 执行冻结五轮 Chat。任何一项缺失都不能宣称 `QUALIFIED / LIVE / PASS`。
+TLS-before-credential、typed unavailable fallback 和 fresh-Conformance identity。`FINDING-010-105/106` 已分别在 clean `1e99e9b…` /
+`653eff3…` 上取得 fresh Ark 2/2、13/13 与 DeepSeek 2/2、12/12 Conformance PASS，两条 route 的 current qualification 同时可用。
+下一动作因此不再扩张 loader、Access 或 transport，而是取得 exact five-Turn Session authorization；之后生成 current actual artifact，
+再在同一授权边界内执行冻结五轮 Chat。任何一项缺失都不能宣称 `LIVE / PASS`。
 
 这四项是同一已授权 Slice 内的交付/停止点，不创建、恢复或替代 Iteration、Slice、Readiness 或开发授权，只能在当前 `f76ba3e8…`
 授权仍 active 时执行。三轮检查点只是预先冻结的同一五轮 live canary 的中间交付，不是另一个三轮 canary；若在此停止，五轮 canary 记为

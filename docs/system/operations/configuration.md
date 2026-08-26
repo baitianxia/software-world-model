@@ -5,7 +5,7 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-103, FINDING-010-104, FINDING-010-105]
+derived_from: [FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106]
 code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
@@ -48,12 +48,12 @@ listener 前失败关闭。
 
 `FINDING-010-103` 已让 `swm-engineering-chat --session-config <owner-private-artifact>` 消费该完整对象图；无参数命令继续保留 Access-only
 身份。固定命令不接受 host、port、工程、revision、Provider、question、credential 或单项 authority 参数；artifact 分支固定
-`127.0.0.1:8765`，在 listener 构造前写零活动 launch receipt，并在 shutdown 后写 terminal receipt。当前状态只是
-`ARK_CONFORMANCE_PASS / DEEPSEEK_REQUALIFICATION_REQUIRED`：`FINDING-010-104` 已把 Ark strict Session audit 接入 Conformance 与 terminal
-receipt，并将 HTTP 前 transport unavailable owner-typed 为 fallback eligibility；`FINDING-010-105` 又在 clean `1e99e9b…` 上取得 current
-Ark qualification。测试和 fresh Ark run 均未生成或执行 current actual sealed Session artifact；旧 DeepSeek Result 因共享 Gateway
-implementation drift stale，必须另行取得 fresh DeepSeek Conformance。不能把单 route qualification 标成 dual-route `QUALIFIED / LIVE /
-PASS`。
+`127.0.0.1:8765`，在 listener 构造前写零活动 launch receipt，并在 shutdown 后写 terminal receipt。当前状态是
+`ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT / SESSION_AUTHORITY_REQUIRED`：
+`FINDING-010-104` 已把 Ark strict Session audit 接入 Conformance 与 terminal receipt，并将 HTTP 前 transport unavailable owner-typed 为
+fallback eligibility；`FINDING-010-105/106` 又分别在 clean `1e99e9b…` / `653eff3…` 上取得 current Ark 与 DeepSeek qualification。
+测试和两次 fresh Conformance run 均未生成或执行 current actual sealed Session artifact；仍需另行取得 exact five-Turn
+Session authorization。不能把 Provider qualification 标成 artifact `LIVE / PASS`。
 
 ```bash
 PYTHONPATH=src python3 -m software_world_model.interface.provider_cli status

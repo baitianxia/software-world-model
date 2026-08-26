@@ -4,7 +4,7 @@ kind: iteration-index
 status: authorized
 authority: current-development
 owners: [product, project, architecture, engineering, quality]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-SLICE-002, ITER-010-SLICE-003, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-DECISIONS, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: []
 tests: []
 iteration: ITER-010
@@ -59,10 +59,10 @@ Tool/Response Control、两条 Provider runtime、committed Work State、route�
 Provider routes、fixed 5×15/75 bounds、mandatory resources exclusion、private Gateway/receipt paths 与唯一 `--session-config` selector 形成
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`，最新相关组合 117/117。`FINDING-010-104` 又闭合 Ark 每 request verified TLS、TLS 后取
 credential、retry 0、typed unavailable fallback 与双 route terminal Session audit，最新相邻组合 141/141。`FINDING-010-105` 随后在
-clean `1e99e9b…` 上取得 fresh Ark Conformance 2/2、13/13 PASS；current Ark qualification 已可用，但旧 DeepSeek qualification 因共享
-Gateway implementation drift stale。fresh DeepSeek Conformance、current actual artifact 与五轮 Chat 仍为
-`NOT_EXECUTED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`；本次 Ark run 没有 mall Source/resources、listener/browser 或 Production 执行，
-也不授权 hidden 或 Slice2/3。
+clean `1e99e9b…` 上取得 fresh Ark Conformance 2/2、13/13 PASS；`FINDING-010-106` 又在 clean `653eff3…` 上取得
+fresh DeepSeek Conformance 2/2、12/12 PASS，TLS `1/1`、connection reuse 1、retry/outcome unknown 0。两条 route 的 current
+qualification 同时可用；current actual artifact 与五轮 Chat 仍为 `SESSION_AUTHORITY_REQUIRED / NOT_EXECUTED / NOT_LIVE`。
+两次 Conformance run 都没有 mall Source/resources、listener/browser 或 Production 执行，也不授权 hidden 或 Slice2/3。
 
 Slice1 已完成 4 条公开方向题和用户现场题。真实 Web、受控调查、Broker/Worker、Ledger/Package、Citation、独立 Review 与失败关闭技术链
 能够运行；现场登录答案却仍由 Controller/Service/Filter 方法序列主导，并省略登录日志副作用，Reviewer 无 Finding 批准。

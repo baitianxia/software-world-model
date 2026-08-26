@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -131,7 +131,8 @@ append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
-ARK_CONFORMANCE_PASS / DEEPSEEK_REQUALIFICATION_REQUIRED / DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
+ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT /
+SESSION_AUTHORITY_REQUIRED / NOT_LIVE`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
 Disclosure 和 typed Gateway receipt；pre-dispatch、fresh dispatch、outcome unknown 与 replay 的计数由 Application 重验，Turn/Browser 只保存
 receipt digest reference。Application-owned Ark→DeepSeek router、committed Work State repository、两 attempt receipt、logical Turn 汇总与
 non-starting fixed Browser composition 已通过本地确定性 Gate；预检没有创建 attempt、启动 listener、解析 credential、读取 Source 或 dispatch。
@@ -141,8 +142,7 @@ Work State、Conversation 与 Browser 组合成一个对象图；preparation 没
 artifact Session loader 现可从一个 owner-private closed document 绑定 product/source Git identity、published World Model、Source Profile、
 Ark→DeepSeek qualification identity、两个 private Gateway repositories 与 Session authority；唯一 `--session-config` selector 让固定
 `127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
-Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 fallback eligibility。fresh Ark Conformance 已以 exact clean identity、
-2/2 request 和 strict Session audit PASS；旧 DeepSeek qualification 因共享 Gateway implementation drift stale。该 lifecycle 仍只在 fake
-listener 与本地构造或 patched typed artifact 上验证；fresh DeepSeek Conformance、current actual artifact、Citation 内容与五轮 Browser
-Chat 尚未闭合，也没有 mall Source payload 或 listener 执行。旧
+Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 fallback eligibility。fresh Ark 与 DeepSeek Conformance 已分别以 exact clean identity、
+2/2 request 和 strict Session audit PASS。该 lifecycle 仍只在 fake listener 与本地构造或 patched typed artifact 上验证；current actual artifact、
+Citation 内容与五轮 Browser Chat 尚未授权、生成或执行，也没有 mall Source payload 或 listener 执行。旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

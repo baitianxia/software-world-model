@@ -272,5 +272,8 @@ iteration: ITER-010
 - [FINDING-010-105](FINDING-010-105.md)：clean `1e99e9b…` 的 fresh Ark Conformance 已以 2/2 request、13/13 Case、TLS/credential
   `2/2`、reuse/retry/unknown 0 PASS；current Ark qualification 可用。artifact Gate 复核同时证明旧 DeepSeek qualification 因共享
   Gateway implementation drift stale，故下一步先取得 fresh DeepSeek Conformance，再生成 current artifact。
+- [FINDING-010-106](FINDING-010-106.md)：clean `653eff3…` 的 fresh DeepSeek Conformance 已以 2/2 request、12/12 Case、TLS
+  `1/1`、credential `2/2`、connection reuse 1、retry/unknown 0 PASS；结合 fresh Ark Result，双 Provider qualification 当前同时可用。
+  Conformance grant 不授权 Source/World Model disclosure、artifact Session 或 Browser，下一 Gate 是 exact five-Turn Session authorization。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

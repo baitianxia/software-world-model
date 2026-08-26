@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [security, architecture]
 depends_on: [SYS-ARCH-INVARIANTS, SYS-ADR-017, SYS-ADR-018]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104, FINDING-010-105, FINDING-010-106]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/source_integration, src/software_world_model/application_services/citation_projection.py, src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface, validation/structure_world_model_iteration_003/isolation, validation/structure_world_model_iteration_003/g3b, validation/structure_world_model_iteration_007/slice1_live_evaluator.py, validation/structure_world_model_iteration_008/slice1_live_evaluator.py]
 tests: [tests/test_model_gateway.py, tests/test_source_operations.py, tests/test_browser_chat_interface.py, tests/test_structure_read_bundle.py, tests/test_structure_view_cli.py, tests/test_citation_projector.py, tests/test_iteration_003_g2_isolation.py, tests/test_iteration_003_g3b.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_007_slice1_live_evaluator.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_evaluator.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_question_answering.py, tests/test_engineering_question_cognition.py, tests/test_engineering_question_strategy.py, tests/test_engineering_question_model_source.py, tests/test_engineering_qa_source.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_browser.py]
 ---
@@ -106,7 +106,7 @@ World Model/Source/Ledger trusted tool adapter 与单 Provider Agent/Reviewer �
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE`；确定 pre-dispatch 与 replay 计 0，fresh dispatch/unknown 计 1，
 retry 仍为 0。non-dispatching candidate preflight 不读取 Source/credential、不启动 listener、不调用 Provider，并固定
 `ready_for_live=false`。ADR-017 双 attempt、生产 Provider runtime、artifact fixed launcher 与 Ark/DeepSeek terminal Session audit 已形成本地
-确定性候选；Ark HTTP 前不可用也已 owner-typed 为独立 fallback eligibility。fresh Ark Conformance 已 PASS，但旧 DeepSeek qualification
-因共享 Gateway implementation drift stale；fresh DeepSeek Conformance、current actual artifact、Citation 内容与五轮 live Chat 仍为
-`DUAL_ROUTE_NOT_QUALIFIED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
+确定性候选；Ark HTTP 前不可用也已 owner-typed 为独立 fallback eligibility。fresh Ark 与 DeepSeek Conformance 均已 PASS，
+双 Provider qualification 当前同时可用；current actual artifact、Citation 内容与五轮 live Chat 仍为
+`SESSION_AUTHORITY_REQUIRED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
 Provider 资格推导已经满足。
