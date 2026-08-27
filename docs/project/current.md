@@ -64,6 +64,74 @@ commit 修订计划；新 PDR 必须同 Iteration、编号递增、依赖该 bas
 clean successor。下面 PDR-008、PDR-007、PDR-006、PDR-005 和历史运行内容继续保存安全、调度、持续执行和失败证据；凡与本节当前动作、
 顺序、路径锁或严格质量门冲突者均为历史兼容说明，不是开发指令。
 
+## 已定方向与下一开发任务接手清单
+
+以下内容已经由当前 System 文档、ADR-018/019、PDR-009、Proposal、Readiness、Slice1 和 Verification Matrix 共同确定，不再是下一开发
+任务需要重新讨论或逐项向用户确认的开放设计问题：
+
+- 软件世界模型是精确版本上的持久、可验证、可更新软件认知，表达实体、关系、行为、约束、状态、来源、覆盖、冲突和未知；工程手册、摘要、
+  地图和检索入口只是它的投影，不是世界模型本身。
+- 默认产品以强主工程 Agent 作为问题解决的认知控制者。它先理解用户目标和对话上下文，以世界模型认知为起点，按需查询或受控读取源码，
+  根据观察重规划，并组织面向用户的自然答案；源码是核实和丰富答案的手段，不是默认输出代码走读或实现清单。
+- 产品必须是真正的语义多轮 Chat，能处理追问、指代、纠正、收窄、深入和总结；失败只结束当前 Turn，不关闭 Conversation 或开发任务。
+- 主链是问题和上下文 → 世界模型认知与受控源码证据 → Evidence Package → 自然答案 → 隔离的独立审核 → 针对性补证或重写。Reviewer
+  检查正确性、完整性、相关性、证据闭合和未知边界，不替代主 Agent 生成答案，也不把未请求的相邻主题强加为完整性要求。
+- 机制必须适用于任意授权工程和任意工程问题。产品代码、Prompt、Reviewer、路由和测试不得按工程名、题面、关键词、类名、方法名、固定答案或
+  测试夹具分支；一次修复还必须用未参与修复的异质问题验证，不能靠同题反复重跑碰出正确答案。
+- 模型和 Provider 对 Agent/Chat/证据协议透明；具体身份只属于独立执行配置、资格/准入插件和不可变调用收据，更换配置不改变系统架构。普通
+  产品 Turn 的透明 fallback 只由 ADR-017 定义：首选 attempt 已密封、没有授权答案且被可信 Application 分类为 ADR-017 明列的
+  Provider/model failure 时，才可启动最多一个完全隔离的备用 attempt；Application、Source、authorization 或 Security failure 不得 fallback。
+- PDR-009 四路 Quality 批次采用更严格且仅限本次评测的切换规则：只有首选批次在任何授权答案形成前因 `TERMINAL_UNAVAILABLE` 被判
+  `INVALID`，才进入零外部调用的 Fallback Refreeze，并把三个系统臂统一重封到同一备用执行配置；Quality `FAIL` 直接进入 Direction Rework。
+  该批次规则不改写 ADR-017 的普通产品 Turn 语义，同一批次不得混用或并行比较执行配置。
+- current Codex 是必须严格超过的强外部产品基线，不是运行时依赖、Source truth、Oracle、Reviewer 或裁判。四路 Gate 同时比较直接相关证据、
+  同一 Agent 仅源码、同一 Agent 世界模型认知+源码和 current Codex；目标臂必须绝对质量 PASS、逐题不输全部基线、总体严格超过 Codex，
+  并证明至少一项非定位型世界模型贡献。成本、时延、调用次数或全体打平不能补偿质量。
+- 答案失败后必须按 exact Source truth、世界模型生成/准入与 Cognition 投影、问题和上下文理解、Agent 调查与综合、Evidence Package、独立审核、
+  Delivery/Web 的顺序定位最早偏差及后续失守层。不能先改 Prompt、规则或答案格式；一个已证明首因只允许一次通用修复，仍复现则进入职责/架构
+  复核，不继续堆规则。
+- 方向探索阶段优先尽快交付可验证价值，而不是先夯实全部代码。当前选择是先用最小 Freeze 和一次严格四路 Quality 证伪价值；Quality PASS
+  后立即进入最小 Web Chat 和用户体验，只有用户 `CONTINUE` 才解锁 hardening 与 full regression。Quality FAIL 直接进入 Direction Rework，
+  不得用全量回归、重复同题调用或长期完善实现推迟方向判断。
+- 当前公开开源工程、固定版本、披露范围和已批准执行路线具有持续 human authority；每次 run/Turn/dispatch 的精确机器收据由系统自动派生，
+  不要求用户逐次确认。只有私有/未知/dirty 或不同来源、执行配置身份/账户变化、扩大披露或预算、准入策略要求的峰时例外、hidden、后续 Slice、
+  写操作或 Production 等真实 scope delta 才重新申请授权。
+- 开发在当前授权动作内持续推进，不因普通测试失败、待执行 Case、调用计数或内部候选变化停下来询问。出现真实权限差异时直接申请精确授权；
+  没有权限差异时不得把精确性实现成重复人工批准。
+- 首选/备用只是执行角色，不是产品语义。成本、时间窗口和准入规则属于当前执行配置的独立策略插件；当前备用配置的闲时硬门禁继续有效，
+  但具体模型或 Provider 名称不得进入通用产品合同、Agent 逻辑或动作图。
+- 以上执行顺序由 trusted-parent、action allowlist、独立 runner、raw-byte evidence digest、sealed Result 和预注册 transition 机械约束，不能只靠
+  文字承诺，也不能由候选计划、候选 verifier 或自报 Result 自我授权。
+
+以下仍是**待实现或待现场验证**，不得写成已经完成，也不得因此重新打开上面的架构方向：四路 Freeze runner 与 sealed Result、首选或合法备用
+配置的严格四路 Quality、Quality PASS 后的最小 Web Chat、普通产品 Turn 的 standing-authority runtime machine receipt 派生、实际备用路线的
+准入/闲时收据，以及远端不可变 required workflow/ruleset。仓库内门禁已经存在，但最后一项未完成前不得声称对恶意仓库管理员不可绕过。
+
+已知会影响执行输入的文档一致性缺口只有一项：Verification Matrix 的 `V-PUBLIC-OSS-AUTHORITY-001` 行误写了一个不存在的 mall commit
+`0504e86b1f1d2a05df86644e40a0d2580866024`。Manifest、Proposal、Readiness、ADR-019、既有 Result 和本文件共同绑定且本地可解析的唯一 current
+Source revision 是 `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，对应 tree
+`047d79d8588b76013c260f3f1a9565707301a60a`。前一字符串必须视为隔离的排版错误，绝不能进入 runner、root input、receipt 或比较证据。当前 action
+明确禁止修改 Verification Matrix，因此本提交只在获准的 current 接手入口消除执行歧义；该行只能在后续 sealed governance transition 或明确允许
+此路径的 action 中原位修正，不能用一次候选文档变更绕过 trusted-parent Gate。
+
+另有一项不改变架构或当前执行输入的状态同步欠账：ADR-017/018 的 Consequences 仍把 Provider runtime composition 和主工程 Agent 写成早期
+local candidate，而 Engineering Conversation、当前 Findings/Results 已记录后续真实运行及其质量失败。接手者必须把 ADR 的 Decision 当作 current
+架构语义，把最新 Result/Current 当作实现状态，不得用 ADR 中的旧 candidate 段宣称当前 live 能力。当前 action 同样禁止修改 System 文档；该状态
+段应在后续允许 `docs/system/**` 的 sealed governance action 中同步，并且最迟在方向接受前闭合，不阻塞当前零外部调用的 Freeze runner。
+
+下一开发任务无需再等待设计确认，精确接手方式如下：
+
+1. 从 trusted `HEAD` 运行 `python3 scripts/plan_gate.py snapshot`，只执行
+   `ITER-010-ACTION-DIRECTION-FREEZE-001 / V-DIRECTION-FREEZE-001`。
+2. 只实现 `validation/structure_world_model_iteration_010/value_gate/**` 和 `tests/test_iteration_010_value_gate.py` 内的自包含 runner 与定向测试；
+   当前 dirty v7 product/test diff 保持隔离，禁止修改或作为 Gate 输入。
+3. 第一提交只提交 runner/测试，使 runner 先成为 trusted base；不得在同一提交生成它自己的 Result。第二提交才由 trusted-base runner 在隔离环境
+   重放 exact JSON evidence，形成唯一 sealed Result/evidence 并按预注册 verdict 移动游标；只有出现需要处置的实现发现时才新增 Finding。
+4. Freeze 期间外部调用、产品代码、Prompt/Reviewer、Web、Provider dispatch、hardening 和 full regression 均为 0。Freeze `PASS` 后立即执行
+   首选四路 Quality；其 `PASS` 直接进入最小 Web，`FAIL` 进入根因化 Direction Rework，只有规定的 `INVALID` 才进入零调用 Fallback Refreeze。
+5. 当前 Iteration/Slice/action 与公开开源评测的 human authority 已有效；接手者不得再次申请普通开发确认或当前 standing scope 授权。只有 Manifest
+   明列的真实 scope delta 才暂停相关动作并申请新权限，其他不相关工作继续推进。
+
 ## PDR-008 公开开源评测持续授权
 
 `ITER-010-PDR-008 / FINDING-010-140` 已纠正把机器逐调用收据误当成人工逐次授权的问题。当前测试工程是公开 Apache-2.0 仓库
