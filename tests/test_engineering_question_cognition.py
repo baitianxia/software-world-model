@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import unittest
+from unittest.mock import patch
 
 from software_world_model.application_services.engineering_question_answering import (
     CognitionDimension,
@@ -12,6 +13,7 @@ from software_world_model.application_services.engineering_question_answering im
     SourceBroker,
 )
 from software_world_model.application_services.engineering_question_cognition import (
+    MultiProfileWorldModelCognitionProjector,
     StructureBundleWorldModelCognitionProjector,
 )
 from software_world_model.cross_cutting import (
@@ -27,6 +29,7 @@ from software_world_model.application_services.engineering_question_answering im
     EngineeringEvidenceClass,
 )
 from tests import test_engineering_question_answering as qa_fixtures
+from tests import test_java_source_semantics as java_fixtures
 from tests import test_structure_view as structure_fixtures
 
 
@@ -40,6 +43,7 @@ class EngineeringQuestionCognitionTests(unittest.TestCase):
             view=self.structure.service,
             snapshot_bundle=self.bundle,
         )
+        self.repository_id = StableId("repository_" + "d" * 32)
         self.profile = LocalGitEvidenceClassProfile.create(
             profile_ref="engineering-qa-structure-integration:1",
             binding_id=self.projector.binding_id,
@@ -61,7 +65,7 @@ class EngineeringQuestionCognitionTests(unittest.TestCase):
             request_ref="structure-cognition-question",
             original_question=qa_fixtures.request().original_question,
             response_language="en",
-            repository_id=StableId("repository_" + "d" * 32),
+            repository_id=self.repository_id,
             binding_id=binding_id or self.projector.binding_id,
             repository_revision=self.projector.source_revision,
             source_profile_ref=self.profile.profile_ref,
@@ -153,6 +157,170 @@ class EngineeringQuestionCognitionTests(unittest.TestCase):
         self.assertIn("WORLD_MODEL_COGNITION", origins)
         self.assertIn("EXACT_REVISION_SOURCE", origins)
         self.assertEqual(result.authorized_answer.package_digest, result.current_package.digest)
+
+
+class MultiProfileEngineeringQuestionCognitionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.structure = structure_fixtures.StructureViewTests(methodName="runTest")
+        self.structure.setUp()
+        self.addCleanup(self.structure.doCleanups)
+        structure_projector = StructureBundleWorldModelCognitionProjector(
+            view=self.structure.service,
+            snapshot_bundle=self.structure.a[1],
+        )
+        self.java = java_fixtures.JavaImplementationViewTests(methodName="runTest")
+        original_fixture_input = java_fixtures._fixture_input
+        with patch.object(
+            java_fixtures,
+            "_fixture_input",
+            side_effect=lambda *args, **kwargs: original_fixture_input(
+                structure_projector.source_revision,
+                *args,
+                **kwargs,
+            ),
+        ):
+            self.java.setUp()
+        self.addCleanup(self.java.doCleanups)
+        java_projector = StructureBundleWorldModelCognitionProjector(
+            view=self.java.service,
+            snapshot_bundle=self.java.bundle,
+        )
+        self.repository_id = StableId("repository_" + "8" * 32)
+        self.structure_projector = structure_projector
+        self.java_projector = java_projector
+        self.multi = MultiProfileWorldModelCognitionProjector(
+            repository_id=self.repository_id,
+            binding_id=structure_projector.binding_id,
+            projectors=(structure_projector, java_projector),
+        )
+
+    def request(self, *, question: str, projector=None):
+        projector = projector or self.multi
+        return EngineeringQuestionRequest.create(
+            request_ref="multi-profile-cognition-question",
+            original_question=question,
+            response_language="en",
+            repository_id=self.repository_id,
+            binding_id=projector.binding_id,
+            repository_revision=projector.source_revision,
+            source_profile_ref="multi-profile-cognition-source:1",
+            source_profile_digest=self.multi.manifest.digest,
+            world_model_read_authority_digest=projector.read_authority_digest,
+            source_allowlist=("src",),
+        )
+
+    def test_maven_only_is_ineligible_for_behavior_question(self) -> None:
+        maven_only = MultiProfileWorldModelCognitionProjector(
+            repository_id=self.repository_id,
+            binding_id=self.structure_projector.binding_id,
+            projectors=(self.structure_projector,),
+        )
+        context = maven_only.project(
+            request=self.request(
+                question="How does authentication behavior work?",
+                projector=maven_only,
+            )
+        )
+
+        self.assertNotIn(CognitionDimension.BEHAVIOR, maven_only.manifest.dimensions)
+        self.assertTrue(
+            any("missing dimensions: BEHAVIOR" in item for item in context.unknowns)
+        )
+
+    def test_same_revision_manifest_combines_structure_and_behavior_authorities(self) -> None:
+        self.assertEqual(len(self.multi.manifest.profiles), 2)
+        self.assertEqual(
+            {item.source_revision for item in self.multi.manifest.profiles},
+            {self.multi.source_revision},
+        )
+        self.assertIn(CognitionDimension.RELATION, self.multi.manifest.dimensions)
+        self.assertIn(CognitionDimension.BEHAVIOR, self.multi.manifest.dimensions)
+        self.assertEqual(
+            len(
+                {
+                    item.read_authority_digest
+                    for item in self.multi.manifest.profiles
+                }
+            ),
+            2,
+        )
+
+        assessment = next(
+            item
+            for item in self.multi.project(
+                request=self.request(
+                    question="How does authentication behavior work?"
+                )
+            ).items
+            if item.modality == "COGNITION_QUESTION_ELIGIBILITY"
+        )
+        self.assertIn('"dimension":"BEHAVIOR"', assessment.statement)
+        self.assertIn(
+            self.java_projector.snapshot_bundle.coverages[0].root.profile_ref,
+            assessment.statement,
+        )
+        self.assertIn('"query_capability":"method_implementations@1"', assessment.statement)
+
+    def test_different_questions_receive_different_relevant_projections(self) -> None:
+        structure = self.multi.project_for_query(
+            request=self.request(
+                question="Which module dependencies connect admin and common?"
+            ),
+            query="admin dependency common module",
+        )
+        behavior = self.multi.project_for_query(
+            request=self.request(
+                question="How does authentication behavior work?"
+            ),
+            query="authenticate credentials session",
+        )
+        structure_support = {
+            item.item_id
+            for item in structure.items
+            if item.dimension not in {
+                CognitionDimension.COVERAGE,
+                CognitionDimension.UNKNOWN,
+            }
+        }
+        behavior_support = {
+            item.item_id
+            for item in behavior.items
+            if item.dimension not in {
+                CognitionDimension.COVERAGE,
+                CognitionDimension.UNKNOWN,
+            }
+        }
+
+        self.assertTrue(structure_support)
+        self.assertTrue(behavior_support)
+        self.assertNotEqual(structure_support, behavior_support)
+        self.assertTrue(
+            any(
+                item.dimension is CognitionDimension.BEHAVIOR
+                and "authenticate" in item.statement
+                for item in behavior.items
+            )
+        )
+        self.assertTrue(
+            any(
+                '"predicate":"CALL_SITE_TARGETS"' in item.statement
+                and "authenticate" in item.statement
+                and "issueSession" in item.statement
+                for item in behavior.items
+            )
+        )
+
+    def test_failure_boundary_need_preserves_constraint_gap(self) -> None:
+        context = self.multi.project_for_query(
+            request=self.request(
+                question="What are the failure responsibility and state boundaries?"
+            ),
+            query="failure responsibility state boundary",
+        )
+
+        self.assertTrue(
+            any("missing dimensions: CONSTRAINT" in item for item in context.unknowns)
+        )
 
 
 if __name__ == "__main__":

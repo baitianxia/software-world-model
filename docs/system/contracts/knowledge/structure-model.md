@@ -13,7 +13,14 @@ tests: [tests/test_formal_knowledge.py, tests/test_knowledge_update.py, tests/te
 
 ## Purpose and scope
 
-Structure Model 是正式知识中的可遍历结构关系，不是按显示名称拼接的 UI 图。当前最小产品 Profile 是 `MAVEN_REACTOR_STRUCTURE@1`，采用 `MAVEN-REACTOR-STRUCTURE@1.0.0`，只描述一个 exact Local Git revision 中的 Maven 根项目、递归子项目及其直接内部依赖。每次采用还必须固定 exact Maven Evaluation Context；Git revision 本身不足以决定 effective model。
+Structure Model 是正式知识中的可遍历结构关系，不是按显示名称拼接的 UI 图。当前已接受的窄结构 Profile 是
+`MAVEN_REACTOR_STRUCTURE@1`，采用 `MAVEN-REACTOR-STRUCTURE@1.0.0`，只描述一个 exact Local Git revision 中的 Maven
+根项目、递归子项目及其直接内部依赖。每次采用还必须固定 exact Maven Evaluation Context；Git revision 本身不足以决定 effective
+model。
+
+该 Profile 的 `COMPLETE / PUBLISHED / QUERYABLE` 只对 reactor child membership 与 POM-local direct internal dependency 的 exact
+Coverage 成立。它不表达实现、声明、运行调用、控制/数据流、业务规则、状态变化、配置接线、异常或用户可见行为，因此不得单独称为
+“完整软件世界模型认知”，也不得单独取得通用工程 Chat 或行为问题的认知资格。
 
 ## Formal shape
 
@@ -41,3 +48,6 @@ Structure Model 是正式知识中的可遍历结构关系，不是按显示名�
 ## Coverage and limitations
 
 Profile Coverage Root 由 owning Scope、`MAVEN_REACTOR_STRUCTURE@1`、exact Schema/Evaluation Context/Canonicalization、稳定 Source Binding、逻辑 reactor root locator 和所覆盖类型/谓词形成；A/B revision 共享该 Root，各自形成 exact Coverage State。完整构建覆盖 root project State、全部递归 child module Entity State、root/child `<dependencies>` 的完整扫描、`CONTAINS_MODULE` 和内部 `DEPENDS_ON`。因此只有 Coverage `COMPLETE` 时，内部边的缺席才能支持“没有 POM 本地声明的直接内部依赖”；若 root POM 未扫描，相关问题必须是 Gap，不能回答否。Build/Admission exclusion 报告不是 Snapshot 成员，能审计构建但不能在 Source-off 回答中证明某条声明被排除的具体原因；若产品需要回答该原因，必须先接受新的正式 Schema，而不能读取报告或 Evidence 补洞。未解析 POM、缺失 module、effective GAV/属性解析不完整或权限过滤使完整 State 失败，不能执行 `REPLACE_COVERAGE` 或发布伪完整图。当前 Profile 不表达 aggregator/parent 层级、外部依赖图、effective/传递/compile/runtime 依赖、运行时调用、Behavior、Business 或 History。
+
+`profile-complete`、`question-sufficient` 与 `engineering-cognition-eligible` 是三个不同 Verdict。前者只由本 Contract 的窄 Coverage
+决定；后两者必须由调用方依据原问题所需认知维度和实际绑定的多域能力独立判断，不能从单个 Profile 的发布或完整性状态推导。

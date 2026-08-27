@@ -30,13 +30,33 @@ Development Design 是当前编码输入，不是长期详细设计百科。它�
 执行卡，用少量有序检查点依次交付可启动产品入口、可持续方向体验，以及本轮要求的方向证据和用户判向。具体检查点数量和 Alpha 后时限由
 当前 Iteration 按最小判向需要冻结，不作为所有未来工程的固定流程。
 
-检查点是当前 Slice 内的交付和停止点，不是新 Iteration、Slice、Readiness 或授权阶段。它们只能在当前 Slice 授权仍 active 时沿用该授权，
-不能恢复已暂停、消费或失效的授权；外部调用仍单独遵守 exact grant。每个检查点完成后必须立即把启动方式、地址、精确版本、已知限制和
-可操作结果交给用户，不得先继续后续开发。代码、测试、文档、Gate 数量或内部链路完成都不算用户可见增量。
+检查点是当前 Slice 内的交付和方向决策点，不是自动结束开发回合的停止点，也不是新 Iteration、Slice、Readiness 或授权阶段。它们只能
+在当前 Slice 授权仍 active 时沿用该授权，不能恢复已暂停、消费或失效的授权；外部调用仍单独遵守 exact grant。每个检查点完成后必须
+立即把启动方式、地址、精确版本、已知限制和可操作结果交给用户；若下一项工作仍在现有授权和既定方向内，交付后继续执行，不为重复
+确认自行停下。代码、测试、文档、Gate 数量或内部链路完成都不算用户可见增量。
 
-未达到检查点时，必须交付最后一个可运行版本、唯一最早阻塞点和可证伪根因，并停止范围扩张；不能用继续建设内部组件来掩盖没有体验
-出口。任何检查点上用户明确认为方向错误，都立即停止后续检查点和 hardening。减少的是场景数量，不是单个已开始交互的 Evidence、
-Citation、独立 Review 或失败关闭质量。完整回归、跨工程、hidden、性能、持久化和协议夯实只有质量通过且用户 `CONTINUE` 才能解锁。
+未达到检查点时，必须交付最后一个可运行版本、唯一最早阻塞点和可证伪根因，并停止范围扩张；但当前最小体验目标、本地根因归因和已
+授权的收敛工作继续，不能把 checkpoint FAIL 当成开发终态，也不能用建设无关内部组件掩盖没有体验出口。任何检查点上用户明确认为方向
+错误，才立即停止后续检查点和 hardening。减少的是场景数量，不是单个已开始交互的 Evidence、Citation、独立 Review 或失败关闭质量。
+完整回归、跨工程、hidden、性能、持久化和协议夯实只有质量通过且用户 `CONTINUE` 才能解锁。
+
+### 授权连续性与开发回合退出条件
+
+Slice 开发授权与 external/side-effect execution grant 必须分开。缺少、消费、过期、拒绝或 identity 漂移的 exact grant 只阻断对应
+action；只要本地 Slice 授权仍有效，就保持 `authorized / in-progress / coding_input=true`，不能把 `NOT_REQUESTED / PENDING / DENIED`
+写成开发完成、产品 FAIL 或自动暂停。
+
+到达权限边界后，实现者先完成不需要该权限的 preflight，冻结 exact action/command 或 Provider/model/endpoint、product/source identity、
+input/disclosure/redaction、credential reference、读写/网络范围、调用/重试/时长、fallback、结果保存与 exclusions，然后直接调用平台审批
+能力；没有审批入口时直接提交一条完整的 exact-grant request。不得先问“是否要申请”，不得只报告缺权限后结束，也不得重复请求相同
+pending grant。相同 active grant 未消费时复用；consumed/expired/drifted 不复用；批准后在 exact scope 内自动继续，不再重复确认计划。
+
+等待时继续所有不依赖该 grant 的安全工作。只有 request 已实际发出且本地替代工作穷尽，才能以
+`WAITING_EXACT_GRANT / IN_PROGRESS` 让出回合；必须报告 request identity、唯一受阻动作和批准后自动执行的动作。授权被拒绝时不得绕过或
+重复催促，只能继续安全替代方案或在范围/证据变化后申请更窄 delta。
+
+开发回合只能在当前阶段交付已实现并交给用户、exact request 已发出且安全替代工作穷尽、用户明确 `STOP/REDIRECT/REJECT`，或存在不可
+通过申请绕开的安全禁止时结束。“需要授权”、局部 Gate 完成、timebox FAIL 或外部权限为零本身都不是退出条件。
 
 从 `ITER-010-PDR-002` 后首个新建产品迭代起，首个持续 Web Alpha 必须把小样本 current Codex 同题盲评并入同一体验出口，而不是把
 比较继续推迟到 hardening，也不是在体验前增加独立阶段。Alpha 至少覆盖一条原失败题和另外两条相邻或异质问题，后两条中至少一条是
@@ -50,10 +70,11 @@ Codex 时才能进入工程夯实；全体打平时使用 `REWORK`。
 
 从 `ITER-012` 起，第一个持续 Alpha Slice 采用固定体验时间盒；ITER-010 可以在 Manifest 显式 opt in。计时点是 Slice 授权后的第一次
 产品代码变更，而不是第一次 live 调用：60 分钟内页面必须可启动，180 分钟内必须形成用户可连续操作的持续 Alpha；到 240 分钟仍未
-形成时，硬停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。60/180 是交付检查点，不能等完整质量证明才开始计时；
-240 是首次持续 Alpha 的停止边界，不能以“再跑一次”绕过。180 分钟未交付持续 Alpha 即记 timebox FAIL、立即交付现状并停止新增范围；
-181—239 分钟只允许定位根因和收敛已有纵切。期间形成的迟到 Alpha 仍须立即交用户，但只能作为 `FAIL / REWORK` 证据，不能追认为按时
-成功或解锁后续夯实。当前 Iteration 对 Alpha 后方向证据和判向另有明确时限时，同样不得把它们拖成新的无界内循环。
+形成时，硬停止功能扩张、hardening、full regression 和无新证据的外部重复调用，密封已有证据并缩围复盘，同时继续本地根因归因和最小
+体验纵切收敛。60/180 是交付检查点，不能等完整质量证明才开始计时；240 是失控路径和扩域的停止边界，不能以“再跑一次”绕过，但不是
+整个开发目标的终点。180 分钟未交付持续 Alpha 即记 timebox FAIL、立即交付现状并停止新增范围；181—239 分钟只允许定位根因和收敛已有
+纵切。期间形成的迟到 Alpha 仍须立即交用户，但只能作为 `FAIL / REWORK` 证据，不能追认为按时成功或解锁后续夯实。当前 Iteration 对
+Alpha 后方向证据和判向另有明确时限时，同样不得把它们拖成新的无界内循环。
 
 若该 policy 在一次失败 Result 密封后才被采用，Manifest 必须用 `historical_pre_policy_result_refs` 精确列出这些历史 Result，并声明它们
 不能满足新的体验 Gate。门禁继续验证其 failed-preserved 身份、所属 Slice、不可变摘要和后继非编码 REWORK 决定，但不得反向要求历史
@@ -65,12 +86,15 @@ Result 补造当时尚不存在的体验或 Provider 字段。新授权后的任
 用户可见答案质量 Case PASS 且用户决定 `CONTINUE` 后，才可进入 hardening。
 
 live attempt 使用轻量计数：同一 sealed product version 中，每个触发任一外部 dispatch 的有界用户交互单元计一次 attempt，不按单元内部模型/
-角色调用数放大；对 Chat，这个单元是 Turn，一段 Conversation 中多个已 dispatch Turn 分别计数；纯本地诊断不计。相同 failure signature 最多重试一次；连续两次 live attempt 没有用户可见增量，立即停止外部重跑，
-回到本地根因诊断。此停止规则发生在问题之间；已经开始的问题仍须执行完整调查、答案、Citation 与独立审核链，调用或成本不得成为
-质量裁剪理由。
+角色调用数放大；对 Chat，这个单元是 Turn，一段 Conversation 中多个已 dispatch Turn 分别计数；纯本地诊断不计。相同 failure signature
+最多重试一次；连续两次 live attempt 没有用户可见增量，立即停止该签名的外部重跑并回到本地根因诊断，但保持最小体验目标和当前 Slice
+开发进行中。此停止规则发生在问题之间；已经开始的问题仍须执行完整调查、答案、Citation 与独立审核链，调用或成本不得成为质量裁剪
+理由。
 
-live failure 必须先沿 `Source truth → World Model cognition → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer → independent review → Web`
-定位最早偏差。没有可证伪 root-cause hypothesis，不得修改 Prompt、Schema 或 Contract。修复顺序固定为：本地最小复现，至少两个未参与
+live failure 必须先沿 `Source truth → knowledge construction/admission → cognition projection/query → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer synthesis → independent review → Web`
+定位最早偏差，并分别记录 first divergence、没有阻断错误的 downstream guard failure 和 display failure。一题可以有多个故障，但下一项
+产品修改只能归属最早有证据的 Owner 层；不得用下游 Prompt、搜索排序或 Reviewer 文案补偿上游知识/投影缺口。没有逐层 evidence table、
+可证伪 root-cause hypothesis 和反事实验证，不得修改 Prompt、Schema、Tool policy 或 Contract。修复顺序固定为：本地最小复现，至少两个未参与
 修复的相邻案例通过，再执行一个有界 live canary 单元；Chat 目标必须把该单元冻结为最小多轮 Conversation，不得用孤立一题代替。不能直接用下一次昂贵 live run 猜测修复。相同 failure signature 经过一次通用修复仍复现，
 必须停止堆规则并评审架构职责。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
 hardening 和正式验收前各运行，不得用它延迟首个体验。
@@ -83,7 +107,9 @@ Provider 或模型能力原因终态结束且未形成 authorized answer 时，�
 重新核对的官方非高峰窗口，峰时紧急启动需审计 override，但已开始问题仍不得降低质量。
 
 可体验 Alpha 必须记录 `CONTINUE`、`REWORK`、`REDIRECT` 或 `REJECT`；只有 `CONTINUE` 才能进入工程夯实。任一阻断项失败默认只阻止
-晋级：保留失败证据、暂停当前 Slice，并在同一 Slice 做通用修复和重新体验。
+PASS 声明、晋级和 hardening：保留失败证据，并在当前授权仍覆盖修复时保持 Slice active，在同一 Slice 做通用修复和重新体验。只有
+修复改变已授权 scope/System Owner、用户明确暂停，或本地授权本身被撤销/失效时才进入 `paused / coding_input=false`；需要新权限时按
+本政策直接申请。
 回答错误、用户指出问题或独立评测要求复核，本身都不能推出 `REDIRECT`。只有用户明确改变产品方向、核心架构假设被证伪，或者达到
 Proposal 预先冻结的无进展上限，才可以转向；否则使用 `REWORK`。若最小可体验 Alpha 本身无法较快形成，应把它视为优先修复的风险，
 而不是先开发更多内部组件。
@@ -109,9 +135,10 @@ Proposal 预先冻结的无进展上限，才可以转向；否则使用 `REWORK
 ## 同一 Slice 的修复循环
 
 体验发现缺陷后，必须保留原问题、原答案、证据、评审和产品代码冻结身份，再完成根因分类。只要产品目标、总体架构、主要数据流、
-模型职责和安全边界没有改变，就在当前 Slice 做最小通用修复，复测原问题，并增加相邻表达或不同类型问题防止特判。失败尝试进入
-`paused / coding_input=false`，不再由 `project/current.md` 指向；新的用户授权到达后，同一 Slice 可以恢复为
-`authorized / coding_input=true`。每次重新授权都必须使用新收据，历史失败 Result 通过 Manifest 的 `rework_result_refs` 保留。
+模型职责和安全边界没有改变，就在当前 Slice 做最小通用修复，复测原问题，并增加相邻表达或不同类型问题防止特判。失败尝试保留为
+`failed-preserved`，但 `REWORK` 本身不撤销仍有效的 Slice coding input，也不从 `project/current.md` 移除活动 Slice。只有 scope/Owner
+变化、明确用户暂停或授权失效时才进入 `paused / coding_input=false`；实现者必须直接申请恢复所需的最小精确权限。新授权到达后恢复同一
+Slice，不新建 Iteration；每次真正的重新授权都使用新收据，历史失败 Result 通过 Manifest 的 `rework_result_refs` 保留。
 
 Proposal 必须预先冻结无进展的可测定义和正整数尝试上限。达到上限只触发一次架构转向评审，不自动证明应当转向；实际
 `REDIRECT` 仍必须绑定用户明确转向、核心架构证伪或该上限已达到中的一项。模型调用次数不得充当无进展定义，也不得成为降低调查、

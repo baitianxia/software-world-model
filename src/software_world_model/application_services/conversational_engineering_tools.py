@@ -8,7 +8,7 @@ opaque locator references issued by a prior Broker-authorized search.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import PurePosixPath
 from threading import Lock
 from typing import Mapping, Sequence
@@ -355,7 +355,46 @@ class EngineeringAgentEvidenceToolAdapter:
     ) -> EngineeringAgentToolResult:
         arguments = _arguments(request, expected=("query",))
         query = arguments["query"]
-        cognition = state.cognition
+        project_for_query = getattr(
+            self._cognition_projector, "project_for_query", None
+        )
+        if callable(project_for_query):
+            cognition = project_for_query(
+                request=state.evidence_request,
+                query=query,
+            )
+            if (
+                cognition.request_digest != state.evidence_request.digest
+                or cognition.read_authority_digest
+                != state.evidence_request.world_model_read_authority_digest
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "query-relevant cognition does not bind the current Turn authority",
+                )
+            if cognition.digest != state.cognition.digest:
+                state.ledger = state.ledger.append(
+                    kind=LedgerEntryKind.COGNITION_CONTEXT,
+                    subject_id=cognition.cognition_context_id.value,
+                    subject_digest=cognition.digest,
+                    references=(state.ledger.entries[-1].entry_id.value,),
+                    details={
+                        "alignment": cognition.alignment.value,
+                        "relevance_query_digest": digest_of(
+                            ["ENGINEERING_COGNITION_RELEVANCE_QUERY@1", query]
+                        ).value,
+                    },
+                    maximum_bytes=state.evidence_request.limits.maximum_ledger_bytes,
+                )
+                state.cognition = cognition
+                state.usage = replace(
+                    state.usage,
+                    world_model_bytes=len(
+                        canonical_json_bytes(cognition.model_view())
+                    ),
+                )
+        else:
+            cognition = state.cognition
         if not state.world_model_receipt_recorded:
             state.ledger = _append_resource_receipt(
                 request=state.evidence_request,

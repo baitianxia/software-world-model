@@ -412,7 +412,11 @@ from .engineering_question_answering import (
     project_evidence_boundary_challenges,
 )
 from .engineering_question_cognition import (
+    ENGINEERING_COGNITION_CAPABILITY_MANIFEST,
     ENGINEERING_QA_STRUCTURE_COGNITION_AUTHORITY,
+    CognitionEligibilityAssessment,
+    EngineeringCognitionCapabilityManifest,
+    MultiProfileWorldModelCognitionProjector,
     StructureBundleWorldModelCognitionProjector,
 )
 
@@ -441,7 +445,11 @@ __all__ = [
     "SourceProfilePolicy",
     "SourceReadOperation",
     "WorldModelCognitionContext",
+    "ENGINEERING_COGNITION_CAPABILITY_MANIFEST",
     "ENGINEERING_QA_STRUCTURE_COGNITION_AUTHORITY",
+    "CognitionEligibilityAssessment",
+    "EngineeringCognitionCapabilityManifest",
+    "MultiProfileWorldModelCognitionProjector",
     "StructureBundleWorldModelCognitionProjector",
     "ActivationDecision",
     "ActivationDecisionType",

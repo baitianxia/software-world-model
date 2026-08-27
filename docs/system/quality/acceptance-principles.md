@@ -35,3 +35,9 @@ tests: []
     模型建模、更新、存储、Provider 成本和冻结复用周期；locator control 失败不能降低产品对 current Codex 的严格胜出门槛。ITER-010
     继续使用已冻结的原 Gate，不受本条前瞻拆分追溯影响。
 16. **对话状态与证据分离：** Conversation Context 保存用户目标和语义连续性，Agent Work State 保存可丢弃的计划与假设，World Model 保存版本化系统认知，Turn Evidence Package 保存当前答案依据；四者不得互相冒充。单个 Turn 失败关闭不得自动结束仍有效的 Conversation，也不得把未密封工具结果或旧答案授权带入下一 Turn。
+17. **失败先做逐层归因：** 用户可见答案失败后，在修改 Prompt、Schema、Tool、检索排序或 Review policy 前，必须对同一 immutable run
+    密封 `Source truth → Knowledge construction/admission → Cognition projection/query → Conversation understanding → Agent investigation →
+    Evidence Package → Answer synthesis → Independent Review → Delivery/UI` 的逐层报告。每个 material fact 分别记录 first divergence、未阻断错误的 downstream
+    guard failure 与 display failure；一题可以有多个故障，但只能先修改最早有证据的 Owner 层。Source 有而 Snapshot 无属于知识构建，
+    Snapshot 有而 Cognition/Package 无属于投影/检索，Package 有而 Draft 无或错误属于综合，坏 Draft 被批准属于 Reviewer，授权结果与 UI
+    不同属于交付。没有可证伪反事实不得以下一次 live run 猜修复；原失败和至少两个未参与修复的异质问题通过前，单题 PASS 不证明通用性。

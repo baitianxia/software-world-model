@@ -3079,6 +3079,37 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-131": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-131.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
+  "FINDING-010-135": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-135.md",
+    "code": [
+      "src/software_world_model/application_services/java_source_semantics.py"
+    ],
+    "tests": [
+      "tests/test_java_source_semantics.py"
+    ]
+  },
+  "FINDING-010-136": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-136.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_chat_session_artifact.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4133,6 +4164,21 @@
       "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
+  "ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001": {
+    "path": "docs/project/iterations/iteration-010/results/v-cognition-eligibility-001.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/java_source_semantics.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_java_source_semantics.py"
+    ]
+  },
   "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009": {
     "path": "docs/project/iterations/iteration-010/results/v-web-000-live-run-009.md",
     "code": [
@@ -4381,16 +4427,20 @@
       "src/software_world_model/application_services/engineering_conversation.py",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/interface/engineering_chat_candidate.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_alpha_cli.py"
     ],
     "tests": [
       "tests/test_conversational_engineering_agent.py",
       "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_question_cognition.py",
       "tests/test_conversational_engineering_model.py",
       "tests/test_engineering_chat_candidate.py",
+      "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
@@ -4723,6 +4773,7 @@
       "src/software_world_model/application_services/structure_read_session.py",
       "src/software_world_model/application_services/structure_read_bundle.py",
       "src/software_world_model/application_services/read_set_catalog.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
       "src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py",
       "src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py",
@@ -4739,6 +4790,7 @@
       "tests/test_natural_task.py",
       "tests/test_structure_read_session.py",
       "tests/test_structure_read_bundle.py",
+      "tests/test_engineering_question_cognition.py",
       "tests/test_maven_workspace.py",
       "tests/test_iteration_003_g1_integration.py",
       "tests/test_iteration_003_g2_integration.py"

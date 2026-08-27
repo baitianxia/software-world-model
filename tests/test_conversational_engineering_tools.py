@@ -86,6 +86,35 @@ class ExactCognitionProjector:
         )
 
 
+class QueryAwareCognitionProjector(ExactCognitionProjector):
+    def __init__(self) -> None:
+        self.queries = []
+
+    def project_for_query(self, *, request, query):
+        self.queries.append(query)
+        item = CognitionItem.create(
+            dimension=CognitionDimension.BEHAVIOR,
+            statement=f"Query-relevant World Model behavior: {query}",
+            modality="QUERY_RELEVANT_BEHAVIOR_RELATION",
+            context_ref="query-relevant-context",
+            source_revision=request.repository_revision,
+            locator="world-model:query-relevant-behavior",
+            support_references=("query-relevant-snapshot-evidence",),
+            coverage="Only records relevant to the semantic query are projected.",
+        )
+        return WorldModelCognitionContext.create(
+            request=request,
+            scope_ref="fixture-scope",
+            context_ref="query-relevant-context",
+            schema_ref="fixture-schema@1",
+            snapshot_ids=("fixture-snapshot",),
+            read_authority_digest=request.world_model_read_authority_digest,
+            source_revision=request.repository_revision,
+            items=(item,),
+            coverage=("Query-relevant behavior is represented.",),
+        )
+
+
 class RecordingReviewer:
     def __init__(self) -> None:
         self.requests = []
@@ -399,7 +428,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
         return completed.stdout
 
-    def service(self, driver, reviewer):
+    def service(self, driver, reviewer, *, cognition_projector=None):
         binding = EngineeringChatBinding.create(
             product_revision="a" * 40,
             project_name="fixture",
@@ -417,7 +446,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
         tools = EngineeringAgentEvidenceToolAdapter(
             configuration=self.configuration,
-            cognition_projector=ExactCognitionProjector(),
+            cognition_projector=cognition_projector or ExactCognitionProjector(),
             source_broker=SourceBroker(source_profile=self.profile),
             retrieval_worker=self.worker,
         )
@@ -464,6 +493,31 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             ("COGNITION_CONTEXT", "RESOURCE_RECEIPT"),
         )
         self.assertIn("WORLD_MODEL_UNKNOWN_REPORTED", boundary.content)
+
+    def test_world_model_tool_records_query_relevant_cognition_context(self) -> None:
+        reviewer = RecordingReviewer()
+        projector = QueryAwareCognitionProjector()
+        service = self.service(
+            WorldThenAnswerDriver(),
+            reviewer,
+            cognition_projector=projector,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(projector.queries, ["login behavior and boundaries"])
+        support = reviewer.requests[0].package.support_observations[0]
+        self.assertIn("login behavior and boundaries", support.content)
+        self.assertEqual(
+            tuple(item.kind for item in support.authority_receipt.ledger_entries),
+            ("COGNITION_CONTEXT", "COGNITION_CONTEXT", "RESOURCE_RECEIPT"),
+        )
 
     def test_source_search_then_opaque_read_extends_one_turn_ledger(self) -> None:
         reviewer = RecordingReviewer()

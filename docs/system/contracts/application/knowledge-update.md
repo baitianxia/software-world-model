@@ -42,6 +42,10 @@ Application 拥有 Update Attempt、Publication Policy、编排和 Result；具�
     Candidate 并保持旧 CURRENT。Snapshot committed 后，Bundle seal 必须分别通过信息保持 Oracle、信息越界 Oracle，并对同一
     normalized closure 重跑 legacy consistency Oracle。后置 Oracle 只裁决 exact Bundle；失败不回滚已发布 Snapshot，但该 Snapshot
     保持 `READ_BUNDLE_UNAVAILABLE`，不得由问题请求修改 allowlist、重新解析 Source 或生成工程/题目专用 index。
+15. 面向工程 Chat 的 Build Objective 必须声明 intended cognition dimensions/capabilities。每个 Profile 仍独立构建、准入、发布并报告
+    exact Coverage；Application 不得从一个窄 Profile 的 `PUBLISHED` 或 `COMPLETE` 推导整体工程认知已经建成。仅有 Maven 模块与依赖时
+    只能报告窄结构认知构建成功，缺少的实现、行为、约束、配置、状态和异常等维度必须保持为未构建、Partial 或 Unknown，不能通过改名
+    取得工程认知资格。
 
 ## Failure, recovery and implementation boundary
 

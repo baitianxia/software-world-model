@@ -34,14 +34,15 @@ Slice1 首次为可见验证工程 `mall` 的 exact HEAD `0504e86b1f1b6f1b8aa6a7
   Contract 一致，不是应在 Slice1 放宽 parser 的局部 bug；
 - Maven run-003 在 exact revision 上以 10 次只读 Source operation、158481 bytes 发布 8 个 module entity 与内部 dependency
   relation，Owner verifier/admission、Bundle、Catalog 均成功；
-- 影响是 `verification / general`：Maven cognition 足以继续 `V-WEB-000` 的最早真实体验，但不满足 `V-XD-001` 明确要求的
-  accepted declaration/`CALLS` 输入。
+- 当时的项目判断是 Maven cognition 足以继续 `V-WEB-000` 的最早链路体验，但不满足 `V-XD-001` 明确要求的 accepted
+  declaration/`CALLS` 输入。run-035—042 与后续用户体验已经反证“足以用于工程行为问答”这一判断；历史执行事实保留，当前产品判断由
+  `FINDING-010-132` 取代。
 
 ## Decision and disposition
 
-本 Slice 保留 Profile 真实边界，不给 `mall` 增加项目特判，也不把 Maven relation 冒充 Java `CALLS`。`V-WEB-000` 可用 exact Maven
-World Model + query-time Source 运行并单独裁决；`V-XD-001` 在获得同工程可接受的 declaration/`CALLS` Result 前保持 blocking，不能由
-Web 成功顺带写成 PASS。
+本 Slice 保留 Profile 真实边界，不给 `mall` 增加项目特判，也不把 Maven relation 冒充 Java `CALLS`。历史 `V-WEB-000` 的链路
+Result 不改写；当前恢复后，Maven-only 不再有资格进入行为问题的 World Model 完整认知臂。`V-XD-001` 和
+`V-COGNITION-ELIGIBILITY-001` 在获得同工程可接受的实现/行为认知前保持 blocking，不能由 Web 可启动或 Source 最终命中顺带写成 PASS。
 
 该发现处置到 `ITER-010-VERIFICATION`。既有 System Contract 已准确说明 Java Profile 的语法与 Coverage 边界，因此无需改写 System
 truth；若后续 Slice 要让该真实工程满足 `V-XD-001`，必须另行扩展并验证通用 Java Profile，而不是在当前题目或项目上旁路失败关闭。

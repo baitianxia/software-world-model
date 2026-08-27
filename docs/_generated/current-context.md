@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-sixth-live-three-of-five-responses-leakage-pass-v6-contract-successor-local-candidate`
+- Worktree status: `iteration-010-slice-001-pdr-005-live-direction-authorized-clean-candidate-freeze-pending`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `pdr-004-sixth-live-three-of-five-responses-leakage-pass-current-turn-response-and-tool-argument-domain-v6-fresh-conformance-required-production-not-activated`
+- Live model path: `pdr-005-one-exact-ark-web-direction-canary-authorized-not-yet-dispatched-production-not-activated`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

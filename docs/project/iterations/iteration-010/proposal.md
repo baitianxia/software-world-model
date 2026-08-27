@@ -4,11 +4,13 @@ kind: iteration-proposal
 status: accepted
 authority: project-proposal
 owners: [product, project, architecture, engineering, quality]
-depends_on: [SYS-PRODUCT-SUCCESS, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-107, FINDING-010-108, FINDING-010-109, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-SECURITY, SYS-OPS-LOCAL-BROWSER]
+depends_on: [SYS-PRODUCT-SUCCESS, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-107, FINDING-010-108, FINDING-010-109, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-ACCEPTANCE, SYS-QUALITY-SECURITY, SYS-OPS-LOCAL-BROWSER]
 code: []
 tests: []
 iteration: ITER-010
 coding_input: false
+current_execution_decision_ref: ITER-010-PDR-006
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137]
 ---
 
 # ITER-010 Proposal：软件世界模型与主工程 Agent 驱动的多轮工程 Chat
@@ -103,6 +105,26 @@ Answer/Citation/Review/Delivery；新 Conversation 没有旧消息，却把省�
 exact product freeze、artifact 和 Session Authority；不能追认首次失败 run。PDR-003 的时间盒、根因、测试后置、Provider 和成本规则全部
 继续有效。
 
+## PDR-005 amendment：先证明认知资格和故障层，再恢复体验
+
+run-035—042 证明 PDR-004 的 Agent/Chat 方向尚未被否定，但执行方式已经偏离：唯一 World Model input 始终是 Maven 模块与依赖，
+每次失败后又修改下游 Prompt/Schema/Tool/Reviewer，再重复双 Provider Conformance 和同一五轮。用户已停止该执行链，并要求新的开发
+对话在文档纠偏后重启。
+
+本 Proposal 的最早差距因此前移：先用 `V-LAYER-ATTRIBUTION-001` 在零外部调用下区分知识构建、Cognition 投影/查询、Agent 调查、
+Evidence、答案、Reviewer 与 Web；再以 `V-COGNITION-ELIGIBILITY-001` 建立同一 exact revision 上按问题有资格的多域 Cognition
+Capability Manifest。Maven-only 仍是正确的窄结构 Profile，但在行为、流程、职责、配置和故障问题上无 full/engineering cognition
+资格。Source 可以补全当前 Turn，不得冒充 World Model 贡献。
+
+v7 的 query/review 提示冻结为未接受症状实验。恢复后不再先做 fresh Ark+DeepSeek Conformance：ADR-017 已规定领域 Prompt 或答案 Schema
+变化不使同一 Adapter/Configuration/endpoint/model/transport Conformance 失效；Ark 是 primary，DeepSeek 只有 Ark terminal 且满足
+fallback reason 才透明启动。现有 Web Access PASS 复用；新的方向出口在附加 60/180/240 分钟 hard stop 内依次交付离线归因、多域认知+
+现有 Web、一条真实语义链和两个未参与修复的异质问题。三个互不相关的独立问答不算 Chat；首次体验前不跑 full regression。
+
+项目仍为 `REWORK`，因为世界模型、主工程 Agent、证据与独立审核的总体架构未被证伪。新的“开发 ITER-010”对话可以接手，不能继承旧
+对话的 v7 推断或执行待办。当前项目入口继续使用已授权 Slice1，以保留此前失败/timebox 责任；这不绑定开发对话，也不禁止未来在确有
+交付边界变化时按治理流程另建 Slice。
+
 ## Product-goal alignment and cumulative delta
 
 - MVP target：`SYS-PRODUCT-SUCCESS`。目标是“准确的软件世界模型 + 优秀的主工程 Agent”共同支撑多轮工程 Chat，不另立绕过世界模型的
@@ -114,11 +136,11 @@ exact product freeze、artifact 和 Session Authority；不能追认首次失败
 - Current gap：系统能执行单轮自适应调查，却没有持续拥有对话目标和计划的主工程 Agent；同一 Session 的独立问题没有追问、指代、纠正、
   总结或新对话隔离语义。
 - Cumulative integration：同一问题链使用 exact World Model Cognition Context 与本题 source/doc/config/test 调查证据，不建立平行答案。
-- Earliest Web checkpoint：历史单题和 4+1 题只证明受控单轮运行。新首交付在固定 loopback、工程和 exact revision 下显示完整消息历史与
-  “新对话”，由主 Agent 完成五轮追问/纠正/深入/总结；一轮失败不关闭 Conversation。逐轮 exact revision、只读、不可信来源、Citation、
-  独立 Review 和新对话隔离不可延后。
-- Direction signal：用户先取得可操作 Chat，五轮 canary 与新对话泄漏负测通过后，Slice1 立即以小样本运行 same-agent source-only、
-  same-agent full-cognition + source、current Codex 三臂，作为不阻塞页面交付的方向信号；Codex 不是 Oracle。
+- Earliest Web checkpoint：历史单题和 4+1 题只证明受控单轮运行。当前先复用已通过的 Web Access，完成离线分层归因与工程认知资格；随后
+  在固定 loopback、工程和 exact revision 下交付一条至少三 Turn 的真实语义链和两个未参与修复的异质问题。逐轮 exact revision、只读、
+  不可信来源、Citation、独立 Review 和新对话隔离不可延后；完整五轮套件不反向阻塞首次方向体验。
+- Direction signal：用户取得上述可操作 Chat 后，Slice1 立即以小样本运行 same-agent source-only、same-agent
+  eligible-cognition + source、current Codex 三臂，作为不阻塞页面交付的方向信号；Codex 不是 Oracle。
 - Later proof：只有持续 Alpha 经实际体验 `CONTINUE` 后，Slice2 才做持久恢复、复杂冲突/去重/异常矩阵、第二工程、性能、安全、完整回归、early hidden
   和三臂复验；Slice3 执行最终两个未见工程 10 answerable + 2 boundary、两条现场题和最终复验。PDR-002 的严格超过 Codex 强制仍从 ITER-012 起。
 - End capability：普通用户无需认证即可在本机 Web 围绕用途、架构、运行、流程、配置、故障、影响和实现细节持续 Chat，能够追问、纠正、
@@ -182,9 +204,9 @@ Engineering Conversation Contract 和本 Proposal 的 A1—A6 组合定义。旧
 
 ## Development slices and dependencies
 
-1. `SLICE-001`：主工程 Agent 多轮 Chat Alpha。复用认知、Broker/Worker、逐轮 Ledger/Package、Answer/Review、Citation、Web 和 PDR-003
-   Provider route；先形成消息历史/新对话 Access，再以一个五轮 Conversation 作为首次 live canary并执行泄漏负测；随后运行不阻塞页面交付的
-   小样本三臂方向比较。持久恢复、多 Agent 和 full regression 不阻塞。
+1. `SLICE-001`：认知资格与主工程 Agent 多轮 Chat Alpha。复用已通过的 Web Access；先对现有 run 离线逐层归因，再形成结构+实现/行为的
+   question-eligible Cognition Capability Manifest 和问题相关投影，接回现有 Web，交付一条真实语义链和两个未参与修复的异质问题；只有这一步通过才
+   执行一个 Ark canary 和小样本 source-only / eligible-cognition+source / current Codex 比较。持久恢复、多 Agent 和 full regression 不阻塞。
 2. `SLICE-002`：跨工程和工程化夯实。Chat Alpha `CONTINUE` 且重新授权后，完成跨重启 Conversation 恢复、第二工程、冲突/去重/性能/
    安全/完整回归、early hidden、Codex/source-only/full-cognition 三臂复验、World Model 成本/复用周期和异步知识沉淀。
 3. `SLICE-003`：正式验收。再次 `CONTINUE` 和重新授权后冻结产品，执行最终隐藏多轮对话、现场 Conversation、三臂、价值、安全和 Reflection。
@@ -209,10 +231,16 @@ Engineering Conversation Contract 和本 Proposal 的 A1—A6 组合定义。旧
 
 ## Verification and acceptance
 
-Slice1 的历史 deterministic/Web 证据保留但不证明 Chat。PDR-004 返工以从未执行的 `V-ALPHA-ACCESS-001` PDR-004 修订版与新
-`V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001` 证明启动、消息历史、新对话、Turn 故障隔离和 recovery 纪律；Access 不能替代质量。首次方向 live canary 本身就是
-`V-CHAT-001` 的五轮脚本和新对话负测，同时每轮进入 `V-CHAT-QUALITY-001`：重大错误为 0、重要结论有 Citation、纠正真实更新 context、prior Answer 不作事实、新对话不泄漏。用户在真实
-Chat 后先取得可操作体验，再运行 `V-COMP-ALPHA-001` 小样本三臂方向比较并裁决方向。
+Slice1 的历史 deterministic/Web 证据保留但不证明 Chat。PDR-005 的 `V-LAYER-ATTRIBUTION-001` 和
+`V-COGNITION-ELIGIBILITY-001` 已分别由 `ITER-010-RESULT-V-LAYER-ATTRIBUTION-001` 与
+`ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001` 以外部调用 0 PASS；已通过的 `V-ALPHA-ACCESS-001` 直接复用。首次方向体验由 `V-TIMEBOX-CHAT-001/
+V-CHAT-EXPERIENCE-001/V-CHAT-001` 验证一条至少三 Turn 的真实语义链、两个未参与修复的异质问题和新对话负测；每轮进入
+`V-CHAT-QUALITY-001`，要求重大错误与 Reviewer 重大漏判均为 0、重要结论有 Citation、纠正真实更新 Context、prior Answer 不作事实且
+新对话不泄漏。完整五轮套件、full regression 和 hardening 只有用户在该体验后决定 `CONTINUE` 才解锁。
+
+随后运行 `V-COMP-ALPHA-001`：先比较 same-agent source-only 与 same-agent eligible-cognition + source，再隔离 current Codex 强基线。
+Codex 不是 Oracle 或 Reviewer。下方 A1—A6 表是既有授权的不可变假设目录，其中 `full-cognition` 是兼容标签；PDR-005 的当前执行含义必须是
+已经通过 `V-COGNITION-ELIGIBILITY-001` 的工程认知，不得把 Maven-only Structure Profile 当成完整认知。
 
 Slice2 运行第二工程 5+2 early canary、三臂同题复验、建模成本/复用周期、性能、安全和完整回归。比较分为两类：对 current Codex 的
 外部产品比较保留其实际客户端、model、reasoning、tools 和权限，只固定 exact revision、Conversation 脚本、可比较输出和 rubric；Codex 不是 Oracle 或裁判。World Model
@@ -223,7 +251,8 @@ Slice2 运行第二工程 5+2 early canary、三臂同题复验、建模成本/�
 
 ## Authorization decision
 
-**ACCEPTED PROPOSAL / PDR-004 REVISION / ITERATION AUTHORIZED / SLICE1 CODING INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
+**ACCEPTED PROPOSAL / PDR-004 AUTHORIZATION BASELINE / PDR-005 CURRENT EXECUTION AMENDMENT / ITERATION AUTHORIZED / SLICE1 CODING
+INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受本 Proposal 与 Readiness，并曾授权 `ITER-010-SLICE-001` 成为产品编码输入。该历史授权基于已冻结的 planning commit
 `01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`。
@@ -244,3 +273,6 @@ Slice1 编码权威。用户现以
 `30e437eea83e048e3fb59ddd90a8d1b76242d82c` 的刷新 Readiness，并授权 `ITER-010-SLICE-001` 产品/System 编码与本地确定性验证。
 该收据不授权 Provider/model、动态源码披露、live browser、hidden、Slice2/3 或 Production；后续 `7256a886…` 仅补充 exact
 `cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。其余外部执行权限保持未授权。
+
+PDR-005 只修正当前执行入口与验证顺序，不扩大上述权限。开发可在全新的“开发 ITER-010”对话中从 PDR-005 Gate 直接接手；换对话不要求
+另建 Slice 或重新申请相同的本地编码权限，后续若确需改变交付边界才按治理流程另建并授权 Slice。

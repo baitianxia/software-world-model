@@ -74,7 +74,7 @@ binding；正文中仅仅出现相关 ID 不算绑定证据。
 冻结关键方案假设与反证
   → 实现最小可持续体验 Alpha
   → 独立技术复核 + 用户实际体验：CONTINUE / REWORK / REDIRECT / REJECT
-  ↘ REWORK：暂停 → 同一 Slice 通用修复 → 重新授权 → 重新体验
+  ↘ REWORK：保留失败证据 → 同一 Slice 持续通用修复 → 新增权限即时申请 → 重新体验
   → CONTINUE 后工程夯实
   → 正式 Web / hidden canary / 对照验收
   → ACCEPT / REWORK / REDIRECT / REJECT
@@ -87,18 +87,21 @@ Secret、授权和失败真实性边界始终生效。完整能力矩阵、全�
 
 从 `ITER-012` 起，Manifest 必须冻结 `EXPERIENCE_FIRST_DELIVERY@1`；ITER-010 只有显式写入该 policy 时才 opt in。其计时从当前 Slice
 授权后的第一次产品代码变更开始：60 分钟页面可启动、180 分钟持续 Alpha 可由用户连续操作；240 分钟尚未达到时硬停止新功能、
-hardening 与外部调用，密封 Result 并作缩围/恢复决定。首次体验前只运行启动、安全、失败真实性、一次 current Provider 资格确认和
+hardening、full regression 与无新证据的外部重复调用，密封 Result 并缩围，但继续本地根因归因和最小体验纵切。该 hard stop 结束失控
+路径而非整个开发目标。首次体验前只运行启动、安全、失败真实性、一次 current Provider 资格确认和
 最多一个 Provider 前本地/Mock Access smoke，不运行 full regression。`V-ALPHA-ACCESS` 与答案质量 Case 必须分离：availability 不等待质量 PASS，hardening 必须等待。
 
 后置采用 policy 时不得改写更早的失败 Result。此类 Result 只能在 Manifest 的 `historical_pre_policy_result_refs` 中以 exact ID 登记，
 仍须作为 paused REWORK 的不可变前提，并且不取得新的体验 PASS；只有恢复授权后产生的 successor Result 才按新 policy 填写完整审计字段。
 
 每个 sealed version 中触发外部 dispatch 的有界用户交互单元计一条 live attempt，单元内部模型/角色调用不重复计数；Chat 按 Turn 计数，不按整段 Conversation 合并。相同 failure
-signature 最多一个 successor retry；连续两次 attempt 没有用户可见增量即停止外部重跑并回到本地诊断。240 分钟和无增量 stop 都发生在
-问题边界，不能中途删除调查、回答、Citation 或独立审核来省 token。
+signature 最多一个 successor retry；连续两次 attempt 没有用户可见增量即停止该签名的外部重跑并回到本地诊断。240 分钟和无增量 stop
+都发生在问题边界，只阻止扩域、hardening 和重复外部运行，不撤销仍有效的本地 Slice 授权；不能中途删除调查、回答、Citation 或独立审核
+来省 token。
 
-诊断必须先找最早偏差：`Source truth → World Model cognition → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer → independent review → Web`。
-没有可证伪 root-cause hypothesis，不得动 Prompt、Schema 或 Contract。任何通用修复先通过本地最小复现和至少两个未参与修复的相邻案例，
+诊断必须先找最早偏差：`Source truth → knowledge construction/admission → cognition projection/query → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer synthesis → independent review → Web`。
+每次另记 downstream guard failure 和 display failure；一题允许有多个故障，但只先修最早有证据的 Owner 层。没有逐层 evidence table 与
+可证伪 root-cause hypothesis，不得动 Prompt、Schema、Tool policy 或 Contract。任何通用修复先通过本地最小复现和至少两个未参与修复的相邻案例，
 然后只用一个有界 live canary 单元；Chat 目标必须使用最小多轮 Conversation，不得以孤立一题代替。同一 failure signature 修复一次仍复现，停止规则堆叠并进入架构职责评审。Alpha 前测试只允许 targeted impact、
 startup、safety；full regression 仅在 Alpha `CONTINUE` 后的 hardening 和正式验收前运行。
 
@@ -107,6 +110,12 @@ Provider route 在 session 前按 `VOLCENGINE_ARK → DEEPSEEK` 预密封并预�
 fallback 从 immutable original interaction input 与 exact cognition 重跑全链，不读取 primary attempt 的中间产物；Chat 还必须携带与当前 Turn 相关的 exact Application-sealed Conversation Context。迟到 primary 只隔离审计。同
 Provider retry 为 0；Application/Source/Security failure 不能触发 fallback。输出/schema 或 Reviewer 拒绝必须按 primary capability failure
 记录，而不是误标为网络不可用。DeepSeek 批量启动优先使用执行时由官方页面重新确认的非高峰窗口；调度和成本只在题目开始前决策。
+
+权限边界采用 just-in-time continuity。Slice 开发授权与 external execution grant 分离：后者缺少、消费、过期或 identity drift 只阻断
+对应 exact action，不能自动把活动 Slice 改成 completed/failed/paused。实现者完成 credential-free preflight 和 exact identity/disclosure
+freeze 后，必须直接调用审批能力或提交一条最小 exact-grant request；不得先问是否申请，也不得只报告“未授权”后退出。批准后在 exact
+scope 内自动继续，不重复确认；等待期间继续所有独立的本地工作。只有 request 已实际发出且安全替代工作穷尽时，才可用
+`WAITING_EXACT_GRANT / IN_PROGRESS` 让出回合。用户明确停止/转向/拒绝或不可绕过的安全禁止仍可终止开发；本规则不授权任何未批准动作。
 
 项目不得连续进行多轮 Prompt、Schema、Contract 或评测优化，却一直没有可供用户操作的真实体验。可供操作是指可重复启动、固定本地
 地址、同一会话连续自由提问、版本和限制可见，且单题失败不会关闭服务；一次性运行器或启动前冻结单题的页面不满足该定义。若目标是
@@ -160,8 +169,10 @@ actual、输入 digest、比较 Case 和独立裁决收据；docs gate 从该 ex
 
 `V-REFLECT-NNN PASS` 只表示复盘完整、证据可审计，不表示产品方案本身 PASS。中间 Slice 只有产品 Gate 全部 PASS、复盘决定为
 `CONTINUE` 且用户再次明确授权时，下一 Slice 才能进入开发；最终 Slice 只有产品 Gate 全部 PASS 且复盘决定为 `ACCEPT` 时，
-才可形成 Iteration Acceptance。`REWORK` 使当前 Slice 进入 `paused / coding_input=false`，只阻止晋级；在新授权后恢复同一 Slice，
-不得新建 Iteration。`REDIRECT` 表示最终目标不变但当前总体方案满足上述转向依据，当前 Iteration 必须按 `rejected` 封存并用新
+才可形成 Iteration Acceptance。`REWORK` 只阻止 PASS 声明、晋级和 hardening；若现有 Slice 授权仍覆盖通用修复，保持
+`authorized / in-progress / coding_input=true` 并持续返工。只有 scope/Owner 变化、用户明确暂停或本地授权失效时才进入
+`paused / coding_input=false`，且实现者应立即申请恢复所需的最小精确权限；恢复同一 Slice，不得新建 Iteration。`REDIRECT` 表示最终目标
+不变但当前总体方案满足上述转向依据，当前 Iteration 必须按 `rejected` 封存并用新
 Proposal 重新选路；
 `REJECT` 表示当前增量不成立且尚无已验证替代。测试 PASS、Web 能打开、代码完成或“没有新 Finding”都不能绕过复盘。
 
@@ -193,8 +204,9 @@ Roadmap 只提供候选。只有 Proposal 被明确接受、Manifest 闭合并�
 Source scope、fresh-task 与答案先密封协议，以及独立盲评协议；不得复制历史 Codex 身份或把 Codex、系统任一方指定为 Oracle/裁判。
 
 同一 Iteration 的累积 Slice 以 Manifest `new_capability_slice_refs` 的顺序推进：执行态必须为“零个或多个 `completed` + 恰好一个
-`authorized/in-progress` + 零个或多个 `proposed`”；修复等待态则为同样的 completed 前缀、恰好一个 `paused` 当前 Slice 和 proposed
-后缀。每个后续 Slice 必须直接依赖前一个；前一个 Slice 的人工 Web/停止 Gate 完成
+`authorized/in-progress` + 零个或多个 `proposed`”；只有 scope/Owner 变化、用户明确暂停或本地授权失效时，修复等待态才使用同样的
+completed 前缀、恰好一个 `paused` 当前 Slice 和 proposed 后缀。external grant pending 不属于该状态，活动 Slice 仍是
+`authorized/in-progress`。每个后续 Slice 必须直接依赖前一个；前一个 Slice 的人工 Web/停止 Gate 完成
 并形成 Result，且方案复盘 Gate 为 PASS、决定为 `CONTINUE` 后，用户再明确授权下一个 Slice，随后才移动
 `project/current.md.active_slice`。后续 Slice 获得授权时，其 `depends_on` 与 Manifest `reflection_prerequisite_result` 还必须绑定
 前一 Slice 的 exact Reflection Result，不能先授权再补复盘证据。可体验 Alpha 以真实可见问题与现场输入尽早判向，不要求
@@ -203,9 +215,10 @@ hidden canary；从 Alpha `CONTINUE` 后的工程夯实 Slice 开始，最终 he
 Slice。完成的 Slice 使用 `historical-development / coding_input: false`，当前 Slice 使用
 `current-development / coding_input: true`，后续 Slice继续保持 proposed。
 
-若某个 Slice 的阻断 Gate 触发，默认把 Iteration 和当前 Slice 标记为 `paused`，把失败尝试以 `failed-preserved` Result 保存，
-`coding_input=false` 且 `project/current.md` 不再指向它。Manifest 的 `rework_result_refs` 保留所有失败尝试；用户用新的明确授权收据后，
-同一 Slice 可以恢复为 `authorized`，不得因修复循环创建新 Iteration。只有正式 `REDIRECT` 或 `REJECT` 才把 Iteration 设为
+若某个 Slice 的阻断 Gate 触发，默认只阻止 PASS、晋级和 hardening，并把失败尝试以 `failed-preserved` Result 保存。现有授权覆盖同 Slice
+修复时保持 `authorized / coding_input=true` 和 `project/current.md` 指针；需要新增权限时直接申请。只有 scope/Owner 变化、用户明确暂停或
+本地授权失效时才标记 `paused / coding_input=false` 并暂时移除指针；新授权后恢复同一 Slice，不得因修复循环创建新 Iteration。Manifest
+的 `rework_result_refs` 保留所有失败尝试。只有正式 `REDIRECT` 或 `REJECT` 才把 Iteration 设为
 `rejected`，失败 Slice 设为 `blocked`，后续 proposed Slice 只保留历史。任何 redirect 都必须建立新 Iteration，重新经过 Proposal、
 Readiness 和用户逐 Slice 授权。
 
@@ -223,7 +236,7 @@ roadmap candidate
   → verification + result
   → findings disposition
   ├→ acceptance → completed
-  ├→ failed attempt → paused → same-Slice reauthorization
+  ├→ failed attempt → active same-Slice REWORK → exact permission requested only when needed
   ├→ stop / evidence-driven redirect → rejected
   └→ pre-execution administrative replacement → superseded
 ```
@@ -269,8 +282,9 @@ Manifest 绑定的每个跨域、正式 Web、隐藏 canary 和现场临时问�
 `<拥有该 Case 的 Slice Result ID>#<case-id>` 绑定不可变执行证据；最终 Product Result 必须依赖并聚合全部 Slice Result，不能改写
 逐 Case Evidence，也不能用 V-000 的 PASS 或汇总计数代替逐项执行。
 只证明本轮新增 Profile/View 的封闭题集通过，或只有旧能力回归而没有跨域组合证据，不得标记为完成的产品进展。结果未显示
-可测增量时，应保留为失败/学习证据并默认把 Iteration/Slice 置为 `paused / REWORK`；只有满足正式转向依据时才判为 `rejected` 并建立
-新 Iteration。执行后的失败不能标为仅用于执行前行政替换的 `superseded`，更不能继续堆叠下一个孤立知识域。
+可测增量时，应保留为失败/学习证据并进入 active same-Slice `REWORK`；只在 scope/Owner 变化、用户明确暂停或授权失效时使用
+`paused`。只有满足正式转向依据时才判为 `rejected` 并建立新 Iteration。执行后的失败不能标为仅用于执行前行政替换的 `superseded`，
+更不能继续堆叠下一个孤立知识域。
 
 从 ITER-005 起，任何声称扩展 Software World Model 建模、查询或问答能力的 Iteration，在标记 completed 前必须把本轮新增
 能力接入同一个产品代码拥有的本机 Web 问答入口，并由人工提交至少一条支持问题和一条边界/Gap 问题。一次性

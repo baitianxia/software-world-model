@@ -3537,6 +3537,147 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-128.md"
   },
   {
+    "id": "FINDING-010-129",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "security",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-129.md"
+  },
+  {
+    "id": "FINDING-010-130",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "interface",
+      "operations",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-130.md"
+  },
+  {
+    "id": "FINDING-010-131",
+    "kind": "implementation-finding",
+    "status": "superseded",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "source",
+      "ai",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-131.md"
+  },
+  {
+    "id": "FINDING-010-132",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "knowledge",
+      "application",
+      "architecture",
+      "product",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-132.md"
+  },
+  {
+    "id": "FINDING-010-133",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "source",
+      "ai",
+      "quality",
+      "interface",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-133.md"
+  },
+  {
+    "id": "FINDING-010-134",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "source",
+      "ai",
+      "quality",
+      "interface",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-134.md"
+  },
+  {
+    "id": "FINDING-010-135",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "knowledge",
+      "application",
+      "source",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-135.md"
+  },
+  {
+    "id": "FINDING-010-136",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "interface",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-136.md"
+  },
+  {
+    "id": "FINDING-010-137",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "project",
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-137.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5280,6 +5421,40 @@
     "path": "docs/project/iterations/iteration-010/decisions/PDR-004-agent-first-conversational-recovery.md"
   },
   {
+    "id": "ITER-010-PDR-005",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai",
+      "interface",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-005-cognition-eligibility-and-layer-attribution-restart.md"
+  },
+  {
+    "id": "ITER-010-PDR-006",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-006-continuous-execution-and-just-in-time-authorization.md"
+  },
+  {
     "id": "ITER-010-PROPOSAL",
     "kind": "iteration-proposal",
     "status": "accepted",
@@ -5337,6 +5512,39 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/results/v-alpha-access-001-browser.md"
+  },
+  {
+    "id": "ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001",
+    "kind": "iteration-result",
+    "status": "passed-local-cognition",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "source",
+      "quality",
+      "interface",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-cognition-eligibility-001.md"
+  },
+  {
+    "id": "ITER-010-RESULT-V-LAYER-ATTRIBUTION-001",
+    "kind": "iteration-result",
+    "status": "passed-diagnostic",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "source",
+      "ai",
+      "quality",
+      "interface",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-layer-attribution-001.md"
   },
   {
     "id": "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009",
@@ -6180,7 +6388,10 @@
     ],
     "derived_from": [
       "FINDING-010-093",
-      "FINDING-010-109"
+      "FINDING-010-109",
+      "FINDING-010-132",
+      "FINDING-010-133",
+      "FINDING-010-136"
     ],
     "path": "docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md"
   },
@@ -6393,7 +6604,10 @@
       "FINDING-010-120",
       "FINDING-010-121",
       "FINDING-010-125",
-      "FINDING-010-128"
+      "FINDING-010-128",
+      "FINDING-010-132",
+      "FINDING-010-133",
+      "FINDING-010-136"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },
@@ -6469,7 +6683,8 @@
       "application"
     ],
     "derived_from": [
-      "DD-APP-KNOWLEDGE-USE"
+      "DD-APP-KNOWLEDGE-USE",
+      "FINDING-010-136"
     ],
     "path": "docs/system/contracts/application/knowledge-use.md"
   },
@@ -6636,7 +6851,9 @@
     "owners": [
       "knowledge"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-010-135"
+    ],
     "path": "docs/system/contracts/knowledge/java-source-semantics.md"
   },
   {

@@ -40,7 +40,7 @@ iteration: ITER-010
 - [FINDING-010-013](FINDING-010-013.md)：冻结前 focused 58/58、docs 389/389 PASS；允许 AF_UNIX 的 full 1108 中 1103 PASS，唯一
   4 FAIL + 1 ERROR 精确属于 `FINDING-008-020`。raw suite 保持 FAIL，只以 exact preserved historical hold gate 继续候选冻结。
 - [FINDING-010-014](FINDING-010-014.md)：`mall` 的现代 Java 源码超出已接受 `JAVA_STATIC_CALL_GRAPH@1` 语法子集；exact Maven
-  Snapshot 可继续最早 Web，但不能替代 `V-XD-001` 要求的 declaration/`CALLS`，该 Gate 保持 blocking。
+  Snapshot 曾继续最早链路验证，但 run-035—042 已反证它足以用于行为问答的旧项目判断；当前由 FINDING-010-132 取代。
 - [FINDING-010-015](FINDING-010-015.md)：首次真实 Web 暴露 live role-progress policy 把合法小写 `search/read/parse` 与错误大写常量
   比较，系统性拒绝所有非 FINISH 调查；已改为 authoritative enum values 并补 initial/verification 回归，旧 candidate/run 保持 FAIL。
 - [FINDING-010-016](FINDING-010-016.md)：第二次真实 Web 的 FINISH 为三个 UNKNOWN 项返回空引用；investigation Schema/Prompt 与共享
@@ -333,5 +333,26 @@ iteration: ITER-010
 - [FINDING-010-128](FINDING-010-128.md)：Primary input v6 让 `allowed_response_kinds` 只列 current SUPPORT/BOUNDARY 实际支持的
   Answer/Limitation，并把已用 query 与未用 locator 直接投影为对应工具参数的 forbidden/allowed exact values；decoder 继续从原 Evidence 与
   action history 重算。相关 Chat contract 84/84 PASS，v6 仍需 fresh 双 Provider Conformance 与新 Live Authority。
+- [FINDING-010-129](FINDING-010-129.md)：exact `3b8d09c…` / `6728a5a…` 的 fresh Ark 与 DeepSeek Conformance 均一次以固定
+  2/2 request、13/13 与 12/12 Case、retry/TLS failure/unknown 0 PASS；资格只允许条件式 run-042，不证明答案质量。
+- [FINDING-010-130](FINDING-010-130.md)：`run-042-chat-alpha` 的 Turn 2/3/4 为 Package-boundary Limitation，Turn 1/5 失败，仍为
+  3/5 / Quality FAIL；43 logical dispatch、retry/unknown 0、private artifact、clean stop 与 Production `NOT_EXECUTED` 已密封，新
+  Conversation clarification/隔离/零 dispatch 继续 PASS；源码存在未调查事实，故这些 Limitation 不是产品质量 PASS。
+- [FINDING-010-131](FINDING-010-131.md)：v7 的 path-relevance query guidance 与 Review materiality 只有字段投影测试，没有逐层归因、
+  真实答案或跨题证据；已作为未接受症状实验由 FINDING-010-133 取代，不再进入 current Contract 或 fresh 双资格重跑。
+- [FINDING-010-132](FINDING-010-132.md)：run-035—042 唯一 World Model input 只有 Maven 模块与依赖；该窄 Profile 本身正确，但对行为、
+  流程、职责、配置和故障问题无工程认知资格。已处置到 ADR-018 与相关 Knowledge/Application/Product/Quality Owner。
+- [FINDING-010-133](FINDING-010-133.md)：run-042 同时存在 Cognition coverage、Agent 调查和 Reviewer 守门故障，v7 不能作为根因修复；
+  已处置到长期逐层归因 Gate，并成为 PDR-005 恢复的第一阻断项。
+- [FINDING-010-134](FINDING-010-134.md)：run-042 的逐 material-fact、六臂离线替换已密封：行为事实 first divergence 是 Knowledge
+  construction/admission；Agent 漏读与 Reviewer 放行/扩域是独立下游故障，Web 无 display first divergence。下一产品修改只进入
+  Knowledge/Application 的多 Profile Manifest、Question Eligibility 与问题相关投影。
+- [FINDING-010-135](FINDING-010-135.md)：普通 parseable Java 超出窄 legacy closure 时不能整包丢弃正向事实；现以完整
+  file/type/member-method disposition manifest 发布同 declaring type、唯一 name+arity 的正向 call-site facts，保持所有不完整 facet、
+  nested executable boundary 和禁止负向推断。
+- [FINDING-010-136](FINDING-010-136.md)：工程认知资格同时绑定原问题 Need 的 dimension 与 versioned query capability，并保留每个
+  Profile 独立 Snapshot/Read Authority；artifact Session `@2` 逐 Profile 固定完整 artifact identity，`@1` 仅保留单 Profile兼容。
+- [FINDING-010-137](FINDING-010-137.md)：缺少 external grant 只阻断对应 exact action，不终止仍获授权的开发；到达权限边界必须先冻结
+  最小 request 并直接申请，批准后自动续跑。timebox/Gate failure 只阻止晋级、扩域和无新证据外部重跑。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

@@ -23,6 +23,8 @@ tests: []
   依赖预先枚举的题型、工程名、问题文本或关键词补丁；
 - 问答能力可以动态分解 Need，并组合已经接受的结构、代码与行为知识；新增知识域必须进入同一查询和回答链，不能形成
   只能单独体验、不能与既有能力组合的孤立 Profile、View 或入口；
+- 工程 Chat 的 Cognition Binding 必须按 exact revision 固定一个或多个 Profile 的能力、Coverage 与 Unknown，并能按当前问题检索直接
+  相关的认知；单个 Profile `COMPLETE`、Maven 模块/依赖图或对每题返回同一整包记录都不能称为通用或完整工程认知；
 - 同一 Conversation 中可以连续追问、指代、纠正、收窄、深入和总结；Application 保存受信 Conversation/Turn/Agent Work State
   Revision，先前答案和模型隐藏状态不自动成为事实，用户纠正不会被旧上下文覆盖；
 - 主工程 Agent 保存用户目标、假设、计划、子任务、观察、证据缺口和完成判断；它根据 World Model/Source Observation 修改计划，而不是
@@ -51,8 +53,10 @@ tests: []
 4. 更新后旧知识不会因局部成功被静默删除；并发失败不会产生部分正式状态。
 5. 从 `ITER-010-PDR-002` 后首个新建产品迭代起，产品价值对照与因果消融必须分开：系统与 current Codex 在相同 exact revision、问题、授权 Source scope、输出约束和盲评量表下比较，
    各自冻结实际模型、reasoning、工具与权限，不强行伪装成同模型或同调用预算；Codex 是强外部基线，不是 Oracle 或裁判。完整 World
-   Model Cognition 与 locator-only/empty 同一主 Agent/工具链的消融才要求相同系统模型、问题、budget、cache 与 evaluator，用于证明世界模型认知的
-   独立质量或非 locator 调查成本增益，并计入建模成本和冻结复用周期。ITER-010 保持其已冻结的现有对照 Gate，不追溯改判。
+   Model Cognition 在消融前必须先机械证明对预提交问题具备多域资格；随后与 locator-only/empty 同一主 Agent/工具链的消融才要求相同
+   系统模型、问题、budget、cache 与 evaluator，用于证明世界模型认知的独立质量或非 locator 调查成本增益，并计入建模成本和冻结复用
+   周期。Maven-structure-only 只能作为窄结构或 locator control，不能冒充 full-cognition arm。ITER-010 保持历史比较事实，但当前恢复 Gate
+   使用上述资格语义。
 6. 主 Agent 在多轮目标守恒、观察驱动重规划、工具选择、对话纠正、证据综合和完成判断上取得资格；资格、有效期和启用范围可机械验证，
    过期、漂移或未知结果安全关闭。
 

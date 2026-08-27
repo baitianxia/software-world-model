@@ -59,6 +59,8 @@ from software_world_model.application_services.engineering_question_answering im
     SourceBroker,
 )
 from software_world_model.application_services.engineering_question_cognition import (
+    CognitionProfileCapability,
+    MultiProfileWorldModelCognitionProjector,
     StructureBundleWorldModelCognitionProjector,
 )
 from software_world_model.application_services.structure_view import (
@@ -68,6 +70,7 @@ from software_world_model.cross_cutting import (
     Digest,
     DomainError,
     ErrorCode,
+    StableId,
     digest_of,
 )
 from software_world_model.infrastructure.file_structure_read_bundle import (
@@ -101,17 +104,20 @@ from .engineering_qa_source import (
 )
 
 
-ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1"
 )
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
+    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@2"
+)
 ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA = (
-    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@1"
+    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@2"
 )
 ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS = (
     "ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE"
 )
 _MAXIMUM_SESSION_CONFIG_BYTES = 1_048_576
-_SESSION_CONFIG_FIELDS = frozenset(
+_SESSION_CONFIG_COMMON_FIELDS = frozenset(
     {
         "schema",
         "product_repository",
@@ -128,9 +134,6 @@ _SESSION_CONFIG_FIELDS = frozenset(
         "build_paths",
         "test_paths",
         "excluded_source_paths",
-        "ordered_envelope",
-        "snapshot_bundles",
-        "cognition_snapshot_id",
         "response_language",
         "session_ref",
         "authorization_message_digest",
@@ -143,6 +146,29 @@ _SESSION_CONFIG_FIELDS = frozenset(
         "maximum_dispatches_per_turn",
         "maximum_total_dispatches_per_provider",
         "known_limitations",
+    }
+)
+_SESSION_CONFIG_V1_FIELDS = _SESSION_CONFIG_COMMON_FIELDS | {
+    "ordered_envelope",
+    "snapshot_bundles",
+    "cognition_snapshot_id",
+}
+_SESSION_CONFIG_V2_FIELDS = _SESSION_CONFIG_COMMON_FIELDS | {
+    "cognition_profiles",
+}
+_COGNITION_PROFILE_FIELDS = frozenset(
+    {
+        "ordinal",
+        "profile_ref",
+        "schema_ref",
+        "source_binding_id",
+        "ordered_envelope",
+        "ordered_bundle_digest",
+        "ordered_file_digest",
+        "snapshot_bundles",
+        "snapshot_bundle_digests",
+        "snapshot_file_digests",
+        "cognition_snapshot_id",
     }
 )
 _PROVIDER_ROUTE_FIELDS = frozenset(
@@ -168,7 +194,23 @@ class EngineeringChatArtifactProviderRouteConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringChatArtifactCognitionProfileConfig:
+    ordinal: int
+    profile_ref: str | None
+    schema_ref: str | None
+    source_binding_id: StableId | None
+    ordered_envelope: str
+    ordered_bundle_digest: Digest | None
+    ordered_file_digest: Digest | None
+    snapshot_bundles: tuple[str, ...]
+    snapshot_bundle_digests: tuple[Digest, ...] | None
+    snapshot_file_digests: tuple[Digest, ...] | None
+    cognition_snapshot_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringChatArtifactSessionConfig:
+    schema: str
     path: Path
     file_digest: Digest
     product_repository: str
@@ -185,9 +227,7 @@ class EngineeringChatArtifactSessionConfig:
     build_paths: tuple[str, ...]
     test_paths: tuple[str, ...]
     excluded_source_paths: tuple[str, ...]
-    ordered_envelope: str
-    snapshot_bundles: tuple[str, ...]
-    cognition_snapshot_id: str | None
+    cognition_profiles: tuple[EngineeringChatArtifactCognitionProfileConfig, ...]
     response_language: str
     session_ref: str
     authorization_message_digest: Digest
@@ -203,15 +243,54 @@ class EngineeringChatArtifactSessionConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class PreparedEngineeringChatCognitionProfileArtifact:
+    ordinal: int
+    profile_ref: str
+    schema_ref: str
+    source_binding_id: StableId
+    snapshot_id: StableId
+    read_authority_digest: Digest
+    ordered_bundle_digest: Digest
+    ordered_file_digest: Digest
+    snapshot_bundle_digests: tuple[Digest, ...]
+    snapshot_file_digests: tuple[Digest, ...]
+
+    def public_status(self) -> dict[str, object]:
+        return {
+            "ordinal": self.ordinal,
+            "profile_ref": self.profile_ref,
+            "schema_ref": self.schema_ref,
+            "source_binding_id": self.source_binding_id.value,
+            "snapshot_id": self.snapshot_id.value,
+            "read_authority_digest": self.read_authority_digest.value,
+            "ordered_bundle_digest": self.ordered_bundle_digest.value,
+            "ordered_file_digest": self.ordered_file_digest.value,
+            "snapshot_bundle_digests": tuple(
+                item.value for item in self.snapshot_bundle_digests
+            ),
+            "snapshot_file_digests": tuple(
+                item.value for item in self.snapshot_file_digests
+            ),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class _LoadedEngineeringChatCognitionProfile:
+    config: EngineeringChatArtifactCognitionProfileConfig
+    view: StructureViewService
+    projector: StructureBundleWorldModelCognitionProjector
+    ordered_file_digest: Digest
+    snapshot_file_digests: tuple[Digest, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class PreparedEngineeringChatArtifactSession:
     runtime: PreparedEngineeringChatSessionRuntime
     session_config: EngineeringChatArtifactSessionConfig
     product_candidate_commit: str
     product_candidate_tree: str
-    ordered_bundle_digest: Digest
-    ordered_file_digest: Digest
-    snapshot_bundle_digests: tuple[Digest, ...]
-    snapshot_file_digests: tuple[Digest, ...]
+    cognition_profiles: tuple[PreparedEngineeringChatCognitionProfileArtifact, ...]
+    world_model_read_authority_digest: Digest
     ark_conformance_result_digest: Digest
     deepseek_conformance_result_digest: Digest
     preparation_digest: Digest
@@ -234,13 +313,11 @@ class PreparedEngineeringChatArtifactSession:
                 self.runtime.fallback_provider_runtime.public_status(),
             ),
             "world_model_artifacts": {
-                "ordered_bundle_digest": self.ordered_bundle_digest.value,
-                "ordered_file_digest": self.ordered_file_digest.value,
-                "snapshot_bundle_digests": tuple(
-                    item.value for item in self.snapshot_bundle_digests
+                "read_authority_digest": (
+                    self.world_model_read_authority_digest.value
                 ),
-                "snapshot_file_digests": tuple(
-                    item.value for item in self.snapshot_file_digests
+                "profiles": tuple(
+                    item.public_status() for item in self.cognition_profiles
                 ),
             },
             "listener_started": False,
@@ -354,15 +431,29 @@ def load_engineering_chat_artifact_session_config(
             ErrorCode.INVALID_ARGUMENT,
             "Engineering Chat artifact session config is not unique-key UTF-8 JSON",
         ) from exc
-    if not isinstance(decoded, Mapping) or set(decoded) != _SESSION_CONFIG_FIELDS:
+    if not isinstance(decoded, Mapping):
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat artifact session config must be an object",
+        )
+    schema = decoded.get("schema")
+    expected_fields = {
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1: (
+            _SESSION_CONFIG_V1_FIELDS
+        ),
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA: (
+            _SESSION_CONFIG_V2_FIELDS
+        ),
+    }.get(schema)
+    if expected_fields is None:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat artifact session config schema is unsupported",
+        )
+    if set(decoded) != expected_fields:
         raise DomainError(
             ErrorCode.INVALID_ARGUMENT,
             "Engineering Chat artifact session config contains missing or unknown fields",
-        )
-    if decoded["schema"] != ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA:
-        raise DomainError(
-            ErrorCode.INVALID_ARGUMENT,
-            "Engineering Chat artifact session config schema is not current",
         )
     routes = _provider_routes(decoded)
     try:
@@ -374,10 +465,9 @@ def load_engineering_chat_artifact_session_config(
             ErrorCode.INVALID_ARGUMENT,
             "Engineering Chat authorization message digest is invalid",
         ) from exc
-    cognition_snapshot_id = decoded["cognition_snapshot_id"]
-    if cognition_snapshot_id is not None:
-        cognition_snapshot_id = _required_text(decoded, "cognition_snapshot_id")
+    cognition_profiles = _cognition_profiles(decoded, schema=schema)
     config = EngineeringChatArtifactSessionConfig(
+        schema=schema,
         path=path,
         file_digest=Digest("sha256:" + sha256(raw).hexdigest()),
         product_repository=_required_absolute_path_text(
@@ -398,13 +488,7 @@ def load_engineering_chat_artifact_session_config(
         excluded_source_paths=_required_text_list(
             decoded, "excluded_source_paths"
         ),
-        ordered_envelope=_required_absolute_path_text(
-            decoded, "ordered_envelope"
-        ),
-        snapshot_bundles=_required_absolute_path_text_list(
-            decoded, "snapshot_bundles"
-        ),
-        cognition_snapshot_id=cognition_snapshot_id,
+        cognition_profiles=cognition_profiles,
         response_language=_required_text(decoded, "response_language"),
         session_ref=_required_text(decoded, "session_ref"),
         authorization_message_digest=authorization_message_digest,
@@ -529,33 +613,64 @@ def prepare_engineering_chat_artifact_session(
         )
 
     store = FileStructureReadBundleStore()
-    ordered_path = _canonical_regular_file(
-        session_config.ordered_envelope,
-        "ordered Structure Read Bundle",
+    loaded_cognition_profiles = tuple(
+        _load_cognition_profile_artifacts(config=item, store=store)
+        for item in session_config.cognition_profiles
     )
-    snapshot_paths = tuple(
-        _canonical_regular_file(path, "Snapshot Structure Read Bundle")
-        for path in session_config.snapshot_bundles
+    projectors = tuple(
+        item.projector for item in loaded_cognition_profiles
     )
-    ordered, ordered_file_digest = store.read_ordered(str(ordered_path))
-    loaded = tuple(store.read_snapshot(str(path)) for path in snapshot_paths)
-    view = StructureViewService(ordered, loaded)
-    snapshot_bundle = _select_cognition_snapshot(
-        loaded=loaded,
-        requested_snapshot_id=session_config.cognition_snapshot_id,
-    )
-    cognition = StructureBundleWorldModelCognitionProjector(
-        view=view,
-        snapshot_bundle=snapshot_bundle,
-    )
-    if (
-        cognition.binding_id != binding_id
-        or cognition.source_revision != repository_revision
-    ):
+    if session_config.schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1:
+        cognition = projectors[0]
+        if cognition.binding_id != binding_id:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "legacy World Model cognition does not bind the Chat Source Binding",
+            )
+        capabilities = (
+            CognitionProfileCapability.from_projector(
+                ordinal=0,
+                projector=cognition,
+            ),
+        )
+    else:
+        cognition = MultiProfileWorldModelCognitionProjector(
+            repository_id=repository_id,
+            binding_id=binding_id,
+            projectors=projectors,
+        )
+        capabilities = cognition.manifest.profiles
+    if cognition.source_revision != repository_revision:
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "published World Model cognition does not bind the Chat Source revision",
         )
+    _require_configured_cognition_profiles(
+        configs=session_config.cognition_profiles,
+        loaded=loaded_cognition_profiles,
+        capabilities=capabilities,
+    )
+    prepared_cognition_profiles = tuple(
+        PreparedEngineeringChatCognitionProfileArtifact(
+            ordinal=capability.ordinal,
+            profile_ref=capability.profile_ref,
+            schema_ref=capability.schema_ref,
+            source_binding_id=capability.source_binding_id,
+            snapshot_id=capability.snapshot_id,
+            read_authority_digest=capability.read_authority_digest,
+            ordered_bundle_digest=capability.ordered_bundle_digest,
+            ordered_file_digest=loaded_profile.ordered_file_digest,
+            snapshot_bundle_digests=(
+                loaded_profile.view.snapshot_bundle_digests
+            ),
+            snapshot_file_digests=loaded_profile.snapshot_file_digests,
+        )
+        for capability, loaded_profile in zip(
+            capabilities,
+            loaded_cognition_profiles,
+            strict=True,
+        )
+    )
 
     ark_route_config, deepseek_route_config = session_config.provider_routes
     ark_provider = VolcengineArkModelConfiguration()
@@ -760,13 +875,11 @@ def prepare_engineering_chat_artifact_session(
         "product_candidate_tree": product_tree,
         "chat_binding_digest": binding.digest.value,
         "evidence_tool_configuration_digest": evidence_tools.digest.value,
-        "ordered_bundle_digest": view.ordered_bundle_digest.value,
-        "ordered_file_digest": ordered_file_digest.value,
-        "snapshot_bundle_digests": tuple(
-            item.value for item in view.snapshot_bundle_digests
+        "world_model_read_authority_digest": (
+            cognition.read_authority_digest.value
         ),
-        "snapshot_file_digests": tuple(
-            item[1].value for item in loaded
+        "cognition_profiles": tuple(
+            item.public_status() for item in prepared_cognition_profiles
         ),
         "ark_conformance_result_digest": ark_qualification.result_digest.value,
         "deepseek_conformance_result_digest": (
@@ -786,14 +899,212 @@ def prepare_engineering_chat_artifact_session(
         session_config=session_config,
         product_candidate_commit=product_commit,
         product_candidate_tree=product_tree,
-        ordered_bundle_digest=view.ordered_bundle_digest,
-        ordered_file_digest=ordered_file_digest,
-        snapshot_bundle_digests=view.snapshot_bundle_digests,
-        snapshot_file_digests=tuple(item[1] for item in loaded),
+        cognition_profiles=prepared_cognition_profiles,
+        world_model_read_authority_digest=cognition.read_authority_digest,
         ark_conformance_result_digest=ark_qualification.result_digest,
         deepseek_conformance_result_digest=deepseek_qualification.result_digest,
         preparation_digest=digest_of(core),
     )
+
+
+def _cognition_profiles(
+    document: Mapping[str, object],
+    *,
+    schema: object,
+) -> tuple[EngineeringChatArtifactCognitionProfileConfig, ...]:
+    if schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1:
+        snapshot_id = document["cognition_snapshot_id"]
+        if snapshot_id is not None:
+            snapshot_id = _required_text(document, "cognition_snapshot_id")
+        return (
+            EngineeringChatArtifactCognitionProfileConfig(
+                ordinal=0,
+                profile_ref=None,
+                schema_ref=None,
+                source_binding_id=None,
+                ordered_envelope=_required_absolute_path_text(
+                    document, "ordered_envelope"
+                ),
+                ordered_bundle_digest=None,
+                ordered_file_digest=None,
+                snapshot_bundles=_required_absolute_path_text_list(
+                    document, "snapshot_bundles"
+                ),
+                snapshot_bundle_digests=None,
+                snapshot_file_digests=None,
+                cognition_snapshot_id=snapshot_id,
+            ),
+        )
+
+    value = document.get("cognition_profiles")
+    if not isinstance(value, list) or not 1 <= len(value) <= 16:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat artifact session requires one to 16 cognition Profiles",
+        )
+    profiles: list[EngineeringChatArtifactCognitionProfileConfig] = []
+    artifact_paths: list[str] = []
+    for ordinal, item in enumerate(value):
+        if not isinstance(item, Mapping) or set(item) != _COGNITION_PROFILE_FIELDS:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Chat cognition Profile contains missing or unknown fields",
+            )
+        if type(item.get("ordinal")) is not int or item.get("ordinal") != ordinal:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Chat cognition Profiles are not in exact zero-based order",
+            )
+        source_binding_id = _stable_id(
+            _required_text(item, "source_binding_id"),
+            "cognition Profile Source Binding ID",
+        )
+        if source_binding_id.kind != "binding":
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Chat cognition Profile Source Binding ID is not typed",
+            )
+        snapshot_bundles = _required_absolute_path_text_list(
+            item, "snapshot_bundles"
+        )
+        snapshot_bundle_digests = _required_digest_list(
+            item, "snapshot_bundle_digests"
+        )
+        snapshot_file_digests = _required_digest_list(
+            item, "snapshot_file_digests"
+        )
+        if not (
+            len(snapshot_bundles)
+            == len(snapshot_bundle_digests)
+            == len(snapshot_file_digests)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Chat cognition Profile Snapshot manifests differ in length",
+            )
+        ordered_envelope = _required_absolute_path_text(
+            item, "ordered_envelope"
+        )
+        artifact_paths.extend((ordered_envelope, *snapshot_bundles))
+        profiles.append(
+            EngineeringChatArtifactCognitionProfileConfig(
+                ordinal=ordinal,
+                profile_ref=_required_text(item, "profile_ref"),
+                schema_ref=_required_text(item, "schema_ref"),
+                source_binding_id=source_binding_id,
+                ordered_envelope=ordered_envelope,
+                ordered_bundle_digest=_required_digest(
+                    item, "ordered_bundle_digest"
+                ),
+                ordered_file_digest=_required_digest(
+                    item, "ordered_file_digest"
+                ),
+                snapshot_bundles=snapshot_bundles,
+                snapshot_bundle_digests=snapshot_bundle_digests,
+                snapshot_file_digests=snapshot_file_digests,
+                cognition_snapshot_id=_required_text(
+                    item, "cognition_snapshot_id"
+                ),
+            )
+        )
+    if (
+        len({item.profile_ref for item in profiles}) != len(profiles)
+        or len(artifact_paths) != len(set(artifact_paths))
+        or len({item.cognition_snapshot_id for item in profiles})
+        != len(profiles)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat cognition Profile identities or artifacts are duplicated",
+        )
+    return tuple(profiles)
+
+
+def _load_cognition_profile_artifacts(
+    *,
+    config: EngineeringChatArtifactCognitionProfileConfig,
+    store: FileStructureReadBundleStore,
+) -> _LoadedEngineeringChatCognitionProfile:
+    ordered_path = _canonical_regular_file(
+        config.ordered_envelope,
+        "ordered Structure Read Bundle",
+    )
+    snapshot_paths = tuple(
+        _canonical_regular_file(path, "Snapshot Structure Read Bundle")
+        for path in config.snapshot_bundles
+    )
+    ordered, ordered_file_digest = store.read_ordered(str(ordered_path))
+    loaded = tuple(store.read_snapshot(str(path)) for path in snapshot_paths)
+    view = StructureViewService(ordered, loaded)
+    snapshot_bundle = _select_cognition_snapshot(
+        loaded=loaded,
+        requested_snapshot_id=config.cognition_snapshot_id,
+    )
+    projector = StructureBundleWorldModelCognitionProjector(
+        view=view,
+        snapshot_bundle=snapshot_bundle,
+    )
+    snapshot_file_digests = tuple(item[1] for item in loaded)
+    if (
+        config.ordered_bundle_digest is not None
+        and (
+            view.ordered_bundle_digest != config.ordered_bundle_digest
+            or ordered_file_digest != config.ordered_file_digest
+            or view.snapshot_bundle_digests
+            != config.snapshot_bundle_digests
+            or snapshot_file_digests != config.snapshot_file_digests
+        )
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat cognition Profile artifact digests drifted",
+        )
+    return _LoadedEngineeringChatCognitionProfile(
+        config=config,
+        view=view,
+        projector=projector,
+        ordered_file_digest=ordered_file_digest,
+        snapshot_file_digests=snapshot_file_digests,
+    )
+
+
+def _require_configured_cognition_profiles(
+    *,
+    configs: Sequence[EngineeringChatArtifactCognitionProfileConfig],
+    loaded: Sequence[_LoadedEngineeringChatCognitionProfile],
+    capabilities: Sequence[CognitionProfileCapability],
+) -> None:
+    if not (len(configs) == len(loaded) == len(capabilities)):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat cognition Profile counts drifted",
+        )
+    for config, loaded_profile, capability in zip(
+        configs, loaded, capabilities, strict=True
+    ):
+        if (
+            capability.ordinal != config.ordinal
+            or capability.snapshot_id
+            != loaded_profile.projector.snapshot_bundle.snapshot_id
+            or capability.snapshot_bundle_digest
+            != loaded_profile.projector.snapshot_bundle.digest
+            or capability.read_authority_digest
+            != loaded_profile.projector.read_authority_digest
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Chat cognition Profile authority drifted while composing",
+            )
+        if config.profile_ref is not None and (
+            capability.profile_ref != config.profile_ref
+            or capability.schema_ref != config.schema_ref
+            or capability.source_binding_id != config.source_binding_id
+            or capability.snapshot_id.value != config.cognition_snapshot_id
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Chat cognition Profile identity differs from Session authority",
+            )
 
 
 def _provider_routes(
@@ -1034,6 +1345,31 @@ def _required_absolute_path_text_list(
     return values
 
 
+def _required_digest(
+    document: Mapping[str, object], field: str
+) -> Digest:
+    try:
+        return Digest(_required_text(document, field))
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"Engineering Chat artifact session field {field} is not a digest",
+        ) from exc
+
+
+def _required_digest_list(
+    document: Mapping[str, object], field: str
+) -> tuple[Digest, ...]:
+    values = _required_text_list(document, field)
+    try:
+        return tuple(Digest(item) for item in values)
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"Engineering Chat artifact session field {field} contains an invalid digest",
+        ) from exc
+
+
 def _required_positive_int(document: Mapping[str, object], field: str) -> int:
     value = document.get(field)
     if type(value) is not int or value < 1:
@@ -1087,11 +1423,14 @@ def _time(value: datetime) -> str:
 
 __all__ = [
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS",
+    "EngineeringChatArtifactCognitionProfileConfig",
     "EngineeringChatArtifactProviderRouteConfig",
     "EngineeringChatArtifactSessionConfig",
     "PreparedEngineeringChatArtifactSession",
+    "PreparedEngineeringChatCognitionProfileArtifact",
     "load_engineering_chat_artifact_session_config",
     "prepare_engineering_chat_artifact_session",
 ]

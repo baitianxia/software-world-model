@@ -250,6 +250,48 @@ class _ParsedType:
 
 
 @dataclass(frozen=True, slots=True)
+class _PartialParsedMethod:
+    declaring_type: str
+    name: str
+    parameter_types: tuple[str, ...]
+    parameters: tuple[_ParsedParameter, ...]
+    return_type: str
+    visibility: str
+    modifiers: tuple[str, ...]
+    source_path: str
+    declaration_ordinal: int
+    header_start: int
+    header_end: int
+    body: Node | None
+
+    @property
+    def signature(self) -> str:
+        return (
+            f"{self.declaring_type}#{self.name}"
+            f"({','.join(self.parameter_types)})"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _PartialParsedType:
+    qualified_name: str
+    simple_name: str
+    package_name: str
+    declaration_kind: str
+    source_path: str
+    header_start: int
+    header_end: int
+    imports: tuple[tuple[str, str], ...]
+    methods: tuple[_PartialParsedMethod, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _PartialCompilationUnit:
+    source_path: str
+    types: tuple[_PartialParsedType, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class _PendingAtom:
     method_signature: str
     kind: JavaImplementationAtomKind
@@ -305,6 +347,20 @@ class _EvaluationState:
         self._validate_input()
 
     def evaluate(self) -> JavaSourceSemanticsEvaluation:
+        try:
+            return self._evaluate_complete_legacy_closure()
+        except JavaSourceSemanticsError as exc:
+            if exc.reason_code not in {
+                "JAVA_CALL_TARGET_UNRESOLVED",
+                "JAVA_LEGACY_CALL_CONSISTENCY_FAILED",
+                "JAVA_LEGACY_DECLARATION_CONSISTENCY_FAILED",
+                "JAVA_SEMANTIC_CONSTRUCT_UNSUPPORTED",
+                "JAVA_TOP_LEVEL_CLASS_REQUIRED",
+            }:
+                raise
+        return self._evaluate_dispositioned_closure()
+
+    def _evaluate_complete_legacy_closure(self) -> JavaSourceSemanticsEvaluation:
         # The accepted ITER-006 evaluator is retained only as an independent
         # consistency facet for declaration keys and exact CALLS.  It is not a
         # parser fallback: tree-sitter parses and validates every source first.
@@ -728,6 +784,685 @@ class _EvaluationState:
             report=report,
             batch=batch,
         )
+
+    def _evaluate_dispositioned_closure(self) -> JavaSourceSemanticsEvaluation:
+        """Publish a complete disposition manifest for parseable common Java.
+
+        The legacy evaluator remains the only producer of ``CALLS``.  This
+        path is used when the exact source closure is outside that deliberately
+        narrow profile.  It preserves declarations and mechanically resolved
+        positive call-site facts, while every affected method remains
+        ``UNSUPPORTED_EXCLUDED`` with incomplete legacy/implementation facets.
+        """
+
+        units = tuple(
+            self._parse_dispositioned_compilation_unit(
+                path, self.source_bytes[path]
+            )
+            for path in sorted(self.source_bytes)
+        )
+        parsed_types: dict[str, _PartialParsedType] = {}
+        parsed_methods: dict[str, _PartialParsedMethod] = {}
+        for unit in units:
+            for parsed_type in unit.types:
+                if parsed_type.qualified_name in parsed_types:
+                    self._fail(
+                        "JAVA_TYPE_DUPLICATE",
+                        "Java source semantics type identity is duplicated",
+                        parsed_type.source_path,
+                    )
+                parsed_types[parsed_type.qualified_name] = parsed_type
+                for method in parsed_type.methods:
+                    if method.signature in parsed_methods:
+                        self._fail(
+                            "JAVA_METHOD_DUPLICATE",
+                            "Java source semantics method signature is duplicated",
+                            method.source_path,
+                        )
+                    parsed_methods[method.signature] = method
+
+        evidence: dict[StableId, StructureEvidence] = {
+            item.evidence_id: item for item in self.tree_evidence
+        }
+        source_files: dict[str, EntityRecord] = {}
+        for path in sorted(self.source_bytes):
+            support = self._evidence(
+                path, 0, len(self.source_bytes[path]), "java-source-file"
+            )
+            evidence[support.evidence_id] = support
+            root = EntityRoot.java_source_file(
+                owning_scope_id=self.scope_id,
+                source_path=path,
+            )
+            source_files[path] = EntityRecord(
+                root,
+                EntityState.create(
+                    root=root,
+                    state_payload_fields={
+                        "source_revision": self.source_revision,
+                        "disposition": JavaSemanticDisposition.UNSUPPORTED_EXCLUDED,
+                        "evidence_references": (support.evidence_id,),
+                    },
+                ),
+            )
+
+        types: dict[str, EntityRecord] = {}
+        for qualified_name, parsed in sorted(parsed_types.items()):
+            support = self._evidence(
+                parsed.source_path,
+                parsed.header_start,
+                parsed.header_end,
+                "java-source-semantics-type-declaration",
+            )
+            evidence[support.evidence_id] = support
+            root = EntityRoot.java_type(
+                owning_scope_id=self.scope_id,
+                qualified_name=qualified_name,
+            )
+            types[qualified_name] = EntityRecord(
+                root,
+                EntityState.create(
+                    root=root,
+                    state_payload_fields={
+                        "simple_name": parsed.simple_name,
+                        "package_name": parsed.package_name,
+                        "declaration_kind": parsed.declaration_kind,
+                        "source_path": parsed.source_path,
+                        "source_revision": self.source_revision,
+                        "evidence_references": (support.evidence_id,),
+                        "disposition": JavaSemanticDisposition.UNSUPPORTED_EXCLUDED,
+                    },
+                ),
+            )
+
+        methods: dict[str, EntityRecord] = {}
+        method_support: dict[str, StableId] = {}
+        for signature, parsed in sorted(parsed_methods.items()):
+            support = self._evidence(
+                parsed.source_path,
+                parsed.header_start,
+                parsed.header_end,
+                "java-source-semantics-method-declaration",
+            )
+            evidence[support.evidence_id] = support
+            method_support[signature] = support.evidence_id
+            root = EntityRoot.java_method(
+                owning_scope_id=self.scope_id,
+                declaring_type_qualified_name=parsed.declaring_type,
+                method_name=parsed.name,
+                parameter_types=parsed.parameter_types,
+            )
+            methods[signature] = EntityRecord(
+                root,
+                EntityState.create(
+                    root=root,
+                    state_payload_fields={
+                        "return_type": parsed.return_type,
+                        "visibility": parsed.visibility,
+                        "modifiers": parsed.modifiers,
+                        "source_path": parsed.source_path,
+                        "source_revision": self.source_revision,
+                        "evidence_references": (support.evidence_id,),
+                        "method_disposition": (
+                            JavaSemanticDisposition.UNSUPPORTED_EXCLUDED
+                        ),
+                        "declaration_completeness": (
+                            JavaSemanticFacetCompleteness.COMPLETE
+                        ),
+                        "legacy_static_call_completeness": (
+                            JavaSemanticFacetCompleteness.INCOMPLETE
+                        ),
+                        "implementation_semantics_completeness": (
+                            JavaSemanticFacetCompleteness.INCOMPLETE
+                        ),
+                    },
+                ),
+            )
+
+        relations: list[RelationFactRecord] = []
+        for qualified_name, parsed_type in sorted(parsed_types.items()):
+            owner = types[qualified_name]
+            for method in parsed_type.methods:
+                relations.append(
+                    self._relation(
+                        subject=owner,
+                        predicate=RelationPredicate.DECLARES_METHOD,
+                        object_=methods[method.signature],
+                        modality=ObservationModality.JAVA_SOURCE_DECLARATION,
+                        evidence_references=(method_support[method.signature],),
+                        predicate_payload={
+                            "declaration_ordinal": method.declaration_ordinal
+                        },
+                    )
+                )
+
+        pending_atoms = {
+            signature: self._project_dispositioned_calls(
+                parsed,
+                methods=methods,
+            )
+            for signature, parsed in sorted(parsed_methods.items())
+        }
+        atoms: dict[tuple[str, int], EntityRecord] = {}
+        atom_evidence: dict[tuple[str, int], StructureEvidence] = {}
+        for signature, pending_values in pending_atoms.items():
+            for pending in pending_values:
+                support = self._evidence(
+                    parsed_methods[signature].source_path,
+                    pending.byte_start,
+                    pending.byte_end,
+                    pending.evidence_kind,
+                )
+                evidence[support.evidence_id] = support
+                atom_evidence[(signature, pending.ordinal)] = support
+                target_signature = pending.referenced_signatures[0]
+                target = methods[target_signature]
+                root = EntityRoot.java_implementation_atom(
+                    owning_scope_id=self.scope_id,
+                    method_entity_root_id=methods[signature].root_id,
+                    atom_kind=pending.kind,
+                    structural_ordinal=pending.ordinal,
+                )
+                atoms[(signature, pending.ordinal)] = EntityRecord(
+                    root,
+                    EntityState.create(
+                        root=root,
+                        state_payload_fields={
+                            "source_revision": self.source_revision,
+                            "source_order_ordinal": pending.ordinal,
+                            "semantic_form": pending.semantic_form,
+                            "operator": pending.operator,
+                            "value_category": pending.value_category,
+                            "semantic_operands": (
+                                {
+                                    "kind": JavaSemanticOperandKind.ENTITY_REF.value,
+                                    "value": target.root_id,
+                                },
+                            ),
+                            "referenced_entity_root_ids": (target.root_id,),
+                            "method_disposition": (
+                                JavaSemanticDisposition.UNSUPPORTED_EXCLUDED
+                            ),
+                            "evidence_references": (support.evidence_id,),
+                        },
+                    ),
+                )
+
+        for signature, pending_values in sorted(pending_atoms.items()):
+            method = methods[signature]
+            for pending in pending_values:
+                atom = atoms[(signature, pending.ordinal)]
+                support_id = atom_evidence[(signature, pending.ordinal)].evidence_id
+                target = methods[pending.referenced_signatures[0]]
+                relations.extend(
+                    (
+                        self._relation(
+                            subject=method,
+                            predicate=RelationPredicate.HAS_IMPLEMENTATION_ATOM,
+                            object_=atom,
+                            modality=(
+                                ObservationModality.JAVA_SOURCE_IMPLEMENTATION_MEMBERSHIP
+                            ),
+                            evidence_references=(support_id,),
+                            predicate_payload={
+                                "source_order_ordinal": pending.ordinal
+                            },
+                        ),
+                        self._relation(
+                            subject=atom,
+                            predicate=RelationPredicate.CALL_SITE_TARGETS,
+                            object_=target,
+                            modality=ObservationModality.JAVA_SOURCE_CALL_SITE_TARGET,
+                            evidence_references=(support_id,),
+                            predicate_payload={
+                                "resolution_class": (
+                                    JavaCallResolutionClass.LEGACY_EXACT_STATIC_DIRECT
+                                )
+                            },
+                        ),
+                    )
+                )
+            for current, following in zip(pending_values, pending_values[1:]):
+                support_id = atom_evidence[
+                    (signature, following.ordinal)
+                ].evidence_id
+                relations.append(
+                    self._relation(
+                        subject=atoms[(signature, current.ordinal)],
+                        predicate=RelationPredicate.NEXT_IN_SOURCE,
+                        object_=atoms[(signature, following.ordinal)],
+                        modality=ObservationModality.JAVA_SOURCE_ORDER,
+                        evidence_references=(support_id,),
+                        predicate_payload={"source_order_distance": 1},
+                    )
+                )
+
+        source_file_records = tuple(source_files[key] for key in sorted(source_files))
+        type_records = tuple(types[key] for key in sorted(types))
+        method_records = tuple(methods[key] for key in sorted(methods))
+        atom_records = tuple(
+            atoms[key]
+            for key in sorted(atoms, key=lambda item: (item[0], item[1]))
+        )
+        relation_records = tuple(
+            sorted(
+                relations,
+                key=lambda item: (
+                    item.root.predicate.value,
+                    item.root.subject.entity_root_id.value,
+                    item.root.object.entity_root_id.value,
+                    item.root.observation_modality.value,
+                ),
+            )
+        )
+        entities = (
+            *source_file_records,
+            *type_records,
+            *method_records,
+            *atom_records,
+        )
+        manifest = CompleteMemberManifest.create(
+            tuple(item.coverage_member for item in entities)
+            + tuple(item.coverage_member for item in relation_records)
+        )
+        evidence_tuple = tuple(
+            sorted(evidence.values(), key=lambda item: item.evidence_id.value)
+        )
+        coverage = self._coverage(
+            manifest,
+            tuple(item.evidence_id for item in evidence_tuple),
+        )
+        batch = StructureKnowledgeBatch.admit(
+            evidence=evidence_tuple,
+            entities=entities,
+            relation_facts=relation_records,
+            coverage=coverage,
+            publication_mode=PublicationMode.REPLACE_COVERAGE,
+        )
+        report = JavaSourceSemanticsBuildReport(
+            complete=True,
+            source_revision=self.source_revision,
+            source_root=self.source_root,
+            schema_ref=SCHEMA_REF,
+            schema_digest=SCHEMA_DIGEST,
+            frontend_ref=FRONTEND_REF,
+            frontend_digest=FRONTEND_DIGEST,
+            language_abi=self.language.abi_version,
+            evaluation_context_ref=EVALUATION_CONTEXT_REF,
+            evaluation_context_digest=EVALUATION_CONTEXT_DIGEST,
+            canonicalization_ref=CANONICALIZATION_REF,
+            canonicalization_digest=CANONICALIZATION_DIGEST,
+            source_file_count=len(source_file_records),
+            type_count=len(type_records),
+            method_count=len(method_records),
+            state_slot_count=0,
+            implementation_atom_count=len(atom_records),
+            declaration_count=sum(
+                item.root.predicate is RelationPredicate.DECLARES_METHOD
+                for item in relation_records
+            ),
+            legacy_call_relation_count=0,
+            legacy_call_site_count=0,
+        )
+        return JavaSourceSemanticsEvaluation(
+            source_files=source_file_records,
+            types=type_records,
+            methods=method_records,
+            state_slots=(),
+            implementation_atoms=atom_records,
+            relations=relation_records,
+            coverage=coverage,
+            complete_member_manifest=manifest,
+            evidence=evidence_tuple,
+            report=report,
+            batch=batch,
+        )
+
+    def _parse_dispositioned_compilation_unit(
+        self, path: str, payload: bytes
+    ) -> _PartialCompilationUnit:
+        tree = self.parser.parse(payload)
+        if tree.root_node.has_error:
+            error = _first_error(tree.root_node)
+            self._fail(
+                "JAVA_FRONTEND_PARSE_ERROR",
+                "tree-sitter Java reported a parse or missing-node error",
+                _node_locator(path, error),
+            )
+        if tree.root_node.start_byte != 0 or tree.root_node.end_byte != len(payload):
+            self._fail(
+                "JAVA_FRONTEND_RANGE_INVALID",
+                "tree-sitter root byte range does not cover the exact source",
+                path,
+            )
+        package_name = ""
+        imports: dict[str, str] = {}
+        type_nodes: list[Node] = []
+        supported_types = {
+            "annotation_type_declaration",
+            "class_declaration",
+            "enum_declaration",
+            "interface_declaration",
+            "record_declaration",
+        }
+        for node in tree.root_node.named_children:
+            if node.type == "package_declaration":
+                name = next(
+                    (
+                        item
+                        for item in node.named_children
+                        if item.type in {"scoped_identifier", "identifier"}
+                    ),
+                    None,
+                )
+                if name is None:
+                    self._fail(
+                        "JAVA_SEMANTIC_PROJECTION_FAILED",
+                        "parseable package declaration has no canonical name",
+                        _node_locator(path, node),
+                    )
+                package_name = _node_text(payload, name)
+            elif node.type == "import_declaration":
+                raw = _node_text(payload, node)
+                if raw.startswith("import static ") or "*" in raw:
+                    continue
+                name = next(
+                    (
+                        item
+                        for item in node.named_children
+                        if item.type in {"scoped_identifier", "identifier"}
+                    ),
+                    None,
+                )
+                if name is not None:
+                    imported = _node_text(payload, name)
+                    simple = imported.rsplit(".", 1)[-1]
+                    if simple not in imports:
+                        imports[simple] = imported
+                    elif imports[simple] != imported:
+                        imports.pop(simple, None)
+            elif node.type in supported_types:
+                type_nodes.append(node)
+        expected_parent = PurePosixPath(path).relative_to(self.source_root).parent
+        expected_package = (
+            "" if str(expected_parent) == "." else ".".join(expected_parent.parts)
+        )
+        if package_name != expected_package:
+            self._fail(
+                "JAVA_PACKAGE_PATH_MISMATCH",
+                "Java package differs from its source-root-relative path",
+                path,
+            )
+        parsed: list[_PartialParsedType] = []
+        for node in type_nodes:
+            parsed.extend(
+                self._parse_dispositioned_type(
+                    node,
+                    payload,
+                    path=path,
+                    package_name=package_name,
+                    imports=imports,
+                    enclosing_type=None,
+                )
+            )
+        return _PartialCompilationUnit(source_path=path, types=tuple(parsed))
+
+    def _parse_dispositioned_type(
+        self,
+        node: Node,
+        payload: bytes,
+        *,
+        path: str,
+        package_name: str,
+        imports: Mapping[str, str],
+        enclosing_type: str | None,
+    ) -> tuple[_PartialParsedType, ...]:
+        name_node = node.child_by_field_name("name")
+        body_node = node.child_by_field_name("body")
+        if name_node is None or body_node is None:
+            self._fail(
+                "JAVA_SEMANTIC_PROJECTION_FAILED",
+                "parseable Java type has no canonical name or body",
+                _node_locator(path, node),
+            )
+        simple_name = _node_text(payload, name_node)
+        local_name = (
+            simple_name
+            if enclosing_type is None
+            else f"{enclosing_type}.{simple_name}"
+        )
+        qualified_name = (
+            f"{package_name}.{local_name}" if package_name else local_name
+        )
+        kind = {
+            "annotation_type_declaration": "ANNOTATION",
+            "class_declaration": "CLASS",
+            "enum_declaration": "ENUM",
+            "interface_declaration": "INTERFACE",
+            "record_declaration": "RECORD",
+        }[node.type]
+        methods: list[_PartialParsedMethod] = []
+        nested: list[_PartialParsedType] = []
+        nested_types = {
+            "annotation_type_declaration",
+            "class_declaration",
+            "enum_declaration",
+            "interface_declaration",
+            "record_declaration",
+        }
+        for child in _direct_type_members(body_node):
+            if child.type == "method_declaration":
+                methods.append(
+                    self._parse_dispositioned_method(
+                        child,
+                        payload,
+                        path=path,
+                        declaring_type=qualified_name,
+                        imports=imports,
+                        declaration_ordinal=len(methods),
+                    )
+                )
+            elif child.type in nested_types:
+                nested.extend(
+                    self._parse_dispositioned_type(
+                        child,
+                        payload,
+                        path=path,
+                        package_name=package_name,
+                        imports=imports,
+                        enclosing_type=local_name,
+                    )
+                )
+        current = _PartialParsedType(
+            qualified_name=qualified_name,
+            simple_name=simple_name,
+            package_name=package_name,
+            declaration_kind=kind,
+            source_path=path,
+            header_start=node.start_byte,
+            header_end=body_node.start_byte,
+            imports=tuple(sorted(imports.items())),
+            methods=tuple(methods),
+        )
+        return (current, *nested)
+
+    def _parse_dispositioned_method(
+        self,
+        node: Node,
+        payload: bytes,
+        *,
+        path: str,
+        declaring_type: str,
+        imports: Mapping[str, str],
+        declaration_ordinal: int,
+    ) -> _PartialParsedMethod:
+        name_node = node.child_by_field_name("name")
+        type_node = node.child_by_field_name("type")
+        parameters_node = node.child_by_field_name("parameters")
+        body_node = node.child_by_field_name("body")
+        if name_node is None or type_node is None or parameters_node is None:
+            self._fail(
+                "JAVA_SEMANTIC_PROJECTION_FAILED",
+                "parseable Java method lacks its declaration identity",
+                _node_locator(path, node),
+            )
+        modifiers_node = next(
+            (child for child in node.named_children if child.type == "modifiers"),
+            None,
+        )
+        modifier_text = (
+            "" if modifiers_node is None else _node_text(payload, modifiers_node)
+        )
+        recognized_modifiers = {
+            "abstract",
+            "default",
+            "final",
+            "native",
+            "private",
+            "protected",
+            "public",
+            "static",
+            "strictfp",
+            "synchronized",
+        }
+        modifiers = tuple(
+            sorted(
+                {
+                    token
+                    for token in re.findall(r"[A-Za-z]+", modifier_text)
+                    if token in recognized_modifiers
+                }
+            )
+        )
+        visibility_values = tuple(
+            item for item in modifiers if item in _VISIBILITY
+        )
+        visibility = (
+            visibility_values[0]
+            if len(visibility_values) == 1
+            else "package-private"
+        )
+        parameters: list[_ParsedParameter] = []
+        for child in parameters_node.named_children:
+            if child.type == "receiver_parameter":
+                continue
+            name = child.child_by_field_name("name")
+            declared_type = child.child_by_field_name("type")
+            if name is None or declared_type is None:
+                self._fail(
+                    "JAVA_SEMANTIC_PROJECTION_FAILED",
+                    "parseable Java parameter lacks its declaration identity",
+                    _node_locator(path, child),
+                )
+            canonical_type = _canonical_partial_type(
+                _node_text(payload, declared_type),
+                declaring_type=declaring_type,
+                imports=imports,
+            )
+            if child.type == "spread_parameter":
+                canonical_type += "..."
+            dimensions = child.child_by_field_name("dimensions")
+            if dimensions is not None:
+                canonical_type += re.sub(
+                    r"\s+", "", _node_text(payload, dimensions)
+                )
+            parameters.append(
+                _ParsedParameter(
+                    name=_node_text(payload, name),
+                    declared_type=canonical_type,
+                    ordinal=len(parameters),
+                    byte_start=child.start_byte,
+                    byte_end=child.end_byte,
+                )
+            )
+        return _PartialParsedMethod(
+            declaring_type=declaring_type,
+            name=_node_text(payload, name_node),
+            parameter_types=tuple(item.declared_type for item in parameters),
+            parameters=tuple(parameters),
+            return_type=_canonical_partial_type(
+                _node_text(payload, type_node),
+                declaring_type=declaring_type,
+                imports=imports,
+            ),
+            visibility=visibility,
+            modifiers=modifiers,
+            source_path=path,
+            declaration_ordinal=declaration_ordinal,
+            header_start=node.start_byte,
+            header_end=(body_node.start_byte if body_node is not None else node.end_byte),
+            body=body_node,
+        )
+
+    def _project_dispositioned_calls(
+        self,
+        method: _PartialParsedMethod,
+        *,
+        methods: Mapping[str, EntityRecord],
+    ) -> tuple[_PendingAtom, ...]:
+        if method.body is None:
+            return ()
+        payload = self.source_bytes[method.source_path]
+        by_target: dict[tuple[str, str, int], list[str]] = {}
+        for signature, record in methods.items():
+            fields = record.root.root_fields
+            by_target.setdefault(
+                (
+                    str(fields["declaring_type_qualified_name"]),
+                    str(fields["method_name"]),
+                    len(fields["parameter_types"]),
+                ),
+                [],
+            ).append(signature)
+        candidates: list[tuple[int, int, str]] = []
+        for node in _walk_executable_body(method.body):
+            if node.type != "method_invocation":
+                continue
+            name_node = node.child_by_field_name("name")
+            arguments = node.child_by_field_name("arguments")
+            object_node = node.child_by_field_name("object")
+            if name_node is None or arguments is None:
+                continue
+            name = _node_text(payload, name_node)
+            arity = len(arguments.named_children)
+            owner: str | None
+            if object_node is None or _node_text(payload, object_node) == "this":
+                owner = method.declaring_type
+            else:
+                owner = None
+            if owner is None:
+                continue
+            targets = by_target.get((owner, name, arity), ())
+            if len(targets) != 1:
+                continue
+            candidates.append((node.start_byte, node.end_byte, targets[0]))
+        candidates.sort()
+        pending: list[_PendingAtom] = []
+        for byte_start, byte_end, target in candidates[:64]:
+            target_record = methods[target]
+            category = (
+                JavaValueCategory.VOID
+                if target_record.state.state_payload_fields["return_type"] == "void"
+                else JavaValueCategory.CALL_RESULT
+            )
+            pending.append(
+                _PendingAtom(
+                    method_signature=method.signature,
+                    kind=JavaImplementationAtomKind.CALL_SITE,
+                    ordinal=len(pending),
+                    byte_start=byte_start,
+                    byte_end=byte_end,
+                    evidence_kind="java-source-semantics-positive-call-site",
+                    semantic_form=JavaSemanticForm.STATIC_CALL,
+                    operator=JavaSemanticOperator.DIRECT_CALL,
+                    value_category=category,
+                    operands=(
+                        (JavaSemanticOperandKind.ENTITY_REF, ("method", target)),
+                    ),
+                    referenced_signatures=(target,),
+                )
+            )
+        return tuple(pending)
 
     def _legacy_evaluation(self) -> JavaStaticCallEvaluation:
         try:
@@ -1565,6 +2300,63 @@ def _canonical_type(
     return (f"{package}.{value}" if package else value) + dimensions
 
 
+def _canonical_partial_type(
+    raw: str,
+    *,
+    declaring_type: str,
+    imports: Mapping[str, str],
+) -> str:
+    """Canonicalize a declaration type without claiming semantic support.
+
+    The complete legacy closure continues to use ``_canonical_type``.  The
+    disposition path additionally needs a stable declaration key for generic
+    and wildcard-bearing signatures so those methods are not omitted from the
+    manifest.  Only the outer type is resolved; nested generic arguments remain
+    normalized source identifiers and never become implementation facts.
+    """
+
+    value = re.sub(r"\s+", " ", raw.strip())
+    value = re.sub(r"\s*([<>,?\[\]&])\s*", r"\1", value)
+    if not any(marker in value for marker in ("<", ">", "?", "&", "...")):
+        dimensions = ""
+        while value.endswith("[]"):
+            dimensions += "[]"
+            value = value[:-2]
+        if value in {
+            "boolean",
+            "byte",
+            "char",
+            "double",
+            "float",
+            "int",
+            "long",
+            "short",
+            "void",
+        }:
+            return value + dimensions
+        if value in imports:
+            return imports[value] + dimensions
+        if value in _JAVA_LANG_TYPES:
+            return f"java.lang.{value}{dimensions}"
+        # A simple name may be a same-package type, a type variable, or a type
+        # supplied by a wildcard import.  The disposition path has deliberately
+        # not resolved that namespace, so preserve the normalized declaration
+        # spelling instead of inventing a qualified type identity.
+        return value + dimensions
+    match = re.match(r"^([A-Za-z_$][A-Za-z0-9_$.]*)(.*)$", value)
+    if match is None:
+        return value
+    base, suffix = match.groups()
+    if base in imports:
+        base = imports[base]
+    elif base in _JAVA_LANG_TYPES:
+        base = f"java.lang.{base}"
+    # Unknown simple outer names remain their normalized declaration spelling;
+    # qualifying them relative to the declaring package would be false when a
+    # wildcard import or type parameter owns the name.
+    return base + suffix
+
+
 def _node_text(payload: bytes, node: Node) -> str:
     return payload[node.start_byte:node.end_byte].decode("utf-8")
 
@@ -1586,6 +2378,45 @@ def _walk_named(root: Node):
         node = stack.pop()
         yield node
         stack.extend(reversed(node.named_children))
+
+
+_NESTED_EXECUTABLE_BOUNDARIES = frozenset(
+    {
+        "annotation_type_declaration",
+        "class_body",
+        "class_declaration",
+        "compact_constructor_declaration",
+        "constructor_declaration",
+        "enum_body",
+        "enum_declaration",
+        "interface_declaration",
+        "lambda_expression",
+        "method_declaration",
+        "record_declaration",
+    }
+)
+
+
+def _walk_executable_body(root: Node):
+    """Walk one method body without crossing a nested executable boundary."""
+
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        if node is not root and node.type in _NESTED_EXECUTABLE_BOUNDARIES:
+            continue
+        yield node
+        stack.extend(reversed(node.named_children))
+
+
+def _direct_type_members(body: Node):
+    """Yield direct members, flattening grammar-only enum wrappers."""
+
+    for child in body.named_children:
+        if child.type == "enum_body_declarations":
+            yield from child.named_children
+        else:
+            yield child
 
 
 def methods_by_simple_name(

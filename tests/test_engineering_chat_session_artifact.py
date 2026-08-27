@@ -35,6 +35,7 @@ from software_world_model.cross_cutting import (
 )
 from software_world_model.interface.engineering_chat_session_artifact import (
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
+    ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1,
     ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
     load_engineering_chat_artifact_session_config,
     prepare_engineering_chat_artifact_session,
@@ -93,11 +94,15 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.source.mkdir()
         self.ordered = self.root / "ordered.json"
         self.snapshot = self.root / "snapshot.json"
+        self.java_ordered = self.root / "java-ordered.json"
+        self.java_snapshot = self.root / "java-snapshot.json"
         self.ark_conformance = self.root / "ark-conformance.json"
         self.deepseek_conformance = self.root / "deepseek-conformance.json"
         for path in (
             self.ordered,
             self.snapshot,
+            self.java_ordered,
+            self.java_snapshot,
             self.ark_conformance,
             self.deepseek_conformance,
         ):
@@ -110,7 +115,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
 
     def document(self) -> dict[str, object]:
         return {
-            "schema": ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
+            "schema": ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1,
             "product_repository": str(self.product),
             "product_commit": self.product_commit,
             "product_tree": self.product_tree,
@@ -166,6 +171,54 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             ],
         }
 
+    def document_v2(self) -> dict[str, object]:
+        document = self.document()
+        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        document.pop("ordered_envelope")
+        document.pop("snapshot_bundles")
+        document.pop("cognition_snapshot_id")
+        document["cognition_profiles"] = [
+            {
+                "ordinal": 0,
+                "profile_ref": "MAVEN_STRUCTURE@1",
+                "schema_ref": "MAVEN-STRUCTURE@1.0.0",
+                "source_binding_id": self.binding_id.value,
+                "ordered_envelope": str(self.ordered),
+                "ordered_bundle_digest": digest_of(
+                    "maven-ordered-bundle"
+                ).value,
+                "ordered_file_digest": digest_of("maven-ordered-file").value,
+                "snapshot_bundles": [str(self.snapshot)],
+                "snapshot_bundle_digests": [
+                    digest_of("maven-snapshot-bundle").value
+                ],
+                "snapshot_file_digests": [
+                    digest_of("maven-snapshot-file").value
+                ],
+                "cognition_snapshot_id": "snapshot_" + "3" * 32,
+            },
+            {
+                "ordinal": 1,
+                "profile_ref": "JAVA_SOURCE_SEMANTICS@1",
+                "schema_ref": "JAVA-SOURCE-SEMANTICS@1.0.0",
+                "source_binding_id": "binding_" + "4" * 32,
+                "ordered_envelope": str(self.java_ordered),
+                "ordered_bundle_digest": digest_of(
+                    "java-ordered-bundle"
+                ).value,
+                "ordered_file_digest": digest_of("java-ordered-file").value,
+                "snapshot_bundles": [str(self.java_snapshot)],
+                "snapshot_bundle_digests": [
+                    digest_of("java-snapshot-bundle").value
+                ],
+                "snapshot_file_digests": [
+                    digest_of("java-snapshot-file").value
+                ],
+                "cognition_snapshot_id": "snapshot_" + "5" * 32,
+            },
+        ]
+        return document
+
     def write_config(
         self,
         document: dict[str, object],
@@ -176,6 +229,39 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         path.write_bytes(canonical_json_bytes(document) + b"\n")
         os.chmod(path, 0o600)
         return path
+
+    def provider_qualifications(self):
+        ark_provider = VolcengineArkModelConfiguration()
+        deepseek_provider = DeepSeekModelConfiguration()
+        ark_digest = digest_of("current-ark-conformance")
+        deepseek_digest = digest_of("current-deepseek-conformance")
+        return (
+            ArkChatConformanceQualification(
+                result_ref=(
+                    f"{ARK_CHAT_CONFORMANCE_FIXTURE_ID}:{ark_digest.value}"
+                ),
+                result_digest=ark_digest,
+                qualified_model_fingerprints=(
+                    ark_provider.qualified_model_identities
+                ),
+                adapter_version=ark_provider.adapter_version,
+                provider_configuration_fingerprint=ark_provider.fingerprint,
+                valid_until=datetime.now(timezone.utc) + timedelta(days=1),
+            ),
+            DeepSeekChatConformanceQualification(
+                result_ref=(
+                    f"{DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID}:"
+                    f"{deepseek_digest.value}"
+                ),
+                result_digest=deepseek_digest,
+                qualified_model_fingerprints=(
+                    deepseek_provider.qualified_model_identities
+                ),
+                adapter_version=deepseek_provider.adapter_version,
+                provider_configuration_fingerprint=deepseek_provider.fingerprint,
+                valid_until=datetime.now(timezone.utc) + timedelta(days=1),
+            ),
+        )
 
     def test_loader_requires_private_closed_ordered_route_document(self) -> None:
         path = self.write_config(self.document())
@@ -224,45 +310,54 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         with self.assertRaises(DomainError):
             load_engineering_chat_artifact_session_config(path)
 
+    def test_v2_loader_seals_ordered_multi_profile_artifact_identities(self) -> None:
+        loaded = load_engineering_chat_artifact_session_config(
+            self.write_config(self.document_v2(), name="session-v2.json")
+        )
+
+        self.assertEqual(
+            tuple(item.ordinal for item in loaded.cognition_profiles),
+            (0, 1),
+        )
+        self.assertEqual(
+            tuple(item.profile_ref for item in loaded.cognition_profiles),
+            ("MAVEN_STRUCTURE@1", "JAVA_SOURCE_SEMANTICS@1"),
+        )
+        self.assertNotEqual(
+            loaded.cognition_profiles[0].source_binding_id,
+            loaded.cognition_profiles[1].source_binding_id,
+        )
+
+        reordered = self.document_v2()
+        reordered["cognition_profiles"] = list(
+            reversed(reordered["cognition_profiles"])
+        )
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(reordered, name="v2-reordered.json")
+            )
+
+        unsealed = self.document_v2()
+        unsealed["cognition_profiles"][1]["snapshot_file_digests"] = []
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(unsealed, name="v2-unsealed.json")
+            )
+
     def test_prepare_loads_artifact_identities_without_runtime_io(self) -> None:
         session_config = load_engineering_chat_artifact_session_config(
             self.write_config(self.document())
         )
-        ark_provider = VolcengineArkModelConfiguration()
-        deepseek_provider = DeepSeekModelConfiguration()
-        ark_digest = digest_of("current-ark-conformance")
-        deepseek_digest = digest_of("current-deepseek-conformance")
-        ark_qualification = ArkChatConformanceQualification(
-            result_ref=(
-                f"{ARK_CHAT_CONFORMANCE_FIXTURE_ID}:{ark_digest.value}"
-            ),
-            result_digest=ark_digest,
-            qualified_model_fingerprints=(
-                ark_provider.qualified_model_identities
-            ),
-            adapter_version=ark_provider.adapter_version,
-            provider_configuration_fingerprint=ark_provider.fingerprint,
-            valid_until=datetime.now(timezone.utc) + timedelta(days=1),
-        )
-        deepseek_qualification = DeepSeekChatConformanceQualification(
-            result_ref=(
-                f"{DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID}:"
-                f"{deepseek_digest.value}"
-            ),
-            result_digest=deepseek_digest,
-            qualified_model_fingerprints=(
-                deepseek_provider.qualified_model_identities
-            ),
-            adapter_version=deepseek_provider.adapter_version,
-            provider_configuration_fingerprint=deepseek_provider.fingerprint,
-            valid_until=datetime.now(timezone.utc) + timedelta(days=1),
+        ark_qualification, deepseek_qualification = (
+            self.provider_qualifications()
         )
         ordered_bundle_digest = digest_of("ordered-bundle")
         ordered_file_digest = digest_of("ordered-file")
         snapshot_bundle_digest = digest_of("snapshot-bundle")
         snapshot_file_digest = digest_of("snapshot-file")
         snapshot = SimpleNamespace(
-            snapshot_id=StableId("snapshot_" + "3" * 32)
+            snapshot_id=StableId("snapshot_" + "3" * 32),
+            digest=snapshot_bundle_digest,
         )
         store = SimpleNamespace(
             read_ordered=lambda path: (object(), ordered_file_digest),
@@ -276,6 +371,17 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             binding_id=self.binding_id,
             revision=self.source_revision,
             authority=digest_of("world-model-authority"),
+        )
+        cognition.snapshot_bundle = snapshot
+        capability = SimpleNamespace(
+            ordinal=0,
+            profile_ref="MAVEN_STRUCTURE@1",
+            schema_ref="MAVEN-STRUCTURE@1.0.0",
+            source_binding_id=self.binding_id,
+            snapshot_id=snapshot.snapshot_id,
+            snapshot_bundle_digest=snapshot_bundle_digest,
+            read_authority_digest=cognition.read_authority_digest,
+            ordered_bundle_digest=ordered_bundle_digest,
         )
 
         with (
@@ -302,6 +408,10 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             patch(
                 "software_world_model.interface.engineering_chat_session_artifact.StructureBundleWorldModelCognitionProjector",
                 return_value=cognition,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.CognitionProfileCapability.from_projector",
+                return_value=capability,
             ),
             patch(
                 "software_world_model.interface.engineering_chat_session_artifact.load_ark_chat_conformance_qualification",
@@ -391,6 +501,173 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.assertNotIn("ARK_API_KEY", public)
         self.assertNotIn("DEEPSEEK_API_KEY", public)
         self.assertNotIn("secret_reference", public)
+
+    def test_prepare_v2_composes_two_exact_profile_authorities(self) -> None:
+        document = self.document_v2()
+        session_config = load_engineering_chat_artifact_session_config(
+            self.write_config(document, name="prepare-v2.json")
+        )
+        ark_qualification, deepseek_qualification = (
+            self.provider_qualifications()
+        )
+        profile_documents = document["cognition_profiles"]
+        ordered_bundle_digests = tuple(
+            Digest(item["ordered_bundle_digest"])
+            for item in profile_documents
+        )
+        ordered_file_digests = tuple(
+            Digest(item["ordered_file_digest"])
+            for item in profile_documents
+        )
+        snapshot_bundle_digests = tuple(
+            Digest(item["snapshot_bundle_digests"][0])
+            for item in profile_documents
+        )
+        snapshot_file_digests = tuple(
+            Digest(item["snapshot_file_digests"][0])
+            for item in profile_documents
+        )
+        snapshots = tuple(
+            SimpleNamespace(
+                snapshot_id=StableId(item["cognition_snapshot_id"]),
+                digest=snapshot_bundle_digest,
+            )
+            for item, snapshot_bundle_digest in zip(
+                profile_documents,
+                snapshot_bundle_digests,
+                strict=True,
+            )
+        )
+        ordered_results = iter(
+            (object(), digest) for digest in ordered_file_digests
+        )
+        snapshot_results = iter(
+            zip(snapshots, snapshot_file_digests, strict=True)
+        )
+        store = SimpleNamespace(
+            read_ordered=lambda path: next(ordered_results),
+            read_snapshot=lambda path: next(snapshot_results),
+        )
+        views = tuple(
+            SimpleNamespace(
+                ordered_bundle_digest=ordered_digest,
+                snapshot_bundle_digests=(snapshot_digest,),
+            )
+            for ordered_digest, snapshot_digest in zip(
+                ordered_bundle_digests,
+                snapshot_bundle_digests,
+                strict=True,
+            )
+        )
+        projectors = (
+            _UnusedCognitionProjector(
+                binding_id=self.binding_id,
+                revision=self.source_revision,
+                authority=digest_of("maven-world-model-authority"),
+            ),
+            _UnusedCognitionProjector(
+                binding_id=StableId("binding_" + "4" * 32),
+                revision=self.source_revision,
+                authority=digest_of("java-world-model-authority"),
+            ),
+        )
+        capabilities = []
+        for ordinal, (profile_document, projector, snapshot, ordered_digest) in enumerate(
+            zip(
+                profile_documents,
+                projectors,
+                snapshots,
+                ordered_bundle_digests,
+                strict=True,
+            )
+        ):
+            projector.snapshot_bundle = snapshot
+            capabilities.append(
+                SimpleNamespace(
+                    ordinal=ordinal,
+                    profile_ref=profile_document["profile_ref"],
+                    schema_ref=profile_document["schema_ref"],
+                    source_binding_id=projector.binding_id,
+                    snapshot_id=snapshot.snapshot_id,
+                    snapshot_bundle_digest=snapshot.digest,
+                    read_authority_digest=projector.read_authority_digest,
+                    ordered_bundle_digest=ordered_digest,
+                )
+            )
+        cognition = _UnusedCognitionProjector(
+            binding_id=self.binding_id,
+            revision=self.source_revision,
+            authority=digest_of("multi-profile-manifest"),
+        )
+        cognition.manifest = SimpleNamespace(profiles=tuple(capabilities))
+
+        with (
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact._verify_product_candidate",
+                return_value=(self.product_commit, self.product_tree),
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact._exact_source_revision",
+                return_value=self.source_revision,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.FileStructureReadBundleStore",
+                return_value=store,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.StructureViewService",
+                side_effect=views,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact._select_cognition_snapshot",
+                side_effect=snapshots,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.StructureBundleWorldModelCognitionProjector",
+                side_effect=projectors,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.MultiProfileWorldModelCognitionProjector",
+                return_value=cognition,
+            ) as multi_factory,
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.load_ark_chat_conformance_qualification",
+                return_value=ark_qualification,
+            ),
+            patch(
+                "software_world_model.interface.engineering_chat_session_artifact.load_deepseek_chat_conformance_qualification",
+                return_value=deepseek_qualification,
+            ),
+        ):
+            prepared = prepare_engineering_chat_artifact_session(
+                session_config,
+                ark_gateway_repository=_UnusedModelGatewayRepository(),
+                deepseek_gateway_repository=_UnusedModelGatewayRepository(),
+                at=self.now,
+            )
+        self.addCleanup(
+            prepared.runtime.fallback_provider_runtime.transport.close
+        )
+
+        self.assertEqual(
+            multi_factory.call_args.kwargs["projectors"],
+            projectors,
+        )
+        self.assertEqual(len(prepared.cognition_profiles), 2)
+        self.assertEqual(
+            prepared.world_model_read_authority_digest,
+            cognition.read_authority_digest,
+        )
+        world_model = prepared.public_status()["world_model_artifacts"]
+        self.assertEqual(len(world_model["profiles"]), 2)
+        self.assertEqual(
+            world_model["read_authority_digest"],
+            cognition.read_authority_digest.value,
+        )
+        self.assertEqual(cognition.calls, 0)
+        self.assertEqual(
+            prepared.runtime.launcher.service.provider_dispatch_count(), 0
+        )
 
 
 if __name__ == "__main__":

@@ -5,9 +5,9 @@ status: current
 authority: normative
 owners: [application]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-PERSISTENCE, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-CONTEXT-COMPARISON, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-AI-CAPABILITY-EVALUATION]
-derived_from: [DD-APP-KNOWLEDGE-USE]
-code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/application_services/read_set_catalog.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_read_set_catalog.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/read_set_catalog_cli.py, src/software_world_model/interface/presenters.py]
-tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_maven_workspace.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
+derived_from: [DD-APP-KNOWLEDGE-USE, FINDING-010-136]
+code: [src/software_world_model/application_services/knowledge_use.py, src/software_world_model/application_services/structure_read_session.py, src/software_world_model/application_services/structure_read_bundle.py, src/software_world_model/application_services/read_set_catalog.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/infrastructure/sqlite_knowledge_use_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_session_repository.py, src/software_world_model/infrastructure/sqlite_structure_read_bundle_repository.py, src/software_world_model/infrastructure/sqlite_maven_workspace_repository.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_read_set_catalog.py, src/software_world_model/interface/runtime.py, src/software_world_model/interface/cli.py, src/software_world_model/interface/read_set_catalog_cli.py, src/software_world_model/interface/presenters.py]
+tests: [tests/test_knowledge_use.py, tests/test_natural_task.py, tests/test_structure_read_session.py, tests/test_structure_read_bundle.py, tests/test_engineering_question_cognition.py, tests/test_maven_workspace.py, tests/test_iteration_003_g1_integration.py, tests/test_iteration_003_g2_integration.py]
 ---
 
 # Knowledge Use 与 Sufficiency
@@ -22,6 +22,10 @@ Application 拥有 Requirement Revision、Read Session、Queryable Read Set Regi
 Sufficiency 与 Use Epoch；Knowledge Engine 提供 exact Snapshot 的只读正式知识，并拥有 Session 所引用的 Context Comparison
 Assessment 与其 Validity。Application 可以声明比较顺序和保存 Assessment，但不能决定兼容 Outcome。Source-off Catalog 是
 这些 Registration 的密封传输 manifest，不拥有或重解释正式知识。
+
+Engineering Conversation 的 Cognition Binding 可以引用同一 repository Binding 与 exact revision 上一个或多个 profile-specific exact
+Read Authority。每次查询仍在各自 Schema/Profile/Read Set Contract 内执行；Application 只组合逐项保留 authority、Profile、Coverage、
+Support 和 Unknown 的只读投影，不创建 mixed-profile Snapshot/Read Set，也不执行跨 Schema Adoption。
 
 ## Invariants
 
@@ -57,6 +61,10 @@ Assessment 与其 Validity。Application 可以声明比较顺序和保存 Asses
     truncated/cursor、Coverage/facet disposition、Support、serialized byte count 与 progress token。Query result completeness、
     Representation Coverage、Business discovery recall 是三个不同 Verdict；只有三者都由独立 Oracle 判为 COMPLETE，Application 才能
     把零结果解释为 `BOUNDED_ABSENCE`。Agent、自报 trace、排名或分页结束不能拥有这些 Verdict。
+18. 用于工程 Chat 的 Cognition Capability Manifest 必须固定 exact repository/revision、ordered profile-specific Read Authorities、每个
+    Profile 的 Schema/Context/Coverage/digest、允许的 query/view capability+version、已覆盖认知维度和显式 unsupported/partial/unknown。
+    Question Eligibility Assessment 必须先从原问题的 material Need 得到所需维度，再与该 Manifest 对照；单个窄 Profile 的
+    `COMPLETE`、同一整包记录或 Source 命中均不能补成多域认知资格。Source 可以支持当前 Turn，却不得被回填为 World Model 贡献。
 
 ## Failure and implementation boundary
 

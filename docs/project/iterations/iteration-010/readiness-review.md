@@ -4,7 +4,7 @@ kind: iteration-readiness
 status: accepted
 authority: project-authorization
 owners: [project, architecture, quality, product]
-depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, FINDING-010-093, FINDING-010-094, FINDING-010-107, FINDING-010-108, FINDING-010-109, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-SOURCE-ARTIFACT]
+depends_on: [ITER-010-PROPOSAL, ITER-010-VERIFICATION, ROADMAP-M-002, ROADMAP-CANDIDATE-ENGINEERING-QUESTION-ANSWER-FIRST, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-002, FINDING-010-093, FINDING-010-094, FINDING-010-107, FINDING-010-108, FINDING-010-109, SYS-ADR-013, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-CAPABILITY-EVALUATION, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY, SYS-CONTRACT-APPLICATION-KNOWLEDGE-UPDATE, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-ACCEPTANCE]
 code: []
 tests: []
 iteration: ITER-010
@@ -17,9 +17,14 @@ historical_product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4
 historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:2e53074115b08841a527fb7ba49e739eb2afd0473d20cacaa1a926338f8a8260
 coding_input: false
+current_execution_decision_ref: ITER-010-PDR-006
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137]
 ---
 
 # ITER-010 Readiness Review
+
+Front matter 的 `coding_input: false` 表示本 Readiness 文档本身不是开发设计；它不撤销 Manifest、Current 与活动 Slice 已记录的
+`ITER-010-SLICE-001 coding_input: true`。实际编码遵循活动 Slice、PDR-006 持续执行规则及 PDR-005 当前 Gate。
 
 ## Reviewed exact inputs
 
@@ -76,7 +81,7 @@ ADR-017 将 Provider 路由改为 Session 预授权的 Ark→DeepSeek：用户�
 quarantine。PDR-003 refresh 时代码尚未证明该语义，Readiness 当时只接受它作为恢复开发输入；后续实现与 live 事实由本文件 PDR-004
 current 段及 Findings 更新。
 
-## PDR-004 readiness refresh and current acceptance
+## PDR-004 accepted architecture and authorization baseline（execution order amended by PDR-005）
 
 本文件头部 `status: accepted`、`product_goal_alignment_review_ref: f76ba3e8…` 与当前 A1—A6 digest 保存 PDR-004 刷新后的当前
 Readiness 权威；`585f02c4…` 对旧单轮 Engineering QA 计划的历史 Readiness 仅由 `historical_*` 字段保存。
@@ -108,7 +113,8 @@ ordered Ark→DeepSeek routes、fixed 5-Turn bounds、private Gateway/receipt pa
 Conformance PASS，两条 route 的 current qualification 同时可用。此后 `FINDING-010-107` 已记录 exact `eb835f5…` 的 owner-private
 artifact 与五轮 live Chat：5/5 Turn 失败且没有 Answer/Citation/Review/Delivery；新 Conversation 的 transcript 隔离成立，但省略指代
 probe 没有澄清。`FINDING-010-108/109` 已形成 bounded literal Search 与 Binding-owned pre-dispatch clarification 的本地修复候选。
-当前状态是 `FIRST_LIVE_CHAT_FAILED / LOCAL_REMEDIATION_CANDIDATE / NEW_EXACT_SESSION_AUTHORITY_REQUIRED`：
+以下是 PDR-004 当时的历史状态 `FIRST_LIVE_CHAT_FAILED / LOCAL_REMEDIATION_CANDIDATE / NEW_EXACT_SESSION_AUTHORITY_REQUIRED`，不是
+PDR-005 当前执行顺序：
 
 - 主 Agent 拥有目标、假设、子任务、计划修订、context/tool 选择、观察解释、重规划、完成判断和答案综合；Control Plane 继续拥有权限、
   exact version、只读工具执行、证据身份、预算和审计，独立 Reviewer 必须保留。
@@ -117,12 +123,40 @@ probe 没有澄清。`FINDING-010-108/109` 已形成 bounded literal Search 与 
 - 模糊指代在 Source/Provider dispatch 前澄清；用户陈述和 prior Answer/Review 不成为 Source truth。旧 evidence 只有 exact revision、Binding、
   World Model authority、Source Profile/allowlist、content digest 和 Coverage 全部匹配，并重新绑定当前 Turn Package 后才可复用。
 - 每轮独立 Request/Evidence/Answer/Review/Delivery；新 Conversation 不继承旧 Context；失败 Turn 不关闭 Conversation。
-- 首个方向 canary 为一段五轮 Conversation 和一个新对话泄漏 probe；随后的比较分开两个问题：current Codex external baseline
+- PDR-004 当时的首个方向 canary 为一段五轮 Conversation 和一个新对话泄漏 probe；随后的比较分开两个问题：current Codex external baseline
   保留其真实客户端/model/reasoning/tools/权限，只作强基线而不是 Oracle/裁判；World Model 因果消融的 source-only 与
   full-cognition + source 两臂才共享同一主 Agent/model/tool/budget/cache/Reviewer。
 
 PDR-003 的体验时间盒、Access/Quality、root-cause-first、首次体验前 full regression=0、Ark→DeepSeek transparent fallback、Conformance
 reuse、DeepSeek 调度和成本不降质仍是恢复后的必要约束，不因本次架构更新重置或放宽。
+
+## PDR-005 execution correction and restart disposition
+
+PDR-004 Readiness 对“双核心、真正 Chat、受控 Source、证据、独立审核和安全边界”的接受继续有效；PDR-005 没有引入新的总体架构、数据
+权限或公开协议，因此不重开一次 Readiness。它纠正的是已授权 Slice 内已经偏离的执行顺序和认知资格解释。
+
+`FINDING-010-132/133` 已确认：run-035—042 的唯一 World Model input 是 Maven 模块/依赖窄 Profile；它不具备行为问题的工程认知资格。
+run-042 同时存在 Cognition coverage、Agent 调查和 Reviewer 守门故障，不能把 query/review prompt 缺口命名为唯一根因。v7 因而是
+`STOPPED / UNACCEPTED SYMPTOM EXPERIMENT`，不能成为 fresh 双 Provider Conformance 或第八次同五轮重跑的入口。
+
+用户停止旧开发执行并要求文档完成后由新开发对话重启的原文以
+`local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499` 本地密封；它不是新的
+平台 Readiness receipt，也不扩大权限。正式开发范围仍由 `f76ba3e8…` 锚定：Slice1 产品/System 代码和本地确定性验证。全新的“开发
+ITER-010”对话可以直接接手，无需继承旧对话的工作状态、复现旧过程或再次确认相同范围；当前使用 Slice1 是授权与审计入口，不是对话
+绑定。Provider/model、动态 Source disclosure、live Browser、hidden、Slice2/3 和 Production 仍未授权。
+
+本 Readiness 当前只放行以下顺序：
+
+1. `V-LAYER-ATTRIBUTION-001`：使用现有 run/source/package/review 离线定位 first divergence、guard failure 和 display failure，外部调用 0；
+2. `V-COGNITION-ELIGIBILITY-001`：建立同一 exact revision 的多 Profile Cognition Capability Manifest，至少覆盖结构与实现/行为，并对
+   三个异质问题逐 Need 给出 eligible capability 或 explicit Gap；
+3. 将问题相关 Cognition 投影接回已经可启动的 Web，在附加 60/180/240 分钟恢复 hard stop 内交付一条真正的语义链（初问→省略指代
+   追问或纠正→深入/总结）和两个未参与修复的异质问题；同一 Session 中三个互不相关的独立问答不算 Chat；
+4. 只有上述通过且取得新的 exact external grant，才执行最多一个 Ark direction canary；DeepSeek 只按 ADR-017 fallback，Alpha 前不跑
+   full regression。
+
+领域 Prompt、答案 Schema 或产品变化本身不使相同 Adapter/Configuration/endpoint/model/transport/rendering 的 Provider Conformance
+失效。下一开发动作不得是 Ark/DeepSeek 同时测试、v7 修改或旧五轮重跑。
 
 ## Product-goal alignment gate
 
@@ -131,18 +165,19 @@ reuse、DeepSeek 调度和成本不降质仍是恢复后的必要约束，不因
 - Capability path：继续 `ROADMAP-M-002` 最早未证明的 Step 1；提问期 Source 调查核实、补充或纠正认知，不取代问题前建模。
 - Cumulative integration：一个主工程 Agent 在 Conversation 中组合 exact World Model Cognition、受控 source/doc/config/test Evidence 和
   prior reviewed Delivery references，但 prior Answer 不取得事实权威。
-- Fast checkpoint：历史单题与 4+1 题只证明受控 Web 技术链。返工首交付是固定工程/revision、消息历史、“新对话”和真实 Turn 提交的
-  Access；Chat 专项 canary 是一个有界五轮 Conversation，每个到达 Provider dispatch 的 Turn 分别计 live attempt并保持完整证据/审核。
-  新对话泄漏 probe 必须同行执行；失败回到本地根因诊断，不启动独立三题套件。
-- Direction signal：Slice1 在用户先取得可操作 Chat、五轮 canary 与泄漏负测后，立即以同一 exact revision/Conversation 脚本/可比较输出/rubric
+- Fast checkpoint：历史单题与 4+1 题只证明受控 Web 技术链。当前返工复用已 PASS 的 Access；先取得离线层归因和工程认知资格，再交付
+  一条语义多轮链和两个未参与修复的异质问题。每个到达 Provider dispatch 的 Turn 分别计 live attempt并保持完整证据/审核；三个独立问答
+  不能冒充 Chat，失败回到最早偏差 Owner。
+- Direction signal：Slice1 在用户取得上述可操作 Chat 和新对话隔离后，立即以同一 exact revision/问题类别/可比较输出/rubric
   运行 current Codex 强外部基线与系统两臂消融；Codex 保留实际能力，系统两臂才固定同 Agent/model/budget/cache。它是方向信号，不阻塞页面交付，也不把 Codex 当 Oracle/裁判。
 - Later proof：Slice2 在第二工程复验多轮 Chat、持久恢复和三臂，Slice3 在最终隐藏工程和现场 Conversation 复验。PDR-002 的“严格超过
   current Codex”正式强制仍从 ITER-012 起；ITER-010 的 direction signal 不能冒充该正式 Gate。
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
-结论：Outcome 直接服务多轮工程 Chat MVP。历史 Readiness 已失去当前编码效力；PDR-004 refresh 已由 `f76ba3e8…` 接受并恢复
-Iteration/Slice1 编码。Agent/Conversation 与透明 route 都尚未实现或验证；本文件只授权 Slice1 产品/System 编码与本地确定性验证，
-不追认旧结果，也不授权外部调用、live 或后续 Slice。
+结论：Outcome 直接服务多轮工程 Chat MVP。PDR-004 refresh 已由 `f76ba3e8…` 接受并继续提供 Slice1 产品/System 编码与本地确定性验证
+权限；PDR-005 是当前执行修正。既有 Access、Agent/Conversation 和透明 route 实现事实保留，run-042 质量失败、v7 未接受；随后
+`V-LAYER-ATTRIBUTION-001` 与 `V-COGNITION-ELIGIBILITY-001` 已由独立 Result 以外部调用 0 PASS。当前下一入口是另取 exact external
+grant 后执行一个 Ark Web direction canary；本文件不追认旧失败为 PASS，也不授权外部调用、live 或后续 Slice。
 
 ## Architecture reflection gate readiness
 
@@ -182,12 +217,11 @@ Reviewer 必须在 fresh context 审查逐轮包与答案，其 Finding 只能�
 
 ## Slice, dependency and risk closure
 
-Slice1 的历史失败尝试已执行完毕；当前为 `authorized / active / rework / coding_input=true`。最短顺序是：
-闭合主 Agent 与 Conversation/Turn/Context 最小纵切 → 可重复启动且标记质量未验收的消息历史/新对话 Access → 最多一次本地或 Mock 单轮
-Access smoke → 冻结最小候选与 Ark→DeepSeek route → 一个有界五轮 Conversation 作为首次方向 live canary，并执行新对话泄漏 probe。
-不得用孤立 live question 代替 Chat canary；每个到达 Provider dispatch 的 Turn 分别计 live attempt并完成完整证据/审核。不得在此之前
-建设跨重启持久化、第二工程、hidden、多 Agent、三臂或 full regression；但五轮 canary 与泄漏负测通过后，Slice1 必须运行不阻塞页面
-交付的小样本三臂方向比较，再交给用户决定。Slice2/3 继续需要 Chat Alpha `CONTINUE` 和新授权。
+Slice1 的历史失败尝试已执行完毕；当前为 `authorized / active / rework / coding_input=true`。最短顺序是：离线密封
+`V-LAYER-ATTRIBUTION-001` → 形成结构+实现/行为的 `V-COGNITION-ELIGIBILITY-001` → 复用已 PASS 的 Web Access，交付一条真正的语义
+多轮链和两个未参与修复的异质问题 → 隔离比较 → 用户判向。每个到达 Provider dispatch 的 Turn 分别计 live attempt并完成完整证据/审核。
+不得在此之前建设跨重启持久化、第二工程、hidden、多 Agent、fresh 双 Provider Conformance 或 full regression。Slice2/3 继续需要 Chat
+Alpha `CONTINUE` 和新授权。
 
 首版必须保留 exact revision、allowlist、只读、Source untrusted、Ledger append-only、seal、证据分区、role isolation、Citation、独立
 Review、Secret 和失败真实性；持久恢复、复杂冲突/去重、跨工程、全面性能、完整异常矩阵、hidden/三臂 comparison 和正式验收可延后。
@@ -196,12 +230,12 @@ disclosure 必须在 live 前另行冻结和授权。
 
 ## Verification readiness
 
-已执行的 `V-ANSWER-001/V-REVIEW-001/V-EXPERIENCE-001/V-TIMEBOX-001/V-ANSWER-REWORK-001/V-WEB-000/V-WEB-001/
-V-PREVIEW-001/V-REFLECT-001` 保留原定义与 PASS/FAIL 证据，只是 historical，不是 PDR-004 的 current Gate。从未执行的
-`V-ALPHA-ACCESS-001/V-PREVIEW-002` 以明确的 PDR-004 pre-execution revision 复用；没有旧执行证据可被追认。
+已执行的旧 Case 与 run-035—042 保留原定义及真实 PASS/FAIL，只是 historical，不能追认 PDR-005 Gate。`V-ALPHA-ACCESS-001` 的
+`PASS / access-only` 可复用；`V-PREVIEW-002` 尚未执行。
 
-current Slice1 Gate 是 `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002`：先交可操作 Chat，
-再运行一个五轮 Conversation 及新对话泄漏负测；每轮保留完整证据、Citation 和 fresh independent Review，Finding 回主 Agent 补证或重写。
+current Slice1 Gate 是 `V-LAYER-ATTRIBUTION-001/V-COGNITION-ELIGIBILITY-001/V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/
+V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-COMP-ALPHA-001/V-PREVIEW-002`：先归因和证明工程认知资格，
+再从现有页面交付一条语义多轮链和两个未参与修复的异质问题；每轮保留完整证据、Citation 和 fresh independent Review，Finding 回主 Agent 补证或重写。
 随后的 `V-COMP-ALPHA-001` 不增加产品交付前阶段：Codex 保留实际能力并只作强外部基线；系统两臂才共享同一 Agent/model/budget/cache。所有新 live Case
 仍须在当前开发授权、后续代码冻结和独立 live grant 下执行；计划、Mock 或旧单轮结果不能冒充真实 Chat。
 

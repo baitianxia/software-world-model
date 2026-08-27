@@ -4,7 +4,7 @@ kind: results-index
 status: completed
 authority: project-evidence
 owners: [quality, project]
-depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-PDR-001]
+depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-PDR-001]
 code: []
 tests: []
 iteration: ITER-010
@@ -22,6 +22,13 @@ iteration: ITER-010
 - [V-ALPHA-ACCESS-001 Browser Result](v-alpha-access-001-browser.md)：clean `cf2883b…` 上的固定 loopback listener 与本机浏览器交互
   PASS；同会话失败 Turn 保持 ACTIVE/历史完整，新会话 identity 与消息隔离成立，最终 2 Conversation、3 Turn、Provider dispatch 0、
   console clean、Production 未执行。它只通过 Access，不通过 Chat/Quality/XD。
+- [V-LAYER-ATTRIBUTION-001 Offline Result](v-layer-attribution-001.md)：以 run-042 exact Source、Maven Snapshot/Cognition、Agent trace、
+  Package/Draft/Review 与页面 Result 做六臂离线替换，外部调用 0。行为事实最早在 Knowledge construction/admission 缺失；Agent 漏读与
+  Reviewer 放行/扩域是独立下游故障，Web 没有 display first divergence。它只通过诊断 Gate，下一 Gate 是工程认知资格。
+- [V-COGNITION-ELIGIBILITY-001 Local Result](v-cognition-eligibility-001.md)：同一 exact mall revision 的 Maven 结构与 Java
+  实现/行为 Profile 形成 versioned Capability Manifest；结构、调用流程和职责/失败边界逐 Need 获得相关正式事实或明确 Gap，Maven-only
+  行为题失败关闭。artifact Session `@2` 已完成本地多 Profile runtime 组合，外部模型、Source projection read、listener/browser 均为 0；
+  它不通过后续 live Chat/Quality/XD。
 - [SLICE-001 Historical Stop Result](slice-001-stop-redirect.md)：技术 Web/Citation/隔离资产永久保留；扁平 Claim/Review 合同再次产生代码
   走读式默认答案并被 Reviewer 批准，历史答案/审核 Gate FAIL 不变。[PDR-001](../decisions/PDR-001-resume-as-rework.md) 将迭代级决定修订
   为 `REWORK`；后续 `32b298de…` 收据已恢复 ITER-010/Slice1 开发，Slice2/3 未授权。

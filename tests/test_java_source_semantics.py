@@ -181,6 +181,53 @@ def _fixture_input(
     )
 
 
+def _replace_fixture_source(
+    value: JavaSourceSemanticsInput, payload: bytes
+) -> JavaSourceSemanticsInput:
+    path = next(iter(value.source_bytes))
+    entries = {
+        path: replace(
+            value.git_entries[path],
+            object_id=hashlib.sha1(payload).hexdigest(),
+        )
+    }
+    source_evidence = {
+        path: replace(
+            value.source_evidence[path],
+            artifact_content_digest=_content_digest(payload),
+        )
+    }
+    tree_excerpt = json.dumps(
+        {
+            "is_symlink": entries[path].is_symlink,
+            "mode": entries[path].mode,
+            "object_id": entries[path].object_id,
+            "path": path,
+            "type": entries[path].object_type,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    tree_payload = tree_excerpt.encode()
+    previous = value.tree_evidence[0]
+    tree_evidence = StructureEvidence.create(
+        artifact_id=previous.artifact_id,
+        source_context_id=previous.source_context_id,
+        byte_start=0,
+        byte_end=len(tree_payload),
+        locator=previous.locator,
+        excerpt=tree_excerpt,
+        artifact_content_digest=_content_digest(tree_payload),
+    )
+    return replace(
+        value,
+        source_bytes={path: payload},
+        git_entries=entries,
+        source_evidence=source_evidence,
+        tree_evidence=(tree_evidence,),
+    )
+
+
 def _method_signature(record: object) -> str:
     fields = record.root.root_fields
     parameters = ",".join(str(item) for item in fields["parameter_types"])
@@ -559,6 +606,139 @@ class JavaSourceSemanticsEvaluatorTests(TestCase):
         self.assertNotIn("throw new IllegalStateException", serialized)
         self.assertNotIn("多字节字符只用于验证", serialized)
         self.assertNotIn("return issueSession()", serialized)
+
+    def test_common_java_constructs_publish_dispositioned_positive_calls(self) -> None:
+        source = b"""package dev.acme.auth;
+
+@interface Audited {}
+
+class LoginService {
+    private String state;
+
+    @Audited
+    public String authenticate(String input) {
+        audit(input);
+        return input;
+    }
+
+    private void audit(String input) {
+        System.out.println(input);
+    }
+}
+"""
+
+        result = evaluate_java_source_semantics(
+            _replace_fixture_source(_fixture_input(), source)
+        )
+
+        result.batch.require_admissible()
+        self.assertEqual(result.report.source_file_count, 1)
+        self.assertEqual(result.report.type_count, 2)
+        self.assertEqual(result.report.method_count, 2)
+        self.assertEqual(result.report.implementation_atom_count, 1)
+        self.assertEqual(result.report.legacy_call_relation_count, 0)
+        self.assertEqual(
+            {
+                item.state.state_payload_fields["method_disposition"]
+                for item in result.methods
+            },
+            {JavaSemanticDisposition.UNSUPPORTED_EXCLUDED.value},
+        )
+        self.assertEqual(
+            sum(
+                item.root.predicate is RelationPredicate.CALL_SITE_TARGETS
+                for item in result.relations
+            ),
+            1,
+        )
+        self.assertFalse(
+            any(
+                item.root.predicate is RelationPredicate.CALLS
+                for item in result.relations
+            )
+        )
+
+    def test_dispositioned_declaration_does_not_invent_wildcard_type_namespace(self) -> None:
+        source = b"""package dev.acme.auth;
+
+import ext.types.*;
+import java.util.List;
+
+class LoginService {
+    public void audit(RemoteType input, List<RemoteType> values) {}
+}
+"""
+
+        result = evaluate_java_source_semantics(
+            _replace_fixture_source(_fixture_input(), source)
+        )
+
+        result.batch.require_admissible()
+        method = result.methods[0]
+        self.assertEqual(
+            method.root.root_fields["parameter_types"],
+            ("RemoteType", "java.util.List<RemoteType>"),
+        )
+        self.assertNotIn(
+            "dev.acme.auth.RemoteType",
+            method.root.root_fields["parameter_types"],
+        )
+
+    def test_dispositioned_calls_do_not_cross_anonymous_executable_boundary(self) -> None:
+        source = b"""package dev.acme.auth;
+
+class LoginService {
+    public void authenticate() {
+        audit();
+        Runnable deferred = new Runnable() {
+            public void run() {
+                audit();
+            }
+        };
+    }
+
+    private void audit() {}
+}
+"""
+
+        result = evaluate_java_source_semantics(
+            _replace_fixture_source(_fixture_input(), source)
+        )
+
+        result.batch.require_admissible()
+        self.assertEqual(result.report.type_count, 1)
+        self.assertEqual(result.report.method_count, 2)
+        self.assertEqual(result.report.implementation_atom_count, 1)
+        self.assertEqual(
+            sum(
+                item.root.predicate is RelationPredicate.CALL_SITE_TARGETS
+                for item in result.relations
+            ),
+            1,
+        )
+
+    def test_disposition_manifest_includes_nested_enum_member_methods(self) -> None:
+        source = b"""package dev.acme.auth;
+
+class LoginService {
+    public void authenticate() {}
+
+    enum AuditMode {
+        ENABLED;
+
+        public void record() {}
+    }
+}
+"""
+
+        result = evaluate_java_source_semantics(
+            _replace_fixture_source(_fixture_input(), source)
+        )
+
+        result.batch.require_admissible()
+        self.assertEqual(result.report.type_count, 2)
+        self.assertEqual(result.report.method_count, 2)
+        self.assertEqual(result.report.declaration_count, 2)
 
     def test_parse_error_fails_the_complete_candidate(self) -> None:
         value = _fixture_input()

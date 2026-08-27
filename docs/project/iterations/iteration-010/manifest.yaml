@@ -4,7 +4,8 @@ iteration:
   status: authorized
   outcome_scope: dual-core-world-model-cognition-and-lead-engineering-agent-semantic-multi-turn-chat-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
-  current_decision_ref: ITER-010-PDR-004
+  current_decision_ref: ITER-010-PDR-006
+  current_gate_decision_ref: ITER-010-PDR-005
   coding_input: true
 
 baseline:
@@ -68,6 +69,8 @@ product_goal_alignment:
     - V-XD-002
     - V-XD-003
   blocking_case_ids:
+    - V-LAYER-ATTRIBUTION-001
+    - V-COGNITION-ELIGIBILITY-001
     - V-CHAT-XD-001
     - V-ALPHA-ACCESS-001
     - V-CHAT-EXPERIENCE-001
@@ -153,6 +156,10 @@ product_goal_alignment:
     per_turn_evidence_and_review: true
     new_conversation_context_isolation: true
     minimum_conversation_turns: 5
+    minimum_conversation_turns_schema_compatibility_only: true
+    pdr005_direction_semantic_chain_minimum_turns: 3
+    pdr005_unseen_heterogeneous_question_minimum: 2
+    complete_five_turn_suite_requires_user_continue: true
     limitations_visible: true
     fixed_loopback_address: http://127.0.0.1:8765/
     turn_failure_scope: current-turn-only-conversation-remains-usable
@@ -161,7 +168,11 @@ product_goal_alignment:
     case_id: V-COMP-ALPHA-001
     new_slice_ref: ITER-010-SLICE-001
     occurs_after_chat_access_and_five_turn_canary: true
+    occurs_after_chat_access_and_five_turn_canary_schema_compatibility_only: true
+    pdr005_current_occurs_after: one-semantic-chain-and-two-unseen-heterogeneous-web-questions
     arms: same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline
+    pdr005_current_arms: same-agent-source-only,same-agent-engineering-cognition-eligible-and-source,current-codex-external-baseline
+    full_cognition_legacy_label_is_not_eligibility_evidence: true
     current_codex_is_oracle_or_reviewer: false
     system_arm_shared_runtime: same-lead-agent-model-tools-permissions-budget-cache-policy-and-state
     external_codex_runtime: preserve-actual-model-reasoning-tools-permissions-and-budget
@@ -313,7 +324,9 @@ critical_assumption_catalog_cutover:
 
 rework:
   decision: REWORK
-  decision_ref: ITER-010-PDR-004
+  decision_ref: ITER-010-PDR-005
+  restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
+  previous_decision_ref: ITER-010-PDR-004
   user_receipt_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
   historical_redirect_message_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
   historical_redirect_message_was_explicit: false
@@ -332,6 +345,7 @@ rework:
   continuous_free_questions_in_same_session: compatibility-only-not-chat-proof
   server_owned_conversation_turn_and_context_required: true
   five_turn_chat_canary_required: true
+  five_turn_chat_canary_required_scope: pdr004-legacy-validator-compatibility-only-full-suite-after-pdr005-user-continue
   restart_or-new-planning-authorization_per_question_required: false
   page_must_show_version_and_known_limits: true
   page_must_show_answer_citations_and_request_failure: true
@@ -356,6 +370,10 @@ rework_policy:
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
+  current_execution_decision_ref: ITER-010-PDR-006
+  current_gate_decision_ref: ITER-010-PDR-005
+  pdr004_schedule_fields_are_legacy_validator_compatibility_only: true
+  pdr004_schedule_superseded_by_current_pdr005_fields_below: true
   direction_discovery_principle_ref: codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f
   first_user_handoff_case_id: V-ALPHA-ACCESS-001
   direction_confirmation_case_id: V-PREVIEW-002
@@ -406,6 +424,7 @@ experience_delivery_policy:
   unseen_adjacent_local_case_count: 2
   live_canary_conversation_count_after_local_pass: 1
   live_canary_turn_count: 5
+  live_canary_turn_count_scope: pdr004-legacy-validator-compatibility-only-full-suite-after-pdr005-user-continue
   same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
   same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities
   pre_first_experience_test_scope: targeted-impact-startup-and-safety-only
@@ -415,6 +434,165 @@ experience_delivery_policy:
   same_failure_signature_retry_limit: 1
   consecutive_no_user_visible_increment_limit: 2
   no_increment_action: stop-external-reruns-and-return-to-local-diagnosis
+  pdr005_recovery_owner_ref: ITER-010-PDR-005
+  pdr005_recovery_entry_case_id: V-LAYER-ATTRIBUTION-001
+  pdr005_cognition_gate_case_id: V-COGNITION-ELIGIBILITY-001
+  pdr005_current_first_new_user_handoff_case_id: V-CHAT-EXPERIENCE-001
+  pdr005_new_development_conversation_allowed: true
+  pdr005_development_conversation_bound_to_existing_slice: false
+  pdr005_current_slice_continuity_reason: reuse-existing-local-development-authorization-and-preserve-failure-timebox-accountability
+  pdr005_new_slice_allowed_when_delivery_boundary_evidence_requires_governed-switch: true
+  pdr005_changing_conversation_alone_requires_new_slice: false
+  pdr005_old_conversation_or_v7_state_may_be_inherited: false
+  pdr005_checkpoint_order: offline-layer-attribution,engineering-cognition-eligibility-and-web-binding,one-semantic-chain-and-two-unseen-heterogeneous-question-browser-experience
+  pdr005_layer_attribution_deadline_minutes: 60
+  pdr005_cognition_web_binding_deadline_minutes: 180
+  pdr005_browser_experience_deadline_minutes: 240
+  pdr005_external_calls_before_attribution_pass: 0
+  pdr005_direction_ark_canary_session_maximum: 1
+  pdr005_semantic_chain_minimum_turns: 3
+  pdr005_semantic_chain_required_intents: initial,referent-follow-up-or-correction,deepen-or-summary
+  pdr005_unseen_heterogeneous_question_minimum: 2
+  pdr005_three-independent_questions_count_as_chat: false
+  pdr005_full_regression_before_user_continue_allowed: false
+  pdr005_completed_case_ids: V-LAYER-ATTRIBUTION-001,V-COGNITION-ELIGIBILITY-001,V-ALPHA-ACCESS-001
+  pdr005_current_external_case_id: V-CHAT-EXPERIENCE-001
+  pdr005_current_external_authorization_status: authorized-pending-clean-candidate
+  pdr005_current_external_authorization_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
+  pdr005_current_external_authorized_at: 2026-08-27T03:01:57Z
+  pdr005_current_external_scope: one-owner-private-loopback-direction-session-five-provider-eligible-turns-plus-zero-dispatch-leakage-probe
+  pdr005_current_external_ark_endpoint: https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions
+  pdr005_current_external_ark_model: glm-5-2-260617
+  pdr005_current_external_deepseek_fallback: adr-017-terminal-only-deepseek-v4-pro
+  pdr005_current_external_dispatch_limit_per_turn: 15
+  pdr005_current_external_dispatch_limit_per_provider: 75
+  pdr005_current_external_http_retry_limit: 0
+
+layer_attribution_policy:
+  schema: ENGINEERING_ANSWER_LAYER_ATTRIBUTION@1
+  owner_ref: SYS-QUALITY-ACCEPTANCE
+  case_id: V-LAYER-ATTRIBUTION-001
+  required_chain: source-truth,knowledge-construction-and-admission,cognition-projection-and-query,conversation-understanding,agent-investigation,evidence-package,answer-synthesis,independent-review,web-display
+  verdict_per_material_fact_required: true
+  first_divergence_required: true
+  downstream_guard_failure_required: true
+  display_failure_required: true
+  multiple_faults_per_question_allowed: true
+  attribution_method: controlled-layer-substitution-not-final-answer-guessing
+  isolation_arms: world-model-only,same-agent-source-only,same-agent-engineering-cognition-eligible-and-source,complete-evidence-bypass,reviewer-seeded-good-and-bad,authorized-result-to-web
+  original_failed_question_required: true
+  unseen_heterogeneous_question_minimum: 2
+  external_model_calls_before_seal: 0
+  prompt_schema_tool_query_or_review_policy_change_before_seal_allowed: false
+  result_ref: ITER-010-RESULT-V-LAYER-ATTRIBUTION-001
+  finding_ref: FINDING-010-134
+  external_model_calls_actual: 0
+  first_divergence_owner: knowledge-construction-and-admission
+  independent_downstream_faults: agent-investigation,evidence-package,independent-review
+  web_display_failure: false
+  next_change_owner: knowledge-and-application-cognition
+  status: passed-diagnostic
+
+engineering_cognition_eligibility:
+  schema: ENGINEERING_COGNITION_CAPABILITY_MANIFEST@1
+  owner_refs: SYS-ADR-018,SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION,SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE,SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS,SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL
+  case_id: V-COGNITION-ELIGIBILITY-001
+  exact_repository_revision_required: true
+  profile_specific_snapshot_and_read_authority_required: true
+  multi_profile_composition_owner: application-read-only-cognition-binding
+  mixed_profile_snapshot_or_read_set_allowed: false
+  minimum_cognition_dimensions: structure,implementation-or-behavior
+  required_manifest_fields: profile-id,schema,exact-read-authority,coverage,gap,source-provenance,revision-binding,eligible-question-needs
+  question_relevant_projection_or_explicit_gap_required: true
+  identical_whole-bundle-for-every-question_counts_as_retrieval: false
+  maven_reactor_structure_role: narrow-structure-and-locator-control-only
+  maven_only_eligible_for_behavior-responsibility-call-flow-configuration-or-failure_questions: false
+  query_time_source_role: verify-supplement-or-correct-current-turn-cognition
+  source_evidence_may_be_reclassified_as_world_model_contribution: false
+  non_locator_question_relevant_world_model_contribution_required: true
+  frozen_question_categories: structure,behavior-or-call-flow,responsibility-or-failure-boundary-or-unknown
+  result_ref: ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001
+  finding_refs: FINDING-010-135,FINDING-010-136
+  application_repository_id: repository_0504e86b1f1b6f1b8aa6a734d37a90fb
+  application_source_binding_id: binding_4ef0d3446b3e44c79ed3c0ffc855d5c9
+  exact_repository_revision: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  capability_manifest_digest: sha256:bf8a416f6866bce7015946aac6ee2e19073d897ca33a76ffc76316f4eb643792
+  artifact_session_current_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@2
+  artifact_session_legacy_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1
+  artifact_session_legacy_role: readable-single-profile-compatibility-not-multi-profile-qualification
+  web_runtime_binding_status: passed-local-composition-only-no-listener-browser-or-provider
+  external_model_calls_actual: 0
+  source_reads_during_projection_actual: 0
+  mixed_profile_snapshot_or_read_set_actual: false
+  profiles:
+    maven_structure:
+      ordinal: 0
+      profile_ref: MAVEN_REACTOR_STRUCTURE@1
+      source_binding_id: binding_4ef0d3446b3e44c79ed3c0ffc855d5c9
+      snapshot_id: structure_snapshot_5033a7fc944141d08ecd5ad3879ce1ba
+      snapshot_bundle_digest: sha256:aba230958a990ed7e7a2f8069a34de50e23bd35b6e4dcf274189c3cb1b9b6b6a
+      read_session_id: structure_read_session_14e79326bedb4db49bf1258fb82dc650
+      read_session_digest: sha256:b78fabe0275ef8a79d5d9256584461c2bc02aa3aa78bf71eb807cf60b2b114bf
+      read_set_digest: sha256:9be2661641d2e28505eb7574bc7ea0f9bea79fd8aca382f3056098640e493b31
+      ordered_bundle_digest: sha256:4843f67eeae273a87d0aacb22598442ef77ea7fc8019dbc425f1460f4b633fb4
+      ordered_file_digest: sha256:b54233af8f259fe23bcd27d1d16c4902401cd525b824476e1684325fe794de39
+      snapshot_file_digest: sha256:02f094a8d816e2466ce34c44bd23c17e254ad6d0b73564e66395152ff4d3ad87
+      read_authority_digest: sha256:9cd68a23017fcd3ca6d91d5f63cd49021038e29f0a327c710c9a4bd2cda01c16
+      capability_digest: sha256:8274b8d068e591d4ace31ddcd249440abc00aaf82f39b06baf4072d248d63e01
+      cognition_dimensions: COVERAGE,ENTITY,EVIDENCE,RELATION
+      query_capability_refs: direct_dependency@1
+      entity_count: 8
+      relation_count: 15
+    java_implementation_behavior:
+      ordinal: 1
+      profile_ref: JAVA_SOURCE_SEMANTICS@1
+      source_binding_id: binding_141b6af98149457f9ffe394c071e3175
+      snapshot_id: structure_snapshot_30c29cee2db34077b5f2123c82fa7323
+      snapshot_bundle_digest: sha256:dd3d7e97d64fe158fe0596bf9784ae73abfdf6f65194b5ac83643bd59ca14744
+      read_session_id: structure_read_session_fef388d874d74106b85c05fe1651429b
+      read_session_digest: sha256:345a0b3a0be7f572656841019ea8a92402cc1f5b0aeb9262b581deee6dd3e26a
+      read_set_digest: sha256:c5232cde7fd03a2aa40c59114756fad4b70c453d8e5e8a3a6ccd323e2a993614
+      ordered_bundle_digest: sha256:1d16dd3b288a8fae20b3b92e0d69859f58f5134e012d013171f7946e6c4de132
+      ordered_file_digest: sha256:b3ecdae2d7d0ecbff3cb1bf0d57a88b9bfcea301c89b1ec6ef82b90ac6866204
+      snapshot_file_digest: sha256:4e943e00809978c75ec309e9b846e02a26ec18ea0c9d2a694e191d7f79070a90
+      read_authority_digest: sha256:1e8e9452a1818e796a63167b626ba4dff04c3bab24ca40797fcbce1a43c3265a
+      capability_digest: sha256:63e6b3fd82738af1f37015ffa521afb3107b772483de7824b2288d1ed4e308d9
+      cognition_dimensions: BEHAVIOR,COVERAGE,ENTITY,EVIDENCE,RELATION
+      query_capability_refs: method_implementations@1
+      source_file_count: 153
+      named_type_count: 154
+      member_method_count: 559
+      implementation_atom_count: 48
+      entity_count: 914
+      relation_count: 681
+      literal_count: 0
+      incomplete_implementation_method_count: 559
+      unsupported_excluded_representable_unit_count: 866
+      unavailable_dimensions: STATE,CONSTRAINT
+  frozen_question_results:
+    structure:
+      context_digest: sha256:985e8b0059fab70c04e8a508f13777f0af60661c333ac3a9e57ba048c06166f4
+      total_item_count: 26
+      support_item_count: 23
+      eligible_profile_ref: MAVEN_REACTOR_STRUCTURE@1
+      required_query_capability_ref: direct_dependency@1
+    behavior_or_call_flow:
+      context_digest: sha256:23534d124053e91aef8e9e7cddb47d7da0841447c11cc7d8fa45344c91311144
+      total_item_count: 35
+      support_item_count: 32
+      eligible_profile_ref: JAVA_SOURCE_SEMANTICS@1
+      required_query_capability_ref: method_implementations@1
+      non_locator_fact_count: 5
+    responsibility_or_failure_boundary:
+      context_digest: sha256:478a6c93f8f447a64c25c5f743e3ef24a38f5b40dcc8ea01d20253f56bd096f2
+      total_item_count: 36
+      support_item_count: 32
+      eligible_behavior_profile_ref: JAVA_SOURCE_SEMANTICS@1
+      overall_eligibility: false
+      explicit_missing_dimensions: STATE,CONSTRAINT
+  next_gate_case_id: V-CHAT-EXPERIENCE-001
+  next_gate_external_authorization_status: authorized-pending-clean-candidate-and-dispatch
+  status: passed-local-cognition
 
 provider_route_policy:
   schema: QUALIFIED_PROVIDER_PREFERENCE@1
@@ -537,6 +715,10 @@ conversational_engineering_agent:
   lead_agent_direct_repository_filesystem_shell_network_or_write_access: false
   tool_families_before_direction_confirmation: world-model-query-and-controlled-source-search-read
   conversation_identity_pinned_to: exact-project-revision-world-model-authority-source-profile-and-session-authority
+  cognition_capability_manifest_schema: ENGINEERING_COGNITION_CAPABILITY_MANIFEST@1
+  cognition_binding_owner: application-read-only-multi-profile-projection
+  question_eligibility_gate_case_id: V-COGNITION-ELIGIBILITY-001
+  maven_only_cognition_eligible_for_behavior_questions: false
   turn_intent_kinds: new,follow-up,correction,clarification,deepen,summary
   context_required_fields: confirmed-goal-and-constraints,referenced-entities-and-topics,open-questions,reviewed-conclusions,contested-or-superseded-conclusions,exact-provenance
   application_sealed_context_projection_required: true
@@ -557,8 +739,14 @@ conversational_engineering_agent:
   failed_turn_closes_conversation: false
   first_chat_canary_conversation_count: 1
   first_chat_canary_turn_count: 5
+  first_chat_canary_turn_count_schema_compatibility_only: true
+  pdr005_direction_semantic_chain_minimum_turns: 3
+  pdr005_unseen_heterogeneous_question_minimum: 2
+  complete_five_turn_canary_requires_user_continue: true
   new_conversation_leakage_probe_required: true
   alpha_comparison_arms: same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline
+  pdr005_alpha_comparison_arms: same-agent-source-only,same-agent-engineering-cognition-eligible-and-source,current-codex-external-baseline
+  full_cognition_legacy_label_requires_pdr005_eligibility_gate: true
   knowledge_admission_from_conversation: asynchronous-reviewed-only
   long_term_memory_before_direction_confirmation_required: false
   multi_agent_before_direction_confirmation_required: false
@@ -680,16 +868,38 @@ conversational_engineering_agent:
   sixth_live_chat_dispatches_by_turn: 8,3,8,7,2
   sixth_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
   response_tool_argument_domain_evidence_ref: FINDING-010-128
+  seventh_live_conformance_execution_evidence_ref: FINDING-010-129
+  seventh_live_ark_conformance_result_digest: sha256:10e4b875b933b12b848b8b08dafa7d59bc5770fb18ec0ae19f455a18ce9944e2
+  seventh_live_ark_conformance_valid_until: "2026-09-25T14:50:05.091986Z"
+  seventh_live_deepseek_conformance_result_digest: sha256:85cfe117920bccd403c96578e42f49dc5eca1afcb551b20c707a14eb41e8dd3b
+  seventh_live_deepseek_conformance_valid_until: "2026-09-25T14:50:31.180603Z"
+  seventh_live_chat_execution_evidence_ref: FINDING-010-130
+  seventh_live_chat_product_commit: 3b8d09c71796e3c9b91ec6a9ea21697497319bbc
+  seventh_live_chat_product_tree: 6728a5ad63bedf65b1315cb7d7fdf27f111dc0d9
+  seventh_live_chat_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  seventh_live_chat_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+  seventh_live_chat_session_authorization_digest: sha256:df3cfe58d7a728899e7294a0c26ced0fb9e175f16334a904a1d70ca345d40ee9
+  seventh_live_chat_session_config_file_digest: sha256:6d7f07509df62e8aa1ffc0dbeed060ec7b65791ae9580b77b29da22a22585dc3
+  seventh_live_chat_terminal_receipt_digest: sha256:201f984bc08aa68e640a0b3b431787e78f6b3aaa2354f9073766767a180bab5b
+  seventh_live_chat_turn_result: three-of-five-reviewed-limitations-two-failed-overall-quality-fail
+  seventh_live_chat_dispatches_by_turn: 15,9,6,6,7
+  seventh_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
+  v7_unaccepted_exact_request_review_and_source_query_evidence_ref: FINDING-010-131
+  v7_unaccepted_model_strategy_ref: conversational-engineering-agent@7
+  v7_unaccepted_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@7
+  v7_unaccepted_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@7
+  v7_unaccepted_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@3
+  v7_status: stopped-unaccepted-symptom-experiment-not-current-system-truth
   current_agent_model_strategy_ref: conversational-engineering-agent@6
   current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@6
   current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@6
   current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@2
   current_agent_review_output_schema: engineering-agent-independent-review-proposal@2
-  current_dual_provider_qualification_status: stale-after-v6-strategy-prompt-primary-input-change-fresh-conformance-required
-  deterministic_successor_canary_status: v6-current-turn-response-and-tool-argument-domain-84-of-84-pass-no-live-authority-consumed
+  current_dual_provider_qualification_status: reuse-when-adapter-configuration-endpoint-model-transport-and-rendering-identity-remain-valid-domain-prompt-or-answer-schema-change-alone-does-not-invalidate-conformance
+  deterministic_successor_canary_status: pdr005-layer-and-cognition-gates-passed-local-awaiting-exact-live-grant
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: sixth-live-three-of-five-responses-overall-fail-leakage-pass-v6-contract-successor-local-candidate-fresh-conformance-required
-  status: implemented-sixth-live-three-of-five-responses-leakage-pass-v6-remediation-local-candidate
+  agent_execution_status: run-042-overall-fail-v7-unaccepted-pdr005-layer-and-cognition-gates-passed-local-live-direction-authorized-not-executed
+  status: implemented-not-qualified
 
 question_evidence_package_classes:
   support_and_citation:
@@ -979,6 +1189,7 @@ readiness_inputs:
     - SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL
     - SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING
     - SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
+    - SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL
     - SYS-CONTRACT-SOURCE-ARTIFACT
   source_semantics_contract_ref: SYS-CONTRACT-KNOWLEDGE-JAVA-SOURCE-SEMANTICS
   implementation_query_contract_ref: SYS-CONTRACT-APPLICATION-IMPLEMENTATION-QUERY
@@ -1021,6 +1232,7 @@ readiness_inputs:
     - docs/system/contracts/application/response-control.md
     - docs/system/contracts/application/world-model-answering.md
     - docs/system/contracts/knowledge/java-source-semantics.md
+    - docs/system/contracts/knowledge/structure-model.md
     - docs/system/contracts/source/source-artifact.md
     - docs/system/operations/configuration.md
     - docs/system/operations/local-browser.md
@@ -1030,7 +1242,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:2eff4b2583df9dcd66700849f4410195649bab0e37cdcdda5eaf589109270f5d
+  system_contract_set_digest: sha256:4bf07f49376b40e7c1e61bdab6878c78fff51992f5b0d349582e8bad121b7e13
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -1064,6 +1276,8 @@ development:
       result: in-progress
       reflection_decision: in-progress
       project_decision_ref: ITER-010-PDR-004
+      restart_execution_decision_ref: ITER-010-PDR-005
+      continuous_execution_decision_ref: ITER-010-PDR-006
       recovery_decision_ref: ITER-010-PDR-003
       historical_reflection_decision: REDIRECT
       historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
@@ -1076,12 +1290,16 @@ development:
         - "codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e"
       authorization_combines_current_readiness_acceptance: true
       reflection_prerequisite_result: none-first-slice
-      product_code_freeze_digest: sha256:33d7a7abedfb0231a697a67533d4147d42d356a35bc3088776c2dc9e1d732d09
-      product_code_freeze_status: sixth-pdr-004-artifact-session-config-freeze-executed-three-of-five-responses-v6-successor-freeze-required
+      product_code_freeze_digest: sha256:6d7f07509df62e8aa1ffc0dbeed060ec7b65791ae9580b77b29da22a22585dc3
+      product_code_freeze_status: run-042-v6-freeze-preserved-current-pdr005-cognition-local-candidate-unfrozen-v7-dirty-files-preserved-unaccepted
       rework_baseline_product_code_freeze_digest: sha256:69813d778adf9fa81c2915fadd1b00a600035119fea61e54f9f31879afee6acb
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
-      live_question_status: authorized-executed-failed-run-041-three-of-five-responses-leakage-pass-v6-remediation-local-candidate-fresh-conformance-and-new-exact-grant-required
+      live_question_status: not-authorized-conversational-five-turn-canary-not-executed
+      pdr005_current_live_question_status: authorized-semantic-chain-plus-two-unseen-heterogeneous-questions-not-executed
+      latest_consumed_live_history_status: run-042-failed-three-of-five-limitations-v7-unaccepted
+      new_development_conversation_may_take_over: true
+      development_conversation_bound_to_slice: false
       authorized_by: user
       authorized_at: 2026-08-25T05:06:07Z
       authorization_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
@@ -1122,72 +1340,87 @@ authorization:
   explicit_user_reauthorization_required: false
   external_execution_reauthorization_required: true
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
-  external_execution_authorization_status: sixth-live-session-grant-consumed-no-current-live-authority
-  first_live_session_authorization:
-    status: consumed
-    authorization_ref: codex-user-message:sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662
-    exact_product_commit: eb835f58b75831fc6f2c5a2513a13f32bdb3f7fe
-    exact_product_tree: e5508f17f99201876ecf932550e1bd30f67127d0
-    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
-    execution_finding_ref: FINDING-010-107
-  second_live_session_authorization:
-    status: consumed
-    authorization_ref: codex-user-message:sha256:096a1bc724f89db2fd2ca59e47ad4807a0981209e27d13fca6884062a097de03
-    exact_product_commit: 999616d24f793e139f20ea821c3069fdaff57a39
-    exact_product_tree: ec3179c1efb5df02c77f4be1d60a5e694dcc7380
-    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
-    execution_finding_ref: FINDING-010-111
-  third_live_session_authorization:
-    status: consumed
-    authorization_ref: codex-user-message:sha256:8ebd3650ea8c82ad43dc5015f633cd4e9b0dd3a39a81a6ddfb1566dc6c80d13a
-    exact_product_commit: d429be6c7e5e43342bf427e394ca5babcc55bcdb
-    exact_product_tree: 400d5791e4c443c201765da5f488519093136738
-    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
-    conformance_execution_finding_ref: FINDING-010-114
-    execution_finding_ref: FINDING-010-115
-    ark_tls_supplemental_authorization_ref: codex-user-message:sha256:e89640faf226ce069216ba40c71448dac0d8e09faf898aacbe74577067d540b3
-    ark_tls_cap_raise_authorization_ref: codex-user-message:sha256:21786af7d671472735a0cf7f064a26a7e19030b8ca6291c14f83ca1c1bfdfae1
-  fourth_live_session_authorization:
-    status: consumed
-    authorization_ref: codex-user-message:sha256:338979f81e29b0d53ddcc86fc5d35cc3a78f6cd671d977a864b5142d62dc352a
-    exact_product_commit: 743942d2593615c5c481110465d7d7faaf41d958
-    exact_product_tree: 748902ce407c434e10f4926cf84b1240a2666424
-    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
-    conformance_execution_finding_ref: FINDING-010-118
-    execution_finding_ref: FINDING-010-119
-  fifth_live_session_authorization:
-    status: consumed
-    authorization_ref: local-user-message-utf8:sha256:6834f6854008a41355d5dacff7c7aaad6edb56c9e915f9097ad14c82f5447ce4
-    exact_product_commit: 34d98ae12fe7429afb3cbe391d273c59a71c4758
-    exact_product_tree: b9100b15a2db30da811157549fc1f2d9affff288
-    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
-    conformance_execution_finding_ref: FINDING-010-123
-    execution_finding_ref: FINDING-010-124
-  sixth_live_session_authorization:
-    status: consumed
-    authorization_ref: local-user-message-utf8:sha256:bed1ccdca788bfaad0c1f8581f538b19d7007da81388a8c8763968f6fdbce8c6
-    exact_product_commit: 6e97bc1c0c02be858212c39da11ac42e099c365e
-    exact_product_tree: fd54821e212b3022e318436d9e96b93af11505c6
-    source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-    source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-    excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
-    conformance_execution_finding_ref: FINDING-010-126
-    execution_finding_ref: FINDING-010-127
+  external_execution_authorization_status: not-authorized
+  latest_consumed_live_history_status: seventh-run-042-failed-no-current-live-authority
+  latest_consumed_live_history_ordinal: 7
+  restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
+  consumed_live_session_authorization_history:
+    first_live_session_authorization:
+      status: consumed
+      authorization_ref: codex-user-message:sha256:bec7f0796899a81422ea013a34e2e7f10121515a8c9f72503f75cbfc8121a662
+      exact_product_commit: eb835f58b75831fc6f2c5a2513a13f32bdb3f7fe
+      exact_product_tree: e5508f17f99201876ecf932550e1bd30f67127d0
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      execution_finding_ref: FINDING-010-107
+    second_live_session_authorization:
+      status: consumed
+      authorization_ref: codex-user-message:sha256:096a1bc724f89db2fd2ca59e47ad4807a0981209e27d13fca6884062a097de03
+      exact_product_commit: 999616d24f793e139f20ea821c3069fdaff57a39
+      exact_product_tree: ec3179c1efb5df02c77f4be1d60a5e694dcc7380
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      execution_finding_ref: FINDING-010-111
+    third_live_session_authorization:
+      status: consumed
+      authorization_ref: codex-user-message:sha256:8ebd3650ea8c82ad43dc5015f633cd4e9b0dd3a39a81a6ddfb1566dc6c80d13a
+      exact_product_commit: d429be6c7e5e43342bf427e394ca5babcc55bcdb
+      exact_product_tree: 400d5791e4c443c201765da5f488519093136738
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      conformance_execution_finding_ref: FINDING-010-114
+      execution_finding_ref: FINDING-010-115
+      ark_tls_supplemental_authorization_ref: codex-user-message:sha256:e89640faf226ce069216ba40c71448dac0d8e09faf898aacbe74577067d540b3
+      ark_tls_cap_raise_authorization_ref: codex-user-message:sha256:21786af7d671472735a0cf7f064a26a7e19030b8ca6291c14f83ca1c1bfdfae1
+    fourth_live_session_authorization:
+      status: consumed
+      authorization_ref: codex-user-message:sha256:338979f81e29b0d53ddcc86fc5d35cc3a78f6cd671d977a864b5142d62dc352a
+      exact_product_commit: 743942d2593615c5c481110465d7d7faaf41d958
+      exact_product_tree: 748902ce407c434e10f4926cf84b1240a2666424
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      conformance_execution_finding_ref: FINDING-010-118
+      execution_finding_ref: FINDING-010-119
+    fifth_live_session_authorization:
+      status: consumed
+      authorization_ref: local-user-message-utf8:sha256:6834f6854008a41355d5dacff7c7aaad6edb56c9e915f9097ad14c82f5447ce4
+      exact_product_commit: 34d98ae12fe7429afb3cbe391d273c59a71c4758
+      exact_product_tree: b9100b15a2db30da811157549fc1f2d9affff288
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      conformance_execution_finding_ref: FINDING-010-123
+      execution_finding_ref: FINDING-010-124
+    sixth_live_session_authorization:
+      status: consumed
+      authorization_ref: local-user-message-utf8:sha256:bed1ccdca788bfaad0c1f8581f538b19d7007da81388a8c8763968f6fdbce8c6
+      exact_product_commit: 6e97bc1c0c02be858212c39da11ac42e099c365e
+      exact_product_tree: fd54821e212b3022e318436d9e96b93af11505c6
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      conformance_execution_finding_ref: FINDING-010-126
+      execution_finding_ref: FINDING-010-127
+    seventh_live_session_authorization:
+      status: consumed
+      authorization_ref: local-user-message-utf8:sha256:df3cfe58d7a728899e7294a0c26ced0fb9e175f16334a904a1d70ca345d40ee9
+      exact_product_commit: 3b8d09c71796e3c9b91ec6a9ea21697497319bbc
+      exact_product_tree: 6728a5ad63bedf65b1315cb7d7fdf27f111dc0d9
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      conformance_execution_finding_ref: FINDING-010-129
+      execution_finding_ref: FINDING-010-130
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24
   final_decision_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
   project_decision_ref: ITER-010-PDR-004
+  restart_execution_decision_ref: ITER-010-PDR-005
   recovery_decision_ref: ITER-010-PDR-003
   recovery_decision_ref_receipt: codex-user-message:sha256:47a3421d48fe3f36000e45696ea9c41b49b7e362332bc724306c10ca42fe119c
   result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT

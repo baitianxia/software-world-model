@@ -5,9 +5,9 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136]
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # ADR-018：世界模型增强的对话式主工程 Agent
@@ -28,7 +28,10 @@ comprehensive Review、evidence-boundary challenge 和 Verification Investigatio
 `SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION` 定义的对话式主工程 Agent。系统由三个相互制约的部分组成：
 
 1. **软件世界模型**提供跨问题、跨会话复用的版本化软件认知，包括实体、关系、行为、约束、状态、来源、Coverage、Conflict 与 Unknown。
-   它不是聊天记录、答案缓存或检索提示集合。
+   它不是聊天记录、答案缓存或检索提示集合。工程 Conversation 通过 Application-owned Cognition Binding 引用同一 repository
+   Binding/exact revision 上一个或多个 profile-specific exact Read Authority，并以 Capability Manifest 声明各 Profile 的 Schema、
+   Coverage、可查询能力、已覆盖认知维度和显式未知。组合只发生在只读投影层，不合并 Snapshot/Read Set，也不绕过跨 Schema Adoption
+   边界。
 2. **主工程 Agent**是解决用户问题的模型认知控制者。它在同一受控工作循环中理解当前消息和相关对话目标，维护假设、计划、子任务、
    已观察结果和未解决项；按需查询世界模型或提议受控源码读取；根据新观察修改计划；最后综合形成自然答案或诚实限制。Question
    Understanding、Investigation、Answer 和针对性修订是该 Agent 的能力，不再是产品架构强制的独立模型角色流水线。
@@ -60,8 +63,13 @@ Package/Draft；新候选必须重新独立审核。架构不再要求单独的 
 和非空 Conversation 仍进入同一主 Agent 路径。
 
 模型和 Provider 对该协议透明。可以使用任何通过同一 Agent 能力、工具、隔离和质量资格的模型 Strategy；current Codex 是强外部产品
-基线，不是系统运行时依赖、Oracle 或 Reviewer。系统还必须以同一主 Agent 的完整世界模型认知与 locator-only/empty 控制做因果消融，
-分别证明 Agent 本体质量和世界模型认知价值。
+基线，不是系统运行时依赖、Oracle 或 Reviewer。系统还必须以同一主 Agent 对预提交问题集合具备资格的多域世界模型认知与
+locator-only/empty 控制做因果消融，分别证明 Agent 本体质量和世界模型认知价值。`MAVEN_REACTOR_STRUCTURE@1` 等窄 Profile 可以在其
+Coverage 内正确回答结构问题，但不得在行为、流程、职责、配置或故障问题上被命名为 `full cognition`。
+
+资格按问题而不是按数据量命名：Application 从原 Turn 的 material Need 独立形成 Cognition Eligibility Assessment，并把每个 Need 绑定到
+已资格化认知维度/操作或显式 Gap。开放式工程 Chat 的可体验认知至少组合结构与实现/行为维度；缺失时主 Agent仍可按授权使用 Source
+完成当前调查，但必须保留 World Model Gap，不能把 Source 命中追认为世界模型贡献。
 
 ## Preserved boundaries from ADR-016
 

@@ -5,6 +5,7 @@ status: current
 authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL, SYS-CONTRACT-SOURCE-ARTIFACT]
+derived_from: [FINDING-010-135]
 code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services]
 tests: [tests]
 ---
@@ -82,7 +83,12 @@ Bundle。正向事实只能陈述保存的 typed outcome，不得从省略字段
 
 ## Disposition and coverage
 
-每个授权 `.java` 文件、type 和 method 都必须在同一 Coverage State 的 disposition manifest 中恰好出现一次：
+每个授权 `.java` 文件，以及具备本 Profile canonical external key 的 named top-level/member type 和 member method，都必须在同一
+Coverage State 的 disposition manifest 中恰好出现一次。constructor、annotation element、anonymous/local type body 与 lambda body
+当前没有独立的 `JAVA_TYPE/JAVA_METHOD` external key，不得伪造合成身份或把其中调用归到外层方法；它们使最近的可表示 type/method
+保持 `UNSUPPORTED_EXCLUDED`，并作为显式 Profile 边界披露。grammar-only enum member wrapper 不改变 named member method 身份，不能因此
+漏掉 disposition。disposition path 未解析 wildcard import 或 type variable namespace 时，方法声明 key 只保留 normalized declaration
+spelling；不得把未知 simple type 擅自限定到 declaring package，且该方法的 implementation facet 继续为 `INCOMPLETE`：
 
 - `SEMANTICS_COMPLETE`：该单元在 Profile 支持闭包内全部分类，所有目标 Atom/Relation、source order 与 Support 完整；
 - `UNSUPPORTED_EXCLUDED`：source 可解析且已精确识别不支持 construct；可以发布逐项有 Support 的正向事实，但不得从缺边、缺 Atom
