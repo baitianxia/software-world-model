@@ -5,6 +5,7 @@ status: current
 authority: normative
 owners: [architecture]
 depends_on: [SYS-PRODUCT-VISION, SYS-ADR-017]
+derived_from: [FINDING-010-139]
 code: [src/software_world_model]
 tests: [tests]
 ---
@@ -64,6 +65,9 @@ tests: [tests]
    没有 authorized answer 且被可信分类为 Provider/model capability 原因时，才可启动最多一个 DeepSeek fallback attempt；Application/
    Source/Security failure 不允许 fallback。每个 attempt 从同一受信 Turn input、Conversation Context 与 exact Cognition 独立运行完整主
    Agent—证据—答案—审核链，不共享中间态、Provider 会话或结果权威；同 Provider retry 为 0，迟到 primary 结果隔离且不得覆盖。
+   Provider 对用户透明不表示其执行门禁透明消失：route 声明 dispatch schedule policy 时，必须在任何该 Provider 外部网络、credential 和
+   HTTP 前验证 run admission，并在每个新 request 前重验窗口或 exact override；失败必须证明该 Provider 分派为 0，不能靠删减答案质量
+   通过。当前 planned DeepSeek 调用使用 Operations 冻结的非高峰硬门禁。
 19. **INV-019 — 语义 Chat 状态分离。** 软件世界模型、Conversation Work State 和 Turn Evidence 是不同权威对象。后续 Turn 可引用、追问、
    纠正、深入或总结，但 Application 必须密封相关历史、有效约束和指代解析；用户纠正形成新 Revision，不改写历史。先前助手答案、摘要、
    Provider hidden state 或模型记忆都不是证据；一次 Turn 失败只结束该 Turn，不能污染后续 Turn、删除会话历史或关闭服务。

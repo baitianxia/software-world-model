@@ -5,9 +5,9 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106]
-code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
+derived_from: [FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139]
+code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # 非敏感模型配置
@@ -62,9 +62,21 @@ PYTHONPATH=src python3 -m software_world_model.interface.provider_cli probe
 
 `status` 不联网且不得显示密钥；`probe` 只证明最小传输，不替代完整 Contract Conformance、Capability Evaluation 或产品验收。
 
-DeepSeek 批量调用的计划窗口为北京时间 `00:00–09:00`、`12:00–14:00`、`18:00–24:00`。截至 `2026-08-25`，DeepSeek 官方页面只
-预告峰谷定价，正式生效日期仍以公告为准；每次批量启动前必须重新检查
-<https://api-docs.deepseek.com/quick_start/pricing/>，密封检查时间、当时窗口和 `EFFECTIVE / NOT_YET_EFFECTIVE / CHANGED` 状态。
-紧急高峰启动必须有显式审计 override。成本只决定 Turn 开始前是否承担完整 primary/fallback 最坏预算，不得削减已经开始的 Agent
-调查、Evidence、Citation 或独立 Review。Provider/Model、Agent Strategy 或 Prompt/Tool identity 变化必须按其 owning gate 单独重新资格化，
-不能因为 Provider 对产品语义透明而跳过验证。
+DeepSeek 的所有 planned development/evaluation 外部分派——包括 probe、Conformance、Capability Evaluation、canary、比较、回归和 Web
+体验——只允许在 `Asia/Shanghai` 半开窗口 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)`。截至 `2026-08-27`，DeepSeek 官方页面
+仍将北京时间每日 `09:00–12:00`、`14:00–18:00` 定义为高峰，峰谷价格正式生效日以公告为准；本项目硬门禁不依赖价格是否已经生效。
+每次 run 必须重新检查 <https://api-docs.deepseek.com/quick_start/pricing/>，密封 check time、内容摘要和
+`EFFECTIVE / NOT_YET_EFFECTIVE / CHANGED`，但官方状态本身不能替代窗口判定；检查缺失或返回 `CHANGED` 时，本次准入失败关闭并先
+重新规划，不能由运行器自行扩张窗口。
+
+每个 run 在任何 DeepSeek socket/connected descriptor provisioning、TLS、credential 或 HTTP 前必须密封
+`DEEPSEEK_DISPATCH_ADMISSION@1`；每个新 DeepSeek request 前重验
+可信时钟仍在允许窗口，或存在一次性 exact user peak override。override 必须绑定 Provider/model、run/Turn、原因、最大 calls/tokens/
+duration、start 和 expiry；普通开发、canary、route 或 fallback grant 均不包含该例外。计划必须把完整最坏质量链安排在窗口内；窗口关闭
+后不再创建新 request，已发出的 request 仍按零重试和 outcome-unknown 规则密封。任何缺失或越界都在外部网络前失败关闭并证明
+DeepSeek socket/descriptor、TLS、credential、HTTP 均为 0；不能用删减 Evidence、Citation、Answer 或独立 Review 换取完成。
+
+**当前执行限制：** runtime 已实现该机械 admission gate 和 receipt，并由 `V-DEEPSEEK-IDLE-001` 本地 PASS；运维只可启动 closed `@3`
+artifact，且必须在启动前重新取得 fresh 官方检查、有效 external grant、完整最坏时长窗口判定或 exact peak override。缺少任一对象时 CLI 在
+listener/credential/TLS/HTTP 前关闭。该能力不是异步排队，也不授权 Production；Provider/Model、Agent Strategy 或 Prompt/Tool identity
+变化仍按各自 owning gate 单独重新资格化，不能因为 Provider 对产品语义透明而跳过验证。

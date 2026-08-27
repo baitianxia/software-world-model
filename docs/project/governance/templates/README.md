@@ -64,22 +64,32 @@ Codex identity、fresh 隔离任务、答案先密封、系统不可见、随机
 首次方向体验必须是真正可持续操作的版本：精确版本可重复启动、固定本地地址、版本和限制可见，且单题失败不关闭服务。一次性验证
 运行或只能回答启动前冻结问题的页面不算体验版本。连续提交独立问题只证明持续 Q&A；若声明 Chat，Manifest 必须使用
 `ENGINEERING_CHAT_EXPERIENCE@1` 和 `CONVERSATIONAL_ENGINEERING_AGENT@1`，冻结追问、纠正、总结、逐轮证据/审核及新对话隔离，
-并用至少五轮语义链验证。阻断失败默认记录为 `REWORK` 并暂停当前 Slice；同一目标和
-总体架构下使用新的用户授权恢复同一 Slice。只有明确用户转向、核心架构证伪或达到预提交无进展上限才允许 `REDIRECT`。
+并用至少五轮语义链验证。阻断失败默认记录为 `REWORK`，只阻止 PASS、晋级和 hardening；现有本地开发授权覆盖通用修复时保持当前
+Slice active。同一目标和总体架构下继续同一 Slice；只有 scope/Owner 变化、用户明确暂停或本地授权失效时才暂停并申请恢复。只有明确
+用户转向、核心架构证伪或达到预提交无进展上限才允许 `REDIRECT`。
 
 从 ITER-012 起，首个持续 Alpha 还必须使用模板中的 `EXPERIENCE_FIRST_DELIVERY@1`：从授权后的第一次产品代码变更起，60 分钟页面可启动、
-180 分钟用户可连续操作，240 分钟仍未达到即停止扩张/hardening/外部调用并缩围复盘。首次体验前只允许启动、安全、失败真实性、一次
+180 分钟用户可连续操作，240 分钟仍未达到即停止扩张、hardening、full regression 和无新证据的外部重跑并缩围复盘，但继续本地根因
+归因和最小体验纵切。首次体验前只允许启动、安全、失败真实性、一次
 current Provider 资格和最多一个 Provider 前本地/Mock Access smoke，不做 full regression。Access PASS 只决定 availability，不替代答案 Quality PASS；后者才允许 hardening。
 ITER-010 只有显式加入同一 policy 时 opt in。
 
 若 policy 是在既有失败 Result 密封后才采用，只能把这些 exact Result ID 写入 `historical_pre_policy_result_refs`。它们继续接受历史完整性
 和 paused REWORK 检查，但不追溯补造新字段，也不能满足新的体验 Gate；恢复授权后的 successor Result 不得列入该清单。
 
+授权连续性必须作为每个开发模板的必填规则：Slice 本地开发授权与 external exact grant 分离；active grant 复用、pending 不重复，真正的
+gap 在 credential-free preflight 和 exact identity/disclosure freeze 后直接申请最小 delta，不先询问是否申请。批准后自动继续；等待时继续
+全部独立安全工作。只有阶段交付、actual exact request 已发出且独立工作穷尽、用户明确停止/转向/拒绝，或不可绕过的安全禁止才允许结束
+开发回合；`WAITING_EXACT_GRANT` 必须同时保持 `IN_PROGRESS`。
+
 live attempt 按“同一 sealed version 的一个有界用户交互单元发生任一外部 dispatch”计一次；Chat 按 Turn 分别计数。同 failure signature 最多重试一次，连续两次
 没有用户可见增量即停止外部重跑；已开始的问题仍保留完整质量链。Provider route 必须 Ark-first，并在 session 前预授权 Ark/DeepSeek
-ordered route 与双方 disclosure scope。Ark 因 Provider/模型能力 outcome 没有 authorized answer 时，可透明启动最多一个独立 DeepSeek
-attempt；用户不重提，fallback 从原交互输入与 exact cognition 重跑全链，Chat 同时携带当前 Turn 的 exact relevant Application-sealed Conversation Context，不复用中间产物，迟到 Ark 只隔离审计。DeepSeek 批量运行优先使用
-执行时重新核对的官方非高峰窗口，峰时 override 可审计；成本不得降低答案质量。
+ordered route、双方 disclosure scope 和 dispatch admission policy。Ark 因 Provider/模型能力 outcome 没有 authorized answer 时，可透明启动
+最多一个独立 DeepSeek attempt；用户不重提，fallback 从原交互输入与 exact cognition 重跑全链，Chat 同时携带当前 Turn 的 exact relevant
+Application-sealed Conversation Context，不复用中间产物，迟到 Ark 只隔离审计。所有 planned DeepSeek 调用必须经过硬调度准入；模板中的
+旧“preferred”字段只作 docs validator 兼容。run receipt 与每个新 request 的窗口/一次性 exact override 重验必须早于 Provider socket/
+connected descriptor、TLS、credential 和 HTTP；缺失时相关计数为 0。完整最坏质量链必须能在窗口结束前完成，窗口关闭后不创建新
+request；无法完成独立审核时失败关闭。等待窗口不停止 Ark-only 或本地开发，成本不得降低答案质量。
 
 失败修复必须 root-cause-first：按 Source truth、World Model cognition、conversation/task understanding、Agent work state/plan、tool
 observation/evidence、answer、independent review、Web 查找最早偏差；无可证伪假设不得改 Prompt/Schema/Contract。先本地最小复现并通过两个未参与修复的相邻案例，再用一个有界 live

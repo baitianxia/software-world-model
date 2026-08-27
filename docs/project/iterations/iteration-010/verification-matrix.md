@@ -8,8 +8,9 @@ depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-09
 code: []
 tests: []
 iteration: ITER-010
-current_execution_decision_ref: ITER-010-PDR-006
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137]
+current_execution_decision_ref: ITER-010-PDR-007
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138]
+current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
 product_goal_outcome: user-visible-general-engineering-qa-delta
 product_goal_evaluation: independent-hidden-plus-live-ad-hoc
@@ -18,7 +19,7 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 
 # ITER-010 Verification Matrix
 
-## PDR-006 execution rule and PDR-005 current verification target
+## PDR-007 DeepSeek admission, PDR-006 execution rule and PDR-005 direction target
 
 PDR-005 已停止 v7 症状实验和第八次同题重跑。新的“开发 ITER-010”对话可以直接接手；它不继承旧对话状态，也不因换对话而被要求新建
 Slice。当前唯一阻断顺序是：
@@ -26,9 +27,24 @@ Slice。当前唯一阻断顺序是：
 `V-LAYER-ATTRIBUTION-001`（离线、外部调用 0）→ `V-COGNITION-ELIGIBILITY-001`（结构+实现/行为的工程认知）→
 复用已 PASS 的 `V-ALPHA-ACCESS-001`，执行一条真实语义链和两个未参与修复的异质问题 → `V-COMP-ALPHA-001` → `V-PREVIEW-002`。
 
-前两项现均已以外部调用 0 PASS；期间没有修改冻结的 Prompt、答案 Schema、Source Tool/Query policy 或 Reviewer 文案，也没有运行 fresh
-双 Provider Conformance、旧五轮或 full regression。下一步只有在另取 exact grant 后，才可复用既有 Web 执行最多一个 Ark direction
-canary；DeepSeek 仅按 ADR-017 条件式透明 fallback。
+Layer、Cognition 与新增的 DeepSeek local admission 三项均已以外部调用 0 PASS。run-043 曾消费 direction grant，但在北京时间
+`11:19–11:27` 的高峰窗口执行 DeepSeek `18` 次，
+没有 fresh official check、window verdict 或 peak override receipt；因此该 run 是
+`DEEPSEEK_SCHEDULING_POLICY_FAIL / NOT_DIRECTION_ACCEPTANCE_EVIDENCE`。clean `03520eb…` 已实现调用前硬门禁，clean
+`3a6089f…` 已冻结 v8 semantic-query successor；当前只在允许窗口和新的 exact grant 同时成立时执行一个后继 canary。峰时 Ark-only 与
+本地工作继续，首次体验前仍不跑 full regression。
+
+本 Matrix 中 `blocking` 只阻止对应 Case 的 PASS 声明、Slice 晋级、扩域或 exact external action，不自动结束开发目标。PDR-006 要求开发者
+保持本 Slice `IN_PROGRESS`：active grant 直接复用，权限 gap 直接申请，等待期间继续独立安全工作。只有阶段交付、已实际发出的 exact
+request 且替代工作穷尽、用户明确停止/转向/拒绝，或不可绕过的安全禁止才允许结束开发回合。
+
+### Current run-043 scheduling evidence
+
+`FINDING-010-139` 对账 `run-043-pdr005-direction-canary` 的 Session、terminal 和两个 Gateway：planned run 在北京时间
+`2026-08-27 11:19–11:27` 运行，DeepSeek HTTP `18`，其中 `16` 个响应合计 `608,785` input / `10,679` output tokens，另有
+`2` 个 outcome unknown；run 没有 schedule/window/override receipt。该证据只证明真实成本和策略违规，不证明调度、Chat、Quality、
+Comparison 或 Preview PASS。不得为修正该记录立即重跑；`V-DEEPSEEK-IDLE-001` 已本地 PASS，下一外部动作现由新的 exact grant、允许
+窗口、fresh 官方检查和 `@3` live receipt 共同阻断。
 
 ## PDR-004 / v7 historical verification target（已被 PDR-005 取代）
 
@@ -662,10 +678,11 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 |---|---|---|---|---|---|---|
 | V-LAYER-ATTRIBUTION-001 | 回答错误先定位到最早偏差层，而不是继续针对问题碰答案 | architecture / diagnostic | run-042 的 exact Source、Maven Snapshot/Read Set、Cognition 投影、Conversation/Work State、工具观察、Ledger/Package、Draft、Review、Delivery 与页面 Result；原问题加两个未参与修复的异质问题；外部模型调用 0 | 对每个 material fact 分别给出 `Source truth → construction/admission → cognition projection/query → conversation understanding → Agent → Package → Answer → Review → Web` 的 verdict、first divergence、应拦未拦的 guard failure 和 display failure；允许同题多个故障；用 World Model-only、同 Agent source-only、同 Agent eligible-cognition+source、complete-evidence bypass、Reviewer seeded-good/bad 和 Result→Web 替换实验隔离责任；未密封前不得改 Prompt/Schema/Tool/Review | `ITER-010-RESULT-V-LAYER-ATTRIBUTION-001 / FINDING-010-134`：固定 run-042 action trace 的六臂离线替换、逐 material-fact chain 与 exact digest 已密封，外部调用 0。行为事实 first divergence 是 Knowledge construction/admission；Agent 漏读和 Reviewer 放行/扩域为独立下游故障；authorized Result→Web 一致，无 display failure。eligible-cognition arm 只用 behavior oracle 隔离责任，不追认下一 Gate | PASS / blocking |
 | V-COGNITION-ELIGIBILITY-001 | 世界模型向主 Agent 提供能回答实际工程问题的版本化认知，而不是只提供 Maven 模块目录 | product / knowledge + application | 同一 exact repository revision；Profile-specific Snapshot/Read Authority；Cognition Capability Manifest；三个预先冻结的异质类别：结构、行为/调用流程、职责/失败边界或 Unknown | Manifest 至少覆盖结构和实现/行为两类维度，逐 Profile 给出 exact Read Authority、Coverage/Gap、来源和同 revision 绑定；Application 只读组合多个 Profile，不创建 mixed-profile Snapshot/Read Set；逐题只投影相关认知或准确 Gap；Maven-only 对行为题明确不合格；Source 后续补证不回填为 World Model 贡献；至少一项非 locator 的问题相关结论可追溯到 World Model | `ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001 / FINDING-010-135/136`：exact mall revision 上固定 Maven 与 Java 两个独立 Profile、Snapshot、Read Authority 和 capability digest；结构/行为/职责边界三题分别形成 23/32/32 个 support item 与准确 Gap，行为题含 `login → loadUserByUsername/insertLoginLog` 等非 locator 正向事实。Maven-only 行为题失败关闭，artifact Session `@2` 本地组合通过；projection Source read、Provider/model、listener/browser 均为 0 | PASS / blocking |
+| V-DEEPSEEK-IDLE-001 | 所有 planned DeepSeek dispatch 只在冻结闲时窗口或一次性 exact peak override 下发生 | operations / cost + runtime | `DEEPSEEK_DISPATCH_ADMISSION@1`；零剩余时长的半开边界时钟 `08:59:59/09:00:00/12:00:00/14:00:00/18:00:00` 与非零 worst-case latest-start；无/有 exact override；Ark success 与 Application/Source/Security failure；跨窗口 planned session；run-043 audit | `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)` 内且 `now + worst_case_duration <= window_end` 才允许；其余时间无 exact override 时在 Provider socket/descriptor/TLS/credential/HTTP 前关闭且相关计数为 0；override 只能覆盖 exact run/call/token/time；Ark success 与非 Provider/model fallback failure 时 DeepSeek=0；窗口结束后不创建新 request；每个 dispatch 回指 fresh official-check/window/authorization receipt；质量链不裁剪；本地 PASS 不授权 live，Ark/local 继续 | `ITER-010-RESULT-V-DEEPSEEK-IDLE-001 / FINDING-010-139`：clean `03520eb…` 实现 Artifact `@3`、run receipt、逐 envelope Gateway preflight/invoke 重验和 terminal 对账；边界/latest-start/override/价格检查/identity/budget/跨窗口测试 PASS，真实 runtime 峰时拒绝的 credential/TLS/HTTP 均为 0。run-043 的 18 次峰时 HTTP 永久保留为历史 FAIL；后继 live receipt 仍需单独证明 | PASS / blocking |
 | V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
 | V-ALPHA-ACCESS-001 | PDR-004 下在答案质量验收前先交付真实、可操作 Chat Web | product / access | 固定启动命令、loopback 页面、消息历史、“新对话”、Provider/失败状态；最多一个 Provider 前本地或 Mock Access smoke | 页面无需认证；能建立/继续/新建 Conversation 并真实提交 Turn；明确“质量未验收/非生产”；Provider 未配置/未资格/失败如实显示而不阻塞页面；完成后立即把命令、URL、版本和限制交给用户，不等待 Chat/Quality/Comparison；静态回放不通过 | `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`：clean `cf2883b…` 固定 listener + in-app Browser；同会话两次失败仍 ACTIVE/历史完整，新会话不同 identity/EMPTY CONTEXT/旧消息不泄漏；2 Conversation、3 Turn、Provider dispatch 0、console clean、Production 未执行；listener 已优雅停止 | PASS / blocking |
 | V-TIMEBOX-001 | 体验优先、根因优先与轻量 live-attempt 纪律成立 | project / delivery | Slice 授权后首个产品变化时间、page/alpha/hard-stop 时间、qualification/smoke/full-regression 计数、sealed version/question/provider dispatch audit、failure signatures、最早偏差层、可证伪根因假设、本地最小复现、两个未参与修复的相邻案例、用户可见增量 | 60/180/240 检查点可核对；本轮已超过 hard stop 并停止 scope expansion/external batch；首次体验前 qualification≤1、smoke≤1、full regression=0 且仅跑 targeted impact/startup/safety；无根因假设不得改 Prompt/Schema/Contract；本地最小复现与两个相邻案例通过后才跑一题 canary；同签名只修一次，复现则架构职责评审；连续两次无用户可见增量停止外部重跑；full regression 只在 Alpha CONTINUE 后 hardening 与正式验收前 | 用户报告约14小时无新体验；PDR-003 hard-stop/root-cause recovery active | FAIL / blocking |
-| V-TIMEBOX-CHAT-001 | PDR-005 下体验优先、根因优先与逐 Turn live-attempt 纪律成立 | project / delivery | 旧 14 小时及 run-035—042 永久 FAIL；新开发对话从首个新产品代码改动起独立审计 T+60/180/240；qualification/smoke/full-regression、Provider dispatch、first divergence 与用户可见增量。兼容历史 PDR-004 审计字段仍保存“四个微检查点”“Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付”及 `Conversation/Turn/provider dispatch`，但不作为 PDR-005 前置顺序 | PDR-005 current：T+60 交付离线分层归因，外部调用 0；T+180 交付行为有意义的多域认知并接回现有 Web；T+240 交付一个真实语义多轮链和两个未参与修复的异质问题，最多一个另行授权的 Ark canary；未达到即交付最后可运行版本与准确 Gap、记 `FAIL / REWORK`、停止扩域和外部调用；首次体验前 full regression=0。历史 PDR-004 审计原文保留但已被取代：60 分钟页面；180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL；181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据；240 分钟绝对停止；360 分钟五轮方向证据；480 分钟独立比较与用户判向；每个检查点立即交付用户；三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`；计划/测试/文档完成不算用户可见增量；每个 Provider-dispatched Turn 分别计 live attempt | `ITER-010-RESULT-V-LAYER-ATTRIBUTION-001` 与 `ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001` 已在外部调用 0、full regression 0 下闭合前两 Gate；一次 exact canary 已授权但尚未 dispatch，clean candidate 密封后执行，故本复合 Case 仍未完成 | NOT-RUN / blocking |
+| V-TIMEBOX-CHAT-001 | PDR-007/PDR-006/PDR-005 下体验优先、根因优先、持续执行、闲时准入与逐 Turn live-attempt 纪律成立 | project / delivery | 旧 14 小时及 run-035—043 永久保留；新开发对话从首个新产品代码改动起独立审计 T+60/180/240；qualification/smoke/full-regression、Provider dispatch、first divergence、用户可见增量、active/pending grant identity、DeepSeek admission、exact request receipt 与等待期间本地工作。兼容历史 PDR-004 审计字段仍保存“四个微检查点”“Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付”及 `Conversation/Turn/provider dispatch`，但不作为 PDR-005 前置顺序 | T+60 交付离线分层归因，外部调用 0；T+180 交付行为有意义的多域认知并接回现有 Web；T+240 交付一个真实语义多轮链和两个未参与修复的异质问题，最多一个 canary。DeepSeek planned run 必须先通过 `V-DEEPSEEK-IDLE-001` 并整体处于允许窗口；窗口外 DeepSeek=0，本地/Ark-only 继续。exact freeze 后直接发出必要最小 delta request，不先询问，批准后自动继续。未达到即交付最后可运行版本与准确 Gap、记 `FAIL / REWORK`，停止扩域、hardening、full regression 和无新证据的外部重跑，但继续最小体验纵切和本地根因修复；只有 request 已发出且独立安全工作穷尽才可等待。首次体验前 full regression=0。兼容审计标签保留：60 分钟页面；180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL；181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据；240 分钟绝对停止；360 分钟五轮方向证据；480 分钟独立比较与用户判向；每个检查点立即交付用户；三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`；计划/测试/文档完成不算用户可见增量；每个 Provider-dispatched Turn 分别计 live attempt。这些兼容里程碑不改变 PDR-005/006/007 的当前先后和停止范围；这里的“绝对停止”只结束失控路径，不结束开发目标；该 FAIL 阻断晋级，但本地/Ark-only 继续 | Layer、Cognition 与 DeepSeek local admission 三个 Gate 已在外部调用 0、full regression 0 下 PASS；run-043 的质量/调度 FAIL 永久保留。clean `3a6089f…` successor 已冻结；当前已到 exact external grant 边界，后继 live 尚未执行 | FAIL / blocking |
 | V-CHAT-EXPERIENCE-001 | 同一产品成为可持续体验的多轮 Chat Alpha | product / browser | 一条固定启动命令；loopback；固定工程/exact revision；一条至少三 Turn 的真实语义链；两个未参与修复的异质问题；“新对话”泄漏负测 | 无认证；体验者不拼装内部参数；语义链显示初问→省略指代追问或纠正→深入/总结，三个独立问答不通过；每 Turn 有 Evidence/Citation/fresh Review；失败只关闭当前 Turn；新 Conversation 必须澄清省略指代且不继承旧 Context/Evidence/provider memory；完整五轮套件不反向阻塞本方向体验 | `FINDING-010-130 / run-042-chat-alpha` 是旧五轮失败历史；PDR-005 方向体验未执行 | NOT-RUN / blocking |
 | V-CHAT-001 | 主 Agent 完成真正语义多轮 Chat 且新对话不泄漏 | product / chat | 一个 Conversation 的最小语义链：初始问题→省略指代追问或用户纠正→进一步区分/深入或按当前 Context 总结；另有两个未参与修复的异质问题；随后新 Conversation 省略指代 probe | Context 维护确认目标/约束、实体/主题、开放问题、reviewed/superseded conclusion refs 与 provenance；模糊指代先澄清；每轮独立 Evidence/Answer/Review；新对话 probe 必须澄清且不继承旧 Context/evidence/provider memory；三个独立问答不算 Chat | `FINDING-010-130` 只保存旧五轮 3/5 与 leakage PASS；PDR-005 current Gate 未执行 | NOT-RUN / blocking |
 | V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 一题 live canary 独立 PASS；原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | canary 失败不启动三题；重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-033 因 supported predecessor observations 被 replacement 删除而不通过；`FINDING-010-088/089` corrective deterministic Gate 已闭合。run-034 仅取得 HTTP 402 Conformance FAIL，未生成新答案证据 | FAIL / blocking |

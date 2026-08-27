@@ -31,8 +31,10 @@ product_goal_slice_gate_case_ids: []
 Alpha 使用可见真实输入判向，不因 hidden canary 延迟；Alpha `CONTINUE` 后的夯实 Slice 才承担 early hidden。后续授权时再把
 该 Result 加入 `depends_on`，并与 Manifest `reflection_prerequisite_result` 一致；不能先授权再补证据。
 
-本 Slice 的失败尝试默认进入 `paused / coding_input=false`，不授权下一 Slice。原 Result 由 Manifest/PDR 保留；用户用新的明确收据
-重新授权后，恢复本 Slice 而不是新建 Iteration。只有满足 Proposal 冻结的转向依据才使用 `blocked / REDIRECT`。
+本 Slice 的失败尝试默认保留为同一 Slice 的 `REWORK`，只阻止 PASS、晋级、扩域和 hardening。若现有本地开发授权仍覆盖通用修复，
+保持 `authorized / in-progress / coding_input=true`；只有 scope/Owner 变化、用户明确暂停或本地开发授权失效时才进入
+`paused / coding_input=false`。原 Result 由 Manifest/PDR 保留；恢复时继续本 Slice而不是新建 Iteration。只有满足 Proposal 冻结的转向
+依据才使用 `blocked / REDIRECT`。
 
 ## Product-goal contribution and cumulative integration
 
@@ -55,18 +57,34 @@ Web 入口人工验证什么。中间机械 Gate 可以先行，但 Slice 不能
 决定。若本 Slice 属于工程夯实或正式验收，必须引用前一 Alpha 的 `CONTINUE` 结果。
 
 方向探索 Slice 必须把本轮最小的有序用户交付点放在本文件最前部的一页执行卡中，至少区分可启动入口、可持续方向体验和最终判向。
-每一行都写明累计时限、用户可见出口、允许验证、停止条件和明确延后项。检查点完成后立即交付，不等待后续 Gate；它们不创建或恢复
-Slice/Readiness/开发授权，只能在当前授权仍 active 时执行。外部执行仍须 exact grant，且任何用户方向否定都会停止后续检查点。
+每一行都写明累计时限、用户可见出口、允许验证、停止条件和明确延后项。检查点完成后立即交付，不等待后续 Gate；只要当前阶段仍有
+未完成工作且授权覆盖，交付后继续执行。检查点不创建或恢复 Slice/Readiness/开发授权，也不是开发目标或开发回合的自动停止点。外部
+执行仍须 exact grant；用户明确方向否定会停止后续检查点。
 
 从下一份新产品 Iteration 起，Alpha 还必须在同一出口绑定 `V-COMP-ALPHA-NNN`：一条原失败题加另外至少两条相邻或异质题，后两条中至少
 一条是产品冻结后的现场输入；current Codex fresh 独立任务先密封、
 系统不可见、两份答案随机匿名、独立评测方依据 exact evidence 裁决。系统绝对质量 PASS、逐题无物质退步且总体答案质量严格为正才允许
 `CONTINUE`；全体打平或只具有效率优势时在同一 Slice `REWORK`。该 Case 不是体验前的新阶段。
 
+## Authorization continuity and development-turn exit
+
+分别冻结 Slice 本地开发授权与 external/side-effect exact grant。active 且覆盖 exact action 的 grant 必须复用，pending request 不重复；
+consumed、expired、denied 或 identity-drifted grant 不得复用，但只阻断对应 exact action，不自动撤销仍有效的本地 coding input。
+
+到达权限边界时，先完成 credential-free preflight，并冻结 exact command/action、product/source revision、artifact/session、Provider/model/
+endpoint、input/disclosure/redaction、credential reference、读写/网络范围、调用/重试/时长、fallback、结果保存和 exclusions。确有 gap 时
+直接提交最小 exact approval request，不先问“是否申请”，也不只报告“需要授权”后退出；批准后自动继续，不重复确认。等待期间继续
+所有不依赖该 grant 的安全工作。
+
+开发回合只能在以下任一条件成立时结束：阶段用户可见交付已交给用户；exact request 已实际发出且所有独立安全工作已穷尽；用户明确
+`STOP / REDIRECT / REJECT`；或存在不可通过申请或安全替代绕开的禁止。等待状态写成 `WAITING_EXACT_GRANT / IN_PROGRESS`，不得写成
+开发完成、失败或停止。
+
 ## Experience-first timebox and Access/Quality split
 
 首个持续 Alpha Slice 从授权后的第一次产品代码变更开始计时：60 分钟内页面可启动，180 分钟内形成用户可连续操作的持续 Alpha；
-到 240 分钟仍未形成时，停止功能扩张、hardening 和外部模型调用，密封已有证据并缩围复盘。首次体验前只允许页面启动、安全边界、
+到 240 分钟仍未形成时，停止功能扩张、hardening、full regression 和无新证据的外部模型重跑，密封已有证据并缩围复盘，同时继续本地
+根因归因与最小体验纵切。该 hard stop 结束失控路径，不结束整个开发目标。首次体验前只允许页面启动、安全边界、
 失败真实性、一次 current Provider 资格确认和最多一个 Provider 前本地/Mock Access smoke；不得把全量回归、完整资格、hidden 或对照放在前面。
 
 `V-ALPHA-ACCESS-NNN` 只判断真实产品页面和请求通路是否可操作；Provider 未配置、未资格或失败可以被如实显示，不能阻塞页面交付，也
@@ -80,11 +98,13 @@ sealed version 中一个有界用户交互单元只要发生任一外部 dispatc
 修复的相邻案例，再执行一个有界 live canary 单元；Chat 使用冻结的最小多轮 Conversation，不得以孤立一题代替。同 signature 修复一次仍复现时，停止增加规则并评审架构职责。Alpha 前只做 targeted impact、
 startup、safety 测试；full regression 只能进入 `CONTINUE` 后 hardening 和正式验收前。
 
-记录 Ark-first ordered route 的 current 资格证据，并在 session 开始前预授权双方 disclosure scope。Ark attempt 以 Provider/模型能力原因
+记录 Ark-first ordered route 的 current 资格证据，并在 session 开始前预授权双方 disclosure scope 与 dispatch admission policy。Ark attempt 以 Provider/模型能力原因
 终态结束且没有 authorized answer 时，可以对用户透明地启动最多一个 DeepSeek attempt；用户不用新建 session 或重提。fallback 必须从
 当前交互的 immutable original input 和 exact World Model cognition 重跑完整链；Chat 还必须携带该 Turn 的 exact relevant Application-sealed Conversation Context。不能复用前次中间产物；迟到 Ark 结果只能隔离审计，不能覆盖已密封
-结果。同 Provider retry 为 0；Application、Source 或 Security 失败不得切 Provider 掩盖。DeepSeek 批量工作优先安排在执行时重新核对的
-官方非高峰窗口，紧急峰时启动必须有可审计显式 override。
+结果。同 Provider retry 为 0；Application、Source 或 Security 失败不得切 Provider 掩盖。所有 planned DeepSeek 调用均须通过当前
+Operations 非高峰硬准入；fallback eligibility 或普通 canary grant 不构成时间准入。run receipt 与每个新 request 的窗口/一次性 exact
+override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和 HTTP；缺失时相应计数为 0。完整最坏质量链必须能在
+当前窗口结束前完成；窗口关闭后不创建新 request，无法完成独立审核时失败关闭。等待窗口时继续 Ark-only 和本地开发。
 
 ## Experience version checkpoint
 
@@ -108,7 +128,8 @@ startup、safety 测试；full regression 只能进入 `CONTINUE` 后 hardening 
 本 Slice 的产品 Gate 后必须形成 exact Result，逐项比较假设与证据、分类问题、复核知识表示/查询编排/Web 产品链/验证设计、
 对照成熟方案并处置相关 Finding。`V-REFLECT-NNN PASS` 只表示复盘完成；中间 Slice 只有明确决定 `CONTINUE` 才可申请下一段授权，
 最终 Slice 只有明确决定 `ACCEPT` 才可申请 Iteration Acceptance。方案被证伪时使用 `REDIRECT` 或 `REJECT`，不得继续堆叠实现。
-实现、答案、审核、配置或局部 Contract 缺陷使用 `REWORK`，只暂停当前 Slice；问题被指出或要求复核不得直接解释为方案被证伪。
+实现、答案、审核、配置或局部 Contract 缺陷使用 `REWORK`，只阻止 PASS、晋级与 hardening；现有授权覆盖修复时保持当前 Slice active。
+问题被指出或要求复核不得直接解释为方案被证伪。
 Manifest 只绑定本 Slice 已到期的假设；成功决定要求这些假设全部为 `SUPPORTED`。尚未到期的假设只能记录 early signal 与下一风险，
 不能伪装成已经证明；最终 Slice 必须覆盖全部关键假设。
 

@@ -9,8 +9,9 @@ code: [src/software_world_model/application_services, src/software_world_model/a
 tests: [tests]
 iteration: ITER-010
 coding_input: true
-current_execution_decision_ref: ITER-010-PDR-006
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137]
+current_execution_decision_ref: ITER-010-PDR-007
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138]
+current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -18,24 +19,30 @@ product_goal_web_checkpoint_id: V-CHAT-EXPERIENCE-001
 direction_preview_web_checkpoint_id: V-CHAT-EXPERIENCE-001
 product_goal_direction_preview_checkpoint_id: V-PREVIEW-002
 product_goal_reflection_gate_case_id: V-PREVIEW-002
-product_goal_slice_gate_case_ids: [V-LAYER-ATTRIBUTION-001, V-COGNITION-ELIGIBILITY-001, V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHAT-EXPERIENCE-001, V-CHAT-001, V-CHAT-QUALITY-001, V-CHAT-XD-001, V-COMP-ALPHA-001, V-PREVIEW-002]
+product_goal_slice_gate_case_ids: [V-LAYER-ATTRIBUTION-001, V-COGNITION-ELIGIBILITY-001, V-DEEPSEEK-IDLE-001, V-ALPHA-ACCESS-001, V-TIMEBOX-CHAT-001, V-CHAT-EXPERIENCE-001, V-CHAT-001, V-CHAT-QUALITY-001, V-CHAT-XD-001, V-COMP-ALPHA-001, V-PREVIEW-002]
 ---
 
 # SLICE-001：主工程 Agent 多轮 Chat Alpha 与逐轮质量返工
 
 ## Status and dependencies
 
-### PDR-006 持续执行规则与 PDR-005 当前 Gate
+### PDR-007 DeepSeek 调度门禁、PDR-006 持续执行与 PDR-005 方向 Gate
 
 新的开发对话不得从 v7、fresh 双 Provider Conformance 或第八次旧五轮重跑开始。先用现有材料归因，再只修改 earliest-divergence Owner；
 Maven-only 不具备行为问题的工程认知资格。旧 14 小时/timebox FAIL 和七次 live 失败永久保留，新的检查点是附加 hard stop，不追认或重置
 历史。
 
+阶段交付前本 Slice 持续 `AUTHORIZED / IN_PROGRESS / coding_input=true`。检查点或 hard stop 只停止扩域、hardening、full regression 和
+无新证据的外部重跑，不是结束开发回合。此前 direction grant 已被 run-043 消费；该 run 在高峰执行 DeepSeek 18 次且没有
+window/override receipt，因此只能作为调度 FAIL 和本地归因证据。`V-DEEPSEEK-IDLE-001` 与 clean `3a6089f…` successor 已本地闭合；
+当前取得新的 exact grant，并在允许窗口只执行一个后继 canary。峰时继续 Ark-only 和全部本地安全工作；grant gap 在 exact freeze 后直接申请最小
+delta。只有阶段交付已交给用户、exact request 已实际发出且独立工作穷尽、用户明确停止/转向/拒绝，或不可绕过的安全禁止时才可退出。
+
 | 顺序 | 时间边界 | 必须交付给用户/项目的结果 | 允许的工作 | Stop / pass rule |
 |---|---:|---|---|---|
 | 离线责任层归因 | 产品代码改动前，最多 60 分钟 | `V-LAYER-ATTRIBUTION-001` 逐层表：每个 material fact 的 Source truth、Snapshot、Cognition/Package、Draft、Review、Web；分别标 first divergence、guard failure、display failure | 只读 exact Source、现有 run/Gateway/Ledger/Package/Review、离线 projector；外部调用 0；只允许补可观测性证据 | 不能密封归因就停止产品修改并报告唯一证据缺口；不得猜改 Prompt/Schema/Tool/Review |
 | 有资格的认知纵切 | 首个新产品代码改动后 T+180 | 同一 exact revision 的 Cognition Capability Manifest；结构+实现/行为 Read Authorities；三个异质问题逐 Need eligible capability/Gap；不同问题得到相关投影 | 只修改归因命中的知识构建/投影 Owner；定向单测、启动、安全 smoke；复用现有 Web Access | Maven-only、同题硬编码、所有问题返回同一整包或 Source 命中被回填成认知贡献均 FAIL |
-| 浏览器方向体验 | T+240 absolute hard stop | 现有 `127.0.0.1:8765` 上一条真正的语义链（初问→省略指代追问或纠正→深入/总结）和两个未参与修复的异质问题；覆盖结构、行为/流程、职责/失败/Unknown；答案/真实失败、Citation、限制和版本可见 | 接入现有页面；每个 Turn 保持完整 Evidence/Answer/fresh Review；最多一个 Ark direction canary session 且须新 exact external grant；DeepSeek 仅 fallback | 到点立即交付最后可运行版并停止新增范围/外部调用；三个独立问答或单题答对不 PASS；重大错误或 Reviewer 漏判为 REWORK |
+| 浏览器方向体验 | T+240 absolute hard stop | 现有 `127.0.0.1:8765` 上一条真正的语义链（初问→省略指代追问或纠正→深入/总结）和两个未参与修复的异质问题；覆盖结构、行为/流程、职责/失败/Unknown；答案/真实失败、Citation、限制和版本可见 | 先过 `V-DEEPSEEK-IDLE-001`；planned canary 整体在允许窗口执行；每个 Turn 保持完整 Evidence/Answer/fresh Review；最多一个后继 canary，exact grant gap 直接申请 | 峰时 DeepSeek=0 且本地/Ark-only 继续；到点交付最后可运行版并停止新增范围和无新证据外部重跑；重大错误、Reviewer 漏判或调度违规均为 REWORK |
 | 方向比较与决定 | 体验交付之后 | 同 Agent source-only vs eligible-cognition+source 的认知增益；隔离 current Codex 强基线；用户 `CONTINUE/REWORK/REDIRECT/REJECT` | 先绝对质量，再盲化比较；Codex 非 Oracle/Reviewer | eligible cognition 不得弱于 source-only，且至少一项非 locator 相关贡献；只有 CONTINUE 解锁 hardening/full regression |
 
 冻结的体验只冻结类别、exact revision、判定规则和互异性，不把题目/答案/符号写进产品逻辑。其中一组 Turn 必须形成真实语义链，另外
@@ -155,8 +162,9 @@ user-message UTF-8 digest 为 `6834f685…`，`FINDING-010-123/124` 再次密封
 `bed1ccdc…`，`FINDING-010-126/127` 密封 3/5 technical responses / overall FAIL 与 leakage PASS。该授权也已消费；v6
 strategy/prompt/Primary input 随后在 exact `3b8d09c…` 上取得 fresh 双资格并执行 run-042。本地密封的 exact user-message UTF-8 digest 为
 `df3cfe58…`，`FINDING-010-129/130` 密封 3/5 reviewed Limitation / overall FAIL 与 leakage PASS。该授权也已消费；v7
-strategy/prompt/Primary/Review input 已冻结为未接受症状实验，领域 Prompt/Schema 变化本身不使 Provider Conformance 失效。当前没有新的 Provider/Source/browser live 授权，hidden、Slice2/3 与 Production
-始终未授权。
+strategy/prompt/Primary/Review input 已冻结为未接受症状实验，领域 Prompt/Schema 变化本身不使 Provider Conformance 失效。在该 v7
+冻结时没有新的 Provider/Source/browser live 授权；此历史状态后来已被 `15a8f810…` 的一次受限 direction-canary grant 更新。hidden、
+Slice2/3 与 Production 始终未授权。
 
 恢复后的最小纵切必须同时具备 server-owned Conversation/Turn/Context、完整消息历史、“新对话”、主 Agent 的目标/假设/计划/重规划、
 逐轮 Request/Evidence/Answer/Review/Delivery 和新对话隔离。PDR-005 首次方向体验至少含一条真实语义链和两个未参与修复的异质问题；
@@ -184,8 +192,10 @@ strategy/prompt/Primary/Review input 已冻结为未接受症状实验，领域 
    primary attempt 因 Provider unavailable/HTTP/outcome unknown/output invalid 或 Review reject 而密封为无 authorized answer 时，才可对
    同一 Turn 自动启动一次 DeepSeek attempt。Fallback 从 original Turn、该 Turn 密封的 Cognition 和 relevant sealed Conversation Context 重跑完整链，不复用 Ark 中间态；迟到 Ark 结果隔离且不覆盖。
    相同且仍有效的 Conformance 必须复用。
-8. DeepSeek 批量运行默认安排在北京时间 `00:00–09:00`、`12:00–14:00`、`18:00–24:00`，并在开始前复核官方价格政策是否已经生效。
-   成本只决定是否在 dispatch 前开始，不能裁剪已经开始的问题的调查、Citation 或 Review。
+8. 所有 planned DeepSeek 运行均受 PDR-007 硬准入，只能在北京时间 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)`
+   内容纳最坏完整质量链；每次 run 复核官方策略，每个新 request 重验窗口或一次性 exact override。门禁必须早于 Provider socket/
+   connected descriptor、TLS、credential 和 HTTP，缺失时相关计数为 0。成本不能裁剪调查、Citation 或 Review；窗口阻断时本地和
+   Ark-only 工作继续。
 
 ## Rework outcome：先交付持续 Web Alpha
 
@@ -207,8 +217,10 @@ Schema 或评测体系。模型调用上限仍只作为安全熔断，不能为�
 
 开发 baseline 仍候选绑定 commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree
 `1369ce932c778c57a118123e8257ede476229d73`；本次刷新 Readiness 冻结的 planning commit/tree 为
-`b66ff9f058b92cebd78d5644ffef042753567b4d` / `30e437eea83e048e3fb59ddd90a8d1b76242d82c`。本开发授权不允许
-credential、Provider/model call、live Web/browser、源码片段外发、hidden disclosure 或 Production；live 必须在产品 freeze 后另取 exact grant。
+`b66ff9f058b92cebd78d5644ffef042753567b4d` / `30e437eea83e048e3fb59ddd90a8d1b76242d82c`。本地开发授权本身不允许
+credential、Provider/model call、live Web/browser、源码片段外发、hidden disclosure 或 Production；后续 `15a8f810…` 曾另行授权一次
+受限 direction canary，已由 run-043 消费并因 DeepSeek 高峰调用判为调度 FAIL。PDR-007 与 clean `3a6089f…` 后继 product 已本地闭合；
+当前直接申请新的最小 exact grant。
 
 用户随后以 `codex-user-message:sha256:b8b6931f8d76b45a16fa50ae057d7fa6ccd744d58f6041d3fdfc1fd5ca84e7c7` 授权完成本 Slice 所需权限；
 该 root authority 已通过 exact product/request/Provider/role/input grants 收窄并消费。Listener 已停止，所有旧 grant 不得复用。Slice2/3、
@@ -714,5 +726,6 @@ FINDING-010-134` 随后以外部调用 0 密封 Knowledge construction/admission
 call-site fact；559 个 method implementation incomplete 与 866 个 unsupported unit 继续显式可见。`FINDING-010-136 /
 ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001` 又把 original-question Need 的 dimension + query capability、两个独立 Profile authority、
 问题相关 projection/Gap 与 artifact Session `@2` 组合闭合为本地 PASS。整个阶段 Provider/model、projection Source read、listener/browser
-均为 0；下一步仍须另取 exact external grant 才能执行一个 Ark Web direction canary，不能由本地 Result 追认 live Chat/Quality/XD。
+均为 0；后续一次受限 direction-canary grant 已由 run-043 消费，但调度 Gate FAIL。run-043 本地归因、PDR-007 机械门禁和 clean
+`3a6089f…` candidate 已闭合；下一步直接取得新的最小 exact grant。本地 Result 与 run-043 均不能追认 live Chat/Quality/XD。
 后续发现按 [Findings](../findings/README.md) 与[实现发现回写规则](../../../governance/implementation-feedback-policy.md)处置。

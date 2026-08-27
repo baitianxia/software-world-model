@@ -53,6 +53,9 @@ ITER-012，也不复活执行前已作废的 ITER-011。
 比较失败默认暂停并在同一 Slice `REWORK`；单次落后不能自动推导核心架构失效或新建迭代。独立技术评测先给出质量结论，用户继续只对
 产品方向和是否接受作决定，不承担源码真值裁判职责。
 
+> Current amendment：`ITER-010-PDR-006` 已将上述“默认暂停”收窄为 active same-Slice `REWORK`。现有本地开发授权覆盖修复时继续开发；
+> 只有 scope/Owner 变化、用户明确暂停或本地授权失效时才进入 paused。严格质量阈值不变。
+
 ## Scope and consequences
 
 - ITER-010 继续使用已冻结的当前计划、Manifest 和 Gate；本决定不追溯改写它的假设、运行结果或验收门槛。

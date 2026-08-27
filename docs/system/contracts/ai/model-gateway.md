@@ -5,9 +5,9 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/ark_chat_conformance.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
-tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_conversational_engineering_model.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/ark_chat_conformance.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py, src/software_world_model/ai_infrastructure/pinned_ark_https.py, src/software_world_model/ai_infrastructure/pinned_deepseek_https.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py]
+tests: [tests/test_model_gateway.py, tests/test_openai_responses_adapter.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_conversational_engineering_model.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_runtime.py, tests/test_model_egress_gateway.py, tests/test_pinned_ark_https.py, tests/test_pinned_deepseek_https.py, tests/test_world_model_gateway_authorization.py, tests/test_world_model_evaluation_grant.py]
 ---
 
 # Model Gateway
@@ -18,7 +18,7 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 
 ## Public contract
 
-调用方提供经过授权的 Capability、Strategy、精确模型资格和 Authorized Input Manifest。Gateway 只能从 Manifest 构造 Provider Request，并返回不可信的模型结果及可验证执行元数据；领域 Owner 决定结果能否封存。调用方可以先调用 non-dispatching `preflight` 只验证 Adapter、Context、隔离 capability 与可渲染 Manifest；该操作不得 prepare/persist call、解析 Secret 或 dispatch，也不构成调用授权、资格或 live receipt。
+调用方提供经过授权的 Capability、Strategy、精确模型资格和 Authorized Input Manifest。Gateway 只能从 Manifest 构造 Provider Request，并返回不可信的模型结果及可验证执行元数据；领域 Owner 决定结果能否封存。调用方可以先调用 non-dispatching `preflight` 只验证 Adapter、Context、隔离 capability 与可渲染 Manifest；该操作不得 prepare/persist call、解析 Secret 或 dispatch，也不构成调用授权、资格、dispatch admission 或 live receipt。
 
 ## Invariants
 
@@ -70,14 +70,24 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
 13. Provider transport 在 HTTP bytes 前已知不可用时，只能由 transport owner 产生 typed `ProviderUnavailable`，Gateway 密封为
     `PROVIDER_UNAVAILABLE` failed call；这与 HTTP bytes 已可能发送后的 `ProviderOutcomeUnknown` 不同。只有前者可证明 transport HTTP count
     为 0，后者必须保留潜在副作用/重复成本。普通 Domain/Gateway error 不得按字符串相似性取得 unavailable 分类或 fallback 权力。
+14. Route 声明 dispatch schedule policy 时，每个 planned external run 必须在任何对应 Provider socket/connected descriptor provisioning、
+    TLS、credential resolution 或 HTTP
+    前提交当前有效的 admission receipt；每个新 request 还必须重验可信时钟命中的允许窗口，或绑定该 request/run 的一次性 exact override。
+    receipt 必须绑定 policy version、时区/时钟来源、run/Provider/model/product/source/session identity、calls/tokens/duration 上限、官方策略
+    检查、窗口判定、授权和完整质量预算。缺失、过期、identity 漂移、窗口关闭或 override 越界都必须在外部网络前失败关闭，并证明该
+    Provider 的 socket/descriptor、TLS、credential 和 HTTP dispatch 均为 0。这类拒绝是 dispatch admission failure，不得伪装为
+    `ProviderUnavailable`、HTTP error 或 outcome unknown，也不得取得 retry/fallback 权力。当前 planned DeepSeek 使用
+    `DEEPSEEK_DISPATCH_ADMISSION@1`；窗口结束后不得创建新 DeepSeek request。已发出的 request 继续沿既有零重试/结果未知语义密封，
+    但不能由不完整 Answer/Review 获得交付权。
 
 ## Security and compatibility
 
 Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatch 前由 Reference 解析，不进入 Request Manifest、日志或持久正文。每个 Provider / Configuration 必须具有明确、版本化且经过 Conformance 的 Adapter compatibility；共享 Adapter 只有在分别证明 Envelope、隔离和身份语义时才可复用，不能凭“OpenAI-compatible”等名称推定兼容。Provider-specific JSON mode 若要求 Adapter 注入 closed schema，schema authority 与 Gateway 的 leading semantic authority 必须按该 Adapter 已资格的 message rendering contract 组合，不能形成未经资格的相互竞争 system turns。当前 DeepSeek contract 将两者合并为恰好一个 leading system message，保持其余消息顺序，并由 live Conformance 同时验证单一 system、任务语义和 closed schema；该结论不自动适用于 Ark 或其他 OpenAI-format Provider。Provider preference 是预授权 attempt route，不是绕过资格的探测。相同 Adapter/Configuration/endpoint/model/transport/rendering identity 且仍有效的 Conformance 必须复用；领域 Prompt、答案 Schema 或不改变该 identity 的产品变化不能要求重复 Conformance。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 same-Provider request retry 都属于 Provider Configuration 与 Capability Qualification 身份；live Result 必须按 logical question 和 provider attempt 分别证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution、fallback reason、late quarantine、post-dispatch unknown 和潜在重复成本，而不只声明配置。Ark Engineering Chat policy 固定每 request 一个 verified TLS session、每 session 一个 HTTP dispatch、`Connection: close`、TLS 后逐 dispatch 解析 credential 与 retry 0；其 Conformance 必须携带通过 strict verifier 的 Session audit，不能由旧 urllib transport 或旧 sealed Result 继承。
 
 这里的单轮 `logical question` 审计术语在 Engineering Conversation 中必须投影为密封 Turn；live Result 按 logical interaction unit（Chat
-中为 Turn）和 provider attempt 分别闭合，不得把整段 Conversation 合并计为一次 live attempt。
+中为 Turn）和 provider attempt 分别闭合，不得把整段 Conversation 合并计为一次 live attempt。Provider 透明只描述产品语义；它不取消
+每条 route 自己的 dispatch admission、资格、授权、披露和 transport 审计。
 
 ## Verification ownership
 
-Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact clean identity 上 PASS。当前状态是 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / SESSION_AUTHORITY_REQUIRED / NOT_LIVE`；current actual artifact 与五轮 live Chat 仍必须单独取得授权与执行证据。
+Execution Context、Manifest、Call Record、Provider DTO、重试状态和错误投影由代码与 Adapter Contract Tests 定义。Live Conformance 与具体运行身份是非规范性执行证据。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、预授权双 route、完整链 fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact clean identity 上 PASS。Provider 资格不等于调度准入：当前状态是 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS / SESSION_AUTHORITY_REQUIRED / NOT_LIVE`；`DEEPSEEK_DISPATCH_ADMISSION@1` 已在 Gateway preflight 与 invoke 前机械执行，但 current actual `@3` artifact、fresh 官方检查、允许窗口或 exact override、新 external grant 与逐 dispatch/terminal receipt 仍必须由每次 planned run 单独取得和验证。

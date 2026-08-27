@@ -3110,6 +3110,38 @@
       "tests/test_engineering_chat_session_artifact.py"
     ]
   },
+  "FINDING-010-138": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-138.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/application_services/java_source_semantics.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_java_source_semantics.py",
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
+  "FINDING-010-139": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-139.md",
+    "code": [
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py",
+      "scripts/docs.py"
+    ],
+    "tests": [
+      "tests/test_deepseek_dispatch_admission.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_docs_gate.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4130,6 +4162,21 @@
       "validation"
     ]
   },
+  "ITER-010-PDR-007": {
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-007-deepseek-off-peak-hard-admission.md",
+    "code": [
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_deepseek_dispatch_admission.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_alpha_cli.py"
+    ]
+  },
   "ITER-010-RESULT-SLICE-001-STOP-REDIRECT": {
     "path": "docs/project/iterations/iteration-010/results/slice-001-stop-redirect.md",
     "code": [
@@ -4164,6 +4211,21 @@
       "tests/test_engineering_qa_alpha_cli.py"
     ]
   },
+  "ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY": {
+    "path": "docs/project/iterations/iteration-010/results/v-chat-experience-001-pdr005-direction-canary.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/application_services/java_source_semantics.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_java_source_semantics.py"
+    ]
+  },
   "ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001": {
     "path": "docs/project/iterations/iteration-010/results/v-cognition-eligibility-001.md",
     "code": [
@@ -4177,6 +4239,21 @@
       "tests/test_conversational_engineering_tools.py",
       "tests/test_engineering_chat_session_artifact.py",
       "tests/test_java_source_semantics.py"
+    ]
+  },
+  "ITER-010-RESULT-V-DEEPSEEK-IDLE-001": {
+    "path": "docs/project/iterations/iteration-010/results/v-deepseek-idle-001.md",
+    "code": [
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_deepseek_dispatch_admission.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_alpha_cli.py"
     ]
   },
   "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009": {
@@ -4403,8 +4480,10 @@
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
       "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
       "src/software_world_model/application_services/conversational_engineering_routing.py",
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
       "src/software_world_model/interface/engineering_chat_provider_launcher.py",
       "src/software_world_model/interface/engineering_chat_provider_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
       "src/software_world_model/interface/engineering_qa_live.py",
       "src/software_world_model/interface/engineering_qa_alpha_cli.py"
     ],
@@ -4413,8 +4492,10 @@
       "tests/test_model_egress_gateway.py",
       "tests/test_conversational_engineering_model.py",
       "tests/test_conversational_engineering_routing.py",
+      "tests/test_deepseek_dispatch_admission.py",
       "tests/test_engineering_chat_provider_launcher.py",
       "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
       "tests/test_volcengine_ark_chat_adapter.py",
       "tests/test_deepseek_chat_adapter.py",
       "tests/test_engineering_qa_live.py",
@@ -4598,6 +4679,8 @@
       "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
       "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
       "src/software_world_model/ai_infrastructure/pinned_deepseek_https.py",
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
       "src/software_world_model/interface/world_model_runtime.py",
       "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
     ],
@@ -4608,6 +4691,8 @@
       "tests/test_ark_chat_conformance.py",
       "tests/test_deepseek_chat_adapter.py",
       "tests/test_conversational_engineering_model.py",
+      "tests/test_deepseek_dispatch_admission.py",
+      "tests/test_engineering_chat_provider_runtime.py",
       "tests/test_model_egress_gateway.py",
       "tests/test_pinned_ark_https.py",
       "tests/test_pinned_deepseek_https.py",
@@ -4656,6 +4741,7 @@
       "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/application_services/conversational_engineering_routing.py",
       "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_provider_launcher.py",
@@ -4671,6 +4757,7 @@
       "tests/test_conversational_engineering_tools.py",
       "tests/test_conversational_engineering_model.py",
       "tests/test_conversational_engineering_routing.py",
+      "tests/test_deepseek_dispatch_admission.py",
       "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_provider_launcher.py",
       "tests/test_engineering_chat_provider_runtime.py",
@@ -5192,6 +5279,7 @@
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
       "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
       "src/software_world_model/interface/provider_cli.py",
       "src/software_world_model/interface/engineering_chat_candidate.py",
       "src/software_world_model/interface/engineering_chat_provider_runtime.py",
@@ -5206,6 +5294,7 @@
       "tests/test_deepseek_chat_adapter.py",
       "tests/test_deepseek_chat_conformance.py",
       "tests/test_conversational_engineering_model.py",
+      "tests/test_deepseek_dispatch_admission.py",
       "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_provider_runtime.py",
       "tests/test_engineering_chat_session_artifact.py",
@@ -5341,7 +5430,10 @@
       "tests/test_conversational_engineering_agent.py",
       "tests/test_conversational_engineering_tools.py",
       "tests/test_conversational_engineering_model.py",
+      "tests/test_deepseek_dispatch_admission.py",
       "tests/test_engineering_chat_candidate.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py",

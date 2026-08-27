@@ -5,9 +5,9 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139]
+code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
 
 # Engineering Conversation
@@ -56,9 +56,10 @@ Response Control 放行边界继续由原 Owner 拥有。
 
 1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Cognition Capability Manifest、Source Profile/allowlist、
    工具目录、versioned Conversation input policy、Provider route、披露范围、有效期和每 Turn/整会话高安全熔断。浏览器不能扩大这些边界。
-   Artifact Session Configuration `@2` 必须以 zero-based fixed order 列出各 cognition Profile 的 Profile/Schema/Source Binding、selected
-   Snapshot、ordered/Snapshot Bundle digest 与 exact file digest；装载时逐项重算后才能形成 Application-owned Manifest authority。旧 `@1`
-   只作为单 Profile 兼容读取，不能取得 multi-Profile 或开放式工程认知资格。
+   current Artifact Session Configuration `@3` 必须以 zero-based fixed order 列出各 cognition Profile 的 Profile/Schema/Source Binding、
+   selected Snapshot、ordered/Snapshot Bundle digest 与 exact file digest，并绑定 closed `DEEPSEEK_DISPATCH_ADMISSION@1` 输入；装载时逐项
+   重算后才能形成 Application-owned Manifest authority。旧 `@2` 多 Profile 与 `@1` 单 Profile 只作为历史兼容读取；current preparation
+   缺少 admission 必须失败关闭，不能取得新 live Session 资格。
 2. 每条 User Message 创建不可变 Turn。Application 从完整历史确定性选择满足本 Turn 所需的相关上下文，密封输入消息、被引用 Turn、有效
    用户约束、当前工作状态和摘要的 identity/digest；不得直接依赖 Provider 会话记忆或无边界拼接全部历史。
 3. 主 Agent 必须处理追问、指代、纠正、深入、收窄和总结。若指代在密封上下文内仍不唯一，必须请求澄清或给出明确条件化解释，不能把
@@ -103,6 +104,11 @@ sealed Message ID。Application 从原 Request、current observations、previous
 `search/read/parse` 等 exact-revision 只读操作。Agent 提交的 path、query、class、locator、命令、URL 或完成声明均是不可信 Proposal；
 Application/Broker 重新验证 authorization、Profile、allowlist、revision、modality、bytes、进度和剩余熔断。模型没有直接 Repository/
 Source Tool/FS/shell/network/credential/write/Knowledge Update 权限。
+
+current `conversational-engineering-agent@8` 对 `WORLD_MODEL_QUERY` 只允许无 argument action，并要求模型把具体事实、关系、状态转换、失败边界
+或已知 repository-native symbol 写入 `evidence_need`。Application 必须把该 need 与 exact current User Turn 确定性编译为 bounded semantic
+query；模型不能直接取得 query argument domain。相同 need 的 current-Turn 重复、显式 query 或 identity 漂移在 Cognition 执行前失败关闭。
+受信旧调用方的 explicit-query 兼容路径不扩大 current 模型权限。
 
 每个 Proposal、Decision、Operation、Observation、Conflict、Unknown、Failure、Coverage 和资源收据按顺序追加到 Turn Evidence Ledger。
 主 Agent 可以读取本 Attempt 获准的密封 Ledger prefix 与工具 Observation，但隐藏 rationale 和未密封输出不进入权威状态。
@@ -184,10 +190,10 @@ Retrieval Worker；同一动作可分别密封 support/boundary，每条 Observa
 append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 只接受本 Turn 先前签发的 opaque locator。状态为
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
-SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
+SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_V3_ADMISSION_LOCAL_PASS /
 ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
 SEVENTH_LIVE_CHAT_THREE_OF_FIVE_LIMITATIONS_OVERALL_FAIL / NEW_CONVERSATION_LEAKAGE_PASS /
-V7_UNACCEPTED_SYMPTOM_EXPERIMENT / LAYER_ATTRIBUTION_AND_COGNITION_ELIGIBILITY_REQUIRED /
+V7_UNACCEPTED_SYMPTOM_EXPERIMENT / V8_SEMANTIC_NEED_QUERY_LOCAL_CANDIDATE / RUN043_QUALITY_REWORK /
 SESSION_AUTHORITY_REQUIRED / NOT_PRODUCTION`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
 Disclosure 和 typed Gateway receipt；pre-dispatch、fresh dispatch、outcome unknown 与 replay 的计数由 Application 重验，Turn/Browser 只保存
 receipt digest reference。Application-owned Ark→DeepSeek router、committed Work State repository、两 attempt receipt、logical Turn 汇总与
@@ -197,8 +203,9 @@ non-starting Session runtime 又把两条 Provider runtime、exact evidence auth
    Work State、Conversation 与 Browser 组合成一个对象图；preparation 没有创建 attempt、读取 Source、解析 credential、dispatch 或启动 listener。
 artifact Session loader 现可从一个 owner-private closed document 绑定 product/source Git identity、ordered profile-specific published
 World Model authorities、Source Profile、Ark→DeepSeek qualification identity、两个 private Gateway repositories 与 Session authority；
-`@2` 对每个 Profile 重验 expected file/Bundle digest、Profile/Schema/Source Binding/selected Snapshot，再以同 repository/exact revision
-形成 Capability Manifest；`@1` 单 Profile配置继续只读兼容。唯一 `--session-config` selector 让固定
+current `@3` 在逐 Profile 重验 expected file/Bundle digest、Profile/Schema/Source Binding/selected Snapshot 并形成 Capability Manifest 后，
+还要求在 Provider network/credential 前密封 DeepSeek admission；`@2` 多 Profile与 `@1` 单 Profile配置继续只读兼容，但不能通过 current
+preparation。唯一 `--session-config` selector 让固定
 `127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
 Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
 exact clean identity、2/2 request 和 strict Session audit PASS，并按各自 exact identity 用于多个 owner-private mall artifact Session。`run-035-chat-alpha` 与
@@ -209,11 +216,12 @@ Limitation 技术成功，整体仍为 1/5 / Quality FAIL；v4 随后关闭 Sour
 在 v4 fresh 双资格后仍只有 Turn 2 的 reviewed Limitation，整体 1/5 / Quality FAIL；v5 随后把 previous Work State Observation IDs 移出
 current Turn copy domain，并要求 `requires_evidence` Review successor 只能提交 exact tool action。`run-041-chat-alpha` 已让 Turn 1
 Answer 与 Turn 3/4 reviewed Limitation 技术成功，但 Turn 2 重复 exact Source action、Turn 5 在 empty SUPPORT domain 复述 prior
-Answer，故整体仍为 3/5 / Quality FAIL。current v6 successor 现把 response kind 与 tool argument 的 current feasible domain 就地密封；
+Answer，故整体仍为 3/5 / Quality FAIL。v6 successor 把 response kind 与 tool argument 的 current feasible domain 就地密封；
 strategy/prompt/Primary input identity 再次改变，所以 run-041 只保留为执行证据。`run-042-chat-alpha` 已在 v6 对应 route 资格后执行：
 Turn 2/3/4 为 reviewed Limitation，Turn 1 review limit、Turn 5 model-call rejection，仍为 3/5 / Quality FAIL；新 Conversation
 clarification/隔离/零 dispatch 继续 PASS。后续 v7 的 path-relevance prompt guidance 与 review-scope policy 没有经过逐层因果归因或跨题
-验证，只是已停止的本地症状实验，不能成为 current Contract、Conformance 失效原因或下一次 live 重跑入口。当前必须先区分知识构建、
-Cognition 投影/查询、Agent 调查、答案综合、Reviewer 和 Web 各层的 first divergence；领域 Prompt 变化本身不触发 ADR-017 Provider
+验证，只是已停止的本地症状实验，不能成为 current Contract、Conformance 失效原因或下一次 live 重跑入口。run-043 随后把 first
+divergence 定位到 semantic `evidence_need` 未进入 Cognition query；current v8 已在 Application 边界本地闭合该绑定，并以两个未参与修复
+的异质问题做真实 bundle 诊断。run-043 的答案质量和 DeepSeek 峰时调度 FAIL 均保持；领域 Prompt 变化本身不触发 ADR-017 Provider
 Conformance。旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

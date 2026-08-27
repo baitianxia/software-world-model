@@ -9,8 +9,9 @@ code: []
 tests: []
 iteration: ITER-010
 coding_input: false
-current_execution_decision_ref: ITER-010-PDR-006
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137]
+current_execution_decision_ref: ITER-010-PDR-007
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138]
+current_scheduling_finding_ref: FINDING-010-139
 ---
 
 # ITER-010 Proposal：软件世界模型与主工程 Agent 驱动的多轮工程 Chat
@@ -69,6 +70,11 @@ terminal、无 authorized answer 且属于允许的 Provider/model reason 时，
 Cognition 以及与当前 Turn 有关的 sealed Conversation Context 重跑完整链，不复用 Ark 中间态；同 Provider retry 为 0，late Ark 结果
 quarantine。PDR-003 作出决定时尚未证明该 route，因此当时只能作为开发目标；后续实现与 live 事实由 PDR-004 段及 Findings 更新。
 
+PDR-007 又把 DeepSeek 调度从“默认/优先”收紧为所有 planned development/evaluation dispatch 的调用前硬准入。当前 canary、Conformance、
+比较和回归的最坏完整质量链都必须整体安排在北京时间 `[00:00,09:00)`、`[12:00,14:00)` 或 `[18:00,24:00)`；窗口外没有 exact user
+override 时，DeepSeek 在 Provider socket/connected descriptor、TLS、credential 和 HTTP 前关闭且相关计数为 `0`。每个新 request 重验
+窗口或 override。等待窗口时 Ark-only 与本地开发继续，不能把持续开发解释成峰时立即调用。
+
 ## PDR-004 amendment：主工程 Agent 与真正多轮 Chat
 
 `FINDING-010-093/094` 证明“固定多角色内容流水线 + 同一 Runtime Session 连续独立提问”不是目标产品。PDR-004 因此在不废弃既有
@@ -124,6 +130,26 @@ fallback reason 才透明启动。现有 Web Access PASS 复用；新的方向�
 项目仍为 `REWORK`，因为世界模型、主工程 Agent、证据与独立审核的总体架构未被证伪。新的“开发 ITER-010”对话可以接手，不能继承旧
 对话的 v7 推断或执行待办。当前项目入口继续使用已授权 Slice1，以保留此前失败/timebox 责任；这不绑定开发对话，也不禁止未来在确有
 交付边界变化时按治理流程另建 Slice。
+
+## PDR-006 amendment：阶段交付前持续执行，授权按需直接申请
+
+PDR-006 不改变 PDR-005 的 Gate、产品架构或安全边界，只修正执行连续性。检查点、timebox FAIL、局部 Gate FAIL 或外部权限缺口只阻止
+对应的 PASS/晋级、扩域、hardening、full regression 或无新证据的外部重跑，不自动结束当前开发目标。只要 Slice1 本地授权仍有效，状态
+保持 `AUTHORIZED / IN_PROGRESS / coding_input=true`，开发者继续最小体验纵切与本地根因修复。
+
+到达外部执行边界时，先完成 credential-free preflight 和 exact product/source/artifact/session/disclosure freeze；已有 active grant 且
+覆盖该 identity 时必须复用，不能重复询问。只有 scope 或 identity 不受覆盖时，才直接提交最小 exact delta request，不先问“是否申请”；
+批准后自动继续，等待期间继续所有独立安全工作。只有阶段交付已交给用户、exact request 已实际发出且替代工作穷尽、用户明确
+`STOP/REDIRECT/REJECT`，或存在不可绕过的安全禁止时，开发回合才可结束。
+
+## PDR-007 amendment：DeepSeek 闲时硬准入
+
+`run-043` 在北京时间 `11:19–11:27` 的高峰窗口执行 DeepSeek `18` 次，且没有 fresh official check、window verdict 或 peak override
+receipt。该 run 只保留为真实成本、答案、失败和责任层归因证据，不能作为合规方向体验。PDR-007 要求的
+`V-DEEPSEEK-IDLE-001` 已由 clean `03520eb…` 本地 PASS：planned development/evaluation run 只能在 `[00:00,09:00)`、`[12:00,14:00)`、
+`[18:00,24:00)` 内容纳最坏完整质量链；窗口外没有一次性 exact user override 时在 Provider socket/connected descriptor、TLS、
+credential 和 HTTP 前失败关闭。clean `3a6089f…` successor 也已冻结；峰时继续 Ark-only 和本地工作，当前只缺新的 exact grant 与合规
+live receipt，允许窗口与 grant 同时成立后才运行一个后继 canary。
 
 ## Product-goal alignment and cumulative delta
 
@@ -251,7 +277,7 @@ Slice2 运行第二工程 5+2 early canary、三臂同题复验、建模成本/�
 
 ## Authorization decision
 
-**ACCEPTED PROPOSAL / PDR-004 AUTHORIZATION BASELINE / PDR-005 CURRENT EXECUTION AMENDMENT / ITERATION AUTHORIZED / SLICE1 CODING
+**ACCEPTED PROPOSAL / PDR-004 AUTHORIZATION BASELINE / PDR-005 CURRENT GATE / PDR-006 CURRENT EXECUTION / ITERATION AUTHORIZED / SLICE1 CODING
 INPUT。** 收据 `d3b60bda…` 只记录重制计划和文档；用户随后以
 `codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e`（`2026-08-21T09:18:34Z`）
 接受本 Proposal 与 Readiness，并曾授权 `ITER-010-SLICE-001` 成为产品编码输入。该历史授权基于已冻结的 planning commit
@@ -272,7 +298,10 @@ Slice1 编码权威。用户现以
 接受基于 planning commit `b66ff9f058b92cebd78d5644ffef042753567b4d` / tree
 `30e437eea83e048e3fb59ddd90a8d1b76242d82c` 的刷新 Readiness，并授权 `ITER-010-SLICE-001` 产品/System 编码与本地确定性验证。
 该收据不授权 Provider/model、动态源码披露、live browser、hidden、Slice2/3 或 Production；后续 `7256a886…` 仅补充 exact
-`cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。其余外部执行权限保持未授权。
+`cf2883b…` 的 `V-ALPHA-ACCESS-001` 本机 listener/browser 权限并已消费。再后的
+`local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4` 已授权一次受限
+direction canary，当前等待 clean-candidate exact freeze 和覆盖校验；它不扩大为其他外部执行权限。
 
-PDR-005 只修正当前执行入口与验证顺序，不扩大上述权限。开发可在全新的“开发 ITER-010”对话中从 PDR-005 Gate 直接接手；换对话不要求
-另建 Slice 或重新申请相同的本地编码权限，后续若确需改变交付边界才按治理流程另建并授权 Slice。
+PDR-005 只修正当前 Gate 与验证顺序，PDR-006 只修正持续执行和即时授权行为；二者都不扩大上述权限。开发可在全新的“开发 ITER-010”
+对话中直接接手；换对话不要求另建 Slice 或重新申请相同的本地编码权限。当前 direction grant 覆盖时直接继续，不覆盖时直接申请最小
+delta；后续若确需改变交付边界才按治理流程另建并授权 Slice。

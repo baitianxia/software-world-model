@@ -16,6 +16,10 @@ coding_input: false
 
 # PDR-003：先恢复可体验 Web，并收紧 Provider 与 live 重跑成本
 
+> Current execution amendment：`ITER-010-PDR-007` 把本决定的 DeepSeek“默认/优先”调度收紧为所有 planned dispatch 的调用前硬门禁；
+> `ITER-010-PDR-006` 保留时间盒、Provider、成本和质量不可裁剪规则，但 hard stop 只结束扩域、hardening、full regression、规则堆叠与
+> 无新证据的外部重跑；它不结束最小体验恢复或本地根因修复。权限 gap 必须在 exact freeze 后直接申请。
+
 ## Context and evidence
 
 ITER-010 已有可复用的 Web、World Model Cognition、受控源码调查、Evidence、Citation 和独立 Review 资产，但本轮返工约 14 小时后仍
@@ -86,8 +90,9 @@ fallback 或已封存的 logical-question result。Ark outcome unknown 后 fallb
 同一 Adapter/Configuration/endpoint/model/transport/rendering identity 下仍有效的 Conformance 直接复用。领域 Prompt、答案 Schema 或
 产品代码中与该 identity 无关的变化不触发 fresh Conformance。identity 变化、有效期结束或证据明确失效时才重新取得。
 
-DeepSeek 多问题或资格套件批量调用默认安排在北京时间 `00:00–09:00`、`12:00–14:00`、`18:00–24:00`。每批开始前必须检查并记录
-DeepSeek 官方定价页；截至本决定，官方只预告峰谷定价、尚未公布生效时间，因此这些窗口是调度偏好，不是当前折扣声明。
+DeepSeek 所有计划性开发、资格、canary、比较、回归和多问题调用必须安排在北京时间 `[00:00,09:00)`、`[12:00,14:00)`、
+`[18:00,24:00)`。每次 run 开始前必须检查并记录 DeepSeek 官方定价页；是否已正式执行峰谷定价不影响项目门禁。窗口外没有一次性
+exact user override 时，必须在 credential/HTTP 前关闭且 DeepSeek dispatch 为 `0`。具体准入收据和验证由 PDR-007 拥有。
 
 ### 6. 成本不能降低已经开始的问题质量
 

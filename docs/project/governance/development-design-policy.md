@@ -99,12 +99,16 @@ live failure 必须先沿 `Source truth → knowledge construction/admission →
 必须停止堆规则并评审架构职责。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
 hardening 和正式验收前各运行，不得用它延迟首个体验。
 
-Provider route 默认 `VOLCENGINE_ARK → DEEPSEEK`，并在 session 开始前预授权 ordered route 与双方 disclosure scope。Ark attempt 因已冻结的
+Provider route 默认 `VOLCENGINE_ARK → DEEPSEEK`，并在 session 开始前预授权 ordered route、双方 disclosure scope 与适用的 dispatch
+admission policy。Ark attempt 因已冻结的
 Provider 或模型能力原因终态结束且未形成 authorized answer 时，可对同一 logical interaction unit 透明启动最多一个 DeepSeek attempt，用户无需
 重提或新建 session。两个 attempt 必须独立密封；fallback 从 immutable original interaction input 与 exact World Model cognition 重跑完整链，禁止
 复用前次中间产物；对 Chat，fallback 输入必须是 immutable original Turn Request、与该 Turn 相关的 exact Application-sealed Conversation Context 和 exact World Model Cognition，不得退化为只重放孤立问句；迟到 primary 结果只允许隔离审计，不得覆盖已密封结果；同 Provider retry 为 0。Provider 输出/schema 或模型审核失败
-必须记录为能力失败，不能伪称网络不可用；Application、Source 或 Security 失败不得通过 fallback 掩盖。DeepSeek 批量运行优先使用执行时
-重新核对的官方非高峰窗口，峰时紧急启动需审计 override，但已开始问题仍不得降低质量。
+必须记录为能力失败，不能伪称网络不可用；Application、Source 或 Security 失败不得通过 fallback 掩盖。所有 planned DeepSeek 调用都必须
+执行当前 Operations 冻结的非高峰硬准入，不以 batch、fallback、smoke、canary 或 live 名称区分。run-level receipt 和每个新 request 的
+窗口/一次性 exact override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和 HTTP；缺失或越界时相关计数为 0。
+完整最坏质量链必须能在当前窗口结束前完成；进入高峰后不创建新 request。已发出 request 继续按零重试和 outcome-unknown 规则密封，
+但无法完成独立审核时必须失败关闭，不能交付降质答案。等待窗口时 Ark-only 与本地开发继续。
 
 可体验 Alpha 必须记录 `CONTINUE`、`REWORK`、`REDIRECT` 或 `REJECT`；只有 `CONTINUE` 才能进入工程夯实。任一阻断项失败默认只阻止
 PASS 声明、晋级和 hardening：保留失败证据，并在当前授权仍覆盖修复时保持 Slice active，在同一 Slice 做通用修复和重新体验。只有

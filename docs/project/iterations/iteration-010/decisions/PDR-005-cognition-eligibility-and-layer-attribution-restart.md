@@ -17,6 +17,10 @@ coding_input: true
 
 # PDR-005：冻结逐题修补，按认知资格和责任层归因重启 ITER-010
 
+> Current execution amendment：`ITER-010-PDR-007` 把 DeepSeek 闲时变为 planned dispatch 硬门禁并将 run-043 标记为调度 FAIL；
+> `ITER-010-PDR-006` 保留本决定的 Gate，但把检查点、hard stop、REWORK 和授权边界收窄为非终止性控制。真正的权限 gap 在 exact
+> freeze 后直接申请；现有本地授权覆盖修复时持续开发。
+
 ## Context and authority
 
 run-035—042 连续消耗大量开发时间和 Provider token，仍没有形成可由用户确认方向的合格 Chat。每次失败后又修改 Prompt、Schema、工具
@@ -94,7 +98,8 @@ Limitation，也曾扩大当前问题；Web 当前没有 first-divergence 证据
 - Ark 始终是 primary；DeepSeek 只在同一 Turn 的 Ark attempt 已密封且满足 ADR-017 fallback 原因时透明重跑完整链，不用于“同时比较模型”；
 - Adapter/Configuration/endpoint/model/transport/rendering identity 未变化且资格未过期时复用 Conformance。领域 Prompt、答案 Schema 或产品
   变化本身不触发 Ark/DeepSeek Conformance；需要验证的是对应 Agent Strategy/Capability，不是重复测传输兼容；
-- DeepSeek 批量活动仍优先官方非高峰窗口；已开始 Turn 的调查、Citation 和独立 Review 不因 token 费用裁剪；
+- DeepSeek 所有 planned development/evaluation dispatch 必须通过 PDR-007 非高峰硬准入；planned Turn 不得在峰时开始后再以完整质量为由
+  触发 fallback。已合法开始的单个 request 仍按既有零重试和结果密封规则结束，调查、Citation 和独立 Review 不因 token 费用裁剪；
 - Alpha 前只执行 targeted impact、startup、security、failure-truth checks；full regression 在用户 `CONTINUE` 后进入 hardening。
 
 ## Scope and authorization consequences

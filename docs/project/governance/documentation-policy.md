@@ -25,7 +25,9 @@ tests: [tests/test_docs_gate.py]
 - Finding：`open`、`dispositioned`、`rejected`、`superseded`；
 - Verification：`not-run`、`pass`、`fail`、`inconclusive`、`stale`。
 
-`paused` 表示同轮返工等待新授权，必须 `coding_input=false`；`superseded` 只用于从未执行的计划被其他项目决定替代，不能伪装执行失败。
+`paused` 只表示 scope/Owner 变化、用户明确暂停或本地开发授权失效后等待恢复，必须 `coding_input=false`；external exact grant pending 只
+阻断对应 action，活动 Slice 仍为 `authorized|in-progress / coding_input=true`。`superseded` 只用于从未执行的计划被其他项目决定替代，
+不能伪装执行失败。
 `not-reconstructed` 与 `historical-*` authority 只用于迁移后明确不伪造的历史索引/开发材料，不得用于新的活动 Iteration。`coding_input` 是独立门：Roadmap/Proposal/模板必须为 `false`；活动 Iteration 与被指向的 Slice 必须为 `true`，且仍需 Readiness 和 `current.md` 同时成立。
 
 状态不得推导：设计 accepted 不表示已实现，测试 pass 不表示产品 pass，产品 pass 不表示生产 activated。

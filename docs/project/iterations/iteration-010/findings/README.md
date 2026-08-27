@@ -354,5 +354,12 @@ iteration: ITER-010
   Profile 独立 Snapshot/Read Authority；artifact Session `@2` 逐 Profile 固定完整 artifact identity，`@1` 仅保留单 Profile兼容。
 - [FINDING-010-137](FINDING-010-137.md)：缺少 external grant 只阻断对应 exact action，不终止仍获授权的开发；到达权限边界必须先冻结
   最小 request 并直接申请，批准后自动续跑。timebox/Gate failure 只阻止晋级、扩域和无新证据外部重跑。
+- [FINDING-010-138](FINDING-010-138.md)：PDR-005 canary 证明 Java Snapshot 虽含 exact `UmsAdminServiceImpl.login`，中文 original Turn
+  的 lexical projection 却漏掉该 entity；Agent 的 semantic `evidence_need` 没有成为受控 World Model query argument，后续 Source scan
+  又被 `loginType` 同词噪声耗尽。clean `3a6089f…` 已把 semantic need 与 exact Turn 交由 Application 编译，并以登录、Maven 结构和 SKU
+  行为三类真实 bundle 离线诊断闭合本地修复；live Agent/Source/答案质量仍待新 canary。
+- [FINDING-010-139](FINDING-010-139.md)：run-043 在北京时间高峰窗口执行 DeepSeek 18 次，且没有 fresh official check、window verdict
+  或 peak override receipt；根因是“闲时优先”没有成为调用前机械 Gate。已处置到 PDR-007，clean `03520eb…` 与
+  `V-DEEPSEEK-IDLE-001` 已闭合本地机械 Gate；后继真实 dispatch 仍需新 grant、允许窗口和 `@3` receipt，峰时 Ark-only 与本地开发继续。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

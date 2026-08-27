@@ -4,8 +4,9 @@ iteration:
   status: authorized
   outcome_scope: dual-core-world-model-cognition-and-lead-engineering-agent-semantic-multi-turn-chat-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
-  current_decision_ref: ITER-010-PDR-006
+  current_decision_ref: ITER-010-PDR-007
   current_gate_decision_ref: ITER-010-PDR-005
+  current_continuation_decision_ref: ITER-010-PDR-006
   coding_input: true
 
 baseline:
@@ -71,6 +72,7 @@ product_goal_alignment:
   blocking_case_ids:
     - V-LAYER-ATTRIBUTION-001
     - V-COGNITION-ELIGIBILITY-001
+    - V-DEEPSEEK-IDLE-001
     - V-CHAT-XD-001
     - V-ALPHA-ACCESS-001
     - V-CHAT-EXPERIENCE-001
@@ -325,6 +327,7 @@ critical_assumption_catalog_cutover:
 rework:
   decision: REWORK
   decision_ref: ITER-010-PDR-005
+  continuous_execution_decision_ref: ITER-010-PDR-006
   restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
   previous_decision_ref: ITER-010-PDR-004
   user_receipt_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
@@ -361,16 +364,43 @@ rework_policy:
   schema: SAME_SLICE_REWORK@1
   failed_attempt_default_decision: REWORK
   failed_attempt_blocks: slice-promotion-only
+  active_authorized_rework_continues: true
+  gate_failure_ends_development_goal: false
   same_slice_reauthorization_allowed: true
   problem_report_or_review_request_implies_redirect: false
   redirect_bases: explicit-user-direction-change,core-architecture-falsified,precommitted-no-progress-limit-reached
   no_progress_measure: after-two-consecutive-rework-attempts-at-least-two-of-three-heterogeneous-supported-questions-still-have-a-major-answer-error-or-reviewer-miss
   no_progress_attempt_limit: 2
 
+authorization_continuation_policy:
+  schema: JUST_IN_TIME_EXACT_AUTHORIZATION@1
+  owner_ref: PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN
+  current_decision_ref: ITER-010-PDR-006
+  slice_development_authorization_separate_from_external_grant: true
+  active_exact_grant_must_be_reused: true
+  active_or_pending_exact_request_must_not_be_duplicated: true
+  exact_preflight_and_identity_disclosure_freeze_before_request_required: true
+  missing_external_grant_blocks: exact-external-action-only
+  authorization_gap_action: request-minimum-exact-delta-immediately
+  ask_whether_to_request_before_request_allowed: false
+  authorized_local_work_continues: true
+  approval_continues_execution_without_redundant_confirmation: true
+  request_pending_status: waiting-exact-grant-in-progress
+  grant_pending_pauses_slice_or_revokes_coding_input: false
+  hard_stop_ends: scope-expansion-hardening-full-regression-rule-accumulation-and-no-new-evidence-external-reruns-only
+  hard_stop_ends_minimum_experience_recovery: false
+  exit_conditions: stage-delivered,exact-request-sent-and-independent-safe-work-exhausted,explicit-user-stop-redirect-reject,unavoidable-safety-prohibition
+  current_status: deepseek-peak-blocked-local-rework-in-progress
+  current_case_id: V-CHAT-EXPERIENCE-001
+  current_root_grant_status: consumed-by-run-043-scheduling-policy-fail
+  current_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
+  current_request_status: not-requestable-until-successor-exact-freeze-then-request-minimum-delta-directly
+
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
-  current_execution_decision_ref: ITER-010-PDR-006
+  current_execution_decision_ref: ITER-010-PDR-007
+  current_continuation_decision_ref: ITER-010-PDR-006
   current_gate_decision_ref: ITER-010-PDR-005
   pdr004_schedule_fields_are_legacy_validator_compatibility_only: true
   pdr004_schedule_superseded_by_current_pdr005_fields_below: true
@@ -385,6 +415,7 @@ experience_delivery_policy:
   checkpoint_completion_requires_runnable_user_visible_artifact: true
   plan_test_or_document_completion_counts_as_user_visible_increment: false
   checkpoint_miss_action: handoff-last-runnable-version-and-earliest-root-cause-stop-scope-expansion
+  checkpoint_miss_continues_minimum_experience_recovery: true
   historical_pre_policy_result_refs:
     - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   historical_results_do_not_satisfy_experience_gate: true
@@ -402,6 +433,7 @@ experience_delivery_policy:
   direction_evidence_handoff_deadline_minutes: 360
   direction_decision_deadline_minutes: 480
   hard_stop_action: stop-scope-expansion-and-external-calls-narrow-and-review
+  hard_stop_action_current_interpretation: stop-scope-expansion-hardening-full-regression-and-no-new-evidence-external-reruns-continue-minimum-experience-recovery
   access_gate_scope: user-operable-web-and-request-path-only
   provider_readiness_blocks_first_user_handoff: false
   quality_gate_scope: user-visible-answer-quality-only
@@ -434,6 +466,9 @@ experience_delivery_policy:
   same_failure_signature_retry_limit: 1
   consecutive_no_user_visible_increment_limit: 2
   no_increment_action: stop-external-reruns-and-return-to-local-diagnosis
+  pdr006_continuous_execution_owner_ref: ITER-010-PDR-006
+  pdr006_development_turn_exit_requires_stage_delivery_or_actual_exact_request_or_explicit_stop_or_safety_prohibition: true
+  pdr006_current_external_status: prior-direction-grant-consumed-by-run-043-schedule-fail-successor-grant-after-exact-freeze-not-stopped
   pdr005_recovery_owner_ref: ITER-010-PDR-005
   pdr005_recovery_entry_case_id: V-LAYER-ATTRIBUTION-001
   pdr005_cognition_gate_case_id: V-COGNITION-ELIGIBILITY-001
@@ -517,9 +552,10 @@ engineering_cognition_eligibility:
   application_source_binding_id: binding_4ef0d3446b3e44c79ed3c0ffc855d5c9
   exact_repository_revision: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
   capability_manifest_digest: sha256:bf8a416f6866bce7015946aac6ee2e19073d897ca33a76ffc76316f4eb643792
-  artifact_session_current_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@2
-  artifact_session_legacy_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1
-  artifact_session_legacy_role: readable-single-profile-compatibility-not-multi-profile-qualification
+  artifact_session_current_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@3
+  artifact_session_legacy_multi_profile_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@2
+  artifact_session_legacy_single_profile_schema: SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1
+  artifact_session_legacy_role: readable-history-only-current-preparation-requires-deepseek-admission
   web_runtime_binding_status: passed-local-composition-only-no-listener-browser-or-provider
   external_model_calls_actual: 0
   source_reads_during_projection_actual: 0
@@ -591,7 +627,7 @@ engineering_cognition_eligibility:
       overall_eligibility: false
       explicit_missing_dimensions: STATE,CONSTRAINT
   next_gate_case_id: V-CHAT-EXPERIENCE-001
-  next_gate_external_authorization_status: authorized-pending-clean-candidate-and-dispatch
+  next_gate_external_authorization_status: prior-grant-consumed-run-043-schedule-fail-successor-grant-after-exact-freeze
   status: passed-local-cognition
 
 provider_route_policy:
@@ -630,19 +666,58 @@ provider_route_policy:
   same_provider_retry_allowed: false
   outcome_unknown_duplicate_cost_risk_recorded: true
   deepseek_batch_start_policy: provider-declared-non-peak-preferred
+  deepseek_batch_start_policy_is_legacy_docs_validator_compatibility_only: true
+  deepseek_current_execution_policy_ref: deepseek_dispatch_admission_policy
   deepseek_schedule_timezone: Asia/Shanghai
   deepseek_current_preferred_windows:
     - "00:00-09:00"
     - "12:00-14:00"
     - "18:00-24:00"
   deepseek_schedule_source: https://api-docs.deepseek.com/quick_start/pricing/
-  deepseek_schedule_checked_at: "2026-08-25"
+  deepseek_schedule_checked_at: "2026-08-27"
   deepseek_schedule_effective_status: announced-not-yet-effective
   peak_urgent_override_requires: audited-explicit-override
   cost_can_reduce_answer_quality: false
   cost_gate_scope: before-interaction-unit-start-only
   current_started_interaction_unit_must_keep_full_quality_chain: true
   unchanged_current_conformance_reuse_required: true
+
+deepseek_dispatch_admission_policy:
+  schema: DEEPSEEK_DISPATCH_ADMISSION@1
+  owner_decision_ref: ITER-010-PDR-007
+  owner_finding_ref: FINDING-010-139
+  scope: all-planned-development-conformance-capability-canary-comparison-regression-and-web-experience-deepseek-dispatch
+  timezone: Asia/Shanghai
+  allowed_windows_are_half_open: true
+  allowed_windows:
+    - "00:00-09:00"
+    - "12:00-14:00"
+    - "18:00-24:00"
+  enforcement_independent_of_price_effective_status: true
+  official_schedule_check_required_per_run: true
+  official_schedule_missing_or_changed_action: fail-closed-and-replan-before-dispatch
+  planned_run_must_fit_worst_case_quality_chain_before_window_end: true
+  admission_receipt_required_before_provider_socket_descriptor_tls_credential_or_http: true
+  per_request_current_window_or_exact_override_revalidation_required: true
+  admission_receipt_required_fields: trusted-utc-and-beijing-time,clock-and-timezone-source,policy-version,run-type,exact-product-source-session,provider-model,maximum-calls-tokens-duration,official-schedule-check-time-and-content-digest-and-status,window-verdict-or-exact-peak-override,ark-first-fallback-and-quality-budget,authorization-identity
+  missing_or_invalid_admission_action: fail-before-provider-network-and-credential-with-zero-provider-socket-tls-credential-and-http
+  new_deepseek_request_after_window_close_allowed: false
+  incomplete_answer_or_review_delivery_allowed: false
+  peak_override_requires: exact-one-time-user-grant-for-provider-model-run-or-turn-reason-call-token-duration-start-expiry
+  ordinary-development-canary-route-or-fallback-grant-implies-peak-override: false
+  waiting_for_window_stops_local_or_ark_only_development: false
+  verification_case_id: V-DEEPSEEK-IDLE-001
+  verification_result_ref: ITER-010-RESULT-V-DEEPSEEK-IDLE-001
+  implementation_commit: 03520eb2b01e16116b3419dd5f1aa562e96cd21c
+  implementation_tree: 9a73b04641e681ab6d9a9e3499b36d6f831c1a3c
+  current_runtime_implementation_status: local-mechanical-admission-gate-pass
+  current_external_status: blocked-only-on-new-exact-grant-and-compliant-live-receipts
+  run_043_status: deepseek-scheduling-policy-fail-not-direction-acceptance-evidence
+  run_043_beijing_window: "2026-08-27T11:19:34+08:00/2026-08-27T11:27:37+08:00"
+  run_043_deepseek_http_dispatch_count: 18
+  run_043_deepseek_input_tokens: 608785
+  run_043_deepseek_output_tokens: 10679
+  run_043_deepseek_outcome_unknown_count: 2
 
 source_scope:
   provider: LOCAL_GIT
@@ -884,22 +959,39 @@ conversational_engineering_agent:
   seventh_live_chat_turn_result: three-of-five-reviewed-limitations-two-failed-overall-quality-fail
   seventh_live_chat_dispatches_by_turn: 15,9,6,6,7
   seventh_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
+  eighth_live_chat_execution_evidence_ref: FINDING-010-138
+  eighth_live_chat_result_ref: ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY
+  eighth_live_chat_product_commit: a4bfd6acabc6d9ae8a8201f6f03cfa24b43765b8
+  eighth_live_chat_product_tree: 8e1fdbb962bd9ec2b6812e28135e7ecefb074277
+  eighth_live_chat_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  eighth_live_chat_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+  eighth_live_chat_session_authorization_digest: sha256:6a3fd9b7c2c2d6a2a89f9677bbd24f97d62fd2fda1df8fbcd3ed2d38ee897676
+  eighth_live_chat_session_config_file_digest: sha256:b9e239b9c96b6e93c3fe69d3778adce6f5751f74de4e206aac5c99b99a539f90
+  eighth_live_chat_terminal_receipt_digest: sha256:47911a98133acbe3fd1abe635be1df94e9ee89270922ac3e1d4aa78dd26eaaec
+  eighth_live_chat_turn_result: one-accepted-one-reviewed-limitation-three-failed-overall-quality-fail
+  eighth_live_chat_dispatches_by_turn: 13,5,5,3,2
+  eighth_live_new_conversation_probe_result: pass-empty-context-clarification-zero-dispatch-no-inheritance
+  eighth_live_deepseek_schedule_verdict: deepseek-scheduling-policy-fail-not-direction-acceptance-evidence
   v7_unaccepted_exact_request_review_and_source_query_evidence_ref: FINDING-010-131
   v7_unaccepted_model_strategy_ref: conversational-engineering-agent@7
   v7_unaccepted_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@7
   v7_unaccepted_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@7
   v7_unaccepted_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@3
   v7_status: stopped-unaccepted-symptom-experiment-not-current-system-truth
-  current_agent_model_strategy_ref: conversational-engineering-agent@6
-  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@6
-  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@6
+  current_agent_model_strategy_ref: conversational-engineering-agent@8
+  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@8
+  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@8
   current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@2
   current_agent_review_output_schema: engineering-agent-independent-review-proposal@2
   current_dual_provider_qualification_status: reuse-when-adapter-configuration-endpoint-model-transport-and-rendering-identity-remain-valid-domain-prompt-or-answer-schema-change-alone-does-not-invalidate-conformance
-  deterministic_successor_canary_status: pdr005-layer-and-cognition-gates-passed-local-awaiting-exact-live-grant
+  successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
+  successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
+  successor_semantic_query_finding_ref: FINDING-010-138
+  successor_schedule_result_ref: ITER-010-RESULT-V-DEEPSEEK-IDLE-001
+  deterministic_successor_canary_status: clean-successor-frozen-awaiting-new-exact-grant-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-042-overall-fail-v7-unaccepted-pdr005-layer-and-cognition-gates-passed-local-live-direction-authorized-not-executed
-  status: implemented-not-qualified
+  agent_execution_status: run-043-fail-preserved-v8-semantic-query-local-candidate-awaiting-one-compliant-live-canary
+  status: implemented-eighth-live-failed-schedule-fail-v8-local-candidate
 
 question_evidence_package_classes:
   support_and_citation:
@@ -1242,7 +1334,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:4bf07f49376b40e7c1e61bdab6878c78fff51992f5b0d349582e8bad121b7e13
+  system_contract_set_digest: sha256:401818f71cb72b972d575f1e294cd5d160c6ff83fe685a9a1c1588a7c9d44475
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -1296,8 +1388,9 @@ development:
       rework_baseline_frozen_producer_commit: 8632904d4e97e152d6379d7ccc203f5a0234c34c
       rework_baseline_frozen_producer_tree: 48b2ab7089a33e1fb4187909d102ad7241754a4f
       live_question_status: not-authorized-conversational-five-turn-canary-not-executed
-      pdr005_current_live_question_status: authorized-semantic-chain-plus-two-unseen-heterogeneous-questions-not-executed
-      latest_consumed_live_history_status: run-042-failed-three-of-five-limitations-v7-unaccepted
+      live_question_status_is_legacy_docs_validator_compatibility_only: true
+      pdr005_current_live_question_status: run-043-executed-failed-successor-after-pdr007-gate-and-new-exact-grant
+      latest_consumed_live_history_status: run-043-failed-one-accepted-one-limitation-three-failed-and-deepseek-scheduling-policy-fail
       new_development_conversation_may_take_over: true
       development_conversation_bound_to_slice: false
       authorized_by: user
@@ -1329,6 +1422,8 @@ verification:
   evidence_location: var/iteration-010
 
 authorization:
+  authorization_state_schema: LEGACY_EXACT_RUNTIME_RECEIPT_COMPATIBILITY@1
+  current_authority_owner_ref: authorization_continuation_policy
   readiness_review_id: ITER-010-READINESS
   active_slice: ITER-010-SLICE-001
   authorized_by: user
@@ -1339,10 +1434,18 @@ authorization:
   refreshed_readiness_required: false
   explicit_user_reauthorization_required: false
   external_execution_reauthorization_required: true
+  external_execution_reauthorization_required_is_legacy_validator_compatibility_only: true
+  human_reauthorization_required_for_current_direction_canary: true
+  human_reauthorization_trigger: successor-exact-freeze-after-pdr007-gate
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
   external_execution_authorization_status: not-authorized
-  latest_consumed_live_history_status: seventh-run-042-failed-no-current-live-authority
-  latest_consumed_live_history_ordinal: 7
+  external_execution_authorization_status_is_legacy_exact_runtime_receipt_only: true
+  external_execution_authorization_status_scope: exact-post-freeze-runtime-receipt-not-yet-derived
+  external_direction_root_grant_status: consumed-by-run-043-scheduling-policy-fail-successor-not-authorized
+  external_direction_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
+  latest_consumed_live_history_status: eighth-run-043-product-fail-and-deepseek-scheduling-policy-fail-no-successor-live-authority
+  latest_consumed_live_history_status_scope: historical-through-run-043-successor-requires-pdr007-gate-and-new-exact-grant
+  latest_consumed_live_history_ordinal: 8
   restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
   consumed_live_session_authorization_history:
     first_live_session_authorization:
@@ -1415,12 +1518,25 @@ authorization:
       excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
       conformance_execution_finding_ref: FINDING-010-129
       execution_finding_ref: FINDING-010-130
+    eighth_live_session_authorization:
+      status: consumed-scheduling-policy-fail
+      root_authorization_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
+      exact_execution_authorization_ref: local-user-message-utf8:sha256:6a3fd9b7c2c2d6a2a89f9677bbd24f97d62fd2fda1df8fbcd3ed2d38ee897676
+      exact_product_commit: a4bfd6acabc6d9ae8a8201f6f03cfa24b43765b8
+      exact_product_tree: 8e1fdbb962bd9ec2b6812e28135e7ecefb074277
+      source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+      excludes: src-main-resources,credential-values,hidden,slice2,slice3,production-activation
+      execution_finding_ref: FINDING-010-138
+      scheduling_finding_ref: FINDING-010-139
+      scheduling_verdict: deepseek-scheduling-policy-fail-not-direction-acceptance-evidence
   planning_request_ref: codex-user-message:sha256:d3b60bdaa52d96ced3c653a8dcd54fabff41beb7f23f0bf691e6983ebb9437bc
   final_decision: REWORK
   final_decision_at: 2026-08-24
   final_decision_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
   project_decision_ref: ITER-010-PDR-004
   restart_execution_decision_ref: ITER-010-PDR-005
+  continuous_execution_decision_ref: ITER-010-PDR-006
   recovery_decision_ref: ITER-010-PDR-003
   recovery_decision_ref_receipt: codex-user-message:sha256:47a3421d48fe3f36000e45696ea9c41b49b7e362332bc724306c10ca42fe119c
   result_ref: ITER-010-RESULT-SLICE-001-STOP-REDIRECT

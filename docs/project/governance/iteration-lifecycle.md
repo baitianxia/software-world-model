@@ -105,11 +105,14 @@ signature 最多一个 successor retry；连续两次 attempt 没有用户可见
 然后只用一个有界 live canary 单元；Chat 目标必须使用最小多轮 Conversation，不得以孤立一题代替。同一 failure signature 修复一次仍复现，停止规则堆叠并进入架构职责评审。Alpha 前测试只允许 targeted impact、
 startup、safety；full regression 仅在 Alpha `CONTINUE` 后的 hardening 和正式验收前运行。
 
-Provider route 在 session 前按 `VOLCENGINE_ARK → DEEPSEEK` 预密封并预授权双方 disclosure scope。Ark 的独立 attempt 若以冻结的 Provider/
+Provider route 在 session 前按 `VOLCENGINE_ARK → DEEPSEEK` 预密封并预授权双方 disclosure scope 与适用的 dispatch admission policy。Ark 的独立 attempt 若以冻结的 Provider/
 模型能力 outcome 终态结束且没有 authorized answer，可在同一 logical interaction unit 内透明启动最多一个 DeepSeek attempt；用户不重新提交。
 fallback 从 immutable original interaction input 与 exact cognition 重跑全链，不读取 primary attempt 的中间产物；Chat 还必须携带与当前 Turn 相关的 exact Application-sealed Conversation Context。迟到 primary 只隔离审计。同
 Provider retry 为 0；Application/Source/Security failure 不能触发 fallback。输出/schema 或 Reviewer 拒绝必须按 primary capability failure
-记录，而不是误标为网络不可用。DeepSeek 批量启动优先使用执行时由官方页面重新确认的非高峰窗口；调度和成本只在题目开始前决策。
+记录，而不是误标为网络不可用。所有 planned DeepSeek 调用均受当前 Operations 非高峰硬准入；fallback eligibility 和普通外部授权不等于
+时间准入。run receipt 与逐 request 窗口/一次性 exact override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和
+HTTP；缺失时相应计数为 0。完整最坏质量链必须能在当前窗口结束前完成，窗口关闭后不创建新 request；无法完成审核时当前交互失败
+关闭，不降低质量。等待窗口时继续 Ark-only、本地归因、修复、targeted tests 和 candidate freeze。
 
 权限边界采用 just-in-time continuity。Slice 开发授权与 external execution grant 分离：后者缺少、消费、过期或 identity drift 只阻断
 对应 exact action，不能自动把活动 Slice 改成 completed/failed/paused。实现者完成 credential-free preflight 和 exact identity/disclosure
@@ -252,7 +255,8 @@ roadmap candidate
 - `ITER-012+` 的 Experience policy 已绑定首个持续 Alpha Slice、`V-ALPHA-ACCESS`、`V-TIMEBOX` 与独立质量 Case；首次体验前的资格/smoke
   上限、full-regression 禁止、相同 failure signature 重试上限和连续无可见增量停止条件均已冻结；
 - Provider policy 已冻结 Ark-first ordered route、双方 session disclosure scope、transparent independent fallback attempt、eligible/ineligible
-  outcome、迟到结果隔离、零同 Provider retry、DeepSeek 官方窗口复核和“成本不得降低质量”；
+  outcome、迟到结果隔离、零同 Provider retry、DeepSeek 官方窗口复核、外部网络前硬准入、逐 request 重验、一次性 exact peak override 和
+  “成本不得降低质量”；
 - 一个明确 Outcome 和非目标；
 - 所引用 System 文档均 current，或先完成所需 System 设计；
 - 每个 Slice 有可验证退出条件和风险边界；
@@ -272,7 +276,9 @@ roadmap candidate
 
 首个持续 Alpha Result 还必须报告时间盒 actual、首次体验前资格/smoke/full-regression 次数、轻量 live-attempt ledger、同签名最大重试数、
 连续无可见增量次数和 stop 后外部 dispatch 数。Provider Result 必须逐 attempt 报告 sealed identity、trigger/outcome 分类、是否重跑完整链、
-中间产物复用、迟到 primary 隔离、fallback 次数和用户重提次数；缺失或把 Access PASS 当 Quality PASS 都不能晋级 hardening。
+中间产物复用、迟到 primary 隔离、fallback 次数和用户重提次数；DeepSeek 还必须报告 run admission、逐 request window verdict、override、
+官方检查、Provider socket/TLS/credential/HTTP 零计数或实际计数以及任何 peak violation。缺失或把 Access PASS 当 Quality PASS 都不能晋级
+hardening。
 
 声称产品能力前进的 Iteration 还必须报告相对 baseline 的目标差距变化：同一正式 Web 入口上的 held-out 自由问题支持率、
 重大错误、完整性、至少一个新旧知识跨域问题、提问时 Source/Update/Direct fallback 计数，以及与成熟源码 Agent 的逐题对照。

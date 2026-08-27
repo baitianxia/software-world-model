@@ -1,0 +1,107 @@
+---
+id: ITER-010-PDR-007
+kind: project-decision
+status: accepted
+authority: project-decision
+owners: [product, project, engineering, quality, ai, operations]
+depends_on: [ITER-010-PDR-003, ITER-010-PDR-005, ITER-010-PDR-006, FINDING-010-139, SYS-ADR-017, SYS-OPS-CONFIGURATION]
+code: [src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
+tests: [tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py]
+iteration: ITER-010
+decision: REWORK
+rework_strategy: HARD_OFF_PEAK_ADMISSION_FOR_ALL_PLANNED_DEEPSEEK_DISPATCH
+decision_ref: local-user-message-utf8:sha256:ba8b85ba94ed69c876bf7cf15fa060ee494afb0c3dff383042c7197bdacacc7a
+effective_scope: ITER-010-SLICE-001-and-future-project-provider-execution-plans
+coding_input: true
+---
+
+# PDR-007：DeepSeek 闲时从调度偏好升级为调用前硬门禁
+
+## Context
+
+PDR-003 已规定 Ark 优先并要求 DeepSeek 高成本批量调用尽量放到官方定义的非高峰时段，但“默认/优先”没有成为可验证的调用准入。
+PDR-003 生效后仍有多次峰时 DeepSeek run；最新 `run-043` 在北京时间 `11:19–11:27` 执行 `18` 次 DeepSeek HTTP dispatch，且没有
+window check 或 override receipt。`FINDING-010-139` 因而将问题归因为计划、实现和执行三层共同缺口。
+
+本决定不改变 Ark→DeepSeek 对用户透明、两个 attempt 隔离、零同 Provider retry、完整质量链或安全边界。它改变的是 DeepSeek
+外部 dispatch 的运营准入：开发者不能再把“优先闲时”解释为“峰时也可以直接运行”。
+
+## Decision
+
+### 1. 所有计划性 DeepSeek 调用统一受硬门禁
+
+当前允许窗口固定为 `Asia/Shanghai` 半开区间：
+
+- `[00:00,09:00)`；
+- `[12:00,14:00)`；
+- `[18:00,24:00)`。
+
+门禁覆盖所有由开发或评测安排的 DeepSeek 请求，包括 probe、Conformance、Capability Evaluation、direction canary、Web 体验脚本、
+比较、回归和多问题运行；不能通过把批次改名为单题、fallback、smoke 或 live 来规避。DeepSeek 官方是否已经正式执行峰谷计价只作为
+成本事实记录，不影响本项目已经冻结的允许窗口。
+
+当前 ITER-010 尚未进入不可预先安排的生产流量。所有 direction canary 都是 planned run，必须整体安排在允许窗口；本决定不为尚未授权的
+Production 设计异步排队协议，也不以该未来问题延迟当前 Web 体验。
+
+### 2. Provider 网络和凭据之前必须有逐 run 准入收据
+
+每个 planned run 在首次 DeepSeek Provider socket/connected descriptor provisioning、TLS acquisition、credential resolution 或 HTTP
+dispatch 前必须密封 `DEEPSEEK_DISPATCH_ADMISSION@1`，至少包含：
+
+- trusted UTC time、`Asia/Shanghai` 换算时间、时区数据库/时钟来源和策略版本；
+- run 类型、exact product/source/session、Provider/model、最大 calls/tokens/duration；
+- 执行时重新检查的 DeepSeek 官方定价页、check time、内容摘要和 `EFFECTIVE / NOT_YET_EFFECTIVE / CHANGED` 事实；缺失或 `CHANGED`
+  必须先失败关闭并重新规划，不能自行扩张窗口；
+- 命中的允许窗口，或 exact peak override receipt；
+- Ark-first/合法 fallback 条件、完整质量预算和授权 identity。
+
+窗口、时钟、官方检查或 override 任一缺失/无效时，DeepSeek 必须在 Provider socket/connected descriptor provisioning、TLS
+acquisition、credential resolution 和 HTTP dispatch 前失败关闭，四类实际计数均为 `0`。run receipt 不能替代逐 request 检查；每个新
+DeepSeek request 都要回指同一有效 receipt，并重验当前窗口、剩余 calls/tokens/duration 或 exact override。planned run 还必须保证最坏
+完整质量链能在当前窗口结束前完成；进入高峰后不得再创建新的 DeepSeek request，已经发出的单个 request 只按既有零重试/结果未知规则
+完成和密封。若意外延迟使剩余 Review 无法合规完成，则当前 interaction 失败关闭，不得交付截断质量链的答案。
+
+### 3. 峰时例外只能是一次性 exact user override
+
+普通开发授权、direction canary grant、Ark→DeepSeek route grant 或透明 fallback 权限都不包含峰时例外。确需峰时调用时，必须按
+PDR-006 在 exact freeze 后直接申请最小 delta，绑定 Provider/model、exact run/Turn、原因、最大 calls/tokens/duration、有效起止时间和
+到期时间。批准只绕过时间门禁，不绕过 Ark-first、attempt 隔离、零重试、完整 Review、披露、安全或 Production 边界；不得形成 standing
+override。
+
+等待允许窗口通常不需要申请权限，也不允许开发停工。开发者继续 Ark-only、本地归因、通用修复、mock、targeted tests、artifact seal 和
+其他独立安全工作；到窗口后，若 exact external grant 已有效则自动继续，若确有 grant gap 才直接申请。
+
+### 4. run-043 的处置
+
+run-043 的 Provider、token、失败和答案结果保留为真实审计证据；由于其违反 current scheduling policy，当前 verdict 是
+`DEEPSEEK_SCHEDULING_POLICY_FAIL / REWORK / NOT_DIRECTION_ACCEPTANCE_EVIDENCE`。它不能解锁 comparison、hardening 或用户方向裁决，
+也不能仅为补一张调度收据立即重跑。
+
+下一步先在本地完成 run-043 的责任层归因，并把调度准入实现为可机械验证的最小 Gate。完成候选冻结后，只有在允许窗口和新的 exact
+grant 同时成立时，才执行一个后继 direction canary。
+
+### 5. 验证门禁
+
+新增 `V-DEEPSEEK-IDLE-001`，至少验证：
+
+- 使用零剩余时长 fixture 验证半开窗口边界：`08:59:59` 允许、`09:00:00` 阻止、`12:00:00` 允许、`14:00:00` 阻止、
+  `18:00:00` 允许；另以非零最坏时长验证 latest start 满足 `now + worst_case_duration <= window_end`；
+- 峰时且无 override 时，在 Provider socket/connected descriptor/TLS/credential/HTTP 前失败关闭，相关计数均为 `0`；
+- exact override 只覆盖绑定的 run/call/token/time 上限；
+- Ark 成功、Application/Source/Security failure 或未授权时 DeepSeek dispatch 为 `0`；
+- planned session 不能跨入高峰后继续创建新 DeepSeek requests；
+- 每个实际 DeepSeek dispatch 都能回指同一有效 admission receipt；
+- 调度门禁不能删减 Evidence、Citation、答案或独立 Review，也不能把失败改判为 PASS。
+
+`V-DEEPSEEK-IDLE-001` 在下一次 DeepSeek 外部 dispatch 前阻断；它不阻断 Ark-only 和本地开发，不要求 full regression，也不创建新的
+Iteration/Slice。
+
+## Consequences
+
+- PDR-003/PDR-005 的“默认/优先”措辞由本决定收紧为硬准入；PDR-006 的“持续开发”不能解释成峰时立即调用 DeepSeek。
+- 当前产品 runtime 已在 clean `03520eb…` 实现机械 schedule gate，并由
+  `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 以零外部调用闭合本地确定性验证；真实 planned run 仍须独立提交 `@3` artifact、fresh 官方检查、
+  允许窗口或 exact override 及逐 dispatch/terminal receipt，不能从本地 PASS 推导 live 合规。
+- 通用治理和模板必须把 declared provider window 变成可验收 admission policy；现有静态 docs validator 仅作 compatibility，不证明 run
+  合规。
+- 本决定不授权任何 Provider/model call、credential、Source disclosure、Browser、hidden、Production 或后续 Slice。

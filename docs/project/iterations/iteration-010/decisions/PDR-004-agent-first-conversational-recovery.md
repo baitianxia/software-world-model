@@ -72,8 +72,9 @@ attempt，且必须独立完成证据、Citation 与 Review。任一重大事实
 ### 5. PDR-003 全部恢复约束继续有效
 
 60/180/240 分钟检查点、Access/Quality 分离、首次体验前 qualification≤1、live smoke≤1、full regression=0、root-cause-first、本地最小
-复现加两个未参与修复的相邻案例、同 failure signature 一次修复上限、Ark→DeepSeek 透明独立 attempt、Conformance 精确复用、DeepSeek
-非高峰调度偏好以及“成本不降低已开始问题质量”全部继续有效。
+复现加两个未参与修复的相邻案例、同 failure signature 一次修复上限、Ark→DeepSeek 透明独立 attempt、Conformance 精确复用以及“成本
+不降低已开始问题质量”全部继续有效。DeepSeek 非高峰规则已由 PDR-007 从偏好收紧为 planned dispatch 硬准入；旧偏好措辞不再是执行
+规则。
 
 PDR-003 的体验前 `smoke≤1` 只约束上述本地/Mock Access 探针，不把五轮 Chat canary 缩减为单题。这里的 live attempt 单位从
 “logical question”精确为“一个 sealed version 的一个 Conversation Turn 到达任一外部 dispatch”；同一 Turn

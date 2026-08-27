@@ -3678,6 +3678,35 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-137.md"
   },
   {
+    "id": "FINDING-010-138",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "ai",
+      "application"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-138.md"
+  },
+  {
+    "id": "FINDING-010-139",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "project",
+      "engineering",
+      "quality",
+      "ai",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-139.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5455,6 +5484,22 @@
     "path": "docs/project/iterations/iteration-010/decisions/PDR-006-continuous-execution-and-just-in-time-authorization.md"
   },
   {
+    "id": "ITER-010-PDR-007",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "engineering",
+      "quality",
+      "ai",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-007-deepseek-off-peak-hard-admission.md"
+  },
+  {
     "id": "ITER-010-PROPOSAL",
     "kind": "iteration-proposal",
     "status": "accepted",
@@ -5514,6 +5559,22 @@
     "path": "docs/project/iterations/iteration-010/results/v-alpha-access-001-browser.md"
   },
   {
+    "id": "ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY",
+    "kind": "iteration-result",
+    "status": "failed-direction-canary-and-scheduling-rework",
+    "authority": "execution-evidence",
+    "owners": [
+      "product",
+      "engineering",
+      "quality",
+      "security",
+      "ai",
+      "interface"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-chat-experience-001-pdr005-direction-canary.md"
+  },
+  {
     "id": "ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001",
     "kind": "iteration-result",
     "status": "passed-local-cognition",
@@ -5528,6 +5589,21 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/results/v-cognition-eligibility-001.md"
+  },
+  {
+    "id": "ITER-010-RESULT-V-DEEPSEEK-IDLE-001",
+    "kind": "iteration-result",
+    "status": "passed-local-dispatch-admission",
+    "authority": "execution-evidence",
+    "owners": [
+      "operations",
+      "ai",
+      "interface",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-deepseek-idle-001.md"
   },
   {
     "id": "ITER-010-RESULT-V-LAYER-ATTRIBUTION-001",
@@ -6369,7 +6445,8 @@
     "derived_from": [
       "FINDING-010-092",
       "FINDING-010-100",
-      "FINDING-010-101"
+      "FINDING-010-101",
+      "FINDING-010-139"
     ],
     "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md"
   },
@@ -6465,7 +6542,8 @@
     "derived_from": [
       "FINDING-008-024",
       "FINDING-008-036",
-      "FINDING-010-092"
+      "FINDING-010-092",
+      "FINDING-010-139"
     ],
     "path": "docs/system/architecture/runtime-flows.md"
   },
@@ -6488,7 +6566,9 @@
     "owners": [
       "architecture"
     ],
-    "derived_from": [],
+    "derived_from": [
+      "FINDING-010-139"
+    ],
     "path": "docs/system/architecture/invariants.md"
   },
   {
@@ -6547,7 +6627,8 @@
       "FINDING-010-099",
       "FINDING-010-104",
       "FINDING-010-105",
-      "FINDING-010-106"
+      "FINDING-010-106",
+      "FINDING-010-139"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -6607,7 +6688,9 @@
       "FINDING-010-128",
       "FINDING-010-132",
       "FINDING-010-133",
-      "FINDING-010-136"
+      "FINDING-010-136",
+      "FINDING-010-138",
+      "FINDING-010-139"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },
@@ -7044,7 +7127,8 @@
       "FINDING-010-103",
       "FINDING-010-104",
       "FINDING-010-105",
-      "FINDING-010-106"
+      "FINDING-010-106",
+      "FINDING-010-139"
     ],
     "path": "docs/system/operations/configuration.md"
   },
@@ -7164,7 +7248,8 @@
       "FINDING-010-093",
       "FINDING-010-104",
       "FINDING-010-105",
-      "FINDING-010-106"
+      "FINDING-010-106",
+      "FINDING-010-139"
     ],
     "path": "docs/system/quality/security-boundaries.md"
   }

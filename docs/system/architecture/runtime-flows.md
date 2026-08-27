@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture, application]
 depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-092]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-092, FINDING-010-139]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -91,6 +91,22 @@ receipt 均不得复用；其他已接受 Profile 保持各自已资格的调用
 Conformance、同 Strategy/Configuration Capability Qualification、隔离 transport、credential reference 和 disclosure scope。当前
 Engineering QA 顺序为 Ark → DeepSeek；不能因 Ark 实现缺口直接跳过 primary。
 
+planned DeepSeek route 还必须执行下列 admission flow：
+
+```text
+freeze exact run / route / quality budget
+  → verify trusted clock + current official schedule record
+  → seal DEEPSEEK_DISPATCH_ADMISSION@1 for an allowed window or exact one-time peak override
+  → before every new DeepSeek request, revalidate window / override
+  → only then allow socket/connected descriptor provisioning, TLS, credential resolution and HTTP
+  → otherwise fail before external network with DeepSeek dispatch = 0
+```
+
+完整最坏质量链必须在开始前可安排进允许窗口；窗口结束后不得再创建 DeepSeek request。已经发出的单个 request 继续按零重试和结果未知
+规则密封，但未完成 Evidence/Answer/Review 的 interaction 失败关闭，不交付降质答案。调度阻断只阻断 DeepSeek 外部分派，不停止 Ark-only
+或本地开发。当前 runtime 已在 Gateway preflight/invoke 与 Artifact Session `@3` 实现该 flow，并由本地 Case PASS；已有 Provider 资格仍
+不能替代每次 planned run 的 exact admission receipt。
+
 一次用户提交只产生一个 logical interaction unit；Engineering Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。
 Ark primary attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有
 authorized answer，且原因为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected，才创建一次
@@ -98,8 +114,9 @@ DeepSeek fallback attempt。后者从 immutable original interaction input、Cha
 以及同一 exact Cognition Context 重新运行完整链，不能读取或拼接 Ark Ledger/Package/Draft/Review。Application、Source 或 Security
 failure 不 fallback；每个 Provider 内 retry 为 0。迟到 Ark 结果进入 quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建
 Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的
-独立身份、调用、Usage、成本、失败分类与 outcome-unknown 重复计费风险。当前实现尚未闭合该流程，运行状态必须标记
-`NOT_IMPLEMENTED / NOT_QUALIFIED`。
+独立身份、调用、Usage、成本、失败分类与 outcome-unknown 重复计费风险。当前 route 与 schedule admission 已本地闭合，运行状态为
+`ROUTING_LOCAL_PASS / DEEPSEEK_SCHEDULE_ADMISSION_LOCAL_PASS / EXACT_SESSION_AUTHORITY_REQUIRED / NOT_LIVE`；这与各 Provider 已取得的
+Conformance 资格和后继 live receipt 分开。
 
 ## 直接源码调查
 

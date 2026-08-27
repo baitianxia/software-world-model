@@ -4,24 +4,28 @@ kind: project-decision
 status: accepted
 authority: project-decision
 owners: [product, project, architecture, engineering, quality, security]
-depends_on: [ITER-010-PDR-005, FINDING-010-137, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-ITERATION-LIFECYCLE]
+depends_on: [ITER-010-PDR-002, ITER-010-PDR-005, FINDING-010-137, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-ITERATION-LIFECYCLE]
 code: []
 tests: []
 iteration: ITER-010
 decision: REWORK
 rework_strategy: CONTINUOUS_EXECUTION_WITH_JUST_IN_TIME_EXACT_AUTHORIZATION
-decision_ref: local-user-message-utf8:sha256:753cb10021d405e0497dc7dc8d4a563d3d9108d2bc9a6472f023ab4716936ad9
+decision_ref: local-user-message-utf8:sha256:13a1931f084e1196fef5edca39a3f7d8d01da88c4e8abedfd088ef042541e399
 effective_scope: ITER-010-SLICE-001-and-project-development-governance
 coding_input: true
 ---
 
 # PDR-006：开发持续到阶段交付，权限在需要时直接申请
 
+> Current execution amendment：`ITER-010-PDR-007` 明确持续开发不等于峰时立即调用 DeepSeek。窗口外继续 Ark-only 和本地工作；
+> DeepSeek 必须等待允许窗口和 runtime admission receipt，确需峰时例外时才直接申请一次性 exact override。
+
 ## Context and authority
 
-PDR-005 已完成离线分层归因与工程认知资格两个本地 Gate。当前活动 Slice、本地产品/System 编码和确定性验证授权仍有效；只有下一次
-Provider/Source/Browser direction canary 缺少 exact grant。把这个状态写成“开发停止”会再次把可体验版本推迟，并混淆 Slice 开发授权与
-一次性外部执行授权。
+PDR-005 已完成离线分层归因与工程认知资格两个本地 Gate。PDR-006 接受时，活动 Slice、本地产品/System 编码和确定性验证授权仍有效，
+随后取得的一次受限 direction-canary root grant 尚未消费；该时间点状态现仅作决定背景，run-043 后续已消费该 grant。彼时停止而不冻结
+候选、派生精确执行收据或继续运行，会再次把可体验版本推迟；未来
+真正出现权限缺口时，只报告“需要授权”后退出，同样混淆 Slice 开发授权与一次性外部执行授权。
 
 用户要求开发未完成时不得自行停下，需要权限时直接申请。本决定接受该执行规则，但不把它伪装成 Provider/model、credential、动态
 Source disclosure、Browser、hidden、后续 Slice 或 Production 的具体 grant；这些动作仍须逐次满足 exact freeze 和最小授权。
@@ -75,11 +79,19 @@ fail closed。持续开发不扩大任何 capability authority。
 
 “还需要授权”“一个本地 Gate 已完成”“timebox FAIL”或“当前外部权限为 0”本身都不是退出条件。
 
-## ITER-010 current action
+本条覆盖 PDR-002 中“比较失败默认暂停”的执行措辞：比较失败仍为同一 Slice `REWORK`，但现有本地开发授权覆盖修复时保持 active；只在
+scope/Owner 变化、用户明确暂停或本地授权失效时进入 paused。PDR-002 的严格 Codex 质量阈值和不自动新建 Iteration 规则保持不变。
 
-`V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001` 与 `V-ALPHA-ACCESS-001` 已 PASS。当前实现者必须先冻结 PDR-005 direction
-canary 的 exact product/artifact/session 与披露包，然后立即申请最多一个 Ark direction canary session 所需 grant；DeepSeek 仅作为同一
-冻结 Session 中 ADR-017 允许的条件式 fallback。批准后继续执行真实语义链和两个未参与修复的异质问题，不再停下来申请第二次确认。
+## ITER-010 action and current amendment
 
-在 request 发出前，状态是 `GRANT_REQUEST_REQUIRED / IN_PROGRESS`；request 发出后才可写成 `WAITING_EXACT_GRANT / IN_PROGRESS`。两者都
-不是 Slice 终态，也不解锁 full regression、三臂比较、后续 Slice、hidden 或 Production。
+PDR-006 接受时，`V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001` 与 `V-ALPHA-ACCESS-001` 已 PASS；当时的动作是先冻结
+PDR-005 direction canary 的 exact product/artifact/session 与披露包，并校验当时尚未消费的
+`local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4` 是否覆盖该 identity。覆盖时直接派生
+精确执行收据并继续，不得再申请相同授权；只有 identity 漂移或范围不足时，才立即申请最多一个 Ark direction canary session 所需的
+最小 delta。DeepSeek 仅作为同一冻结 Session 中 ADR-017 允许的条件式 fallback。随后继续执行真实语义链和两个未参与修复的异质问题，
+不再停下来申请第二次确认。
+
+run-043 已消费该 direction grant，但违反 PDR-007 的 DeepSeek 闲时门禁，只能作为失败与归因证据。当前状态改为
+`DEEPSEEK_GATE_LOCAL_PASS / SUCCESSOR_FROZEN / EXACT_EXTERNAL_GRANT_REQUIRED`：调度 Gate 与 clean `3a6089f…` candidate 已闭合，当前
+直接申请必要 external delta；等待允许窗口不等于等待权限，更不允许停止本地开发。该状态不解锁 full regression、三臂比较、后续
+Slice、hidden 或 Production。

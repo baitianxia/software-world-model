@@ -70,6 +70,12 @@ experience_elapsed_minutes_at_result_seal: pending
 page_launchable_elapsed_minutes: pending
 sustained_user_operable_alpha_elapsed_minutes: pending
 experience_hard_stop_triggered: pending
+authorization_continuation_policy_schema: pending
+external_grant_status_at_result: pending
+exact_approval_request_ref: pending
+independent_safe_work_exhausted: pending
+development_status_after_result: pending
+development_turn_exit_basis: pending
 # 仅在当前 Iteration Manifest 冻结了方向探索微检查点时填写。
 experience_checkpoint_handoff_count: pending
 experience_checkpoint_handoff_report_digest: pending
@@ -86,6 +92,22 @@ external_dispatch_after_required_stop_count: pending
 started_question_quality_chain_truncation_count: pending
 provider_route_policy_schema: pending
 provider_route_report_digest: pending
+deepseek_dispatch_admission_policy_schema: pending
+deepseek_dispatch_admission_case_id: pending
+deepseek_dispatch_admission_verdict: pending
+deepseek_dispatch_admission_receipt_digest: pending
+deepseek_dispatch_window: pending
+deepseek_official_schedule_check_status: pending
+deepseek_peak_override_ref: pending
+deepseek_request_count: pending
+deepseek_request_with_valid_admission_count: pending
+deepseek_blocked_before_network_count: pending
+deepseek_peak_without_override_dispatch_count: pending
+deepseek_post_window_new_request_count: pending
+deepseek_socket_without_valid_admission_count: pending
+deepseek_tls_without_valid_admission_count: pending
+deepseek_credential_without_valid_admission_count: pending
+deepseek_http_without_valid_admission_count: pending
 fallback_provider_attempt_count: pending
 same_provider_retry_count: pending
 cross_attempt_intermediate_artifact_reuse_count: pending
@@ -126,7 +148,8 @@ critical_assumption_catalog_digest: pending
 
 首个持续 Alpha Slice 的成功或失败 Result 必须绑定 `EXPERIENCE_FIRST_DELIVERY@1`、三个 Case、计时起点和 actual。记录 60 分钟页面、
 180 分钟持续 Alpha 是否达成；180 分钟未交即记 timebox FAIL，181—239 分钟形成的迟到 Alpha 只能作为 `FAIL / REWORK` 证据；若到
-240 分钟仍未达成，必须记录 hard stop 后新增功能/hardening/外部 dispatch 为 0。首次体验前资格次数不得超过 1、Provider 前本地/Mock
+240 分钟仍未达成，必须记录 hard stop 后新增功能、hardening、full regression 和无新证据外部重跑为 0；最小体验恢复和本地根因工作仍
+继续。首次体验前资格次数不得超过 1、Provider 前本地/Mock
 Access smoke 不得超过 1 个、full regression 必须为 0。Manifest 另行冻结方向探索微检查点时，Result 还须记录逐点交付次数、聚合报告
 digest、同一冻结 canary 的完成 Turn 数、后续方向证据/决定时间；成功 Result 必须绑定方向 Gate PASS 和用户 `CONTINUE` 收据。
 
@@ -144,6 +167,17 @@ Provider 报告还必须列出 ordered routes、每个独立 attempt 的 sealed 
 interaction input + World Model cognition 重跑完整链，并在 Chat 中携带当前 Turn 的 exact relevant Application-sealed Conversation Context、中间产物复用数、迟到 primary 隔离收据、同 Provider retry 数和用户是否被要求重提。
 Provider 输出/schema/模型审核失败可以作为 capability fallback 原因，但不得伪称网络不可用；Application、Source 或 Security 失败不得
 通过切 Provider 掩盖。
+
+DeepSeek 调度报告必须覆盖全部 planned 直接调用和 fallback，不按 batch/smoke/live 名称过滤。逐 run 记录 official schedule check、trusted
+time/window、完整最坏质量链预算、`DEEPSEEK_DISPATCH_ADMISSION@1` digest 和一次性 exact override；逐 request 证明 current-window/
+override 重验并回指同一 receipt。无有效准入时 Provider socket/connected descriptor、TLS、credential 和 HTTP 计数必须为 0；任何峰时
+无 override dispatch 均使 `V-DEEPSEEK-IDLE` 为 `FAIL / blocking`，不能事后补写收据追认。窗口阻断期间 Ark-only 和本地工作继续；无法
+完成 Evidence、Answer、Citation 和独立 Review 时当前交互失败关闭，不交付降质答案。
+
+授权连续性报告必须记录 Slice 本地授权、active/pending/consumed external grant、exact freeze identity、是否复用 active grant、实际
+approval request receipt，以及等待期间完成的独立安全工作。缺权限只阻断对应 exact action；若 request 尚未实际发出，不得以“等待授权”
+作为开发回合退出依据。request 已发出但本地工作尚未穷尽时继续开发；只有二者都满足才可记录
+`WAITING_EXACT_GRANT / IN_PROGRESS`。批准后必须自动续跑，不重复确认。
 
 ## Architecture reflection and continuation decision
 
@@ -174,7 +208,8 @@ full cognition/locator-only 因果消融分开报告。
 `Decision ref: codex-user-message:sha256:<exact-message-digest>` 记录唯一决定、Owner 与人工决策收据，再说明
 理由。正文决定、metadata 与 Manifest
 必须一致。`CONTINUE` 或 `ACCEPT` 要求本 Slice 绑定的全部假设均为 `SUPPORTED`；存在 `FALSIFIED` 或 `UNRESOLVED` 时默认
-`REWORK` 并暂停当前 Slice。`REDIRECT` 必须在 `reflection_redirect_basis` 绑定明确用户转向、核心架构证伪或预提交无进展上限已达到；
+`REWORK` 并阻止 PASS、晋级与 hardening；现有本地开发授权覆盖修复时保持当前 Slice `authorized / in-progress / coding_input=true`。
+`REDIRECT` 必须在 `reflection_redirect_basis` 绑定明确用户转向、核心架构证伪或预提交无进展上限已达到；
 问题报告、错误答案或复核要求不能作为依据。复盘完成不等于方案通过。
 
 每项假设的 `PASS Case IDs` 必须是本 Slice 所有、已执行并绑定该 Result Evidence 的 Verification Case；不得引用本身的

@@ -4,7 +4,7 @@ kind: results-index
 status: completed
 authority: project-evidence
 owners: [quality, project]
-depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-PDR-001]
+depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY, ITER-010-RESULT-V-DEEPSEEK-IDLE-001, ITER-010-PDR-001]
 code: []
 tests: []
 iteration: ITER-010
@@ -29,6 +29,13 @@ iteration: ITER-010
   实现/行为 Profile 形成 versioned Capability Manifest；结构、调用流程和职责/失败边界逐 Need 获得相关正式事实或明确 Gap，Maven-only
   行为题失败关闭。artifact Session `@2` 已完成本地多 Profile runtime 组合，外部模型、Source projection read、listener/browser 均为 0；
   它不通过后续 live Chat/Quality/XD。
+- [PDR-005 Direction Canary](v-chat-experience-001-pdr005-direction-canary.md)：clean `a4bfd6a…` 的唯一授权 canary 已执行并停止；五个
+  Provider-eligible Turn 为 1 ACCEPTED、1 REVIEWED_LIMITATION、3 FAILED，故 Chat/Quality/XD 均 `FAIL / REWORK`。结构题通过；中文行为题
+  暴露有资格 Java cognition 未投影 exact login entity、Source scan 被 `loginType` 噪声耗尽。新 Conversation 澄清/隔离/零 dispatch PASS；
+  terminal 密封 4 Conversation、6 Turn、28 dispatch、retry 0、Production 未执行；其峰时 DeepSeek 调度另判 PDR-007 FAIL。
+- [V-DEEPSEEK-IDLE-001 Local Result](v-deepseek-idle-001.md)：clean `03520eb…` 实现 `DEEPSEEK_DISPATCH_ADMISSION@1`、Artifact Session
+  `@3`、Gateway preflight/invoke 双重门禁和 terminal 对账；半开窗口、latest-start、exact override、价格检查、identity/budget 漂移及
+  credential/TLS/HTTP 前峰时拒绝均本地 PASS，外部调用 0。它不追认 run-043，也不授权后继 canary。
 - [SLICE-001 Historical Stop Result](slice-001-stop-redirect.md)：技术 Web/Citation/隔离资产永久保留；扁平 Claim/Review 合同再次产生代码
   走读式默认答案并被 Reviewer 批准，历史答案/审核 Gate FAIL 不变。[PDR-001](../decisions/PDR-001-resume-as-rework.md) 将迭代级决定修订
   为 `REWORK`；后续 `32b298de…` 收据已恢复 ITER-010/Slice1 开发，Slice2/3 未授权。

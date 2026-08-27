@@ -155,11 +155,32 @@ rework_policy:
   schema: SAME_SLICE_REWORK@1
   failed_attempt_default_decision: REWORK
   failed_attempt_blocks: slice-promotion-only
+  active_authorized_rework_continues: true
+  gate_failure_ends_development_goal: false
   same_slice_reauthorization_allowed: true
   problem_report_or_review_request_implies_redirect: false
   redirect_bases: explicit-user-direction-change,core-architecture-falsified,precommitted-no-progress-limit-reached
   no_progress_measure: <measurable-quality-or-user-capability-delta>
   no_progress_attempt_limit: <positive-integer-at-least-two>
+
+authorization_continuation_policy:
+  schema: JUST_IN_TIME_EXACT_AUTHORIZATION@1
+  owner_ref: PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN
+  current_decision_ref: <current-project-decision-id>
+  slice_development_authorization_separate_from_external_grant: true
+  active_exact_grant_must_be_reused: true
+  active_or_pending_exact_request_must_not_be_duplicated: true
+  exact_preflight_and_identity_disclosure_freeze_before_request_required: true
+  missing_external_grant_blocks: exact-external-action-only
+  authorization_gap_action: request-minimum-exact-delta-immediately
+  ask_whether_to_request_before_request_allowed: false
+  authorized_local_work_continues: true
+  approval_continues_execution_without_redundant_confirmation: true
+  request_pending_status: waiting-exact-grant-in-progress
+  grant_pending_pauses_slice_or_revokes_coding_input: false
+  hard_stop_ends: scope-expansion-hardening-full-regression-rule-accumulation-and-no-new-evidence-external-reruns-only
+  hard_stop_ends_minimum_experience_recovery: false
+  exit_conditions: stage-delivered,exact-request-sent-and-independent-safe-work-exhausted,explicit-user-stop-redirect-reject,unavoidable-safety-prohibition
 
 # Required when experience_version_binding declares ENGINEERING_CHAT_EXPERIENCE@1.
 conversational_engineering_agent:
@@ -221,7 +242,7 @@ experience_delivery_policy:
   page_launchable_deadline_minutes: 60
   sustained_user_operable_alpha_deadline_minutes: 180
   hard_stop_deadline_minutes: 240
-  hard_stop_action: stop-scope-expansion-and-external-calls-narrow-and-review
+  hard_stop_action: stop-scope-expansion-hardening-full-regression-and-no-new-evidence-external-reruns-continue-minimum-experience-recovery
   access_gate_scope: user-operable-web-and-request-path-only
   provider_readiness_blocks_first_user_handoff: false
   quality_gate_scope: user-visible-answer-quality-only
@@ -286,7 +307,10 @@ provider_route_policy:
   same_provider_retry_allowed: false
   outcome_unknown_duplicate_cost_risk_recorded: true
   post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route
+  # Legacy docs-validator compatibility only; the executable rule is deepseek_dispatch_admission_policy below.
   deepseek_batch_start_policy: provider-declared-non-peak-preferred
+  deepseek_batch_start_policy_is_legacy_docs_validator_compatibility_only: true
+  deepseek_current_execution_policy_ref: deepseek_dispatch_admission_policy
   deepseek_schedule_timezone: Asia/Shanghai
   deepseek_current_preferred_windows:
     - "00:00-09:00"
@@ -297,9 +321,35 @@ provider_route_policy:
   deepseek_schedule_effective_status: <announced-not-yet-effective-or-effective>
   peak_urgent_override_requires: audited-explicit-override
   cost_can_reduce_answer_quality: false
-  cost_gate_scope: before-question-start-only
-  current_started_question_must_keep_full_quality_chain: true
+  cost_gate_scope: before-interaction-unit-start-only
+  current_started_interaction_unit_must_keep_full_quality_chain: true
   unchanged_current_conformance_reuse_required: true
+
+deepseek_dispatch_admission_policy:
+  schema: DEEPSEEK_DISPATCH_ADMISSION@1
+  owner_decision_ref: <current-project-decision-id>
+  scope: all-planned-development-conformance-capability-canary-comparison-regression-and-web-experience-deepseek-dispatch
+  timezone: Asia/Shanghai
+  allowed_windows_are_half_open: true
+  allowed_windows:
+    - "00:00-09:00"
+    - "12:00-14:00"
+    - "18:00-24:00"
+  enforcement_independent_of_price_effective_status: true
+  official_schedule_check_required_per_run: true
+  official_schedule_missing_or_changed_action: fail-closed-and-replan-before-dispatch
+  planned_run_must_fit_worst_case_quality_chain_before_window_end: true
+  admission_receipt_required_before_provider_socket_descriptor_tls_credential_or_http: true
+  per_request_current_window_or_exact_override_revalidation_required: true
+  admission_receipt_required_fields: trusted-utc-and-beijing-time,clock-and-timezone-source,policy-version,run-type,exact-product-source-session,provider-model,maximum-calls-tokens-duration,official-schedule-check-time-and-content-digest-and-status,window-verdict-or-exact-peak-override,ark-first-fallback-and-quality-budget,authorization-identity
+  missing_or_invalid_admission_action: fail-before-provider-network-and-credential-with-zero-provider-socket-tls-credential-and-http
+  new_deepseek_request_after_window_close_allowed: false
+  incomplete_answer_or_review_delivery_allowed: false
+  peak_override_requires: exact-one-time-user-grant-for-provider-model-run-or-turn-reason-call-token-duration-start-expiry
+  ordinary-development-canary-route-or-fallback-grant-implies-peak-override: false
+  waiting_for_window_stops_local_or_ark_only_development: false
+  verification_case_id: <V-DEEPSEEK-IDLE-NNN>
+  current_runtime_implementation_status: <implemented-and-verified-or-missing>
 
 source_scope:
   provider: <provider-id>

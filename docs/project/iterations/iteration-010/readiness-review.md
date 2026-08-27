@@ -17,14 +17,16 @@ historical_product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4
 historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:2e53074115b08841a527fb7ba49e739eb2afd0473d20cacaa1a926338f8a8260
 coding_input: false
-current_execution_decision_ref: ITER-010-PDR-006
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137]
+current_execution_decision_ref: ITER-010-PDR-007
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138]
+current_scheduling_finding_ref: FINDING-010-139
 ---
 
 # ITER-010 Readiness Review
 
 Front matter 的 `coding_input: false` 表示本 Readiness 文档本身不是开发设计；它不撤销 Manifest、Current 与活动 Slice 已记录的
-`ITER-010-SLICE-001 coding_input: true`。实际编码遵循活动 Slice、PDR-006 持续执行规则及 PDR-005 当前 Gate。
+`ITER-010-SLICE-001 coding_input: true`。实际编码遵循活动 Slice、PDR-007 DeepSeek 调度门禁、PDR-006 持续执行规则及 PDR-005
+当前 Gate。
 
 ## Reviewed exact inputs
 
@@ -143,7 +145,9 @@ run-042 同时存在 Cognition coverage、Agent 调查和 Reviewer 守门故障�
 `local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499` 本地密封；它不是新的
 平台 Readiness receipt，也不扩大权限。正式开发范围仍由 `f76ba3e8…` 锚定：Slice1 产品/System 代码和本地确定性验证。全新的“开发
 ITER-010”对话可以直接接手，无需继承旧对话的工作状态、复现旧过程或再次确认相同范围；当前使用 Slice1 是授权与审计入口，不是对话
-绑定。Provider/model、动态 Source disclosure、live Browser、hidden、Slice2/3 和 Production 仍未授权。
+绑定。本 Readiness 本身不授权 Provider/model、动态 Source disclosure、live Browser、hidden、Slice2/3 或 Production。
+这里的“未授权”只描述 PDR-004 本地开发授权本身；run-043 后续取得的一次性外部授权已执行并消费，不可复用。当前后继
+Provider/model、动态 Source disclosure 与 live Browser 仍无 exact grant，须在 PDR-007 和 candidate freeze 后直接申请。
 
 本 Readiness 当前只放行以下顺序：
 
@@ -152,8 +156,10 @@ ITER-010”对话可以直接接手，无需继承旧对话的工作状态、复
    三个异质问题逐 Need 给出 eligible capability 或 explicit Gap；
 3. 将问题相关 Cognition 投影接回已经可启动的 Web，在附加 60/180/240 分钟恢复 hard stop 内交付一条真正的语义链（初问→省略指代
    追问或纠正→深入/总结）和两个未参与修复的异质问题；同一 Session 中三个互不相关的独立问答不算 Chat；
-4. 只有上述通过且取得新的 exact external grant，才执行最多一个 Ark direction canary；DeepSeek 只按 ADR-017 fallback，Alpha 前不跑
-   full regression。
+4. 上述前两项现已 PASS；run-043 随后消费 direction grant，却在高峰执行 DeepSeek `18` 次且没有 window/override receipt，故只能作为
+   `DEEPSEEK_SCHEDULING_POLICY_FAIL` 和本地归因证据；
+5. `V-DEEPSEEK-IDLE-001` 与 clean `3a6089f…` 后继 candidate 已本地闭合。当前取得新 exact grant，允许窗口与 grant 同时成立后才执行
+   一个后继 canary；峰时继续 Ark-only 和本地开发，Alpha 前不跑 full regression。
 
 领域 Prompt、答案 Schema 或产品变化本身不使相同 Adapter/Configuration/endpoint/model/transport/rendering 的 Provider Conformance
 失效。下一开发动作不得是 Ark/DeepSeek 同时测试、v7 修改或旧五轮重跑。
@@ -175,9 +181,25 @@ ITER-010”对话可以直接接手，无需继承旧对话的工作状态、复
 - Stop：任何手册化/缓存化概念漂移、一次性固定调查、模型直接 Source 权限、特判、旧包批准、错误 Citation、审核/安全降级均阻断。
 
 结论：Outcome 直接服务多轮工程 Chat MVP。PDR-004 refresh 已由 `f76ba3e8…` 接受并继续提供 Slice1 产品/System 编码与本地确定性验证
-权限；PDR-005 是当前执行修正。既有 Access、Agent/Conversation 和透明 route 实现事实保留，run-042 质量失败、v7 未接受；随后
-`V-LAYER-ATTRIBUTION-001` 与 `V-COGNITION-ELIGIBILITY-001` 已由独立 Result 以外部调用 0 PASS。当前下一入口是另取 exact external
-grant 后执行一个 Ark Web direction canary；本文件不追认旧失败为 PASS，也不授权外部调用、live 或后续 Slice。
+权限；PDR-005 是方向 Gate 修正，PDR-006 是持续执行修正，PDR-007 是 DeepSeek 调度修正。既有 Access、Agent/Conversation 和透明 route 实现事实保留，run-042 质量失败、v7 未接受；随后
+`V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001` 与 `V-DEEPSEEK-IDLE-001` 已由独立 Result 以外部调用 0 PASS。run-043
+调度/质量 FAIL 后，clean `3a6089f…` successor 已冻结；当前只在允许窗口和新的 exact grant 同时成立时执行一个后继 Web canary。
+本文件不追认旧失败为 PASS，也不把该授权扩大为其他 live 或后续 Slice。
+
+## PDR-006 authorization continuity readiness
+
+本轮不重开架构 Readiness，也不撤销现有 Slice1 coding input。实现者必须在阶段交付前持续推进：active exact grant 直接复用；权限确有
+缺口时，在完成本地 preflight 和 exact freeze 后直接提交审批，不先询问是否申请。等待审批只阻断对应 exact action，本地根因分析、定向
+验证、artifact seal 与其他独立安全工作继续。批准后自动续跑；只有 request 已实际发出且独立工作穷尽时，状态才可写成
+`WAITING_EXACT_GRANT / IN_PROGRESS`，不得写成开发完成、失败或停止。
+
+## PDR-007 DeepSeek admission readiness
+
+下一次 DeepSeek 外部 dispatch 前，必须以注入时钟和零真实调用验证 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)` 边界、
+峰时 fail-before-Provider-socket/connected-descriptor/TLS/credential/HTTP、exact override 限界和 receipt 对账。planned canary 的最坏完整
+质量链必须在允许窗口结束前完成，并在每个新 request 前重验；普通 canary/fallback grant
+不是 peak override。当前 runtime 已由 `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 本地证明该机械 Gate，状态是
+`LOCAL_GATE_PASS / EXACT_EXTERNAL_GRANT_AND_LIVE_RECEIPT_REQUIRED`，不冒充 live Ready；该阻断不影响 Ark-only 与本地开发持续推进。
 
 ## Architecture reflection gate readiness
 

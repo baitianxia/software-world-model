@@ -41,12 +41,33 @@ Profile/View/组件，Readiness 必须保持 `proposed`。
 核对 Proposal 已冻结关键假设、最早反证、成熟替代方案对照和反证后的动作；Manifest 为每个 Slice 恰好绑定一个
 `V-REFLECT-NNN`。第一段必须优先验证最高风险架构假设，每个 Slice Result 必须形成独立复盘结论；没有 `CONTINUE` 决定和用户
 再次授权时，后续 Slice 不得进入开发。
-失败默认进入同一 Slice 的 `REWORK`。Proposal 必须冻结无进展定义和正整数尝试上限；只有明确用户转向、核心架构证伪或达到该上限
-才允许 `REDIRECT`。
+失败默认进入同一 Slice 的 `REWORK`。现有本地开发授权覆盖修复时保持该 Slice `authorized / in-progress / coding_input=true`；失败只
+阻止 PASS、晋级与 hardening。只有 scope/Owner 变化、用户明确暂停或本地授权失效时才暂停。Proposal 必须冻结无进展定义和正整数尝试
+上限；只有明确用户转向、核心架构证伪或达到该上限才允许 `REDIRECT`。
 每段 Reflection 必须绑定 exact 用户决策消息收据；后续 Slice 的授权必须引用同一条前序 Reflection 决策消息，且不能复用更早
 授权。current Codex 的 client/binary/model/reasoning/tools/permissions identity、fresh 隔离任务、答案先密封、protocol/rubric/cache policy、
 严格答案质量 metric/unit/direction/正阈值/replay protocol 和独立裁决 Owner 必须在首个持续 Web Alpha 授权前冻结；完整 hidden 与跨工程
 复验仍可后置到夯实阶段。调查步数与模型调用上限至少为 2，并结构化冻结 query/result 单步与总字节、总时长、Support、trace 和超限语义。
+
+## Authorization continuity readiness
+
+核对 Manifest 已把 Slice 本地开发授权与 external/side-effect exact grant 分开，并冻结以下规则：active grant 必须复用、pending request
+不得重复、consumed/expired/drifted grant 不得复用；权限缺口只阻断对应 exact action，不自动暂停 Slice 或撤销 coding input。实现者在
+credential-free preflight 和 exact identity/disclosure freeze 后直接提交最小 approval request，不先询问是否申请；批准后自动续跑，等待
+期间继续全部独立安全工作。
+
+开发回合退出条件必须收窄为阶段交付、actual exact request 已发出且独立安全工作穷尽、用户明确 `STOP/REDIRECT/REJECT`，或不可绕过的
+安全禁止。`WAITING_EXACT_GRANT` 必须同时保持 `IN_PROGRESS`；“需要授权”、局部 Gate PASS/FAIL 或 timebox FAIL 本身不是退出条件。
+
+## Provider dispatch admission readiness
+
+核对 Manifest 已把旧 `deepseek_batch_start_policy=provider-declared-non-peak-preferred` 标为静态 validator 兼容，并另行冻结
+`DEEPSEEK_DISPATCH_ADMISSION@1`。该硬门禁必须覆盖所有 planned DeepSeek probe、Conformance、Capability、canary、fallback、Web 体验、
+比较和回归；run receipt 与逐 request 窗口/一次性 exact override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和
+HTTP。冻结 trusted clock/timezone、半开窗口、official check、exact identity、calls/tokens/duration、完整最坏质量链、override bounds、
+零计数失败语义和 `V-DEEPSEEK-IDLE-NNN`。Provider qualification、fallback eligibility、普通开发/canary/route grant 均不能替代准入。
+等待窗口必须继续 Ark-only 和本地工作；当前 runtime 若缺少机械门禁，Readiness 必须明确只阻断 DeepSeek 外部分派，不撤销本地 Slice
+coding input。
 
 ## Outcome, scope and non-goals
 

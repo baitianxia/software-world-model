@@ -67,8 +67,14 @@ fresh 独立任务与答案先密封协议、独立盲评量表，以及严格�
 至少明确区分：首个 Slice 直接形成小而多样的非验收可体验 Alpha；只有 Alpha `CONTINUE` 后才执行工程夯实与正式验收。首次体验前只
 安排安全运行和判断核心价值所需工作，不把全面加固作为体验前置。Alpha 必须可重复启动、固定本地地址、版本/限制可见且坏题不关闭
 服务；不得用一次性测试运行替代。若目标声明 Chat，必须用至少五轮语义链验证追问、纠正和总结，并用“新对话”负测隔离；连续独立问题
-不能冒充 Chat。每次失败默认暂停并在同一 Slice 修复，Proposal 必须冻结无进展的可测
-定义和尝试上限。
+不能冒充 Chat。每次失败默认在同一 Slice `REWORK`，只阻止 PASS、晋级与 hardening；现有本地开发授权覆盖修复时保持 active。只有
+scope/Owner 变化、用户明确暂停或本地开发授权失效时才暂停。Proposal 必须冻结无进展的可测定义和尝试上限，并冻结授权连续性：active
+exact grant 复用、真正 gap 在 exact freeze 后直接申请、批准后自动续跑、等待期间继续独立安全工作。
+
+若任一 Slice 计划使用 DeepSeek，Proposal 还必须冻结当前 Operations dispatch admission policy、全部 planned 调用类型和最坏完整质量链的
+calls/tokens/duration，并证明其可整体安排在允许窗口内。普通 external grant、系统生成的 admission receipt 与一次性 exact peak override
+是三个不同对象，不能互相推导；峰时例外在批准前只能标记为尚未授权。窗口外的同阶段 Ark-only、本地归因、修复、targeted tests 和
+candidate freeze 必须明确列出，不能把等待闲时作为停止开发的理由。
 
 Alpha 内的 current Codex 比较是同一体验出口的阻断 Case，不得拆成新的前置 Slice。产品替代价值对照不得与 full cognition 对
 locator-only/empty 的因果消融混为三臂：前者保留双方真实能力并统一问题/revision/Source scope/rubric，后者才统一系统模型、链路与预算。
