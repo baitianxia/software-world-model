@@ -9,7 +9,7 @@ code: []
 tests: []
 iteration: ITER-010
 current_execution_decision_ref: ITER-010-PDR-009
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153]
 current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
 product_goal_outcome: user-visible-general-source-qa-delta
@@ -19,7 +19,13 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 
 # ITER-010 Verification Matrix
 
-## PDR-009 current blocking order and machine-enforced cursor
+## 用户计划恢复与被中断的 PDR-009 动作图
+
+用户已显式中断 PDR-009 的旧 Freeze 入口并授权一次治理恢复。当前唯一顺序是
+`V-PLAN-RECOVERY-001 runner trusted base → sealed PASS Result → 独立 PDR-010`；产品、Provider、Web 和 full regression 均未解锁。
+旧 `V-DIRECTION-FREEZE-001` 继续保留 `NOT-RUN` 历史事实，但不能执行，也不能满足 recovery 或 PDR-010。
+
+### PDR-009 interrupted blocking order（历史上下文）
 
 PDR-005 已停止 v7 症状实验和第八次同题重跑；PDR-009 又把最早产品判断前移，并把当前动作锁入 base-tree Manifest。新的“开发
 ITER-010”对话可以直接接手。Manifest 已预注册 Freeze、PreferredQuality、FallbackRefreeze、FallbackQuality、FreezeRework、DirectionRework、
@@ -688,6 +694,7 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
+| V-PLAN-RECOVERY-001 | 用户显式改变开发计划时，以一次性治理恢复出口中断不可达的旧动作图，不由候选计划自我授权 | project / governance | trusted `04e8b6cc3df2c9335b9cd6fb4e4f5a8a955c8c4e` / tree `aca4b4718724d8e2b49f58c35e7ed15256d47635`；exact recovery authorization `local-user-message-utf8:sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5`；interrupted `ITER-010-PDR-009 / ITER-010-ACTION-DIRECTION-FREEZE-001`；recovery runner identity | 只允许治理、计划、门禁及其定向测试；产品代码、旧四路 runner、Provider dispatch、Web、hardening、full regression 均保持锁定；runner 与自己的 Result 分提交；PASS Result 自环且不直接授权产品，后续 PDR-010 必须在独立提交依赖该 sealed Result 与新的未复用 decision ref | not-executed；Root-A 只安装可信 recovery runner/合同，不生成自己的 Result | NOT-RUN / blocking |
 | V-DIRECTION-FREEZE-001 | 四路方向 Gate 输入冻结 | product / plan execution | clean product `3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19` / tree `b1fd51bb533c8ff393dc42b6864a08e5c94929c0`；`current Codex actual identity`；`三道异质问题`覆盖用途/入口/结构、行为调用链与实质副作用、故障/授权/未知且至少两题未参与开发、无 POM-only；四路 runner、独立 exact-source truth ledger、blind rubric、首选/备用 execution profile refs、Result Schema；外部调用 0 | Agent/Codex identity、问题、原始证据、隔离/随机化、绝对质量和逐臂判定字段可重放；具体 Provider/model identity 只由 execution profile 配置和执行收据绑定；直接证据和 Codex 都不是 Oracle/Reviewer；前三路同一 execution profile，两个 Agent 路除认知开关外无变量差异；密封关闭 Schema 的 provider-neutral root input set：三个唯一 `Q-*` ID × 三个固定系统臂共九项，每项只有 question/system-arm ID 与 exact root-input digest，任何额外 route/provider/model/profile/plugin 控制字段失败关闭；后续只允许替换 route profile；`产品代码、Prompt/Reviewer、Web canary、hardening、full regression、Provider dispatch 保持锁定`；只允许 Manifest 白名单路径；Result 精确绑定 `plan_revision_ref/action_ref/verification_case_id/plan_gate_verdict` | not-executed；dirty v7 为 `QUARANTINED / NOT_INPUT`，不得作为本 Case 输入 | NOT-RUN / blocking |
 | V-PUBLIC-OSS-AUTHORITY-ADMISSION-001 | 四路评测与最小 Web 在外部调用前机械证明公开源码 standing-authority 准入 | security / local admission | PDR-008/PDR-009；公开 mall upstream、exact revision/source scope；preferred/fallback route roles、execution-profile/admission-plugin refs、披露和预算边界；Freeze runner；外部调用 0 | 本地派生 exact one-use scope；replay、revision/provider/model/endpoint/account/disclosure/budget/admission-policy 漂移在 credential/TLS/HTTP 前失败；所有计数与 runner identity 写入 digest-bound JSON 收据；本 Case 只证明外调前 admission，不冒充完整 live terminal reconciliation | not-executed；由 Freeze 与 `V-DIRECTION-FREEZE-001` 一起按 `INVALID > FAIL > PASS` 聚合 | NOT-RUN / blocking |
 | V-DIRECTION-QUALITY-001 | 四路价值比较；首选/备用执行配置两个预注册 Result 最多一个 PASS | product / strict direction quality | `direct relevant evidence`、`same-agent source-only`、`same-agent World Model + source`、`current Codex`；Freeze PASS 后的 immutable runner/questions/ledger/rubric/identities 和 provider-neutral root input set；答案跨臂披露前密封；事实由 independent exact-source ledger 提供；Preferred Result=`ITER-010-RESULT-V-DIRECTION-QUALITY-PREFERRED-001`，Fallback Result=`ITER-010-RESULT-V-DIRECTION-QUALITY-FALLBACK-001`；具体 Provider/model 只记录在 execution profile 与 sealed receipts | 目标系统先过`绝对质量 PASS`；逐题`不得输给任一对照臂`；`总体严格超过 current Codex`；`至少一项非 locator 世界模型贡献`；`全体打平 FAIL`；`成本或延迟不能补偿答案质量`；任一重大错误、物质遗漏、无据/错误 Citation、假 Limitation/Unknown、Reviewer 重大漏判均 FAIL。首选配置 PASS→MinimumWeb、FAIL→DirectionRework、INVALID→FallbackRefreeze；备用配置 PASS→MinimumWeb、FAIL→DirectionRework、INVALID 自环失败关闭；不得混批或合并首选与备用路线输出 | not-executed；Preferred 仅在 Freeze PASS 后解锁，Fallback 仅在 FallbackRefreeze PASS 后解锁；两个 Result 最多一个 PASS | NOT-RUN / blocking |

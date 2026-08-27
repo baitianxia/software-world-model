@@ -17,6 +17,23 @@ baseline:
   dirty_worktree_allowed: false
   relation: exact-iteration-009-slice-001-technical-subject-with-rejected-product-direction-preserved-as-predecessor-evidence
 
+user_plan_recovery:
+  schema: USER_DIRECTED_PLAN_RECOVERY@1
+  status: authorized-recovery-entry-installed
+  authorization_ref: local-user-message-utf8:sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5
+  authorization_reusable: false
+  trusted_base_commit: 04e8b6cc3df2c9335b9cd6fb4e4f5a8a955c8c4e
+  trusted_base_tree: aca4b4718724d8e2b49f58c35e7ed15256d47635
+  interrupted_plan_revision_ref: ITER-010-PDR-009
+  interrupted_action_id: ITER-010-ACTION-DIRECTION-FREEZE-001
+  recovery_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+  recovery_case_id: V-PLAN-RECOVERY-001
+  target_plan_revision_ref: ITER-010-PDR-010
+  scope: governance-only-no-product-no-external-execution
+  one_time_recovery: true
+  product_code_changes_allowed: false
+  external_execution_allowed: false
+
 plan_execution_control:
   schema: DEVELOPMENT_PLAN_EXECUTION_CONTROL@1
   plan_revision_ref: ITER-010-PDR-009
@@ -25,54 +42,64 @@ plan_execution_control:
     - local-user-message-utf8:sha256:612341017bef3d98db372608d22b0d57744a96883e23dd51a6552c13da183989
     - local-user-message-utf8:sha256:63962a3f18667dd3727dd76d72c45ae8224e40a06be2d8c12622aca3a4ef0ae5
   current_action:
-    id: ITER-010-ACTION-DIRECTION-FREEZE-001
+    id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
     owner_slice_ref: ITER-010-SLICE-001
-    kind: four-arm-direction-gate-freeze
+    kind: governance
     status: authorized
-    case_id: V-DIRECTION-FREEZE-001
-    coding_allowed: true
+    case_id: V-PLAN-RECOVERY-001
+    coding_allowed: false
     external_execution_allowed: false
-    result_ref: ITER-010-RESULT-V-DIRECTION-FREEZE-001
-    result_path: docs/project/iterations/iteration-010/results/v-direction-freeze-001.md
+    result_ref: ITER-010-RESULT-V-PLAN-RECOVERY-001
+    result_path: docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
     evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-001.json
-    evidence_verifier: ITER010_VALUE_GATE@1
+    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
+    evidence_verifier: ITER010_PLAN_RECOVERY@1
     runner_identity_paths:
       - scripts/plan_gate.py
-      - validation/structure_world_model_iteration_010/value_gate/runner.py
-      - tests/test_iteration_010_value_gate.py
+      - validation/iteration_010_plan_recovery/value_gate/runner.py
+      - tests/test_iteration_010_plan_recovery.py
     produced_case_ids:
-      - V-DIRECTION-FREEZE-001
-      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-    prerequisite_case_ids:
-      - V-LAYER-ATTRIBUTION-001
-      - V-COGNITION-ELIGIBILITY-001
-      - V-FALLBACK-ROUTE-ADMISSION-001
-      - V-ALPHA-ACCESS-001
+      - V-PLAN-RECOVERY-001
+    prerequisite_case_ids: []
     allowed_change_paths:
-      - validation/structure_world_model_iteration_010/value_gate/**
-      - tests/test_iteration_010_value_gate.py
-      - docs/project/iterations/iteration-010/results/v-direction-freeze-001.md
-      - docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-001.json
-      - docs/project/iterations/iteration-010/results/README.md
-      - docs/project/iterations/iteration-010/findings/FINDING-010-142.md
-      - docs/project/iterations/iteration-010/findings/README.md
+      - validation/iteration_010_plan_recovery/value_gate/**
+      - validation/iteration_010_mvp/value_gate/**
+      - tests/test_iteration_010_plan_recovery.py
+      - tests/test_iteration_010_mvp_value_gate.py
+      - scripts/plan_gate.py
+      - tests/test_plan_gate.py
+      - scripts/docs.py
+      - tests/test_docs_gate.py
+      - AGENTS.md
+      - docs/_generated/**
+      - docs/system/**
+      - docs/project/governance/**
       - docs/project/current.md
       - docs/project/iterations/iteration-010/manifest.yaml
-    forbidden_change_paths:
-      - src/software_world_model/**
-      - tests/test_conversational_engineering_model.py
-      - docs/system/**
+      - docs/project/iterations/iteration-010/verification-matrix.md
       - docs/project/iterations/iteration-010/proposal.md
       - docs/project/iterations/iteration-010/readiness-review.md
       - docs/project/iterations/iteration-010/development-design/**
-      - scripts/docs.py
-      - scripts/plan_gate.py
+      - docs/project/iterations/iteration-010/README.md
+      - docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md
+      - docs/project/iterations/iteration-010/decisions/README.md
+      - docs/project/iterations/iteration-010/findings/FINDING-010-153.md
+      - docs/project/iterations/iteration-010/findings/README.md
+      - docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
+      - docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
+      - docs/project/iterations/iteration-010/results/v-pdr010-activation-001.md
+      - docs/project/iterations/iteration-010/results/evidence/v-pdr010-activation-001.json
+      - docs/project/iterations/iteration-010/results/README.md
+    forbidden_change_paths:
+      - src/**
+      - tests/test_conversational_engineering_model.py
+      - validation/structure_world_model_iteration_010/**
+      - .githooks/**
       - .github/workflows/**
   transition:
-    pass_next_action_id: ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001
-    fail_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-REWORK-001
-    invalid_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-001
+    pass_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+    fail_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+    invalid_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
   locks:
     product_code_changes: true
     prompt_or_reviewer_changes: true
@@ -81,6 +108,72 @@ plan_execution_control:
     full_regression: true
     provider_dispatch: true
   next_action_contracts:
+    user_plan_recovery:
+      id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+      owner_slice_ref: ITER-010-SLICE-001
+      kind: governance
+      status: authorized
+      case_id: V-PLAN-RECOVERY-001
+      coding_allowed: false
+      external_execution_allowed: false
+      result_ref: ITER-010-RESULT-V-PLAN-RECOVERY-001
+      result_path: docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
+      evidence_verifier: ITER010_PLAN_RECOVERY@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/iteration_010_plan_recovery/value_gate/runner.py
+        - tests/test_iteration_010_plan_recovery.py
+      produced_case_ids:
+        - V-PLAN-RECOVERY-001
+      prerequisite_case_ids: []
+      allowed_change_paths:
+        - validation/iteration_010_plan_recovery/value_gate/**
+        - validation/iteration_010_mvp/value_gate/**
+        - tests/test_iteration_010_plan_recovery.py
+        - tests/test_iteration_010_mvp_value_gate.py
+        - scripts/plan_gate.py
+        - tests/test_plan_gate.py
+        - scripts/docs.py
+        - tests/test_docs_gate.py
+        - AGENTS.md
+        - docs/_generated/**
+        - docs/system/**
+        - docs/project/governance/**
+        - docs/project/current.md
+        - docs/project/iterations/iteration-010/manifest.yaml
+        - docs/project/iterations/iteration-010/verification-matrix.md
+        - docs/project/iterations/iteration-010/proposal.md
+        - docs/project/iterations/iteration-010/readiness-review.md
+        - docs/project/iterations/iteration-010/development-design/**
+        - docs/project/iterations/iteration-010/README.md
+        - docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md
+        - docs/project/iterations/iteration-010/decisions/README.md
+        - docs/project/iterations/iteration-010/findings/FINDING-010-153.md
+        - docs/project/iterations/iteration-010/findings/README.md
+        - docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
+        - docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
+        - docs/project/iterations/iteration-010/results/v-pdr010-activation-001.md
+        - docs/project/iterations/iteration-010/results/evidence/v-pdr010-activation-001.json
+        - docs/project/iterations/iteration-010/results/README.md
+      forbidden_change_paths:
+        - src/**
+        - tests/test_conversational_engineering_model.py
+        - validation/structure_world_model_iteration_010/**
+        - .githooks/**
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+        fail_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+        invalid_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
     direction_freeze:
       id: ITER-010-ACTION-DIRECTION-FREEZE-001
       owner_slice_ref: ITER-010-SLICE-001
@@ -799,6 +892,7 @@ product_goal_alignment:
     - V-XD-002
     - V-XD-003
   blocking_case_ids:
+    - V-PLAN-RECOVERY-001
     - V-DIRECTION-FREEZE-001
     - V-DIRECTION-QUALITY-001
     - V-LAYER-ATTRIBUTION-001
@@ -1185,8 +1279,8 @@ public_oss_evaluation_standing_authority:
   verification_case_id: V-PUBLIC-OSS-AUTHORITY-001
   verification_status: NOT-RUN
   independent_action_entry_allowed: false
-  next_execution_entry_action_id: ITER-010-ACTION-DIRECTION-FREEZE-001
-  next_execution_entry_case_id: V-DIRECTION-FREEZE-001
+  next_execution_entry_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+  next_execution_entry_case_id: V-PLAN-RECOVERY-001
   current_external_execution_status: not-waiting-human-approval-blocked-by-machine-receipt-runtime-gate
 
 experience_delivery_policy:

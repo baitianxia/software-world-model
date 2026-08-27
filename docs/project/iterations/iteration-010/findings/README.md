@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,8 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-153](FINDING-010-153.md)：PDR-009 动作图没有 fresh 用户方向的可达治理出口，导致用户明确调整计划后既不能继续旧动作也不能合法修订；
+  本轮以一次性、治理专用、零产品与零外部执行的 recovery action 恢复活性，永久轮换式中断合同由 PDR-010 处置。
 - [FINDING-010-141](FINDING-010-141.md)：现有计划以组件/阶段完整度而不是最早产品价值假设组织，且 Slice 内没有机器可读的唯一动作；
   已处置为 PDR-009 四路价值 Gate 前移和基线差分执行门禁，当前产品代码与外部调用锁定。
 

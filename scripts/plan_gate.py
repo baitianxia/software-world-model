@@ -156,6 +156,20 @@ VERDICT_TO_TRANSITION_FIELD = {
 }
 EVIDENCE_SCHEMA = "DEVELOPMENT_PLAN_GATE_EVIDENCE@1"
 ITER010_VALUE_GATE_VERIFIER = "ITER010_VALUE_GATE@1"
+ITER010_PLAN_RECOVERY_VERIFIER = "ITER010_PLAN_RECOVERY@1"
+ITER010_PLAN_RECOVERY_ACTION_ID = "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
+ITER010_PLAN_RECOVERY_RESULT_ID = "ITER-010-RESULT-V-PLAN-RECOVERY-001"
+ITER010_PLAN_RECOVERY_CASE_ID = "V-PLAN-RECOVERY-001"
+ITER010_PLAN_RECOVERY_BASE_REVISION = "ITER-010-PDR-009"
+ITER010_PLAN_RECOVERY_TARGET_REVISION = "ITER-010-PDR-010"
+ITER010_PLAN_CHANGE_AUTHORIZATION_REF = (
+    "local-user-message-utf8:"
+    "sha256:5ced06d2604020248c5baf69421ccbb4e5c047288b6db5b2202675c558c38cf6"
+)
+ITER010_PLAN_RECOVERY_AUTHORIZATION_REF = (
+    "local-user-message-utf8:"
+    "sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5"
+)
 PLAN_RESULT_SEAL_SCHEMA = "DEVELOPMENT_PLAN_RESULT_SEAL@1"
 EXECUTION_PROFILE_CONFIGURATION_SCHEMA = "MODEL_TRANSPARENT_EXECUTION_PROFILES@1"
 EXECUTION_PROFILE_CONFIGURATION_KEYS = {
@@ -763,6 +777,7 @@ def _validate_plan_revision_lineage(
     base_documents: Mapping[str, Mapping[str, object]] | None,
     target_documents: Mapping[str, Mapping[str, object]] | None,
     base_document_authorization_refs: Iterable[str] | None = None,
+    base_result_evidence_artifacts: Mapping[str, str | bytes] | None = None,
 ) -> list[str]:
     """Require a forward-only PDR with fresh authority and base Result lineage."""
 
@@ -830,11 +845,76 @@ def _validate_plan_revision_lineage(
             return found
         return set()
 
+    recovery_pre_registration = False
+    recovery_artifact_raw = (base_result_evidence_artifacts or {}).get(
+        ITER010_PLAN_RECOVERY_RESULT_ID
+    )
+    if isinstance(recovery_artifact_raw, bytes):
+        try:
+            recovery_artifact_raw = recovery_artifact_raw.decode(
+                "utf-8", errors="strict"
+            )
+        except UnicodeDecodeError:
+            recovery_artifact_raw = None
+    recovery_artifact: object = None
+    if isinstance(recovery_artifact_raw, str):
+        try:
+            recovery_artifact = json.loads(recovery_artifact_raw)
+        except json.JSONDecodeError:
+            recovery_artifact = None
+    expected_recovery_action_evidence = {
+        "schema": "ITER010_USER_PLAN_RECOVERY_EVIDENCE@1",
+        "target_plan_revision_ref": ITER010_PLAN_RECOVERY_TARGET_REVISION,
+        "authorization_refs": [
+            ITER010_PLAN_CHANGE_AUTHORIZATION_REF,
+            ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+        ],
+        "change_boundary": {
+            "plan_governance_change_authorized": True,
+            "product_code_change_authorized": False,
+            "external_execution_authorized": False,
+        },
+    }
+    recovery_pre_registration = (
+        base_reference == ITER010_PLAN_RECOVERY_BASE_REVISION
+        and target_reference == ITER010_PLAN_RECOVERY_TARGET_REVISION
+        and base_action.get("id") == ITER010_PLAN_RECOVERY_ACTION_ID
+        and base_action.get("kind") == "governance"
+        and base_action.get("case_id") == ITER010_PLAN_RECOVERY_CASE_ID
+        and base_action.get("result_ref") == ITER010_PLAN_RECOVERY_RESULT_ID
+        and base_action.get("evidence_verifier")
+        == ITER010_PLAN_RECOVERY_VERIFIER
+        and decision_ref == ITER010_PLAN_CHANGE_AUTHORIZATION_REF
+        and target_control.get("authorization_refs")
+        == [
+            ITER010_PLAN_CHANGE_AUTHORIZATION_REF,
+            ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+        ]
+        and isinstance(recovery_artifact, Mapping)
+        and recovery_artifact.get("result_id")
+        == ITER010_PLAN_RECOVERY_RESULT_ID
+        and recovery_artifact.get("plan_revision_ref")
+        == ITER010_PLAN_RECOVERY_BASE_REVISION
+        and recovery_artifact.get("action_ref")
+        == ITER010_PLAN_RECOVERY_ACTION_ID
+        and recovery_artifact.get("verification_case_id")
+        == ITER010_PLAN_RECOVERY_CASE_ID
+        and recovery_artifact.get("plan_gate_verdict") == "PASS"
+        and recovery_artifact.get("evidence_verifier")
+        == ITER010_PLAN_RECOVERY_VERIFIER
+        and recovery_artifact.get("action_evidence")
+        == expected_recovery_action_evidence
+    )
+
     previously_used_authority = set(base_document_authorization_refs or ())
     previously_used_authority.update(authorization_values(base_manifest))
     for metadata in (base_documents or {}).values():
         previously_used_authority.update(authorization_values(metadata))
-    if isinstance(decision_ref, str) and decision_ref in previously_used_authority:
+    if (
+        isinstance(decision_ref, str)
+        and decision_ref in previously_used_authority
+        and not recovery_pre_registration
+    ):
         errors.append(
             "target plan revision PDR decision_ref must never have appeared in the trusted base documents"
         )
@@ -845,7 +925,7 @@ def _validate_plan_revision_lineage(
             for reference in previously_used_authority
             if AUTHORIZATION_RE.fullmatch(reference) is not None
         }
-        if decision_digest in historical_digests:
+        if decision_digest in historical_digests and not recovery_pre_registration:
             errors.append(
                 "target plan revision PDR decision_ref content digest must never have appeared under any authority scheme in the trusted base documents"
             )
@@ -2665,6 +2745,7 @@ def validate_transition(
                     base_documents,
                     target_documents,
                     base_document_authorization_refs,
+                    base_result_evidence_artifacts,
                 )
             )
     return sorted(set(errors))

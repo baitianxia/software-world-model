@@ -133,6 +133,31 @@ ITER010_CURRENT_ACTION_RESULT_PATH = (
 ITER010_CURRENT_ACTION_EVIDENCE_PATH = (
     "docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-001.json"
 )
+ITER010_PLAN_RECOVERY_ACTION_ID = "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
+ITER010_PLAN_RECOVERY_CASE_ID = "V-PLAN-RECOVERY-001"
+ITER010_PLAN_RECOVERY_RESULT_REF = "ITER-010-RESULT-V-PLAN-RECOVERY-001"
+ITER010_PLAN_RECOVERY_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-plan-recovery-001.md"
+)
+ITER010_PLAN_RECOVERY_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json"
+)
+ITER010_PLAN_RECOVERY_VERIFIER = "ITER010_PLAN_RECOVERY@1"
+ITER010_PLAN_RECOVERY_RUNNER_IDENTITY_PATHS = (
+    "scripts/plan_gate.py",
+    "validation/iteration_010_plan_recovery/value_gate/runner.py",
+    "tests/test_iteration_010_plan_recovery.py",
+)
+ITER010_PLAN_RECOVERY_AUTHORIZATION_REF = (
+    "local-user-message-utf8:"
+    "sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5"
+)
+ITER010_PLAN_RECOVERY_TRUSTED_COMMIT = (
+    "04e8b6cc3df2c9335b9cd6fb4e4f5a8a955c8c4e"
+)
+ITER010_PLAN_RECOVERY_TRUSTED_TREE = (
+    "aca4b4718724d8e2b49f58c35e7ed15256d47635"
+)
 ITER010_PREFERRED_QUALITY_ACTION_ID = "ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001"
 ITER010_PREFERRED_QUALITY_RESULT_REF = (
     "ITER-010-RESULT-V-DIRECTION-QUALITY-PREFERRED-001"
@@ -291,6 +316,43 @@ ITER010_DIRECTION_FREEZE_FORBIDDEN_CHANGE_PATHS = (
     "docs/project/iterations/iteration-010/development-design/**",
     "scripts/docs.py",
     "scripts/plan_gate.py",
+    ".github/workflows/**",
+)
+ITER010_PLAN_RECOVERY_ALLOWED_CHANGE_PATHS = (
+    "validation/iteration_010_plan_recovery/value_gate/**",
+    "validation/iteration_010_mvp/value_gate/**",
+    "tests/test_iteration_010_plan_recovery.py",
+    "tests/test_iteration_010_mvp_value_gate.py",
+    "scripts/plan_gate.py",
+    "tests/test_plan_gate.py",
+    "scripts/docs.py",
+    "tests/test_docs_gate.py",
+    "AGENTS.md",
+    "docs/_generated/**",
+    "docs/system/**",
+    "docs/project/governance/**",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+    "docs/project/iterations/iteration-010/verification-matrix.md",
+    "docs/project/iterations/iteration-010/proposal.md",
+    "docs/project/iterations/iteration-010/readiness-review.md",
+    "docs/project/iterations/iteration-010/development-design/**",
+    "docs/project/iterations/iteration-010/README.md",
+    "docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md",
+    "docs/project/iterations/iteration-010/decisions/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-153.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    ITER010_PLAN_RECOVERY_RESULT_PATH,
+    ITER010_PLAN_RECOVERY_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/v-pdr010-activation-001.md",
+    "docs/project/iterations/iteration-010/results/evidence/v-pdr010-activation-001.json",
+    "docs/project/iterations/iteration-010/results/README.md",
+)
+ITER010_PLAN_RECOVERY_FORBIDDEN_CHANGE_PATHS = (
+    "src/**",
+    "tests/test_conversational_engineering_model.py",
+    "validation/structure_world_model_iteration_010/**",
+    ".githooks/**",
     ".github/workflows/**",
 )
 ITER010_PREFERRED_QUALITY_ALLOWED_CHANGE_PATHS = (
@@ -534,6 +596,7 @@ IMMUTABLE_HISTORICAL_CASE_EVIDENCE: dict[tuple[str, str], str] = {
 }
 ITER010_CURRENT_CHAT_GATE_CASES = frozenset(
     {
+        ITER010_PLAN_RECOVERY_CASE_ID,
         ITER010_CURRENT_ACTION_CASE_ID,
         ITER010_FALLBACK_REFREEZE_CASE_ID,
         ITER010_DIRECTION_QUALITY_CASE_ID,
@@ -545,6 +608,18 @@ ITER010_CURRENT_CHAT_GATE_CASES = frozenset(
 ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
     str, dict[str, tuple[str, ...]]
 ] = {
+    ITER010_PLAN_RECOVERY_CASE_ID: {
+        "Claim": ("用户显式改变开发计划",),
+        "Frozen input / oracle": (
+            "trusted `04e8b6cc3df2c9335b9cd6fb4e4f5a8a955c8c4e`",
+            "exact recovery authorization",
+        ),
+        "Expected": (
+            "runner 与自己的 Result 分提交",
+            "产品代码、旧四路 runner、Provider dispatch、Web、hardening、full regression 均保持锁定",
+            "PDR-010 必须在独立提交依赖该 sealed Result",
+        ),
+    },
     ITER010_CURRENT_ACTION_CASE_ID: {
         "Claim": ("四路方向 Gate 输入冻结",),
         "Frozen input / oracle": (
@@ -2671,11 +2746,15 @@ def iter010_pending_codex_identity_allowed(
     if not isinstance(control, dict) or not isinstance(gate, dict):
         return False
     current_action = control.get("current_action")
+    current_identity = (
+        (ITER010_CURRENT_ACTION_ID, ITER010_CURRENT_ACTION_CASE_ID),
+        (ITER010_PLAN_RECOVERY_ACTION_ID, ITER010_PLAN_RECOVERY_CASE_ID),
+    )
     return (
         control.get("plan_revision_ref") == ITER010_PLAN_REVISION_REF
         and isinstance(current_action, dict)
-        and current_action.get("id") == ITER010_CURRENT_ACTION_ID
-        and current_action.get("case_id") == ITER010_CURRENT_ACTION_CASE_ID
+        and (current_action.get("id"), current_action.get("case_id"))
+        in current_identity
         and current_action.get("status") == "authorized"
         and gate.get("status") == "locked-until-direction-freeze-pass"
     )
@@ -5006,7 +5085,37 @@ def iter010_plan_action_specs() -> dict[str, dict[str, object]]:
         ITER010_PUBLIC_AUTHORITY_ADMISSION_CASE_ID,
         *ITER010_DIRECTION_PREREQUISITE_CASE_IDS,
     )
+    recovery_spec = build(
+        registry_key="user_plan_recovery",
+        action_id=ITER010_PLAN_RECOVERY_ACTION_ID,
+        kind="governance",
+        case_id=ITER010_PLAN_RECOVERY_CASE_ID,
+        coding_allowed=False,
+        external_execution_allowed=False,
+        result_ref=ITER010_PLAN_RECOVERY_RESULT_REF,
+        result_path=ITER010_PLAN_RECOVERY_RESULT_PATH,
+        evidence_path=ITER010_PLAN_RECOVERY_EVIDENCE_PATH,
+        produced_case_ids=(ITER010_PLAN_RECOVERY_CASE_ID,),
+        prerequisite_case_ids=(),
+        allowed_change_paths=ITER010_PLAN_RECOVERY_ALLOWED_CHANGE_PATHS,
+        forbidden_change_paths=ITER010_PLAN_RECOVERY_FORBIDDEN_CHANGE_PATHS,
+        pass_next_action_id=ITER010_PLAN_RECOVERY_ACTION_ID,
+        fail_next_action_id=ITER010_PLAN_RECOVERY_ACTION_ID,
+        invalid_next_action_id=ITER010_PLAN_RECOVERY_ACTION_ID,
+        locks=all_locked,
+        gate_status="locked-until-direction-freeze-pass",
+        required_result=None,
+    )
+    recovery_scalars = recovery_spec["scalars"]
+    recovery_sequences = recovery_spec["sequences"]
+    assert isinstance(recovery_scalars, dict)
+    assert isinstance(recovery_sequences, dict)
+    recovery_scalars["evidence_verifier"] = ITER010_PLAN_RECOVERY_VERIFIER
+    recovery_sequences["runner_identity_paths"] = (
+        ITER010_PLAN_RECOVERY_RUNNER_IDENTITY_PATHS
+    )
     return {
+        ITER010_PLAN_RECOVERY_ACTION_ID: recovery_spec,
         ITER010_CURRENT_ACTION_ID: build(
             registry_key="direction_freeze",
             action_id=ITER010_CURRENT_ACTION_ID,
@@ -5569,6 +5678,12 @@ def _validate_iter010_transition_result(
         errors.append(
             f"{label}: predecessor Result {result_id} must be at {expected['path']}"
         )
+    action_ref = expected["action_ref"]
+    expected_verifier = (
+        ITER010_PLAN_RECOVERY_VERIFIER
+        if action_ref == ITER010_PLAN_RECOVERY_ACTION_ID
+        else ITER010_PLAN_EVIDENCE_VERIFIER
+    )
     for field, expected_value in (
         ("id", expected["id"]),
         ("kind", "iteration-result"),
@@ -5580,7 +5695,7 @@ def _validate_iter010_transition_result(
         ("verification_case_id", expected["verification_case_id"]),
         ("plan_gate_verdict", expected["plan_gate_verdict"]),
         ("evidence_schema", ITER010_PLAN_EVIDENCE_SCHEMA),
-        ("evidence_verifier", ITER010_PLAN_EVIDENCE_VERIFIER),
+        ("evidence_verifier", expected_verifier),
         ("evidence_artifact_path", expected["evidence_path"]),
     ):
         if result.metadata.get(field) != expected_value:
@@ -5655,7 +5770,6 @@ def _validate_iter010_transition_result(
             errors.append(
                 f"{label}: predecessor Result {result_id} evidence {field} must equal {expected_value}"
             )
-    action_ref = expected["action_ref"]
     action_evidence = artifact.get("action_evidence")
     if not isinstance(action_evidence, dict):
         errors.append(
@@ -5697,7 +5811,25 @@ def _validate_iter010_transition_result(
         "terminal_classification",
         "mixed_execution_profile_batch",
     }
-    if action_ref == ITER010_CURRENT_ACTION_ID:
+    if action_ref == ITER010_PLAN_RECOVERY_ACTION_ID:
+        expected_recovery_evidence = {
+            "schema": "ITER010_USER_PLAN_RECOVERY_EVIDENCE@1",
+            "target_plan_revision_ref": "ITER-010-PDR-010",
+            "authorization_refs": [
+                "local-user-message-utf8:sha256:5ced06d2604020248c5baf69421ccbb4e5c047288b6db5b2202675c558c38cf6",
+                ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+            ],
+            "change_boundary": {
+                "plan_governance_change_authorized": True,
+                "product_code_change_authorized": False,
+                "external_execution_authorized": False,
+            },
+        }
+        if action_evidence != expected_recovery_evidence:
+            errors.append(
+                f"{label}: PlanRecovery action_evidence must exactly bind the authorized governance-only recovery"
+            )
+    elif action_ref == ITER010_CURRENT_ACTION_ID:
         if set(map(str, action_evidence)) != root_keys:
             errors.append(
                 f"{label}: DirectionFreeze action_evidence must contain exactly the provider-neutral root input keys"
@@ -6147,6 +6279,34 @@ def validate_iter010_plan_execution_snapshot(
         )
         errors.extend(action_errors)
 
+    recovery = manifest.get("user_plan_recovery")
+    if action_id == ITER010_PLAN_RECOVERY_ACTION_ID:
+        expected_recovery = {
+            "schema": "USER_DIRECTED_PLAN_RECOVERY@1",
+            "status": "authorized-recovery-entry-installed",
+            "authorization_ref": ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+            "authorization_reusable": False,
+            "trusted_base_commit": ITER010_PLAN_RECOVERY_TRUSTED_COMMIT,
+            "trusted_base_tree": ITER010_PLAN_RECOVERY_TRUSTED_TREE,
+            "interrupted_plan_revision_ref": ITER010_PLAN_REVISION_REF,
+            "interrupted_action_id": ITER010_CURRENT_ACTION_ID,
+            "recovery_action_id": ITER010_PLAN_RECOVERY_ACTION_ID,
+            "recovery_case_id": ITER010_PLAN_RECOVERY_CASE_ID,
+            "target_plan_revision_ref": "ITER-010-PDR-010",
+            "scope": "governance-only-no-product-no-external-execution",
+            "one_time_recovery": True,
+            "product_code_changes_allowed": False,
+            "external_execution_allowed": False,
+        }
+        if not isinstance(recovery, dict) or recovery != expected_recovery:
+            errors.append(
+                f"{label}: user_plan_recovery must exactly bind the one-time trusted recovery entry"
+            )
+    elif recovery is not None:
+        errors.append(
+            f"{label}: user_plan_recovery may be active only while its recovery action is current"
+        )
+
     next_contracts = control.get("next_action_contracts")
     registered_specs = {
         str(spec["registry_key"]): spec
@@ -6434,14 +6594,24 @@ def validate_iter010_plan_execution_snapshot(
             f"{label}: PDR-009 requires public_oss_evaluation_standing_authority"
         )
     else:
+        expected_entry_action = (
+            ITER010_PLAN_RECOVERY_ACTION_ID
+            if action_id == ITER010_PLAN_RECOVERY_ACTION_ID
+            else ITER010_CURRENT_ACTION_ID
+        )
+        expected_entry_case = (
+            ITER010_PLAN_RECOVERY_CASE_ID
+            if action_id == ITER010_PLAN_RECOVERY_ACTION_ID
+            else ITER010_CURRENT_ACTION_CASE_ID
+        )
         for field, expected in (
             ("owner_decision_ref", "ITER-010-PDR-008"),
             ("current_plan_amendment_ref", ITER010_PLAN_REVISION_REF),
             ("verification_case_id", ITER010_PUBLIC_AUTHORITY_CASE_ID),
             ("verification_status", "NOT-RUN"),
             ("independent_action_entry_allowed", False),
-            ("next_execution_entry_action_id", ITER010_CURRENT_ACTION_ID),
-            ("next_execution_entry_case_id", ITER010_CURRENT_ACTION_CASE_ID),
+            ("next_execution_entry_action_id", expected_entry_action),
+            ("next_execution_entry_case_id", expected_entry_case),
         ):
             if not _exact_plan_scalar(public_authority.get(field), expected):
                 errors.append(
@@ -6481,7 +6651,10 @@ def validate_iter010_plan_execution_snapshot(
         scalar_spec = current_spec["scalars"]
         assert isinstance(scalar_spec, dict)
         required_current_cases.add(str(scalar_spec["case_id"]))
-        if action_id != ITER010_CURRENT_ACTION_ID:
+        if action_id not in {
+            ITER010_CURRENT_ACTION_ID,
+            ITER010_PLAN_RECOVERY_ACTION_ID,
+        }:
             identity_digest = (
                 alignment.get("mature_source_agent_identity_digest")
                 if isinstance(alignment, dict)

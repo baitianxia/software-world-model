@@ -2630,6 +2630,91 @@ class GovernanceRevisionTests(unittest.TestCase):
             errors,
         )
 
+    def test_exact_one_time_recovery_evidence_may_pre_register_pdr010_decision(self) -> None:
+        base_action = {
+            "id": plan_gate.ITER010_PLAN_RECOVERY_ACTION_ID,
+            "kind": "governance",
+            "case_id": plan_gate.ITER010_PLAN_RECOVERY_CASE_ID,
+            "result_ref": plan_gate.ITER010_PLAN_RECOVERY_RESULT_ID,
+            "evidence_verifier": plan_gate.ITER010_PLAN_RECOVERY_VERIFIER,
+        }
+        base_control = {
+            "plan_revision_ref": plan_gate.ITER010_PLAN_RECOVERY_BASE_REVISION,
+            "authorization_refs": [AUTH_9],
+        }
+        target_control = {
+            "plan_revision_ref": plan_gate.ITER010_PLAN_RECOVERY_TARGET_REVISION,
+            "authorization_refs": [
+                plan_gate.ITER010_PLAN_CHANGE_AUTHORIZATION_REF,
+                plan_gate.ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+            ],
+        }
+        target_documents = {
+            plan_gate.ITER010_PLAN_RECOVERY_TARGET_REVISION: {
+                "id": plan_gate.ITER010_PLAN_RECOVERY_TARGET_REVISION,
+                "depends_on": [plan_gate.ITER010_PLAN_RECOVERY_RESULT_ID],
+                "decision_ref": plan_gate.ITER010_PLAN_CHANGE_AUTHORIZATION_REF,
+            }
+        }
+        action_evidence = {
+            "schema": "ITER010_USER_PLAN_RECOVERY_EVIDENCE@1",
+            "target_plan_revision_ref": (
+                plan_gate.ITER010_PLAN_RECOVERY_TARGET_REVISION
+            ),
+            "authorization_refs": [
+                plan_gate.ITER010_PLAN_CHANGE_AUTHORIZATION_REF,
+                plan_gate.ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+            ],
+            "change_boundary": {
+                "plan_governance_change_authorized": True,
+                "product_code_change_authorized": False,
+                "external_execution_authorized": False,
+            },
+        }
+        artifact = {
+            "result_id": plan_gate.ITER010_PLAN_RECOVERY_RESULT_ID,
+            "plan_revision_ref": plan_gate.ITER010_PLAN_RECOVERY_BASE_REVISION,
+            "action_ref": plan_gate.ITER010_PLAN_RECOVERY_ACTION_ID,
+            "verification_case_id": plan_gate.ITER010_PLAN_RECOVERY_CASE_ID,
+            "plan_gate_verdict": "PASS",
+            "evidence_verifier": plan_gate.ITER010_PLAN_RECOVERY_VERIFIER,
+            "action_evidence": action_evidence,
+        }
+
+        errors = plan_gate._validate_plan_revision_lineage(
+            {},
+            base_control,
+            target_control,
+            base_action,
+            {},
+            target_documents,
+            {plan_gate.ITER010_PLAN_CHANGE_AUTHORIZATION_REF},
+            {
+                plan_gate.ITER010_PLAN_RECOVERY_RESULT_ID: json.dumps(artifact)
+            },
+        )
+        self.assertEqual(errors, [])
+
+        widened = copy.deepcopy(artifact)
+        widened["action_evidence"]["change_boundary"][  # type: ignore[index]
+            "external_execution_authorized"
+        ] = True
+        errors = plan_gate._validate_plan_revision_lineage(
+            {},
+            base_control,
+            target_control,
+            base_action,
+            {},
+            target_documents,
+            {plan_gate.ITER010_PLAN_CHANGE_AUTHORIZATION_REF},
+            {
+                plan_gate.ITER010_PLAN_RECOVERY_RESULT_ID: json.dumps(widened)
+            },
+        )
+        self.assertTrue(
+            any("trusted base documents" in error for error in errors), errors
+        )
+
     def test_non_governance_action_cannot_revise_plan(self) -> None:
         target = manifest(pdr=PDR_10)
         target_control = target["plan_execution_control"]

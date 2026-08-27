@@ -3143,6 +3143,19 @@
       "tests/test_docs_gate.py"
     ]
   },
+  "FINDING-010-153": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-153.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py",
+      "validation/iteration_010_plan_recovery/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py",
+      "tests/test_iteration_010_plan_recovery.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

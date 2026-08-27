@@ -390,7 +390,7 @@ readiness_inputs:
         freeze_case = docs_gate.ITER010_CURRENT_ACTION_CASE_ID
         quality_case = docs_gate.ITER010_DIRECTION_QUALITY_CASE_ID
         action_specs = docs_gate.iter010_plan_action_specs()
-        self.assertEqual(len(action_specs), 10)
+        self.assertEqual(len(action_specs), 11)
         action_and_produced_cases = list(
             dict.fromkeys(
                 str(case_id)
@@ -846,6 +846,84 @@ readiness_inputs:
             )
         )
         self.assertEqual(validate(), [])
+
+        recovery_candidate = copy.deepcopy(manifest)
+        recovery_control = recovery_candidate["plan_execution_control"]
+        assert isinstance(recovery_control, dict)
+        recovery_control["current_action"] = action_payload(
+            docs_gate.ITER010_PLAN_RECOVERY_ACTION_ID, registered=False
+        )
+        recovery_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_PLAN_RECOVERY_ACTION_ID]["transition"]
+        )
+        recovery_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_PLAN_RECOVERY_ACTION_ID]["locks"]
+        )
+        recovery_candidate["user_plan_recovery"] = {
+            "schema": "USER_DIRECTED_PLAN_RECOVERY@1",
+            "status": "authorized-recovery-entry-installed",
+            "authorization_ref": docs_gate.ITER010_PLAN_RECOVERY_AUTHORIZATION_REF,
+            "authorization_reusable": False,
+            "trusted_base_commit": docs_gate.ITER010_PLAN_RECOVERY_TRUSTED_COMMIT,
+            "trusted_base_tree": docs_gate.ITER010_PLAN_RECOVERY_TRUSTED_TREE,
+            "interrupted_plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+            "interrupted_action_id": docs_gate.ITER010_CURRENT_ACTION_ID,
+            "recovery_action_id": docs_gate.ITER010_PLAN_RECOVERY_ACTION_ID,
+            "recovery_case_id": docs_gate.ITER010_PLAN_RECOVERY_CASE_ID,
+            "target_plan_revision_ref": "ITER-010-PDR-010",
+            "scope": "governance-only-no-product-no-external-execution",
+            "one_time_recovery": True,
+            "product_code_changes_allowed": False,
+            "external_execution_allowed": False,
+        }
+        recovery_public_authority = recovery_candidate[
+            "public_oss_evaluation_standing_authority"
+        ]
+        assert isinstance(recovery_public_authority, dict)
+        recovery_public_authority["next_execution_entry_action_id"] = (
+            docs_gate.ITER010_PLAN_RECOVERY_ACTION_ID
+        )
+        recovery_public_authority["next_execution_entry_case_id"] = (
+            docs_gate.ITER010_PLAN_RECOVERY_CASE_ID
+        )
+        recovery_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_PLAN_RECOVERY_ACTION_ID,
+                "next_action_case_id": docs_gate.ITER010_PLAN_RECOVERY_CASE_ID,
+            },
+            "",
+        )
+        self.assertEqual(
+            validate(recovery_candidate, current_doc=recovery_current), []
+        )
+
+        recovery_unlocked = copy.deepcopy(recovery_candidate)
+        recovery_unlocked["plan_execution_control"]["locks"][  # type: ignore[index]
+            "provider_dispatch"
+        ] = False
+        self.assertTrue(
+            any(
+                "provider_dispatch" in error
+                for error in validate(
+                    recovery_unlocked, current_doc=recovery_current
+                )
+            )
+        )
+
+        recovery_scope_widened = copy.deepcopy(recovery_candidate)
+        recovery_scope_widened["user_plan_recovery"][  # type: ignore[index]
+            "product_code_changes_allowed"
+        ] = True
+        self.assertTrue(
+            any(
+                "user_plan_recovery" in error
+                for error in validate(
+                    recovery_scope_widened, current_doc=recovery_current
+                )
+            )
+        )
 
         missing_route_policy = copy.deepcopy(manifest)
         missing_route_policy.pop("provider_route_policy")

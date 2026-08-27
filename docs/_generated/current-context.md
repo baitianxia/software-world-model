@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-value-first-direction-gate-freeze-authorized-dirty-v7-quarantined`
+- Worktree status: `iteration-010-slice-001-user-plan-recovery-authorized-dirty-v7-quarantined`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `freeze-four-arm-direction-gate-then-run-strict-value-comparison-before-product-change`
+- Live model path: `governance-recovery-no-product-no-provider-execution-then-complete-mvp-vertical-slice-plan`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
