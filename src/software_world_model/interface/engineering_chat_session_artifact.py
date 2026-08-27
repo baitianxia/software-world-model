@@ -17,7 +17,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import stat
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 from software_world_model.ai_infrastructure.ark_chat_conformance import (
     load_ark_chat_conformance_qualification,
@@ -48,6 +48,15 @@ from software_world_model.application_services.conversational_engineering_routin
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
+)
+from software_world_model.application_services.deepseek_dispatch_admission import (
+    DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF,
+    DEEPSEEK_PRICING_SOURCE,
+    DeepSeekDispatchAdmissionController,
+    DeepSeekDispatchAdmissionPlan,
+    DeepSeekOfficialPricingCheck,
+    DeepSeekPeakOverride,
+    DeepSeekPricingEffectiveStatus,
 )
 from software_world_model.application_services.engineering_conversation import (
     ENGINEERING_CHAT_EMPTY_CONTEXT_REFERENT_POLICY_ZH_CN,
@@ -107,8 +116,11 @@ from .engineering_qa_source import (
 ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1"
 )
-ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@2"
+)
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
+    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@3"
 )
 ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@2"
@@ -156,6 +168,9 @@ _SESSION_CONFIG_V1_FIELDS = _SESSION_CONFIG_COMMON_FIELDS | {
 _SESSION_CONFIG_V2_FIELDS = _SESSION_CONFIG_COMMON_FIELDS | {
     "cognition_profiles",
 }
+_SESSION_CONFIG_V3_FIELDS = _SESSION_CONFIG_V2_FIELDS | {
+    "deepseek_dispatch_admission",
+}
 _COGNITION_PROFILE_FIELDS = frozenset(
     {
         "ordinal",
@@ -180,6 +195,44 @@ _PROVIDER_ROUTE_FIELDS = frozenset(
     }
 )
 _PROVIDER_ROUTE_ORDER = ("VOLCENGINE_ARK", "DEEPSEEK")
+_DEEPSEEK_DISPATCH_ADMISSION_FIELDS = frozenset(
+    {
+        "schema",
+        "policy_ref",
+        "run_type",
+        "run_ref",
+        "turn_scope_digest",
+        "official_pricing_source",
+        "official_pricing_checked_at",
+        "official_pricing_content_digest",
+        "official_pricing_content_summary",
+        "official_pricing_effective_status",
+        "maximum_input_tokens",
+        "maximum_output_tokens",
+        "maximum_duration_seconds",
+        "peak_override",
+    }
+)
+_DEEPSEEK_PEAK_OVERRIDE_FIELDS = frozenset(
+    {
+        "schema",
+        "run_ref",
+        "turn_scope_digest",
+        "product_revision",
+        "source_revision",
+        "session_ref",
+        "provider_configuration_digest",
+        "model_ref",
+        "reason",
+        "authorization_message_digest",
+        "authorized_at",
+        "expires_at",
+        "maximum_calls",
+        "maximum_input_tokens",
+        "maximum_output_tokens",
+        "maximum_duration_seconds",
+    }
+)
 _CURRENT_REQUIRED_CONVERSATION_TURNS = 5
 _CURRENT_MAXIMUM_DISPATCHES_PER_TURN = 15
 _CURRENT_MAXIMUM_TOTAL_DISPATCHES_PER_PROVIDER = 75
@@ -209,6 +262,18 @@ class EngineeringChatArtifactCognitionProfileConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringChatArtifactDeepSeekAdmissionConfig:
+    run_type: str
+    run_ref: str
+    turn_scope_digest: Digest
+    pricing_check: DeepSeekOfficialPricingCheck
+    maximum_input_tokens: int
+    maximum_output_tokens: int
+    maximum_duration_seconds: int
+    peak_override: DeepSeekPeakOverride | None
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringChatArtifactSessionConfig:
     schema: str
     path: Path
@@ -228,6 +293,9 @@ class EngineeringChatArtifactSessionConfig:
     test_paths: tuple[str, ...]
     excluded_source_paths: tuple[str, ...]
     cognition_profiles: tuple[EngineeringChatArtifactCognitionProfileConfig, ...]
+    deepseek_dispatch_admission: (
+        EngineeringChatArtifactDeepSeekAdmissionConfig | None
+    )
     response_language: str
     session_ref: str
     authorization_message_digest: Digest
@@ -332,6 +400,7 @@ class PreparedEngineeringChatArtifactSession:
         service = self.runtime.launcher.service
         primary = self.runtime.primary_provider_runtime
         fallback = self.runtime.fallback_provider_runtime
+        admission = fallback.dispatch_admission_controller
         if (
             service.statistics() != (0, 0)
             or service.provider_dispatch_count() != 0
@@ -340,6 +409,9 @@ class PreparedEngineeringChatArtifactSession:
             or fallback.model_boundary.audits
             or primary.authorizer.disclosure_requests
             or fallback.authorizer.disclosure_requests
+            or admission is None
+            or admission.authorizations
+            or admission.invoked_envelopes
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -360,6 +432,12 @@ class PreparedEngineeringChatArtifactSession:
             ),
             "deepseek_conformance_result_digest": (
                 self.deepseek_conformance_result_digest.value
+            ),
+            "deepseek_dispatch_admission_receipt_digest": (
+                admission.receipt.digest.value
+            ),
+            "deepseek_dispatch_admission_decision": (
+                admission.receipt.decision.value
             ),
             "conversation_count_at_seal": 0,
             "turn_count_at_seal": 0,
@@ -441,8 +519,11 @@ def load_engineering_chat_artifact_session_config(
         ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1: (
             _SESSION_CONFIG_V1_FIELDS
         ),
-        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA: (
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2: (
             _SESSION_CONFIG_V2_FIELDS
+        ),
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA: (
+            _SESSION_CONFIG_V3_FIELDS
         ),
     }.get(schema)
     if expected_fields is None:
@@ -489,6 +570,11 @@ def load_engineering_chat_artifact_session_config(
             decoded, "excluded_source_paths"
         ),
         cognition_profiles=cognition_profiles,
+        deepseek_dispatch_admission=(
+            _deepseek_dispatch_admission(decoded)
+            if schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+            else None
+        ),
         response_language=_required_text(decoded, "response_language"),
         session_ref=_required_text(decoded, "session_ref"),
         authorization_message_digest=authorization_message_digest,
@@ -546,10 +632,17 @@ def prepare_engineering_chat_artifact_session(
     ark_gateway_repository: ModelGatewayRepository,
     deepseek_gateway_repository: ModelGatewayRepository,
     at: datetime,
+    clock: Callable[[], datetime] | None = None,
 ) -> PreparedEngineeringChatArtifactSession:
     """Compose all configured assets without listener, credential, or dispatch."""
 
     current = _aware_utc(at)
+    runtime_clock = clock or (lambda: current)
+    if session_config.deepseek_dispatch_admission is None:
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "current Engineering Chat artifact requires DeepSeek dispatch admission",
+        )
     if session_config.response_language != "zh-CN":
         raise DomainError(
             ErrorCode.CONTROL_STATE_DENIED,
@@ -776,6 +869,35 @@ def prepare_engineering_chat_artifact_session(
             session_config.authorization_message_digest
         ),
     )
+    admission_config = session_config.deepseek_dispatch_admission
+    admission_plan = DeepSeekDispatchAdmissionPlan.create(
+        run_type=admission_config.run_type,
+        run_ref=admission_config.run_ref,
+        turn_scope_digest=admission_config.turn_scope_digest,
+        product_revision=product_commit,
+        source_revision=repository_revision,
+        session_ref=deepseek_authority.session_ref,
+        provider_configuration_digest=deepseek_configuration.digest,
+        model_ref=deepseek_configuration.model_ref,
+        authorization_message_digest=(
+            session_config.authorization_message_digest
+        ),
+        authorized_at=session_config.authorized_at,
+        expires_at=session_config.expires_at,
+        maximum_calls=(
+            session_config.maximum_total_dispatches_per_provider
+        ),
+        maximum_input_tokens=admission_config.maximum_input_tokens,
+        maximum_output_tokens=admission_config.maximum_output_tokens,
+        maximum_duration_seconds=admission_config.maximum_duration_seconds,
+        pricing_check=admission_config.pricing_check,
+        peak_override=admission_config.peak_override,
+    )
+    deepseek_dispatch_admission = DeepSeekDispatchAdmissionController(
+        plan=admission_plan,
+        admitted_at=current,
+        clock=runtime_clock,
+    )
     primary_route = _route_spec(
         ordinal=1,
         role=EngineeringProviderRouteRole.PRIMARY,
@@ -823,7 +945,7 @@ def prepare_engineering_chat_artifact_session(
         configuration=ark_configuration,
         session_authority=ark_authority,
         at=current,
-        clock=lambda: current,
+        clock=runtime_clock,
     )
     deepseek_runtime = create_deepseek_engineering_chat_provider_model_runtime(
         repository=deepseek_gateway_repository,
@@ -833,8 +955,9 @@ def prepare_engineering_chat_artifact_session(
         qualification=deepseek_qualification,
         configuration=deepseek_configuration,
         session_authority=deepseek_authority,
+        dispatch_admission_controller=deepseek_dispatch_admission,
         at=current,
-        clock=lambda: current,
+        clock=runtime_clock,
     )
     worker = LocalGitRetrievalWorker(
         source_repository,
@@ -885,6 +1008,9 @@ def prepare_engineering_chat_artifact_session(
         "deepseek_conformance_result_digest": (
             deepseek_qualification.result_digest.value
         ),
+        "deepseek_dispatch_admission_receipt_digest": (
+            deepseek_dispatch_admission.receipt.digest.value
+        ),
         "session_runtime_receipt_digest": runtime.receipt.digest.value,
         "source_read_performed_at_preparation": False,
         "credential_resolved_at_preparation": False,
@@ -904,6 +1030,124 @@ def prepare_engineering_chat_artifact_session(
         ark_conformance_result_digest=ark_qualification.result_digest,
         deepseek_conformance_result_digest=deepseek_qualification.result_digest,
         preparation_digest=digest_of(core),
+    )
+
+
+def _deepseek_dispatch_admission(
+    document: Mapping[str, object],
+) -> EngineeringChatArtifactDeepSeekAdmissionConfig:
+    value = document.get("deepseek_dispatch_admission")
+    if not isinstance(value, Mapping) or set(value) != _DEEPSEEK_DISPATCH_ADMISSION_FIELDS:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat DeepSeek admission contains missing or unknown fields",
+        )
+    if (
+        value.get("schema") != "DEEPSEEK_DISPATCH_ADMISSION_INPUT@1"
+        or value.get("policy_ref") != DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF
+        or value.get("official_pricing_source") != DEEPSEEK_PRICING_SOURCE
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat DeepSeek admission policy or pricing source drifted",
+        )
+    try:
+        effective_status = DeepSeekPricingEffectiveStatus(
+            _required_text(value, "official_pricing_effective_status")
+        )
+    except ValueError as exc:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat DeepSeek pricing status is invalid",
+        ) from exc
+    pricing_check = DeepSeekOfficialPricingCheck.create(
+        source=_required_text(value, "official_pricing_source"),
+        checked_at=_required_time(value, "official_pricing_checked_at"),
+        content_digest=_required_digest(
+            value,
+            "official_pricing_content_digest",
+        ),
+        content_summary=_required_text(
+            value,
+            "official_pricing_content_summary",
+        ),
+        effective_status=effective_status,
+    )
+    override_value = value.get("peak_override")
+    if override_value is None:
+        peak_override = None
+    else:
+        if (
+            not isinstance(override_value, Mapping)
+            or set(override_value) != _DEEPSEEK_PEAK_OVERRIDE_FIELDS
+            or override_value.get("schema") != "DEEPSEEK_PEAK_OVERRIDE@1"
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Chat DeepSeek peak override is not a closed object",
+            )
+        peak_override = DeepSeekPeakOverride.create(
+            run_ref=_required_text(override_value, "run_ref"),
+            turn_scope_digest=_required_digest(
+                override_value,
+                "turn_scope_digest",
+            ),
+            product_revision=_required_text(
+                override_value,
+                "product_revision",
+            ),
+            source_revision=_required_text(
+                override_value,
+                "source_revision",
+            ),
+            session_ref=_required_text(override_value, "session_ref"),
+            provider_configuration_digest=_required_digest(
+                override_value,
+                "provider_configuration_digest",
+            ),
+            model_ref=_required_text(override_value, "model_ref"),
+            reason=_required_text(override_value, "reason"),
+            authorization_message_digest=_required_digest(
+                override_value,
+                "authorization_message_digest",
+            ),
+            authorized_at=_required_time(override_value, "authorized_at"),
+            expires_at=_required_time(override_value, "expires_at"),
+            maximum_calls=_required_positive_int(
+                override_value,
+                "maximum_calls",
+            ),
+            maximum_input_tokens=_required_positive_int(
+                override_value,
+                "maximum_input_tokens",
+            ),
+            maximum_output_tokens=_required_positive_int(
+                override_value,
+                "maximum_output_tokens",
+            ),
+            maximum_duration_seconds=_required_positive_int(
+                override_value,
+                "maximum_duration_seconds",
+            ),
+        )
+    return EngineeringChatArtifactDeepSeekAdmissionConfig(
+        run_type=_required_text(value, "run_type"),
+        run_ref=_required_text(value, "run_ref"),
+        turn_scope_digest=_required_digest(value, "turn_scope_digest"),
+        pricing_check=pricing_check,
+        maximum_input_tokens=_required_positive_int(
+            value,
+            "maximum_input_tokens",
+        ),
+        maximum_output_tokens=_required_positive_int(
+            value,
+            "maximum_output_tokens",
+        ),
+        maximum_duration_seconds=_required_positive_int(
+            value,
+            "maximum_duration_seconds",
+        ),
+        peak_override=peak_override,
     )
 
 
@@ -1193,10 +1437,48 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
         item.receipt.provider_dispatch_count for item in audits
     )
     if runtime.provider_type == "DEEPSEEK":
+        admission = runtime.dispatch_admission_controller
+        if admission is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "DeepSeek terminal audit is missing dispatch admission",
+            )
+        admission_audit = admission.public_audit()
+        issued_envelopes = tuple(
+            (
+                f"engineering-agent:{authorization.session_authority_digest.value[-12:]}:"
+                f"{request.dispatch_ordinal}:{authorization.digest.value[-12:]}"
+            )
+            for request, authorization in zip(
+                requests,
+                authorizations,
+                strict=True,
+            )
+        )
+        admitted_envelopes = tuple(
+            admission_audit["execution_envelope_refs"]
+        )
+        invoked_envelopes = tuple(
+            admission_audit["invoked_execution_envelope_refs"]
+        )
+        if (
+            not set(admitted_envelopes).issubset(issued_envelopes)
+            or not set(invoked_envelopes).issubset(admitted_envelopes)
+            or provider_dispatch_count > len(invoked_envelopes)
+            or (
+                provider_dispatch_count > 0
+                and not admission.receipt.allowed
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "DeepSeek dispatches do not bind the sealed admission receipt",
+            )
         transport_session_audit = deepseek_transport_session_audit(
             runtime.transport
         )
     elif runtime.provider_type == "VOLCENGINE_ARK":
+        admission_audit = None
         transport_session_audit = ark_transport_session_audit(runtime.transport)
     else:
         raise DomainError(
@@ -1221,6 +1503,7 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
         ),
         "provider_dispatch_count": provider_dispatch_count,
         "transport_session_audit": transport_session_audit,
+        "dispatch_admission_audit": admission_audit,
         "request_retry_count": 0,
         "production_activation": "NOT_EXECUTED",
     }
@@ -1424,9 +1707,11 @@ def _time(value: datetime) -> str:
 __all__ = [
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS",
     "EngineeringChatArtifactCognitionProfileConfig",
+    "EngineeringChatArtifactDeepSeekAdmissionConfig",
     "EngineeringChatArtifactProviderRouteConfig",
     "EngineeringChatArtifactSessionConfig",
     "PreparedEngineeringChatArtifactSession",

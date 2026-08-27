@@ -353,8 +353,16 @@ class EngineeringAgentEvidenceToolAdapter:
         request: EngineeringAgentToolRequest,
         state: _TurnToolState,
     ) -> EngineeringAgentToolResult:
-        arguments = _arguments(request, expected=("query",))
-        query = arguments["query"]
+        arguments = dict(request.action.arguments)
+        if set(arguments) == {"query"} and len(arguments) == 1:
+            query = arguments["query"]
+        elif not arguments:
+            query = _compile_world_model_semantic_query(request)
+        else:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "World Model query accepts either one semantic query or Application compilation",
+            )
         project_for_query = getattr(
             self._cognition_projector, "project_for_query", None
         )
@@ -936,6 +944,31 @@ def _arguments(
             "Agent tool arguments do not match the closed operation schema",
         )
     return arguments
+
+
+def _compile_world_model_semantic_query(
+    request: EngineeringAgentToolRequest,
+) -> str:
+    """Compile a bounded semantic query from the material Need and exact Turn.
+
+    ``evidence_need`` remains an untrusted Agent proposal.  Binding the current
+    immutable User Message keeps the compiled query inside the Turn's material
+    scope while still allowing repository-native symbols or cross-language
+    terminology proposed by the Agent to drive formal cognition projection.
+    """
+
+    action = request.action
+    current_message = request.turn_request.user_message.content
+    components = tuple(
+        dict.fromkeys((action.evidence_need, current_message))
+    )
+    query = "\n".join(components)
+    if not query or len(query.encode("utf-8")) > 17_000:
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "Application-compiled World Model semantic query exceeds its bound",
+        )
+    return query
 
 
 def _payload(value: Mapping[str, object]) -> str | None:

@@ -22,6 +22,12 @@ from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
 )
 from software_world_model.ai_infrastructure.model_gateway import (
     AdapterConformanceLevel,
+    AuthorizedInputItem,
+    AuthorizedInputManifest,
+    InputDisposition,
+    ModelExecutionContext,
+    PlatformProposalMode,
+    RuntimeAccessMode,
 )
 from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
     UrllibVolcengineArkChatTransport,
@@ -36,6 +42,13 @@ from software_world_model.application_services.conversational_engineering_routin
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
+)
+from software_world_model.application_services.deepseek_dispatch_admission import (
+    DEEPSEEK_PRICING_SOURCE,
+    DeepSeekDispatchAdmissionController,
+    DeepSeekDispatchAdmissionPlan,
+    DeepSeekOfficialPricingCheck,
+    DeepSeekPricingEffectiveStatus,
 )
 from software_world_model.application_services.engineering_question_answering import (
     EngineeringEvidenceClass,
@@ -130,7 +143,7 @@ class _UnusedRetrievalWorker:
 
 class EngineeringChatProviderRuntimeTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.now = datetime(2026, 8, 25, 8, tzinfo=timezone.utc)
+        self.now = datetime(2026, 8, 25, 4, tzinfo=timezone.utc)
         self.valid_until = datetime(2099, 1, 1, tzinfo=timezone.utc)
         self.ark_provider = VolcengineArkModelConfiguration(
             api_key_environment_variable="ITER010_TEST_ARK_KEY"
@@ -231,6 +244,42 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
             authorization_message_digest=message_digest,
         )
 
+    def _deepseek_admission(self) -> DeepSeekDispatchAdmissionController:
+        pricing_check = DeepSeekOfficialPricingCheck.create(
+            source=DEEPSEEK_PRICING_SOURCE,
+            checked_at=self.now - timedelta(seconds=30),
+            content_digest=digest_of("provider-runtime-pricing-check"),
+            content_summary="官方页面的峰谷时段已在本地测试输入中冻结。",
+            effective_status=(
+                DeepSeekPricingEffectiveStatus.NOT_YET_EFFECTIVE
+            ),
+        )
+        plan = DeepSeekDispatchAdmissionPlan.create(
+            run_type="LOCAL_RUNTIME_TEST",
+            run_ref="test-engineering-chat-provider-runtime",
+            turn_scope_digest=digest_of("provider-runtime-turn-scope"),
+            product_revision=self.binding.product_revision,
+            source_revision=self.binding.repository_revision,
+            session_ref=self.deepseek_authority.session_ref,
+            provider_configuration_digest=self.deepseek_configuration.digest,
+            model_ref=self.deepseek_configuration.model_ref,
+            authorization_message_digest=(
+                self.deepseek_authority.authorization_message_digest
+            ),
+            authorized_at=self.deepseek_authority.authorized_at,
+            expires_at=self.deepseek_authority.expires_at,
+            maximum_calls=self.deepseek_authority.maximum_total_dispatches,
+            maximum_input_tokens=10_000_000,
+            maximum_output_tokens=75 * 8_192,
+            maximum_duration_seconds=600,
+            pricing_check=pricing_check,
+        )
+        return DeepSeekDispatchAdmissionController(
+            plan=plan,
+            admitted_at=self.now,
+            clock=lambda: self.now,
+        )
+
     def test_real_provider_runtimes_prepare_without_io_or_credentials(self) -> None:
         ark = create_ark_engineering_chat_provider_model_runtime(
             repository=_UnusedModelGatewayRepository(),
@@ -251,6 +300,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
             qualification=self.deepseek_qualification,
             configuration=self.deepseek_configuration,
             session_authority=self.deepseek_authority,
+            dispatch_admission_controller=self._deepseek_admission(),
             at=self.now,
             clock=lambda: self.now,
         )
@@ -315,6 +365,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
             qualification=self.deepseek_qualification,
             configuration=self.deepseek_configuration,
             session_authority=self.deepseek_authority,
+            dispatch_admission_controller=self._deepseek_admission(),
             at=self.now,
             clock=lambda: self.now,
         )
@@ -398,6 +449,120 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
         self.assertEqual(ark.model_boundary.audits, ())
         self.assertEqual(deepseek.model_boundary.audits, ())
 
+    def test_peak_admission_rejects_before_credential_tls_or_http(self) -> None:
+        peak = datetime(2026, 8, 25, 3, 30, tzinfo=timezone.utc)
+        authority = EngineeringAgentSessionDisclosureAuthority.create(
+            session_ref="engineering-chat-deepseek-peak-denial",
+            product_candidate_digest=(
+                self.deepseek_authority.product_candidate_digest
+            ),
+            chat_binding_digest=self.binding.digest,
+            configuration=self.deepseek_configuration,
+            maximum_turns=5,
+            maximum_dispatches_per_turn=15,
+            maximum_total_dispatches=75,
+            authorized_at=peak - timedelta(hours=1),
+            expires_at=peak + timedelta(hours=1),
+            authorization_ref=(
+                "codex-user-message:"
+                + self.deepseek_authority.authorization_message_digest.value
+            ),
+            authorization_message_digest=(
+                self.deepseek_authority.authorization_message_digest
+            ),
+        )
+        controller = DeepSeekDispatchAdmissionController(
+            plan=DeepSeekDispatchAdmissionPlan.create(
+                run_type="LOCAL_RUNTIME_TEST",
+                run_ref="test-peak-denial",
+                turn_scope_digest=digest_of("peak-denial-turn-scope"),
+                product_revision=self.binding.product_revision,
+                source_revision=self.binding.repository_revision,
+                session_ref=authority.session_ref,
+                provider_configuration_digest=(
+                    self.deepseek_configuration.digest
+                ),
+                model_ref=self.deepseek_configuration.model_ref,
+                authorization_message_digest=(
+                    authority.authorization_message_digest
+                ),
+                authorized_at=authority.authorized_at,
+                expires_at=authority.expires_at,
+                maximum_calls=authority.maximum_total_dispatches,
+                maximum_input_tokens=10_000_000,
+                maximum_output_tokens=75 * 8_192,
+                maximum_duration_seconds=60,
+                pricing_check=DeepSeekOfficialPricingCheck.create(
+                    source=DEEPSEEK_PRICING_SOURCE,
+                    checked_at=peak - timedelta(seconds=30),
+                    content_digest=digest_of("peak-denial-pricing-check"),
+                    content_summary="官方峰谷时段测试输入。",
+                    effective_status=(
+                        DeepSeekPricingEffectiveStatus.NOT_YET_EFFECTIVE
+                    ),
+                ),
+            ),
+            admitted_at=peak,
+            clock=lambda: peak,
+        )
+        runtime = create_deepseek_engineering_chat_provider_model_runtime(
+            repository=_UnusedModelGatewayRepository(),
+            gateway_repository_ref="deepseek-gateway-db:sha256:peak-denial",
+            binding=self.binding,
+            provider_configuration=self.deepseek_provider,
+            qualification=self.deepseek_qualification,
+            configuration=self.deepseek_configuration,
+            session_authority=authority,
+            dispatch_admission_controller=controller,
+            at=peak,
+            clock=lambda: peak,
+        )
+        self.addCleanup(runtime.transport.close)
+        manifest = AuthorizedInputManifest.create(
+            capability_id="engineering-chat-test",
+            strategy_ref="test@1",
+            execution_stage="PRIMARY_AGENT",
+            calling_module="tests",
+            proposal_vocabulary_ref="test-output@1",
+            items=(
+                AuthorizedInputItem.create(
+                    item_id="input",
+                    schema_ref="text@1",
+                    classification="INTERNAL",
+                    purpose="test admission before transport",
+                    authority_reference="test-authority",
+                    disposition=InputDisposition.PROVIDED,
+                    content="bounded input",
+                ),
+            ),
+        )
+        context = ModelExecutionContext(
+            execution_envelope_ref="engineering-agent:test:1:peak",
+            manifest=manifest,
+            prompt_program_ref="test-prompt@1",
+            rendering_contract_version="test-rendering@1",
+            output_schema_ref="test-output@1",
+            runtime_access_mode=RuntimeAccessMode.NO_EXTERNAL_ACCESS,
+            platform_proposal_mode=PlatformProposalMode.NONE,
+            requested_model_ref=self.deepseek_configuration.model_ref,
+            provider_type=self.deepseek_configuration.provider_type,
+            adapter_version=self.deepseek_configuration.adapter_version,
+            provider_configuration_fingerprint=(
+                self.deepseek_configuration.provider_configuration_fingerprint
+            ),
+            max_output_tokens=8_192,
+            timeout_milliseconds=180_000,
+            classification="INTERNAL",
+            required_exact_fingerprint=True,
+        )
+
+        with self.assertRaises(DomainError):
+            runtime.gateway.preflight(context)
+        self.assertEqual(controller.public_audit()["authorized_dispatch_count"], 0)
+        self.assertEqual(runtime.transport.credential_resolution_count, 0)
+        self.assertEqual(runtime.transport.tls_handshake_attempt_count, 0)
+        self.assertEqual(runtime.transport.http_dispatch_count, 0)
+
     def test_forged_or_drifted_qualification_is_rejected(self) -> None:
         forged = ArkChatConformanceQualification(
             result_ref=(
@@ -456,6 +621,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
             qualification=self.deepseek_qualification,
             configuration=self.deepseek_configuration,
             session_authority=self.deepseek_authority,
+            dispatch_admission_controller=self._deepseek_admission(),
             at=self.now,
             clock=lambda: self.now,
         )

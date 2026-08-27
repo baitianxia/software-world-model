@@ -36,6 +36,7 @@ from software_world_model.cross_cutting import (
 from software_world_model.interface.engineering_chat_session_artifact import (
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1,
+    ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2,
     ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
     load_engineering_chat_artifact_session_config,
     prepare_engineering_chat_artifact_session,
@@ -173,7 +174,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
 
     def document_v2(self) -> dict[str, object]:
         document = self.document()
-        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2
         document.pop("ordered_envelope")
         document.pop("snapshot_bundles")
         document.pop("cognition_snapshot_id")
@@ -217,6 +218,37 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
                 "cognition_snapshot_id": "snapshot_" + "5" * 32,
             },
         ]
+        return document
+
+    def document_v3(self) -> dict[str, object]:
+        document = self.document_v2()
+        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        document["deepseek_dispatch_admission"] = {
+            "schema": "DEEPSEEK_DISPATCH_ADMISSION_INPUT@1",
+            "policy_ref": "ITER-010-PDR-007@1",
+            "run_type": "LOCAL_ARTIFACT_TEST",
+            "run_ref": "test-engineering-chat-session-artifact",
+            "turn_scope_digest": digest_of(
+                "artifact-test-turn-scope"
+            ).value,
+            "official_pricing_source": (
+                "https://api-docs.deepseek.com/quick_start/pricing/"
+            ),
+            "official_pricing_checked_at": (
+                self.now - timedelta(seconds=30)
+            ).isoformat().replace("+00:00", "Z"),
+            "official_pricing_content_digest": digest_of(
+                "artifact-test-pricing-page"
+            ).value,
+            "official_pricing_content_summary": (
+                "官方页面的峰谷时段已在测试输入中冻结。"
+            ),
+            "official_pricing_effective_status": "NOT_YET_EFFECTIVE",
+            "maximum_input_tokens": 10_000_000,
+            "maximum_output_tokens": 75 * 8_192,
+            "maximum_duration_seconds": 600,
+            "peak_override": None,
+        }
         return document
 
     def write_config(
@@ -345,16 +377,23 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             )
 
     def test_prepare_loads_artifact_identities_without_runtime_io(self) -> None:
+        document = self.document_v3()
+        document["cognition_profiles"] = document["cognition_profiles"][:1]
+        profile_document = document["cognition_profiles"][0]
         session_config = load_engineering_chat_artifact_session_config(
-            self.write_config(self.document())
+            self.write_config(document)
         )
         ark_qualification, deepseek_qualification = (
             self.provider_qualifications()
         )
-        ordered_bundle_digest = digest_of("ordered-bundle")
-        ordered_file_digest = digest_of("ordered-file")
-        snapshot_bundle_digest = digest_of("snapshot-bundle")
-        snapshot_file_digest = digest_of("snapshot-file")
+        ordered_bundle_digest = Digest(profile_document["ordered_bundle_digest"])
+        ordered_file_digest = Digest(profile_document["ordered_file_digest"])
+        snapshot_bundle_digest = Digest(
+            profile_document["snapshot_bundle_digests"][0]
+        )
+        snapshot_file_digest = Digest(
+            profile_document["snapshot_file_digests"][0]
+        )
         snapshot = SimpleNamespace(
             snapshot_id=StableId("snapshot_" + "3" * 32),
             digest=snapshot_bundle_digest,
@@ -383,6 +422,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             read_authority_digest=cognition.read_authority_digest,
             ordered_bundle_digest=ordered_bundle_digest,
         )
+        cognition.manifest = SimpleNamespace(profiles=(capability,))
 
         with (
             patch(
@@ -410,8 +450,8 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
                 return_value=cognition,
             ),
             patch(
-                "software_world_model.interface.engineering_chat_session_artifact.CognitionProfileCapability.from_projector",
-                return_value=capability,
+                "software_world_model.interface.engineering_chat_session_artifact.MultiProfileWorldModelCognitionProjector",
+                return_value=cognition,
             ),
             patch(
                 "software_world_model.interface.engineering_chat_session_artifact.load_ark_chat_conformance_qualification",
@@ -502,10 +542,10 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.assertNotIn("DEEPSEEK_API_KEY", public)
         self.assertNotIn("secret_reference", public)
 
-    def test_prepare_v2_composes_two_exact_profile_authorities(self) -> None:
-        document = self.document_v2()
+    def test_prepare_v3_composes_two_exact_profile_authorities(self) -> None:
+        document = self.document_v3()
         session_config = load_engineering_chat_artifact_session_config(
-            self.write_config(document, name="prepare-v2.json")
+            self.write_config(document, name="prepare-v3.json")
         )
         ark_qualification, deepseek_qualification = (
             self.provider_qualifications()

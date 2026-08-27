@@ -37,6 +37,8 @@ from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
 from software_world_model.ai_infrastructure.model_gateway import (
     AdapterConformanceLevel,
     ModelGateway,
+    ModelExecutionContext,
+    ModelGatewayResult,
     ModelGatewayRepository,
 )
 from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
@@ -53,6 +55,9 @@ from software_world_model.cross_cutting import (
 from software_world_model.application_services.engineering_conversation import (
     EngineeringChatBinding,
     RuntimeCapabilityStatus,
+)
+from software_world_model.application_services.deepseek_dispatch_admission import (
+    DeepSeekDispatchAdmissionController,
 )
 
 from .engineering_chat_provider_launcher import (
@@ -92,9 +97,10 @@ class EngineeringChatProviderModelRuntime:
     transport_ref: str
     adapter: object
     transport: object
-    gateway: ModelGateway
+    gateway: object
     authorizer: SealedEngineeringAgentRoleDisclosureAuthorizer
     model_boundary: ModelBackedConversationalEngineeringAgent
+    dispatch_admission_controller: DeepSeekDispatchAdmissionController | None
     credential_resolved_at_preparation: bool
     provider_dispatch_count_at_preparation: int
     request_retry_allowed: bool
@@ -118,6 +124,11 @@ class EngineeringChatProviderModelRuntime:
             "qualification_result_digest": self.qualification_result_digest.value,
             "gateway_repository_ref": self.gateway_repository_ref,
             "transport_ref": self.transport_ref,
+            "dispatch_admission": (
+                self.dispatch_admission_controller.receipt.public_status()
+                if self.dispatch_admission_controller is not None
+                else None
+            ),
             "credential_resolved_at_preparation": (
                 self.credential_resolved_at_preparation
             ),
@@ -273,6 +284,7 @@ def create_ark_engineering_chat_provider_model_runtime(
         qualification_result_digest=qualification.result_digest,
         adapter=adapter,
         transport=transport,
+        dispatch_admission_controller=None,
         at=current,
         clock=clock,
     )
@@ -287,6 +299,7 @@ def create_deepseek_engineering_chat_provider_model_runtime(
     qualification: DeepSeekChatConformanceQualification,
     configuration: EngineeringAgentModelConfiguration,
     session_authority: EngineeringAgentSessionDisclosureAuthority,
+    dispatch_admission_controller: DeepSeekDispatchAdmissionController,
     at: datetime,
     clock: Callable[[], datetime] | None = None,
 ) -> EngineeringChatProviderModelRuntime:
@@ -326,6 +339,7 @@ def create_deepseek_engineering_chat_provider_model_runtime(
         qualification_result_digest=qualification.result_digest,
         adapter=adapter,
         transport=transport,
+        dispatch_admission_controller=dispatch_admission_controller,
         at=current,
         clock=clock,
     )
@@ -395,6 +409,7 @@ def _provider_runtime(
     qualification_result_digest: Digest,
     adapter,
     transport,
+    dispatch_admission_controller: DeepSeekDispatchAdmissionController | None,
     at: datetime,
     clock: Callable[[], datetime] | None,
 ) -> EngineeringChatProviderModelRuntime:
@@ -431,6 +446,39 @@ def _provider_runtime(
         chat_binding_digest=binding.digest,
         at=at,
     )
+    if configuration.provider_type == "DEEPSEEK":
+        if not isinstance(
+            dispatch_admission_controller,
+            DeepSeekDispatchAdmissionController,
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "DeepSeek runtime requires a sealed dispatch admission controller",
+            )
+        admission_plan = dispatch_admission_controller.plan
+        if (
+            admission_plan.product_revision != binding.product_revision
+            or admission_plan.source_revision != binding.repository_revision
+            or admission_plan.session_ref != session_authority.session_ref
+            or admission_plan.provider_configuration_digest
+            != configuration.digest
+            or admission_plan.model_ref != configuration.model_ref
+            or admission_plan.authorization_message_digest
+            != session_authority.authorization_message_digest
+            or admission_plan.authorized_at != session_authority.authorized_at
+            or admission_plan.expires_at != session_authority.expires_at
+            or admission_plan.maximum_calls
+            != session_authority.maximum_total_dispatches
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "DeepSeek dispatch admission does not bind the exact runtime Session",
+            )
+    elif dispatch_admission_controller is not None:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "non-DeepSeek runtime cannot consume DeepSeek dispatch admission",
+        )
     capabilities = getattr(adapter, "capabilities", None)
     expected_model_fingerprints = tuple(
         dict.fromkeys(
@@ -457,7 +505,15 @@ def _provider_runtime(
             "Engineering Chat live Adapter capabilities do not match Conformance",
         )
     runtime_clock = clock or (lambda: datetime.now(timezone.utc))
-    gateway = ModelGateway(repository, (adapter,), clock=runtime_clock)
+    raw_gateway = ModelGateway(repository, (adapter,), clock=runtime_clock)
+    gateway = (
+        _DeepSeekAdmissionEnforcingGateway(
+            gateway=raw_gateway,
+            controller=dispatch_admission_controller,
+        )
+        if dispatch_admission_controller is not None
+        else raw_gateway
+    )
     authorizer = SealedEngineeringAgentRoleDisclosureAuthorizer(
         session_authority=session_authority,
         configuration=configuration,
@@ -486,6 +542,11 @@ def _provider_runtime(
         "gateway_repository_ref": gateway_repository_ref,
         "transport_ref": transport_ref,
         "model_boundary": "MODEL_BACKED_CONVERSATIONAL_ENGINEERING_AGENT@1",
+        "dispatch_admission_receipt_digest": (
+            dispatch_admission_controller.receipt.digest.value
+            if dispatch_admission_controller is not None
+            else None
+        ),
         "credential_resolved_at_preparation": False,
         "provider_dispatch_count_at_preparation": 0,
         "request_retry_allowed": False,
@@ -507,12 +568,47 @@ def _provider_runtime(
         gateway=gateway,
         authorizer=authorizer,
         model_boundary=boundary,
+        dispatch_admission_controller=dispatch_admission_controller,
         credential_resolved_at_preparation=False,
         provider_dispatch_count_at_preparation=0,
         request_retry_allowed=False,
         production_activation="NOT_EXECUTED",
         digest=digest_of(core),
     )
+
+
+class _DeepSeekAdmissionEnforcingGateway:
+    """Enforce the run receipt before the generic Gateway can reach transport."""
+
+    def __init__(
+        self,
+        *,
+        gateway: ModelGateway,
+        controller: DeepSeekDispatchAdmissionController,
+    ) -> None:
+        self._gateway = gateway
+        self._controller = controller
+
+    def preflight(self, context: ModelExecutionContext) -> None:
+        self._gateway.preflight(context)
+        if context.provider_type != "DEEPSEEK":
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "DeepSeek admission gateway received another Provider",
+            )
+        input_token_upper_bound = sum(
+            len(item.content.encode("utf-8")) for item in context.manifest.items
+        )
+        self._controller.authorize_dispatch(
+            execution_envelope_ref=context.execution_envelope_ref,
+            input_token_upper_bound=max(1, input_token_upper_bound),
+            maximum_output_tokens=context.max_output_tokens,
+        )
+
+    def invoke(self, context: ModelExecutionContext) -> ModelGatewayResult:
+        self.preflight(context)
+        self._controller.mark_invoked(context.execution_envelope_ref)
+        return self._gateway.invoke(context)
 
 
 def _aware_utc(value: datetime) -> datetime:

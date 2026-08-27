@@ -214,6 +214,24 @@ class WorldThenAnswerDriver:
         )
 
 
+class SemanticNeedWorldThenAnswerDriver(WorldThenAnswerDriver):
+    def propose(self, invocation):
+        if self.calls == 0:
+            self.calls += 1
+            return proposal(
+                invocation,
+                call_ref="semantic-world-agent-1",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    arguments=(),
+                    evidence_need=(
+                        "Locate AdminService login credential verification and token generation"
+                    ),
+                ),
+            )
+        return super().propose(invocation)
+
+
 class SearchReadAnswerDriver:
     def __init__(self) -> None:
         self.calls = 0
@@ -518,6 +536,28 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             tuple(item.kind for item in support.authority_receipt.ledger_entries),
             ("COGNITION_CONTEXT", "COGNITION_CONTEXT", "RESOURCE_RECEIPT"),
         )
+
+    def test_world_model_tool_compiles_semantic_need_with_exact_turn(self) -> None:
+        reviewer = RecordingReviewer()
+        projector = QueryAwareCognitionProjector()
+        service = self.service(
+            SemanticNeedWorldThenAnswerDriver(),
+            reviewer,
+            cognition_projector=projector,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="管理员登录从用户名和密码到 token 的流程是什么？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(len(projector.queries), 1)
+        query = projector.queries[0]
+        self.assertIn("AdminService login", query)
+        self.assertIn("管理员登录", query)
 
     def test_source_search_then_opaque_read_extends_one_turn_ledger(self) -> None:
         reviewer = RecordingReviewer()

@@ -246,11 +246,28 @@ def _run_artifact_session(value: str | Path, output: TextIO) -> None:
                         deepseek_database
                     ),
                     at=datetime.now(timezone.utc),
+                    clock=lambda: datetime.now(timezone.utc),
                 )
                 _write_new_private_json(
                     launch_receipt_path,
                     prepared.launch_receipt(),
                 )
+                admission = (
+                    prepared.runtime.fallback_provider_runtime
+                    .dispatch_admission_controller
+                )
+                if admission is None or not admission.receipt.allowed:
+                    raise DomainError(
+                        ErrorCode.CONTROL_STATE_DENIED,
+                        "DeepSeek dispatch admission denied this planned artifact Session",
+                        {
+                            "decision": (
+                                admission.receipt.decision.value
+                                if admission is not None
+                                else "MISSING"
+                            )
+                        },
+                    )
                 with make_server(
                     "127.0.0.1",
                     ENGINEERING_CHAT_ALPHA_PORT,

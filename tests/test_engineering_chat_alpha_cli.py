@@ -223,7 +223,13 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
                     transport=primary_transport
                 ),
                 fallback_provider_runtime=SimpleNamespace(
-                    transport=FallbackTransport()
+                    transport=FallbackTransport(),
+                    dispatch_admission_controller=SimpleNamespace(
+                        receipt=SimpleNamespace(
+                            allowed=True,
+                            decision=SimpleNamespace(value="ALLOWED_OFF_PEAK"),
+                        )
+                    ),
                 ),
             ),
             public_status=lambda: {
