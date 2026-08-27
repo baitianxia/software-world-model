@@ -16,6 +16,10 @@ target: ITER-010-PDR-007
 
 # FINDING-010-139：DeepSeek 闲时偏好没有形成执行门禁
 
+> Current authority amendment：`ITER-010-PDR-008 / SYS-ADR-019` 已将当前公开来源评测改为 standing human authority。
+> 下文形成时所称“新的 external/exact grant”现应解释为从该 standing authority 自动派生的 exact machine receipt；只有真正
+> scope delta 或 DeepSeek 峰时 override 才需要新的人工授权。历史 run-043 的授权与调度失败事实不变。
+
 ## Observation
 
 `run-043-pdr005-direction-canary` 在北京时间 `2026-08-27 11:19–11:27` 执行，处于当前计划冻结的
@@ -60,7 +64,8 @@ terminal 对象均没有本批官方价格检查、北京时间窗口判定或�
 - planned canary 必须在开始前保证其完整最坏质量链可在允许窗口结束前完成；不能先在峰时开题，再以“问题已经开始”为由触发
   DeepSeek；
 - run-043 永久保留为真实调用、成本和失败证据，但标记为 `DEEPSEEK_SCHEDULING_POLICY_FAIL / NOT_DIRECTION_ACCEPTANCE_EVIDENCE`；
-  不得为了修正调度记录立即重跑。先从该 run 做本地归因，只有产生通用候选并进入允许窗口后，才可按新的 exact grant 执行一次后继 canary；
+  不得为了修正调度记录立即重跑。先从该 run 做本地归因，只有产生通用候选并进入允许窗口后，才可按 PDR-008 自动派生的 exact
+  machine receipt 执行一次后继 canary；
 - 自动运行时门禁、逐 dispatch receipt 和注入时钟验证是当前 Slice 的开发输入；在本发现形成与计划修订时尚未修改产品/System 代码，
   后续实现证据单列如下，不能追溯改写 run-043。
 
@@ -75,4 +80,5 @@ terminal 对象均没有本批官方价格检查、北京时间窗口判定或�
 - Model Gateway preflight 与实际 invoke 前的双重 current-window/override/identity/budget 检查；
 - fixed CLI 在 listener 前拒绝 denied admission，terminal 对账同一 receipt、Gateway envelope 与 transport dispatch。
 
-该实现关闭“门禁不存在”的本地缺口；新的 external grant、允许窗口、fresh 官方检查和真实 launch/terminal receipt 仍须由后继 run 独立证明。
+该实现关闭“门禁不存在”的本地缺口；PDR-008 standing authority 的自动 machine-receipt 派生、允许窗口、fresh 官方检查和真实
+launch/terminal receipt 仍须由后继 run 独立证明。只有 scope delta 才需要新的 human grant。

@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-local-gate-pass-successor-frozen-awaiting-exact-external-grant`
+- Worktree status: `iteration-010-slice-001-value-first-direction-gate-freeze-authorized-dirty-v7-quarantined`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `clean-successor-with-pdr007-admission-and-v8-semantic-query-awaiting-compliant-direction-canary`
+- Live model path: `freeze-four-arm-direction-gate-then-run-strict-value-comparison-before-product-change`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

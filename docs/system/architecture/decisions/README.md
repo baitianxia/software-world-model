@@ -31,8 +31,10 @@ ADR 解释为什么选择当前架构；规范正文仍由 Architecture、Invari
 | [ADR-014](ADR-014-snapshot-first-world-model-answering.md) | 软件世界模型回答只读 exact Snapshot，禁止静默源码回退 |
 | [ADR-015](ADR-015-bounded-world-model-investigation.md) | Agent 只通过有界 typed 查询调查 exact World Model |
 | [ADR-016](ADR-016-engineering-question-answering.md) | 默认工程问答由世界模型认知驱动自适应、受控的 exact-revision 调查 |
-| [ADR-017](ADR-017-transparent-qualified-provider-routing.md) | Ark 优先、DeepSeek 备用，以隔离的完整 Provider attempt 对用户透明地处理同一 logical question |
+| [ADR-017](ADR-017-transparent-qualified-provider-routing.md) | 以配置化 `preferred → fallback` 路线和隔离的完整 Provider attempt，对用户透明地处理同一 logical question |
 | [ADR-018](ADR-018-conversational-engineering-agent.md) | 软件世界模型提供持久认知，主工程 Agent 在受控工具和独立审核边界内承担语义多轮工程 Chat |
+| [ADR-019](ADR-019-public-source-standing-model-authority.md) | 公开开源 exact revision 与既定 Provider route 采用一次持续人工权威，由系统逐 Turn/调用派生 exact receipt |
 
 交付范围、暂停、某次运行实际选择哪个 Provider 和环境激活不改变长期架构选择，因此不进入当前 ADR 集合；Provider 路由协议本身由
 ADR-017 拥有。ADR-018 对 ADR-016 作部分修订：保留认知、来源、证据与审核底座，只替换固定多角色 Agent 本体。
+ADR-019 进一步区分一次性的人类边界决定与逐次机器控制记录；它不放宽 ADR-017 的 attempt 隔离、备用路线准入或模型调用审计。

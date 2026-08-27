@@ -4,8 +4,8 @@ kind: system-invariants
 status: current
 authority: normative
 owners: [architecture]
-depends_on: [SYS-PRODUCT-VISION, SYS-ADR-017]
-derived_from: [FINDING-010-139]
+depends_on: [SYS-PRODUCT-VISION, SYS-ADR-017, SYS-ADR-019]
+derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140]
 code: [src/software_world_model]
 tests: [tests]
 ---
@@ -60,17 +60,34 @@ tests: [tests]
    API mapping owner。每个工程 Chat Draft 必须由至少一个 fresh 独立 Reviewer 比较用户目标、对话约束、evidence scope 与 Draft scope；
    任何越界、遗漏或错误 Citation 都必须绑定具体 Finding。资格 Strategy 可采用多个 challenge，但固定双 focus 不是架构不变量。最终
    Authorization 只能绑定 current Package 上 finding-free 的独立 Review；预算不足以完成审核时必须失败关闭。
-18. **INV-018 — Provider 路由透明但 attempt 不混合。** Engineering Conversation 在 Turn dispatch 前预授权有序 Ark → DeepSeek route 与
-   双方独立 disclosure/credential/qualification scope；用户一次提交只形成一个 immutable logical Turn。Ark attempt 只有在密封 terminal、
-   没有 authorized answer 且被可信分类为 Provider/model capability 原因时，才可启动最多一个 DeepSeek fallback attempt；Application/
-   Source/Security failure 不允许 fallback。每个 attempt 从同一受信 Turn input、Conversation Context 与 exact Cognition 独立运行完整主
-   Agent—证据—答案—审核链，不共享中间态、Provider 会话或结果权威；同 Provider retry 为 0，迟到 primary 结果隔离且不得覆盖。
-   Provider 对用户透明不表示其执行门禁透明消失：route 声明 dispatch schedule policy 时，必须在任何该 Provider 外部网络、credential 和
-   HTTP 前验证 run admission，并在每个新 request 前重验窗口或 exact override；失败必须证明该 Provider 分派为 0，不能靠删减答案质量
-   通过。当前 planned DeepSeek 调用使用 Operations 冻结的非高峰硬门禁。
+18. **INV-018 — Provider 路由透明但 attempt 不混合。** Engineering Conversation 在 Turn dispatch 前从有效 standing authority 或其
+   exact human delta 冻结有序 `preferred → fallback` route，以及每个角色对应的 exact execution profile。Execution profile 必须绑定
+   Provider/model/endpoint、Adapter/Configuration、credential reference、资格、披露、预算、transport 和适用的 admission plugin；这些
+   具体身份是可替换配置，不得进入系统分支或质量规则。用户一次提交只形成一个 immutable logical Turn。只有 preferred-route attempt
+   已密封 terminal、没有 authorized answer 且被可信分类为允许 fallback 的通用 Provider/model capability 原因时，才可启动最多一个
+   fallback-route attempt；Application/Source/Security failure 不允许 fallback。每个 attempt 从同一受信 Turn input、Conversation Context
+   与 exact Cognition 独立运行完整主 Agent—证据—答案—审核链，不共享中间态、Provider 会话或结果权威；同 Provider retry 为 0，迟到的
+   preferred-route 结果隔离且不得覆盖。Provider 对用户透明不表示执行控制可以省略：每个 route 都必须产生 execution-profile、disclosure、
+   dispatch-admission、transport/call 和 attempt-terminal 通用 receipt；execution profile 声明 admission plugin 时，必须在任何该 Provider
+   外部网络、credential 和 HTTP 前验证准入，并在每个新 request 前重验插件条件或 exact override。拒绝必须证明该 route 分派为 0，不能
+   靠删减答案质量通过。
 19. **INV-019 — 语义 Chat 状态分离。** 软件世界模型、Conversation Work State 和 Turn Evidence 是不同权威对象。后续 Turn 可引用、追问、
    纠正、深入或总结，但 Application 必须密封相关历史、有效约束和指代解析；用户纠正形成新 Revision，不改写历史。先前助手答案、摘要、
    Provider hidden state 或模型记忆都不是证据；一次 Turn 失败只结束该 Turn，不能污染后续 Turn、删除会话历史或关闭服务。
+20. **INV-020 — 人工边界与逐次机器审计分离。** 对已证明为公开开源、clean exact revision 的来源，以及已批准的
+   Provider/model/endpoint/credential account、只读披露范围、预算和 loopback `EVALUATION_ONLY` Sink，一次 standing human authority
+   可以覆盖多个 run、Conversation、Turn 和 dispatch。可信系统必须为每个实际 Session/Turn/attempt/call 自动派生不可复用的 exact
+   Manifest、disclosure/dispatch receipt 和审计链；它们不是新的人工审批，也不能扩张 standing authority。private/unknown/dirty/local
+   data、新 Provider/model/endpoint/credential account、预算扩张、execution profile/admission plugin 或其策略例外变化、外部写入、
+   非 loopback 或 Production 才是
+   必须重新取得人工决定的 material delta。公开来源仍是不可信 data；exact revision、只读、prompt-injection 防护、Secret/Provider
+   隔离、资格、预算、逐调用审计、独立 Reviewer、失败关闭和 profile-specific admission 全部保持。
+
+## 当前配置实例与历史实现证据
+
+当前 ITER-010 配置把 Ark 映射到 `preferred`、DeepSeek 映射到 `fallback`；备用 execution profile 选择的调度插件以
+`DEEPSEEK_DISPATCH_ADMISSION@1` 收据和 `V-DEEPSEEK-IDLE-001` 证据验证。该映射、名称与插件实例只是可替换的当前配置和历史实现证据，
+不定义 INV-018 的分支、质量、授权或 fallback 语义。
 
 ## 架构原则
 

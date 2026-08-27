@@ -4,18 +4,87 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-RESULT-V-DEEPSEEK-IDLE-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, FINDING-010-126, FINDING-010-127, FINDING-010-128, FINDING-010-129, FINDING-010-130, FINDING-010-131, FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-139, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-001-INDEX, ITER-002-INDEX, ITER-002-RESULT-ACCEPTANCE, ITER-003-INDEX, ITER-003-RESULT-ACCEPTANCE, ITER-004-INDEX, ITER-004-RESULT-ACCEPTANCE, ITER-005-INDEX, ITER-005-RESULT-ACCEPTANCE, ITER-006-INDEX, ITER-006-RESULT-ACCEPTANCE, ITER-007-INDEX, ITER-007-RESULT-SLICE-001-STOP-DECISION, ITER-008-INDEX, ITER-008-RESULT-SLICE-001-STOP-REDIRECT, ITER-009-INDEX, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-WEB-000-LIVE-RUN-009, ITER-010-RESULT-V-WEB-001-PUBLIC-DIRECTION-QUESTIONS, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-RESULT-V-DEEPSEEK-IDLE-001, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, FINDING-010-027, FINDING-010-028, FINDING-010-091, FINDING-010-092, FINDING-010-093, FINDING-010-094, FINDING-010-095, FINDING-010-096, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, FINDING-010-126, FINDING-010-127, FINDING-010-128, FINDING-010-129, FINDING-010-130, FINDING-010-131, FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-139, FINDING-010-140, FINDING-010-141, ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, ITER-010-PDR-008, ITER-010-PDR-009, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-27
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-local-gate-pass-successor-frozen-awaiting-exact-external-grant
+worktree_status: iteration-010-slice-001-value-first-direction-gate-freeze-authorized-dirty-v7-quarantined
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
-live_model_path: clean-successor-with-pdr007-admission-and-v8-semantic-query-awaiting-compliant-direction-canary
+live_model_path: freeze-four-arm-direction-gate-then-run-strict-value-comparison-before-product-change
+plan_revision_ref: ITER-010-PDR-009
+next_action: ITER-010-ACTION-DIRECTION-FREEZE-001
+next_action_case_id: V-DIRECTION-FREEZE-001
 ---
 
 # 当前工作上下文
+
+## PDR-009 当前唯一动作：先做四路价值 Gate
+
+`ITER-010-PDR-009 / FINDING-010-141` 已取代此前“机器收据 → Web canary → 三臂比较”的 current 顺序。总体架构仍是软件世界模型提供
+持久、版本化、可验证的软件认知，主工程 Agent 使用认知和受控源码工具解决用户问题；改变的是最早应验证的假设和计划执行方式。
+
+当前唯一获准动作是 `ITER-010-ACTION-DIRECTION-FREEZE-001 / V-DIRECTION-FREEZE-001`：在外部调用为 0、产品代码为 0 的条件下，冻结并
+实现四路比较 runner、三条异质问题、独立 source-truth ledger、盲化 rubric、exact 模型/工具身份和 Result Schema。四路依次是直接相关
+证据、同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex。直接证据和 Codex 都不是 Oracle 或裁判；事实来自 exact source
+ledger，评测者不参与答案生成。
+
+该 Freeze PASS 后唯一后继是首选执行配置四路 Quality。目标系统必须在绝对质量 PASS 后逐题不输前三个基线、总体严格超过 current Codex，并证明
+至少一项非 locator 世界模型贡献；全体打平即 FAIL，成本/时延/调用数不能补偿质量。Preferred Quality `PASS` 直接进入最小 Web，`FAIL` 进入
+Direction Rework，`INVALID` 才进入零外部调用、零人工授权请求、零 Provider dispatch 的 Fallback Refreeze。Refreeze 必须绑定 exact 首选配置
+INVALID Result、provider-neutral root input set、备用执行配置与其准入策略插件 identity，以及 no-mixed-batch 约束；只有首选尝试在任何授权答案
+形成前以已密封的 Provider/模型能力终态不可用结束时，Refreeze 才能 `PASS`。其他 `INVALID` 的 Refreeze 必须 `FAIL` 并返回 Preferred
+Quality，Refreeze 自身证据无效则留在本动作失败关闭。Fallback Quality `PASS` 进入最小 Web，`FAIL` 进入 Direction Rework，`INVALID` 在
+本动作自环失败关闭。首选与备用配置两个 Quality Result 都可生产 `V-DIRECTION-QUALITY-001`，但最多一个能为 PASS；不得重复请求当前
+standing scope 的用户授权。
+
+状态机不读取任何具体 Provider/model 名称；动作 ID/kind、分支条件、质量规则和 evidence 字段只使用 `preferred/fallback` 角色、profile/plugin
+引用与通用终态。当前具体身份只存在于独立配置映射及不可变调用收据中。更换模型不修改动作图；trusted-parent 门禁还会机械拒绝把配置身份
+写回 action graph，并从父树重算 predecessor seal、Freeze root input、profile 与 plugin 绑定。
+
+Manifest v2 已完整预注册十个动作，把前置、允许/禁止路径、受保护 runner identity、produced Cases、唯一 Result/JSON evidence 和
+PASS/FAIL/INVALID 后继机器化。`scripts/docs.py` 校验当前树；CI 的第一项可执行检查按 Pull Request head SHA 逐提交运行 trusted-parent
+`scripts/plan_gate.py`，每个提交必须单 parent 且连接前一可信节点；候选 Python、测试和 docs 工具只能在它通过后执行。Result JSON 摘要
+覆盖 raw blob bytes，CRLF/LF 不规范化；Result 按 `INVALID > FAIL > PASS` 聚合。action graph 产出的前置 Case 不接受 Matrix 手写 PASS，
+只能由 digest-bound sealed receipt 满足。
+
+每个 action identity 恰好包含一个自包含 `*/value_gate/runner.py`。该 runner 必须先独立提交并成为 trusted base；下一提交形成 Result/JSON
+和迁移时，base gate 才会在隔离环境以 `python -I -S ... verify-plan-evidence` 对 exact evidence bytes 重执行 verifier，并逐字段核对其唯一
+JSON 输出。runner 与自己的 Result 同提交、候选 runner 替换 base runner 或只靠 Result 自报均会失败。真实外部 PASS 还必须同时记录正数的
+模型调用、Provider dispatch、HTTP dispatch 和 0 次 full regression。只有已有独立 sealed PASS Result 的 governance action 才能在后续
+commit 修订计划；新 PDR 必须同 Iteration、编号递增、依赖该 base Result 且使用未复用的 decision ref，改变 Manifest、Result 或 verifier
+不能自我授权。未复用按整个 trusted base 文档树计算，而不是只与当前 Manifest 的授权引用比较。
+
+当前仓库内门禁不能替代远端信任根：在不可变 required workflow/ruleset 以及独立签名的用户/Provider 证明配置完成前，当前状态只能称为
+本地机械门禁已实现，不能声称对恶意仓库管理员不可绕过。
+
+当前工作树的 v7 product/test diff 是 `QUARANTINED / NOT_INPUT`，不得合入或用于 Gate。目标系统只使用 clean
+`3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19` / tree `b1fd51bb533c8ff393dc42b6864a08e5c94929c0` 的产品语义或内容精确等价的
+clean successor。下面 PDR-008、PDR-007、PDR-006、PDR-005 和历史运行内容继续保存安全、调度、持续执行和失败证据；凡与本节当前动作、
+顺序、路径锁或严格质量门冲突者均为历史兼容说明，不是开发指令。
+
+## PDR-008 公开开源评测持续授权
+
+`ITER-010-PDR-008 / FINDING-010-140` 已纠正把机器逐调用收据误当成人工逐次授权的问题。当前测试工程是公开 Apache-2.0 仓库
+`https://github.com/macrozheng/mall.git`，固定 clean source commit
+`0504e86b1f1b6f1b8aa6a734d37a90fb67346be7` / tree `047d79d8588b76013c260f3f1a9565707301a60a`；现有 Slice/root 开发授权对
+ITER-010-SLICE-001 当前公开工程评测构成持续 human authority。
+
+当前 successor **不再等待用户授权**。首选执行配置在 current route、qualification、披露与预算内无需新批准；Preferred Quality
+`INVALID` 后的 Fallback Refreeze 也不得产生人工授权请求；备用执行配置在 Refreeze PASS、其已绑定准入策略允许、合法 fallback 和完整
+质量链内无需新批准。每个
+run、Turn、dispatch 仍须从 `PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1` 自动派生并核验
+one-use machine receipt；runtime 派生尚未证明，完整 `V-PUBLIC-OSS-AUTHORITY-001` 因而保持 `NOT-RUN`。它不是当前独立开发入口：Freeze
+以外部调用 0 同步证明较窄的 `V-PUBLIC-OSS-AUTHORITY-ADMISSION-001`；四路 Quality 必须机械依赖该准入 Case，完整 umbrella Case 则由
+实际执行到的唯一 Quality Route 与最小 Web terminal receipts 证明。PDR-009 已修订 PDR-008 的执行顺序；当前唯一入口仍是 Freeze，当前
+动作仍禁止 Provider dispatch，二者不得互相冒充。
+
+只有真正 scope delta 才重请人类授权：私有/未知/dirty 来源、不同 upstream、执行配置中的 Provider/model/endpoint/account 变化、扩大披露
+或预算、当前备用配置策略要求的峰时 override、hidden、后续 Slice、写操作或 Production。clean product successor、同 approved upstream/revision policy 内经
+Source Authority 复核的新 clean source commit、同一范围的 run/Turn/dispatch 和机器收据更新不属于 scope delta。PDR-007 的
+DeepSeek 闲时硬门禁不变；run-035—043 的历史人工 grant、消费与失败事实也不追溯改写。下文与本节冲突的“successor 需要新 external
+grant”只保存 PDR-008 接受前的历史状态，不再是 current 指令。
 
 ## PDR-007 DeepSeek 调度纠偏与 PDR-006 持续执行
 
@@ -27,14 +96,14 @@ hardening 或用户方向裁决。
 `ITER-010-PDR-007 / FINDING-010-139` 已把 DeepSeek 闲时从“默认/优先”改为所有 planned development/evaluation dispatch 的硬准入。
 当前允许窗口是 `Asia/Shanghai` 的 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)`；是否已正式执行峰谷价格不改变本项目门禁。
 `V-DEEPSEEK-IDLE-001` 已在 clean `03520eb…` 以外部调用、credential、TLS 和 HTTP 均为 0 的确定性证据 PASS；current Artifact
-Session `@3`、Gateway preflight/invoke 门禁与 terminal 对账均已实现。普通 canary/fallback grant 不等于 peak override，真实 run 仍须新的
-exact grant、fresh 官方检查、允许窗口或 exact override 以及逐 dispatch receipt。
+Session `@3`、Gateway preflight/invoke 门禁与 terminal 对账均已实现。PDR-008 后，普通 canary 不再逐次取得 human grant；真实 run 仍须从
+standing authority 自动派生 exact receipt，并满足 fresh 官方检查、允许窗口或 exact peak override 及逐 dispatch receipt。
 
 PDR-006 继续要求开发不中止：run-043 的 Cognition query first divergence 已由 F138 归因，clean successor
 `3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19` / tree `b1fd51bb533c8ff393dc42b6864a08e5c94929c0` 已冻结。它把 semantic
-`evidence_need` 与 exact current Turn 交给 Application 编译，并在登录、Maven 结构与 SKU 行为三类真实 bundle 上离线通过。当前独立安全
-工作已完成，下一入口是直接取得新的最小 exact external grant，并只在允许窗口内执行一个后继 canary。当前状态为
-`DEEPSEEK_GATE_LOCAL_PASS / SUCCESSOR_FROZEN / SUCCESSOR_EXTERNAL_GRANT_REQUIRED / NOT_LIVE`。
+`evidence_need` 与 exact current Turn 交给 Application 编译，并在登录、Maven 结构与 SKU 行为三类真实 bundle 上离线通过。该 clean
+successor 现在只作为四路 Gate 的固定被测产品，不能继续修改。下一入口仅是 `V-DIRECTION-FREEZE-001`；机器收据和 live canary 都仍被
+当前 action 锁住。
 
 ## PDR-006 持续执行与 PDR-005 历史 Gate
 
@@ -43,7 +112,7 @@ PDR-006 继续要求开发不中止：run-043 的 Cognition query first divergen
 CODING INPUT TRUE`。活动 Slice 是项目记录与现有授权入口，不绑定开发对话：开发可在名为“开发 ITER-010”的全新对话中直接开始，
 不要求复用旧对话、上下文或待办；若后续证据证明需要另建 Slice，再按治理流程切换，而不是为了换对话先制造新的计划门槛。
 
-PDR-005 的前两步现已完成；当前按以下剩余顺序继续：
+PDR-005 的前两步现已完成；以下只保存其截至 PDR-009 前的状态：
 
 1. `ITER-010-RESULT-V-LAYER-ATTRIBUTION-001 / FINDING-010-134` 已用 run-042 完成零外部调用归因：行为事实 first divergence 是
    Knowledge construction/admission，Agent 与 Reviewer 另有独立下游故障，Web 无 display first divergence；
@@ -51,13 +120,14 @@ PDR-005 的前两步现已完成；当前按以下剩余顺序继续：
    Manifest、逐题 Eligibility/Gap 和 artifact Session `@2` 本地 runtime binding；Maven-only 行为题失败关闭，外部调用与 projection Source
    read 均为 0；
 3. 此前一次 PDR-005 direction canary 已由 run-043 消费，但其 DeepSeek 高峰调用使调度 Gate FAIL；只保留失败与归因证据；
-4. run-043 本地归因、`V-DEEPSEEK-IDLE-001` 和 clean successor freeze 已完成；当前直接申请所需 exact grant，只在允许窗口执行一个后继
-   canary。只有合规方向体验通过才执行 source-only / eligible-cognition+source / current Codex 三臂方向比较。
+4. run-043 本地归因、`V-DEEPSEEK-IDLE-001` 和 clean successor freeze 已完成。PDR-009 取代了“先机器收据/体验、再三路比较”的后续
+   顺序；current 只能先冻结并运行四路严格价值 Gate。
 
 v7 的 query/review prompt dirty change 是 `STOPPED / UNACCEPTED SYMPTOM EXPERIMENT`，不属于 current System truth，不使 Provider
 Conformance 自动失效，也不是下一次 live 入口。正式编码范围仍由 PDR-004 Readiness 收据 `f76ba3e8…` 锚定；此前一次受限 direction
-canary 权限已由 run-043 消费。当前没有可用于后继 Provider/model、动态 Source disclosure、live Browser、hidden、Slice2/3 或 Production
-的权限；后继候选冻结并通过调度门禁后必须直接申请新的最小 exact grant。本次重启指令原文的本地 UTF-8 摘要是
+canary 权限已由 run-043 消费；这是历史事实。PDR-008 已为当前公开 mall 范围建立 standing human authority，后继 Provider/model 与
+固定公开 Source 披露不再逐次申请；hidden、不同/私有来源、扩大预算或披露、峰时 DeepSeek、Slice2/3 与 Production 仍不在范围内。本次
+重启指令原文的本地 UTF-8 摘要是
 `sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499`，不冒充平台消息收据。
 
 下文保留旧授权、run-035—042 和 PDR-004 实现史；与本节冲突的“fresh 双 Provider Conformance / 第八次同五轮”均已被 PDR-005 取代。
@@ -165,23 +235,21 @@ Citation 和具体失败事实全部保留。旧消息 `d746968f…` 只是要�
 `codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90` 只授权同步最新 Agent/Chat
 设计，不授权产品代码、测试扩展、Provider/model、源码披露或 live browser。
 
-未执行的 `ITER-011` 已标记为 superseded。新的首交付目标是真正多轮工程 Chat：固定 loopback/工程/exact revision，页面显示完整消息历史
-与“新对话”，主工程 Agent 持续理解目标、指代、纠正、深入和总结；每个 Turn 独立证据、Citation 和 Review，失败 Turn 不关闭
-Conversation，新对话不继承旧 Context。PDR-005 的首次方向体验是一条至少三 Turn 的真实语义链加两个未参与修复的异质问题；完整五轮
-套件后置到用户 `CONTINUE` 后。体验通过后再形成 current Codex、same-agent source-only、same-agent eligible-cognition+source 三臂方向信号。
+未执行的 `ITER-011` 已标记为 superseded。新的首个方向交付是四路严格价值 Gate，而不是继续改 Chat；Gate PASS 后的首个用户体验才是
+真正多轮工程 Chat：固定 loopback/工程/exact revision，页面显示完整消息历史与“新对话”，主工程 Agent 持续理解目标、指代、纠正、
+深入和总结；每个 Turn 独立证据、Citation 和 Review，失败 Turn 不关闭 Conversation，新对话不继承旧 Context。
 
-`ITER-010-PDR-002` 已冻结前瞻规则：ITER-010 仍按现有 Gate 执行，ITER-011 不复活；ITER-010 终态后的下一份新产品迭代（按顺序为
-ITER-012）必须从首个持续 Web Alpha 起，用相互隔离、答案来源盲化的同题对照证明系统答案质量严格超过当时实际可用的 current Codex。
-Codex 只是强外部基线，不是 Oracle 或裁判；质量全体打平也不得用成本、时延或复用优势改判通过。本规则不创建或授权下一迭代。
+`ITER-010-PDR-002` 曾把严格 Codex 规则延后到 ITER-012；该例外已由 PDR-009 取消。ITER-010 当前四路 Gate 就必须证明系统逐题不输
+current Codex 且总体严格超过；Codex 只是强外部基线，不是 Oracle 或裁判，平局也不得用成本、时延或复用优势改判通过。
 
 `ITER-010-PDR-003` 继续提供成本、安全、透明 fallback 和根因优先约束：用户报告约 14 小时仍无新体验版本且 DeepSeek token 消耗过多；
 首次体验前停止 scope expansion、外部批量调用和 full regression。PDR-004 曾把当时的方向 canary 定义为冻结五轮 Conversation；该执行
-时间线已经由 PDR-005 的“离线归因→工程认知资格→至少三 Turn 语义链加两个异质问题”取代。Provider 对用户透明：Session 预授权
-Ark→DeepSeek；fallback 从 immutable original Turn Request、exact relevant Application-sealed Conversation Context 和 exact Cognition
+时间线已经由 PDR-005 的“离线归因→工程认知资格→至少三 Turn 语义链加两个异质问题”取代。模型对系统主流程透明：Session 只预授权
+`preferred → fallback` 路线角色；具体 Provider/model 只由版本化 execution profile 配置解析。fallback 从 immutable original Turn Request、exact relevant Application-sealed Conversation Context 和 exact Cognition
 重跑完整链，用户不重提或重启。失败处理必须先定位 Source truth 到 Web 责任链中的最早偏差并提出可证伪假设；无假设不得改
 Prompt/Schema/Contract，同 signature 修一次仍复现即评审架构职责。
 
-`ITER-010-PDR-004` 是仍有效的架构与本地开发授权基线，PDR-005 是当前最高优先级执行决定。系统冻结“软件世界模型 + 主工程 Agent”双核心；默认交互冻结为 Conversation/Turn/
+`ITER-010-PDR-004` 是仍有效的架构与本地开发授权基线，PDR-009 是当前最高优先级执行决定。系统冻结“软件世界模型 + 主工程 Agent”双核心；默认交互冻结为 Conversation/Turn/
 Application-sealed Context 的语义多轮 Chat，每轮独立 Evidence/Answer/Review/Delivery，新对话隔离。旧固定多角色内容流水线不是目标 Agent，
 旧持续 Session QA 不是 Chat。独立 Chat Access 已为 `CHAT_ACCESS_BROWSER_PASS`；`FINDING-010-097` 又形成
 `AGENT_EXECUTOR_LOCAL_CANDIDATE`，在确定性 fake ports 上闭合 Application-owned loop、跨 Turn Work State、Observation/Package、fresh
@@ -234,7 +302,7 @@ stale。`FINDING-010-129` 随后取得 exact `3b8d09c…` / `6728a5a…` fresh �
 仍只有 Turn 2/3/4 reviewed Limitation，Turn 1/5 失败，整体 3/5 / Quality FAIL，新 Conversation leakage probe 继续 PASS。
 `FINDING-010-132/133` 随后证明这不是单一 query/review prompt 故障：Maven-only 对行为题无认知资格，Agent 未取得授权源码中的决定性事实，
 Reviewer 又批准了不完整 Limitation。`FINDING-010-131` 的 v7 因而冻结为未接受症状实验；当前 Gate 是离线层归因和工程认知资格，不是 fresh
-双 Provider Conformance 或旧五轮重跑。PDR-003 的质量不可裁剪、Ark→DeepSeek 和成本原则继续有效，PDR-005 覆盖其执行时间线。
+双 Provider Conformance 或旧五轮重跑。PDR-003 的质量不可裁剪、透明 `preferred → fallback` 路由和成本原则继续有效，PDR-005 覆盖其执行时间线。
 
 PDR 收据 `3112da25…` 只授权项目决定纠正；`32b298de…` 收据曾补足旧 Slice1 开发授权，但 PDR-004 已将其暂停。当前 `f76ba3e8…`
 开发授权不复用任何旧 live grant，也不自动取得 credential、Provider/model call、动态源码披露或 live browser 权限；后续 `7256a886…` 只对
@@ -293,11 +361,11 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 | Iteration 007 | **Rejected / technical PASS, product FAIL** | run-004 完成正式 Web、三调用、隔离与 Citation，但固定单方法协议不能组合登录流程，也不能可靠判断源码中不存在的下单功能；无 Acceptance |
 | Iteration 008 | **Rejected / REDIRECT / evidence preserved** | run-012 正式冻结 PASS；登录题真实 Web 以 5 次调用给出自然答案和 4 个 Citation；下单边界题的 Draft 正确形成 Limitation，但 Review 拒绝交付。该结果证明技术资产可复用，也证明当前边界未闭合；没有 Acceptance，未执行 canary、Agent 对照或 Activation |
 | Iteration 009 | **Rejected / REDIRECT / evidence preserved** | 三条真实 Web 已足够判向：链路可运行，但默认答案被方法、分支、调用顺序和内部诊断主导；没有 Acceptance，后续 Slice 未执行 |
-| Iteration 010 | **Authorized / active Slice1 / REWORK / local gate PASS / successor frozen / PDR-006 continuous** | `V-ALPHA-ACCESS-001` 已 PASS；run-035—042 整体质量 FAIL，run-043 以质量与 `DEEPSEEK_SCHEDULING_POLICY_FAIL` 保留。v7 是未接受症状实验；分层归因、认知资格、`V-DEEPSEEK-IDLE-001` 与 v8 semantic-query successor 已本地 PASS/冻结。当前缺新的 exact canary grant 和合规 live 证据；Comparison/Preview 仍 blocking，Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
+| Iteration 010 | **Authorized / active Slice1 / REWORK / PDR-009 value-first plan lock** | `V-ALPHA-ACCESS-001`、分层归因、认知资格和 DeepSeek 本地准入已 PASS；run-035—043 与 dirty v7 保持失败/隔离。当前唯一动作是零外部调用、零产品代码的四路 Gate freeze；严格四路价值 Gate 未 PASS 前，机器锁住产品代码、Prompt/Reviewer、Web canary、hardening 与 full regression。Slice2/3、hidden、Acceptance 与 Production 未授权或未执行 |
 | Iteration 011 | **Superseded / never executed** | 原 proposed 的答案优先探针/Alpha/夯实计划未获授权、未开发、未 live；有效的早体验与后置夯实原则已吸收回 ITER-010 REWORK |
 | Evidence-first Strategy | PASS / exact and time-bound | `evidence-first-software-answer@1.0.0` 的十类能力、两个 Java 工程六题和本机浏览器体验通过；它读取任务级 Evidence Packet，不是 Snapshot 世界模型问答 |
 | 软件世界模型产品闭环 | **ACCEPTED / local Maven + narrow Java static-call evaluation-only** | typed Structure Kernel、独立更新、Source-off View/Citation、Snapshot-first 回答与真实模型对照通过；仍未达到通用源码问答 MVP |
-| `local-browser` | **Chat Access PASS / eight canaries failed or non-acceptance / no successor live grant** | Direct、strict World Model、旧 Engineering QA 与新 Engineering Chat identity 不混用；run-035—043 的 exact owner-private Browser Session 均已执行并正常停止。run-043 只有一题获批且违反 DeepSeek 闲时门禁；新 Conversation probe 正确澄清且不 dispatch。后继只在调度 Gate、candidate freeze 和新 exact grant 同时成立后启动 |
+| `local-browser` | **Chat Access PASS / eight canaries failed or non-acceptance / new Web locked behind four-arm Gate** | Direct、strict World Model、旧 Engineering QA 与新 Engineering Chat identity 不混用；run-035—043 的 exact Browser Session 均已执行并正常停止。run-043 只有一题获批且违反 DeepSeek 闲时门禁；新 Conversation probe 正确澄清且不 dispatch。PDR-009 四路严格价值 Gate PASS 前不得启动新 Web canary |
 | Production Activation | **NOT EXECUTED** | 不得由任何本机 PASS 自动推导 |
 
 精确产品边界见 [Iteration 006 Acceptance](iterations/iteration-006/results/acceptance.md)。原始 Provider、能力、产品和浏览器证据
@@ -305,12 +373,15 @@ stage `sha256:862fdb8d…`，不是当前整个未提交工作树；Production A
 
 ## 当前执行顺序
 
-`V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001` 与 `V-DEEPSEEK-IDLE-001` 已以外部调用 0 PASS；本地 multi-Profile cognition、
-Artifact Session `@3` admission 和 v8 semantic-query successor 已闭合。此前 direction canary grant 已由 run-043 消费且调度 FAIL；当前直接
-申请一个新的最小 exact grant，随后只在允许窗口执行最多一个合规 Ark-first direction canary → 既有 Web
-的一条真实语义链与两个未参与修复的异质问题 →
-隔离 source-only / eligible-cognition+source / current Codex 方向信号 → 用户判向。Alpha 前不跑 full regression；clean candidate 的 exact
-freeze、grant 覆盖校验和执行收据完成前不调用 Provider/model 或 live Browser。
+当前机器游标固定为：`V-DIRECTION-FREEZE-001`（外部调用 0、产品代码 0）→ `V-DIRECTION-QUALITY-001`（四路严格价值 Gate）→ 最小
+Web Chat 体验 → 用户判向。已通过的 `V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001`、`V-DEEPSEEK-IDLE-001` 与
+`V-ALPHA-ACCESS-001` 只是历史/支持证据；当前备用路线的机器前置统一为 `V-FALLBACK-ROUTE-ADMISSION-001`，其 current configuration plugin
+可引用 `V-DEEPSEEK-IDLE-001` 收据，但后者不得进入通用状态机。PDR-008 的自动收据被并入真实四路运行的安全前置，不得先开发成一个
+独立产品阶段。
+
+当前动作只允许 `validation/structure_world_model_iteration_010/value_gate/**`、对应定向测试、唯一 freeze Result 和预留 Finding；禁止
+`src/software_world_model/**`、现有产品测试、Prompt/Reviewer、Provider dispatch、Web canary、hardening 和 full regression。任何越界 diff
+由计划门禁直接拒绝。四路 Gate 未 PASS 前，后续步骤都不是开发输入。
 
 ### run-035—042 历史执行审计（不再是当前待办）
 
@@ -1316,9 +1387,8 @@ run-003 与 run-007 的失败、run-002 capability 8/8、run-008 三路各 6/6 �
 
 ## Agent 读取范围
 
-当前 coding input 是 `ITER-010-SLICE-001`。已授权修改该 Slice 所需的产品/System 代码并执行本地确定性验证；Chat Access、离线分层归因、
-工程认知资格、DeepSeek 调度门禁和 clean successor freeze 已经本地闭合。此前 direction-canary grant 已消费；下一入口是直接申请新的最小
-exact grant，再在允许窗口交付至少三 Turn 的语义链和两个未参与修复的异质问题。等待闲时或授权时继续 Ark-only 与本地工作，
-不停止开发或重复询问是否申请。完整五轮、full regression 和 hardening 不得反向阻塞该体验。技术质量先由独立复核裁决，用户随后决定
-`CONTINUE / REWORK / REDIRECT / REJECT`。不得越过 exact grant 启动 live Web/Provider，不得进入 Slice2/3、披露或收集 hidden 输入、
-复用已消费 grant，亦不得执行 Production Activation。`src/main/resources`、配置凭据仍在授权范围外。
+当前 coding input 是 `ITER-010-SLICE-001`，但 action-level authority 覆盖并收窄 Slice 的广义代码范围。当前只允许 value-gate runner、
+对应定向测试、唯一 Freeze Result/Finding 和 Manifest/Current 迁移游标；不得修改 `src/software_world_model/**`、现有产品测试、Prompt、
+Reviewer、Web 或 system docs，外部调用为 0。Freeze PASS 后也只能按 base-tree 预注册 contract 进入四路 Quality action；四路 PASS 后才可
+进入最小 Web Chat。其中先运行 Preferred Quality；首选配置 INVALID 只进零外部/零人工请求/零 dispatch Fallback Refreeze，Refreeze PASS 后才运行
+Fallback Quality；两个 Quality Result 最多一个 PASS。不得进入 Slice2/3、hidden、扩大 Source/预算或 Production Activation。

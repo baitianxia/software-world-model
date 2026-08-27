@@ -1,12 +1,720 @@
-schema_version: 1
+schema_version: 2
 iteration:
   id: ITER-NNN
   status: proposed
   outcome_scope: <scope>
+  current_decision_ref: ITER-NNN-PDR-NNN
+  coding_input: false
 
 baseline:
   commit: <exact-git-commit>
+  tree: <exact-git-tree>
+  planning_commit: <exact-planning-git-commit>
+  planning_tree: <exact-planning-git-tree>
   dirty_worktree_allowed: false
+  relation: <exact-baseline-relation>
+
+# 在 Readiness 和用户授权完成前保持整个 Iteration/Slice 为 proposed/coding_input=false；
+# 激活时必须把下面的 exact ID、路径、前置和授权引用全部替换，并与 PROJECT-CURRENT 镜像一致。
+plan_execution_control:
+  schema: DEVELOPMENT_PLAN_EXECUTION_CONTROL@1
+  plan_revision_ref: ITER-NNN-PDR-NNN
+  enforcement_mode: fail-closed
+  authorization_refs:
+    - <exact-user-authorization-ref>
+  current_action:
+    id: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
+    owner_slice_ref: ITER-NNN-SLICE-NNN
+    kind: four-arm-direction-gate-freeze
+    status: proposed
+    case_id: V-DIRECTION-FREEZE-NNN
+    coding_allowed: true
+    external_execution_allowed: false
+    result_ref: ITER-NNN-RESULT-V-DIRECTION-FREEZE-NNN
+    result_path: docs/project/iterations/iteration-NNN/results/v-direction-freeze-NNN.md
+    evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+    evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-freeze-NNN.json
+    evidence_verifier: ITERNNN_VALUE_GATE@1
+    runner_identity_paths:
+      - scripts/plan_gate.py
+      - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+      - tests/test_iteration_NNN_value_gate.py
+    produced_case_ids:
+      - V-DIRECTION-FREEZE-NNN
+      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+    prerequisite_case_ids: []
+    allowed_change_paths:
+      - validation/structure_world_model_iteration_NNN/value_gate/**
+      - tests/test_iteration_NNN_value_gate.py
+      - docs/project/iterations/iteration-NNN/results/v-direction-freeze-NNN.md
+      - docs/project/iterations/iteration-NNN/results/evidence/v-direction-freeze-NNN.json
+      - docs/project/iterations/iteration-NNN/results/README.md
+      - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+      - docs/project/iterations/iteration-NNN/findings/README.md
+      - docs/project/current.md
+      - docs/project/iterations/iteration-NNN/manifest.yaml
+    forbidden_change_paths:
+      - src/software_world_model/**
+      - tests/test_conversational_engineering_model.py
+      - docs/system/**
+      - docs/project/iterations/iteration-NNN/proposal.md
+      - docs/project/iterations/iteration-NNN/readiness-review.md
+      - docs/project/iterations/iteration-NNN/development-design/**
+      - scripts/docs.py
+      - scripts/plan_gate.py
+      - .github/workflows/**
+  transition:
+    pass_next_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-PREFERRED-NNN
+    fail_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-REWORK-NNN
+    invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
+  locks:
+    product_code_changes: true
+    prompt_or_reviewer_changes: true
+    web_canary: true
+    hardening: true
+    full_regression: true
+    provider_dispatch: true
+  # current action 也必须在 registry 中完整登记；所有 PASS/FAIL/INVALID 非自环目标必须在 base Manifest 预注册。
+  # governance 自环只有在对应 Result 已独立密封后，才可沿受限 revision allowlist 修订下一版计划；
+  # Finding、accepted PDR 和 exact 用户授权不能由同一迁移候选补造或自我授权。
+  next_action_contracts:
+    direction_freeze:
+      id: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: four-arm-direction-gate-freeze
+      status: proposed
+      case_id: V-DIRECTION-FREEZE-NNN
+      coding_allowed: true
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-DIRECTION-FREEZE-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-direction-freeze-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-freeze-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      prerequisite_case_ids: []
+      allowed_change_paths:
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/project/iterations/iteration-NNN/results/v-direction-freeze-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-direction-freeze-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-PREFERRED-NNN
+        fail_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-REWORK-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+    preferred_quality:
+      id: ITER-NNN-ACTION-DIRECTION-QUALITY-PREFERRED-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: four-arm-direction-quality-gate
+      status: proposed
+      case_id: V-DIRECTION-QUALITY-NNN
+      coding_allowed: false
+      external_execution_allowed: true
+      result_ref: ITER-NNN-RESULT-V-DIRECTION-QUALITY-PREFERRED-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-direction-quality-preferred-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-quality-preferred-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-DIRECTION-QUALITY-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-direction-quality-preferred-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-direction-quality-preferred-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-MINIMUM-WEB-CHAT-NNN
+        fail_next_action_id: ITER-NNN-ACTION-DIRECTION-REWORK-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-FALLBACK-REFREEZE-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: false
+    fallback_refreeze:
+      id: ITER-NNN-ACTION-DIRECTION-FALLBACK-REFREEZE-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: fallback-route-batch-refreeze
+      status: proposed
+      case_id: V-DIRECTION-FALLBACK-REFREEZE-NNN
+      coding_allowed: false
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-DIRECTION-FALLBACK-REFREEZE-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-direction-fallback-refreeze-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-fallback-refreeze-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-DIRECTION-FALLBACK-REFREEZE-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+        - V-FALLBACK-ROUTE-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-direction-fallback-refreeze-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-direction-fallback-refreeze-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-FALLBACK-NNN
+        fail_next_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-PREFERRED-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-FALLBACK-REFREEZE-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+    fallback_quality:
+      id: ITER-NNN-ACTION-DIRECTION-QUALITY-FALLBACK-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: four-arm-direction-quality-gate
+      status: proposed
+      case_id: V-DIRECTION-QUALITY-NNN
+      coding_allowed: false
+      external_execution_allowed: true
+      result_ref: ITER-NNN-RESULT-V-DIRECTION-QUALITY-FALLBACK-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-direction-quality-fallback-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-quality-fallback-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-DIRECTION-QUALITY-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-FALLBACK-REFREEZE-NNN
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+        - V-FALLBACK-ROUTE-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-direction-quality-fallback-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-direction-quality-fallback-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-MINIMUM-WEB-CHAT-NNN
+        fail_next_action_id: ITER-NNN-ACTION-DIRECTION-REWORK-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-FALLBACK-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: false
+    direction_freeze_rework:
+      id: ITER-NNN-ACTION-DIRECTION-FREEZE-REWORK-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: four-arm-direction-gate-freeze-rework
+      status: proposed
+      case_id: V-DIRECTION-FREEZE-REWORK-NNN
+      coding_allowed: true
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-DIRECTION-FREEZE-REWORK-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-direction-freeze-rework-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-freeze-rework-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-DIRECTION-FREEZE-REWORK-NNN
+      prerequisite_case_ids: []
+      allowed_change_paths:
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/project/iterations/iteration-NNN/results/v-direction-freeze-rework-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-direction-freeze-rework-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
+        fail_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-REWORK-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-REWORK-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+    direction_rework:
+      id: ITER-NNN-ACTION-DIRECTION-REWORK-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: four-arm-failure-attribution
+      status: proposed
+      case_id: V-DIRECTION-REWORK-NNN
+      coding_allowed: false
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-DIRECTION-REWORK-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-direction-rework-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-direction-rework-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-DIRECTION-REWORK-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-direction-rework-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-direction-rework-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-RESPONSIBILITY-PLAN-NNN
+        fail_next_action_id: ITER-NNN-ACTION-DIRECTION-REWORK-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-DIRECTION-REWORK-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+    minimum_web_chat:
+      id: ITER-NNN-ACTION-MINIMUM-WEB-CHAT-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: minimum-existing-web-chat
+      status: proposed
+      case_id: V-CHAT-EXPERIENCE-NNN
+      coding_allowed: false
+      external_execution_allowed: true
+      result_ref: ITER-NNN-RESULT-V-MINIMUM-WEB-CHAT-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-minimum-web-chat-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-minimum-web-chat-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-CHAT-EXPERIENCE-NNN
+        - V-CHAT-NNN
+        - V-CHAT-QUALITY-NNN
+        - V-CHAT-XD-NNN
+        - V-TIMEBOX-CHAT-NNN
+        - V-PUBLIC-OSS-AUTHORITY-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-QUALITY-NNN
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-minimum-web-chat-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-minimum-web-chat-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/structure_world_model_iteration_NNN/value_gate/**
+        - tests/test_iteration_NNN_value_gate.py
+        - docs/system/**
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - .github/workflows/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-USER-DIRECTION-DECISION-NNN
+        fail_next_action_id: ITER-NNN-ACTION-WEB-FAILURE-ATTRIBUTION-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-MINIMUM-WEB-CHAT-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: false
+        hardening: true
+        full_regression: true
+        provider_dispatch: false
+    web_failure_attribution:
+      id: ITER-NNN-ACTION-WEB-FAILURE-ATTRIBUTION-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: governance
+      status: proposed
+      case_id: V-WEB-FAILURE-ATTRIBUTION-NNN
+      coding_allowed: false
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-WEB-FAILURE-ATTRIBUTION-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-web-failure-attribution-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-web-failure-attribution-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-WEB-FAILURE-ATTRIBUTION-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-QUALITY-NNN
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-web-failure-attribution-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-web-failure-attribution-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+        - AGENTS.md
+        - docs/_generated/**
+        - docs/system/**
+        - docs/project/governance/**
+        - docs/project/iterations/iteration-NNN/README.md
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/verification-matrix.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - docs/project/iterations/iteration-NNN/decisions/PDR-NNN-post-direction-plan.md
+        - docs/project/iterations/iteration-NNN/decisions/README.md
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - tests/test_docs_gate.py
+        - tests/test_plan_gate.py
+        - .github/workflows/plan-compliance.yml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-WEB-FAILURE-ATTRIBUTION-NNN
+        fail_next_action_id: ITER-NNN-ACTION-WEB-FAILURE-ATTRIBUTION-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-WEB-FAILURE-ATTRIBUTION-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+    user_direction_decision:
+      id: ITER-NNN-ACTION-USER-DIRECTION-DECISION-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: governance
+      status: proposed
+      case_id: V-PREVIEW-NNN
+      coding_allowed: false
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-USER-DIRECTION-DECISION-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-user-direction-decision-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-user-direction-decision-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-PREVIEW-NNN
+      prerequisite_case_ids:
+        - V-CHAT-EXPERIENCE-NNN
+        - V-DIRECTION-QUALITY-NNN
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-user-direction-decision-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-user-direction-decision-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - docs/project/current.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+        - AGENTS.md
+        - docs/_generated/**
+        - docs/system/**
+        - docs/project/governance/**
+        - docs/project/iterations/iteration-NNN/README.md
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/verification-matrix.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - docs/project/iterations/iteration-NNN/decisions/PDR-NNN-post-direction-plan.md
+        - docs/project/iterations/iteration-NNN/decisions/README.md
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - tests/test_docs_gate.py
+        - tests/test_plan_gate.py
+        - .github/workflows/plan-compliance.yml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-USER-DIRECTION-DECISION-NNN
+        fail_next_action_id: ITER-NNN-ACTION-USER-DIRECTION-DECISION-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-USER-DIRECTION-DECISION-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+    responsibility_plan:
+      id: ITER-NNN-ACTION-RESPONSIBILITY-PLAN-NNN
+      owner_slice_ref: ITER-NNN-SLICE-NNN
+      kind: governance
+      status: proposed
+      case_id: V-RESPONSIBILITY-PLAN-NNN
+      coding_allowed: false
+      external_execution_allowed: false
+      result_ref: ITER-NNN-RESULT-V-RESPONSIBILITY-PLAN-NNN
+      result_path: docs/project/iterations/iteration-NNN/results/v-responsibility-plan-NNN.md
+      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+      evidence_path: docs/project/iterations/iteration-NNN/results/evidence/v-responsibility-plan-NNN.json
+      evidence_verifier: ITERNNN_VALUE_GATE@1
+      runner_identity_paths:
+        - scripts/plan_gate.py
+        - validation/structure_world_model_iteration_NNN/value_gate/runner.py
+        - tests/test_iteration_NNN_value_gate.py
+      produced_case_ids:
+        - V-RESPONSIBILITY-PLAN-NNN
+      prerequisite_case_ids:
+        - V-DIRECTION-REWORK-NNN
+        - V-DIRECTION-FREEZE-NNN
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-NNN
+      allowed_change_paths:
+        - docs/project/iterations/iteration-NNN/results/v-responsibility-plan-NNN.md
+        - docs/project/iterations/iteration-NNN/results/evidence/v-responsibility-plan-NNN.json
+        - docs/project/iterations/iteration-NNN/results/README.md
+        - docs/project/iterations/iteration-NNN/findings/FINDING-NNN-NNN.md
+        - docs/project/iterations/iteration-NNN/findings/README.md
+        - AGENTS.md
+        - docs/_generated/**
+        - docs/system/**
+        - docs/project/current.md
+        - docs/project/governance/**
+        - docs/project/iterations/iteration-NNN/README.md
+        - docs/project/iterations/iteration-NNN/proposal.md
+        - docs/project/iterations/iteration-NNN/readiness-review.md
+        - docs/project/iterations/iteration-NNN/verification-matrix.md
+        - docs/project/iterations/iteration-NNN/development-design/**
+        - docs/project/iterations/iteration-NNN/decisions/PDR-NNN-post-direction-plan.md
+        - docs/project/iterations/iteration-NNN/decisions/README.md
+        - docs/project/iterations/iteration-NNN/manifest.yaml
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - tests/test_docs_gate.py
+        - tests/test_plan_gate.py
+        - .github/workflows/plan-compliance.yml
+      forbidden_change_paths:
+        - src/software_world_model/**
+        - tests/test_conversational_engineering_model.py
+        - validation/**
+      transition:
+        pass_next_action_id: ITER-NNN-ACTION-RESPONSIBILITY-PLAN-NNN
+        fail_next_action_id: ITER-NNN-ACTION-RESPONSIBILITY-PLAN-NNN
+        invalid_next_action_id: ITER-NNN-ACTION-RESPONSIBILITY-PLAN-NNN
+      locks:
+        product_code_changes: true
+        prompt_or_reviewer_changes: true
+        web_canary: true
+        hardening: true
+        full_regression: true
+        provider_dispatch: true
+
+direction_quality_gate:
+  schema: VALUE_FIRST_FOUR_ARM_DIRECTION_GATE@1
+  freeze_case_id: V-DIRECTION-FREEZE-NNN
+  quality_case_id: V-DIRECTION-QUALITY-NNN
+  owner_slice_ref: ITER-NNN-SLICE-NNN
+  status: proposed-locked-until-direction-freeze-pass
+  execution_order: direction-freeze-PASS->preferred-quality;preferred-quality-PASS->minimum-web;preferred-quality-FAIL->direction-rework;preferred-quality-INVALID->fallback-refreeze;fallback-refreeze-PASS->fallback-quality;fallback-refreeze-FAIL->preferred-quality;fallback-refreeze-INVALID->fallback-refreeze;fallback-quality-PASS->minimum-web;fallback-quality-FAIL->direction-rework;fallback-quality-INVALID->fallback-quality;minimum-web-PASS->user-direction-decision
+  arms:
+    - direct-relevant-evidence
+    - same-agent-source-only
+    - same-agent-world-model-and-source
+    - current-codex
+  minimum_question_count: 3
+  question_count: <positive-integer-at-least-three>
+  question_set_rule: system-purpose-or-entry,behavior-call-flow-and-material-side-effect,failure-authorization-or-unknown;at-least-two-unseen;no-pom-only-question
+  source_truth_owner: independent-exact-source-ledger-not-any-model-answer
+  source_truth_ledger_digest: <sha256-exact-independent-source-ledger>
+  direct_evidence_arm_is_oracle: false
+  direct_evidence_arm_generation_model_matches_system_arms: true
+  current_codex_role: strong-external-baseline-not-oracle-not-adjudicator
+  current_codex_is_oracle_or_reviewer: false
+  current_codex_identity_digest: <sha256-exact-client-model-reasoning-tools-permissions-runtime>
+  first_three_arms_same_provider_model_configuration: true
+  source_only_and_world_model_arms_same_agent_prompt_tools_budget_cache_and_reviewer: true
+  outputs_sealed_before_cross_arm_disclosure: true
+  blind_randomized_independent_evaluation: true
+  absolute_quality_pass_required: true
+  absolute_quality_rule: zero-major-errors-material-omissions-unsupported-or-wrong-citations-false-limitations-or-boundary-errors
+  world_model_arm_must_not_lose_to_direct_evidence: true
+  world_model_arm_must_not_lose_to_source_only: true
+  world_model_arm_must_not_lose_to_current_codex: true
+  current_codex_overall_quality_margin_rule: strictly-positive
+  non_locator_world_model_contribution_required: true
+  all_tie_outcome: FAIL
+  both_fail_unresolved_invalid_or_blinding_invalid_outcome: FAIL
+  cost_or_latency_can_compensate_quality: false
+  product_code_change_before_verdict_allowed: false
+  web_change_before_verdict_allowed: false
+  preferred_route_execution_profile_ref: <preferred-route-execution-profile-ref>
+  fallback_route_execution_profile_ref: <fallback-route-execution-profile-ref>
+  preferred_quality_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-PREFERRED-NNN
+  preferred_quality_result_ref: ITER-NNN-RESULT-V-DIRECTION-QUALITY-PREFERRED-NNN
+  mixed_provider_batch_allowed: false
+  fallback_refreeze_action_id: ITER-NNN-ACTION-DIRECTION-FALLBACK-REFREEZE-NNN
+  fallback_refreeze_case_id: V-DIRECTION-FALLBACK-REFREEZE-NNN
+  fallback_refreeze_requires_new_human_authority: false
+  fallback_refreeze_provider_dispatch_allowed: false
+  fallback_refreeze_action_evidence_required: preferred-invalid-predecessor-seal,provider-neutral-root-input-set,fallback-execution-profile-ref-and-digest,fallback-admission-policy-plugin-ref-and-digest,no-mixed-batch,zero-provider-dispatch,no-new-human-authority
+  fallback_quality_action_id: ITER-NNN-ACTION-DIRECTION-QUALITY-FALLBACK-NNN
+  fallback_quality_result_ref: ITER-NNN-RESULT-V-DIRECTION-QUALITY-FALLBACK-NNN
+  fallback_allowed_only_after_refreeze_pass: true
+  fallback_admission_prerequisite_case_id: V-FALLBACK-ROUTE-ADMISSION-NNN
+  fallback_quality_action_evidence_required: fallback-refreeze-predecessor-seal,provider-neutral-root-input-set,execution-profile-ref-and-digest,admission-and-terminal-receipts,no-mixed-batch
+  quality_case_pass_result_cardinality: at-most-one
+  preferred_terminal_unavailable_action: invalidate-preferred-batch-and-enter-pre-registered-fallback-refreeze
+  preferred_other_invalid_action: fallback-refreeze-fails-back-to-preferred-quality
+  fallback_invalid_action: fail-closed-at-fallback-quality
+  target_product_commit: <exact-clean-product-commit>
+  target_product_tree: <exact-clean-product-tree>
+  dirty_candidate_allowed: false
+
+# 当公开源码 standing authority 适用时，完整 umbrella Case 不是独立阶段；它由真实外部动作的
+# terminal receipts 证明。当前执行入口仍由 plan_execution_control.current_action 唯一决定。
+public_oss_evaluation_standing_authority:
+  schema: PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1
+  owner_decision_ref: ITER-NNN-PDR-NNN
+  current_plan_amendment_ref: ITER-NNN-PDR-NNN
+  verification_case_id: V-PUBLIC-OSS-AUTHORITY-NNN
+  verification_status: NOT-RUN
+  independent_action_entry_allowed: false
+  next_execution_entry_action_id: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
+  next_execution_entry_case_id: V-DIRECTION-FREEZE-NNN
 
 product_goal_alignment:
   target_ref: SYS-PRODUCT-SUCCESS
@@ -34,7 +742,7 @@ product_goal_alignment:
   baseline_result_digest: <sha256-exact-baseline-result>
   mature_source_agent_protocol_digest: <sha256-exact-comparison-protocol>
   mature_source_agent_rubric_digest: <sha256-exact-rubric-and-adjudication-policy>
-  # 从下一份新产品 Iteration 起，current Codex 是强外部基线，不是 Oracle 或裁判；identity digest 必须覆盖实际
+  # 当前及未来计划立即适用：current Codex 是强外部基线，不是 Oracle 或裁判；identity digest 必须覆盖实际
   # client/binary/model/reasoning/tools/permissions/source-scope/revision/questions/run-time identity。
   mature_source_agent_identity_digest: <sha256-exact-current-codex-identity>
   mature_source_agent_role: strong-external-baseline-not-oracle-not-adjudicator
@@ -72,7 +780,9 @@ product_goal_alignment:
       case_id: <V-XD-NNN>
       accepted_capability_ref: <prior-acceptance-id>
       new_slice_ref: <current-slice-id>
-  first_product_web_checkpoint: <verification-case-id>
+  earliest_falsifiable_value_freeze_checkpoint: <V-DIRECTION-FREEZE-NNN>
+  earliest_falsifiable_value_quality_checkpoint: <V-DIRECTION-QUALITY-NNN>
+  first_product_web_checkpoint: <verification-case-id-after-direction-quality-pass>
   earliest_web_micro_checkpoint: <V-ALPHA-ACCESS-NNN>
   direction_preview_checkpoint: <V-PREVIEW-NNN>
   direction_preview_binding:
@@ -109,19 +819,27 @@ product_goal_alignment:
     turn_failure_scope: current-turn-only-conversation-remains-usable
     long_term_memory_required: false
     limitations_visible: true
-  # 与首个持续 Web Alpha 同出口的小样本 current Codex 盲评；不是体验前的新阶段，完整 hidden 复验仍在 hardening/final。
+  # Validator 兼容 key；语义是任何新产品/Web 变更之前的四路方向 Gate，不是 Web Alpha 内的二元 A/B。
   alpha_agent_comparison_binding:
-    case_id: <V-COMP-ALPHA-NNN>
-    new_slice_ref: <first-sustained-web-alpha-slice-id>
+    case_id: <V-DIRECTION-QUALITY-NNN>
+    new_slice_ref: <earliest-value-gate-slice-id>
+    result_role: blocking-strict-superiority-direction-gate
+    occurs_before_new_product_or_web_change: true
     question_count: <positive-integer-at-least-three>
-    post_freeze_live_question_count: <positive-integer-at-least-one-and-no-greater-than-question-count>
-    question_set_rule: original-failure-plus-two-heterogeneous-including-post-freeze-live
+    unseen_question_count: <positive-integer-at-least-two-and-less-than-or-equal-to-question-count>
+    question_set_rule: system-purpose-or-entry-plus-behavior-or-material-side-effect-plus-failure-authorization-or-unknown-no-pom-only
+    arms: direct-relevant-evidence,same-agent-source-only,same-agent-world-model-and-source,current-codex
     protocol_digest_ref: mature_source_agent_protocol_digest
     rubric_digest_ref: mature_source_agent_rubric_digest
     identity_digest_ref: mature_source_agent_identity_digest
-    pass_rule: system-absolute-pass-no-per-question-regression-and-positive-blind-quality-margin
+    source_truth_ref: independent-exact-source-ledger-not-any-model-answer
+    pass_rule: world-model-arm-absolute-pass-no-per-question-regression-to-any-baseline-positive-codex-margin-and-non-locator-contribution
     all_tie_outcome: FAIL
+    both_fail_unresolved_invalid_or_blinding_invalid_outcome: FAIL
     secondary_metric_compensation_allowed: false
+    current_codex_is_oracle_or_reviewer: false
+    source_only_and_world_model_arms_same_agent_prompt_tools_budget_cache_and_reviewer: true
+    first_three_arms_same_provider_model_configuration: true
   # 可选：后续 Slice 的正式 Web checkpoint；每项必须绑定同一 Slice 的跨域 Case。
   additional_web_checkpoint_bindings: {}
   # 只有体验 Alpha CONTINUE 后的适用 hardening Slice 才绑定独立持有的 early hidden canary；首次体验不得被 hidden 阻断。
@@ -164,19 +882,48 @@ rework_policy:
   no_progress_attempt_limit: <positive-integer-at-least-two>
 
 authorization_continuation_policy:
+  # Legacy umbrella schema name; just-in-time human requests now apply only to material scope deltas.
   schema: JUST_IN_TIME_EXACT_AUTHORIZATION@1
   owner_ref: PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN
   current_decision_ref: <current-project-decision-id>
+  # Legacy compatibility field: external_grant means standing human authority or an exact scope-delta grant, never a machine receipt.
   slice_development_authorization_separate_from_external_grant: true
+  standing_external_authority_schema: PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1
+  standing_external_authority_ref: <codex-user-message-sha256>
+  standing_external_authority_scope: canonical-public-open-source-license-confirmed-exact-commit-tree-clean-allowlisted-read-only-source-to-approved-provider-route-budget-schedule-and-loopback-evaluation-sink
+  standing_external_authority_revision_selection_policy: <approved-public-upstream-and-clean-revision-selection-policy>
+  standing_external_authority_scope_digest: <sha256-exact-source-disclosure-route-budget-schedule-validity-sink-retention-and-exclusions>
+  standing_external_authority_valid_from: <ISO-timestamp>
+  standing_external_authority_expires_at: <ISO-timestamp-or-explicit-until-revoked>
+  standing_external_authority_revocation_condition: <exact-condition>
+  standing_external_authority_reusable_across_runs_questions_and_turns_with_unchanged_source_identity: true
+  per_run_or_per_question_human_authorization_within_standing_scope_required: false
+  derived_exact_control_kinds: authorized-input-manifest,one-use-disclosure-receipt,one-use-dispatch-receipt,terminal-audit
+  derived_exact_controls_required_for_every_external_action: true
+  derived_exact_controls_are_system_derived_and_not_authority: true
+  derived_exact_controls_must_reference_standing_authority: true
+  receipt_missing_invalid_or_scope_mismatch_action: fail-closed-before-source-disclosure-provider-network-or-credential
+  human_reauthorization_required_only_for_scope_delta: true
+  scope_delta_kinds:
+    - private-unknown-license-unknown-local-only-or-dirty-data
+    - project-revision-or-allowlist-outside-standing-scope
+    - new-external-recipient-provider-model-endpoint-or-account
+    - call-retry-token-duration-or-cost-budget-increase
+    - fallback-route-policy-exception
+    - external-write
+    - non-loopback-exposure
+    - production-activation
+    - standing-authority-exclusion
+  # Legacy field: active exact authority means the active standing authority or an approved one-time scope delta, not a per-run grant.
   active_exact_grant_must_be_reused: true
   active_or_pending_exact_request_must_not_be_duplicated: true
   exact_preflight_and_identity_disclosure_freeze_before_request_required: true
-  missing_external_grant_blocks: exact-external-action-only
-  authorization_gap_action: request-minimum-exact-delta-immediately
+  missing_external_grant_blocks: exact-scope-delta-action-only
+  authorization_gap_action: request-minimum-exact-scope-delta-immediately
   ask_whether_to_request_before_request_allowed: false
   authorized_local_work_continues: true
   approval_continues_execution_without_redundant_confirmation: true
-  request_pending_status: waiting-exact-grant-in-progress
+  request_pending_status: waiting-exact-scope-delta-in-progress
   grant_pending_pauses_slice_or_revokes_coding_input: false
   hard_stop_ends: scope-expansion-hardening-full-regression-rule-accumulation-and-no-new-evidence-external-reruns-only
   hard_stop_ends_minimum_experience_recovery: false
@@ -213,7 +960,7 @@ conversational_engineering_agent:
   first_chat_canary_conversation_count: 1
   first_chat_canary_turn_count: 5
   new_conversation_leakage_probe_required: true
-  alpha_comparison_arms: same-agent-source-only,same-agent-full-world-model-cognition-and-source,current-codex-external-baseline
+  direction_comparison_arms: direct-relevant-evidence,same-agent-source-only,same-agent-world-model-and-source,current-codex-external-baseline
   knowledge_admission_from_conversation: asynchronous-reviewed-only
   long_term_memory_before_direction_confirmation_required: false
   multi_agent_before_direction_confirmation_required: false
@@ -222,11 +969,13 @@ conversational_engineering_agent:
   full_regression_before_direction_confirmation_allowed: false
   status: target-not-implemented-not-qualified
 
-# 从 ITER-012 起强制；ITER-010 可显式 opt in。计时从授权后的第一次产品代码变更开始，
-# availability/access 与答案 quality 分开；quality PASS 仍是 hardening 前置。
+# 可选的 Gate-PASS 后 Web 交付 policy。它不能把 Web/Access 提前到四路方向 Gate 之前；计时从 Web action 获授权后的第一次产品代码
+# 变更开始，availability/access 与答案 quality 分开；quality PASS 仍是 hardening 前置。
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: <first-sustained-web-alpha-slice-id>
+  prerequisite_direction_quality_case_id: <V-DIRECTION-QUALITY-NNN>
+  prerequisite_direction_quality_verdict: PASS
   first_user_handoff_case_id: <V-ALPHA-ACCESS-NNN>
   direction_confirmation_case_id: <V-PREVIEW-NNN>
   user_handoff_required_at_each_checkpoint: true
@@ -270,15 +1019,21 @@ experience_delivery_policy:
   full_regression_before_alpha_continue_allowed: false
   full_regression_allowed_stages: alpha-continue-hardening-and-before-formal-acceptance
 
-# Session 开始前密封 Ark→DeepSeek ordered route 和双方 disclosure scope。用户只提交一个 logical interaction unit；Chat 按 Turn 独立密封；
+# standing external authority 预授权 preferred→fallback ordered route、双方 disclosure scope、预算和调度；Session 开始前只密封本次 exact identity，
+# 不产生新的用户授权。用户只提交一个 logical interaction unit；Chat 按 Turn 独立密封；
 # fallback 是内部独立 provider attempt，不要求重提，不混用两个 attempt 的中间产物，也不因成本删减完整质量链。
 provider_route_policy:
   schema: QUALIFIED_PROVIDER_PREFERENCE@1
+  preferred_execution_profile_ref: <runtime-config-preferred-qualified-profile>
+  fallback_execution_profile_ref: <runtime-config-fallback-qualified-profile>
+  fallback_admission_policy_plugin_ref: fallback_route_admission_policy
+  preferred_model_identity: <configured-preferred-model-id>
+  fallback_model_identity: <configured-fallback-model-id>
   preference_order:
-    - VOLCENGINE_ARK
-    - DEEPSEEK
-  primary_provider: VOLCENGINE_ARK
-  fallback_provider: DEEPSEEK
+    - <configured-preferred-provider-id>
+    - <configured-fallback-provider-id>
+  primary_provider: <configured-preferred-provider-id>
+  fallback_provider: <configured-fallback-provider-id>
   fallback_requires_primary_attempt_terminal_without_authorized_answer: true
   primary_unavailable_evidence_required: true
   implementation_gap_counts_as_primary_unavailable: false
@@ -296,6 +1051,9 @@ provider_route_policy:
   route_freeze_time: before-conversation-start-and-before-any-interaction-unit-dispatch
   ordered_routes_preauthorized_at_session_start: true
   ordered_route_disclosure_scopes_preauthorized_at_session_start: true
+  ordered_route_and_disclosure_human_authority_source: standing_external_authority
+  new_session_turn_question_or_run_requires_new_human_authority_within_standing_scope: false
+  per_attempt_exact_execution_receipt_required: true
   transparent_logical_interaction_fallback_allowed: true
   user_resubmission_or_new_session_required: false
   fallback_attempt_restarts_full_chain: true
@@ -307,48 +1065,48 @@ provider_route_policy:
   same_provider_retry_allowed: false
   outcome_unknown_duplicate_cost_risk_recorded: true
   post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route
-  # Legacy docs-validator compatibility only; the executable rule is deepseek_dispatch_admission_policy below.
-  deepseek_batch_start_policy: provider-declared-non-peak-preferred
-  deepseek_batch_start_policy_is_legacy_docs_validator_compatibility_only: true
-  deepseek_current_execution_policy_ref: deepseek_dispatch_admission_policy
-  deepseek_schedule_timezone: Asia/Shanghai
-  deepseek_current_preferred_windows:
-    - "00:00-09:00"
-    - "12:00-14:00"
-    - "18:00-24:00"
-  deepseek_schedule_source: https://api-docs.deepseek.com/quick_start/pricing/
-  deepseek_schedule_checked_at: <ISO-date-checked-before-authorization>
-  deepseek_schedule_effective_status: <announced-not-yet-effective-or-effective>
   peak_urgent_override_requires: audited-explicit-override
   cost_can_reduce_answer_quality: false
   cost_gate_scope: before-interaction-unit-start-only
   current_started_interaction_unit_must_keep_full_quality_chain: true
   unchanged_current_conformance_reuse_required: true
 
-deepseek_dispatch_admission_policy:
-  schema: DEEPSEEK_DISPATCH_ADMISSION@1
+execution_profile_configurations:
+  schema: MODEL_TRANSPARENT_EXECUTION_PROFILES@1
+  preferred:
+    execution_profile_ref: <runtime-config-preferred-qualified-profile>
+    provider_identity: <configured-preferred-provider-id>
+    model_identity: <configured-preferred-model-id>
+  fallback:
+    execution_profile_ref: <runtime-config-fallback-qualified-profile>
+    provider_identity: <configured-fallback-provider-id>
+    model_identity: <configured-fallback-model-id>
+
+fallback_route_admission_policy:
+  schema: ROUTE_DISPATCH_ADMISSION@1
   owner_decision_ref: <current-project-decision-id>
-  scope: all-planned-development-conformance-capability-canary-comparison-regression-and-web-experience-deepseek-dispatch
-  timezone: Asia/Shanghai
+  configured_execution_profile_ref: <same-as-provider-route-policy-fallback-profile>
+  provider_policy_plugin_ref: <provider-specific-admission-plugin-and-version>
+  scope: all-planned-development-conformance-capability-canary-comparison-regression-and-web-experience-fallback-route-dispatch
+  timezone: <provider-policy-timezone>
   allowed_windows_are_half_open: true
   allowed_windows:
-    - "00:00-09:00"
-    - "12:00-14:00"
-    - "18:00-24:00"
+    - <provider-policy-window>
   enforcement_independent_of_price_effective_status: true
   official_schedule_check_required_per_run: true
   official_schedule_missing_or_changed_action: fail-closed-and-replan-before-dispatch
   planned_run_must_fit_worst_case_quality_chain_before_window_end: true
   admission_receipt_required_before_provider_socket_descriptor_tls_credential_or_http: true
   per_request_current_window_or_exact_override_revalidation_required: true
-  admission_receipt_required_fields: trusted-utc-and-beijing-time,clock-and-timezone-source,policy-version,run-type,exact-product-source-session,provider-model,maximum-calls-tokens-duration,official-schedule-check-time-and-content-digest-and-status,window-verdict-or-exact-peak-override,ark-first-fallback-and-quality-budget,authorization-identity
+  admission_receipt_required_fields: trusted-time,clock-and-timezone-source,policy-plugin-version,run-type,exact-product-source-session,route-role,execution-profile-ref-and-digest,provider-model-endpoint-account,maximum-calls-tokens-duration,official-schedule-check-time-and-content-digest-and-status,policy-verdict-or-exact-override,ordered-route-and-quality-budget,standing-authority-or-exact-override-identity
   missing_or_invalid_admission_action: fail-before-provider-network-and-credential-with-zero-provider-socket-tls-credential-and-http
-  new_deepseek_request_after_window_close_allowed: false
+  new_fallback_request_after_policy_window_close_allowed: false
   incomplete_answer_or_review_delivery_allowed: false
   peak_override_requires: exact-one-time-user-grant-for-provider-model-run-or-turn-reason-call-token-duration-start-expiry
-  ordinary-development-canary-route-or-fallback-grant-implies-peak-override: false
-  waiting_for_window_stops_local_or_ark_only_development: false
-  verification_case_id: <V-DEEPSEEK-IDLE-NNN>
+  standing-development-canary-route-or-fallback-authority-implies-peak-override: false
+  waiting_for_window_stops_local_or_preferred_route_development: false
+  verification_case_id: <provider-specific-configuration-verification-case>
+  generic_admission_case_id: V-FALLBACK-ROUTE-ADMISSION-NNN
   current_runtime_implementation_status: <implemented-and-verified-or-missing>
 
 source_scope:
@@ -356,6 +1114,14 @@ source_scope:
   content_kind: <content-kind>
   contract_ref: <current-system-contract-id>
   authorized_software_sources_digest: <same-as-product-goal-alignment>
+  standing_external_authority_ref: <same-as-authorization-continuation-policy>
+  canonical_upstream_identity: <public-repository-url>
+  license_and_publicness_record_digest: <sha256-exact-record>
+  exact_commit: <git-commit>
+  exact_tree: <git-tree>
+  clean_local_mirror_evidence_digest: <sha256-exact-evidence>
+  read_only_allowlist_digest: <sha256-exact-allowlist-and-exclusions>
+  public_open_source_license_confirmed_clean_read_only: true
   question_or_suite_driven_update_allowed: false
   verification_case_ids: []
 
@@ -427,4 +1193,6 @@ authorization:
   authorized_by: pending
   authorized_at: pending
   authorization_ref: pending
+  standing_external_authority_ref: pending
+  standing_external_authority_scope_digest: pending
   active_slice: none

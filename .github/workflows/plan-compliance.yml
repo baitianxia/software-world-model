@@ -1,0 +1,99 @@
+name: Plan compliance
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  plan-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate every commit with its trusted parent gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          CHECKOUT_SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BASE_SHA="$PR_BASE_SHA"
+            TARGET_SHA="$PR_HEAD_SHA"
+          else
+            BASE_SHA="$PUSH_BEFORE_SHA"
+            TARGET_SHA="$CHECKOUT_SHA"
+          fi
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-parse "$TARGET_SHA^1")"
+          fi
+          PREVIOUS_SHA="$BASE_SHA"
+          for COMMIT_SHA in $(git rev-list --reverse --topo-order "$BASE_SHA..$TARGET_SHA"); do
+            read -r -a COMMIT_WITH_PARENTS <<< "$(git rev-list --parents -n 1 "$COMMIT_SHA")"
+            if [ "${#COMMIT_WITH_PARENTS[@]}" -ne 2 ]; then
+              echo "ERROR: plan-controlled history must be linear; $COMMIT_SHA does not have exactly one parent" >&2
+              exit 1
+            fi
+            PARENT_SHA="${COMMIT_WITH_PARENTS[1]}"
+            if [ "$PARENT_SHA" != "$PREVIOUS_SHA" ]; then
+              echo "ERROR: $COMMIT_SHA parent $PARENT_SHA is not the previous trusted node $PREVIOUS_SHA" >&2
+              exit 1
+            fi
+            if git cat-file -e "$PARENT_SHA:scripts/plan_gate.py" 2>/dev/null; then
+              TRUSTED_GATE="$(mktemp)"
+              git show "$PARENT_SHA:scripts/plan_gate.py" > "$TRUSTED_GATE"
+              python3 "$TRUSTED_GATE" --repository "$GITHUB_WORKSPACE" diff \
+                --base "$PARENT_SHA" --target "$COMMIT_SHA"
+              PREVIOUS_SHA="$COMMIT_SHA"
+              continue
+            fi
+            while IFS= read -r CHANGED_PATH; do
+              case "$CHANGED_PATH" in
+                AGENTS.md|.githooks/plan-pre-commit|scripts/docs.py|scripts/plan_gate.py|tests/test_docs_gate.py|tests/test_plan_gate.py|.github/workflows/plan-compliance.yml|docs/system/*|docs/project/current.md|docs/project/governance/*|docs/project/iterations/*|docs/_generated/*)
+                  ;;
+                *)
+                  echo "ERROR: bootstrap changed path is not governance-only: $CHANGED_PATH" >&2
+                  exit 1
+                  ;;
+              esac
+              case "$CHANGED_PATH" in
+                src/software_world_model/*)
+                  echo "ERROR: bootstrap cannot change product code: $CHANGED_PATH" >&2
+                  exit 1
+                  ;;
+              esac
+            done < <(git diff --name-only "$PARENT_SHA" "$COMMIT_SHA" --)
+            PREVIOUS_SHA="$COMMIT_SHA"
+          done
+
+      - name: Run isolated plan-gate tests
+        run: python3 -m unittest tests.test_plan_gate -v
+
+      - name: Run documentation-gate tests
+        run: python3 -m unittest tests.test_docs_gate -v
+
+      - name: Run active deterministic value-gate tests when present
+        run: |
+          if [ -f tests/test_iteration_010_value_gate.py ]; then
+            python3 -m unittest tests.test_iteration_010_value_gate -v
+          fi
+
+      - name: Validate pre-registered documentation contracts
+        run: python3 scripts/docs.py check
+
+      - name: Validate current plan snapshot
+        run: python3 scripts/plan_gate.py snapshot

@@ -4,7 +4,7 @@ kind: project-governance
 status: current
 authority: project-governance
 owners: [architecture, engineering]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-BOUNDARY]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-BOUNDARY, SYS-ADR-019]
 code: []
 tests: []
 ---
@@ -13,16 +13,25 @@ tests: []
 
 Development Design 是当前编码输入，不是长期详细设计百科。它应当足以让人或 Agent 知道要改变什么、不能破坏什么、如何验证，并允许局部实现由代码和测试快速探索。
 
-## 先体验方向，再夯实实现
+## 先证伪方向，再提供最小体验，最后夯实实现
 
-凡是用户可以直接感知、且方向风险较高的产品变化，计划默认拆成三个阶段，顺序不得倒置：
+凡是用户可以直接感知、且方向风险较高的产品变化，计划必须围绕“最早能证伪的产品价值假设”拆分，而不是围绕组件完成度拆分。默认
+顺序如下，不能把方向判断拖到内部实现完成之后：
 
-1. **可体验 Alpha：** 用最小纵向实现直接形成可重复启动、持续可操作的真实产品版本，并用一组小而多样的输入和现场输入尽快判向；
-2. **工程夯实：** 只有 Alpha 被明确确认后，才补齐完整契约、边界处理、回归、性能、可观测性和质量评估；
-3. **正式验收：** 在实现稳定后执行隐藏输入、对照、现场问题和发布前 Gate。
+1. **最早方向证据：** 复用既有 clean 产品和能力，以最小实现/对照直接检验核心价值。已有可运行产品但替代价值未证明时，先做小而异质、
+   独立真值、强基线和严格失败条件的受控 Gate；没有可运行纵切时，先做最小可操作 Alpha。不得先完善 Prompt、Reviewer、Provider、Web
+   或内部证明再事后比较。
+2. **最小可体验 Alpha：** 方向证据 PASS 后，立即形成可重复启动、持续可操作的真实产品版本，让用户用自由问题、追问和纠正判向。
+3. **工程夯实：** 只有严格质量 Gate 和 Alpha 用户方向都通过后，才补齐完整契约、边界处理、回归、性能、可观测性和扩大评估。
+4. **正式验收：** 在实现稳定后执行隐藏输入、跨工程、现场问题和发布前 Gate。
 
-可以在 Alpha 内设置更早的内部检查点，但它不能成为独立晋级门槛，也不能用一次性运行、静态回放或启动前冻结问题代替可体验版本。
-用户可操作的真实结果必须先于与方向判断无关的全面夯实。
+最早方向证据必须是一个有界动作，不得演变成长期内部工程。它通过后立即进入最小体验，失败后只允许对最早责任层做一个通用修复并用
+原题和至少两个未参与修复的异质问题复验。一次性运行、静态回放或启动前冻结问题不能冒充可体验版本；可体验版本也不能替代严格方向
+质量证明。两者都必须早于与方向判断无关的全面夯实。
+
+当前开发权威还必须把唯一下一动作、允许/禁止路径、外部执行权、唯一 Result 和 PASS/FAIL/INVALID 后继写入 Manifest。Slice 的广义代码
+范围不能覆盖 action-level 白名单；base→target 差分必须只使用 base plan 授权，目标分支不得通过同时修改计划自我扩权。具体机械合同由
+`PROJECT-GOVERNANCE-PLAN-EXECUTION` 拥有。
 
 ### 方向探索检查点必须是用户交付出口
 
@@ -31,7 +40,8 @@ Development Design 是当前编码输入，不是长期详细设计百科。它�
 当前 Iteration 按最小判向需要冻结，不作为所有未来工程的固定流程。
 
 检查点是当前 Slice 内的交付和方向决策点，不是自动结束开发回合的停止点，也不是新 Iteration、Slice、Readiness 或授权阶段。它们只能
-在当前 Slice 授权仍 active 时沿用该授权，不能恢复已暂停、消费或失效的授权；外部调用仍单独遵守 exact grant。每个检查点完成后必须
+在当前 Slice 授权仍 active 时沿用该授权，不能恢复已暂停、消费或失效的授权；外部调用仍须落在 active standing external authority 内并
+生成逐次精确审计收据。每个检查点完成后必须
 立即把启动方式、地址、精确版本、已知限制和可操作结果交给用户；若下一项工作仍在现有授权和既定方向内，交付后继续执行，不为重复
 确认自行停下。代码、测试、文档、Gate 数量或内部链路完成都不算用户可见增量。
 
@@ -42,33 +52,48 @@ Development Design 是当前编码输入，不是长期详细设计百科。它�
 
 ### 授权连续性与开发回合退出条件
 
-Slice 开发授权与 external/side-effect execution grant 必须分开。缺少、消费、过期、拒绝或 identity 漂移的 exact grant 只阻断对应
-action；只要本地 Slice 授权仍有效，就保持 `authorized / in-progress / coding_input=true`，不能把 `NOT_REQUESTED / PENDING / DENIED`
-写成开发完成、产品 FAIL 或自动暂停。
+Slice 开发授权、人类授予的 standing external authority、系统派生的 exact execution/admission receipt 和一次性 scope-delta grant 必须分开。
+standing authority 在 Readiness 或后续明确用户决定中以 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 一次性冻结可重复使用的外部范围：
+canonical public source、许可/公开性记录、允许的 revision selection policy、每次运行的 exact commit/tree、allowlist 与只读披露边界，Provider/model/endpoint/credential account route、
+调用/重试/token/时长预算、调度窗口、有效期/撤销条件、结果保存、loopback `EVALUATION_ONLY` Sink 和 exclusions。对于上述公开开源测试
+工程，只要 source identity、clean 状态、route、预算和调度仍在已批准范围内，新的 run、Conversation、Turn 或问题不构成权限变化，不得逐
+run 或逐题向用户重新申请。
 
-到达权限边界后，实现者先完成不需要该权限的 preflight，冻结 exact action/command 或 Provider/model/endpoint、product/source identity、
-input/disclosure/redaction、credential reference、读写/网络范围、调用/重试/时长、fallback、结果保存与 exclusions，然后直接调用平台审批
-能力；没有审批入口时直接提交一条完整的 exact-grant request。不得先问“是否要申请”，不得只报告缺权限后结束，也不得重复请求相同
-pending grant。相同 active grant 未消费时复用；consumed/expired/drifted 不复用；批准后在 exact scope 内自动继续，不再重复确认计划。
+每次实际外部动作仍必须在 Source disclosure、network 或 credential 前冻结 exact product/source revision、session/turn、Provider/model/
+endpoint/credential account、披露内容、预算和时间判定，并生成系统派生的 one-use exact receipt；receipt 必须回指 active standing
+authority，且只能证明本次动作满足既有权限，不能自行创建、扩大或替代人类授权。standing authority 存在但 receipt 缺失、失效或与
+本次身份不一致时必须失败关闭；反之，系统生成 receipt
+也不能为未获人类授权的范围放行。
 
-等待时继续所有不依赖该 grant 的安全工作。只有 request 已实际发出且本地替代工作穷尽，才能以
+只有发生 scope delta 才提交新的最小 exact human-approval request：私有、来源/许可证未知、仅本机存在或 dirty 的数据；超出已批准
+upstream/revision selection policy/allowlist；新的外部接收方、Provider、model、endpoint 或 credential account；提高调用、重试、token、时长或费用预算；
+超出 fallback admission policy 的调度范围或需要一次性 override；任何外部写入；非 loopback 暴露或 Production Activation；或 standing
+authority 明确排除的其他动作。同一 approved
+public upstream/revision policy 内的新 clean exact commit 经 Source Authority 复核后只重新派生机器收据，不属于 delta。普通公开开源
+只读测试在 standing authority 内切换问题或运行身份同样不属于 delta。到达 delta 边界后，实现者
+先完成不需要该权限的 preflight 和 exact identity/disclosure freeze，再直接调用平台审批能力；没有审批入口时提交一条完整的 exact-delta
+request。不得先问“是否要申请”，不得只报告缺权限后结束，也不得重复请求相同 pending delta。相同 active standing authority 必须复用；
+批准 delta 后在 exact scope 内自动继续，不再重复确认计划。
+
+等待 scope delta 时继续所有不依赖该 delta 的安全工作。只有 delta request 已实际发出且本地替代工作穷尽，才能以
 `WAITING_EXACT_GRANT / IN_PROGRESS` 让出回合；必须报告 request identity、唯一受阻动作和批准后自动执行的动作。授权被拒绝时不得绕过或
 重复催促，只能继续安全替代方案或在范围/证据变化后申请更窄 delta。
 
-开发回合只能在当前阶段交付已实现并交给用户、exact request 已发出且安全替代工作穷尽、用户明确 `STOP/REDIRECT/REJECT`，或存在不可
+开发回合只能在当前阶段交付已实现并交给用户、scope-delta exact request 已发出且安全替代工作穷尽、用户明确
+`STOP/REDIRECT/REJECT`，或存在不可
 通过申请绕开的安全禁止时结束。“需要授权”、局部 Gate 完成、timebox FAIL 或外部权限为零本身都不是退出条件。
 
-从 `ITER-010-PDR-002` 后首个新建产品迭代起，首个持续 Web Alpha 必须把小样本 current Codex 同题盲评并入同一体验出口，而不是把
-比较继续推迟到 hardening，也不是在体验前增加独立阶段。Alpha 至少覆盖一条原失败题和另外两条相邻或异质问题，后两条中至少一条是
-产品冻结后的现场输入；完整
-hidden、跨工程与统计复验仍在 `CONTINUE` 后执行。Alpha 只有在系统自身绝对质量合格、逐题无物质性退步且总体答案质量严格优于
-Codex 时才能进入工程夯实；全体打平时使用 `REWORK`。
+从 `ITER-010-PDR-009` 起，current Codex 严格基线和 World Model 因果消融必须在任何新产品/Web 变更前，或在没有既有可运行纵切时并入
+最早 Alpha 出口。小样本至少覆盖一条系统性失败类别和另外两条异质问题，至少两条未参与开发；禁止只用模块/POM 问题。目标系统只有在
+自身绝对质量合格、逐题不输直接证据/仅源码/current Codex、总体严格优于 Codex 且有非 locator 世界模型贡献时，才能进入最小 Chat；
+全体打平使用 `REWORK`。完整 hidden、跨工程与统计复验仍在用户 `CONTINUE` 后执行。
 
 方向体验版不是验收版，不得声称完整、稳定或可生产使用，但始终必须遵守数据/源码授权、只读和写入权限、Secret 隔离、外部调用
 披露、失败不伪造成功等不可推迟的安全边界。首次体验前不得执行全量回归；安全运行或判断核心方向所需的验证只能收窄为聚焦测试。
 完整 Schema、全面能力资格、性能优化或完备证明材料同样不得放在首次体验之前。
 
-从 `ITER-012` 起，第一个持续 Alpha Slice 采用固定体验时间盒；ITER-010 可以在 Manifest 显式 opt in。计时点是 Slice 授权后的第一次
+从 `ITER-010-PDR-009` 起，方向风险较高的产品开发默认采用固定体验时间盒；活动 Iteration 可在 Manifest 对 exact action 顺序和时限作更
+严格、可机械验证的覆盖，历史旧字段不得反向恢复被取代的顺序。计时点是授权后的第一次
 产品代码变更，而不是第一次 live 调用：60 分钟内页面必须可启动，180 分钟内必须形成用户可连续操作的持续 Alpha；到 240 分钟仍未
 形成时，硬停止功能扩张、hardening、full regression 和无新证据的外部重复调用，密封已有证据并缩围复盘，同时继续本地根因归因和最小
 体验纵切收敛。60/180 是交付检查点，不能等完整质量证明才开始计时；240 是失控路径和扩域的停止边界，不能以“再跑一次”绕过，但不是
@@ -99,16 +124,18 @@ live failure 必须先沿 `Source truth → knowledge construction/admission →
 必须停止堆规则并评审架构职责。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
 hardening 和正式验收前各运行，不得用它延迟首个体验。
 
-Provider route 默认 `VOLCENGINE_ARK → DEEPSEEK`，并在 session 开始前预授权 ordered route、双方 disclosure scope 与适用的 dispatch
-admission policy。Ark attempt 因已冻结的
-Provider 或模型能力原因终态结束且未形成 authorized answer 时，可对同一 logical interaction unit 透明启动最多一个 DeepSeek attempt，用户无需
+Provider route 默认按 `preferred route → fallback route` 角色顺序运行，并通过 standing external authority 预授权 ordered route、两个角色的
+execution profile、disclosure scope 与适用的 admission policy；范围内的新 session/Turn 不要求再次取得用户授权。
+preferred-route attempt 因已冻结的 Provider 或模型能力原因终态结束且未形成 authorized answer 时，可对同一 logical interaction unit 透明启动最多一个
+fallback-route attempt，用户无需
 重提或新建 session。两个 attempt 必须独立密封；fallback 从 immutable original interaction input 与 exact World Model cognition 重跑完整链，禁止
 复用前次中间产物；对 Chat，fallback 输入必须是 immutable original Turn Request、与该 Turn 相关的 exact Application-sealed Conversation Context 和 exact World Model Cognition，不得退化为只重放孤立问句；迟到 primary 结果只允许隔离审计，不得覆盖已密封结果；同 Provider retry 为 0。Provider 输出/schema 或模型审核失败
-必须记录为能力失败，不能伪称网络不可用；Application、Source 或 Security 失败不得通过 fallback 掩盖。所有 planned DeepSeek 调用都必须
-执行当前 Operations 冻结的非高峰硬准入，不以 batch、fallback、smoke、canary 或 live 名称区分。run-level receipt 和每个新 request 的
-窗口/一次性 exact override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和 HTTP；缺失或越界时相关计数为 0。
-完整最坏质量链必须能在当前窗口结束前完成；进入高峰后不创建新 request。已发出 request 继续按零重试和 outcome-unknown 规则密封，
-但无法完成独立审核时必须失败关闭，不能交付降质答案。等待窗口时 Ark-only 与本地开发继续。
+必须记录为能力失败，不能伪称网络不可用；Application、Source 或 Security 失败不得通过 fallback 掩盖。所有 planned fallback-route 调用都必须
+执行该 execution profile 引用的 admission plugin，不以 batch、fallback、smoke、canary 或 live 名称区分。run-level receipt 和每个新 request 的
+准入条件/一次性 exact override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和 HTTP；缺失或越界时相关计数为 0。
+完整最坏质量链必须能在 admission plugin 准入的时间与资源边界内完成；准入失效后不创建新 request。已发出 request 继续按零重试和 outcome-unknown 规则密封，
+但无法完成独立审核时必须失败关闭，不能交付降质答案。等待准入时 preferred-route-only 与本地开发继续。具体 Provider/model 名称只属于
+execution profile 配置和执行收据，不得写入通用 action/Case 语义。
 
 可体验 Alpha 必须记录 `CONTINUE`、`REWORK`、`REDIRECT` 或 `REJECT`；只有 `CONTINUE` 才能进入工程夯实。任一阻断项失败默认只阻止
 PASS 声明、晋级和 hardening：保留失败证据，并在当前授权仍覆盖修复时保持 Slice active，在同一 Slice 做通用修复和重新体验。只有
@@ -142,7 +169,8 @@ Proposal 预先冻结的无进展上限，才可以转向；否则使用 `REWORK
 模型职责和安全边界没有改变，就在当前 Slice 做最小通用修复，复测原问题，并增加相邻表达或不同类型问题防止特判。失败尝试保留为
 `failed-preserved`，但 `REWORK` 本身不撤销仍有效的 Slice coding input，也不从 `project/current.md` 移除活动 Slice。只有 scope/Owner
 变化、明确用户暂停或授权失效时才进入 `paused / coding_input=false`；实现者必须直接申请恢复所需的最小精确权限。新授权到达后恢复同一
-Slice，不新建 Iteration；每次真正的重新授权都使用新收据，历史失败 Result 通过 Manifest 的 `rework_result_refs` 保留。
+Slice，不新建 Iteration；只有 standing authority 失效或发生 scope delta 才产生新的人类授权收据，范围内每次运行只产生系统派生的精确
+execution/admission receipt。历史失败 Result 通过 Manifest 的 `rework_result_refs` 保留。
 
 Proposal 必须预先冻结无进展的可测定义和正整数尝试上限。达到上限只触发一次架构转向评审，不自动证明应当转向；实际
 `REDIRECT` 仍必须绑定用户明确转向、核心架构证伪或该上限已达到中的一项。模型调用次数不得充当无进展定义，也不得成为降低调查、
@@ -151,7 +179,9 @@ Proposal 必须预先冻结无进展的可测定义和正整数尝试上限。�
 输入持有、技术质量裁决和产品方向决定必须分离。用户可以持有现场问题并决定继续、改向、停止或最终接受，但正确性、完整性、引用支持、
 边界判断和是否存在特判必须先由独立评测方裁决，不能把代码事实审核转嫁给用户，也不能用用户喜欢某种表达替代技术质量 PASS。
 current Codex 对照是强外部基线参赛者，不是事实来源或评测方；它必须在 fresh 独立任务中先生成并密封答案，系统看不到该答案，评测方
-也不参与任一候选答案生成。系统对 current Codex 的产品价值比较与 full cognition 对 locator-only/empty 的因果消融必须分别计划。
+也不参与任一候选答案生成。产品价值与世界模型因果贡献必须在同一个四路 Gate 中判读：直接相关证据到相同 generator、同一主 Agent
+仅源码、同一主 Agent 世界模型认知+源码、current Codex。第 2/3 路除认知开关外保持相同，事实由独立 exact-source ledger 提供；不得
+拆成 Web 后对照和另一套后置消融，也不得把任何一条基线当成 Oracle 或裁判。
 
 ## 每个 Slice 必须包含
 
@@ -167,7 +197,7 @@ current Codex 对照是强外部基线参赛者，不是事实来源或评测方
 - 若目标是 Chat，增加追问、纠正、总结、逐轮证据/审核、新对话隔离和最小五轮语义链证明。
 - 若目标是 Agent，明确主 Agent 拥有目标、假设、计划、工具选择、观察解释、重规划和完成判断；平台继续拥有权限、执行、证据与审计，
   独立 Reviewer 继续拥有放行前技术复核。
-- 同一 Slice 的修复记录、重新授权边界，以及预提交的无进展定义和尝试上限。
+- 同一 Slice 的修复记录、standing external authority、系统派生 exact receipt、scope-delta 重新授权边界，以及预提交的无进展定义和尝试上限。
 
 ## 不应预写
 

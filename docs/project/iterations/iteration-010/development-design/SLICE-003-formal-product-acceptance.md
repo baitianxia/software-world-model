@@ -31,8 +31,8 @@ product_goal_slice_gate_case_ids: [V-HIDDEN-003, V-COMP-001, V-SEC-003, V-XD-003
 - Capability path：正式裁决 `ROADMAP-M-002` 这一实现路线是否推进 MVP。
 - Cumulative integration：final `V-XD-003` 同一问题/答案组合 ITER-006 accepted Snapshot 知识与本轮源码、文档、配置或测试 Evidence。
 - User-visible delta：两个隐藏真实 Java 工程的多轮 Conversation，包括 answerable/boundary Turn，加 product freeze 后现场对话。
-- Stop signal：任何重大错误、实质遗漏、层级错误、无关 Citation、特判、越权 Source、静默 mode fallback、hidden burn、完整认知低于
-  成熟 Agent、相对 locator-only/empty 同链没有预提交增益、建模成本遗漏或用户 REDIRECT/REJECT。
+- Stop signal：任何重大错误、实质遗漏、层级错误、无关 Citation、特判、越权 Source、静默 mode fallback、hidden burn、目标系统逐题低于
+  任一四路基线、总体未严格超过 current Codex、无非 locator 世界模型贡献、建模成本遗漏或用户 REDIRECT/REJECT。
 - Critical assumptions：按冻结顺序最终验证 A1—A6。
 - Reflection：`V-REFLECT-003`；只有所有产品 Gate PASS、A1—A6 `SUPPORTED` 和用户新 `ACCEPT` 才能形成 Acceptance。
 
@@ -57,8 +57,9 @@ product_goal_slice_gate_case_ids: [V-HIDDEN-003, V-COMP-001, V-SEC-003, V-XD-003
   并形成后继 Ledger/Package/Answer/fresh Review identity。质量不由固定 rewrite/补证次数配额裁剪。
 - 质量不会因调用预算删减；正式协议不固定“一轮补证”，exact freeze 预密封 Package revision/model call/Broker operation/source bytes/
   wall-time/no-progress 高安全熔断。answerable 因熔断耗尽未回答计 FAIL。
-- hidden suite、三臂、external baseline、rubric、cache、value protocol、Provider disclosure 和现场 Conversation 都绑定 exact freeze。
-  产品外部比较中 current Codex 保留其真实客户端/model/reasoning/tools/权限，不是 Oracle/裁判；World Model 因果消融的 source-only 与 full-cognition + source 两系统臂才共享同一主 Agent/model/tool/budget/cache/Reviewer。新增协议必须引用 Slice2 前新收据。
+- hidden suite、四路 identities、rubric、cache、value protocol、Provider disclosure 和现场 Conversation 都绑定 exact freeze。四路为 direct
+  relevant evidence、same-agent source-only、same-agent full-cognition+source 与 current Codex；current Codex 和 direct evidence 都不是
+  Oracle/裁判，两个 Agent 臂除认知开关外完全相同。新增协议必须引用 Slice2 后的新授权与 freeze Result。
 - Production Activation 始终 `NOT_EXECUTED`。
 
 ## Interfaces and affected code
@@ -80,15 +81,16 @@ Secret、raw hidden suite、Oracle、成熟 Agent 输出和未授权源码不进
 - 现场题可能超出 Java/static evidence 能力；诚实 limitation 是合法结果，但 answerable/boundary 分类由独立评测裁决，不能事后改分母。
 - Provider/network unknown 与产品能力失败必须分开；同 Provider request 可能发送后不 retry。跨 Provider 只允许 ADR-017 预授权的同
   logical Turn 独立全链 fallback attempt，从 original Turn、relevant sealed Conversation Context 和 exact Cognition 重跑。
-- 若完整认知通过质量门但相对 locator-only/empty 同链既没有预提交质量增益，也没有预提交非 locator 调查成本增益，复杂混合方案不能
-  接受。World Model 的建模、更新、存储与 Provider 成本必须按冻结复用周期摊入报告。
+- 若目标臂未绝对质量 PASS、任一问题低于 direct evidence/source-only/current Codex、总体未严格超过 Codex，或没有可验证的非 locator
+  世界模型贡献，复杂混合方案不能接受。World Model 的建模、更新、存储与 Provider 成本必须按冻结复用周期摊入报告，但不能补偿质量。
 
 ## Acceptance scenarios
 
 1. `V-HIDDEN-003`：两个未见工程 10 answerable + 2 boundary；answerable 10/10 supported、boundary 2/2、重大错误 0。
-2. `V-COMP-001`（PDR-004 pre-execution revision，旧定义无执行证据）：同一 exact revision/多轮 Conversation 脚本/可比较输出/rubric 下，current Codex 保留实际客户端/model/reasoning/tools/权限作强外部基线；
-   source-only 与 full-cognition + source 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer。full-cognition 先过零重大错误、对话连续性和 boundary 质量门，再证明相对 source-only 的预提交质量或 normalized non-locator cost 增益；Codex 不是 Oracle/裁判。报告计入
-   World Model 建模/更新/存储/Provider 成本与冻结复用周期；旧 source-exposure 指标只作为历史输入，不代替新消融 Gate。
+2. `V-COMP-001`：同一 exact revision/多轮 Conversation 脚本/可比较输出/rubric 下冻结并密封 direct relevant evidence、same-agent
+   source-only、same-agent full-cognition+source、current Codex 四路；事实只来自独立 exact-source ledger。目标臂必须绝对质量 PASS、逐题不输
+   三条基线、总体严格超过 Codex 且证明非 locator 世界模型贡献；全体打平、both-fail、unresolved/invalid 或盲化失效均 FAIL。报告计入
+   World Model 建模/更新/存储/Provider 成本与冻结复用周期，但效率不得补偿质量。
 3. `V-SEC-003`：source read 只经 Broker/Worker；主 Agent/Reviewer direct source/FS/Shell/network/credential/write=0；Update/write/silent
    unauthorized/silent-mode fallback、secret exposure、same-Provider hidden retry=0；ADR-017 fallback attempt 完整隔离；loopback only。
 4. `V-XD-003` 与 `V-WEB-003`：同一正式 Web 对最终问题组合 accepted Snapshot 与本轮多来源 Evidence，Citation 可人工核对。
@@ -100,7 +102,7 @@ Secret、raw hidden suite、Oracle、成熟 Agent 输出和未授权源码不进
 
 ## Architecture reflection checkpoint
 
-最终 Result 必须复核三段证据、全部假设、System 边界、隐藏/现场题、三臂认知消融、World Model 建模成本与复用价值、Source disclosure、时延/成本、安全、
+最终 Result 必须复核三段证据、全部假设、System 边界、隐藏/现场题、四路严格价值 Gate、World Model 建模成本与复用价值、Source disclosure、时延/成本、安全、
 用户体验和全部 Finding。`V-REFLECT-003 PASS` 只表示复盘完整；只有 A1—A6 全部 `SUPPORTED`、全部 Case PASS 且用户新决定为
 `ACCEPT`，才能形成 Iteration Acceptance。
 

@@ -26,4 +26,8 @@ coding_input: false
 
 ## Scope and consequences
 
+若本决定改变 `DEVELOPMENT_PLAN_EXECUTION_CONTROL@1` 的动作、顺序、权限、路径、锁或 transition，必须依赖至少一个 exact Finding，
+并在 `decision_ref` 绑定 exact 用户授权。新计划先由独立 governance action 取得已密封、digest-bound 的 base PASS Result，再在后续
+独立提交中修订；不得在同一 candidate 中同时补 Result/JSON 收据、修改 verifier、放宽计划或迁移动作，候选 Manifest 不能授权自己的 diff。
+
 ## Revisit condition

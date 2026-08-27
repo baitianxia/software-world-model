@@ -21,7 +21,7 @@ product_goal_slice_gate_case_ids: [V-GENERAL-002, V-RERETRIEVE-002, V-ASYNC-002,
 
 ## Status and dependencies
 
-`PROPOSED / NOT AUTHORIZED / NOT CODING INPUT`。只有重新授权后的 Slice1 五轮 Chat 与泄漏 probe exact Result 为 `PASS + CONTINUE`、A1—A3/A6
+`PROPOSED / NOT AUTHORIZED / NOT CODING INPUT`。只有 Slice1 四路方向 Gate 与最小 Web Chat exact Result 为 `PASS + CONTINUE`、A1—A3/A6
 `SUPPORTED`，并取得 Slice1 决定之后的新用户开发授权，才可把本文件切换为 current-development。届时 `depends_on` 必须增加 exact
 Slice1 Result；当前 Readiness/架构收据不可复用。
 
@@ -35,8 +35,8 @@ Slice1 Result；当前 Readiness/架构收据不可复用。
 - Stop signal：新工程需要特判；World Model 被降级为手册或召回硬门禁；调查不是 prior-result driven；bounded absence/coverage limitation
   混淆；补证/rewrite 不收敛；Agent 质量退步；
   正向价值阈值未达；Source/Provider disclosure、安全或回归失败。
-- Critical assumptions：保留并验证 A1—A4/A6；`V-COMP-EARLY-002` 在第二工程复验 Slice1 已运行的 current Codex external baseline、
-  same-agent source-only、same-agent full World Model cognition + source 三臂，并加入正式可比 protocol。新阈值和 digest 当前未获授权。
+- Critical assumptions：保留并验证 A1—A6；`V-COMP-EARLY-002` 在第二工程以同一四路协议复验 direct relevant evidence、same-agent
+  source-only、same-agent full World Model cognition + source 与 current Codex。新输入、阈值和 digest 当前未冻结或获授权。
 - Reflection：`V-REFLECT-002`；只有 `CONTINUE` 与新的后续授权才可进入 Slice3。
 
 ## Current vs expected behavior
@@ -90,9 +90,10 @@ Reviewer 仍无直接 repo access。loopback、read-only、no update/write、no 
 
 - 文档与源码冲突可能无法自动裁决；正确结果可以是呈现冲突及其版本/来源，而不是强行单一答案。
 - 配置继承、generated source、annotation processing 或运行时行为可能超过静态 exact-revision 证据；不能把无法观察写成不存在。
-- 比较必须分开产品外部基线与 World Model 因果消融。current Codex 保留其真实客户端/model/reasoning/tools/权限，不是 Oracle/裁判；只有 same-agent source-only 与 full-cognition + source 两个系统臂固定同一主 Agent/model/tool/budget/cache/Reviewer。
-  full-cognition 相对 source-only 无质量或非 locator 调查成本增益，或产品质量不如 Codex，都应 REDIRECT/REJECT，而非改阈值。报告必须计 exact 建模/更新/存储/Provider 成本，并按
-  新收据冻结的复用周期摊销，不能只报告提问期 Source bytes。
+- 产品外部基线与 World Model 因果贡献必须在同一四路 Gate 中判读。current Codex 与 direct-evidence arm 都不是 Oracle/裁判；
+  same-agent source-only 与 full-cognition + source 两臂固定同一主 Agent/model/tool/budget/cache/Reviewer。目标臂绝对质量 PASS、逐题不输
+  三条基线、总体严格超过 Codex 且有非 locator 世界模型贡献才通过；质量失败不能由成本优势补偿。报告仍必须计 exact 建模/更新/存储/
+  Provider 成本并按新冻结的复用周期摊销，不能只报告提问期 Source bytes。
 - early canary 曝光后若发现实现缺口，本组输入立即烧毁，不允许针对题目修补再复用。
 
 ## Acceptance scenarios
@@ -106,8 +107,10 @@ Reviewer 仍无直接 repo access。loopback、read-only、no update/write、no 
 5. `V-SEC-002`：Source injection、symlink/path/write/network/secret/disclosure/role escape、outcome unknown 全部失败关闭。
 6. `V-CANARY-002` 与 `V-NEG-EARLY-002`：第二工程 5 answerable + 2 boundary 全部正确，bounded absence 与 coverage limitation 不混淆。
 7. `V-XD-002` 与 `V-WEB-002`：同一 Web 在第二工程组合 accepted Snapshot 与新来源 Evidence。
-8. `V-COMP-EARLY-002`（PDR-004 pre-execution revision，旧定义无执行证据）：同一 exact revision/Conversation 脚本/可比较输出/rubric 下分别报告 current Codex 强外部基线与系统两臂消融。
-   Codex 保留实际能力，不是 Oracle/裁判；source-only 与 full-cognition 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer。full-cognition 必须通过自身质量门，再相对 source-only 达到新收据预提交的质量或 normalized non-locator cost 增益；报告包含建模成本和冻结复用周期。
+8. `V-COMP-EARLY-002`：同一 exact revision/Conversation 脚本/可比较输出/rubric 下重跑四路：direct relevant evidence、same-agent
+   source-only、same-agent full-cognition+source、current Codex。四路先密封并由独立 exact-source ledger 盲评；目标臂必须绝对质量 PASS、
+   逐题不输三条基线、总体严格超过 Codex 且证明非 locator 世界模型贡献。全体打平或任何物质退步均 FAIL；建模成本和冻结复用周期只作
+   次级报告，不得补偿质量。
 9. `V-DIAG-002`：按 Source truth → World Model Cognition → Conversation Context/Turn goal → Agent Work State/plan/tool observation/replan → Broker/Worker → Ledger/Package →
    Answer → independent Review → Web 定位首次偏差。
 10. `V-REGRESSION-002`：accepted scope、严格 WORLD_MODEL、显式 DIRECT 和 Slice1 主线无退步。
@@ -115,7 +118,7 @@ Reviewer 仍无直接 repo access。loopback、read-only、no update/write、no 
 
 ## Architecture reflection checkpoint
 
-Result 必须复核两个工程、early canary、三臂认知消融、正向价值、安全、建模与提问成本/时延、复用周期、Source exposure、模式复杂度、
+Result 必须复核两个工程、early canary、四路严格价值 Gate、安全、建模与提问成本/时延、复用周期、Source exposure、模式复杂度、
 知识沉淀边界与全部 Finding。`V-REFLECT-002 PASS` 不等于接受；A1—A4/A6 必须 `SUPPORTED`，A5 early comparison 不得 FAIL，用户须给出新的
 `CONTINUE`，否则 `REDIRECT/REJECT`。
 

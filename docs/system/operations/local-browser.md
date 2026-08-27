@@ -4,7 +4,8 @@ kind: system-operations
 status: current
 authority: operational
 owners: [operations, interface]
-depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
+depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
+derived_from: [FINDING-010-029, FINDING-010-140]
 code: [pyproject.toml, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
@@ -36,8 +37,8 @@ World Model、Source Profile、Ark/DeepSeek qualification identity 与 distinct 
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又把 Ark per-request verified TLS Session audit 接入 Conformance 与
 terminal receipt，并 owner-type HTTP 前 unavailable；状态增加 `ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。这些状态来自本地构造/
 patched typed artifacts 和 fake listener lifecycle；fresh Ark 与 DeepSeek Conformance 随后已分别以 2/2 request、strict Session audit
-PASS，双 Provider qualification 当前同时可用。current actual sealed artifact 和 Browser 五轮 Chat 均未授权、生成或执行，
-故仍为 `SESSION_AUTHORITY_REQUIRED / NOT_LIVE`。在双 route Adapter 资格、
+PASS，双 Provider qualification 当前同时可用。current actual sealed artifact 和 Browser 五轮 Chat 均未生成或执行，公开来源 standing
+authority 到 exact Session/Turn/call 的自动派生也尚未实现，故仍为 `STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。在双 route Adapter 资格、
 真实模型审计和人工体验均闭合前，页面不得把
 `ENGINEERING_CHAT_EXPERIENCE@1` 标成 PASS 或生产可用。
 
@@ -79,11 +80,13 @@ audit 为 TLS handshake 1、reuse 9、HTTP/credential 10/10、retry/switch/outco
 `REWORK`，历史 `V-PREVIEW-001` 与答案/审核 FAIL 不改写。`FINDING-010-028` 定位答案层级根因，`FINDING-010-029` 定位单题 prepared
 launcher 与持续体验冲突；后续收据曾恢复 Slice1 开发，但 PDR-004 已再次暂停旧编码权威，旧 question/run grant 仍不可复用。
 
-ADR-016 / `@3` 兼容 Alpha 目标在 listener 前固定一个升级后的 Engineering QA Session Authority，而不是固定一条问题。它绑定 clean product、exact 工程/
+ADR-016 / `@3` 兼容 Alpha 目标在 listener 前固定一个升级后的 Engineering QA Session Authority，而不是固定一条问题。公开开源工程路径
+从 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 自动派生该 Session Authority；它绑定 clean product、exact 工程/
 revision、World Model、Source Profile/allowlist、Ark→DeepSeek 有序 route、每条 route 的 model/configuration/qualification/credential reference/
 披露边界、有效期和 logical-question/provider-attempt 两级安全熔断。
-页面显示这些边界；体验者只输入问题并确认提交，服务签发 request/run identity 并由 System Owner 编译该题 exact grant。每题后续动态
-Ledger/Package 输入仍逐角色、逐 Provider attempt 形成 one-use authorization。Ark attempt 无 authorized answer 且符合 ADR-017 的
+页面显示这些边界；体验者只输入问题并提交，服务签发 request/run identity 并由 System Owner 从 standing authority 编译该题 exact
+machine authority/receipt，不要求人工逐题批准。每题后续动态 Ledger/Package 输入仍逐角色、逐 Provider attempt 自动形成 one-use
+authorization。Ark attempt 无 authorized answer 且符合 ADR-017 的
 Provider/model reason 时，系统可对同一 logical question 自动启动一次完全隔离的 DeepSeek attempt；用户不重提问题或重启 Session。
 题目最终失败只关闭该 logical question，服务继续接受下一题；session authority 漂移、过期或总熔断耗尽则拒绝后续新题。问题 POST 仅接受当前 `http://127.0.0.1:8765` 页面发出的 same-origin `application/json`；跨站或
 `text/plain` 请求在 receipt 与 transport 前拒绝。当前实现与确定性证据闭合前，不得把该目标写成 live PASS。
@@ -141,7 +144,7 @@ ordinal 2 DeepSeek。数据库与 receipt 路径必须是互异、尚不存在�
   "cognition_snapshot_id": null,
   "response_language": "zh-CN",
   "session_ref": "<unique-session-ref>",
-  "authorization_message_digest": "sha256:<post-freeze-user-session-authorization-digest>",
+  "authorization_message_digest": "sha256:<standing-or-delta-authority-digest>",
   "authorized_at": "<canonical-UTC-time>",
   "expires_at": "<canonical-UTC-time-not-after-both-conformance-expiries>",
   "provider_routes": [
@@ -171,7 +174,11 @@ launcher exclusive-create 两个 private SQLite repositories，在 listener 构�
 terminal receipt。launch receipt 必须仍是 attempt/tool/cognition/Source/credential/dispatch/listener 0；terminal receipt 密封两条 route 的
 Disclosure/model-boundary audits 与各自经过 strict verifier 的 Ark/DeepSeek transport Session audit。current Ark 与 DeepSeek identity 的 fresh
 Conformance 均已 PASS；但尚未用 current actual artifact 启动真实 Provider/browser，所以状态只是
-`DUAL_PROVIDER_QUALIFICATION_CURRENT / SESSION_AUTHORITY_REQUIRED / NOT_LIVE`，不是 live PASS。
+`DUAL_PROVIDER_QUALIFICATION_CURRENT / STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`，不是 live PASS。
+
+当前字段名 `authorization_message_digest` 是兼容实现名称。公开来源路径中它必须绑定既有 standing human authority，不得要求每次 run
+新增用户消息；可信系统另为每个 Turn/attempt/call 派生 exact receipt。后续 schema 应采用明确的 authority-chain ref/digest，避免把机器
+派生记录误解为人工审批。
 
 已实现兼容 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：
@@ -207,7 +214,7 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_alpha_
   "cognition_snapshot_id": "<exact-snapshot-id-or-null>",
   "response_language": "zh-CN",
   "session_ref": "<unique-session-ref>",
-  "authorization_message_digest": "sha256:<post-freeze-user-session-authorization-digest>",
+  "authorization_message_digest": "sha256:<standing-or-delta-authority-digest>",
   "authorized_at": "<canonical-UTC-time>",
   "expires_at": "<canonical-UTC-time-not-after-conformance-expiry>",
   "conformance_result": "/absolute/current/deepseek-conformance.json",
@@ -226,8 +233,9 @@ launcher 必须以 exclusive create 原子创建 Gateway SQLite 主文件并强�
 private creation mask 下保持 `0600`。不能先让 SQLite 按进程默认 umask 创建 `0644` 文件后再补 chmod，因为 role input、Source evidence、
 Ledger、Package 和 Review 可能已在窗口期落盘。并发占用或权限不满足必须在 listener 前失败关闭。
 配置不得包含 Secret value；`@1` 的 DeepSeek credential 只在每题首个已授权 dispatch 前从冻结配置所指的环境引用解析。ADR-017 目标
-则要求每个 Provider attempt 只解析自身 route 的 credential，另一 route 的 secret reference 不能进入该 attempt。该配置必须绑定新 product
-freeze 与 post-freeze live 授权，且 launcher 不接受 host/port/question/request/run 参数。旧
+则要求每个 Provider attempt 只解析自身 route 的 credential，另一 route 的 secret reference 不能进入该 attempt。公开来源配置必须绑定
+新 product freeze 与有效 standing authority；只有 material delta 才绑定 post-freeze human delta，且 launcher 不接受
+host/port/question/request/run 参数。旧
 `engineering_qa_preview_cli` 是历史单题审计兼容面，不是当前 Alpha 或平行演示入口。
 
 历史 exact prepared question/run 的审计复现入口使用：
@@ -261,7 +269,7 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_previe
 
 - `WORLD_MODEL` 显示 source revision、exact Snapshot、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact 与 Evidence 引用；问题请求只读不含 Evidence payload 的 exact Snapshot Read Bundle，不得触发更新或访问 Source、权威数据库或 Evidence Store。点击引用由浏览器另行访问密封结果后的 Citation Projector，不把正文发送回问答进程。
 - `DIRECT_INVESTIGATION` 显示 exact Source Target 与 Evidence Packet；它按 ADR-013 调查源码，但不能标成世界模型回答。
-- 目标 Engineering Chat 页面在 Conversation Authority 中固定 protocol identity、exact repository/revision、World Model Read Authority、Source allowlist、Source Profile identity、Tool Catalog、versioned Conversation input policy 和预授权 Ark→DeepSeek route。浏览器按 Turn 提交 user message 与 disclosure acknowledgement，Conversation/Turn/run ID 由服务签发；历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。新 Conversation 的空 Context 指代若命中 Binding-owned policy，页面必须在 Source/Provider dispatch 0 下显示可操作澄清，并在 health/developer projection 中展示 policy identity；Session budget rejection 或通用失败文案不能冒充该行为。Provider 选择与 fallback 对普通用户透明；默认主视图展示语义连续的消息、结论优先答案、结论级 Citation 与可理解的 unknown/limitation，开发者详情才展示 Turn/provider-attempt identity、fallback reason、成本与 quarantine。World Model Cognition、Agent Work State 摘要、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
+- 目标 Engineering Chat 页面在 Conversation Authority 中固定 protocol identity、exact repository/revision、World Model Read Authority、Source allowlist、Source Profile identity、Tool Catalog、versioned Conversation input policy、standing authority 和预授权 Ark→DeepSeek route。公开来源边界内，浏览器按 Turn 提交 user message 即可，Conversation/Turn/run ID 由服务签发并自动派生 exact authority/receipt；不得要求用户再确认相同模型披露。只有 material delta 才显示并取得新的 human decision。历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。新 Conversation 的空 Context 指代若命中 Binding-owned policy，页面必须在 Source/Provider dispatch 0 下显示可操作澄清，并在 health/developer projection 中展示 policy identity；Session budget rejection 或通用失败文案不能冒充该行为。Provider 选择与 fallback 对普通用户透明；默认主视图展示语义连续的消息、结论优先答案、结论级 Citation 与可理解的 unknown/limitation，开发者详情才展示 Turn/provider-attempt identity、fallback reason、成本与 quarantine。World Model Cognition、Agent Work State 摘要、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
 - Engineering Chat 不根据问题、项目、关键词、符号、fixture 或 Oracle 切换后端。World Model Cognition 缺失或无关不会切换为 Direct；主 Agent 的源码调查是同一受权 Turn 的策略，每个 Proposal 必须由 Broker 编译、Worker 只读执行并追加 Ledger，实际工具、证据来源和重规划必须可审计。兼容 Alpha 当前仍按 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 单题/固定角色语义运行，不能由 UI 外观推导新协议已经实现。
 
 人工更新是独立操作：即使从未提问也能构建新 Snapshot；计划或来源事件自动更新需要独立启用和运维证明。
@@ -278,7 +286,7 @@ held-out suite、independent evaluator、Provider subject 和确定性资格。�
 4—6 次调用顺序消费且不能复用，未消费 connection 在 terminal 后关闭并审计。页面必须展示 investigation step count、budget、
 Coverage/完整性 verdict、trace digest、实际 Provider 调用数和具体 Gap/Limitation，不能只显示最终正文。
 
-当前服务没有认证，所有现有入口与未来 Engineering Chat 方向体验都必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要为 Conversation 中每条允许 route 显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一 route 的证明缺失、过期或漂移会使该 route 不可用，不能扩大到未授权 Provider。真实模型运行还必须在每次 Agent/Reviewer dispatch 前密封并授权“哪些 current Turn、受信 relevant Conversation Context、World Model Cognition、Agent Work State、Evidence Ledger 或 Turn Evidence Package 字段/片段可发给哪个 exact Provider/model/purpose”及 redaction/input digest；开发或浏览器启动授权不能代替内容披露授权。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
+当前服务没有认证，所有现有入口与未来 Engineering Chat 方向体验都必须精确绑定 `127.0.0.1`。启用任何非 `EVALUATION_ONLY` 的模型生成路径时，需要为 Conversation 中每条允许 route 显式加载仍有效且与当前实现、模式匹配的 Provider Conformance、Capability Qualification、Product Validation 和本机 Activation；任一 route 的证明缺失、过期或漂移会使该 route 不可用，不能扩大到未授权 Provider。真实模型运行还必须在每次 Agent/Reviewer dispatch 前密封“哪些 current Turn、受信 relevant Conversation Context、World Model Cognition、Agent Work State、Evidence Ledger 或 Turn Evidence Package 字段/片段可发给哪个 exact Provider/model/purpose”及 redaction/input digest。公开来源 standing boundary 内由可信系统自动派生 one-use disclosure authorization；开发或浏览器启动本身不能替代该派生，也不得要求人工逐 dispatch 批准。首次 `EVALUATION_ONLY` 候选验证不循环要求尚未产生的 Product Result，但必须绑定 exact Conformance、Provider Qualification、候选 package/launcher、确定性资格和预先密封的 Product suite/evaluator；页面保持 `CANDIDATE`，直到运行后 Product Validation 与人工接受完成。它不得伪造或推导 Activation。确定性 Snapshot/View 读取可独立运行，但不能冒充已经通过模型回答 Gate。
 
 Capability Evaluation、Product Validation 和本机交互体验只允许在显式 `EVALUATION_ONLY` browser sink 中运行。
 页面必须持续显示不可关闭的评测标识，禁止生产 Delivery、跨授权 Conversation 复用和正式 Activation；输出只进入隔离验证目录。对现有 `WORLD_MODEL / EVALUATION_ONLY` 入口，自由文本只在用户选择的 exact、单一 Profile Read Set 与 Coverage 内求解：覆盖外问题应返回 Knowledge Gap；无法形成已验证 Result 时必须显示失败关闭，不能切换 Direct 或回源。目标 `ENGINEERING_CHAT_EXPERIENCE@1 / EVALUATION_ONLY` 则按预先声明的 World Model Cognition + exact-revision Broker/Worker 工具边界，由主 Agent 形成 append-only Ledger，并在当前 Turn 调查结束后密封 Turn Evidence Package；它不受本段 World Model-only Coverage 规则限制，但仍必须失败关闭且不得切换模式。
@@ -299,12 +307,13 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.world_model_http \
 
 所有示例路径都必须替换成启动主机上的 exact 路径；database 必须是无符号链接的 canonical regular file，session/socket
 root 必须尚不存在。launcher 不从 `validation.*` 推断默认工件，也不会下载、重建或降级。`evaluation-grant` 必须使用
-`SWM-WORLD-MODEL-EVALUATION-GRANT@2`，且包含用户对“原问题 + no-payload published Structure”这一精确披露边界的本次
-授权；`NOT_AUTHORIZED` grant 会在创建 session、Provider socket 和 HTTP listener 前拒绝。授权之后，launcher 仍会在监听前
+`SWM-WORLD-MODEL-EVALUATION-GRANT@2`。公开来源路径中该 exact grant 由 trusted launcher 从 standing authority、原问题与
+no-payload published Structure 自动派生，而不是要求用户逐题签发；private/unknown/dirty/local data 或其他 material delta 仍要求 human
+delta。`NOT_AUTHORIZED` grant 会在创建 session、Provider socket 和 HTTP listener 前拒绝。派生之后，launcher 仍会在监听前
 重验全部 digest、当前 session Gateway authorization receipt、实际 Workspace/authority deny targets 和 OS isolation
 preflight。服务没有认证，固定只绑定 `127.0.0.1`。
 
-候选冻结在签发 authorized browser grant 前，必须用 runtime exact `-I -S -B` flags 和 role package root 导入真实 Answer/Gateway/
+候选冻结在派生 authorized browser grant 前，必须用 runtime exact `-I -S -B` flags 和 role package root 导入真实 Answer/Gateway/
 Projector entrypoint，且证明 Answer 不依赖未封入 role package 的 `site-packages`。OS capability probe 只证明允许/拒绝操作，不能替代
 真实产品入口的 import/dependency closure；任一 entrypoint 不能导入时，页面不得进入可体验候选状态。
 

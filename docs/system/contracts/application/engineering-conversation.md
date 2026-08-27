@@ -6,8 +6,8 @@ authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
 derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139]
-code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
-tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
+code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
+tests: [tests]
 ---
 
 # Engineering Conversation
@@ -28,7 +28,7 @@ Response Control 放行边界继续由原 Owner 拥有。
   State Revision、Agent Attempt、Tool Authorization/Observation、Evidence Ledger/Package reference 和不可变 Turn Result 的唯一写者。
 - Application-owned committed Work State repository 只保存成功 Turn 已密封的 Conversation successor。每个 Provider attempt 的 executor、
   Ledger、Package、Draft 与 Review 是 attempt-local；失败 attempt 不写 committed repository。fresh executor 可从 exact sealed Context 读取
-  已提交 predecessor，但不能从 primary executor 私有内存取得 fallback 输入。
+  已提交 predecessor，但 fallback-route executor 不能从 preferred-route executor 私有内存取得输入。
 - 软件世界模型由 Knowledge Engine/Snapshot Owner 持有，可跨 Conversation 复用；Conversation Binding 只通过 Application-owned
   Cognition Capability Manifest 引用同一 repository Binding/exact revision 上一个或多个 profile-specific exact Read Authority。对话工作
   状态不准写入 Snapshot 或冒充正式知识，多域投影也不创建 mixed-profile Snapshot/Read Set。
@@ -54,12 +54,14 @@ Response Control 放行边界继续由原 Owner 拥有。
 
 ## Conversation and turn invariants
 
-1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Cognition Capability Manifest、Source Profile/allowlist、
-   工具目录、versioned Conversation input policy、Provider route、披露范围、有效期和每 Turn/整会话高安全熔断。浏览器不能扩大这些边界。
-   current Artifact Session Configuration `@3` 必须以 zero-based fixed order 列出各 cognition Profile 的 Profile/Schema/Source Binding、
-   selected Snapshot、ordered/Snapshot Bundle digest 与 exact file digest，并绑定 closed `DEEPSEEK_DISPATCH_ADMISSION@1` 输入；装载时逐项
-   重算后才能形成 Application-owned Manifest authority。旧 `@2` 多 Profile 与 `@1` 单 Profile 只作为历史兼容读取；current preparation
-   缺少 admission 必须失败关闭，不能取得新 live Session 资格。
+1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Cognition Capability Manifest、Source
+   Profile/allowlist、工具目录、versioned Conversation input policy、`preferred → fallback` route、两个角色各自的 exact execution profile、
+   披露范围、有效期和每 Turn/整会话高安全熔断。每个 execution profile 必须绑定 Provider/model/endpoint、资格、transport 与 admission
+   plugin；浏览器不能扩大这些边界。current Artifact Session Configuration `@3` 必须以 zero-based fixed order 列出各 cognition Profile 的
+   Profile/Schema/Source Binding、selected Snapshot、ordered/Snapshot Bundle digest 与 exact file digest，并绑定两个 route profile、plugin
+   ref+digest 和形成通用 dispatch-admission receipt 所需的 closed trusted inputs；装载时逐项重算后才能形成 Application-owned Manifest
+   authority。旧 `@2` 多 Profile 与 `@1` 单 Profile 只作为历史兼容读取；current preparation 缺少任一 execution profile、plugin 或必需
+   admission input 必须失败关闭，不能取得新 live Session 资格。
 2. 每条 User Message 创建不可变 Turn。Application 从完整历史确定性选择满足本 Turn 所需的相关上下文，密封输入消息、被引用 Turn、有效
    用户约束、当前工作状态和摘要的 identity/digest；不得直接依赖 Provider 会话记忆或无边界拼接全部历史。
 3. 主 Agent 必须处理追问、指代、纠正、深入、收窄和总结。若指代在密封上下文内仍不唯一，必须请求澄清或给出明确条件化解释，不能把
@@ -135,7 +137,7 @@ no-progress failure 关闭。
    任一 line reference 被读取后，同一 resource 的全部 reference 都离开 legal domain；没有未使用 option 时 `SOURCE_READ` 不得出现在
    effective tool catalog。受信 Ledger 已出现 operation/file/byte terminal fuse rejection 时，Source Search/Read 也必须离开 effective
    tool catalog；World Model operation 不被 Source terminal state 连带撤销。
-   Decoder 从原 action/Observation/receipt 重算，fallback attempt 不继承 primary 的中间 action 或 resource catalog。tool catalog 的
+   Decoder 从原 action/Observation/receipt 重算，fallback-route attempt 不继承 preferred-route attempt 的中间 action 或 resource catalog。tool catalog 的
    argument name 与 count 都是 exact closed domain；Provider 不得增加、遗漏或重复参数。Primary input 还必须把每个已用 World
    Model/Source query 就地投影为对应 tool argument 的 `forbidden_exact_values`，把未使用 Source locator 投影为 Source Read argument 的
    exhaustive `allowed_exact_values`；这些 model-facing 值不能取代 Application 从原 action history 与 authority receipt 的重算。
@@ -168,8 +170,9 @@ fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显�
 只能决定是否要求澄清，不能生成工程结论或切换 Agent/Provider/Source 路径。
 
 产品资格必须同时验证：多轮指代、追问、用户纠正、目标延续、观察驱动重规划、World Model 与 Source 工具组合、证据引用、Reviewer 缺口
-反馈和 Turn 故障隔离。系统与 current Codex 的比较用于证明产品替代价值；同一主 Agent 的 question-eligible multi-domain Cognition 与 locator-only/empty 对照用于
-证明世界模型认知的独立贡献，二者不得混为 Oracle。
+反馈和 Turn 故障隔离。在任何新产品/Web 变更前，同一个四路 Gate 使用直接相关证据到相同 generator、同一主 Agent 仅源码、同一主
+Agent question-eligible multi-domain Cognition+源码和 current Codex，同时证明产品替代价值与世界模型认知的独立贡献。第 2/3 路除
+认知开关外保持相同；事实来自独立 exact-source ledger，任何一臂都不是 Oracle 或 Reviewer。
 
 授权/identity/revision 漂移、上下文错绑、工具越权、Ledger/Package 缺口、无依据结论、Reviewer 未通过、资源耗尽或 Provider outcome
 unknown 都使当前 provider attempt 或 Turn 失败关闭。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
@@ -178,9 +181,15 @@ exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不�
 Fallback eligibility 不得从 raw error string 推断。model boundary receipt 必须同时保存原始 owner code 和 trusted failure kind；Application
 只能把 `PROVIDER_UNAVAILABLE / PROVIDER_HTTP_ERROR / PROVIDER_OUTCOME_UNKNOWN / PROVIDER_OUTPUT_INVALID / MODEL_REVIEW_REJECTED`
 五类投影为 route classification。pre-dispatch、qualification、Gateway/repository/result identity、Application、Source、authorization 或
-Security failure 均保持 non-eligible。每个 attempt authority/receipt 绑定 logical Turn parent、route/configuration/session、dispatch/model
-receipts 和 retry 0；logical Turn Result 只取最后一个完整 attempt 的 Outcome，但汇总全部 attempt dispatch。outcome unknown 后启动 fallback
-必须标记 duplicate-cost risk；late primary 固定 `QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
+Security failure 均保持 non-eligible。每个 attempt authority/receipt 绑定 logical Turn parent、route role、execution profile、admission
+plugin/session、execution-profile/disclosure/dispatch-admission/transport/model/terminal receipts 和 retry 0；logical Turn Result 只取最后一个
+完整 attempt 的 Outcome，但汇总全部 attempt dispatch。preferred outcome unknown 后启动 fallback 必须标记 duplicate-cost risk；late
+preferred-route result 固定 `QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
+
+## 当前配置实例与历史实现证据
+
+当前 ITER-010 配置把 Ark 映射到 `preferred` execution profile，把 DeepSeek 映射到 `fallback` execution profile；以下具体名称、状态和运行
+记录只描述当前配置实例与历史实现证据，不定义本契约的 route 分支、质量、授权或 Agent 语义。
 
 当前独立 Chat Access 已提供 Application-owned Conversation/Turn/Message、不可变 Revision、完整页面消息历史、“新对话”隔离与失败
 Turn 后 Conversation 继续，并已通过真实 browser Access Case。Application-owned bounded executor 也已在确定性 fake ports 上密封跨 Turn

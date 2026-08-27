@@ -4178,6 +4178,18 @@
       "tests/test_engineering_chat_alpha_cli.py"
     ]
   },
+  "ITER-010-PDR-009": {
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-009-value-first-four-arm-and-plan-lock.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py",
+      ".github/workflows/plan-compliance.yml"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py"
+    ]
+  },
   "ITER-010-RESULT-SLICE-001-STOP-REDIRECT": {
     "path": "docs/project/iterations/iteration-010/results/slice-001-stop-redirect.md",
     "code": [
@@ -4399,10 +4411,24 @@
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
     "path": "docs/project/governance/documentation-policy.md",
     "code": [
-      "scripts/docs.py"
+      "scripts/docs.py",
+      "scripts/plan_gate.py"
     ],
     "tests": [
-      "tests/test_docs_gate.py"
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py"
+    ]
+  },
+  "PROJECT-GOVERNANCE-PLAN-EXECUTION": {
+    "path": "docs/project/governance/plan-execution-enforcement.md",
+    "code": [
+      ".githooks/plan-pre-commit",
+      "scripts/docs.py",
+      "scripts/plan_gate.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py"
     ]
   },
   "PROJECT-GOVERNANCE-VERIFICATION": {
@@ -4526,6 +4552,21 @@
       "tests/test_engineering_conversation.py",
       "tests/test_engineering_chat_browser.py",
       "tests/test_engineering_chat_alpha_cli.py"
+    ]
+  },
+  "SYS-ADR-019": {
+    "path": "docs/system/architecture/decisions/ADR-019-public-source-standing-model-authority.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_world_model_evaluation_grant.py",
+      "tests/test_world_model_gateway_authorization.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_provider_runtime.py"
     ]
   },
   "SYS-ARCH-COMPONENTS": {
@@ -4670,35 +4711,12 @@
   "SYS-CONTRACT-AI-MODEL-GATEWAY": {
     "path": "docs/system/contracts/ai/model-gateway.md",
     "code": [
-      "src/software_world_model/ai_infrastructure/model_gateway.py",
-      "src/software_world_model/ai_infrastructure/openai_responses_adapter.py",
-      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
-      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py",
-      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
-      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
-      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
-      "src/software_world_model/ai_infrastructure/versioned_world_model_answer_strategy.py",
-      "src/software_world_model/ai_infrastructure/pinned_ark_https.py",
-      "src/software_world_model/ai_infrastructure/pinned_deepseek_https.py",
-      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
-      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
-      "src/software_world_model/interface/world_model_runtime.py",
-      "src/software_world_model/interface/world_model_runtime_assets/gateway_authorized_workload.py"
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface"
     ],
     "tests": [
-      "tests/test_model_gateway.py",
-      "tests/test_openai_responses_adapter.py",
-      "tests/test_volcengine_ark_chat_adapter.py",
-      "tests/test_ark_chat_conformance.py",
-      "tests/test_deepseek_chat_adapter.py",
-      "tests/test_conversational_engineering_model.py",
-      "tests/test_deepseek_dispatch_admission.py",
-      "tests/test_engineering_chat_provider_runtime.py",
-      "tests/test_model_egress_gateway.py",
-      "tests/test_pinned_ark_https.py",
-      "tests/test_pinned_deepseek_https.py",
-      "tests/test_world_model_gateway_authorization.py",
-      "tests/test_world_model_evaluation_grant.py"
+      "tests"
     ]
   },
   "SYS-CONTRACT-APPLICATION-AGENTIC-TASK": {
@@ -4738,34 +4756,12 @@
   "SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION": {
     "path": "docs/system/contracts/application/engineering-conversation.md",
     "code": [
-      "src/software_world_model/application_services/engineering_conversation.py",
-      "src/software_world_model/application_services/conversational_engineering_agent.py",
-      "src/software_world_model/application_services/conversational_engineering_routing.py",
-      "src/software_world_model/application_services/conversational_engineering_tools.py",
-      "src/software_world_model/application_services/deepseek_dispatch_admission.py",
+      "src/software_world_model/application_services",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
-      "src/software_world_model/interface/engineering_chat_candidate.py",
-      "src/software_world_model/interface/engineering_chat_provider_launcher.py",
-      "src/software_world_model/interface/engineering_chat_provider_runtime.py",
-      "src/software_world_model/interface/engineering_chat_session_runtime.py",
-      "src/software_world_model/interface/engineering_chat_session_artifact.py",
-      "src/software_world_model/interface/engineering_chat_browser.py",
-      "src/software_world_model/interface/engineering_chat_browser_ui.py",
-      "src/software_world_model/interface/engineering_chat_alpha_cli.py"
+      "src/software_world_model/interface"
     ],
     "tests": [
-      "tests/test_conversational_engineering_agent.py",
-      "tests/test_conversational_engineering_tools.py",
-      "tests/test_conversational_engineering_model.py",
-      "tests/test_conversational_engineering_routing.py",
-      "tests/test_deepseek_dispatch_admission.py",
-      "tests/test_engineering_chat_candidate.py",
-      "tests/test_engineering_chat_provider_launcher.py",
-      "tests/test_engineering_chat_provider_runtime.py",
-      "tests/test_engineering_chat_session_artifact.py",
-      "tests/test_engineering_conversation.py",
-      "tests/test_engineering_chat_browser.py",
-      "tests/test_engineering_chat_alpha_cli.py"
+      "tests"
     ]
   },
   "SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING": {
@@ -5410,42 +5406,7 @@
       "validation/structure_world_model_iteration_008/slice1_live_evaluator.py"
     ],
     "tests": [
-      "tests/test_model_gateway.py",
-      "tests/test_source_operations.py",
-      "tests/test_browser_chat_interface.py",
-      "tests/test_structure_read_bundle.py",
-      "tests/test_structure_view_cli.py",
-      "tests/test_citation_projector.py",
-      "tests/test_iteration_003_g2_isolation.py",
-      "tests/test_iteration_003_g3b.py",
-      "tests/test_model_egress_gateway.py",
-      "tests/test_pinned_ark_https.py",
-      "tests/test_pinned_deepseek_https.py",
-      "tests/test_world_model_http.py",
-      "tests/test_world_model_evaluation_grant.py",
-      "tests/test_world_model_gateway_authorization.py",
-      "tests/test_iteration_007_slice1_freeze.py",
-      "tests/test_iteration_007_slice1_live_evaluator.py",
-      "tests/test_iteration_008_slice1_freeze.py",
-      "tests/test_iteration_008_slice1_live_evaluator.py",
-      "tests/test_conversational_engineering_agent.py",
-      "tests/test_conversational_engineering_tools.py",
-      "tests/test_conversational_engineering_model.py",
-      "tests/test_deepseek_dispatch_admission.py",
-      "tests/test_engineering_chat_candidate.py",
-      "tests/test_engineering_chat_provider_runtime.py",
-      "tests/test_engineering_chat_session_artifact.py",
-      "tests/test_engineering_conversation.py",
-      "tests/test_engineering_chat_browser.py",
-      "tests/test_engineering_chat_alpha_cli.py",
-      "tests/test_engineering_question_answering.py",
-      "tests/test_engineering_question_cognition.py",
-      "tests/test_engineering_question_strategy.py",
-      "tests/test_engineering_question_model_source.py",
-      "tests/test_engineering_qa_source.py",
-      "tests/test_engineering_qa_live.py",
-      "tests/test_engineering_qa_preview_cli.py",
-      "tests/test_engineering_qa_browser.py"
+      "tests"
     ]
   }
 }

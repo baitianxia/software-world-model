@@ -31,21 +31,25 @@ tests: [tests]
 6. 原始运行证据默认位于 `var/` 且不受 Git 管理；版本化 Result 必须明确它是摘要/attestation，并给出本机证据身份与保留限制。
 7. Result 不能反向定义 System Contract；发现契约错误时走 Implementation Finding 和 System 修订。
 
-## Current Codex 强基线协议
+## 四路产品价值与 Current Codex 强基线协议
 
-从 `ITER-010-PDR-002` 后首个新建产品迭代起，产品问答最低门必须包含系统与运行时 current Codex 的同题独立盲评：
+从 `ITER-010-PDR-009` 起的当前 ITER-010 及所有后续产品迭代，最早方向门必须在任何与方向无关的产品加固前冻结并隔离四路：直接相关
+证据、同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex。
 
-1. Codex 只是强外部基线候选，不是 Oracle、rubric 作者或 adjudicator；事实边界是原问题与同一授权 exact revision 上可核验的软件证据。
-2. 对照前冻结 Codex 客户端/二进制、实际模型、reasoning、工具、权限、Source scope、问题与 revision；每题使用 fresh 隔离任务，答案在
+1. 任何一路模型答案都不是 Oracle、rubric 作者或 adjudicator；事实边界由原问题和同一授权 exact revision 上的独立 exact-source ledger
+   提供。直接相关证据路是复杂度 control，不经过 World Model、Agent 或检索协议。
+2. 前三路固定同一 Provider/model/configuration、问题、语言和输出边界；两个 Agent 路还必须固定同一 Agent/Prompt/tools/permissions/
+   budget/cache/state/Reviewer，唯一变量是 eligible World Model Cognition。
+3. 对照前冻结 Codex 客户端/二进制、实际模型、reasoning、工具、权限、Source scope、问题与 revision；每题使用 fresh 隔离任务，答案在
    向系统披露前密封。任一身份漂移烧毁并重跑基线。
-3. 系统不得读取 Codex 答案，Codex 不得读取世界模型产物、系统答案、本项目对话或既有 verdict。两份答案均先密封，再随机匿名为 A/B。
-4. 独立评测方不得参与任一答案生成，也不得看到来源标签、生成 trace 或先前 verdict；它读取原问题与 exact evidence，允许判定系统更好、
-   打平、Codex 更好、双方失败或无法裁决。
-5. `PASS` 要求冻结的全部问题均已完成并进入唯一逐题分类，分类计数与冻结题数严格相等；系统绝对质量门全部通过、逐题没有物质性退步，
-   且预提交盲评量表的总体答案质量差值严格为正。全体打平、双方失败、无法裁决或盲化无效均失败；成本、时延、调用次数、缓存与复用
-   指标只能另行报告，不能补偿答案质量。
-6. current Codex 产品基线不与世界模型因果消融混用。只有 full cognition 与 locator-only/empty control 才要求相同系统模型、链路、预算
-   和 cache。
+4. 四路都不得读取其他路的答案、世界模型产物或既有 verdict；全部答案先密封，再随机匿名。独立评测方不得参与答案生成，也不得看到
+   来源标签、生成 trace 或先前 verdict。
+5. `PASS` 要求目标系统绝对质量门全部通过、逐题不得输给任一路 control、相对 current Codex 的总体盲评质量差值严格为正，并证明至少
+   一项非 locator 世界模型贡献。全体打平、任一重大错误/物质遗漏、双方失败、无法裁决或盲化无效均失败；成本、时延、调用次数、缓存
+   与复用只能另报，不能补偿答案质量。
+6. Provider 不参与答案优劣比较。前三路整批使用同一 preferred execution profile；首个答案形成前该 profile 不可用时整批 `INVALID`
+   并重新冻结，禁止混用 preferred/fallback execution profiles 或在同一批并行测试两个路由角色。具体 Provider/model 名称只能出现在冻结的
+   execution profile 和执行收据中，不是比较协议、action 或 Case 的规范性语义。
 
 ## Verification Matrix
 

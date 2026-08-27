@@ -17,6 +17,10 @@ coding_input: false
 
 # PDR-004：以主工程 Agent 和真正多轮 Chat 恢复 ITER-010
 
+> PDR-008 current authority amendment：本决定冻结的 current public mall evaluation 由现有 Slice/root authorization 提供持续 human
+> authority；逐 run/Turn/dispatch 的 exact authorization 是自动派生机器收据，不再要求用户重复批准。峰时 DeepSeek、private/different
+> Source、扩大披露/预算、hidden、后续 Slice 与 Production 仍不在范围内。下文逐次 grant 是历史记录。
+
 ## Context
 
 PDR-003 已纠正“长时间内部加固、反复 live 重跑、没有体验版本”的交付方式，并冻结体验时间盒、根因优先、Ark primary / DeepSeek

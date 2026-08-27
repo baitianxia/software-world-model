@@ -16,6 +16,10 @@ coding_input: false
 
 # PDR-003：先恢复可体验 Web，并收紧 Provider 与 live 重跑成本
 
+> PDR-008 current authority amendment：对固定 Apache-2.0 mall exact revision，现有 Slice/root authorization 是持续 human authority；
+> Ark/current route 与 PDR-007 允许窗口内的合法 DeepSeek fallback 不再逐 run 申请。run/Turn/dispatch 仍自动派生 exact machine receipt；
+> 峰时 DeepSeek 和其他真正 scope delta 仍须用户授权。本决定后文“另取 external grant”仅保存 PDR-008 前历史语义。
+
 > Current execution amendment：`ITER-010-PDR-007` 把本决定的 DeepSeek“默认/优先”调度收紧为所有 planned dispatch 的调用前硬门禁；
 > `ITER-010-PDR-006` 保留时间盒、Provider、成本和质量不可裁剪规则，但 hard stop 只结束扩域、hardening、full regression、规则堆叠与
 > 无新证据的外部重跑；它不结束最小体验恢复或本地根因修复。权限 gap 必须在 exact freeze 后直接申请。

@@ -4,13 +4,16 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141]
 code: []
 tests: []
 iteration: ITER-010
 ---
 
 # ITER-010 Findings
+
+- [FINDING-010-141](FINDING-010-141.md)：现有计划以组件/阶段完整度而不是最早产品价值假设组织，且 Slice 内没有机器可读的唯一动作；
+  已处置为 PDR-009 四路价值 Gate 前移和基线差分执行门禁，当前产品代码与外部调用锁定。
 
 - [FINDING-010-001](FINDING-010-001.md)：ITER-009 体验与用户架构裁决证明严格 Source-off `WORLD_MODEL` 不能独自承担默认通用工程
   问答；已处置到 `SYS-ADR-016` 和同变更 owning System Contract/治理边界。
@@ -361,5 +364,8 @@ iteration: ITER-010
 - [FINDING-010-139](FINDING-010-139.md)：run-043 在北京时间高峰窗口执行 DeepSeek 18 次，且没有 fresh official check、window verdict
   或 peak override receipt；根因是“闲时优先”没有成为调用前机械 Gate。已处置到 PDR-007，clean `03520eb…` 与
   `V-DEEPSEEK-IDLE-001` 已闭合本地机械 Gate；后继真实 dispatch 仍需新 grant、允许窗口和 `@3` receipt，峰时 Ark-only 与本地开发继续。
+- [FINDING-010-140](FINDING-010-140.md)：公开 Apache-2.0 mall 测试工程与当前 Slice 已有持续 human authority；此前把逐 run/Turn/
+  dispatch 的机器审计收据误当成逐次人工授权。已处置到 PDR-008：current scope 内自动派生 one-use receipts，Ark 与闲时 DeepSeek 不再
+  请求重复批准；runtime 尚待 `V-PUBLIC-OSS-AUTHORITY-001` 验证，峰时、私有/不同来源和其他真正 scope delta 仍须 exact authorization。
 
 后续 Finding 按实现反馈规则逐一落位，不能只写在 Result 中。

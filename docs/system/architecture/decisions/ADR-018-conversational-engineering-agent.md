@@ -63,9 +63,10 @@ Package/Draft；新候选必须重新独立审核。架构不再要求单独的 
 和非空 Conversation 仍进入同一主 Agent 路径。
 
 模型和 Provider 对该协议透明。可以使用任何通过同一 Agent 能力、工具、隔离和质量资格的模型 Strategy；current Codex 是强外部产品
-基线，不是系统运行时依赖、Oracle 或 Reviewer。系统还必须以同一主 Agent 对预提交问题集合具备资格的多域世界模型认知与
-locator-only/empty 控制做因果消融，分别证明 Agent 本体质量和世界模型认知价值。`MAVEN_REACTOR_STRUCTURE@1` 等窄 Profile 可以在其
-Coverage 内正确回答结构问题，但不得在行为、流程、职责、配置或故障问题上被命名为 `full cognition`。
+基线，不是系统运行时依赖、Oracle 或 Reviewer。方向资格必须在同一个四路 Gate 中同时证明产品价值和世界模型因果贡献：直接相关证据
+到与系统臂相同的 generator、同一主 Agent 仅源码、同一主 Agent question-eligible 多域世界模型认知+源码、current Codex。第 2/3 路
+除认知开关外保持相同；四路答案先密封，由未参与生成的独立评测方依据 exact-source truth ledger 盲评。`MAVEN_REACTOR_STRUCTURE@1`
+等窄 Profile 可以在其 Coverage 内正确回答结构问题，但不得在行为、流程、职责、配置或故障问题上被命名为 `full cognition`。
 
 资格按问题而不是按数据量命名：Application 从原 Turn 的 material Need 独立形成 Cognition Eligibility Assessment，并把每个 Need 绑定到
 已资格化认知维度/操作或显式 Gap。开放式工程 Chat 的可体验认知至少组合结构与实现/行为维度；缺失时主 Agent仍可按授权使用 Source

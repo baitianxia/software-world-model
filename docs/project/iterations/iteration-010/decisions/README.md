@@ -4,7 +4,7 @@ kind: project-decision-index
 status: current
 authority: project
 owners: [project]
-depends_on: [ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007]
+depends_on: [ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, ITER-010-PDR-008, ITER-010-PDR-009]
 code: []
 tests: []
 iteration: ITER-010
@@ -19,3 +19,5 @@ iteration: ITER-010
 - [PDR-005：冻结逐题修补，按认知资格和责任层归因重启 ITER-010](PDR-005-cognition-eligibility-and-layer-attribution-restart.md)
 - [PDR-006：开发持续到阶段交付，权限在需要时直接申请](PDR-006-continuous-execution-and-just-in-time-authorization.md)
 - [PDR-007：DeepSeek 闲时从调度偏好升级为调用前硬门禁](PDR-007-deepseek-off-peak-hard-admission.md)
+- [PDR-008：公开开源测试工程采用持续执行授权和自动机器收据](PDR-008-public-oss-standing-model-execution-authority.md)
+- [PDR-009：先验证产品价值，并用机器锁定唯一下一动作](PDR-009-value-first-four-arm-and-plan-lock.md)

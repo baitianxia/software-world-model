@@ -17,6 +17,10 @@ coding_input: true
 
 # PDR-005：冻结逐题修补，按认知资格和责任层归因重启 ITER-010
 
+> PDR-008 current authority amendment：current public mall successor 已有 standing human authority，不再等待新的 external human grant；
+> 当前先实现/验证逐 run/Turn/dispatch 自动机器收据派生，再在 PDR-007 允许窗口执行 canary。只有峰时 DeepSeek、private/different Source、
+> 扩大披露/预算、hidden、后续 Slice 或 Production 等真正 scope delta 才按 PDR-006 申请。
+
 > Current execution amendment：`ITER-010-PDR-007` 把 DeepSeek 闲时变为 planned dispatch 硬门禁并将 run-043 标记为调度 FAIL；
 > `ITER-010-PDR-006` 保留本决定的 Gate，但把检查点、hard stop、REWORK 和授权边界收窄为非终止性控制。真正的权限 gap 在 exact
 > freeze 后直接申请；现有本地授权覆盖修复时持续开发。

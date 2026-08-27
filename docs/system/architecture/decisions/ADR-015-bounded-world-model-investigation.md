@@ -79,9 +79,10 @@ Answer terminal 后由 Gateway 丢弃并单独审计，不能跨题或跨 sessio
 request ID、body/result digest 和 transport audit；TLS attempt/success/reuse 与 Provider call count 分开闭合。
 
 历史单 Provider Profile 继续在 product freeze 前选择一个 exact route，并保持同 Provider request 零重试。默认 `ENGINEERING_QA` 的
-多 Provider 高可用语义已由 ADR-017 收窄为 Session 预授权的 Ark→DeepSeek 有序 attempt：用户的一次 logical question 可在 primary
+多 Provider 高可用语义已由 ADR-017 收窄为 Session 预授权的 `preferred → fallback` 有序 attempt；具体 Provider/model 只由 execution profile
+配置解析。用户的一次 logical question 可在 preferred
 attempt 密封 terminal 后透明启动一个完全隔离、从原问题与 exact Cognition 重跑全链的 fallback attempt。它不是同一外部 request 的
-retry，也不得复用 primary 中间态。本 ADR 不再拥有 Engineering QA 的跨 Provider 路由规则。
+retry，也不得复用 preferred 中间态。本 ADR 不再拥有 Engineering QA 的跨 Provider 路由规则。
 
 progress receipt 可以投影下列三层平台 verdict，但不得暴露 Oracle identity、评测期望或隐藏输入。负向结论必须分别拥有三个独立证明：
 

@@ -77,6 +77,12 @@ EXPERIENCE_FIRST_DELIVERY_START_ITERATION = 12
 PROVIDER_ROUTE_POLICY_START_ITERATION = 12
 EXPERIENCE_FIRST_DELIVERY_SCHEMA = "EXPERIENCE_FIRST_DELIVERY@1"
 PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
+EXECUTION_PROFILE_CONFIGURATION_SCHEMA = "MODEL_TRANSPARENT_EXECUTION_PROFILES@1"
+EXECUTION_PROFILE_CONFIGURATION_KEYS = {
+    "execution_profile_ref",
+    "provider_identity",
+    "model_identity",
+}
 ENGINEERING_CHAT_EXPERIENCE_SCHEMA = "ENGINEERING_CHAT_EXPERIENCE@1"
 CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA = "CONVERSATIONAL_ENGINEERING_AGENT@1"
 EXPERIENCE_FIRST_FAILURE_DIAGNOSIS_ORDER = (
@@ -98,24 +104,346 @@ EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION = (
     "stop-external-reruns-and-return-to-local-diagnosis"
 )
 ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER = (
-    "runnable-access-handoff,sustained-direction-alpha-handoff,"
-    "direction-evidence-handoff,independent-comparison-and-user-decision"
+    "direction-freeze-PASS->preferred-quality;preferred-quality-PASS->minimum-web;"
+    "preferred-quality-FAIL->direction-rework;"
+    "preferred-quality-INVALID->fallback-refreeze;"
+    "fallback-refreeze-PASS->fallback-quality;"
+    "fallback-refreeze-FAIL->preferred-quality;"
+    "fallback-refreeze-INVALID->fallback-refreeze;"
+    "fallback-quality-PASS->minimum-web;"
+    "fallback-quality-FAIL->direction-rework;"
+    "fallback-quality-INVALID->fallback-quality;"
+    "minimum-web-PASS->user-direction-decision"
 )
 ITER010_DIRECTION_CHECKPOINT_MISS_ACTION = (
     "handoff-last-runnable-version-and-earliest-root-cause-stop-scope-expansion"
 )
-PROVIDER_ROUTE_PREFERENCE = ("VOLCENGINE_ARK", "DEEPSEEK")
+ITER010_PLAN_EXECUTION_CONTROL_SCHEMA = "DEVELOPMENT_PLAN_EXECUTION_CONTROL@1"
+ITER010_PLAN_REVISION_REF = "ITER-010-PDR-009"
+ITER010_PLAN_AUTHORIZATION_REFS = (
+    "local-user-message-utf8:sha256:612341017bef3d98db372608d22b0d57744a96883e23dd51a6552c13da183989",
+    "local-user-message-utf8:sha256:63962a3f18667dd3727dd76d72c45ae8224e40a06be2d8c12622aca3a4ef0ae5",
+)
+ITER010_CURRENT_ACTION_ID = "ITER-010-ACTION-DIRECTION-FREEZE-001"
+ITER010_CURRENT_ACTION_CASE_ID = "V-DIRECTION-FREEZE-001"
+ITER010_CURRENT_ACTION_RESULT_REF = "ITER-010-RESULT-V-DIRECTION-FREEZE-001"
+ITER010_CURRENT_ACTION_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-direction-freeze-001.md"
+)
+ITER010_CURRENT_ACTION_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-001.json"
+)
+ITER010_PREFERRED_QUALITY_ACTION_ID = "ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001"
+ITER010_PREFERRED_QUALITY_RESULT_REF = (
+    "ITER-010-RESULT-V-DIRECTION-QUALITY-PREFERRED-001"
+)
+ITER010_PREFERRED_QUALITY_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-direction-quality-preferred-001.md"
+)
+ITER010_PREFERRED_QUALITY_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-direction-quality-preferred-001.json"
+)
+ITER010_FALLBACK_REFREEZE_ACTION_ID = (
+    "ITER-010-ACTION-DIRECTION-FALLBACK-REFREEZE-001"
+)
+ITER010_FALLBACK_REFREEZE_CASE_ID = "V-DIRECTION-FALLBACK-REFREEZE-001"
+ITER010_FALLBACK_REFREEZE_RESULT_REF = (
+    "ITER-010-RESULT-V-DIRECTION-FALLBACK-REFREEZE-001"
+)
+ITER010_FALLBACK_REFREEZE_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/"
+    "v-direction-fallback-refreeze-001.md"
+)
+ITER010_FALLBACK_REFREEZE_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/"
+    "v-direction-fallback-refreeze-001.json"
+)
+ITER010_FALLBACK_QUALITY_ACTION_ID = (
+    "ITER-010-ACTION-DIRECTION-QUALITY-FALLBACK-001"
+)
+ITER010_FALLBACK_QUALITY_RESULT_REF = (
+    "ITER-010-RESULT-V-DIRECTION-QUALITY-FALLBACK-001"
+)
+ITER010_FALLBACK_QUALITY_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/"
+    "v-direction-quality-fallback-001.md"
+)
+ITER010_FALLBACK_QUALITY_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/"
+    "v-direction-quality-fallback-001.json"
+)
+ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID = (
+    "ITER-010-ACTION-DIRECTION-FREEZE-REWORK-001"
+)
+ITER010_DIRECTION_FREEZE_REWORK_CASE_ID = "V-DIRECTION-FREEZE-REWORK-001"
+ITER010_DIRECTION_FREEZE_REWORK_RESULT_REF = (
+    "ITER-010-RESULT-V-DIRECTION-FREEZE-REWORK-001"
+)
+ITER010_DIRECTION_FREEZE_REWORK_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-direction-freeze-rework-001.md"
+)
+ITER010_DIRECTION_FREEZE_REWORK_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-rework-001.json"
+)
+ITER010_DIRECTION_REWORK_ACTION_ID = "ITER-010-ACTION-DIRECTION-REWORK-001"
+ITER010_DIRECTION_REWORK_CASE_ID = "V-DIRECTION-REWORK-001"
+ITER010_DIRECTION_REWORK_RESULT_REF = "ITER-010-RESULT-V-DIRECTION-REWORK-001"
+ITER010_DIRECTION_REWORK_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-direction-rework-001.md"
+)
+ITER010_DIRECTION_REWORK_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-direction-rework-001.json"
+)
+ITER010_MINIMUM_WEB_ACTION_ID = "ITER-010-ACTION-MINIMUM-WEB-CHAT-001"
+ITER010_MINIMUM_WEB_CASE_ID = "V-CHAT-EXPERIENCE-001"
+ITER010_MINIMUM_WEB_RESULT_REF = "ITER-010-RESULT-V-MINIMUM-WEB-CHAT-001"
+ITER010_MINIMUM_WEB_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-minimum-web-chat-001.md"
+)
+ITER010_MINIMUM_WEB_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-minimum-web-chat-001.json"
+)
+ITER010_WEB_FAILURE_ACTION_ID = "ITER-010-ACTION-WEB-FAILURE-ATTRIBUTION-001"
+ITER010_WEB_FAILURE_CASE_ID = "V-WEB-FAILURE-ATTRIBUTION-001"
+ITER010_WEB_FAILURE_RESULT_REF = (
+    "ITER-010-RESULT-V-WEB-FAILURE-ATTRIBUTION-001"
+)
+ITER010_WEB_FAILURE_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-web-failure-attribution-001.md"
+)
+ITER010_WEB_FAILURE_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-web-failure-attribution-001.json"
+)
+ITER010_USER_DIRECTION_ACTION_ID = "ITER-010-ACTION-USER-DIRECTION-DECISION-001"
+ITER010_USER_DIRECTION_CASE_ID = "V-PREVIEW-002"
+ITER010_USER_DIRECTION_RESULT_REF = "ITER-010-RESULT-V-USER-DIRECTION-DECISION-001"
+ITER010_USER_DIRECTION_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md"
+)
+ITER010_USER_DIRECTION_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-user-direction-decision-001.json"
+)
+ITER010_RESPONSIBILITY_PLAN_ACTION_ID = "ITER-010-ACTION-RESPONSIBILITY-PLAN-001"
+ITER010_RESPONSIBILITY_PLAN_CASE_ID = "V-RESPONSIBILITY-PLAN-001"
+ITER010_RESPONSIBILITY_PLAN_RESULT_REF = (
+    "ITER-010-RESULT-V-RESPONSIBILITY-PLAN-001"
+)
+ITER010_RESPONSIBILITY_PLAN_RESULT_PATH = (
+    "docs/project/iterations/iteration-010/results/v-responsibility-plan-001.md"
+)
+ITER010_RESPONSIBILITY_PLAN_EVIDENCE_PATH = (
+    "docs/project/iterations/iteration-010/results/evidence/v-responsibility-plan-001.json"
+)
+ITER010_PUBLIC_AUTHORITY_ADMISSION_CASE_ID = (
+    "V-PUBLIC-OSS-AUTHORITY-ADMISSION-001"
+)
+ITER010_PUBLIC_AUTHORITY_CASE_ID = "V-PUBLIC-OSS-AUTHORITY-001"
+ITER010_DIRECTION_QUALITY_GATE_SCHEMA = "VALUE_FIRST_FOUR_ARM_DIRECTION_GATE@1"
+ITER010_DIRECTION_QUALITY_CASE_ID = "V-DIRECTION-QUALITY-001"
+ITER010_DIRECTION_QUALITY_ARMS = (
+    "direct-relevant-evidence",
+    "same-agent-source-only",
+    "same-agent-world-model-and-source",
+    "current-codex",
+)
+ITER010_DIRECTION_ABSOLUTE_QUALITY_RULE = (
+    "zero-major-errors-material-omissions-unsupported-or-wrong-citations-"
+    "false-limitations-or-boundary-errors"
+)
+ITER010_PLAN_LOCK_FIELDS = (
+    "product_code_changes",
+    "prompt_or_reviewer_changes",
+    "web_canary",
+    "hardening",
+    "full_regression",
+    "provider_dispatch",
+)
+ITER010_PLAN_EVIDENCE_SCHEMA = "DEVELOPMENT_PLAN_GATE_EVIDENCE@1"
+ITER010_PLAN_EVIDENCE_VERIFIER = "ITER010_VALUE_GATE@1"
+ITER010_PLAN_RUNNER_IDENTITY_PATHS = (
+    "scripts/plan_gate.py",
+    "validation/structure_world_model_iteration_010/value_gate/runner.py",
+    "tests/test_iteration_010_value_gate.py",
+)
+ITER010_DIRECTION_PREREQUISITE_CASE_IDS = (
+    "V-LAYER-ATTRIBUTION-001",
+    "V-COGNITION-ELIGIBILITY-001",
+    "V-FALLBACK-ROUTE-ADMISSION-001",
+    "V-ALPHA-ACCESS-001",
+)
+ITER010_DIRECTION_FREEZE_ALLOWED_CHANGE_PATHS = (
+    "validation/structure_world_model_iteration_010/value_gate/**",
+    "tests/test_iteration_010_value_gate.py",
+    ITER010_CURRENT_ACTION_RESULT_PATH,
+    ITER010_CURRENT_ACTION_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-142.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_DIRECTION_FREEZE_FORBIDDEN_CHANGE_PATHS = (
+    "src/software_world_model/**",
+    "tests/test_conversational_engineering_model.py",
+    "docs/system/**",
+    "docs/project/iterations/iteration-010/proposal.md",
+    "docs/project/iterations/iteration-010/readiness-review.md",
+    "docs/project/iterations/iteration-010/development-design/**",
+    "scripts/docs.py",
+    "scripts/plan_gate.py",
+    ".github/workflows/**",
+)
+ITER010_PREFERRED_QUALITY_ALLOWED_CHANGE_PATHS = (
+    ITER010_PREFERRED_QUALITY_RESULT_PATH,
+    ITER010_PREFERRED_QUALITY_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-143.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_FALLBACK_REFREEZE_ALLOWED_CHANGE_PATHS = (
+    ITER010_FALLBACK_REFREEZE_RESULT_PATH,
+    ITER010_FALLBACK_REFREEZE_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-151.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_FALLBACK_QUALITY_ALLOWED_CHANGE_PATHS = (
+    ITER010_FALLBACK_QUALITY_RESULT_PATH,
+    ITER010_FALLBACK_QUALITY_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-152.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_DIRECTION_QUALITY_FORBIDDEN_CHANGE_PATHS = (
+    "src/software_world_model/**",
+    "tests/test_conversational_engineering_model.py",
+    "validation/structure_world_model_iteration_010/value_gate/**",
+    "tests/test_iteration_010_value_gate.py",
+    "docs/system/**",
+    "docs/project/iterations/iteration-010/proposal.md",
+    "docs/project/iterations/iteration-010/readiness-review.md",
+    "docs/project/iterations/iteration-010/development-design/**",
+    "scripts/docs.py",
+    "scripts/plan_gate.py",
+    ".github/workflows/**",
+)
+ITER010_DIRECTION_FREEZE_REWORK_ALLOWED_CHANGE_PATHS = (
+    "validation/structure_world_model_iteration_010/value_gate/**",
+    "tests/test_iteration_010_value_gate.py",
+    ITER010_DIRECTION_FREEZE_REWORK_RESULT_PATH,
+    ITER010_DIRECTION_FREEZE_REWORK_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-144.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_DIRECTION_REWORK_ALLOWED_CHANGE_PATHS = (
+    ITER010_DIRECTION_REWORK_RESULT_PATH,
+    ITER010_DIRECTION_REWORK_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-145.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_DIRECTION_REWORK_FORBIDDEN_CHANGE_PATHS = (
+    ITER010_DIRECTION_QUALITY_FORBIDDEN_CHANGE_PATHS
+)
+ITER010_MINIMUM_WEB_ALLOWED_CHANGE_PATHS = (
+    ITER010_MINIMUM_WEB_RESULT_PATH,
+    ITER010_MINIMUM_WEB_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-146.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_USER_DIRECTION_ALLOWED_CHANGE_PATHS = (
+    ITER010_USER_DIRECTION_RESULT_PATH,
+    ITER010_USER_DIRECTION_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-147.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_WEB_FAILURE_ALLOWED_CHANGE_PATHS = (
+    ITER010_WEB_FAILURE_RESULT_PATH,
+    ITER010_WEB_FAILURE_EVIDENCE_PATH,
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-148.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/current.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+)
+ITER010_GOVERNANCE_REVISION_ALLOWED_PATHS = (
+    "AGENTS.md",
+    "docs/_generated/**",
+    "docs/system/**",
+    "docs/project/current.md",
+    "docs/project/governance/**",
+    "docs/project/iterations/iteration-010/README.md",
+    "docs/project/iterations/iteration-010/proposal.md",
+    "docs/project/iterations/iteration-010/readiness-review.md",
+    "docs/project/iterations/iteration-010/verification-matrix.md",
+    "docs/project/iterations/iteration-010/development-design/**",
+    "docs/project/iterations/iteration-010/decisions/PDR-010-post-direction-plan.md",
+    "docs/project/iterations/iteration-010/decisions/README.md",
+    "docs/project/iterations/iteration-010/findings/FINDING-010-150.md",
+    "docs/project/iterations/iteration-010/findings/README.md",
+    "docs/project/iterations/iteration-010/results/README.md",
+    "docs/project/iterations/iteration-010/manifest.yaml",
+    "scripts/docs.py",
+    "scripts/plan_gate.py",
+    "tests/test_docs_gate.py",
+    "tests/test_plan_gate.py",
+    ".github/workflows/plan-compliance.yml",
+)
+ITER010_USER_DIRECTION_GOVERNANCE_ALLOWED_CHANGE_PATHS = tuple(
+    dict.fromkeys(
+        (*ITER010_USER_DIRECTION_ALLOWED_CHANGE_PATHS, *ITER010_GOVERNANCE_REVISION_ALLOWED_PATHS)
+    )
+)
+ITER010_WEB_FAILURE_GOVERNANCE_ALLOWED_CHANGE_PATHS = tuple(
+    dict.fromkeys(
+        (*ITER010_WEB_FAILURE_ALLOWED_CHANGE_PATHS, *ITER010_GOVERNANCE_REVISION_ALLOWED_PATHS)
+    )
+)
+ITER010_RESPONSIBILITY_PLAN_ALLOWED_CHANGE_PATHS = tuple(
+    dict.fromkeys(
+        (
+            ITER010_RESPONSIBILITY_PLAN_RESULT_PATH,
+            ITER010_RESPONSIBILITY_PLAN_EVIDENCE_PATH,
+            "docs/project/iterations/iteration-010/results/README.md",
+            "docs/project/iterations/iteration-010/findings/FINDING-010-149.md",
+            "docs/project/iterations/iteration-010/findings/README.md",
+            *ITER010_GOVERNANCE_REVISION_ALLOWED_PATHS,
+        )
+    )
+)
+ITER010_RESPONSIBILITY_PLAN_FORBIDDEN_CHANGE_PATHS = (
+    "src/software_world_model/**",
+    "tests/test_conversational_engineering_model.py",
+    "validation/**",
+)
+ITER010_DIRECTION_QUESTION_SET_RULE = (
+    "system-purpose-or-entry,behavior-call-flow-and-material-side-effect,"
+    "failure-authorization-or-unknown;at-least-two-unseen;no-pom-only-question"
+)
+ITER010_PENDING_CODEX_IDENTITY = "not-yet-frozen-by-current-action"
 PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES = (
     "provider-unavailable",
     "provider-http-error",
     "provider-outcome-unknown",
     "provider-output-invalid",
     "model-review-rejected",
-)
-DEEPSEEK_PREFERRED_WINDOWS = (
-    "00:00-09:00",
-    "12:00-14:00",
-    "18:00-24:00",
 )
 STRICT_CODEX_BASELINE_ROLE = (
     "strong-external-baseline-not-oracle-not-adjudicator"
@@ -161,7 +489,7 @@ ITER010_CURRENT_ASSUMPTIONS: dict[str, str] = {
     "A2": "主工程 Agent 能持续维护目标、假设、子任务和计划，依据每次观察选择 World Model/Source 受控工具并重规划，不取得直接权限",
     "A3": "每个 Turn 的 Evidence Package、自然答案与 fresh independent Review 同时保证直接答案、Citation、失败关闭和可返工性，Reviewer Finding 只回到主 Agent",
     "A4": "相同 Conversation—主 Agent—受控工具—逐 Turn Evidence/Review 协议能跨第二工程、来源组合和复杂失败泛化",
-    "A5": "产品外部比较与 World Model 因果消融必须分开；current Codex 保留其真实客户端、model、reasoning、tools 和权限，只有系统的 source-only 与 full-cognition 两臂使用同一主 Agent/model/tool/budget/cache/Reviewer",
+    "A5": "产品外部比较与 World Model 因果消融在同一四路 Gate 中独立判读；current Codex 保留真实客户端、model、reasoning、tools 和权限，前三路固定相同 Provider/model/config，两个 Agent 路除认知开关外完全相同",
     "A6": "产品具有真正语义多轮 Conversation，而不是同 Session 的独立问答",
 }
 ITER010_HISTORICAL_ASSUMPTION_DIGEST = (
@@ -206,6 +534,9 @@ IMMUTABLE_HISTORICAL_CASE_EVIDENCE: dict[tuple[str, str], str] = {
 }
 ITER010_CURRENT_CHAT_GATE_CASES = frozenset(
     {
+        ITER010_CURRENT_ACTION_CASE_ID,
+        ITER010_FALLBACK_REFREEZE_CASE_ID,
+        ITER010_DIRECTION_QUALITY_CASE_ID,
         "V-CHAT-EXPERIENCE-001",
         "V-TIMEBOX-CHAT-001",
         "V-CHAT-QUALITY-001",
@@ -214,6 +545,47 @@ ITER010_CURRENT_CHAT_GATE_CASES = frozenset(
 ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
     str, dict[str, tuple[str, ...]]
 ] = {
+    ITER010_CURRENT_ACTION_CASE_ID: {
+        "Claim": ("四路方向 Gate 输入冻结",),
+        "Frozen input / oracle": (
+            "current Codex actual identity",
+            "三道异质问题",
+        ),
+        "Expected": (
+            "产品代码、Prompt/Reviewer、Web canary、hardening、full regression、Provider dispatch 保持锁定",
+        ),
+    },
+    ITER010_DIRECTION_QUALITY_CASE_ID: {
+        "Claim": ("四路价值比较",),
+        "Frozen input / oracle": (
+            "direct relevant evidence",
+            "same-agent source-only",
+            "same-agent World Model + source",
+            "current Codex",
+        ),
+        "Expected": (
+            "绝对质量 PASS",
+            "不得输给任一对照臂",
+            "总体严格超过 current Codex",
+            "至少一项非 locator 世界模型贡献",
+            "全体打平 FAIL",
+            "成本或延迟不能补偿答案质量",
+            "不得混批或合并首选与备用路线输出",
+        ),
+    },
+    ITER010_FALLBACK_REFREEZE_CASE_ID: {
+        "Claim": ("首选路线 INVALID 后把三个系统路统一冻结到备用执行配置",),
+        "Frozen input / oracle": (
+            "exact preferred-route Quality `INVALID` Result seal",
+            "fallback admission policy plugin ref and digest",
+        ),
+        "Expected": (
+            "人工授权请求=0",
+            "三个系统路 input digest 集合",
+            "no mixed batch",
+            "Provider dispatch=0",
+        ),
+    },
     "V-ALPHA-ACCESS-001": {
         "Expected": (
             "Provider 未配置/未资格/失败如实显示而不阻塞页面",
@@ -225,7 +597,7 @@ ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
         "Claim": ("逐 Turn live-attempt",),
         "Frozen input / oracle": (
             "四个微检查点",
-            "Turn1 前冻结的同一五轮 Conversation 脚本及前三轮中间交付",
+            "实际 Quality Route PASS 后",
             "Conversation/Turn/provider dispatch",
         ),
         "Expected": (
@@ -233,37 +605,20 @@ ITER010_CURRENT_VERIFICATION_REQUIRED_PHRASES: dict[
             "180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL",
             "181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据",
             "240 分钟绝对停止",
-            "360 分钟五轮方向证据",
-            "480 分钟独立比较与用户判向",
             "每个检查点立即交付用户",
             "三轮停止时五轮 canary 为 `INCOMPLETE / FAIL`",
             "计划/测试/文档完成不算用户可见增量",
             "每个 Provider-dispatched Turn 分别计 live attempt",
         ),
     },
-    "V-COMP-ALPHA-001": {
-        "Claim": ("主 Agent/World Model 方向信号",),
-        "Frozen input / oracle": (
-            "current Codex external baseline",
-            "same-agent source-only",
-            "same-agent full World Model cognition + source",
-        ),
-        "Expected": (
-            "Codex 保留实际客户端/model/reasoning/tools/权限",
-            "只作强外部基线，不是 Oracle/裁判",
-            "只有 source-only/full-cognition 两系统臂共享同一主 Agent/model/tool/budget/cache/Reviewer",
-            "独立评估者",
-            "不阻塞更早的用户交付",
-        ),
-    },
     "V-PREVIEW-002": {
         "Claim": (
-            "用户基于 A1—A3/A6 复盘、多轮 Chat 和三臂方向信号决定是否进入夯实",
+            "用户基于四路严格价值 Gate、最小 Web Chat 和 A1—A6 复盘决定是否进入夯实",
         ),
         "Frozen input / oracle": ("真实 Result、限制、Findings 和假设证据",),
         "Expected": (
-            "独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal",
-            "用户实际追问、纠正、深入、总结并查看三臂方向信号后决定 CONTINUE/REWORK/REDIRECT/REJECT",
+            "独立技术复核给出 A1—A6 exact Verdict",
+            "用户实际追问、纠正、深入、总结并查看四路严格价值 Gate 后决定 CONTINUE/REWORK/REDIRECT/REJECT",
             "只有 CONTINUE 解锁 hardening",
         ),
     },
@@ -805,10 +1160,17 @@ def requires_engineering_qa_hybrid(identifier: object) -> bool:
 
 
 def requires_strict_codex_baseline(identifier: object) -> bool:
-    """Apply the strong external Codex baseline contract to new iterations only."""
+    """Apply the strong Codex baseline to PDR-009 and later new iterations.
+
+    ITER-011 is a superseded planning record.  ITER-010 opted into the strict
+    contract through PDR-009; ITER-012 remains the default cut-over for newly
+    numbered iterations.
+    """
 
     number = iteration_number(identifier)
-    return number is not None and number >= STRICT_CODEX_BASELINE_START_ITERATION
+    return number == 10 or (
+        number is not None and number >= STRICT_CODEX_BASELINE_START_ITERATION
+    )
 
 
 def requires_experience_first_delivery_policy(identifier: object) -> bool:
@@ -822,7 +1184,7 @@ def requires_experience_first_delivery_policy(identifier: object) -> bool:
 
 
 def requires_provider_route_policy(identifier: object) -> bool:
-    """Require a qualified Ark-first provider route for newly planned iterations."""
+    """Require qualified preferred/fallback routing for planned iterations."""
 
     number = iteration_number(identifier)
     return number is not None and number >= PROVIDER_ROUTE_POLICY_START_ITERATION
@@ -1845,9 +2207,19 @@ def validate_experience_first_delivery_policy(
             errors.append(
                 f"{label}: experience_delivery_policy.live_canary_turn_count must equal 5 for Chat"
             )
+        control = manifest.get("plan_execution_control")
+        pdr009_four_arm_gate = (
+            isinstance(control, dict)
+            and control.get("plan_revision_ref") == ITER010_PLAN_REVISION_REF
+        )
         for field, pattern in (
             ("chat_case_id", r"V-CHAT-[0-9]{3,}"),
-            ("alpha_comparison_case_id", r"V-COMP-ALPHA-[0-9]{3,}"),
+            (
+                "alpha_comparison_case_id",
+                re.escape(ITER010_DIRECTION_QUALITY_CASE_ID)
+                if pdr009_four_arm_gate
+                else r"V-COMP-ALPHA-[0-9]{3,}",
+            ),
         ):
             case_id = policy.get(field)
             if (
@@ -1870,6 +2242,181 @@ def validate_experience_first_delivery_policy(
     return errors
 
 
+def _configured_execution_profiles(
+    manifest: dict[str, object], label: str
+) -> tuple[dict[str, dict[str, object]], tuple[str, ...], dict[str, object] | None, list[str]]:
+    """Resolve route identities and bind them to immutable configuration objects."""
+
+    errors: list[str] = []
+    policy = manifest.get("provider_route_policy")
+    if not isinstance(policy, dict):
+        return {}, (), None, [f"{label}: provider_route_policy must be a mapping"]
+
+    for field in (
+        "preferred_execution_profile_ref",
+        "fallback_execution_profile_ref",
+        "primary_provider",
+        "fallback_provider",
+        "preferred_model_identity",
+        "fallback_model_identity",
+        "fallback_admission_policy_plugin_ref",
+    ):
+        value = policy.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(
+                f"{label}: provider_route_policy.{field} must be a non-empty string"
+            )
+
+    configurations = manifest.get("execution_profile_configurations")
+    if not isinstance(configurations, dict):
+        return (
+            {},
+            (),
+            None,
+            errors
+            + [f"{label}: execution_profile_configurations must be a mapping"],
+        )
+    if configurations.get("schema") != EXECUTION_PROFILE_CONFIGURATION_SCHEMA:
+        errors.append(
+            f"{label}: execution_profile_configurations.schema must equal "
+            f"{EXECUTION_PROFILE_CONFIGURATION_SCHEMA}"
+        )
+    if set(map(str, configurations)) != {"schema", "preferred", "fallback"}:
+        errors.append(
+            f"{label}: execution_profile_configurations must contain exactly schema, preferred, and fallback"
+        )
+
+    resolved: dict[str, dict[str, object]] = {}
+    identities: list[str] = []
+    for role, provider_field, model_field, profile_field in (
+        (
+            "preferred",
+            "primary_provider",
+            "preferred_model_identity",
+            "preferred_execution_profile_ref",
+        ),
+        (
+            "fallback",
+            "fallback_provider",
+            "fallback_model_identity",
+            "fallback_execution_profile_ref",
+        ),
+    ):
+        profile = configurations.get(role)
+        if not isinstance(profile, dict):
+            errors.append(
+                f"{label}: execution_profile_configurations.{role} must be a mapping"
+            )
+            continue
+        if set(map(str, profile)) != EXECUTION_PROFILE_CONFIGURATION_KEYS:
+            errors.append(
+                f"{label}: execution_profile_configurations.{role} must contain exactly the model-transparent configuration fields"
+            )
+        resolved[role] = profile
+        for field in EXECUTION_PROFILE_CONFIGURATION_KEYS:
+            value = profile.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(
+                    f"{label}: execution_profile_configurations.{role}.{field} must be a non-empty string"
+                )
+        for profile_key, policy_key in (
+            ("execution_profile_ref", profile_field),
+            ("provider_identity", provider_field),
+            ("model_identity", model_field),
+        ):
+            if profile.get(profile_key) != policy.get(policy_key):
+                errors.append(
+                    f"{label}: execution_profile_configurations.{role}.{profile_key} "
+                    f"must equal provider_route_policy.{policy_key}"
+                )
+        for field in ("provider_identity", "model_identity"):
+            value = profile.get(field)
+            if isinstance(value, str) and value.strip():
+                identities.append(value.strip().lower())
+
+    preferred_ref = policy.get("preferred_execution_profile_ref")
+    fallback_ref = policy.get("fallback_execution_profile_ref")
+    if (
+        isinstance(preferred_ref, str)
+        and isinstance(fallback_ref, str)
+        and preferred_ref == fallback_ref
+    ):
+        errors.append(
+            f"{label}: preferred and fallback execution profile refs must differ"
+        )
+    primary_provider = policy.get("primary_provider")
+    fallback_provider = policy.get("fallback_provider")
+    if (
+        isinstance(primary_provider, str)
+        and isinstance(fallback_provider, str)
+        and primary_provider.lower() == fallback_provider.lower()
+    ):
+        errors.append(
+            f"{label}: preferred and fallback Provider identities must differ"
+        )
+
+    plugin: dict[str, object] | None = None
+    plugin_ref = policy.get("fallback_admission_policy_plugin_ref")
+    if not isinstance(plugin_ref, str) or not plugin_ref.strip():
+        errors.append(
+            f"{label}: provider_route_policy.fallback_admission_policy_plugin_ref "
+            "must be a non-empty configuration reference"
+        )
+    else:
+        candidate = manifest.get(plugin_ref)
+        if not isinstance(candidate, dict):
+            errors.append(
+                f"{label}: provider_route_policy.fallback_admission_policy_plugin_ref "
+                "must resolve to a configuration object"
+            )
+        else:
+            plugin = candidate
+    return resolved, tuple(dict.fromkeys(identities)), plugin, errors
+
+
+_GENERIC_ROUTE_IDENTITY_TOKENS = {
+    "configured",
+    "primary",
+    "preferred",
+    "fallback",
+    "provider",
+    "identity",
+    "model",
+    "route",
+}
+
+
+def _configured_identity_is_present(value: object, identity: str) -> bool:
+    rendered = json.dumps(value, ensure_ascii=False, sort_keys=True).lower()
+    rendered_tokens = {
+        token for token in re.split(r"[^a-z0-9]+", rendered) if token
+    }
+    normalized_identity = re.sub(r"[^a-z0-9]+", "", identity)
+    normalized_rendered = re.sub(r"[^a-z0-9]+", "", rendered)
+    identity_tokens = {
+        token
+        for token in re.split(r"[^a-z0-9]+", identity)
+        if len(token) >= 3
+        and not token.isdigit()
+        and token not in _GENERIC_ROUTE_IDENTITY_TOKENS
+    }
+    return (
+        identity in rendered
+        or (normalized_identity and normalized_identity in normalized_rendered)
+        or bool(identity_tokens.intersection(rendered_tokens))
+    )
+
+
+def _configured_identity_errors(
+    value: object, identities: Iterable[str], label: str
+) -> list[str]:
+    return [
+        f"{label} must not contain configured Provider/model identity {identity}"
+        for identity in identities
+        if _configured_identity_is_present(value, identity)
+    ]
+
+
 def validate_provider_route_policy(
     manifest: dict[str, object],
     text_or_label: str,
@@ -1877,7 +2424,7 @@ def validate_provider_route_policy(
     *,
     required: bool,
 ) -> list[str]:
-    """Require an Ark-first route with isolated transparent fallback attempts."""
+    """Require role-based routing without freezing any Provider or model name."""
 
     text = text_or_label if label is not None else None
     label = label if label is not None else text_or_label
@@ -1894,20 +2441,54 @@ def validate_provider_route_policy(
             f"{label}: provider_route_policy.schema must equal "
             f"{PROVIDER_ROUTE_POLICY_SCHEMA}"
         )
+    primary_provider = policy.get("primary_provider")
+    fallback_provider = policy.get("fallback_provider")
+    if (
+        not isinstance(primary_provider, str)
+        or not primary_provider.strip()
+        or not isinstance(fallback_provider, str)
+        or not fallback_provider.strip()
+        or primary_provider == fallback_provider
+    ):
+        errors.append(
+            f"{label}: provider_route_policy must configure two distinct non-empty Provider identities"
+        )
+    for field in (
+        "preferred_execution_profile_ref",
+        "fallback_execution_profile_ref",
+        "fallback_admission_policy_plugin_ref",
+    ):
+        value = policy.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(
+                f"{label}: provider_route_policy.{field} must be a non-empty runtime configuration reference"
+            )
+    for field in ("preferred_model_identity", "fallback_model_identity"):
+        value = policy.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(
+                f"{label}: provider_route_policy.{field} must be a non-empty model identity"
+            )
+    if (
+        isinstance(policy.get("preferred_execution_profile_ref"), str)
+        and policy.get("preferred_execution_profile_ref")
+        == policy.get("fallback_execution_profile_ref")
+    ):
+        errors.append(
+            f"{label}: preferred and fallback execution profile refs must be distinct"
+        )
+
     preference_order = policy.get("preference_order")
     if not isinstance(preference_order, list) and text is not None:
         preference_order = manifest_resolved_sequence_items(
             text, "provider_route_policy", "preference_order"
         )
-    if preference_order != list(PROVIDER_ROUTE_PREFERENCE):
+    if preference_order != [primary_provider, fallback_provider]:
         errors.append(
-            f"{label}: provider_route_policy.preference_order must equal "
-            "VOLCENGINE_ARK then DEEPSEEK"
+            f"{label}: provider_route_policy.preference_order must exactly match the configured preferred and fallback Provider identities"
         )
 
     exact_values: tuple[tuple[str, object], ...] = (
-        ("primary_provider", "VOLCENGINE_ARK"),
-        ("fallback_provider", "DEEPSEEK"),
         (
             "fallback_requires_primary_attempt_terminal_without_authorized_answer",
             True,
@@ -1954,8 +2535,6 @@ def validate_provider_route_policy(
             "post_dispatch_provider_switch_requires",
             "new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route",
         ),
-        ("deepseek_batch_start_policy", "provider-declared-non-peak-preferred"),
-        ("deepseek_schedule_timezone", "Asia/Shanghai"),
         ("peak_urgent_override_requires", "audited-explicit-override"),
         ("cost_can_reduce_answer_quality", False),
         ("cost_gate_scope", "before-interaction-unit-start-only"),
@@ -1984,16 +2563,6 @@ def validate_provider_route_policy(
                 "with isolated transparent fallback attempts"
             )
 
-    preferred_windows = policy.get("deepseek_current_preferred_windows")
-    if not isinstance(preferred_windows, list) and text is not None:
-        preferred_windows = manifest_resolved_sequence_items(
-            text, "provider_route_policy", "deepseek_current_preferred_windows"
-        )
-    if preferred_windows != list(DEEPSEEK_PREFERRED_WINDOWS):
-        errors.append(
-            f"{label}: provider_route_policy.deepseek_current_preferred_windows "
-            "must equal the frozen provider-declared windows"
-        )
     fallback_eligible_outcomes = policy.get("fallback_eligible_outcomes")
     if not isinstance(fallback_eligible_outcomes, list) and text is not None:
         fallback_eligible_outcomes = manifest_resolved_sequence_items(
@@ -2004,53 +2573,139 @@ def validate_provider_route_policy(
             f"{label}: provider_route_policy.fallback_eligible_outcomes must "
             "equal the frozen provider/model availability and capability outcomes"
         )
-    schedule_source = policy.get("deepseek_schedule_source")
-    if not isinstance(schedule_source, str) or re.fullmatch(
-        r"https://api-docs\.deepseek\.com(?:/.*)?", schedule_source
-    ) is None:
-        errors.append(
-            f"{label}: provider_route_policy.deepseek_schedule_source must use "
-            "the official api-docs.deepseek.com domain"
+    _, identities, _, configuration_errors = _configured_execution_profiles(
+        manifest, label
+    )
+    errors.extend(configuration_errors)
+    errors.extend(
+        _configured_identity_errors(
+            list(policy),
+            identities,
+            f"{label}: provider_route_policy keys must remain generic and",
         )
-    checked_at = policy.get("deepseek_schedule_checked_at")
-    if not isinstance(checked_at, str) or re.fullmatch(
-        r"[0-9]{4}-[0-9]{2}-[0-9]{2}", checked_at
-    ) is None:
-        errors.append(
-            f"{label}: provider_route_policy.deepseek_schedule_checked_at must "
-            "be an ISO date"
-        )
-    else:
-        try:
-            datetime.strptime(checked_at, "%Y-%m-%d")
-        except ValueError:
-            errors.append(
-                f"{label}: provider_route_policy.deepseek_schedule_checked_at "
-                "must be a real ISO date"
+    )
+    return errors
+
+
+def validate_model_transparent_plan_routing(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Keep configured Provider/model identities out of executable semantics."""
+
+    policy = manifest.get("provider_route_policy")
+    if not isinstance(policy, dict):
+        control = manifest.get("plan_execution_control")
+        if (
+            isinstance(control, dict)
+            and control.get("plan_revision_ref") == ITER010_PLAN_REVISION_REF
+        ):
+            return [f"{label}: provider_route_policy is required for ITER-010"]
+        return []
+    _, identities, _, errors = _configured_execution_profiles(manifest, label)
+
+    scopes = {
+        "plan_execution_control": manifest.get("plan_execution_control"),
+        "direction_quality_gate": manifest.get("direction_quality_gate"),
+    }
+    for scope_name, scope in scopes.items():
+        if scope is None:
+            continue
+        errors.extend(
+            _configured_identity_errors(
+                scope,
+                identities,
+                f"{label}: {scope_name} must use preferred/fallback route roles and",
             )
-    if policy.get("deepseek_schedule_effective_status") not in {
-        "announced-not-yet-effective",
-        "effective",
-    }:
-        errors.append(
-            f"{label}: provider_route_policy.deepseek_schedule_effective_status "
-            "must record whether the provider-declared schedule is effective"
         )
     return errors
 
 
+def validate_model_transparent_governance_templates(
+    manifest: dict[str, object],
+    label: str,
+    *,
+    template_paths: Iterable[Path] | None = None,
+) -> list[str]:
+    """Keep configured Provider/model identities out of reusable templates."""
+
+    _, identities, _, errors = _configured_execution_profiles(manifest, label)
+    if not identities:
+        return errors
+
+    if template_paths is None:
+        template_root = DOCS / "project" / "governance" / "templates"
+        template_paths = sorted(
+            path
+            for path in template_root.rglob("*")
+            if path.is_file() and path.suffix.lower() in {".md", ".yaml", ".yml"}
+        )
+
+    for path in template_paths:
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as error:
+            errors.append(f"{label}: cannot read governance template {path}: {error}")
+            continue
+        for identity in identities:
+            if _configured_identity_is_present(content, identity):
+                try:
+                    path_label = path.relative_to(REPOSITORY).as_posix()
+                except ValueError:
+                    path_label = path.as_posix()
+                errors.append(
+                    f"{label}: reusable governance template {path_label} must not "
+                    f"contain configured Provider/model identity {identity}"
+                )
+    return errors
+
+
+def iter010_pending_codex_identity_allowed(
+    manifest: dict[str, object] | None,
+) -> bool:
+    """Return whether the active freeze action owns the not-yet-frozen marker."""
+
+    if not isinstance(manifest, dict):
+        return False
+    control = manifest.get("plan_execution_control")
+    gate = manifest.get("direction_quality_gate")
+    if not isinstance(control, dict) or not isinstance(gate, dict):
+        return False
+    current_action = control.get("current_action")
+    return (
+        control.get("plan_revision_ref") == ITER010_PLAN_REVISION_REF
+        and isinstance(current_action, dict)
+        and current_action.get("id") == ITER010_CURRENT_ACTION_ID
+        and current_action.get("case_id") == ITER010_CURRENT_ACTION_CASE_ID
+        and current_action.get("status") == "authorized"
+        and gate.get("status") == "locked-until-direction-freeze-pass"
+    )
+
+
 def validate_strict_codex_baseline_alignment(
-    alignment: dict[str, object], label: str
+    alignment: dict[str, object],
+    label: str,
+    *,
+    allow_pending_identity: bool = False,
 ) -> list[str]:
     """Freeze a blind answer-quality gate that secondary metrics cannot replace."""
 
     errors: list[str] = []
     identity_digest = alignment.get("mature_source_agent_identity_digest")
-    if not isinstance(identity_digest, str) or re.fullmatch(
-        r"sha256:[0-9a-f]{64}", identity_digest
-    ) is None:
+    identity_is_pending_freeze = (
+        allow_pending_identity
+        and identity_digest == ITER010_PENDING_CODEX_IDENTITY
+    )
+    if not identity_is_pending_freeze and (
+        not isinstance(identity_digest, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", identity_digest) is None
+    ):
         errors.append(
             f"{label}: mature_source_agent_identity_digest must be an exact sha256 digest"
+            + (
+                f" or {ITER010_PENDING_CODEX_IDENTITY} while the exact ITER-010 freeze action is active"
+                if allow_pending_identity
+                else ""
+            )
         )
     for field, expected in (
         ("mature_source_agent_role", STRICT_CODEX_BASELINE_ROLE),
@@ -2095,6 +2750,30 @@ def validate_alpha_agent_comparison_binding(
         return [f"{label}: alpha_agent_comparison_binding must be a mapping"]
     errors: list[str] = []
     case_id = binding.get("case_id")
+    if binding.get("result_role") == (
+        "blocking-iter010-strict-superiority-direction-gate"
+    ):
+        if (
+            case_id != ITER010_DIRECTION_QUALITY_CASE_ID
+            or case_id not in blocking_case_ids
+        ):
+            errors.append(
+                f"{label}: ITER-010 four-arm comparison case_id must equal "
+                f"{ITER010_DIRECTION_QUALITY_CASE_ID} and remain blocking"
+            )
+        if binding.get("new_slice_ref") != "ITER-010-SLICE-001":
+            errors.append(
+                f"{label}: ITER-010 four-arm comparison must belong to ITER-010-SLICE-001"
+            )
+        if binding.get("arms") != ",".join(ITER010_DIRECTION_QUALITY_ARMS):
+            errors.append(
+                f"{label}: ITER-010 alpha_agent_comparison_binding.arms must equal the exact four-arm order"
+            )
+        if binding.get("current_codex_is_oracle_or_reviewer") is not False:
+            errors.append(
+                f"{label}: current Codex must not be Oracle or reviewer"
+            )
+        return errors
     if (
         not isinstance(case_id, str)
         or re.fullmatch(r"V-COMP-ALPHA-[0-9]{3,}", case_id) is None
@@ -4170,7 +4849,7 @@ def validate_conversational_architecture_cutover(
 def validate_iter010_direction_checkpoint_policy(
     manifest: dict[str, object], label: str
 ) -> list[str]:
-    """Freeze ITER-010's concrete direction checkpoints without globalizing them."""
+    """Freeze ITER-010's value-first checkpoints without globalizing them."""
 
     policy = manifest.get("experience_delivery_policy")
     if not isinstance(policy, dict):
@@ -4184,10 +4863,7 @@ def validate_iter010_direction_checkpoint_policy(
         ),
         ("micro_checkpoint_count", 4),
         ("micro_checkpoint_order", ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER),
-        ("direction_alpha_prefix_turn_count", 3),
-        ("direction_alpha_is_prefix_of_frozen_live_canary", True),
-        ("direction_evidence_handoff_deadline_minutes", 360),
-        ("direction_decision_deadline_minutes", 480),
+        ("pdr004_schedule_fields_are_legacy_validator_compatibility_only", True),
         ("checkpoint_miss_action", ITER010_DIRECTION_CHECKPOINT_MISS_ACTION),
     ):
         if policy.get(field) != expected:
@@ -4204,6 +4880,1707 @@ def validate_iter010_direction_checkpoint_policy(
             errors.append(
                 f"{label}: ITER-010 experience_delivery_policy.{ambiguous_field} must not create a parallel lifecycle or authorization state"
             )
+    return errors
+
+
+def _manifest_nested_sequence(
+    manifest: dict[str, object],
+    path: tuple[str, ...],
+    manifest_text: str | None,
+) -> list[str] | None:
+    """Resolve an exact nested sequence from an in-memory or file manifest."""
+
+    value: object = manifest
+    for key in path:
+        if not isinstance(value, dict) or key not in value:
+            value = None
+            break
+        value = value[key]
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    if manifest_text is None:
+        return None
+    return manifest_resolved_nested_sequence_items(manifest_text, path)
+
+
+def _plan_path_is_safe(value: str) -> bool:
+    """Reject broad, absolute, parent-traversing or empty plan path patterns."""
+
+    if (
+        not value
+        or value in {"*", "**", "**/*"}
+        or value.startswith(("/", "~"))
+        or "\\" in value
+    ):
+        return False
+    path = PurePosixPath(value.removesuffix("/**"))
+    return path.as_posix() not in {"", "."} and ".." not in path.parts
+
+
+def iter010_plan_action_specs() -> dict[str, dict[str, object]]:
+    """Return the PDR-009 action registry as immutable-by-caller data.
+
+    The Manifest stores the current action separately from its transition and
+    locks, while future action contracts nest those two mappings.  Keeping one
+    machine-owned registry here prevents a transition commit from defining its
+    own permissions, paths, or successor after seeing a Result.
+    """
+
+    all_locked = {field: True for field in ITER010_PLAN_LOCK_FIELDS}
+
+    def build(
+        *,
+        registry_key: str,
+        action_id: str,
+        kind: str,
+        case_id: str,
+        coding_allowed: bool,
+        external_execution_allowed: bool,
+        result_ref: str,
+        result_path: str,
+        evidence_path: str,
+        produced_case_ids: tuple[str, ...],
+        prerequisite_case_ids: tuple[str, ...],
+        allowed_change_paths: tuple[str, ...],
+        forbidden_change_paths: tuple[str, ...],
+        pass_next_action_id: str,
+        fail_next_action_id: str,
+        invalid_next_action_id: str,
+        locks: dict[str, bool],
+        gate_status: str,
+        required_result: dict[str, object] | tuple[dict[str, object], ...] | None,
+    ) -> dict[str, object]:
+        return {
+            "registry_key": registry_key,
+            "scalars": {
+                "id": action_id,
+                "owner_slice_ref": "ITER-010-SLICE-001",
+                "kind": kind,
+                "status": "authorized",
+                "case_id": case_id,
+                "coding_allowed": coding_allowed,
+                "external_execution_allowed": external_execution_allowed,
+                "result_ref": result_ref,
+                "result_path": result_path,
+                "evidence_schema": ITER010_PLAN_EVIDENCE_SCHEMA,
+                "evidence_path": evidence_path,
+                "evidence_verifier": ITER010_PLAN_EVIDENCE_VERIFIER,
+            },
+            "sequences": {
+                "runner_identity_paths": ITER010_PLAN_RUNNER_IDENTITY_PATHS,
+                "produced_case_ids": produced_case_ids,
+                "prerequisite_case_ids": prerequisite_case_ids,
+                "allowed_change_paths": allowed_change_paths,
+                "forbidden_change_paths": forbidden_change_paths,
+            },
+            "transition": {
+                "pass_next_action_id": pass_next_action_id,
+                "fail_next_action_id": fail_next_action_id,
+                "invalid_next_action_id": invalid_next_action_id,
+            },
+            "locks": locks,
+            "gate_status": gate_status,
+            "required_result": required_result,
+        }
+
+    def predecessor(
+        result_id: str,
+        result_path: str,
+        evidence_path: str,
+        action_ref: str,
+        case_id: str,
+        verdict: str,
+    ) -> dict[str, object]:
+        return {
+            "id": result_id,
+            "path": result_path,
+            "evidence_path": evidence_path,
+            "action_ref": action_ref,
+            "verification_case_id": case_id,
+            "plan_gate_verdict": verdict,
+        }
+
+    freeze_prerequisites = ITER010_DIRECTION_PREREQUISITE_CASE_IDS
+    external_prerequisites = (
+        ITER010_CURRENT_ACTION_CASE_ID,
+        ITER010_PUBLIC_AUTHORITY_ADMISSION_CASE_ID,
+        *ITER010_DIRECTION_PREREQUISITE_CASE_IDS,
+    )
+    return {
+        ITER010_CURRENT_ACTION_ID: build(
+            registry_key="direction_freeze",
+            action_id=ITER010_CURRENT_ACTION_ID,
+            kind="four-arm-direction-gate-freeze",
+            case_id=ITER010_CURRENT_ACTION_CASE_ID,
+            coding_allowed=True,
+            external_execution_allowed=False,
+            result_ref=ITER010_CURRENT_ACTION_RESULT_REF,
+            result_path=ITER010_CURRENT_ACTION_RESULT_PATH,
+            evidence_path=ITER010_CURRENT_ACTION_EVIDENCE_PATH,
+            produced_case_ids=(
+                ITER010_CURRENT_ACTION_CASE_ID,
+                ITER010_PUBLIC_AUTHORITY_ADMISSION_CASE_ID,
+            ),
+            prerequisite_case_ids=freeze_prerequisites,
+            allowed_change_paths=ITER010_DIRECTION_FREEZE_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_FREEZE_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_PREFERRED_QUALITY_ACTION_ID,
+            fail_next_action_id=ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID,
+            invalid_next_action_id=ITER010_CURRENT_ACTION_ID,
+            locks=all_locked,
+            gate_status="locked-until-direction-freeze-pass",
+            required_result=None,
+        ),
+        ITER010_PREFERRED_QUALITY_ACTION_ID: build(
+            registry_key="preferred_quality",
+            action_id=ITER010_PREFERRED_QUALITY_ACTION_ID,
+            kind="four-arm-direction-quality-gate",
+            case_id=ITER010_DIRECTION_QUALITY_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=True,
+            result_ref=ITER010_PREFERRED_QUALITY_RESULT_REF,
+            result_path=ITER010_PREFERRED_QUALITY_RESULT_PATH,
+            evidence_path=ITER010_PREFERRED_QUALITY_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_DIRECTION_QUALITY_CASE_ID,),
+            prerequisite_case_ids=external_prerequisites,
+            allowed_change_paths=ITER010_PREFERRED_QUALITY_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_QUALITY_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_MINIMUM_WEB_ACTION_ID,
+            fail_next_action_id=ITER010_DIRECTION_REWORK_ACTION_ID,
+            invalid_next_action_id=ITER010_FALLBACK_REFREEZE_ACTION_ID,
+            locks={**all_locked, "provider_dispatch": False},
+            gate_status="authorized",
+            required_result=predecessor(
+                ITER010_CURRENT_ACTION_RESULT_REF,
+                ITER010_CURRENT_ACTION_RESULT_PATH,
+                ITER010_CURRENT_ACTION_EVIDENCE_PATH,
+                ITER010_CURRENT_ACTION_ID,
+                ITER010_CURRENT_ACTION_CASE_ID,
+                "PASS",
+            ),
+        ),
+        ITER010_FALLBACK_REFREEZE_ACTION_ID: build(
+            registry_key="fallback_refreeze",
+            action_id=ITER010_FALLBACK_REFREEZE_ACTION_ID,
+            kind="fallback-route-batch-refreeze",
+            case_id=ITER010_FALLBACK_REFREEZE_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=False,
+            result_ref=ITER010_FALLBACK_REFREEZE_RESULT_REF,
+            result_path=ITER010_FALLBACK_REFREEZE_RESULT_PATH,
+            evidence_path=ITER010_FALLBACK_REFREEZE_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_FALLBACK_REFREEZE_CASE_ID,),
+            prerequisite_case_ids=external_prerequisites,
+            allowed_change_paths=ITER010_FALLBACK_REFREEZE_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_QUALITY_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_FALLBACK_QUALITY_ACTION_ID,
+            fail_next_action_id=ITER010_PREFERRED_QUALITY_ACTION_ID,
+            invalid_next_action_id=ITER010_FALLBACK_REFREEZE_ACTION_ID,
+            locks=all_locked,
+            gate_status="preferred-invalid-fallback-refreeze-authorized",
+            required_result=predecessor(
+                ITER010_PREFERRED_QUALITY_RESULT_REF,
+                ITER010_PREFERRED_QUALITY_RESULT_PATH,
+                ITER010_PREFERRED_QUALITY_EVIDENCE_PATH,
+                ITER010_PREFERRED_QUALITY_ACTION_ID,
+                ITER010_DIRECTION_QUALITY_CASE_ID,
+                "INVALID",
+            ),
+        ),
+        ITER010_FALLBACK_QUALITY_ACTION_ID: build(
+            registry_key="fallback_quality",
+            action_id=ITER010_FALLBACK_QUALITY_ACTION_ID,
+            kind="four-arm-direction-quality-gate",
+            case_id=ITER010_DIRECTION_QUALITY_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=True,
+            result_ref=ITER010_FALLBACK_QUALITY_RESULT_REF,
+            result_path=ITER010_FALLBACK_QUALITY_RESULT_PATH,
+            evidence_path=ITER010_FALLBACK_QUALITY_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_DIRECTION_QUALITY_CASE_ID,),
+            prerequisite_case_ids=(
+                ITER010_FALLBACK_REFREEZE_CASE_ID,
+                *external_prerequisites,
+            ),
+            allowed_change_paths=ITER010_FALLBACK_QUALITY_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_QUALITY_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_MINIMUM_WEB_ACTION_ID,
+            fail_next_action_id=ITER010_DIRECTION_REWORK_ACTION_ID,
+            invalid_next_action_id=ITER010_FALLBACK_QUALITY_ACTION_ID,
+            locks={**all_locked, "provider_dispatch": False},
+            gate_status="fallback-refreeze-passed-direction-quality-authorized",
+            required_result=predecessor(
+                ITER010_FALLBACK_REFREEZE_RESULT_REF,
+                ITER010_FALLBACK_REFREEZE_RESULT_PATH,
+                ITER010_FALLBACK_REFREEZE_EVIDENCE_PATH,
+                ITER010_FALLBACK_REFREEZE_ACTION_ID,
+                ITER010_FALLBACK_REFREEZE_CASE_ID,
+                "PASS",
+            ),
+        ),
+        ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID: build(
+            registry_key="direction_freeze_rework",
+            action_id=ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID,
+            kind="four-arm-direction-gate-freeze-rework",
+            case_id=ITER010_DIRECTION_FREEZE_REWORK_CASE_ID,
+            coding_allowed=True,
+            external_execution_allowed=False,
+            result_ref=ITER010_DIRECTION_FREEZE_REWORK_RESULT_REF,
+            result_path=ITER010_DIRECTION_FREEZE_REWORK_RESULT_PATH,
+            evidence_path=ITER010_DIRECTION_FREEZE_REWORK_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_DIRECTION_FREEZE_REWORK_CASE_ID,),
+            prerequisite_case_ids=freeze_prerequisites,
+            allowed_change_paths=ITER010_DIRECTION_FREEZE_REWORK_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_FREEZE_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_CURRENT_ACTION_ID,
+            fail_next_action_id=ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID,
+            invalid_next_action_id=ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID,
+            locks=all_locked,
+            gate_status="locked-until-direction-freeze-pass",
+            required_result=predecessor(
+                ITER010_CURRENT_ACTION_RESULT_REF,
+                ITER010_CURRENT_ACTION_RESULT_PATH,
+                ITER010_CURRENT_ACTION_EVIDENCE_PATH,
+                ITER010_CURRENT_ACTION_ID,
+                ITER010_CURRENT_ACTION_CASE_ID,
+                "FAIL",
+            ),
+        ),
+        ITER010_DIRECTION_REWORK_ACTION_ID: build(
+            registry_key="direction_rework",
+            action_id=ITER010_DIRECTION_REWORK_ACTION_ID,
+            kind="four-arm-failure-attribution",
+            case_id=ITER010_DIRECTION_REWORK_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=False,
+            result_ref=ITER010_DIRECTION_REWORK_RESULT_REF,
+            result_path=ITER010_DIRECTION_REWORK_RESULT_PATH,
+            evidence_path=ITER010_DIRECTION_REWORK_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_DIRECTION_REWORK_CASE_ID,),
+            prerequisite_case_ids=external_prerequisites,
+            allowed_change_paths=ITER010_DIRECTION_REWORK_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_REWORK_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_RESPONSIBILITY_PLAN_ACTION_ID,
+            fail_next_action_id=ITER010_DIRECTION_REWORK_ACTION_ID,
+            invalid_next_action_id=ITER010_DIRECTION_REWORK_ACTION_ID,
+            locks=all_locked,
+            gate_status="failed-rework-attribution-authorized",
+            required_result=(
+                predecessor(
+                    ITER010_PREFERRED_QUALITY_RESULT_REF,
+                    ITER010_PREFERRED_QUALITY_RESULT_PATH,
+                    ITER010_PREFERRED_QUALITY_EVIDENCE_PATH,
+                    ITER010_PREFERRED_QUALITY_ACTION_ID,
+                    ITER010_DIRECTION_QUALITY_CASE_ID,
+                    "FAIL",
+                ),
+                predecessor(
+                    ITER010_FALLBACK_QUALITY_RESULT_REF,
+                    ITER010_FALLBACK_QUALITY_RESULT_PATH,
+                    ITER010_FALLBACK_QUALITY_EVIDENCE_PATH,
+                    ITER010_FALLBACK_QUALITY_ACTION_ID,
+                    ITER010_DIRECTION_QUALITY_CASE_ID,
+                    "FAIL",
+                ),
+            ),
+        ),
+        ITER010_MINIMUM_WEB_ACTION_ID: build(
+            registry_key="minimum_web_chat",
+            action_id=ITER010_MINIMUM_WEB_ACTION_ID,
+            kind="minimum-existing-web-chat",
+            case_id=ITER010_MINIMUM_WEB_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=True,
+            result_ref=ITER010_MINIMUM_WEB_RESULT_REF,
+            result_path=ITER010_MINIMUM_WEB_RESULT_PATH,
+            evidence_path=ITER010_MINIMUM_WEB_EVIDENCE_PATH,
+            produced_case_ids=(
+                ITER010_MINIMUM_WEB_CASE_ID,
+                "V-CHAT-001",
+                "V-CHAT-QUALITY-001",
+                "V-CHAT-XD-001",
+                "V-TIMEBOX-CHAT-001",
+                ITER010_PUBLIC_AUTHORITY_CASE_ID,
+            ),
+            prerequisite_case_ids=(
+                ITER010_DIRECTION_QUALITY_CASE_ID,
+                *external_prerequisites,
+            ),
+            allowed_change_paths=ITER010_MINIMUM_WEB_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_DIRECTION_QUALITY_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_USER_DIRECTION_ACTION_ID,
+            fail_next_action_id=ITER010_WEB_FAILURE_ACTION_ID,
+            invalid_next_action_id=ITER010_MINIMUM_WEB_ACTION_ID,
+            locks={**all_locked, "web_canary": False, "provider_dispatch": False},
+            gate_status="direction-quality-passed-minimum-web-authorized",
+            required_result=(
+                predecessor(
+                    ITER010_PREFERRED_QUALITY_RESULT_REF,
+                    ITER010_PREFERRED_QUALITY_RESULT_PATH,
+                    ITER010_PREFERRED_QUALITY_EVIDENCE_PATH,
+                    ITER010_PREFERRED_QUALITY_ACTION_ID,
+                    ITER010_DIRECTION_QUALITY_CASE_ID,
+                    "PASS",
+                ),
+                predecessor(
+                    ITER010_FALLBACK_QUALITY_RESULT_REF,
+                    ITER010_FALLBACK_QUALITY_RESULT_PATH,
+                    ITER010_FALLBACK_QUALITY_EVIDENCE_PATH,
+                    ITER010_FALLBACK_QUALITY_ACTION_ID,
+                    ITER010_DIRECTION_QUALITY_CASE_ID,
+                    "PASS",
+                ),
+            ),
+        ),
+        ITER010_WEB_FAILURE_ACTION_ID: build(
+            registry_key="web_failure_attribution",
+            action_id=ITER010_WEB_FAILURE_ACTION_ID,
+            kind="governance",
+            case_id=ITER010_WEB_FAILURE_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=False,
+            result_ref=ITER010_WEB_FAILURE_RESULT_REF,
+            result_path=ITER010_WEB_FAILURE_RESULT_PATH,
+            evidence_path=ITER010_WEB_FAILURE_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_WEB_FAILURE_CASE_ID,),
+            prerequisite_case_ids=(
+                ITER010_DIRECTION_QUALITY_CASE_ID,
+                *external_prerequisites,
+            ),
+            allowed_change_paths=ITER010_WEB_FAILURE_GOVERNANCE_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_RESPONSIBILITY_PLAN_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_WEB_FAILURE_ACTION_ID,
+            fail_next_action_id=ITER010_WEB_FAILURE_ACTION_ID,
+            invalid_next_action_id=ITER010_WEB_FAILURE_ACTION_ID,
+            locks=all_locked,
+            gate_status="minimum-web-failed-attribution-authorized",
+            required_result=predecessor(
+                ITER010_MINIMUM_WEB_RESULT_REF,
+                ITER010_MINIMUM_WEB_RESULT_PATH,
+                ITER010_MINIMUM_WEB_EVIDENCE_PATH,
+                ITER010_MINIMUM_WEB_ACTION_ID,
+                ITER010_MINIMUM_WEB_CASE_ID,
+                "FAIL",
+            ),
+        ),
+        ITER010_USER_DIRECTION_ACTION_ID: build(
+            registry_key="user_direction_decision",
+            action_id=ITER010_USER_DIRECTION_ACTION_ID,
+            kind="governance",
+            case_id=ITER010_USER_DIRECTION_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=False,
+            result_ref=ITER010_USER_DIRECTION_RESULT_REF,
+            result_path=ITER010_USER_DIRECTION_RESULT_PATH,
+            evidence_path=ITER010_USER_DIRECTION_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_USER_DIRECTION_CASE_ID,),
+            prerequisite_case_ids=(
+                ITER010_MINIMUM_WEB_CASE_ID,
+                ITER010_DIRECTION_QUALITY_CASE_ID,
+                *external_prerequisites,
+            ),
+            allowed_change_paths=ITER010_USER_DIRECTION_GOVERNANCE_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_RESPONSIBILITY_PLAN_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_USER_DIRECTION_ACTION_ID,
+            fail_next_action_id=ITER010_USER_DIRECTION_ACTION_ID,
+            invalid_next_action_id=ITER010_USER_DIRECTION_ACTION_ID,
+            locks=all_locked,
+            gate_status="minimum-web-passed-user-decision-authorized",
+            required_result=predecessor(
+                ITER010_MINIMUM_WEB_RESULT_REF,
+                ITER010_MINIMUM_WEB_RESULT_PATH,
+                ITER010_MINIMUM_WEB_EVIDENCE_PATH,
+                ITER010_MINIMUM_WEB_ACTION_ID,
+                ITER010_MINIMUM_WEB_CASE_ID,
+                "PASS",
+            ),
+        ),
+        ITER010_RESPONSIBILITY_PLAN_ACTION_ID: build(
+            registry_key="responsibility_plan",
+            action_id=ITER010_RESPONSIBILITY_PLAN_ACTION_ID,
+            kind="governance",
+            case_id=ITER010_RESPONSIBILITY_PLAN_CASE_ID,
+            coding_allowed=False,
+            external_execution_allowed=False,
+            result_ref=ITER010_RESPONSIBILITY_PLAN_RESULT_REF,
+            result_path=ITER010_RESPONSIBILITY_PLAN_RESULT_PATH,
+            evidence_path=ITER010_RESPONSIBILITY_PLAN_EVIDENCE_PATH,
+            produced_case_ids=(ITER010_RESPONSIBILITY_PLAN_CASE_ID,),
+            prerequisite_case_ids=(
+                ITER010_DIRECTION_REWORK_CASE_ID,
+                ITER010_CURRENT_ACTION_CASE_ID,
+                ITER010_PUBLIC_AUTHORITY_ADMISSION_CASE_ID,
+                *ITER010_DIRECTION_PREREQUISITE_CASE_IDS,
+            ),
+            allowed_change_paths=ITER010_RESPONSIBILITY_PLAN_ALLOWED_CHANGE_PATHS,
+            forbidden_change_paths=ITER010_RESPONSIBILITY_PLAN_FORBIDDEN_CHANGE_PATHS,
+            pass_next_action_id=ITER010_RESPONSIBILITY_PLAN_ACTION_ID,
+            fail_next_action_id=ITER010_RESPONSIBILITY_PLAN_ACTION_ID,
+            invalid_next_action_id=ITER010_RESPONSIBILITY_PLAN_ACTION_ID,
+            locks=all_locked,
+            gate_status="direction-failure-attributed-governance-plan-authorized",
+            required_result=predecessor(
+                ITER010_DIRECTION_REWORK_RESULT_REF,
+                ITER010_DIRECTION_REWORK_RESULT_PATH,
+                ITER010_DIRECTION_REWORK_EVIDENCE_PATH,
+                ITER010_DIRECTION_REWORK_ACTION_ID,
+                ITER010_DIRECTION_REWORK_CASE_ID,
+                "PASS",
+            ),
+        ),
+    }
+
+
+def _exact_plan_scalar(actual: object, expected: object) -> bool:
+    """Compare plan scalars without accepting bool/int equivalence."""
+
+    return type(actual) is type(expected) and actual == expected
+
+
+def _plan_canonical_json_digest(value: object) -> str:
+    """Digest one model-transparent plan object using its canonical JSON form."""
+
+    encoded = json.dumps(
+        value,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _validate_plan_bound_object(
+    action_evidence: dict[str, object],
+    object_field: str,
+    digest_field: str,
+    label: str,
+) -> list[str]:
+    """Require a complete object and a digest derived from those exact values."""
+
+    value = action_evidence.get(object_field)
+    if not isinstance(value, dict) or not value:
+        return [f"{label}: {object_field} must be a non-empty object"]
+    expected = _plan_canonical_json_digest(value)
+    if action_evidence.get(digest_field) != expected:
+        return [
+            f"{label}: {digest_field} must match the canonical {object_field}"
+        ]
+    return []
+
+
+def _validate_provider_neutral_root_input_set(
+    value: object, label: str
+) -> list[str]:
+    """Mirror the closed provider-neutral root schema at the docs trust boundary."""
+
+    if not isinstance(value, dict):
+        return [f"{label}: provider_neutral_root_input_set must be an object"]
+
+    errors: list[str] = []
+    expected_root_keys = {"schema", "question_ids", "system_arm_ids", "entries"}
+    if set(map(str, value)) != expected_root_keys:
+        errors.append(
+            f"{label}: provider_neutral_root_input_set must contain exactly "
+            "schema, question_ids, system_arm_ids, and entries"
+        )
+    if value.get("schema") != "VALUE_GATE_PROVIDER_NEUTRAL_ROOT_INPUT_SET@1":
+        errors.append(
+            f"{label}: provider_neutral_root_input_set.schema must equal "
+            "VALUE_GATE_PROVIDER_NEUTRAL_ROOT_INPUT_SET@1"
+        )
+
+    question_ids = value.get("question_ids")
+    valid_question_ids = (
+        isinstance(question_ids, list)
+        and len(question_ids) == 3
+        and all(
+            isinstance(question_id, str)
+            and re.fullmatch(r"Q-[A-Z0-9][A-Z0-9._-]*", question_id) is not None
+            for question_id in question_ids
+        )
+        and len(set(question_ids)) == 3
+    )
+    if not valid_question_ids:
+        errors.append(
+            f"{label}: provider_neutral_root_input_set.question_ids must contain exactly three unique Q-* IDs"
+        )
+
+    expected_arm_ids = list(ITER010_DIRECTION_QUALITY_ARMS[:3])
+    system_arm_ids = value.get("system_arm_ids")
+    if system_arm_ids != expected_arm_ids:
+        errors.append(
+            f"{label}: provider_neutral_root_input_set.system_arm_ids must equal the exact first three direction-quality arms"
+        )
+
+    entries = value.get("entries")
+    if not isinstance(entries, list):
+        errors.append(
+            f"{label}: provider_neutral_root_input_set.entries must be a list"
+        )
+        return errors
+
+    seen_pairs: set[tuple[str, str]] = set()
+    for index, entry in enumerate(entries):
+        entry_label = f"{label}: provider_neutral_root_input_set.entries[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{entry_label} must be an object")
+            continue
+        if set(map(str, entry)) != {
+            "question_id",
+            "system_arm_id",
+            "root_input_digest",
+        }:
+            errors.append(
+                f"{entry_label} must contain exactly question_id, system_arm_id, and root_input_digest"
+            )
+        question_id = entry.get("question_id")
+        system_arm_id = entry.get("system_arm_id")
+        digest = entry.get("root_input_digest")
+        if (
+            not isinstance(question_id, str)
+            or not valid_question_ids
+            or question_id not in question_ids
+        ):
+            errors.append(f"{entry_label}.question_id must reference question_ids")
+        if not isinstance(system_arm_id, str) or system_arm_id not in expected_arm_ids:
+            errors.append(
+                f"{entry_label}.system_arm_id must reference the exact system_arm_ids"
+            )
+        if not isinstance(digest, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", digest
+        ) is None:
+            errors.append(f"{entry_label}.root_input_digest must be an exact sha256 digest")
+        if isinstance(question_id, str) and isinstance(system_arm_id, str):
+            pair = (question_id, system_arm_id)
+            if pair in seen_pairs:
+                errors.append(
+                    f"{entry_label} duplicates question_id/system_arm_id pair {pair}"
+                )
+            seen_pairs.add(pair)
+
+    if valid_question_ids and system_arm_ids == expected_arm_ids:
+        expected_pairs = {
+            (question_id, system_arm_id)
+            for question_id in question_ids
+            for system_arm_id in expected_arm_ids
+        }
+        if seen_pairs != expected_pairs or len(entries) != len(expected_pairs):
+            errors.append(
+                f"{label}: provider_neutral_root_input_set.entries must be the complete question_ids x system_arm_ids Cartesian product without omissions or extras"
+            )
+    return errors
+
+
+def _validate_iter010_action_mapping(
+    manifest: dict[str, object],
+    manifest_text: str | None,
+    action: dict[str, object],
+    spec: dict[str, object],
+    path: tuple[str, ...],
+    label: str,
+    *,
+    registered_contract: bool,
+) -> tuple[list[str], dict[str, list[str]]]:
+    """Validate one current or pre-registered action against an exact spec."""
+
+    errors: list[str] = []
+    scalar_spec = spec["scalars"]
+    sequence_spec = spec["sequences"]
+    assert isinstance(scalar_spec, dict)
+    assert isinstance(sequence_spec, dict)
+    expected_keys = set(scalar_spec) | set(sequence_spec)
+    if registered_contract:
+        expected_keys |= {"transition", "locks"}
+    dotted = ".".join(path)
+    if set(map(str, action)) != expected_keys:
+        errors.append(
+            f"{label}: {dotted} must contain exactly the frozen action fields"
+        )
+    for field, expected in scalar_spec.items():
+        if not _exact_plan_scalar(action.get(field), expected):
+            errors.append(f"{label}: {dotted}.{field} must equal {expected}")
+
+    resolved: dict[str, list[str]] = {}
+    for field, expected_items in sequence_spec.items():
+        expected = list(expected_items) if isinstance(expected_items, tuple) else []
+        items = _manifest_nested_sequence(
+            manifest,
+            (*path, str(field)),
+            manifest_text,
+        )
+        resolved[str(field)] = items or []
+        if items != expected:
+            errors.append(
+                f"{label}: {dotted}.{field} must be the exact frozen YAML block sequence"
+            )
+        if items is not None and len(items) != len(set(items)):
+            errors.append(f"{label}: {dotted}.{field} must not contain duplicates")
+
+    for field in ("allowed_change_paths", "forbidden_change_paths"):
+        for value in resolved.get(field, []):
+            if not _plan_path_is_safe(value):
+                errors.append(f"{label}: {dotted}.{field} contains an unsafe path: {value}")
+    if set(resolved.get("allowed_change_paths", [])).intersection(
+        resolved.get("forbidden_change_paths", [])
+    ):
+        errors.append(
+            f"{label}: {dotted} allowed_change_paths and forbidden_change_paths must not overlap"
+        )
+
+    if registered_contract:
+        for nested_field in ("transition", "locks"):
+            actual = action.get(nested_field)
+            expected = spec[nested_field]
+            if not isinstance(actual, dict) or not isinstance(expected, dict):
+                errors.append(f"{label}: {dotted}.{nested_field} must be a mapping")
+                continue
+            if set(map(str, actual)) != set(expected):
+                errors.append(
+                    f"{label}: {dotted}.{nested_field} must contain exactly the frozen keys"
+                )
+            for field, expected_value in expected.items():
+                if not _exact_plan_scalar(actual.get(field), expected_value):
+                    errors.append(
+                        f"{label}: {dotted}.{nested_field}.{field} must equal {expected_value}"
+                    )
+    return errors, resolved
+
+
+def _validate_iter010_transition_result(
+    result: Document | None,
+    expected: dict[str, object],
+    label: str,
+    evidence_text: str | None = None,
+    *,
+    configured_profiles: dict[str, dict[str, object]] | None = None,
+    configured_identities: Iterable[str] = (),
+    fallback_plugin_ref: str | None = None,
+    fallback_plugin: dict[str, object] | None = None,
+) -> list[str]:
+    """Require the exact predecessor Result that authorizes an action move."""
+
+    result_id = str(expected["id"])
+    if result is None:
+        return [
+            f"{label}: current action materialization requires exact predecessor Result {result_id}"
+        ]
+    errors: list[str] = []
+    if _path_label(result.path) != expected["path"]:
+        errors.append(
+            f"{label}: predecessor Result {result_id} must be at {expected['path']}"
+        )
+    for field, expected_value in (
+        ("id", expected["id"]),
+        ("kind", "iteration-result"),
+        ("status", "sealed"),
+        ("authority", "evidence"),
+        ("iteration", "ITER-010"),
+        ("plan_revision_ref", ITER010_PLAN_REVISION_REF),
+        ("action_ref", expected["action_ref"]),
+        ("verification_case_id", expected["verification_case_id"]),
+        ("plan_gate_verdict", expected["plan_gate_verdict"]),
+        ("evidence_schema", ITER010_PLAN_EVIDENCE_SCHEMA),
+        ("evidence_verifier", ITER010_PLAN_EVIDENCE_VERIFIER),
+        ("evidence_artifact_path", expected["evidence_path"]),
+    ):
+        if result.metadata.get(field) != expected_value:
+            errors.append(
+                f"{label}: predecessor Result {result_id} {field} must equal {expected_value}"
+            )
+    if result.metadata.get("plan_gate_verdict") not in {"PASS", "FAIL", "INVALID"}:
+        errors.append(
+            f"{label}: predecessor Result {result_id} plan_gate_verdict must be PASS, FAIL, or INVALID"
+        )
+    for field in (
+        "evidence_artifact_digest",
+        "execution_input_digest",
+        "runner_identity_digest",
+        "runner_receipt_digest",
+        "verification_report_digest",
+        "subject_digest",
+    ):
+        value = result.metadata.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None:
+            errors.append(
+                f"{label}: predecessor Result {result_id} {field} must be an exact sha256 digest"
+            )
+    call_count = result.metadata.get("external_model_call_count")
+    if not isinstance(call_count, str) or re.fullmatch(r"0|[1-9][0-9]*", call_count) is None:
+        errors.append(
+            f"{label}: predecessor Result {result_id} external_model_call_count must be a non-negative integer"
+        )
+
+    if evidence_text is None:
+        evidence_path = REPOSITORY / str(expected["evidence_path"])
+        if evidence_path.is_file():
+            try:
+                evidence_text = evidence_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as error:
+                errors.append(
+                    f"{label}: cannot read predecessor Result evidence {expected['evidence_path']}: {error}"
+                )
+    if evidence_text is None:
+        errors.append(
+            f"{label}: predecessor Result {result_id} requires evidence artifact {expected['evidence_path']}"
+        )
+        return errors
+    actual_digest = "sha256:" + hashlib.sha256(evidence_text.encode("utf-8")).hexdigest()
+    if result.metadata.get("evidence_artifact_digest") != actual_digest:
+        errors.append(
+            f"{label}: predecessor Result {result_id} evidence_artifact_digest must match exact artifact bytes"
+        )
+    try:
+        artifact = json.loads(evidence_text)
+    except json.JSONDecodeError:
+        errors.append(
+            f"{label}: predecessor Result {result_id} evidence artifact must be valid JSON"
+        )
+        return errors
+    if not isinstance(artifact, dict):
+        errors.append(
+            f"{label}: predecessor Result {result_id} evidence artifact root must be an object"
+        )
+        return errors
+    for field, expected_value in (
+        ("schema", ITER010_PLAN_EVIDENCE_SCHEMA),
+        ("result_id", expected["id"]),
+        ("plan_revision_ref", ITER010_PLAN_REVISION_REF),
+        ("action_ref", expected["action_ref"]),
+        ("verification_case_id", expected["verification_case_id"]),
+        ("plan_gate_verdict", expected["plan_gate_verdict"]),
+        ("evidence_verifier", ITER010_PLAN_EVIDENCE_VERIFIER),
+        ("evidence_artifact_path", expected["evidence_path"]),
+    ):
+        if artifact.get(field) != expected_value:
+            errors.append(
+                f"{label}: predecessor Result {result_id} evidence {field} must equal {expected_value}"
+            )
+    action_ref = expected["action_ref"]
+    action_evidence = artifact.get("action_evidence")
+    if not isinstance(action_evidence, dict):
+        errors.append(
+            f"{label}: predecessor Result {result_id} evidence action_evidence must be an object"
+        )
+        action_evidence = {}
+    if action_ref in {
+        ITER010_CURRENT_ACTION_ID,
+        ITER010_PREFERRED_QUALITY_ACTION_ID,
+        ITER010_FALLBACK_REFREEZE_ACTION_ID,
+        ITER010_FALLBACK_QUALITY_ACTION_ID,
+    }:
+        errors.extend(
+            _validate_provider_neutral_root_input_set(
+                action_evidence.get("provider_neutral_root_input_set"),
+                f"{label}: predecessor Result {result_id}",
+            )
+        )
+    errors.extend(
+        _configured_identity_errors(
+            action_evidence.get("provider_neutral_root_input_set"),
+            configured_identities,
+            f"{label}: predecessor Result {result_id} provider_neutral_root_input_set",
+        )
+    )
+    root_keys = {
+        "provider_neutral_root_input_set",
+        "provider_neutral_root_input_set_digest",
+    }
+    quality_keys = root_keys | {
+        "route_role",
+        "execution_profile_ref",
+        "execution_profile",
+        "execution_profile_digest",
+        "admission_receipt",
+        "admission_receipt_digest",
+        "terminal_receipt",
+        "terminal_receipt_digest",
+        "terminal_classification",
+        "mixed_execution_profile_batch",
+    }
+    if action_ref == ITER010_CURRENT_ACTION_ID:
+        if set(map(str, action_evidence)) != root_keys:
+            errors.append(
+                f"{label}: DirectionFreeze action_evidence must contain exactly the provider-neutral root input keys"
+            )
+        errors.extend(
+            _validate_plan_bound_object(
+                action_evidence,
+                "provider_neutral_root_input_set",
+                "provider_neutral_root_input_set_digest",
+                f"{label}: DirectionFreeze evidence",
+            )
+        )
+    elif action_ref in {
+        ITER010_PREFERRED_QUALITY_ACTION_ID,
+        ITER010_FALLBACK_QUALITY_ACTION_ID,
+    }:
+        expected_keys = set(quality_keys)
+        expected_role = "preferred"
+        evidence_name = "PreferredRouteQuality"
+        if action_ref == ITER010_FALLBACK_QUALITY_ACTION_ID:
+            expected_role = "fallback"
+            evidence_name = "FallbackRouteQuality"
+            expected_keys |= {
+                "fallback_refreeze_predecessor_ref",
+                "fallback_refreeze_predecessor_seal_digest",
+                "admission_policy_plugin_ref",
+                "admission_policy_plugin",
+                "admission_policy_plugin_digest",
+            }
+        if set(map(str, action_evidence)) != expected_keys:
+            errors.append(
+                f"{label}: {evidence_name} action_evidence must contain exactly the model-transparent keys"
+            )
+        if action_evidence.get("route_role") != expected_role:
+            errors.append(
+                f"{label}: {evidence_name} route_role must equal {expected_role}"
+            )
+        if action_evidence.get("mixed_execution_profile_batch") is not False:
+            errors.append(
+                f"{label}: {evidence_name} mixed_execution_profile_batch must equal false"
+            )
+        if action_evidence.get("terminal_classification") not in {
+            "AVAILABLE",
+            "TERMINAL_UNAVAILABLE",
+            "OTHER_INVALID",
+        }:
+            errors.append(
+                f"{label}: {evidence_name} terminal_classification must be a generic terminal class"
+            )
+        for object_field, digest_field in (
+            (
+                "provider_neutral_root_input_set",
+                "provider_neutral_root_input_set_digest",
+            ),
+            ("execution_profile", "execution_profile_digest"),
+            ("admission_receipt", "admission_receipt_digest"),
+            ("terminal_receipt", "terminal_receipt_digest"),
+        ):
+            errors.extend(
+                _validate_plan_bound_object(
+                    action_evidence,
+                    object_field,
+                    digest_field,
+                    f"{label}: {evidence_name} evidence",
+                )
+            )
+        for ref_field in ("execution_profile_ref",):
+            if not isinstance(action_evidence.get(ref_field), str) or not str(
+                action_evidence.get(ref_field)
+            ).strip():
+                errors.append(
+                    f"{label}: {evidence_name} {ref_field} must be a non-empty reference"
+                )
+        expected_profile = (configured_profiles or {}).get(expected_role)
+        if isinstance(expected_profile, dict):
+            if action_evidence.get("execution_profile_ref") != expected_profile.get(
+                "execution_profile_ref"
+            ):
+                errors.append(
+                    f"{label}: {evidence_name} execution_profile_ref must equal the trusted {expected_role} execution profile ref"
+                )
+            if action_evidence.get("execution_profile") != expected_profile:
+                errors.append(
+                    f"{label}: {evidence_name} execution_profile must exactly equal the trusted {expected_role} execution profile configuration"
+                )
+        if action_ref == ITER010_FALLBACK_QUALITY_ACTION_ID:
+            if (
+                action_evidence.get("fallback_refreeze_predecessor_ref")
+                != ITER010_FALLBACK_REFREEZE_RESULT_REF
+            ):
+                errors.append(
+                    f"{label}: FallbackRouteQuality predecessor ref must equal {ITER010_FALLBACK_REFREEZE_RESULT_REF}"
+                )
+            seal = action_evidence.get("fallback_refreeze_predecessor_seal_digest")
+            if not isinstance(seal, str) or re.fullmatch(
+                r"sha256:[0-9a-f]{64}", seal
+            ) is None:
+                errors.append(
+                    f"{label}: FallbackRouteQuality predecessor seal must be an exact sha256 digest"
+                )
+            errors.extend(
+                _validate_plan_bound_object(
+                    action_evidence,
+                    "admission_policy_plugin",
+                    "admission_policy_plugin_digest",
+                    f"{label}: FallbackRouteQuality evidence",
+                )
+            )
+            if action_evidence.get("admission_policy_plugin_ref") != fallback_plugin_ref:
+                errors.append(
+                    f"{label}: FallbackRouteQuality admission_policy_plugin_ref must equal provider_route_policy.fallback_admission_policy_plugin_ref"
+                )
+            if isinstance(fallback_plugin, dict) and action_evidence.get(
+                "admission_policy_plugin"
+            ) != fallback_plugin:
+                errors.append(
+                    f"{label}: FallbackRouteQuality admission_policy_plugin must exactly equal the trusted admission plugin configuration"
+                )
+    elif action_ref == ITER010_FALLBACK_REFREEZE_ACTION_ID:
+        expected_action_keys = root_keys | {
+            "preferred_invalid_predecessor_ref",
+            "preferred_invalid_predecessor_seal_digest",
+            "fallback_execution_profile_ref",
+            "fallback_execution_profile",
+            "fallback_execution_profile_digest",
+            "fallback_admission_policy_plugin_ref",
+            "fallback_admission_policy_plugin",
+            "fallback_admission_policy_plugin_digest",
+            "preferred_terminal_classification",
+            "mixed_execution_profile_batch",
+            "provider_dispatch_count",
+            "new_human_authority_requested",
+        }
+        if set(map(str, action_evidence)) != expected_action_keys:
+            errors.append(
+                f"{label}: FallbackRouteRefreeze action_evidence must contain exactly the model-transparent keys"
+            )
+        for field, expected_value in (
+            (
+                "preferred_invalid_predecessor_ref",
+                ITER010_PREFERRED_QUALITY_RESULT_REF,
+            ),
+            ("mixed_execution_profile_batch", False),
+            ("provider_dispatch_count", 0),
+            ("new_human_authority_requested", False),
+        ):
+            if not _exact_plan_scalar(action_evidence.get(field), expected_value):
+                errors.append(
+                    f"{label}: FallbackRouteRefreeze {field} must equal {expected_value}"
+                )
+        terminal = action_evidence.get("preferred_terminal_classification")
+        if terminal not in {"TERMINAL_UNAVAILABLE", "OTHER_INVALID"}:
+            errors.append(
+                f"{label}: FallbackRouteRefreeze preferred_terminal_classification must identify the preferred route invalid class"
+            )
+        if (
+            artifact.get("plan_gate_verdict") == "PASS"
+            and terminal != "TERMINAL_UNAVAILABLE"
+        ):
+            errors.append(
+                f"{label}: FallbackRouteRefreeze PASS requires TERMINAL_UNAVAILABLE"
+            )
+        seal = action_evidence.get("preferred_invalid_predecessor_seal_digest")
+        if not isinstance(seal, str) or re.fullmatch(
+            r"sha256:[0-9a-f]{64}", seal
+        ) is None:
+            errors.append(
+                f"{label}: FallbackRouteRefreeze predecessor seal must be an exact sha256 digest"
+            )
+        for object_field, digest_field in (
+            (
+                "provider_neutral_root_input_set",
+                "provider_neutral_root_input_set_digest",
+            ),
+            ("fallback_execution_profile", "fallback_execution_profile_digest"),
+            (
+                "fallback_admission_policy_plugin",
+                "fallback_admission_policy_plugin_digest",
+            ),
+        ):
+            errors.extend(
+                _validate_plan_bound_object(
+                    action_evidence,
+                    object_field,
+                    digest_field,
+                    f"{label}: FallbackRouteRefreeze evidence",
+                )
+            )
+        expected_profile = (configured_profiles or {}).get("fallback")
+        if isinstance(expected_profile, dict):
+            if action_evidence.get(
+                "fallback_execution_profile_ref"
+            ) != expected_profile.get("execution_profile_ref"):
+                errors.append(
+                    f"{label}: FallbackRouteRefreeze fallback_execution_profile_ref must equal the trusted fallback execution profile ref"
+                )
+            if action_evidence.get("fallback_execution_profile") != expected_profile:
+                errors.append(
+                    f"{label}: FallbackRouteRefreeze fallback_execution_profile must exactly equal the trusted fallback execution profile configuration"
+                )
+        if (
+            action_evidence.get("fallback_admission_policy_plugin_ref")
+            != fallback_plugin_ref
+        ):
+            errors.append(
+                f"{label}: FallbackRouteRefreeze fallback_admission_policy_plugin_ref must equal provider_route_policy.fallback_admission_policy_plugin_ref"
+            )
+        if isinstance(fallback_plugin, dict) and action_evidence.get(
+            "fallback_admission_policy_plugin"
+        ) != fallback_plugin:
+            errors.append(
+                f"{label}: FallbackRouteRefreeze fallback_admission_policy_plugin must exactly equal the trusted admission plugin configuration"
+            )
+    elif action_evidence:
+        errors.append(f"{label}: this plan action requires empty action_evidence")
+    return errors
+
+
+def _iter010_required_result_options(
+    required: object,
+) -> tuple[dict[str, object], ...]:
+    """Normalize a single predecessor or an explicit mutually exclusive set."""
+
+    if isinstance(required, dict):
+        return (required,)
+    if isinstance(required, tuple) and required and all(
+        isinstance(item, dict) for item in required
+    ):
+        return required
+    return ()
+
+
+def _load_iter010_required_transition_results(
+    manifest: dict[str, object], manifest_path: Path, label: str
+) -> tuple[dict[str, Document], dict[str, str], list[str]]:
+    """Load only the predecessor Result required by the current action."""
+
+    authoritative_manifest_path = (
+        REPOSITORY
+        / "docs/project/iterations/iteration-010/manifest.yaml"
+    )
+    if manifest_path.resolve() != authoritative_manifest_path.resolve():
+        return {}, {}, []
+    control = manifest.get("plan_execution_control")
+    action = control.get("current_action") if isinstance(control, dict) else None
+    action_id = action.get("id") if isinstance(action, dict) else None
+    spec = iter010_plan_action_specs().get(str(action_id))
+    required = spec.get("required_result") if isinstance(spec, dict) else None
+    options = list(_iter010_required_result_options(required))
+    specs = iter010_plan_action_specs()
+    for quality_action_id in (
+        ITER010_PREFERRED_QUALITY_ACTION_ID,
+        ITER010_FALLBACK_QUALITY_ACTION_ID,
+    ):
+        quality_spec = specs[quality_action_id]
+        scalars = quality_spec["scalars"]
+        assert isinstance(scalars, dict)
+        if not any(option.get("id") == scalars["result_ref"] for option in options):
+            options.append(
+                {
+                    "id": scalars["result_ref"],
+                    "path": scalars["result_path"],
+                    "evidence_path": scalars["evidence_path"],
+                }
+            )
+    results: dict[str, Document] = {}
+    evidence: dict[str, str] = {}
+    errors: list[str] = []
+    for option in options:
+        result_id = str(option["id"])
+        result_path = REPOSITORY / str(option["path"])
+        if not result_path.is_file():
+            continue
+        try:
+            result, parse_errors = parse_document(result_path)
+        except (OSError, UnicodeError) as error:
+            errors.append(
+                f"{label}: cannot read predecessor Result {result_id}: {error}"
+            )
+            continue
+        errors.extend(parse_errors)
+        if result is None:
+            continue
+        results[result_id] = result
+        evidence_path = REPOSITORY / str(option["evidence_path"])
+        if evidence_path.is_file():
+            try:
+                evidence[result_id] = evidence_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as error:
+                errors.append(
+                    f"{label}: cannot read predecessor Result evidence {result_id}: {error}"
+                )
+    return results, evidence, errors
+
+
+def _iter010_validated_receipt_outcomes(
+    evidence_text: str | None,
+    predecessor_spec: dict[str, object] | None,
+    expected_verdict: str,
+    label: str,
+) -> tuple[dict[str, str], list[str]]:
+    """Validate exact produced-Case coverage and deterministic verdict aggregation."""
+
+    if evidence_text is None or predecessor_spec is None:
+        return {}, []
+    try:
+        artifact = json.loads(evidence_text)
+    except json.JSONDecodeError:
+        return {}, []
+    if not isinstance(artifact, dict):
+        return {}, []
+    raw_outcomes = artifact.get("case_outcomes")
+    if not isinstance(raw_outcomes, list) or not raw_outcomes:
+        return {}, [f"{label}: transition evidence case_outcomes must be non-empty"]
+    outcomes: dict[str, str] = {}
+    errors: list[str] = []
+    for outcome in raw_outcomes:
+        if not isinstance(outcome, dict):
+            errors.append(f"{label}: transition evidence case_outcome must be a mapping")
+            continue
+        case_id = outcome.get("case_id")
+        verdict = outcome.get("verdict")
+        if not isinstance(case_id, str) or verdict not in {"PASS", "FAIL", "INVALID"}:
+            errors.append(f"{label}: transition evidence case_outcome identity/verdict is invalid")
+            continue
+        if case_id in outcomes:
+            errors.append(f"{label}: transition evidence repeats Case {case_id}")
+        outcomes[case_id] = str(verdict)
+    sequences = predecessor_spec.get("sequences")
+    produced = (
+        sequences.get("produced_case_ids", ())
+        if isinstance(sequences, dict)
+        else ()
+    )
+    if set(outcomes) != set(produced):
+        errors.append(
+            f"{label}: transition evidence must exactly cover predecessor produced_case_ids"
+        )
+    aggregate = (
+        "INVALID"
+        if "INVALID" in outcomes.values()
+        else "FAIL"
+        if "FAIL" in outcomes.values()
+        else "PASS"
+        if outcomes
+        else None
+    )
+    if aggregate != expected_verdict:
+        errors.append(
+            f"{label}: transition evidence verdict must use INVALID > FAIL > PASS aggregation"
+        )
+    return outcomes, errors
+
+
+def validate_iter010_plan_execution_snapshot(
+    manifest: dict[str, object],
+    label: str,
+    *,
+    manifest_text: str | None = None,
+    current: Document | None = None,
+    verification: Document | None = None,
+    transition_results: dict[str, Document] | None = None,
+    transition_evidence_artifacts: dict[str, str] | None = None,
+    require_external_bindings: bool = False,
+) -> list[str]:
+    """Fail closed when ITER-010 drifts from the PDR-009 executable plan.
+
+    This is deliberately a state-machine snapshot, not prose interpretation.
+    It binds the current action to a pre-registered contract, its exact change
+    envelope and locks, the Result needed for each transition, the four-arm
+    direction gate, and the current pointer.
+    """
+
+    errors: list[str] = []
+    errors.extend(validate_model_transparent_plan_routing(manifest, label))
+    configured_profiles, configured_identities, fallback_plugin, _ = (
+        _configured_execution_profiles(manifest, label)
+    )
+    provider_policy = manifest.get("provider_route_policy")
+    fallback_plugin_ref = (
+        provider_policy.get("fallback_admission_policy_plugin_ref")
+        if isinstance(provider_policy, dict)
+        else None
+    )
+    if manifest.get("schema_version") != 2:
+        errors.append(f"{label}: active ITER-010 schema_version must equal 2")
+
+    control = manifest.get("plan_execution_control")
+    if not isinstance(control, dict):
+        return errors + [f"{label}: plan_execution_control must be a mapping"]
+    expected_control_keys = {
+        "schema",
+        "plan_revision_ref",
+        "enforcement_mode",
+        "authorization_refs",
+        "current_action",
+        "transition",
+        "locks",
+        "next_action_contracts",
+    }
+    if set(map(str, control)) != expected_control_keys:
+        errors.append(
+            f"{label}: plan_execution_control must contain exactly the frozen control keys"
+        )
+    for field, expected in (
+        ("schema", ITER010_PLAN_EXECUTION_CONTROL_SCHEMA),
+        ("plan_revision_ref", ITER010_PLAN_REVISION_REF),
+        ("enforcement_mode", "fail-closed"),
+    ):
+        if control.get(field) != expected:
+            errors.append(
+                f"{label}: plan_execution_control.{field} must equal {expected}"
+            )
+    authorization_refs = _manifest_nested_sequence(
+        manifest,
+        ("plan_execution_control", "authorization_refs"),
+        manifest_text,
+    )
+    if authorization_refs != list(ITER010_PLAN_AUTHORIZATION_REFS):
+        errors.append(
+            f"{label}: plan_execution_control.authorization_refs must be the exact frozen YAML block sequence"
+        )
+
+    specs = iter010_plan_action_specs()
+    action = control.get("current_action")
+    if not isinstance(action, dict):
+        errors.append(
+            f"{label}: plan_execution_control.current_action must be a mapping"
+        )
+        action = {}
+    action_id = action.get("id")
+    current_spec = specs.get(str(action_id))
+    action_sequences: dict[str, list[str]] = {}
+    if current_spec is None:
+        errors.append(
+            f"{label}: current action {action_id} is not the initial freeze or a pre-registered action contract"
+        )
+    else:
+        action_errors, action_sequences = _validate_iter010_action_mapping(
+            manifest,
+            manifest_text,
+            action,
+            current_spec,
+            ("plan_execution_control", "current_action"),
+            label,
+            registered_contract=False,
+        )
+        errors.extend(action_errors)
+
+    next_contracts = control.get("next_action_contracts")
+    registered_specs = {
+        str(spec["registry_key"]): spec
+        for spec in specs.values()
+        if spec["registry_key"] is not None
+    }
+    if not isinstance(next_contracts, dict):
+        errors.append(
+            f"{label}: plan_execution_control.next_action_contracts must be a mapping"
+        )
+        next_contracts = {}
+    if set(map(str, next_contracts)) != set(registered_specs):
+        errors.append(
+            f"{label}: plan_execution_control.next_action_contracts must contain exactly the pre-registered action keys"
+        )
+    for registry_key, spec in registered_specs.items():
+        contract = next_contracts.get(registry_key)
+        if not isinstance(contract, dict):
+            errors.append(
+                f"{label}: plan_execution_control.next_action_contracts.{registry_key} must be a mapping"
+            )
+            continue
+        contract_errors, _ = _validate_iter010_action_mapping(
+            manifest,
+            manifest_text,
+            contract,
+            spec,
+            ("plan_execution_control", "next_action_contracts", registry_key),
+            label,
+            registered_contract=True,
+        )
+        errors.extend(contract_errors)
+
+    transition = control.get("transition")
+    if not isinstance(transition, dict):
+        errors.append(f"{label}: plan_execution_control.transition must be a mapping")
+    elif current_spec is not None:
+        expected_transition = current_spec["transition"]
+        assert isinstance(expected_transition, dict)
+        if set(map(str, transition)) != set(expected_transition):
+            errors.append(
+                f"{label}: plan_execution_control.transition must contain exactly the frozen keys"
+            )
+        for field, expected in expected_transition.items():
+            if not _exact_plan_scalar(transition.get(field), expected):
+                errors.append(
+                    f"{label}: plan_execution_control.transition.{field} must equal {expected}"
+                )
+
+    locks = control.get("locks")
+    if not isinstance(locks, dict):
+        errors.append(f"{label}: plan_execution_control.locks must be a mapping")
+    elif current_spec is not None:
+        expected_locks = current_spec["locks"]
+        assert isinstance(expected_locks, dict)
+        if set(map(str, locks)) != set(expected_locks):
+            errors.append(
+                f"{label}: plan_execution_control.locks must contain exactly the frozen lock keys"
+            )
+        for field, expected in expected_locks.items():
+            if not _exact_plan_scalar(locks.get(field), expected):
+                errors.append(
+                    f"{label}: plan_execution_control.locks.{field} must equal {expected}"
+                )
+
+    available_results = transition_results or {}
+    quality_pass_result_ids = [
+        result_id
+        for result_id in (
+            ITER010_PREFERRED_QUALITY_RESULT_REF,
+            ITER010_FALLBACK_QUALITY_RESULT_REF,
+        )
+        if (
+            result_id in available_results
+            and available_results[result_id].metadata.get("plan_gate_verdict") == "PASS"
+        )
+    ]
+    if len(quality_pass_result_ids) > 1:
+        errors.append(
+            f"{label}: {ITER010_DIRECTION_QUALITY_CASE_ID} may have at most one PASS "
+            "Result across the preferred and fallback quality actions"
+        )
+
+    validated_receipt_pass_cases: set[str] = set()
+    if current_spec is not None:
+        required_options = _iter010_required_result_options(
+            current_spec["required_result"]
+        )
+        selected_required: dict[str, object] | None = None
+        if len(required_options) == 1:
+            selected_required = required_options[0]
+        elif required_options:
+            matching_options = [
+                option
+                for option in required_options
+                if (
+                    (result := available_results.get(str(option["id"])))
+                    is not None
+                    and result.metadata.get("plan_gate_verdict")
+                    == option["plan_gate_verdict"]
+                )
+            ]
+            if len(matching_options) != 1:
+                errors.append(
+                    f"{label}: current action requires exactly one qualifying "
+                    "mutually exclusive predecessor Result"
+                )
+                present_options = [
+                    option
+                    for option in required_options
+                    if str(option["id"]) in available_results
+                ]
+                if len(present_options) == 1:
+                    selected_required = present_options[0]
+            else:
+                selected_required = matching_options[0]
+
+        if selected_required is not None:
+            result_id = str(selected_required["id"])
+            result = available_results.get(result_id)
+            evidence_text = (transition_evidence_artifacts or {}).get(result_id)
+            if evidence_text is None:
+                evidence_path = REPOSITORY / str(
+                    selected_required["evidence_path"]
+                )
+                if evidence_path.is_file():
+                    try:
+                        evidence_text = evidence_path.read_text(encoding="utf-8")
+                    except (OSError, UnicodeError):
+                        evidence_text = None
+            result_errors = _validate_iter010_transition_result(
+                result,
+                selected_required,
+                label,
+                evidence_text,
+                configured_profiles=configured_profiles,
+                configured_identities=configured_identities,
+                fallback_plugin_ref=(
+                    fallback_plugin_ref
+                    if isinstance(fallback_plugin_ref, str)
+                    else None
+                ),
+                fallback_plugin=fallback_plugin,
+            )
+            errors.extend(result_errors)
+            predecessor_spec = specs.get(str(selected_required["action_ref"]))
+            outcomes, outcome_errors = _iter010_validated_receipt_outcomes(
+                evidence_text,
+                predecessor_spec,
+                str(selected_required["plan_gate_verdict"]),
+                label,
+            )
+            errors.extend(outcome_errors)
+            if not result_errors and not outcome_errors:
+                validated_receipt_pass_cases.update(
+                    case_id
+                    for case_id, verdict in outcomes.items()
+                    if verdict == "PASS"
+                )
+
+    gate = manifest.get("direction_quality_gate")
+    if not isinstance(gate, dict):
+        errors.append(f"{label}: direction_quality_gate must be a mapping")
+        gate = {}
+    expected_gate_status = (
+        current_spec["gate_status"]
+        if current_spec is not None
+        else "locked-until-direction-freeze-pass"
+    )
+    gate_exact_values = (
+        ("schema", ITER010_DIRECTION_QUALITY_GATE_SCHEMA),
+        ("case_id", ITER010_DIRECTION_QUALITY_CASE_ID),
+        ("owner_slice_ref", "ITER-010-SLICE-001"),
+        ("status", expected_gate_status),
+        ("execution_order", ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER),
+        ("question_set_rule", ITER010_DIRECTION_QUESTION_SET_RULE),
+        ("source_truth_owner", "independent-exact-source-ledger-not-any-model-answer"),
+        ("direct_evidence_arm_is_oracle", False),
+        ("current_codex_role", STRICT_CODEX_BASELINE_ROLE),
+        ("current_codex_is_oracle_or_reviewer", False),
+        ("first_three_arms_same_provider_model_configuration", True),
+        (
+            "source_only_and_world_model_arms_same_agent_prompt_tools_budget_cache_and_reviewer",
+            True,
+        ),
+        ("outputs_sealed_before_cross_arm_disclosure", True),
+        ("blind_randomized_independent_evaluation", True),
+        ("absolute_quality_pass_required", True),
+        ("absolute_quality_rule", ITER010_DIRECTION_ABSOLUTE_QUALITY_RULE),
+        ("world_model_arm_must_not_lose_to_direct_evidence", True),
+        ("world_model_arm_must_not_lose_to_source_only", True),
+        ("world_model_arm_must_not_lose_to_current_codex", True),
+        ("current_codex_overall_quality_margin_rule", "strictly-positive"),
+        ("non_locator_world_model_contribution_required", True),
+        ("all_tie_outcome", "FAIL"),
+        ("cost_or_latency_can_compensate_quality", False),
+        ("product_code_change_before_verdict_allowed", False),
+        (
+            "preferred_route_execution_profile_ref",
+            "provider_route_policy.preferred_execution_profile_ref",
+        ),
+        (
+            "fallback_route_execution_profile_ref",
+            "provider_route_policy.fallback_execution_profile_ref",
+        ),
+        ("preferred_quality_action_id", ITER010_PREFERRED_QUALITY_ACTION_ID),
+        ("preferred_quality_result_ref", ITER010_PREFERRED_QUALITY_RESULT_REF),
+        ("mixed_provider_batch_allowed", False),
+        ("fallback_refreeze_action_id", ITER010_FALLBACK_REFREEZE_ACTION_ID),
+        ("fallback_refreeze_case_id", ITER010_FALLBACK_REFREEZE_CASE_ID),
+        ("fallback_refreeze_requires_new_human_authority", False),
+        ("fallback_refreeze_provider_dispatch_allowed", False),
+        (
+            "fallback_refreeze_action_evidence_required",
+            "preferred-invalid-predecessor-seal,provider-neutral-root-input-set,"
+            "fallback-execution-profile-ref-and-digest,"
+            "fallback-admission-policy-plugin-ref-and-digest,no-mixed-batch,"
+            "zero-provider-dispatch,no-new-human-authority",
+        ),
+        ("fallback_quality_action_id", ITER010_FALLBACK_QUALITY_ACTION_ID),
+        ("fallback_quality_result_ref", ITER010_FALLBACK_QUALITY_RESULT_REF),
+        ("fallback_allowed_only_after_refreeze_pass", True),
+        (
+            "fallback_admission_prerequisite_case_id",
+            "V-FALLBACK-ROUTE-ADMISSION-001",
+        ),
+        (
+            "fallback_quality_action_evidence_required",
+            "fallback-refreeze-predecessor-seal,provider-neutral-root-input-set,"
+            "execution-profile-ref-and-digest,admission-and-terminal-receipts,"
+            "no-mixed-batch",
+        ),
+        ("quality_case_pass_result_cardinality", "at-most-one"),
+        (
+            "preferred_terminal_unavailable_action",
+            "invalidate-preferred-batch-and-enter-pre-registered-fallback-refreeze",
+        ),
+        (
+            "preferred_other_invalid_action",
+            "fallback-refreeze-fails-back-to-preferred-quality",
+        ),
+        ("fallback_invalid_action", "fail-closed-at-fallback-quality"),
+        ("dirty_v7_status", "quarantined-not-input"),
+    )
+    expected_gate_keys = {
+        field for field, _ in gate_exact_values
+    } | {"arms", "question_count", "target_product_commit", "target_product_tree"}
+    if set(map(str, gate)) != expected_gate_keys:
+        errors.append(
+            f"{label}: direction_quality_gate must contain exactly the frozen four-arm Gate fields"
+        )
+    for field, expected in gate_exact_values:
+        if gate.get(field) != expected:
+            errors.append(
+                f"{label}: direction_quality_gate.{field} must equal {expected}"
+            )
+    for field in ("target_product_commit", "target_product_tree"):
+        value = gate.get(field)
+        if not isinstance(value, str) or HEX_COMMIT_RE.fullmatch(value) is None:
+            errors.append(
+                f"{label}: direction_quality_gate.{field} must be an exact 40-character lowercase Git object ID"
+            )
+    question_count = gate.get("question_count")
+    if (
+        isinstance(question_count, bool)
+        or not isinstance(question_count, int)
+        or question_count < 3
+    ):
+        errors.append(
+            f"{label}: direction_quality_gate.question_count must be at least 3"
+        )
+    arms = _manifest_nested_sequence(
+        manifest,
+        ("direction_quality_gate", "arms"),
+        manifest_text,
+    )
+    if arms != list(ITER010_DIRECTION_QUALITY_ARMS):
+        errors.append(
+            f"{label}: direction_quality_gate.arms must equal the exact four-arm order"
+        )
+
+    public_authority = manifest.get("public_oss_evaluation_standing_authority")
+    if not isinstance(public_authority, dict):
+        errors.append(
+            f"{label}: PDR-009 requires public_oss_evaluation_standing_authority"
+        )
+    else:
+        for field, expected in (
+            ("owner_decision_ref", "ITER-010-PDR-008"),
+            ("current_plan_amendment_ref", ITER010_PLAN_REVISION_REF),
+            ("verification_case_id", ITER010_PUBLIC_AUTHORITY_CASE_ID),
+            ("verification_status", "NOT-RUN"),
+            ("independent_action_entry_allowed", False),
+            ("next_execution_entry_action_id", ITER010_CURRENT_ACTION_ID),
+            ("next_execution_entry_case_id", ITER010_CURRENT_ACTION_CASE_ID),
+        ):
+            if not _exact_plan_scalar(public_authority.get(field), expected):
+                errors.append(
+                    f"{label}: public_oss_evaluation_standing_authority.{field} "
+                    f"must equal {expected}"
+                )
+
+    alignment = manifest.get("product_goal_alignment")
+    blocking_case_ids = (
+        _execution_manifest_sequence(
+            manifest=manifest,
+            manifest_text=manifest_text,
+            section="product_goal_alignment",
+            field="blocking_case_ids",
+        )
+        if isinstance(alignment, dict)
+        else []
+    )
+    required_current_cases = {
+        str(case_id)
+        for spec in specs.values()
+        for case_id in (
+            *(
+                [spec["scalars"].get("case_id")]
+                if isinstance(spec.get("scalars"), dict)
+                else []
+            ),
+            *(
+                spec["sequences"].get("produced_case_ids", ())
+                if isinstance(spec.get("sequences"), dict)
+                else ()
+            ),
+        )
+        if isinstance(case_id, str)
+    }
+    if current_spec is not None:
+        scalar_spec = current_spec["scalars"]
+        assert isinstance(scalar_spec, dict)
+        required_current_cases.add(str(scalar_spec["case_id"]))
+        if action_id != ITER010_CURRENT_ACTION_ID:
+            identity_digest = (
+                alignment.get("mature_source_agent_identity_digest")
+                if isinstance(alignment, dict)
+                else None
+            )
+            if not isinstance(identity_digest, str) or re.fullmatch(
+                r"sha256:[0-9a-f]{64}", identity_digest
+            ) is None:
+                errors.append(
+                    f"{label}: mature_source_agent_identity_digest must be exact sha256 after the freeze action"
+                )
+    for case_id in sorted(required_current_cases):
+        if case_id not in blocking_case_ids:
+            errors.append(
+                f"{label}: product_goal_alignment.blocking_case_ids must include {case_id}"
+            )
+        if verification is not None:
+            errors.extend(validate_blocking_verification_case(verification, case_id))
+
+    prerequisite_case_ids = action_sequences.get("prerequisite_case_ids", [])
+    for case_id in prerequisite_case_ids:
+        if case_id not in blocking_case_ids:
+            errors.append(
+                f"{label}: current action prerequisite_case_ids must reference blocking_case_ids: {case_id}"
+            )
+        if verification is not None:
+            row = markdown_table_case_rows(verification.body, case_id)
+            row_verdict = (
+                blocking_case_status_verdict(row[0][6])
+                if len(row) == 1 and len(row[0]) == 7
+                else None
+            )
+            if row_verdict in {"FAIL", "INVALID"}:
+                errors.append(
+                    f"{verification.relative_path}: completed {case_id} must be PASS"
+                )
+            else:
+                errors.extend(
+                    validate_blocking_verification_case(
+                        verification,
+                        case_id,
+                        require_pass=case_id not in validated_receipt_pass_cases,
+                    )
+                )
+
+    alpha_binding = (
+        alignment.get("alpha_agent_comparison_binding")
+        if isinstance(alignment, dict)
+        else None
+    )
+    if not isinstance(alpha_binding, dict):
+        errors.append(
+            f"{label}: alpha_agent_comparison_binding must retain the four-arm compatibility binding"
+        )
+    else:
+        if alpha_binding.get("result_role") != (
+            "blocking-iter010-strict-superiority-direction-gate"
+        ):
+            errors.append(
+                f"{label}: legacy three-arm comparison cannot remain current; alpha_agent_comparison_binding.result_role must bind PDR-009"
+            )
+        if alpha_binding.get("case_id") != ITER010_DIRECTION_QUALITY_CASE_ID:
+            errors.append(
+                f"{label}: alpha_agent_comparison_binding.case_id must equal {ITER010_DIRECTION_QUALITY_CASE_ID}"
+            )
+        if alpha_binding.get("arms") != ",".join(ITER010_DIRECTION_QUALITY_ARMS):
+            errors.append(
+                f"{label}: alpha_agent_comparison_binding must use the same exact four-arm order"
+            )
+
+    if current is not None:
+        expected_action_id = (
+            str(action_id) if current_spec is not None else ITER010_CURRENT_ACTION_ID
+        )
+        expected_case_id = (
+            str(action.get("case_id"))
+            if current_spec is not None
+            else ITER010_CURRENT_ACTION_CASE_ID
+        )
+        for field, expected in (
+            ("plan_revision_ref", ITER010_PLAN_REVISION_REF),
+            ("next_action", expected_action_id),
+            ("next_action_case_id", expected_case_id),
+            ("active_slice", "ITER-010-SLICE-001"),
+        ):
+            if current.metadata.get(field) != expected:
+                errors.append(f"PROJECT-CURRENT: {field} must equal {expected}")
+        if current.metadata.get("next_action") != action.get("id"):
+            errors.append(
+                "PROJECT-CURRENT: next_action must match plan_execution_control.current_action.id"
+            )
+        if current.metadata.get("next_action_case_id") != action.get("case_id"):
+            errors.append(
+                "PROJECT-CURRENT: next_action_case_id must match plan_execution_control.current_action.case_id"
+            )
+    elif require_external_bindings:
+        errors.append(f"{label}: active ITER-010 plan requires PROJECT-CURRENT")
+    if verification is None and require_external_bindings:
+        errors.append(f"{label}: active ITER-010 plan requires Verification bindings")
     return errors
 
 
@@ -4986,8 +7363,18 @@ def validate_product_goal_alignment_manifest(
             required=requires_provider_route_policy(iteration),
         )
     )
+    errors.extend(validate_model_transparent_plan_routing(manifest, label))
     if requires_strict_codex_baseline(iteration):
-        errors.extend(validate_strict_codex_baseline_alignment(alignment, label))
+        errors.extend(
+            validate_strict_codex_baseline_alignment(
+                alignment,
+                label,
+                allow_pending_identity=(
+                    iteration == "ITER-010"
+                    and iter010_pending_codex_identity_allowed(manifest)
+                ),
+            )
+        )
     if requires_reflection_gate(iteration):
         catalog_digest = alignment.get("critical_assumption_catalog_digest")
         if catalog_digest != "not-frozen-proposal-only" and (
@@ -5486,7 +7873,7 @@ def validate_blocking_verification_case(
     if strict_status:
         if status_verdict is None:
             errors.append(
-                f"{label}: {case_id} must remain blocking and use exact PASS, FAIL or NOT-RUN / blocking grammar"
+                f"{label}: {case_id} must remain blocking and use exact PASS, FAIL, INVALID or NOT-RUN / blocking grammar"
             )
     else:
         legacy_status_tokens = set(
@@ -5548,7 +7935,7 @@ def blocking_case_status_verdict(value: str) -> str | None:
 
     normalized = value.strip().strip("*_`").strip().upper()
     match = re.fullmatch(
-        r"(PASS|FAIL|NOT-RUN)\s*/\s*(?:READINESS\s+)?BLOCKING",
+        r"(PASS|FAIL|INVALID|NOT-RUN)\s*/\s*(?:READINESS\s+)?BLOCKING",
         normalized,
     )
     return match.group(1) if match is not None else None
@@ -6721,7 +9108,7 @@ def validate_product_goal_v000(
     if strict_status:
         if status_verdict is None:
             errors.append(
-                f"{label}: V-000 status must remain blocking and use exact PASS, FAIL or NOT-RUN / blocking grammar"
+                f"{label}: V-000 status must remain blocking and use exact PASS, FAIL, INVALID or NOT-RUN / blocking grammar"
             )
     else:
         legacy_status_tokens = set(
@@ -6907,6 +9294,20 @@ def validate_active_manifest(
             manifest, manifest_text, label, iteration
         )
     )
+    if iteration == "ITER-010":
+        transition_results, transition_evidence, transition_result_errors = (
+            _load_iter010_required_transition_results(manifest, path, label)
+        )
+        errors.extend(transition_result_errors)
+        errors.extend(
+            validate_iter010_plan_execution_snapshot(
+                manifest,
+                label,
+                manifest_text=manifest_text,
+                transition_results=transition_results,
+                transition_evidence_artifacts=transition_evidence,
+            )
+        )
 
     if not allow_unresolved_planning and (
         has_unresolved_placeholder(manifest_text)
@@ -7383,10 +9784,16 @@ def validate_engineering_qa_ablation(
     hardening_ref: str = "ITER-010-SLICE-002",
     final_ref: str = "ITER-010-SLICE-003",
 ) -> list[str]:
-    """Freeze a fair three-arm cognition ablation before hardening starts."""
+    """Freeze a fair ablation or retain it as explicitly disabled history."""
 
     section_label = f"{label}: engineering_qa_ablation"
     if ablation.get("schema") == CONVERSATIONAL_AGENT_ABLATION_SCHEMA:
+        alpha_binding = alignment.get("alpha_agent_comparison_binding")
+        pdr009_historical = isinstance(alpha_binding, dict) and (
+            alpha_binding.get("case_id") == ITER010_DIRECTION_QUALITY_CASE_ID
+            and alpha_binding.get("result_role")
+            == "blocking-iter010-strict-superiority-direction-gate"
+        )
         expected_keys = {
             "schema",
             "status",
@@ -7411,6 +9818,14 @@ def validate_engineering_qa_ablation(
             "slice_002_case_id",
             "slice_003_case_id",
         }
+        if pdr009_historical:
+            expected_keys.update(
+                {
+                    "legacy_validator_compatibility_only",
+                    "current_use_allowed",
+                    "superseded_by_case_id",
+                }
+            )
         errors = validate_exact_mapping_keys(ablation, expected_keys, section_label)
         arm_expectations: dict[str, dict[str, object]] = {
             "full_cognition_system_arm": {
@@ -7493,7 +9908,18 @@ def validate_engineering_qa_ablation(
             errors.append(
                 f"{section_label}.proposed_reuse_horizon_questions must be a positive integer"
             )
-        if not hardening_started:
+        if pdr009_historical:
+            for field, expected in (
+                ("status", "proposed-not-authorized"),
+                ("authorization_ref", ENGINEERING_QA_NOT_AUTHORIZED),
+                ("frozen_protocol_digest", ENGINEERING_QA_NOT_AUTHORIZED),
+                ("legacy_validator_compatibility_only", True),
+                ("current_use_allowed", False),
+                ("superseded_by_case_id", ITER010_DIRECTION_QUALITY_CASE_ID),
+            ):
+                if ablation.get(field) != expected:
+                    errors.append(f"{section_label}.{field} must equal {expected}")
+        elif not hardening_started:
             for field, expected in (
                 ("status", "proposed-not-authorized"),
                 ("authorization_ref", ENGINEERING_QA_NOT_AUTHORIZED),
@@ -8374,7 +10800,11 @@ def validate_answer_protocol_execution_readiness(
 
 
 def validate_positive_value_execution_readiness(
-    alignment: dict[str, object], label: str, iteration: object = ""
+    alignment: dict[str, object],
+    label: str,
+    iteration: object = "",
+    *,
+    manifest: dict[str, object] | None = None,
 ) -> list[str]:
     """Require a precommitted, replayable value comparison before coding."""
 
@@ -8440,7 +10870,16 @@ def validate_positive_value_execution_readiness(
             f"{label}: positive_value_adjudication_owner must be frozen as user or independent-evaluator before Slice execution"
         )
     if requires_strict_codex_baseline(iteration):
-        errors.extend(validate_strict_codex_baseline_alignment(alignment, label))
+        errors.extend(
+            validate_strict_codex_baseline_alignment(
+                alignment,
+                label,
+                allow_pending_identity=(
+                    iteration_number(iteration) == 10
+                    and iter010_pending_codex_identity_allowed(manifest)
+                ),
+            )
+        )
     return errors
 
 
@@ -8485,7 +10924,7 @@ def validate_alpha_staged_execution_inputs(
         if strict_codex_baseline:
             errors.extend(
                 validate_positive_value_execution_readiness(
-                    alignment, label, iteration
+                    alignment, label, iteration, manifest=manifest
                 )
             )
         else:
@@ -8505,7 +10944,9 @@ def validate_alpha_staged_execution_inputs(
         return errors
 
     errors.extend(
-        validate_positive_value_execution_readiness(alignment, label, iteration)
+        validate_positive_value_execution_readiness(
+            alignment, label, iteration, manifest=manifest
+        )
     )
     hidden_digest = readiness.get("hidden_freeze_protocol_digest")
     if not isinstance(hidden_digest, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", hidden_digest) is None:
@@ -8621,7 +11062,7 @@ def validate_product_goal_execution_readiness(
     if requires_strict_codex_baseline(iteration):
         errors.extend(
             validate_positive_value_execution_readiness(
-                alignment, label, iteration
+                alignment, label, iteration, manifest=manifest
             )
         )
 
@@ -8645,7 +11086,7 @@ def validate_product_goal_execution_readiness(
     ):
         errors.extend(
             validate_positive_value_execution_readiness(
-                alignment, label, iteration
+                alignment, label, iteration, manifest=manifest
             )
         )
 
@@ -12564,6 +15005,35 @@ def validate(documents: list[Document]) -> list[str]:
                     )
                 else:
                     errors.extend(validate_active_manifest(manifest, iteration))
+                    if iteration == "ITER-010":
+                        try:
+                            manifest_text = manifest.read_text(encoding="utf-8")
+                            manifest_data = safe_load_manifest(manifest_text)
+                        except (OSError, UnicodeError, SafeYamlError) as error:
+                            errors.append(
+                                f"{manifest.relative_to(REPOSITORY)}: cannot bind executable plan: {error}"
+                            )
+                        else:
+                            errors.extend(
+                                validate_model_transparent_governance_templates(
+                                    manifest_data,
+                                    manifest.relative_to(REPOSITORY).as_posix(),
+                                )
+                            )
+                            errors.extend(
+                                validate_iter010_plan_execution_snapshot(
+                                    manifest_data,
+                                    manifest.relative_to(REPOSITORY).as_posix(),
+                                    manifest_text=manifest_text,
+                                    current=current,
+                                    verification=documents_by_path.get(
+                                        iteration_directory
+                                        / "verification-matrix.md"
+                                    ),
+                                    transition_results=by_id,
+                                    require_external_bindings=True,
+                                )
+                            )
 
     errors.extend(validate_dependency_cycles(by_id))
     return sorted(set(errors))

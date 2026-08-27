@@ -4,7 +4,7 @@ kind: project-governance
 status: current
 authority: project-governance
 owners: [project, product]
-depends_on: [PROJECT-GOVERNANCE-BOUNDARY, SYS-PRODUCT-SUCCESS]
+depends_on: [PROJECT-GOVERNANCE-BOUNDARY, SYS-PRODUCT-SUCCESS, SYS-ADR-019]
 code: []
 tests: []
 ---
@@ -21,6 +21,7 @@ tests: []
   → 达成目标必需的用户能力
   → 已有 Acceptance 实际证明的基线
   → 当前最早未证明的阻断能力
+  → 最小可证伪的产品方向 Gate
   → 能在正式 Web 人工验证的最小纵向增量
 ```
 
@@ -49,12 +50,13 @@ Iteration。只有用户明确改变产品方向、核心架构假设被证伪�
    编码前只冻结计数下限、判定规则和“代码冻结前不披露”；exact 问题、输入、baseline 与 target 在产品代码冻结后首次披露时
    一次性密封，随后任何产品修改都烧毁该组证据；
 4. **跨域证明：** 除新能力自身的问题，还必须包含至少一类需要组合既有能力与本轮能力的问题，证明产品能力是累积的；
-5. **最早体验点：** 第一个 Slice 如何直接交付可重复启动、固定本地地址、持续服务、同会话自由提问且单题故障隔离的正式 Web Alpha；
+5. **最早方向与体验点：** 第一个 Slice 如何用最小、异质、独立真值的证据先证伪核心价值；PASS 后如何立即交付可重复启动、固定本地
+   地址、持续服务、同会话自由提问且单题故障隔离的正式 Web Alpha；
 6. **停止或转向条件：** 若上游知识不足、只能依赖题型/关键词补丁、不能跨域组合或效果低于成熟源码 Agent，何时停止扩张
    并重新审视建模或查询架构。
-7. **差异化价值：** 从 `ITER-010-PDR-002` 后首个新建产品迭代起，在首个持续 Web Alpha 授权前冻结 current Codex 精确身份、同题隔离
-   协议、独立盲评量表和严格为正的答案质量差值阈值；Alpha 必须实际比较，不能只记录 early signal。成本、时延、调用数和复用可在
-   hardening 前另冻指标，但不能补偿质量打平或退步；“答案不退步”不再足以证明产品价值。
+7. **差异化价值：** 从 `ITER-010-PDR-009` 起，在任何新产品/Web 变更前冻结 direct evidence、same-agent source-only、same-agent World
+   Model + source、current Codex 四路，独立 exact-source truth、盲评量表和严格为正的 Codex 质量差值；目标系统必须绝对质量 PASS、逐题
+   不输任一 control、总体严格超过 Codex，并有非 locator 世界模型贡献。成本、时延、调用数和复用不能补偿质量打平或退步。
 8. **能力路径位置：** 本轮属于哪一个 Roadmap 能力步骤，哪些前置已被 Acceptance 证明，本轮正式 Web 验证会前进什么，
    以及成功后下一个阻断差距是什么。
 
@@ -85,7 +87,7 @@ binding；正文中仅仅出现相关 ID 不算绑定证据。
 Secret、授权和失败真实性边界始终生效。完整能力矩阵、全量回归、性能和异常穷举属于 Alpha `CONTINUE` 后的夯实阶段。首次体验所需
 的安全或方向验证必须使用聚焦测试，不能以“必要条件”为由提前执行全量回归。
 
-从 `ITER-012` 起，Manifest 必须冻结 `EXPERIENCE_FIRST_DELIVERY@1`；ITER-010 只有显式写入该 policy 时才 opt in。其计时从当前 Slice
+当前及未来产品 Iteration 在四路方向 Gate PASS 后的 Web action 必须冻结 `EXPERIENCE_FIRST_DELIVERY@1`。其计时从该 Web action
 授权后的第一次产品代码变更开始：60 分钟页面可启动、180 分钟持续 Alpha 可由用户连续操作；240 分钟尚未达到时硬停止新功能、
 hardening、full regression 与无新证据的外部重复调用，密封 Result 并缩围，但继续本地根因归因和最小体验纵切。该 hard stop 结束失控
 路径而非整个开发目标。首次体验前只运行启动、安全、失败真实性、一次 current Provider 资格确认和
@@ -105,20 +107,33 @@ signature 最多一个 successor retry；连续两次 attempt 没有用户可见
 然后只用一个有界 live canary 单元；Chat 目标必须使用最小多轮 Conversation，不得以孤立一题代替。同一 failure signature 修复一次仍复现，停止规则堆叠并进入架构职责评审。Alpha 前测试只允许 targeted impact、
 startup、safety；full regression 仅在 Alpha `CONTINUE` 后的 hardening 和正式验收前运行。
 
-Provider route 在 session 前按 `VOLCENGINE_ARK → DEEPSEEK` 预密封并预授权双方 disclosure scope 与适用的 dispatch admission policy。Ark 的独立 attempt 若以冻结的 Provider/
-模型能力 outcome 终态结束且没有 authorized answer，可在同一 logical interaction unit 内透明启动最多一个 DeepSeek attempt；用户不重新提交。
+Provider route 在首次外部执行前按 `preferred route → fallback route` 角色顺序预密封，并由 standing external authority
+一次性批准两个角色的 disclosure scope、execution profile、预算与适用的 admission policy；范围内的新 session、Turn、问题或
+run 无需再次向用户申请。preferred-route attempt 若以冻结的 Provider/模型能力 outcome 终态结束且没有 authorized
+answer，可在同一 logical interaction unit 内透明启动最多一个 fallback-route attempt；用户不重新提交。具体 Provider/model 名称只能由
+execution profile 配置和执行收据携带，不得进入通用状态机、action ID 或路由分支语义。
 fallback 从 immutable original interaction input 与 exact cognition 重跑全链，不读取 primary attempt 的中间产物；Chat 还必须携带与当前 Turn 相关的 exact Application-sealed Conversation Context。迟到 primary 只隔离审计。同
 Provider retry 为 0；Application/Source/Security failure 不能触发 fallback。输出/schema 或 Reviewer 拒绝必须按 primary capability failure
-记录，而不是误标为网络不可用。所有 planned DeepSeek 调用均受当前 Operations 非高峰硬准入；fallback eligibility 和普通外部授权不等于
-时间准入。run receipt 与逐 request 窗口/一次性 exact override 重验必须早于 Provider socket/connected descriptor、TLS、credential 和
-HTTP；缺失时相应计数为 0。完整最坏质量链必须能在当前窗口结束前完成，窗口关闭后不创建新 request；无法完成审核时当前交互失败
-关闭，不降低质量。等待窗口时继续 Ark-only、本地归因、修复、targeted tests 和 candidate freeze。
+记录，而不是误标为网络不可用。所有 planned fallback-route 调用均受其 execution profile 引用的 admission plugin 硬准入；
+fallback eligibility 和普通外部授权不等于该 plugin 的调度准入。run receipt 与逐 request 准入条件/一次性 exact override
+重验必须早于 Provider socket/connected descriptor、TLS、credential 和
+HTTP；缺失时相应计数为 0。完整最坏质量链必须能在 admission plugin 准入的时间与资源边界内完成，准入失效后不创建新 request；无法完成审核时当前交互失败
+关闭，不降低质量。等待准入时继续 preferred-route-only、本地归因、修复、targeted tests 和 candidate freeze。
 
-权限边界采用 just-in-time continuity。Slice 开发授权与 external execution grant 分离：后者缺少、消费、过期或 identity drift 只阻断
-对应 exact action，不能自动把活动 Slice 改成 completed/failed/paused。实现者完成 credential-free preflight 和 exact identity/disclosure
-freeze 后，必须直接调用审批能力或提交一条最小 exact-grant request；不得先问是否申请，也不得只报告“未授权”后退出。批准后在 exact
-scope 内自动继续，不重复确认；等待期间继续所有独立的本地工作。只有 request 已实际发出且安全替代工作穷尽时，才可用
-`WAITING_EXACT_GRANT / IN_PROGRESS` 让出回合。用户明确停止/转向/拒绝或不可绕过的安全禁止仍可终止开发；本规则不授权任何未批准动作。
+权限边界采用 standing-authority continuity。Slice 开发授权、人类 standing external authority、系统派生 exact execution/admission receipt
+与一次性 scope-delta grant 分离。`PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 应覆盖已确认的 canonical public source、许可记录、exact
+commit/tree、允许的 revision selection policy、clean 只读测试工程、allowlist、Provider/model/endpoint/credential account route、预算、调度、有效期与 loopback
+`EVALUATION_ONLY` Sink；source identity 不变时的新 run、Conversation、Turn 或问题不得逐次申请。每次外部动作仍须
+在 Source disclosure、network 和 credential 前生成回指 standing authority 的 one-use exact machine receipt，并校验 source、session、route、预算和调度；该 receipt 只
+证明符合既有授权，不能自行授权或扩权，缺失/失配时失败关闭。
+
+只有私有、来源/许可证未知、仅本机存在或 dirty 数据，超出 approved upstream/revision selection policy/allowlist，新的外部接收方/Provider/model/
+endpoint/credential account，预算增加，超出 fallback admission policy 的调度范围或需要一次性 override，外部写入、非 loopback 暴露、
+Production Activation 或其他明确排除项才是 scope
+delta。实现者完成 credential-free preflight 和 exact identity/disclosure freeze 后，必须
+直接调用审批能力或提交最小 exact-delta request；不得先问是否申请，也不得只报告“未授权”后退出。批准后自动继续；等待期间继续所有
+独立本地工作。只有 delta request 已实际发出且安全替代工作穷尽时，才可用 `WAITING_EXACT_GRANT / IN_PROGRESS` 让出回合。用户明确
+停止/转向/拒绝或不可绕过的安全禁止仍可终止开发；本规则不授权任何 standing scope 之外的动作。
 
 项目不得连续进行多轮 Prompt、Schema、Contract 或评测优化，却一直没有可供用户操作的真实体验。可供操作是指可重复启动、固定本地
 地址、同一会话连续自由提问、版本和限制可见，且单题失败不会关闭服务；一次性运行器或启动前冻结单题的页面不满足该定义。若目标是
@@ -128,9 +143,9 @@ Chat，还必须冻结语义追问、纠正、总结、逐轮证据/审核和新
 
 本门禁从 `ITER-008` 开始强制执行。Proposal 必须在编码前写明少量决定方案能否成立的关键假设、每项假设的最早反证方式、
 反证后停止或换路的动作，以及被认真比较过的替代方案。第一个 Slice 必须优先验证风险最高、最可能导致整条路线无效的假设，
-不能只实现“基础组件”并把真实产品效果留到最后一段。ITER-010 继续使用其已冻结的分阶段 Gate；从下一份新建产品迭代起，体验 Alpha
-必须在不增加独立阶段的前提下完成小样本 current Codex 同题盲评，严格答案质量阈值在该 Alpha 授权前冻结。完整 hidden、跨工程和统计
-复验仍在首个 hardening Slice 或最终验收执行。
+不能只实现“基础组件”并把真实产品效果留到最后一段。从 `ITER-010-PDR-009` 起，最早方向动作必须完成小样本四路严格价值 Gate；已有
+可运行纵切时该 Gate 位于新产品/Web 变更前，没有纵切时并入最小 Alpha 出口。完整 hidden、跨工程和统计复验仍在首个 hardening Slice
+或最终验收执行。
 
 每个 Slice 必须恰好拥有一个 `V-REFLECT-NNN` 阻断 Case。本 Slice 适用的真实 Web、机械 Gate，以及仅对 hardening/验收适用的 hidden
 canary 与对照形成 exact Result 后，Result 必须新增“Architecture reflection and continuation decision”，至少回答：
@@ -138,8 +153,8 @@ canary 与对照形成 exact Result 后，Result 必须新增“Architecture ref
 1. 原方案假设是什么，实际证据与预期哪里一致、哪里不一致；
 2. 问题属于架构、实现、配置/环境、需求/使用还是验证设计，影响是个案还是系统性；
 3. 知识表示、查询/编排、产品 Web 链和验证方案各自是否仍成立；
-4. 若本 Slice 已拥有成熟直接源码 Agent 对照，比较正确性、完整性、无关证据、时延、成本和复杂度；从下一份新建产品迭代起，首次持续
-   Web Alpha 必须拥有小样本 current Codex 对照并报告严格答案质量结论，不能再用后置理由替代；
+4. 从 ITER-010/PDR-009 起，首次方向 Gate 必须报告 direct evidence、source-only、World Model + source 与 current Codex 四路的绝对质量、
+   逐题关系、严格总体差值和非 locator 世界模型贡献，不能再用后置理由替代；
 5. 本 Slice Finding 如何处置，当前最早未证明的风险是什么；
 6. 明确作出 `CONTINUE`、`ACCEPT`、`REWORK`、`REDIRECT` 或 `REJECT` 决策并说明理由。
 
@@ -197,18 +212,20 @@ Roadmap 只提供候选。只有 Proposal 被明确接受、Manifest 闭合并�
 ## 新一轮最小启动顺序
 
 1. 按[模板落位表](templates/README.md#最小落位)建立 Iteration Index、Proposal、Manifest、Verification Matrix、Readiness、Development Design 和 Findings Index；全部保持 proposed / non-coding。
-2. 冻结 baseline、System IDs、外部输入、风险、Acceptance 和第一个纵向 Slice，不复制上一轮运行身份；`ITER-012+` 同时冻结 60/180/240
-   体验时间盒、Access/Quality 分离、live-attempt stop rule 和 Ark→DeepSeek transparent-attempt route。
+2. 冻结 baseline、System IDs、外部输入、风险、Acceptance 和第一个纵向 Slice，不复制上一轮运行身份；从 `ITER-010-PDR-009` 起同时冻结
+   最早四路方向 Gate、体验时间盒、Access/Quality 分离、live-attempt stop rule 和透明 Provider route。
 3. Readiness Review 记录用户的明确授权，把 Proposal 与 Readiness 状态改为 `accepted`；未授权字段不得用默认值代替。
 4. 把 Iteration Index、Manifest 与第一个 Slice 改为 authorized，把 Slice `authority` 改为 `current-development`，并将 Index/Slice 的 `coding_input` 改为 `true`；Manifest 已规划的后续 Slice 保持 `proposed / proposed-development / coding_input: false`。
-5. 最后更新 `project/current.md` 的 `active_iteration`、`active_slice` 与 `depends_on`。`scripts/docs.py check` 只有在这些对象属于同一 Iteration 且必需输入闭合时才通过。
+5. 最后更新 `project/current.md` 的 `active_iteration`、`active_slice`、`plan_revision_ref`、`next_action` 与 `depends_on`。Manifest 还必须冻结
+   action-level 允许/禁止路径、外部执行权、唯一 Result 和预声明后继；`scripts/docs.py check` 与 base→target plan gate 都通过后才可开发。
 
-从 `ITER-010-PDR-002` 后首个新建产品迭代起，第 2 步还必须冻结当时 current Codex 的客户端/二进制、实际模型、reasoning、工具、权限、
-Source scope、fresh-task 与答案先密封协议，以及独立盲评协议；不得复制历史 Codex 身份或把 Codex、系统任一方指定为 Oracle/裁判。
+从 `ITER-010-PDR-009` 起，第 2 步还必须冻结 direct evidence 与两个系统 Agent 路的同 Provider/model/config、公平变量，以及当时 current
+Codex 的客户端/二进制、实际模型、reasoning、工具、权限、Source scope、fresh-task、答案先密封和独立盲评协议；不得复制历史 Codex
+身份或把任何模型答案指定为 Oracle/裁判。
 
 同一 Iteration 的累积 Slice 以 Manifest `new_capability_slice_refs` 的顺序推进：执行态必须为“零个或多个 `completed` + 恰好一个
 `authorized/in-progress` + 零个或多个 `proposed`”；只有 scope/Owner 变化、用户明确暂停或本地授权失效时，修复等待态才使用同样的
-completed 前缀、恰好一个 `paused` 当前 Slice 和 proposed 后缀。external grant pending 不属于该状态，活动 Slice 仍是
+completed 前缀、恰好一个 `paused` 当前 Slice 和 proposed 后缀。external scope-delta grant pending 不属于该状态，活动 Slice 仍是
 `authorized/in-progress`。每个后续 Slice 必须直接依赖前一个；前一个 Slice 的人工 Web/停止 Gate 完成
 并形成 Result，且方案复盘 Gate 为 PASS、决定为 `CONTINUE` 后，用户再明确授权下一个 Slice，随后才移动
 `project/current.md.active_slice`。后续 Slice 获得授权时，其 `depends_on` 与 Manifest `reflection_prerequisite_result` 还必须绑定
@@ -239,7 +256,7 @@ roadmap candidate
   → verification + result
   → findings disposition
   ├→ acceptance → completed
-  ├→ failed attempt → active same-Slice REWORK → exact permission requested only when needed
+  ├→ failed attempt → active same-Slice REWORK → standing authority reused; exact delta requested only on scope change
   ├→ stop / evidence-driven redirect → rejected
   └→ pre-execution administrative replacement → superseded
 ```
@@ -249,18 +266,21 @@ roadmap candidate
 - Proposal 已通过产品目标对齐门禁，目标差距、累积路径、独立持有且对实现隐藏的可测增量、跨域问题、最早 Web 体验点、
   现场临时问题和停止条件均已冻结；
 - Proposal 已绑定 planning-only Roadmap 中的精确能力步骤，前置接受证据、本轮结束时的 Web 用户能力和成功后的下一阻断差距均已明确；
-- Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；可体验 Alpha 会尽早使用正式 Web 和现场输入判断架构
-  与用户价值。下一份新建产品迭代的 Alpha 同时执行轻量 current Codex 同题盲评；只有完整 hidden、跨工程和统计复验留到 Alpha
-  `CONTINUE` 后的首个夯实 Slice，不推迟到最终验收；
-- `ITER-012+` 的 Experience policy 已绑定首个持续 Alpha Slice、`V-ALPHA-ACCESS`、`V-TIMEBOX` 与独立质量 Case；首次体验前的资格/smoke
+- Proposal 已冻结关键方案假设、最早反证、替代方案和逐 Slice 复盘计划；任何新产品/Web 变更前先执行四路方向 Gate：直接相关证据、
+  同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex。目标系统绝对质量 PASS、逐题不输任一基线、总体严格超过 Codex 且
+  证明非 locator 世界模型贡献后，才进入可体验 Alpha；只有完整 hidden、跨工程和统计复验留到 Alpha `CONTINUE` 后的首个夯实 Slice；
+- Experience policy 已绑定四路 Gate PASS 后的首个持续 Alpha Slice、`V-ALPHA-ACCESS`、`V-TIMEBOX` 与独立 Web 质量 Case；首次体验前的资格/smoke
   上限、full-regression 禁止、相同 failure signature 重试上限和连续无可见增量停止条件均已冻结；
-- Provider policy 已冻结 Ark-first ordered route、双方 session disclosure scope、transparent independent fallback attempt、eligible/ineligible
-  outcome、迟到结果隔离、零同 Provider retry、DeepSeek 官方窗口复核、外部网络前硬准入、逐 request 重验、一次性 exact peak override 和
+- Provider policy 已冻结 preferred-first ordered route、两个角色的 execution profile 与 session disclosure scope、transparent independent fallback
+  attempt、eligible/ineligible outcome、迟到结果隔离、零同 Provider retry、fallback admission plugin/Case/receipt、外部网络前硬准入、逐
+  request 重验、一次性 exact override 和
   “成本不得降低质量”；
 - 一个明确 Outcome 和非目标；
 - 所引用 System 文档均 current，或先完成所需 System 设计；
 - 每个 Slice 有可验证退出条件和风险边界；
-- 外部输入、权限、Secret Reference 和原始证据保存方式已说明；若评测问题由用户现场持有，则必须明确在产品代码冻结前不收集
+- 外部输入、standing external authority、机器派生 exact receipt、scope-delta 边界、Secret Reference 和原始证据保存方式已说明；公开开源
+  exact revision、clean、allowlisted、只读测试在已批准 route/预算/调度/有效期和 loopback evaluation 边界内不得逐 run/逐题申请；若评测
+  问题由用户现场持有，则必须明确在产品代码冻结前不收集
   问题，并把未披露 marker 与完成前必须替换的 exact Result 绑定写入 Manifest；
 - Verification Matrix 能区分机械测试、真实能力和产品价值；
 - `current.md` 同一时刻最多指向一个活动迭代和一个主要 Slice。
@@ -276,14 +296,14 @@ roadmap candidate
 
 首个持续 Alpha Result 还必须报告时间盒 actual、首次体验前资格/smoke/full-regression 次数、轻量 live-attempt ledger、同签名最大重试数、
 连续无可见增量次数和 stop 后外部 dispatch 数。Provider Result 必须逐 attempt 报告 sealed identity、trigger/outcome 分类、是否重跑完整链、
-中间产物复用、迟到 primary 隔离、fallback 次数和用户重提次数；DeepSeek 还必须报告 run admission、逐 request window verdict、override、
-官方检查、Provider socket/TLS/credential/HTTP 零计数或实际计数以及任何 peak violation。缺失或把 Access PASS 当 Quality PASS 都不能晋级
+中间产物复用、迟到 primary 隔离、fallback 次数和用户重提次数；fallback route 还必须报告 execution profile identity、
+admission plugin/Case/receipt、逐 request admission verdict、override、配置源检查、Provider socket/TLS/credential/HTTP 零计数或实际计数以及任何准入违规。缺失或把 Access PASS 当 Quality PASS 都不能晋级
 hardening。
 
 声称产品能力前进的 Iteration 还必须报告相对 baseline 的目标差距变化：同一正式 Web 入口上的 held-out 自由问题支持率、
 重大错误、完整性、至少一个新旧知识跨域问题、提问时 Source/Update/Direct fallback 计数，以及与成熟源码 Agent 的逐题对照。
-从 `ITER-010-PDR-002` 后首个新建产品迭代起，该对照必须使用精确冻结的 current Codex 与独立盲评：系统自身绝对质量 PASS、逐题无物质
-退步且总体答案质量差值严格为正；全体打平、双方失败、无法裁决、盲化无效或只凭效率优势均不能完成产品 Gate。
+从 `ITER-010-PDR-009` 起，该对照必须使用四路协议与独立盲评：系统自身绝对质量 PASS、逐题不输任一 control、总体相对 current Codex
+质量差值严格为正，且至少一项非 locator 世界模型贡献；全体打平、任一重大失败、无法裁决、盲化无效或只凭效率优势均不能完成产品 Gate。
 Manifest 绑定的每个跨域、正式 Web、隐藏 canary 和现场临时问题 Case 必须逐项 PASS，并以
 `<拥有该 Case 的 Slice Result ID>#<case-id>` 绑定不可变执行证据；最终 Product Result 必须依赖并聚合全部 Slice Result，不能改写
 逐 Case Evidence，也不能用 V-000 的 PASS 或汇总计数代替逐项执行。

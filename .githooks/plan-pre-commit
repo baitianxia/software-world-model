@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+# This installed hook validates the staged tree with the gate already trusted in
+# HEAD.  It deliberately never executes the candidate copy from the worktree.
+if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
+    echo "ERROR: plan-controlled commits must be linear; merge commits are forbidden" >&2
+    exit 1
+fi
+
+REPOSITORY_ROOT=$(git rev-parse --show-toplevel)
+TRUSTED_HEAD=$(GIT_NO_REPLACE_OBJECTS=1 git rev-parse HEAD)
+if ! GIT_NO_REPLACE_OBJECTS=1 git cat-file -e "$TRUSTED_HEAD:scripts/plan_gate.py" 2>/dev/null; then
+    echo "ERROR: trusted HEAD does not contain scripts/plan_gate.py" >&2
+    exit 1
+fi
+
+INDEX_TREE=$(GIT_NO_REPLACE_OBJECTS=1 git write-tree)
+TRUSTED_GATE=$(mktemp "${TMPDIR:-/tmp}/software-world-model-plan-gate.XXXXXX")
+trap 'rm -f "$TRUSTED_GATE"' EXIT HUP INT TERM
+GIT_NO_REPLACE_OBJECTS=1 git show "$TRUSTED_HEAD:scripts/plan_gate.py" >"$TRUSTED_GATE"
+
+GIT_NO_REPLACE_OBJECTS=1 python3 "$TRUSTED_GATE" \
+    --repository "$REPOSITORY_ROOT" diff \
+    --base "$TRUSTED_HEAD" --target "$INDEX_TREE"

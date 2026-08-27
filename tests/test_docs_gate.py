@@ -385,6 +385,1537 @@ readiness_inputs:
                     expected,
                 )
 
+    def test_iter010_executable_plan_snapshot_is_fail_closed(self) -> None:
+        prerequisites = list(docs_gate.ITER010_DIRECTION_PREREQUISITE_CASE_IDS)
+        freeze_case = docs_gate.ITER010_CURRENT_ACTION_CASE_ID
+        quality_case = docs_gate.ITER010_DIRECTION_QUALITY_CASE_ID
+        action_specs = docs_gate.iter010_plan_action_specs()
+        self.assertEqual(len(action_specs), 10)
+        action_and_produced_cases = list(
+            dict.fromkeys(
+                str(case_id)
+                for spec in action_specs.values()
+                for case_id in (
+                    spec["scalars"]["case_id"],  # type: ignore[index]
+                    *spec["sequences"]["produced_case_ids"],  # type: ignore[index]
+                )
+            )
+        )
+        all_plan_cases = list(
+            dict.fromkeys([*prerequisites, *action_and_produced_cases])
+        )
+        preferred_profile_configuration = {
+            "execution_profile_ref": "runtime-config:preferred-qualified-profile",
+            "provider_identity": "AURORA",
+            "model_identity": "nebula-x1",
+        }
+        fallback_profile_configuration = {
+            "execution_profile_ref": "runtime-config:fallback-qualified-profile",
+            "provider_identity": "BOREALIS",
+            "model_identity": "quasar-y2",
+        }
+        fallback_policy_plugin_configuration = {
+            "schema": "ROUTE_ADMISSION_POLICY_PLUGIN@1",
+            "route_role": "fallback",
+            "configured_execution_profile_ref": (
+                fallback_profile_configuration["execution_profile_ref"]
+            ),
+        }
+
+        def action_payload(action_id: str, *, registered: bool) -> dict[str, object]:
+            spec = action_specs[action_id]
+            scalars = spec["scalars"]
+            sequences = spec["sequences"]
+            assert isinstance(scalars, dict)
+            assert isinstance(sequences, dict)
+            payload = copy.deepcopy(scalars)
+            payload.update(
+                {
+                    field: list(items)
+                    for field, items in sequences.items()
+                    if isinstance(items, tuple)
+                }
+            )
+            if registered:
+                payload["transition"] = copy.deepcopy(spec["transition"])
+                payload["locks"] = copy.deepcopy(spec["locks"])
+            return payload
+
+        def transition_receipt(
+            action_id: str,
+            verdict: str,
+            *,
+            outcomes: list[dict[str, str]] | None = None,
+        ) -> tuple[docs_gate.Document, str]:
+            def canonical_digest(value: object) -> str:
+                encoded = json.dumps(
+                    value,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ).encode("utf-8")
+                return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+            root_input_set = {
+                "schema": "VALUE_GATE_PROVIDER_NEUTRAL_ROOT_INPUT_SET@1",
+                "question_ids": ["Q-STRUCTURE", "Q-FLOW", "Q-BEHAVIOR"],
+                "system_arm_ids": list(docs_gate.ITER010_DIRECTION_QUALITY_ARMS[:3]),
+                "entries": [
+                    {
+                        "question_id": question_id,
+                        "system_arm_id": arm_id,
+                        "root_input_digest": canonical_digest(
+                            {
+                                "question_id": question_id,
+                                "system_arm_id": arm_id,
+                            }
+                        ),
+                    }
+                    for question_id in ("Q-STRUCTURE", "Q-FLOW", "Q-BEHAVIOR")
+                    for arm_id in docs_gate.ITER010_DIRECTION_QUALITY_ARMS[:3]
+                ],
+            }
+            preferred_profile = copy.deepcopy(preferred_profile_configuration)
+            fallback_profile = copy.deepcopy(fallback_profile_configuration)
+            fallback_policy_plugin = copy.deepcopy(
+                fallback_policy_plugin_configuration
+            )
+
+            def quality_evidence(route_role: str) -> dict[str, object]:
+                profile = (
+                    preferred_profile if route_role == "preferred" else fallback_profile
+                )
+                terminal_classification = (
+                    "TERMINAL_UNAVAILABLE"
+                    if verdict == "INVALID" and route_role == "preferred"
+                    else "OTHER_INVALID"
+                    if verdict == "INVALID"
+                    else "AVAILABLE"
+                )
+                admission_receipt = {
+                    "schema": "ROUTE_ADMISSION_RECEIPT@1",
+                    "route_role": route_role,
+                    "decision": "ADMITTED",
+                }
+                terminal_receipt = {
+                    "schema": "ROUTE_TERMINAL_RECEIPT@1",
+                    "route_role": route_role,
+                    "terminal_classification": terminal_classification,
+                }
+                return {
+                    "provider_neutral_root_input_set": root_input_set,
+                    "provider_neutral_root_input_set_digest": canonical_digest(
+                        root_input_set
+                    ),
+                    "route_role": route_role,
+                    "execution_profile_ref": profile["execution_profile_ref"],
+                    "execution_profile": profile,
+                    "execution_profile_digest": canonical_digest(profile),
+                    "admission_receipt": admission_receipt,
+                    "admission_receipt_digest": canonical_digest(admission_receipt),
+                    "terminal_receipt": terminal_receipt,
+                    "terminal_receipt_digest": canonical_digest(terminal_receipt),
+                    "terminal_classification": terminal_classification,
+                    "mixed_execution_profile_batch": False,
+                }
+
+            spec = action_specs[action_id]
+            scalars = spec["scalars"]
+            sequences = spec["sequences"]
+            assert isinstance(scalars, dict)
+            assert isinstance(sequences, dict)
+            produced = list(sequences["produced_case_ids"])
+            if outcomes is None:
+                outcome_verdicts = ["PASS"] * len(produced)
+                if verdict in {"FAIL", "INVALID"}:
+                    outcome_verdicts[0] = verdict
+                outcomes = [
+                    {"case_id": str(case_id), "verdict": outcome_verdict}
+                    for case_id, outcome_verdict in zip(
+                        produced, outcome_verdicts, strict=True
+                    )
+                ]
+            artifact = {
+                "schema": docs_gate.ITER010_PLAN_EVIDENCE_SCHEMA,
+                "result_id": scalars["result_ref"],
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+                "action_ref": action_id,
+                "verification_case_id": scalars["case_id"],
+                "plan_gate_verdict": verdict,
+                "evidence_verifier": docs_gate.ITER010_PLAN_EVIDENCE_VERIFIER,
+                "evidence_artifact_path": scalars["evidence_path"],
+                "case_outcomes": outcomes,
+                "action_evidence": {},
+            }
+            if action_id == docs_gate.ITER010_CURRENT_ACTION_ID:
+                artifact["action_evidence"] = {
+                    "provider_neutral_root_input_set": root_input_set,
+                    "provider_neutral_root_input_set_digest": canonical_digest(
+                        root_input_set
+                    ),
+                }
+            elif action_id == docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID:
+                artifact["action_evidence"] = quality_evidence("preferred")
+            elif action_id == docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID:
+                artifact["action_evidence"] = {
+                    "preferred_invalid_predecessor_ref": docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF,
+                    "preferred_invalid_predecessor_seal_digest": "sha256:" + "6" * 64,
+                    "provider_neutral_root_input_set": root_input_set,
+                    "provider_neutral_root_input_set_digest": canonical_digest(
+                        root_input_set
+                    ),
+                    "fallback_execution_profile_ref": fallback_profile[
+                        "execution_profile_ref"
+                    ],
+                    "fallback_execution_profile": fallback_profile,
+                    "fallback_execution_profile_digest": canonical_digest(
+                        fallback_profile
+                    ),
+                    "fallback_admission_policy_plugin_ref": "fallback_admission_policy",
+                    "fallback_admission_policy_plugin": fallback_policy_plugin,
+                    "fallback_admission_policy_plugin_digest": canonical_digest(
+                        fallback_policy_plugin
+                    ),
+                    "preferred_terminal_classification": "TERMINAL_UNAVAILABLE",
+                    "mixed_execution_profile_batch": False,
+                    "provider_dispatch_count": 0,
+                    "new_human_authority_requested": False,
+                }
+            elif action_id == docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID:
+                fallback_evidence = quality_evidence("fallback")
+                fallback_evidence.update(
+                    {
+                        "fallback_refreeze_predecessor_ref": docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF,
+                        "fallback_refreeze_predecessor_seal_digest": "sha256:"
+                        + "9" * 64,
+                        "admission_policy_plugin_ref": "fallback_admission_policy",
+                        "admission_policy_plugin": fallback_policy_plugin,
+                        "admission_policy_plugin_digest": canonical_digest(
+                            fallback_policy_plugin
+                        ),
+                    }
+                )
+                artifact["action_evidence"] = fallback_evidence
+            # The digest deliberately binds these exact UTF-8 bytes rather than
+            # a reconstructed/canonical JSON object.
+            evidence_text = json.dumps(
+                artifact,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+            metadata = {
+                "id": scalars["result_ref"],
+                "kind": "iteration-result",
+                "status": "sealed",
+                "authority": "evidence",
+                "iteration": "ITER-010",
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+                "action_ref": action_id,
+                "verification_case_id": scalars["case_id"],
+                "plan_gate_verdict": verdict,
+                "evidence_schema": docs_gate.ITER010_PLAN_EVIDENCE_SCHEMA,
+                "evidence_verifier": docs_gate.ITER010_PLAN_EVIDENCE_VERIFIER,
+                "evidence_artifact_path": scalars["evidence_path"],
+                "evidence_artifact_digest": "sha256:"
+                + hashlib.sha256(evidence_text.encode("utf-8")).hexdigest(),
+                "execution_input_digest": "sha256:" + "1" * 64,
+                "runner_identity_digest": "sha256:" + "2" * 64,
+                "runner_receipt_digest": "sha256:" + "3" * 64,
+                "verification_report_digest": "sha256:" + "4" * 64,
+                "subject_digest": "sha256:" + "5" * 64,
+                "external_model_call_count": "0",
+            }
+            return (
+                docs_gate.Document(
+                    docs_gate.REPOSITORY / str(scalars["result_path"]),
+                    metadata,
+                    "# Sealed plan action Result\n",
+                ),
+                evidence_text,
+            )
+
+        def canonical_object_digest(value: object) -> str:
+            encoded = json.dumps(
+                value,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+            return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+        def reseal_result(
+            result: docs_gate.Document, artifact: dict[str, object]
+        ) -> tuple[docs_gate.Document, str]:
+            evidence_text = json.dumps(
+                artifact,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+            return (
+                docs_gate.Document(
+                    result.path,
+                    {
+                        **result.metadata,
+                        "evidence_artifact_digest": "sha256:"
+                        + hashlib.sha256(evidence_text.encode("utf-8")).hexdigest(),
+                    },
+                    result.body,
+                ),
+                evidence_text,
+            )
+
+        def verification_for(
+            verdicts: dict[str, str] | None = None,
+        ) -> docs_gate.Document:
+            resolved = {case_id: "NOT-RUN" for case_id in all_plan_cases}
+            resolved.update({case_id: "PASS" for case_id in prerequisites})
+            if verdicts is not None:
+                resolved.update(verdicts)
+            rows = "".join(
+                f"| {case_id} | resolved claim | quality | frozen input | resolved expected | "
+                f"{'result-ref' if verdict in {'PASS', 'FAIL', 'INVALID'} else 'not-executed'} | {verdict} / blocking |\n"
+                for case_id, verdict in resolved.items()
+            )
+            return docs_gate.Document(
+                docs_gate.REPOSITORY
+                / "docs/project/iterations/iteration-010/verification-matrix.md",
+                {"id": "ITER-010-VERIFICATION", "iteration": "ITER-010"},
+                rows,
+            )
+
+        manifest: dict[str, object] = {
+            "schema_version": 2,
+            "provider_route_policy": {
+                "preferred_execution_profile_ref": preferred_profile_configuration[
+                    "execution_profile_ref"
+                ],
+                "fallback_execution_profile_ref": fallback_profile_configuration[
+                    "execution_profile_ref"
+                ],
+                "fallback_admission_policy_plugin_ref": "fallback_admission_policy",
+                "preferred_model_identity": preferred_profile_configuration[
+                    "model_identity"
+                ],
+                "fallback_model_identity": fallback_profile_configuration[
+                    "model_identity"
+                ],
+                "primary_provider": preferred_profile_configuration[
+                    "provider_identity"
+                ],
+                "fallback_provider": fallback_profile_configuration[
+                    "provider_identity"
+                ],
+            },
+            "execution_profile_configurations": {
+                "schema": docs_gate.EXECUTION_PROFILE_CONFIGURATION_SCHEMA,
+                "preferred": preferred_profile_configuration,
+                "fallback": fallback_profile_configuration,
+            },
+            "fallback_admission_policy": fallback_policy_plugin_configuration,
+            "plan_execution_control": {
+                "schema": docs_gate.ITER010_PLAN_EXECUTION_CONTROL_SCHEMA,
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+                "enforcement_mode": "fail-closed",
+                "authorization_refs": list(
+                    docs_gate.ITER010_PLAN_AUTHORIZATION_REFS
+                ),
+                "current_action": action_payload(
+                    docs_gate.ITER010_CURRENT_ACTION_ID, registered=False
+                ),
+                "transition": copy.deepcopy(
+                    action_specs[docs_gate.ITER010_CURRENT_ACTION_ID]["transition"]
+                ),
+                "locks": copy.deepcopy(
+                    action_specs[docs_gate.ITER010_CURRENT_ACTION_ID]["locks"]
+                ),
+                "next_action_contracts": {
+                    str(spec["registry_key"]): action_payload(
+                        action_id, registered=True
+                    )
+                    for action_id, spec in action_specs.items()
+                    if spec["registry_key"] is not None
+                },
+            },
+            "direction_quality_gate": {
+                "schema": docs_gate.ITER010_DIRECTION_QUALITY_GATE_SCHEMA,
+                "case_id": quality_case,
+                "owner_slice_ref": "ITER-010-SLICE-001",
+                "status": "locked-until-direction-freeze-pass",
+                "execution_order": docs_gate.ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER,
+                "arms": list(docs_gate.ITER010_DIRECTION_QUALITY_ARMS),
+                "question_count": 3,
+                "question_set_rule": docs_gate.ITER010_DIRECTION_QUESTION_SET_RULE,
+                "source_truth_owner": "independent-exact-source-ledger-not-any-model-answer",
+                "direct_evidence_arm_is_oracle": False,
+                "current_codex_role": docs_gate.STRICT_CODEX_BASELINE_ROLE,
+                "current_codex_is_oracle_or_reviewer": False,
+                "first_three_arms_same_provider_model_configuration": True,
+                "source_only_and_world_model_arms_same_agent_prompt_tools_budget_cache_and_reviewer": True,
+                "outputs_sealed_before_cross_arm_disclosure": True,
+                "blind_randomized_independent_evaluation": True,
+                "absolute_quality_pass_required": True,
+                "absolute_quality_rule": docs_gate.ITER010_DIRECTION_ABSOLUTE_QUALITY_RULE,
+                "world_model_arm_must_not_lose_to_direct_evidence": True,
+                "world_model_arm_must_not_lose_to_source_only": True,
+                "world_model_arm_must_not_lose_to_current_codex": True,
+                "current_codex_overall_quality_margin_rule": "strictly-positive",
+                "non_locator_world_model_contribution_required": True,
+                "all_tie_outcome": "FAIL",
+                "cost_or_latency_can_compensate_quality": False,
+                "product_code_change_before_verdict_allowed": False,
+                "preferred_route_execution_profile_ref": "provider_route_policy.preferred_execution_profile_ref",
+                "fallback_route_execution_profile_ref": "provider_route_policy.fallback_execution_profile_ref",
+                "preferred_quality_action_id": docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID,
+                "preferred_quality_result_ref": docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF,
+                "mixed_provider_batch_allowed": False,
+                "fallback_refreeze_action_id": docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID,
+                "fallback_refreeze_case_id": docs_gate.ITER010_FALLBACK_REFREEZE_CASE_ID,
+                "fallback_refreeze_requires_new_human_authority": False,
+                "fallback_refreeze_provider_dispatch_allowed": False,
+                "fallback_refreeze_action_evidence_required": (
+                    "preferred-invalid-predecessor-seal,provider-neutral-root-input-set,"
+                    "fallback-execution-profile-ref-and-digest,"
+                    "fallback-admission-policy-plugin-ref-and-digest,no-mixed-batch,"
+                    "zero-provider-dispatch,no-new-human-authority"
+                ),
+                "fallback_quality_action_id": docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID,
+                "fallback_quality_result_ref": docs_gate.ITER010_FALLBACK_QUALITY_RESULT_REF,
+                "fallback_allowed_only_after_refreeze_pass": True,
+                "fallback_admission_prerequisite_case_id": "V-FALLBACK-ROUTE-ADMISSION-001",
+                "fallback_quality_action_evidence_required": (
+                    "fallback-refreeze-predecessor-seal,provider-neutral-root-input-set,"
+                    "execution-profile-ref-and-digest,admission-and-terminal-receipts,"
+                    "no-mixed-batch"
+                ),
+                "quality_case_pass_result_cardinality": "at-most-one",
+                "preferred_terminal_unavailable_action": (
+                    "invalidate-preferred-batch-and-enter-pre-registered-fallback-refreeze"
+                ),
+                "preferred_other_invalid_action": (
+                    "fallback-refreeze-fails-back-to-preferred-quality"
+                ),
+                "fallback_invalid_action": "fail-closed-at-fallback-quality",
+                "target_product_commit": "a" * 40,
+                "target_product_tree": "b" * 40,
+                "dirty_v7_status": "quarantined-not-input",
+            },
+            "product_goal_alignment": {
+                "blocking_case_ids": all_plan_cases,
+                "alpha_agent_comparison_binding": {
+                    "case_id": quality_case,
+                    "new_slice_ref": "ITER-010-SLICE-001",
+                    "arms": ",".join(docs_gate.ITER010_DIRECTION_QUALITY_ARMS),
+                    "current_codex_is_oracle_or_reviewer": False,
+                    "result_role": "blocking-iter010-strict-superiority-direction-gate",
+                },
+            },
+            "public_oss_evaluation_standing_authority": {
+                "owner_decision_ref": "ITER-010-PDR-008",
+                "current_plan_amendment_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+                "verification_case_id": docs_gate.ITER010_PUBLIC_AUTHORITY_CASE_ID,
+                "verification_status": "NOT-RUN",
+                "independent_action_entry_allowed": False,
+                "next_execution_entry_action_id": docs_gate.ITER010_CURRENT_ACTION_ID,
+                "next_execution_entry_case_id": docs_gate.ITER010_CURRENT_ACTION_CASE_ID,
+            },
+        }
+        current = docs_gate.Document(
+            docs_gate.REPOSITORY / "docs/project/current.md",
+            {
+                "id": "PROJECT-CURRENT",
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+                "next_action": docs_gate.ITER010_CURRENT_ACTION_ID,
+                "next_action_case_id": freeze_case,
+                "active_slice": "ITER-010-SLICE-001",
+            },
+            "",
+        )
+        verification = verification_for()
+
+        validate = lambda candidate=manifest, current_doc=current, matrix=verification, result_docs=None, evidence_docs=None: (
+            docs_gate.validate_iter010_plan_execution_snapshot(
+                candidate,
+                "manifest.yaml",
+                current=current_doc,
+                verification=matrix,
+                transition_results=result_docs,
+                transition_evidence_artifacts=evidence_docs,
+                require_external_bindings=True,
+            )
+        )
+        self.assertEqual(validate(), [])
+
+        missing_route_policy = copy.deepcopy(manifest)
+        missing_route_policy.pop("provider_route_policy")
+        self.assertTrue(
+            any(
+                "provider_route_policy is required for ITER-010" in error
+                for error in validate(missing_route_policy)
+            )
+        )
+
+        missing_profile_configuration = copy.deepcopy(manifest)
+        missing_profile_configuration.pop("execution_profile_configurations")
+        self.assertTrue(
+            any(
+                "execution_profile_configurations must be a mapping" in error
+                for error in validate(missing_profile_configuration)
+            )
+        )
+
+        unresolved_plugin_configuration = copy.deepcopy(manifest)
+        unresolved_plugin_configuration.pop("fallback_admission_policy")
+        self.assertTrue(
+            any(
+                "must resolve to a configuration object" in error
+                for error in validate(unresolved_plugin_configuration)
+            )
+        )
+
+        missing_control = copy.deepcopy(manifest)
+        missing_control.pop("plan_execution_control")
+        self.assertTrue(
+            any("plan_execution_control" in error for error in validate(missing_control))
+        )
+
+        extra_control_override = copy.deepcopy(manifest)
+        extra_control_override["plan_execution_control"][  # type: ignore[index]
+            "developer_override"
+        ] = True
+        self.assertTrue(
+            any("exactly the frozen control keys" in error for error in validate(extra_control_override))
+        )
+
+        csv_authorization_refs = copy.deepcopy(manifest)
+        csv_authorization_refs["plan_execution_control"][  # type: ignore[index]
+            "authorization_refs"
+        ] = ",".join(docs_gate.ITER010_PLAN_AUTHORIZATION_REFS)
+        self.assertTrue(
+            any("authorization_refs" in error for error in validate(csv_authorization_refs))
+        )
+
+        missing_result_ref = copy.deepcopy(manifest)
+        missing_result_ref["plan_execution_control"]["current_action"].pop(  # type: ignore[index]
+            "result_ref"
+        )
+        self.assertTrue(
+            any("current_action.result_ref" in error for error in validate(missing_result_ref))
+        )
+
+        wrong_owner = copy.deepcopy(manifest)
+        wrong_owner["plan_execution_control"]["current_action"][  # type: ignore[index]
+            "owner_slice_ref"
+        ] = "ITER-010-SLICE-002"
+        self.assertTrue(any("owner_slice_ref" in error for error in validate(wrong_owner)))
+
+        missing_registered_action = copy.deepcopy(manifest)
+        missing_registered_action["plan_execution_control"][  # type: ignore[index]
+            "next_action_contracts"
+        ].pop("direction_rework")
+        self.assertTrue(
+            any(
+                "pre-registered action keys" in error
+                for error in validate(missing_registered_action)
+            )
+        )
+
+        unregistered_current = copy.deepcopy(manifest)
+        unregistered_current["plan_execution_control"]["current_action"][  # type: ignore[index]
+            "id"
+        ] = "ITER-010-ACTION-UNREGISTERED-001"
+        self.assertTrue(
+            any("not the initial freeze or a pre-registered" in error for error in validate(unregistered_current))
+        )
+
+        csv_prerequisites = copy.deepcopy(manifest)
+        csv_prerequisites["plan_execution_control"]["current_action"][  # type: ignore[index]
+            "prerequisite_case_ids"
+        ] = ",".join(prerequisites)
+        self.assertTrue(
+            any("exact frozen YAML block sequence" in error for error in validate(csv_prerequisites))
+        )
+
+        three_arms = copy.deepcopy(manifest)
+        three_arms["direction_quality_gate"]["arms"] = list(  # type: ignore[index]
+            docs_gate.ITER010_DIRECTION_QUALITY_ARMS[1:]
+        )
+        self.assertTrue(any("four-arm order" in error for error in validate(three_arms)))
+
+        grandfathered_three_arm = copy.deepcopy(manifest)
+        grandfathered_three_arm["product_goal_alignment"][  # type: ignore[index]
+            "alpha_agent_comparison_binding"
+        ]["arms"] = (
+            "same-agent-source-only,same-agent-world-model-and-source,current-codex"
+        )
+        self.assertTrue(
+            any("same exact four-arm order" in error for error in validate(grandfathered_three_arm))
+        )
+
+        codex_judge = copy.deepcopy(manifest)
+        codex_judge["direction_quality_gate"][  # type: ignore[index]
+            "current_codex_is_oracle_or_reviewer"
+        ] = True
+        self.assertTrue(
+            any("current_codex_is_oracle_or_reviewer" in error for error in validate(codex_judge))
+        )
+
+        tie_pass = copy.deepcopy(manifest)
+        tie_pass["direction_quality_gate"]["all_tie_outcome"] = "PASS"  # type: ignore[index]
+        self.assertTrue(any("all_tie_outcome" in error for error in validate(tie_pass)))
+
+        quality_compensated_by_cost = copy.deepcopy(manifest)
+        quality_compensated_by_cost["direction_quality_gate"][  # type: ignore[index]
+            "cost_or_latency_can_compensate_quality"
+        ] = True
+        self.assertTrue(
+            any(
+                "cost_or_latency_can_compensate_quality" in error
+                for error in validate(quality_compensated_by_cost)
+            )
+        )
+
+        unlocked_product = copy.deepcopy(manifest)
+        unlocked_product["plan_execution_control"]["locks"][  # type: ignore[index]
+            "product_code_changes"
+        ] = False
+        unlocked_product["direction_quality_gate"][  # type: ignore[index]
+            "product_code_change_before_verdict_allowed"
+        ] = True
+        unlocked_errors = validate(unlocked_product)
+        self.assertTrue(any("product_code_changes" in error for error in unlocked_errors))
+        self.assertTrue(
+            any("product_code_change_before_verdict_allowed" in error for error in unlocked_errors)
+        )
+
+        quality_candidate = copy.deepcopy(manifest)
+        quality_control = quality_candidate["plan_execution_control"]
+        assert isinstance(quality_control, dict)
+        quality_control["current_action"] = action_payload(
+            docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID,
+            registered=False,
+        )
+        quality_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID]["transition"]
+        )
+        quality_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID]["locks"]
+        )
+        quality_gate = quality_candidate["direction_quality_gate"]
+        assert isinstance(quality_gate, dict)
+        quality_gate["status"] = "authorized"
+        quality_alignment = quality_candidate["product_goal_alignment"]
+        assert isinstance(quality_alignment, dict)
+        quality_alignment["mature_source_agent_identity_digest"] = "sha256:" + "c" * 64
+        quality_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID,
+                "next_action_case_id": quality_case,
+            },
+            "",
+        )
+        freeze_produced = list(
+            action_specs[docs_gate.ITER010_CURRENT_ACTION_ID]["sequences"][  # type: ignore[index]
+                "produced_case_ids"
+            ]
+        )
+        quality_verification = verification_for(
+            {case_id: "PASS" for case_id in freeze_produced}
+        )
+        freeze_result, freeze_evidence = transition_receipt(
+            docs_gate.ITER010_CURRENT_ACTION_ID,
+            "PASS",
+        )
+        quality_results = {
+            docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: freeze_result
+        }
+        quality_evidence = {
+            docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: freeze_evidence
+        }
+        self.assertEqual(
+            validate(
+                quality_candidate,
+                current_doc=quality_current,
+                matrix=quality_verification,
+                result_docs=quality_results,
+                evidence_docs=quality_evidence,
+            ),
+            [],
+        )
+
+        identity_leaked_freeze_artifact = json.loads(freeze_evidence)
+        leaked_root = identity_leaked_freeze_artifact["action_evidence"][
+            "provider_neutral_root_input_set"
+        ]
+        leaked_root["execution_hint"] = "use-nebula-x1"
+        identity_leaked_freeze_artifact["action_evidence"][
+            "provider_neutral_root_input_set_digest"
+        ] = canonical_object_digest(leaked_root)
+        identity_leaked_freeze_result, identity_leaked_freeze_evidence = (
+            reseal_result(freeze_result, identity_leaked_freeze_artifact)
+        )
+        identity_leak_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                    identity_leaked_freeze_result
+                )
+            },
+            evidence_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                    identity_leaked_freeze_evidence
+                )
+            },
+        )
+        self.assertTrue(
+            any(
+                "provider_neutral_root_input_set" in error
+                and "nebula-x1" in error
+                for error in identity_leak_errors
+            ),
+            identity_leak_errors,
+        )
+
+        for forbidden_field in (
+            "provider_identity",
+            "model_identity",
+            "route_role",
+            "execution_profile_ref",
+            "admission_policy_plugin_ref",
+        ):
+            with self.subTest(provider_neutral_control_field=forbidden_field):
+                attacker_artifact = json.loads(freeze_evidence)
+                attacker_root = attacker_artifact["action_evidence"][
+                    "provider_neutral_root_input_set"
+                ]
+                attacker_root[forbidden_field] = "ATTACKER_UNREGISTERED"
+                attacker_artifact["action_evidence"][
+                    "provider_neutral_root_input_set_digest"
+                ] = canonical_object_digest(attacker_root)
+                attacker_result, attacker_evidence = reseal_result(
+                    freeze_result,
+                    attacker_artifact,
+                )
+                attacker_errors = validate(
+                    quality_candidate,
+                    current_doc=quality_current,
+                    matrix=quality_verification,
+                    result_docs={
+                        docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: attacker_result
+                    },
+                    evidence_docs={
+                        docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: attacker_evidence
+                    },
+                )
+                self.assertTrue(
+                    any(
+                        "must contain exactly schema, question_ids, system_arm_ids, and entries"
+                        in error
+                        for error in attacker_errors
+                    ),
+                    attacker_errors,
+                )
+
+        incomplete_cartesian_artifact = json.loads(freeze_evidence)
+        incomplete_cartesian_root = incomplete_cartesian_artifact["action_evidence"][
+            "provider_neutral_root_input_set"
+        ]
+        incomplete_cartesian_root["entries"].pop()
+        incomplete_cartesian_artifact["action_evidence"][
+            "provider_neutral_root_input_set_digest"
+        ] = canonical_object_digest(incomplete_cartesian_root)
+        incomplete_cartesian_result, incomplete_cartesian_evidence = reseal_result(
+            freeze_result,
+            incomplete_cartesian_artifact,
+        )
+        incomplete_cartesian_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                    incomplete_cartesian_result
+                )
+            },
+            evidence_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                    incomplete_cartesian_evidence
+                )
+            },
+        )
+        self.assertTrue(
+            any(
+                "complete question_ids x system_arm_ids Cartesian product" in error
+                for error in incomplete_cartesian_errors
+            ),
+            incomplete_cartesian_errors,
+        )
+
+        forged_missing_digest_result = docs_gate.Document(
+            freeze_result.path,
+            {
+                key: value
+                for key, value in {
+                    **freeze_result.metadata,
+                    "kind": "forged-result-note",
+                }.items()
+                if key != "runner_receipt_digest"
+            },
+            freeze_result.body,
+        )
+        forged_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                    forged_missing_digest_result
+                )
+            },
+            evidence_docs=quality_evidence,
+        )
+        self.assertTrue(any("kind must equal iteration-result" in error for error in forged_errors))
+        self.assertTrue(any("runner_receipt_digest" in error for error in forged_errors))
+
+        wrong_artifact_digest_result = docs_gate.Document(
+            freeze_result.path,
+            {
+                **freeze_result.metadata,
+                "evidence_artifact_digest": "sha256:" + "0" * 64,
+            },
+            freeze_result.body,
+        )
+        wrong_artifact_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                    wrong_artifact_digest_result
+                )
+            },
+            evidence_docs=quality_evidence,
+        )
+        self.assertTrue(
+            any("must match exact artifact bytes" in error for error in wrong_artifact_errors),
+            wrong_artifact_errors,
+        )
+
+        missing_case_artifact = json.loads(freeze_evidence)
+        missing_case_artifact["case_outcomes"] = missing_case_artifact[
+            "case_outcomes"
+        ][:-1]
+        missing_case_evidence = json.dumps(
+            missing_case_artifact,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        missing_case_result = docs_gate.Document(
+            freeze_result.path,
+            {
+                **freeze_result.metadata,
+                "evidence_artifact_digest": "sha256:"
+                + hashlib.sha256(missing_case_evidence.encode("utf-8")).hexdigest(),
+            },
+            freeze_result.body,
+        )
+        missing_produced_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: missing_case_result
+            },
+            evidence_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: missing_case_evidence
+            },
+        )
+        self.assertTrue(
+            any("exactly cover predecessor produced_case_ids" in error for error in missing_produced_errors),
+            missing_produced_errors,
+        )
+
+        wrong_aggregate_artifact = json.loads(freeze_evidence)
+        wrong_aggregate_artifact["case_outcomes"][0]["verdict"] = "FAIL"
+        wrong_aggregate_evidence = json.dumps(
+            wrong_aggregate_artifact,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        wrong_aggregate_result = docs_gate.Document(
+            freeze_result.path,
+            {
+                **freeze_result.metadata,
+                "evidence_artifact_digest": "sha256:"
+                + hashlib.sha256(
+                    wrong_aggregate_evidence.encode("utf-8")
+                ).hexdigest(),
+            },
+            freeze_result.body,
+        )
+        wrong_aggregate_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: wrong_aggregate_result
+            },
+            evidence_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: wrong_aggregate_evidence
+            },
+        )
+        self.assertTrue(
+            any("INVALID > FAIL > PASS aggregation" in error for error in wrong_aggregate_errors),
+            wrong_aggregate_errors,
+        )
+
+        no_freeze_result_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+        )
+        self.assertTrue(
+            any("requires exact predecessor Result" in error for error in no_freeze_result_errors)
+        )
+
+        failed_freeze_result, failed_freeze_evidence = transition_receipt(
+            docs_gate.ITER010_CURRENT_ACTION_ID,
+            "FAIL",
+        )
+        wrong_verdict_errors = validate(
+            quality_candidate,
+            current_doc=quality_current,
+            matrix=quality_verification,
+            result_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: failed_freeze_result
+            },
+            evidence_docs={
+                docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: failed_freeze_evidence
+            },
+        )
+        self.assertTrue(any("must equal PASS" in error for error in wrong_verdict_errors))
+
+        pending_quality_identity = copy.deepcopy(quality_candidate)
+        pending_quality_identity["product_goal_alignment"][  # type: ignore[index]
+            "mature_source_agent_identity_digest"
+        ] = docs_gate.ITER010_PENDING_CODEX_IDENTITY
+        self.assertTrue(
+            any(
+                "must be exact sha256 after the freeze action" in error
+                for error in validate(
+                    pending_quality_identity,
+                    current_doc=quality_current,
+                    matrix=quality_verification,
+                    result_docs=quality_results,
+                    evidence_docs=quality_evidence,
+                )
+            )
+        )
+
+        quality_dispatch_locked = copy.deepcopy(quality_candidate)
+        quality_dispatch_locked["plan_execution_control"]["locks"][  # type: ignore[index]
+            "provider_dispatch"
+        ] = True
+        self.assertTrue(
+            any(
+                "locks.provider_dispatch must equal False" in error
+                for error in validate(
+                    quality_dispatch_locked,
+                    current_doc=quality_current,
+                    matrix=quality_verification,
+                    result_docs=quality_results,
+                    evidence_docs=quality_evidence,
+                )
+            )
+        )
+
+        wrong_quality_transition = copy.deepcopy(quality_candidate)
+        wrong_quality_transition["plan_execution_control"]["transition"][  # type: ignore[index]
+            "fail_next_action_id"
+        ] = "ITER-010-ACTION-PATCH-ANSWER-001"
+        self.assertTrue(
+            any(
+                "transition.fail_next_action_id" in error
+                for error in validate(
+                    wrong_quality_transition,
+                    current_doc=quality_current,
+                    matrix=quality_verification,
+                    result_docs=quality_results,
+                    evidence_docs=quality_evidence,
+                )
+            )
+        )
+
+        independent_public_authority = copy.deepcopy(manifest)
+        independent_public_authority[
+            "public_oss_evaluation_standing_authority"
+        ]["independent_action_entry_allowed"] = True  # type: ignore[index]
+        self.assertTrue(
+            any(
+                "independent_action_entry_allowed" in error
+                for error in validate(independent_public_authority)
+            )
+        )
+        for field, wrong_value in (
+            ("verification_status", "FAIL"),
+            (
+                "next_execution_entry_action_id",
+                "ITER-010-ACTION-PUBLIC-OSS-AUTHORITY-001",
+            ),
+            ("current_plan_amendment_ref", "ITER-010-PDR-008"),
+        ):
+            with self.subTest(public_authority_field=field):
+                drifted_authority = copy.deepcopy(manifest)
+                drifted_authority["public_oss_evaluation_standing_authority"][  # type: ignore[index]
+                    field
+                ] = wrong_value
+                self.assertTrue(
+                    any(field in error for error in validate(drifted_authority))
+                )
+
+        fallback_refreeze_candidate = copy.deepcopy(quality_candidate)
+        fallback_refreeze_control = fallback_refreeze_candidate[
+            "plan_execution_control"
+        ]
+        assert isinstance(fallback_refreeze_control, dict)
+        fallback_refreeze_control["current_action"] = action_payload(
+            docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID,
+            registered=False,
+        )
+        fallback_refreeze_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID][
+                "transition"
+            ]
+        )
+        fallback_refreeze_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID]["locks"]
+        )
+        fallback_refreeze_candidate["direction_quality_gate"][  # type: ignore[index]
+            "status"
+        ] = "preferred-invalid-fallback-refreeze-authorized"
+        fallback_refreeze_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID,
+                "next_action_case_id": docs_gate.ITER010_FALLBACK_REFREEZE_CASE_ID,
+            },
+            "",
+        )
+        preferred_invalid_result, preferred_invalid_evidence = transition_receipt(
+            docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID,
+            "INVALID",
+        )
+        fallback_refreeze_verification = verification_for(
+            {
+                **{str(case_id): "PASS" for case_id in freeze_produced},
+                quality_case: "INVALID",
+            }
+        )
+        self.assertEqual(
+            validate(
+                fallback_refreeze_candidate,
+                current_doc=fallback_refreeze_current,
+                matrix=fallback_refreeze_verification,
+                result_docs={
+                    docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_invalid_result
+                },
+                evidence_docs={
+                    docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_invalid_evidence
+                },
+            ),
+            [],
+        )
+        mismatched_preferred_profile_artifact = json.loads(
+            preferred_invalid_evidence
+        )
+        mismatched_preferred_profile = {
+            **mismatched_preferred_profile_artifact["action_evidence"][
+                "execution_profile"
+            ],
+            "model_identity": "untrusted-model",
+        }
+        mismatched_preferred_profile_artifact["action_evidence"][
+            "execution_profile"
+        ] = mismatched_preferred_profile
+        mismatched_preferred_profile_artifact["action_evidence"][
+            "execution_profile_digest"
+        ] = canonical_object_digest(mismatched_preferred_profile)
+        mismatched_preferred_profile_result, mismatched_preferred_profile_evidence = (
+            reseal_result(
+                preferred_invalid_result,
+                mismatched_preferred_profile_artifact,
+            )
+        )
+        mismatched_profile_errors = validate(
+            fallback_refreeze_candidate,
+            current_doc=fallback_refreeze_current,
+            matrix=fallback_refreeze_verification,
+            result_docs={
+                docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: (
+                    mismatched_preferred_profile_result
+                )
+            },
+            evidence_docs={
+                docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: (
+                    mismatched_preferred_profile_evidence
+                )
+            },
+        )
+        self.assertTrue(
+            any(
+                "execution_profile must exactly equal the trusted preferred" in error
+                for error in mismatched_profile_errors
+            ),
+            mismatched_profile_errors,
+        )
+        missing_fallback_admission_predecessor = copy.deepcopy(
+            fallback_refreeze_candidate
+        )
+        missing_fallback_admission_predecessor["plan_execution_control"][  # type: ignore[index]
+            "current_action"
+        ]["prerequisite_case_ids"].remove("V-FALLBACK-ROUTE-ADMISSION-001")
+        self.assertTrue(
+            any(
+                "prerequisite_case_ids" in error
+                for error in validate(
+                    missing_fallback_admission_predecessor,
+                    current_doc=fallback_refreeze_current,
+                    matrix=fallback_refreeze_verification,
+                    result_docs={
+                        docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_invalid_result
+                    },
+                    evidence_docs={
+                        docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_invalid_evidence
+                    },
+                )
+            )
+        )
+
+        fallback_quality_candidate = copy.deepcopy(fallback_refreeze_candidate)
+        fallback_quality_control = fallback_quality_candidate["plan_execution_control"]
+        assert isinstance(fallback_quality_control, dict)
+        fallback_quality_control["current_action"] = action_payload(
+            docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID,
+            registered=False,
+        )
+        fallback_quality_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID]["transition"]
+        )
+        fallback_quality_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID]["locks"]
+        )
+        fallback_quality_candidate["direction_quality_gate"][  # type: ignore[index]
+            "status"
+        ] = "fallback-refreeze-passed-direction-quality-authorized"
+        fallback_quality_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID,
+                "next_action_case_id": quality_case,
+            },
+            "",
+        )
+        refreeze_result, refreeze_evidence = transition_receipt(
+            docs_gate.ITER010_FALLBACK_REFREEZE_ACTION_ID,
+            "PASS",
+        )
+        fallback_quality_verification = verification_for(
+            {
+                **{str(case_id): "PASS" for case_id in freeze_produced},
+                quality_case: "INVALID",
+                docs_gate.ITER010_FALLBACK_REFREEZE_CASE_ID: "PASS",
+            }
+        )
+        self.assertEqual(
+            validate(
+                fallback_quality_candidate,
+                current_doc=fallback_quality_current,
+                matrix=fallback_quality_verification,
+                result_docs={
+                    docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF: refreeze_result
+                },
+                evidence_docs={
+                    docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF: refreeze_evidence
+                },
+            ),
+            [],
+        )
+        mismatched_plugin_artifact = json.loads(refreeze_evidence)
+        mismatched_plugin = {
+            **mismatched_plugin_artifact["action_evidence"][
+                "fallback_admission_policy_plugin"
+            ],
+            "route_role": "preferred",
+        }
+        mismatched_plugin_artifact["action_evidence"][
+            "fallback_admission_policy_plugin"
+        ] = mismatched_plugin
+        mismatched_plugin_artifact["action_evidence"][
+            "fallback_admission_policy_plugin_digest"
+        ] = canonical_object_digest(mismatched_plugin)
+        mismatched_plugin_result, mismatched_plugin_evidence = reseal_result(
+            refreeze_result,
+            mismatched_plugin_artifact,
+        )
+        mismatched_plugin_errors = validate(
+            fallback_quality_candidate,
+            current_doc=fallback_quality_current,
+            matrix=fallback_quality_verification,
+            result_docs={
+                docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF: (
+                    mismatched_plugin_result
+                )
+            },
+            evidence_docs={
+                docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF: (
+                    mismatched_plugin_evidence
+                )
+            },
+        )
+        self.assertTrue(
+            any(
+                "fallback_admission_policy_plugin must exactly equal the trusted" in error
+                for error in mismatched_plugin_errors
+            ),
+            mismatched_plugin_errors,
+        )
+        incomplete_refreeze_artifact = json.loads(refreeze_evidence)
+        incomplete_refreeze_artifact["action_evidence"].pop(
+            "provider_neutral_root_input_set_digest"
+        )
+        incomplete_refreeze_evidence = json.dumps(
+            incomplete_refreeze_artifact,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        incomplete_refreeze_result = docs_gate.Document(
+            refreeze_result.path,
+            {
+                **refreeze_result.metadata,
+                "evidence_artifact_digest": "sha256:"
+                + hashlib.sha256(
+                    incomplete_refreeze_evidence.encode("utf-8")
+                ).hexdigest(),
+            },
+            refreeze_result.body,
+        )
+        self.assertTrue(
+            any(
+                "FallbackRouteRefreeze action_evidence"
+                in error
+                for error in validate(
+                    fallback_quality_candidate,
+                    current_doc=fallback_quality_current,
+                    matrix=fallback_quality_verification,
+                    result_docs={
+                        docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF: (
+                            incomplete_refreeze_result
+                        )
+                    },
+                    evidence_docs={
+                        docs_gate.ITER010_FALLBACK_REFREEZE_RESULT_REF: (
+                            incomplete_refreeze_evidence
+                        )
+                    },
+                )
+            )
+        )
+
+        minimum_web_candidate = copy.deepcopy(fallback_quality_candidate)
+        minimum_web_control = minimum_web_candidate["plan_execution_control"]
+        assert isinstance(minimum_web_control, dict)
+        minimum_web_control["current_action"] = action_payload(
+            docs_gate.ITER010_MINIMUM_WEB_ACTION_ID,
+            registered=False,
+        )
+        minimum_web_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_MINIMUM_WEB_ACTION_ID]["transition"]
+        )
+        minimum_web_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_MINIMUM_WEB_ACTION_ID]["locks"]
+        )
+        minimum_web_candidate["direction_quality_gate"][  # type: ignore[index]
+            "status"
+        ] = "direction-quality-passed-minimum-web-authorized"
+        minimum_web_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_MINIMUM_WEB_ACTION_ID,
+                "next_action_case_id": docs_gate.ITER010_MINIMUM_WEB_CASE_ID,
+            },
+            "",
+        )
+        fallback_pass_result, fallback_pass_evidence = transition_receipt(
+            docs_gate.ITER010_FALLBACK_QUALITY_ACTION_ID,
+            "PASS",
+        )
+        minimum_web_verification = verification_for(
+            {
+                **{str(case_id): "PASS" for case_id in freeze_produced},
+                quality_case: "PASS",
+                docs_gate.ITER010_FALLBACK_REFREEZE_CASE_ID: "PASS",
+            }
+        )
+        fallback_route_results = {
+            docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_invalid_result,
+            docs_gate.ITER010_FALLBACK_QUALITY_RESULT_REF: fallback_pass_result,
+        }
+        fallback_route_evidence = {
+            docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_invalid_evidence,
+            docs_gate.ITER010_FALLBACK_QUALITY_RESULT_REF: fallback_pass_evidence,
+        }
+        self.assertEqual(
+            validate(
+                minimum_web_candidate,
+                current_doc=minimum_web_current,
+                matrix=minimum_web_verification,
+                result_docs=fallback_route_results,
+                evidence_docs=fallback_route_evidence,
+            ),
+            [],
+        )
+        preferred_pass_result, preferred_pass_evidence = transition_receipt(
+            docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID,
+            "PASS",
+        )
+        duplicate_quality_pass_errors = validate(
+            minimum_web_candidate,
+            current_doc=minimum_web_current,
+            matrix=minimum_web_verification,
+            result_docs={
+                docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_pass_result,
+                docs_gate.ITER010_FALLBACK_QUALITY_RESULT_REF: fallback_pass_result,
+            },
+            evidence_docs={
+                docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: preferred_pass_evidence,
+                docs_gate.ITER010_FALLBACK_QUALITY_RESULT_REF: fallback_pass_evidence,
+            },
+        )
+        self.assertTrue(
+            any(
+                "may have at most one PASS Result" in error
+                for error in duplicate_quality_pass_errors
+            ),
+            duplicate_quality_pass_errors,
+        )
+
+        freeze_rework_candidate = copy.deepcopy(manifest)
+        freeze_rework_control = freeze_rework_candidate["plan_execution_control"]
+        assert isinstance(freeze_rework_control, dict)
+        freeze_rework_control["current_action"] = action_payload(
+            docs_gate.ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID,
+            registered=False,
+        )
+        freeze_rework_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID][
+                "transition"
+            ]
+        )
+        freeze_rework_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID][
+                "locks"
+            ]
+        )
+        freeze_rework_alignment = freeze_rework_candidate[
+            "product_goal_alignment"
+        ]
+        assert isinstance(freeze_rework_alignment, dict)
+        freeze_rework_alignment["mature_source_agent_identity_digest"] = (
+            "sha256:" + "d" * 64
+        )
+        freeze_rework_blocking = freeze_rework_alignment["blocking_case_ids"]
+        assert isinstance(freeze_rework_blocking, list)
+        self.assertIn(
+            docs_gate.ITER010_DIRECTION_FREEZE_REWORK_CASE_ID,
+            freeze_rework_blocking,
+        )
+        freeze_rework_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_DIRECTION_FREEZE_REWORK_ACTION_ID,
+                "next_action_case_id": docs_gate.ITER010_DIRECTION_FREEZE_REWORK_CASE_ID,
+            },
+            "",
+        )
+        freeze_rework_verification = verification_for(
+            {
+                str(freeze_produced[0]): "FAIL",
+                **{
+                    str(case_id): "PASS"
+                    for case_id in freeze_produced[1:]
+                },
+            }
+        )
+        self.assertEqual(
+            validate(
+                freeze_rework_candidate,
+                current_doc=freeze_rework_current,
+                matrix=freeze_rework_verification,
+                result_docs={
+                    docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: failed_freeze_result
+                },
+                evidence_docs={
+                    docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                        failed_freeze_evidence
+                    )
+                },
+            ),
+            [],
+        )
+        invalid_freeze_result, invalid_freeze_evidence = transition_receipt(
+            docs_gate.ITER010_CURRENT_ACTION_ID,
+            "INVALID",
+        )
+        self.assertTrue(
+            any(
+                "plan_gate_verdict must equal FAIL" in error
+                for error in validate(
+                    freeze_rework_candidate,
+                    current_doc=freeze_rework_current,
+                    matrix=freeze_rework_verification,
+                    result_docs={
+                        docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: invalid_freeze_result
+                    },
+                    evidence_docs={
+                        docs_gate.ITER010_CURRENT_ACTION_RESULT_REF: (
+                            invalid_freeze_evidence
+                        )
+                    },
+                )
+            )
+        )
+
+        direction_rework_candidate = copy.deepcopy(quality_candidate)
+        direction_rework_control = direction_rework_candidate[
+            "plan_execution_control"
+        ]
+        assert isinstance(direction_rework_control, dict)
+        direction_rework_control["current_action"] = action_payload(
+            docs_gate.ITER010_DIRECTION_REWORK_ACTION_ID,
+            registered=False,
+        )
+        direction_rework_control["transition"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_DIRECTION_REWORK_ACTION_ID]["transition"]
+        )
+        direction_rework_control["locks"] = copy.deepcopy(
+            action_specs[docs_gate.ITER010_DIRECTION_REWORK_ACTION_ID]["locks"]
+        )
+        direction_rework_gate = direction_rework_candidate["direction_quality_gate"]
+        assert isinstance(direction_rework_gate, dict)
+        direction_rework_gate["status"] = "failed-rework-attribution-authorized"
+        direction_rework_alignment = direction_rework_candidate[
+            "product_goal_alignment"
+        ]
+        assert isinstance(direction_rework_alignment, dict)
+        direction_rework_blocking = direction_rework_alignment["blocking_case_ids"]
+        assert isinstance(direction_rework_blocking, list)
+        self.assertIn(
+            docs_gate.ITER010_DIRECTION_REWORK_CASE_ID,
+            direction_rework_blocking,
+        )
+        direction_rework_current = docs_gate.Document(
+            current.path,
+            {
+                **current.metadata,
+                "next_action": docs_gate.ITER010_DIRECTION_REWORK_ACTION_ID,
+                "next_action_case_id": docs_gate.ITER010_DIRECTION_REWORK_CASE_ID,
+            },
+            "",
+        )
+        direction_rework_verification = verification_for(
+            {
+                **{str(case_id): "PASS" for case_id in freeze_produced},
+                quality_case: "FAIL",
+            }
+        )
+        quality_failure_result, quality_failure_evidence = transition_receipt(
+            docs_gate.ITER010_PREFERRED_QUALITY_ACTION_ID,
+            "FAIL",
+        )
+        self.assertEqual(
+            validate(
+                direction_rework_candidate,
+                current_doc=direction_rework_current,
+                matrix=direction_rework_verification,
+                result_docs={
+                    docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: quality_failure_result
+                },
+                evidence_docs={
+                    docs_gate.ITER010_PREFERRED_QUALITY_RESULT_REF: (
+                        quality_failure_evidence
+                    )
+                },
+            ),
+            [],
+        )
+
+        missing_case = copy.deepcopy(manifest)
+        missing_case["product_goal_alignment"]["blocking_case_ids"].remove(  # type: ignore[index]
+            quality_case
+        )
+        self.assertTrue(any(quality_case in error for error in validate(missing_case)))
+
+        stale_current = docs_gate.Document(
+            current.path,
+            {**current.metadata, "next_action": "ITER-010-ACTION-WEB-CANARY-001"},
+            "",
+        )
+        self.assertTrue(any("next_action" in error for error in validate(current_doc=stale_current)))
+
+        stale_order = copy.deepcopy(manifest)
+        stale_order["experience_delivery_policy"] = {
+            "direction_discovery_principle_ref": docs_gate.ITER010_DIRECTION_DISCOVERY_PRINCIPLE_REF,
+            "micro_checkpoint_count": 4,
+            "micro_checkpoint_order": (
+                "machine-receipt,web-canary,three-arm-comparison,user-decision"
+            ),
+            "pdr004_schedule_fields_are_legacy_validator_compatibility_only": True,
+            "checkpoint_miss_action": docs_gate.ITER010_DIRECTION_CHECKPOINT_MISS_ACTION,
+        }
+        order_errors = docs_gate.validate_iter010_direction_checkpoint_policy(
+            stale_order, "manifest.yaml"
+        )
+        self.assertTrue(any("micro_checkpoint_order" in error for error in order_errors))
+
+    def test_iter010_pending_codex_identity_is_owned_only_by_freeze_action(self) -> None:
+        alignment = {
+            "mature_source_agent_identity_digest": docs_gate.ITER010_PENDING_CODEX_IDENTITY,
+            "mature_source_agent_role": docs_gate.STRICT_CODEX_BASELINE_ROLE,
+            "mature_source_agent_execution_mode": docs_gate.STRICT_CODEX_BASELINE_EXECUTION_MODE,
+            "positive_value_metric": docs_gate.STRICT_CODEX_QUALITY_METRIC,
+            "positive_value_unit": docs_gate.STRICT_CODEX_QUALITY_UNIT,
+            "positive_value_comparison": docs_gate.STRICT_CODEX_QUALITY_COMPARISON,
+            "positive_value_threshold": 1,
+            "held_out_evaluation_owner": "independent-evaluator",
+            "positive_value_adjudication_owner": "independent-evaluator",
+            "secondary_metrics_can_compensate_answer_quality": False,
+        }
+        self.assertEqual(
+            docs_gate.validate_strict_codex_baseline_alignment(
+                alignment,
+                "manifest.yaml",
+                allow_pending_identity=True,
+            ),
+            [],
+        )
+        errors = docs_gate.validate_strict_codex_baseline_alignment(
+            alignment,
+            "manifest.yaml",
+        )
+        self.assertTrue(any("exact sha256" in error for error in errors), errors)
+
     COMMIT = "a" * 40
 
     def validate(self, content: str, iteration: str = "ITER-002") -> list[str]:
@@ -798,7 +2329,7 @@ product_goal_alignment:
             docs_gate.validate_product_goal_v000(verification, "ITER-012"), []
         )
 
-    def test_iter010_v000_uses_engineering_qa_source_isolation_contract(self) -> None:
+    def test_iter010_v000_uses_strict_codex_quality_contract(self) -> None:
         path = (
             docs_gate.REPOSITORY
             / "docs/project/iterations/iteration-010/verification-matrix.md"
@@ -808,16 +2339,16 @@ product_goal_alignment:
             "kind": "iteration-verification",
             "status": "not-run",
             "iteration": "ITER-010",
-            **docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA,
+            **docs_gate.PRODUCT_GOAL_V000_METADATA,
             "product_goal_result_id": "not-executed",
         }
         body = (
             "| Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |\n"
             "|---|---|---|---|---|---|---|\n"
-            f"| V-000 | {docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_CLAIM} | "
+            f"| V-000 | {docs_gate.STRICT_CODEX_PRODUCT_GOAL_V000_CLAIM} | "
             f"{docs_gate.PRODUCT_GOAL_V000_LEVEL} | "
-            f"{docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_FROZEN_INPUT} | "
-            f"{docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_EXPECTED} | "
+            f"{docs_gate.STRICT_CODEX_PRODUCT_GOAL_V000_FROZEN_INPUT} | "
+            f"{docs_gate.STRICT_CODEX_PRODUCT_GOAL_V000_EXPECTED} | "
             "not-executed | NOT-RUN / blocking |\n"
         )
         verification = docs_gate.Document(path, metadata, body)
@@ -827,8 +2358,11 @@ product_goal_alignment:
 
         stale_source_off = docs_gate.Document(
             path,
-            {**metadata, **docs_gate.PRODUCT_GOAL_V000_METADATA},
-            body,
+            {**metadata, **docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_METADATA},
+            body.replace(
+                docs_gate.STRICT_CODEX_PRODUCT_GOAL_V000_CLAIM,
+                docs_gate.ENGINEERING_QA_PRODUCT_GOAL_V000_CLAIM,
+            ),
         )
         errors = docs_gate.validate_product_goal_v000(
             stale_source_off, "ITER-010"
@@ -861,6 +2395,7 @@ product_goal_alignment:
         self.assertEqual(
             docs_gate.validate_product_goal_v000(verification, "ITER-012"), []
         )
+        self.assertTrue(docs_gate.requires_strict_codex_baseline("ITER-010"))
         self.assertFalse(docs_gate.requires_strict_codex_baseline("ITER-011"))
         self.assertTrue(docs_gate.requires_strict_codex_baseline("ITER-012"))
 
@@ -1081,14 +2616,19 @@ product_goal_alignment:
             direction_errors,
         )
 
-    def test_provider_route_policy_is_ark_first_transparent_and_quality_preserving(
+    def test_provider_route_policy_accepts_arbitrary_configured_identities_and_keeps_actions_transparent(
         self,
     ) -> None:
         policy: dict[str, object] = {
             "schema": docs_gate.PROVIDER_ROUTE_POLICY_SCHEMA,
-            "preference_order": list(docs_gate.PROVIDER_ROUTE_PREFERENCE),
-            "primary_provider": "VOLCENGINE_ARK",
-            "fallback_provider": "DEEPSEEK",
+            "preference_order": ["AURORA", "BOREALIS"],
+            "primary_provider": "AURORA",
+            "fallback_provider": "BOREALIS",
+            "preferred_model_identity": "nebula-x1",
+            "fallback_model_identity": "quasar-y2",
+            "preferred_execution_profile_ref": "runtime-config:preferred-qualified-profile",
+            "fallback_execution_profile_ref": "runtime-config:fallback-qualified-profile",
+            "fallback_admission_policy_plugin_ref": "fallback_admission_policy",
             "fallback_requires_primary_attempt_terminal_without_authorized_answer": True,
             "primary_unavailable_evidence_required": True,
             "implementation_gap_counts_as_primary_unavailable": False,
@@ -1114,21 +2654,32 @@ product_goal_alignment:
             "same_provider_retry_allowed": False,
             "outcome_unknown_duplicate_cost_risk_recorded": True,
             "post_dispatch_provider_switch_requires": "new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route",
-            "deepseek_batch_start_policy": "provider-declared-non-peak-preferred",
-            "deepseek_schedule_timezone": "Asia/Shanghai",
-            "deepseek_current_preferred_windows": list(
-                docs_gate.DEEPSEEK_PREFERRED_WINDOWS
-            ),
-            "deepseek_schedule_source": "https://api-docs.deepseek.com/quick_start/pricing/",
-            "deepseek_schedule_checked_at": "2026-08-25",
-            "deepseek_schedule_effective_status": "announced-not-yet-effective",
             "peak_urgent_override_requires": "audited-explicit-override",
             "cost_can_reduce_answer_quality": False,
             "cost_gate_scope": "before-interaction-unit-start-only",
             "current_started_interaction_unit_must_keep_full_quality_chain": True,
             "unchanged_current_conformance_reuse_required": True,
         }
-        manifest = {"provider_route_policy": policy}
+        manifest = {
+            "provider_route_policy": policy,
+            "execution_profile_configurations": {
+                "schema": docs_gate.EXECUTION_PROFILE_CONFIGURATION_SCHEMA,
+                "preferred": {
+                    "execution_profile_ref": "runtime-config:preferred-qualified-profile",
+                    "provider_identity": "AURORA",
+                    "model_identity": "nebula-x1",
+                },
+                "fallback": {
+                    "execution_profile_ref": "runtime-config:fallback-qualified-profile",
+                    "provider_identity": "BOREALIS",
+                    "model_identity": "quasar-y2",
+                },
+            },
+            "fallback_admission_policy": {
+                "schema": "ROUTE_ADMISSION_POLICY_PLUGIN@1",
+                "route_role": "fallback",
+            },
+        }
         self.assertFalse(docs_gate.requires_provider_route_policy("ITER-010"))
         self.assertTrue(docs_gate.requires_provider_route_policy("ITER-012"))
         self.assertEqual(
@@ -1136,6 +2687,18 @@ product_goal_alignment:
                 manifest, "manifest.yaml", required=False
             ),
             [],
+        )
+        _, configured_identities, configured_plugin, configuration_errors = (
+            docs_gate._configured_execution_profiles(manifest, "manifest.yaml")
+        )
+        self.assertEqual(configuration_errors, [])
+        self.assertEqual(
+            configured_identities,
+            ("aurora", "nebula-x1", "borealis", "quasar-y2"),
+        )
+        self.assertEqual(
+            configured_plugin,
+            manifest["fallback_admission_policy"],
         )
         self.assertTrue(
             any(
@@ -1152,8 +2715,140 @@ product_goal_alignment:
             [],
         )
 
+        mismatched_profile_configuration = copy.deepcopy(manifest)
+        mismatched_profile_configuration["execution_profile_configurations"][  # type: ignore[index]
+            "preferred"
+        ]["model_identity"] = "untrusted-model"  # type: ignore[index]
+        profile_configuration_errors = docs_gate.validate_provider_route_policy(
+            mismatched_profile_configuration,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any(
+                "execution_profile_configurations.preferred.model_identity"
+                in error
+                and "preferred_model_identity" in error
+                for error in profile_configuration_errors
+            ),
+            profile_configuration_errors,
+        )
+
+        provider_specific_policy_key = copy.deepcopy(manifest)
+        provider_specific_policy_key["provider_route_policy"][  # type: ignore[index]
+            "borealis_schedule"
+        ] = "embedded-in-generic-policy"
+        provider_specific_key_errors = docs_gate.validate_provider_route_policy(
+            provider_specific_policy_key,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any(
+                "provider_route_policy keys must remain generic" in error
+                and "borealis" in error
+                for error in provider_specific_key_errors
+            ),
+            provider_specific_key_errors,
+        )
+
+        transparent_action_graph = {
+            **copy.deepcopy(manifest),
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+                "current_action": {
+                    "id": "ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001",
+                    "kind": "four-arm-direction-quality-gate",
+                }
+            },
+            "direction_quality_gate": {
+                "preferred_quality_action_id": (
+                    "ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001"
+                ),
+                "fallback_quality_action_id": (
+                    "ITER-010-ACTION-DIRECTION-QUALITY-FALLBACK-001"
+                ),
+            },
+        }
+        self.assertEqual(
+            docs_gate.validate_model_transparent_plan_routing(
+                transparent_action_graph, "manifest.yaml"
+            ),
+            [],
+        )
+        leaked_action_identity = copy.deepcopy(transparent_action_graph)
+        leaked_action_identity["plan_execution_control"]["current_action"][  # type: ignore[index]
+            "id"
+        ] = "ITER-010-ACTION-AURORA-QUALITY-001"
+        action_leak_errors = docs_gate.validate_model_transparent_plan_routing(
+            leaked_action_identity, "manifest.yaml"
+        )
+        self.assertTrue(
+            any(
+                "plan_execution_control" in error and "aurora" in error
+                for error in action_leak_errors
+            ),
+            action_leak_errors,
+        )
+        leaked_gate_identity = copy.deepcopy(transparent_action_graph)
+        leaked_gate_identity["direction_quality_gate"][  # type: ignore[index]
+            "preferred_terminal_unavailable_action"
+        ] = "dispatch-to-BOREALIS"
+        gate_leak_errors = docs_gate.validate_model_transparent_plan_routing(
+            leaked_gate_identity, "manifest.yaml"
+        )
+        self.assertTrue(
+            any(
+                "direction_quality_gate" in error and "borealis" in error
+                for error in gate_leak_errors
+            ),
+            gate_leak_errors,
+        )
+        leaked_model_identity = copy.deepcopy(transparent_action_graph)
+        leaked_model_identity["direction_quality_gate"][  # type: ignore[index]
+            "fallback_invalid_action"
+        ] = "fail-closed-at-quasar-y2"
+        model_leak_errors = docs_gate.validate_model_transparent_plan_routing(
+            leaked_model_identity, "manifest.yaml"
+        )
+        self.assertTrue(
+            any(
+                "direction_quality_gate" in error and "quasar-y2" in error
+                for error in model_leak_errors
+            ),
+            model_leak_errors,
+        )
+
+        self.assertEqual(
+            docs_gate.validate_model_transparent_governance_templates(
+                transparent_action_graph, "manifest.yaml"
+            ),
+            [],
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            leaked_template = Path(directory) / "manifest.yaml"
+            leaked_template.write_text(
+                "current_action: dispatch-to-nebula-x1\n",
+                encoding="utf-8",
+            )
+            template_errors = (
+                docs_gate.validate_model_transparent_governance_templates(
+                    transparent_action_graph,
+                    "manifest.yaml",
+                    template_paths=[leaked_template],
+                )
+            )
+        self.assertTrue(
+            any(
+                "reusable governance template" in error
+                and "nebula-x1" in error
+                for error in template_errors
+            ),
+            template_errors,
+        )
+
         invalid_changes = (
-            ("preference_order", ["DEEPSEEK", "VOLCENGINE_ARK"]),
+            ("preference_order", ["BOREALIS", "AURORA"]),
             ("implementation_gap_counts_as_primary_unavailable", True),
             ("transparent_logical_interaction_fallback_allowed", False),
             ("fallback_attempt_inputs", "immutable-original-question-and-exact-cognition-context"),
@@ -1197,15 +2892,6 @@ product_goal_alignment:
         self.assertTrue(
             any("incompatible" in error for error in legacy_errors), legacy_errors
         )
-        bad_date = copy.deepcopy(manifest)
-        bad_date["provider_route_policy"]["deepseek_schedule_checked_at"] = (
-            "2026-02-30"
-        )
-        date_errors = docs_gate.validate_provider_route_policy(
-            bad_date, "manifest.yaml", required=True
-        )
-        self.assertTrue(any("real ISO date" in error for error in date_errors))
-
     def test_iter012_manifest_requires_experience_and_provider_policies(self) -> None:
         manifest: dict[str, object] = {"product_goal_alignment": {}}
         errors = docs_gate.validate_product_goal_alignment_manifest(
@@ -6840,7 +8526,10 @@ class ReflectionGateTests(unittest.TestCase):
             blocked=True,
         )
         self.assertTrue(
-            any("exact PASS, FAIL or NOT-RUN" in error for error in nonblocking_fail_errors),
+            any(
+                "exact PASS, FAIL, INVALID or NOT-RUN" in error
+                for error in nonblocking_fail_errors
+            ),
             nonblocking_fail_errors,
         )
 
@@ -8066,26 +9755,45 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ),
         )
 
-    def test_current_alpha_comparison_verification_freezes_codex_baseline_semantics(
+    def test_current_four_arm_comparison_verification_freezes_codex_baseline_semantics(
         self,
     ) -> None:
         self._assert_current_verification_mutations_rejected(
-            "V-COMP-ALPHA-001",
+            docs_gate.ITER010_DIRECTION_QUALITY_CASE_ID,
             (
                 (
                     "Claim",
-                    "主 Agent/World Model 方向信号",
+                    "四路价值比较",
                     "统一标准答案",
                 ),
                 (
                     "Frozen input / oracle",
-                    "current Codex external baseline",
-                    "current Codex oracle",
+                    "same-agent World Model + source",
+                    "same-agent World Model without source",
                 ),
                 (
                     "Expected",
-                    "只作强外部基线，不是 Oracle/裁判",
-                    "必须作为 Oracle 和最终裁判",
+                    "总体严格超过 current Codex",
+                    "允许与 current Codex 打平",
+                ),
+            ),
+        )
+
+    def test_current_direction_freeze_verification_keeps_later_work_locked(
+        self,
+    ) -> None:
+        self._assert_current_verification_mutations_rejected(
+            docs_gate.ITER010_CURRENT_ACTION_CASE_ID,
+            (
+                (
+                    "Claim",
+                    "四路方向 Gate 输入冻结",
+                    "直接启动 Web canary",
+                ),
+                (
+                    "Expected",
+                    "产品代码、Prompt/Reviewer、Web canary、hardening、full regression、Provider dispatch 保持锁定",
+                    "产品代码和 Web canary 可并行修改",
                 ),
             ),
         )
@@ -8098,7 +9806,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             (
                 (
                     "Claim",
-                    "用户基于 A1—A3/A6 复盘、多轮 Chat 和三臂方向信号决定是否进入夯实",
+                    "用户基于四路严格价值 Gate、最小 Web Chat 和 A1—A6 复盘决定是否进入夯实",
                     "独立评估者决定是否进入夯实",
                 ),
                 (
@@ -8108,8 +9816,8 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 ),
                 (
                     "Expected",
-                    "独立技术复核给出 A1—A3/A6 exact Verdict 与 A4/A5 early signal；用户实际追问、纠正、深入、总结并查看三臂方向信号后决定",
-                    "用户直接给出 A1—A3/A6 技术 Verdict；独立评估者随后决定",
+                    "独立技术复核给出 A1—A6 exact Verdict；用户实际追问、纠正、深入、总结并查看四路严格价值 Gate 后决定",
+                    "用户直接给出 A1—A6 技术 Verdict；独立评估者随后决定",
                 ),
             ),
         )
@@ -8472,10 +10180,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ("direction_discovery_principle_ref", "codex-user-message:sha256:" + "b" * 64),
             ("micro_checkpoint_count", 3),
             ("micro_checkpoint_order", "runnable-access-handoff"),
-            ("direction_alpha_prefix_turn_count", 5),
-            ("direction_alpha_is_prefix_of_frozen_live_canary", False),
-            ("direction_evidence_handoff_deadline_minutes", 361),
-            ("direction_decision_deadline_minutes", 481),
+            ("pdr004_schedule_fields_are_legacy_validator_compatibility_only", False),
             ("checkpoint_miss_action", "continue-scope-expansion"),
         ):
             invalid_direction = copy.deepcopy(manifest)
@@ -8500,6 +10205,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "direction_discovery_principle_ref",
             "micro_checkpoint_count",
             "micro_checkpoint_order",
+            "pdr004_schedule_fields_are_legacy_validator_compatibility_only",
             "direction_alpha_prefix_turn_count",
             "direction_alpha_is_prefix_of_frozen_live_canary",
             "direction_evidence_handoff_deadline_minutes",

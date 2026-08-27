@@ -31,8 +31,8 @@ Web 的现场临时自由提问，提问时 Source/Update/Direct fallback 计数
 - Baseline versus current: <exact-measures-and-evidence>
 - New plus existing cross-domain result: <exact-cases-and-evidence>
 - Product Web ad-hoc questions and fallback counters: <exact-evidence>
-- Current Codex strict blind comparison: <identity-answer-bundles-randomization-independent-adjudication-and-positive-quality-margin-evidence>
-- Separate World Model causal ablation: <full-cognition-versus-locator-or-empty-exact-evidence>
+- Four-arm strict direction/final comparison: <direct-evidence-source-only-world-model-plus-source-current-codex-identities-sealed-answer-bundles-randomization-independent-source-ledger-adjudication-and-positive-quality-margin-evidence>
+- World Model causal contribution inside the same gate: <same-agent-source-only-versus-world-model-plus-source-non-locator-contribution-evidence>
 
 ## Finding dispositions and System write-back
 

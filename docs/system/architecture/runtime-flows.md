@@ -4,8 +4,8 @@ kind: system-architecture
 status: current
 authority: normative
 owners: [architecture, application]
-depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-092, FINDING-010-139]
+depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-139, FINDING-010-140]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -77,46 +77,59 @@ candidate 或其他没有合法 evidence-reducing transition 的 Result 可在 1
 Limitation，并保持 Source/Update/Direct fallback 为 0。查询、表示与业务发现三层完整性只由平台通过 progress receipt 投影；没有
 同时证明时不得给 bounded absence，评测 Oracle identity 不进入 Answer。
 
-该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway connection policy 是资格身份，不能从调用
-上限推导 descriptor 数。当前 DeepSeek bounded route 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`：supervisor 预建恰好 3 个
-exact connected descriptor 候选；Gateway 在读取 credential 或发送 HTTP 前最多顺序尝试 3 次 verified TLS，并在同一授权 run 内复用
-成功 session 承载仍然彼此独立的 stateless request。每条 session 最多 20 次 HTTP dispatch；达到上限或服务端在完整响应后明确关闭
-时，下一 logical request 必须在读取 credential 前消费剩余 descriptor。40-call Capability qualification 正常使用 2 条 session 并
-保留第 3 次 acquisition 余量；正式产品单题 4—6 calls 通常只使用第一条。任何 HTTP bytes 可能已发送后的失败都立即
-`OUTCOME_UNKNOWN` 且不重发。terminal 后关闭未使用 descriptor，审计分别闭合 TLS attempts、successes、reuse、Provider calls、
-per-session dispatch bound 与 `provisioned = attempts + unused_closed`。旧 `@1`、旧固定三调用资格、旧一请求一连接资格和 connection
-receipt 均不得复用；其他已接受 Profile 保持各自已资格的调用与连接协议。
+该 Profile 每题实际模型调用为 4—6（调查 2—4、Draft 1、Review 1），不重试。Gateway connection policy 是 execution profile 的资格身份，
+不能从调用上限推导 descriptor 数。每个 execution profile 必须冻结连接方式、credential-free TLS acquisition 上限、每条 verified session
+的 dispatch 上限、连接轮换和 terminal close 规则；只有取得 exact 资格的 persistent policy 才能复用 TLS session，同时仍为每次 stateless
+request 保持独立 Manifest、call identity 和 receipt。任何 HTTP bytes 可能已发送后的失败都立即记为 `OUTCOME_UNKNOWN` 且不重发。
+terminal 后关闭未使用 descriptor，通用 transport/call receipt 必须分别闭合 TLS attempts、successes、reuse、Provider calls、per-session
+dispatch bound 与 `provisioned = attempts + unused_closed`。旧资格或不同 profile 的 connection receipt 均不得复用。
 
-若候选配置声明多个 Provider，Application 必须在 Session 开始和任何问题 dispatch 前冻结有序 route，以及每条 route 的 current exact
-Conformance、同 Strategy/Configuration Capability Qualification、隔离 transport、credential reference 和 disclosure scope。当前
-Engineering QA 顺序为 Ark → DeepSeek；不能因 Ark 实现缺口直接跳过 primary。
+若候选配置声明多个 Provider，Application 必须在 Session 开始和任何问题 dispatch 前冻结有序 `preferred → fallback` route，以及每个
+route role 的 exact execution profile。Profile 必须绑定 current exact Conformance、同 Strategy/Configuration Capability Qualification、
+endpoint、隔离 transport、credential reference、disclosure scope、预算和 admission plugin。不能因 preferred execution profile 的实现
+缺口把它伪装成 terminal unavailable，也不能临时跳过 preferred route。
 
-planned DeepSeek route 还必须执行下列 admission flow：
+公开来源本机体验先执行下列 authority flow：
 
 ```text
-freeze exact run / route / quality budget
-  → verify trusted clock + current official schedule record
-  → seal DEEPSEEK_DISPATCH_ADMISSION@1 for an allowed window or exact one-time peak override
-  → before every new DeepSeek request, revalidate window / override
-  → only then allow socket/connected descriptor provisioning, TLS, credential resolution and HTTP
-  → otherwise fail before external network with DeepSeek dispatch = 0
+one standing human authority
+  → verify public upstream + license/provenance + clean exact revision
+  → freeze approved preferred/fallback execution profiles / disclosure / budgets / loopback evaluation boundary
+  → user submits an exact Turn
+  → trusted Application derives exact Session / Turn / attempt authority
+  → Gateway derives one-use Manifest and disclosure / dispatch receipt for every call
+  → terminal audit closes actual payload / Usage / transport / cost
 ```
 
-完整最坏质量链必须在开始前可安排进允许窗口；窗口结束后不得再创建 DeepSeek request。已经发出的单个 request 继续按零重试和结果未知
-规则密封，但未完成 Evidence/Answer/Review 的 interaction 失败关闭，不交付降质答案。调度阻断只阻断 DeepSeek 外部分派，不停止 Ark-only
-或本地开发。当前 runtime 已在 Gateway preflight/invoke 与 Artifact Session `@3` 实现该 flow，并由本地 Case PASS；已有 Provider 资格仍
-不能替代每次 planned run 的 exact admission receipt。
+这个 flow 中只有第一步和 material delta 是人工决定；Turn/run/dispatch receipt 是受信系统对同一边界的逐次派生，不得成为新的人工等待点。
+若 payload 进入 private/unknown/dirty/local data，新 Provider/model/endpoint/credential account，预算扩张，外部写入、非 loopback 或
+Production，则停止派生并要求 exact human delta。公开来源仍经 Broker/Worker 只读执行，Source 内容仍按 prompt-injection-capable 的不可信
+data 处理。
+
+任何 execution profile 选择 admission plugin 时，该 route 必须执行下列通用 admission flow：
+
+```text
+derive exact run / route role / execution profile / quality budget from standing authority or exact human delta
+  → execute the frozen admission plugin against its trusted inputs
+  → seal a generic dispatch-admission receipt for an allowed verdict, or bind an exact policy-specific override
+  → before every new request on that route, revalidate the plugin verdict / override
+  → only then allow socket/connected descriptor provisioning, TLS, credential resolution and HTTP
+  → otherwise fail before external network with that route's dispatch = 0
+```
+
+完整最坏质量链必须在开始前满足插件的允许条件；条件失效后不得再创建该 route 的 request。已经发出的单个 request 继续按零重试和结果未知
+规则密封，但未完成 Evidence/Answer/Review 的 interaction 失败关闭，不交付降质答案。准入阻断只阻断该 execution profile 的外部分派，
+不停止其他合格 route 或本地开发。已有 Provider 资格不能替代每次 planned run 的 exact dispatch-admission receipt；standing scope 内的
+receipt 由可信系统派生，不是逐 run 人工审批。
 
 一次用户提交只产生一个 logical interaction unit；Engineering Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。
-Ark primary attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有
-authorized answer，且原因为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected，才创建一次
-DeepSeek fallback attempt。后者从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，
-以及同一 exact Cognition Context 重新运行完整链，不能读取或拼接 Ark Ledger/Package/Draft/Review。Application、Source 或 Security
-failure 不 fallback；每个 Provider 内 retry 为 0。迟到 Ark 结果进入 quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建
+preferred-route attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有 authorized answer，且可信 terminal receipt
+分类为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected，才创建一次 fallback-route attempt。
+后者从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition
+Context 重新运行完整链，不能读取或拼接 preferred attempt 的 Ledger/Package/Draft/Review。Application、Source 或 Security failure 不
+fallback；每个 Provider 内 retry 为 0。迟到的 preferred-route 结果进入 quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建
 Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的
-独立身份、调用、Usage、成本、失败分类与 outcome-unknown 重复计费风险。当前 route 与 schedule admission 已本地闭合，运行状态为
-`ROUTING_LOCAL_PASS / DEEPSEEK_SCHEDULE_ADMISSION_LOCAL_PASS / EXACT_SESSION_AUTHORITY_REQUIRED / NOT_LIVE`；这与各 Provider 已取得的
-Conformance 资格和后继 live receipt 分开。
+独立身份、execution-profile/dispatch-admission/transport/call/terminal receipts、Usage、成本、失败分类与 outcome-unknown 重复计费风险。
 
 ## 直接源码调查
 
@@ -136,7 +149,7 @@ Original Question
 
 ```text
 Explicit Engineering Conversation
-  → fixed product / project / exact revision / World Model / tools / Provider route
+  → fixed product / project / exact revision / World Model / tools / preferred/fallback execution profiles / standing authority
   → immutable User Turn + sealed relevant Conversation Context + current Agent Work State
   → isolated primary Engineering Agent
   → understand goal and references; form or revise hypotheses, plan and subtasks
@@ -183,3 +196,18 @@ handler behavior 或下游 HTTP mapping。Reviewer Strategy 可以增加隔离 c
 ## 模型资格
 
 Provider Contract Conformance 证明 Adapter 接口成立；Capability Evaluation 证明精确 Strategy 适合业务能力；Product Validation 证明端到端用户价值；显式 Activation 决定可用范围。四者独立且按精确实现、模型、配置和有效期绑定。某一 Provider 的资格不能借给另一 Provider；偏好顺序也不能替代当前资格。
+
+## 当前配置实例与历史实现证据
+
+当前 ITER-010 配置把 Ark 映射为 `preferred` execution profile，把 DeepSeek 映射为 `fallback` execution profile。备用 profile 的
+admission plugin 使用 `DEEPSEEK_DISPATCH_ADMISSION@1`，当前允许窗口与价格检查由该插件实例定义；这些具体名称、窗口和价格策略不定义
+通用 route 分支、质量或授权语义。
+
+当前 DeepSeek bounded profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`：最多 3 次 credential-free TLS acquisition，每条
+verified session 最多 20 次 HTTP dispatch；40-call Capability qualification 通常使用 2 条 session 并保留第 3 次 acquisition 余量，正式
+产品单题 4—6 calls 通常只使用第一条。当前 Ark profile 使用其独立的一请求一连接策略。这些数值是 execution profile 的当前实例和历史
+实现证据，不可借给其他 profile。
+
+当前 runtime 已在 Gateway preflight/invoke 与 Artifact Session `@3` 对备用 profile 的 admission flow 形成本地 Case PASS；当前状态为
+`ROUTING_LOCAL_PASS / DEEPSEEK_SCHEDULE_ADMISSION_LOCAL_PASS / STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。fresh Ark 与 DeepSeek
+资格和既有运行只证明具体配置实例；standing-authority 派生链和逐 dispatch receipt 仍须分别实现与验证。

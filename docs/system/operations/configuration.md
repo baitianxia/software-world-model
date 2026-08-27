@@ -4,8 +4,8 @@ kind: system-operations
 status: current
 authority: operational
 owners: [operations, ai]
-depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139]
+depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
+derived_from: [FINDING-010-029, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140]
 code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
@@ -38,6 +38,17 @@ reference 和 disclosure scope。用户提交一个 Turn；Ark Agent attempt 无
 透明地以独立 DeepSeek attempt 从受信 Turn input、relevant Conversation Context 和 exact Cognition 重新执行完整 Agent 链。Provider 对
 用户和上层 Agent 语义透明；用户不选择 Provider、不重提问题或新建 Conversation，同一 attempt 内也不继承另一 Provider 的隐藏状态。
 
+## 公开来源 standing authority
+
+固定公开开源测试工程、clean exact revision、上述已批准 Provider route/credential account、只读披露边界、预算和 loopback
+`EVALUATION_ONLY` Sink 使用一次 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1`。运维不得为该边界内的每个 run、Turn、Agent/Reviewer
+step 或 dispatch 再申请人工批准；trusted launcher/Application 自动派生 exact Session/Turn/attempt/call authority、Manifest 和 one-use
+receipt，并继续逐调用记录 payload digest、Usage、transport 和成本。
+
+以下变化必须停止自动派生并申请 human delta：private/unknown/dirty/local data；新 Provider/model/endpoint/credential account；预算扩张；
+DeepSeek 峰时 override；外部写；非 loopback 或 Production。公开性、clean revision、资格、standing authority 有效性或派生链无法证明时
+失败关闭。正常 Turn 文本、run identity 和 dispatch 数量本身不是新的人工授权事件。
+
 **当前实现边界：** 兼容 Engineering QA Alpha 的 `@1` 配置仍是单 DeepSeek session，不定义
 `CONVERSATIONAL_ENGINEERING_AGENT@1`。新 Chat 已实现独立 `SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1`：canonical absolute、
 owner-private mode `0600`、unique-key UTF-8 JSON、closed root fields；它固定 distinct product/source Git identity、published World Model
@@ -49,11 +60,12 @@ listener 前失败关闭。
 `FINDING-010-103` 已让 `swm-engineering-chat --session-config <owner-private-artifact>` 消费该完整对象图；无参数命令继续保留 Access-only
 身份。固定命令不接受 host、port、工程、revision、Provider、question、credential 或单项 authority 参数；artifact 分支固定
 `127.0.0.1:8765`，在 listener 构造前写零活动 launch receipt，并在 shutdown 后写 terminal receipt。当前状态是
-`ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT / SESSION_AUTHORITY_REQUIRED`：
+`ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT / STANDING_AUTHORITY_DERIVATION_REQUIRED`：
 `FINDING-010-104` 已把 Ark strict Session audit 接入 Conformance 与 terminal receipt，并将 HTTP 前 transport unavailable owner-typed 为
 fallback eligibility；`FINDING-010-105/106` 又分别在 clean `1e99e9b…` / `653eff3…` 上取得 current Ark 与 DeepSeek qualification。
-测试和两次 fresh Conformance run 均未生成或执行 current actual sealed Session artifact；仍需另行取得 exact five-Turn
-Session authorization。不能把 Provider qualification 标成 artifact `LIVE / PASS`。
+测试和两次 fresh Conformance run 均未生成或执行 current actual sealed Session artifact；当前实现仍缺公开来源 standing authority 到
+exact five-Turn Session/Turn/call 的可信自动派生，不能再以逐 run 人工 authorization 作为目标替代。不能把 Provider qualification 标成
+artifact `LIVE / PASS`。
 
 ```bash
 PYTHONPATH=src python3 -m software_world_model.interface.provider_cli status
@@ -71,12 +83,14 @@ DeepSeek 的所有 planned development/evaluation 外部分派——包括 probe
 
 每个 run 在任何 DeepSeek socket/connected descriptor provisioning、TLS、credential 或 HTTP 前必须密封
 `DEEPSEEK_DISPATCH_ADMISSION@1`；每个新 DeepSeek request 前重验
-可信时钟仍在允许窗口，或存在一次性 exact user peak override。override 必须绑定 Provider/model、run/Turn、原因、最大 calls/tokens/
-duration、start 和 expiry；普通开发、canary、route 或 fallback grant 均不包含该例外。计划必须把完整最坏质量链安排在窗口内；窗口关闭
+可信时钟仍在允许窗口，或存在一次性 exact human peak override。允许窗口内的 receipt 由 trusted admission authority 从 standing
+authority 自动派生；override 必须绑定 Provider/model、run/Turn、原因、最大 calls/tokens/duration、start 和 expiry；普通 standing
+authority、开发、canary、route 或 fallback 均不包含该例外。计划必须把完整最坏质量链安排在窗口内；窗口关闭
 后不再创建新 request，已发出的 request 仍按零重试和 outcome-unknown 规则密封。任何缺失或越界都在外部网络前失败关闭并证明
 DeepSeek socket/descriptor、TLS、credential、HTTP 均为 0；不能用删减 Evidence、Citation、Answer 或独立 Review 换取完成。
 
 **当前执行限制：** runtime 已实现该机械 admission gate 和 receipt，并由 `V-DEEPSEEK-IDLE-001` 本地 PASS；运维只可启动 closed `@3`
-artifact，且必须在启动前重新取得 fresh 官方检查、有效 external grant、完整最坏时长窗口判定或 exact peak override。缺少任一对象时 CLI 在
-listener/credential/TLS/HTTP 前关闭。该能力不是异步排队，也不授权 Production；Provider/Model、Agent Strategy 或 Prompt/Tool identity
-变化仍按各自 owning gate 单独重新资格化，不能因为 Provider 对产品语义透明而跳过验证。
+artifact，且必须在启动前取得 fresh 官方检查、有效 standing/delta authority chain、完整最坏时长窗口判定或 exact human peak override。
+缺少任一对象时 CLI 在 listener/credential/TLS/HTTP 前关闭。非高峰 run/dispatch receipt 必须由系统派生，不得要求用户逐次批准。该能力
+不是异步排队，也不授权 Production；Provider/Model、Agent Strategy 或 Prompt/Tool identity 变化仍按各自 owning gate 单独重新资格化，
+不能因为 Provider 对产品语义透明而跳过验证。

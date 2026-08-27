@@ -17,6 +17,10 @@ coding_input: true
 
 # PDR-007：DeepSeek 闲时从调度偏好升级为调用前硬门禁
 
+> PDR-008 current authority amendment：`authorization identity` 对 current public mall evaluation 追溯到 standing human authority，并由
+> runtime 自动派生逐 run/request machine receipts；允许窗口内不再取得新的 human grant。峰时仍只能使用一次性 exact user override，
+> PDR-007 的时间、质量、网络前 fail-closed 和逐 request 重验均不放宽。
+
 ## Context
 
 PDR-003 已规定 Ark 优先并要求 DeepSeek 高成本批量调用尽量放到官方定义的非高峰时段，但“默认/优先”没有成为可验证的调用准入。
@@ -69,7 +73,7 @@ PDR-006 在 exact freeze 后直接申请最小 delta，绑定 Provider/model、e
 override。
 
 等待允许窗口通常不需要申请权限，也不允许开发停工。开发者继续 Ark-only、本地归因、通用修复、mock、targeted tests、artifact seal 和
-其他独立安全工作；到窗口后，若 exact external grant 已有效则自动继续，若确有 grant gap 才直接申请。
+其他独立安全工作；PDR-008 后，到窗口且 standing authority 的自动 machine receipt 有效即直接继续，只有真正 scope delta 才申请。
 
 ### 4. run-043 的处置
 
@@ -77,8 +81,8 @@ run-043 的 Provider、token、失败和答案结果保留为真实审计证据�
 `DEEPSEEK_SCHEDULING_POLICY_FAIL / REWORK / NOT_DIRECTION_ACCEPTANCE_EVIDENCE`。它不能解锁 comparison、hardening 或用户方向裁决，
 也不能仅为补一张调度收据立即重跑。
 
-下一步先在本地完成 run-043 的责任层归因，并把调度准入实现为可机械验证的最小 Gate。完成候选冻结后，只有在允许窗口和新的 exact
-grant 同时成立时，才执行一个后继 direction canary。
+下一步先在本地完成 run-043 的责任层归因，并把调度准入实现为可机械验证的最小 Gate。完成候选冻结后，PDR-008 要求再闭合 standing
+authority → machine receipt runtime Gate；该 Gate 与允许窗口同时成立时直接执行一个后继 direction canary，不再等待新 human grant。
 
 ### 5. 验证门禁
 
@@ -104,4 +108,5 @@ Iteration/Slice。
   允许窗口或 exact override 及逐 dispatch/terminal receipt，不能从本地 PASS 推导 live 合规。
 - 通用治理和模板必须把 declared provider window 变成可验收 admission policy；现有静态 docs validator 仅作 compatibility，不证明 run
   合规。
-- 本决定不授权任何 Provider/model call、credential、Source disclosure、Browser、hidden、Production 或后续 Slice。
+- 本决定本身不授权任何 Provider/model call、credential、Source disclosure、Browser、hidden、Production 或后续 Slice；current public mall
+  execution authority 由后续 PDR-008 独立拥有，不能从本调度决定反推。

@@ -17,6 +17,10 @@ coding_input: true
 
 # PDR-006：开发持续到阶段交付，权限在需要时直接申请
 
+> PDR-008 current authority amendment：公开 Apache-2.0 mall current evaluation 已由现有 Slice/root authorization 持续覆盖，不构成
+> external human grant gap。每个具体执行自动派生 machine receipt；只有真正 scope delta 才走本决定的直接申请路径。当前 successor 不得
+> 以“等待用户授权”退出。
+
 > Current execution amendment：`ITER-010-PDR-007` 明确持续开发不等于峰时立即调用 DeepSeek。窗口外继续 Ark-only 和本地工作；
 > DeepSeek 必须等待允许窗口和 runtime admission receipt，确需峰时例外时才直接申请一次性 exact override。
 
@@ -91,7 +95,7 @@ PDR-005 direction canary 的 exact product/artifact/session 与披露包，并�
 最小 delta。DeepSeek 仅作为同一冻结 Session 中 ADR-017 允许的条件式 fallback。随后继续执行真实语义链和两个未参与修复的异质问题，
 不再停下来申请第二次确认。
 
-run-043 已消费该 direction grant，但违反 PDR-007 的 DeepSeek 闲时门禁，只能作为失败与归因证据。当前状态改为
-`DEEPSEEK_GATE_LOCAL_PASS / SUCCESSOR_FROZEN / EXACT_EXTERNAL_GRANT_REQUIRED`：调度 Gate 与 clean `3a6089f…` candidate 已闭合，当前
-直接申请必要 external delta；等待允许窗口不等于等待权限，更不允许停止本地开发。该状态不解锁 full regression、三臂比较、后续
+run-043 已消费该 direction grant，但违反 PDR-007 的 DeepSeek 闲时门禁，只能作为失败与归因证据。PDR-008 将 current 状态修订为
+`DEEPSEEK_GATE_LOCAL_PASS / SUCCESSOR_FROZEN / STANDING_HUMAN_AUTHORITY_ACTIVE / MACHINE_RECEIPT_GATE_PENDING`：调度 Gate 与 clean
+`3a6089f…` candidate 已闭合，当前实现/验证自动机器收据派生；等待允许窗口不等于等待权限，更不允许停止本地开发。该状态不解锁 full regression、三臂比较、后续
 Slice、hidden 或 Production。
