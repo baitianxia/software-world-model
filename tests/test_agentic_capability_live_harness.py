@@ -276,6 +276,34 @@ class EchoingConformanceTransport:
             ).encode(),
         )
 
+    def session_audit(self):
+        return {
+            "schema": "SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1",
+            "connection_policy": (
+                "DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1"
+            ),
+            "maximum_pre_dispatch_tls_handshake_attempts_per_request": 1,
+            "maximum_http_dispatches_per_tls_session": 1,
+            "tls_handshake_attempt_count": self.calls,
+            "tls_handshake_success_count": self.calls,
+            "pre_dispatch_tls_handshake_failure_count": 0,
+            "pre_dispatch_tls_failure_codes": [],
+            "http_dispatch_count": self.calls,
+            "connection_reuse_count": 0,
+            "verified_peer_certificate_sha256s": [
+                "sha256:" + f"{ordinal:064x}"
+                for ordinal in range(1, self.calls + 1)
+            ],
+            "post_dispatch_outcome_unknown_count": 0,
+            "post_dispatch_failure_codes": [],
+            "request_retry_count": 0,
+            "credential_resolution_count": self.calls,
+            "credential_resolution_success_count": self.calls,
+            "credential_resolution_policy": (
+                "AFTER_VERIFIED_TLS_BEFORE_EACH_HTTP_DISPATCH"
+            ),
+        }
+
 
 class AgenticCapabilityLiveHarnessTests(unittest.TestCase):
     def setUp(self) -> None:

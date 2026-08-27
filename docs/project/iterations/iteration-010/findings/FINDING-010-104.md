@@ -6,7 +6,7 @@ authority: development-evidence
 owners: [ai, security, application, interface, operations, quality, project]
 depends_on: [FINDING-010-103, SYS-ADR-017, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-QUALITY-SECURITY, SYS-OPS-CONFIGURATION, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION]
 code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/ark_chat_conformance.py, src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_session_runtime.py, validation/structure_world_model_iteration_003/v009/inputs.py]
-tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_model_gateway.py, tests/test_iteration_003_v009.py]
+tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_agentic_capability_live_harness.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_model_gateway.py, tests/test_iteration_003_v009.py]
 iteration: ITER-010
 classification: system-contract
 scope: systemic
@@ -45,6 +45,9 @@ Bearer credential，并把连接建立失败与 HTTP bytes 已发送后的断连
   current documentation check 为 504/504 PASS。
   本次没有读取 mall Source/resources、解析真实 credential、访问网络、调用 Provider/model、启动 listener/browser 或执行 Production
   Activation。
+- 后继候选的离线回归诊断发现 `tests/test_agentic_capability_live_harness.py` 中旧 Echo transport 没有实现上述 mandatory Session audit，
+  因而被 current Conformance 正确 fail-close；夹具补齐同一 `@1` audit 后，该离线能力流定向测试 PASS。该修复只恢复测试夹具与现行
+  Ark 契约的一致性，不刷新资格、不访问网络，也不改变既有 V-009/Codex binary historical hold。
 
 ## Decision and disposition
 
