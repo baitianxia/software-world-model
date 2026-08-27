@@ -7945,7 +7945,9 @@ class ReworkPlanningGateTests(unittest.TestCase):
         )
 
         missing_consumed_receipt = copy.deepcopy(manifest)
-        missing_consumed_receipt["authorization"].pop(  # type: ignore[index]
+        missing_consumed_receipt["authorization"][  # type: ignore[index]
+            "consumed_live_session_authorization_history"
+        ].pop(
             "first_live_session_authorization"
         )
         missing_consumed_errors = (
@@ -7960,8 +7962,8 @@ class ReworkPlanningGateTests(unittest.TestCase):
 
         reactivated_consumed_grant = copy.deepcopy(manifest)
         reactivated_consumed_grant["authorization"][  # type: ignore[index]
-            "first_live_session_authorization"
-        ]["status"] = "active"
+            "consumed_live_session_authorization_history"
+        ]["first_live_session_authorization"]["status"] = "active"
         reactivated_consumed_errors = (
             docs_gate.validate_conversational_architecture_cutover(
                 reactivated_consumed_grant, "manifest.yaml"

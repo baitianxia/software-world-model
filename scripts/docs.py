@@ -2553,10 +2553,107 @@ def validate_conversational_engineering_agent(
         "implemented-fourth-live-one-of-five-limitation-leakage-pass-v4-remediation-local-candidate",
         "implemented-fifth-live-one-of-five-limitation-leakage-pass-v5-remediation-local-candidate",
         "implemented-sixth-live-three-of-five-responses-leakage-pass-v6-remediation-local-candidate",
+        "implemented-eighth-live-failed-schedule-fail-v8-local-candidate",
     }:
         errors.append(
             f"{label}: conversational_engineering_agent.status must be a closed pre-production state"
         )
+    if policy.get("status") == (
+        "implemented-eighth-live-failed-schedule-fail-v8-local-candidate"
+    ):
+        for field, expected in (
+            (
+                "first_live_chat_turn_result",
+                "five-of-five-failed-no-answer-citation-review-or-delivery",
+            ),
+            ("eighth_live_chat_execution_evidence_ref", "FINDING-010-138"),
+            (
+                "eighth_live_chat_result_ref",
+                "ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY",
+            ),
+            (
+                "eighth_live_chat_turn_result",
+                "one-accepted-one-reviewed-limitation-three-failed-overall-quality-fail",
+            ),
+            ("eighth_live_chat_dispatches_by_turn", "13,5,5,3,2"),
+            (
+                "eighth_live_new_conversation_probe_result",
+                "pass-empty-context-clarification-zero-dispatch-no-inheritance",
+            ),
+            (
+                "eighth_live_deepseek_schedule_verdict",
+                "deepseek-scheduling-policy-fail-not-direction-acceptance-evidence",
+            ),
+            (
+                "v7_status",
+                "stopped-unaccepted-symptom-experiment-not-current-system-truth",
+            ),
+            (
+                "current_agent_model_strategy_ref",
+                "conversational-engineering-agent@8",
+            ),
+            (
+                "current_agent_model_prompt_ref",
+                "conversational-engineering-agent-no-tools-prompt@8",
+            ),
+            (
+                "current_agent_primary_input_schema",
+                "ENGINEERING_AGENT_PRIMARY_INPUT@8",
+            ),
+            (
+                "current_agent_review_input_schema",
+                "ENGINEERING_AGENT_REVIEW_INPUT@2",
+            ),
+            (
+                "current_agent_review_output_schema",
+                "engineering-agent-independent-review-proposal@2",
+            ),
+            ("successor_semantic_query_finding_ref", "FINDING-010-138"),
+            (
+                "successor_schedule_result_ref",
+                "ITER-010-RESULT-V-DEEPSEEK-IDLE-001",
+            ),
+            (
+                "deterministic_successor_canary_status",
+                "clean-successor-frozen-awaiting-new-exact-grant-and-compliant-window",
+            ),
+            (
+                "deterministic_successor_canary_source_file_budget",
+                "five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-"
+                "search-56-plus-read-3-equals-59-of-64",
+            ),
+        ):
+            if policy.get(field) != expected:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must equal {expected}"
+                )
+        for field in (
+            "eighth_live_chat_product_commit",
+            "eighth_live_chat_product_tree",
+            "eighth_live_chat_source_commit",
+            "eighth_live_chat_source_tree",
+            "successor_product_commit",
+            "successor_product_tree",
+        ):
+            value = policy.get(field)
+            if not isinstance(value, str) or re.fullmatch(
+                r"[0-9a-f]{40}", value
+            ) is None:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must be an exact Git object"
+                )
+        for field in (
+            "eighth_live_chat_session_authorization_digest",
+            "eighth_live_chat_session_config_file_digest",
+            "eighth_live_chat_terminal_receipt_digest",
+        ):
+            value = policy.get(field)
+            if not isinstance(value, str) or re.fullmatch(
+                r"sha256:[0-9a-f]{64}", value
+            ) is None:
+                errors.append(
+                    f"{label}: conversational_engineering_agent.{field} must be an exact sha256 digest"
+                )
     if policy.get("status") == "implemented-live-failed-remediation-local-candidate":
         for field, expected in (
             ("first_live_chat_execution_evidence_ref", "FINDING-010-107"),
@@ -3401,6 +3498,86 @@ def validate_conversational_architecture_cutover(
             if isinstance(authorization, dict)
             else None
         )
+        consumed_history = (
+            authorization.get("consumed_live_session_authorization_history")
+            if isinstance(authorization, dict)
+            else None
+        )
+        expected_consumed_history = {
+            "first_live_session_authorization": "FINDING-010-107",
+            "second_live_session_authorization": "FINDING-010-111",
+            "third_live_session_authorization": "FINDING-010-115",
+            "fourth_live_session_authorization": "FINDING-010-119",
+            "fifth_live_session_authorization": "FINDING-010-124",
+            "sixth_live_session_authorization": "FINDING-010-127",
+            "seventh_live_session_authorization": "FINDING-010-130",
+            "eighth_live_session_authorization": "FINDING-010-138",
+        }
+        if not isinstance(consumed_history, dict):
+            errors.append(
+                f"{label}: consumed live Session history must retain its exact receipts"
+            )
+        else:
+            for name, finding_ref in expected_consumed_history.items():
+                receipt = consumed_history.get(name)
+                if not isinstance(receipt, dict):
+                    errors.append(
+                        f"{label}: consumed live Session history must retain its exact receipt: {name}"
+                    )
+                    continue
+                expected_status = (
+                    "consumed-scheduling-policy-fail"
+                    if name == "eighth_live_session_authorization"
+                    else "consumed"
+                )
+                authorization_refs = (
+                    (
+                        receipt.get("root_authorization_ref"),
+                        receipt.get("exact_execution_authorization_ref"),
+                    )
+                    if name == "eighth_live_session_authorization"
+                    else (receipt.get("authorization_ref"),)
+                )
+                if (
+                    receipt.get("status") != expected_status
+                    or any(
+                        not isinstance(reference, str)
+                        or re.fullmatch(
+                            r"(?:codex-user-message|local-user-message-utf8):sha256:[0-9a-f]{64}",
+                            reference,
+                        )
+                        is None
+                        for reference in authorization_refs
+                    )
+                    or receipt.get("excludes")
+                    != "src-main-resources,credential-values,hidden,slice2,slice3,production-activation"
+                    or receipt.get("execution_finding_ref") != finding_ref
+                ):
+                    errors.append(
+                        f"{label}: {name} must remain exact, excluded and evidence-bound"
+                    )
+                for field in (
+                    "exact_product_commit",
+                    "exact_product_tree",
+                    "source_commit",
+                    "source_tree",
+                ):
+                    value = receipt.get(field)
+                    if not isinstance(value, str) or re.fullmatch(
+                        r"[0-9a-f]{40}", value
+                    ) is None:
+                        errors.append(
+                            f"{label}: {name}.{field} must be an exact Git object"
+                        )
+            eighth = consumed_history.get("eighth_live_session_authorization")
+            if not isinstance(eighth, dict) or (
+                eighth.get("scheduling_finding_ref") != "FINDING-010-139"
+                or eighth.get("scheduling_verdict")
+                != "deepseek-scheduling-policy-fail-not-direction-acceptance-evidence"
+            ):
+                errors.append(
+                    f"{label}: eighth live Session history must retain its scheduling failure disposition"
+                )
         if external_execution_status == "not-authorized":
             if (
                 first_live_authorization is not None
