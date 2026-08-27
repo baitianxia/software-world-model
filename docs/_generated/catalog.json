@@ -5698,6 +5698,19 @@
     "path": "docs/project/iterations/iteration-010/results/v-layer-attribution-001.md"
   },
   {
+    "id": "ITER-010-RESULT-V-PLAN-RECOVERY-001",
+    "kind": "iteration-result",
+    "status": "sealed",
+    "authority": "evidence",
+    "owners": [
+      "project",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-plan-recovery-001.md"
+  },
+  {
     "id": "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009",
     "kind": "iteration-result",
     "status": "passed-micro-checkpoint",

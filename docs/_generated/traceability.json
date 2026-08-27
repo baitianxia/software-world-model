@@ -4282,6 +4282,19 @@
       "tests/test_engineering_chat_alpha_cli.py"
     ]
   },
+  "ITER-010-RESULT-V-PLAN-RECOVERY-001": {
+    "path": "docs/project/iterations/iteration-010/results/v-plan-recovery-001.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py",
+      "validation/iteration_010_plan_recovery/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py",
+      "tests/test_iteration_010_plan_recovery.py"
+    ]
+  },
   "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009": {
     "path": "docs/project/iterations/iteration-010/results/v-web-000-live-run-009.md",
     "code": [
