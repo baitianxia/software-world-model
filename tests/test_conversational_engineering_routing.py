@@ -97,7 +97,7 @@ def _configuration_digest(provider: str) -> Digest:
     return digest_of(["provider-configuration", provider])
 
 
-def _binding_and_plan():
+def _binding_and_plan(*, standing_authority: bool = False):
     ark = _configuration_digest("VOLCENGINE_ARK")
     deepseek = _configuration_digest("DEEPSEEK")
     route_ref = engineering_agent_dual_provider_route_ref(
@@ -116,6 +116,11 @@ def _binding_and_plan():
         provider_route_ref=route_ref,
         known_limitations=("Direction Alpha only",),
     )
+    standing_digest = (
+        digest_of("public-source-standing-authority")
+        if standing_authority
+        else None
+    )
     primary = EngineeringProviderRouteSpec.create(
         ordinal=1,
         role=EngineeringProviderRouteRole.PRIMARY,
@@ -124,6 +129,7 @@ def _binding_and_plan():
         model_ref="ark-model",
         provider_configuration_digest=ark,
         session_disclosure_authority_digest=digest_of("ark-session"),
+        standing_authority_digest=standing_digest,
         qualification_ref="CC-ARK:sha256:current",
         maximum_dispatches_per_turn=15,
     )
@@ -135,6 +141,7 @@ def _binding_and_plan():
         model_ref="deepseek-model",
         provider_configuration_digest=deepseek,
         session_disclosure_authority_digest=digest_of("deepseek-session"),
+        standing_authority_digest=standing_digest,
         qualification_ref="CC-DEEPSEEK:sha256:current",
         maximum_dispatches_per_turn=15,
     )
@@ -215,8 +222,10 @@ def _success(request, *, provider: str, dispatches: int, receipt_ref: str):
     )
 
 
-def _service(factory):
-    binding, plan = _binding_and_plan()
+def _service(factory, *, standing_authority: bool = False):
+    binding, plan = _binding_and_plan(
+        standing_authority=standing_authority
+    )
     router = ApplicationOwnedEngineeringProviderRouter(
         plan=plan,
         attempt_factory=factory,
@@ -231,6 +240,40 @@ def _service(factory):
 
 
 class ConversationalEngineeringRoutingTests(unittest.TestCase):
+    def test_turn_attempt_authority_binds_public_source_standing_parent(self) -> None:
+        factory = _Factory(
+            {
+                EngineeringProviderRouteRole.PRIMARY: lambda request: _success(
+                    request,
+                    provider="ark",
+                    dispatches=1,
+                    receipt_ref="ark-model-receipt",
+                ),
+                EngineeringProviderRouteRole.FALLBACK: lambda request: _failure(
+                    request,
+                    code="NOT_USED",
+                ),
+            }
+        )
+        service, _ = _service(factory, standing_authority=True)
+        conversation = service.create_conversation()
+
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(len(factory.authorities), 1)
+        self.assertEqual(
+            factory.authorities[0].standing_authority_digest,
+            digest_of("public-source-standing-authority"),
+        )
+        self.assertEqual(
+            factory.authorities[0].schema,
+            "ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY@2",
+        )
+
     def test_primary_success_does_not_start_fallback(self) -> None:
         factory = _Factory(
             {

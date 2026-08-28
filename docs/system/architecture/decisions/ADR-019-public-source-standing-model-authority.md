@@ -5,9 +5,9 @@ status: accepted
 authority: normative
 owners: [architecture, application, security, ai, operations, quality]
 depends_on: [SYS-ADR-006, SYS-ADR-017]
-derived_from: [FINDING-010-029, FINDING-010-140]
-code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/interface]
-tests: [tests/test_model_gateway.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_provider_runtime.py]
+derived_from: [FINDING-010-029, FINDING-010-140, FINDING-010-154]
+code: [src/software_world_model/application_services/public_source_model_authority.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/interface/engineering_chat_session_artifact.py]
+tests: [tests/test_public_source_model_authority.py, tests/test_model_gateway.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_provider_runtime.py]
 ---
 
 # ADR-019：公开来源采用持续模型调用权威
@@ -61,14 +61,22 @@ Provider dispatch 逐次批准，并没有增加新的授权判断；它只是�
 当前 execution profile 配置把 DeepSeek 映射为备用路线，并选择 `DEEPSEEK_DISPATCH_ADMISSION@1` 作为其 admission plugin；该插件把非高峰
 窗口作为自动准入条件、把峰时运行作为 exact override。该映射只描述当前可替换配置，不定义本 ADR 的权限状态、分支或质量规则。
 
+当前 Artifact Session `@4` 把 standing authority 作为明确的父对象：launcher 先重验 owner-private closed document、公开 upstream、clean
+HEAD、exact commit/tree 与许可证路径对象，再由可信 Application 派生绑定 exact product、Source Profile/allowlist、World Model、Chat
+Binding、route/configuration/qualification、预算和时窗的 `PUBLIC_SOURCE_MODEL_SESSION_AUTHORITY@1`。Provider Session、逐 Turn attempt 与逐
+call one-use disclosure receipt 都直接或经不可变摘要链绑定 standing parent；过期、消费、Source/provider/account/profile/budget/admission
+drift 在 Source disclosure、credential 或 Provider network 前失败关闭。旧 Artifact Session `@1—@3` 只保留 exact-human-delta 兼容语义，
+不能取得该状态。
+
 ## Consequences
 
 - 公开开源测试工程上的正常 Chat、canary 和评测不再因 run/Turn/dispatch 数量重复向人申请同一权限；系统仍为每次真实调用留下更精确的
   审计链。
 - “人工授权”与“机器派生 receipt”成为不同概念：前者决定边界及其 material delta，后者执行和证明边界。
 - 系统必须可靠证明公开来源分类并检测 authority drift；做不到时按 unknown 处理，而不是把本机目录默认当成公开数据。
-- 现有要求 post-freeze exact user-message grant 的 launcher/artifact 是兼容实现，不再是公开来源体验的目标产品契约；后续实现必须以
-  standing-authority ref/digest 和自动派生链取代逐 run 人工消息依赖。在该实现和确定性验证完成前，不得把本 ADR 写成 live 能力。
+- 现有要求 post-freeze exact user-message grant 的 launcher/artifact 是兼容实现，不再是公开来源体验的目标产品契约；current `@4` 已以
+  standing-authority ref/digest 和自动派生链取代逐 run 人工消息依赖，并形成 deterministic local candidate。该本地闭合不等于 actual
+  current artifact、真实 dispatch 或 Browser 体验已经 PASS；这些仍须由 live receipt 与当前体验 Case 证明。
 
 ## Rejected alternatives
 

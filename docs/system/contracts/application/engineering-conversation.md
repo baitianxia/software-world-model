@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -58,11 +58,13 @@ Response Control 放行边界继续由原 Owner 拥有。
    Profile/allowlist、工具目录、versioned Conversation input policy、`preferred → fallback` route、两个角色各自的 exact execution-profile ref/digest、
    披露范围、有效期和每 Turn/整会话高安全熔断。产品、主 Agent、Reviewer 和 route branch 只读取通用 route role/profile reference、顺序和受信 availability verdict，
    不得使用 Provider/model 名称选择行为或质量标准。每个 execution profile 的运行配置内部绑定 Provider/model/endpoint、Adapter/plugin、资格、transport 与 admission
-   plugin；浏览器不能扩大这些边界。current Artifact Session Configuration `@3` 必须以 zero-based fixed order 列出各 cognition Profile 的
+   plugin；浏览器不能扩大这些边界。current Artifact Session Configuration `@4` 必须以 zero-based fixed order 列出各 cognition Profile 的
    Profile/Schema/Source Binding、selected Snapshot、ordered/Snapshot Bundle digest 与 exact file digest，并绑定两个 route profile、plugin
-   ref+digest 和形成通用 dispatch-admission receipt 所需的 closed trusted inputs；装载时逐项重算后才能形成 Application-owned Manifest
-   authority。旧 `@2` 多 Profile 与 `@1` 单 Profile 只作为历史兼容读取；current preparation 缺少任一 execution profile、plugin 或必需
-   admission input 必须失败关闭，不能取得新 live Session 资格。
+   ref+digest、形成通用 dispatch-admission receipt 所需的 closed trusted inputs，以及 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 的明确父
+   ref/digest、Source 公开性/upstream/license/exact commit-tree、Provider/account/disclosure/budget/time/loopback 边界；装载时逐项重算后才能
+   派生 exact `PUBLIC_SOURCE_MODEL_SESSION_AUTHORITY@1` 与 Application-owned Manifest authority。旧 `@3` admission、`@2` 多 Profile 与
+   `@1` 单 Profile 只作为 exact-human-delta 历史兼容读取；current preparation 缺少任一 standing/execution profile/plugin 或必需 admission
+   input 必须失败关闭，不能取得新 live Session 资格。
 2. 每条 User Message 创建不可变 Turn。Application 从完整历史确定性选择满足本 Turn 所需的相关上下文，密封输入消息、被引用 Turn、有效
    用户约束、当前工作状态和摘要的 identity/digest；不得直接依赖 Provider 会话记忆或无边界拼接全部历史。
 3. 主 Agent 必须处理追问、指代、纠正、深入、收窄和总结。若指代在密封上下文内仍不唯一，必须请求澄清或给出明确条件化解释，不能把
@@ -203,7 +205,7 @@ append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 
 `ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
 PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
 SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_V3_ADMISSION_LOCAL_PASS /
-ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
+ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE / PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE /
 SEVENTH_LIVE_CHAT_THREE_OF_FIVE_LIMITATIONS_OVERALL_FAIL / NEW_CONVERSATION_LEAKAGE_PASS /
 V7_UNACCEPTED_SYMPTOM_EXPERIMENT / V8_SEMANTIC_NEED_QUERY_LOCAL_CANDIDATE / RUN043_QUALITY_REWORK /
 SESSION_AUTHORITY_REQUIRED / NOT_PRODUCTION`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
@@ -215,9 +217,10 @@ non-starting Session runtime 又把两条 Provider runtime、exact evidence auth
    Work State、Conversation 与 Browser 组合成一个对象图；preparation 没有创建 attempt、读取 Source、解析 credential、dispatch 或启动 listener。
 artifact Session loader 现可从一个 owner-private closed document 绑定 product/source Git identity、ordered profile-specific published
 World Model authorities、Source Profile、Ark→DeepSeek qualification identity、两个 private Gateway repositories 与 Session authority；
-current `@3` 在逐 Profile 重验 expected file/Bundle digest、Profile/Schema/Source Binding/selected Snapshot 并形成 Capability Manifest 后，
-还要求在 Provider network/credential 前密封 DeepSeek admission；`@2` 多 Profile与 `@1` 单 Profile配置继续只读兼容，但不能通过 current
-preparation。唯一 `--session-config` selector 让固定
+current `@4` 在逐 Profile 重验 expected file/Bundle digest、Profile/Schema/Source Binding/selected Snapshot 并形成 Capability Manifest 后，
+还要求在 Provider network/credential 前重验公开 upstream、clean HEAD、exact commit/tree、license object、standing scope 和 DeepSeek
+admission，再派生 exact Session/Turn/call 摘要链且记录人工重复审批数 0；`@3` admission、`@2` 多 Profile 与 `@1` 单 Profile 配置继续
+只读兼容，但不能取得 current standing-authority preparation 状态。唯一 `--session-config` selector 让固定
 `127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
 Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 availability raw evidence，但受信 availability-owner verdict 尚未闭合，不得追认为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
 exact clean identity、2/2 request 和 strict Session audit PASS，并按各自 exact identity 用于多个 owner-private mall artifact Session。`run-035-chat-alpha` 与

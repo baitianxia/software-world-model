@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, ITER-010-PDR-010]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, ITER-010-PDR-010]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-154](FINDING-010-154.md)：Artifact Session `@3` 仍把 exact machine receipt 绑定为逐 run user-message grant，未实现
+  `SYS-ADR-019` 的 standing parent；`@4` 现重验公开 upstream/clean exact commit-tree/license object，并派生 exact Session、Turn attempt
+  与 one-use call authority chain。正负向本地测试 PASS；current actual artifact、真实 dispatch 与 Browser 仍为 NOT-RUN。
 - [FINDING-010-153](FINDING-010-153.md)：PDR-009 动作图没有 fresh 用户方向的可达治理出口，导致用户明确调整计划后既不能继续旧动作也不能合法修订；
   一次性 recovery Result 只恢复了采纳 PDR-010 的治理能力，PDR-010 已用可跨提交的完整体验开发动作和显式用户方向分支完成处置，不再设置
   rotating slot、分钟收据或整份 Manifest 摘要门禁。

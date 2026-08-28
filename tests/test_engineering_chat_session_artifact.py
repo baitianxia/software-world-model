@@ -37,6 +37,7 @@ from software_world_model.interface.engineering_chat_session_artifact import (
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1,
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2,
+    ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3,
     ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
     load_engineering_chat_artifact_session_config,
     prepare_engineering_chat_artifact_session,
@@ -112,6 +113,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.product_commit = "a" * 40
         self.product_tree = "b" * 40
         self.source_revision = "c" * 40
+        self.source_tree = "d" * 40
         self.binding_id = StableId("binding_" + "2" * 32)
 
     def document(self) -> dict[str, object]:
@@ -222,7 +224,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
 
     def document_v3(self) -> dict[str, object]:
         document = self.document_v2()
-        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3
         document["deepseek_dispatch_admission"] = {
             "schema": "DEEPSEEK_DISPATCH_ADMISSION_INPUT@1",
             "policy_ref": "ITER-010-PDR-007@1",
@@ -248,6 +250,92 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             "maximum_output_tokens": 75 * 8_192,
             "maximum_duration_seconds": 600,
             "peak_override": None,
+        }
+        return document
+
+    def document_v4(self) -> dict[str, object]:
+        document = self.document_v3()
+        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        document.pop("authorization_message_digest")
+        human_digest = digest_of("standing-human-authority")
+        ark = VolcengineArkModelConfiguration()
+        deepseek = DeepSeekModelConfiguration()
+        document["standing_authority"] = {
+            "schema": "PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1",
+            "authority_ref": "test-public-source-standing-authority@1",
+            "human_authority_ref": (
+                "local-user-message-utf8:" + human_digest.value
+            ),
+            "human_authority_digest": human_digest.value,
+            "authority_evidence_refs": ["SYS-ADR-019", "test-authority"],
+            "purpose": "public-open-source-loopback-evaluation",
+            "source_authority_ref": "test-public-source-authority@1",
+            "canonical_source_upstream": "https://example.com/public/repo.git",
+            "source_license": "Apache-2.0",
+            "source_license_path": "LICENSE",
+            "source_revision_policy": "EXACT_CLEAN_COMMIT",
+            "source_tree": self.source_tree,
+            "route_policy_ref": "qualified-primary-fallback@1",
+            "provider_scopes": [
+                {
+                    "ordinal": 1,
+                    "route_role": "PRIMARY",
+                    "provider_type": ark.provider_type,
+                    "adapter_version": ark.adapter_version,
+                    "endpoint": ark.endpoint,
+                    "model_ref": ark.model_ref,
+                    "expected_actual_model_fingerprint": (
+                        ark.actual_model_fingerprint
+                    ),
+                    "provider_configuration_fingerprint": ark.fingerprint.value,
+                    "secret_reference": ark.secret_reference,
+                    "disclosure_policy_ref": (
+                        "engineering-agent-exact-role-disclosure@1"
+                    ),
+                    "dispatch_admission_policy_ref": "NONE",
+                    "maximum_calls": 75,
+                    "maximum_input_bytes": 4_194_304,
+                    "maximum_output_tokens": 8_192,
+                    "timeout_milliseconds": 180_000,
+                },
+                {
+                    "ordinal": 2,
+                    "route_role": "FALLBACK",
+                    "provider_type": deepseek.provider_type,
+                    "adapter_version": deepseek.adapter_version,
+                    "endpoint": deepseek.endpoint,
+                    "model_ref": deepseek.model_ref,
+                    "expected_actual_model_fingerprint": (
+                        deepseek.actual_model_fingerprint
+                    ),
+                    "provider_configuration_fingerprint": (
+                        deepseek.fingerprint.value
+                    ),
+                    "secret_reference": deepseek.secret_reference,
+                    "disclosure_policy_ref": (
+                        "engineering-agent-exact-role-disclosure@1"
+                    ),
+                    "dispatch_admission_policy_ref": "ITER-010-PDR-007@1",
+                    "maximum_calls": 75,
+                    "maximum_input_bytes": 4_194_304,
+                    "maximum_output_tokens": 8_192,
+                    "timeout_milliseconds": 180_000,
+                },
+            ],
+            "maximum_turns": 5,
+            "maximum_dispatches_per_turn": 15,
+            "maximum_total_dispatches_per_provider": 75,
+            "maximum_input_tokens": 10_000_000,
+            "maximum_output_tokens": 75 * 8_192,
+            "maximum_duration_seconds": 600,
+            "authorized_at": (self.now - timedelta(minutes=1))
+            .isoformat()
+            .replace("+00:00", "Z"),
+            "expires_at": (self.now + timedelta(hours=1))
+            .isoformat()
+            .replace("+00:00", "Z"),
+            "sink": "EVALUATION_ONLY",
+            "loopback_origin": "http://127.0.0.1:8765/",
         }
         return document
 
@@ -376,8 +464,44 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
                 self.write_config(unsealed, name="v2-unsealed.json")
             )
 
+    def test_v4_loader_replaces_message_grant_with_closed_standing_scope(self) -> None:
+        document = self.document_v4()
+        loaded = load_engineering_chat_artifact_session_config(
+            self.write_config(document, name="session-v4.json")
+        )
+
+        self.assertIsNone(loaded.authorization_message_digest)
+        self.assertIsNotNone(loaded.standing_authority)
+        self.assertEqual(
+            loaded.standing_authority.source_revision,
+            self.source_revision,
+        )
+        self.assertEqual(
+            loaded.standing_authority.source_tree,
+            self.source_tree,
+        )
+
+        mismatched_human = self.document_v4()
+        mismatched_human["standing_authority"]["human_authority_ref"] = (
+            "local-user-message-utf8:" + digest_of("different-human").value
+        )
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(
+                    mismatched_human,
+                    name="v4-mismatched-human.json",
+                )
+            )
+
+        widened = self.document_v4()
+        widened["standing_authority"]["maximum_turns"] = 129
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(widened, name="v4-widened.json")
+            )
+
     def test_prepare_loads_artifact_identities_without_runtime_io(self) -> None:
-        document = self.document_v3()
+        document = self.document_v4()
         document["cognition_profiles"] = document["cognition_profiles"][:1]
         profile_document = document["cognition_profiles"][0]
         session_config = load_engineering_chat_artifact_session_config(
@@ -434,6 +558,16 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
                 return_value=self.source_revision,
             ),
             patch(
+                "software_world_model.interface.engineering_chat_session_artifact._verify_public_source_mirror",
+                return_value=(
+                    "https://example.com/public/repo.git",
+                    self.source_tree,
+                    True,
+                    "blob",
+                    digest_of("test-public-source-mirror"),
+                ),
+            ),
+            patch(
                 "software_world_model.interface.engineering_chat_session_artifact.FileStructureReadBundleStore",
                 return_value=store,
             ),
@@ -480,6 +614,13 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             prepared.public_status()["status"],
             ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
         )
+        self.assertIsNotNone(prepared.public_source_session_authority)
+        authority_status = prepared.public_status()["authority_chain"]
+        self.assertEqual(authority_status["human_approval_request_count"], 0)
+        self.assertEqual(
+            prepared.runtime.primary_provider_runtime.session_authority.standing_authority_digest,
+            session_config.standing_authority.digest,
+        )
         self.assertTrue(prepared.runtime.receipt.artifact_session_config_loaded)
         self.assertTrue(prepared.runtime.receipt.fixed_command_wired)
         self.assertEqual(
@@ -515,6 +656,11 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             launch["status"], "ARTIFACT_SESSION_PREPARED_NOT_STARTED"
         )
         self.assertEqual(launch["provider_dispatch_count_at_seal"], 0)
+        self.assertEqual(launch["human_approval_request_count"], 0)
+        self.assertEqual(
+            launch["standing_authority_digest"],
+            session_config.standing_authority.digest.value,
+        )
         terminal = prepared.terminal_receipt()
         self.assertEqual(terminal["status"], "STOPPED_WITHOUT_DISPATCH")
         self.assertEqual(terminal["provider_dispatch_count"], 0)

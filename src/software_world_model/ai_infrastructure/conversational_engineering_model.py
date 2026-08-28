@@ -93,11 +93,17 @@ ENGINEERING_AGENT_REDACTION_REF = (
 ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA = (
     "SWM-ENGINEERING-AGENT-SESSION-DISCLOSURE-AUTHORITY@1"
 )
+ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2 = (
+    "SWM-ENGINEERING-AGENT-SESSION-DISCLOSURE-AUTHORITY@2"
+)
 ENGINEERING_AGENT_ROLE_DISCLOSURE_REQUEST_SCHEMA = (
     "SWM-ENGINEERING-AGENT-ROLE-DISCLOSURE-REQUEST@1"
 )
 ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA = (
     "SWM-ENGINEERING-AGENT-ROLE-DISCLOSURE-AUTHORIZATION@1"
+)
+ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2 = (
+    "SWM-ENGINEERING-AGENT-ROLE-DISCLOSURE-AUTHORIZATION@2"
 )
 
 _CALLING_MODULE = "ai-infrastructure/conversational-engineering-model"
@@ -549,6 +555,9 @@ class EngineeringAgentSessionDisclosureAuthority:
     expires_at: datetime
     authorization_ref: str
     authorization_message_digest: Digest
+    standing_authority_digest: Digest | None
+    public_source_session_authority_digest: Digest | None
+    human_approval_request_count: int
     redaction_ref: str
     production_activation: str
     digest: Digest
@@ -570,15 +579,126 @@ class EngineeringAgentSessionDisclosureAuthority:
         authorization_message_digest: Digest,
         loopback_origin: str = _LOOPBACK_ORIGIN,
     ) -> "EngineeringAgentSessionDisclosureAuthority":
+        """Create the legacy exact-human-delta Session authority."""
+
+        return cls._create(
+            schema=ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA,
+            session_ref=session_ref,
+            product_candidate_digest=product_candidate_digest,
+            chat_binding_digest=chat_binding_digest,
+            configuration=configuration,
+            maximum_turns=maximum_turns,
+            maximum_dispatches_per_turn=maximum_dispatches_per_turn,
+            maximum_total_dispatches=maximum_total_dispatches,
+            authorized_at=authorized_at,
+            expires_at=expires_at,
+            authorization_ref=authorization_ref,
+            authorization_message_digest=authorization_message_digest,
+            standing_authority_digest=None,
+            public_source_session_authority_digest=None,
+            loopback_origin=loopback_origin,
+        )
+
+    @classmethod
+    def derive_from_public_source_session(
+        cls,
+        *,
+        session_ref: str,
+        product_candidate_digest: Digest,
+        chat_binding_digest: Digest,
+        configuration: EngineeringAgentModelConfiguration,
+        maximum_turns: int,
+        maximum_dispatches_per_turn: int,
+        maximum_total_dispatches: int,
+        authorized_at: datetime,
+        expires_at: datetime,
+        standing_authority_digest: Digest,
+        public_source_session_authority_digest: Digest,
+        loopback_origin: str = _LOOPBACK_ORIGIN,
+    ) -> "EngineeringAgentSessionDisclosureAuthority":
+        """Narrow an exact public-Source Session authority to one Provider."""
+
+        if not isinstance(standing_authority_digest, Digest) or not isinstance(
+            public_source_session_authority_digest, Digest
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Agent public Source authority digests are invalid",
+            )
+        return cls._create(
+            schema=ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2,
+            session_ref=session_ref,
+            product_candidate_digest=product_candidate_digest,
+            chat_binding_digest=chat_binding_digest,
+            configuration=configuration,
+            maximum_turns=maximum_turns,
+            maximum_dispatches_per_turn=maximum_dispatches_per_turn,
+            maximum_total_dispatches=maximum_total_dispatches,
+            authorized_at=authorized_at,
+            expires_at=expires_at,
+            authorization_ref=(
+                "public-source-standing-authority:"
+                + standing_authority_digest.value
+            ),
+            authorization_message_digest=standing_authority_digest,
+            standing_authority_digest=standing_authority_digest,
+            public_source_session_authority_digest=(
+                public_source_session_authority_digest
+            ),
+            loopback_origin=loopback_origin,
+        )
+
+    @classmethod
+    def _create(
+        cls,
+        *,
+        schema: str,
+        session_ref: str,
+        product_candidate_digest: Digest,
+        chat_binding_digest: Digest,
+        configuration: EngineeringAgentModelConfiguration,
+        maximum_turns: int,
+        maximum_dispatches_per_turn: int,
+        maximum_total_dispatches: int,
+        authorized_at: datetime,
+        expires_at: datetime,
+        authorization_ref: str,
+        authorization_message_digest: Digest,
+        standing_authority_digest: Digest | None,
+        public_source_session_authority_digest: Digest | None,
+        loopback_origin: str,
+    ) -> "EngineeringAgentSessionDisclosureAuthority":
         session_ref = _text(session_ref, "Engineering Agent session reference")
         issued = _aware_utc(authorized_at, "session authorization time")
         expiry = _aware_utc(expires_at, "session authorization expiration")
-        if authorization_ref != (
-            f"codex-user-message:{authorization_message_digest.value}"
+        legacy = schema == ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA
+        standing = schema == ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2
+        if not legacy and not standing:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Agent session authority schema is unsupported",
+            )
+        if legacy and (
+            authorization_ref
+            != f"codex-user-message:{authorization_message_digest.value}"
+            or standing_authority_digest is not None
+            or public_source_session_authority_digest is not None
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Agent session authorization does not bind its user message",
+            )
+        if standing and (
+            not isinstance(standing_authority_digest, Digest)
+            or not isinstance(public_source_session_authority_digest, Digest)
+            or authorization_message_digest != standing_authority_digest
+            or authorization_ref
+            != "public-source-standing-authority:"
+            + standing_authority_digest.value
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent session authority does not bind its public Source parent chain",
             )
         if loopback_origin != _LOOPBACK_ORIGIN:
             raise DomainError(
@@ -606,7 +726,7 @@ class EngineeringAgentSessionDisclosureAuthority:
             )
         roles = tuple(EngineeringAgentModelRole)
         core = {
-            "schema": ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA,
+            "schema": schema,
             "environment": _ENVIRONMENT,
             "status": "AUTHORIZED",
             "session_ref": session_ref,
@@ -627,7 +747,11 @@ class EngineeringAgentSessionDisclosureAuthority:
             "maximum_turns": maximum_turns,
             "maximum_dispatches_per_turn": maximum_dispatches_per_turn,
             "maximum_total_dispatches": maximum_total_dispatches,
-            "authorized_by": "user",
+            "authorized_by": (
+                "user"
+                if legacy
+                else "trusted-application-from-standing-authority"
+            ),
             "authorized_at": _time(issued),
             "expires_at": _time(expiry),
             "authorization_ref": authorization_ref,
@@ -636,8 +760,20 @@ class EngineeringAgentSessionDisclosureAuthority:
             "request_retry_allowed": False,
             "production_activation": _PRODUCTION_ACTIVATION,
         }
+        if standing:
+            core.update(
+                {
+                    "standing_authority_digest": (
+                        standing_authority_digest.value
+                    ),
+                    "public_source_session_authority_digest": (
+                        public_source_session_authority_digest.value
+                    ),
+                    "human_approval_request_count": 0,
+                }
+            )
         return cls(
-            schema=ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA,
+            schema=schema,
             environment=_ENVIRONMENT,
             status="AUTHORIZED",
             session_ref=session_ref,
@@ -655,9 +791,14 @@ class EngineeringAgentSessionDisclosureAuthority:
             expires_at=expiry,
             authorization_ref=authorization_ref,
             authorization_message_digest=authorization_message_digest,
+            standing_authority_digest=standing_authority_digest,
+            public_source_session_authority_digest=(
+                public_source_session_authority_digest
+            ),
+            human_approval_request_count=0 if standing else 1,
             redaction_ref=ENGINEERING_AGENT_REDACTION_REF,
             production_activation=_PRODUCTION_ACTIVATION,
-            digest=digest_of([ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA, core]),
+            digest=digest_of([schema, core]),
         )
 
     def require_current(
@@ -667,20 +808,47 @@ class EngineeringAgentSessionDisclosureAuthority:
         chat_binding_digest: Digest,
         at: datetime,
     ) -> None:
-        expected = EngineeringAgentSessionDisclosureAuthority.create(
-            session_ref=self.session_ref,
-            product_candidate_digest=self.product_candidate_digest,
-            chat_binding_digest=self.chat_binding_digest,
-            configuration=configuration,
-            maximum_turns=self.maximum_turns,
-            maximum_dispatches_per_turn=self.maximum_dispatches_per_turn,
-            maximum_total_dispatches=self.maximum_total_dispatches,
-            authorized_at=self.authorized_at,
-            expires_at=self.expires_at,
-            authorization_ref=self.authorization_ref,
-            authorization_message_digest=self.authorization_message_digest,
-            loopback_origin=self.loopback_origin,
-        )
+        if self.schema == ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA:
+            expected = EngineeringAgentSessionDisclosureAuthority.create(
+                session_ref=self.session_ref,
+                product_candidate_digest=self.product_candidate_digest,
+                chat_binding_digest=self.chat_binding_digest,
+                configuration=configuration,
+                maximum_turns=self.maximum_turns,
+                maximum_dispatches_per_turn=self.maximum_dispatches_per_turn,
+                maximum_total_dispatches=self.maximum_total_dispatches,
+                authorized_at=self.authorized_at,
+                expires_at=self.expires_at,
+                authorization_ref=self.authorization_ref,
+                authorization_message_digest=self.authorization_message_digest,
+                loopback_origin=self.loopback_origin,
+            )
+        elif self.schema == ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2:
+            expected = (
+                EngineeringAgentSessionDisclosureAuthority.derive_from_public_source_session(
+                    session_ref=self.session_ref,
+                    product_candidate_digest=self.product_candidate_digest,
+                    chat_binding_digest=self.chat_binding_digest,
+                    configuration=configuration,
+                    maximum_turns=self.maximum_turns,
+                    maximum_dispatches_per_turn=(
+                        self.maximum_dispatches_per_turn
+                    ),
+                    maximum_total_dispatches=self.maximum_total_dispatches,
+                    authorized_at=self.authorized_at,
+                    expires_at=self.expires_at,
+                    standing_authority_digest=self.standing_authority_digest,
+                    public_source_session_authority_digest=(
+                        self.public_source_session_authority_digest
+                    ),
+                    loopback_origin=self.loopback_origin,
+                )
+            )
+        else:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent session disclosure authority schema drifted",
+            )
         if self != expected or self.chat_binding_digest != chat_binding_digest:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -881,6 +1049,9 @@ class EngineeringAgentRoleDisclosureAuthorization:
     authorized_at: datetime
     expires_at: datetime
     authorization_ref: str
+    standing_authority_digest: Digest | None
+    public_source_session_authority_digest: Digest | None
+    human_approval_request_count: int
     maximum_dispatches: int
     redaction_ref: str
     production_activation: str
@@ -893,8 +1064,25 @@ class EngineeringAgentRoleDisclosureAuthorization:
         request: EngineeringAgentRoleDisclosureRequest,
         session_authority: EngineeringAgentSessionDisclosureAuthority,
     ) -> "EngineeringAgentRoleDisclosureAuthorization":
+        standing = (
+            session_authority.schema
+            == ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2
+        )
+        if session_authority.schema not in {
+            ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA,
+            ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2,
+        }:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent role disclosure parent schema is unsupported",
+            )
+        schema = (
+            ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2
+            if standing
+            else ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA
+        )
         core = {
-            "schema": ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA,
+            "schema": schema,
             "status": "AUTHORIZED",
             "session_authority_digest": session_authority.digest.value,
             "disclosure_request_digest": request.digest.value,
@@ -909,8 +1097,28 @@ class EngineeringAgentRoleDisclosureAuthorization:
             "request_retry_allowed": False,
             "production_activation": _PRODUCTION_ACTIVATION,
         }
+        if standing:
+            if (
+                session_authority.standing_authority_digest is None
+                or session_authority.public_source_session_authority_digest is None
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent role disclosure is missing its public Source parent chain",
+                )
+            core.update(
+                {
+                    "standing_authority_digest": (
+                        session_authority.standing_authority_digest.value
+                    ),
+                    "public_source_session_authority_digest": (
+                        session_authority.public_source_session_authority_digest.value
+                    ),
+                    "human_approval_request_count": 0,
+                }
+            )
         return cls(
-            schema=ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA,
+            schema=schema,
             status="AUTHORIZED",
             session_authority_digest=session_authority.digest,
             disclosure_request_digest=request.digest,
@@ -920,11 +1128,20 @@ class EngineeringAgentRoleDisclosureAuthorization:
             authorized_at=session_authority.authorized_at,
             expires_at=session_authority.expires_at,
             authorization_ref=session_authority.authorization_ref,
+            standing_authority_digest=(
+                session_authority.standing_authority_digest
+            ),
+            public_source_session_authority_digest=(
+                session_authority.public_source_session_authority_digest
+            ),
+            human_approval_request_count=(
+                session_authority.human_approval_request_count
+            ),
             maximum_dispatches=1,
             redaction_ref=session_authority.redaction_ref,
             production_activation=_PRODUCTION_ACTIVATION,
             digest=digest_of(
-                [ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA, core]
+                [schema, core]
             ),
         )
 
@@ -3290,8 +3507,10 @@ __all__ = [
     "ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA",
     "ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF",
     "ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA",
+    "ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2",
     "ENGINEERING_AGENT_ROLE_DISCLOSURE_REQUEST_SCHEMA",
     "ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA",
+    "ENGINEERING_AGENT_SESSION_AUTHORITY_SCHEMA_V2",
     "EngineeringAgentGatewayPreDispatchRejected",
     "EngineeringAgentModelConfiguration",
     "EngineeringAgentModelDispatchAudit",

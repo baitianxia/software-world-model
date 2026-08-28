@@ -72,6 +72,13 @@ from software_world_model.application_services.engineering_question_cognition im
     MultiProfileWorldModelCognitionProjector,
     StructureBundleWorldModelCognitionProjector,
 )
+from software_world_model.application_services.public_source_model_authority import (
+    NO_DISPATCH_ADMISSION_POLICY,
+    PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY_SCHEMA,
+    PublicSourceModelSessionAuthority,
+    PublicSourceModelStandingAuthority,
+    PublicSourceProviderScope,
+)
 from software_world_model.application_services.structure_view import (
     StructureViewService,
 )
@@ -103,6 +110,7 @@ from .engineering_chat_session_runtime import (
 from .engineering_qa_preview_cli import (
     _canonical_directory,
     _exact_source_revision,
+    _git,
     _select_cognition_snapshot,
     _stable_id,
     _verify_product_candidate,
@@ -119,14 +127,23 @@ ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1 = (
 ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@2"
 )
-ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@3"
 )
-ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA = (
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
+    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@4"
+)
+ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA_V2 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@2"
 )
-ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS = (
+ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA = (
+    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@3"
+)
+ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS_V2 = (
     "ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE"
+)
+ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS = (
+    "PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE"
 )
 _MAXIMUM_SESSION_CONFIG_BYTES = 1_048_576
 _SESSION_CONFIG_COMMON_FIELDS = frozenset(
@@ -171,6 +188,9 @@ _SESSION_CONFIG_V2_FIELDS = _SESSION_CONFIG_COMMON_FIELDS | {
 _SESSION_CONFIG_V3_FIELDS = _SESSION_CONFIG_V2_FIELDS | {
     "deepseek_dispatch_admission",
 }
+_SESSION_CONFIG_V4_FIELDS = (
+    _SESSION_CONFIG_V3_FIELDS - {"authorization_message_digest"}
+) | {"standing_authority"}
 _COGNITION_PROFILE_FIELDS = frozenset(
     {
         "ordinal",
@@ -231,6 +251,53 @@ _DEEPSEEK_PEAK_OVERRIDE_FIELDS = frozenset(
         "maximum_input_tokens",
         "maximum_output_tokens",
         "maximum_duration_seconds",
+    }
+)
+_STANDING_AUTHORITY_FIELDS = frozenset(
+    {
+        "schema",
+        "authority_ref",
+        "human_authority_ref",
+        "human_authority_digest",
+        "authority_evidence_refs",
+        "purpose",
+        "source_authority_ref",
+        "canonical_source_upstream",
+        "source_license",
+        "source_license_path",
+        "source_revision_policy",
+        "source_tree",
+        "route_policy_ref",
+        "provider_scopes",
+        "maximum_turns",
+        "maximum_dispatches_per_turn",
+        "maximum_total_dispatches_per_provider",
+        "maximum_input_tokens",
+        "maximum_output_tokens",
+        "maximum_duration_seconds",
+        "authorized_at",
+        "expires_at",
+        "sink",
+        "loopback_origin",
+    }
+)
+_STANDING_PROVIDER_SCOPE_FIELDS = frozenset(
+    {
+        "ordinal",
+        "route_role",
+        "provider_type",
+        "adapter_version",
+        "endpoint",
+        "model_ref",
+        "expected_actual_model_fingerprint",
+        "provider_configuration_fingerprint",
+        "secret_reference",
+        "disclosure_policy_ref",
+        "dispatch_admission_policy_ref",
+        "maximum_calls",
+        "maximum_input_bytes",
+        "maximum_output_tokens",
+        "timeout_milliseconds",
     }
 )
 _CURRENT_REQUIRED_CONVERSATION_TURNS = 5
@@ -298,7 +365,8 @@ class EngineeringChatArtifactSessionConfig:
     )
     response_language: str
     session_ref: str
-    authorization_message_digest: Digest
+    authorization_message_digest: Digest | None
+    standing_authority: PublicSourceModelStandingAuthority | None
     authorized_at: datetime
     expires_at: datetime
     provider_routes: tuple[EngineeringChatArtifactProviderRouteConfig, ...]
@@ -361,14 +429,17 @@ class PreparedEngineeringChatArtifactSession:
     world_model_read_authority_digest: Digest
     ark_conformance_result_digest: Digest
     deepseek_conformance_result_digest: Digest
+    public_source_session_authority: PublicSourceModelSessionAuthority | None
+    preparation_schema: str
+    preparation_status: str
     preparation_digest: Digest
 
     def public_status(self) -> dict[str, object]:
         health = self.runtime.launcher.application.health()
         return {
             **health,
-            "schema": ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA,
-            "status": ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
+            "schema": self.preparation_schema,
+            "status": self.preparation_status,
             "url": "http://127.0.0.1:8765/",
             "product": {
                 **health["product"],
@@ -388,6 +459,11 @@ class PreparedEngineeringChatArtifactSession:
                     item.public_status() for item in self.cognition_profiles
                 ),
             },
+            "authority_chain": (
+                self.public_source_session_authority.public_status()
+                if self.public_source_session_authority is not None
+                else None
+            ),
             "listener_started": False,
             "browser_live_verification": "NOT_EXECUTED",
             "production_activation": "NOT_EXECUTED",
@@ -417,8 +493,13 @@ class PreparedEngineeringChatArtifactSession:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Chat artifact launch receipt requires zero runtime activity",
             )
+        current_authority = self.public_source_session_authority
         core = {
-            "schema": "SWM-ENGINEERING-CHAT-ARTIFACT-LAUNCH-RECEIPT@1",
+            "schema": (
+                "SWM-ENGINEERING-CHAT-ARTIFACT-LAUNCH-RECEIPT@2"
+                if current_authority is not None
+                else "SWM-ENGINEERING-CHAT-ARTIFACT-LAUNCH-RECEIPT@1"
+            ),
             "status": "ARTIFACT_SESSION_PREPARED_NOT_STARTED",
             "preparation_digest": self.preparation_digest.value,
             "session_config_file_digest": self.session_config.file_digest.value,
@@ -448,6 +529,18 @@ class PreparedEngineeringChatArtifactSession:
             "request_retry_count": 0,
             "production_activation": "NOT_EXECUTED",
         }
+        if current_authority is not None:
+            core.update(
+                {
+                    "standing_authority_digest": (
+                        current_authority.parent_authority_digest.value
+                    ),
+                    "public_source_session_authority_digest": (
+                        current_authority.digest.value
+                    ),
+                    "human_approval_request_count": 0,
+                }
+            )
         return {**core, "digest": digest_of(core).value}
 
     def terminal_receipt(self) -> dict[str, object]:
@@ -467,8 +560,13 @@ class PreparedEngineeringChatArtifactSession:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Chat terminal Provider dispatch totals drifted",
             )
+        current_authority = self.public_source_session_authority
         core = {
-            "schema": "SWM-ENGINEERING-CHAT-ARTIFACT-TERMINAL-RECEIPT@1",
+            "schema": (
+                "SWM-ENGINEERING-CHAT-ARTIFACT-TERMINAL-RECEIPT@2"
+                if current_authority is not None
+                else "SWM-ENGINEERING-CHAT-ARTIFACT-TERMINAL-RECEIPT@1"
+            ),
             "status": (
                 "STOPPED_AFTER_DISPATCH"
                 if provider_dispatch_count
@@ -484,6 +582,18 @@ class PreparedEngineeringChatArtifactSession:
             "request_retry_count": 0,
             "production_activation": "NOT_EXECUTED",
         }
+        if current_authority is not None:
+            core.update(
+                {
+                    "standing_authority_digest": (
+                        current_authority.parent_authority_digest.value
+                    ),
+                    "public_source_session_authority_digest": (
+                        current_authority.digest.value
+                    ),
+                    "human_approval_request_count": 0,
+                }
+            )
         return {**core, "digest": digest_of(core).value}
 
 
@@ -522,8 +632,11 @@ def load_engineering_chat_artifact_session_config(
         ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2: (
             _SESSION_CONFIG_V2_FIELDS
         ),
-        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA: (
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3: (
             _SESSION_CONFIG_V3_FIELDS
+        ),
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA: (
+            _SESSION_CONFIG_V4_FIELDS
         ),
     }.get(schema)
     if expected_fields is None:
@@ -537,16 +650,51 @@ def load_engineering_chat_artifact_session_config(
             "Engineering Chat artifact session config contains missing or unknown fields",
         )
     routes = _provider_routes(decoded)
-    try:
-        authorization_message_digest = Digest(
-            _required_text(decoded, "authorization_message_digest")
-        )
-    except ValueError as exc:
-        raise DomainError(
-            ErrorCode.INVALID_ARGUMENT,
-            "Engineering Chat authorization message digest is invalid",
-        ) from exc
+    authorization_message_digest = None
+    if schema != ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA:
+        try:
+            authorization_message_digest = Digest(
+                _required_text(decoded, "authorization_message_digest")
+            )
+        except ValueError as exc:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Chat authorization message digest is invalid",
+            ) from exc
     cognition_profiles = _cognition_profiles(decoded, schema=schema)
+    source_paths = _required_text_list(decoded, "source_paths")
+    document_paths = _required_text_list(decoded, "document_paths")
+    build_paths = _required_text_list(decoded, "build_paths")
+    test_paths = _required_text_list(decoded, "test_paths")
+    excluded_source_paths = _required_text_list(
+        decoded, "excluded_source_paths"
+    )
+    source_profile_ref = _required_text(decoded, "source_profile_ref")
+    repository_revision = _required_text(decoded, "repository_revision")
+    authorized_at = _required_time(decoded, "authorized_at")
+    expires_at = _required_time(decoded, "expires_at")
+    required_conversation_turns = _required_positive_int(
+        decoded, "required_conversation_turns"
+    )
+    maximum_dispatches_per_turn = _required_positive_int(
+        decoded, "maximum_dispatches_per_turn"
+    )
+    maximum_total_dispatches_per_provider = _required_positive_int(
+        decoded, "maximum_total_dispatches_per_provider"
+    )
+    standing_authority = (
+        _public_source_standing_authority(
+            decoded,
+            source_revision=repository_revision,
+            source_profile_ref=source_profile_ref,
+            source_allowlist=(
+                source_paths + document_paths + build_paths + test_paths
+            ),
+            excluded_source_paths=excluded_source_paths,
+        )
+        if schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        else None
+    )
     config = EngineeringChatArtifactSessionConfig(
         schema=schema,
         path=path,
@@ -560,39 +708,38 @@ def load_engineering_chat_artifact_session_config(
         repository=_required_absolute_path_text(decoded, "repository"),
         repository_id=_required_text(decoded, "repository_id"),
         binding_id=_required_text(decoded, "binding_id"),
-        repository_revision=_required_text(decoded, "repository_revision"),
-        source_profile_ref=_required_text(decoded, "source_profile_ref"),
-        source_paths=_required_text_list(decoded, "source_paths"),
-        document_paths=_required_text_list(decoded, "document_paths"),
-        build_paths=_required_text_list(decoded, "build_paths"),
-        test_paths=_required_text_list(decoded, "test_paths"),
-        excluded_source_paths=_required_text_list(
-            decoded, "excluded_source_paths"
-        ),
+        repository_revision=repository_revision,
+        source_profile_ref=source_profile_ref,
+        source_paths=source_paths,
+        document_paths=document_paths,
+        build_paths=build_paths,
+        test_paths=test_paths,
+        excluded_source_paths=excluded_source_paths,
         cognition_profiles=cognition_profiles,
         deepseek_dispatch_admission=(
             _deepseek_dispatch_admission(decoded)
-            if schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+            if schema
+            in {
+                ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3,
+                ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
+            }
             else None
         ),
         response_language=_required_text(decoded, "response_language"),
         session_ref=_required_text(decoded, "session_ref"),
         authorization_message_digest=authorization_message_digest,
-        authorized_at=_required_time(decoded, "authorized_at"),
-        expires_at=_required_time(decoded, "expires_at"),
+        standing_authority=standing_authority,
+        authorized_at=authorized_at,
+        expires_at=expires_at,
         provider_routes=routes,
         launch_receipt=_required_absolute_path_text(decoded, "launch_receipt"),
         terminal_receipt=_required_absolute_path_text(
             decoded, "terminal_receipt"
         ),
-        required_conversation_turns=_required_positive_int(
-            decoded, "required_conversation_turns"
-        ),
-        maximum_dispatches_per_turn=_required_positive_int(
-            decoded, "maximum_dispatches_per_turn"
-        ),
-        maximum_total_dispatches_per_provider=_required_positive_int(
-            decoded, "maximum_total_dispatches_per_provider"
+        required_conversation_turns=required_conversation_turns,
+        maximum_dispatches_per_turn=maximum_dispatches_per_turn,
+        maximum_total_dispatches_per_provider=(
+            maximum_total_dispatches_per_provider
         ),
         known_limitations=_required_text_list(decoded, "known_limitations"),
     )
@@ -676,6 +823,33 @@ def prepare_engineering_chat_artifact_session(
         source_repository,
         session_config.repository_revision,
     )
+    standing_authority = session_config.standing_authority
+    if session_config.schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA:
+        if standing_authority is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "current Engineering Chat artifact is missing standing authority",
+            )
+        standing_authority.require_current(current)
+        (
+            observed_source_upstream,
+            observed_source_tree,
+            source_clean,
+            license_object_type,
+            source_repository_ref,
+        ) = _verify_public_source_mirror(
+            repository=source_repository,
+            revision=repository_revision,
+            authority=standing_authority,
+        )
+    else:
+        observed_source_upstream = ""
+        observed_source_tree = ""
+        source_clean = False
+        license_object_type = ""
+        source_repository_ref = digest_of(
+            ["LEGACY_ENGINEERING_CHAT_SOURCE_REPOSITORY@1", str(source_repository)]
+        )
     repository_id = _stable_id(session_config.repository_id, "repository ID")
     binding_id = _stable_id(session_config.binding_id, "binding ID")
     profile = LocalGitEvidenceClassProfile.create(
@@ -827,49 +1001,117 @@ def prepare_engineering_chat_artifact_session(
         product_revision=product_commit,
         product_tree=product_tree,
     )
-    authorization_ref = (
-        "codex-user-message:"
-        + session_config.authorization_message_digest.value
-    )
-    ark_authority = EngineeringAgentSessionDisclosureAuthority.create(
-        session_ref=session_config.session_ref + ":ark",
-        product_candidate_digest=product_candidate_digest,
-        chat_binding_digest=binding.digest,
-        configuration=ark_configuration,
-        maximum_turns=session_config.required_conversation_turns,
-        maximum_dispatches_per_turn=(
-            session_config.maximum_dispatches_per_turn
-        ),
-        maximum_total_dispatches=(
-            session_config.maximum_total_dispatches_per_provider
-        ),
-        authorized_at=session_config.authorized_at,
-        expires_at=session_config.expires_at,
-        authorization_ref=authorization_ref,
-        authorization_message_digest=(
-            session_config.authorization_message_digest
-        ),
-    )
-    deepseek_authority = EngineeringAgentSessionDisclosureAuthority.create(
-        session_ref=session_config.session_ref + ":deepseek",
-        product_candidate_digest=product_candidate_digest,
-        chat_binding_digest=binding.digest,
-        configuration=deepseek_configuration,
-        maximum_turns=session_config.required_conversation_turns,
-        maximum_dispatches_per_turn=(
-            session_config.maximum_dispatches_per_turn
-        ),
-        maximum_total_dispatches=(
-            session_config.maximum_total_dispatches_per_provider
-        ),
-        authorized_at=session_config.authorized_at,
-        expires_at=session_config.expires_at,
-        authorization_ref=authorization_ref,
-        authorization_message_digest=(
-            session_config.authorization_message_digest
-        ),
-    )
     admission_config = session_config.deepseek_dispatch_admission
+    provider_scopes = (
+        _public_source_provider_scope(
+            ordinal=1,
+            route_role=EngineeringProviderRouteRole.PRIMARY,
+            configuration=ark_configuration,
+            dispatch_admission_policy_ref=NO_DISPATCH_ADMISSION_POLICY,
+        ),
+        _public_source_provider_scope(
+            ordinal=2,
+            route_role=EngineeringProviderRouteRole.FALLBACK,
+            configuration=deepseek_configuration,
+            dispatch_admission_policy_ref=(
+                DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF
+            ),
+        ),
+    )
+    if standing_authority is not None:
+        public_source_session_authority = PublicSourceModelSessionAuthority.derive(
+            standing_authority=standing_authority,
+            session_ref=session_config.session_ref,
+            product_revision=product_commit,
+            product_tree=product_tree,
+            product_candidate_digest=product_candidate_digest,
+            source_repository_ref=source_repository_ref,
+            observed_source_upstream=observed_source_upstream,
+            observed_source_revision=repository_revision,
+            observed_source_tree=observed_source_tree,
+            source_clean=source_clean,
+            license_object_type=license_object_type,
+            source_profile_ref=profile.profile_ref,
+            source_profile_digest=profile.profile_digest,
+            source_allowlist=source_allowlist,
+            excluded_source_paths=session_config.excluded_source_paths,
+            repository_id=repository_id,
+            binding_id=binding_id,
+            world_model_read_authority_digest=cognition.read_authority_digest,
+            chat_binding_digest=binding.digest,
+            provider_route_ref=route_ref,
+            provider_scopes=provider_scopes,
+            provider_configuration_digests=(
+                ark_configuration.digest,
+                deepseek_configuration.digest,
+            ),
+            provider_qualification_refs=(
+                ark_configuration.qualification_ref,
+                deepseek_configuration.qualification_ref,
+            ),
+            maximum_turns=session_config.required_conversation_turns,
+            maximum_dispatches_per_turn=(
+                session_config.maximum_dispatches_per_turn
+            ),
+            maximum_total_dispatches_per_provider=(
+                session_config.maximum_total_dispatches_per_provider
+            ),
+            maximum_input_tokens=admission_config.maximum_input_tokens,
+            maximum_output_tokens=admission_config.maximum_output_tokens,
+            maximum_duration_seconds=(
+                admission_config.maximum_duration_seconds
+            ),
+            authorized_at=session_config.authorized_at,
+            expires_at=session_config.expires_at,
+            derived_at=current,
+        )
+        ark_authority = _derive_public_source_provider_session_authority(
+            session_config=session_config,
+            configuration=ark_configuration,
+            binding=binding,
+            product_candidate_digest=product_candidate_digest,
+            public_source_session_authority=public_source_session_authority,
+            provider_suffix="ark",
+        )
+        deepseek_authority = _derive_public_source_provider_session_authority(
+            session_config=session_config,
+            configuration=deepseek_configuration,
+            binding=binding,
+            product_candidate_digest=product_candidate_digest,
+            public_source_session_authority=public_source_session_authority,
+            provider_suffix="deepseek",
+        )
+        authorization_compatibility_digest = standing_authority.digest
+    else:
+        public_source_session_authority = None
+        authorization_message_digest = session_config.authorization_message_digest
+        if authorization_message_digest is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "legacy Engineering Chat artifact is missing its exact human delta",
+            )
+        authorization_ref = (
+            "codex-user-message:" + authorization_message_digest.value
+        )
+        ark_authority = _legacy_provider_session_authority(
+            session_config=session_config,
+            configuration=ark_configuration,
+            binding=binding,
+            product_candidate_digest=product_candidate_digest,
+            authorization_ref=authorization_ref,
+            authorization_message_digest=authorization_message_digest,
+            provider_suffix="ark",
+        )
+        deepseek_authority = _legacy_provider_session_authority(
+            session_config=session_config,
+            configuration=deepseek_configuration,
+            binding=binding,
+            product_candidate_digest=product_candidate_digest,
+            authorization_ref=authorization_ref,
+            authorization_message_digest=authorization_message_digest,
+            provider_suffix="deepseek",
+        )
+        authorization_compatibility_digest = authorization_message_digest
     admission_plan = DeepSeekDispatchAdmissionPlan.create(
         run_type=admission_config.run_type,
         run_ref=admission_config.run_ref,
@@ -879,9 +1121,7 @@ def prepare_engineering_chat_artifact_session(
         session_ref=deepseek_authority.session_ref,
         provider_configuration_digest=deepseek_configuration.digest,
         model_ref=deepseek_configuration.model_ref,
-        authorization_message_digest=(
-            session_config.authorization_message_digest
-        ),
+        authorization_message_digest=authorization_compatibility_digest,
         authorized_at=session_config.authorized_at,
         expires_at=session_config.expires_at,
         maximum_calls=(
@@ -990,9 +1230,19 @@ def prepare_engineering_chat_artifact_session(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "artifact Session did not produce the loaded runtime status",
         )
+    preparation_schema = (
+        ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA
+        if public_source_session_authority is not None
+        else ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA_V2
+    )
+    preparation_status = (
+        ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS
+        if public_source_session_authority is not None
+        else ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS_V2
+    )
     core = {
-        "schema": ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA,
-        "status": ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
+        "schema": preparation_schema,
+        "status": preparation_status,
         "session_config_file_digest": session_config.file_digest.value,
         "product_candidate_commit": product_commit,
         "product_candidate_tree": product_tree,
@@ -1020,6 +1270,18 @@ def prepare_engineering_chat_artifact_session(
         "production_activation": "NOT_EXECUTED",
         "checked_at": _time(current),
     }
+    if public_source_session_authority is not None:
+        core.update(
+            {
+                "standing_authority_digest": (
+                    public_source_session_authority.parent_authority_digest.value
+                ),
+                "public_source_session_authority_digest": (
+                    public_source_session_authority.digest.value
+                ),
+                "human_approval_request_count": 0,
+            }
+        )
     return PreparedEngineeringChatArtifactSession(
         runtime=runtime,
         session_config=session_config,
@@ -1029,6 +1291,9 @@ def prepare_engineering_chat_artifact_session(
         world_model_read_authority_digest=cognition.read_authority_digest,
         ark_conformance_result_digest=ark_qualification.result_digest,
         deepseek_conformance_result_digest=deepseek_qualification.result_digest,
+        public_source_session_authority=public_source_session_authority,
+        preparation_schema=preparation_schema,
+        preparation_status=preparation_status,
         preparation_digest=digest_of(core),
     )
 
@@ -1148,6 +1413,131 @@ def _deepseek_dispatch_admission(
             "maximum_duration_seconds",
         ),
         peak_override=peak_override,
+    )
+
+
+def _public_source_standing_authority(
+    document: Mapping[str, object],
+    *,
+    source_revision: str,
+    source_profile_ref: str,
+    source_allowlist: Sequence[str],
+    excluded_source_paths: Sequence[str],
+) -> PublicSourceModelStandingAuthority:
+    value = document.get("standing_authority")
+    if not isinstance(value, Mapping) or set(value) != _STANDING_AUTHORITY_FIELDS:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat standing authority contains missing or unknown fields",
+        )
+    if value.get("schema") != PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY_SCHEMA:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat standing authority schema is unsupported",
+        )
+    raw_scopes = value.get("provider_scopes")
+    if (
+        not isinstance(raw_scopes, Sequence)
+        or isinstance(raw_scopes, (str, bytes))
+        or not raw_scopes
+    ):
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat standing authority Provider scopes are invalid",
+        )
+    scopes: list[PublicSourceProviderScope] = []
+    for raw_scope in raw_scopes:
+        if (
+            not isinstance(raw_scope, Mapping)
+            or set(raw_scope) != _STANDING_PROVIDER_SCOPE_FIELDS
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Engineering Chat standing Provider scope contains missing or unknown fields",
+            )
+        scopes.append(
+            PublicSourceProviderScope.create(
+                ordinal=_required_positive_int(raw_scope, "ordinal"),
+                route_role=_required_text(raw_scope, "route_role"),
+                provider_type=_required_text(raw_scope, "provider_type"),
+                adapter_version=_required_text(raw_scope, "adapter_version"),
+                endpoint=_required_text(raw_scope, "endpoint"),
+                model_ref=_required_text(raw_scope, "model_ref"),
+                expected_actual_model_fingerprint=_required_text(
+                    raw_scope, "expected_actual_model_fingerprint"
+                ),
+                provider_configuration_fingerprint=_required_digest(
+                    raw_scope, "provider_configuration_fingerprint"
+                ),
+                secret_reference=_required_text(
+                    raw_scope, "secret_reference"
+                ),
+                disclosure_policy_ref=_required_text(
+                    raw_scope, "disclosure_policy_ref"
+                ),
+                dispatch_admission_policy_ref=_required_text(
+                    raw_scope, "dispatch_admission_policy_ref"
+                ),
+                maximum_calls=_required_positive_int(
+                    raw_scope, "maximum_calls"
+                ),
+                maximum_input_bytes=_required_positive_int(
+                    raw_scope, "maximum_input_bytes"
+                ),
+                maximum_output_tokens=_required_positive_int(
+                    raw_scope, "maximum_output_tokens"
+                ),
+                timeout_milliseconds=_required_positive_int(
+                    raw_scope, "timeout_milliseconds"
+                ),
+            )
+        )
+    return PublicSourceModelStandingAuthority.create(
+        authority_ref=_required_text(value, "authority_ref"),
+        human_authority_ref=_required_text(value, "human_authority_ref"),
+        human_authority_digest=_required_digest(
+            value, "human_authority_digest"
+        ),
+        authority_evidence_refs=_required_text_list(
+            value, "authority_evidence_refs"
+        ),
+        purpose=_required_text(value, "purpose"),
+        source_authority_ref=_required_text(value, "source_authority_ref"),
+        canonical_source_upstream=_required_text(
+            value, "canonical_source_upstream"
+        ),
+        source_license=_required_text(value, "source_license"),
+        source_license_path=_required_text(value, "source_license_path"),
+        source_revision_policy=_required_text(
+            value, "source_revision_policy"
+        ),
+        source_revision=source_revision,
+        source_tree=_required_text(value, "source_tree"),
+        source_profile_ref=source_profile_ref,
+        source_allowlist=source_allowlist,
+        excluded_source_paths=excluded_source_paths,
+        route_policy_ref=_required_text(value, "route_policy_ref"),
+        provider_scopes=scopes,
+        maximum_turns=_required_positive_int(value, "maximum_turns"),
+        maximum_dispatches_per_turn=_required_positive_int(
+            value, "maximum_dispatches_per_turn"
+        ),
+        maximum_total_dispatches_per_provider=_required_positive_int(
+            value, "maximum_total_dispatches_per_provider"
+        ),
+        maximum_input_tokens=_required_positive_int(
+            value, "maximum_input_tokens"
+        ),
+        maximum_output_tokens=_required_positive_int(
+            value, "maximum_output_tokens"
+        ),
+        maximum_duration_seconds=_required_positive_int(
+            value, "maximum_duration_seconds"
+        ),
+        authorized_at=_required_time(value, "authorized_at"),
+        expires_at=_required_time(value, "expires_at"),
+        sink=_required_text(value, "sink"),
+        loopback_origin=_required_text(value, "loopback_origin"),
     )
 
 
@@ -1394,6 +1784,149 @@ def _provider_routes(
     return tuple(routes)
 
 
+def _verify_public_source_mirror(
+    *,
+    repository: Path,
+    revision: str,
+    authority: PublicSourceModelStandingAuthority,
+) -> tuple[str, str, bool, str, Digest]:
+    """Verify public identity and clean exact Git metadata without Source payload."""
+
+    upstreams = tuple(
+        item
+        for item in _git(repository, "remote", "get-url", "--all", "origin").splitlines()
+        if item
+    )
+    head = _git(repository, "rev-parse", "HEAD").casefold()
+    tree = _git(repository, "rev-parse", f"{revision}^{{tree}}").casefold()
+    status = _git(
+        repository,
+        "status",
+        "--porcelain",
+        "--untracked-files=normal",
+    )
+    license_type = _git(
+        repository,
+        "cat-file",
+        "-t",
+        f"{revision}:{authority.source_license_path}",
+    )
+    if (
+        upstreams != (authority.canonical_source_upstream,)
+        or head != revision
+        or tree != authority.source_tree
+        or status
+        or license_type != "blob"
+    ):
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "public Source mirror identity, cleanliness, tree, or license proof drifted",
+        )
+    repository_ref = digest_of(
+        [
+            "PUBLIC_SOURCE_LOCAL_MIRROR@1",
+            str(repository),
+            upstreams[0],
+            revision,
+            tree,
+            authority.source_license,
+            authority.source_license_path,
+        ]
+    )
+    return upstreams[0], tree, True, license_type, repository_ref
+
+
+def _public_source_provider_scope(
+    *,
+    ordinal: int,
+    route_role: EngineeringProviderRouteRole,
+    configuration,
+    dispatch_admission_policy_ref: str,
+) -> PublicSourceProviderScope:
+    return PublicSourceProviderScope.create(
+        ordinal=ordinal,
+        route_role=route_role.value,
+        provider_type=configuration.provider_type,
+        adapter_version=configuration.adapter_version,
+        endpoint=configuration.endpoint,
+        model_ref=configuration.model_ref,
+        expected_actual_model_fingerprint=(
+            configuration.expected_actual_model_fingerprint
+        ),
+        provider_configuration_fingerprint=(
+            configuration.provider_configuration_fingerprint
+        ),
+        secret_reference=configuration.secret_reference,
+        disclosure_policy_ref=configuration.provider_disclosure_policy_ref,
+        dispatch_admission_policy_ref=dispatch_admission_policy_ref,
+        maximum_calls=configuration.maximum_calls,
+        maximum_input_bytes=configuration.maximum_input_bytes,
+        maximum_output_tokens=configuration.maximum_output_tokens,
+        timeout_milliseconds=configuration.timeout_milliseconds,
+    )
+
+
+def _derive_public_source_provider_session_authority(
+    *,
+    session_config: EngineeringChatArtifactSessionConfig,
+    configuration,
+    binding: EngineeringChatBinding,
+    product_candidate_digest: Digest,
+    public_source_session_authority: PublicSourceModelSessionAuthority,
+    provider_suffix: str,
+) -> EngineeringAgentSessionDisclosureAuthority:
+    return EngineeringAgentSessionDisclosureAuthority.derive_from_public_source_session(
+        session_ref=f"{session_config.session_ref}:{provider_suffix}",
+        product_candidate_digest=product_candidate_digest,
+        chat_binding_digest=binding.digest,
+        configuration=configuration,
+        maximum_turns=session_config.required_conversation_turns,
+        maximum_dispatches_per_turn=(
+            session_config.maximum_dispatches_per_turn
+        ),
+        maximum_total_dispatches=(
+            session_config.maximum_total_dispatches_per_provider
+        ),
+        authorized_at=session_config.authorized_at,
+        expires_at=session_config.expires_at,
+        standing_authority_digest=(
+            public_source_session_authority.parent_authority_digest
+        ),
+        public_source_session_authority_digest=(
+            public_source_session_authority.digest
+        ),
+    )
+
+
+def _legacy_provider_session_authority(
+    *,
+    session_config: EngineeringChatArtifactSessionConfig,
+    configuration,
+    binding: EngineeringChatBinding,
+    product_candidate_digest: Digest,
+    authorization_ref: str,
+    authorization_message_digest: Digest,
+    provider_suffix: str,
+) -> EngineeringAgentSessionDisclosureAuthority:
+    return EngineeringAgentSessionDisclosureAuthority.create(
+        session_ref=f"{session_config.session_ref}:{provider_suffix}",
+        product_candidate_digest=product_candidate_digest,
+        chat_binding_digest=binding.digest,
+        configuration=configuration,
+        maximum_turns=session_config.required_conversation_turns,
+        maximum_dispatches_per_turn=(
+            session_config.maximum_dispatches_per_turn
+        ),
+        maximum_total_dispatches=(
+            session_config.maximum_total_dispatches_per_provider
+        ),
+        authorized_at=session_config.authorized_at,
+        expires_at=session_config.expires_at,
+        authorization_ref=authorization_ref,
+        authorization_message_digest=authorization_message_digest,
+    )
+
+
 def _route_spec(*, ordinal, role, configuration, authority):
     return EngineeringProviderRouteSpec.create(
         ordinal=ordinal,
@@ -1403,6 +1936,7 @@ def _route_spec(*, ordinal, role, configuration, authority):
         model_ref=configuration.model_ref,
         provider_configuration_digest=configuration.digest,
         session_disclosure_authority_digest=authority.digest,
+        standing_authority_digest=authority.standing_authority_digest,
         qualification_ref=configuration.qualification_ref,
         maximum_dispatches_per_turn=authority.maximum_dispatches_per_turn,
     )
@@ -1485,7 +2019,7 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Engineering Chat Provider transport audit type is unsupported",
         )
-    return {
+    audit = {
         "provider_type": runtime.provider_type,
         "runtime_digest": runtime.digest.value,
         "session_disclosure_authority_digest": (
@@ -1507,6 +2041,26 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
         "request_retry_count": 0,
         "production_activation": "NOT_EXECUTED",
     }
+    if runtime.session_authority.standing_authority_digest is not None:
+        if runtime.session_authority.public_source_session_authority_digest is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Chat Provider audit is missing its public Source Session parent",
+            )
+        audit.update(
+            {
+                "standing_authority_digest": (
+                    runtime.session_authority.standing_authority_digest.value
+                ),
+                "public_source_session_authority_digest": (
+                    runtime.session_authority.public_source_session_authority_digest.value
+                ),
+                "human_approval_request_count": (
+                    runtime.session_authority.human_approval_request_count
+                ),
+            }
+        )
+    return audit
 
 
 def _canonical_private_file(value: str | Path, label: str) -> Path:
@@ -1708,8 +2262,11 @@ __all__ = [
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA_V2",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS_V2",
     "EngineeringChatArtifactCognitionProfileConfig",
     "EngineeringChatArtifactDeepSeekAdmissionConfig",
     "EngineeringChatArtifactProviderRouteConfig",

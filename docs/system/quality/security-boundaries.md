@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [security, architecture]
 depends_on: [SYS-ARCH-INVARIANTS, SYS-ADR-017, SYS-ADR-018, SYS-ADR-019]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/source_integration, src/software_world_model/application_services/citation_projection.py, src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface, validation/structure_world_model_iteration_003/isolation, validation/structure_world_model_iteration_003/g3b, validation/structure_world_model_iteration_007/slice1_live_evaluator.py, validation/structure_world_model_iteration_008/slice1_live_evaluator.py]
 tests: [tests]
 ---
@@ -138,6 +138,8 @@ World Model/Source/Ledger trusted tool adapter 与单 Provider Agent/Reviewer �
 retry 仍为 0。non-dispatching candidate preflight 不读取 Source/credential、不启动 listener、不调用 Provider，并固定
 `ready_for_live=false`。ADR-017 双 attempt、生产 Provider runtime、artifact fixed launcher 与 Ark/DeepSeek terminal Session audit 已形成本地
 确定性候选；Ark HTTP 前不可用也已 owner-typed 为 raw availability evidence，但受信 availability-owner verdict 尚未闭合，不得追认为 fallback eligibility。fresh Ark 与 DeepSeek Conformance 均已 PASS，
-双 Provider qualification 当前同时可用；公开来源 standing authority 的可信派生链尚未由当前实现证明，current actual artifact、Citation
-内容与五轮 live Chat 仍为 `STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
-Provider 资格推导已经满足。
+双 Provider qualification 当前同时可用；Artifact Session `@4` 已形成
+`PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE`：owner-private closed standing scope 经 public upstream、clean HEAD、exact
+commit/tree/license object 重验后，派生 exact Session authority，Provider route/Turn attempt 和 one-use role receipt 均绑定 parent digest，
+且 Source/provider/account/profile/budget/time 漂移在 disclosure/credential/network 前失败关闭。current actual artifact、Citation 内容与
+live Chat 仍为 `NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@1—@3` 运行、浏览器连续提交外观或既有 Provider 资格推导已经满足。

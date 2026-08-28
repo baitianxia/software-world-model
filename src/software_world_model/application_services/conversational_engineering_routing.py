@@ -41,6 +41,9 @@ ENGINEERING_PROVIDER_ROUTE_SCHEMA = "ENGINEERING_PROVIDER_ROUTE_PLAN@1"
 ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA = (
     "ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY@1"
 )
+ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA_V2 = (
+    "ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY@2"
+)
 ENGINEERING_PROVIDER_ATTEMPT_RUNTIME_SCHEMA = (
     "ENGINEERING_PROVIDER_ATTEMPT_RUNTIME@1"
 )
@@ -104,6 +107,7 @@ class EngineeringProviderRouteSpec:
     model_ref: str
     provider_configuration_digest: Digest
     session_disclosure_authority_digest: Digest
+    standing_authority_digest: Digest | None
     qualification_ref: str
     maximum_dispatches_per_turn: int
     digest: Digest
@@ -119,6 +123,7 @@ class EngineeringProviderRouteSpec:
         model_ref: str,
         provider_configuration_digest: Digest,
         session_disclosure_authority_digest: Digest,
+        standing_authority_digest: Digest | None = None,
         qualification_ref: str,
         maximum_dispatches_per_turn: int,
     ) -> "EngineeringProviderRouteSpec":
@@ -143,6 +148,13 @@ class EngineeringProviderRouteSpec:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "Provider route requires exact configuration and disclosure digests",
+            )
+        if standing_authority_digest is not None and not isinstance(
+            standing_authority_digest, Digest
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Provider route standing authority digest is invalid",
             )
         parsed = urlsplit(endpoint)
         if (
@@ -172,6 +184,8 @@ class EngineeringProviderRouteSpec:
             "maximum_dispatches_per_turn": maximum_dispatches_per_turn,
             "request_retry_allowed": False,
         }
+        if standing_authority_digest is not None:
+            core["standing_authority_digest"] = standing_authority_digest.value
         return cls(
             ordinal=ordinal,
             role=role,
@@ -182,6 +196,7 @@ class EngineeringProviderRouteSpec:
             session_disclosure_authority_digest=(
                 session_disclosure_authority_digest
             ),
+            standing_authority_digest=standing_authority_digest,
             qualification_ref=qualification_ref,
             maximum_dispatches_per_turn=maximum_dispatches_per_turn,
             digest=digest_of(core),
@@ -219,6 +234,7 @@ class EngineeringProviderRoutePlan:
             session_disclosure_authority_digest=(
                 primary.session_disclosure_authority_digest
             ),
+            standing_authority_digest=primary.standing_authority_digest,
             qualification_ref=primary.qualification_ref,
             maximum_dispatches_per_turn=primary.maximum_dispatches_per_turn,
         )
@@ -232,6 +248,7 @@ class EngineeringProviderRoutePlan:
             session_disclosure_authority_digest=(
                 fallback.session_disclosure_authority_digest
             ),
+            standing_authority_digest=fallback.standing_authority_digest,
             qualification_ref=fallback.qualification_ref,
             maximum_dispatches_per_turn=fallback.maximum_dispatches_per_turn,
         )
@@ -264,6 +281,8 @@ class EngineeringProviderRoutePlan:
             == fallback.provider_configuration_digest
             or primary.session_disclosure_authority_digest
             == fallback.session_disclosure_authority_digest
+            or primary.standing_authority_digest
+            != fallback.standing_authority_digest
         ):
             raise DomainError(
                 ErrorCode.STRATEGY_CONTRACT_MISMATCH,
@@ -316,6 +335,7 @@ class EngineeringProviderAttemptAuthority:
     provider_type: str
     provider_configuration_digest: Digest
     session_disclosure_authority_digest: Digest
+    standing_authority_digest: Digest | None
     source_profile_ref: str
     retry_count: int
     full_chain_required: bool
@@ -345,8 +365,13 @@ class EngineeringProviderAttemptAuthority:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Provider attempt authority does not bind the logical Turn and route",
             )
+        schema = (
+            ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA_V2
+            if route.standing_authority_digest is not None
+            else ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA
+        )
         core = {
-            "schema": ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA,
+            "schema": schema,
             "attempt_id": attempt_id.value,
             "logical_turn_request_digest": request.request_digest.value,
             "original_user_message_digest": request.user_message.digest.value,
@@ -377,8 +402,12 @@ class EngineeringProviderAttemptAuthority:
             "late_result_policy": plan.late_result_policy.value,
             "production_activation": "NOT_EXECUTED",
         }
+        if route.standing_authority_digest is not None:
+            core["standing_authority_digest"] = (
+                route.standing_authority_digest.value
+            )
         return cls(
-            schema=ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA,
+            schema=schema,
             attempt_id=attempt_id,
             logical_turn_request_digest=request.request_digest,
             original_user_message_digest=request.user_message.digest,
@@ -396,6 +425,7 @@ class EngineeringProviderAttemptAuthority:
             session_disclosure_authority_digest=(
                 route.session_disclosure_authority_digest
             ),
+            standing_authority_digest=route.standing_authority_digest,
             source_profile_ref=request.binding.source_profile_ref,
             retry_count=0,
             full_chain_required=True,

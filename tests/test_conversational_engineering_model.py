@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import unittest
 
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
+    ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2,
     EngineeringAgentModelConfiguration,
     EngineeringAgentSessionDisclosureAuthority,
     ModelBackedConversationalEngineeringAgent,
@@ -228,27 +229,40 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         provider_unavailable: bool = False,
         failure_code: ErrorCode | None = None,
         authority_binding_digest=None,
+        standing_authority: bool = False,
     ):
         binding = _binding()
         configuration = _configuration(self.now)
         message_digest = digest_of("local deterministic disclosure fixture")
-        authority = EngineeringAgentSessionDisclosureAuthority.create(
-            session_ref="agent-session-fixture",
-            product_candidate_digest=digest_of("product-candidate"),
-            chat_binding_digest=(
+        authority_arguments = {
+            "session_ref": "agent-session-fixture",
+            "product_candidate_digest": digest_of("product-candidate"),
+            "chat_binding_digest": (
                 authority_binding_digest
                 if authority_binding_digest is not None
                 else binding.digest
             ),
-            configuration=configuration,
-            maximum_turns=3,
-            maximum_dispatches_per_turn=12,
-            maximum_total_dispatches=12,
-            authorized_at=self.now,
-            expires_at=self.now + timedelta(hours=1),
-            authorization_ref=f"codex-user-message:{message_digest.value}",
-            authorization_message_digest=message_digest,
-        )
+            "configuration": configuration,
+            "maximum_turns": 3,
+            "maximum_dispatches_per_turn": 12,
+            "maximum_total_dispatches": 12,
+            "authorized_at": self.now,
+            "expires_at": self.now + timedelta(hours=1),
+        }
+        if standing_authority:
+            authority = EngineeringAgentSessionDisclosureAuthority.derive_from_public_source_session(
+                **authority_arguments,
+                standing_authority_digest=digest_of("standing-authority"),
+                public_source_session_authority_digest=digest_of(
+                    "public-source-session-authority"
+                ),
+            )
+        else:
+            authority = EngineeringAgentSessionDisclosureAuthority.create(
+                **authority_arguments,
+                authorization_ref=f"codex-user-message:{message_digest.value}",
+                authorization_message_digest=message_digest,
+            )
         authorizer = SealedEngineeringAgentRoleDisclosureAuthorizer(
             session_authority=authority,
             configuration=configuration,
@@ -396,6 +410,31 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIsNone(submission.turn.provider_failure_classification)
         self.assertIsNone(model.audits[0].disclosure_authorization_digest)
+
+    def test_standing_authority_is_carried_into_one_use_role_receipt(self) -> None:
+        service, _, authorizer, _, _, _ = self._service(
+            standing_authority=True
+        )
+        conversation = service.create_conversation()
+
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(len(authorizer.issued_authorizations), 1)
+        authorization = authorizer.issued_authorizations[0]
+        self.assertEqual(
+            authorization.schema,
+            ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2,
+        )
+        self.assertEqual(
+            authorization.standing_authority_digest,
+            authorizer.session_authority.standing_authority_digest,
+        )
+        self.assertEqual(authorization.human_approval_request_count, 0)
+        self.assertEqual(authorization.maximum_dispatches, 1)
 
     def test_outcome_unknown_is_one_dispatch_and_zero_retry(self) -> None:
         service, model, _, adapter, _, _ = self._service(outcome_unknown=True)

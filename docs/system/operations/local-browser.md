@@ -5,9 +5,9 @@ status: current
 authority: operational
 owners: [operations, interface]
 depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-029, FINDING-010-140]
-code: [pyproject.toml, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
+derived_from: [FINDING-010-029, FINDING-010-140, FINDING-010-154]
+code: [pyproject.toml, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/public_source_model_authority.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_public_source_model_authority.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
 
 # 本机浏览器体验
@@ -37,8 +37,9 @@ World Model、Source Profile、Ark/DeepSeek qualification identity 与 distinct 
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又把 Ark per-request verified TLS Session audit 接入 Conformance 与
 terminal receipt，并 owner-type HTTP 前 unavailable raw evidence；状态增加 `ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。该 raw evidence 未经受信 availability owner 形成 exact verdict，不具备 fallback eligibility。这些状态来自本地构造/
 patched typed artifacts 和 fake listener lifecycle；fresh Ark 与 DeepSeek Conformance 随后已分别以 2/2 request、strict Session audit
-PASS，双 Provider qualification 当前同时可用。current actual sealed artifact 和 Browser 五轮 Chat 均未生成或执行，公开来源 standing
-authority 到 exact Session/Turn/call 的自动派生也尚未实现，故仍为 `STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。在双 route Adapter 资格、
+PASS，双 Provider qualification 当前同时可用。Artifact Session `@4` 已把公开来源 standing authority 到 exact Session/Turn/call 的自动派生
+形成 `PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE`；current actual sealed artifact 和 Browser Chat 仍未生成或执行，故仍为
+`NOT_LIVE`。在双 route Adapter 资格、
 真实模型审计和人工体验均闭合前，页面不得把
 `ENGINEERING_CHAT_EXPERIENCE@1` 标成 PASS 或生产可用。
 
@@ -119,10 +120,11 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_chat_alph
   --session-config /absolute/private/engineering-chat-session.json
 ```
 
-`SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1` 必须是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，根对象字段
-exact match。当前实现固定 5 Turns、每 Turn 每 Provider 15 dispatch、每 Provider 总计 75；Provider routes 必须恰好为 ordinal 1 Ark、
+所有 Artifact Session 配置必须是 canonical absolute path 上 mode `0600` 的 unique-key UTF-8 JSON，根对象字段 exact match。当前
+`SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@4` 固定 5 Turns、每 Turn 每 Provider 15 dispatch、每 Provider 总计 75；Provider routes 必须恰好为 ordinal 1 Ark、
 ordinal 2 DeepSeek。数据库与 receipt 路径必须是互异、尚不存在的 absolute paths；product/source repositories 必须互异；
-`src/main/resources` 必须在排除项且不能与 Source Profile overlap：
+`src/main/resources` 必须在排除项且不能与 Source Profile overlap。下面的 `@1` 仅展示共享字段和历史单 Profile 兼容形状，不是 current
+standing-authority 输入：
 
 ```json
 {
@@ -172,15 +174,23 @@ ordinal 2 DeepSeek。数据库与 receipt 路径必须是互异、尚不存在�
 }
 ```
 
+current `@4` 保留上述 shared product/source/session/route/receipt/budget 字段，但删除 `authorization_message_digest`，并要求三个 closed
+对象：`cognition_profiles` 逐 Profile 密封 Bundle 与 file digest；`deepseek_dispatch_admission` 密封 plugin、official pricing trusted inputs、
+token/duration budget 与可选 exact peak override；`standing_authority` 密封
+`PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 的 human evidence ref/digest、authority evidence refs、purpose、Source Authority、canonical
+upstream/license/license path/revision policy/exact tree、route policy、两个 qualification-independent Provider/account/disclosure/admission
+scope、总预算、时窗与 exact loopback evaluation Sink。loader 用 top-level exact revision、Source Profile/allowlist 和上述 standing fields
+重算 parent digest；任何缺失、未知字段或边界扩大都在 listener/credential/network 前失败关闭。
+
 launcher exclusive-create 两个 private SQLite repositories，在 listener 构造前写 launch receipt，固定绑定 `127.0.0.1:8765`，停止后写
 terminal receipt。launch receipt 必须仍是 attempt/tool/cognition/Source/credential/dispatch/listener 0；terminal receipt 密封两条 route 的
 Disclosure/model-boundary audits 与各自经过 strict verifier 的 Ark/DeepSeek transport Session audit。current Ark 与 DeepSeek identity 的 fresh
 Conformance 均已 PASS；但尚未用 current actual artifact 启动真实 Provider/browser，所以状态只是
-`DUAL_PROVIDER_QUALIFICATION_CURRENT / STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`，不是 live PASS。
+`DUAL_PROVIDER_QUALIFICATION_CURRENT / PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE / NOT_LIVE`，不是 live PASS。
 
-当前字段名 `authorization_message_digest` 是兼容实现名称。公开来源路径中它必须绑定既有 standing human authority，不得要求每次 run
-新增用户消息；可信系统另为每个 Turn/attempt/call 派生 exact receipt。后续 schema 应采用明确的 authority-chain ref/digest，避免把机器
-派生记录误解为人工审批。
+字段名 `authorization_message_digest` 只属于 `@1—@3` 兼容实现。公开来源 current `@4` 使用明确 standing parent 与 exact Session child
+ref/digest，不要求每次 run 新增用户消息；每个 Turn attempt 和 call receipt 继续自动派生、one-use 并记录人工重复审批数 0。兼容 schema
+不能被标成该能力。
 
 已实现兼容 Alpha 的 `swm-engineering-qa` 产品命令固定使用端口 `8765`；operator 在 product freeze 后生成一次 exact session configuration，普通体验者不
 接触其中的授权或内部参数：

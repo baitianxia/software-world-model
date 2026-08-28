@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -127,5 +127,7 @@ contract 把 schema authority 与 leading semantic authority 合并为恰好一�
 fallback、late-result quarantine、typed unavailable raw evidence 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
 clean identity 上 PASS。当前状态是
 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS /
-AVAILABILITY_OWNER_VERDICT_NOT_YET_ATTESTED / STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。这些名称、策略与状态是当前配置实例和历史实现证据；公开来源 standing authority 到
-Session/Turn/call 的可信派生链仍须实现和验证。
+AVAILABILITY_OWNER_VERDICT_NOT_YET_ATTESTED / PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE / NOT_LIVE`。Artifact Session `@4` 已在本地确定性测试中把 standing parent
+逐级绑定到 exact Session、Provider route、Turn attempt 与 one-use role disclosure receipt，并对 Source/provider/account/profile/budget/time
+drift 失败关闭；旧 `@1—@3` 不取得该状态。这些名称、策略与状态是当前配置实例和本地实现证据；current actual artifact、真实
+Gateway/transport dispatch 与 Browser 体验仍须验证，不能由 local candidate 推导 live PASS。

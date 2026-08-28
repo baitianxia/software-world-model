@@ -137,7 +137,8 @@ current Codex 答案和独立比较必须作为内嵌原始记录随 handoff 交
 - Agent 是否会在证据充分前结束，或在无进展时无界探索；
 - Reviewer 是否能阻断物质遗漏和错误 Citation，且不会取得工具规划权；
 - Conversation 是否真正使用前文语义，同时避免 prior Answer 与新 Conversation 污染；
-- runtime standing-authority receipt 是否在每个真实 dispatch 前自动、one-use 且失败关闭；
+- runtime standing-authority receipt 已形成 Session/Turn/call 本地派生候选；current actual artifact 中它是否在每个真实 dispatch 前自动、
+  one-use 且失败关闭仍须 live receipt 验证；
 - 答案是否先解决用户目标，而不是把调查记录和代码走读机械平铺。
 
 这些风险由通用 trace、异质问题和跨层替换实验定位，不通过题目特判消除。

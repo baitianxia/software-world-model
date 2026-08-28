@@ -3158,6 +3158,21 @@
       "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
+  "FINDING-010-154": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-154.md",
+    "code": [
+      "src/software_world_model/application_services/public_source_model_authority.py",
+      "src/software_world_model/application_services/conversational_engineering_routing.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
+    ],
+    "tests": [
+      "tests/test_public_source_model_authority.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_conversational_engineering_routing.py",
+      "tests/test_engineering_chat_session_artifact.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4598,14 +4613,19 @@
   "SYS-ADR-019": {
     "path": "docs/system/architecture/decisions/ADR-019-public-source-standing-model-authority.md",
     "code": [
-      "src/software_world_model/application_services",
+      "src/software_world_model/application_services/public_source_model_authority.py",
+      "src/software_world_model/application_services/conversational_engineering_routing.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/ai_infrastructure/model_gateway.py",
-      "src/software_world_model/interface"
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
     ],
     "tests": [
+      "tests/test_public_source_model_authority.py",
       "tests/test_model_gateway.py",
       "tests/test_world_model_evaluation_grant.py",
       "tests/test_world_model_gateway_authorization.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_conversational_engineering_routing.py",
       "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_chat_provider_runtime.py"
     ]
@@ -5355,6 +5375,7 @@
       "pyproject.toml",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
       "src/software_world_model/application_services/conversational_engineering_routing.py",
+      "src/software_world_model/application_services/public_source_model_authority.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/interface/http_api.py",
       "src/software_world_model/interface/browser_ui.py",
@@ -5393,6 +5414,7 @@
       "tests/test_conversational_engineering_tools.py",
       "tests/test_conversational_engineering_model.py",
       "tests/test_conversational_engineering_routing.py",
+      "tests/test_public_source_model_authority.py",
       "tests/test_engineering_chat_candidate.py",
       "tests/test_engineering_chat_provider_launcher.py",
       "tests/test_engineering_chat_provider_runtime.py",
