@@ -430,10 +430,33 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@1",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@2",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
+        self.assertEqual(
+            output_preflight["json_serialization"],
+            {
+                "parseable_json_object_required": True,
+                "embedded_double_quote_rule": (
+                    "Inside every JSON string value, encode each literal "
+                    "double quote as backslash followed by double quote."
+                ),
+                "backslash_rule": (
+                    "Inside every JSON string value, encode each literal "
+                    "backslash as two backslashes."
+                ),
+                "line_break_rule": (
+                    "Inside every JSON string value, encode each line break "
+                    "as backslash followed by n."
+                ),
+                "copied_text_rule": (
+                    "Apply the same escaping to copied user, conversation, "
+                    "evidence, Draft, and review text."
+                ),
+                "parse_before_return": True,
+            },
+        )
         self.assertEqual(
             output_preflight["non_null_action"]["required_fields"],
             ["operation", "arguments", "evidence_need"],
@@ -637,8 +660,83 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             repair_payload["format_repair_policy"][
                 "validation_failure_message"
             ],
-            "output text is not JSON",
+            "$ JSON syntax is invalid at line 1, column 1, character 0: "
+            "Expecting value",
         )
+
+    def test_unescaped_draft_quote_gets_bounded_json_syntax_repair(self) -> None:
+        repaired = json.loads(SequencedLiveAgentAdapter().outputs[1])
+        repaired["draft"]["content"] = '请明确"登录入口"。'
+        repaired_output = json.dumps(repaired, ensure_ascii=False)
+        malformed_output = repaired_output.replace(
+            '\\"登录入口\\"',
+            '"登录入口"',
+            1,
+        )
+        self.assertNotEqual(malformed_output, repaired_output)
+        with self.assertRaises(json.JSONDecodeError) as syntax_failure:
+            json.loads(malformed_output)
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                malformed_output,
+                repaired_output,
+                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+            )
+        )
+        service, model, _, _, tool, response = self._service(adapter=adapter)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 3)
+        self.assertEqual(len(model.audits), 3)
+        self.assertEqual(tool.requests, [])
+        self.assertEqual(len(response.requests), 1)
+        repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[1].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        diagnostic = repair_payload["format_repair_policy"][
+            "validation_failure_message"
+        ]
+        error = syntax_failure.exception
+        self.assertEqual(
+            diagnostic,
+            "$ JSON syntax is invalid at "
+            f"line {error.lineno}, column {error.colno}, "
+            f"character {error.pos}: {error.msg}",
+        )
+        self.assertNotIn("登录入口", diagnostic)
+        self.assertNotIn(malformed_output, diagnostic)
+        repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
+        self.assertEqual(
+            repair_preflight["format_repair"]["validation_failure_message"],
+            diagnostic,
+        )
+        self.assertTrue(
+            repair_preflight["json_serialization"][
+                "parseable_json_object_required"
+            ]
+        )
+        self.assertIn(
+            "double quote",
+            repair_preflight["json_serialization"][
+                "embedded_double_quote_rule"
+            ],
+        )
+        self.assertTrue(
+            repair_preflight["json_serialization"]["parse_before_return"]
+        )
+        self.assertNotIn("prior_output_text", repair_preflight)
+        self.assertNotIn(malformed_output, adapter.requests[1].messages[-1].content)
 
     def test_format_repair_projects_exact_missing_action_operation_diagnostic(self) -> None:
         capture = CapturingTurnExecutor()
@@ -975,6 +1073,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "prior_output_text"
             ],
             "Reviewer natural-language analysis",
+        )
+        reviewer_preflight = json.loads(
+            adapter.requests[2].messages[-1].content
+        )
+        self.assertEqual(
+            reviewer_preflight["schema"],
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@2",
+        )
+        self.assertTrue(
+            reviewer_preflight["json_serialization"][
+                "parseable_json_object_required"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["json_serialization"]["parse_before_return"]
         )
         self.assertEqual(tool.requests, [])
         self.assertEqual(len(response.requests), 1)

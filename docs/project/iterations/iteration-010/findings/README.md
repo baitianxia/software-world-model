@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-168](FINDING-010-168.md)：run-056 前两轮登录链成功，但用户纠正 Turn 的初始/repair Draft 都把原文双引号未转义地写入 JSON
+  string，导致词法解析失败；现以受信且不回显内容的行/列/字符诊断和全角色 `@2` 序列化预检闭合本地修复，75 项受影响测试 PASS。
+  run-056 已密封为 Ark 17 / DeepSeek 0 / Production 未执行，fresh successor 仍需独立 run-057 外发授权。
 - [FINDING-010-167](FINDING-010-167.md)：run-055 首个同一 Conversation 三轮链已真实成功并交付，但新 Conversation 的异质问题在初始/
   repair 中逐字重复遗漏 `action.operation`，尽管 sealed input 已含同形 template 与 exact diagnostic。现于 sealed role input 后追加受信但
   shape-only 的 final-output preflight，重复有效 templates/required fields/repair diagnostic；Application 仍不补字段，fresh successor 待验证。
