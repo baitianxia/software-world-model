@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, ITER-010-PDR-010]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, ITER-010-PDR-010]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-159](FINDING-010-159.md)：run-049 的 7 次 Ark TLS/HTTP 全部成功且 DeepSeek 0；第一 Turn 只因单一
+  `WORLD_MODEL_QUERY` action 在初始/repair 输出中连续缺少 `operation` 而失败。nullable validator 原先丢弃字段级分支诊断，repair input 又不
+  携带 trusted failure；现以不静默补字段的通用诊断闭环处置，124 项定向测试 PASS，fresh Browser successor 待执行。
 - [FINDING-010-158](FINDING-010-158.md)：run-048 的 Ark 前两次 HTTP 已成功，第三次 call 只在 HTTP 前发生一次 TLS failure；真实缺口是
   launcher 未组合受信 availability Owner。现仅把 Gateway 密封的 canonical pre-HTTP unavailable 提升为 exact verdict，HTTP/outcome、
   输出合同无效与审核拒绝仍不回退；36 项定向测试 PASS，fresh Browser successor 待执行。

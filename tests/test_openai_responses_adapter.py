@@ -251,6 +251,45 @@ class OpenAIResponsesAdapterTests(unittest.TestCase):
                 OutputSchemaDefinition("invalid-array-bound", schema)
             self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
 
+    def test_nullable_closed_object_failure_reports_missing_field(self) -> None:
+        definition = OutputSchemaDefinition(
+            "nullable_action",
+            {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "anyOf": [
+                            {"type": "null"},
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "operation": {"type": "string"},
+                                    "arguments": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
+                                },
+                                "required": ["operation", "arguments"],
+                                "additionalProperties": False,
+                            },
+                        ]
+                    }
+                },
+                "required": ["action"],
+                "additionalProperties": False,
+            },
+        )
+
+        with self.assertRaises(DomainError) as raised:
+            definition.validate_output_text('{"action":{"arguments":[]}}')
+
+        self.assertEqual(
+            raised.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn("$.action", raised.exception.message)
+        self.assertIn("missing=[operation]", raised.exception.message)
+
     def test_live_level_cannot_be_declared_without_qualified_exact_model(self) -> None:
         with self.assertRaises(DomainError) as raised:
             self.adapter(

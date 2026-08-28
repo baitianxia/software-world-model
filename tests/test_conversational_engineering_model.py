@@ -437,6 +437,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("exact_action_repetition_forbidden", rendered)
         self.assertIn("forbidden_exact_values", rendered)
         self.assertIn("allowed_exact_values", rendered)
+        self.assertIn(
+            "The action object always contains exactly operation, arguments, and",
+            rendered,
+        )
+        self.assertIn("never infer that a sole", rendered)
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertNotIn("literal or semantic search proposal", rendered)
         self.assertNotIn("AGENT_FIXTURE_API_KEY", rendered)
@@ -590,6 +595,105 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             repair_payload["format_repair_policy"]["prior_output_text"],
             "not-json",
+        )
+        self.assertEqual(
+            repair_payload["format_repair_policy"][
+                "validation_failure_code"
+            ],
+            ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        self.assertEqual(
+            repair_payload["format_repair_policy"][
+                "validation_failure_message"
+            ],
+            "output text is not JSON",
+        )
+
+    def test_format_repair_projects_exact_missing_action_operation_diagnostic(self) -> None:
+        capture = CapturingTurnExecutor()
+        capture_service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = capture_service.create_conversation()
+        capture_service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+        malformed = {
+            "goal": "解释登录调用链",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": ["local deterministic candidate only"],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": ["需要查询版本化世界模型认知"],
+            "plan": ["查询登录调用关系"],
+            "observation_ids": [],
+            "open_items": ["登录调用关系"],
+            "phase": "INVESTIGATING",
+            "action": {
+                "arguments": [],
+                "evidence_need": "Locate the login service call relation",
+            },
+            "draft": None,
+        }
+        repaired = {
+            **malformed,
+            "action": {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": [],
+                "evidence_need": "Locate the login service call relation",
+            },
+        }
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                json.dumps(malformed, ensure_ascii=False),
+                json.dumps(repaired, ensure_ascii=False),
+            )
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
+        result = model.propose(
+            EngineeringAgentInvocation(
+                request=capture.request,
+                previous_work_state=None,
+                observations=(),
+                review_findings=(),
+                review_digest=None,
+                available_operations=(
+                    EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                ),
+            )
+        )
+
+        self.assertEqual(
+            result.proposal.action.operation,
+            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+        )
+        self.assertEqual(len(result.prior_receipts), 1)
+        self.assertEqual(len(adapter.requests), 2)
+        repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[1].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        repair_policy = repair_payload["format_repair_policy"]
+        self.assertEqual(
+            repair_policy["validation_failure_code"],
+            ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        self.assertIn("$.action", repair_policy["validation_failure_message"])
+        self.assertIn("operation", repair_policy["validation_failure_message"])
+        self.assertEqual(
+            tuple(item["operation"] for item in repair_payload["tool_catalog"]),
+            ("WORLD_MODEL_QUERY",),
         )
 
     def test_format_repair_exhaustion_fails_closed_without_request_retry(self) -> None:

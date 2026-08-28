@@ -466,13 +466,17 @@ def _validate_output(
         return
     any_of = schema.get("anyOf")
     if isinstance(any_of, list):
+        failures: list[str] = []
         for option in any_of:
             try:
                 _validate_output(value, option, root_schema, path=path)
                 return
-            except ValueError:
-                continue
-        raise ValueError(f"{path} matches no allowed schema variant")
+            except ValueError as exc:
+                failures.append(str(exc))
+        detail = "; ".join(failures)
+        raise ValueError(
+            f"{path} matches no allowed schema variant ({detail})"
+        )
     kind = schema.get("type")
     kinds = kind if isinstance(kind, list) else [kind]
     if not any(_matches_type(value, item) for item in kinds):
@@ -483,7 +487,14 @@ def _validate_output(
     if isinstance(value, dict):
         properties = schema.get("properties")
         if not isinstance(properties, dict) or set(value) != set(properties):
-            raise ValueError(f"{path} object fields do not match the closed schema")
+            expected = set(properties) if isinstance(properties, dict) else set()
+            actual = set(value)
+            missing = ",".join(sorted(expected - actual)) or "none"
+            unexpected = ",".join(sorted(actual - expected)) or "none"
+            raise ValueError(
+                f"{path} object fields do not match the closed schema "
+                f"(missing=[{missing}]; unexpected=[{unexpected}])"
+            )
         for name, child in properties.items():
             _validate_output(value[name], child, root_schema, path=f"{path}.{name}")
     elif isinstance(value, list):
