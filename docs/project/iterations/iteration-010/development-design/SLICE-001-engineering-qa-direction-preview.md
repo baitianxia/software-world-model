@@ -10,7 +10,7 @@ tests: [tests]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-010
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162]
 current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -32,6 +32,12 @@ product_goal_slice_gate_case_ids: [V-MVP-EXPERIENCE-001, V-PUBLIC-OSS-AUTHORITY-
 
 Manifest 当前动作的 path allowlist、forbid list 与 locks 是唯一机械边界。动作可跨多个普通提交持续进行；定向失败、内部候选和普通外调
 都不移动游标。`V-CHAT-EXPERIENCE-001` 的第一条完整主链可操作即交付，但 `requires_result=false`、不移动游标。只有同一候选完成三条异质问题、两条 unseen 与 current Codex 比较形成最终 `V-MVP-EXPERIENCE-001` handoff，或一次通用修复后同类重大失败仍存在时，才形成一次 Result/evidence，然后进入 `V-PREVIEW-002`。
+
+current evidence 已到达第二个出口的产品停止条件：run-052 原失败与 run-053 两个异质案例在一次通用修复后仍以 Ark typed-output contract
+失败，且结构化输出失败期间 DeepSeek dispatch 始终为 0。产品修复和外调现已停止。冻结 `ITER010_MVP_LIGHT@2` 却只接受已有三份完整
+Answer/Citation/Review/Codex comparison 的单 Session 包，不能表达当前答案前失败；当前动作又禁止修改该 runner 与 PDR。因此 Result 尚未
+密封、游标尚未移动。唯一合法后续是用户明确授权最小 forward governance revision，先修订失败 handoff contract/runner 并形成新的 trusted
+parent，再在后续提交密封唯一 Result。
 
 ## Current vs expected behavior
 
@@ -131,6 +137,9 @@ current Codex 答案和独立比较必须作为内嵌原始记录随 handoff 交
 测试失败、preferred execution profile 暂时不可用或授权 scope delta 只阻断对应工作；其他本地、安全且独立的工作继续。不得以同题重跑、规则累积或放宽审核
 标准碰正确答案。
 
+`FINDING-010-161` 已完成上述第 4/5 步并停止产品路径。`FINDING-010-162` 记录的是进入用户判向前的计划实现缺口，不授权继续修产品，
+也不授权当前候选修改 frozen verifier；该缺口必须通过 forward-only governance revision 解决。
+
 ## Open questions and implementation risks
 
 - 现有 Agent loop 是否真的根据上一观察重规划，还是仍是固定多角色流水线；
@@ -172,7 +181,8 @@ Review、A5 current Codex 严格质量、A6 语义多轮必须在当前候选可
 
 当前计划纠偏由 [FINDING-010-153](../findings/FINDING-010-153.md) 和
 [PDR-010](../decisions/PDR-010-complete-mvp-vertical-slice.md) 拥有；当前 live authority 与 Source 最后槽位实现发现分别由
-[FINDING-010-154](../findings/FINDING-010-154.md)、[FINDING-010-155](../findings/FINDING-010-155.md) 和
-[FINDING-010-156](../findings/FINDING-010-156.md) 处置。既有实现/运行发现与失败证据继续在
+[FINDING-010-154](../findings/FINDING-010-154.md)、[FINDING-010-155](../findings/FINDING-010-155.md)、
+[FINDING-010-156](../findings/FINDING-010-156.md)、[FINDING-010-161](../findings/FINDING-010-161.md) 和
+[FINDING-010-162](../findings/FINDING-010-162.md) 处置。既有实现/运行发现与失败证据继续在
 [Findings index](../findings/README.md) 和 [Results index](../results/README.md) 中保留，不在本当前执行卡重复展开。后续发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 处置。

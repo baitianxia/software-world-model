@@ -37,8 +37,8 @@ coding_input: true
 
 ## Status and authorization
 
-`AUTHORIZED / REWORK / PDR-010 CURRENT / COMPLETE MVP EXPERIENCE DEVELOPMENT /
-PRODUCT AND STANDING-SCOPE EXTERNAL EXECUTION ALLOWED / NO ACTIVATION /
+`AUTHORIZED / REWORK / PDR-010 CURRENT / PRODUCT REPAIR STOP CONDITION MET /
+RESULT NOT SEALED / FORWARD GOVERNANCE REVISION REQUIRED / NO ACTIVATION /
 DIRTY V7 AND OLD VALUE RUNNER QUARANTINED / SLICE-002 AND SLICE-003 NOT AUTHORIZED / NO ACCEPTANCE`。
 
 当前唯一可执行工作是“完整体验版开发”：Manifest 为可信父提交连续性保留机器 ID
@@ -60,6 +60,12 @@ dirty 代码/测试不构成当前设计或质量证据。
 2. 主链完整后以 `V-CHAT-EXPERIENCE-001` 立即交给用户体验，不等待全量回归或四路比较基础设施；该交付 `requires_result=false`、不移动游标；
 3. 在同一候选上执行至少三条异质问题和 current Codex 定向对照；若失败，先归因根因，再做一次最小通用修复和定向复验；
 4. 比较完成，或证明一次通用修复后同类重大失败仍存在时，才密封 `V-MVP-EXPERIENCE-001` Result 并进入用户方向决定。
+
+current candidate `a5c780f51fa5242ee8209766712ad408ed023f80` 已走到第 4 步的失败出口：run-052 原失败和 run-053 两个异质案例在一次通用修复后
+仍发生 Ark typed-output contract failure，DeepSeek 在所有结构化失败路径上保持 0。`FINDING-010-161` 因而停止产品修复与外调。
+`FINDING-010-162` 同时证明 frozen `ITER010_MVP_LIGHT@2` 无法表示答案前失败，且当前动作禁止修改该 runner/PDR；所以 Result 与计划游标
+尚未改变。下一步不是继续碰答案，而是由用户明确授权最小 forward governance revision，先形成新的 trusted parent，再密封 truthful failure
+handoff。
 
 用户方向 Result/receipt 只记录 `CONTINUE / REWORK / REDIRECT / REJECT`，direction action 保持自环。`CONTINUE` 不自行解锁 hardening、
 full regression、第二工程或 hidden；这些工作仍须新 PDR、明确用户授权和可信父 cutover。本地消息 digest 只是内容证据引用，不是平台认证

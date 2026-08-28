@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-complete-experience-development-authorized`
+- Worktree status: `iteration-010-slice-001-product-stop-condition-met-result-verifier-gap`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `complete-mvp-experience-development-then-quality-and-user-direction`
+- Live model path: `product-repair-stopped-forward-governance-revision-required-before-failure-handoff`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only
