@@ -4503,6 +4503,16 @@
       "tests/test_iteration_010_plan_recovery.py"
     ]
   },
+  "ITER-010-RESULT-V-USER-DIRECTION-DECISION-001": {
+    "path": "docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md",
+    "code": [
+      "validation/iteration_010_mvp/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_iteration_010_mvp_value_gate.py",
+      "tests/test_plan_gate.py"
+    ]
+  },
   "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009": {
     "path": "docs/project/iterations/iteration-010/results/v-web-000-live-run-009.md",
     "code": [

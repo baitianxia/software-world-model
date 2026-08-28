@@ -5921,6 +5921,21 @@
     "path": "docs/project/iterations/iteration-010/results/v-plan-recovery-001.md"
   },
   {
+    "id": "ITER-010-RESULT-V-USER-DIRECTION-DECISION-001",
+    "kind": "iteration-result",
+    "status": "sealed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md"
+  },
+  {
     "id": "ITER-010-RESULT-V-WEB-000-LIVE-RUN-009",
     "kind": "iteration-result",
     "status": "passed-micro-checkpoint",
