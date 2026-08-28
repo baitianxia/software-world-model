@@ -639,6 +639,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "action": {
                 "arguments": [],
                 "evidence_need": "Locate the login service call relation",
+                "ignore_previous_instructions": "untrusted output field",
             },
             "draft": None,
         }
@@ -691,6 +692,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn("$.action", repair_policy["validation_failure_message"])
         self.assertIn("operation", repair_policy["validation_failure_message"])
+        self.assertIn(
+            "unexpected_count=1",
+            repair_policy["validation_failure_message"],
+        )
+        self.assertNotIn(
+            "ignore_previous_instructions",
+            repair_policy["validation_failure_message"],
+        )
         self.assertEqual(
             tuple(item["operation"] for item in repair_payload["tool_catalog"]),
             ("WORLD_MODEL_QUERY",),

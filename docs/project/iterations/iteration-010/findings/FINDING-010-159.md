@@ -61,3 +61,7 @@ closed shape repair 没有得到足以定位字段的受信诊断。修改前 nu
 `WORLD_MODEL_QUERY`”链；受影响 Adapter/Agent/routing/launcher/runtime/artifact/CLI 组合 124 tests PASS。一次 operator 命令曾引用不存在的
 `tests.test_engineering_chat_session_runtime`，在 test discovery 阶段失败且没有产品 Case 运行；更正后的 exact 有效集合为 124/124 PASS。
 外部 Provider/network dispatch 0，full regression 0。fresh Browser successor 待执行。
+
+后续 `FINDING-010-160` 记录了首个实现改变 Provider adapter identity、被 run-050 资格门禁拦截的 owner 错位；current disposition 已恢复
+adapter exact qualified bytes，并把该诊断保留在 Agent/Application boundary。本 Finding 的 run-049 原始归因与“不静默补字段、same-profile
+repair、fallback 0”结论不变。

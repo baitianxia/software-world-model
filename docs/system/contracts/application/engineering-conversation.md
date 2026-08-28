@@ -5,8 +5,8 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159]
-code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/openai_responses_adapter.py, src/software_world_model/interface]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160]
+code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
 
@@ -166,9 +166,10 @@ no-progress failure 关闭。
    关闭。生成者不能自审，Reviewer 不能自行执行工具或放行。同包重写、补证后重答与每次 fresh Review 都是当前 execution profile 内的新 authorized
    model call，必须有新 call identity、Manifest 和 one-use receipts；它们不是重发同一 Provider request。closed JSON 输出无效时，若已资格化的通用格式修复步骤、
    权威和预算都存在，也只能用同一 execution profile 创建新 authorized call；否则当前 Turn 失败关闭。格式修复输入必须把 trusted local
-   closed-schema validator 的 error code 与 bounded diagnostic（至少保留失败路径；closed object mismatch 还要列出 missing/unexpected field
-   names）同原始失败 call receipt 和 untrusted prior output 一并绑定；nullable/union validator 不得丢弃各分支诊断。diagnostic 只定位 shape，
-   不授予事实、工具或审核权，Application 也不得据此静默规范化模型输出。两种情况都不允许改换 route role。该诊断性修复沿用 current
+   validator error code 与 Application-owned bounded diagnostic（至少保留失败路径和 trusted schema 中缺失的 closed-object field names；
+   untrusted unexpected key 只投影 count）同原始失败 call receipt 和 untrusted prior output 一并绑定；nullable union、本地 schema reference
+   或嵌套 object 不得隐藏可机械定位的字段缺失。diagnostic 只定位 shape，不授予事实、工具或审核权，Application 也不得据此静默规范化模型
+   输出或改变 Provider adapter identity/qualification。两种情况都不允许改换 route role。该诊断性修复沿用 current
    `conversational-engineering-agent-no-tools-prompt@8 / ENGINEERING_AGENT_PRIMARY_INPUT@8 / ENGINEERING_AGENT_REVIEW_INPUT@2` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独

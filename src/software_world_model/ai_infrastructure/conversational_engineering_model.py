@@ -14,6 +14,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import Lock
+import json
 import re
 from typing import Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
@@ -1831,7 +1832,13 @@ class ModelBackedConversationalEngineeringAgent(
                         is ErrorCode.STRUCTURED_OUTPUT_INVALID
                     ):
                         failure_code = validation_failure.code
-                        failure_message = validation_failure.message
+                        failure_message = (
+                            _closed_object_shape_diagnostic(
+                                output_text=result.response.output_text,
+                                schema=output_schema.schema,
+                            )
+                            or validation_failure.message
+                        )
             raise EngineeringAgentModelCallFailure(
                 receipt=receipt,
                 invalid_output_text=(
@@ -1869,7 +1876,13 @@ class ModelBackedConversationalEngineeringAgent(
                 receipt=rejected,
                 invalid_output_text=result.response.output_text,
                 code=exc.code,
-                message=exc.message,
+                message=(
+                    _closed_object_shape_diagnostic(
+                        output_text=result.response.output_text,
+                        schema=output_schema.schema,
+                    )
+                    or exc.message
+                ),
             ) from exc
         self._append_audit(disclosure_request, authorization, receipt)
         return proposal, receipt
@@ -2307,6 +2320,127 @@ def _initial_format_repair_policy() -> dict[str, object]:
         "validation_failure_code": None,
         "validation_failure_message": None,
     }
+
+
+def _closed_object_shape_diagnostic(
+    *,
+    output_text: str,
+    schema: Mapping[str, object],
+) -> str | None:
+    """Return one bounded field-level diagnostic without changing the adapter."""
+
+    try:
+        decoded = json.loads(output_text)
+    except json.JSONDecodeError:
+        return None
+    return _first_closed_object_shape_mismatch(
+        decoded,
+        schema,
+        root_schema=schema,
+        path="$",
+    )
+
+
+def _first_closed_object_shape_mismatch(
+    value: object,
+    schema: Mapping[str, object],
+    *,
+    root_schema: Mapping[str, object],
+    path: str,
+) -> str | None:
+    reference = schema.get("$ref")
+    if isinstance(reference, str):
+        resolved = _resolve_repair_schema_reference(root_schema, reference)
+        if resolved is None:
+            return None
+        return _first_closed_object_shape_mismatch(
+            value,
+            resolved,
+            root_schema=root_schema,
+            path=path,
+        )
+    any_of = schema.get("anyOf")
+    if isinstance(any_of, list):
+        for option in any_of:
+            if not isinstance(option, Mapping):
+                continue
+            mismatch = _first_closed_object_shape_mismatch(
+                value,
+                option,
+                root_schema=root_schema,
+                path=path,
+            )
+            if mismatch is not None:
+                return mismatch
+        return None
+    kind = schema.get("type")
+    kinds = kind if isinstance(kind, list) else [kind]
+    if not any(_repair_schema_type_matches(value, item) for item in kinds):
+        return None
+    if isinstance(value, dict):
+        properties = schema.get("properties")
+        if not isinstance(properties, Mapping):
+            return None
+        expected = set(properties)
+        actual = set(value)
+        if actual != expected:
+            missing = ",".join(sorted(expected - actual)) or "none"
+            return (
+                f"{path} object fields do not match the closed schema "
+                f"(missing=[{missing}]; "
+                f"unexpected_count={len(actual - expected)})"
+            )
+        for name, child in properties.items():
+            if not isinstance(child, Mapping):
+                continue
+            mismatch = _first_closed_object_shape_mismatch(
+                value[name],
+                child,
+                root_schema=root_schema,
+                path=f"{path}.{name}",
+            )
+            if mismatch is not None:
+                return mismatch
+    elif isinstance(value, list):
+        items = schema.get("items")
+        if isinstance(items, Mapping):
+            for index, item in enumerate(value):
+                mismatch = _first_closed_object_shape_mismatch(
+                    item,
+                    items,
+                    root_schema=root_schema,
+                    path=f"{path}[{index}]",
+                )
+                if mismatch is not None:
+                    return mismatch
+    return None
+
+
+def _resolve_repair_schema_reference(
+    root_schema: Mapping[str, object],
+    reference: str,
+) -> Mapping[str, object] | None:
+    if not reference.startswith("#/"):
+        return None
+    current: object = root_schema
+    for segment in reference[2:].split("/"):
+        name = segment.replace("~1", "/").replace("~0", "~")
+        if not isinstance(current, Mapping) or name not in current:
+            return None
+        current = current[name]
+    return current if isinstance(current, Mapping) else None
+
+
+def _repair_schema_type_matches(value: object, kind: object) -> bool:
+    return {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+        "number": isinstance(value, (int, float)) and not isinstance(value, bool),
+        "boolean": isinstance(value, bool),
+        "null": value is None,
+    }.get(kind, False)
 
 
 def _format_repair_input_view(
