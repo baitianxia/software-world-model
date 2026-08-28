@@ -3318,6 +3318,15 @@
       "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
+  "FINDING-010-165": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-165.md",
+    "code": [
+      "scripts/plan_gate.py"
+    ],
+    "tests": [
+      "tests/test_plan_gate.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

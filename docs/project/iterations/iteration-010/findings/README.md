@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, ITER-010-PDR-010, ITER-010-PDR-011]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, ITER-010-PDR-010, ITER-010-PDR-011]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-165](FINDING-010-165.md)：通用 plan gate 曾把 PDR-011 sealing action 的“禁止新外调”与 Result 对 PDR-010 历史 19 次 Ark
+  调用的“运行对账”混为一谈。现只对 exact @3 failure packet 允许历史 external counters，其他 non-external action、错误 schema 与非零
+  full regression 继续失败关闭；该治理修正必须先成为 trusted parent，Result 后置重建。
 - [FINDING-010-164](FINDING-010-164.md)：@3 首次真实 run-052/053 回放发现 Gateway `output_digest` 使用
   canonical JSON string codec，而 synthetic verifier fixture 错用 raw-text SHA-256。现保留原始输出 raw digest，另用产品同源
   canonical digest 对账 Gateway；真实形状 dry replay 已闭合 19 个 Ark / 0 个 DeepSeek dispatch。

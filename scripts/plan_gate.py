@@ -158,6 +158,7 @@ EVIDENCE_SCHEMA = "DEVELOPMENT_PLAN_GATE_EVIDENCE@1"
 ITER010_VALUE_GATE_VERIFIER = "ITER010_VALUE_GATE@1"
 ITER010_PLAN_RECOVERY_VERIFIER = "ITER010_PLAN_RECOVERY@1"
 ITER010_MVP_LIGHT_VERIFIER = "ITER010_MVP_LIGHT@3"
+ITER010_MVP_LIGHT_FAILURE_PACKET_SCHEMA = "ITER010_MVP_FAILURE_HANDOFF_PACKET@3"
 ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID = (
     "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
 )
@@ -2528,10 +2529,28 @@ def validate_gate_result(
     artifact_call_count = parsed_counters.get("external_model_call_count")
     if result_call_count is not None and artifact_call_count != result_call_count:
         errors.append("transition evidence artifact external_model_call_count must match the Result")
-    if action.get("external_execution_allowed") is not True and any(
-        parsed_counters.values()
-    ):
-        errors.append("non-external action evidence must report zero external execution counters")
+    historical_failure_reconciliation = (
+        verdict_value == "PASS"
+        and action.get("id") == ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID
+        and action.get("case_id") == ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID
+        and action.get("kind") == "mvp-failure-handoff"
+        and action.get("evidence_verifier") == ITER010_MVP_LIGHT_VERIFIER
+        and action.get("coding_allowed") is False
+        and action.get("external_execution_allowed") is False
+        and isinstance(action_evidence, dict)
+        and action_evidence.get("schema")
+        == ITER010_MVP_LIGHT_FAILURE_PACKET_SCHEMA
+    )
+    if action.get("external_execution_allowed") is not True:
+        if historical_failure_reconciliation:
+            if parsed_counters.get("full_regression_run_count") != 0:
+                errors.append(
+                    "failure handoff evidence must report full_regression_run_count equal to zero"
+                )
+        elif any(parsed_counters.values()):
+            errors.append(
+                "non-external action evidence must report zero external execution counters"
+            )
     if action.get("external_execution_allowed") is True and verdict_value == "PASS":
         for field in (
             "external_model_call_count",

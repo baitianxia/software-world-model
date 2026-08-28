@@ -24,6 +24,7 @@ AUTH_9 = "codex-user-message:sha256:" + "9" * 64
 AUTH_10 = "codex-user-message:sha256:" + "a" * 64
 PDR_9 = "ITER-010-PDR-009"
 PDR_10 = "ITER-010-PDR-010"
+PDR_11 = "ITER-010-PDR-011"
 PDR_8 = "ITER-010-PDR-008"
 PDR_11_10 = "ITER-011-PDR-010"
 
@@ -1329,6 +1330,76 @@ class EvidenceReceiptTests(unittest.TestCase):
             result, self.action, PDR_9, evidence, RUNNER_FILES
         )
         self.assertTrue(any("zero external execution counters" in error for error in errors), errors)
+
+    def test_exact_failure_handoff_allows_historical_external_reconciliation(self) -> None:
+        handoff = action(
+            plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+            plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID,
+            "mvp-failure-handoff",
+        )
+        handoff["evidence_verifier"] = plan_gate.ITER010_MVP_LIGHT_VERIFIER
+        counters = {
+            "external_model_call_count": 19,
+            "provider_dispatch_count": 19,
+            "credential_resolution_count": 19,
+            "tls_attempt_count": 19,
+            "http_dispatch_count": 19,
+        }
+        result, evidence = gate_bundle(
+            handoff,
+            counters=counters,
+            pdr=PDR_11,
+            action_evidence={
+                "schema": plan_gate.ITER010_MVP_LIGHT_FAILURE_PACKET_SCHEMA
+            },
+        )
+
+        _, _, errors = configured_gate_result(
+            result, handoff, PDR_11, evidence, RUNNER_FILES
+        )
+
+        self.assertEqual([], errors)
+
+    def test_failure_handoff_counter_exception_is_schema_and_regression_closed(self) -> None:
+        handoff = action(
+            plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+            plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID,
+            "mvp-failure-handoff",
+        )
+        handoff["evidence_verifier"] = plan_gate.ITER010_MVP_LIGHT_VERIFIER
+        for packet_schema, full_regression_count, expected_error in (
+            ("UNRELATED_PACKET@1", 0, "zero external execution counters"),
+            (
+                plan_gate.ITER010_MVP_LIGHT_FAILURE_PACKET_SCHEMA,
+                1,
+                "full_regression_run_count equal to zero",
+            ),
+        ):
+            with self.subTest(
+                packet_schema=packet_schema,
+                full_regression_count=full_regression_count,
+            ):
+                result, evidence = gate_bundle(
+                    handoff,
+                    counters={
+                        "external_model_call_count": 19,
+                        "provider_dispatch_count": 19,
+                        "credential_resolution_count": 19,
+                        "tls_attempt_count": 19,
+                        "http_dispatch_count": 19,
+                        "full_regression_run_count": full_regression_count,
+                    },
+                    pdr=PDR_11,
+                    action_evidence={"schema": packet_schema},
+                )
+
+                _, _, errors = configured_gate_result(
+                    result, handoff, PDR_11, evidence, RUNNER_FILES
+                )
+
+                self.assertTrue(
+                    any(expected_error in error for error in errors), errors
+                )
 
     def test_external_pass_requires_positive_model_provider_and_http_counts(self) -> None:
         external_action = contract_by_id(registered_contracts(), ACTION_QUALITY)
