@@ -101,6 +101,7 @@ Result 的 ID/path 必须等于 base current action 的预注册目标，并逐�
 
 `Decision ref: <exact-user-message-ref>`
 
-本 Result/receipt 只记录方向，不能自行扩权；user-direction action 保持自环。`CONTINUE` 仅使 direct evidence / source-only / World Model+source / current Codex 四路因果消融、full regression、hidden、跨工程和 hardening 具备后续规划资格，真正解锁仍需要新 PDR、明确用户授权与可信父 cutover。`REWORK` 保持同一 Slice 和长运行动作；只有明确用户转向或核心架构证伪才使用 `REDIRECT`。`direction_decision_ref` 的本地消息 digest 只是内容证据引用，不是平台认证身份、签名或授权。
+本 Result/receipt 只记录方向，不能创建或扩大 standing authority。同一 standing scope 内，`CONTINUE` 或 `REWORK` 直接更新工作顺序并继续；
+只有真实 scope delta 才需要新授权。`REWORK` 保持同一 Slice 和长运行动作；只有明确用户转向或核心架构证伪才使用 `REDIRECT`。
 
 当本模板用于独立 user-direction action 时，只填写决定、prior final handoff reference 与必要审计绑定；不得重新声称产品质量、生成新的产品执行权或移动到未预注册的后续动作。

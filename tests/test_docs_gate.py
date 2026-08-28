@@ -380,6 +380,41 @@ class LightweightIter010GateTests(unittest.TestCase):
             legacy_validator.assert_not_called()
             lightweight_validator.assert_not_called()
 
+    def test_experience_policy_dispatch_accepts_continuous_product_build(self) -> None:
+        action_id = "ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001"
+        manifest = {
+            "plan_execution_control": {
+                "plan_revision_ref": "ITER-010-PDR-012",
+                "current_action": {
+                    "id": action_id,
+                    "kind": "mvp-experience-development",
+                    "status": "authorized",
+                    "coding_allowed": True,
+                },
+                "transition": {
+                    "pass_next_action_id": action_id,
+                    "fail_next_action_id": action_id,
+                    "invalid_next_action_id": action_id,
+                },
+            },
+            "experience_delivery_policy": {
+                "first_operable_browser_delivery_requires_result": False,
+                "first_operable_browser_delivery_moves_plan_cursor": False,
+            },
+        }
+        with patch.object(
+            docs_gate,
+            "_validate_continuous_product_build_experience_policy",
+            return_value=[],
+        ) as continuous_validator:
+            self.assertEqual(
+                docs_gate.validate_experience_first_delivery_policy(
+                    manifest, {}, [], [], "manifest.yaml", required=True
+                ),
+                [],
+            )
+        continuous_validator.assert_called_once()
+
     def test_lightweight_experience_policy_has_no_machine_deadline(self) -> None:
         manifest_path = (
             docs_gate.REPOSITORY
@@ -437,6 +472,8 @@ class LightweightIter010GateTests(unittest.TestCase):
         )
         manifest_text = manifest_path.read_text(encoding="utf-8")
         manifest = docs_gate.safe_load_manifest(manifest_text)
+        if docs_gate.continuous_product_build_active(manifest):
+            self.skipTest("historical PDR-010/011 closed-schema mutation test")
         blocking = docs_gate.manifest_resolved_sequence_items(
             manifest_text, "product_goal_alignment", "blocking_case_ids"
         )
@@ -567,6 +604,8 @@ class LightweightIter010GateTests(unittest.TestCase):
         )
         manifest_text = manifest_path.read_text(encoding="utf-8")
         manifest = docs_gate.safe_load_manifest(manifest_text)
+        if docs_gate.continuous_product_build_active(manifest):
+            self.skipTest("historical PDR-011 direction-action compatibility test")
         for field, expected in (
             docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES
         ):
@@ -668,6 +707,8 @@ class LightweightIter010GateTests(unittest.TestCase):
 
     def test_lightweight_standing_authority_rejects_every_field_mutation(self) -> None:
         manifest = self._current_manifest()
+        if docs_gate.continuous_product_build_active(manifest):
+            self.skipTest("historical PDR-010/011 closed standing-authority schema test")
         self.assertEqual(
             docs_gate.validate_iter010_lightweight_standing_authority(
                 manifest, "manifest.yaml"
@@ -713,6 +754,46 @@ class LightweightIter010GateTests(unittest.TestCase):
             with_extra_field, "manifest.yaml"
         )
         self.assertTrue(any("closed schema" in error for error in extra_errors), extra_errors)
+
+    def test_current_continuous_product_build_policy_and_authority(self) -> None:
+        manifest = self._current_manifest()
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "blocking_case_ids"
+        )
+        assert blocking is not None
+
+        self.assertTrue(docs_gate.continuous_product_build_active(manifest))
+        self.assertEqual(
+            docs_gate._validate_continuous_product_build_experience_policy(
+                manifest, blocking, "manifest.yaml"
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_continuous_product_build_authority(
+                manifest, "manifest.yaml"
+            ),
+            [],
+        )
+
+        locked = copy.deepcopy(manifest)
+        locked["plan_execution_control"]["locks"]["provider_dispatch"] = True  # type: ignore[index]
+        self.assertTrue(
+            docs_gate.validate_continuous_product_build_authority(
+                locked, "manifest.yaml"
+            )
+        )
+
+        stopped = copy.deepcopy(manifest)
+        stopped["plan_execution_control"]["transition"][  # type: ignore[index]
+            "fail_next_action_id"
+        ] = "ITER-010-ACTION-STOP-001"
+        self.assertFalse(docs_gate.continuous_product_build_active(stopped))
 
     def test_dependency_cycles_ignore_only_prior_sealed_result_lineage(self) -> None:
         pdr = docs_gate.Document(
@@ -10058,45 +10139,6 @@ class ReworkPlanningGateTests(unittest.TestCase):
         self.assertEqual(parse_errors, [])
         return documents, {document.identifier: document for document in documents}
 
-    def _assert_lightweight_verification_mutations_rejected(
-        self,
-        case_id: str,
-        mutations: tuple[tuple[str, str, str], ...],
-    ) -> None:
-        _, by_id = self._documents()
-        verification = by_id["ITER-010-VERIFICATION"]
-        for field_name, original, replacement in mutations:
-            with self.subTest(case_id=case_id, field=field_name):
-                lines = verification.body.splitlines(keepends=True)
-                matching_indexes = [
-                    index
-                    for index, line in enumerate(lines)
-                    if line.startswith(f"| {case_id} |")
-                ]
-                self.assertEqual(len(matching_indexes), 1)
-                row_index = matching_indexes[0]
-                self.assertIn(original, lines[row_index])
-                lines[row_index] = lines[row_index].replace(
-                    original, replacement, 1
-                )
-                tampered = docs_gate.Document(
-                    verification.path,
-                    verification.metadata,
-                    "".join(lines),
-                )
-                errors = docs_gate.validate_iter010_lightweight_verification_semantics(
-                    tampered
-                )
-                self.assertTrue(
-                    any(
-                        case_id in error
-                        and field_name in error
-                        and "lightweight-plan phrase" in error
-                        for error in errors
-                    ),
-                    errors,
-                )
-
     def test_file_backed_rework_authorization_history_is_materialized(self) -> None:
         manifest_path = (
             docs_gate.REPOSITORY
@@ -10120,7 +10162,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ],
         )
 
-    def test_conversational_cutover_marks_every_fixed_role_section_legacy(
+    def test_continuous_build_does_not_reactivate_retired_fixed_role_sections(
         self,
     ) -> None:
         manifest_path = (
@@ -10131,6 +10173,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
         manifest = docs_gate.safe_load_manifest(
             manifest_text
         )
+        self.assertTrue(docs_gate.continuous_product_build_active(manifest))
         self.assertEqual(
             docs_gate.validate_conversational_architecture_cutover(
                 manifest, "manifest.yaml", manifest_text=manifest_text
@@ -10148,10 +10191,7 @@ class ReworkPlanningGateTests(unittest.TestCase):
             errors = docs_gate.validate_conversational_architecture_cutover(
                 tampered, "manifest.yaml", manifest_text=manifest_text
             )
-            self.assertTrue(
-                any(section_name in error for error in errors),
-                (section_name, errors),
-            )
+            self.assertEqual(errors, [], (section_name, errors))
 
     def test_current_readiness_acceptance_is_bound_to_active_authorization(
         self,
@@ -10164,6 +10204,33 @@ class ReworkPlanningGateTests(unittest.TestCase):
         manifest = docs_gate.safe_load_manifest(
             manifest_text
         )
+        if docs_gate.continuous_product_build_active(manifest):
+            self.assertEqual(
+                docs_gate.validate_conversational_architecture_cutover(
+                    manifest, "manifest.yaml", manifest_text=manifest_text
+                ),
+                [],
+            )
+            stale = copy.deepcopy(manifest)
+            stale["readiness_inputs"][  # type: ignore[index]
+                "current_readiness_status"
+            ] = "historical-receipt-no-longer-controls-current-build"
+            self.assertEqual(
+                docs_gate.validate_conversational_architecture_cutover(
+                    stale, "manifest.yaml", manifest_text=manifest_text
+                ),
+                [],
+            )
+            revoked = copy.deepcopy(manifest)
+            revoked["public_oss_evaluation_standing_authority"][  # type: ignore[index]
+                "authority_status"
+            ] = "revoked"
+            self.assertTrue(
+                docs_gate.validate_conversational_architecture_cutover(
+                    revoked, "manifest.yaml", manifest_text=manifest_text
+                )
+            )
+            return
         self.assertEqual(
             docs_gate.validate_conversational_architecture_cutover(
                 manifest, "manifest.yaml", manifest_text=manifest_text
@@ -10440,78 +10507,6 @@ class ReworkPlanningGateTests(unittest.TestCase):
             root_grant_errors,
         )
 
-    def test_current_first_operable_verification_is_immediate_non_result_handoff(
-        self,
-    ) -> None:
-        self._assert_lightweight_verification_mutations_rejected(
-            docs_gate.ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID,
-            (
-                (
-                    "Claim",
-                    "完整浏览器主链",
-                    "仅浏览器外壳",
-                ),
-                (
-                    "Frozen input / oracle",
-                    "至少三 Turn 语义链",
-                    "单次问答",
-                ),
-                (
-                    "Expected",
-                    "`requires_result=false`",
-                    "`requires_result=true`",
-                ),
-            ),
-        )
-
-    def test_current_mvp_verification_freezes_final_result_handoff_semantics(
-        self,
-    ) -> None:
-        self._assert_lightweight_verification_mutations_rejected(
-            docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID,
-            (
-                (
-                    "Claim",
-                    "最终 Result handoff",
-                    "首次浏览器交付",
-                ),
-                (
-                    "Frozen input / oracle",
-                    "`V-CHAT-EXPERIENCE-001` 同一 clean candidate",
-                    "不同候选",
-                ),
-                (
-                    "Expected",
-                    "`requires_result=true`",
-                    "`requires_result=false`",
-                ),
-            ),
-        )
-
-    def test_current_preview_verification_freezes_post_experience_direction_semantics(
-        self,
-    ) -> None:
-        self._assert_lightweight_verification_mutations_rejected(
-            "V-PREVIEW-002",
-            (
-                (
-                    "Claim",
-                    "完整浏览器体验",
-                    "单条测试输出",
-                ),
-                (
-                    "Frozen input / oracle",
-                    "最早责任层",
-                    "最终答案猜测根因",
-                ),
-                (
-                    "Expected",
-                    "`CONTINUE` 后仍需新 PDR、明确用户授权和可信父 cutover",
-                    "`CONTINUE` 自动进入 full regression",
-                ),
-            ),
-        )
-
     def test_rework_validates_the_immutable_historical_result(self) -> None:
         _, by_id = self._documents()
         manifest_path = (
@@ -10719,17 +10714,16 @@ class ReworkPlanningGateTests(unittest.TestCase):
             cutover_errors,
         )
 
-        # The lightweight action permits one evidence-backed general repair
-        # before responsibility review; zero attempts would silently disable
-        # that repair path.
-        self.assertEqual(manifest["rework_policy"]["no_progress_attempt_limit"], 1)
-        no_general_repair = copy.deepcopy(manifest)
-        no_general_repair["rework_policy"]["no_progress_attempt_limit"] = 0
+        # Ordinary failures remain inside the product loop.  A fixed attempt
+        # count would turn a work-plan heuristic back into a stop condition.
+        self.assertNotIn("no_progress_attempt_limit", manifest["rework_policy"])
+        fixed_stop = copy.deepcopy(manifest)
+        fixed_stop["rework_policy"]["no_progress_attempt_limit"] = 1
         repair_errors = docs_gate.validate_rework_policy(
-            no_general_repair, "manifest.yaml", required=True
+            fixed_stop, "manifest.yaml", required=True
         )
         self.assertTrue(
-            any("no_progress_attempt_limit" in error for error in repair_errors),
+            any("fixed no-progress stop count" in error for error in repair_errors),
             repair_errors,
         )
 
@@ -10929,18 +10923,20 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ),
             [],
         )
-        self.assertTrue(docs_gate.uses_post_pdr009_iter010_plan(manifest))
-        self.assertTrue(docs_gate.uses_failure_handoff_iter010_plan(manifest))
+        self.assertTrue(docs_gate.continuous_product_build_active(manifest))
+        self.assertFalse(docs_gate.uses_post_pdr009_iter010_plan(manifest))
+        self.assertFalse(docs_gate.uses_failure_handoff_iter010_plan(manifest))
         self.assertFalse(docs_gate.uses_legacy_iter010_plan(manifest))
 
         for field, value in (
-            ("micro_checkpoint_count", 4),
-            ("micro_checkpoint_order", "runnable-access-handoff"),
-            ("pdr010_machine_timebox_or_activation_receipt_required", True),
+            ("first_operable_browser_delivery_requires_result", True),
+            ("first_operable_browser_delivery_moves_plan_cursor", True),
+            ("first_operable_browser_delivery_requires_current_codex_comparison", True),
             (
-                "current_execution_decision_ref",
-                docs_gate.ITER010_PLAN_REVISION_REF,
+                "final_experience_handoff_failure_path_requires_one_general_repair_still_failed",
+                True,
             ),
+            ("pre_first_experience_full_regression_allowed", True),
         ):
             invalid_direction = copy.deepcopy(manifest)
             invalid_direction["experience_delivery_policy"][field] = value
@@ -10953,13 +10949,15 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 required=True,
                 manifest_text=manifest_text,
             )
-            self.assertTrue(any(field in error for error in errors), (field, errors))
+            self.assertTrue(errors, (field, errors))
 
-        invalid_turn_count = copy.deepcopy(manifest)
-        invalid_turn_count["experience_delivery_policy"]["live_canary_turn_count"] = 2
-        turn_count_errors = docs_gate.validate_experience_first_delivery_policy(
-            invalid_turn_count,
-            invalid_turn_count["product_goal_alignment"],
+        machine_deadline = copy.deepcopy(manifest)
+        machine_deadline["experience_delivery_policy"][
+            "direction_decision_deadline_minutes"
+        ] = 480
+        deadline_errors = docs_gate.validate_experience_first_delivery_policy(
+            machine_deadline,
+            machine_deadline["product_goal_alignment"],
             new_refs,
             blocking,
             "manifest.yaml",
@@ -10968,10 +10966,10 @@ class ReworkPlanningGateTests(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                "live_canary_turn_count" in error
-                for error in turn_count_errors
+                "direction_decision_deadline_minutes" in error
+                for error in deadline_errors
             ),
-            turn_count_errors,
+            deadline_errors,
         )
 
         invalid_policy_values = (

@@ -33,7 +33,7 @@ standing_external_authority_scope_digest: pending
 - Baseline gap and predecessor evidence: <exact-reference-and-verdict>
 - Complete experience boundary: <world-model-agent-source-evidence-citation-review-semantic-chat>
 - First operable browser delivery Case and launch entry: <V-CHAT-EXPERIENCE-NNN-requires-result-false-no-cursor-move>
-- Final experience handoff Case: <V-MVP-EXPERIENCE-NNN-requires-result-true-after-comparison-or-proven-post-repair-failure>
+- Final direction/completion handoff Case: <V-MVP-EXPERIENCE-NNN-requires-result-true-after-real-experience-and-comparison>
 - Post-experience heterogeneous/Codex comparison: <three-questions-two-unseen-exact-current-codex-and-independent-review>
 - Work locked until `CONTINUE`: <four-arm-ablation-full-regression-hidden-cross-project-hardening>
 - Stop/redirect basis: <exact-falsifiable-conditions>
@@ -42,7 +42,7 @@ standing_external_authority_scope_digest: pending
 
 核对 Manifest 使用 `schema_version: 2` / `DEVELOPMENT_PLAN_EXECUTION_CONTROL@1`，且只有一个长运行 `current_action`。它必须完整绑定 plan revision、Slice、最终 handoff Case/Result、coding/external 权限、allowed/forbidden paths 和 locks；`project/current.md` 精确镜像当前 action/Case。Manifest 还必须用独立字段把首次可操作浏览器交付 Case 与最终 Result handoff Case 分开，并明确前者 `requires_result=false`、不移动游标，后者 `requires_result=true`。
 
-完整体验开发可跨多个普通提交。第一次完整浏览器主链可操作即交付，但不创建 Result、不移动游标。Result 和最小 runner 只用于最终方向 handoff，或证明一次通用修复后同类重大失败仍存在而移动计划游标；不能要求每次提交、测试、失败或 Provider dispatch 建立动作/Result；不得引入 Freeze-first、Activation 分钟时钟、whole-Manifest 摘要或复制产品工作流的 verifier 状态机。
+完整体验开发可跨多个普通提交。第一次完整浏览器主链可操作即交付，但不创建 Result、不移动游标。Result 只用于最终方向/完成交接或真实项目状态迁移；普通失败返回同一产品开发闭环。不能要求每次提交、测试、失败或 Provider dispatch 建立动作/Result；不得引入 Freeze-first、Activation 分钟时钟、whole-Manifest 摘要或复制产品工作流的 verifier 状态机。
 
 开发前运行 snapshot，交接或合并前用 trusted base 运行 diff gate。candidate Manifest 不能给自身 diff 扩权；runner 必须先于其验证的 Result 冻结。
 
@@ -65,7 +65,9 @@ standing_external_authority_scope_digest: pending
 
 系统必须通过绝对质量门，逐题无物质落后，总体答案质量严格超过 current Codex，并至少证明一项非 locator 世界模型贡献。失败、平局、无法裁决或重大错误只阻止方向 `PASS`、hardening 和晋级，不阻止已经形成的首次体验交付；失败回到同一开发动作做根因归因和通用修复。
 
-只有最终 `V-MVP-EXPERIENCE-NNN` Result 已密封并进入用户判向后才记录方向。`CONTINUE` direction receipt 只使后续工作具备规划资格；必须再有新 PDR、明确用户授权和可信父 cutover，才执行 direct evidence、同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex 四路因果消融，以及 full regression、hidden、跨工程和正式验收。本地消息 digest 不能冒充平台认证身份或授权。
+真实体验与独立质量证据形成后记录用户方向。`CONTINUE` 不能创建或扩大 standing authority；同一 standing scope 内直接执行 direct
+evidence、同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex 四路因果消融，以及 full regression、hidden、跨工程和正式验收。
+只有真实 scope delta 才申请新授权。
 
 ## Root-cause and repair readiness
 

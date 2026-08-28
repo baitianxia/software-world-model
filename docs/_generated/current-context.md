@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-pdr011-awaiting-user-direction`
+- Worktree status: `iteration-010-slice-001-product-first-browser-chat-build`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `product-and-provider-work-stopped-sealed-failure-handoff-awaiting-user-direction`
+- Live model path: `preferred-execution-profile-first-fallback-only-on-trusted-unavailability`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

@@ -26,10 +26,12 @@ Development Design 是当前编码输入，不是长期详细设计百科。它�
 4. **正式验收：** 在实现稳定后执行隐藏输入、跨工程、现场问题和发布前 Gate。
 
 已有代表性可运行 MVP 时，可以先复用它做小样本方向比较；没有代表性 MVP 时，比较必须基于刚交付的完整纵切，不能要求一个尚不存在的
-产品先通过质量证明。比较失败后先定位最早责任层，只允许一个通用修复，再用原题和至少两个未参与修复的异质问题复验。一次性运行、
+产品先通过质量证明。比较失败后先定位最早责任层，提出可证伪根因并做最小通用修复，再用原题和至少两个未参与修复的异质问题复验；
+失败时回到新的分层证据继续收敛，不能靠重复外调碰答案，也不能因预设“一次修复”上限停止整个产品开发。一次性运行、
 静态回放或启动前冻结问题不能冒充可体验版本；可体验版本也不能替代严格方向质量证明。两者都必须早于与方向判断无关的全面夯实。
 
-当前开发权威还必须把唯一下一动作、允许/禁止路径、外部执行权和交接后继写入 Manifest。一个产品开发动作可以跨多个提交、局部失败、
+当前工作计划还必须把产品目标、允许/禁止路径、外部边界和唯一下一任务写入 Manifest；权限本身来自活动 Slice 与 standing authority。
+一个产品开发动作可以跨多个提交、局部失败、
 定向测试和安全重试持续运行；只在体验交接或游标迁移时生成并密封唯一 Result，不按提交、问题、外部调用或普通失败拆动作。Slice 的广义
 代码范围不能覆盖 action-level 白名单；base→target 差分必须只使用 base plan 授权，目标分支不得通过同时修改计划自我扩权。具体机械
 合同由 `PROJECT-GOVERNANCE-PLAN-EXECUTION` 拥有。
@@ -111,8 +113,8 @@ live failure 必须先沿 `Source truth → knowledge construction/admission →
 定位最早偏差，并分别记录 first divergence、没有阻断错误的 downstream guard failure 和 display failure。一题可以有多个故障，但下一项
 产品修改只能归属最早有证据的 Owner 层；不得用下游 Prompt、搜索排序或 Reviewer 文案补偿上游知识/投影缺口。没有逐层 evidence table、
 可证伪 root-cause hypothesis 和反事实验证，不得修改 Prompt、Schema、Tool policy 或 Contract。修复顺序固定为：本地最小复现，至少两个未参与
-修复的相邻案例通过，再执行一个有界 live canary 单元；Chat 目标必须把该单元冻结为最小多轮 Conversation，不得用孤立一题代替。不能直接用下一次昂贵 live run 猜测修复。相同 failure signature 经过一次通用修复仍复现，
-必须停止堆规则并评审架构职责。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
+修复的相邻案例通过，再执行一个有界 live canary 单元；Chat 目标必须把该单元冻结为最小多轮 Conversation，不得用孤立一题代替。不能直接用下一次昂贵 live run 猜测修复。相同 failure signature 经通用修复仍复现时，
+必须停止无新证据外调和堆规则，重新评审最早责任层与架构职责，但保持当前产品开发继续。首次体验前只运行 targeted impact、startup 和 safety 测试；full regression 在 Alpha `CONTINUE` 后的
 hardening 和正式验收前各运行，不得用它延迟首个体验。
 
 Provider route 默认按 `preferred route → fallback route` 角色顺序运行，并通过 standing external authority 预授权 ordered route、两个角色的

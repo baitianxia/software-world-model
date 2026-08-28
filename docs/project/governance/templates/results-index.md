@@ -24,5 +24,6 @@ Result，也不解锁下一阶段。
 `action_ref`、`verification_case_id` 和 `plan_gate_verdict`；最后一项只能是 `PASS / FAIL / INVALID`，不得使用别名。Result 记录事实，不能
 修改 allowlist、预注册 contract 或为同一 candidate diff 创建权限。
 
-用户方向 Result/receipt 只记录方向，不能自行解锁后续动作；`CONTINUE` 仍需新 PDR、明确用户授权和可信父 cutover。本地消息 digest 不能
+用户方向 Result/receipt 只记录方向，不能创建或扩大 standing authority；同一 standing scope 内 `CONTINUE` 直接调整工作顺序，只有
+真实 scope delta 才需要新授权。本地消息 digest 不能
 冒充平台认证身份、签名或授权。

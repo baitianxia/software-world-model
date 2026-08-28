@@ -4574,12 +4574,11 @@
   "ITER-010-SLICE-001": {
     "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
     "code": [
-      "src/software_world_model/application_services",
-      "src/software_world_model/ai_infrastructure",
-      "src/software_world_model/interface"
+      "src/software_world_model"
     ],
     "tests": [
-      "tests"
+      "tests",
+      "validation/iteration_010_mvp"
     ]
   },
   "ITER-010-SLICE-002": {

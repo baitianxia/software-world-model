@@ -15,106 +15,76 @@ product_goal_alignment_reviewed_by: user
 product_goal_alignment_review_ref: codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5
 historical_product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4edcf25502b40f880c17a7bdf7f1af71044cd8d1bbe97b055a735ee9e
 historical_authorized_at: 2026-08-21T09:18:34Z
-critical_assumption_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
+critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
-current_execution_decision_ref: ITER-010-PDR-011
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165]
+current_execution_decision_ref: ITER-010-PDR-012
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165]
 current_scheduling_finding_ref: FINDING-010-139
 ---
 
 # ITER-010 Readiness Review
 
-Front matter 仍表示本 Readiness 文件本身不是 coding input；活动 Slice 依治理约束保持 `coding_input: true`，但 PDR-011
-当前 action 以 `coding_allowed=false` 和全部执行锁覆盖该宽口径，只允许记录用户方向。
-
-## PDR-011 current readiness
-
-PDR-010 的产品开发已达到一次通用修复仍失败的停止条件。PDR-011 没有重新打开产品开发；它恢复 frozen verifier 对真实 pre-answer
-failure handoff 的表达能力，并已密封 `ITER-010-RESULT-V-MVP-EXPERIENCE-001`。当前 coding/external execution 均为 false，所有执行锁关闭。
-
-Readiness 结论是：**不得继续开发完整体验版**。当前动作是 `V-PREVIEW-002` 用户方向决定；产品代码、主工程 Agent、Evidence/Reviewer、
-模型路线、受控源码读取和 loopback Web 新执行全部锁定。
-
-执行顺序只有四步：
-
-1. 形成版本化软件世界模型认知、主工程 Agent、按 Gap 受控源码、逐 Turn Evidence/Citation、fresh Review、语义多轮与新 Conversation 隔离的完整浏览器主链；
-2. 第一条主链可操作后以 `V-CHAT-EXPERIENCE-001` 立即把启动命令、URL、exact candidate、质量状态和限制交给用户；`requires_result=false`、不移动游标；
-3. 在同一候选上运行至少三条异质问题（至少两条未参与修复），并以 actual current Codex 独立作答作严格强基线；
-4. 比较完成，或证明一次通用修复后同类重大失败仍存在时，才以 `V-MVP-EXPERIENCE-001` 密封 Result、移动到 `V-PREVIEW-002`，由用户决定 `CONTINUE / REWORK / REDIRECT / REJECT`。
-
-方向 Result/receipt 只记录决定且 direction action 自环。`CONTINUE` 只使 hardening、full regression、第二工程、hidden、完整四路因果消融和后续 Slice 具备下一份计划资格；真正解锁仍需新 PDR、明确用户授权和可信父 cutover。PDR-009 的 Freeze-first、多动作
-状态机和分钟 timebox 已被 PDR-010 取代；历史记录可从 [decisions](decisions/README.md)、[findings](findings/README.md) 与
-[results](results/README.md) 查阅，不是当前执行指令。
-
 ## Reviewed exact inputs
 
-已复核当前 Proposal、Manifest、Verification Matrix、活动 Slice、PDR-010、FINDING-010-153，以及现行产品成功标准、ADR-018、Engineering
-Conversation、Agentic Task、Evidence Answering、World Model Answering、Model Gateway、Source Artifact、Security 和 Local Browser 合同。
-历史 baseline、公开 mall exact revision、既有分层归因/认知资格/备用路线准入/Web Access Result 继续作为证据；它们不冒充新的完整体验或
-答案质量 PASS。
+CURRENT READINESS ACCEPTED / PDR-012 PRODUCT DEVELOPMENT ACTIVE。
 
-当前机器动作 ID 是 `ITER-010-ACTION-USER-DIRECTION-DECISION-001`，Case 是 `V-PREVIEW-002`；它只记录用户方向，且保持自环直到后续新
-PDR、明确用户授权和可信父 cutover。
-
-## Product-goal alignment gate
-
-- 最早产物必须是普通用户能真实操作的完整工程 Chat，而不是页面外壳、POM/模块图、单轮问答、比较 runner 或内部证明。
-- 软件世界模型提供版本化的软件认知，不只是手册或检索入口；主工程 Agent 负责理解、调查、综合和对话。
-- 受控 Source 用于核实、补全或纠正当前问题，不取代问题前世界模型认知，也不能回填为世界模型贡献。
-- 答案必须直接解决用户问题并绑定 Citation；代码走读只作为必要证据，不能成为默认表达。
-- 方向质量要求重大错误为 0、逐题不输 current Codex、总体严格超过 Codex，并有非 locator 世界模型贡献；该判断紧随首次完整体验，不阻塞首次交付。
-
-## Architecture reflection gate readiness
-
-A1—A6 继续有效：世界模型概念、主工程 Agent 自适应决策、逐 Turn Evidence/Review、跨工程泛化、相对 current Codex 的产品质量与世界模型
-贡献、真正语义多轮 Chat 都必须最终被验证。Slice1 验证 A1/A2/A3/A5/A6 的完整组合；用户 `CONTINUE` 后还须新 PDR、明确授权和可信父 cutover，Slice2 才能做完整四路因果消融
-和跨工程 A4；Slice3 完成最终复验。安全熔断只失败关闭，不能通过裁剪证据、Citation 或独立审核换取 PASS。
+SLICE-001 是唯一 active coding input。当前公开 mall exact revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的
+standing authority 仍有效，因此产品代码、主工程 Agent、Prompt/Reviewer、loopback Web 和范围内 Provider dispatch 可以直接继续。
+PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-012、run-052/053 trace、
+当前 System Contracts 与公开 mall exact revision。
 
 ## Outcome, scope and non-goals
 
-当前 Outcome 是无需认证的本机工程 Chat：同一 Conversation 可以追问、纠正、深入和总结；每个 Turn 都有独立 Request、Evidence、Answer、
-Review 和 Delivery；新 Conversation 不继承旧 Work State、Evidence 或 Provider memory。
+开发必须直接形成一条普通用户可操作的完整链：
 
-范围限公开 mall exact revision、Java、预构建世界模型认知、受控只读源码/文档/配置/测试和 loopback。首次用户判向前不做跨重启长期
-Memory、第二工程、第二语言、跨仓库、公网、Production、多用户、任意 Shell 或源码写入。
+1. 世界模型按问题提供结构、行为、职责或失败边界的版本化认知及 Coverage/Gap，不能只提供 Maven/POM 或 locator；
+2. 主工程 Agent 维护 Conversation 目标、假设、计划和观察，根据 Gap 受控读取源码并重规划；
+3. 每个 Turn 生成自然答案、可打开 Citation 和 fresh independent Review；
+4. 同一 Conversation 至少完成首问、上下文追问和纠正/深入/总结，新 Conversation 不继承旧指代；
+5. 固定 loopback、无认证、单 Turn 失败不关闭服务，不存在工程或题面特判。
 
-## System contracts and unresolved decisions
+第一条真实三轮链可操作即交付，requires_result=false。首次交付前只运行 targeted impact、startup、安全和失败真实性验证；不以全量回归、
+hidden、跨工程、完整比较基础设施或工程夯实延迟体验。
 
-默认 System Owner 是 `SYS-ADR-018` 与 `SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION`。模型无直接 Repository/FS/Shell/
-network/credential/write 权限；Broker/Worker 拥有受控只读执行权；Ledger 只追加；调查后才 seal；seal 不等于真值；Reviewer 只返回
-具体 Finding，补证或重写由主工程 Agent 决定并形成新的 Package/Answer/Review identity。
+当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 
-实现细节可以调整，但不得引入工程、题面、关键词、符号、类、方法、fixture 或 Oracle 特判。具体 Provider/model 是 execution profile
-和收据中的配置值，不得进入产品动作、分支或质量标准；产品代码只消费通用 route role、profile ref/digest 和 availability verdict。
-备用路线的唯一合法入口是 availability boundary 密封的 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE`。结构化输出无效、Reviewer 拒绝以及
-未经该 boundary 分类的原始 HTTP/outcome 都不得触发备用路线。格式修复或审核返工必须在同一 profile 上作为有界的新 call 执行，使用新
-request identity/receipt，不属于 transport request retry；仍失败则如实关闭当前 Turn。
+## Product-goal alignment gate
+
+纵切必须同时出现非 locator 世界模型认知、能自主重规划的主工程 Agent、Gap 驱动源码补证、自然答案、Citation、fresh Review 和语义多轮
+Chat。任何单独组件、POM/Maven-only 回答或静态回放都不能满足产品目标。
 
 ## Slice, dependency and risk closure
 
-Slice1 仍是唯一 active Slice，宽口径 `coding_input=true`；PDR-011 当前 action 的 `coding_allowed=false` 才是更精确的停工边界。PDR-010 规定的归因、一次通用修复、原失败与两个异质复验已经完成；同类
-pre-answer failure 仍复现，因此产品和外调均已停止。PDR-011 只允许把既有 trace 如实交给用户判向。
+答案、格式、测试或审核失败只阻止该 Turn 或完成声明。实现者必须保存 trace，定位
+Source → 世界模型构建/查询 → Agent → Evidence/Answer → Review → Web
+的最早偏差，提出可证伪根因、做通用修复，并用未参与修复的异质问题复验。失败不会暂停 Slice、产生失败 Result、切换路线碰答案或要求
+同范围重新授权。
 
-首次体验前只运行改动相关测试、启动 smoke、安全与失败真实性检查。full regression、hardening、第二工程和 hidden 在用户 `CONTINUE`
-前保持锁定。
+世界模型和主工程 Agent 是两个同等必要的核心：前者提供真正的软件认知，后者像高级工程师一样利用认知与受控源码完成用户目标。Codex
+只作强基线，不作标准答案或裁判；独立技术复核拥有正确性、完整性、引用和未知边界判断。
+
+SLICE-001 保持 authorized/coding_input=true。主要风险是继续碰单题答案、世界模型退化为 locator、Agent 不重规划或 Reviewer 漏判；它们均由
+同一产品闭环中的分层 trace 和异质问题复验处理，不创建新的停工动作。
+
+## System contracts and unresolved decisions
+
+SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model Answering、Source Artifact、Security 和 Local Browser 合同
+继续拥有跨模块语义。当前没有会阻止首次体验开发的未决架构问题；实现若发现合同级偏差，按 Finding policy 回写唯一 Owner，同时继续不受
+影响的产品工作。
 
 ## Verification readiness
 
-`V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001`、`V-FALLBACK-ROUTE-ADMISSION-001` 与 `V-ALPHA-ACCESS-001` 的既有
-PASS 可作为输入；`V-MODEL-TRANSPARENT-ROUTING-001` 已由定向测试通过，`V-MVP-EXPERIENCE-001` 已达到 failure branch 的业务停止
-条件并已由 @3 密封为 machine PASS failure handoff；`FINDING-010-165` 只修正当前 sealing 权限与历史 19 次调用对账的治理语义。产品质量仍为
-`QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。`V-PREVIEW-002` 已进入，
-尚待用户方向。@3 verifier 不要求不存在的 Answer/Citation/Review/Codex comparison，只验证原失败、两个 unseen 异质复验、多 Session
-原始记录和 19/0 Provider 执行对账。
+首次体验前只运行 targeted impact、startup、source/secret safety 与 failure-truthfulness 检查。浏览器主链可操作即交付；异质问题与 current
+Codex 比较在同一候选上随后进行，full regression 不得成为首次体验前置。
 
-当前公开工程、exact revision、既有披露/预算和配置路线属于 standing scope，人工重复授权请求应为 0。每个真实 Turn/dispatch 仍须在
-Source disclosure、credential 和 network 前自动派生 one-use exact receipt；真实 scope delta 继续失败关闭并申请最小增量权限。
+## Architecture reflection gate readiness
+
+真实体验后才判断 A1—A6：世界模型是否提供真正认知、Agent 是否充分利用认知与源码、Evidence/Review 是否保证答案质量、Chat 是否为语义
+多轮，以及相对 current Codex 是否有严格质量优势。该判断不阻止用户先体验，也不由任一模型答案充当 Oracle。
 
 ## Authorization decision
 
-**CURRENT READINESS ACCEPTED / PDR-011 FAILURE RESULT SEALED / AWAITING USER DIRECTION。**
+工作计划不能创建、扩大、撤销或消费 standing authority。只有私有/新 Source、新接收方或账户、扩大披露/预算、外部写入、非 loopback、
+Production 或破坏性动作需要最小增量权限。用户明确 STOP / REDIRECT / REJECT 或不可绕过的安全禁止会停止对应工作；普通失败不会。
 
-当前只能取得并记录用户的 `CONTINUE / REWORK / REDIRECT / REJECT`。当前授权不包括产品代码、Prompt、Provider 调用、hardening、full
-regression、第二工程、hidden、非 loopback、Source 写入、
-后续 Slice 或 Production；这些边界只有用户 `CONTINUE`、后续新 PDR、明确用户授权和可信父 cutover 共同成立时才能改变。front matter 中的
-本地消息 digest 仅是项目记录的内容证据引用，不代表平台认证身份、签名或可自行扩权的授权。
+当前没有权限、计划或环境阻塞。唯一下一动作是 V-BROWSER-CHAT-MVP-BUILD-001。

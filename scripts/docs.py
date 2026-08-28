@@ -2893,6 +2893,90 @@ def _validate_iter010_lightweight_experience_policy(
     return errors
 
 
+def _validate_continuous_product_build_experience_policy(
+    manifest: dict[str, object],
+    blocking_case_ids: list[str],
+    label: str,
+) -> list[str]:
+    """Validate the minimum boundaries needed by a continuous product build."""
+
+    policy = manifest.get("experience_delivery_policy")
+    control = manifest.get("plan_execution_control")
+    if not isinstance(policy, dict) or not isinstance(control, dict):
+        return [f"{label}: continuous product build requires experience policy and plan control"]
+
+    errors: list[str] = []
+    for field, expected in (
+        ("schema", EXPERIENCE_FIRST_DELIVERY_SCHEMA),
+        ("first_operable_browser_delivery_requires_result", False),
+        ("first_operable_browser_delivery_moves_plan_cursor", False),
+        ("first_operable_browser_delivery_requires_current_codex_comparison", False),
+        (
+            "final_experience_handoff_failure_path_requires_one_general_repair_still_failed",
+            False,
+        ),
+        ("pre_first_experience_full_regression_allowed", False),
+    ):
+        if policy.get(field) != expected:
+            errors.append(
+                f"{label}: experience_delivery_policy.{field} must equal {expected}"
+            )
+
+    forbidden_machine_clock_fields = sorted(
+        str(field)
+        for field in policy
+        if str(field).endswith("_minutes")
+        or str(field) in {"start_event", "timebox_case_id"}
+    )
+    if forbidden_machine_clock_fields:
+        errors.append(
+            f"{label}: continuous product build must not retain machine timebox fields: "
+            + ", ".join(forbidden_machine_clock_fields)
+        )
+
+    first_case = policy.get("first_operable_browser_delivery_case_id")
+    if not isinstance(first_case, str) or first_case not in blocking_case_ids:
+        errors.append(
+            f"{label}: first operable browser delivery must reference a current blocking Case"
+        )
+
+    action = control.get("current_action")
+    transition = control.get("transition")
+    locks = control.get("locks")
+    if not isinstance(action, dict):
+        return errors + [f"{label}: continuous product build requires current_action"]
+    action_id = action.get("id")
+    action_case = action.get("case_id")
+    if not isinstance(action_case, str) or action_case not in blocking_case_ids:
+        errors.append(
+            f"{label}: continuous product build action must reference a current blocking Case"
+        )
+    if not isinstance(transition, dict) or any(
+        transition.get(field) != action_id
+        for field in (
+            "pass_next_action_id",
+            "fail_next_action_id",
+            "invalid_next_action_id",
+        )
+    ):
+        errors.append(
+            f"{label}: ordinary outcomes must self-loop to the continuous product build"
+        )
+    if not isinstance(locks, dict) or any(
+        locks.get(field) is not False
+        for field in (
+            "product_code_changes",
+            "prompt_or_reviewer_changes",
+            "web_canary",
+            "provider_dispatch",
+        )
+    ):
+        errors.append(
+            f"{label}: continuous product build must keep product, review, Web and authorized dispatch work unlocked"
+        )
+    return errors
+
+
 def validate_experience_first_delivery_policy(
     manifest: dict[str, object],
     alignment: dict[str, object],
@@ -2912,6 +2996,14 @@ def validate_experience_first_delivery_policy(
             errors.append(f"{label}: experience_delivery_policy is required")
     elif not isinstance(policy, dict):
         errors.append(f"{label}: experience_delivery_policy must be a mapping")
+    elif continuous_product_build_active(manifest):
+        errors.extend(
+            _validate_continuous_product_build_experience_policy(
+                manifest,
+                blocking_case_ids,
+                label,
+            )
+        )
     elif uses_lightweight_iter010_plan(manifest) or (
         uses_failure_handoff_iter010_plan(manifest)
     ):
@@ -3619,7 +3711,16 @@ def iter010_pending_codex_identity_allowed(
         and current_action.get("status") == "authorized"
         and gate.get("status") == "post-experience-quality-policy-not-current-action"
     )
-    return legacy_pending or experience_first_pending or failure_handoff_pending
+    continuous_product_build_pending = (
+        continuous_product_build_active(manifest)
+        and gate.get("status") == "post-experience-quality-policy-not-current-action"
+    )
+    return (
+        legacy_pending
+        or experience_first_pending
+        or failure_handoff_pending
+        or continuous_product_build_pending
+    )
 
 
 def validate_strict_codex_baseline_alignment(
@@ -4896,6 +4997,8 @@ def validate_conversational_architecture_cutover(
 
     if not conversational_agent_cutover_active(manifest):
         return []
+    if continuous_product_build_active(manifest):
+        return validate_continuous_product_build_authority(manifest, label)
     errors: list[str] = []
     legacy_markers: tuple[tuple[str, str], ...] = (
         ("hybrid_evidence_path", "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"),
@@ -7719,6 +7822,92 @@ def uses_legacy_iter010_plan(manifest: dict[str, object]) -> bool:
     )
 
 
+def continuous_product_build_active(manifest: dict[str, object]) -> bool:
+    """Recognize a product build by behavior, not by a hard-coded PDR number."""
+
+    control = manifest.get("plan_execution_control")
+    policy = manifest.get("experience_delivery_policy")
+    if not isinstance(control, dict) or not isinstance(policy, dict):
+        return False
+    action = control.get("current_action")
+    transition = control.get("transition")
+    if not isinstance(action, dict) or not isinstance(transition, dict):
+        return False
+    action_id = action.get("id")
+    return (
+        isinstance(action_id, str)
+        and action.get("kind") == "mvp-experience-development"
+        and action.get("status") == "authorized"
+        and action.get("coding_allowed") is True
+        and policy.get("first_operable_browser_delivery_requires_result") is False
+        and policy.get("first_operable_browser_delivery_moves_plan_cursor") is False
+        and all(
+            transition.get(field) == action_id
+            for field in (
+                "pass_next_action_id",
+                "fail_next_action_id",
+                "invalid_next_action_id",
+            )
+        )
+    )
+
+
+def validate_continuous_product_build_authority(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Keep real scope boundaries without reviving per-run authorization gates."""
+
+    control = manifest.get("plan_execution_control")
+    authority = manifest.get("public_oss_evaluation_standing_authority")
+    continuation = manifest.get("authorization_continuation_policy")
+    if not isinstance(control, dict):
+        return [f"{label}: continuous product build requires plan_execution_control"]
+    action = control.get("current_action")
+    locks = control.get("locks")
+    errors: list[str] = []
+    if not isinstance(action, dict) or action.get("external_execution_allowed") is not True:
+        errors.append(
+            f"{label}: continuous product build must expose its authorized external execution state"
+        )
+    if not isinstance(authority, dict) or any(
+        authority.get(field) != expected
+        for field, expected in (
+            ("authority_status", "active"),
+            ("source_clean_required", True),
+            ("source_read_only_required", True),
+            ("run_turn_or_dispatch_identity_change_requires_new_human_approval", False),
+        )
+    ):
+        errors.append(
+            f"{label}: continuous product build requires active clean read-only standing authority without per-run approval"
+        )
+    if not isinstance(continuation, dict) or any(
+        continuation.get(field) != expected
+        for field, expected in (
+            ("missing_external_grant_blocks", "exact-external-action-only"),
+            ("authorized_local_work_continues", True),
+            ("approval_continues_execution_without_redundant_confirmation", True),
+            ("current_human_reauthorization_required", False),
+        )
+    ):
+        errors.append(
+            f"{label}: authorization continuation must block only the exact scope delta and avoid repeated approval"
+        )
+    if not isinstance(locks, dict) or any(
+        locks.get(field) is not False
+        for field in (
+            "product_code_changes",
+            "prompt_or_reviewer_changes",
+            "web_canary",
+            "provider_dispatch",
+        )
+    ):
+        errors.append(
+            f"{label}: standing scope must not be revoked by current work-plan locks"
+        )
+    return errors
+
+
 def uses_lightweight_iter010_plan(manifest: dict[str, object]) -> bool:
     """Return whether the complete-experience-first PDR-010 owns this snapshot."""
 
@@ -8027,11 +8216,16 @@ def validate_rework_policy(
         "failed_attempt_blocks": "slice-promotion-only",
         "same_slice_reauthorization_allowed": True,
         "problem_report_or_review_request_implies_redirect": False,
-        "redirect_bases": (
+    }
+    if continuous_product_build_active(manifest):
+        expected["redirect_bases"] = (
+            "explicit-user-direction-change,unavoidable-safety-prohibition"
+        )
+    else:
+        expected["redirect_bases"] = (
             "explicit-user-direction-change,core-architecture-falsified,"
             "precommitted-no-progress-limit-reached"
-        ),
-    }
+        )
     for field, value in expected.items():
         if policy.get(field) != value:
             errors.append(f"{label}: rework_policy.{field} must equal {value}")
@@ -8044,12 +8238,20 @@ def validate_rework_policy(
         errors.append(
             f"{label}: rework_policy.no_progress_measure must be a resolved measurable outcome"
         )
-    limit = policy.get("no_progress_attempt_limit")
-    minimum_limit = 1 if policy.get("active_authorized_rework_continues") is True else 2
-    if isinstance(limit, bool) or not isinstance(limit, int) or limit < minimum_limit:
-        errors.append(
-            f"{label}: rework_policy.no_progress_attempt_limit must be an integer of at least {minimum_limit}"
+    if continuous_product_build_active(manifest):
+        if "no_progress_attempt_limit" in policy:
+            errors.append(
+                f"{label}: continuous product build must not use a fixed no-progress stop count"
+            )
+    else:
+        limit = policy.get("no_progress_attempt_limit")
+        minimum_limit = (
+            1 if policy.get("active_authorized_rework_continues") is True else 2
         )
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < minimum_limit:
+            errors.append(
+                f"{label}: rework_policy.no_progress_attempt_limit must be an integer of at least {minimum_limit}"
+            )
     return errors
 
 

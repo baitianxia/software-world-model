@@ -4,9 +4,9 @@ iteration:
   status: authorized
   outcome_scope: dual-core-world-model-cognition-and-lead-engineering-agent-semantic-multi-turn-chat-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
-  current_decision_ref: ITER-010-PDR-011
-  current_gate_decision_ref: ITER-010-PDR-011
-  current_continuation_decision_ref: ITER-010-PDR-011
+  current_decision_ref: ITER-010-PDR-012
+  current_gate_decision_ref: ITER-010-PDR-012
+  current_continuation_decision_ref: ITER-010-PDR-012
   coding_input: true
 
 baseline:
@@ -34,66 +34,54 @@ user_plan_recovery:
   product_code_changes_allowed: false
   external_execution_allowed: false
 
-mvp_failure_handoff_recovery:
-  schema: USER_DIRECTED_FAILURE_HANDOFF_RECOVERY@1
-  status: authorized-recovery-root-installed
-  authorization_ref: local-user-message-utf8:sha256:382638cd16fdbc85c08a4202a94e630fe4c973ce03bb0d8a1671cbe4ee151aa7
-  authorization_reusable: false
-  trusted_base_commit: 120a8903462caf04fbf7bda0c1afa07e3133d448
-  trusted_base_tree: 883bdde37eec62856139e7fc00ee38691d311b73
-  interrupted_plan_revision_ref: ITER-010-PDR-010
-  interrupted_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-  target_plan_revision_ref: ITER-010-PDR-011
-  scope: governance-only-failure-handoff-contract-recovery
-  old_gate_compliance_claimed: false
-  product_code_changes_allowed: false
-  external_execution_allowed: false
-  one_time_recovery: true
-
 plan_execution_control:
   schema: DEVELOPMENT_PLAN_EXECUTION_CONTROL@1
-  plan_revision_ref: ITER-010-PDR-011
+  plan_revision_ref: ITER-010-PDR-012
   enforcement_mode: fail-closed
   authorization_refs:
-    - local-user-message-utf8:sha256:382638cd16fdbc85c08a4202a94e630fe4c973ce03bb0d8a1671cbe4ee151aa7
+    - local-user-message-utf8:sha256:2755c56a091dc1928d5952dc64a238e04922891451c6471787ecd4d9bbe68e62
   current_action:
     id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
     owner_slice_ref: ITER-010-SLICE-001
-    kind: governance
+    kind: mvp-experience-development
     status: authorized
-    case_id: V-PREVIEW-002
-    coding_allowed: false
-    external_execution_allowed: false
-    result_ref: ITER-010-RESULT-V-USER-DIRECTION-DECISION-001
-    result_path: docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md
+    case_id: V-BROWSER-CHAT-MVP-BUILD-001
+    coding_allowed: true
+    external_execution_allowed: true
+    result_ref: ITER-010-RESULT-V-BROWSER-CHAT-MVP-BUILD-001
+    result_path: docs/project/iterations/iteration-010/results/v-browser-chat-mvp-build-001.md
     evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-user-direction-decision-001.json
+    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-browser-chat-mvp-build-001.json
     evidence_verifier: ITER010_MVP_LIGHT@3
     runner_identity_paths:
       - scripts/plan_gate.py
       - validation/iteration_010_mvp/value_gate/runner.py
       - tests/test_iteration_010_mvp_value_gate.py
     produced_case_ids:
-      - V-PREVIEW-002
+      - V-BROWSER-CHAT-MVP-BUILD-001
     prerequisite_case_ids:
-      - V-MVP-EXPERIENCE-001
+      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
     allowed_change_paths:
+      - src/software_world_model/**
+      - tests/**
+      - validation/iteration_010_mvp/**
+      - validation/structure_world_model_iteration_010/**
+      - pyproject.toml
+      - README.md
       - docs/project/iterations/iteration-010/**
       - docs/project/current.md
-      - AGENTS.md
       - docs/_generated/**
       - docs/system/**
+    forbidden_change_paths:
+      - validation/iteration_010_mvp/value_gate/**
+      - tests/test_iteration_010_mvp_value_gate.py
       - docs/project/governance/**
+      - docs/project/roadmap/**
       - scripts/docs.py
       - scripts/plan_gate.py
       - tests/test_docs_gate.py
       - tests/test_plan_gate.py
-      - validation/iteration_010_mvp/value_gate/**
-      - tests/test_iteration_010_mvp_value_gate.py
-    forbidden_change_paths:
-      - src/software_world_model/**
-      - validation/structure_world_model_iteration_010/**
-      - validation/iteration_010_mvp/experience/**
+      - AGENTS.md
       - .githooks/**
       - .github/workflows/**
   transition:
@@ -101,48 +89,55 @@ plan_execution_control:
     fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
     invalid_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
   locks:
-    product_code_changes: true
-    prompt_or_reviewer_changes: true
-    web_canary: true
-    hardening: true
-    full_regression: true
-    provider_dispatch: true
+    product_code_changes: false
+    prompt_or_reviewer_changes: false
+    web_canary: false
+    hardening: false
+    full_regression: false
+    provider_dispatch: false
   next_action_contracts:
-    user_plan_recovery:
-      id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+    browser_chat_mvp_build:
+      id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
       owner_slice_ref: ITER-010-SLICE-001
-      kind: mvp-failure-handoff
+      kind: mvp-experience-development
       status: authorized
-      case_id: V-MVP-EXPERIENCE-001
-      coding_allowed: false
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-MVP-EXPERIENCE-001
-      result_path: docs/project/iterations/iteration-010/results/v-mvp-experience-001.md
+      case_id: V-BROWSER-CHAT-MVP-BUILD-001
+      coding_allowed: true
+      external_execution_allowed: true
+      result_ref: ITER-010-RESULT-V-BROWSER-CHAT-MVP-BUILD-001
+      result_path: docs/project/iterations/iteration-010/results/v-browser-chat-mvp-build-001.md
       evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-mvp-experience-001.json
+      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-browser-chat-mvp-build-001.json
       evidence_verifier: ITER010_MVP_LIGHT@3
       runner_identity_paths:
         - scripts/plan_gate.py
         - validation/iteration_010_mvp/value_gate/runner.py
         - tests/test_iteration_010_mvp_value_gate.py
       produced_case_ids:
-        - V-MVP-EXPERIENCE-001
+        - V-BROWSER-CHAT-MVP-BUILD-001
       prerequisite_case_ids:
         - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
       allowed_change_paths:
-        - docs/_generated/**
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/**
-      forbidden_change_paths:
-        - src/**
+        - src/software_world_model/**
         - tests/**
-        - validation/**
-        - scripts/**
-        - AGENTS.md
+        - validation/iteration_010_mvp/**
+        - validation/structure_world_model_iteration_010/**
+        - pyproject.toml
+        - README.md
+        - docs/project/iterations/iteration-010/**
+        - docs/project/current.md
+        - docs/_generated/**
         - docs/system/**
+      forbidden_change_paths:
+        - validation/iteration_010_mvp/value_gate/**
+        - tests/test_iteration_010_mvp_value_gate.py
         - docs/project/governance/**
         - docs/project/roadmap/**
-        - docs/project/iterations/iteration-010/decisions/**
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - tests/test_docs_gate.py
+        - tests/test_plan_gate.py
+        - AGENTS.md
         - .githooks/**
         - .github/workflows/**
       transition:
@@ -150,14 +145,14 @@ plan_execution_control:
         fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
         invalid_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
       locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-    user_direction_decision:
-      id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+        product_code_changes: false
+        prompt_or_reviewer_changes: false
+        web_canary: false
+        hardening: false
+        full_regression: false
+        provider_dispatch: false
+    governance_compatibility:
+      id: ITER-010-ACTION-GOVERNANCE-COMPATIBILITY-001
       owner_slice_ref: ITER-010-SLICE-001
       kind: governance
       status: authorized
@@ -188,8 +183,6 @@ plan_execution_control:
         - scripts/plan_gate.py
         - tests/test_docs_gate.py
         - tests/test_plan_gate.py
-        - validation/iteration_010_mvp/value_gate/**
-        - tests/test_iteration_010_mvp_value_gate.py
       forbidden_change_paths:
         - src/software_world_model/**
         - validation/structure_world_model_iteration_010/**
@@ -197,9 +190,9 @@ plan_execution_control:
         - .githooks/**
         - .github/workflows/**
       transition:
-        pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
-        fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
-        invalid_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+        pass_next_action_id: ITER-010-ACTION-GOVERNANCE-COMPATIBILITY-001
+        fail_next_action_id: ITER-010-ACTION-GOVERNANCE-COMPATIBILITY-001
+        invalid_next_action_id: ITER-010-ACTION-GOVERNANCE-COMPATIBILITY-001
       locks:
         product_code_changes: true
         prompt_or_reviewer_changes: true
@@ -240,7 +233,7 @@ product_goal_alignment:
   capability_path_ref: ROADMAP-M-002
   capability_path_step: step-1-java-result-driven-world-model-investigation
   critical_assumption_ids: A1,A2,A3,A4,A5,A6
-  critical_assumption_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
+  critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
   predecessor_result_refs:
     - ITER-006-RESULT-ACCEPTANCE
     - ITER-009-RESULT-SLICE-001-STOP-REDIRECT
@@ -293,15 +286,10 @@ product_goal_alignment:
     - V-XD-002
     - V-XD-003
   blocking_case_ids:
-    - V-MVP-EXPERIENCE-001
+    - V-BROWSER-CHAT-MVP-BUILD-001
     - V-DIRECTION-QUALITY-001
-    - V-LAYER-ATTRIBUTION-001
-    - V-COGNITION-ELIGIBILITY-001
-    - V-FALLBACK-ROUTE-ADMISSION-001
     - V-MODEL-TRANSPARENT-ROUTING-001
-    - V-PUBLIC-OSS-AUTHORITY-001
     - V-CHAT-XD-001
-    - V-ALPHA-ACCESS-001
     - V-CHAT-EXPERIENCE-001
     - V-CHAT-001
     - V-CHAT-QUALITY-001
@@ -513,20 +501,9 @@ product_goal_alignment:
     - citation-does-not-support-a-material-conclusion
     - per-question-investigation-review-or-resource-fuse-fails
   stop_or_redirect_conditions:
-    - system-contract-and-code-mode-boundaries-do-not-match
-    - default-answer-remains-method-branch-call-order-or-internal-diagnostic-walkthrough
-    - implementation-requires-question-project-keyword-symbol-class-method-fixture-or-oracle-routing
-    - question-understanding-drops-or-rewrites-a-material-user-constraint
-    - world-model-is-reduced-to-manual-cache-or-retrieval-hints
-    - investigation-is-single-upfront-plan-or-not-driven-by-prior-results
-    - investigation-answer-or-reviewer-can-directly-read-repository-source-or-use-filesystem-shell-network-or-credential
-    - evidence-ledger-is-rewritten-or-package-is-sealed-before-investigation-finishes
-    - package-seal-is-treated-as-content-truth-or-old-review-approves-new-package
-    - reviewer-verification-bypasses-application-source-broker-or-new-package-answer-review
-    - source-write-update-silent-mode-fallback-secret-exposure-or-non-loopback-listener-occurs
-    - independent-review-is-removed-weakened-or-skipped-for-call-budget
-    - repeated-heterogeneous-question-failures-prove-the-core-path-cannot-be-boundedly-reworked
-    - user-explicitly-decides-redirect-or-reject-after-sustained-web-experience
+    - user-explicitly-stops-redirects-or-rejects
+    - unavoidable-safety-prohibition
+    - exact-scope-delta-blocks-only-the-affected-operation-while-independent-work-continues
 
 critical_assumption_catalog_cutover:
   schema: ITERATION_CRITICAL_ASSUMPTION_CATALOG_CUTOVER@1
@@ -540,7 +517,7 @@ critical_assumption_catalog_cutover:
     A4: 相同 Conversation—主 Agent—受控工具—逐 Turn Evidence/Review 协议能跨第二工程、来源组合和复杂失败泛化
     A5: 完整体验候选先与保留真实客户端、model、reasoning、tools 和权限的 current Codex 做严格外部比较；用户 CONTINUE 后再用同 Agent、同 Provider/model/config 且只改变认知输入的受控对照做 World Model 因果消融
     A6: 产品具有真正语义多轮 Conversation，而不是同 Session 的独立问答
-  current_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
+  current_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
   historical_owner_ref: ITER-010-PROPOSAL@pre-PDR-004
   historical_assumption_ids: A1,A2,A3,A4,A5
   historical_assumptions:
@@ -559,8 +536,8 @@ critical_assumption_catalog_cutover:
 
 rework:
   decision: REWORK
-  decision_ref: ITER-010-PDR-011
-  continuous_execution_decision_ref: ITER-010-PDR-011
+  decision_ref: ITER-010-PDR-012
+  continuous_execution_decision_ref: ITER-010-PDR-012
   restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
   previous_decision_ref: ITER-010-PDR-004
   user_receipt_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
@@ -601,14 +578,13 @@ rework_policy:
   gate_failure_ends_development_goal: false
   same_slice_reauthorization_allowed: true
   problem_report_or_review_request_implies_redirect: false
-  redirect_bases: explicit-user-direction-change,core-architecture-falsified,precommitted-no-progress-limit-reached
-  no_progress_measure: same-failure-signature-persists-after-one-evidence-backed-general-repair-or-two-of-three-heterogeneous-questions-still-have-major-errors
-  no_progress_attempt_limit: 1
+  redirect_bases: explicit-user-direction-change,unavoidable-safety-prohibition
+  no_progress_measure: evidence-backed-earliest-divergence-reassessment-without-fixed-product-stop-count
 
 authorization_continuation_policy:
   schema: JUST_IN_TIME_EXACT_AUTHORIZATION@1
   owner_ref: PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN
-  current_decision_ref: ITER-010-PDR-011
+  current_decision_ref: ITER-010-PDR-012
   current_authority_amendment_ref: ITER-010-PDR-008
   slice_development_authorization_separate_from_external_grant: true
   active_exact_grant_must_be_reused: true
@@ -624,21 +600,21 @@ authorization_continuation_policy:
   hard_stop_ends: scope-expansion-hardening-full-regression-rule-accumulation-and-no-new-evidence-external-reruns-only
   hard_stop_ends_minimum_experience_recovery: false
   exit_conditions: stage-delivered,exact-request-sent-and-independent-safe-work-exhausted,explicit-user-stop-redirect-reject,unavoidable-safety-prohibition
-  current_status: awaiting-user-direction-decision-product-and-external-execution-locked
-  current_case_id: V-PREVIEW-002
+  current_status: product-first-browser-chat-build-active
+  current_case_id: V-BROWSER-CHAT-MVP-BUILD-001
   current_root_grant_status: standing-authority-active
   current_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
   current_request_status: no-human-request-required-within-standing-scope
   current_human_authority_status: active-public-oss-evaluation-standing-authority
   current_human_reauthorization_required: false
-  current_blocker: user-direction-decision-required-no-work-unlocked
+  current_blocker: none-ordinary-failures-remain-inside-active-build
 
 public_oss_evaluation_standing_authority:
   schema: PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1
   generic_schema: PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1
   system_contract_ref: SYS-ADR-019
   owner_decision_ref: ITER-010-PDR-008
-  current_plan_amendment_ref: ITER-010-PDR-011
+  current_plan_amendment_ref: ITER-010-PDR-012
   owner_finding_ref: FINDING-010-140
   authority_status: active
   human_authority_source: existing-iter010-slice001-root-development-authorization
@@ -668,21 +644,21 @@ public_oss_evaluation_standing_authority:
   invalid_or_drifted_machine_receipt_action: fail-before-source-disclosure-credential-or-provider-network
   unverified_source_revision_drift_action: fail-closed-until-source-authority-reverification-not-automatic-human-request
   same_approved_upstream_clean_revision_after_reverification_requires_new_human_approval: false
-  scope_delta_requires_exact_user_authorization: private-unknown-dirty-or-nonpublic-source,different-upstream,provider-model-endpoint-or-credential-account-change,expanded-disclosure-or-budget,fallback-admission-policy-exception,hidden,slice2-or-slice3,write-or-nonloopback-or-production
+  scope_delta_requires_exact_user_authorization: private-unknown-dirty-or-nonpublic-source,different-upstream,new-external-recipient-or-account,expanded-disclosure-or-budget,fallback-admission-policy-exception,write-or-nonloopback-or-production
   historical_grants_and_runs_are_immutable: true
-  runtime_implementation_status: not-yet-implemented-or-verified
+  runtime_implementation_status: active-standing-authority-with-per-dispatch-machine-record
   verification_case_id: V-PUBLIC-OSS-AUTHORITY-001
   verification_status: NOT-RUN
-  independent_action_entry_allowed: false
-  next_execution_entry_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-  next_execution_entry_case_id: V-MVP-EXPERIENCE-001
-  current_external_execution_status: locked-by-pdr011-no-new-dispatch
+  independent_action_entry_allowed: true
+  next_execution_entry_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+  next_execution_entry_case_id: V-BROWSER-CHAT-MVP-BUILD-001
+  current_external_execution_status: active-within-standing-scope
 
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
-  current_execution_decision_ref: ITER-010-PDR-011
-  current_gate_decision_ref: ITER-010-PDR-011
+  current_execution_decision_ref: ITER-010-PDR-012
+  current_gate_decision_ref: ITER-010-PDR-012
   direction_discovery_principle_ref: codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f
   first_operable_browser_delivery_case_id: V-CHAT-EXPERIENCE-001
   first_operable_browser_delivery_requires_result: false
@@ -692,15 +668,15 @@ experience_delivery_policy:
   final_experience_handoff_requires_result: true
   final_experience_handoff_moves_plan_cursor: true
   final_experience_handoff_success_path_requires_current_codex_comparison: true
-  final_experience_handoff_failure_path_requires_one_general_repair_still_failed: true
-  final_experience_handoff_alternate_trigger: one-evidence-backed-general-repair-still-has-same-material-failure
+  final_experience_handoff_failure_path_requires_one_general_repair_still_failed: false
+  final_experience_handoff_alternate_trigger: none-ordinary-failure-remains-active-build
   direction_confirmation_case_id: V-PREVIEW-002
   micro_checkpoint_count: 2
   micro_checkpoint_order: first-operable-browser-delivery->same-candidate-quality-comparison->final-experience-result-handoff->user-direction
   user_handoff_required_at_each_checkpoint: true
   checkpoint_completion_requires_runnable_user_visible_artifact: true
   plan_test_or_document_completion_counts_as_user_visible_increment: false
-  checkpoint_miss_action: handoff-last-runnable-version-and-earliest-root-cause-stop-scope-expansion
+  checkpoint_miss_action: handoff-last-runnable-version-record-earliest-root-cause-and-continue-product-build
   checkpoint_miss_continues_minimum_experience_recovery: true
   historical_pre_policy_result_refs:
     - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
@@ -711,41 +687,26 @@ experience_delivery_policy:
   access_pass_cannot_satisfy_quality_gate: true
   availability_requires_quality_pass: false
   hardening_requires_quality_pass: true
-  pre_first_experience_allowed_checks: targeted-impact-startup-safety-failure-truth-one-qualification-one-smoke-only
+  pre_first_experience_allowed_checks: targeted-impact-startup-safety-and-failure-truthfulness
   pre_first_experience_full_regression_allowed: false
   failure_diagnosis_order: source-truth-world-model-cognition-conversation-or-task-understanding-agent-work-state-and-plan-tool-observation-and-evidence-answer-independent-review-web
   earliest_divergence_required: true
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
   local_minimal_reproduction_required_before_live_retry: true
   unseen_adjacent_local_case_count: 2
-  live_canary_conversation_count_after_local_pass: 1
-  live_canary_turn_count: 3
-  same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
-  same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities
+  repeated_failure_action: reassess-earliest-divergence-and-owner-then-continue-general-product-repair
+  identical_external_rerun_without_new_evidence_allowed: false
+  fixed_product_repair_attempt_limit: none
   pre_first_experience_test_scope: targeted-impact-startup-and-safety-only
   full_regression_before_alpha_continue_allowed: false
   full_regression_allowed_stages: alpha-continue-hardening-and-before-formal-acceptance
-  live_attempt_unit: one-sealed-version-bounded-user-interaction-unit-reaching-any-external-dispatch-chat-counts-each-turn
-  same_failure_signature_retry_limit: 1
-  consecutive_no_user_visible_increment_limit: 2
-  no_increment_action: stop-external-reruns-and-return-to-local-diagnosis
-  pdr010_current_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-  pdr010_current_action_name: complete-mvp-experience-development
-  pdr010_current_case_id: V-MVP-EXPERIENCE-001
-  pdr010_first_browser_experience_precedes_quality_comparison: true
-  pdr010_machine_timebox_or_activation_receipt_required: false
-  pdr010_failure_stays_in_same_action_until_general-repair-or-user-direction: true
-  pdr010_hardening_and_full_regression_locked_until_user_continue: true
-  pdr011_failure_handoff_only: true
-  pdr011_product_candidate_commit: a5c780f51fa5242ee8209766712ad408ed023f80
-  pdr011_multi_artifact_session_failure_records_allowed: true
-  pdr011_missing_answer_citation_review_or_codex_records_must_not_be_fabricated: true
-  pdr011_new_external_dispatch_allowed: false
+  ordinary_failure_stays_in_current_product_build: true
+  historical_pdr010_and_pdr011_results_control_current_work: false
   direction_receipt_records_decision_only: true
-  direction_action_self_loop_until_new_pdr_cutover: true
-  continue_unlock_requires_new_pdr: true
-  continue_unlock_requires_explicit_user_authorization: true
-  continue_unlock_requires_trusted_parent_cutover: true
+  direction_action_self_loop_until_new_pdr_cutover: false
+  continue_unlock_requires_new_pdr: false
+  continue_unlock_requires_explicit_user_authorization: false
+  continue_unlock_requires_trusted_parent_cutover: false
   local_message_digest_is_platform_authenticated_authority: false
 
 layer_attribution_policy:
@@ -975,7 +936,7 @@ deepseek_dispatch_admission_policy:
   implementation_commit: 03520eb2b01e16116b3419dd5f1aa562e96cd21c
   implementation_tree: 9a73b04641e681ab6d9a9e3499b36d6f831c1a3c
   current_runtime_implementation_status: local-mechanical-admission-gate-pass
-  current_external_status: standing-human-authority-active-blocked-on-machine-receipt-runtime-and-compliant-live-receipts
+  current_external_status: fallback-dispatch-only-subject-to-off-peak-admission-local-and-preferred-route-work-continues
   new_human_approval_required_inside_allowed_window_and_current_scope: false
   run_043_status: deepseek-scheduling-policy-fail-not-direction-acceptance-evidence
   run_043_beijing_window: "2026-08-27T11:19:34+08:00/2026-08-27T11:27:37+08:00"
@@ -1639,7 +1600,7 @@ development:
       project_decision_ref: ITER-010-PDR-004
       restart_execution_decision_ref: ITER-010-PDR-005
       continuous_execution_decision_ref: ITER-010-PDR-006
-      current_execution_decision_ref: ITER-010-PDR-011
+      current_execution_decision_ref: ITER-010-PDR-012
       recovery_decision_ref: ITER-010-PDR-003
       historical_reflection_decision: REDIRECT
       historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
@@ -1711,10 +1672,10 @@ authorization:
   human_reauthorization_trigger: standing-scope-delta-only
   pdr008_current_human_reauthorization_required_for_current_direction_canary: false
   pdr008_current_machine_receipt_derivation_required: true
-  pdr008_current_scope_delta_reauthorization_trigger: private-unknown-dirty-or-different-upstream,provider-model-endpoint-or-account-change,expanded-disclosure-or-budget,fallback-admission-policy-exception,hidden,slice2-or-slice3,write-nonloopback-or-production
+  pdr008_current_scope_delta_reauthorization_trigger: private-unknown-dirty-or-different-upstream,new-external-recipient-or-account,expanded-disclosure-or-budget,fallback-admission-policy-exception,write-nonloopback-or-production
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
-  external_execution_authorization_status: not-authorized
-  external_execution_authorization_status_scope: locked-by-pdr011-no-new-dispatch
+  external_execution_authorization_status: authorized-within-public-oss-standing-scope
+  external_execution_authorization_status_scope: current-source-route-disclosure-budget-and-loopback-evaluation
   external_direction_root_grant_status: consumed-by-run-043-scheduling-policy-fail-successor-not-authorized
   external_direction_root_grant_status_is_historical_legacy_validator_compatibility_only: true
   external_direction_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4

@@ -92,7 +92,8 @@ Secret、授权和失败真实性边界始终生效。完整能力矩阵、全�
 不使用 Activation Result、分钟级时钟收据或迟到即非法的时点。首次体验前只运行 targeted impact、startup、safety 和失败真实性测试，不运行 full regression。
 Access 与答案质量 Case 必须分离：availability 不等待质量 PASS，hardening 必须等待。
 
-历史 sealed Result 保持不可变，不反向补造后来出现的体验或 Provider 字段，也不能满足新的体验 Gate。新的长运行动作只在完整体验交接或游标迁移时密封 Result，不按每次
+历史 sealed Result 保持不可变，不反向补造后来出现的体验或 Provider 字段，也不能满足新的体验 Gate。首个完整 Web 体验
+`requires_result=false` 并立即交付；新的长运行动作只在最终方向/完成交接或确需迁移项目状态时密封 Result，不按首次体验、每次
 失败、提交或外部调用切分 Result。
 
 每个 sealed version 中触发外部 dispatch 的有界用户交互单元计一条 live attempt，单元内部模型/角色调用不重复计数；Chat 按 Turn 计数，不按整段 Conversation 合并。相同 failure

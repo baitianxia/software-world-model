@@ -5771,6 +5771,22 @@
     "path": "docs/project/iterations/iteration-010/decisions/PDR-011-truthful-pre-answer-failure-handoff.md"
   },
   {
+    "id": "ITER-010-PDR-012",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-012-product-first-continuous-browser-chat-build.md"
+  },
+  {
     "id": "ITER-010-PROPOSAL",
     "kind": "iteration-proposal",
     "status": "accepted",
@@ -6034,7 +6050,7 @@
   {
     "id": "ITER-010-VERIFICATION",
     "kind": "iteration-verification",
-    "status": "failed",
+    "status": "current",
     "authority": "execution-evidence",
     "owners": [
       "quality"

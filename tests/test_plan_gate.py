@@ -2336,18 +2336,6 @@ class TransitionTests(unittest.TestCase):
             missing_errors,
         )
 
-    def test_failure_handoff_recovery_allows_registered_direction_action(self) -> None:
-        manifest_value = copy.deepcopy(self._current_manifest())
-        contract = manifest_value["plan_execution_control"]["next_action_contracts"][  # type: ignore[index]
-            "user_direction_decision"
-        ]
-        manifest_value["plan_execution_control"]["current_action"] = contract  # type: ignore[index]
-        manifest_value["plan_execution_control"]["transition"] = contract["transition"]  # type: ignore[index]
-        manifest_value["plan_execution_control"]["locks"] = contract["locks"]  # type: ignore[index]
-        self.assertEqual(
-            plan_gate._failure_handoff_recovery_errors(manifest_value), []
-        )
-
     def test_lightweight_user_direction_does_not_require_candidate_identity(self) -> None:
         action = {
             "evidence_verifier": plan_gate.ITER010_MVP_LIGHT_VERIFIER,
@@ -2793,13 +2781,15 @@ class GovernanceRevisionTests(unittest.TestCase):
         target_control = target["plan_execution_control"]
         assert isinstance(target_control, dict)
         target_pdr = str(target_control["plan_revision_ref"])
+        target_action = target_control["current_action"]
+        assert isinstance(target_action, dict)
         return plan_gate.validate_transition(
             base,
             target,
             [MANIFEST_PATH],
             base_current_metadata=current_metadata(action_id=ACTION_RESPONSIBILITY),
             target_current_metadata=current_metadata(
-                action_id=ACTION_RESPONSIBILITY, pdr=target_pdr
+                action_id=str(target_action["id"]), pdr=target_pdr
             ),
             base_verification_cases=cases(),
             target_verification_cases=cases(),
@@ -2829,6 +2819,33 @@ class GovernanceRevisionTests(unittest.TestCase):
 
     def test_governance_revision_with_preexisting_base_pass_receipt_passes(self) -> None:
         self.assertEqual(self.validate_revision(include_base_result=True), [])
+
+    def test_governance_revision_may_replace_the_work_plan_action(self) -> None:
+        base, target, result, evidence = self.revision_states()
+        target_control = target["plan_execution_control"]
+        assert isinstance(target_control, dict)
+        target_contracts = target_control["next_action_contracts"]
+        assert isinstance(target_contracts, dict)
+        replacement_contract = contract_by_id(
+            target_contracts, ACTION_FREEZE_REWORK
+        )
+        replacement = plan_gate._action_fields(replacement_contract)
+        target_control["current_action"] = replacement
+        target_control["transition"] = copy.deepcopy(
+            replacement_contract["transition"]
+        )
+        target_control["locks"] = copy.deepcopy(replacement_contract["locks"])
+        self.assertEqual(
+            self.validate_revision_states(
+                base,
+                target,
+                result,
+                evidence,
+                include_base_result=True,
+                target_documents=documents(include_revision_10=True),
+            ),
+            [],
+        )
 
     def test_governance_revision_rejects_pdr_sequence_rollback(self) -> None:
         base, target, result, evidence = self.revision_states()

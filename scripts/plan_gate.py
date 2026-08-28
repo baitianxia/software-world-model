@@ -3219,7 +3219,6 @@ def validate_transition(
     result_changed = isinstance(result_path, str) and result_path in changed_paths
     evidence_path = base_action.get("evidence_path")
     evidence_changed = isinstance(evidence_path, str) and evidence_path in changed_paths
-    transition_attempted = action_changed or result_changed or evidence_changed
     base_runner_paths = base_action.get("runner_identity_paths")
     changed_runner_paths = (
         set(changed_paths).intersection(base_runner_paths)
@@ -3228,6 +3227,14 @@ def validate_transition(
     )
     revision_changed = base_control.get("plan_revision_ref") != target_control.get(
         "plan_revision_ref"
+    )
+    # A governance plan revision may replace the work-plan action mirror.  It
+    # is not a Result transition unless it also consumes Result/evidence, or
+    # changes the action without advancing the plan revision.
+    transition_attempted = (
+        result_changed
+        or evidence_changed
+        or (action_changed and not revision_changed)
     )
     semantics_changed = (
         _plan_semantics_without_revision(base_manifest, base_control)

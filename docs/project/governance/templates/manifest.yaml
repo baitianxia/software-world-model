@@ -169,9 +169,9 @@ plan_execution_control:
         full_regression: true
         provider_dispatch: true
 
-# 比较发生在首次可操作浏览器交付之后。它决定能否形成最终方向 handoff，
-# 但不是第一次体验的前置动作或产品代码锁；方向 `CONTINUE` 仍需新 PDR、
-# 明确用户授权和可信父 cutover 才能解锁 hardening。
+# 比较发生在首次可操作浏览器交付之后。它决定能否进入方向确认后的夯实，
+# 但不是第一次体验的前置动作或产品代码锁。同一 standing scope 内的后续
+# 工作只调整工作计划；只有真实 scope delta 才需要新的授权决定。
 direction_quality_gate:
   schema: POST_EXPERIENCE_STRONG_BASELINE_GATE@1
   case_id: V-DIRECTION-QUALITY-NNN
@@ -251,23 +251,23 @@ experience_delivery_policy:
   final_experience_handoff_requires_result: true
   final_experience_handoff_moves_plan_cursor: true
   final_experience_handoff_success_path_requires_current_codex_comparison: true
-  final_experience_handoff_failure_path_requires_one_general_repair_still_failed: true
-  final_experience_handoff_alternate_trigger: one-evidence-backed-general-repair-still-has-same-material-failure
+  final_experience_handoff_failure_path_requires_one_general_repair_still_failed: false
+  final_experience_handoff_alternate_trigger: none-ordinary-failure-remains-in-product-build
   direction_confirmation_case_id: V-PREVIEW-NNN
   micro_checkpoint_count: 2
   micro_checkpoint_order: first-operable-browser-delivery->same-candidate-quality-comparison->final-experience-result-handoff->user-direction
   direction_receipt_records_decision_only: true
-  direction_action_self_loop_until_new_pdr_cutover: true
-  continue_unlock_requires_new_pdr: true
-  continue_unlock_requires_explicit_user_authorization: true
-  continue_unlock_requires_trusted_parent_cutover: true
+  direction_action_self_loop_until_new_pdr_cutover: false
+  continue_unlock_requires_new_pdr: false
+  continue_unlock_requires_explicit_user_authorization: false
+  continue_unlock_requires_trusted_parent_cutover: false
   local_message_digest_is_platform_authenticated_authority: false
 
 development_policy:
   action_unit: one-long-running-complete-experience-action
   ordinary_commits_within_action_allowed: true
   ordinary_failures_remain_in_current_action: true
-  result_required_for: final-experience-direction-handoff-or-proven-post-general-repair-failure-cursor-move
+  result_required_for: final-direction-completion-or-real-project-state-migration
   first_operable_browser_delivery_requires_result: false
   result_for_each_commit_test_failure_or_dispatch: false
   activation_clock_allowed: false
@@ -284,10 +284,10 @@ failure_attribution_policy:
   ordered_layers: source-truth,world-model-cognition,conversation-task-understanding,agent-work-state-plan,tool-observation-evidence,answer,independent-review,web
   falsifiable_hypothesis_required_before_change: true
   question_specific_logic_allowed: false
-  repair_scope: one-general-repair-in-current-action
+  repair_scope: evidence-driven-general-repairs-in-current-action
   targeted_recheck_requires_unseen_adjacent_cases: 2
-  live_canary_after_local_recheck_maximum: 1
-  repeated_signature_after_one_repair_action: architecture-responsibility-review
+  live_canary_after_local_recheck_maximum: per-evidence-backed-hypothesis
+  repeated_signature_after_one_repair_action: recheck-earliest-divergence-and-owner-without-stopping-product-build
 
 authorization_continuation_policy:
   schema: AUTHORIZATION_CONTINUITY@1

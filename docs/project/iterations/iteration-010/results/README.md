@@ -17,9 +17,9 @@ iteration: ITER-010
   任何产品；当前完整体验开发权威来自 PDR-010 与 Manifest。
 - [V-MVP-EXPERIENCE-001 Failure Handoff Result](v-mvp-experience-001.md)：@3 runner 对 run-052/053 的多 Session 原始摘要、Git identity、
   digest 与 19 次 Ark / 0 次 DeepSeek 执行对账给出 machine PASS；产品质量结论严格为 `QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。
-  Answer/Citation/Review/current Codex comparison 均未产生且未补造，当前只进入用户方向决定，不解锁任何产品或 Provider 工作。
+  Answer/Citation/Review/current Codex comparison 均未产生且未补造。它只保存 PDR-011 历史失败；PDR-012 已恢复同一 Slice 产品开发。
 - [V-PREVIEW-002 User Direction Result](v-user-direction-decision-001.md)：用户决定为 `REWORK`，要求完全纠正开发方式并严格围绕产品目标执行。
-  本记录的产品、模型、网络和测试计数均为 0；它只完成 PDR-011 的历史方向记录，后继计划负责恢复同一 Slice 的持续产品开发。
+  本记录的产品、模型、网络和测试计数均为 0；它完成 PDR-011 的历史方向记录，PDR-012 据此恢复同一 Slice 的持续产品开发。
 - [V-WEB-000 Live Run 009](v-web-000-live-run-009.md)：最早真实 Web 微纵切 PASS；exact mall + Maven Cognition + adaptive Source +
   sealed Package + Answer + independent Review + 6 个可打开 Citation。它是 `NOT_ACCEPTANCE / NOT_PRODUCTION` 微检查点，不是 Slice Result。
 - [V-WEB-001 Public Direction Questions](v-web-001-public-direction-questions.md)：同一真实 Web 的 4 条不同覆盖维度公开题已执行；3 个

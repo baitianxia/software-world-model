@@ -30,11 +30,14 @@ tests: [tests/test_docs_gate.py, tests/test_plan_gate.py]
 不能伪装执行失败。
 `not-reconstructed` 与 `historical-*` authority 只用于迁移后明确不伪造的历史索引/开发材料，不得用于新的活动 Iteration。`coding_input` 是
 Slice 级门，不是无限代码授权：Roadmap/Proposal/模板必须为 `false`；活动 Iteration 与被指向的 Slice 必须为 `true`，且仍需 Readiness、
-`current.md` 和 Manifest 的唯一 action 同时成立。action-level 白名单比 Slice 的 `code/tests` 范围更窄时，以 action 为准。
+`current.md` 和 Manifest 的工作计划同时成立。权限来源是活动 Slice 与 standing authority；action-level 路径只收窄当前 diff，不得因普通
+失败、Result 缺失或计划调整撤销、消费或暂停仍有效的权限。
 
 状态不得推导：设计 accepted 不表示已实现，测试 pass 不表示产品 pass，产品 pass 不表示生产 activated。
 
-开发过程与 Result 必须分离。一个活动产品 action 可以跨多个普通提交、定向测试、局部失败、根因归因和通用修复长时间运行；这些事件保留为动作内证据，不按每次提交、失败、外调或重试建立 Project Result。Result 只在完整体验交接、用户方向决定、scope 变更导致游标迁移，或明确结束当前动作时密封。
+开发过程与 Result 必须分离。一个活动产品 action 可以跨多个普通提交、定向测试、局部失败、根因归因和通用修复长时间运行；这些事件
+保留为动作内证据，不按每次提交、失败、外调、重试或首个 Web 体验建立 Project Result。Result 只在最终方向/完成交接、scope 变更导致
+项目状态迁移，或明确结束当前动作时密封。
 
 外部权限文档必须区分三类对象，禁止把审计收据写成人工授权门槛：
 

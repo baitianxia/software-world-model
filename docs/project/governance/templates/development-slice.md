@@ -30,7 +30,8 @@ product_goal_slice_gate_case_ids: []
 
 本 Slice 是一个长运行产品动作，可跨多个普通提交。第一次完整浏览器主链可操作后立即交给用户；随后在同一候选上执行至少 3 个异质问题（至少 2 个未参与修复）和 actual current Codex 的严格比较。比较失败阻止方向 `PASS`、hardening 和晋级，但不阻止首次体验交付，也不结束本 Slice。
 
-用户明确 `CONTINUE` 前，不运行 direct evidence / source-only / World Model+source / current Codex 四路因果消融、full regression、hidden、跨工程或 hardening。`CONTINUE` 只记录方向；后续执行还必须由新 PDR、明确用户授权和可信父 cutover 解锁。
+用户明确 `CONTINUE` 前，不运行 direct evidence / source-only / World Model+source / current Codex 四路因果消融、full regression、hidden、
+跨工程或 hardening。`CONTINUE` 后，同一 standing scope 内直接按工作计划继续；只有真实 scope delta 才申请授权。
 
 ## User-visible outcome
 
@@ -70,7 +71,7 @@ product_goal_slice_gate_case_ids: []
 
 `Source truth → World Model cognition → conversation/task understanding → Agent work state/plan → tool observation/evidence → answer → independent review → Web`
 
-在形成可证伪 root-cause hypothesis 前不得修改 Prompt、Schema、Contract 或添加规则。一次通用修复先通过本地最小复现和至少两个未参与修复的相邻案例，再执行一个有界 live canary。相同 signature 修复一次仍复现时，评审架构职责；不得继续堆叠单题特判或无新证据的外部重跑。
+在形成可证伪 root-cause hypothesis 前不得修改 Prompt、Schema、Contract 或添加规则。每次通用修复先通过本地最小复现和未参与修复的相邻案例，再执行有界 live canary。相同 signature 仍复现时重新检查最早偏差和职责归属；不得堆叠单题特判或无新证据地重跑外部模型，但产品开发继续。
 
 失败保持本动作和 Slice `IN_PROGRESS / coding_input=true`。不为每次失败、测试或 Provider dispatch 新建 action 或 Result。
 
@@ -91,15 +92,15 @@ product_goal_slice_gate_case_ids: []
 - 基于独立源码证据的密封、独立质量评估；
 - 系统绝对质量、逐题无物质落后、总体严格超过和非 locator 世界模型贡献检查。
 
-上述比较不是首次体验前置。只有用户 `CONTINUE`，且后续新 PDR 取得明确用户授权并完成可信父 cutover，才进行四路因果消融、full regression、hidden、跨工程和 hardening。
+上述比较不是首次体验前置。用户 `CONTINUE` 后，在同一 standing scope 内直接调整工作计划并进行四路因果消融、full regression、hidden、跨工程和 hardening；只有真实 scope delta 才申请新的最小授权。
 
 ## Acceptance scenarios
 
 ## User handoff and direction decision
 
-第一次完整浏览器主链形成后只报告 exact version、启动入口、完整链、Chat 行为、质量待验证状态和限制，立即让用户操作；此时不生成 Result、不移动游标。随后同候选完成异质问题和 Codex 比较。只有最终 `V-MVP-EXPERIENCE-NNN` 方向 handoff，或证明一次通用修复后同类重大失败仍存在时，才密封一次 Result 并移动到 `V-PREVIEW-NNN`。
+第一次完整浏览器主链形成后只报告 exact version、启动入口、完整链、Chat 行为、质量待验证状态和限制，立即让用户操作；此时不生成 Result、不移动游标。随后同候选完成异质问题和 Codex 比较。只有最终 `V-MVP-EXPERIENCE-NNN` 方向/完成 handoff 或真实项目状态迁移时，才密封一次 Result。
 
-用户基于真实体验和比较结果决定 `CONTINUE / REWORK / REDIRECT / REJECT`。方向 Result/receipt 只记录决定，当前 user-direction action 保持自环；`CONTINUE` 仅允许起草后续新 PDR，并须明确用户授权与可信父 cutover 后才解锁夯实。`REWORK` 保持本 Slice；只有明确用户转向或核心架构证伪才使用 `REDIRECT`。本地消息 digest 不是平台认证身份或授权。
+用户基于真实体验和比较结果决定 `CONTINUE / REWORK / REDIRECT / REJECT`。方向 Result/receipt 只记录决定，不能创建或扩大权限；`CONTINUE` 在既有 standing scope 内直接进入夯实，`REWORK` 保持本 Slice 继续开发，只有明确用户转向或核心架构证伪才使用 `REDIRECT`。真实 scope delta 才需要新的最小授权。本地消息 digest 不是平台认证身份或授权。
 
 ## Findings
 

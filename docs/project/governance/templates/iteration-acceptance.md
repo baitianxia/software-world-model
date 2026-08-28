@@ -25,7 +25,8 @@ production_activation: pending
 
 ## Direction decision and post-continue work
 
-绑定用户 `CONTINUE` 的 exact direction receipt。该 receipt 只记录方向，不自行授权；还必须绑定后续新 PDR、明确用户授权和可信父 cutover。缺少任一项，不得把四路因果消融、full regression、hidden、跨工程或 hardening 写成已授权或已执行。本地消息 digest 不是平台认证身份、签名或授权。
+绑定用户 `CONTINUE` 的 exact direction record。它只记录方向，不能创建或扩大 standing authority；同一 standing scope 内后续工作直接
+继续，真实 scope delta 必须另获授权。不得把未执行的四路因果消融、full regression、hidden、跨工程或 hardening 写成已执行。
 
 `CONTINUE` 后记录 direct evidence、同 Agent 仅源码、同 Agent 世界模型认知+源码、actual current Codex 四路 exact identity、密封答案、独立 source truth 和独立 evaluator。Codex 与 direct evidence 都不是 Oracle。系统必须通过绝对质量门、逐题无物质退步、总体质量严格超过 Codex，并证明非 locator 世界模型贡献；全体打平、重大错误、双方失败或无法裁决都不能接受。
 

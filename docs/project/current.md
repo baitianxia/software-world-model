@@ -4,56 +4,48 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-PLAN-RECOVERY-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, ITER-010-PDR-010, ITER-010-PDR-011, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-28
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-pdr011-awaiting-user-direction
+worktree_status: iteration-010-slice-001-product-first-browser-chat-build
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
-live_model_path: product-and-provider-work-stopped-sealed-failure-handoff-awaiting-user-direction
-plan_revision_ref: ITER-010-PDR-011
+live_model_path: preferred-execution-profile-first-fallback-only-on-trusted-unavailability
+plan_revision_ref: ITER-010-PDR-012
 next_action: ITER-010-ACTION-USER-DIRECTION-DECISION-001
-next_action_case_id: V-PREVIEW-002
+next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 ---
 
 # 当前工作上下文
 
-## PDR-011 当前唯一动作
+## 当前结果
 
-`V-MVP-EXPERIENCE-001` failure handoff Result 已密封，计划游标已按预注册 transition 移到
-`ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-PREVIEW-002`。当前动作只等待并记录用户的
-`CONTINUE / REWORK / REDIRECT / REJECT` 方向，不授权实现或外部执行。
+ITER-010 / SLICE-001 已恢复为持续产品开发。目标不是继续建设治理设施，而是尽快交付普通用户可直接使用的无认证浏览器 Chat：
 
-exact product candidate 仍是 `a5c780f51fa5242ee8209766712ad408ed023f80` / tree
-`4dcf8b0eca2f50b7618d0af1c43eca1613bace94`。run-052 原问题与 run-053 两个 unseen 异质复验均在
-Answer/Citation/Review 前以 `AGENT_MODEL_CALL_REJECTED` 失败关闭。19 次 Ark 调用都完成 dispatch、credential、TLS 与 HTTP；DeepSeek
-调用和 transport 计数全部为 0。结构化输出不合约属于 Application contract failure，不是首选模型不可用，也没有触发备用路线。
+- 软件世界模型提供 exact revision 上真实、版本化的软件认知，不能以 Maven 模块/依赖或 locator 列表冒充；
+- 主工程 Agent 以认知为起点，根据 Coverage/Gap 受控读取源码、文档、配置或测试，并根据观察重规划；
+- 每个 Turn 形成自然答案、可打开 Citation 和 fresh independent Review；
+- 同一 Conversation 支持追问、纠正、深入或总结，新 Conversation 隔离；
+- 不包含工程、问题、关键词、符号、类、方法、fixture 或 Oracle 特判。
 
-## 已密封证据的边界
+## 持续授权与工作计划
 
-- machine `PASS` 只表示 @3 schema、digest、Git identity 与 runtime reconciliation 闭合；产品质量结论仍是
-  `QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。
-- run-052 无 browser capture；run-052 与 run-053 保持两个 exact Artifact Session。
-- raw model outputs 只是被拒绝的 proposal，不是 Answer；Citation=0、Review=false、current Codex comparison=false。
-- handoff trusted parent 与实际运行 product candidate 分开绑定；local capture authenticity 和 semantic quality 均未被机器认证。
+当前公开 mall exact revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 仍在 active standing authority 内。它是产品
+编码和范围内外调的权限来源；新的问题、Turn、运行或同范围工作计划调整不重复申请授权。只有私有/新 Source、新接收方或账户、扩大
+披露/预算、外部写入、非 loopback、Production 或破坏性操作才属于 scope delta。
 
-## 当前锁
+Manifest current action 只是工作计划和可信路径的兼容镜像，不得因答案、格式或测试失败撤销上述授权。普通失败留在同一开发动作：先定位
+Source → 世界模型构建/查询 → Agent → Evidence/Answer → Review → Web 的最早偏差，再做通用修复和异质复验。
 
-产品代码、Prompt/Reviewer、Web canary、Provider dispatch、hardening、full regression、hidden、第二工程、非 loopback、Source 写入和
-Production 全部锁定。即使用户选择 `CONTINUE`，后续工作仍需新 PDR、fresh 明确授权与可信父 cutover；方向 receipt 本身不解锁实现。
+## 唯一下一开发动作
 
-## 当前权威入口
+使用已有 run-052/053 trace 和当前代码确定最早可证实的产品偏差，完成一条非 POM/Maven 问题的真实三轮浏览器 Conversation。世界模型
+必须产生可观察的非 locator 认知贡献；认知不足时主 Agent 必须按 Gap 只读源码；最终页面必须显示自然答案、Citation 和本轮 fresh Review。
 
-- [PDR-011](iterations/iteration-010/decisions/PDR-011-truthful-pre-answer-failure-handoff.md)
-- [Manifest](iterations/iteration-010/manifest.yaml)
-- [Slice1](iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md)
-- [Verification Matrix](iterations/iteration-010/verification-matrix.md)
-- [V-MVP-EXPERIENCE-001 Result](iterations/iteration-010/results/v-mvp-experience-001.md)
-- [FINDING-010-161](iterations/iteration-010/findings/FINDING-010-161.md)、[FINDING-010-162](iterations/iteration-010/findings/FINDING-010-162.md)、
-  [FINDING-010-163](iterations/iteration-010/findings/FINDING-010-163.md) 与
-  [FINDING-010-164](iterations/iteration-010/findings/FINDING-010-164.md)、
-  [FINDING-010-165](iterations/iteration-010/findings/FINDING-010-165.md)
+该链一旦可操作，立即启动在 http://127.0.0.1:8765/ 交给用户，requires_result=false，不等待 current Codex 比较、全量回归、跨工程、
+hidden 或工程夯实。交付后在同一候选上用至少两个未参与修复的异质问题和 current Codex 强基线验证方向；失败继续同一开发闭环，不新建
+迭代、PDR、失败 Result 或授权请求。
 
-当前状态：`AUTHORIZED / PDR-011 / FAILURE-RESULT-SEALED / AWAITING-USER-DIRECTION / PRODUCT-AND-PROVIDER-STOPPED / NON-PRODUCTION`。
+当前状态：AUTHORIZED / REWORK / PDR-012 / PRODUCT DEVELOPMENT ACTIVE / LOOPBACK EVALUATION / NON-PRODUCTION。
