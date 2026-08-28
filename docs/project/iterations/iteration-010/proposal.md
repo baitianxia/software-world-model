@@ -19,8 +19,8 @@ current_scheduling_finding_ref: FINDING-010-139
 ## PDR-012 current amendment：持续完成真实浏览器 Chat
 
 PDR-011 已如实保存 run-052/053 的答案前失败，但把工作计划误作授权来源并停止了仍在 standing scope 内的产品开发。PDR-012 保留全部
-失败证据，恢复同一 Slice 的持续产品开发；普通失败不再迁移游标或产生新的治理任务。当前唯一目标是尽快打通真实浏览器 Chat 纵切并交给
-用户体验。
+失败证据，恢复同一 Slice 的持续产品开发；普通失败不再迁移游标或产生新的治理任务。当前唯一目标是尽快交付答案质量合格的真实浏览器
+Chat MVP；首条可运行纵切只是开发体验候选，不是 MVP 完成。
 
 ITER-010 保持“双核心”产品架构：软件世界模型维护 exact revision 上持久、版本化、可验证、可更新的软件认知；主工程 Agent 以该认知为
 起点，持续维护用户目标、假设、计划和对话上下文，并按证据缺口通过受控工具读取源码、文档、配置或测试。Application 密封逐 Turn
@@ -39,7 +39,8 @@ PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR
 满足目标的 MVP。根因属于计划与架构执行问题：把内部证明和比较工具放在完整体验之前；答案失败没有先区分世界模型构建、Agent、Evidence/
 Review 与 Chat/Web 的最早偏差；过多动作、收据和时间门禁把普通开发失败变成停工。
 
-PDR-010 因此把最早可验证产物改为完整体验，同时保留准确性、安全、独立审核和严格强基线标准。质量门后移到首条完整体验之后，不被取消。
+PDR-010 因此把最早可验证产物改为完整开发体验候选，同时保留准确性、安全、独立审核和严格强基线标准。质量判断在候选可运行后立即执行，
+并且是 MVP 命名、完成和用户判向的必经条件。
 
 ## Product-goal alignment and cumulative delta
 
@@ -51,7 +52,8 @@ PDR-010 因此把最早可验证产物改为完整体验，同时保留准确性
   只有独立 availability boundary 密封首选 execution profile 不可用，才可进入备用路线。
 - 结构化输出无效与 Reviewer 拒绝不是“模型不可用”。前者在同一 profile 内有界格式修复，后者由同一 profile 重写并 fresh review；两者都是
   新 call、新 request identity 和新 receipt，不是 transport request retry，耗尽通用安全/no-progress 边界后如实关闭当前 Turn，不能切换路线碰答案。
-- 第一次完整体验只证明方向可被用户真实判断；严格超过 actual current Codex、无重大错误和非 locator 世界模型贡献共同决定是否进入夯实。
+- 第一次完整链只形成可供早期反馈的开发体验候选；它不证明方向或 MVP 合格。系统自身无重大错误、逐题不输 actual current Codex、总体
+  严格超过 Codex和具有非 locator 世界模型贡献，共同决定是否取得 MVP 资格并进入用户判向。
 
 ## Outcome and users
 
@@ -74,7 +76,8 @@ World Model Answering、Knowledge Update/Use、Response Control、Model Gateway�
 
 ## Development slices and dependencies
 
-1. `SLICE-001`：当前 active Slice。持续完成真实浏览器 Chat，首次完整三轮链可操作即交付；随后用异质问题与 current Codex 判向。
+1. `SLICE-001`：当前 active Slice。持续完成真实浏览器 Chat；首次完整三轮链可操作即作为开发体验候选交付，开发不停，随后立即用异质问题
+   与 current Codex 完成 MVP 质量资格判断。
 2. `SLICE-002`：用户确认方向后完成持久恢复、第二工程、复杂冲突/去重/性能/安全、完整四路因果消融与 full regression；同一 standing
    scope 内不重复申请授权。
 3. `SLICE-003`：再次授权后执行最终隐藏工程、现场问题、安全与正式 Acceptance。
@@ -109,8 +112,9 @@ Slice3 完成最终 A1—A6 验收。
 
 ## Verification and acceptance
 
-当前验证顺序固定为：完整浏览器主链 → 无 Result 立即用户可体验 → 同候选异质问题与 actual current Codex 严格比较 → 用户
-`CONTINUE / REWORK / REDIRECT / REJECT`。第一条体验交付不移动游标、不冒充质量 PASS；普通失败继续同一开发动作。
+当前验证顺序固定为：完整浏览器主链 → 以“开发体验候选”无 Result 立即用户可体验且开发不停 → 同候选异质问题与 actual current Codex
+严格比较 → 质量通过后命名为 MVP → 用户 `CONTINUE / REWORK / REDIRECT / REJECT`。第一条体验交付不移动游标、不冒充 MVP 或质量 PASS；
+普通失败继续同一开发动作。
 
 严格方向通过要求：重大错误为 0；逐题相对 Codex 无物质退步；总体质量严格超过 Codex；至少一项重要价值来自非 locator 的世界模型认知。
 Codex 是强基线，不是真值、Oracle、Reviewer 或裁判。完整四路因果消融、第二工程、hidden、hardening 与 full regression 只在用户

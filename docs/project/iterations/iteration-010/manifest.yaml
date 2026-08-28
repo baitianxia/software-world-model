@@ -205,6 +205,13 @@ direction_quality_gate:
   case_id: V-DIRECTION-QUALITY-001
   owner_slice_ref: ITER-010-SLICE-001
   status: post-experience-quality-policy-not-current-action
+  first_browser_handoff_classification: development-preview-not-mvp
+  first_browser_handoff_may_claim_mvp: false
+  development_continues_after_first_browser_handoff_without_pause: true
+  mvp_claim_requires_this_gate_pass: true
+  mvp_claim_requires_same_candidate: true
+  mvp_claim_requires_current_codex_comparison: true
+  candidate_change_invalidates_prior_preview_and_quality_evidence: true
   execution_order: first-operable-browser-delivery->heterogeneous-quality-and-current-codex-comparison->final-experience-result-handoff->user-direction
   arms:
     - complete-world-model-system

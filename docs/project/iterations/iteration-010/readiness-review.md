@@ -43,8 +43,9 @@ PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复�
 4. 同一 Conversation 至少完成首问、上下文追问和纠正/深入/总结，新 Conversation 不继承旧指代；
 5. 固定 loopback、无认证、单 Turn 失败不关闭服务，不存在工程或题面特判。
 
-第一条真实三轮链可操作即交付，requires_result=false。首次交付前只运行 targeted impact、startup、安全和失败真实性验证；不以全量回归、
-hidden、跨工程、完整比较基础设施或工程夯实延迟体验。
+第一条真实三轮链可操作即作为“开发体验候选”交付，requires_result=false；它不得称为 MVP、质量 PASS、方向 PASS 或完成。首次交付前只
+运行 targeted impact、startup、安全和失败真实性验证，不以全量回归、hidden、跨工程、完整比较基础设施或工程夯实延迟早期反馈。候选
+交付后开发不停，立即完成同一候选的绝对质量检查和 current Codex 同题比较；两者通过才取得 MVP 资格。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 
@@ -74,17 +75,19 @@ SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model A
 
 ## Verification readiness
 
-首次体验前只运行 targeted impact、startup、source/secret safety 与 failure-truthfulness 检查。浏览器主链可操作即交付；异质问题与 current
-Codex 比较在同一候选上随后进行，full regression 不得成为首次体验前置。
+首次体验前只运行 targeted impact、startup、source/secret safety 与 failure-truthfulness 检查。浏览器主链可操作即作为开发体验候选
+交付；异质问题与 current Codex 比较在同一候选上紧接着进行，期间不暂停、不等待新的用户决定。full regression 不得成为 MVP 前置。
 
 ## Architecture reflection gate readiness
 
-真实体验后才判断 A1—A6：世界模型是否提供真正认知、Agent 是否充分利用认知与源码、Evidence/Review 是否保证答案质量、Chat 是否为语义
-多轮，以及相对 current Codex 是否有严格质量优势。该判断不阻止用户先体验，也不由任一模型答案充当 Oracle。
+开发体验候选形成后立即判断 A1—A6：世界模型是否提供真正认知、Agent 是否充分利用认知与源码、Evidence/Review 是否保证答案质量、Chat
+是否为语义多轮，以及相对 current Codex 是否有严格质量优势。该判断不阻止用户先看候选，但它必须在候选被称为 MVP 或提交用户判向前
+通过，也不由任一模型答案充当 Oracle。
 
 ## Authorization decision
 
 工作计划不能创建、扩大、撤销或消费 standing authority。只有私有/新 Source、新接收方或账户、扩大披露/预算、外部写入、非 loopback、
 Production 或破坏性动作需要最小增量权限。用户明确 STOP / REDIRECT / REJECT 或不可绕过的安全禁止会停止对应工作；普通失败不会。
 
-当前没有权限、计划或环境阻塞。唯一下一动作是 V-BROWSER-CHAT-MVP-BUILD-001。
+当前没有权限、计划或环境阻塞。唯一下一动作是持续完成“开发体验候选 → 同候选质量资格 → 合格 MVP”；技术 Case ID
+`V-BROWSER-CHAT-MVP-BUILD-001` 只作兼容标识，不能单独证明 MVP 完成。

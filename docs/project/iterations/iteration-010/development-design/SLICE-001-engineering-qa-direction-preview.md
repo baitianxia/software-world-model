@@ -83,24 +83,25 @@ revision 且只读；每个重要结论绑定 Citation；prior Answer/Review 与
    得到自然 Answer、可打开 Citation 和本轮 fresh Review。
 4. 在同一 Conversation 完成上下文追问和纠正/深入/总结；新 Conversation 用模糊指代验证隔离。每轮有独立 Request/Evidence/Review；
    prior Answer 和 hidden memory 不作事实证据。
-5. 运行最小 targeted、startup、安全和失败真实性测试。链一旦可操作，立即启动固定 loopback 页面交给用户，
-   requires_result=false，不等待全量回归或比较。
-6. 交付后在同一候选上运行至少两个未参与修复的异质问题，并让 actual current Codex 在隔离任务中回答相同问题。独立技术复核判断双方
-   正确性、完整性、Citation、Unknown 和用户目标满足度。
+5. 运行最小 targeted、startup、安全和失败真实性测试。链一旦可操作，立即启动固定 loopback 页面作为“开发体验候选”交给用户，
+   requires_result=false；该候选不得称为 MVP、质量 PASS、方向 PASS 或完成。
+6. 候选交付后不暂停、不等待新的用户决定，立即在同一候选上运行至少两个未参与修复的异质问题，并让 actual current Codex 在隔离任务中
+   回答相同问题。独立 exact-source 证据和技术复核判断双方正确性、完整性、Citation、Unknown 和用户目标满足度。只有系统重大错误为 0、
+   逐题无物质退步、总体严格更优且有非 locator 世界模型价值，才能称为 MVP。
 7. 质量不足时回到第 1 步继续同一 BUILD。停止同 signature 的无新证据外调，但不停止产品开发，不切备用碰答案，不创建失败 Result/PDR。
 
 ## Acceptance scenarios
 
 | Case | 必须可观察的结果 |
 |---|---|
-| V-BROWSER-CHAT-MVP-BUILD-001 | 固定 http://127.0.0.1:8765/、无认证、exact product/source revision 可见，服务持续可提问 |
+| V-BROWSER-CHAT-MVP-BUILD-001 | 兼容技术 ID；持续完成开发体验候选及其质量资格，不能因 ID 含 MVP 就声明完成 |
 | V-CHAT-XD-001 | 同一答案链同时使用问题相关世界模型认知和 Gap 驱动的受控源码证据，且二者来源区分正确 |
 | V-CHAT-001 | 至少三轮语义连续：首问、追问、纠正/深入/总结；新 Conversation 隔离 |
 | V-CHAT-QUALITY-001 | 每轮自然回答、重大错误 0、关键结论有可打开 Citation、fresh Review 无重大漏判 |
 | V-MODEL-TRANSPARENT-ROUTING-001 | 产品只使用首选/备用执行角色；只有可信不可用结论触发备用，输出或审核失败不触发 |
 
-首次 Web 交付只证明“方向可体验”，不冒充质量、稳定性或 Production PASS。交付后方向通过还要求：系统自身重大错误为 0；逐题相对 current
-Codex 无物质退步；总体更优；至少一项重要价值来自非 locator 世界模型认知。Codex 不是 Oracle 或裁判。
+首次 Web 交付只证明“候选可操作”，不冒充 MVP、方向、质量、稳定性或 Production PASS。交付后必须立即继续质量资格：系统自身重大错误
+为 0；逐题相对 current Codex 无物质退步；总体严格更优；至少一项重要价值来自非 locator 世界模型认知。Codex 不是 Oracle 或裁判。
 
 ## Compatibility, data and security boundaries
 
@@ -140,5 +141,6 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## 交付
 
-第一条真实三轮链完成后立即提供启动命令、固定 URL、exact product/source revision、可操作页面和已知限制。该交付无 Result、不移动游标；
-同范围修复与异质自测继续进行。最终方向与验收事实再在适当的完成记录中密封，不把过程治理放回产品关键路径。
+第一条真实三轮链完成后立即提供启动命令、固定 URL、exact product/source revision、可操作页面和已知限制，并明确标记“开发体验候选，
+质量未通过，不是 MVP”。该交付无 Result、不移动游标；开发不停，立即继续同候选异质质量检查和 current Codex 同题比较。只有质量资格
+通过后才以 MVP 交给用户判向；最终方向与验收事实再在适当的完成记录中密封，不把过程治理放回产品关键路径。

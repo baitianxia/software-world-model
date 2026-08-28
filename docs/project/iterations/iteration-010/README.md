@@ -32,8 +32,9 @@ coding_input: true
 | Main Engineering Agent | 持续拥有目标、假设、计划、工具选择、观察解释、重规划、完成判断和答案综合的主工程 Agent |
 
 恢复原则仍是尽快验证方向再夯实。一次性 governance recovery 已中断“先四路 Freeze/Quality、后完整产品纵切”的不可达旧图；
-[PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 现将完整 MVP 体验放到严格比较之前。严格质量标准不降低，但必须比较用户已经能
-体验的同一候选。三个独立问答不算 Chat，POM 模块/依赖题、Access 页面或单独 Web 外壳也不能充当 MVP。
+[PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 将完整可运行体验候选放到严格比较之前，但该候选不是 MVP。严格质量标准不降低：
+必须比较用户已经能体验的同一候选，并且只有绝对质量和 current Codex 同题比较通过后才取得 MVP 资格。三个独立问答不算 Chat，POM
+模块/依赖题、Access 页面或单独 Web 外壳也不能充当候选，更不能充当 MVP。
 
 ## Status and authorization
 
@@ -41,9 +42,10 @@ coding_input: true
 
 `AUTHORIZED / REWORK / PRODUCT-FIRST BROWSER CHAT BUILD ACTIVE / STANDING SCOPE ACTIVE / NON-PRODUCTION`。
 
-当前唯一工作计划是 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001 / V-BROWSER-CHAT-MVP-BUILD-001`：在同一 Slice 完成真实世界模型认知、
+当前唯一工作计划的技术 ID 仍是 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001 / V-BROWSER-CHAT-MVP-BUILD-001`：在同一 Slice 完成真实世界模型认知、
 主工程 Agent、按 Gap 受控源码、Evidence/Citation、fresh Review 和至少三轮语义 Chat。coding、Prompt/Reviewer、loopback Web 与 standing
-scope 内 Provider dispatch 已恢复；首次完整链可操作即无 Result 交付。
+scope 内 Provider dispatch 已恢复；首次完整链可操作即以开发体验候选无 Result 交付，随后不停工完成同候选质量资格。技术 ID 含 MVP 不
+代表候选已经是 MVP。
 
 [PDR-012](decisions/PDR-012-product-first-continuous-browser-chat-build.md) 是当前执行决定。PDR-011、run-052/053 和 failure Result 只保留
 历史失败，不撤销 PDR-008 的公开工程 standing authority。普通失败留在当前 BUILD 做分层归因、通用修复与异质复验；不得生成失败 Result、

@@ -22,7 +22,8 @@ next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 
 ## 当前结果
 
-ITER-010 / SLICE-001 已恢复为持续产品开发。目标不是继续建设治理设施，而是尽快交付普通用户可直接使用的无认证浏览器 Chat：
+ITER-010 / SLICE-001 已恢复为持续产品开发。当前唯一目标不是继续建设治理设施，也不是把“页面能运行”冒充 MVP，而是尽快交付答案质量
+合格、普通用户可直接使用的无认证浏览器 Chat MVP：
 
 - 软件世界模型提供 exact revision 上真实、版本化的软件认知，不能以 Maven 模块/依赖或 locator 列表冒充；
 - 主工程 Agent 以认知为起点，根据 Coverage/Gap 受控读取源码、文档、配置或测试，并根据观察重规划；
@@ -44,8 +45,13 @@ Source → 世界模型构建/查询 → Agent → Evidence/Answer → Review �
 使用已有 run-052/053 trace 和当前代码确定最早可证实的产品偏差，完成一条非 POM/Maven 问题的真实三轮浏览器 Conversation。世界模型
 必须产生可观察的非 locator 认知贡献；认知不足时主 Agent 必须按 Gap 只读源码；最终页面必须显示自然答案、Citation 和本轮 fresh Review。
 
-该链一旦可操作，立即启动在 http://127.0.0.1:8765/ 交给用户，requires_result=false，不等待 current Codex 比较、全量回归、跨工程、
-hidden 或工程夯实。交付后在同一候选上用至少两个未参与修复的异质问题和 current Codex 强基线验证方向；失败继续同一开发闭环，不新建
-迭代、PDR、失败 Result 或授权请求。
+该链一旦可操作，立即启动在 http://127.0.0.1:8765/ 作为“开发体验候选”交给用户，requires_result=false；它不等待 current Codex
+比较，但也不得称为 MVP、质量 PASS、方向 PASS 或完成。交付开发体验候选后不暂停、不等待新的用户决定，立即在同一候选上用至少两个
+未参与修复的异质问题和 current Codex 强基线完成质量资格判断。只有系统自身重大错误为 0、逐题相对 Codex 无物质退步、总体严格更优，
+且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一开发闭环，不新建迭代、PDR、失败 Result
+或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
+
+Manifest 中含 `MVP` 的既有动作/Case 技术 ID 仅为可信父兼容标识，不构成 MVP 资格或完成声明；MVP 资格只由上述绝对质量与同题 Codex
+比较共同决定。
 
 当前状态：AUTHORIZED / REWORK / PDR-012 / PRODUCT DEVELOPMENT ACTIVE / LOOPBACK EVALUATION / NON-PRODUCTION。
