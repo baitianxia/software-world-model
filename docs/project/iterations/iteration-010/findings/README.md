@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, ITER-010-PDR-010, ITER-010-PDR-011]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, ITER-010-PDR-010, ITER-010-PDR-011]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-164](FINDING-010-164.md)：@3 首次真实 run-052/053 回放发现 Gateway `output_digest` 使用
+  canonical JSON string codec，而 synthetic verifier fixture 错用 raw-text SHA-256。现保留原始输出 raw digest，另用产品同源
+  canonical digest 对账 Gateway；真实形状 dry replay 已闭合 19 个 Ark / 0 个 DeepSeek dispatch。
 - [FINDING-010-163](FINDING-010-163.md)：普通 plan revision 要求 base governance action + PASS Result，而当前非治理动作只能先生成被
   @2 expressiveness gap 阻止的 Result，形成机械自锁。用户已明确授权 exact 最小 trust-root recovery；PDR-011 只先冻结 @3 runner，
   产品/Provider/Result 均不进入该恢复提交。

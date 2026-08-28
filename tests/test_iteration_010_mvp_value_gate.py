@@ -194,7 +194,7 @@ def _gateway_call(call_id: str) -> tuple[dict[str, object], str]:
             "requested_model_ref": "glm-5-2-260617",
             "failure_code": "STRUCTURED_OUTPUT_INVALID",
             "actual_model_fingerprint": "glm-5.2",
-            "output_digest": runner.raw_digest(output),
+            "output_digest": runner.gateway_output_digest(output),
             "termination_reason": "stop",
             "output_normalization": "IDENTITY",
         },
@@ -461,6 +461,15 @@ class Iter010MvpValueGateTests(unittest.TestCase):
     def test_failure_call_output_must_bind_gateway_digest(self) -> None:
         experience = _experience()
         experience["failure_turns"][0]["initial_model_output"] += " tampered"  # type: ignore[index,operator]
+        with self.assertRaises(runner.EvidenceError):
+            runner.validate_evidence(_seal(experience))
+
+    def test_gateway_output_digest_uses_canonical_string_codec(self) -> None:
+        experience = _experience()
+        call = experience["capture_sets"][0]["gateway_calls"][0]  # type: ignore[index]
+        output = experience["failure_turns"][0]["initial_model_output"]  # type: ignore[index]
+        self.assertNotEqual(runner.raw_digest(output), call["output_digest"])
+        call["output_digest"] = runner.raw_digest(output)
         with self.assertRaises(runner.EvidenceError):
             runner.validate_evidence(_seal(experience))
 

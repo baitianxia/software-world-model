@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-PLAN-RECOVERY-001, FINDING-010-161, FINDING-010-162, FINDING-010-163, ITER-010-PDR-010, ITER-010-PDR-011, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-PLAN-RECOVERY-001, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, ITER-010-PDR-010, ITER-010-PDR-011, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-28
@@ -35,7 +35,8 @@ ITER-010 既有一次性 trust-root recovery 先例，只授权治理、Manifest
 当前顺序只有两步：
 
 1. 先提交 PDR-011、Manifest、`ITER010_MVP_LIGHT@3` 与测试，形成新的 trusted parent；该提交不生成 Result，也不声称通过被自锁的
-   PDR-010 gate。
+   PDR-010 gate。首次真实回放发现 @3 fixture 对 Gateway canonical-string digest 使用了 raw-text codec；
+   `FINDING-010-164` 只修正这一 verifier 实现差异，并在 Result 前再形成一个 trusted parent。
 2. 后续提交内嵌 run-052/053 的真实 turn-scope、terminal、browser 和 Gateway 摘要，密封唯一
    `V-MVP-EXPERIENCE-001` failure handoff Result，并按预注册 transition 进入 `V-PREVIEW-002`。
 
@@ -62,7 +63,8 @@ cutover；方向消息本身不解锁实现。
 - [Manifest](iterations/iteration-010/manifest.yaml)
 - [Slice1](iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md)
 - [Verification Matrix](iterations/iteration-010/verification-matrix.md)
-- [FINDING-010-161](iterations/iteration-010/findings/FINDING-010-161.md)、[FINDING-010-162](iterations/iteration-010/findings/FINDING-010-162.md) 与
-  [FINDING-010-163](iterations/iteration-010/findings/FINDING-010-163.md)
+- [FINDING-010-161](iterations/iteration-010/findings/FINDING-010-161.md)、[FINDING-010-162](iterations/iteration-010/findings/FINDING-010-162.md)、
+  [FINDING-010-163](iterations/iteration-010/findings/FINDING-010-163.md) 与
+  [FINDING-010-164](iterations/iteration-010/findings/FINDING-010-164.md)
 
 当前状态：`AUTHORIZED / PDR-011 / PRODUCT-AND-PROVIDER-STOPPED / RUNNER-FREEZE-BEFORE-RESULT / NON-PRODUCTION`。

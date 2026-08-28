@@ -183,6 +183,12 @@ def raw_digest(value: str) -> str:
     return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def gateway_output_digest(value: str) -> str:
+    """Match Model Gateway ``digest_of(str)`` canonical-value semantics."""
+
+    return canonical_digest(value)
+
+
 def _unique_object(pairs: Sequence[tuple[str, Any]]) -> dict[str, Any]:
     value: dict[str, Any] = {}
     for key, item in pairs:
@@ -597,7 +603,9 @@ def _validate_failure_turns(
             )
             if turn.get(f"{phase}_model_output_digest") != raw_digest(output):
                 raise EvidenceError(f"{label} {phase} output digest is invalid")
-            if capture["output_digests"].get(call_id) != raw_digest(output):
+            if capture["output_digests"].get(call_id) != gateway_output_digest(
+                output
+            ):
                 raise EvidenceError(f"{label} {phase} output is not bound to Gateway")
             if call_id in used_calls:
                 raise EvidenceError("failure call IDs must be unique")
