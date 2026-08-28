@@ -1015,6 +1015,91 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
 
+    def test_world_model_action_uses_semantic_need_compiled_by_application(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="管理员登录从用户名和密码到 token 的流程是什么？",
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            ),
+        )
+        rendered = _primary_input_view(invocation)
+        world_model = rendered["tool_catalog"][0]
+        self.assertEqual(world_model["operation"], "WORLD_MODEL_QUERY")
+        self.assertEqual(world_model["arguments"], ())
+        self.assertIn("evidence_need", world_model["value_constraints"])
+
+        payload = {
+            "goal": "确认登录实现流程",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": [],
+                "evidence_need": (
+                    "Locate AdminService login credential verification and token generation"
+                ),
+            },
+            "draft": None,
+        }
+        proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(payload),
+            invocation=invocation,
+            model_call_ref="semantic-world-model-call",
+        )
+        self.assertEqual(proposal.action.arguments, ())
+
+        repeated = replace(invocation, action_history=(proposal.action,))
+        with self.assertRaises(DomainError) as repeated_need:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=repeated,
+                model_call_ref="repeated-semantic-world-model-call",
+            )
+        self.assertEqual(
+            repeated_need.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        payload["action"]["arguments"] = [
+            {"name": "query", "value": "login"}
+        ]
+        with self.assertRaises(DomainError) as model_authored_query:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="model-authored-world-model-query",
+            )
+        self.assertEqual(
+            model_authored_query.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
     def test_terminal_source_fuse_denial_removes_source_operations(self) -> None:
         capture = CapturingTurnExecutor()
         service = InMemoryEngineeringConversationService(

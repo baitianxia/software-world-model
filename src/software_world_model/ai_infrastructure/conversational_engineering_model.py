@@ -72,11 +72,11 @@ from .model_gateway import (
 from .openai_responses_adapter import OutputSchemaDefinition
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@6"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@8"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@6"
+    "conversational-engineering-agent-no-tools-prompt@8"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@6"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@8"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
@@ -166,6 +166,12 @@ tool_catalog; never add, omit, or duplicate an argument. Its value_constraints
 are closed: allowed_exact_values is the complete copy domain and
 forbidden_exact_values must never be returned. Compare every proposed argument
 with those constraints before returning the action.
+WORLD_MODEL_QUERY has no model-authored argument. Put the specific semantic
+fact, relation, state transition, failure boundary, or repository-native symbol
+you need in evidence_need; the trusted Application binds it to the exact current
+Turn and compiles the bounded cognition query. Do not copy the User Message as
+evidence_need when a more precise semantic need is available, and do not repeat
+an evidence_need listed by tool_reference_policy.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation, never a path. Copy it only from an unused entry in
 tool_reference_policy.source_read_options. That catalog exposes at most one
@@ -2040,11 +2046,13 @@ def _tool_contract_view(
     if operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY:
         return {
             "operation": operation.value,
-            "arguments": ("query",),
+            "arguments": (),
             "value_constraints": {
-                "query": "non-empty semantic question",
+                "evidence_need": (
+                    "specific semantic need compiled with the exact current Turn by the trusted Application"
+                ),
                 "forbidden_exact_values": tool_reference_policy[
-                    "world_model_queries_already_attempted"
+                    "world_model_evidence_needs_already_attempted"
                 ],
             },
         }
@@ -2155,12 +2163,10 @@ def _tool_reference_policy(
             for value in (_action_argument(item, "query"),)
             if value is not None
         ),
-        "world_model_queries_already_attempted": tuple(
-            value
+        "world_model_evidence_needs_already_attempted": tuple(
+            item.evidence_need
             for item in invocation.action_history
             if item.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
-            for value in (_action_argument(item, "query"),)
-            if value is not None
         ),
         "source_read_locator_references_already_attempted": attempted_reads,
         "source_read_resource_locators_already_attempted": tuple(
@@ -2312,6 +2318,7 @@ def _trusted_action_view(
             {"name": name, "value": value}
             for name, value in action.arguments
         ),
+        "evidence_need": action.evidence_need,
         "digest": action.digest.value,
     }
 
@@ -2821,7 +2828,7 @@ def _validate_primary_action(
             "Engineering Agent action is outside the effective sealed tool catalog",
         )
     expected_argument_names = {
-        EngineeringAgentToolOperation.WORLD_MODEL_QUERY: ("query",),
+        EngineeringAgentToolOperation.WORLD_MODEL_QUERY: (),
         EngineeringAgentToolOperation.SOURCE_SEARCH: ("evidence_class", "query"),
         EngineeringAgentToolOperation.SOURCE_READ: ("locator_reference",),
     }[action.operation]
@@ -2832,29 +2839,28 @@ def _validate_primary_action(
             "Engineering Agent action arguments do not match the sealed tool catalog",
         )
     reference_policy = _tool_reference_policy(invocation)
-    forbidden_query_field = {
-        EngineeringAgentToolOperation.WORLD_MODEL_QUERY: (
-            "world_model_queries_already_attempted"
-        ),
-        EngineeringAgentToolOperation.SOURCE_SEARCH: (
-            "source_search_queries_already_attempted"
-        ),
-    }.get(action.operation)
     if (
-        forbidden_query_field is not None
-        and arguments["query"] in reference_policy[forbidden_query_field]
+        action.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+        and action.evidence_need
+        in reference_policy["world_model_evidence_needs_already_attempted"]
     ):
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
-            "Engineering Agent repeated a forbidden current-Turn tool query",
+            "Engineering Agent repeated a forbidden current-Turn World Model evidence need",
         )
-    signature = (action.operation, tuple(sorted(arguments.items())))
+    if (
+        action.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        and arguments["query"]
+        in reference_policy["source_search_queries_already_attempted"]
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent repeated a forbidden current-Turn Source query",
+        )
+    signature = _action_signature(action)
     for previous in invocation.action_history:
         _trusted_action_view(previous)
-        previous_signature = (
-            previous.operation,
-            tuple(sorted(previous.arguments)),
-        )
+        previous_signature = _action_signature(previous)
         if signature == previous_signature:
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
@@ -2881,6 +2887,20 @@ def _validate_primary_action(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 "Engineering Agent Source read reference is outside the trusted current-Turn copy domain",
             )
+
+
+def _action_signature(
+    action: EngineeringAgentToolActionProposal,
+) -> tuple[object, ...]:
+    return (
+        action.operation,
+        tuple(sorted(action.arguments)),
+        (
+            action.evidence_need
+            if action.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+            else None
+        ),
+    )
 
 
 def _decode_review_output(
