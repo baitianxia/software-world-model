@@ -84,10 +84,11 @@ request 保持独立 Manifest、call identity 和 receipt。任何 HTTP bytes �
 terminal 后关闭未使用 descriptor，通用 transport/call receipt 必须分别闭合 TLS attempts、successes、reuse、Provider calls、per-session
 dispatch bound 与 `provisioned = attempts + unused_closed`。旧资格或不同 profile 的 connection receipt 均不得复用。
 
-若候选配置声明多个 Provider，Application 必须在 Session 开始和任何问题 dispatch 前冻结有序 `preferred → fallback` route，以及每个
-route role 的 exact execution profile。Profile 必须绑定 current exact Conformance、同 Strategy/Configuration Capability Qualification、
-endpoint、隔离 transport、credential reference、disclosure scope、预算和 admission plugin。不能因 preferred execution profile 的实现
-缺口把它伪装成 terminal unavailable，也不能临时跳过 preferred route。
+若候选配置声明多个 execution profile，Application 必须在 Session 开始和任何问题 dispatch 前冻结有序 `preferred → fallback` route，以及每个
+route role 的 exact execution-profile ref/digest。产品、Agent 与路由流程只消费通用 role/profile reference，不读取 Provider/model 名称。Profile 的运行配置内部绑定
+current exact Conformance、同 Strategy/Configuration Capability Qualification、Provider/model/endpoint、Adapter/plugin、隔离 transport、
+credential reference、disclosure scope、预算和 admission policy。不能因 preferred execution profile 的实现、输出或质量缺口把它伪装成
+terminal unavailable，也不能临时跳过 preferred route。
 
 公开来源本机体验先执行下列 authority flow：
 
@@ -123,13 +124,15 @@ derive exact run / route role / execution profile / quality budget from standing
 receipt 由可信系统派生，不是逐 run 人工审批。
 
 一次用户提交只产生一个 logical interaction unit；Engineering Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。
-preferred-route attempt 使用自己的完整问答链和审计；只有该 attempt 密封 terminal、没有 authorized answer，且可信 terminal receipt
-分类为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected，才创建一次 fallback-route attempt。
-后者从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition
-Context 重新运行完整链，不能读取或拼接 preferred attempt 的 Ledger/Package/Draft/Review。Application、Source 或 Security failure 不
-fallback；每个 Provider 内 retry 为 0。迟到的 preferred-route 结果进入 quarantine 且不能覆盖。用户不选择 Provider、不重提问题、不新建
-Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的
-独立身份、execution-profile/dispatch-admission/transport/call/terminal receipts、Usage、成本、失败分类与 outcome-unknown 重复计费风险。
+preferred-route attempt 使用自己的完整问答链和审计。只有该 attempt 密封 terminal、没有 authorized answer，且 preferred profile 登记的受信
+availability owner 从 exact raw receipts 密封 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict，才创建一次 fallback-route attempt。Raw
+unavailable/HTTP/outcome 信号只是裁决输入，不能直接开启 fallback。Output-invalid、Reviewer reject、Capability/qualification、Application、Source、
+authorization/admission 或 Security failure 均为 non-eligible。格式修复、答案重写、补证后重答和 fresh Review 只能在当前 preferred profile 内以新的
+authorized model call 进行，每次都重建 call identity、Manifest 和 one-use receipts，不得重发同一 request；无合法新调用时当前 interaction 失败关闭。
+fallback attempt 从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition
+Context 重新运行完整链，不能读取或拼接 preferred attempt 的 Ledger/Package/Draft/Review。迟到的 preferred-route 结果进入 quarantine 且不能覆盖。用户不选择
+Provider、不重提问题、不新建 Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的独立身份、availability-verdict、
+execution-profile/dispatch-admission/transport/call/terminal receipts、Usage、成本、失败分类与 outcome-unknown 重复计费风险。
 
 ## 直接源码调查
 

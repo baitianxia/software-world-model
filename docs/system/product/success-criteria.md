@@ -36,9 +36,11 @@ tests: []
   新证据都形成新 Package 并重新审核；
 - 答案先回应用户目标并匹配期望抽象层级，代码细节只按问题需要展开；每个实质结论绑定包内真实引用，经授权软件来源仍不能证明的设计动机或其他内容明确返回 unknown/limitation；
 - 在未参与实现的工程上，由独立评测方或用户持有、实现阶段不可见的 held-out 自由问题，加上验收现场临时提出的问题，
-  答案重大错误、物质遗漏和无据实质结论为零，未知边界准确，重要结论有可核验引用；从 `ITER-010-PDR-009` 起的当前 ITER-010 及所有
-  后续产品迭代，还必须在同题独立盲评中逐题不低于当时实际可用的 current Codex 强基线，并取得严格为正的总体答案质量差值。全体打平
-  不是产品价值 PASS，成本、时延、调用数或复用优势不能补偿答案质量平局或退步。
+  答案重大错误、物质遗漏和无据实质结论为零，未知边界准确，重要结论有可核验引用；从 `ITER-010-PDR-010` 起，执行顺序改为先形成并
+  交付一个贯通世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh 独立审核和语义多轮 Chat 的完整浏览器 MVP 候选，再立即
+  用异质问题和当时实际可用的 current Codex 强基线检验同一个候选。首次交付只证明完整体验链存在，不等于产品价值 PASS，也不免除
+  同题独立盲评中逐题不低于 current Codex 且总体答案质量差值严格为正的最终门槛。全体打平不是产品价值 PASS，成本、时延、调用数或
+  复用优势不能补偿答案质量平局或退步。
 
 在达到该门槛前，模块图、静态调用图、单个 Semantic View、解析器或固定问题集的 PASS 都只能作为中间证据，不能单独
 称为产品 MVP。
@@ -51,12 +53,15 @@ tests: []
 2. 用户可见 Claim 不扩张引用证据的 Context、Modality 或 Coverage。
 3. 来源、生成、准入、发布、答案生成和答案审核之间不存在未授权旁路。
 4. 更新后旧知识不会因局部成功被静默删除；并发失败不会产生部分正式状态。
-5. 从 `ITER-010-PDR-009` 起，最早方向 Gate 必须同时密封四路但分别判读：`direct relevant evidence` 用同一生成模型直接读取独立选定的
-   相关原始证据，作为复杂度 control；`same-agent source-only` 衡量主 Agent/源码工具本身；`same-agent World Model + source` 是目标系统，
-   与 source-only 除 eligible Cognition 开关外完全相同；`current Codex` 保留实际客户端、模型、reasoning、工具和权限，作为强外部基线。
-   任何一路答案都不是 Oracle 或裁判，事实来自独立 exact-source ledger。目标系统必须先过绝对质量门，逐题不输任一对照，总体严格超过
-   Codex，并证明至少一项非 locator 世界模型贡献；平局或效率优势不能通过。Maven-structure-only 只能作为窄结构或 locator control，
-   不能冒充完整认知。
+5. 从 `ITER-010-PDR-010` 起，方向验证分阶段执行但不降低最终质量标准。第一阶段先贯通并向用户交付完整浏览器 MVP 候选；它必须真实使用
+   世界模型认知和受控源码，由主工程 Agent 形成带 Evidence/Citation 的答案，经 fresh 独立审核后交付，并支持语义多轮 Chat，不能用只有
+   页面、单轮问答或 Maven 模块/依赖知识的演示代替。候选形成后立即用异质问题和 `current Codex` 检查绝对质量、逐题不退步和总体严格
+   为正的质量差值；该检查不反向阻止首次体验交付，但失败必须保留且不得宣称方向通过。用户明确 `CONTINUE` 后，最终产品价值 Gate 再完成
+   四路因果对照和全量回归：`direct relevant evidence`、`same-agent source-only`、`same-agent World Model + source` 与 `current Codex`。
+   前三路按可比条件冻结，两个 Agent 路除 eligible Cognition 开关外相同；Codex 保留其实际客户端、模型、reasoning、工具和权限。任何一路
+   答案都不是 Oracle 或裁判，事实来自独立 exact-source ledger。目标系统最终仍须通过绝对质量门、逐题不输任一对照、总体严格超过 Codex，
+   并证明至少一项非 locator 世界模型贡献；平局或效率优势不能通过。Maven-structure-only 只能作为窄结构或 locator control，不能冒充
+   完整认知。
 6. 主 Agent 在多轮目标守恒、观察驱动重规划、工具选择、对话纠正、证据综合和完成判断上取得资格；资格、有效期和启用范围可机械验证，
    过期、漂移或未知结果安全关闭。
 

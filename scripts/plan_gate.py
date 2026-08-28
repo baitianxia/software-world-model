@@ -157,6 +157,11 @@ VERDICT_TO_TRANSITION_FIELD = {
 EVIDENCE_SCHEMA = "DEVELOPMENT_PLAN_GATE_EVIDENCE@1"
 ITER010_VALUE_GATE_VERIFIER = "ITER010_VALUE_GATE@1"
 ITER010_PLAN_RECOVERY_VERIFIER = "ITER010_PLAN_RECOVERY@1"
+ITER010_MVP_LIGHT_VERIFIER = "ITER010_MVP_LIGHT@2"
+ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID = (
+    "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
+)
+ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID = "V-MVP-EXPERIENCE-001"
 ITER010_PLAN_RECOVERY_ACTION_ID = "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
 ITER010_PLAN_RECOVERY_RESULT_ID = "ITER-010-RESULT-V-PLAN-RECOVERY-001"
 ITER010_PLAN_RECOVERY_CASE_ID = "V-PLAN-RECOVERY-001"
@@ -171,11 +176,90 @@ ITER010_PLAN_RECOVERY_AUTHORIZATION_REF = (
     "sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5"
 )
 PLAN_RESULT_SEAL_SCHEMA = "DEVELOPMENT_PLAN_RESULT_SEAL@1"
-EXECUTION_PROFILE_CONFIGURATION_SCHEMA = "MODEL_TRANSPARENT_EXECUTION_PROFILES@1"
-EXECUTION_PROFILE_CONFIGURATION_KEYS = {
+PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2"
+LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
+EXECUTION_PROFILE_CONFIGURATION_SCHEMA = "MODEL_TRANSPARENT_EXECUTION_PROFILES@2"
+LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA = (
+    "MODEL_TRANSPARENT_EXECUTION_PROFILES@1"
+)
+ROUTE_POLICY_MIGRATION_SCHEMA = "TRUSTED_PARENT_ROUTE_POLICY_MIGRATION@1"
+ROUTE_POLICY_MIGRATION_STATE = "trusted-parent-bridge"
+ROUTE_POLICY_MIGRATION_KEYS = {
+    "schema",
+    "state",
+    "from_schema",
+    "to_schema",
+    "plan_revision_ref",
+    "only_next_change",
+    "external_dispatch_allowed",
+}
+ROUTE_POLICY_MIGRATION_EXPECTED = {
+    "schema": ROUTE_POLICY_MIGRATION_SCHEMA,
+    "state": ROUTE_POLICY_MIGRATION_STATE,
+    "from_schema": LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA,
+    "to_schema": PROVIDER_ROUTE_POLICY_SCHEMA,
+    "plan_revision_ref": ITER010_PLAN_RECOVERY_TARGET_REVISION,
+    "only_next_change": "finalize-model-transparent-route-policy",
+    "external_dispatch_allowed": False,
+}
+PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS = {
     "execution_profile_ref",
     "provider_identity",
     "model_identity",
+}
+FALLBACK_EXECUTION_PROFILE_CONFIGURATION_KEYS = (
+    PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS
+    | {"admission_policy_plugin_ref"}
+)
+PREFERRED_PROFILE_UNAVAILABLE_VERDICT = "PREFERRED_EXECUTION_PROFILE_UNAVAILABLE"
+PREFERRED_PROFILE_UNAVAILABLE_OUTCOME = "preferred-execution-profile-unavailable"
+PROVIDER_ROUTE_POLICY_KEYS = {
+    "schema",
+    "preferred_execution_profile_ref",
+    "fallback_execution_profile_ref",
+    "preference_order",
+    "availability_owner",
+    "required_fallback_verdict",
+    "product_control_flow_allowed_inputs",
+    "product_control_flow_forbidden_inputs",
+    "verification_case_id",
+    "fallback_dispatch_requires_verification_pass",
+    "preferred_unavailable_evidence_required",
+    "implementation_gap_counts_as_preferred_unavailable",
+    "preferred_availability_requires",
+    "route_freeze_time",
+    "ordered_routes_preauthorized_at_session_start",
+    "ordered_route_disclosure_scopes_preauthorized_at_session_start",
+    "transparent_logical_interaction_fallback_allowed",
+    "user_resubmission_or_new_session_required",
+    "fallback_requires_preferred_attempt_terminal_without_authorized_answer",
+    "fallback_trigger",
+    "fallback_eligible_outcomes",
+    "structured_output_invalid_allows_fallback",
+    "model_review_rejected_allows_fallback",
+    "raw_http_or_outcome_without_availability_verdict_allows_fallback",
+    "application_source_security_failure_allows_fallback",
+    "fallback_reason_classification_required",
+    "capability_failure_must_not_be_misclassified_as_unavailable",
+    "structured_output_invalid_recovery",
+    "model_review_rejected_recovery",
+    "same_profile_application_repair_is_transport_request_retry",
+    "same_profile_application_repair_bound",
+    "same_profile_application_repair_exhausted_action",
+    "fallback_attempt_restarts_full_chain",
+    "fallback_attempt_inputs",
+    "cross_attempt_intermediate_state_reuse_allowed",
+    "late_preferred_result_policy",
+    "late_preferred_result_overwrite_allowed",
+    "post_dispatch_execution_profile_switch_requires",
+    "maximum_fallback_execution_profile_attempts",
+    "transport_request_retry_allowed",
+    "outcome_unknown_duplicate_cost_risk_recorded",
+    "peak_urgent_override_requires",
+    "cost_can_reduce_answer_quality",
+    "cost_gate_scope",
+    "current_started_interaction_unit_must_keep_full_quality_chain",
+    "unchanged_current_conformance_reuse_required",
 }
 PROVIDER_NEUTRAL_ROOT_INPUT_SCHEMA = (
     "VALUE_GATE_PROVIDER_NEUTRAL_ROOT_INPUT_SET@1"
@@ -932,10 +1016,88 @@ def _validate_plan_revision_lineage(
     return errors
 
 
+def _route_policy_migration_bridge_errors(
+    manifest: Mapping[str, object],
+) -> list[str]:
+    """Validate the one-commit bridge required by the trusted @1 parent gate."""
+
+    migration = manifest.get("provider_route_policy_migration")
+    if migration is None:
+        return []
+    if not isinstance(migration, Mapping):
+        return ["provider_route_policy_migration must be a mapping"]
+    errors = _exact_keys(
+        migration,
+        ROUTE_POLICY_MIGRATION_KEYS,
+        "provider_route_policy_migration",
+    )
+    for field, expected in ROUTE_POLICY_MIGRATION_EXPECTED.items():
+        if migration.get(field) != expected:
+            errors.append(
+                f"provider_route_policy_migration.{field} must equal {expected}"
+            )
+    control = _control(manifest)
+    if not isinstance(control, Mapping) or control.get("plan_revision_ref") != (
+        ITER010_PLAN_RECOVERY_TARGET_REVISION
+    ):
+        errors.append(
+            "provider_route_policy_migration is limited to ITER-010-PDR-010"
+        )
+    action = control.get("current_action") if isinstance(control, Mapping) else None
+    if not isinstance(action, Mapping) or action.get("id") != (
+        ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID
+    ):
+        errors.append(
+            "provider_route_policy_migration requires the ITER-010 experience action"
+        )
+    policy = manifest.get("provider_route_policy")
+    configurations = manifest.get("execution_profile_configurations")
+    if not isinstance(policy, Mapping) or policy.get("schema") != (
+        LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA
+    ):
+        errors.append(
+            "provider_route_policy_migration requires the trusted legacy route schema"
+        )
+    if not isinstance(configurations, Mapping) or configurations.get("schema") != (
+        LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA
+    ):
+        errors.append(
+            "provider_route_policy_migration requires the trusted legacy execution-profile schema"
+        )
+    return errors
+
+
+def _is_route_policy_migration_bridge(manifest: Mapping[str, object]) -> bool:
+    return (
+        manifest.get("provider_route_policy_migration") is not None
+        and not _route_policy_migration_bridge_errors(manifest)
+    )
+
+
+def _fallback_admission_policy_plugin_ref(
+    manifest: Mapping[str, object],
+) -> object:
+    """Resolve the configured fallback plugin without leaking it into route policy."""
+
+    configurations = manifest.get("execution_profile_configurations")
+    if isinstance(configurations, Mapping):
+        fallback = configurations.get("fallback")
+        if isinstance(fallback, Mapping) and "admission_policy_plugin_ref" in fallback:
+            return fallback.get("admission_policy_plugin_ref")
+    # Historical trusted plans stored this configuration ref in policy.  It is
+    # read only so an already-sealed trusted parent can authorize its cutover.
+    policy = manifest.get("provider_route_policy")
+    return (
+        policy.get("fallback_admission_policy_plugin_ref")
+        if isinstance(policy, Mapping)
+        else None
+    )
+
+
 def _configured_execution_profiles(
     manifest: Mapping[str, object],
 ) -> tuple[dict[str, Mapping[str, object]], tuple[str, ...], list[str]]:
-    """Resolve the only concrete route identities from configuration objects."""
+    """Resolve concrete identities only from execution-profile configuration."""
 
     errors: list[str] = []
     policy = manifest.get("provider_route_policy")
@@ -947,18 +1109,18 @@ def _configured_execution_profiles(
     for field in (
         "preferred_execution_profile_ref",
         "fallback_execution_profile_ref",
-        "primary_provider",
-        "fallback_provider",
-        "preferred_model_identity",
-        "fallback_model_identity",
-        "fallback_admission_policy_plugin_ref",
     ):
         value = policy.get(field)
         if not isinstance(value, str) or not value.strip():
             errors.append(
                 f"provider_route_policy.{field} must be a non-empty string"
             )
-    if configurations.get("schema") != EXECUTION_PROFILE_CONFIGURATION_SCHEMA:
+
+    configuration_schema = configurations.get("schema")
+    if configuration_schema not in {
+        EXECUTION_PROFILE_CONFIGURATION_SCHEMA,
+        LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA,
+    }:
         errors.append(
             "execution_profile_configurations.schema must equal "
             f"{EXECUTION_PROFILE_CONFIGURATION_SCHEMA}"
@@ -970,57 +1132,48 @@ def _configured_execution_profiles(
 
     resolved: dict[str, Mapping[str, object]] = {}
     identities: list[str] = []
-    for role, provider_field, model_field, profile_field in (
-        (
-            "preferred",
-            "primary_provider",
-            "preferred_model_identity",
-            "preferred_execution_profile_ref",
-        ),
-        (
-            "fallback",
-            "fallback_provider",
-            "fallback_model_identity",
-            "fallback_execution_profile_ref",
-        ),
+    legacy_configuration = (
+        configuration_schema == LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA
+    )
+    for role, profile_field in (
+        ("preferred", "preferred_execution_profile_ref"),
+        ("fallback", "fallback_execution_profile_ref"),
     ):
         profile = configurations.get(role)
         if not isinstance(profile, Mapping):
             errors.append(f"execution_profile_configurations.{role} must be a mapping")
             continue
-        if set(profile) != EXECUTION_PROFILE_CONFIGURATION_KEYS:
+        expected_keys = PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS
+        if role == "fallback" and not legacy_configuration:
+            expected_keys = FALLBACK_EXECUTION_PROFILE_CONFIGURATION_KEYS
+        if set(profile) != expected_keys:
             errors.append(
                 f"execution_profile_configurations.{role} must contain exactly the model-transparent configuration fields"
             )
         resolved[role] = profile
-        for field in EXECUTION_PROFILE_CONFIGURATION_KEYS:
+        for field in expected_keys:
             value = profile.get(field)
             if not isinstance(value, str) or not value.strip():
                 errors.append(
                     f"execution_profile_configurations.{role}.{field} must be a non-empty string"
                 )
-        for profile_key, policy_key in (
-            ("execution_profile_ref", profile_field),
-            ("provider_identity", provider_field),
-            ("model_identity", model_field),
-        ):
-            if profile.get(profile_key) != policy.get(policy_key):
-                errors.append(
-                    f"execution_profile_configurations.{role}.{profile_key} must equal provider_route_policy.{policy_key}"
-                )
+        if profile.get("execution_profile_ref") != policy.get(profile_field):
+            errors.append(
+                f"execution_profile_configurations.{role}.execution_profile_ref must equal provider_route_policy.{profile_field}"
+            )
         for field in ("provider_identity", "model_identity"):
             value = profile.get(field)
             if isinstance(value, str) and value.strip():
                 identities.append(value.strip().lower())
 
-    plugin_ref = policy.get("fallback_admission_policy_plugin_ref")
+    plugin_ref = _fallback_admission_policy_plugin_ref(manifest)
     if not isinstance(plugin_ref, str) or not plugin_ref.strip():
         errors.append(
-            "provider_route_policy.fallback_admission_policy_plugin_ref must be a non-empty configuration reference"
+            "execution_profile_configurations.fallback.admission_policy_plugin_ref must be a non-empty configuration reference"
         )
     elif not isinstance(manifest.get(plugin_ref), Mapping):
         errors.append(
-            "provider_route_policy.fallback_admission_policy_plugin_ref must resolve to a configuration object"
+            "execution_profile_configurations.fallback.admission_policy_plugin_ref must resolve to a configuration object"
         )
     preferred_ref = policy.get("preferred_execution_profile_ref")
     fallback_ref = policy.get("fallback_execution_profile_ref")
@@ -1030,12 +1183,22 @@ def _configured_execution_profiles(
         and preferred_ref == fallback_ref
     ):
         errors.append("preferred and fallback execution profile refs must differ")
-    primary_provider = policy.get("primary_provider")
-    fallback_provider = policy.get("fallback_provider")
+    preferred_profile = resolved.get("preferred")
+    fallback_profile = resolved.get("fallback")
+    preferred_provider = (
+        preferred_profile.get("provider_identity")
+        if isinstance(preferred_profile, Mapping)
+        else None
+    )
+    fallback_provider = (
+        fallback_profile.get("provider_identity")
+        if isinstance(fallback_profile, Mapping)
+        else None
+    )
     if (
-        isinstance(primary_provider, str)
+        isinstance(preferred_provider, str)
         and isinstance(fallback_provider, str)
-        and primary_provider.lower() == fallback_provider.lower()
+        and preferred_provider.lower() == fallback_provider.lower()
     ):
         errors.append("preferred and fallback Provider identities must differ")
     return resolved, tuple(dict.fromkeys(identities)), errors
@@ -1050,6 +1213,31 @@ _GENERIC_ROUTE_IDENTITY_TOKENS = {
     "identity",
     "model",
     "route",
+}
+
+_CONCRETE_IDENTITY_FIELD_NAMES = {
+    "provider_identity",
+    "model_identity",
+    "provider_name",
+    "model_name",
+    "provider_id",
+    "model_id",
+    "model_ref",
+    "provider_type",
+    "actual_model_fingerprint",
+    "primary_provider",
+    "preferred_provider",
+    "fallback_provider",
+    "preferred_model_identity",
+    "fallback_model_identity",
+}
+_NON_AVAILABILITY_FALLBACK_TOKENS = {
+    "provider-unavailable",
+    "provider-http-error",
+    "provider-outcome-unknown",
+    "provider-output-invalid",
+    "structured-output-invalid",
+    "model-review-rejected",
 }
 
 
@@ -1082,6 +1270,135 @@ def _configured_identity_errors(
         for identity in identities
         if _identity_is_present(value, identity)
     ]
+
+
+def _concrete_identity_field_errors(value: object, label: str) -> list[str]:
+    """Reject concrete identity-bearing inputs outside profile configuration."""
+
+    errors: list[str] = []
+
+    def visit(candidate: object, path: str) -> None:
+        if isinstance(candidate, Mapping):
+            for key, item in candidate.items():
+                field = str(key).lower().replace("-", "_")
+                child_path = f"{path}.{key}"
+                if field in _CONCRETE_IDENTITY_FIELD_NAMES:
+                    errors.append(
+                        f"{child_path} is a concrete Provider/model identity input; use an execution-profile ref"
+                    )
+                visit(item, child_path)
+        elif isinstance(candidate, list):
+            for index, item in enumerate(candidate):
+                visit(item, f"{path}[{index}]")
+
+    visit(value, label)
+    return errors
+
+
+def _non_availability_fallback_input_errors(
+    value: object, label: str
+) -> list[str]:
+    """Reject application-output or review outcomes as executable fallback inputs."""
+
+    rendered = json.dumps(value, ensure_ascii=False, sort_keys=True).lower()
+    normalized = re.sub(r"[_\s]+", "-", rendered)
+    return [
+        f"{label} must not branch fallback on {token}"
+        for token in sorted(_NON_AVAILABILITY_FALLBACK_TOKENS)
+        if token in normalized
+    ]
+
+
+def _validate_current_provider_route_policy(
+    manifest: Mapping[str, object],
+    identities: Sequence[str],
+    *,
+    allow_legacy: bool,
+) -> list[str]:
+    """Validate the closed, identity-free, availability-only route policy."""
+
+    policy = manifest.get("provider_route_policy")
+    if not isinstance(policy, Mapping):
+        return ["provider_route_policy must be a mapping"]
+    if allow_legacy and policy.get("schema") == LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA:
+        return []
+
+    errors = _exact_keys(policy, PROVIDER_ROUTE_POLICY_KEYS, "provider_route_policy")
+    exact_values: tuple[tuple[str, object], ...] = (
+        ("schema", PROVIDER_ROUTE_POLICY_SCHEMA),
+        ("preference_order", ["preferred", "fallback"]),
+        ("availability_owner", "provider-availability-boundary"),
+        ("required_fallback_verdict", PREFERRED_PROFILE_UNAVAILABLE_VERDICT),
+        (
+            "product_control_flow_allowed_inputs",
+            "route-role,execution-profile-ref-and-digest,availability-verdict",
+        ),
+        (
+            "product_control_flow_forbidden_inputs",
+            "provider-identity,model-identity",
+        ),
+        ("verification_case_id", "V-MODEL-TRANSPARENT-ROUTING-001"),
+        ("fallback_dispatch_requires_verification_pass", True),
+        ("preferred_unavailable_evidence_required", True),
+        ("implementation_gap_counts_as_preferred_unavailable", False),
+        (
+            "fallback_requires_preferred_attempt_terminal_without_authorized_answer",
+            True,
+        ),
+        (
+            "fallback_trigger",
+            "sealed-provider-availability-verdict:"
+            + PREFERRED_PROFILE_UNAVAILABLE_VERDICT,
+        ),
+        ("fallback_eligible_outcomes", [PREFERRED_PROFILE_UNAVAILABLE_OUTCOME]),
+        ("structured_output_invalid_allows_fallback", False),
+        ("model_review_rejected_allows_fallback", False),
+        (
+            "raw_http_or_outcome_without_availability_verdict_allows_fallback",
+            False,
+        ),
+        ("application_source_security_failure_allows_fallback", False),
+        ("capability_failure_must_not_be_misclassified_as_unavailable", True),
+        ("same_profile_application_repair_is_transport_request_retry", False),
+        (
+            "same_profile_application_repair_exhausted_action",
+            "fail-current-turn-with-exact-reason-without-fallback",
+        ),
+        ("late_preferred_result_overwrite_allowed", False),
+        ("maximum_fallback_execution_profile_attempts", 1),
+        ("transport_request_retry_allowed", False),
+        ("cost_can_reduce_answer_quality", False),
+        ("current_started_interaction_unit_must_keep_full_quality_chain", True),
+    )
+    for field, expected in exact_values:
+        if policy.get(field) != expected:
+            errors.append(
+                f"provider_route_policy.{field} must equal {expected}"
+            )
+    for field in (
+        "preferred_execution_profile_ref",
+        "fallback_execution_profile_ref",
+    ):
+        value = policy.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"provider_route_policy.{field} must be non-empty")
+    configurations = manifest.get("execution_profile_configurations")
+    if not isinstance(configurations, Mapping) or configurations.get(
+        "schema"
+    ) != EXECUTION_PROFILE_CONFIGURATION_SCHEMA:
+        errors.append(
+            "current provider_route_policy requires "
+            f"execution_profile_configurations.schema {EXECUTION_PROFILE_CONFIGURATION_SCHEMA}"
+        )
+    errors.extend(
+        _configured_identity_errors(
+            policy,
+            identities,
+            "provider_route_policy",
+        )
+    )
+    errors.extend(_concrete_identity_field_errors(policy, "provider_route_policy"))
+    return errors
 
 
 def _provider_neutral_root_input_errors(value: object, label: str) -> list[str]:
@@ -1174,10 +1491,25 @@ def _provider_neutral_root_input_errors(value: object, label: str) -> list[str]:
 
 def _validate_model_transparent_action_graph(
     manifest: Mapping[str, object],
+    *,
+    allow_legacy_route_policy: bool = False,
 ) -> list[str]:
-    """Reject configured Provider/model identities from the executable graph."""
+    """Enforce profile-role routing and availability-only fallback branches."""
 
+    migration_errors = _route_policy_migration_bridge_errors(manifest)
+    migration_bridge = (
+        manifest.get("provider_route_policy_migration") is not None
+        and not migration_errors
+    )
     _, identities, errors = _configured_execution_profiles(manifest)
+    errors.extend(migration_errors)
+    errors.extend(
+        _validate_current_provider_route_policy(
+            manifest,
+            identities,
+            allow_legacy=allow_legacy_route_policy or migration_bridge,
+        )
+    )
     for scope_name in ("plan_execution_control", "direction_quality_gate"):
         scope = manifest.get(scope_name)
         if scope is None:
@@ -1189,6 +1521,8 @@ def _validate_model_transparent_action_graph(
                 f"{scope_name} must use preferred/fallback route roles and",
             )
         )
+        errors.extend(_concrete_identity_field_errors(scope, scope_name))
+        errors.extend(_non_availability_fallback_input_errors(scope, scope_name))
     return errors
 
 
@@ -1200,13 +1534,19 @@ def validate_snapshot(
     documents: Mapping[str, Mapping[str, object]] | None = None,
     result_evidence_artifacts: Mapping[str, str | bytes] | None = None,
     runner_files: Mapping[str, str] | None = None,
+    allow_legacy_route_policy: bool = False,
 ) -> list[str]:
     """Validate the single current action and its already-due prerequisites."""
 
     errors: list[str] = []
     if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
         errors.append("manifest schema_version must equal 2")
-    errors.extend(_validate_model_transparent_action_graph(manifest))
+    errors.extend(
+        _validate_model_transparent_action_graph(
+            manifest,
+            allow_legacy_route_policy=allow_legacy_route_policy,
+        )
+    )
     _, configured_identities, _ = _configured_execution_profiles(manifest)
     control = _control(manifest)
     if control is None:
@@ -1506,6 +1846,60 @@ def _load_evidence_json(text: str) -> dict[str, object]:
     if not isinstance(value, dict):
         raise PlanGateError("evidence artifact root must be an object")
     return value
+
+
+def _validate_lightweight_handoff_parent_binding(
+    action: Mapping[str, object],
+    evidence_text: str | bytes | None,
+    trusted_parent_commit: str | None,
+    trusted_parent_tree: str | None,
+) -> list[str]:
+    """Bind an MVP handoff to the actual trusted Git parent, not a claimed SHA."""
+
+    if action.get("evidence_verifier") != ITER010_MVP_LIGHT_VERIFIER:
+        return []
+    if (
+        action.get("id") != ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID
+        or action.get("case_id") != ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID
+    ):
+        return []
+    if not isinstance(trusted_parent_commit, str) or re.fullmatch(
+        r"[0-9a-f]{40}", trusted_parent_commit
+    ) is None:
+        return ["lightweight handoff requires the exact trusted parent commit"]
+    if not isinstance(trusted_parent_tree, str) or re.fullmatch(
+        r"[0-9a-f]{40}", trusted_parent_tree
+    ) is None:
+        return ["lightweight handoff requires the exact trusted parent tree"]
+    if evidence_text is None:
+        return ["lightweight handoff evidence is missing"]
+    try:
+        text = (
+            evidence_text.decode("utf-8", errors="strict")
+            if isinstance(evidence_text, bytes)
+            else evidence_text
+        )
+        artifact = _load_evidence_json(text)
+    except (UnicodeDecodeError, PlanGateError) as error:
+        return [f"lightweight handoff evidence cannot bind the trusted parent: {error}"]
+    action_evidence = artifact.get("action_evidence")
+    candidate = (
+        action_evidence.get("candidate_identity")
+        if isinstance(action_evidence, Mapping)
+        else None
+    )
+    if not isinstance(candidate, Mapping):
+        return ["lightweight handoff candidate_identity is missing"]
+    errors: list[str] = []
+    if candidate.get("commit") != trusted_parent_commit:
+        errors.append(
+            "lightweight handoff candidate commit must equal the actual trusted parent commit"
+        )
+    if candidate.get("tree") != trusted_parent_tree:
+        errors.append(
+            "lightweight handoff candidate tree must equal the actual trusted parent tree"
+        )
+    return errors
 
 
 def _canonical_json_digest(value: object) -> str:
@@ -2325,7 +2719,6 @@ def _validate_iter010_cross_action_bindings(
                         f"cross-action evidence {field} must exactly match the trusted Freeze Result"
                     )
 
-    policy = base_manifest.get("provider_route_policy")
     route_role = "preferred" if role == "preferred-quality" else "fallback"
     expected_profile = profile_configurations.get(route_role)
     evidence_profile_ref_field = (
@@ -2350,10 +2743,8 @@ def _validate_iter010_cross_action_bindings(
                 f"cross-action evidence {evidence_profile_object_field} must exactly equal the trusted {route_role} execution profile configuration"
             )
 
-    if role in {"fallback-refreeze", "fallback-quality"} and isinstance(
-        policy, Mapping
-    ):
-        plugin_ref = policy.get("fallback_admission_policy_plugin_ref")
+    if role in {"fallback-refreeze", "fallback-quality"}:
+        plugin_ref = _fallback_admission_policy_plugin_ref(base_manifest)
         plugin_ref_field = (
             "fallback_admission_policy_plugin_ref"
             if role == "fallback-refreeze"
@@ -2366,7 +2757,7 @@ def _validate_iter010_cross_action_bindings(
         )
         if target_evidence.get(plugin_ref_field) != plugin_ref:
             errors.append(
-                f"cross-action evidence {plugin_ref_field} must equal provider_route_policy.fallback_admission_policy_plugin_ref"
+                f"cross-action evidence {plugin_ref_field} must equal the trusted fallback execution-profile admission policy plugin ref"
             )
         expected_plugin = (
             base_manifest.get(plugin_ref) if isinstance(plugin_ref, str) else None
@@ -2506,11 +2897,7 @@ def _route_configuration_semantics(manifest: Mapping[str, object]) -> object:
     """Return route/profile/plugin values that no action transition may rewrite."""
 
     policy = manifest.get("provider_route_policy")
-    plugin_ref = (
-        policy.get("fallback_admission_policy_plugin_ref")
-        if isinstance(policy, Mapping)
-        else None
-    )
+    plugin_ref = _fallback_admission_policy_plugin_ref(manifest)
     return {
         "provider_route_policy": copy.deepcopy(policy),
         "execution_profile_configurations": copy.deepcopy(
@@ -2520,6 +2907,115 @@ def _route_configuration_semantics(manifest: Mapping[str, object]) -> object:
             manifest.get(plugin_ref) if isinstance(plugin_ref, str) else None
         ),
     }
+
+
+def _is_exact_route_policy_migration_cutover(
+    base_manifest: Mapping[str, object],
+    target_manifest: Mapping[str, object],
+) -> bool:
+    """Allow only the exact legacy bridge -> identity-free @2 cutover."""
+
+    if not _is_route_policy_migration_bridge(base_manifest):
+        return False
+    if target_manifest.get("provider_route_policy_migration") is not None:
+        return False
+    if _control(base_manifest) != _control(target_manifest):
+        return False
+
+    base_policy = base_manifest.get("provider_route_policy")
+    target_policy = target_manifest.get("provider_route_policy")
+    base_configurations = base_manifest.get("execution_profile_configurations")
+    target_configurations = target_manifest.get("execution_profile_configurations")
+    if not all(
+        isinstance(value, Mapping)
+        for value in (
+            base_policy,
+            target_policy,
+            base_configurations,
+            target_configurations,
+        )
+    ):
+        return False
+    assert isinstance(base_policy, Mapping)
+    assert isinstance(target_policy, Mapping)
+    assert isinstance(base_configurations, Mapping)
+    assert isinstance(target_configurations, Mapping)
+    if target_policy.get("schema") != PROVIDER_ROUTE_POLICY_SCHEMA:
+        return False
+    if set(target_policy) != PROVIDER_ROUTE_POLICY_KEYS:
+        return False
+    if target_configurations.get("schema") != EXECUTION_PROFILE_CONFIGURATION_SCHEMA:
+        return False
+
+    base_preferred = base_configurations.get("preferred")
+    base_fallback = base_configurations.get("fallback")
+    target_preferred = target_configurations.get("preferred")
+    target_fallback = target_configurations.get("fallback")
+    if not all(
+        isinstance(value, Mapping)
+        for value in (
+            base_preferred,
+            base_fallback,
+            target_preferred,
+            target_fallback,
+        )
+    ):
+        return False
+    assert isinstance(base_preferred, Mapping)
+    assert isinstance(base_fallback, Mapping)
+    assert isinstance(target_preferred, Mapping)
+    assert isinstance(target_fallback, Mapping)
+
+    if dict(base_preferred) != dict(target_preferred):
+        return False
+    if any(
+        base_fallback.get(field) != target_fallback.get(field)
+        for field in PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS
+    ):
+        return False
+    base_plugin_ref = _fallback_admission_policy_plugin_ref(base_manifest)
+    target_plugin_ref = _fallback_admission_policy_plugin_ref(target_manifest)
+    if (
+        base_plugin_ref != target_plugin_ref
+        or target_fallback.get("admission_policy_plugin_ref") != base_plugin_ref
+    ):
+        return False
+    if base_manifest.get(base_plugin_ref) != target_manifest.get(target_plugin_ref):
+        return False
+
+    aliases = (
+        (
+            base_policy.get("preferred_execution_profile_ref"),
+            target_policy.get("preferred_execution_profile_ref"),
+            target_preferred.get("execution_profile_ref"),
+        ),
+        (
+            base_policy.get("fallback_execution_profile_ref"),
+            target_policy.get("fallback_execution_profile_ref"),
+            target_fallback.get("execution_profile_ref"),
+        ),
+        (
+            base_policy.get("primary_provider"),
+            base_preferred.get("provider_identity"),
+            target_preferred.get("provider_identity"),
+        ),
+        (
+            base_policy.get("preferred_model_identity"),
+            base_preferred.get("model_identity"),
+            target_preferred.get("model_identity"),
+        ),
+        (
+            base_policy.get("fallback_provider"),
+            base_fallback.get("provider_identity"),
+            target_fallback.get("provider_identity"),
+        ),
+        (
+            base_policy.get("fallback_model_identity"),
+            base_fallback.get("model_identity"),
+            target_fallback.get("model_identity"),
+        ),
+    )
+    return all(first == second == third for first, second, third in aliases)
 
 
 def validate_transition(
@@ -2541,6 +3037,8 @@ def validate_transition(
     target_result_evidence_text: str | bytes | None = None,
     base_runner_files: Mapping[str, str] | None = None,
     target_runner_files: Mapping[str, str] | None = None,
+    trusted_parent_commit: str | None = None,
+    trusted_parent_tree: str | None = None,
 ) -> list[str]:
     """Validate one base-to-target change using only base action authority."""
 
@@ -2565,6 +3063,7 @@ def validate_transition(
             documents=base_documents,
             result_evidence_artifacts=base_result_evidence_artifacts,
             runner_files=base_runner_files,
+            allow_legacy_route_policy=True,
         )
     )
     if target_control is None:
@@ -2600,6 +3099,27 @@ def validate_transition(
         _route_configuration_semantics(base_manifest)
         != _route_configuration_semantics(target_manifest)
     )
+    route_policy_migration_cutover = _is_exact_route_policy_migration_cutover(
+        base_manifest,
+        target_manifest,
+    )
+    if _is_route_policy_migration_bridge(base_manifest):
+        if not route_policy_migration_cutover:
+            errors.append(
+                "trusted-parent route-policy bridge permits only its exact @2 finalization"
+            )
+        unexpected_migration_paths = sorted(
+            path
+            for path in changed_paths
+            if path
+            != "docs/project/iterations/iteration-010/manifest.yaml"
+            and not path.startswith("docs/_generated/")
+        )
+        if unexpected_migration_paths:
+            errors.append(
+                "route-policy bridge finalization may change only the Manifest and generated indexes: "
+                + ", ".join(unexpected_migration_paths)
+            )
 
     protected = PROTECTED_GATE_PATHS.intersection(changed_paths)
     if protected and not (
@@ -2633,6 +3153,14 @@ def validate_transition(
             configured_identities,
         )
         errors.extend(result_errors)
+        errors.extend(
+            _validate_lightweight_handoff_parent_binding(
+                base_action,
+                target_result_evidence_text,
+                trusted_parent_commit,
+                trusted_parent_tree,
+            )
+        )
         errors.extend(
             _validate_iter010_cross_action_bindings(
                 base_manifest,
@@ -2696,7 +3224,11 @@ def validate_transition(
         if not action_changed and semantics_changed:
             errors.append("self-loop transition must not revise plan semantics")
     else:
-        if semantics_changed and not revision_changed:
+        if (
+            semantics_changed
+            and not revision_changed
+            and not route_policy_migration_cutover
+        ):
             errors.append("plan semantics changed without a new plan_revision_ref")
         if revision_changed and not semantics_changed:
             errors.append("plan_revision_ref changed without a semantic plan revision")
@@ -3090,6 +3622,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 target_result_evidence_text=_transition_evidence_from_target(
                     repository, args.target, base.manifest
                 ),
+                trusted_parent_commit=_run_git(
+                    repository, "rev-parse", f"{args.base}^{{commit}}"
+                ).strip(),
+                trusted_parent_tree=_run_git(
+                    repository, "rev-parse", f"{args.base}^{{tree}}"
+                ).strip(),
             )
         )
         return _print_errors(errors)

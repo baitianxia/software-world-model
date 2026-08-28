@@ -60,17 +60,19 @@ tests: [tests]
    API mapping owner。每个工程 Chat Draft 必须由至少一个 fresh 独立 Reviewer 比较用户目标、对话约束、evidence scope 与 Draft scope；
    任何越界、遗漏或错误 Citation 都必须绑定具体 Finding。资格 Strategy 可采用多个 challenge，但固定双 focus 不是架构不变量。最终
    Authorization 只能绑定 current Package 上 finding-free 的独立 Review；预算不足以完成审核时必须失败关闭。
-18. **INV-018 — Provider 路由透明但 attempt 不混合。** Engineering Conversation 在 Turn dispatch 前从有效 standing authority 或其
-   exact human delta 冻结有序 `preferred → fallback` route，以及每个角色对应的 exact execution profile。Execution profile 必须绑定
-   Provider/model/endpoint、Adapter/Configuration、credential reference、资格、披露、预算、transport 和适用的 admission plugin；这些
-   具体身份是可替换配置，不得进入系统分支或质量规则。用户一次提交只形成一个 immutable logical Turn。只有 preferred-route attempt
-   已密封 terminal、没有 authorized answer 且被可信分类为允许 fallback 的通用 Provider/model capability 原因时，才可启动最多一个
-   fallback-route attempt；Application/Source/Security failure 不允许 fallback。每个 attempt 从同一受信 Turn input、Conversation Context
-   与 exact Cognition 独立运行完整主 Agent—证据—答案—审核链，不共享中间态、Provider 会话或结果权威；同 Provider retry 为 0，迟到的
-   preferred-route 结果隔离且不得覆盖。Provider 对用户透明不表示执行控制可以省略：每个 route 都必须产生 execution-profile、disclosure、
-   dispatch-admission、transport/call 和 attempt-terminal 通用 receipt；execution profile 声明 admission plugin 时，必须在任何该 Provider
-   外部网络、credential 和 HTTP 前验证准入，并在每个新 request 前重验插件条件或 exact override。拒绝必须证明该 route 分派为 0，不能
-   靠删减答案质量通过。
+18. **INV-018 — 执行配置路由透明但 attempt 不混合。** Engineering Conversation 在 Turn dispatch 前从有效 standing authority 或其
+   exact human delta 冻结有序 `preferred → fallback` route，以及每个角色对应的 exact execution-profile ref/digest。产品、Agent 和 route branch
+   只能读取通用 route role、profile ref/digest、顺序与受信 availability verdict。Execution profile 内部绑定 Provider/model/endpoint、
+   Adapter/Configuration/plugin、credential reference、资格、披露、预算与 transport；这些具体身份只属于运行配置、资格、Adapter/plugin 和 receipt，
+   不得进入产品分支、Agent 决策或质量规则。用户一次提交只形成一个 immutable logical Turn。只有 preferred-route attempt 已密封 terminal、
+   没有 authorized answer，且该 preferred profile 登记的受信 availability owner 密封了 exact
+   `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才可启动最多一个 fallback-route attempt。Raw unavailable/HTTP/outcome 信号本身不授予 fallback；
+   结构化输出无效、Reviewer 拒绝、Capability/qualification、Application、Source、authorization/admission 或 Security failure 全部 non-eligible。格式修复、
+   答案重写、补证后重答和 fresh Review 若在当前 profile 内继续，每次都必须是新的 authorized call，而不是重发同一 Provider request；无合法新调用时当前 Turn
+   失败关闭，不 fallback。每个 fallback attempt 从同一受信 Turn input、Conversation Context 与 exact Cognition 独立运行完整主 Agent—证据—答案—审核链，
+   不共享中间态、Provider 会话或结果权威；同 request retry 为 0，迟到的 preferred-route 结果隔离且不得覆盖。每个 route 都必须产生 execution-profile、disclosure、
+   dispatch-admission、transport/call 和 attempt-terminal 通用 receipt；profile 声明 admission plugin 时，必须在任何该 Provider 外部网络、credential 和 HTTP 前验证准入，
+   并在每个新 request 前重验插件条件或 exact override。拒绝必须证明该 route 分派为 0，不能靠删减答案质量通过。
 19. **INV-019 — 语义 Chat 状态分离。** 软件世界模型、Conversation Work State 和 Turn Evidence 是不同权威对象。后续 Turn 可引用、追问、
    纠正、深入或总结，但 Application 必须密封相关历史、有效约束和指代解析；用户纠正形成新 Revision，不改写历史。先前助手答案、摘要、
    Provider hidden state 或模型记忆都不是证据；一次 Turn 失败只结束该 Turn，不能污染后续 Turn、删除会话历史或关闭服务。

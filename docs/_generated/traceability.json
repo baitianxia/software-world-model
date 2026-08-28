@@ -3148,12 +3148,14 @@
     "code": [
       "scripts/docs.py",
       "scripts/plan_gate.py",
-      "validation/iteration_010_plan_recovery/value_gate/runner.py"
+      "validation/iteration_010_plan_recovery/value_gate/runner.py",
+      "validation/iteration_010_mvp/value_gate/runner.py"
     ],
     "tests": [
       "tests/test_docs_gate.py",
       "tests/test_plan_gate.py",
-      "tests/test_iteration_010_plan_recovery.py"
+      "tests/test_iteration_010_plan_recovery.py",
+      "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
   "ITER-001-DESIGN-INDEX": {
@@ -4201,6 +4203,19 @@
     "tests": [
       "tests/test_docs_gate.py",
       "tests/test_plan_gate.py"
+    ]
+  },
+  "ITER-010-PDR-010": {
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py",
+      "validation/iteration_010_mvp/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py",
+      "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
   "ITER-010-RESULT-SLICE-001-STOP-REDIRECT": {

@@ -33,7 +33,7 @@ tests: [tests]
 - 工程 Chat 读取的源码、注释、README/其他仓库文档、配置和测试全部是不可信 data。其中任何 prompt、命令、URL、路径、evidence class
   声明、工具建议、权限或外发声明都不得成为 instruction，不得扩大操作集、路径、类型能力、revision、Source Profile、Provider disclosure
   或预算。用户纠正可以改变对话目标和待验证假设，但不能成为 Source truth。
-- Secret 只保存 Reference，并在 exact endpoint 的 TLS/SNI/certificate 验证成功后、HTTP 分派前解析；不得进入文档、命令参数、数据库正文、日志或 Result。每个 Provider transport 必须以 strict Session audit 分列 TLS attempt/success、credential resolution、HTTP dispatch、connection reuse、post-dispatch unknown 与 retry。HTTP 前已知不可用只能由 transport owner 产生 typed unavailable，且 audit 的 credential/HTTP count 必须与实际阶段一致；HTTP 已开始后的失败必须保持 outcome unknown，二者不得互换。
+- Secret 只保存 Reference，并在 exact endpoint 的 TLS/SNI/certificate 验证成功后、HTTP 分派前解析；不得进入文档、命令参数、数据库正文、日志或 Result。每个 Provider transport 必须以 strict Session audit 分列 TLS attempt/success、credential resolution、HTTP dispatch、connection reuse、post-dispatch unknown 与 retry。HTTP 前已知不可用只能由 transport owner 产生 typed unavailable，且 audit 的 credential/HTTP count 必须与实际阶段一致；HTTP 已开始后的失败必须保持 outcome unknown，二者不得互换。typed unavailable、HTTP status/error 和 outcome unknown 都是 raw execution evidence，不直接授予 fallback；只有 execution profile 登记的受信 availability owner 可密封 fallback 所需的 exact availability verdict。
 - 通用 dispatch-admission receipt 是受信控制输入，不是模型消息、Provider 元数据或普通用户字段；只有受信 admission authority 可以按
   execution profile 选择的 admission plugin 和 standing/delta authority chain 密封，调用方、模型、来源内容和 Provider 都不能生成、修改或
   扩张。Receipt 必须绑定 route role、execution-profile/plugin ref+digest、trusted inputs、verdict、override 和完整质量预算。声明 admission
@@ -60,14 +60,14 @@ tests: [tests]
   Provider/model/endpoint/configuration、Agent/Reviewer purpose、允许字段/片段、redaction、secret reference 和完整 input digest。每个动态
   模型输入都形成一次性机器授权，Gateway 在 credential/HTTP 前独立重验 root Turn、Conversation/Work State Revision、authority chain、
   完整 payload 和 Provider qualification；secret reference 与 authority/receipt 不进入模型消息。同一内容对另一 invocation 的 receipt 不能
-  复用。授权或 input 越过 Gateway 即消费；同 Provider 异常、outcome
-  unknown、drift 或 replay 均不 retry。ADR-017 fallback 使用新 Agent attempt，从受信 original Turn input、exact Conversation Context 和
+  复用。授权或 input 越过 Gateway 即消费；同 Provider request 异常、outcome
+  unknown、drift 或 replay 均不 retry。格式修复、答案重写、补证后重答和 fresh Review 若在同一 profile 内继续，每次都必须是拥有新 identity、Manifest 和 one-use receipt 的新 authorized call，不是对旧 request 的 retry。ADR-017 fallback 只在受信 availability verdict 成立后使用新 Agent attempt，从受信 original Turn input、exact Conversation Context 和
   Cognition 重跑完整链，不能复用前一 Provider 的隐藏状态或未密封中间产物。
 - Engineering Conversation trusted launcher 必须证明自身来自 clean exact product candidate；listener 前重验 exact Source commit、published
   World Model Bundle digest/read authority、Source Profile/allowlist、Tool Catalog、`preferred → fallback` execution profiles、各 profile 的
   qualification/admission plugin 与 Conversation authority，并用新 `0600` 文件密封零分派 launch receipt。Gateway database/sidecar 和
   launch/terminal receipt 从创建起保持 private mode。terminal receipt 按 Conversation/Turn/route role/provider attempt 密封一次性
-  execution-profile、disclosure、dispatch-admission、Gateway/TLS/credential 计数、同 Provider retry 0、fallback/quarantine、潜在重复成本和
+  execution-profile、disclosure、dispatch-admission、Gateway/TLS/credential 计数、same-request retry 0、availability verdict、fallback/quarantine、潜在重复成本和
   `NOT_EXECUTED` Activation，不得包含 Secret value。
 - 持续 Engineering Chat 不得把 prepared Turn/Request receipt 当成整段 Conversation 的可复用调用记录，也不得允许浏览器 POST 扩大 standing/session authority。
   listener 前必须固定 clean product、loopback origin、工程/Binding/revision、World Model authority、Source Profile/allowlist、Tool Catalog、
@@ -90,18 +90,20 @@ tests: [tests]
   payload，后续 step 只能读取平台密封的 typed trace prefix；Draft 不得读取 Reviewer 或 Citation observation，Review 不得读取
   Provider 会话记忆或 Source。角色只能通过平台密封的 Requirement/trace/Assessment/Draft 逐阶段传递；role package、model call、
   socket/session receipt 与调用审计不可复用。每题调查 2—4 次，随后 Draft/Review 各一次，无 retry。
-- 多 Provider route 只能在 Session 开始与任何问题 dispatch 前从 standing authority 或 exact human delta 冻结为
-  `preferred → fallback`；每个 route role 必须绑定一个 exact execution profile，分别冻结 Provider/model/endpoint、current exact
-  Conformance、Capability Qualification、secret reference、disclosure scope、预算、隔离 transport 和 admission plugin。任何 profile 选择
+- 多 execution-profile route 只能在 Session 开始与任何问题 dispatch 前从 standing authority 或 exact human delta 冻结为
+  `preferred → fallback`；每个 route role 必须绑定一个 exact execution-profile ref/digest。产品、Agent 和 route branch 只能读取通用 role/profile reference、顺序与受信
+  availability verdict；不得以 Provider/model 名称形成分支、质量或安全语义。具体 Provider/model/endpoint、current exact Conformance、Capability Qualification、
+  Adapter/plugin、secret reference、disclosure scope、预算与隔离 transport 只属于 execution-profile configuration、资格和 receipt。任何 profile 选择
   admission plugin 时，都必须在该 route 的 socket/connected descriptor provisioning、TLS、credential 或 HTTP 前验证通用
   dispatch-admission receipt，并在每个新 request 前重验 plugin trusted inputs 或一次性 exact override。普通 standing authority、开发、
   route、canary 或 fallback 都不自动包含策略例外；receipt 缺失、过期、identity/plugin/input 漂移、条件失效或 override 越界时，该 route
   的 socket/descriptor、TLS、credential 和 HTTP 计数必须全部为 0。一次用户提交创建一个 logical interaction unit；Engineering
   Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。preferred-route attempt 只有在密封 terminal、没有 authorized
-  answer 且可信 terminal receipt 分类为 Provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected 后，才可
-  创建最多一个 fallback-route attempt。Application/Source/Security failure 不得 fallback。Fallback 从 immutable original interaction
+  answer，且 preferred profile 登记的受信 availability owner 对 exact profile 和 current receipts 密封
+  `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 后，才可创建最多一个 fallback-route attempt。Raw unavailable/HTTP/outcome 信号不直接授予 fallback；
+  output-invalid、Reviewer reject、Capability/qualification、Application、Source、authorization/admission 或 Security failure 全部 non-eligible。Fallback 从 immutable original interaction
   input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链；两个 attempt 的
-  Ledger/Package/Draft/Review/Provider session 不得交叉；同 Provider retry 为 0，late preferred-route response 必须 quarantine 且不得覆盖。
+  Ledger/Package/Draft/Review/Provider session 不得交叉；same-request retry 为 0，late preferred-route response 必须 quarantine 且不得覆盖。
   用户无需选择 Provider、重提问题或新建 Session。admission 阻断不能通过删减 Evidence、Citation、Answer 或独立 Review 绕过；无法完成
   质量链时当前 interaction 失败关闭，而其他合格 route 和本地开发继续。
 - `WORLD_MODEL` 答案进程的应用输入只能读取 package 与不含 Evidence payload 的 exact Snapshot Read Bundle；解释器、系统 runtime、精确 ancestor directory traversal 和独立输出 capability 必须单列，且不得包含目标来源、工作树、权威/旧数据库、Evidence/Citation Store 或另一角色输出。其网络默认拒绝：无模型阶段禁止全部出站；真实模型阶段只能连接 evaluator-owned exact Model Egress Gateway，由网关校验 Manifest 固定的 Provider scheme/host/port/path 并注入 credential。答案进程不能直连 DNS、公网、Source remote 或 Citation Projector。若本机 OS 不能按单一公网 IP 过滤 Gateway connect，允许由无 credential、无请求/响应 payload port 的 Gateway supervisor 预解析，并按已资格 connection policy 建立有界 exact peer TCP descriptor set，再把这些 descriptor 与 evaluator 已绑定的 exact `0600` AF_UNIX listener 交给 sandboxed Gateway child。默认一请求一连接的 transport 必须明确发送 `Connection: close`；显式取得资格的 persistent verified TLS transport 才能在同一授权 run 内发送 `Connection: keep-alive` 并复用 session。execution profile 必须冻结 descriptor 数、credential-free TLS acquisition 上限和每条 verified session 的 HTTP dispatch 上限；达到上限后的轮换发生在下一次 credential resolution 前。HTTP bytes 可能已发送后绝不重发 request。每个逻辑调用仍按 Investigation* → Draft → Review 拥有独立 Manifest、receipt、request/response audit。未使用 descriptor 在 Answer terminal 后关闭并审计为 `UNUSED_CLOSED`，且 `provisioned = TLS attempts + unused_closed`；Provider call、TLS attempt/success、reuse、per-session dispatch bound、post-dispatch unknown 与 request retry 必须分列，`request_retry_count` 必须为 0。少于、多于、交换、未资格复用或跨题/session 复用均失败关闭。地址 scope 必须如实区分标准 public unicast 与 executor 明确提供的 synthetic external peer，loopback、普通 private、link-local 与其他 reserved 地址仍拒绝，不能把 synthetic 地址误报成公网 IP。若 Seatbelt 对继承 TCP 数据面仍要求 remote-port `network-outbound`，该规则只能与拒绝 `SYS_socket`/`SYS_socketpair`/`SYS_socket_delegate` 的 syscall firewall 联合使用；child 必须无法创建任何新 AF_UNIX/INET/INET6 socket，并在解析 credential 前复核 peer、TLS certificate/SNI 与 exact HTTP scheme/Host/port/path。该组合只证明 digest-sealed 闭合 workload 的新 socket 创建被 OS 拒绝：它不是抵抗任意 native code execution 的 exact destination firewall，因为 Darwin `disconnectx`/`connectx` 可重定向既有 descriptor。正常 workload 必须另以 digest seal、禁止 fork 与 `connect`/`bind` 零计数审计闭合；若威胁模型包含任意 native code execution，必须改用 VM/container/per-process network namespace 或等价的 exact destination enforcement。preflight 必须真实执行继承 descriptor 已连接 exact peer、继承 listener 往返、继承 TLS 和新 socket denial；审计必须分列 supervisor connection provisioning、credential-free TLS acquisition、unused close、listener handoff 与 child Provider dispatch，并验证数量、复用关系与角色顺序，不能把 remote-port 规则单独描述为 endpoint allowlist，也不能声称 OS 提供了实际不存在的 remote-IP filter。
@@ -114,8 +116,8 @@ tests: [tests]
   POST 还必须在 receipt/transport/credential 前要求 `Origin` 精确等于已验证的 loopback Host、media type 为 `application/json`，且存在的
   `Sec-Fetch-Site` 只能是 `same-origin`。旧 prepared `@3` 模式只能接受其 exact Request，二者不得混用。
 
-失败、配置缺失、资格过期、身份漂移、输入截断或结果未知都对当前 provider attempt 采用 fail-closed 行为，且不得把未知伪装成确定失败。
-只有 ADR-017 明确允许、由冻结 fallback execution profile 与有效 receipts 授权且重新执行完整链的 fallback attempt 可以继续同一 logical
+失败、配置缺失、资格过期、身份漂移、输入截断或结果未知都对当前 provider attempt 采用 fail-closed 行为，且不得把未知伪装成确定失败或不可用。
+只有 ADR-017 明确允许、受信 availability owner 已密封 preferred profile unavailable verdict、并由冻结 fallback execution profile 与有效 receipts 授权且重新执行完整链的 fallback attempt 可以继续同一 logical
 question；它不能追认或修改已失败 attempt。
 
 Engineering Conversation 中上述 `logical question` 必须解释为密封 Turn；只有同一 Turn 下由冻结 fallback execution profile、admission
@@ -135,7 +137,7 @@ World Model/Source/Ledger trusted tool adapter 与单 Provider Agent/Reviewer �
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE`；确定 pre-dispatch 与 replay 计 0，fresh dispatch/unknown 计 1，
 retry 仍为 0。non-dispatching candidate preflight 不读取 Source/credential、不启动 listener、不调用 Provider，并固定
 `ready_for_live=false`。ADR-017 双 attempt、生产 Provider runtime、artifact fixed launcher 与 Ark/DeepSeek terminal Session audit 已形成本地
-确定性候选；Ark HTTP 前不可用也已 owner-typed 为独立 fallback eligibility。fresh Ark 与 DeepSeek Conformance 均已 PASS，
+确定性候选；Ark HTTP 前不可用也已 owner-typed 为 raw availability evidence，但受信 availability-owner verdict 尚未闭合，不得追认为 fallback eligibility。fresh Ark 与 DeepSeek Conformance 均已 PASS，
 双 Provider qualification 当前同时可用；公开来源 standing authority 的可信派生链尚未由当前实现证明，current actual artifact、Citation
 内容与五轮 live Chat 仍为 `STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。以上边界不能由 fake/offline port、Access、旧 `@3` 运行、浏览器连续提交外观或既有
 Provider 资格推导已经满足。

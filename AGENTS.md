@@ -69,8 +69,14 @@ a local hook is an automatic guardrail, not an administrator-proof trust root.
 
 Do not change product code, run an external provider, or advance an action when the
 base action does not explicitly allow it. A candidate Manifest cannot authorize its
-own diff. Only a sealed Result plus its digest-bound machine evidence, validated by
-the trusted base gate against a pre-registered transition, can move the cursor.
+own diff. Product development may span multiple ordinary commits inside one active
+long-running action as long as each diff stays within the base action's paths,
+permissions, and locks. A first operable complete browser chain must be handed to
+the user immediately with `requires_result=false`; that delivery neither seals a
+Result nor moves the plan cursor. A sealed Result plus base-validated machine
+evidence is required only for the final direction handoff (or after one
+evidence-backed general repair still fails) when moving the plan cursor, not for
+every commit, failed attempt, test, provider dispatch, or first browser delivery.
 
 The trusted-parent check is the first executable CI gate. On pull requests it
 must validate the pull-request head SHA, not a synthetic merge SHA. Every
@@ -78,30 +84,32 @@ plan-controlled commit must have exactly one parent and that parent must be the
 previous trusted node; candidate Python, tests, documentation tooling, or other
 repository code must not run before this check succeeds.
 
-An action verifier is executable evidence, not a self-reported Result field.
-The action runner identity must include exactly one `*/value_gate/runner.py`.
-Commit and freeze that self-contained runner before committing the Result: the
-trusted-base gate copies the base runner to an isolated temporary directory and
-executes it with `python -I -S <runner> verify-plan-evidence`, passing the exact
-evidence JSON bytes on stdin. The runner must emit only the registered JSON
-verification fields on stdout; the gate binds those fields to the evidence and
-Result. A runner and the Result it verifies cannot be introduced in the same
-commit. Evidence digests cover raw blob bytes, so line-ending changes, including
-CRLF versus LF, are material and must not be normalized.
+An action verifier is executable evidence, not a self-reported Result field. Freeze
+the smallest self-contained runner needed for the final direction handoff before the
+Result it verifies; the trusted-base gate must replay that runner against the exact
+evidence bytes. A candidate runner cannot verify itself. Do not build per-failure
+actions, Activation clocks, whole-Manifest digest schemes, or verifier state
+machines that duplicate the product workflow.
 
-For an external action to report `PASS`, `external_model_call_count`,
-`provider_dispatch_count`, and `http_dispatch_count` must each be positive and
-`full_regression_run_count` must be zero. A prerequisite Case produced by the
-registered action graph is satisfied only by its digest-bound Result receipt;
-textual `PASS` in the Verification Matrix is not sufficient. A plan revision
-must remain in the same Iteration, use a strictly higher PDR number, depend on
-the base governance action's sealed Result, and use a decision reference that
-has never appeared in any trusted-base document or authorization field.
+Each real external dispatch still requires a one-use runtime receipt tied to active
+standing authority, exact source/product/session/route/disclosure/budget, and the
+Secret Reference. First experience development may run only targeted impact,
+startup, safety, and failure-truthfulness tests; full regression, hidden inputs,
+cross-project validation, hardening, and Production remain locked until the user
+continues after the quality comparison. A direction receipt records the user's
+decision only: `CONTINUE` makes later work eligible but does not itself unlock it.
+Unlocking requires a subsequent PDR, explicit user authorization, and trusted-parent
+cutover; a local message digest is an evidence reference, not platform-authenticated
+authority. Ordinary answer failures stay in the same
+action: attribute the earliest divergence before one general repair and targeted
+recheck.
 
 Local gates do not establish an unbypassable trust boundary against a malicious
 repository administrator. Do not claim that property until the remote host has
 an immutable required workflow/ruleset and the required user/provider evidence
 has independently authenticated signatures.
 
-Run the smallest relevant code test set, then the full suite when a cross-module
-contract or invariant changes.
+Run the smallest relevant targeted, startup, and safety tests during first-experience
+development. Run the full suite after the experience and quality decision unlocks
+hardening, and before final acceptance; do not use it to delay the first complete
+browser experience.

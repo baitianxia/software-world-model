@@ -13,103 +13,88 @@ tests: [tests/test_docs_gate.py, tests/test_plan_gate.py]
 
 ## 目的
 
-自然语言计划只能解释意图，不能阻止实现者在一个较大的活动 Slice 内改变顺序、扩大范围，或把计划与结果同时改写为“已获授权”。
-所有采用本政策的活动产品迭代必须把唯一下一动作写入 Manifest，并由单树校验、基线差分校验和合并必需检查共同执行。文档正文不是
-执行权威；机器可读游标才是当前允许工作的最小边界。
+自然语言计划只能解释意图，不能阻止实现者扩大范围或把候选计划写成自己的授权。机械门禁只负责执行少量高价值边界：当前做什么、
+哪些路径可以改变、能否调用外部系统、哪些安全锁仍然生效，以及什么时候可以把游标交给下一动作。它不能把开发拆成行政动作迷宫，也
+不能把“收据齐全”冒充产品方向正确。
 
-## 唯一下一动作
+## 唯一长运行动作
 
 采用 `DEVELOPMENT_PLAN_EXECUTION_CONTROL@1` 的 Manifest 必须且只能有一个 `current_action`。它至少绑定：
 
 - 计划修订、活动 Slice、Verification Case、动作类型和状态；
-- 已通过的前置 Case、唯一允许生成的 Result ID/path；
-- exact evidence schema/path/verifier、受保护 runner identity paths 和本动作可产出的 Case 集；
-- 是否允许编码和外部执行；
-- 可变更路径、禁止变更路径和当前全部锁；
-- `PASS / FAIL / INVALID` 各自唯一的后继动作。
+- 是否允许产品编码和外部执行；
+- 允许与禁止变更的路径；
+- 始终锁定的 hardening、full regression、Production 和未授权外部范围；
+- 体验交接时唯一 Result/evidence 路径，以及交接 Verdict 对应的后继动作。
 
-所有可能由当前动作直接迁移到的后继必须在 base Manifest 的 `next_action_contracts` 预注册完整 action、transition 和 locks；未预注册 ID
-一律拒绝。候选树只能把预注册 contract 原样提升为 `current_action`，不能自行补写或放宽字段。
+首次缺少代表性 MVP 时，`current_action` 应是一个完整体验开发动作。它可以跨多个普通提交、定向测试、局部失败、根因诊断和通用修复
+持续运行，直到完整用户主链可交接或出现真正需要停止的安全/权限边界。普通失败留在同一动作：保留原输入、输出、证据、最早偏差、
+downstream guard failure、根因假设和反事实验证，但不按每次失败、提交、测试或外部调用生成 Result，不移动游标。
 
-`PROJECT-CURRENT` 必须复制计划修订、动作 ID 和 Case ID，文档检查必须与 Manifest 精确比对。活动 Slice 的广义 `coding_input=true`
-不能覆盖动作级白名单；动作未列出的产品代码、Prompt、Reviewer、Provider、Web、hardening 或测试范围一律未授权。
+`PROJECT-CURRENT` 必须复制计划修订、动作 ID 和 Case ID，并与 Manifest 精确一致。活动 Slice 的广义 `coding_input=true` 不能覆盖
+动作级路径白名单；候选 Manifest 不能授权自己的 diff。
 
-## 状态转换
+## Result 与状态转换
 
-动作可以保持不变或前进一步，不能跳步、一次推进多步或回写已完成历史。前进一步必须同时满足：
+Result 是体验交接或计划游标迁移的密封收据，不是开发过程日志。只有当前动作达到以下任一交接点时才生成唯一 Result：
 
-1. 基线 Manifest 中当前动作指定的唯一 Result 已生成；
-2. Result 必须为 `sealed iteration-result / evidence`，绑定原动作 ID、计划修订、Case、exact 输入、verifier、runner/report/subject digest、
-   外部调用数和允许的 Verdict；同一动作的 JSON evidence artifact 必须位于预注册路径，摘要覆盖 Git blob 或工作树中的原始 bytes 并与
-   Result 一致；UTF-8 解码只用于解析，不得先把 CRLF、LF 或其他字节差异规范化后再计算摘要；
-3. Verification Matrix 不得已明确 `FAIL/INVALID`；若 Matrix 因当前动作路径锁保持 `NOT-RUN/UNKNOWN`，Result frontmatter 只作为迁移
-   索引，实际迁移真源是受保护门禁校验通过的 Result + JSON 收据；收据必须精确覆盖预注册 `produced_case_ids`，Verdict 按
-   `INVALID > FAIL > PASS` 聚合，不能使用别名或自行声明额外 PASS Case；凡是 action graph 声明会产出的 prerequisite Case，Matrix
-   文本 `PASS` 也不能满足前置，必须解析到唯一 digest-bound sealed Result receipt；只有 graph 之外的历史 Case 才可继续使用 Matrix
-   索引。后续允许的索引动作再回写 Matrix，不得为了迁移放宽当前白名单；
-4. 新动作 ID 等于原动作对应 Verdict 的唯一后继；
-5. diff 没有越过原动作允许路径，也没有触碰锁定范围。
+- 完整可体验主链已经按当前 Case 交给用户；
+- 用户在体验和独立质量比较后作出方向决定；
+- 当前 scope 确实需要改变，必须迁移到新的治理动作；
+- 不可绕过的安全禁止或用户明确 `STOP / REDIRECT / REJECT` 结束当前动作。
 
-`evidence_verifier` 不是 Result 可以自报的标签。每个 action 的 `runner_identity_paths` 必须恰好包含一个
-`*/value_gate/runner.py`；该 Python runner 必须自包含。迁移时 trusted gate 必须读取 **trusted base** 的 runner identity，把 runner 复制到
-隔离临时目录，以清理后的最小环境、受限超时执行
-`python -I -S <temporary-runner> verify-plan-evidence`，并把 evidence JSON 的 exact raw bytes 通过 stdin 输入。stdout 必须是且只能是一个
-JSON object，精确包含并绑定以下字段：`evidence_verifier`、`action_ref`、`verification_case_id`、`plan_gate_verdict`、
-`execution_input_digest`、`runner_identity_digest`、`verification_report_digest`、`subject_digest`、`external_model_call_count`；非零退出、
-stderr、超时、字段缺失/多余或任何值不一致均使迁移失败。runner 必须先在一个独立提交中冻结，Result/JSON receipt 与 cursor transition
-在下一提交产生；runner 与自己的 Result 同提交属于自签并被拒绝，候选 runner 也不能替代 base runner。
+前进一步必须由 trusted base Manifest 预注册后继，并同时满足：当前动作指定的 Result/evidence 已生成；证据经 base 已冻结的轻量 verifier
+验证；Verdict 与后继一致；候选 diff 未越过 base 路径白名单和锁。Result 必须绑定动作、Case、subject/execution identity、实际执行计数和
+Verdict；外部动作还要聚合逐 dispatch runtime receipt。历史 sealed Result 保持不可变，但不得反向要求它补造后来新增的字段。
 
-每份 JSON receipt 还必须包含顶层 `action_evidence` object。通用门禁把其 exact bytes 一并交给 trusted runner；动作 runner 负责对本次
-工件内部的结构、计数、收据和值失败关闭。跨动作的 predecessor Result 原始字节、evidence 原始字节、Freeze root input、execution profile
-和 admission plugin 绑定必须由 trusted-parent `plan_gate.py` 从基线树重新计算并逐值比较，不能由只看到当前 stdin 的 runner 自证；文档检查
-只能重复核对而不能替代两者。没有动作专属字段时该 object 仍必须存在并为空对象，禁止用任意 SHA-256 外形字符串或未注册顶层字段绕开
-通用 Schema。
+失败证据可以在动作工作目录和最终交接 evidence 中聚合。`FAIL` 只阻止 PASS、晋级与 hardening，不自动撤销当前产品编码权；只要 scope、
+Owner、架构目标和安全边界不变，就在同一动作先归因最早责任层，再做一次通用修复和定向复验。`INVALID` 先修复输入、身份、盲化或
+执行完整性。任何 Verdict 都不得授权针对单题表象堆 Prompt、关键词或特殊规则。
 
-动作图、动作 ID/kind、迁移条件、质量标准和 `action_evidence` 字段名只允许使用 `preferred/fallback` 路线角色与 execution-profile/plugin
-引用，不得包含当前配置的 Provider 或 model 身份。具体身份只允许出现在独立运行配置对象和不可变执行收据的值中；更换模型只重封配置、
-资格和调用收据，不修改状态机。
+## 轻量 evidence verifier
 
-`provider_neutral_root_input_set` 使用关闭 Schema：顶层只能是 `schema/question_ids/system_arm_ids/entries`，恰好三个唯一 `Q-*` 问题 ID，
-system arm 必须等于当前 Gate 冻结的三个系统臂，entries 必须恰好覆盖问题×系统臂的完整笛卡尔积；每项只能包含 question ID、system-arm ID
-和 exact root-input digest。Provider/model/route/profile/plugin 控制字段即使使用未登记身份也不能进入该对象；问题正文等数据由 trusted runner
-通过 root-input digest 绑定和验证，不能被通用门禁解释为路由控制。
+交接 evidence 使用与动作规模相称的自包含 runner。runner 只验证本次交接的核心事实，例如：
 
-若 action 允许外部执行且 Result 为 `PASS`，JSON `execution_counters` 中 `external_model_call_count`、`provider_dispatch_count`、
-`http_dispatch_count` 必须都大于 0，并且 `full_regression_run_count` 必须等于 0。零调用不能伪装真实 Quality PASS，首次方向 Gate 也不能
-借 PASS 偷跑完整回归。禁止外部执行的 action 则全部外部计数必须为 0。
+- 完整主链、浏览器入口、语义多轮、新对话隔离和失败真实性是否实际成立；
+- 异质问题、未参与开发的问题、current Codex 强基线、独立评审和非 locator 世界模型贡献是否达到冻结阈值；
+- 普通失败是否完成分层根因归因和通用修复，而不是单题碰答案；
+- 首次体验前是否只运行 targeted impact、startup 与 safety 测试，`full_regression_run_count` 是否为零；
+- 每个真实外部 dispatch 是否有回指 standing authority 的 exact runtime receipt，Secret 是否只通过 Reference 使用。
 
-`FAIL` 不授权针对答案表象继续调参。它只能进入预先冻结的归因/返工动作；`INVALID` 只能修复输入、身份、盲化或执行完整性后重跑。
-需要改变计划本身时，必须先形成 Finding、Project Decision 和明确用户授权引用；同一变更不能同时以新计划为自己补造成功证据。
-只有预注册 `kind: governance` 动作可以修订计划；它必须先在独立基线提交中形成 digest-bound `PASS` Result，修订提交只能读取该 base
-Result，不能同时补 Result、改 verifier 或迁移动作。新 `plan_revision_ref` 必须仍属于同一 Iteration、PDR 数字序号严格大于 base PDR，
-新 PDR 的 `depends_on` 必须包含 base governance action 的 sealed Result，而且 `decision_ref` 必须在整个 trusted base 文档树的所有授权字段中
-从未出现；只检查当前 Manifest 的引用集合不足以阻止复用更早 PDR 的授权。
-所有非自环后继都必须已注册，且动作图必须至少保留一个此类治理出口。
+runner 与其验证的 Result 不能在同一提交中引入；trusted gate 从 base 读取 runner 并以 evidence 原始 bytes 重放，候选 runner 不能自签。
+但门禁不得要求对整个 Manifest、每个仓库文件或每个中间工件维护人工摘要，也不得用数千行 verifier 重建一套产品状态机。摘要只绑定
+真正影响交接身份和证据真实性的工件。
+
+若交接 Result 声称执行了外部模型，外部调用、Provider dispatch 和 HTTP dispatch 计数必须与逐次 runtime receipt 一致；未执行则如实为
+零。首次体验前 `full_regression_run_count` 必须为零。质量失败不能伪称网络失败，`OUTCOME_UNKNOWN` 不能改写成 PASS 或确定 FAIL。
+
+## 安全与权限边界
+
+以下边界在长运行动作中始终机械执行，不能后置：
+
+- 只访问 Manifest 允许的 active Slice/path；源码访问保持授权范围内只读；
+- Secret 只通过 Secret Reference 解析，不写入仓库、日志、Prompt 或 Result；
+- 外部执行必须落在 active standing authority 的 source、revision policy、receiver route、预算、调度与 Sink 范围内；
+- 每次真实 dispatch 前生成 one-use exact runtime receipt，并冻结 source/product/session/turn/route/disclosure/budget；receipt 只证明符合既有
+  权限，不能创建或扩大权限；
+- 只有 scope delta 才申请新的人类授权；同一公开开源、clean、allowlisted、只读 standing scope 内的新问题、Turn 或 run 不重复申请；
+- hardening、full regression、跨工程、hidden、性能和 Production 在用户体验与质量决定 `CONTINUE` 前保持锁定。
+
+Activation Result、分钟级时间盒收据、迟到即非法、每次失败单独动作、Build/Live/Quality/Attribution/Repair/Recheck 链和 rotating governance
+slot 都不是通用合法性条件。进度应频繁对用户可见；长时间没有可见增量时停止扩域与无证据重跑、回到根因和主链收敛，但不让人工时钟
+使仍在范围内的开发自动失权。
 
 ## 两类检查
 
-- `python3 scripts/docs.py check` 校验当前树：Schema、唯一动作、活动 Slice、Verification、Current 镜像、锁和文档一致性。
-- `python3 scripts/plan_gate.py diff --base <git-ref>` 校验基线到候选树：路径白名单、受保护 runner identity、Result/JSON 原始摘要、Case
-  聚合、trusted-base verifier 重执行、外部执行 Admission/正计数和单步状态迁移。
+- `python3 scripts/docs.py check` 校验当前树的文档引用、唯一动作、活动 Slice、Current 镜像、路径与锁一致性。
+- `python3 scripts/plan_gate.py diff --base <git-ref>` 用 trusted base 校验候选 diff 没有自扩权；只有发生 Result 交接/游标迁移时，才额外重放
+  evidence verifier 并校验单步后继。
 
-首次启用只能提交治理 cutover：允许计划、治理、验证工具及其测试，禁止夹带产品代码。cutover 之后，所有开发变更都用基线版本的
-`current_action` 审核，候选树不能通过修改自己的白名单来扩大权限。
+首次启用或修订计划只允许治理 cutover，禁止夹带产品代码。cutover 后，产品开发可在同一个 current action 中形成多个小提交；这些提交
+只需持续满足 base action 的路径、权限和锁，不要求每个提交产生新 Result。一个 Product Result 只在体验交接时密封。
 
-本地开发仓库必须把受保护的 `.githooks/plan-pre-commit` 安装为 `.git/hooks/pre-commit`。它通过 `git write-tree` 只校验暂存树，避免把
-未暂存的隔离实验误带入提交，同时从 trusted `HEAD` 提取 `scripts/plan_gate.py`，禁止执行候选门禁并拒绝 merge commit。该钩子用于自动
-阻止普通误操作；`--no-verify` 或直接修改 `.git` 仍属于本地管理员能力，不能替代下述远端不可变规则。
+本地开发仓库应安装 `.githooks/plan-pre-commit`，用 trusted `HEAD` 的 gate 检查暂存 diff；远端 CI 仍应在候选代码执行前进行 trusted-parent
+检查。二者防止普通误操作和候选自扩权，但没有远端不可变 required workflow/ruleset 与独立签名时，不得声称管理员绝对不可绕过。
 
-## 合并强制与不可绕过边界
-
-仓库 CI 必须把逐 commit trusted-parent 差分门禁放在任何候选 Python、候选测试、文档工具或 snapshot 执行之前。Pull Request 使用真实 head
-SHA，而不是平台合成的 merge SHA；base 到 head 的每个提交必须恰好一个 parent，且该 parent 必须等于前一可信节点。每个提交都由其
-trusted parent 的 `scripts/plan_gate.py` 校验，不能执行候选自己削弱后的 verifier，也不能用 merge commit、并行父节点或聚合 diff 把多次
-迁移压成一次。trusted-parent 门禁 PASS 后才可执行候选治理单测、文档检查和当前 snapshot。
-
-托管仓库还必须把该 workflow 设为不可由候选变更绕过的分支必需检查/ruleset，并保护门禁脚本、workflow、Manifest、Current 和活动
-Slice；仅把命令写进 AGENTS、README 或仓库内 workflow 不构成对恶意仓库管理员的不可绕过边界。没有远端不可变 required workflow/
-ruleset，也没有独立签名的用户授权与 Provider 执行证明时，只能声明“本地结构、执行重放和合并前门禁已实现”，不能声称用户意图、外部
-调用或管理员行为已经由仓库内文件做了密码学认证，更不能宣称门禁绝对不可绕过。
-
-紧急修订也不绕过本政策：先用专门的 governance action 修改规则并取得对应决定，再执行新的唯一动作。安全事件可以停止动作，但不能
-把停止本身解释为后续开发授权。
+紧急安全事件可以停止动作。需要改变计划时，先形成 Finding、Project Decision 与明确用户授权引用，再由一个治理 cutover 提交修改计划；
+不得把候选产品代码与自授权计划混在同一提交。

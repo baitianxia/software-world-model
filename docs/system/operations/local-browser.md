@@ -29,13 +29,13 @@ ADR-016 的固定 Understanding/Initial Investigation/Answer/双 Review/Verifica
 `ACCESS_BROWSER_PASS`，已实现 Conversation/Turn/Context、消息历史和“新对话”；Application-owned Agent executor 与浏览器 success/failure
 投影为 `AGENT_EXECUTOR_LOCAL_CANDIDATE`。World Model/Source/Ledger tool adapter 与单 Provider Agent/Reviewer model boundary 已分别达到
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE / PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`。Application-owned
-Ark→DeepSeek router 和 fixed Browser composition 已在不创建 attempt 的预检中绑定；listener、credential、Source read、Provider dispatch
+generic `preferred → fallback` router（当前配置实例映射 Ark→DeepSeek）和 fixed Browser composition 已在不创建 attempt 的预检中绑定；listener、credential、Source read、Provider dispatch
 仍全部为 0。Ark/DeepSeek model runtime 已以生产 Adapter/credential-lazy transport 形成
 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；Session runtime 又绑定 exact evidence authority、per-attempt fresh Tool/Response Control、route、
 Conversation 与 Browser。`FINDING-010-103` 进一步实现 owner-private artifact loader 和固定命令分支，加载 product/source identity、published
 World Model、Source Profile、Ark/DeepSeek qualification identity 与 distinct private Gateway repositories，状态为
 `ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`。`FINDING-010-104` 又把 Ark per-request verified TLS Session audit 接入 Conformance 与
-terminal receipt，并 owner-type HTTP 前 unavailable；状态增加 `ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。这些状态来自本地构造/
+terminal receipt，并 owner-type HTTP 前 unavailable raw evidence；状态增加 `ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。该 raw evidence 未经受信 availability owner 形成 exact verdict，不具备 fallback eligibility。这些状态来自本地构造/
 patched typed artifacts 和 fake listener lifecycle；fresh Ark 与 DeepSeek Conformance 随后已分别以 2/2 request、strict Session audit
 PASS，双 Provider qualification 当前同时可用。current actual sealed artifact 和 Browser 五轮 Chat 均未生成或执行，公开来源 standing
 authority 到 exact Session/Turn/call 的自动派生也尚未实现，故仍为 `STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。在双 route Adapter 资格、
@@ -82,12 +82,14 @@ launcher 与持续体验冲突；后续收据曾恢复 Slice1 开发，但 PDR-0
 
 ADR-016 / `@3` 兼容 Alpha 目标在 listener 前固定一个升级后的 Engineering QA Session Authority，而不是固定一条问题。公开开源工程路径
 从 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 自动派生该 Session Authority；它绑定 clean product、exact 工程/
-revision、World Model、Source Profile/allowlist、Ark→DeepSeek 有序 route、每条 route 的 model/configuration/qualification/credential reference/
+revision、World Model、Source Profile/allowlist、通用 `preferred → fallback` route role 与 execution-profile refs，以及每条 profile 配置内的 model/configuration/qualification/credential reference/
 披露边界、有效期和 logical-question/provider-attempt 两级安全熔断。
 页面显示这些边界；体验者只输入问题并提交，服务签发 request/run identity 并由 System Owner 从 standing authority 编译该题 exact
 machine authority/receipt，不要求人工逐题批准。每题后续动态 Ledger/Package 输入仍逐角色、逐 Provider attempt 自动形成 one-use
-authorization。Ark attempt 无 authorized answer 且符合 ADR-017 的
-Provider/model reason 时，系统可对同一 logical question 自动启动一次完全隔离的 DeepSeek attempt；用户不重提问题或重启 Session。
+authorization。preferred attempt 无 authorized answer 且其登记的受信 availability owner 密封 exact
+`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，系统可对同一 logical question 自动启动一次完全隔离的 fallback attempt；用户不重提问题或重启 Session。
+Raw unavailable/HTTP/outcome 信号不直接启用 fallback；格式无效、Reviewer 拒绝、Capability/qualification、Application、Source、authorization/admission 或 Security failure 均 non-eligible。
+格式修复、答案重写、补证后重答和 fresh Review 使用同一 profile 下的新 authorized call，不是重发同一 request。
 题目最终失败只关闭该 logical question，服务继续接受下一题；session authority 漂移、过期或总熔断耗尽则拒绝后续新题。问题 POST 仅接受当前 `http://127.0.0.1:8765` 页面发出的 same-origin `application/json`；跨站或
 `text/plain` 请求在 receipt 与 transport 前拒绝。当前实现与确定性证据闭合前，不得把该目标写成 live PASS。
 
@@ -269,7 +271,7 @@ PYTHONPATH=src:. python3 -m software_world_model.interface.engineering_qa_previe
 
 - `WORLD_MODEL` 显示 source revision、exact Snapshot、Read Bundle digest、View、Profile/关系 modality、Coverage、View Limitation/Knowledge Gap、Fact 与 Evidence 引用；问题请求只读不含 Evidence payload 的 exact Snapshot Read Bundle，不得触发更新或访问 Source、权威数据库或 Evidence Store。点击引用由浏览器另行访问密封结果后的 Citation Projector，不把正文发送回问答进程。
 - `DIRECT_INVESTIGATION` 显示 exact Source Target 与 Evidence Packet；它按 ADR-013 调查源码，但不能标成世界模型回答。
-- 目标 Engineering Chat 页面在 Conversation Authority 中固定 protocol identity、exact repository/revision、World Model Read Authority、Source allowlist、Source Profile identity、Tool Catalog、versioned Conversation input policy、standing authority 和预授权 Ark→DeepSeek route。公开来源边界内，浏览器按 Turn 提交 user message 即可，Conversation/Turn/run ID 由服务签发并自动派生 exact authority/receipt；不得要求用户再确认相同模型披露。只有 material delta 才显示并取得新的 human decision。历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。新 Conversation 的空 Context 指代若命中 Binding-owned policy，页面必须在 Source/Provider dispatch 0 下显示可操作澄清，并在 health/developer projection 中展示 policy identity；Session budget rejection 或通用失败文案不能冒充该行为。Provider 选择与 fallback 对普通用户透明；默认主视图展示语义连续的消息、结论优先答案、结论级 Citation 与可理解的 unknown/limitation，开发者详情才展示 Turn/provider-attempt identity、fallback reason、成本与 quarantine。World Model Cognition、Agent Work State 摘要、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
+- 目标 Engineering Chat 页面在 Conversation Authority 中固定 protocol identity、exact repository/revision、World Model Read Authority、Source allowlist、Source Profile identity、Tool Catalog、versioned Conversation input policy、standing authority 和预授权的通用 `preferred → fallback` route role/execution-profile refs。具体 Provider/model 只作为运行配置、资格、Adapter/plugin 和 receipt 详情展示，不得成为产品、Agent 或 route branch 条件。公开来源边界内，浏览器按 Turn 提交 user message 即可，Conversation/Turn/run ID 由服务签发并自动派生 exact authority/receipt；不得要求用户再确认相同模型披露。只有 material delta 才显示并取得新的 human decision。历史 prepared 模式仍只能接受其 grant 中 exact request ID/question。新 Conversation 的空 Context 指代若命中 Binding-owned policy，页面必须在 Source/Provider dispatch 0 下显示可操作澄清，并在 health/developer projection 中展示 policy identity；Session budget rejection 或通用失败文案不能冒充该行为。Provider 选择与 fallback 对普通用户透明；只有受信 availability owner 密封 preferred profile 真实不可用 verdict 时才能进入 fallback。格式无效或 Reviewer 拒绝必须在同一 profile 内以新 authorized call 修复/重写，或如实关闭当前 Turn，不能换路由。默认主视图展示语义连续的消息、结论优先答案、结论级 Citation 与可理解的 unknown/limitation，开发者详情才展示 Turn/provider-attempt identity、availability verdict/fallback reason、成本与 quarantine。World Model Cognition、Agent Work State 摘要、Broker Decision、Evidence Ledger/Package digest、调用数和 Review Finding 折叠到开发者详情，不平铺为用户答案。手册或地图只能作为世界模型认知投影展示，不得将其标成完整世界模型。
 - Engineering Chat 不根据问题、项目、关键词、符号、fixture 或 Oracle 切换后端。World Model Cognition 缺失或无关不会切换为 Direct；主 Agent 的源码调查是同一受权 Turn 的策略，每个 Proposal 必须由 Broker 编译、Worker 只读执行并追加 Ledger，实际工具、证据来源和重规划必须可审计。兼容 Alpha 当前仍按 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 单题/固定角色语义运行，不能由 UI 外观推导新协议已经实现。
 
 人工更新是独立操作：即使从未提问也能构建新 Snapshot；计划或来源事件自动更新需要独立启用和运维证明。

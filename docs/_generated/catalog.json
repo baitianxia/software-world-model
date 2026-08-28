@@ -3739,7 +3739,7 @@
   {
     "id": "FINDING-010-153",
     "kind": "implementation-finding",
-    "status": "open",
+    "status": "dispositioned",
     "authority": "development-evidence",
     "owners": [
       "project",
@@ -5573,6 +5573,22 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/decisions/PDR-009-value-first-four-arm-and-plan-lock.md"
+  },
+  {
+    "id": "ITER-010-PDR-010",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md"
   },
   {
     "id": "ITER-010-PROPOSAL",

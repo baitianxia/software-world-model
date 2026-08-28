@@ -14,7 +14,7 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 
 两个已登记的非敏感 Provider 配置为：
 
-| 项 | Ark primary | DeepSeek fallback |
+| 项 | 当前 `preferred` 配置实例 | 当前 `fallback` 配置实例 |
 |---|---|---|
 | Provider | `VOLCENGINE_ARK` | `DEEPSEEK` |
 | Base URL | `https://ark.cn-beijing.volces.com/api/coding/v3` | `https://api.deepseek.com` |
@@ -33,10 +33,13 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 rendering identity 或有效期变化会使旧 Conformance 失效；领域 Prompt、答案 Schema 或不改变上述 identity 的产品变化不得强制重复取得
 Conformance。
 
-ADR-017 的目标 route 是在 Engineering Conversation 启动前预封 `VOLCENGINE_ARK → DEEPSEEK` 及两者各自的 qualification、credential
-reference 和 disclosure scope。用户提交一个 Turn；Ark Agent attempt 无 authorized answer 且属于已允许 Provider/model reason 时，系统
-透明地以独立 DeepSeek attempt 从受信 Turn input、relevant Conversation Context 和 exact Cognition 重新执行完整 Agent 链。Provider 对
-用户和上层 Agent 语义透明；用户不选择 Provider、不重提问题或新建 Conversation，同一 attempt 内也不继承另一 Provider 的隐藏状态。
+ADR-017 的通用 route 在 Engineering Conversation 启动前只预封 `preferred → fallback` role 和两个 execution-profile ref/digest。产品、Agent 和 route branch
+不读取 Provider/model 名称；本文配置层才把它们解析为当前 `VOLCENGINE_ARK → DEEPSEEK` 实例，并绑定各自的 qualification、Adapter/plugin、
+credential reference 和 disclosure scope。只有首选 profile 登记的受信 availability owner 对 exact profile 和当前 receipts 密封
+`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict，系统才可以独立 fallback attempt 从受信 Turn input、relevant Conversation Context 和 exact Cognition 重新执行完整 Agent 链。
+Raw unavailable/HTTP/outcome 信号不直接授予 fallback；结构化输出无效、Reviewer 拒绝、Capability/qualification、Application、Source、authorization/admission 和
+Security failure 均 non-eligible。格式修复、答案重写、补证后重答和 fresh Review 只能在同一 execution profile 内作为新 authorized call，不是重发同一
+Provider request。Provider 对用户和上层 Agent 语义透明；用户不选择 Provider、不重提问题或新建 Conversation，同一 attempt 内也不继承另一 Provider 的隐藏状态。
 
 ## 公开来源 standing authority
 
@@ -62,7 +65,7 @@ listener 前失败关闭。
 `127.0.0.1:8765`，在 listener 构造前写零活动 launch receipt，并在 shutdown 后写 terminal receipt。当前状态是
 `ARK_CONFORMANCE_PASS / DEEPSEEK_CONFORMANCE_PASS / DUAL_PROVIDER_QUALIFICATION_CURRENT / STANDING_AUTHORITY_DERIVATION_REQUIRED`：
 `FINDING-010-104` 已把 Ark strict Session audit 接入 Conformance 与 terminal receipt，并将 HTTP 前 transport unavailable owner-typed 为
-fallback eligibility；`FINDING-010-105/106` 又分别在 clean `1e99e9b…` / `653eff3…` 上取得 current Ark 与 DeepSeek qualification。
+raw availability evidence；它未证明受信 availability-owner verdict，不得追认为 fallback eligibility。`FINDING-010-105/106` 又分别在 clean `1e99e9b…` / `653eff3…` 上取得 current Ark 与 DeepSeek qualification。
 测试和两次 fresh Conformance run 均未生成或执行 current actual sealed Session artifact；当前实现仍缺公开来源 standing authority 到
 exact five-Turn Session/Turn/call 的可信自动派生，不能再以逐 run 人工 authorization 作为目标替代。不能把 Provider qualification 标成
 artifact `LIVE / PASS`。

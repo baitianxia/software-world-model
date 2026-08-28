@@ -136,6 +136,593 @@ def product_goal_verification(
     return docs_gate.Document(path, metadata, body)
 
 
+def generic_provider_route_policy() -> dict[str, object]:
+    return {
+        "schema": docs_gate.PROVIDER_ROUTE_POLICY_SCHEMA,
+        "preferred_execution_profile_ref": "runtime-config:preferred-qualified-profile",
+        "fallback_execution_profile_ref": "runtime-config:fallback-qualified-profile",
+        "preference_order": ["preferred", "fallback"],
+        "availability_owner": "provider-availability-boundary",
+        "required_fallback_verdict": docs_gate.PREFERRED_PROFILE_UNAVAILABLE_VERDICT,
+        "product_control_flow_allowed_inputs": "route-role,execution-profile-ref-and-digest,availability-verdict",
+        "product_control_flow_forbidden_inputs": "provider-identity,model-identity",
+        "verification_case_id": "V-MODEL-TRANSPARENT-ROUTING-001",
+        "fallback_dispatch_requires_verification_pass": True,
+        "preferred_unavailable_evidence_required": True,
+        "implementation_gap_counts_as_preferred_unavailable": False,
+        "preferred_availability_requires": "credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold",
+        "route_freeze_time": "before-conversation-start-and-before-any-interaction-unit-dispatch",
+        "ordered_routes_preauthorized_at_session_start": True,
+        "ordered_route_disclosure_scopes_preauthorized_at_session_start": True,
+        "transparent_logical_interaction_fallback_allowed": True,
+        "user_resubmission_or_new_session_required": False,
+        "fallback_requires_preferred_attempt_terminal_without_authorized_answer": True,
+        "fallback_trigger": "sealed-provider-availability-verdict:PREFERRED_EXECUTION_PROFILE_UNAVAILABLE",
+        "fallback_eligible_outcomes": list(
+            docs_gate.PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES
+        ),
+        "structured_output_invalid_allows_fallback": False,
+        "model_review_rejected_allows_fallback": False,
+        "raw_http_or_outcome_without_availability_verdict_allows_fallback": False,
+        "application_source_security_failure_allows_fallback": False,
+        "fallback_reason_classification_required": True,
+        "capability_failure_must_not_be_misclassified_as_unavailable": True,
+        "structured_output_invalid_recovery": "bounded-new-call-on-same-execution-profile-with-new-request-identity-and-receipt",
+        "model_review_rejected_recovery": "bounded-rewrite-new-call-on-same-execution-profile-with-new-request-identity-and-receipt-and-fresh-review",
+        "same_profile_application_repair_is_transport_request_retry": False,
+        "same_profile_application_repair_bound": "current-interaction-safety-and-no-progress-policy",
+        "same_profile_application_repair_exhausted_action": "fail-current-turn-with-exact-reason-without-fallback",
+        "fallback_attempt_restarts_full_chain": True,
+        "fallback_attempt_inputs": "immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition",
+        "cross_attempt_intermediate_state_reuse_allowed": False,
+        "late_preferred_result_policy": "quarantine-audit-only",
+        "late_preferred_result_overwrite_allowed": False,
+        "post_dispatch_execution_profile_switch_requires": "new-fallback-attempt-under-same-logical-interaction-unit-preauthorized-route-and-required-availability-verdict",
+        "maximum_fallback_execution_profile_attempts": 1,
+        "transport_request_retry_allowed": False,
+        "outcome_unknown_duplicate_cost_risk_recorded": True,
+        "peak_urgent_override_requires": "audited-explicit-override",
+        "cost_can_reduce_answer_quality": False,
+        "cost_gate_scope": "before-interaction-unit-start-only",
+        "current_started_interaction_unit_must_keep_full_quality_chain": True,
+        "unchanged_current_conformance_reuse_required": True,
+    }
+
+
+class LightweightIter010GateTests(unittest.TestCase):
+    @staticmethod
+    def _current_manifest() -> dict[str, object]:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        return docs_gate.safe_load_manifest(manifest_path.read_text(encoding="utf-8"))
+
+    def test_plan_revision_classification_separates_legacy_and_lightweight(self) -> None:
+        legacy = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+            }
+        }
+        lightweight = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_LIGHTWEIGHT_PLAN_REVISION_REF,
+            }
+        }
+        unrelated = {
+            "plan_execution_control": {
+                "plan_revision_ref": "ITER-010-PDR-011",
+            }
+        }
+
+        self.assertTrue(docs_gate.uses_legacy_iter010_plan(legacy))
+        self.assertFalse(docs_gate.uses_lightweight_iter010_plan(legacy))
+        self.assertFalse(docs_gate.uses_legacy_iter010_plan(lightweight))
+        self.assertTrue(docs_gate.uses_lightweight_iter010_plan(lightweight))
+        self.assertFalse(docs_gate.uses_legacy_iter010_plan(unrelated))
+        self.assertFalse(docs_gate.uses_lightweight_iter010_plan(unrelated))
+
+        downstream_verification = docs_gate.Document(
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/verification-matrix.md",
+            {"id": "ITER-010-VERIFICATION"},
+            "",
+        )
+        downstream_errors = docs_gate.validate_historical_gate_catalog(
+            {
+                **unrelated,
+                "critical_assumption_catalog_cutover": {
+                    "historical_case_ids": "",
+                },
+            },
+            [],
+            downstream_verification,
+            "manifest.yaml",
+        )
+        self.assertFalse(
+            any(
+                case_id in error
+                for error in downstream_errors
+                for case_id in docs_gate.ITER010_CURRENT_CHAT_GATE_CASES
+            ),
+            downstream_errors,
+        )
+        self.assertFalse(
+            any("current ITER-010 Gate contracts" in error for error in downstream_errors),
+            downstream_errors,
+        )
+
+    def test_experience_policy_dispatches_registered_iter010_revisions(self) -> None:
+        arguments = ({}, [], [], "manifest.yaml")
+        legacy = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+            },
+            "experience_delivery_policy": {},
+        }
+        lightweight = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_LIGHTWEIGHT_PLAN_REVISION_REF,
+            },
+            "experience_delivery_policy": {},
+        }
+        other_iteration = {
+            "plan_execution_control": {
+                "plan_revision_ref": "ITER-012-PDR-011",
+            },
+            "experience_delivery_policy": {},
+        }
+
+        with patch.object(
+            docs_gate,
+            "_validate_experience_first_delivery_policy_legacy_or_generic",
+            return_value=["legacy-validator"],
+        ) as legacy_validator, patch.object(
+            docs_gate,
+            "_validate_iter010_lightweight_experience_policy",
+            return_value=["lightweight-validator"],
+        ) as lightweight_validator:
+            self.assertEqual(
+                docs_gate.validate_experience_first_delivery_policy(
+                    legacy, *arguments, required=True
+                ),
+                ["legacy-validator"],
+            )
+            legacy_validator.assert_called_once()
+            lightweight_validator.assert_not_called()
+
+            legacy_validator.reset_mock()
+            self.assertEqual(
+                docs_gate.validate_experience_first_delivery_policy(
+                    lightweight, *arguments, required=True
+                ),
+                ["lightweight-validator"],
+            )
+            legacy_validator.assert_not_called()
+            lightweight_validator.assert_called_once()
+
+            lightweight_validator.reset_mock()
+            self.assertEqual(
+                docs_gate.validate_experience_first_delivery_policy(
+                    other_iteration, *arguments, required=True
+                ),
+                ["legacy-validator"],
+            )
+            legacy_validator.assert_called_once()
+            lightweight_validator.assert_not_called()
+
+    def test_experience_policy_dispatch_rejects_unregistered_pdr011_or_later(
+        self,
+    ) -> None:
+        arguments = ({}, [], [], "manifest.yaml")
+        with patch.object(
+            docs_gate,
+            "_validate_experience_first_delivery_policy_legacy_or_generic",
+            return_value=[],
+        ) as legacy_validator, patch.object(
+            docs_gate,
+            "_validate_iter010_lightweight_experience_policy",
+            return_value=[],
+        ) as lightweight_validator:
+            for revision in (11, 12, 100):
+                with self.subTest(revision=revision):
+                    manifest = {
+                        "plan_execution_control": {
+                            "plan_revision_ref": f"ITER-010-PDR-{revision:03d}",
+                        },
+                        "experience_delivery_policy": {},
+                    }
+                    errors = docs_gate.validate_experience_first_delivery_policy(
+                        manifest, *arguments, required=True
+                    )
+                    self.assertEqual(len(errors), 1, errors)
+                    self.assertIn(
+                        f"ITER-010-PDR-{revision:03d}", errors[0]
+                    )
+                    self.assertIn(
+                        "no registered experience policy validator", errors[0]
+                    )
+                    self.assertIn("must not fall back", errors[0])
+
+            legacy_validator.assert_not_called()
+            lightweight_validator.assert_not_called()
+
+    def test_lightweight_experience_policy_has_no_machine_deadline(self) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "blocking_case_ids"
+        )
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "new_capability_slice_refs"
+        )
+        assert blocking is not None and new_refs is not None
+
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                manifest,
+                manifest["product_goal_alignment"],
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+                manifest_text=manifest_text,
+            ),
+            [],
+        )
+
+        with_deadline = copy.deepcopy(manifest)
+        with_deadline["experience_delivery_policy"][
+            "direction_decision_deadline_minutes"
+        ] = 480
+        errors = docs_gate.validate_experience_first_delivery_policy(
+            with_deadline,
+            with_deadline["product_goal_alignment"],
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            required=True,
+            manifest_text=manifest_text,
+        )
+        self.assertTrue(
+            any(
+                "machine timebox fields" in error
+                and "direction_decision_deadline_minutes" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_lightweight_experience_policy_rejects_every_field_mutation(self) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "blocking_case_ids"
+        )
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "new_capability_slice_refs"
+        )
+        assert blocking is not None and new_refs is not None
+        for field, expected in (
+            docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES
+        ):
+            manifest["experience_delivery_policy"][field] = list(expected)  # type: ignore[index]
+
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                manifest,
+                manifest["product_goal_alignment"],
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+                manifest_text=manifest_text,
+            ),
+            [],
+        )
+
+        for field, original in (
+            docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES
+        ):
+            with self.subTest(policy_field=field):
+                candidate = copy.deepcopy(manifest)
+                if isinstance(original, bool):
+                    replacement: object = int(original)
+                elif isinstance(original, int):
+                    replacement = True if original == 1 else original + 1
+                else:
+                    replacement = f"{original}-tampered"
+                candidate["experience_delivery_policy"][field] = replacement  # type: ignore[index]
+                errors = docs_gate.validate_experience_first_delivery_policy(
+                    candidate,
+                    candidate["product_goal_alignment"],
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
+                    required=True,
+                )
+                self.assertTrue(any(f".{field}" in error for error in errors), errors)
+
+        sequence_candidate = copy.deepcopy(manifest)
+        sequence_candidate["experience_delivery_policy"][  # type: ignore[index]
+            "historical_pre_policy_result_refs"
+        ] = ["ITER-010-RESULT-COUNTERFEIT"]
+        sequence_errors = docs_gate.validate_experience_first_delivery_policy(
+            sequence_candidate,
+            sequence_candidate["product_goal_alignment"],
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any("historical_pre_policy_result_refs" in error for error in sequence_errors),
+            sequence_errors,
+        )
+
+        for path, value, expected_error in (
+            (("current_action", "case_id"), "V-CHAT-EXPERIENCE-001", "action.case_id"),
+            (("control_locks", "full_regression"), False, "lock hardening"),
+            (
+                ("experience_version_binding", "repeatable_start"),
+                False,
+                "repeatably runnable",
+            ),
+        ):
+            with self.subTest(binding_path=path):
+                candidate = copy.deepcopy(manifest)
+                if path[0] == "current_action":
+                    target = candidate["plan_execution_control"]["current_action"]  # type: ignore[index]
+                    keys = path[1:]
+                elif path[0] == "control_locks":
+                    target = candidate["plan_execution_control"]["locks"]  # type: ignore[index]
+                    keys = path[1:]
+                else:
+                    target = candidate["product_goal_alignment"][path[0]]  # type: ignore[index]
+                    keys = path[1:]
+                for key in keys[:-1]:
+                    target = target[key]  # type: ignore[index]
+                target[keys[-1]] = value  # type: ignore[index]
+                errors = docs_gate.validate_experience_first_delivery_policy(
+                    candidate,
+                    candidate["product_goal_alignment"],
+                    new_refs,
+                    blocking,
+                    "manifest.yaml",
+                    required=True,
+                )
+                self.assertTrue(
+                    any(expected_error in error for error in errors), errors
+                )
+
+        result_backed_first = copy.deepcopy(manifest)
+        result_backed_first["plan_execution_control"]["next_action_contracts"][  # type: ignore[index]
+            "premature_first_delivery_result"
+        ] = {
+            "case_id": docs_gate.ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID,
+            "result_ref": "ITER-010-RESULT-V-CHAT-EXPERIENCE-001",
+        }
+        result_backed_errors = docs_gate.validate_experience_first_delivery_policy(
+            result_backed_first,
+            result_backed_first["product_goal_alignment"],
+            new_refs,
+            blocking,
+            "manifest.yaml",
+            required=True,
+        )
+        self.assertTrue(
+            any("requires_result=false" in error for error in result_backed_errors),
+            result_backed_errors,
+        )
+
+    def test_post_experience_comparison_is_two_arm_and_heterogeneous(self) -> None:
+        binding: dict[str, object] = {
+            "case_id": docs_gate.ITER010_DIRECTION_QUALITY_CASE_ID,
+            "new_slice_ref": "ITER-010-SLICE-001",
+            "result_role": "post-experience-strict-superiority-direction-evidence",
+            "occurs_after_complete_browser_experience": True,
+            "question_count": 3,
+            "unseen_question_count_minimum": 2,
+            "question_set_rule": "heterogeneous-no-pom-only",
+            "arms": "complete-world-model-system,current-codex",
+            "protocol_digest_ref": "mature_source_agent_protocol_digest",
+            "rubric_digest_ref": "mature_source_agent_rubric_digest",
+            "identity_digest_ref": "mature_source_agent_identity_digest",
+            "pass_rule": docs_gate.STRICT_CODEX_ALPHA_PASS_RULE,
+            "all_tie_outcome": "FAIL",
+            "secondary_metric_compensation_allowed": False,
+            "current_codex_is_oracle_or_reviewer": False,
+            "external_codex_runtime": (
+                "preserve-actual-model-reasoning-tools-permissions-and-budget"
+            ),
+            "shared_evaluation_inputs": (
+                "same-exact-revision-questions-authorized-source-scope-"
+                "output-constraints-and-blind-rubric"
+            ),
+            "technical_adjudication_owner": "independent-evaluator-not-answer-generator",
+            "product_direction_decision_owner": "user",
+            "full_four_arm_causal_ablation_requires_user_continue": True,
+        }
+        alignment = {"alpha_agent_comparison_binding": binding}
+        blocking = [docs_gate.ITER010_DIRECTION_QUALITY_CASE_ID]
+
+        self.assertEqual(
+            docs_gate.validate_alpha_agent_comparison_binding(
+                alignment,
+                ["ITER-010-SLICE-001"],
+                blocking,
+                "manifest.yaml",
+            ),
+            [],
+        )
+
+        invalid_changes = (
+            (
+                "arms",
+                "source-only,complete-world-model-system,current-codex",
+                ".arms",
+            ),
+            ("question_set_rule", "pom-only", ".question_set_rule"),
+            ("question_count", 2, "question_count must be at least 3"),
+            (
+                "unseen_question_count_minimum",
+                1,
+                "unseen_question_count_minimum must be between 2",
+            ),
+        )
+        for field, value, expected_error in invalid_changes:
+            with self.subTest(field=field):
+                candidate = copy.deepcopy(alignment)
+                candidate["alpha_agent_comparison_binding"][field] = value
+                errors = docs_gate.validate_alpha_agent_comparison_binding(
+                    candidate,
+                    ["ITER-010-SLICE-001"],
+                    blocking,
+                    "manifest.yaml",
+                )
+                self.assertTrue(
+                    any(expected_error in error for error in errors),
+                    errors,
+                )
+
+    def test_lightweight_standing_authority_rejects_every_field_mutation(self) -> None:
+        manifest = self._current_manifest()
+        self.assertEqual(
+            docs_gate.validate_iter010_lightweight_standing_authority(
+                manifest, "manifest.yaml"
+            ),
+            [],
+        )
+
+        for field, original in (
+            docs_gate.ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES
+        ):
+            with self.subTest(authority_field=field):
+                candidate = copy.deepcopy(manifest)
+                candidate["public_oss_evaluation_standing_authority"][field] = (  # type: ignore[index]
+                    int(original)
+                    if isinstance(original, bool)
+                    else f"{original}-tampered"
+                )
+                errors = docs_gate.validate_iter010_lightweight_standing_authority(
+                    candidate, "manifest.yaml"
+                )
+                self.assertTrue(any(f".{field}" in error for error in errors), errors)
+
+        for field, original in (
+            docs_gate.ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES
+        ):
+            with self.subTest(authorization_field=field):
+                candidate = copy.deepcopy(manifest)
+                candidate["authorization"][field] = (  # type: ignore[index]
+                    int(original)
+                    if isinstance(original, bool)
+                    else f"{original}-tampered"
+                )
+                errors = docs_gate.validate_iter010_lightweight_standing_authority(
+                    candidate, "manifest.yaml"
+                )
+                self.assertTrue(any(f".{field}" in error for error in errors), errors)
+
+        with_extra_field = copy.deepcopy(manifest)
+        with_extra_field["public_oss_evaluation_standing_authority"][  # type: ignore[index]
+            "implicit_unregistered_scope"
+        ] = True
+        extra_errors = docs_gate.validate_iter010_lightweight_standing_authority(
+            with_extra_field, "manifest.yaml"
+        )
+        self.assertTrue(any("closed schema" in error for error in extra_errors), extra_errors)
+
+    def test_dependency_cycles_ignore_only_prior_sealed_result_lineage(self) -> None:
+        pdr = docs_gate.Document(
+            docs_gate.REPOSITORY / "docs/project/iterations/iteration-010/decisions/pdr.md",
+            {
+                "id": "ITER-010-PDR-010",
+                "kind": "project-decision",
+                "iteration": "ITER-010",
+                "decision": "REWORK",
+                "rework_strategy": "COMPLETE_MVP_EXPERIENCE_FIRST",
+                "depends_on": ["ITER-010-RESULT-V-PLAN-RECOVERY-001"],
+            },
+            "",
+        )
+        prior_result = docs_gate.Document(
+            docs_gate.REPOSITORY / "docs/project/iterations/iteration-010/results/recovery.md",
+            {
+                "id": "ITER-010-RESULT-V-PLAN-RECOVERY-001",
+                "kind": "iteration-result",
+                "status": "sealed",
+                "iteration": "ITER-010",
+                "plan_revision_ref": "ITER-010-PDR-009",
+                "action_ref": "ITER-010-ACTION-USER-PLAN-RECOVERY-001",
+                "verification_case_id": "V-PLAN-RECOVERY-001",
+                "depends_on": ["ITER-010-PDR-009", "ITER-010-PDR-010"],
+            },
+            "",
+        )
+        self.assertEqual(
+            docs_gate.validate_dependency_cycles(
+                {pdr.identifier: pdr, prior_result.identifier: prior_result}
+            ),
+            [],
+        )
+
+        for field, value in (
+            ("id", "ITER-010-RESULT-V-COUNTERFEIT-001"),
+            ("status", "draft"),
+            ("plan_revision_ref", "ITER-010-PDR-008"),
+            ("action_ref", "ITER-010-ACTION-NOT-GOVERNANCE-001"),
+            ("verification_case_id", "V-COUNTERFEIT-001"),
+        ):
+            with self.subTest(counterfeit_result_field=field):
+                metadata = {**prior_result.metadata, field: value}
+                counterfeit = docs_gate.Document(
+                    prior_result.path,
+                    metadata,
+                    prior_result.body,
+                )
+                counterfeit_pdr = docs_gate.Document(
+                    pdr.path,
+                    {
+                        **pdr.metadata,
+                        "depends_on": [counterfeit.identifier],
+                    },
+                    pdr.body,
+                )
+                errors = docs_gate.validate_dependency_cycles(
+                    {
+                        counterfeit_pdr.identifier: counterfeit_pdr,
+                        counterfeit.identifier: counterfeit,
+                    }
+                )
+                self.assertTrue(
+                    any("dependency cycle" in error for error in errors), errors
+                )
+
+        first = docs_gate.Document(
+            docs_gate.REPOSITORY / "docs/system/first.md",
+            {"id": "SYS-FIRST", "kind": "system-design", "depends_on": ["SYS-SECOND"]},
+            "",
+        )
+        second = docs_gate.Document(
+            docs_gate.REPOSITORY / "docs/system/second.md",
+            {"id": "SYS-SECOND", "kind": "system-design", "depends_on": ["SYS-FIRST"]},
+            "",
+        )
+        errors = docs_gate.validate_dependency_cycles(
+            {first.identifier: first, second.identifier: second}
+        )
+        self.assertTrue(any("dependency cycle" in error for error in errors), errors)
+
+
 class ManifestGateTests(unittest.TestCase):
     def test_later_engineering_qa_result_inherits_source_safety_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -413,6 +1000,7 @@ readiness_inputs:
             "execution_profile_ref": "runtime-config:fallback-qualified-profile",
             "provider_identity": "BOREALIS",
             "model_identity": "quasar-y2",
+            "admission_policy_plugin_ref": "fallback_admission_policy",
         }
         fallback_policy_plugin_configuration = {
             "schema": "ROUTE_ADMISSION_POLICY_PLUGIN@1",
@@ -687,27 +1275,7 @@ readiness_inputs:
 
         manifest: dict[str, object] = {
             "schema_version": 2,
-            "provider_route_policy": {
-                "preferred_execution_profile_ref": preferred_profile_configuration[
-                    "execution_profile_ref"
-                ],
-                "fallback_execution_profile_ref": fallback_profile_configuration[
-                    "execution_profile_ref"
-                ],
-                "fallback_admission_policy_plugin_ref": "fallback_admission_policy",
-                "preferred_model_identity": preferred_profile_configuration[
-                    "model_identity"
-                ],
-                "fallback_model_identity": fallback_profile_configuration[
-                    "model_identity"
-                ],
-                "primary_provider": preferred_profile_configuration[
-                    "provider_identity"
-                ],
-                "fallback_provider": fallback_profile_configuration[
-                    "provider_identity"
-                ],
-            },
+            "provider_route_policy": generic_provider_route_policy(),
             "execution_profile_configurations": {
                 "schema": docs_gate.EXECUTION_PROFILE_CONFIGURATION_SCHEMA,
                 "preferred": preferred_profile_configuration,
@@ -2697,47 +3265,7 @@ product_goal_alignment:
     def test_provider_route_policy_accepts_arbitrary_configured_identities_and_keeps_actions_transparent(
         self,
     ) -> None:
-        policy: dict[str, object] = {
-            "schema": docs_gate.PROVIDER_ROUTE_POLICY_SCHEMA,
-            "preference_order": ["AURORA", "BOREALIS"],
-            "primary_provider": "AURORA",
-            "fallback_provider": "BOREALIS",
-            "preferred_model_identity": "nebula-x1",
-            "fallback_model_identity": "quasar-y2",
-            "preferred_execution_profile_ref": "runtime-config:preferred-qualified-profile",
-            "fallback_execution_profile_ref": "runtime-config:fallback-qualified-profile",
-            "fallback_admission_policy_plugin_ref": "fallback_admission_policy",
-            "fallback_requires_primary_attempt_terminal_without_authorized_answer": True,
-            "primary_unavailable_evidence_required": True,
-            "implementation_gap_counts_as_primary_unavailable": False,
-            "primary_availability_requires": "credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold",
-            "fallback_trigger": "sealed-primary-attempt-terminal-without-authorized-answer-for-provider-or-model-capability-reason",
-            "fallback_eligible_outcomes": list(
-                docs_gate.PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES
-            ),
-            "application_source_security_failure_allows_fallback": False,
-            "fallback_reason_classification_required": True,
-            "capability_failure_must_not_be_misclassified_as_unavailable": True,
-            "route_freeze_time": "before-conversation-start-and-before-any-interaction-unit-dispatch",
-            "ordered_routes_preauthorized_at_session_start": True,
-            "ordered_route_disclosure_scopes_preauthorized_at_session_start": True,
-            "transparent_logical_interaction_fallback_allowed": True,
-            "user_resubmission_or_new_session_required": False,
-            "fallback_attempt_restarts_full_chain": True,
-            "fallback_attempt_inputs": "immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition",
-            "cross_attempt_intermediate_state_reuse_allowed": False,
-            "late_primary_result_policy": "quarantine-audit-only",
-            "late_primary_result_overwrite_allowed": False,
-            "maximum_fallback_provider_attempts": 1,
-            "same_provider_retry_allowed": False,
-            "outcome_unknown_duplicate_cost_risk_recorded": True,
-            "post_dispatch_provider_switch_requires": "new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route",
-            "peak_urgent_override_requires": "audited-explicit-override",
-            "cost_can_reduce_answer_quality": False,
-            "cost_gate_scope": "before-interaction-unit-start-only",
-            "current_started_interaction_unit_must_keep_full_quality_chain": True,
-            "unchanged_current_conformance_reuse_required": True,
-        }
+        policy = generic_provider_route_policy()
         manifest = {
             "provider_route_policy": policy,
             "execution_profile_configurations": {
@@ -2751,6 +3279,7 @@ product_goal_alignment:
                     "execution_profile_ref": "runtime-config:fallback-qualified-profile",
                     "provider_identity": "BOREALIS",
                     "model_identity": "quasar-y2",
+                    "admission_policy_plugin_ref": "fallback_admission_policy",
                 },
             },
             "fallback_admission_policy": {
@@ -2796,7 +3325,7 @@ product_goal_alignment:
         mismatched_profile_configuration = copy.deepcopy(manifest)
         mismatched_profile_configuration["execution_profile_configurations"][  # type: ignore[index]
             "preferred"
-        ]["model_identity"] = "untrusted-model"  # type: ignore[index]
+        ]["execution_profile_ref"] = "runtime-config:untrusted-profile"  # type: ignore[index]
         profile_configuration_errors = docs_gate.validate_provider_route_policy(
             mismatched_profile_configuration,
             "manifest.yaml",
@@ -2804,9 +3333,9 @@ product_goal_alignment:
         )
         self.assertTrue(
             any(
-                "execution_profile_configurations.preferred.model_identity"
+                "execution_profile_configurations.preferred.execution_profile_ref"
                 in error
-                and "preferred_model_identity" in error
+                and "preferred_execution_profile_ref" in error
                 for error in profile_configuration_errors
             ),
             profile_configuration_errors,
@@ -2823,7 +3352,7 @@ product_goal_alignment:
         )
         self.assertTrue(
             any(
-                "provider_route_policy keys must remain generic" in error
+                "provider_route_policy must remain generic" in error
                 and "borealis" in error
                 for error in provider_specific_key_errors
             ),
@@ -2927,15 +3456,22 @@ product_goal_alignment:
 
         invalid_changes = (
             ("preference_order", ["BOREALIS", "AURORA"]),
-            ("implementation_gap_counts_as_primary_unavailable", True),
+            ("implementation_gap_counts_as_preferred_unavailable", True),
+            ("required_fallback_verdict", "MODEL_REVIEW_REJECTED"),
+            ("structured_output_invalid_allows_fallback", True),
+            ("model_review_rejected_allows_fallback", True),
+            (
+                "raw_http_or_outcome_without_availability_verdict_allows_fallback",
+                True,
+            ),
             ("transparent_logical_interaction_fallback_allowed", False),
             ("fallback_attempt_inputs", "immutable-original-question-and-exact-cognition-context"),
             ("user_resubmission_or_new_session_required", True),
             ("fallback_attempt_restarts_full_chain", False),
             ("cross_attempt_intermediate_state_reuse_allowed", True),
-            ("late_primary_result_overwrite_allowed", True),
-            ("maximum_fallback_provider_attempts", 2),
-            ("same_provider_retry_allowed", True),
+            ("late_preferred_result_overwrite_allowed", True),
+            ("maximum_fallback_execution_profile_attempts", 2),
+            ("transport_request_retry_allowed", True),
             ("application_source_security_failure_allows_fallback", True),
             ("capability_failure_must_not_be_misclassified_as_unavailable", False),
             ("cost_can_reduce_answer_quality", True),
@@ -2968,8 +3504,28 @@ product_goal_alignment:
             legacy, "manifest.yaml", required=True
         )
         self.assertTrue(
-            any("incompatible" in error for error in legacy_errors), legacy_errors
+            any("closed generic fields" in error for error in legacy_errors),
+            legacy_errors,
         )
+
+        for outcome in (
+            "STRUCTURED_OUTPUT_INVALID",
+            "MODEL_REVIEW_REJECTED",
+            "PROVIDER_HTTP_ERROR",
+            "PROVIDER_OUTCOME_UNKNOWN",
+        ):
+            with self.subTest(branch_outcome=outcome):
+                branch = copy.deepcopy(transparent_action_graph)
+                branch["direction_quality_gate"][  # type: ignore[index]
+                    "fallback_branch_input"
+                ] = outcome
+                branch_errors = docs_gate.validate_model_transparent_plan_routing(
+                    branch, "manifest.yaml"
+                )
+                self.assertTrue(
+                    any("must not branch fallback" in error for error in branch_errors),
+                    branch_errors,
+                )
     def test_iter012_manifest_requires_experience_and_provider_policies(self) -> None:
         manifest: dict[str, object] = {"product_goal_alignment": {}}
         errors = docs_gate.validate_product_goal_alignment_manifest(
@@ -9429,38 +9985,40 @@ class ReworkPlanningGateTests(unittest.TestCase):
         self.assertEqual(parse_errors, [])
         return documents, {document.identifier: document for document in documents}
 
-    def _assert_current_verification_mutations_rejected(
+    def _assert_lightweight_verification_mutations_rejected(
         self,
         case_id: str,
         mutations: tuple[tuple[str, str, str], ...],
     ) -> None:
         _, by_id = self._documents()
-        manifest_path = (
-            docs_gate.REPOSITORY
-            / "docs/project/iterations/iteration-010/manifest.yaml"
-        )
         verification = by_id["ITER-010-VERIFICATION"]
         for field_name, original, replacement in mutations:
             with self.subTest(case_id=case_id, field=field_name):
-                self.assertIn(original, verification.body)
+                lines = verification.body.splitlines(keepends=True)
+                matching_indexes = [
+                    index
+                    for index, line in enumerate(lines)
+                    if line.startswith(f"| {case_id} |")
+                ]
+                self.assertEqual(len(matching_indexes), 1)
+                row_index = matching_indexes[0]
+                self.assertIn(original, lines[row_index])
+                lines[row_index] = lines[row_index].replace(
+                    original, replacement, 1
+                )
                 tampered = docs_gate.Document(
                     verification.path,
                     verification.metadata,
-                    verification.body.replace(original, replacement, 1),
+                    "".join(lines),
                 )
-                errors = docs_gate.validate_product_goal_reference_targets(
-                    manifest_path,
-                    "ITER-010",
-                    {**by_id, verification.identifier: tampered},
-                    require_execution_slice_sequence=True,
-                    require_paused_slice_sequence=False,
-                    verification=tampered,
+                errors = docs_gate.validate_iter010_lightweight_verification_semantics(
+                    tampered
                 )
                 self.assertTrue(
                     any(
                         case_id in error
                         and field_name in error
-                        and "current semantic phrase" in error
+                        and "lightweight-plan phrase" in error
                         for error in errors
                     ),
                     errors,
@@ -9809,93 +10367,74 @@ class ReworkPlanningGateTests(unittest.TestCase):
             root_grant_errors,
         )
 
-    def test_current_timebox_chat_verification_freezes_per_turn_attempt_semantics(
+    def test_current_first_operable_verification_is_immediate_non_result_handoff(
         self,
     ) -> None:
-        self._assert_current_verification_mutations_rejected(
-            "V-TIMEBOX-CHAT-001",
+        self._assert_lightweight_verification_mutations_rejected(
+            docs_gate.ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID,
             (
                 (
                     "Claim",
-                    "逐 Turn live-attempt 纪律成立",
-                    "Conversation 级 live-attempt 纪律成立",
+                    "完整浏览器主链",
+                    "仅浏览器外壳",
                 ),
                 (
                     "Frozen input / oracle",
-                    "Conversation/Turn/provider dispatch",
-                    "Conversation/provider dispatch",
+                    "至少三 Turn 语义链",
+                    "单次问答",
                 ),
                 (
                     "Expected",
-                    "每个 Provider-dispatched Turn 分别计 live attempt",
-                    "整个 Conversation 只计一次 live attempt",
+                    "`requires_result=false`",
+                    "`requires_result=true`",
                 ),
             ),
         )
 
-    def test_current_four_arm_comparison_verification_freezes_codex_baseline_semantics(
+    def test_current_mvp_verification_freezes_final_result_handoff_semantics(
         self,
     ) -> None:
-        self._assert_current_verification_mutations_rejected(
-            docs_gate.ITER010_DIRECTION_QUALITY_CASE_ID,
+        self._assert_lightweight_verification_mutations_rejected(
+            docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID,
             (
                 (
                     "Claim",
-                    "四路价值比较",
-                    "统一标准答案",
+                    "最终 Result handoff",
+                    "首次浏览器交付",
                 ),
                 (
                     "Frozen input / oracle",
-                    "same-agent World Model + source",
-                    "same-agent World Model without source",
+                    "`V-CHAT-EXPERIENCE-001` 同一 clean candidate",
+                    "不同候选",
                 ),
                 (
                     "Expected",
-                    "总体严格超过 current Codex",
-                    "允许与 current Codex 打平",
+                    "`requires_result=true`",
+                    "`requires_result=false`",
                 ),
             ),
         )
 
-    def test_current_direction_freeze_verification_keeps_later_work_locked(
+    def test_current_preview_verification_freezes_post_experience_direction_semantics(
         self,
     ) -> None:
-        self._assert_current_verification_mutations_rejected(
-            docs_gate.ITER010_CURRENT_ACTION_CASE_ID,
-            (
-                (
-                    "Claim",
-                    "四路方向 Gate 输入冻结",
-                    "直接启动 Web canary",
-                ),
-                (
-                    "Expected",
-                    "产品代码、Prompt/Reviewer、Web canary、hardening、full regression、Provider dispatch 保持锁定",
-                    "产品代码和 Web canary 可并行修改",
-                ),
-            ),
-        )
-
-    def test_current_preview_verification_separates_technical_and_direction_owners(
-        self,
-    ) -> None:
-        self._assert_current_verification_mutations_rejected(
+        self._assert_lightweight_verification_mutations_rejected(
             "V-PREVIEW-002",
             (
                 (
                     "Claim",
-                    "用户基于四路严格价值 Gate、最小 Web Chat 和 A1—A6 复盘决定是否进入夯实",
-                    "独立评估者决定是否进入夯实",
+                    "完整浏览器体验",
+                    "单条测试输出",
                 ),
                 (
                     "Frozen input / oracle",
-                    "真实 Result、限制、Findings 和假设证据",
-                    "模型最终结论",
+                    "最早责任层",
+                    "最终答案猜测根因",
                 ),
                 (
                     "Expected",
-                    "独立技术复核给出 A1—A6 exact Verdict；用户实际追问、纠正、深入、总结并查看四路严格价值 Gate 后决定",
-                    "用户直接给出 A1—A6 技术 Verdict；独立评估者随后决定",
+                    "`CONTINUE` 后仍需新 PDR、明确用户授权和可信父 cutover",
+                    "`CONTINUE` 自动进入 full regression",
                 ),
             ),
         )
@@ -9907,16 +10446,22 @@ class ReworkPlanningGateTests(unittest.TestCase):
             / "docs/project/iterations/iteration-010/manifest.yaml"
         )
         verification = by_id["ITER-010-VERIFICATION"]
-        self.assertEqual(
-            docs_gate.validate_product_goal_reference_targets(
-                manifest_path,
-                "ITER-010",
-                by_id,
-                require_execution_slice_sequence=True,
-                require_paused_slice_sequence=False,
-                verification=verification,
+        baseline_errors = docs_gate.validate_product_goal_reference_targets(
+            manifest_path,
+            "ITER-010",
+            by_id,
+            require_execution_slice_sequence=True,
+            require_paused_slice_sequence=False,
+            verification=verification,
+        )
+        self.assertFalse(
+            any(
+                "immutable Evidence" in error
+                or "reflection_report_digest" in error
+                or "Slice gate Cases must include" in error
+                for error in baseline_errors
             ),
-            [],
+            baseline_errors,
         )
 
         historical_evidence = (
@@ -10025,7 +10570,6 @@ class ReworkPlanningGateTests(unittest.TestCase):
     def test_authorized_rework_requires_policy_and_sustained_experience_binding(
         self,
     ) -> None:
-        _, by_id = self._documents()
         manifest_path = (
             docs_gate.REPOSITORY
             / "docs/project/iterations/iteration-010/manifest.yaml"
@@ -10044,7 +10588,12 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "product_goal_alignment",
             "new_capability_slice_refs",
         )
-        assert new_refs is not None
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text,
+            "product_goal_alignment",
+            "blocking_case_ids",
+        )
+        assert new_refs is not None and blocking is not None
         for reference in new_refs:
             state = manifest["development"]["slices"][reference]  # type: ignore[index]
             for field in ("rework_result_refs", "prior_authorization_refs"):
@@ -10058,21 +10607,27 @@ class ReworkPlanningGateTests(unittest.TestCase):
                     )
 
         self.assertEqual(
-            docs_gate.validate_product_goal_slice_sequence(
+            docs_gate.validate_rework_policy(
+                manifest, "manifest.yaml", required=True
+            ),
+            [],
+        )
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                manifest,
+                manifest["product_goal_alignment"],
                 new_refs,
-                by_id,
+                blocking,
                 "manifest.yaml",
-                manifest=manifest,
-                verification=by_id["ITER-010-VERIFICATION"],
-                require_paused=False,
+                required=True,
+                manifest_text=manifest_text,
             ),
             [],
         )
 
-        # A Result sealed before the experience policy may remain immutable,
-        # but only through an exact, explicit cutover binding.  Removing the
-        # binding must reactivate the current-policy Result audit rather than
-        # silently treating the old Result as an experience PASS.
+        # PDR-010 does not use a historical Result as a current experience
+        # prerequisite.  Removing the legacy cutover list therefore must not
+        # restore the superseded PDR-009 Result audit.
         without_cutover = copy.deepcopy(manifest)
         without_cutover["experience_delivery_policy"][  # type: ignore[index]
             "historical_pre_policy_result_refs"
@@ -10083,12 +10638,26 @@ class ReworkPlanningGateTests(unittest.TestCase):
             "manifest.yaml",
             "ITER-010",
         )
-        self.assertTrue(
+        self.assertFalse(
             any(
                 "historical_pre_policy_result_refs" in error
                 for error in cutover_errors
             ),
             cutover_errors,
+        )
+
+        # The lightweight action permits one evidence-backed general repair
+        # before responsibility review; zero attempts would silently disable
+        # that repair path.
+        self.assertEqual(manifest["rework_policy"]["no_progress_attempt_limit"], 1)
+        no_general_repair = copy.deepcopy(manifest)
+        no_general_repair["rework_policy"]["no_progress_attempt_limit"] = 0
+        repair_errors = docs_gate.validate_rework_policy(
+            no_general_repair, "manifest.yaml", required=True
+        )
+        self.assertTrue(
+            any("no_progress_attempt_limit" in error for error in repair_errors),
+            repair_errors,
         )
 
         without_policy = copy.deepcopy(manifest)
@@ -10193,6 +10762,45 @@ class ReworkPlanningGateTests(unittest.TestCase):
         self.assertTrue(any("127.0.0.1" in error for error in errors), errors)
         self.assertTrue(any("without stopping" in error for error in errors), errors)
 
+    def test_legacy_direction_checkpoint_policy_uses_explicit_pdr009_fixture(
+        self,
+    ) -> None:
+        legacy_manifest: dict[str, object] = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_PLAN_REVISION_REF,
+            },
+            "experience_delivery_policy": {
+                "direction_discovery_principle_ref": (
+                    docs_gate.ITER010_DIRECTION_DISCOVERY_PRINCIPLE_REF
+                ),
+                "micro_checkpoint_count": 4,
+                "micro_checkpoint_order": (
+                    docs_gate.ITER010_DIRECTION_MICRO_CHECKPOINT_ORDER
+                ),
+                "pdr004_schedule_fields_are_legacy_validator_compatibility_only": True,
+                "checkpoint_miss_action": (
+                    docs_gate.ITER010_DIRECTION_CHECKPOINT_MISS_ACTION
+                ),
+            },
+        }
+        self.assertTrue(docs_gate.uses_legacy_iter010_plan(legacy_manifest))
+        self.assertFalse(docs_gate.uses_lightweight_iter010_plan(legacy_manifest))
+        self.assertEqual(
+            docs_gate.validate_iter010_direction_checkpoint_policy(
+                legacy_manifest, "manifest.yaml"
+            ),
+            [],
+        )
+
+        invalid = copy.deepcopy(legacy_manifest)
+        invalid["experience_delivery_policy"]["micro_checkpoint_count"] = 2
+        errors = docs_gate.validate_iter010_direction_checkpoint_policy(
+            invalid, "manifest.yaml"
+        )
+        self.assertTrue(
+            any("micro_checkpoint_count" in error for error in errors), errors
+        )
+
     def test_semantic_chat_requires_lead_agent_context_and_turn_isolation(
         self,
     ) -> None:
@@ -10244,95 +10852,52 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 blocking,
                 "manifest.yaml",
                 required=True,
+                manifest_text=manifest_text,
             ),
             [],
         )
-        self.assertEqual(
-            docs_gate.validate_iter010_direction_checkpoint_policy(
-                manifest, "manifest.yaml"
-            ),
-            [],
-        )
+        self.assertTrue(docs_gate.uses_lightweight_iter010_plan(manifest))
+        self.assertFalse(docs_gate.uses_legacy_iter010_plan(manifest))
 
         for field, value in (
-            ("direction_discovery_principle_ref", "codex-user-message:sha256:" + "b" * 64),
-            ("micro_checkpoint_count", 3),
+            ("micro_checkpoint_count", 4),
             ("micro_checkpoint_order", "runnable-access-handoff"),
-            ("pdr004_schedule_fields_are_legacy_validator_compatibility_only", False),
-            ("checkpoint_miss_action", "continue-scope-expansion"),
+            ("pdr010_machine_timebox_or_activation_receipt_required", True),
+            (
+                "current_execution_decision_ref",
+                docs_gate.ITER010_PLAN_REVISION_REF,
+            ),
         ):
             invalid_direction = copy.deepcopy(manifest)
             invalid_direction["experience_delivery_policy"][field] = value
-            errors = docs_gate.validate_iter010_direction_checkpoint_policy(
-                invalid_direction, "manifest.yaml"
-            )
-            self.assertTrue(any(field in error for error in errors), (field, errors))
-
-        parallel_lifecycle = copy.deepcopy(manifest)
-        parallel_lifecycle["experience_delivery_policy"]["hardening_unlocked"] = True
-        parallel_errors = docs_gate.validate_iter010_direction_checkpoint_policy(
-            parallel_lifecycle, "manifest.yaml"
-        )
-        self.assertTrue(
-            any("parallel lifecycle" in error for error in parallel_errors),
-            parallel_errors,
-        )
-
-        reusable_chat_cutover = copy.deepcopy(manifest)
-        for field in (
-            "direction_discovery_principle_ref",
-            "micro_checkpoint_count",
-            "micro_checkpoint_order",
-            "pdr004_schedule_fields_are_legacy_validator_compatibility_only",
-            "direction_alpha_prefix_turn_count",
-            "direction_alpha_is_prefix_of_frozen_live_canary",
-            "direction_evidence_handoff_deadline_minutes",
-            "direction_decision_deadline_minutes",
-            "checkpoint_miss_action",
-        ):
-            reusable_chat_cutover["experience_delivery_policy"].pop(field)
-        self.assertEqual(
-            docs_gate.validate_conversational_architecture_cutover(
-                reusable_chat_cutover,
-                "future-chat-manifest.yaml",
-            ),
-            [],
-        )
-
-        for field, value in (
-            ("live_canary_conversation_count_after_local_pass", 2),
-            ("live_canary_turn_count", 1),
-        ):
-            invalid_experience = copy.deepcopy(manifest)
-            invalid_experience["experience_delivery_policy"][field] = value
             errors = docs_gate.validate_experience_first_delivery_policy(
-                invalid_experience,
-                invalid_experience["product_goal_alignment"],
+                invalid_direction,
+                invalid_direction["product_goal_alignment"],
                 new_refs,
                 blocking,
                 "manifest.yaml",
                 required=True,
+                manifest_text=manifest_text,
             )
             self.assertTrue(any(field in error for error in errors), (field, errors))
 
-        legacy_attempt_unit = copy.deepcopy(manifest)
-        legacy_attempt_unit["experience_delivery_policy"][
-            "live_canary_turn_count_after_local_pass"
-        ] = 5
-        legacy_errors = docs_gate.validate_experience_first_delivery_policy(
-            legacy_attempt_unit,
-            legacy_attempt_unit["product_goal_alignment"],
+        invalid_turn_count = copy.deepcopy(manifest)
+        invalid_turn_count["experience_delivery_policy"]["live_canary_turn_count"] = 2
+        turn_count_errors = docs_gate.validate_experience_first_delivery_policy(
+            invalid_turn_count,
+            invalid_turn_count["product_goal_alignment"],
             new_refs,
             blocking,
             "manifest.yaml",
             required=True,
+            manifest_text=manifest_text,
         )
         self.assertTrue(
             any(
-                "live_canary_turn_count_after_local_pass" in error
-                for error in legacy_errors
+                "live_canary_turn_count" in error
+                for error in turn_count_errors
             ),
-            legacy_errors,
+            turn_count_errors,
         )
 
         invalid_policy_values = (

@@ -55,8 +55,9 @@ Response Control 放行边界继续由原 Owner 拥有。
 ## Conversation and turn invariants
 
 1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Cognition Capability Manifest、Source
-   Profile/allowlist、工具目录、versioned Conversation input policy、`preferred → fallback` route、两个角色各自的 exact execution profile、
-   披露范围、有效期和每 Turn/整会话高安全熔断。每个 execution profile 必须绑定 Provider/model/endpoint、资格、transport 与 admission
+   Profile/allowlist、工具目录、versioned Conversation input policy、`preferred → fallback` route、两个角色各自的 exact execution-profile ref/digest、
+   披露范围、有效期和每 Turn/整会话高安全熔断。产品、主 Agent、Reviewer 和 route branch 只读取通用 route role/profile reference、顺序和受信 availability verdict，
+   不得使用 Provider/model 名称选择行为或质量标准。每个 execution profile 的运行配置内部绑定 Provider/model/endpoint、Adapter/plugin、资格、transport 与 admission
    plugin；浏览器不能扩大这些边界。current Artifact Session Configuration `@3` 必须以 zero-based fixed order 列出各 cognition Profile 的
    Profile/Schema/Source Binding、selected Snapshot、ordered/Snapshot Bundle digest 与 exact file digest，并绑定两个 route profile、plugin
    ref+digest 和形成通用 dispatch-admission receipt 所需的 closed trusted inputs；装载时逐项重算后才能形成 Application-owned Manifest
@@ -159,7 +160,9 @@ no-progress failure 关闭。
    `requires_evidence=true` 时，standard successor Primary input 必须把 `tool_action_required` 设为 true，并把 Draft response kind domain 置空；
    主 Agent 只能从 effective tool catalog 提交一个 exact action，不能只重写被拒 Draft。任何新 Observation 都形成新 Ledger/Package
    Revision，旧 Review 不得放行新 Draft。evidence-only completion 不恢复工具；此时 Reviewer 要求新 Evidence 仍按 no-progress failure
-   关闭。生成者不能自审，Reviewer 不能自行执行工具或放行。
+   关闭。生成者不能自审，Reviewer 不能自行执行工具或放行。同包重写、补证后重答与每次 fresh Review 都是当前 execution profile 内的新 authorized
+   model call，必须有新 call identity、Manifest 和 one-use receipts；它们不是重发同一 Provider request。closed JSON 输出无效时，若已资格化的通用格式修复步骤、
+   权威和预算都存在，也只能用同一 execution profile 创建新 authorized call；否则当前 Turn 失败关闭。两种情况都不允许改换 route role。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
    Verification Investigation Agent 不是长期架构不变量。任何 Strategy 都不得少于一次 fresh 独立审核，或取消逐结论 evidence closure。
 
@@ -174,17 +177,17 @@ fixture 或 Oracle 注入专用答案逻辑。语言和来源差异只能由显�
 Agent question-eligible multi-domain Cognition+源码和 current Codex，同时证明产品替代价值与世界模型认知的独立贡献。第 2/3 路除
 认知开关外保持相同；事实来自独立 exact-source ledger，任何一臂都不是 Oracle 或 Reviewer。
 
-授权/identity/revision 漂移、上下文错绑、工具越权、Ledger/Package 缺口、无依据结论、Reviewer 未通过、资源耗尽或 Provider outcome
-unknown 都使当前 provider attempt 或 Turn 失败关闭。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
+授权/identity/revision 漂移、上下文错绑、工具越权、Ledger/Package 缺口、无依据结论、结构化输出无效、Reviewer 未通过、资源耗尽或 raw Provider outcome
+unknown 都使当前 provider attempt 或 Turn 失败关闭，除非同一 profile 内存在前述已授权新调用。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
 exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不得复用失败 Provider 的隐藏状态或未密封中间产物。
 
-Fallback eligibility 不得从 raw error string 推断。model boundary receipt 必须同时保存原始 owner code 和 trusted failure kind；Application
-只能把 `PROVIDER_UNAVAILABLE / PROVIDER_HTTP_ERROR / PROVIDER_OUTCOME_UNKNOWN / PROVIDER_OUTPUT_INVALID / MODEL_REVIEW_REJECTED`
-五类投影为 route classification。pre-dispatch、qualification、Gateway/repository/result identity、Application、Source、authorization 或
-Security failure 均保持 non-eligible。每个 attempt authority/receipt 绑定 logical Turn parent、route role、execution profile、admission
-plugin/session、execution-profile/disclosure/dispatch-admission/transport/model/terminal receipts 和 retry 0；logical Turn Result 只取最后一个
-完整 attempt 的 Outcome，但汇总全部 attempt dispatch。preferred outcome unknown 后启动 fallback 必须标记 duplicate-cost risk；late
-preferred-route result 固定 `QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
+Fallback eligibility 不得从 raw error string、owner code、HTTP status 或 outcome 直接推断。model boundary receipt 必须保存原始 owner code 和 trusted failure kind，但它们只是证据。
+只有 preferred execution profile 登记的受信 availability owner 能对 exact profile/ref、当前时间与 receipts 密封
+`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` route verdict。`PROVIDER_OUTPUT_INVALID`、`MODEL_REVIEW_REJECTED`、pre-dispatch、Capability/qualification、
+Gateway/repository/result identity、Application、Source、authorization/admission 或 Security failure 均保持 non-eligible。每个 attempt authority/receipt 绑定 logical Turn parent、route role、execution profile、
+availability owner/verdict、admission plugin/session、execution-profile/disclosure/dispatch-admission/transport/model/terminal receipts 和 same-request retry 0；logical Turn Result 只取最后一个完整 attempt 的 Outcome，
+但汇总全部 attempt dispatch。availability owner 若基于 preferred outcome unknown 形成 unavailable verdict，后续 fallback 必须标记 duplicate-cost risk；late preferred-route result 固定
+`QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
 
 ## 当前配置实例与历史实现证据
 
@@ -205,7 +208,7 @@ SEVENTH_LIVE_CHAT_THREE_OF_FIVE_LIMITATIONS_OVERALL_FAIL / NEW_CONVERSATION_LEAK
 V7_UNACCEPTED_SYMPTOM_EXPERIMENT / V8_SEMANTIC_NEED_QUERY_LOCAL_CANDIDATE / RUN043_QUALITY_REWORK /
 SESSION_AUTHORITY_REQUIRED / NOT_PRODUCTION`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
 Disclosure 和 typed Gateway receipt；pre-dispatch、fresh dispatch、outcome unknown 与 replay 的计数由 Application 重验，Turn/Browser 只保存
-receipt digest reference。Application-owned Ark→DeepSeek router、committed Work State repository、两 attempt receipt、logical Turn 汇总与
+receipt digest reference。Application-owned generic preferred→fallback router（当前配置实例映射 Ark→DeepSeek）、committed Work State repository、两 attempt receipt、logical Turn 汇总与
 non-starting fixed Browser composition 已通过本地确定性 Gate；预检没有创建 attempt、启动 listener、解析 credential、读取 Source 或 dispatch。
 Provider runtime composition 已使用生产 Ark/DeepSeek Adapter 与 credential-lazy transport，但只消费本地构造的 typed qualification identity。
 non-starting Session runtime 又把两条 Provider runtime、exact evidence authority、per-attempt fresh Tool/Response Control、共享 committed
@@ -216,7 +219,7 @@ current `@3` 在逐 Profile 重验 expected file/Bundle digest、Profile/Schema/
 还要求在 Provider network/credential 前密封 DeepSeek admission；`@2` 多 Profile与 `@1` 单 Profile配置继续只读兼容，但不能通过 current
 preparation。唯一 `--session-config` selector 让固定
 `127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
-Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
+Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 availability raw evidence，但受信 availability-owner verdict 尚未闭合，不得追认为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
 exact clean identity、2/2 request 和 strict Session audit PASS，并按各自 exact identity 用于多个 owner-private mall artifact Session。`run-035-chat-alpha` 与
 `run-036-chat-alpha` 均真实启动 listener、执行 Browser 五轮 Chat、消费受限 Source/Provider 并优雅停止，但五轮各自 5/5 失败；run-036 的
 新 Conversation probe 已以 Application clarification、零 dispatch 和空 Context 通过泄漏负测。run-037 在 fresh 双资格后仍为 0/5；v3

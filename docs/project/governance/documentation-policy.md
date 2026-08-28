@@ -34,6 +34,8 @@ Slice 级门，不是无限代码授权：Roadmap/Proposal/模板必须为 `fals
 
 状态不得推导：设计 accepted 不表示已实现，测试 pass 不表示产品 pass，产品 pass 不表示生产 activated。
 
+开发过程与 Result 必须分离。一个活动产品 action 可以跨多个普通提交、定向测试、局部失败、根因归因和通用修复长时间运行；这些事件保留为动作内证据，不按每次提交、失败、外调或重试建立 Project Result。Result 只在完整体验交接、用户方向决定、scope 变更导致游标迁移，或明确结束当前动作时密封。
+
 外部权限文档必须区分三类对象，禁止把审计收据写成人工授权门槛：
 
 - `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 是人类批准的可重复使用范围；公开开源、来源与许可证可确认、允许的 revision selection policy、每次运行的 exact revision、clean、
@@ -51,7 +53,7 @@ Proposal、Manifest、Readiness、Slice 和 Result 必须分别记录这三类�
 
 ## Baseline
 
-Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固定本轮采用的 System IDs、外部模型/Provider、冻结输入、Oracle、运行证明和有效期；不为每个仓库文件维护第二套人工 Hash 清单。
+Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固定本轮采用的 System IDs、外部路由角色和 execution profile 引用、冻结输入、Oracle、运行证明和有效期；不为整个 Manifest、每个仓库文件或中间工件维护第二套人工 Hash 清单。摘要只绑定体验交接或游标迁移时真正影响身份和证据真实性的工件。
 
 固定变化前后状态的目的，是让验证、回退和因果判断绑定同一对象：没有 before/after 精确身份，就无法知道结果证明的是哪个实现，也无法区分代码变化、配置漂移和外部状态变化。
 
@@ -66,6 +68,6 @@ Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固�
 ## Automated checks
 
 `python3 scripts/docs.py check` 检查元数据、ID 唯一性、依赖、System→Project 越界链接、代码/测试引用、Roadmap 权威、活动 Iteration/Slice
-授权闭包、Manifest 唯一 action、Current 镜像、预注册后继、未替换模板输入、Finding disposition 和完成验收，并验证生成索引没有漂移。
+授权闭包、Manifest 唯一长运行 action、Current 镜像、交接后继、未替换模板输入、Finding disposition 和完成验收，并验证生成索引没有漂移。
 `python3 scripts/plan_gate.py diff --base <trusted-base-ref>` 另用 base plan 检查候选 diff、Result 和单步迁移，防止候选树修改自己的白名单。
 两套门禁绕过分别用 `tests/test_docs_gate.py` 与 `tests/test_plan_gate.py` 固化；CI 必须同时执行。

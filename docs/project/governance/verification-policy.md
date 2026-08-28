@@ -31,10 +31,12 @@ tests: [tests]
 6. 原始运行证据默认位于 `var/` 且不受 Git 管理；版本化 Result 必须明确它是摘要/attestation，并给出本机证据身份与保留限制。
 7. Result 不能反向定义 System Contract；发现契约错误时走 Implementation Finding 和 System 修订。
 
-## 四路产品价值与 Current Codex 强基线协议
+## 完整体验后的 Current Codex 强基线与后续因果消融
 
-从 `ITER-010-PDR-009` 起的当前 ITER-010 及所有后续产品迭代，最早方向门必须在任何与方向无关的产品加固前冻结并隔离四路：直接相关
-证据、同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex。
+当前 ITER-010 及所有后续产品迭代，在没有代表性 MVP 时先完成一个可从浏览器操作的完整用户主链，交付后立即将完整系统与 actual current
+Codex 隔离比较。已有可代表当前方向的完整 MVP 时，可以复用它在新产品变更前先做比较。该 Gate 阻止方向 PASS、hardening 和验收，但不能
+阻止首个完整体验的形成。用户 `CONTINUE` 后，再冻结直接相关证据、同 Agent 仅源码、同 Agent 世界模型认知+源码、current Codex 四路，
+验证世界模型的因果贡献；不得为了体验前构建完整消融基础设施。
 
 1. 任何一路模型答案都不是 Oracle、rubric 作者或 adjudicator；事实边界由原问题和同一授权 exact revision 上的独立 exact-source ledger
    提供。直接相关证据路是复杂度 control，不经过 World Model、Agent 或检索协议。
@@ -50,6 +52,8 @@ tests: [tests]
 6. Provider 不参与答案优劣比较。前三路整批使用同一 preferred execution profile；首个答案形成前该 profile 不可用时整批 `INVALID`
    并重新冻结，禁止混用 preferred/fallback execution profiles 或在同一批并行测试两个路由角色。具体 Provider/model 名称只能出现在冻结的
    execution profile 和执行收据中，不是比较协议、action 或 Case 的规范性语义。
+
+比较必须覆盖小而异质的问题组，包含未参与开发的问题；禁止只用模块列表、POM 或为当前修复定制的问题。普通失败必须留在同一开发动作中，先沿 Source truth、知识构建/准入、认知投影/查询、Agent 工作状态、工具证据、答案生成、独立审核和 Web 定位最早偏差，再做一次通用修复与定向复验；不为每次失败生成独立 Result。
 
 ## Verification Matrix
 

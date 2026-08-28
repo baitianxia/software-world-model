@@ -19,24 +19,33 @@ production_activation: pending
 
 ## Exact subject and scope
 
-## Gate results and limitations
+## Complete experience evidence
+
+记录首次交付的 exact version、重复启动命令、固定 loopback 地址、完整世界模型—Agent—源码—Evidence/Citation—独立审核—Web 主链、语义 Chat、新对话隔离和真实限制。首次可操作浏览器交付 `requires_result=false`、不移动游标；其运行证据可被后续最终方向 Result 引用，但不能被称为首次体验 Result，也不单独证明最终质量或可进入 Production。
+
+## Direction decision and post-continue work
+
+绑定用户 `CONTINUE` 的 exact direction receipt。该 receipt 只记录方向，不自行授权；还必须绑定后续新 PDR、明确用户授权和可信父 cutover。缺少任一项，不得把四路因果消融、full regression、hidden、跨工程或 hardening 写成已授权或已执行。本地消息 digest 不是平台认证身份、签名或授权。
+
+`CONTINUE` 后记录 direct evidence、同 Agent 仅源码、同 Agent 世界模型认知+源码、actual current Codex 四路 exact identity、密封答案、独立 source truth 和独立 evaluator。Codex 与 direct evidence 都不是 Oracle。系统必须通过绝对质量门、逐题无物质退步、总体质量严格超过 Codex，并证明非 locator 世界模型贡献；全体打平、重大错误、双方失败或无法裁决都不能接受。
+
+## Hardening and final verification
+
+- Full regression: <exact-result>
+- Hidden and cross-project suite: <exact-result>
+- Security/compatibility/performance: <exact-result>
+- Same formal Web live questions: <exact-result>
+- Remaining limitations and non-goals: <exact-list>
 
 ## Product-goal delta and cumulative evidence
 
-记录相对 baseline 的独立/用户持有 held-out 自由问题支持率、重大错误与完整性变化，至少一个新旧知识跨域结果，同一正式
-Web 的现场临时自由提问，提问时 Source/Update/Direct fallback 计数，以及 current Codex 的精确身份和逐题盲评。系统必须先通过绝对
-质量门，完成并唯一分类冻结的全部问题，逐题无物质退步并取得严格为正的总体答案质量差值；分类计数与冻结题数不等、全体打平、
-双方失败、无法裁决、盲化失效或只具有效率优势都不能接受。
-
 - Baseline versus current: <exact-measures-and-evidence>
-- New plus existing cross-domain result: <exact-cases-and-evidence>
-- Product Web ad-hoc questions and fallback counters: <exact-evidence>
-- Four-arm strict direction/final comparison: <direct-evidence-source-only-world-model-plus-source-current-codex-identities-sealed-answer-bundles-randomization-independent-source-ledger-adjudication-and-positive-quality-margin-evidence>
-- World Model causal contribution inside the same gate: <same-agent-source-only-versus-world-model-plus-source-non-locator-contribution-evidence>
+- Accepted plus new cross-domain result: <exact-cases-and-evidence>
+- World Model causal contribution: <exact-four-arm-evidence>
+- Actual current Codex strict comparison: <identity-protocol-independent-evaluation-and-positive-margin>
 
-## Finding dispositions and System write-back
+## Finding dispositions and system write-back
 
 ## Verdict
 
-仅在所有必需 Gate 有证据、没有 `open` Finding、System 回写完成后，才可把状态改为 `accepted` 或 `completed`。Alpha 对照不能替代最终
-held-out 对照，current Codex 或系统生成方不能担任裁判。明确记录未执行和不在范围内的事项，不能从前置 PASS 推导 Activation。
+只有全部必需 Gate 有证据、用户已经 `CONTINUE`、full regression/hidden/跨工程和 hardening 已完成、没有 `open` Finding、System 文档回写完成时，才可把状态改为 `accepted` 或 `completed`。明确列出未执行项；不得从首次体验、局部测试或方向比较 PASS 推导 Production Activation。

@@ -53,17 +53,18 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    state 的非空受限子集。子集只能由 Application 从冻结 evidence ledger、前序 Result 和预算派生，并按 contract canonical order
    表达；Gateway 拒绝 universe 外 operation、空子集、乱序/重复项或调用方自行扩张。模型 response 中越出子集的 operation 仍作为
    untrusted raw output 记录，但不能由 Gateway 或 Adapter 获得查询/FINISH 权力。
-10. 多 Provider 路由按 ADR-017/019 在 Session 开始前从 standing authority 或 exact human delta 冻结有序
-    `preferred → fallback` route，以及两个角色各自的 exact execution profile。每个 profile 必须绑定 current Adapter Conformance、同一活动
-    Strategy/Configuration Capability Qualification、Provider/model/endpoint、secret reference、独立 disclosure scope、预算、transport 和
-    admission plugin。用户的一次提交只创建一个 logical interaction unit；Engineering Conversation 中该单位是一个密封 Turn，兼容单轮
-    协议中是 logical question。每个 route 使用不同 attempt identity、Manifest、execution-profile/disclosure/dispatch-admission/transport/
-    call/terminal receipts、Ledger/Package/Answer/Review 和 transport audit。只有 preferred-route attempt 已密封 terminal、没有 authorized
-    answer，且可信 terminal classification 为 provider unavailable/HTTP error/outcome unknown/output invalid 或 model Review rejected 时，
-    才能透明启动最多一次 fallback-route attempt。Application/Source/Security failure 不允许 fallback。Fallback attempt 必须从 immutable
-    original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，
-    不得读取 preferred attempt 中间态；迟到的 preferred response 必须 quarantine 且永不覆盖。每个 Provider 内 request retry 为 0，用户
-    无需重提问题或新建 Session。preferred outcome unknown 后的 fallback 必须记录潜在重复计费风险。
+10. 多 execution-profile 路由按 ADR-017/019 在 Session 开始前从 standing authority 或 exact human delta 冻结有序
+    `preferred → fallback` route，以及两个角色各自的 exact execution-profile ref/digest。产品、Agent 和 route branch 只能消费通用 route role、profile ref/digest、
+    顺序与受信 availability verdict；Provider/model 具体身份只属于配置、资格、Adapter/plugin 和 receipt。每个 profile 必须绑定 current Adapter Conformance、
+    同一活动 Strategy/Configuration Capability Qualification、Provider/model/endpoint、secret reference、独立 disclosure scope、预算、transport 和 admission plugin。
+    用户的一次提交只创建一个 logical interaction unit；Engineering Conversation 中该单位是一个密封 Turn，兼容单轮协议中是 logical question。每个 route 使用不同
+    attempt identity、Manifest、execution-profile/disclosure/dispatch-admission/transport/call/terminal receipts、Ledger/Package/Answer/Review 和 transport audit。
+    只有 preferred-route attempt 已密封 terminal、没有 authorized answer，且 preferred profile 登记的受信 availability owner 密封 exact
+    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway 只保存 raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。
+    Output-invalid、Reviewer reject、Capability/qualification、Application、Source、authorization/admission 或 Security failure 均 non-eligible。Fallback attempt 必须从 immutable original
+    interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，不得读取 preferred attempt 中间态；
+    迟到的 preferred response 必须 quarantine 且永不覆盖。同一 Provider request retry 为 0，用户无需重提问题或新建 Session。availability owner 若基于 outcome unknown
+    形成 unavailable verdict，后续 fallback 必须记录潜在重复计费风险。
 11. 一个 prompt program 可以为不同 Capability 定义不同 semantic authority，但每次调用只能在 Manifest 构造前按 sealed
     execution stage 确定性选择唯一 entry。Manifest 必须记录版本化 selection transformation，prompt program digest 必须绑定全部
     stage-entry-content，Gateway 必须校验 stage、transformation 与所选 content digest；仅在完整 monolithic prompt 中声明其他 section
@@ -74,7 +75,9 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     必须对 pre-dispatch rejection、fresh dispatch 与 repository replay 分别保留真实计数。
 13. Provider transport 在 HTTP bytes 前已知不可用时，只能由 transport owner 产生 typed `ProviderUnavailable`，Gateway 密封为
     `PROVIDER_UNAVAILABLE` failed call；这与 HTTP bytes 已可能发送后的 `ProviderOutcomeUnknown` 不同。只有前者可证明 transport HTTP count
-    为 0，后者必须保留潜在副作用/重复成本。普通 Domain/Gateway error 不得按字符串相似性取得 unavailable 分类或 fallback 权力。
+    为 0，后者必须保留潜在副作用/重复成本。两者以及 HTTP status/error 都只是 raw execution evidence，不直接授予 fallback；只有该
+    execution profile 登记的受信 availability owner 可以结合 exact profile 与当前收据密封 availability verdict。普通 Domain/Gateway error 不得按字符串相似性取得
+    unavailable verdict 或 fallback 权力。
 14. Route execution profile 选择 admission plugin 时，每个 planned external run 必须在任何对应 Provider socket/connected descriptor
     provisioning、TLS、credential resolution 或 HTTP 前提交当前有效的通用 dispatch-admission receipt；每个新 request 还必须重验插件要求
     的可信输入或绑定该 request/run 的一次性 exact policy override。Receipt 必须绑定 route role、execution-profile/plugin ref+digest、
@@ -84,6 +87,9 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     descriptor、TLS、credential 和 HTTP dispatch 均为 0。这类拒绝是 dispatch admission failure，不得伪装为 `ProviderUnavailable`、HTTP
     error 或 outcome unknown，也不得取得 retry/fallback 权力。条件失效后不得创建该 route 的新 request；已发出的 request 继续沿既有
     零重试/结果未知语义密封，但不能由不完整 Answer/Review 获得交付权。
+15. Provider 完成响应但 closed output 无效，或 fresh Reviewer 拒绝 Draft，都不证明 execution profile 不可用。若当前资格、权威和预算允许格式修复、
+    同包重写、补证后重答或 fresh Review，每个步骤都必须在同一 exact execution profile 下创建新 model call，重新密封 call identity、Manifest、input digest、
+    one-use disclosure/dispatch receipt 与 Usage；不得重发旧 request bytes，也不得改换 route role。无合法新调用时当前 interaction 失败关闭。
 
 ## Security and compatibility
 
@@ -93,9 +99,9 @@ Secret 只在 exact endpoint 的 TLS/SNI/certificate 已验证后、HTTP dispatc
 schema，schema authority 与 Gateway 的 leading semantic authority 必须按该 Adapter 已资格的 message rendering contract 组合，不能形成
 未经资格的相互竞争 system turns。Route role 是 standing authority 预授权的执行顺序，不是绕过资格的探测。相同 Adapter/Configuration/
 endpoint/model/transport/rendering identity 且仍有效的 Conformance 必须复用；领域 Prompt、答案 Schema 或不改变该 identity 的产品变化
-不能要求重复 Conformance。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 same-Provider request
+不能要求重复 Conformance。Connection policy、最大 credential-free TLS acquisition 次数、session audit schema 和零 same-request
 retry 都属于 execution profile、Provider Configuration 与 Capability Qualification 身份；live Result 必须按 logical question 和 provider
-attempt 分别证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution、fallback reason、late quarantine、
+attempt 分别证明实际 TLS attempts/successes、HTTP dispatch、connection reuse、credential resolution、raw outcome、availability owner/verdict、fallback reason、late quarantine、
 post-dispatch unknown 和潜在重复成本，而不只声明配置。
 
 这里的单轮 `logical question` 审计术语在 Engineering Conversation 中必须投影为密封 Turn；live Result 按 logical interaction unit（Chat
@@ -118,8 +124,8 @@ contract 把 schema authority 与 leading semantic authority 合并为恰好一�
 
 当前 DeepSeek profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 session 最多 20 次 dispatch、最多 3 次 acquisition，并
 使用 `DEEPSEEK_DISPATCH_ADMISSION@1`。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、双 route、完整链
-fallback、late-result quarantine、typed unavailable 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
+fallback、late-result quarantine、typed unavailable raw evidence 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
 clean identity 上 PASS。当前状态是
 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS /
-STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。这些名称、策略与状态是当前配置实例和历史实现证据；公开来源 standing authority 到
+AVAILABILITY_OWNER_VERDICT_NOT_YET_ATTESTED / STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_LIVE`。这些名称、策略与状态是当前配置实例和历史实现证据；公开来源 standing authority 到
 Session/Turn/call 的可信派生链仍须实现和验证。

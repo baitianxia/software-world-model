@@ -76,13 +76,31 @@ STRICT_CODEX_BASELINE_START_ITERATION = 12
 EXPERIENCE_FIRST_DELIVERY_START_ITERATION = 12
 PROVIDER_ROUTE_POLICY_START_ITERATION = 12
 EXPERIENCE_FIRST_DELIVERY_SCHEMA = "EXPERIENCE_FIRST_DELIVERY@1"
-PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
-EXECUTION_PROFILE_CONFIGURATION_SCHEMA = "MODEL_TRANSPARENT_EXECUTION_PROFILES@1"
-EXECUTION_PROFILE_CONFIGURATION_KEYS = {
+PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2"
+LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
+EXECUTION_PROFILE_CONFIGURATION_SCHEMA = "MODEL_TRANSPARENT_EXECUTION_PROFILES@2"
+LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA = (
+    "MODEL_TRANSPARENT_EXECUTION_PROFILES@1"
+)
+ROUTE_POLICY_MIGRATION_SCHEMA = "TRUSTED_PARENT_ROUTE_POLICY_MIGRATION@1"
+ROUTE_POLICY_MIGRATION_EXPECTED = {
+    "schema": ROUTE_POLICY_MIGRATION_SCHEMA,
+    "state": "trusted-parent-bridge",
+    "from_schema": LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA,
+    "to_schema": PROVIDER_ROUTE_POLICY_SCHEMA,
+    "plan_revision_ref": "ITER-010-PDR-010",
+    "only_next_change": "finalize-model-transparent-route-policy",
+    "external_dispatch_allowed": False,
+}
+PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS = {
     "execution_profile_ref",
     "provider_identity",
     "model_identity",
 }
+FALLBACK_EXECUTION_PROFILE_CONFIGURATION_KEYS = (
+    PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS
+    | {"admission_policy_plugin_ref"}
+)
 ENGINEERING_CHAT_EXPERIENCE_SCHEMA = "ENGINEERING_CHAT_EXPERIENCE@1"
 CONVERSATIONAL_ENGINEERING_AGENT_SCHEMA = "CONVERSATIONAL_ENGINEERING_AGENT@1"
 EXPERIENCE_FIRST_FAILURE_DIAGNOSIS_ORDER = (
@@ -120,6 +138,247 @@ ITER010_DIRECTION_CHECKPOINT_MISS_ACTION = (
 )
 ITER010_PLAN_EXECUTION_CONTROL_SCHEMA = "DEVELOPMENT_PLAN_EXECUTION_CONTROL@1"
 ITER010_PLAN_REVISION_REF = "ITER-010-PDR-009"
+ITER010_LIGHTWEIGHT_PLAN_REVISION_REF = "ITER-010-PDR-010"
+ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID = "V-MVP-EXPERIENCE-001"
+ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID = "V-CHAT-EXPERIENCE-001"
+ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES: tuple[
+    tuple[str, object], ...
+] = (
+    ("schema", EXPERIENCE_FIRST_DELIVERY_SCHEMA),
+    ("owner_slice_ref", "ITER-010-SLICE-001"),
+    ("current_execution_decision_ref", ITER010_LIGHTWEIGHT_PLAN_REVISION_REF),
+    ("current_gate_decision_ref", ITER010_LIGHTWEIGHT_PLAN_REVISION_REF),
+    (
+        "direction_discovery_principle_ref",
+        "codex-user-message:sha256:"
+        "27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f",
+    ),
+    (
+        "first_operable_browser_delivery_case_id",
+        ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID,
+    ),
+    ("first_operable_browser_delivery_requires_result", False),
+    ("first_operable_browser_delivery_moves_plan_cursor", False),
+    (
+        "first_operable_browser_delivery_requires_current_codex_comparison",
+        False,
+    ),
+    ("final_experience_handoff_case_id", ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID),
+    ("final_experience_handoff_requires_result", True),
+    ("final_experience_handoff_moves_plan_cursor", True),
+    (
+        "final_experience_handoff_success_path_requires_current_codex_comparison",
+        True,
+    ),
+    (
+        "final_experience_handoff_failure_path_requires_one_general_repair_still_failed",
+        True,
+    ),
+    (
+        "final_experience_handoff_alternate_trigger",
+        "one-evidence-backed-general-repair-still-has-same-material-failure",
+    ),
+    ("direction_confirmation_case_id", "V-PREVIEW-002"),
+    ("micro_checkpoint_count", 2),
+    (
+        "micro_checkpoint_order",
+        "first-operable-browser-delivery->same-candidate-quality-comparison->"
+        "final-experience-result-handoff->user-direction",
+    ),
+    ("user_handoff_required_at_each_checkpoint", True),
+    ("checkpoint_completion_requires_runnable_user_visible_artifact", True),
+    ("plan_test_or_document_completion_counts_as_user_visible_increment", False),
+    (
+        "checkpoint_miss_action",
+        "handoff-last-runnable-version-and-earliest-root-cause-stop-scope-expansion",
+    ),
+    ("checkpoint_miss_continues_minimum_experience_recovery", True),
+    ("historical_results_do_not_satisfy_experience_gate", True),
+    ("alpha_comparison_case_id", "V-DIRECTION-QUALITY-001"),
+    ("provider_readiness_blocks_first_user_handoff", False),
+    ("quality_gate_scope", "user-visible-answer-quality-only"),
+    ("access_pass_cannot_satisfy_quality_gate", True),
+    ("availability_requires_quality_pass", False),
+    ("hardening_requires_quality_pass", True),
+    (
+        "pre_first_experience_allowed_checks",
+        EXPERIENCE_FIRST_DELIVERY_PRE_ACCESS_WORK,
+    ),
+    ("pre_first_experience_full_regression_allowed", False),
+    ("failure_diagnosis_order", EXPERIENCE_FIRST_FAILURE_DIAGNOSIS_ORDER),
+    ("earliest_divergence_required", True),
+    (
+        "falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change",
+        True,
+    ),
+    ("local_minimal_reproduction_required_before_live_retry", True),
+    ("unseen_adjacent_local_case_count", 2),
+    ("live_canary_conversation_count_after_local_pass", 1),
+    ("live_canary_turn_count", 3),
+    (
+        "same_failure_signature_fix_limit_before_architecture_responsibility_review",
+        1,
+    ),
+    (
+        "same_failure_signature_recurrence_action",
+        "stop-rule-accumulation-and-review-architecture-responsibilities",
+    ),
+    ("pre_first_experience_test_scope", "targeted-impact-startup-and-safety-only"),
+    ("full_regression_before_alpha_continue_allowed", False),
+    (
+        "full_regression_allowed_stages",
+        "alpha-continue-hardening-and-before-formal-acceptance",
+    ),
+    ("live_attempt_unit", EXPERIENCE_FIRST_DELIVERY_LIVE_ATTEMPT_UNIT),
+    ("same_failure_signature_retry_limit", 1),
+    ("consecutive_no_user_visible_increment_limit", 2),
+    ("no_increment_action", EXPERIENCE_FIRST_DELIVERY_NO_INCREMENT_ACTION),
+    (
+        "pdr010_current_action_id",
+        "ITER-010-ACTION-USER-PLAN-RECOVERY-001",
+    ),
+    ("pdr010_current_action_name", "complete-mvp-experience-development"),
+    ("pdr010_current_case_id", ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID),
+    ("pdr010_first_browser_experience_precedes_quality_comparison", True),
+    ("pdr010_machine_timebox_or_activation_receipt_required", False),
+    (
+        "pdr010_failure_stays_in_same_action_until_general-repair-or-user-direction",
+        True,
+    ),
+    ("pdr010_hardening_and_full_regression_locked_until_user_continue", True),
+    ("direction_receipt_records_decision_only", True),
+    ("direction_action_self_loop_until_new_pdr_cutover", True),
+    ("continue_unlock_requires_new_pdr", True),
+    ("continue_unlock_requires_explicit_user_authorization", True),
+    ("continue_unlock_requires_trusted_parent_cutover", True),
+    ("local_message_digest_is_platform_authenticated_authority", False),
+)
+ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES: tuple[
+    tuple[str, tuple[str, ...]], ...
+] = (
+    (
+        "historical_pre_policy_result_refs",
+        ("ITER-010-RESULT-SLICE-001-STOP-REDIRECT",),
+    ),
+)
+ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES: tuple[
+    tuple[str, object], ...
+] = (
+    ("schema", "PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1"),
+    ("generic_schema", "PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1"),
+    ("system_contract_ref", "SYS-ADR-019"),
+    ("owner_decision_ref", "ITER-010-PDR-008"),
+    ("current_plan_amendment_ref", ITER010_LIGHTWEIGHT_PLAN_REVISION_REF),
+    ("owner_finding_ref", "FINDING-010-140"),
+    ("authority_status", "active"),
+    (
+        "human_authority_source",
+        "existing-iter010-slice001-root-development-authorization",
+    ),
+    ("root_authorization_field_ref", "authorization.authorization_ref"),
+    (
+        "correction_ref",
+        "local-user-message-utf8:sha256:"
+        "6dd1e3f4c444b69539f2c9082e26f605d4b0ff84b5dcf99cfb53b42cdb334bdb",
+    ),
+    ("iteration_ref", "ITER-010"),
+    ("slice_ref", "ITER-010-SLICE-001"),
+    (
+        "purpose",
+        "public-open-source-direction-canary-and-web-experience-evaluation",
+    ),
+    ("source_origin", "https://github.com/macrozheng/mall.git"),
+    ("source_license", "Apache-2.0"),
+    ("source_commit", "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7"),
+    ("source_tree", "047d79d8588b76013c260f3f1a9565707301a60a"),
+    (
+        "source_revision_selection_policy",
+        "same-approved-public-upstream-clean-exact-commit-after-source-authority-reverification",
+    ),
+    ("source_clean_required", True),
+    ("source_read_only_required", True),
+    ("current_provider_route_ref", "provider_route_policy"),
+    (
+        "fallback_admission_policy_plugin_ref",
+        "deepseek_dispatch_admission_policy",
+    ),
+    ("preferred_current_route_budget_requires_new_human_approval", False),
+    (
+        "fallback_admitted_current_route_budget_requires_new_human_approval",
+        False,
+    ),
+    ("fallback_policy_exception_requires_exact_user_override", True),
+    ("clean_product_successor_requires_new_human_approval", False),
+    (
+        "run_turn_or_dispatch_identity_change_requires_new_human_approval",
+        False,
+    ),
+    (
+        "machine_receipt_derivation_required_per_run_turn_and_dispatch",
+        True,
+    ),
+    ("machine_receipt_parent_digest_required", True),
+    ("machine_receipt_one_use_expiry_and_consumption_required", True),
+    (
+        "machine_receipt_fields",
+        "exact-product-source-session,provider-model-role-input-digest,disclosure,"
+        "budget,time,fallback-reason,parent-authority-digest",
+    ),
+    (
+        "invalid_or_drifted_machine_receipt_action",
+        "fail-before-source-disclosure-credential-or-provider-network",
+    ),
+    (
+        "unverified_source_revision_drift_action",
+        "fail-closed-until-source-authority-reverification-not-automatic-human-request",
+    ),
+    (
+        "same_approved_upstream_clean_revision_after_reverification_requires_new_human_approval",
+        False,
+    ),
+    (
+        "scope_delta_requires_exact_user_authorization",
+        "private-unknown-dirty-or-nonpublic-source,different-upstream,"
+        "provider-model-endpoint-or-credential-account-change,"
+        "expanded-disclosure-or-budget,fallback-admission-policy-exception,hidden,"
+        "slice2-or-slice3,write-or-nonloopback-or-production",
+    ),
+    ("historical_grants_and_runs_are_immutable", True),
+    ("runtime_implementation_status", "not-yet-implemented-or-verified"),
+    ("verification_case_id", "V-PUBLIC-OSS-AUTHORITY-001"),
+    ("verification_status", "NOT-RUN"),
+    ("independent_action_entry_allowed", False),
+    (
+        "next_execution_entry_action_id",
+        "ITER-010-ACTION-USER-PLAN-RECOVERY-001",
+    ),
+    ("next_execution_entry_case_id", ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID),
+    (
+        "current_external_execution_status",
+        "standing-authority-active-runtime-receipt-required-per-dispatch",
+    ),
+)
+ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES: tuple[
+    tuple[str, object], ...
+] = (
+    ("current_authority_owner_ref", "public_oss_evaluation_standing_authority"),
+    ("external_execution_reauthorization_required", False),
+    ("human_reauthorization_required_for_current_direction_canary", False),
+    ("human_reauthorization_trigger", "standing-scope-delta-only"),
+    ("external_execution_authorization_status", "standing-authority-active"),
+    (
+        "external_execution_authorization_status_scope",
+        "exact-runtime-receipt-required-per-dispatch",
+    ),
+    (
+        "current_successor_authority_status",
+        "public-oss-standing-human-authority-active-no-new-approval-required",
+    ),
+    (
+        "current_successor_runtime_gate_status",
+        "machine-receipt-required-before-each-dispatch",
+    ),
+)
 ITER010_PLAN_AUTHORIZATION_REFS = (
     "local-user-message-utf8:sha256:612341017bef3d98db372608d22b0d57744a96883e23dd51a6552c13da183989",
     "local-user-message-utf8:sha256:63962a3f18667dd3727dd76d72c45ae8224e40a06be2d8c12622aca3a4ef0ae5",
@@ -501,12 +760,57 @@ ITER010_DIRECTION_QUESTION_SET_RULE = (
 )
 ITER010_PENDING_CODEX_IDENTITY = "not-yet-frozen-by-current-action"
 PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES = (
-    "provider-unavailable",
-    "provider-http-error",
-    "provider-outcome-unknown",
-    "provider-output-invalid",
-    "model-review-rejected",
+    "preferred-execution-profile-unavailable",
 )
+PREFERRED_PROFILE_UNAVAILABLE_VERDICT = "PREFERRED_EXECUTION_PROFILE_UNAVAILABLE"
+PROVIDER_ROUTE_POLICY_KEYS = {
+    "schema",
+    "preferred_execution_profile_ref",
+    "fallback_execution_profile_ref",
+    "preference_order",
+    "availability_owner",
+    "required_fallback_verdict",
+    "product_control_flow_allowed_inputs",
+    "product_control_flow_forbidden_inputs",
+    "verification_case_id",
+    "fallback_dispatch_requires_verification_pass",
+    "preferred_unavailable_evidence_required",
+    "implementation_gap_counts_as_preferred_unavailable",
+    "preferred_availability_requires",
+    "route_freeze_time",
+    "ordered_routes_preauthorized_at_session_start",
+    "ordered_route_disclosure_scopes_preauthorized_at_session_start",
+    "transparent_logical_interaction_fallback_allowed",
+    "user_resubmission_or_new_session_required",
+    "fallback_requires_preferred_attempt_terminal_without_authorized_answer",
+    "fallback_trigger",
+    "fallback_eligible_outcomes",
+    "structured_output_invalid_allows_fallback",
+    "model_review_rejected_allows_fallback",
+    "raw_http_or_outcome_without_availability_verdict_allows_fallback",
+    "application_source_security_failure_allows_fallback",
+    "fallback_reason_classification_required",
+    "capability_failure_must_not_be_misclassified_as_unavailable",
+    "structured_output_invalid_recovery",
+    "model_review_rejected_recovery",
+    "same_profile_application_repair_is_transport_request_retry",
+    "same_profile_application_repair_bound",
+    "same_profile_application_repair_exhausted_action",
+    "fallback_attempt_restarts_full_chain",
+    "fallback_attempt_inputs",
+    "cross_attempt_intermediate_state_reuse_allowed",
+    "late_preferred_result_policy",
+    "late_preferred_result_overwrite_allowed",
+    "post_dispatch_execution_profile_switch_requires",
+    "maximum_fallback_execution_profile_attempts",
+    "transport_request_retry_allowed",
+    "outcome_unknown_duplicate_cost_risk_recorded",
+    "peak_urgent_override_requires",
+    "cost_can_reduce_answer_quality",
+    "cost_gate_scope",
+    "current_started_interaction_unit_must_keep_full_quality_chain",
+    "unchanged_current_conformance_reuse_required",
+}
 STRICT_CODEX_BASELINE_ROLE = (
     "strong-external-baseline-not-oracle-not-adjudicator"
 )
@@ -551,7 +855,7 @@ ITER010_CURRENT_ASSUMPTIONS: dict[str, str] = {
     "A2": "主工程 Agent 能持续维护目标、假设、子任务和计划，依据每次观察选择 World Model/Source 受控工具并重规划，不取得直接权限",
     "A3": "每个 Turn 的 Evidence Package、自然答案与 fresh independent Review 同时保证直接答案、Citation、失败关闭和可返工性，Reviewer Finding 只回到主 Agent",
     "A4": "相同 Conversation—主 Agent—受控工具—逐 Turn Evidence/Review 协议能跨第二工程、来源组合和复杂失败泛化",
-    "A5": "产品外部比较与 World Model 因果消融在同一四路 Gate 中独立判读；current Codex 保留真实客户端、model、reasoning、tools 和权限，前三路固定相同 Provider/model/config，两个 Agent 路除认知开关外完全相同",
+    "A5": "完整体验候选先与保留真实客户端、model、reasoning、tools 和权限的 current Codex 做严格外部比较；用户 CONTINUE 后再用同 Agent、同 Provider/model/config 且只改变认知输入的受控对照做 World Model 因果消融",
     "A6": "产品具有真正语义多轮 Conversation，而不是同 Session 的独立问答",
 }
 ITER010_HISTORICAL_ASSUMPTION_DIGEST = (
@@ -2054,7 +2358,7 @@ def resolved_sustained_alpha_slice_ref(
     return resolved_direction_preview_slice_ref(alignment, new_refs)
 
 
-def validate_experience_first_delivery_policy(
+def _validate_experience_first_delivery_policy_legacy_or_generic(
     manifest: dict[str, object],
     alignment: dict[str, object],
     new_refs: list[str],
@@ -2317,12 +2621,316 @@ def validate_experience_first_delivery_policy(
     return errors
 
 
+def _validate_iter010_lightweight_experience_policy(
+    manifest: dict[str, object],
+    alignment: dict[str, object],
+    blocking_case_ids: list[str],
+    label: str,
+    *,
+    manifest_text: str | None,
+) -> list[str]:
+    """Validate the complete PDR-010 policy as one closed contract."""
+
+    policy = manifest.get("experience_delivery_policy")
+    if not isinstance(policy, dict):
+        return [f"{label}: experience_delivery_policy must be a mapping"]
+
+    errors: list[str] = []
+    expected_scalar_values = dict(
+        ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES
+    )
+    expected_sequence_fields = {
+        field
+        for field, _ in ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES
+    }
+    expected_fields = set(expected_scalar_values) | expected_sequence_fields
+    actual_fields = set(map(str, policy))
+    if actual_fields != expected_fields:
+        missing = sorted(expected_fields - actual_fields)
+        extra = sorted(actual_fields - expected_fields)
+        errors.append(
+            f"{label}: lightweight experience_delivery_policy must use its closed schema"
+            + (f"; missing={','.join(missing)}" if missing else "")
+            + (f"; unexpected={','.join(extra)}" if extra else "")
+        )
+    for field, expected in ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES:
+        if not _exact_plan_scalar(policy.get(field), expected):
+            errors.append(
+                f"{label}: lightweight experience_delivery_policy.{field} "
+                f"must equal {expected}"
+            )
+
+    for field, expected in ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES:
+        direct = policy.get(field)
+        if manifest_text is not None:
+            actual = manifest_resolved_sequence_items(
+                manifest_text, "experience_delivery_policy", field
+            )
+        elif isinstance(direct, list):
+            actual = [str(item) for item in direct]
+        else:
+            actual = None
+        if actual != list(expected):
+            errors.append(
+                f"{label}: lightweight experience_delivery_policy.{field} "
+                f"must equal {','.join(expected)}"
+            )
+
+    forbidden_machine_clock_fields = sorted(
+        str(field)
+        for field in policy
+        if str(field).endswith("_minutes")
+        or str(field) in {"start_event", "timebox_case_id"}
+    )
+    if forbidden_machine_clock_fields:
+        errors.append(
+            f"{label}: lightweight experience policy must not retain machine timebox fields: "
+            + ", ".join(forbidden_machine_clock_fields)
+        )
+
+    for field in (
+        "first_operable_browser_delivery_case_id",
+        "final_experience_handoff_case_id",
+        "alpha_comparison_case_id",
+        "direction_confirmation_case_id",
+    ):
+        case_id = policy.get(field)
+        if case_id not in blocking_case_ids:
+            errors.append(
+                f"{label}: lightweight experience_delivery_policy.{field} "
+                "must be a blocking Case"
+            )
+
+    first_case = policy.get("first_operable_browser_delivery_case_id")
+    final_case = policy.get("final_experience_handoff_case_id")
+    if first_case == final_case:
+        errors.append(
+            f"{label}: first operable browser delivery and final Result handoff "
+            "must use distinct Cases"
+        )
+    if alignment.get("first_product_web_checkpoint") != first_case:
+        errors.append(
+            f"{label}: product_goal_alignment.first_product_web_checkpoint must "
+            "equal first_operable_browser_delivery_case_id"
+        )
+    for field, expected in (
+        ("first_operable_browser_delivery_case_id", first_case),
+        ("final_experience_handoff_case_id", final_case),
+    ):
+        if alignment.get(field) != expected:
+            errors.append(
+                f"{label}: product_goal_alignment.{field} must equal {expected}"
+            )
+    experience_binding = alignment.get("experience_version_binding")
+    if not isinstance(experience_binding, dict) or (
+        experience_binding.get("case_id") != first_case
+    ):
+        errors.append(
+            f"{label}: experience_version_binding.case_id must equal the first "
+            "operable browser delivery Case"
+        )
+    elif (
+        experience_binding.get("exact_version_visible") is not True
+        or experience_binding.get("repeatable_start") is not True
+        or experience_binding.get("listener_browser_execution_status")
+        != "passed-and-stopped"
+    ):
+        errors.append(
+            f"{label}: first operable browser delivery must bind a repeatably "
+            "runnable, exact-version browser artifact"
+        )
+
+    control = manifest.get("plan_execution_control")
+    current_action = (
+        control.get("current_action") if isinstance(control, dict) else None
+    )
+    if not isinstance(current_action, dict):
+        errors.append(
+            f"{label}: lightweight ITER-010 current experience action must be a mapping"
+        )
+    else:
+        for field, expected in (
+            ("id", "ITER-010-ACTION-USER-PLAN-RECOVERY-001"),
+            ("kind", "mvp-experience-development"),
+            ("case_id", final_case),
+            ("result_ref", "ITER-010-RESULT-V-MVP-EXPERIENCE-001"),
+            ("coding_allowed", True),
+            ("external_execution_allowed", True),
+        ):
+            if not _exact_plan_scalar(current_action.get(field), expected):
+                errors.append(
+                    f"{label}: lightweight current experience action.{field} "
+                    f"must equal {expected}"
+                )
+        locks = control.get("locks") if isinstance(control, dict) else None
+        if not isinstance(locks, dict) or (
+            locks.get("hardening") is not True
+            or locks.get("full_regression") is not True
+        ):
+            errors.append(
+                f"{label}: lightweight current experience action must lock "
+                "hardening and full regression until user CONTINUE"
+            )
+
+    action_contracts = (
+        control.get("next_action_contracts") if isinstance(control, dict) else None
+    )
+    if isinstance(action_contracts, dict):
+        result_backed_first_cases = [
+            str(name)
+            for name, contract in action_contracts.items()
+            if isinstance(contract, dict)
+            and contract.get("case_id") == first_case
+            and any(
+                contract.get(field)
+                for field in ("result_ref", "result_path", "evidence_path")
+            )
+        ]
+        if result_backed_first_cases:
+            errors.append(
+                f"{label}: first operable browser delivery requires_result=false "
+                "and must not be registered as a Result-backed action: "
+                + ", ".join(sorted(result_backed_first_cases))
+            )
+    return errors
+
+
+def validate_experience_first_delivery_policy(
+    manifest: dict[str, object],
+    alignment: dict[str, object],
+    new_refs: list[str],
+    blocking_case_ids: list[str],
+    label: str,
+    *,
+    required: bool,
+    manifest_text: str | None = None,
+) -> list[str]:
+    """Select the exact current policy without falling back to PDR-009."""
+
+    policy = manifest.get("experience_delivery_policy")
+    errors: list[str] = []
+    if policy is None:
+        if required:
+            errors.append(f"{label}: experience_delivery_policy is required")
+    elif not isinstance(policy, dict):
+        errors.append(f"{label}: experience_delivery_policy must be a mapping")
+    elif uses_lightweight_iter010_plan(manifest):
+        errors.extend(
+            _validate_iter010_lightweight_experience_policy(
+                manifest,
+                alignment,
+                blocking_case_ids,
+                label,
+                manifest_text=manifest_text,
+            )
+        )
+    elif (
+        isinstance(manifest.get("plan_execution_control"), dict)
+        and isinstance(
+            manifest["plan_execution_control"].get("plan_revision_ref"),
+            str,
+        )
+        and (
+            match := re.fullmatch(
+                r"ITER-010-PDR-([0-9]{3,})",
+                manifest["plan_execution_control"]["plan_revision_ref"],
+            )
+        )
+        is not None
+        and int(match.group(1)) > 10
+    ):
+        plan_revision_ref = manifest["plan_execution_control"][
+            "plan_revision_ref"
+        ]
+        errors.append(
+            f"{label}: {plan_revision_ref} has no registered experience policy "
+            "validator; later ITER-010 revisions must define their own contract "
+            "and must not fall back to the PDR-009 60/180/240-minute policy"
+        )
+    else:
+        errors.extend(
+            _validate_experience_first_delivery_policy_legacy_or_generic(
+                manifest,
+                alignment,
+                new_refs,
+                blocking_case_ids,
+                label,
+                required=required,
+            )
+        )
+    return errors
+
+
+def _route_policy_migration_bridge_errors(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Validate the non-operable bridge required by the trusted @1 gate."""
+
+    migration = manifest.get("provider_route_policy_migration")
+    if migration is None:
+        return []
+    if not isinstance(migration, dict):
+        return [f"{label}: provider_route_policy_migration must be a mapping"]
+    errors: list[str] = []
+    if set(map(str, migration)) != set(ROUTE_POLICY_MIGRATION_EXPECTED):
+        errors.append(
+            f"{label}: provider_route_policy_migration must contain exactly the trusted bridge fields"
+        )
+    for field, expected in ROUTE_POLICY_MIGRATION_EXPECTED.items():
+        if migration.get(field) != expected:
+            errors.append(
+                f"{label}: provider_route_policy_migration.{field} must equal {expected}"
+            )
+    control = manifest.get("plan_execution_control")
+    if not isinstance(control, dict) or control.get("plan_revision_ref") != (
+        "ITER-010-PDR-010"
+    ):
+        errors.append(
+            f"{label}: provider_route_policy_migration is limited to ITER-010-PDR-010"
+        )
+    action = control.get("current_action") if isinstance(control, dict) else None
+    if not isinstance(action, dict) or action.get("id") != (
+        "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
+    ):
+        errors.append(
+            f"{label}: provider_route_policy_migration requires the ITER-010 experience action"
+        )
+    policy = manifest.get("provider_route_policy")
+    configurations = manifest.get("execution_profile_configurations")
+    if not isinstance(policy, dict) or policy.get("schema") != (
+        LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA
+    ):
+        errors.append(
+            f"{label}: provider_route_policy_migration requires the trusted legacy route schema"
+        )
+    if not isinstance(configurations, dict) or configurations.get("schema") != (
+        LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA
+    ):
+        errors.append(
+            f"{label}: provider_route_policy_migration requires the trusted legacy execution-profile schema"
+        )
+    return errors
+
+
+def _is_route_policy_migration_bridge(
+    manifest: dict[str, object], label: str
+) -> bool:
+    return (
+        manifest.get("provider_route_policy_migration") is not None
+        and not _route_policy_migration_bridge_errors(manifest, label)
+    )
+
+
 def _configured_execution_profiles(
     manifest: dict[str, object], label: str
 ) -> tuple[dict[str, dict[str, object]], tuple[str, ...], dict[str, object] | None, list[str]]:
-    """Resolve route identities and bind them to immutable configuration objects."""
+    """Resolve concrete identities only from immutable profile configurations."""
 
-    errors: list[str] = []
+    errors = _route_policy_migration_bridge_errors(manifest, label)
+    migration_bridge = (
+        manifest.get("provider_route_policy_migration") is not None
+        and not errors
+    )
     policy = manifest.get("provider_route_policy")
     if not isinstance(policy, dict):
         return {}, (), None, [f"{label}: provider_route_policy must be a mapping"]
@@ -2330,11 +2938,6 @@ def _configured_execution_profiles(
     for field in (
         "preferred_execution_profile_ref",
         "fallback_execution_profile_ref",
-        "primary_provider",
-        "fallback_provider",
-        "preferred_model_identity",
-        "fallback_model_identity",
-        "fallback_admission_policy_plugin_ref",
     ):
         value = policy.get(field)
         if not isinstance(value, str) or not value.strip():
@@ -2351,10 +2954,15 @@ def _configured_execution_profiles(
             errors
             + [f"{label}: execution_profile_configurations must be a mapping"],
         )
-    if configurations.get("schema") != EXECUTION_PROFILE_CONFIGURATION_SCHEMA:
+    expected_configuration_schema = (
+        LEGACY_EXECUTION_PROFILE_CONFIGURATION_SCHEMA
+        if migration_bridge
+        else EXECUTION_PROFILE_CONFIGURATION_SCHEMA
+    )
+    if configurations.get("schema") != expected_configuration_schema:
         errors.append(
             f"{label}: execution_profile_configurations.schema must equal "
-            f"{EXECUTION_PROFILE_CONFIGURATION_SCHEMA}"
+            f"{expected_configuration_schema}"
         )
     if set(map(str, configurations)) != {"schema", "preferred", "fallback"}:
         errors.append(
@@ -2363,19 +2971,9 @@ def _configured_execution_profiles(
 
     resolved: dict[str, dict[str, object]] = {}
     identities: list[str] = []
-    for role, provider_field, model_field, profile_field in (
-        (
-            "preferred",
-            "primary_provider",
-            "preferred_model_identity",
-            "preferred_execution_profile_ref",
-        ),
-        (
-            "fallback",
-            "fallback_provider",
-            "fallback_model_identity",
-            "fallback_execution_profile_ref",
-        ),
+    for role, profile_field in (
+        ("preferred", "preferred_execution_profile_ref"),
+        ("fallback", "fallback_execution_profile_ref"),
     ):
         profile = configurations.get(role)
         if not isinstance(profile, dict):
@@ -2383,27 +2981,25 @@ def _configured_execution_profiles(
                 f"{label}: execution_profile_configurations.{role} must be a mapping"
             )
             continue
-        if set(map(str, profile)) != EXECUTION_PROFILE_CONFIGURATION_KEYS:
+        expected_keys = PREFERRED_EXECUTION_PROFILE_CONFIGURATION_KEYS
+        if role == "fallback" and not migration_bridge:
+            expected_keys = FALLBACK_EXECUTION_PROFILE_CONFIGURATION_KEYS
+        if set(map(str, profile)) != expected_keys:
             errors.append(
                 f"{label}: execution_profile_configurations.{role} must contain exactly the model-transparent configuration fields"
             )
         resolved[role] = profile
-        for field in EXECUTION_PROFILE_CONFIGURATION_KEYS:
+        for field in expected_keys:
             value = profile.get(field)
             if not isinstance(value, str) or not value.strip():
                 errors.append(
                     f"{label}: execution_profile_configurations.{role}.{field} must be a non-empty string"
                 )
-        for profile_key, policy_key in (
-            ("execution_profile_ref", profile_field),
-            ("provider_identity", provider_field),
-            ("model_identity", model_field),
-        ):
-            if profile.get(profile_key) != policy.get(policy_key):
-                errors.append(
-                    f"{label}: execution_profile_configurations.{role}.{profile_key} "
-                    f"must equal provider_route_policy.{policy_key}"
-                )
+        if profile.get("execution_profile_ref") != policy.get(profile_field):
+            errors.append(
+                f"{label}: execution_profile_configurations.{role}.execution_profile_ref "
+                f"must equal provider_route_policy.{profile_field}"
+            )
         for field in ("provider_identity", "model_identity"):
             value = profile.get(field)
             if isinstance(value, str) and value.strip():
@@ -2419,8 +3015,18 @@ def _configured_execution_profiles(
         errors.append(
             f"{label}: preferred and fallback execution profile refs must differ"
         )
-    primary_provider = policy.get("primary_provider")
-    fallback_provider = policy.get("fallback_provider")
+    preferred_profile = resolved.get("preferred")
+    fallback_profile = resolved.get("fallback")
+    primary_provider = (
+        preferred_profile.get("provider_identity")
+        if isinstance(preferred_profile, dict)
+        else None
+    )
+    fallback_provider = (
+        fallback_profile.get("provider_identity")
+        if isinstance(fallback_profile, dict)
+        else None
+    )
     if (
         isinstance(primary_provider, str)
         and isinstance(fallback_provider, str)
@@ -2431,17 +3037,21 @@ def _configured_execution_profiles(
         )
 
     plugin: dict[str, object] | None = None
-    plugin_ref = policy.get("fallback_admission_policy_plugin_ref")
+    plugin_ref = None
+    if isinstance(fallback_profile, dict):
+        plugin_ref = fallback_profile.get("admission_policy_plugin_ref")
+    if migration_bridge:
+        plugin_ref = policy.get("fallback_admission_policy_plugin_ref")
     if not isinstance(plugin_ref, str) or not plugin_ref.strip():
         errors.append(
-            f"{label}: provider_route_policy.fallback_admission_policy_plugin_ref "
+            f"{label}: execution_profile_configurations.fallback.admission_policy_plugin_ref "
             "must be a non-empty configuration reference"
         )
     else:
         candidate = manifest.get(plugin_ref)
         if not isinstance(candidate, dict):
             errors.append(
-                f"{label}: provider_route_policy.fallback_admission_policy_plugin_ref "
+                f"{label}: execution_profile_configurations.fallback.admission_policy_plugin_ref "
                 "must resolve to a configuration object"
             )
         else:
@@ -2492,6 +3102,65 @@ def _configured_identity_errors(
     ]
 
 
+_CONCRETE_IDENTITY_FIELD_NAMES = {
+    "provider_identity",
+    "model_identity",
+    "provider_name",
+    "model_name",
+    "provider_id",
+    "model_id",
+    "model_ref",
+    "provider_type",
+    "actual_model_fingerprint",
+    "primary_provider",
+    "preferred_provider",
+    "fallback_provider",
+    "preferred_model_identity",
+    "fallback_model_identity",
+}
+_NON_AVAILABILITY_FALLBACK_TOKENS = {
+    "provider-unavailable",
+    "provider-http-error",
+    "provider-outcome-unknown",
+    "provider-output-invalid",
+    "structured-output-invalid",
+    "model-review-rejected",
+}
+
+
+def _concrete_identity_field_errors(value: object, label: str) -> list[str]:
+    errors: list[str] = []
+
+    def visit(candidate: object, path: str) -> None:
+        if isinstance(candidate, dict):
+            for key, item in candidate.items():
+                field = str(key).lower().replace("-", "_")
+                child_path = f"{path}.{key}"
+                if field in _CONCRETE_IDENTITY_FIELD_NAMES:
+                    errors.append(
+                        f"{child_path} is a concrete Provider/model identity input; use an execution-profile ref"
+                    )
+                visit(item, child_path)
+        elif isinstance(candidate, list):
+            for index, item in enumerate(candidate):
+                visit(item, f"{path}[{index}]")
+
+    visit(value, label)
+    return errors
+
+
+def _non_availability_fallback_input_errors(
+    value: object, label: str
+) -> list[str]:
+    rendered = json.dumps(value, ensure_ascii=False, sort_keys=True).lower()
+    normalized = re.sub(r"[_\s]+", "-", rendered)
+    return [
+        f"{label} must not branch fallback on {token}"
+        for token in sorted(_NON_AVAILABILITY_FALLBACK_TOKENS)
+        if token in normalized
+    ]
+
+
 def validate_provider_route_policy(
     manifest: dict[str, object],
     text_or_label: str,
@@ -2499,7 +3168,7 @@ def validate_provider_route_policy(
     *,
     required: bool,
 ) -> list[str]:
-    """Require role-based routing without freezing any Provider or model name."""
+    """Require closed profile-role routing and availability-only fallback."""
 
     text = text_or_label if label is not None else None
     label = label if label is not None else text_or_label
@@ -2510,39 +3179,79 @@ def validate_provider_route_policy(
     if not isinstance(policy, dict):
         return [f"{label}: provider_route_policy must be a mapping"]
 
-    errors: list[str] = []
-    if policy.get("schema") != PROVIDER_ROUTE_POLICY_SCHEMA:
-        errors.append(
-            f"{label}: provider_route_policy.schema must equal "
-            f"{PROVIDER_ROUTE_POLICY_SCHEMA}"
+    migration_errors = _route_policy_migration_bridge_errors(manifest, label)
+    migration_bridge = (
+        manifest.get("provider_route_policy_migration") is not None
+        and not migration_errors
+    )
+    if migration_bridge:
+        profiles, _, _, configuration_errors = _configured_execution_profiles(
+            manifest, label
         )
-    primary_provider = policy.get("primary_provider")
-    fallback_provider = policy.get("fallback_provider")
-    if (
-        not isinstance(primary_provider, str)
-        or not primary_provider.strip()
-        or not isinstance(fallback_provider, str)
-        or not fallback_provider.strip()
-        or primary_provider == fallback_provider
-    ):
+        errors = list(configuration_errors)
+        preferred = profiles.get("preferred")
+        fallback = profiles.get("fallback")
+        aliases = (
+            (
+                "primary_provider",
+                preferred.get("provider_identity")
+                if isinstance(preferred, dict)
+                else None,
+            ),
+            (
+                "preferred_model_identity",
+                preferred.get("model_identity")
+                if isinstance(preferred, dict)
+                else None,
+            ),
+            (
+                "fallback_provider",
+                fallback.get("provider_identity")
+                if isinstance(fallback, dict)
+                else None,
+            ),
+            (
+                "fallback_model_identity",
+                fallback.get("model_identity")
+                if isinstance(fallback, dict)
+                else None,
+            ),
+        )
+        for field, expected in aliases:
+            if policy.get(field) != expected:
+                errors.append(
+                    f"{label}: migration bridge provider_route_policy.{field} must match execution-profile configuration"
+                )
+        if not isinstance(policy.get("fallback_admission_policy_plugin_ref"), str):
+            errors.append(
+                f"{label}: migration bridge requires the legacy fallback plugin reference"
+            )
+        return sorted(set(errors))
+    if migration_errors:
+        return migration_errors
+
+    errors: list[str] = []
+    actual_keys = set(map(str, policy))
+    if actual_keys != PROVIDER_ROUTE_POLICY_KEYS:
+        missing = sorted(PROVIDER_ROUTE_POLICY_KEYS - actual_keys)
+        extra = sorted(actual_keys - PROVIDER_ROUTE_POLICY_KEYS)
+        details: list[str] = []
+        if missing:
+            details.append("missing " + ", ".join(missing))
+        if extra:
+            details.append("unexpected " + ", ".join(extra))
         errors.append(
-            f"{label}: provider_route_policy must configure two distinct non-empty Provider identities"
+            f"{label}: provider_route_policy must contain exactly the closed generic fields"
+            + (": " + "; ".join(details) if details else "")
         )
     for field in (
         "preferred_execution_profile_ref",
         "fallback_execution_profile_ref",
-        "fallback_admission_policy_plugin_ref",
     ):
         value = policy.get(field)
         if not isinstance(value, str) or not value.strip():
             errors.append(
                 f"{label}: provider_route_policy.{field} must be a non-empty runtime configuration reference"
-            )
-    for field in ("preferred_model_identity", "fallback_model_identity"):
-        value = policy.get(field)
-        if not isinstance(value, str) or not value.strip():
-            errors.append(
-                f"{label}: provider_route_policy.{field} must be a non-empty model identity"
             )
     if (
         isinstance(policy.get("preferred_execution_profile_ref"), str)
@@ -2558,31 +3267,68 @@ def validate_provider_route_policy(
         preference_order = manifest_resolved_sequence_items(
             text, "provider_route_policy", "preference_order"
         )
-    if preference_order != [primary_provider, fallback_provider]:
+    if preference_order != ["preferred", "fallback"]:
         errors.append(
-            f"{label}: provider_route_policy.preference_order must exactly match the configured preferred and fallback Provider identities"
+            f"{label}: provider_route_policy.preference_order must exactly equal preferred, fallback"
         )
 
     exact_values: tuple[tuple[str, object], ...] = (
+        ("schema", PROVIDER_ROUTE_POLICY_SCHEMA),
+        ("availability_owner", "provider-availability-boundary"),
+        ("required_fallback_verdict", PREFERRED_PROFILE_UNAVAILABLE_VERDICT),
         (
-            "fallback_requires_primary_attempt_terminal_without_authorized_answer",
+            "product_control_flow_allowed_inputs",
+            "route-role,execution-profile-ref-and-digest,availability-verdict",
+        ),
+        (
+            "product_control_flow_forbidden_inputs",
+            "provider-identity,model-identity",
+        ),
+        ("verification_case_id", "V-MODEL-TRANSPARENT-ROUTING-001"),
+        ("fallback_dispatch_requires_verification_pass", True),
+        (
+            "fallback_requires_preferred_attempt_terminal_without_authorized_answer",
             True,
         ),
-        ("primary_unavailable_evidence_required", True),
-        ("implementation_gap_counts_as_primary_unavailable", False),
+        ("preferred_unavailable_evidence_required", True),
+        ("implementation_gap_counts_as_preferred_unavailable", False),
         (
-            "primary_availability_requires",
+            "preferred_availability_requires",
             "credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold",
         ),
         (
             "fallback_trigger",
-            "sealed-primary-attempt-terminal-without-authorized-answer-for-provider-or-model-capability-reason",
+            "sealed-provider-availability-verdict:"
+            + PREFERRED_PROFILE_UNAVAILABLE_VERDICT,
+        ),
+        ("structured_output_invalid_allows_fallback", False),
+        ("model_review_rejected_allows_fallback", False),
+        (
+            "raw_http_or_outcome_without_availability_verdict_allows_fallback",
+            False,
         ),
         ("application_source_security_failure_allows_fallback", False),
         ("fallback_reason_classification_required", True),
         (
             "capability_failure_must_not_be_misclassified_as_unavailable",
             True,
+        ),
+        (
+            "structured_output_invalid_recovery",
+            "bounded-new-call-on-same-execution-profile-with-new-request-identity-and-receipt",
+        ),
+        (
+            "model_review_rejected_recovery",
+            "bounded-rewrite-new-call-on-same-execution-profile-with-new-request-identity-and-receipt-and-fresh-review",
+        ),
+        ("same_profile_application_repair_is_transport_request_retry", False),
+        (
+            "same_profile_application_repair_bound",
+            "current-interaction-safety-and-no-progress-policy",
+        ),
+        (
+            "same_profile_application_repair_exhausted_action",
+            "fail-current-turn-with-exact-reason-without-fallback",
         ),
         (
             "route_freeze_time",
@@ -2601,14 +3347,14 @@ def validate_provider_route_policy(
             "immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition",
         ),
         ("cross_attempt_intermediate_state_reuse_allowed", False),
-        ("late_primary_result_policy", "quarantine-audit-only"),
-        ("late_primary_result_overwrite_allowed", False),
-        ("maximum_fallback_provider_attempts", 1),
-        ("same_provider_retry_allowed", False),
+        ("late_preferred_result_policy", "quarantine-audit-only"),
+        ("late_preferred_result_overwrite_allowed", False),
+        ("maximum_fallback_execution_profile_attempts", 1),
+        ("transport_request_retry_allowed", False),
         ("outcome_unknown_duplicate_cost_risk_recorded", True),
         (
-            "post_dispatch_provider_switch_requires",
-            "new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route",
+            "post_dispatch_execution_profile_switch_requires",
+            "new-fallback-attempt-under-same-logical-interaction-unit-preauthorized-route-and-required-availability-verdict",
         ),
         ("peak_urgent_override_requires", "audited-explicit-override"),
         ("cost_can_reduce_answer_quality", False),
@@ -2621,23 +3367,6 @@ def validate_provider_route_policy(
             errors.append(
                 f"{label}: provider_route_policy.{field} must equal {expected}"
             )
-    for legacy_field in (
-        "fallback_requires_primary_unavailable",
-        "quality_or_schema_failure_counts_as_primary_unavailable",
-        "selection_time",
-        "request_level_failover_allowed",
-        "same_question_redispatch_to_fallback_allowed",
-        "transparent_logical_question_fallback_allowed",
-        "transparent_logical_turn_fallback_allowed",
-        "current_started_question_must_keep_full_quality_chain",
-        "current_started_turn_must_keep_full_quality_chain",
-    ):
-        if legacy_field in policy:
-            errors.append(
-                f"{label}: provider_route_policy.{legacy_field} is incompatible "
-                "with isolated transparent fallback attempts"
-            )
-
     fallback_eligible_outcomes = policy.get("fallback_eligible_outcomes")
     if not isinstance(fallback_eligible_outcomes, list) and text is not None:
         fallback_eligible_outcomes = manifest_resolved_sequence_items(
@@ -2646,7 +3375,7 @@ def validate_provider_route_policy(
     if fallback_eligible_outcomes != list(PROVIDER_FALLBACK_ELIGIBLE_OUTCOMES):
         errors.append(
             f"{label}: provider_route_policy.fallback_eligible_outcomes must "
-            "equal the frozen provider/model availability and capability outcomes"
+            "equal the trusted preferred execution-profile unavailable outcome"
         )
     _, identities, _, configuration_errors = _configured_execution_profiles(
         manifest, label
@@ -2654,9 +3383,15 @@ def validate_provider_route_policy(
     errors.extend(configuration_errors)
     errors.extend(
         _configured_identity_errors(
-            list(policy),
+            policy,
             identities,
-            f"{label}: provider_route_policy keys must remain generic and",
+            f"{label}: provider_route_policy must remain generic and",
+        )
+    )
+    errors.extend(
+        _concrete_identity_field_errors(
+            policy,
+            f"{label}: provider_route_policy",
         )
     )
     return errors
@@ -2690,6 +3425,18 @@ def validate_model_transparent_plan_routing(
                 scope,
                 identities,
                 f"{label}: {scope_name} must use preferred/fallback route roles and",
+            )
+        )
+        errors.extend(
+            _concrete_identity_field_errors(
+                scope,
+                f"{label}: {scope_name}",
+            )
+        )
+        errors.extend(
+            _non_availability_fallback_input_errors(
+                scope,
+                f"{label}: {scope_name}",
             )
         )
     return errors
@@ -2737,7 +3484,7 @@ def validate_model_transparent_governance_templates(
 def iter010_pending_codex_identity_allowed(
     manifest: dict[str, object] | None,
 ) -> bool:
-    """Return whether the active freeze action owns the not-yet-frozen marker."""
+    """Return whether the active plan has not reached its comparison freeze yet."""
 
     if not isinstance(manifest, dict):
         return False
@@ -2746,18 +3493,26 @@ def iter010_pending_codex_identity_allowed(
     if not isinstance(control, dict) or not isinstance(gate, dict):
         return False
     current_action = control.get("current_action")
-    current_identity = (
+    legacy_current_identity = (
         (ITER010_CURRENT_ACTION_ID, ITER010_CURRENT_ACTION_CASE_ID),
         (ITER010_PLAN_RECOVERY_ACTION_ID, ITER010_PLAN_RECOVERY_CASE_ID),
     )
-    return (
+    legacy_pending = (
         control.get("plan_revision_ref") == ITER010_PLAN_REVISION_REF
         and isinstance(current_action, dict)
         and (current_action.get("id"), current_action.get("case_id"))
-        in current_identity
+        in legacy_current_identity
         and current_action.get("status") == "authorized"
         and gate.get("status") == "locked-until-direction-freeze-pass"
     )
+    experience_first_pending = (
+        control.get("plan_revision_ref") == ITER010_LIGHTWEIGHT_PLAN_REVISION_REF
+        and isinstance(current_action, dict)
+        and current_action.get("case_id") == ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID
+        and current_action.get("status") == "authorized"
+        and gate.get("status") == "post-experience-quality-policy-not-current-action"
+    )
+    return legacy_pending or experience_first_pending
 
 
 def validate_strict_codex_baseline_alignment(
@@ -2781,7 +3536,7 @@ def validate_strict_codex_baseline_alignment(
         errors.append(
             f"{label}: mature_source_agent_identity_digest must be an exact sha256 digest"
             + (
-                f" or {ITER010_PENDING_CODEX_IDENTITY} while the exact ITER-010 freeze action is active"
+                f" or {ITER010_PENDING_CODEX_IDENTITY} before the active ITER-010 plan reaches its comparison freeze"
                 if allow_pending_identity
                 else ""
             )
@@ -2829,6 +3584,68 @@ def validate_alpha_agent_comparison_binding(
         return [f"{label}: alpha_agent_comparison_binding must be a mapping"]
     errors: list[str] = []
     case_id = binding.get("case_id")
+    if binding.get("result_role") == (
+        "post-experience-strict-superiority-direction-evidence"
+    ):
+        required_values: tuple[tuple[str, object], ...] = (
+            ("case_id", ITER010_DIRECTION_QUALITY_CASE_ID),
+            ("new_slice_ref", "ITER-010-SLICE-001"),
+            ("occurs_after_complete_browser_experience", True),
+            ("question_set_rule", "heterogeneous-no-pom-only"),
+            ("arms", "complete-world-model-system,current-codex"),
+            ("protocol_digest_ref", "mature_source_agent_protocol_digest"),
+            ("rubric_digest_ref", "mature_source_agent_rubric_digest"),
+            ("identity_digest_ref", "mature_source_agent_identity_digest"),
+            ("pass_rule", STRICT_CODEX_ALPHA_PASS_RULE),
+            ("all_tie_outcome", "FAIL"),
+            ("secondary_metric_compensation_allowed", False),
+            ("current_codex_is_oracle_or_reviewer", False),
+            (
+                "external_codex_runtime",
+                "preserve-actual-model-reasoning-tools-permissions-and-budget",
+            ),
+            (
+                "shared_evaluation_inputs",
+                "same-exact-revision-questions-authorized-source-scope-output-constraints-and-blind-rubric",
+            ),
+            (
+                "technical_adjudication_owner",
+                "independent-evaluator-not-answer-generator",
+            ),
+            ("product_direction_decision_owner", "user"),
+            ("full_four_arm_causal_ablation_requires_user_continue", True),
+        )
+        for field, expected in required_values:
+            if binding.get(field) != expected:
+                errors.append(
+                    f"{label}: post-experience alpha_agent_comparison_binding.{field} must equal {expected}"
+                )
+        question_count = binding.get("question_count")
+        unseen_count = binding.get("unseen_question_count_minimum")
+        if (
+            isinstance(question_count, bool)
+            or not isinstance(question_count, int)
+            or question_count < 3
+        ):
+            errors.append(
+                f"{label}: post-experience comparison question_count must be at least 3"
+            )
+        if (
+            isinstance(unseen_count, bool)
+            or not isinstance(unseen_count, int)
+            or unseen_count < 2
+            or not isinstance(question_count, int)
+            or isinstance(question_count, bool)
+            or unseen_count > question_count
+        ):
+            errors.append(
+                f"{label}: post-experience comparison unseen_question_count_minimum must be between 2 and question_count"
+            )
+        if case_id not in blocking_case_ids:
+            errors.append(
+                f"{label}: post-experience comparison Case must remain blocking"
+            )
+        return errors
     if binding.get("result_role") == (
         "blocking-iter010-strict-superiority-direction-gate"
     ):
@@ -4336,7 +5153,29 @@ def validate_conversational_architecture_cutover(
                 errors.append(
                     f"{label}: eighth live Session history must retain its scheduling failure disposition"
                 )
-        if external_execution_status == "not-authorized":
+        if (
+            external_execution_status == "standing-authority-active"
+            and uses_lightweight_iter010_plan(manifest)
+        ):
+            standing = manifest.get("public_oss_evaluation_standing_authority")
+            if (
+                authorization.get("external_execution_reauthorization_required")
+                is not False
+                or authorization.get(
+                    "human_reauthorization_required_for_current_direction_canary"
+                )
+                is not False
+                or not isinstance(standing, dict)
+                or standing.get("authority_status") != "active"
+                or standing.get(
+                    "machine_receipt_derivation_required_per_run_turn_and_dispatch"
+                )
+                is not True
+            ):
+                errors.append(
+                    f"{label}: lightweight ITER-010 standing authority must be active without repeated human approval and retain per-dispatch runtime receipts"
+                )
+        elif external_execution_status == "not-authorized":
             if (
                 first_live_authorization is not None
                 or second_live_authorization is not None
@@ -6208,10 +7047,10 @@ def validate_iter010_plan_execution_snapshot(
     configured_profiles, configured_identities, fallback_plugin, _ = (
         _configured_execution_profiles(manifest, label)
     )
-    provider_policy = manifest.get("provider_route_policy")
+    fallback_profile = configured_profiles.get("fallback")
     fallback_plugin_ref = (
-        provider_policy.get("fallback_admission_policy_plugin_ref")
-        if isinstance(provider_policy, dict)
+        fallback_profile.get("admission_policy_plugin_ref")
+        if isinstance(fallback_profile, dict)
         else None
     )
     if manifest.get("schema_version") != 2:
@@ -6757,6 +7596,173 @@ def validate_iter010_plan_execution_snapshot(
     return errors
 
 
+def uses_legacy_iter010_plan(manifest: dict[str, object]) -> bool:
+    """Return whether the superseded PDR-009 action graph owns this snapshot.
+
+    PDR-010 uses the repository-wide plan gate and a single long-running MVP
+    experience action.  The large ITER-010-specific Freeze/Quality validator is
+    retained only so historical PDR-009 snapshots remain testable; applying it
+    to PDR-010 would silently restore the superseded plan.
+    """
+
+    control = manifest.get("plan_execution_control")
+    return (
+        isinstance(control, dict)
+        and control.get("plan_revision_ref") == ITER010_PLAN_REVISION_REF
+    )
+
+
+def uses_lightweight_iter010_plan(manifest: dict[str, object]) -> bool:
+    """Return whether the complete-experience-first PDR-010 owns this snapshot."""
+
+    control = manifest.get("plan_execution_control")
+    return (
+        isinstance(control, dict)
+        and control.get("plan_revision_ref")
+        == ITER010_LIGHTWEIGHT_PLAN_REVISION_REF
+    )
+
+
+def validate_iter010_lightweight_standing_authority(
+    manifest: dict[str, object], label: str
+) -> list[str]:
+    """Freeze PDR-010 public-source authority and its runtime safety boundary."""
+
+    if not uses_lightweight_iter010_plan(manifest):
+        return []
+    authority = manifest.get("public_oss_evaluation_standing_authority")
+    if not isinstance(authority, dict):
+        return [
+            f"{label}: lightweight ITER-010 "
+            "public_oss_evaluation_standing_authority must be a mapping"
+        ]
+
+    errors: list[str] = []
+    expected_values = dict(ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES)
+    actual_fields = set(map(str, authority))
+    expected_fields = set(expected_values)
+    if actual_fields != expected_fields:
+        missing = sorted(expected_fields - actual_fields)
+        extra = sorted(actual_fields - expected_fields)
+        errors.append(
+            f"{label}: lightweight ITER-010 standing authority must use its closed schema"
+            + (f"; missing={','.join(missing)}" if missing else "")
+            + (f"; unexpected={','.join(extra)}" if extra else "")
+        )
+    for field, expected in ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES:
+        if not _exact_plan_scalar(authority.get(field), expected):
+            errors.append(
+                f"{label}: public_oss_evaluation_standing_authority.{field} "
+                f"must equal {expected}"
+            )
+
+    for field in ("source_commit", "source_tree"):
+        value = authority.get(field)
+        if not isinstance(value, str) or HEX_COMMIT_RE.fullmatch(value) is None:
+            errors.append(
+                f"{label}: public_oss_evaluation_standing_authority.{field} "
+                "must be an exact 40-character lowercase Git object"
+            )
+
+    route_ref = authority.get("current_provider_route_ref")
+    fallback_ref = authority.get("fallback_admission_policy_plugin_ref")
+    for field, reference in (
+        ("current_provider_route_ref", route_ref),
+        ("fallback_admission_policy_plugin_ref", fallback_ref),
+    ):
+        if not isinstance(reference, str) or not isinstance(
+            manifest.get(reference), dict
+        ):
+            errors.append(
+                f"{label}: public_oss_evaluation_standing_authority.{field} "
+                "must resolve to a generic Manifest policy mapping"
+            )
+
+    authorization = manifest.get("authorization")
+    if not isinstance(authorization, dict):
+        return errors + [
+            f"{label}: lightweight ITER-010 authorization must be a mapping"
+        ]
+    for field, expected in ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES:
+        if not _exact_plan_scalar(authorization.get(field), expected):
+            errors.append(
+                f"{label}: lightweight ITER-010 authorization.{field} "
+                f"must equal {expected}"
+            )
+    root_authorization_ref = authorization.get("authorization_ref")
+    if not isinstance(root_authorization_ref, str) or re.fullmatch(
+        r"(?:codex-user-message|local-user-message-utf8):sha256:[0-9a-f]{64}",
+        root_authorization_ref,
+    ) is None:
+        errors.append(
+            f"{label}: lightweight ITER-010 authorization.authorization_ref "
+            "must preserve an exact human root-authority receipt"
+        )
+    return errors
+
+
+def validate_iter010_lightweight_verification_semantics(
+    verification: Document | None,
+) -> list[str]:
+    """Keep the lightweight plan enforceable without restoring the old action maze."""
+
+    if verification is None:
+        return ["ITER-010 lightweight plan requires Verification"]
+    required: dict[str, dict[str, tuple[str, ...]]] = {
+        ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID: {
+            "Claim": ("完整浏览器主链", "可操作即交付"),
+            "Frozen input / oracle": (
+                "至少三 Turn 语义链",
+                "完整世界模型—Agent—源码—Evidence/Citation—fresh Review—Web 责任链",
+            ),
+            "Expected": (
+                "第一次达成即交付",
+                "`requires_result=false`",
+                "不移动游标",
+                "不等待 Codex 比较",
+            ),
+        },
+        ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID: {
+            "Claim": ("同一已交付候选", "最终 Result handoff"),
+            "Frozen input / oracle": (
+                "`V-CHAT-EXPERIENCE-001` 同一 clean candidate",
+                "actual current Codex fresh baseline",
+                "一次通用修复仍失败",
+            ),
+            "Expected": (
+                "`requires_result=true`",
+                "V-PREVIEW-002",
+                "full regression=0",
+            ),
+        },
+        "V-PREVIEW-002": {
+            "Claim": ("完整浏览器体验", "异质问题", "current Codex"),
+            "Frozen input / oracle": ("V-MVP-EXPERIENCE-001", "最早责任层"),
+            "Expected": (
+                "receipt 只记录方向且 action 自环",
+                "`CONTINUE` 后仍需新 PDR、明确用户授权和可信父 cutover",
+            ),
+        },
+    }
+    indexes = {"Claim": 1, "Frozen input / oracle": 3, "Expected": 4}
+    errors: list[str] = []
+    for case_id, fields in required.items():
+        rows = markdown_table_case_rows(verification.body, case_id)
+        if len(rows) != 1 or len(rows[0]) != 7:
+            errors.append(
+                f"{verification.relative_path}: {case_id} must remain exactly once with the seven-column schema"
+            )
+            continue
+        for field, phrases in fields.items():
+            value = rows[0][indexes[field]]
+            for phrase in phrases:
+                if phrase not in value:
+                    errors.append(
+                        f"{verification.relative_path}: {case_id} {field} must preserve lightweight-plan phrase {phrase!r}"
+                    )
+    return errors
+
+
 def validate_historical_gate_catalog(
     manifest: dict[str, object],
     blocking_case_ids: list[str],
@@ -6776,7 +7782,21 @@ def validate_historical_gate_catalog(
             f"{label}: current blocking_case_ids must not reuse historical executed Cases: "
             + ", ".join(reused)
         )
-    missing_current = sorted(ITER010_CURRENT_CHAT_GATE_CASES - set(blocking_case_ids))
+    if uses_lightweight_iter010_plan(manifest):
+        required_current_cases = {
+            ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID,
+            ITER010_DIRECTION_QUALITY_CASE_ID,
+            "V-CHAT-EXPERIENCE-001",
+            "V-PREVIEW-002",
+            "V-PUBLIC-OSS-AUTHORITY-ADMISSION-001",
+        }
+    elif uses_legacy_iter010_plan(manifest):
+        required_current_cases = set(ITER010_CURRENT_CHAT_GATE_CASES)
+    else:
+        # A later plan revision must opt into its own generic/current contract;
+        # absence of the PDR-010 marker must never reactivate PDR-009.
+        required_current_cases = set()
+    missing_current = sorted(required_current_cases - set(blocking_case_ids))
     if missing_current:
         errors.append(
             f"{label}: current blocking_case_ids must include the new Chat Gate catalog: "
@@ -6803,9 +7823,23 @@ def validate_historical_gate_catalog(
             errors.append(
                 f"{label}: historical Case {case_id} must preserve its immutable Evidence"
             )
-    errors.extend(
-        validate_iter010_current_verification_semantics(verification, label)
-    )
+    if uses_lightweight_iter010_plan(manifest):
+        obsolete_cases = {
+            ITER010_PLAN_RECOVERY_CASE_ID,
+            ITER010_CURRENT_ACTION_CASE_ID,
+            ITER010_FALLBACK_REFREEZE_CASE_ID,
+            "V-TIMEBOX-CHAT-001",
+        }.intersection(blocking_case_ids)
+        if obsolete_cases:
+            errors.append(
+                f"{label}: lightweight ITER-010 blocking cases must not retain superseded action cases: "
+                + ", ".join(sorted(obsolete_cases))
+            )
+        errors.extend(validate_iter010_lightweight_verification_semantics(verification))
+    elif uses_legacy_iter010_plan(manifest):
+        errors.extend(
+            validate_iter010_current_verification_semantics(verification, label)
+        )
     return errors
 
 
@@ -6874,9 +7908,10 @@ def validate_rework_policy(
             f"{label}: rework_policy.no_progress_measure must be a resolved measurable outcome"
         )
     limit = policy.get("no_progress_attempt_limit")
-    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 2:
+    minimum_limit = 1 if policy.get("active_authorized_rework_continues") is True else 2
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < minimum_limit:
         errors.append(
-            f"{label}: rework_policy.no_progress_attempt_limit must be an integer of at least two"
+            f"{label}: rework_policy.no_progress_attempt_limit must be an integer of at least {minimum_limit}"
         )
     return errors
 
@@ -7852,8 +8887,13 @@ def validate_product_goal_alignment_manifest(
             blocking_case_ids,
             label,
             required=requires_experience_first_delivery_policy(iteration),
+            manifest_text=text,
         )
     )
+    if iteration == "ITER-010":
+        errors.extend(
+            validate_iter010_lightweight_standing_authority(manifest, label)
+        )
     errors.extend(
         validate_experience_version_binding(
             alignment,
@@ -7883,7 +8923,7 @@ def validate_product_goal_alignment_manifest(
             manifest, label, manifest_text=text
         )
     )
-    if iteration == "ITER-010":
+    if iteration == "ITER-010" and uses_legacy_iter010_plan(manifest):
         errors.extend(validate_iter010_direction_checkpoint_policy(manifest, label))
     if requires_direction_preview(iteration):
         errors.extend(
@@ -9467,7 +10507,7 @@ def validate_active_manifest(
             manifest, manifest_text, label, iteration
         )
     )
-    if iteration == "ITER-010":
+    if iteration == "ITER-010" and uses_legacy_iter010_plan(manifest):
         transition_results, transition_evidence, transition_result_errors = (
             _load_iter010_required_transition_results(manifest, path, label)
         )
@@ -9967,6 +11007,10 @@ def validate_engineering_qa_ablation(
             and alpha_binding.get("result_role")
             == "blocking-iter010-strict-superiority-direction-gate"
         )
+        pdr010_lightweight = isinstance(alpha_binding, dict) and (
+            alpha_binding.get("result_role")
+            == "post-experience-strict-superiority-direction-evidence"
+        )
         expected_keys = {
             "schema",
             "status",
@@ -10037,7 +11081,9 @@ def validate_engineering_qa_ablation(
         for field, expected in (
             (
                 "authorization_required_before",
-                "ITER-010-SLICE-001-live-comparison",
+                "ITER-010-SLICE-002"
+                if pdr010_lightweight
+                else "ITER-010-SLICE-001-live-comparison",
             ),
             (
                 "system_arm_shared_runtime",
@@ -10069,8 +11115,13 @@ def validate_engineering_qa_ablation(
                 "modeling_cost_accounting",
                 "exact-world-model-build-update-storage-and-provider-cost-amortized-over-frozen-reuse-horizon",
             ),
-            ("slice_001_required", True),
-            ("slice_001_case_id", "V-COMP-ALPHA-001"),
+            ("slice_001_required", False if pdr010_lightweight else True),
+            (
+                "slice_001_case_id",
+                ENGINEERING_QA_NOT_AUTHORIZED
+                if pdr010_lightweight
+                else "V-COMP-ALPHA-001",
+            ),
             ("slice_002_case_id", "V-COMP-EARLY-002"),
             ("slice_003_case_id", "V-COMP-001"),
         ):
@@ -11315,7 +12366,7 @@ def validate_product_goal_execution_readiness(
                 manifest, label, manifest_text=manifest_text
             )
         )
-        if iteration == "ITER-010":
+        if iteration == "ITER-010" and uses_legacy_iter010_plan(manifest):
             errors.extend(
                 validate_iter010_direction_checkpoint_policy(manifest, label)
             )
@@ -14625,6 +15676,42 @@ def validate_dependency_cycles(by_id: dict[str, Document]) -> list[str]:
     state: dict[str, int] = {}
     stack: list[str] = []
 
+    def is_prior_result_lineage(source: Document, target: Document) -> bool:
+        """Ignore only the registered PDR-010 governance chronology edge.
+
+        A generic ``newer PDR -> any older sealed Result`` exemption lets an
+        arbitrary Result hide a real two-node cycle.  The only historical
+        document that lacks a generic ``action_kind`` marker but is already
+        trusted as a governance predecessor is the exact PDR-009 plan-recovery
+        Result.  Bind every available identity field instead of inferring that
+        role merely from revision numbers.
+        """
+
+        source_dependencies = source.metadata.get("depends_on")
+        target_dependencies = target.metadata.get("depends_on")
+        return (
+            source.identifier == ITER010_LIGHTWEIGHT_PLAN_REVISION_REF
+            and source.metadata.get("kind") == "project-decision"
+            and source.metadata.get("iteration") == "ITER-010"
+            and source.metadata.get("decision") == "REWORK"
+            and source.metadata.get("rework_strategy")
+            == "COMPLETE_MVP_EXPERIENCE_FIRST"
+            and isinstance(source_dependencies, list)
+            and ITER010_PLAN_RECOVERY_RESULT_REF in source_dependencies
+            and target.identifier == ITER010_PLAN_RECOVERY_RESULT_REF
+            and target.metadata.get("kind") == "iteration-result"
+            and target.metadata.get("status") == "sealed"
+            and target.metadata.get("iteration") == "ITER-010"
+            and target.metadata.get("plan_revision_ref")
+            == ITER010_PLAN_REVISION_REF
+            and target.metadata.get("action_ref")
+            == ITER010_PLAN_RECOVERY_ACTION_ID
+            and target.metadata.get("verification_case_id")
+            == ITER010_PLAN_RECOVERY_CASE_ID
+            and isinstance(target_dependencies, list)
+            and ITER010_PLAN_REVISION_REF in target_dependencies
+        )
+
     def visit(identifier: str) -> None:
         mark = state.get(identifier, 0)
         if mark == 2:
@@ -14639,6 +15726,10 @@ def validate_dependency_cycles(by_id: dict[str, Document]) -> list[str]:
         if isinstance(dependencies, list):
             for dependency in dependencies:
                 if dependency in by_id:
+                    if is_prior_result_lineage(
+                        by_id[identifier], by_id[dependency]
+                    ):
+                        continue
                     visit(dependency)
         stack.pop()
         state[identifier] = 2
@@ -15193,20 +16284,21 @@ def validate(documents: list[Document]) -> list[str]:
                                     manifest.relative_to(REPOSITORY).as_posix(),
                                 )
                             )
-                            errors.extend(
-                                validate_iter010_plan_execution_snapshot(
-                                    manifest_data,
-                                    manifest.relative_to(REPOSITORY).as_posix(),
-                                    manifest_text=manifest_text,
-                                    current=current,
-                                    verification=documents_by_path.get(
-                                        iteration_directory
-                                        / "verification-matrix.md"
-                                    ),
-                                    transition_results=by_id,
-                                    require_external_bindings=True,
+                            if uses_legacy_iter010_plan(manifest_data):
+                                errors.extend(
+                                    validate_iter010_plan_execution_snapshot(
+                                        manifest_data,
+                                        manifest.relative_to(REPOSITORY).as_posix(),
+                                        manifest_text=manifest_text,
+                                        current=current,
+                                        verification=documents_by_path.get(
+                                            iteration_directory
+                                            / "verification-matrix.md"
+                                        ),
+                                        transition_results=by_id,
+                                        require_external_bindings=True,
+                                    )
                                 )
-                            )
 
     errors.extend(validate_dependency_cycles(by_id))
     return sorted(set(errors))

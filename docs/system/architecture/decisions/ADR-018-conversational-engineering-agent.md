@@ -63,10 +63,13 @@ Package/Draft；新候选必须重新独立审核。架构不再要求单独的 
 和非空 Conversation 仍进入同一主 Agent 路径。
 
 模型和 Provider 对该协议透明。可以使用任何通过同一 Agent 能力、工具、隔离和质量资格的模型 Strategy；current Codex 是强外部产品
-基线，不是系统运行时依赖、Oracle 或 Reviewer。方向资格必须在同一个四路 Gate 中同时证明产品价值和世界模型因果贡献：直接相关证据
-到与系统臂相同的 generator、同一主 Agent 仅源码、同一主 Agent question-eligible 多域世界模型认知+源码、current Codex。第 2/3 路
-除认知开关外保持相同；四路答案先密封，由未参与生成的独立评测方依据 exact-source truth ledger 盲评。`MAVEN_REACTOR_STRUCTURE@1`
-等窄 Profile 可以在其 Coverage 内正确回答结构问题，但不得在行为、流程、职责、配置或故障问题上被命名为 `full cognition`。
+基线，不是系统运行时依赖、Oracle 或 Reviewer。实现顺序不改变架构或最终资格：先形成并向用户交付贯通软件世界模型认知、主工程 Agent、
+受控源码、Evidence/Citation、fresh 独立审核和语义多轮 Chat 的完整浏览器 MVP 候选，再立即以异质问题和 current Codex 检查同一个候选。
+该比较不阻止首次体验交付，但未通过时不能宣称方向或质量合格。用户明确 `CONTINUE` 后，才运行完整四路因果 Gate 和全量回归，以同时证明
+产品价值和世界模型因果贡献：直接相关证据到与系统臂相同的 generator、同一主 Agent 仅源码、同一主 Agent question-eligible 多域世界模型
+认知+源码、current Codex。第 2/3 路除认知开关外保持相同；四路答案先密封，由未参与生成的独立评测方依据 exact-source truth ledger 盲评。
+最终绝对质量、逐题不退步、总体严格超过 Codex 和非 locator 世界模型贡献的要求不变。`MAVEN_REACTOR_STRUCTURE@1` 等窄 Profile 可以在其
+Coverage 内正确回答结构问题，但不得在行为、流程、职责、配置或故障问题上被命名为 `full cognition`。
 
 资格按问题而不是按数据量命名：Application 从原 Turn 的 material Need 独立形成 Cognition Eligibility Assessment，并把每个 Need 绑定到
 已资格化认知维度/操作或显式 Gap。开放式工程 Chat 的可体验认知至少组合结构与实现/行为维度；缺失时主 Agent仍可按授权使用 Source
@@ -96,6 +99,12 @@ Worker-only 只读来源执行、append-only Ledger、双分区 Package、逐结
 exact 代码、运行、对照与用户体验证据验证。
 
 ## Consequences
+
+ITER-010 的当前交付单位是完整浏览器 MVP 候选，而不是独立页面、局部知识 Profile、单轮回答或单个测试 PASS。第一次完整体验交付之后，
+异质问题与 current Codex 比较立即在同一候选上进行；只有用户 `CONTINUE` 才进入完整四路消融、全量回归和硬化。这样把方向反馈提前，
+但不把“可体验”误报为“已验收”，也不降低任何最终质量边界。候选答案失败时，必须先沿 Source truth、知识构建/准入、认知投影/查询、
+Conversation 理解、Agent 调查、Evidence Package、答案综合、独立审核和 Delivery/UI 分层定位 first divergence，再对最早有证据的 Owner 层
+实施一个通用修复批次；禁止用工程名、题目文本、关键词或固定答案补丁碰对单题。
 
 系统需要新的 Conversation/Turn/Agent Work State 合同、Agent 工具协议、上下文选择与压缩策略，以及面向多轮对话的资格和产品验证。旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的代码和运行证据继续作为可复用安全/证据资产和历史基线，但不能证明本 ADR 已实现。

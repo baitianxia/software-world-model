@@ -76,6 +76,7 @@ FALLBACK_PROFILE = {
     "execution_profile_ref": FALLBACK_PROFILE_REF,
     "provider_identity": FALLBACK_PROVIDER_IDENTITY,
     "model_identity": FALLBACK_MODEL_IDENTITY,
+    "admission_policy_plugin_ref": FALLBACK_PLUGIN_REF,
 }
 FALLBACK_PLUGIN = {
     "schema": "ROUTE_ADMISSION_POLICY_PLUGIN@1",
@@ -86,13 +87,56 @@ FALLBACK_PLUGIN = {
 def route_configuration() -> dict[str, object]:
     return {
         "provider_route_policy": {
-            "primary_provider": PREFERRED_PROVIDER_IDENTITY,
-            "fallback_provider": FALLBACK_PROVIDER_IDENTITY,
-            "preferred_model_identity": PREFERRED_MODEL_IDENTITY,
-            "fallback_model_identity": FALLBACK_MODEL_IDENTITY,
+            "schema": plan_gate.PROVIDER_ROUTE_POLICY_SCHEMA,
             "preferred_execution_profile_ref": PREFERRED_PROFILE_REF,
             "fallback_execution_profile_ref": FALLBACK_PROFILE_REF,
-            "fallback_admission_policy_plugin_ref": FALLBACK_PLUGIN_REF,
+            "preference_order": ["preferred", "fallback"],
+            "availability_owner": "provider-availability-boundary",
+            "required_fallback_verdict": (
+                plan_gate.PREFERRED_PROFILE_UNAVAILABLE_VERDICT
+            ),
+            "product_control_flow_allowed_inputs": "route-role,execution-profile-ref-and-digest,availability-verdict",
+            "product_control_flow_forbidden_inputs": "provider-identity,model-identity",
+            "verification_case_id": "V-MODEL-TRANSPARENT-ROUTING-001",
+            "fallback_dispatch_requires_verification_pass": True,
+            "preferred_unavailable_evidence_required": True,
+            "implementation_gap_counts_as_preferred_unavailable": False,
+            "preferred_availability_requires": "credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold",
+            "route_freeze_time": "before-conversation-start-and-before-any-interaction-unit-dispatch",
+            "ordered_routes_preauthorized_at_session_start": True,
+            "ordered_route_disclosure_scopes_preauthorized_at_session_start": True,
+            "transparent_logical_interaction_fallback_allowed": True,
+            "user_resubmission_or_new_session_required": False,
+            "fallback_requires_preferred_attempt_terminal_without_authorized_answer": True,
+            "fallback_trigger": "sealed-provider-availability-verdict:PREFERRED_EXECUTION_PROFILE_UNAVAILABLE",
+            "fallback_eligible_outcomes": [
+                plan_gate.PREFERRED_PROFILE_UNAVAILABLE_OUTCOME
+            ],
+            "structured_output_invalid_allows_fallback": False,
+            "model_review_rejected_allows_fallback": False,
+            "raw_http_or_outcome_without_availability_verdict_allows_fallback": False,
+            "application_source_security_failure_allows_fallback": False,
+            "fallback_reason_classification_required": True,
+            "capability_failure_must_not_be_misclassified_as_unavailable": True,
+            "structured_output_invalid_recovery": "bounded-new-call-on-same-execution-profile-with-new-request-identity-and-receipt",
+            "model_review_rejected_recovery": "bounded-rewrite-new-call-on-same-execution-profile-with-new-request-identity-and-receipt-and-fresh-review",
+            "same_profile_application_repair_is_transport_request_retry": False,
+            "same_profile_application_repair_bound": "current-interaction-safety-and-no-progress-policy",
+            "same_profile_application_repair_exhausted_action": "fail-current-turn-with-exact-reason-without-fallback",
+            "fallback_attempt_restarts_full_chain": True,
+            "fallback_attempt_inputs": "immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition",
+            "cross_attempt_intermediate_state_reuse_allowed": False,
+            "late_preferred_result_policy": "quarantine-audit-only",
+            "late_preferred_result_overwrite_allowed": False,
+            "post_dispatch_execution_profile_switch_requires": "new-fallback-attempt-under-same-logical-interaction-unit-preauthorized-route-and-required-availability-verdict",
+            "maximum_fallback_execution_profile_attempts": 1,
+            "transport_request_retry_allowed": False,
+            "outcome_unknown_duplicate_cost_risk_recorded": True,
+            "peak_urgent_override_requires": "audited-explicit-override",
+            "cost_can_reduce_answer_quality": False,
+            "cost_gate_scope": "before-interaction-unit-start-only",
+            "current_started_interaction_unit_must_keep_full_quality_chain": True,
+            "unchanged_current_conformance_reuse_required": True,
         },
         "execution_profile_configurations": {
             "schema": plan_gate.EXECUTION_PROFILE_CONFIGURATION_SCHEMA,
@@ -815,6 +859,129 @@ class SnapshotTests(unittest.TestCase):
             [],
         )
 
+    def test_route_policy_rejects_concrete_provider_or_model_identity_inputs(
+        self,
+    ) -> None:
+        for field, value in (
+            ("primary_provider", PREFERRED_PROVIDER_IDENTITY),
+            ("preferred_model_identity", PREFERRED_MODEL_IDENTITY),
+        ):
+            with self.subTest(field=field):
+                candidate = manifest()
+                policy = candidate["provider_route_policy"]
+                assert isinstance(policy, dict)
+                policy[field] = value
+
+                errors = plan_gate.validate_snapshot(
+                    candidate,
+                    current_metadata=current_metadata(),
+                    verification_cases=cases(),
+                    documents=documents(),
+                )
+
+                self.assertTrue(
+                    any(
+                        "provider_route_policy" in error
+                        and "concrete Provider/model identity input" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_action_branch_rejects_even_unconfigured_concrete_identity_field(
+        self,
+    ) -> None:
+        candidate = manifest()
+        control = candidate["plan_execution_control"]
+        assert isinstance(control, dict)
+        transition = control["transition"]
+        assert isinstance(transition, dict)
+        transition["provider_identity"] = "unconfigured-provider"
+
+        errors = plan_gate.validate_snapshot(
+            candidate,
+            current_metadata=current_metadata(),
+            verification_cases=cases(),
+            documents=documents(),
+        )
+
+        self.assertTrue(
+            any(
+                "plan_execution_control.transition.provider_identity" in error
+                and "concrete Provider/model identity input" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_fallback_eligibility_is_only_trusted_preferred_availability_verdict(
+        self,
+    ) -> None:
+        mutations = (
+            (
+                "fallback_eligible_outcomes",
+                ["structured-output-invalid"],
+            ),
+            ("structured_output_invalid_allows_fallback", True),
+            ("model_review_rejected_allows_fallback", True),
+            (
+                "raw_http_or_outcome_without_availability_verdict_allows_fallback",
+                True,
+            ),
+            ("required_fallback_verdict", "MODEL_REVIEW_REJECTED"),
+        )
+        for field, value in mutations:
+            with self.subTest(field=field):
+                candidate = manifest()
+                policy = candidate["provider_route_policy"]
+                assert isinstance(policy, dict)
+                policy[field] = value
+
+                errors = plan_gate.validate_snapshot(
+                    candidate,
+                    current_metadata=current_metadata(),
+                    verification_cases=cases(),
+                    documents=documents(),
+                )
+
+                self.assertTrue(
+                    any(
+                        f"provider_route_policy.{field} must equal" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_branch_cannot_treat_output_or_review_failure_as_fallback_input(
+        self,
+    ) -> None:
+        for outcome in (
+            "STRUCTURED_OUTPUT_INVALID",
+            "MODEL_REVIEW_REJECTED",
+            "PROVIDER_HTTP_ERROR",
+            "PROVIDER_OUTCOME_UNKNOWN",
+        ):
+            with self.subTest(outcome=outcome):
+                candidate = manifest()
+                candidate["direction_quality_gate"] = {
+                    "fallback_branch_input": outcome,
+                }
+
+                errors = plan_gate.validate_snapshot(
+                    candidate,
+                    current_metadata=current_metadata(),
+                    verification_cases=cases(),
+                    documents=documents(),
+                )
+
+                self.assertTrue(
+                    any(
+                        "direction_quality_gate must not branch fallback" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
     def test_configured_preferred_identity_is_forbidden_in_plan_control(self) -> None:
         candidate = manifest()
         control = candidate["plan_execution_control"]
@@ -1269,6 +1436,7 @@ class Iter010ActionEvidenceBindingTests(unittest.TestCase):
         "execution_profile_ref": FALLBACK_PROFILE_REF,
         "provider_identity": FALLBACK_PROVIDER_IDENTITY,
         "model_identity": FALLBACK_MODEL_IDENTITY,
+        "admission_policy_plugin_ref": FALLBACK_PLUGIN_REF,
     }
     FALLBACK_PLUGIN_REF = "policy-plugin:fallback-admission@1"
     FALLBACK_PLUGIN = {
@@ -1981,6 +2149,68 @@ class PathTests(unittest.TestCase):
 
 
 class TransitionTests(unittest.TestCase):
+    def test_lightweight_handoff_binds_actual_trusted_parent(self) -> None:
+        action = {
+            "evidence_verifier": plan_gate.ITER010_MVP_LIGHT_VERIFIER,
+            "id": plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+            "case_id": plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID,
+        }
+        evidence = json.dumps(
+            {
+                "action_evidence": {
+                    "candidate_identity": {
+                        "commit": "a" * 40,
+                        "tree": "b" * 40,
+                    }
+                }
+            }
+        )
+        self.assertEqual(
+            [],
+            plan_gate._validate_lightweight_handoff_parent_binding(
+                action, evidence, "a" * 40, "b" * 40
+            ),
+        )
+
+    def test_lightweight_handoff_rejects_claimed_non_parent_commit_and_tree(self) -> None:
+        action = {
+            "evidence_verifier": plan_gate.ITER010_MVP_LIGHT_VERIFIER,
+            "id": plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+            "case_id": plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID,
+        }
+        evidence = json.dumps(
+            {
+                "action_evidence": {
+                    "candidate_identity": {
+                        "commit": "e" * 40,
+                        "tree": "f" * 40,
+                    }
+                }
+            }
+        )
+        errors = plan_gate._validate_lightweight_handoff_parent_binding(
+            action, evidence, "a" * 40, "b" * 40
+        )
+        self.assertEqual(2, len(errors), errors)
+        self.assertTrue(any("actual trusted parent commit" in error for error in errors))
+        self.assertTrue(any("actual trusted parent tree" in error for error in errors))
+
+    def test_lightweight_user_direction_does_not_require_candidate_identity(self) -> None:
+        action = {
+            "evidence_verifier": plan_gate.ITER010_MVP_LIGHT_VERIFIER,
+            "id": "ITER-010-ACTION-USER-DIRECTION-DECISION-001",
+            "case_id": "V-PREVIEW-002",
+        }
+        self.assertEqual(
+            [],
+            plan_gate._validate_lightweight_handoff_parent_binding(
+                action,
+                json.dumps({"action_evidence": {"schema": "direction-record"}}),
+                "a" * 40,
+                "b" * 40,
+            ),
+        )
+
     def validate_freeze_transition(self, verdict: str) -> list[str]:
         next_action = {
             "PASS": ACTION_QUALITY,
@@ -2212,10 +2442,12 @@ class TransitionTests(unittest.TestCase):
         mutations = {}
 
         route_target = manifest()
-        route_policy = route_target["provider_route_policy"]
-        assert isinstance(route_policy, dict)
+        route_configurations = route_target["execution_profile_configurations"]
+        assert isinstance(route_configurations, dict)
+        fallback_profile = route_configurations["fallback"]
+        assert isinstance(fallback_profile, dict)
         replacement_plugin_ref = "policy-plugin:replacement-admission@1"
-        route_policy["fallback_admission_policy_plugin_ref"] = replacement_plugin_ref
+        fallback_profile["admission_policy_plugin_ref"] = replacement_plugin_ref
         route_target[replacement_plugin_ref] = {
             "schema": "ROUTE_ADMISSION_POLICY_PLUGIN@1",
             "policy_revision": "replacement-admission@1",
@@ -2271,10 +2503,12 @@ class TransitionTests(unittest.TestCase):
         mutations = {}
 
         route_target = manifest(current_action_id=ACTION_QUALITY)
-        route_policy = route_target["provider_route_policy"]
-        assert isinstance(route_policy, dict)
+        route_configurations = route_target["execution_profile_configurations"]
+        assert isinstance(route_configurations, dict)
+        fallback_profile = route_configurations["fallback"]
+        assert isinstance(fallback_profile, dict)
         replacement_plugin_ref = "policy-plugin:replacement-admission@1"
-        route_policy["fallback_admission_policy_plugin_ref"] = replacement_plugin_ref
+        fallback_profile["admission_policy_plugin_ref"] = replacement_plugin_ref
         route_target[replacement_plugin_ref] = {
             "schema": "ROUTE_ADMISSION_POLICY_PLUGIN@1",
             "policy_revision": "replacement-admission@1",

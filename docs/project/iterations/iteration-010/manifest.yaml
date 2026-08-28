@@ -4,9 +4,9 @@ iteration:
   status: authorized
   outcome_scope: dual-core-world-model-cognition-and-lead-engineering-agent-semantic-multi-turn-chat-direction-preview-generalization-and-formal-acceptance
   current_decision: REWORK
-  current_decision_ref: ITER-010-PDR-009
-  current_gate_decision_ref: ITER-010-PDR-009
-  current_continuation_decision_ref: ITER-010-PDR-006
+  current_decision_ref: ITER-010-PDR-010
+  current_gate_decision_ref: ITER-010-PDR-010
+  current_continuation_decision_ref: ITER-010-PDR-010
   coding_input: true
 
 baseline:
@@ -19,7 +19,7 @@ baseline:
 
 user_plan_recovery:
   schema: USER_DIRECTED_PLAN_RECOVERY@1
-  status: authorized-recovery-entry-installed
+  status: consumed-by-pdr010-lightweight-plan
   authorization_ref: local-user-message-utf8:sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5
   authorization_reusable: false
   trusted_base_commit: 04e8b6cc3df2c9335b9cd6fb4e4f5a8a955c8c4e
@@ -36,614 +36,124 @@ user_plan_recovery:
 
 plan_execution_control:
   schema: DEVELOPMENT_PLAN_EXECUTION_CONTROL@1
-  plan_revision_ref: ITER-010-PDR-009
+  plan_revision_ref: ITER-010-PDR-010
   enforcement_mode: fail-closed
   authorization_refs:
-    - local-user-message-utf8:sha256:612341017bef3d98db372608d22b0d57744a96883e23dd51a6552c13da183989
-    - local-user-message-utf8:sha256:63962a3f18667dd3727dd76d72c45ae8224e40a06be2d8c12622aca3a4ef0ae5
+    - local-user-message-utf8:sha256:5ced06d2604020248c5baf69421ccbb4e5c047288b6db5b2202675c558c38cf6
+    - local-user-message-utf8:sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5
   current_action:
     id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
     owner_slice_ref: ITER-010-SLICE-001
-    kind: governance
+    kind: mvp-experience-development
     status: authorized
-    case_id: V-PLAN-RECOVERY-001
-    coding_allowed: false
-    external_execution_allowed: false
-    result_ref: ITER-010-RESULT-V-PLAN-RECOVERY-001
-    result_path: docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
+    case_id: V-MVP-EXPERIENCE-001
+    coding_allowed: true
+    external_execution_allowed: true
+    result_ref: ITER-010-RESULT-V-MVP-EXPERIENCE-001
+    result_path: docs/project/iterations/iteration-010/results/v-mvp-experience-001.md
     evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
-    evidence_verifier: ITER010_PLAN_RECOVERY@1
+    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-mvp-experience-001.json
+    evidence_verifier: ITER010_MVP_LIGHT@2
     runner_identity_paths:
       - scripts/plan_gate.py
-      - validation/iteration_010_plan_recovery/value_gate/runner.py
-      - tests/test_iteration_010_plan_recovery.py
-    produced_case_ids:
-      - V-PLAN-RECOVERY-001
-    prerequisite_case_ids: []
-    allowed_change_paths:
-      - validation/iteration_010_plan_recovery/value_gate/**
-      - validation/iteration_010_mvp/value_gate/**
-      - tests/test_iteration_010_plan_recovery.py
+      - validation/iteration_010_mvp/value_gate/runner.py
       - tests/test_iteration_010_mvp_value_gate.py
-      - scripts/plan_gate.py
-      - tests/test_plan_gate.py
-      - scripts/docs.py
-      - tests/test_docs_gate.py
-      - AGENTS.md
+    produced_case_ids:
+      - V-MVP-EXPERIENCE-001
+    prerequisite_case_ids:
+      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
+    allowed_change_paths:
+      - src/software_world_model/**
+      - tests/**
+      - validation/iteration_010_mvp/experience/**
+      - pyproject.toml
+      - README.md
       - docs/_generated/**
       - docs/system/**
-      - docs/project/governance/**
       - docs/project/current.md
-      - docs/project/iterations/iteration-010/manifest.yaml
-      - docs/project/iterations/iteration-010/verification-matrix.md
-      - docs/project/iterations/iteration-010/proposal.md
-      - docs/project/iterations/iteration-010/readiness-review.md
-      - docs/project/iterations/iteration-010/development-design/**
-      - docs/project/iterations/iteration-010/README.md
-      - docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md
-      - docs/project/iterations/iteration-010/decisions/README.md
-      - docs/project/iterations/iteration-010/findings/FINDING-010-153.md
-      - docs/project/iterations/iteration-010/findings/README.md
-      - docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
-      - docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
-      - docs/project/iterations/iteration-010/results/v-pdr010-activation-001.md
-      - docs/project/iterations/iteration-010/results/evidence/v-pdr010-activation-001.json
-      - docs/project/iterations/iteration-010/results/README.md
+      - docs/project/iterations/iteration-010/**
     forbidden_change_paths:
-      - src/**
-      - tests/test_conversational_engineering_model.py
       - validation/structure_world_model_iteration_010/**
+      - validation/iteration_010_mvp/value_gate/**
+      - tests/test_iteration_010_mvp_value_gate.py
+      - scripts/docs.py
+      - scripts/plan_gate.py
+      - tests/test_docs_gate.py
+      - tests/test_plan_gate.py
+      - AGENTS.md
+      - docs/project/governance/**
+      - docs/project/roadmap/**
+      - docs/project/iterations/iteration-010/decisions/**
       - .githooks/**
       - .github/workflows/**
   transition:
-    pass_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-    fail_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-    invalid_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+    pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+    fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+    invalid_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
   locks:
-    product_code_changes: true
-    prompt_or_reviewer_changes: true
-    web_canary: true
+    product_code_changes: false
+    prompt_or_reviewer_changes: false
+    web_canary: false
     hardening: true
     full_regression: true
-    provider_dispatch: true
+    provider_dispatch: false
   next_action_contracts:
     user_plan_recovery:
       id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
       owner_slice_ref: ITER-010-SLICE-001
-      kind: governance
+      kind: mvp-experience-development
       status: authorized
-      case_id: V-PLAN-RECOVERY-001
-      coding_allowed: false
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-PLAN-RECOVERY-001
-      result_path: docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
+      case_id: V-MVP-EXPERIENCE-001
+      coding_allowed: true
+      external_execution_allowed: true
+      result_ref: ITER-010-RESULT-V-MVP-EXPERIENCE-001
+      result_path: docs/project/iterations/iteration-010/results/v-mvp-experience-001.md
       evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
-      evidence_verifier: ITER010_PLAN_RECOVERY@1
+      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-mvp-experience-001.json
+      evidence_verifier: ITER010_MVP_LIGHT@2
       runner_identity_paths:
         - scripts/plan_gate.py
-        - validation/iteration_010_plan_recovery/value_gate/runner.py
-        - tests/test_iteration_010_plan_recovery.py
-      produced_case_ids:
-        - V-PLAN-RECOVERY-001
-      prerequisite_case_ids: []
-      allowed_change_paths:
-        - validation/iteration_010_plan_recovery/value_gate/**
-        - validation/iteration_010_mvp/value_gate/**
-        - tests/test_iteration_010_plan_recovery.py
+        - validation/iteration_010_mvp/value_gate/runner.py
         - tests/test_iteration_010_mvp_value_gate.py
-        - scripts/plan_gate.py
-        - tests/test_plan_gate.py
-        - scripts/docs.py
-        - tests/test_docs_gate.py
-        - AGENTS.md
+      produced_case_ids:
+        - V-MVP-EXPERIENCE-001
+      prerequisite_case_ids:
+        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
+      allowed_change_paths:
+        - src/software_world_model/**
+        - tests/**
+        - validation/iteration_010_mvp/experience/**
+        - pyproject.toml
+        - README.md
         - docs/_generated/**
         - docs/system/**
-        - docs/project/governance/**
         - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-        - docs/project/iterations/iteration-010/verification-matrix.md
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - docs/project/iterations/iteration-010/README.md
-        - docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md
-        - docs/project/iterations/iteration-010/decisions/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-153.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/iterations/iteration-010/results/v-plan-recovery-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-plan-recovery-001.json
-        - docs/project/iterations/iteration-010/results/v-pdr010-activation-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-pdr010-activation-001.json
-        - docs/project/iterations/iteration-010/results/README.md
+        - docs/project/iterations/iteration-010/**
       forbidden_change_paths:
-        - src/**
-        - tests/test_conversational_engineering_model.py
         - validation/structure_world_model_iteration_010/**
+        - validation/iteration_010_mvp/value_gate/**
+        - tests/test_iteration_010_mvp_value_gate.py
+        - scripts/docs.py
+        - scripts/plan_gate.py
+        - tests/test_docs_gate.py
+        - tests/test_plan_gate.py
+        - AGENTS.md
+        - docs/project/governance/**
+        - docs/project/roadmap/**
+        - docs/project/iterations/iteration-010/decisions/**
         - .githooks/**
         - .github/workflows/**
       transition:
-        pass_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-        fail_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-        invalid_next_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-    direction_freeze:
-      id: ITER-010-ACTION-DIRECTION-FREEZE-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: four-arm-direction-gate-freeze
-      status: authorized
-      case_id: V-DIRECTION-FREEZE-001
-      coding_allowed: true
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-DIRECTION-FREEZE-001
-      result_path: docs/project/iterations/iteration-010/results/v-direction-freeze-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-      prerequisite_case_ids:
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/project/iterations/iteration-010/results/v-direction-freeze-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-142.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001
-        fail_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-REWORK-001
-        invalid_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-    preferred_quality:
-      id: ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: four-arm-direction-quality-gate
-      status: authorized
-      case_id: V-DIRECTION-QUALITY-001
-      coding_allowed: false
-      external_execution_allowed: true
-      result_ref: ITER-010-RESULT-V-DIRECTION-QUALITY-PREFERRED-001
-      result_path: docs/project/iterations/iteration-010/results/v-direction-quality-preferred-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-quality-preferred-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-DIRECTION-QUALITY-001
-      prerequisite_case_ids:
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-direction-quality-preferred-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-direction-quality-preferred-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-143.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-MINIMUM-WEB-CHAT-001
-        fail_next_action_id: ITER-010-ACTION-DIRECTION-REWORK-001
-        invalid_next_action_id: ITER-010-ACTION-DIRECTION-FALLBACK-REFREEZE-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: false
-    fallback_refreeze:
-      id: ITER-010-ACTION-DIRECTION-FALLBACK-REFREEZE-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: fallback-route-batch-refreeze
-      status: authorized
-      case_id: V-DIRECTION-FALLBACK-REFREEZE-001
-      coding_allowed: false
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-DIRECTION-FALLBACK-REFREEZE-001
-      result_path: docs/project/iterations/iteration-010/results/v-direction-fallback-refreeze-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-fallback-refreeze-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-DIRECTION-FALLBACK-REFREEZE-001
-      prerequisite_case_ids:
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-direction-fallback-refreeze-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-direction-fallback-refreeze-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-151.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-DIRECTION-QUALITY-FALLBACK-001
-        fail_next_action_id: ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001
-        invalid_next_action_id: ITER-010-ACTION-DIRECTION-FALLBACK-REFREEZE-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-    fallback_quality:
-      id: ITER-010-ACTION-DIRECTION-QUALITY-FALLBACK-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: four-arm-direction-quality-gate
-      status: authorized
-      case_id: V-DIRECTION-QUALITY-001
-      coding_allowed: false
-      external_execution_allowed: true
-      result_ref: ITER-010-RESULT-V-DIRECTION-QUALITY-FALLBACK-001
-      result_path: docs/project/iterations/iteration-010/results/v-direction-quality-fallback-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-quality-fallback-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-DIRECTION-QUALITY-001
-      prerequisite_case_ids:
-        - V-DIRECTION-FALLBACK-REFREEZE-001
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-direction-quality-fallback-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-direction-quality-fallback-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-152.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-MINIMUM-WEB-CHAT-001
-        fail_next_action_id: ITER-010-ACTION-DIRECTION-REWORK-001
-        invalid_next_action_id: ITER-010-ACTION-DIRECTION-QUALITY-FALLBACK-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: false
-    direction_freeze_rework:
-      id: ITER-010-ACTION-DIRECTION-FREEZE-REWORK-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: four-arm-direction-gate-freeze-rework
-      status: authorized
-      case_id: V-DIRECTION-FREEZE-REWORK-001
-      coding_allowed: true
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-DIRECTION-FREEZE-REWORK-001
-      result_path: docs/project/iterations/iteration-010/results/v-direction-freeze-rework-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-rework-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-DIRECTION-FREEZE-REWORK-001
-      prerequisite_case_ids:
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/project/iterations/iteration-010/results/v-direction-freeze-rework-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-direction-freeze-rework-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-144.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-001
-        fail_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-REWORK-001
-        invalid_next_action_id: ITER-010-ACTION-DIRECTION-FREEZE-REWORK-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-    direction_rework:
-      id: ITER-010-ACTION-DIRECTION-REWORK-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: four-arm-failure-attribution
-      status: authorized
-      case_id: V-DIRECTION-REWORK-001
-      coding_allowed: false
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-DIRECTION-REWORK-001
-      result_path: docs/project/iterations/iteration-010/results/v-direction-rework-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-direction-rework-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-DIRECTION-REWORK-001
-      prerequisite_case_ids:
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-direction-rework-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-direction-rework-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-145.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-RESPONSIBILITY-PLAN-001
-        fail_next_action_id: ITER-010-ACTION-DIRECTION-REWORK-001
-        invalid_next_action_id: ITER-010-ACTION-DIRECTION-REWORK-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-    minimum_web_chat:
-      id: ITER-010-ACTION-MINIMUM-WEB-CHAT-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: minimum-existing-web-chat
-      status: authorized
-      case_id: V-CHAT-EXPERIENCE-001
-      coding_allowed: false
-      external_execution_allowed: true
-      result_ref: ITER-010-RESULT-V-MINIMUM-WEB-CHAT-001
-      result_path: docs/project/iterations/iteration-010/results/v-minimum-web-chat-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-minimum-web-chat-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-CHAT-EXPERIENCE-001
-        - V-CHAT-001
-        - V-CHAT-QUALITY-001
-        - V-CHAT-XD-001
-        - V-TIMEBOX-CHAT-001
-        - V-PUBLIC-OSS-AUTHORITY-001
-      prerequisite_case_ids:
-        - V-DIRECTION-QUALITY-001
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-minimum-web-chat-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-minimum-web-chat-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-146.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/structure_world_model_iteration_010/value_gate/**
-        - tests/test_iteration_010_value_gate.py
-        - docs/system/**
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - .github/workflows/**
-      transition:
         pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
-        fail_next_action_id: ITER-010-ACTION-WEB-FAILURE-ATTRIBUTION-001
-        invalid_next_action_id: ITER-010-ACTION-MINIMUM-WEB-CHAT-001
+        fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+        invalid_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
       locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
+        product_code_changes: false
+        prompt_or_reviewer_changes: false
         web_canary: false
         hardening: true
         full_regression: true
         provider_dispatch: false
-    web_failure_attribution:
-      id: ITER-010-ACTION-WEB-FAILURE-ATTRIBUTION-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: governance
-      status: authorized
-      case_id: V-WEB-FAILURE-ATTRIBUTION-001
-      coding_allowed: false
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-WEB-FAILURE-ATTRIBUTION-001
-      result_path: docs/project/iterations/iteration-010/results/v-web-failure-attribution-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-web-failure-attribution-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-WEB-FAILURE-ATTRIBUTION-001
-      prerequisite_case_ids:
-        - V-DIRECTION-QUALITY-001
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-web-failure-attribution-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-web-failure-attribution-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-148.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-        - AGENTS.md
-        - docs/_generated/**
-        - docs/system/**
-        - docs/project/governance/**
-        - docs/project/iterations/iteration-010/README.md
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/verification-matrix.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - docs/project/iterations/iteration-010/decisions/PDR-010-post-direction-plan.md
-        - docs/project/iterations/iteration-010/decisions/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-150.md
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - tests/test_docs_gate.py
-        - tests/test_plan_gate.py
-        - .github/workflows/plan-compliance.yml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-WEB-FAILURE-ATTRIBUTION-001
-        fail_next_action_id: ITER-010-ACTION-WEB-FAILURE-ATTRIBUTION-001
-        invalid_next_action_id: ITER-010-ACTION-WEB-FAILURE-ATTRIBUTION-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
     user_direction_decision:
       id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
       owner_slice_ref: ITER-010-SLICE-001
@@ -656,51 +166,31 @@ plan_execution_control:
       result_path: docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md
       evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
       evidence_path: docs/project/iterations/iteration-010/results/evidence/v-user-direction-decision-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
+      evidence_verifier: ITER010_MVP_LIGHT@2
       runner_identity_paths:
         - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
+        - validation/iteration_010_mvp/value_gate/runner.py
+        - tests/test_iteration_010_mvp_value_gate.py
       produced_case_ids:
         - V-PREVIEW-002
       prerequisite_case_ids:
-        - V-CHAT-EXPERIENCE-001
-        - V-DIRECTION-QUALITY-001
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
+        - V-MVP-EXPERIENCE-001
       allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-user-direction-decision-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-147.md
-        - docs/project/iterations/iteration-010/findings/README.md
+        - docs/project/iterations/iteration-010/**
         - docs/project/current.md
-        - docs/project/iterations/iteration-010/manifest.yaml
         - AGENTS.md
         - docs/_generated/**
         - docs/system/**
         - docs/project/governance/**
-        - docs/project/iterations/iteration-010/README.md
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/verification-matrix.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - docs/project/iterations/iteration-010/decisions/PDR-010-post-direction-plan.md
-        - docs/project/iterations/iteration-010/decisions/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-150.md
         - scripts/docs.py
         - scripts/plan_gate.py
         - tests/test_docs_gate.py
         - tests/test_plan_gate.py
-        - .github/workflows/plan-compliance.yml
       forbidden_change_paths:
         - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
         - validation/**
+        - .githooks/**
+        - .github/workflows/**
       transition:
         pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
         fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
@@ -712,134 +202,40 @@ plan_execution_control:
         hardening: true
         full_regression: true
         provider_dispatch: true
-    responsibility_plan:
-      id: ITER-010-ACTION-RESPONSIBILITY-PLAN-001
-      owner_slice_ref: ITER-010-SLICE-001
-      kind: governance
-      status: authorized
-      case_id: V-RESPONSIBILITY-PLAN-001
-      coding_allowed: false
-      external_execution_allowed: false
-      result_ref: ITER-010-RESULT-V-RESPONSIBILITY-PLAN-001
-      result_path: docs/project/iterations/iteration-010/results/v-responsibility-plan-001.md
-      evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-      evidence_path: docs/project/iterations/iteration-010/results/evidence/v-responsibility-plan-001.json
-      evidence_verifier: ITER010_VALUE_GATE@1
-      runner_identity_paths:
-        - scripts/plan_gate.py
-        - validation/structure_world_model_iteration_010/value_gate/runner.py
-        - tests/test_iteration_010_value_gate.py
-      produced_case_ids:
-        - V-RESPONSIBILITY-PLAN-001
-      prerequisite_case_ids:
-        - V-DIRECTION-REWORK-001
-        - V-DIRECTION-FREEZE-001
-        - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-        - V-LAYER-ATTRIBUTION-001
-        - V-COGNITION-ELIGIBILITY-001
-        - V-FALLBACK-ROUTE-ADMISSION-001
-        - V-ALPHA-ACCESS-001
-      allowed_change_paths:
-        - docs/project/iterations/iteration-010/results/v-responsibility-plan-001.md
-        - docs/project/iterations/iteration-010/results/evidence/v-responsibility-plan-001.json
-        - docs/project/iterations/iteration-010/results/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-149.md
-        - docs/project/iterations/iteration-010/findings/README.md
-        - AGENTS.md
-        - docs/_generated/**
-        - docs/system/**
-        - docs/project/current.md
-        - docs/project/governance/**
-        - docs/project/iterations/iteration-010/README.md
-        - docs/project/iterations/iteration-010/proposal.md
-        - docs/project/iterations/iteration-010/readiness-review.md
-        - docs/project/iterations/iteration-010/verification-matrix.md
-        - docs/project/iterations/iteration-010/development-design/**
-        - docs/project/iterations/iteration-010/decisions/PDR-010-post-direction-plan.md
-        - docs/project/iterations/iteration-010/decisions/README.md
-        - docs/project/iterations/iteration-010/findings/FINDING-010-150.md
-        - docs/project/iterations/iteration-010/manifest.yaml
-        - scripts/docs.py
-        - scripts/plan_gate.py
-        - tests/test_docs_gate.py
-        - tests/test_plan_gate.py
-        - .github/workflows/plan-compliance.yml
-      forbidden_change_paths:
-        - src/software_world_model/**
-        - tests/test_conversational_engineering_model.py
-        - validation/**
-      transition:
-        pass_next_action_id: ITER-010-ACTION-RESPONSIBILITY-PLAN-001
-        fail_next_action_id: ITER-010-ACTION-RESPONSIBILITY-PLAN-001
-        invalid_next_action_id: ITER-010-ACTION-RESPONSIBILITY-PLAN-001
-      locks:
-        product_code_changes: true
-        prompt_or_reviewer_changes: true
-        web_canary: true
-        hardening: true
-        full_regression: true
-        provider_dispatch: true
-
 direction_quality_gate:
-  schema: VALUE_FIRST_FOUR_ARM_DIRECTION_GATE@1
+  schema: POST_EXPERIENCE_STRONG_BASELINE_GATE@1
   case_id: V-DIRECTION-QUALITY-001
   owner_slice_ref: ITER-010-SLICE-001
-  status: locked-until-direction-freeze-pass
-  execution_order: direction-freeze-PASS->preferred-quality;preferred-quality-PASS->minimum-web;preferred-quality-FAIL->direction-rework;preferred-quality-INVALID->fallback-refreeze;fallback-refreeze-PASS->fallback-quality;fallback-refreeze-FAIL->preferred-quality;fallback-refreeze-INVALID->fallback-refreeze;fallback-quality-PASS->minimum-web;fallback-quality-FAIL->direction-rework;fallback-quality-INVALID->fallback-quality;minimum-web-PASS->user-direction-decision
+  status: post-experience-quality-policy-not-current-action
+  execution_order: first-operable-browser-delivery->heterogeneous-quality-and-current-codex-comparison->final-experience-result-handoff->user-direction
   arms:
-    - direct-relevant-evidence
-    - same-agent-source-only
-    - same-agent-world-model-and-source
+    - complete-world-model-system
     - current-codex
   question_count: 3
   question_set_rule: system-purpose-or-entry,behavior-call-flow-and-material-side-effect,failure-authorization-or-unknown;at-least-two-unseen;no-pom-only-question
   source_truth_owner: independent-exact-source-ledger-not-any-model-answer
-  direct_evidence_arm_is_oracle: false
   current_codex_role: strong-external-baseline-not-oracle-not-adjudicator
   current_codex_is_oracle_or_reviewer: false
-  first_three_arms_same_provider_model_configuration: true
-  source_only_and_world_model_arms_same_agent_prompt_tools_budget_cache_and_reviewer: true
   outputs_sealed_before_cross_arm_disclosure: true
   blind_randomized_independent_evaluation: true
   absolute_quality_pass_required: true
   absolute_quality_rule: zero-major-errors-material-omissions-unsupported-or-wrong-citations-false-limitations-or-boundary-errors
-  world_model_arm_must_not_lose_to_direct_evidence: true
-  world_model_arm_must_not_lose_to_source_only: true
   world_model_arm_must_not_lose_to_current_codex: true
   current_codex_overall_quality_margin_rule: strictly-positive
   non_locator_world_model_contribution_required: true
   all_tie_outcome: FAIL
   cost_or_latency_can_compensate_quality: false
-  product_code_change_before_verdict_allowed: false
-  preferred_route_execution_profile_ref: provider_route_policy.preferred_execution_profile_ref
-  fallback_route_execution_profile_ref: provider_route_policy.fallback_execution_profile_ref
-  preferred_quality_action_id: ITER-010-ACTION-DIRECTION-QUALITY-PREFERRED-001
-  preferred_quality_result_ref: ITER-010-RESULT-V-DIRECTION-QUALITY-PREFERRED-001
-  mixed_provider_batch_allowed: false
-  fallback_refreeze_action_id: ITER-010-ACTION-DIRECTION-FALLBACK-REFREEZE-001
-  fallback_refreeze_case_id: V-DIRECTION-FALLBACK-REFREEZE-001
-  fallback_refreeze_requires_new_human_authority: false
-  fallback_refreeze_provider_dispatch_allowed: false
-  fallback_refreeze_action_evidence_required: preferred-invalid-predecessor-seal,provider-neutral-root-input-set,fallback-execution-profile-ref-and-digest,fallback-admission-policy-plugin-ref-and-digest,no-mixed-batch,zero-provider-dispatch,no-new-human-authority
-  fallback_quality_action_id: ITER-010-ACTION-DIRECTION-QUALITY-FALLBACK-001
-  fallback_quality_result_ref: ITER-010-RESULT-V-DIRECTION-QUALITY-FALLBACK-001
-  fallback_allowed_only_after_refreeze_pass: true
-  fallback_admission_prerequisite_case_id: V-FALLBACK-ROUTE-ADMISSION-001
-  fallback_quality_action_evidence_required: fallback-refreeze-predecessor-seal,provider-neutral-root-input-set,execution-profile-ref-and-digest,admission-and-terminal-receipts,no-mixed-batch
-  quality_case_pass_result_cardinality: at-most-one
-  preferred_terminal_unavailable_action: invalidate-preferred-batch-and-enter-pre-registered-fallback-refreeze
-  preferred_other_invalid_action: fallback-refreeze-fails-back-to-preferred-quality
-  fallback_invalid_action: fail-closed-at-fallback-quality
-  target_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
-  target_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
-  dirty_v7_status: quarantined-not-input
+  product_code_change_before_verdict_allowed: true
+  first_browser_handoff_precedes_gate_completion: true
+  full_four_arm_causal_ablation_requires_user_continue: true
+  full_regression_before_user_continue_allowed: false
 
 product_goal_alignment:
   target_ref: SYS-PRODUCT-SUCCESS
   capability_path_ref: ROADMAP-M-002
   capability_path_step: step-1-java-result-driven-world-model-investigation
   critical_assumption_ids: A1,A2,A3,A4,A5,A6
-  critical_assumption_catalog_digest: sha256:5467354554b4e94a2ef7d1d7fff49764c772c9efa890340f8cf44320e0c4270a
+  critical_assumption_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
   predecessor_result_refs:
     - ITER-006-RESULT-ACCEPTANCE
     - ITER-009-RESULT-SLICE-001-STOP-REDIRECT
@@ -892,17 +288,16 @@ product_goal_alignment:
     - V-XD-002
     - V-XD-003
   blocking_case_ids:
-    - V-PLAN-RECOVERY-001
-    - V-DIRECTION-FREEZE-001
+    - V-MVP-EXPERIENCE-001
     - V-DIRECTION-QUALITY-001
     - V-LAYER-ATTRIBUTION-001
     - V-COGNITION-ELIGIBILITY-001
     - V-FALLBACK-ROUTE-ADMISSION-001
+    - V-MODEL-TRANSPARENT-ROUTING-001
     - V-PUBLIC-OSS-AUTHORITY-001
     - V-CHAT-XD-001
     - V-ALPHA-ACCESS-001
     - V-CHAT-EXPERIENCE-001
-    - V-TIMEBOX-CHAT-001
     - V-CHAT-001
     - V-CHAT-QUALITY-001
     - V-PREVIEW-002
@@ -929,11 +324,6 @@ product_goal_alignment:
     - V-010
     - V-REFLECT-003
     - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
-    - V-DIRECTION-FREEZE-REWORK-001
-    - V-DIRECTION-FALLBACK-REFREEZE-001
-    - V-DIRECTION-REWORK-001
-    - V-WEB-FAILURE-ATTRIBUTION-001
-    - V-RESPONSIBILITY-PLAN-001
   readiness_blocking_case_ids:
     - V-PRE-CHAT-001
     - V-PRE-CHAT-002
@@ -941,6 +331,7 @@ product_goal_alignment:
     - V-PRE-CHAT-004
     - V-PRE-CHAT-005
     - V-PRE-CHAT-006
+    - V-PRE-CHAT-007
   cross_domain_case_count: 3
   cross_domain_bindings:
     binding_001:
@@ -956,6 +347,8 @@ product_goal_alignment:
       accepted_capability_ref: ITER-006-RESULT-ACCEPTANCE
       new_slice_ref: ITER-010-SLICE-003
   first_product_web_checkpoint: V-CHAT-EXPERIENCE-001
+  first_operable_browser_delivery_case_id: V-CHAT-EXPERIENCE-001
+  final_experience_handoff_case_id: V-MVP-EXPERIENCE-001
   earliest_web_micro_checkpoint: V-ALPHA-ACCESS-001
   direction_preview_checkpoint: V-PREVIEW-002
   direction_preview_binding:
@@ -1000,12 +393,12 @@ product_goal_alignment:
   alpha_agent_comparison_binding:
     case_id: V-DIRECTION-QUALITY-001
     new_slice_ref: ITER-010-SLICE-001
-    result_role: blocking-iter010-strict-superiority-direction-gate
-    occurs_before_new_product_or_web_chat_change: true
+    result_role: post-experience-strict-superiority-direction-evidence
+    occurs_after_complete_browser_experience: true
     question_count: 3
-    post_freeze_live_question_count: 2
-    question_set_rule: original-systemic-failure-plus-two-unseen-heterogeneous-no-pom-only
-    arms: direct-relevant-evidence,same-agent-source-only,same-agent-world-model-and-source,current-codex
+    unseen_question_count_minimum: 2
+    question_set_rule: heterogeneous-no-pom-only
+    arms: complete-world-model-system,current-codex
     protocol_digest_ref: mature_source_agent_protocol_digest
     rubric_digest_ref: mature_source_agent_rubric_digest
     identity_digest_ref: mature_source_agent_identity_digest
@@ -1013,12 +406,11 @@ product_goal_alignment:
     all_tie_outcome: FAIL
     secondary_metric_compensation_allowed: false
     current_codex_is_oracle_or_reviewer: false
-    system_arm_shared_runtime: same-lead-agent-model-tools-permissions-budget-cache-policy-and-state
     external_codex_runtime: preserve-actual-model-reasoning-tools-permissions-and-budget
     shared_evaluation_inputs: same-exact-revision-questions-authorized-source-scope-output-constraints-and-blind-rubric
-    forced_runtime_identity_across_all_three_arms: false
     technical_adjudication_owner: independent-evaluator-not-answer-generator
     product_direction_decision_owner: user
+    full_four_arm_causal_ablation_requires_user_continue: true
   web_checkpoint_binding:
     case_id: V-CHAT-EXPERIENCE-001
     new_slice_ref: ITER-010-SLICE-001
@@ -1141,9 +533,9 @@ critical_assumption_catalog_cutover:
     A2: 主工程 Agent 能持续维护目标、假设、子任务和计划，依据每次观察选择 World Model/Source 受控工具并重规划，不取得直接权限
     A3: 每个 Turn 的 Evidence Package、自然答案与 fresh independent Review 同时保证直接答案、Citation、失败关闭和可返工性，Reviewer Finding 只回到主 Agent
     A4: 相同 Conversation—主 Agent—受控工具—逐 Turn Evidence/Review 协议能跨第二工程、来源组合和复杂失败泛化
-    A5: 产品外部比较与 World Model 因果消融在同一四路 Gate 中独立判读；current Codex 保留真实客户端、model、reasoning、tools 和权限，前三路固定相同 Provider/model/config，两个 Agent 路除认知开关外完全相同
+    A5: 完整体验候选先与保留真实客户端、model、reasoning、tools 和权限的 current Codex 做严格外部比较；用户 CONTINUE 后再用同 Agent、同 Provider/model/config 且只改变认知输入的受控对照做 World Model 因果消融
     A6: 产品具有真正语义多轮 Conversation，而不是同 Session 的独立问答
-  current_catalog_digest: sha256:5467354554b4e94a2ef7d1d7fff49764c772c9efa890340f8cf44320e0c4270a
+  current_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
   historical_owner_ref: ITER-010-PROPOSAL@pre-PDR-004
   historical_assumption_ids: A1,A2,A3,A4,A5
   historical_assumptions:
@@ -1162,8 +554,8 @@ critical_assumption_catalog_cutover:
 
 rework:
   decision: REWORK
-  decision_ref: ITER-010-PDR-009
-  continuous_execution_decision_ref: ITER-010-PDR-006
+  decision_ref: ITER-010-PDR-010
+  continuous_execution_decision_ref: ITER-010-PDR-010
   restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
   previous_decision_ref: ITER-010-PDR-004
   user_receipt_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
@@ -1205,13 +597,13 @@ rework_policy:
   same_slice_reauthorization_allowed: true
   problem_report_or_review_request_implies_redirect: false
   redirect_bases: explicit-user-direction-change,core-architecture-falsified,precommitted-no-progress-limit-reached
-  no_progress_measure: after-two-consecutive-rework-attempts-at-least-two-of-three-heterogeneous-supported-questions-still-have-a-major-answer-error-or-reviewer-miss
-  no_progress_attempt_limit: 2
+  no_progress_measure: same-failure-signature-persists-after-one-evidence-backed-general-repair-or-two-of-three-heterogeneous-questions-still-have-major-errors
+  no_progress_attempt_limit: 1
 
 authorization_continuation_policy:
   schema: JUST_IN_TIME_EXACT_AUTHORIZATION@1
   owner_ref: PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN
-  current_decision_ref: ITER-010-PDR-006
+  current_decision_ref: ITER-010-PDR-010
   current_authority_amendment_ref: ITER-010-PDR-008
   slice_development_authorization_separate_from_external_grant: true
   active_exact_grant_must_be_reused: true
@@ -1228,22 +620,20 @@ authorization_continuation_policy:
   hard_stop_ends_minimum_experience_recovery: false
   exit_conditions: stage-delivered,exact-request-sent-and-independent-safe-work-exhausted,explicit-user-stop-redirect-reject,unavoidable-safety-prohibition
   current_status: public-oss-standing-human-authority-active-machine-receipt-runtime-gate-pending
-  current_case_id: V-CHAT-EXPERIENCE-001
-  current_root_grant_status: consumed-by-run-043-scheduling-policy-fail
+  current_case_id: V-MVP-EXPERIENCE-001
+  current_root_grant_status: standing-authority-active
   current_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
-  current_request_status: not-requestable-until-successor-exact-freeze-then-request-minimum-delta-directly
-  current_root_grant_fields_are_legacy_validator_compatibility_only: true
-  current_request_status_is_legacy_validator_compatibility_only: true
+  current_request_status: no-human-request-required-within-standing-scope
   current_human_authority_status: active-public-oss-evaluation-standing-authority
   current_human_reauthorization_required: false
-  current_blocker: machine-receipt-derivation-runtime-not-yet-verified
+  current_blocker: none-for-local-development-runtime-receipt-required-before-each-dispatch
 
 public_oss_evaluation_standing_authority:
   schema: PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1
   generic_schema: PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1
   system_contract_ref: SYS-ADR-019
   owner_decision_ref: ITER-010-PDR-008
-  current_plan_amendment_ref: ITER-010-PDR-009
+  current_plan_amendment_ref: ITER-010-PDR-010
   owner_finding_ref: FINDING-010-140
   authority_status: active
   human_authority_source: existing-iter010-slice001-root-development-authorization
@@ -1280,24 +670,28 @@ public_oss_evaluation_standing_authority:
   verification_status: NOT-RUN
   independent_action_entry_allowed: false
   next_execution_entry_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
-  next_execution_entry_case_id: V-PLAN-RECOVERY-001
-  current_external_execution_status: not-waiting-human-approval-blocked-by-machine-receipt-runtime-gate
+  next_execution_entry_case_id: V-MVP-EXPERIENCE-001
+  current_external_execution_status: standing-authority-active-runtime-receipt-required-per-dispatch
 
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
-  current_execution_decision_ref: ITER-010-PDR-009
-  current_continuation_decision_ref: ITER-010-PDR-006
-  current_gate_decision_ref: ITER-010-PDR-009
-  pdr004_schedule_fields_are_legacy_validator_compatibility_only: true
-  pdr004_schedule_superseded_by_current_pdr005_fields_below: true
+  current_execution_decision_ref: ITER-010-PDR-010
+  current_gate_decision_ref: ITER-010-PDR-010
   direction_discovery_principle_ref: codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f
-  first_user_handoff_case_id: V-ALPHA-ACCESS-001
+  first_operable_browser_delivery_case_id: V-CHAT-EXPERIENCE-001
+  first_operable_browser_delivery_requires_result: false
+  first_operable_browser_delivery_moves_plan_cursor: false
+  first_operable_browser_delivery_requires_current_codex_comparison: false
+  final_experience_handoff_case_id: V-MVP-EXPERIENCE-001
+  final_experience_handoff_requires_result: true
+  final_experience_handoff_moves_plan_cursor: true
+  final_experience_handoff_success_path_requires_current_codex_comparison: true
+  final_experience_handoff_failure_path_requires_one_general_repair_still_failed: true
+  final_experience_handoff_alternate_trigger: one-evidence-backed-general-repair-still-has-same-material-failure
   direction_confirmation_case_id: V-PREVIEW-002
-  micro_checkpoint_count: 4
-  micro_checkpoint_order: direction-freeze-PASS->preferred-quality;preferred-quality-PASS->minimum-web;preferred-quality-FAIL->direction-rework;preferred-quality-INVALID->fallback-refreeze;fallback-refreeze-PASS->fallback-quality;fallback-refreeze-FAIL->preferred-quality;fallback-refreeze-INVALID->fallback-refreeze;fallback-quality-PASS->minimum-web;fallback-quality-FAIL->direction-rework;fallback-quality-INVALID->fallback-quality;minimum-web-PASS->user-direction-decision
-  direction_alpha_prefix_turn_count: 3
-  direction_alpha_is_prefix_of_frozen_live_canary: true
+  micro_checkpoint_count: 2
+  micro_checkpoint_order: first-operable-browser-delivery->same-candidate-quality-comparison->final-experience-result-handoff->user-direction
   user_handoff_required_at_each_checkpoint: true
   checkpoint_completion_requires_runnable_user_visible_artifact: true
   plan_test_or_document_completion_counts_as_user_visible_increment: false
@@ -1306,44 +700,21 @@ experience_delivery_policy:
   historical_pre_policy_result_refs:
     - ITER-010-RESULT-SLICE-001-STOP-REDIRECT
   historical_results_do_not_satisfy_experience_gate: true
-  access_case_id: V-ALPHA-ACCESS-001
-  access_case_status: pass-access-only
-  access_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
-  quality_case_id: V-CHAT-QUALITY-001
-  chat_case_id: V-CHAT-001
   alpha_comparison_case_id: V-DIRECTION-QUALITY-001
-  timebox_case_id: V-TIMEBOX-CHAT-001
-  start_event: first-product-code-change-after-slice-authorization
-  page_launchable_deadline_minutes: 60
-  sustained_user_operable_alpha_deadline_minutes: 180
-  hard_stop_deadline_minutes: 240
-  direction_evidence_handoff_deadline_minutes: 360
-  direction_decision_deadline_minutes: 480
-  hard_stop_action: stop-scope-expansion-and-external-calls-narrow-and-review
-  hard_stop_action_current_interpretation: stop-scope-expansion-hardening-full-regression-and-no-new-evidence-external-reruns-continue-minimum-experience-recovery
-  access_gate_scope: user-operable-web-and-request-path-only
   provider_readiness_blocks_first_user_handoff: false
   quality_gate_scope: user-visible-answer-quality-only
   access_pass_cannot_satisfy_quality_gate: true
   availability_requires_quality_pass: false
   hardening_requires_quality_pass: true
   pre_first_experience_allowed_checks: targeted-impact-startup-safety-failure-truth-one-qualification-one-smoke-only
-  pre_first_experience_qualification_limit: 1
-  pre_first_experience_smoke_question_limit: 1
   pre_first_experience_full_regression_allowed: false
-  pre_first_experience_qualification_count: 0
-  pre_first_experience_access_smoke_run_count: 1
-  pre_first_experience_zero_provider_turn_submission_count: 3
-  pre_first_experience_full_regression_count: 0
-  pre_first_experience_access_smoke_result_ref: ITER-010-RESULT-V-ALPHA-ACCESS-001
   failure_diagnosis_order: source-truth-world-model-cognition-conversation-or-task-understanding-agent-work-state-and-plan-tool-observation-and-evidence-answer-independent-review-web
   earliest_divergence_required: true
   falsifiable_root_cause_hypothesis_required_before_prompt_schema_or_contract_change: true
   local_minimal_reproduction_required_before_live_retry: true
   unseen_adjacent_local_case_count: 2
   live_canary_conversation_count_after_local_pass: 1
-  live_canary_turn_count: 5
-  live_canary_turn_count_scope: pdr004-legacy-validator-compatibility-only-full-suite-after-pdr005-user-continue
+  live_canary_turn_count: 3
   same_failure_signature_fix_limit_before_architecture_responsibility_review: 1
   same_failure_signature_recurrence_action: stop-rule-accumulation-and-review-architecture-responsibilities
   pre_first_experience_test_scope: targeted-impact-startup-and-safety-only
@@ -1353,50 +724,19 @@ experience_delivery_policy:
   same_failure_signature_retry_limit: 1
   consecutive_no_user_visible_increment_limit: 2
   no_increment_action: stop-external-reruns-and-return-to-local-diagnosis
-  pdr006_continuous_execution_owner_ref: ITER-010-PDR-006
-  pdr006_development_turn_exit_requires_stage_delivery_or_actual_exact_request_or_explicit_stop_or_safety_prohibition: true
-  pdr006_current_external_status: prior-direction-grant-consumed-by-run-043-schedule-fail-successor-grant-after-exact-freeze-not-stopped
-  pdr006_current_external_status_is_legacy_validator_compatibility_only: true
-  pdr008_current_external_status: standing-human-authority-active-machine-receipt-runtime-gate-pending-not-stopped
-  pdr005_recovery_owner_ref: ITER-010-PDR-005
-  pdr005_recovery_entry_case_id: V-LAYER-ATTRIBUTION-001
-  pdr005_cognition_gate_case_id: V-COGNITION-ELIGIBILITY-001
-  pdr005_current_first_new_user_handoff_case_id: V-CHAT-EXPERIENCE-001
-  pdr005_new_development_conversation_allowed: true
-  pdr005_development_conversation_bound_to_existing_slice: false
-  pdr005_current_slice_continuity_reason: reuse-existing-local-development-authorization-and-preserve-failure-timebox-accountability
-  pdr005_new_slice_allowed_when_delivery_boundary_evidence_requires_governed-switch: true
-  pdr005_changing_conversation_alone_requires_new_slice: false
-  pdr005_old_conversation_or_v7_state_may_be_inherited: false
-  pdr005_checkpoint_order: offline-layer-attribution,engineering-cognition-eligibility-and-web-binding,one-semantic-chain-and-two-unseen-heterogeneous-question-browser-experience
-  pdr005_layer_attribution_deadline_minutes: 60
-  pdr005_cognition_web_binding_deadline_minutes: 180
-  pdr005_browser_experience_deadline_minutes: 240
-  pdr005_external_calls_before_attribution_pass: 0
-  pdr005_direction_ark_canary_session_maximum: 1
-  pdr005_semantic_chain_minimum_turns: 3
-  pdr005_semantic_chain_required_intents: initial,referent-follow-up-or-correction,deepen-or-summary
-  pdr005_unseen_heterogeneous_question_minimum: 2
-  pdr005_three-independent_questions_count_as_chat: false
-  pdr005_full_regression_before_user_continue_allowed: false
-  pdr005_completed_case_ids: V-LAYER-ATTRIBUTION-001,V-COGNITION-ELIGIBILITY-001,V-ALPHA-ACCESS-001
-  pdr005_current_external_case_id: V-CHAT-EXPERIENCE-001
-  pdr005_current_external_authorization_status: authorized-pending-clean-candidate
-  pdr005_current_external_authorization_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
-  pdr005_current_external_authorized_at: 2026-08-27T03:01:57Z
-  pdr005_current_external_scope: one-owner-private-loopback-direction-session-five-provider-eligible-turns-plus-zero-dispatch-leakage-probe
-  pdr005_current_external_ark_endpoint: https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions
-  pdr005_current_external_ark_model: glm-5-2-260617
-  pdr005_current_external_deepseek_fallback: adr-017-terminal-only-deepseek-v4-pro
-  pdr005_current_external_dispatch_limit_per_turn: 15
-  pdr005_current_external_dispatch_limit_per_provider: 75
-  pdr005_current_external_http_retry_limit: 0
-  pdr009_current_action_id: ITER-010-ACTION-DIRECTION-FREEZE-001
-  pdr009_current_case_id: V-DIRECTION-FREEZE-001
-  pdr009_direction_quality_case_id: V-DIRECTION-QUALITY-001
-  pdr009_external_calls_before_freeze_pass: 0
-  pdr009_product_code_prompt_reviewer_web_and_full_regression_locked: true
-  pdr009_only_direction_quality_pass_unlocks_minimum_web_chat: true
+  pdr010_current_action_id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+  pdr010_current_action_name: complete-mvp-experience-development
+  pdr010_current_case_id: V-MVP-EXPERIENCE-001
+  pdr010_first_browser_experience_precedes_quality_comparison: true
+  pdr010_machine_timebox_or_activation_receipt_required: false
+  pdr010_failure_stays_in_same_action_until_general-repair-or-user-direction: true
+  pdr010_hardening_and_full_regression_locked_until_user_continue: true
+  direction_receipt_records_decision_only: true
+  direction_action_self_loop_until_new_pdr_cutover: true
+  continue_unlock_requires_new_pdr: true
+  continue_unlock_requires_explicit_user_authorization: true
+  continue_unlock_requires_trusted_parent_cutover: true
+  local_message_digest_is_platform_authenticated_authority: false
 
 layer_attribution_policy:
   schema: ENGINEERING_ANSWER_LAYER_ATTRIBUTION@1
@@ -1527,6 +867,15 @@ engineering_cognition_eligibility:
   next_gate_current_human_authority_status: active-public-oss-standing-authority-no-new-approval-required
   next_gate_current_runtime_status: automatic-machine-receipt-derivation-not-yet-verified
   status: passed-local-cognition
+
+provider_route_policy_migration:
+  schema: TRUSTED_PARENT_ROUTE_POLICY_MIGRATION@1
+  state: trusted-parent-bridge
+  from_schema: QUALIFIED_PROVIDER_PREFERENCE@1
+  to_schema: QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2
+  plan_revision_ref: ITER-010-PDR-010
+  only_next_change: finalize-model-transparent-route-policy
+  external_dispatch_allowed: false
 
 provider_route_policy:
   schema: QUALIFIED_PROVIDER_PREFERENCE@1
@@ -1955,10 +1304,7 @@ reviewer_verification_investigation:
 engineering_qa_ablation:
   schema: CONVERSATIONAL_AGENT_ABLATION@1
   status: proposed-not-authorized
-  authorization_required_before: ITER-010-SLICE-001-live-comparison
-  legacy_validator_compatibility_only: true
-  current_use_allowed: false
-  superseded_by_case_id: V-DIRECTION-QUALITY-001
+  authorization_required_before: ITER-010-SLICE-002
   authorization_ref: not-authorized
   frozen_protocol_digest: not-authorized
   full_cognition_system_arm:
@@ -1983,8 +1329,8 @@ engineering_qa_ablation:
   cost_dimensions: source-bytes-source-broker-operations-model-tokens-wall-time-provider-cost-and-world-model-build-update-storage-cost
   modeling_cost_accounting: exact-world-model-build-update-storage-and-provider-cost-amortized-over-frozen-reuse-horizon
   proposed_reuse_horizon_questions: 12
-  slice_001_required: true
-  slice_001_case_id: V-COMP-ALPHA-001
+  slice_001_required: false
+  slice_001_case_id: not-authorized
   slice_002_case_id: V-COMP-EARLY-002
   slice_003_case_id: V-COMP-001
 
@@ -2166,10 +1512,11 @@ answer_protocol:
   question_or_project_keyword_symbol_class_method_fixture_or_oracle_special_routing_allowed: false
   resource_exhaustion_behavior: answerable-fail-boundary-limitation-only-if-independently-approved-otherwise-fail-closed
   deterministic_grounding_authorization_revision-allowlist-and-package-seal_checks: true
-  provider_request_retries_allowed: false
-  provider_switch_after_dispatch_allowed: false
-  same_provider_retry_after_dispatch_allowed: false
-  preauthorized_cross_provider_fallback_after_terminal_allowed: true
+  transport_request_retries_allowed: false
+  execution_profile_switch_without_required_availability_verdict_allowed: false
+  same_execution_profile_application_repair_dispatch_allowed: true
+  same_execution_profile_application_repair_dispatch_is_transport_request_retry: false
+  preauthorized_cross_profile_fallback_after_required_availability_verdict_allowed: true
   provider_fallback_contract_ref: SYS-ADR-017
   exact_provider_outcome-unknown_preserved-after-binding-revalidation: true
   status: frozen
@@ -2249,7 +1596,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:38f99da02865a780c7fc2b442a42ab9ebae252ef95ea20d62fc950670a1ec231
+  system_contract_set_digest: sha256:0e9545a831b92b06b41594f8234836727be04bb7eca011fb361a14d9a618b2ec
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
@@ -2285,6 +1632,7 @@ development:
       project_decision_ref: ITER-010-PDR-004
       restart_execution_decision_ref: ITER-010-PDR-005
       continuous_execution_decision_ref: ITER-010-PDR-006
+      current_execution_decision_ref: ITER-010-PDR-010
       recovery_decision_ref: ITER-010-PDR-003
       historical_reflection_decision: REDIRECT
       historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0
@@ -2351,18 +1699,15 @@ authorization:
   docs_sync_authorizes_product_code: false
   refreshed_readiness_required: false
   explicit_user_reauthorization_required: false
-  external_execution_reauthorization_required: true
-  external_execution_reauthorization_required_is_legacy_validator_compatibility_only: true
-  human_reauthorization_required_for_current_direction_canary: true
-  human_reauthorization_trigger: successor-exact-freeze-after-pdr007-gate
-  human_reauthorization_fields_are_legacy_validator_compatibility_only: true
+  external_execution_reauthorization_required: false
+  human_reauthorization_required_for_current_direction_canary: false
+  human_reauthorization_trigger: standing-scope-delta-only
   pdr008_current_human_reauthorization_required_for_current_direction_canary: false
   pdr008_current_machine_receipt_derivation_required: true
   pdr008_current_scope_delta_reauthorization_trigger: private-unknown-dirty-or-different-upstream,provider-model-endpoint-or-account-change,expanded-disclosure-or-budget,fallback-admission-policy-exception,hidden,slice2-or-slice3,write-nonloopback-or-production
   development_authorization_scope: slice1-product-system-code-and-local-deterministic-verification-only
-  external_execution_authorization_status: not-authorized
-  external_execution_authorization_status_is_legacy_exact_runtime_receipt_only: true
-  external_execution_authorization_status_scope: exact-post-freeze-runtime-receipt-not-yet-derived
+  external_execution_authorization_status: standing-authority-active
+  external_execution_authorization_status_scope: exact-runtime-receipt-required-per-dispatch
   external_direction_root_grant_status: consumed-by-run-043-scheduling-policy-fail-successor-not-authorized
   external_direction_root_grant_status_is_historical_legacy_validator_compatibility_only: true
   external_direction_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
@@ -2370,7 +1715,7 @@ authorization:
   latest_consumed_live_history_status_scope: historical-through-run-043-successor-requires-pdr007-gate-and-new-exact-grant
   latest_consumed_live_history_status_scope_is_legacy_validator_compatibility_only: true
   current_successor_authority_status: public-oss-standing-human-authority-active-no-new-approval-required
-  current_successor_runtime_gate_status: machine-receipt-derivation-not-yet-verified
+  current_successor_runtime_gate_status: machine-receipt-required-before-each-dispatch
   latest_consumed_live_history_ordinal: 8
   restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
   consumed_live_session_authorization_history:

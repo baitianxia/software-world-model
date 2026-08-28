@@ -1,17 +1,17 @@
 ---
 id: FINDING-010-153
 kind: implementation-finding
-status: open
+status: dispositioned
 authority: development-evidence
 owners: [project, engineering, quality]
-depends_on: [ITER-010-PDR-009, PROJECT-GOVERNANCE-PLAN-EXECUTION]
-code: [scripts/docs.py, scripts/plan_gate.py, validation/iteration_010_plan_recovery/value_gate/runner.py]
-tests: [tests/test_docs_gate.py, tests/test_plan_gate.py, tests/test_iteration_010_plan_recovery.py]
+depends_on: [PROJECT-GOVERNANCE-PLAN-EXECUTION]
+code: [scripts/docs.py, scripts/plan_gate.py, validation/iteration_010_plan_recovery/value_gate/runner.py, validation/iteration_010_mvp/value_gate/runner.py]
+tests: [tests/test_docs_gate.py, tests/test_plan_gate.py, tests/test_iteration_010_plan_recovery.py, tests/test_iteration_010_mvp_value_gate.py]
 iteration: ITER-010
 classification: iteration-design
 scope: systemic
-disposition: pending
-target: pending
+disposition: replace-unreachable-action-maze-with-long-running-mvp-experience-action
+target: ITER-010-PDR-010
 ---
 
 # FINDING-010-153：执行图缺少用户主动改计划的治理出口
@@ -19,7 +19,8 @@ target: pending
 ## Observation
 
 用户在 `ITER-010-PDR-009 / ITER-010-ACTION-DIRECTION-FREEZE-001` 尚未执行时重新定义了 MVP：Web 页面本身不是 MVP，最早应形成的是包含软件世界模型认知、
-主工程 Agent、受控源码补证、证据与独立审核、语义多轮 Web 的完整纵向候选；严格四路比较应验证同一个已可体验候选，而不是先建设比较基础设施再形成产品。
+主工程 Agent、受控源码补证、证据与独立审核、语义多轮 Web 的完整纵向候选；首次严格方向比较应验证同一个已可体验候选，而不是先建设
+比较基础设施再形成产品，完整四路因果消融则在用户确认方向后执行。
 
 现有动作图没有从 Freeze 到治理计划修订的可达路径。`scripts/plan_gate.py` 又正确要求只有已密封 PASS Result 的 governance action 才能修订计划，导致用户明确改变计划后，
 仓库既不能合法继续旧动作，也不能合法接受新计划。这是计划执行机制的活性缺陷，不是产品实现或模型配置问题。
@@ -34,9 +35,12 @@ target: pending
 
 根因是动作图只建模运行结果，没有把 fresh 用户方向变更建模成可机械验证、不可伪造业务 PASS/FAIL 的治理中断。
 
-## Temporary disposition
+## Disposition
 
-本次建立一次性 `ITER-010-ACTION-USER-PLAN-RECOVERY-001`。它保持所有执行锁关闭，先独立提交自包含 runner，再由下一提交密封恢复 Result；恢复 PASS 只允许后续独立
-PDR-010 修订，不直接授权产品或外部调用。旧 Freeze 与未跟踪旧 runner 均为 `INTERRUPTED / QUARANTINED / NOT_INPUT`。
+一次性 `V-PLAN-RECOVERY-001` 已以零产品、零外部调用恢复采纳 PDR-010 的治理能力。该 Result 只证明两条用户消息和治理边界得到可信父 runner
+重放；它没有生成、验证或解锁产品，产品执行权威来自随后独立提交的 PDR-010 与 Manifest。旧 Freeze 与未跟踪旧 runner 继续保持
+`INTERRUPTED / QUARANTINED / NOT_INPUT`。
 
-最终处置必须由 PDR-010 完成：除修订 MVP 顺序外，还要为以后每个动作预注册可轮换、不可复用的 fresh 用户方向治理出口，防止再次发生同类死锁。
+PDR-010 以一个可跨提交持续运行的“完整体验版开发”动作取代 Freeze/Quality/Activation 动作迷宫；普通失败留在同一动作内归因和修复，形成
+完整候选或确认无法继续碰答案时才密封一次 Result 并进入用户方向决定。用户改变方向由这个显式方向分支和后续独立 PDR 处理，不再为每个动作
+预注册 rotating slot、分钟收据或整份 Manifest 摘要。可信父差分、动作级文件边界和 Result 绑定继续防止候选自授权。

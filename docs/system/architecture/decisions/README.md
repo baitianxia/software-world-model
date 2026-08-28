@@ -31,7 +31,7 @@ ADR 解释为什么选择当前架构；规范正文仍由 Architecture、Invari
 | [ADR-014](ADR-014-snapshot-first-world-model-answering.md) | 软件世界模型回答只读 exact Snapshot，禁止静默源码回退 |
 | [ADR-015](ADR-015-bounded-world-model-investigation.md) | Agent 只通过有界 typed 查询调查 exact World Model |
 | [ADR-016](ADR-016-engineering-question-answering.md) | 默认工程问答由世界模型认知驱动自适应、受控的 exact-revision 调查 |
-| [ADR-017](ADR-017-transparent-qualified-provider-routing.md) | 以配置化 `preferred → fallback` 路线和隔离的完整 Provider attempt，对用户透明地处理同一 logical question |
+| [ADR-017](ADR-017-transparent-qualified-provider-routing.md) | 以通用 `preferred → fallback` execution-profile route 和受信可用性裁决，对用户透明地处理真实执行配置不可用 |
 | [ADR-018](ADR-018-conversational-engineering-agent.md) | 软件世界模型提供持久认知，主工程 Agent 在受控工具和独立审核边界内承担语义多轮工程 Chat |
 | [ADR-019](ADR-019-public-source-standing-model-authority.md) | 公开开源 exact revision 与既定 Provider route 采用一次持续人工权威，由系统逐 Turn/调用派生 exact receipt |
 

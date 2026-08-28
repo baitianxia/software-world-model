@@ -4,11 +4,11 @@ kind: iteration-verification
 status: failed
 authority: execution-evidence
 owners: [quality]
-depends_on: [ITER-010-PROPOSAL, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, FINDING-010-126, FINDING-010-127, FINDING-010-128, FINDING-010-129, FINDING-010-130, FINDING-010-131]
+depends_on: [ITER-010-PROPOSAL, ITER-010-PDR-010, FINDING-010-153, FINDING-010-095, FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-107, FINDING-010-108, FINDING-010-109, FINDING-010-110, FINDING-010-111, FINDING-010-112, FINDING-010-113, FINDING-010-114, FINDING-010-115, FINDING-010-116, FINDING-010-117, FINDING-010-118, FINDING-010-119, FINDING-010-120, FINDING-010-121, FINDING-010-122, FINDING-010-123, FINDING-010-124, FINDING-010-125, FINDING-010-126, FINDING-010-127, FINDING-010-128, FINDING-010-129, FINDING-010-130, FINDING-010-131]
 code: []
 tests: []
 iteration: ITER-010
-current_execution_decision_ref: ITER-010-PDR-009
+current_execution_decision_ref: ITER-010-PDR-010
 current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153]
 current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
@@ -19,740 +19,49 @@ product_goal_result_id: ITER-010-RESULT-SLICE-001-STOP-REDIRECT
 
 # ITER-010 Verification Matrix
 
-## 用户计划恢复与被中断的 PDR-009 动作图
+## PDR-010 current verification order
 
-用户已显式中断 PDR-009 的旧 Freeze 入口并授权一次治理恢复。当前唯一顺序是
-`V-PLAN-RECOVERY-001 runner trusted base → sealed PASS Result → 独立 PDR-010`；产品、Provider、Web 和 full regression 均未解锁。
-旧 `V-DIRECTION-FREEZE-001` 继续保留 `NOT-RUN` 历史事实，但不能执行，也不能满足 recovery 或 PDR-010。
+当前顺序固定为：**完整浏览器主链 → `V-CHAT-EXPERIENCE-001` 无 Result 立即交付 → 同一候选至少三条异质问题与 actual current Codex 严格比较 → `V-MVP-EXPERIENCE-001` 最终 Result → 用户判向**。
+首次交付不移动游标；普通失败、定向测试和内部候选不产生阶段 Result；首次完整体验前不运行 full regression。PDR-009 的 Freeze-first、首选/备用四路多动作路径、
+分钟 timebox 和体验前质量 Gate 已被取代。旧计划恢复 Result 只证明 PDR-010 的治理切换合法，不能重新成为产品入口。
 
-### PDR-009 interrupted blocking order（历史上下文）
-
-PDR-005 已停止 v7 症状实验和第八次同题重跑；PDR-009 又把最早产品判断前移，并把当前动作锁入 base-tree Manifest。新的“开发
-ITER-010”对话可以直接接手。Manifest 已预注册 Freeze、PreferredQuality、FallbackRefreeze、FallbackQuality、FreezeRework、DirectionRework、
-MinimumWeb、WebFailureAttribution、UserDirectionDecision 和 ResponsibilityPlan 十个动作，但当前唯一入口和条件顺序只能是：
-
-`V-DIRECTION-FREEZE-001`（外部调用 0、产品代码变更 0）→ 首选执行配置 `V-DIRECTION-QUALITY-001`。首选配置 `PASS` →最小 Web Chat，`FAIL` →
-Direction Rework，`INVALID` → `V-DIRECTION-FALLBACK-REFREEZE-001`。Fallback Refreeze 必须是外部模型调用 0、人工授权请求 0、Provider
-dispatch 0，从可信父树绑定 exact 首选配置 INVALID Result seal、provider-neutral root input set、备用执行配置与其准入策略插件；只有首选
-终态为 `TERMINAL_UNAVAILABLE` 时 PASS，其他 INVALID 返回 Preferred Quality。PASS 后进入备用执行配置
-`V-DIRECTION-QUALITY-001`。备用配置 `PASS` →最小 Web，`FAIL` → Direction Rework，`INVALID` 在 Fallback Quality 自环失败关闭。
-最小 Web PASS 后才进入 `V-PREVIEW-002`。首选/备用两个 Result 共同生产质量 Case，但最多一个 PASS；不得重复请求 current
-standing scope 用户授权。
-
-Layer、Cognition 与新增的通用 fallback-route admission 三项均已以外部调用 0 PASS。run-043 曾消费 direction grant，但在北京时间
-`11:19–11:27` 的高峰窗口执行 DeepSeek `18` 次，
-没有 fresh official check、window verdict 或 peak override receipt；因此该 run 是
-`DEEPSEEK_SCHEDULING_POLICY_FAIL / NOT_DIRECTION_ACCEPTANCE_EVIDENCE`。clean `03520eb…` 已实现调用前硬门禁，clean
-`3a6089f…` 已冻结 v8 semantic-query successor。PDR-008 已闭合公开 mall standing human authority 的文档/设计，但 runtime 自动机器收据
-派生尚未实现/验证，完整 Case 为 `NOT-RUN / blocking`；PDR-009 已修订它不是方向 Gate 之前的独立产品开发阶段，当前唯一入口仍是 Freeze。
-当前 Freeze 锁定所有 Provider dispatch；进入 Preferred Quality 后前三路统一使用同一首选执行配置。只有首选配置以任何授权答案形成前的
-终态不可用结束且 Refreeze PASS，下一批前三路才能统一使用同一备用执行配置；不得在同批混用执行配置，也不得并行比较 Provider。
-方向确认前仍不跑 full regression。
-
-本 Matrix 中 `blocking` 只阻止对应 Case 的 PASS 声明、Slice 晋级、扩域或 exact external action，不自动结束开发目标。PDR-006 要求开发者
-保持本 Slice `IN_PROGRESS`：active grant 直接复用，权限 gap 直接申请，等待期间继续独立安全工作。只有阶段交付、已实际发出的 exact
-request 且替代工作穷尽、用户明确停止/转向/拒绝，或不可绕过的安全禁止才允许结束开发回合。
-
-### Current run-043 scheduling evidence
-
-`FINDING-010-139` 对账 `run-043-pdr005-direction-canary` 的 Session、terminal 和两个 Gateway：planned run 在北京时间
-`2026-08-27 11:19–11:27` 运行，DeepSeek HTTP `18`，其中 `16` 个响应合计 `608,785` input / `10,679` output tokens，另有
-`2` 个 outcome unknown；run 没有 schedule/window/override receipt。该证据只证明真实成本和策略违规，不证明调度、Chat、Quality、
-Comparison 或 Preview PASS。不得为修正该记录立即重跑；`V-DEEPSEEK-IDLE-001` 只作为当前配置插件的本地 PASS 收据，满足通用
-`V-FALLBACK-ROUTE-ADMISSION-001` 的配置证据。当前唯一动作仍是 Freeze；只有动作图随后解锁 fallback Quality 时，才现场生成该 profile
-要求的 admission 与 live receipts，不能由本段历史记录改写下一动作。
-
-## PDR-004 / v7 historical verification target（已被 PDR-005 取代）
-
-本 Matrix 的既有 FAIL/PASS 行保存旧单轮 Engineering QA 执行事实与原 Case 定义，不因新方向改写。PDR-004 Readiness 已由
-`f76ba3e8…` 接受，当前 Iteration/Slice1 已授权；current 产品 Gate 只是：
-`V-ALPHA-ACCESS-001` PDR-004 pre-execution revision → `V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001` →
-`V-COMP-ALPHA-001` → `V-PREVIEW-002` PDR-004 pre-execution revision。Case 仍属于同一 Slice，但不再被解释为一次性大交付：Access 只阻断
-首次用户交付，Chat/Quality/XD 阻断五轮方向证据，Comparison/Preview 阻断 hardening；后项不得反向阻塞前项交付。新架构为
-`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
-PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
-SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE /
-ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE /
-SEVENTH_LIVE_CHAT_THREE_OF_FIVE_LIMITATIONS_OVERALL_FAILED / NEW_CONVERSATION_LEAKAGE_PASS /
-EXACT_REQUEST_REVIEW_AND_BOUNDED_SOURCE_QUERY_V7_UNACCEPTED /
-NO_CURRENT_EXTERNAL_AUTHORITY /
-NOT_ACCEPTED / NOT_PRODUCTION`。`V-ALPHA-ACCESS-001` 已有独立真实执行证据；七次五轮 canary 均已有执行证据，run-042 有三个
-reviewed Limitation，但仍有两轮失败；新对话 probe 单独通过，不能把局部 PASS 扩张为 Chat/Quality PASS。一次 Access/browser 或已消费的 live Session grant 不等于修复后
-Provider/live Chat、hidden、后续 Slice 或 Production 授权。
-
-## Current Chat Access evidence
-
-`FINDING-010-095` 已把首个 Access 纵切实现为独立 `swm-engineering-chat`：Application 持有不可变 Conversation/Revision/Context、Message
-和 Turn，页面展示完整历史与“新对话”；Provider 未配置时提交仍形成真实失败 Turn，dispatch/retry 为 0，Conversation 保持 `ACTIVE`。
-固定 launcher 无运行参数，只接受 clean exact product 和 `mall@0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，固定
-`127.0.0.1:8765`，不装载 Provider/credential/Source/World Model payload。新 Access 定向 17/17、既有 QA 相邻兼容回归 18/18、Browser
-JavaScript syntax、四模块 compile 和 diff check 均 PASS。
-
-`FINDING-010-096 / ITER-010-RESULT-V-ALPHA-ACCESS-001` 随后在 clean exact
-`cf2883bef861e0345afc36415d4216f943d31cf4` / tree `a720afbb36e05410d8e9e830b4f51f261e494852` 上按固定命令启动真实 listener，并用
-in-app Browser 完成普通用户交互。第一 Conversation 连续两个失败 Turn 后为 `revision 3 / ACTIVE` 且完整四条历史仍在；“新对话”产生不同
-identity、`EMPTY CONTEXT` 和空消息历史，隔离探针只显示新 Conversation 的两条消息。最终 health 为 Conversation 2、Turn 3、Provider
-dispatch 0，browser console 无 warning/error，Production Activation `NOT_EXECUTED`；listener exit 0 且端口已关闭。因此
-`V-ALPHA-ACCESS-001` 为 `PASS / access-only`。本次没有 Provider/model、Source/World Model、源码/resources 或主 Agent 执行，不能产生
-Chat/Quality/XD PASS。
-
-## First live five-Turn Chat failure evidence
-
-`FINDING-010-107` 记录 exact product `eb835f58b75831fc6f2c5a2513a13f32bdb3f7fe` / tree
-`e5508f17f99201876ecf932550e1bd30f67127d0` 与 `mall@0504e86b1f1b6f1b8aa6a734d37a90fb67346be7` 的 owner-private
-`run-035-chat-alpha`。同一 Conversation 的五个固定问题全部失败：Turn 1/2/3/5 为
-`AGENT_NO_PROGRESS_LIMIT_REACHED`，Turn 4 为 `AGENT_MODEL_OUTCOME_UNKNOWN`；逐 Turn logical dispatch 为 `4/4/3/4/5`，没有任何
-Answer、Citation、Review 或 Delivery。新 Conversation 初始确为 `EMPTY CONTEXT` 且没有旧消息，但省略指代“它呢？”返回
-`AGENT_PRE_DISPATCH_REJECTED` 通用失败，而不是澄清。因此 transcript isolation 成立，Chat/Quality/XD 和要求的泄漏负测仍失败。
-
-terminal receipt `sha256:7bf6a2553cb952db281e56d8c15924476359e522f26148fff082178a8d0ac1ba` 密封 2 Conversation、6 Turn、20
-logical Provider dispatch、request retry 0、private artifact/Gateway files 与 Production Activation `NOT_EXECUTED`；listener 已正常停止，
-browser console clean。最早系统性偏差是 model-facing `SOURCE_SEARCH` 错称可作 semantic proposal，而 Worker 只做大小写敏感 literal
-match；519 个授权 Java entry 又按 canonical 顺序在 64-file fuse 前扫描不到目标。新对话则没有可信的 Provider 前指代策略，第六 Turn 的
-零 dispatch 实际来自已耗尽的 Session Authority，不能冒充正确澄清。
-
-`FINDING-010-108/109` 已分别形成 literal-search contract + authorized-path candidate ordering，以及 binding-owned 空上下文指代澄清的本地
-修复候选。它们不能追认 run-035；新的真实验证必须绑定修复后的 exact commit/tree、owner-private artifact 与新 Session Authority。
-
-组合审计随后发现，默认 64 文件总预算下的截断 SEARCH 会在 locator READ 前耗尽全部预算。`FINDING-010-110` 让 Broker 只在同一总熔断
-内为后续 READ/PARSE 保留 1 个名额，不提高任何资源上限。新增 deterministic successor canary 使用 71 个授权临时 Java 文件和 run-035
-同一固定五轮：每轮 SEARCH 读取 63 个文件并保留 `PARTIAL / SOURCE_FILE_FUSE_EXHAUSTED` boundary，随后 opaque locator READ 使用第 64
-个名额，五轮均形成 Package、fresh Review 和 Delivery；Work State revision 为 `3/6/9/12/15`，fake Agent/Reviewer logical dispatch
-合计 20。空的新 Conversation probe 又以 0 dispatch 返回 Application clarification，旧 Conversation digest 不变。六个相邻模块合计
-`99/99 PASS`；允许本机 socket 的完整 1275 项为 1269 PASS，剩余 5 FAIL + 1 ERROR 精确属于既有 V-009/Codex drift hold，没有本次模块
-新增失败。该 canary 不验证五个答案的产品质量或 World Model + Source 组合质量，也没有 mall、外部 Provider/model、credential、
-listener/browser 或 Production 活动，因此所有 live Chat/Quality/XD verdict 仍为 FAIL，下一 Gate 不变。
-
-## Second live five-Turn Chat failure and leakage PASS
-
-`FINDING-010-111` 记录 exact product `999616d24f793e139f20ea821c3069fdaff57a39` / tree
-`ec3179c1efb5df02c77f4be1d60a5e694dcc7380` 的 owner-private `run-036-chat-alpha`。五轮终态依次为
-`NO_PROGRESS / OUTCOME_UNKNOWN / NO_PROGRESS / OUTCOME_UNKNOWN / MODEL_CALL_REJECTED`，logical dispatch 为 `6/6/7/3/2`；仍没有
-Answer/Citation/Review/Delivery。terminal 密封 2 Conversation、6 Turn、24 logical dispatch、retry 0 和 Production
-`NOT_EXECUTED`；Ark/DeepSeek actual HTTP 为 11/9，另有 4 次 pre-dispatch TLS failure 和 3 次 post-dispatch outcome unknown。private files
-0600、browser console clean、listener clean stop 均成立。
-
-新 Conversation 使用不同 identity，初始 Context/messages/turns/work state 均为空；“它呢？”以
-`APPLICATION_INPUT_CLARIFICATION / Provider dispatch 0` 要求明确对象，故 transcript isolation 与 required clarification 首次真实 PASS。
-它不改变五轮 5/5 FAIL。
-
-同 signature 再现触发架构职责评审。`FINDING-010-112` 用显式 per-SEARCH scan fuse 56 与 whole-Turn file fuse 64 取代单 READ
-reservation；73 文件相邻案例在真实 PARTIAL Coverage 后完成 3 个不同 locator READ，累计 59/64。`FINDING-010-113` 又以
-`ENGINEERING_AGENT_PRIMARY_INPUT@2` 的 trusted `draft_reference_policy` 分别列出 affirmative SUPPORT 与 limitation BOUNDARY IDs；
-decoder 继续重算并拒绝跨域/未知引用，不自动改写 Draft。相关 Source/Agent/Model 聚焦组合当前 63/63 PASS。model strategy/prompt/input
-identity 已改变。相邻 Chat/Source/docs 组合 217/217、docs gate 80/80、513-document check、受影响模块 `py_compile` 与 diff check 均
-PASS；允许 AF_UNIX 的 full discovery 1277 项中 1271 PASS，余下 5 failures + 1 error 仅属于既有 ITER-003 frozen implementation 与
-Codex binary digest drift。所以旧 Ark/DeepSeek Conformance 失效；下一外部 Gate 是 fresh 双 Provider Conformance，之后才是新 exact
-artifact/session 和同一五轮重验。
-
-## Third live five-Turn Chat failure, leakage PASS and v3 successor
-
-`FINDING-010-114` 记录 exact product `d429be6c7e5e43342bf427e394ca5babcc55bcdb` / tree
-`400d5791e4c443c201765da5f488519093136738` 的 fresh qualification。DeepSeek 为 2/2 request、12/12 Case、TLS 1/1、reuse 1、
-retry/unknown 0；Ark 补充授权只在 credential/HTTP 0 的 TLS failure 后启动 fresh run，补充 acquisition 使用 4/10，最终成功 run 为
-2/2 request、13/13 Case、TLS/credential/HTTP 2/2、retry/unknown 0。两条 PASS 后才生成 owner-private run-037 artifact。
-
-`FINDING-010-115 / run-037-chat-alpha` 的五轮终态依次为 `REVIEW_LIMIT / NO_PROGRESS / OUTCOME_UNKNOWN / NO_PROGRESS /
-OUTCOME_UNKNOWN`，logical dispatch 为 `10/8/4/4/5`，五轮仍无用户可见 Answer/Citation/Delivery，Chat/Quality/XD 保持 FAIL。terminal
-密封 2 Conversation、6 Turn、31 logical dispatch、request retry 0 和 Production `NOT_EXECUTED`；Ark 11 logical（8 HTTP + 3
-pre-dispatch TLS failure），DeepSeek 20 HTTP（含 2 post-dispatch outcome unknown）。private files 0600、Browser console clean、listener
-clean stop 和端口关闭均成立。新 Conversation 仍以独立 empty Context 对“它呢？”返回
-`APPLICATION_INPUT_CLARIFICATION / dispatch 0`，旧 Conversation digest 不变。
-
-最早产品偏差不是资源上限：Turn 1 Reviewer 的 Finding message 自己确认 Claim 已被证据完全支持；Turn 2/4 主 Agent 分别重复 exact
-Search、伪造未签发 locator 和重复 `401`。`FINDING-010-116` 因此把 current-attempt typed action history 与 authority-receipt Citation
-catalog 投影为 `ENGINEERING_AGENT_PRIMARY_INPUT@3.tool_reference_policy`，decoder 重算并拒绝重复 action、参数漂移和未列 locator。
-`FINDING-010-117` 又以 `ENGINEERING_AGENT_REVIEW_INPUT@2` /
-`engineering-agent-independent-review-proposal@2` 强制 exact ordered Claim 的 `SUPPORTED/DEFECT` assessments 与 Finding/decision 一致；
-role prompt 禁止 JSON 外叙述，closed adapter 不增加 substring 修复。current strategy/prompt 为
-`conversational-engineering-agent@3` / `conversational-engineering-agent-no-tools-prompt@3`。v3 Model/Agent 27/27、七组相邻组合
-43/43 与 `py_compile` 已通过；旧 run-037 qualification/artifact 因 identity 改变而 stale，下一 Gate 再次是 fresh 双 Provider
-Conformance 和新的 exact Live Authority。
-
-## Fourth live one-of-five Limitation, leakage PASS and v4 successor
-
-`FINDING-010-118` 记录 exact product `743942d2593615c5c481110465d7d7faaf41d958` / tree
-`748902ce407c434e10f4926cf84b1240a2666424` 的 fresh Ark→DeepSeek qualification。Ark 一次完成 2/2 request、13/13 Case，DeepSeek
-随后完成 2/2 request、12/12 Case；两者 request retry、post-dispatch outcome unknown 均为 0。只有双 PASS 后才生成 owner-private
-run-038 artifact。
-
-`FINDING-010-119 / run-038-chat-alpha` 的五轮终态依次为 `NO_PROGRESS / NO_PROGRESS / OUTCOME_UNKNOWN / NO_PROGRESS /
-REVIEWED_LIMITATION`，logical dispatch 为 `8/6/2/8/5`。Turn 5 的诚实边界经 fresh Review/Delivery 技术成功，却没有回答要求的用户可见
-登录流程；所以本 canary 只记 1/5 reviewed Limitation，Chat/Quality/XD 继续 FAIL。terminal 密封 2 Conversation、6 Turn、29 logical
-dispatch、retry 0 和 Production `NOT_EXECUTED`；Ark 16 logical 中 12 HTTP + 4 pre-dispatch TLS failure，DeepSeek 13 HTTP 中含 1
-post-dispatch outcome unknown。private files 0600、listener clean stop 和端口关闭均成立。新 Conversation 继续以独立 empty Context 对
-“它呢？”返回 `APPLICATION_INPUT_CLARIFICATION / dispatch 0`，泄漏负测 PASS。
-
-earliest deviation 是 `source_read_options` 按 line reference 而非 canonical resource 去重，并在 trusted Broker 已报告 terminal Source
-file fuse 后仍把 Source action 保留在 legal domain；连续两次无进展又直接失败，不能用已有 SUPPORT/BOUNDARY 进入受审结论。
-`FINDING-010-120/121` 因而升级 Primary strategy/prompt/input 到 v4：每个 canonical resource 最多一个 read option、任一 line read 后同
-resource 全部退出、terminal Source operation/file/byte fuse 后移除 Source Search/Read；no-progress threshold 后只允许一次无工具的
-`ANSWER/LIMITATION` completion，仍须 fresh Review，Reviewer 要求新 Evidence 时 fail closed。Model/Agent 31/31、Session/Tool/Route/
-Browser 相邻组合 84/84、`py_compile` 与 diff check 通过。`FINDING-010-122` 同时修正 artifact qualification fixture 的 wall-clock
-绑定，不改变产品资格规则。run-038 qualification 因 v4 identity 改变而 stale；下一 Gate 是 fresh 双 Provider Conformance 与新的 exact
-Live Authority，未授权 Production Activation。
-
-## Fifth live one-of-five Limitation, leakage PASS and v5 successor
-
-`FINDING-010-123` 记录 exact product `34d98ae12fe7429afb3cbe391d273c59a71c4758` / tree
-`b9100b15a2db30da811157549fc1f2d9affff288` 的 fresh Ark→DeepSeek qualification。Ark 第一次 attempt 在 credential/HTTP 前 TLS
-失败，按授权 fresh restart 后完成 2/2 request、13/13 Case；DeepSeek 随后完成 2/2 request、12/12 Case。两个成功 run 的 request retry、
-post-dispatch outcome unknown 均为 0。只有双 PASS 后才生成 owner-private run-040 artifact。此前 run-039 使用错误 Binding ID，在 listener、
-credential、Source 与 Provider 前被 fixed launcher 拒绝，不是 live attempt。
-
-`FINDING-010-124 / run-040-chat-alpha` 的五轮终态依次为 `PROTOCOL_VIOLATION / REVIEWED_LIMITATION / MODEL_CALL_REJECTED /
-OUTCOME_UNKNOWN / MODEL_CALL_REJECTED`，logical dispatch 为 `11/8/2/5/2`。Turn 2 的诚实边界经 fresh Review/Delivery 技术成功，却只说明
-当前证据没有确认认证失败日志，没有回答完整登录流程；所以本 canary 只记 1/5 reviewed Limitation，Chat/Quality/XD 继续 FAIL。terminal
-密封 2 Conversation、6 Turn、28 logical dispatch、retry 0 和 Production `NOT_EXECUTED`；Ark 13 logical 中 10 HTTP + 3
-pre-dispatch TLS failure，DeepSeek 15 HTTP 中含 1 post-dispatch outcome unknown。private files 0600、Browser console clean、listener
-clean stop 和端口关闭均成立。新 Conversation 继续以独立 empty Context 对“它呢？”返回
-`APPLICATION_INPUT_CLARIFICATION / dispatch 0`，泄漏负测 PASS。
-
-earliest deviation 是 previous Work State 暴露 prior-Turn Observation IDs，使 fallback 在 current Turn 无 observations 时复制旧 ID；另一个
-偏差是 Reviewer 明确 `requires_evidence` 后 successor 仍允许普通 Draft。`FINDING-010-125` 因而升级 Primary strategy/prompt/input 到 v5：
-可信 `work_state_reference_policy` 只授权 exact current-Turn Observation 和 correction/superseded prefixes，previous Work State 只披露 prior
-Observation count；evidence-required Review successor 只能提交一个 effective tool catalog 中的 exact action。closed decoder、Source/
-Agent/Review/Provider/retry/fallback/wall-time fuses 均不放宽。Model/Agent 31/31、Session/Tool/Route/Browser 相邻组合 84/84 与
-`py_compile` 通过。run-040 qualification 因 v5 identity 改变而 stale；下一 Gate 是 fresh 双 Provider Conformance 与新的 exact Live
-Authority，未授权 Production Activation。
-
-## Sixth live three-of-five responses, leakage PASS and v6 successor
-
-`FINDING-010-126` 记录 exact product `6e97bc1c0c02be858212c39da11ac42e099c365e` / tree
-`fd54821e212b3022e318436d9e96b93af11505c6` 的 fresh Ark→DeepSeek qualification。Ark 前两个 attempt 均在 credential/HTTP 前 TLS
-失败，按授权 fresh restart 后第三个 run 完成 2/2 request、13/13 Case；DeepSeek 随后一次完成 2/2 request、12/12 Case。两个成功 run
-的 request retry、post-dispatch outcome unknown 均为 0。只有双 PASS 后才生成 owner-private run-041 artifact。
-
-`FINDING-010-127 / run-041-chat-alpha` 的五轮终态依次为 `ACCEPTED / MODEL_CALL_REJECTED / REVIEWED_LIMITATION /
-REVIEWED_LIMITATION / MODEL_CALL_REJECTED`，logical dispatch 为 `8/3/8/7/2`。Turn 1 首次交付经 fresh Review/Delivery 的登录流程 Answer；
-Turn 3/4 诚实密封本次证据不能确认的认证失败日志与 401/403 producer。相对 run-040 的 3/5 技术响应是可见增量，但固定脚本仍有 Turn 2/5
-失败，最终用户可见总结也未交付，所以 Chat/Quality/XD 继续 FAIL。terminal 密封 2 Conversation、6 Turn、28 logical dispatch、retry
-和 outcome unknown 0、Production `NOT_EXECUTED`；Ark 12 logical 中 7 HTTP + 5 pre-dispatch TLS failure，DeepSeek 16 HTTP 并复用
-connection 15 次。private files 0600、listener clean stop 和端口关闭均成立。新 Conversation 继续以独立 empty Context 对“它呢？”返回
-`APPLICATION_INPUT_CLARIFICATION / dispatch 0`，泄漏负测 PASS。
-
-earliest deviation 有两个：Turn 2 在已有未用 Source Read options 时重复 exact `SOURCE_SEARCH(SOURCE, login)`；Turn 5 的 current
-SUPPORT domain 为空，`allowed_response_kinds` 却仍展示 `ANSWER`，模型因而复述 prior Answer 并提交三个无 SUPPORT 的 Claim。可信
-decoder 均正确失败关闭。`FINDING-010-128` 因此升级 Primary strategy/prompt/input 到 v6：Answer/Limitation 只在 current SUPPORT/
-BOUNDARY 存在时进入 exhaustive response domain；每个 tool entry 又把已用 query 与未用 locator 就地投影为 forbidden/allowed exact
-values，Application 仍从原 observations/action history 重算。相关 Chat contract 84/84、`py_compile` 与 diff check 通过。run-041
-qualification 因 v6 identity 改变而 stale；下一 Gate 是 fresh 双 Provider Conformance 与新的 exact Live Authority，未授权 Production
-Activation。
-
-## Seventh live three-of-five limitations, leakage PASS and v7 successor
-
-`FINDING-010-129` 记录 exact product `3b8d09c71796e3c9b91ec6a9ea21697497319bbc` / tree
-`6728a5ad63bedf65b1315cb7d7fdf27f111dc0d9` 的 fresh Ark→DeepSeek qualification。Ark 与 DeepSeek 都一次完成固定 2/2 request、
-13/13 与 12/12 Case；两者 request retry、pre-dispatch TLS failure、post-dispatch outcome unknown 均为 0。只有双 PASS 后才生成
-owner-private run-042 artifact。
-
-`FINDING-010-130 / run-042-chat-alpha` 的五轮终态依次为 `REVIEW_LIMIT_REACHED / REVIEWED_LIMITATION /
-REVIEWED_LIMITATION / REVIEWED_LIMITATION / MODEL_CALL_REJECTED`，logical dispatch 为 `15/9/6/6/7`。Turn 2/3/4 诚实交付当前证据不能
-确认的失败日志与 401/403 producer，但 Turn 1 登录流程和 Turn 5 用户可见总结都未交付，故仍为 3/5 / Quality FAIL。terminal 密封
-2 Conversation、6 Turn、43 logical dispatch、retry/outcome unknown 0、Production `NOT_EXECUTED`；Ark 12 logical 中 10 HTTP + 2
-pre-dispatch TLS failure，DeepSeek 31 HTTP、两个 verified TLS session、connection reuse 29。private files 0600、Browser console clean、
-listener clean stop 和端口关闭均成立。新 Conversation 继续以独立 empty Context 对“它呢？”返回
-`APPLICATION_INPUT_CLARIFICATION / dispatch 0`，提交前后两个 Gateway 行计数不变，泄漏负测 PASS。
-
-当时直接观察到 Reviewer 扩题与 Primary 缺少 bounded Source candidate-ordering 两个症状，`FINDING-010-131` 因此形成 v7
-strategy/prompt/Primary/Review input 实验；模型契约 11/11 与 `py_compile` 只证明字段投影。`FINDING-010-132/133` 后续证明该 earliest
-deviation 判断不成立：Maven-only 对行为题无认知资格、Agent 未取得授权源码中的决定性事实、Reviewer 又批准了不完整 Limitation。
-v7 现为未接受症状实验；fresh 双 Provider Conformance 与旧五轮重跑已被 PDR-005 取消。Production Activation 未授权。
-
-## Current local Agent executor evidence
-
-`FINDING-010-097` 在 Access 之后闭合了不接外部系统的 Application-owned bounded executor：同一 Conversation 的 Work State identity 跨
-Turn 稳定且 revision 递增；主 Agent 只提交 full Work State 与 closed-catalog action/Draft；工具 Result、support/boundary Observation、
-Package、Claim、fresh Review、Finding 和 Delivery Authorization 均按 exact digest 绑定。Reviewer 要求补证后，没有新 Observation 就不能
-重交 Draft；同包重写复用 Package，新 Observation 形成 successor Package 与 fresh Review。伪造 Tool/Delivery binding、Source authority
-缺失、malformed executor outcome、并发同 Conversation、无进展及资源熔断都只关闭当前 Turn并保留既有 Context。
-
-Agent/Conversation/Browser 与相邻旧 QA 定向组合实际 `48/48 PASS`，四模块 `py_compile`、Browser JavaScript `node --check` 和
-`git diff --check` PASS。测试只使用 fake ports，
-没有 listener/browser、Provider/model、mall 源码/resources 或 Production 执行。因此这只把实现状态更新为
-`AGENT_EXECUTOR_LOCAL_CANDIDATE`；World Model/Source Broker/Worker、完整 Ledger/Citation、Provider driver/Reviewer、Disclosure/
-fallback、fixed launcher 与五轮 live Chat 仍未集成或资格化，下面所有 Chat/Quality/XD/Comparison/Preview verdict 保持不变。
-
-## Current local evidence-tool adapter evidence
-
-`FINDING-010-098` 在 executor 后复用现有 World Model projector、Source Broker 与 Local Git Retrieval Worker：一个工具动作可分别返回
-support/boundary Observation；每条 Observation 带 exact Turn/Tool/evidence Request/repository revision、可重算的完整 Ledger entry
-chain/prefix 与 Citation content digest。Source `search→read` 只能复制当前 Turn 已签发 opaque locator，raw path 与包含
-`src/main/resources` 的父 allowlist 都在 Worker 前拒绝。World Model fixture 同时产生 supported behavior 与 unknown boundary，分别进入
-Package 两个分区。
-
-新增 4 个 adapter 案例与 Agent/Conversation/Browser/旧 QA 相邻组合实际 `61/61 PASS`；Local Git 只读取测试生成的临时仓库。没有读取
-mall 源码/resources，没有 listener/browser、Provider/model、credential、外部网络或 Production Activation。因此状态只增加
-`EVIDENCE_TOOLS_LOCAL_CANDIDATE`；当时 Provider-backed Agent/Reviewer、Disclosure/fallback、Citation browser projection、fixed launcher 与
-五轮 mall Chat 尚未集成或资格化；下节记录随后形成的单 Provider model-boundary 候选，所有 live verdict 仍保持不变。
-
-## Current local model-boundary and candidate-preflight evidence
-
-`FINDING-010-099` 为 primary Agent 与 independent Reviewer 分别密封 closed no-tools input/output。每个角色 input 绑定 current Turn、
-relevant Conversation Context、Work State/Observation 或 Package/Draft、exact tool proposal contract、Provider configuration、完整输入与逐 leaf
-Disclosure digest；session authority 不作为模型内容发送，credential reference 不进入 rendered message。Provider output 不能自报 call ID，
-Gateway call identity 由可信 Adapter 注入 proposal，并以 typed receipt 贯穿 Application Turn 与 Browser developer view。
-
-真实本地 `ModelGateway + SQLite + OFFLINE_FIXTURE Adapter` 证明：binding drift 在 dispatch 前计 0；fresh offline Adapter call 计 1 但不能
-取得 live eligibility；outcome unknown 计 1 且 retry 0；repository replay 计 0。Gateway `preflight` 不 prepare、不 dispatch、不读取 Secret。
-新的 candidate preflight 只核对调用者已解析的 product commit/tree、Chat binding、World Model/Source/evidence tools、单 Provider config 和
-Session Disclosure；listener、credential、Source read、Provider dispatch 均保持 0，且 `ready_for_live=false` 明示 fallback、fixed launcher
-和 live 尚未闭合。
-
-Model/Agent/candidate/Conversation/Browser 与旧 QA 相邻组合实际 `86/86 PASS`，相关 `py_compile` 与 `git diff --check` PASS。本次没有
-外部网络、Provider/model、listener/browser、mall Source/resources、credential 或 Production Activation。因此状态只增加
-`MODEL_BOUNDARY_LOCAL_CANDIDATE`；在该证据点，ADR-017 Ark→DeepSeek 独立 full-chain fallback、真实 Adapter/transport/fixed launcher、
-Citation browser projection 与五轮 mall Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。下节记录随后形成的 route composition
-本地候选；所有 live verdict 保持不变。
-
-## Current local Provider-route composition evidence
-
-`FINDING-010-100` 将 raw Provider failure code 与 trusted owner classification 分开；只有已验证 Gateway terminal Result 或 closed output decoder
-产生的五类 ADR-017 outcome 可触发 fallback，Application/Source/Security、qualification、Gateway identity 和 runtime creation failure 均失败
-关闭。Ark primary 与 DeepSeek fallback 从 immutable original Turn、relevant sealed Context、exact World Model authority 和 Source Profile 启动
-独立 full-chain attempt；同 Provider retry 为 0，fallback 至多一次，primary 临时 Work State 不写入 Application-owned committed repository。
-logical Turn 聚合两个 attempt 的 dispatch/receipt audit，只投影最后完整 attempt 的 Outcome；outcome unknown 后 fallback 会记录潜在重复计费，
-late primary 固定 quarantine 且没有 overwrite/merge API。
-
-non-starting fixed composition 将 exact product tree/commit、Chat Binding、evidence tools、双 route/configuration/Session Disclosure、lazy attempt
-factory、Conversation Service 和 Browser Application 绑定在一起。预检不创建 attempt，不解析 credential，不读取 Source，不启动 listener，也不
-调用 Provider；公开 `swm-engineering-chat` 仍是 Access-only launcher。相关定向命令实际 `76/76 PASS`，`compileall`、`py_compile` 与
-`git diff --check` 同时通过；没有外部网络、Provider/model、listener/browser、mall Source/resources、credential 或 Production Activation。
-因此在该 evidence point，状态只增加 `PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE`；真实 Ark/DeepSeek Adapter/transport/credential-reference、
-Source/World Model runtime、fixed command Session wiring、资格与五轮 mall Chat 仍为 `NOT_ATTESTED / NOT_QUALIFIED / NOT_LIVE`。下节记录
-随后形成的 Provider runtime composition；所有 live verdict 保持不变。
-
-## Current local Provider-runtime composition evidence
-
-`FINDING-010-101` 将已验证 typed Conformance identity 转换为 exact Agent model configuration，并使用生产 Ark/DeepSeek Adapter、
-credential-lazy direct transport、Model Gateway、Session-scoped Disclosure Authorizer 和 closed Agent/Reviewer model boundary。两条 runtime
-生成 distinct attempt dependencies 并接入上一节 non-starting route/Browser composition；构造不调用 credential resolver、不建 TLS/socket、
-不 prepare Gateway、不创建 Turn 或 Provider dispatch，公开 receipt 也不投影 secret reference。
-
-新增 3 个 runtime 案例后的相关组合实际 `79/79 PASS`。这些测试使用本地构造的 typed qualification identity，没有加载 current sealed
-Conformance 文件，也没有外部网络、Provider/model、credential、listener/browser、mall Source/resources 或 Production Activation。因此状态
-只增加 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；current qualification、published World Model、exact Source Profile/Worker、两个
-private Gateway repositories、fixed command Session 与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
-
-## Current local Session-runtime composition evidence
-
-`FINDING-010-102` 把两条生产 Provider runtime、exact Chat Binding/Evidence Tool Configuration、World Model projector identity、Source
-Broker/Worker、per-attempt fresh evidence Tool/Response Control、Application-owned committed Work State、Ark→DeepSeek route、Conversation
-Service 与 Browser Application 接入同一 non-starting Session runtime。两条 attempt 共享同一只读 Cognition/Source control plane，但各自持有
-独立 Tool Ledger/progress/locator state 与 one-use Response Control；失败 primary 的私有中间态不能进入 fallback。
-
-新增 2 个 Session 案例并纳入 Source runtime 相邻回归后的相关组合实际 `89/89 PASS`，其中一例在空临时目录上构造真实
-`LocalGitEvidenceClassProfile / SourceBroker /
-LocalGitRetrievalWorker`，并证明 preparation 不读取 Source 或投影 cognition。receipt 同时证明此时 attempt/tool、credential、Provider dispatch
-与 listener 均为 0/false，Production Activation 为 `NOT_EXECUTED`。测试仍使用本地构造的 typed qualification identity，没有加载 current
-sealed Conformance 或 canonical private artifact Session Configuration，也没有 mall Source/resources、外部网络、Provider/model、credential、
-listener/browser 或 Production 执行。因此状态只增加 `SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`；artifact loader、fixed command wiring
-与五轮 Chat 仍为 `NOT_LOADED / NOT_QUALIFIED / NOT_LIVE`，下面所有 verdict 保持不变。
-
-## Current local artifact Session and fixed-command evidence
-
-`FINDING-010-103` 实现 `SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@1` 的 owner-private closed loader：product/source Git identity、
-published ordered/snapshot World Model、exact Source Profile、mandatory `src/main/resources` exclusion、ordinal 1 Ark/ordinal 2 DeepSeek、两份
-Conformance result、两个 distinct private Gateway repositories、Session authority、5 Turns × 每 Turn 每 Provider 15 dispatch 与每 Provider
-总计 75 都由同一 artifact 密封。unknown/missing/duplicate/reordered field、公开权限、relative path、identity drift 与 profile/exclusion
-overlap 在外部活动前失败关闭。
-
-`swm-engineering-chat` 无参数继续是已验证 Access-only；唯一新增 selector `--session-config` 不暴露 host/port/project/revision/Provider/
-question/credential/authority。fake listener lifecycle 证明两个 private database exclusive-create 后，launch receipt 在 listener 构造前写入，
-terminal receipt 在 shutdown 后写入；固定 URL 仍是 `127.0.0.1:8765`。artifact/CLI/provider-runtime 直接组合实际 `13/13 PASS`；包含 Agent、
-Conversation、Tools、Model、Route、Candidate、Launcher、Provider runtime、artifact、Source、Browser、CLI、Gateway、Conformance、Cognition 与
-Structure 的聚焦组合实际 `117/117 PASS`，application/AI/interface compile 与 diff check 通过。
-
-测试通过 patched/local typed artifacts 与 fake listener 证明零 I/O composition，没有读取 mall Source/resources、解析 credential、访问网络、
-调用 Provider/model、启动真实 listener/browser 或执行 Production Activation。current actual artifact 未生成或执行；terminal receipt 当前有
-Disclosure/model-boundary/model-call audit、dispatch total 与 DeepSeek transport Session audit，但没有 Ark transport-level Session audit。因此在该 evidence point 状态只增加
-`ARTIFACT_SESSION_FIXED_COMMAND_LOCAL_CANDIDATE`；`V-CHAT-*`、资格、live 与 Acceptance verdict 均保持不变。
-
-## Current local Ark transport Session-audit evidence
-
-`FINDING-010-104` 将 Ark transport 固定为 exact host/path、每 request 一个 verified TLS session、certificate 验证后才解析 credential、
-每 session 一个 HTTP dispatch、`Connection: close` 与 request retry 0。`SWM-VOLCENGINE-ARK-TRANSPORT-SESSION-AUDIT@1` 分列 TLS、
-credential、HTTP、reuse、post-dispatch unknown 和 retry；terminal receipt 现在对 Ark/DeepSeek 都要求 strict transport audit。HTTP 前 TLS
-不可用通过 Model Gateway owner-typed `ProviderUnavailable` 密封为 fallback-eligible `PROVIDER_UNAVAILABLE`；HTTP 已开始后的失败仍单独是
-outcome unknown。
-
-Ark Conformance fixture/result identity 升级为 `1.7.0 / @2`，新增 `CC-ARK-13` 并把 Session audit 纳入 PASS verifier；configuration
-fingerprint 又绑定 connection/credential/retry policy，旧 qualification 因 fixture、implementation 与 configuration drift 失效。最小相关组合
-48/48、相邻聚焦组合 141/141、compileall 与 diff check 通过；V-009 定向模块仍保留既有 3 FAIL + 1 ERROR 的 exact implementation-drift
-historical hold。本证据没有真实 TLS、credential、Provider/model、Source、listener/browser 或 Activation，状态只增加
-`ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE`。
-
-## Current fresh Ark Conformance evidence
-
-`FINDING-010-105` 记录用户精确授权的 clean `1e99e9b…` fresh run：`CC-ARK-CHAT-NO-TOOLS-001 / 1.7.0 / @2` 以 2/2
-request、13/13 Case PASS，actual model `glm-5.2`，Result digest 为
-`sha256:d0e9d49f234b770f9c22ad38276622f04168cbb17e1cada3b18586431ba40a15`。strict audit 为 TLS/credential `2/2`、HTTP 2、
-reuse/retry/post-dispatch unknown 0；sealed file mode `0600`，raw prompt/response persistence false。没有 mall Source/resources、DeepSeek、
-listener/browser 或 Activation 活动。current Ark qualification 有效到 `2026-09-25T01:00:39.148494Z`。
-
-artifact Gate 同时要求 current DeepSeek qualification。由于 DeepSeek implementation manifest 也包含本次变化的 `model_gateway.py`，current
-digest `sha256:a680b0c8…bb07` 与旧 PASS Result 的 `sha256:1022fdd1…3d4b` 不同；current loader 实际以
-`QUALIFICATION_INVALID` 拒绝旧 Result。下节记录另行授权的 fresh DeepSeek Conformance。
-
-## Current fresh DeepSeek Conformance evidence
-
-`FINDING-010-106` 记录用户精确授权的 clean `653eff3…` / tree `d0cab3a…` fresh run：
-`CC-DEEPSEEK-CHAT-NO-TOOLS-001 / fixture 1.2.0 / result @2` 以 2/2 request、12/12 Case PASS，actual model
-`deepseek-v4-pro`，Result digest 为 `sha256:3e43921a5e0ebf00d0805b7c66f609c29b0d29a3fd8b848a8b3e491e641e6a4d`。
-strict persistent transport audit 为 TLS attempts/successes `1/1`、credential resolutions `2/2`、HTTP dispatch 2、connection reuse 1、
-request retry/post-dispatch unknown 0；sealed file mode `0600`，raw prompt/response persistence false。current DeepSeek qualification 有效到
-`2026-09-25T01:22:41.700955Z`。本次没有 mall Source/resources、Ark、listener/browser 或 Activation 活动。
-
-结合 `FINDING-010-105`，Ark 与 DeepSeek current qualification 现在同时可用。Conformance grant 不授权 artifact 中的 Source/
-World Model disclosure 或五轮 Browser Session；下一 Gate 是 exact five-Turn Session authorization，之后才生成 current owner-private
-artifact 并执行 fixed canary。`V-CHAT-*` 与所有质量 verdict 继续 `NOT-RUN / blocking`。
-
-## Pre-freeze implementation evidence
-
-截至 `2026-08-22`，candidate `b8360a3…` 的 focused 58/58、docs 389/389、full 1108/1103，以及修复
-`FINDING-010-015` 后 candidate `50b08b5…` 的 focused 59/59、docs 391/391、full 1109/1104 均作为历史证据保留。后续 live
-暴露 `FINDING-010-016—019` 后，Prompt `@4` 实现 focused 69/69、docs 395/395、`py_compile`、`git diff --check` 均 PASS；允许 AF_UNIX 的 full
-discovery 共 1112 项，其中 1107 PASS，唯一 4 FAIL + 1 ERROR 的测试 identity、结果类型和 marker 仍精确等于
-`FINDING-008-020`。因此 raw full suite 仍为 FAIL，deterministic gate 仅为
-`PASS_WITH_EXACT_PRESERVED_HISTORICAL_HOLD`。这些证据只允许提交新的 clean product freeze，不提前给真实产品 Case 下 PASS。
-`FINDING-010-020/021` 的 latest-basis/eligible-locator 与 exact call-reserve 修复随后通过 focused 117/117、docs 397/397、`py_compile`、
-`git diff --check`；full discovery 增至 1113 项，其中 1108 PASS，唯一 4 FAIL + 1 ERROR 仍保持同一历史 hold identity、marker 与 Codex
-digest，没有新增失败。
-`FINDING-010-023` 的 fail-closed Browser presentation 与 current Operations write-back 最终通过 focused 118/118、docs 399/399、
-`py_compile`、`git diff --check`；full discovery 为 1114 项，其中 1109 PASS，唯一历史 4 FAIL + 1 ERROR identity/type/marker/digest 不变。
-首次 full run 曾以新增 ITER-007 system fileset digest mismatch 阻断；同步 ITER-007/010 exact current fileset digest 后针对性 84/84 与最终
-full gate 均闭合，因此没有把该新增失败混入 historical hold。
-`FINDING-010-024/025` 随后把 FINISH 字段组合与 disposition support/boundary eligibility 提升为 Prompt + 动态 Application 控制；最终
-Engineering QA focused 63/63、docs 401/401、`py_compile`、`git diff --check` PASS，full discovery 增至 1115 项，其中 1110 PASS；唯一
-4 FAIL + 1 ERROR 的 identity/marker/Codex digest 仍精确保持同一历史 hold。
-V-BASELINE/V-ARCH/V-QINTENT/V-COGNITION/V-INVESTIGATE/V-BROKER/
-V-LEDGER/V-ISOLATION/V-REVIEW/V-LIMIT/V-SEC 的确定性子断言已有测试证据，但它们的 Case verdict 仍等待 clean freeze 或所要求的真实链；
-`V-WEB-000` 前六次永久失败的真实尝试如下。candidate `b8360a3…` 在第二个 Provider output 暴露 live role-progress 大小写错误；2 次
-dispatch，见 `FINDING-010-015`。修复后的 candidate `50b08b5…` 继续完成 4 次 dispatch，但目录级 SOURCE capability 的首个 search
-耗尽 64 文件上限，后续 Broker 拒绝；模型随后提交含空引用的 FINISH，暴露 Schema/Prompt/shared validator 与领域 invariant 不一致，见
-`FINDING-010-016/017`。第三个 candidate `e35d8f7…` 已用新 2-call qualification 和 17 个 exact 文件 Profile 运行；SOURCE search
-完整检查 12 文件且未触发 fuse，但自然语言 literal query 返回 0 items 后，模型把 allowlisted path 误作 opaque locator reference，3 次
-role dispatch 后失败关闭，见 `FINDING-010-018`。三次 Web run 共 9 次 role dispatch，另有 2 次 current qualification call，累计
-11/20，见 `FINDING-010-018`。第四个 candidate `91dffec…` 正确完成 literal search 和 opaque locator read，但重复读取已返回完整内容的
-同一路径；相同 progress digest 连续两次触发 no-progress fuse，5 次 role dispatch 后在 Answer/Review 前失败关闭，见
-`FINDING-010-019`。四次 Web run 共 14 次 role dispatch，另有 2 次 current qualification call，累计 16/20；全部 retry 0、switch 0、
-Production Activation `NOT_EXECUTED`。用户随后把总上限提高到 28；Prompt `@4` clean candidate `1f4e1b0…` 的第五次 run 完成 5 次
-dispatch 后，模型未引用紧邻的最新 Ledger Result，并再次选择已返回 full content 的 locator。Application 在 Source operation 前失败关闭，
-见 `FINDING-010-020`。五次 Web run 共 19 次 role dispatch，另有 2 次 current qualification call，累计 21/28；第五次仍为 retry 0、
-switch 0、Production Activation `NOT_EXECUTED`。Prompt-only 控制已改为显式 latest-basis/eligible-locator 投影与 Application validation；同时
-Preview Request call fuse 与 exact run grant 对齐以预留 Answer/Review，见 `FINDING-010-020/021`。旧 candidate/run 不能由后续修复追溯
-覆盖。candidate `d6d8d02…` 随后在 7-call exact grant 下完成 Understanding、literal search 和 3 个不同 full-content READ；每步都满足
-latest basis/eligible locator，no-progress 0。第 4 次 Investigation 后仍未完成全部 material conclusions，Application 在第 6 个 Provider
-dispatch 前保留 Answer/Review 所需 2 次调用并以 `INDEPENDENT_REVIEW_RESERVE_EXHAUSTED` 关闭，Draft/Review 均为 0，见
-`FINDING-010-022`。六次 Web run 共 24 次 role dispatch，另有 2 次 current qualification call，累计 26/28；全部 retry 0、switch 0、
-Production Activation `NOT_EXECUTED`，剩余 2 次未使用。该 run 还暴露 fail-closed Result 被 UI 固定标成 `REVIEWED RESULT` 的显示缺口，
-已按 `FINDING-010-023` 修复；因此 `d6d8d02…` 也成为 burned candidate。用户随后以
-`sha256:815d868ca3df4795276934acbc21d12584fcfd4cb49b31c67696c72d3a5a6b74` 取消本次累计调用上限，其他披露/零重试/resources 排除/
-非生产边界不变。candidate `31b1a19…` 的第七次 run 完成 7 次 dispatch，Prompt `@5` FINISH 错带 SOURCE evidence class，见
-`FINDING-010-024`；candidate `449e925…` 的第八次 run 也完成 7 次 dispatch，字段组合已合法，但把 `SOURCE_RESULT` Ledger entry ID
-误作 Package support/boundary reference，见 `FINDING-010-025`。两次都在 Answer/Review 前失败关闭。
-
-clean candidate `f38f6cc…` 的第九次 run `web-v-web-000-012` 以 Prompt `@7` 完成 9 次 dispatch：Understanding、6 次
-Investigation、Answer、Review。5 个 Broker Decision 全部授权，no-progress 0；Package 为 37 support/citation + 14 boundary/audit；
-Answer 形成 5 个 affirmative claim 和 1 个测试覆盖 limitation，独立 Review `APPROVED`。Browser 显示 `REVIEWED RESULT`，6 个 Source/
-World Model Citation 全部实际打开且绑定同一 Package/Result，console 为空。terminal receipt 为 retry 0、switch 0、一次 TLS handshake
-复用 8 次、Production Activation `NOT_EXECUTED`；全部 manifest 对 `src/main/resources` 匹配数为 0。九次 Web run 共 47 次 role
-dispatch，另有 2 次 current qualification call；详见 `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`。因此 `V-WEB-000` 由当前 exact run
-获得 PASS；旧失败不改写。`V-XD-001` 仍因 `mall` 未形成 declaration/`CALLS` Result 保持独立 blocking，见 `FINDING-010-014`。
-随后冻结 4 条不同覆盖维度的公开方向题，suite digest 为
-`sha256:f75f2e7881b8b57b4e9dd1b7ff01da9ac322bb4c853ed1853f881db9ca74f100`；现场题仍由用户持有。第一题绑定 clean candidate
-`aa14234…`，在 5 次 dispatch 后因调查角色重复 `SOURCE / search("mall-security")` 触发 `NO_PROGRESS_FUSE_EXHAUSTED`，retry/switch 0、
-Production Activation `NOT_EXECUTED`。`FINDING-010-026` 已把此前未投影的 attempt-scoped query/locator intent 加入 Ledger/角色输入，并由
-Broker 在 Worker 前拒绝重复工作；Prompt 升级为 `@8`。该题与 candidate 永久失败，不重放。
-
-修复后的 clean candidate `17cff66…` 只消费 successor freeze 中的 Q2—Q4，三题分别以 8/8/9 dispatch、0 no-progress 到达独立 Review
-`APPROVED`；11 个 Citation 全部打开，公开题总分为 3 supported / 1 fail，达到两个非实现维度阈值。用户随后以 exact message digest
-`sha256:684849e3…e9c9` 现场提出“登录流程是怎样的？”。clean candidate `8632904…` 的全新 onsite run 以 10 dispatch、6 个只读 Broker
-operation、0 no-progress 形成 Result `engineering_result_e5f3c335944de0f2f57e8f9fdd48b419` 和 Review `APPROVED`；3 个 exact Source
-Citation 全部打开、console `[]`、retry/switch/outcome-unknown 0、resources match 0、Production Activation `NOT_EXECUTED`。因此公开 4 题
-与现场题合并后 `V-WEB-001` 技术 PASS。`FINDING-010-027` 同时保留正文仍以 Controller/Service/Filter 方法调用序列为主且省略
-`insertLoginLog` 副作用的方向信号；用户随后以
-`codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0` 要求实现者自行复核并修复已知问题；旧记录曾将其解释为 `REDIRECT`。
-`FINDING-010-028` 将共同根因定位到自由文本抽象层级、扁平 Answer Claim 和不可执行的 Review 方向质量 Gate。因此历史
-`V-ANSWER-001`、`V-REVIEW-001`、`V-XD-001` 与 `V-PREVIEW-001` 继续为 FAIL；`V-REFLECT-001` PASS 只表示失败复盘完整。
-
-[PDR-001](decisions/PDR-001-resume-as-rework.md) 依据当时用户收据修订的是迭代级历史决定，不改写上述执行事实。旧消息 `d746968f…`
-没有明确表达 `REDIRECT`；后续 `32b298de…` 收据曾恢复 ITER-010/Slice1 编码。该 Web-first 入口已由 PDR-009 替代，不是当前执行指令；
-当前条件顺序是 Freeze → Preferred Quality；首选配置 PASS → 最小 Web、FAIL → Direction Rework、INVALID → 零外部/零人工请求/零 dispatch
-Fallback Refreeze → Fallback Quality；备用配置 PASS → 最小 Web、FAIL → Direction Rework、INVALID 自环失败关闭；最小 Web 后才由用户
-决定方向。
-
-用户随后提供的 root + exact mall/DeepSeek scope 已授权持续 Alpha。candidate `b6e13eb…` 的首次会话真实启动并以 8 次 role dispatch、
-retry/switch 0 回答现场登录题；完整 `UmsAdminServiceImpl` 已进入 Package/Reviewer，但正文再次遗漏成功登录审计写入，Reviewer 错误
-`APPROVED`。该 Result 只把 `V-EXPERIENCE/V-ANSWER-REWORK` 推进为 in-progress，并以 `FINDING-010-033` 保留失败，不能取得 PASS。会话还
-暴露 Gateway SQLite 主文件为 `0644`，见 `FINDING-010-034`。当前 worktree 已升级
-`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3`：FINISH 原子 evidence observations、Answer observation/evidence closure、Reviewer 独立
-Package/Draft observation audit，以及 SQLite 主文件/WAL/SHM `0600` 创建测试均通过；新协议仍须 clean freeze、current Conformance 和完整
-原题 + 两道异质题 + 受控失败的持续 browser run。
-
-Engineering QA 83/83、docs/freeze/browser 86/86、current docs 427/427 PASS；在允许 AF_UNIX 的本机执行面运行 full 1144 项得到 1139 PASS，
-raw 仍精确为既有 4 FAIL + 1 ERROR，见 `FINDING-010-035`。默认沙箱额外出现的 AF_UNIX denial 不属于产品回归，raw full suite 仍不写成
-PASS。
-
-clean candidate `fc827ce…` 已取得 current DeepSeek Conformance `sha256:c6f6a0f…` 并真实提交原题。5 次 role dispatch、retry/switch 0；
-Package 与 Answer affirmative 正文已显式覆盖 `loginLogMapper.insert` 审计写入，Gateway 主文件/live WAL/SHM 为 `0600`。但 Answer 的末尾
-coverage-only Limitation 因非空 link 规则错绑全部 supported observations，Application 以 `answer claim kind differs from its material
-observation` 失败关闭；见 `FINDING-010-036`。该 Result 不能取得答案或体验 PASS。
-
-coverage-only Limitation 收窄后的 Answer/strategy/model-source 49/49、Engineering QA 86/86、current docs 430/430 PASS；最终 full 1147 项
-中 1142 PASS，raw 仍精确为既有 4 FAIL + 1 ERROR，见 `FINDING-010-037`。新修复尚未取得 clean freeze 后的 live Result。
-
-clean candidate `e15ec50…` 与 current Conformance `sha256:5ef04be6…` 的原题 run 同样为 5 次 role dispatch、retry/switch 0、private SQLite。
-上一修复的空-link coverage Limitation 已生效；但 Investigation 只读 README 后过早 FINISH，Answer 将 limitation observations 错标为
-process/impact roles，Domain 以 structured-output violation 失败关闭。`FINDING-010-038` 已形成 closed kind/role mapping 与跨 evidence-class
-unknown 消减规则，尚待新 clean candidate live 重验。
-
-closed mapping/跨 evidence-class 修复后的 clean candidate `c7e32b5…` 以 current Conformance `sha256:8802280…` 启动同一持续会话。原现场题
-用 7 次 dispatch 形成 `APPROVED` Result：固定 revision 的 Controller/Service Source、正文和独立 Reviewer 都覆盖登录主链、
-`SecurityContext`、JWT、失败分支与 `loginLogMapper.insert` 审计副作用，private SQLite 成立。随后两道异质题均在首个角色调用收到
-`PROVIDER_HTTP_ERROR`，每题一次调用、retry/switch 0，listener 继续；受控超限页面请求在 Provider 前拒绝，调用根不增加且 health 保持
-`READY`。旧实现却把已知 HTTP 失败在页面/terminal audit 重标为 binding drift/outcome unknown，见 `FINDING-010-039`。因此该会话只证明
-原题质量修复和请求隔离，不能取得三题 PASS；错误传播/审计修复的 Engineering QA 全组 87/87 PASS，仍须新 clean candidate live 重验。
-允许本机 AF_UNIX 的完整回归为 1148 项、1143 PASS，raw 唯一 4 FAIL + 1 ERROR 仍与既有 V-009/Codex historical hold 完全相同，见
-`FINDING-010-040`；默认沙箱额外 6 ERROR + 1 FAIL 精确属于 socket permission noise，不进入产品失败集合。
-
-clean candidate `31a9ccd…` 随后使用正确 DeepSeek CLI 发起新的 current Conformance；run
-`ccrun_717391edb4c6482d8809dd45be405626` 在第一次 dispatch 收到 HTTP 402，Result `sha256:44bf29b…` 为 FAIL、qualification
-`NOT_ISSUED`、request 1、retry 0、TLS/credential 成功。官方错误码将 402 定义为余额不足，见 `FINDING-010-041`。旧 run-008 adapter
-qualification 仍在有效期且 implementation/config digest 相同，但不证明当前账户可用或新候选三题质量；因此 live 保持 environment-blocked，
-不得重试、切 Provider 或用旧答案补齐。
-
-余额恢复后的后续候选最终推进到 clean `5ce5ab0…` 与 run-015 fresh DeepSeek Conformance 2/2 PASS。同一持续会话 3 题共 32 dispatch、
-retry/switch 0，但 raw SQLite 复核否定页面的两个 `APPROVED`：原登录题再次漏掉 `insertLoginLog` 审计副作用；混合 support/unknown 题
-输出两个 `DIRECT_ANSWER` 而失败关闭；401/403 题用 `SecurityConfig` 接线替代未读取的动态 manager 自身实现。见
-`FINDING-010-048`。受控超限仍在 Provider 前拒绝，private files 与 Production `NOT_EXECUTED` 成立；这些安全/隔离事实不构成答案质量
-PASS。当前 mandatory-read path、唯一 direct-answer shape 与独立 side-effect audit 的定向组合 96/96、docs 442/442 PASS；允许本机
-AF_UNIX 的 full 1162 项中 1157 PASS，唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold。仍须 clean freeze、fresh
-Conformance 和完整三题重验。
-
-该处置形成 clean `00afecd…`，run-016 fresh DeepSeek Conformance 2/2 PASS；同一持续会话三题分别用 12/13/13 次 dispatch，全部未形成
-交付答案。原题的第 12 次总 dispatch 为 post-dispatch `PROVIDER_OUTCOME_UNKNOWN`，Gateway raw state 正确但页面误报 binding drift；
-另两题的 Question Understanding 分别声明 8/6 个 mandatory-read paths，12 次 Investigation 被 search/read 和非必读 locator 消耗，无法
-FINISH。terminal receipt `sha256:b3c94c2…` 记录 38 dispatch、retry/switch 0、private files、Production `NOT_EXECUTED`；22,000 字符
-输入仍在 Provider 前拒绝且 call root 不增加。见 `FINDING-010-049`。当前 4-path/fuse reachability、required-locator priority、remaining-fuse
-投影与 exact outcome-unknown propagation 的 Engineering QA 组合 97/97、docs 444/444、compile/diff PASS；允许 AF_UNIX 的 full
-1163 项中 1158 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确为冻结 V-009/Codex historical hold，见 `FINDING-010-050`。新 clean candidate
-与 fresh live 仍待执行。
-
-该处置形成 clean `d12223f…`，run-017 fresh DeepSeek Conformance 2/2 PASS。三题调查均在 4-path/12-call contract 内进入 Answer；混合
-构建/安全/resources unknown 题以 14 次 dispatch 获得 `APPROVED`，并把 resources 中运行参数保留为未知。原登录题与 401/403 题分别以
-9/12 次 dispatch 到达 Answer，却都因 follow-up claims 的 role 次序为“process → impact → process …”在 Review 前失败关闭；raw claims 的
-checklist、observation、evidence links 完整。terminal receipt `sha256:e901faf2…` 记录 35 dispatch、retry/switch 0、private files、
-Production `NOT_EXECUTED`，22,000 字符输入在 Provider 前拒绝且 call root 不变。见 `FINDING-010-051`。可信 adapter 的受控稳定排序回归
-已使 Engineering QA 98/98 PASS；docs 446/446、compile/diff PASS，允许 AF_UNIX 的 full 1164/1159，raw 唯一 4 FAIL + 1 ERROR 仍为
-冻结 historical hold，见 `FINDING-010-052`。新 clean/fresh live 尚未闭合。
-
-该处置形成 clean `88e33bd…`，run-018 fresh DeepSeek Conformance 2/2 PASS。原登录题与构建/resources unknown 题分别以 13/15 次
-dispatch 得到 `APPROVED`；401/403 题以 8 次 dispatch 形成三个检查面、401/403 区分、Citation 和独立
-`IMPLEMENTATION_EVIDENCE` 核对依据，但后者独自绑定的 3 个 material observations 被默认正文无条件隐藏，因而在 Review 前失败。
-terminal receipt `sha256:08d84045…` 记录 36 dispatch、retry/switch 0、private files、Production `NOT_EXECUTED`，22,000 字符输入在
-Provider 前拒绝且 call root 不变。见 `FINDING-010-053`。conditional implementation-evidence visibility 的 Engineering QA 99/99 PASS；
-docs 448/448、compile/diff PASS；允许 AF_UNIX 的 full 1165 项中 1160 PASS，raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见
-`FINDING-010-054`。确定性 Gate 已闭合，新 clean/fresh live 尚未执行。
-
-该处置形成 clean `c65617e…`，run-019 fresh DeepSeek Conformance 2/2 PASS。同一持续会话三题分别以 12/15/12 次 dispatch 获得模型
-`APPROVED`，且第三题 requested implementation evidence 已进入默认正文；但独立技术复核发现其一处把未认证与权限不足都归为 403，后一处
-又正确区分为 401/403。raw Review 逐字复述冲突仍将四项 quality 全部 PASS。terminal receipt `sha256:cfed19a1…` 记录 39 dispatch、
-retry/switch 0、private files、verified transport、Production `NOT_EXECUTED`；超限输入在 Provider 前失败且 call root 保持 39。见
-`FINDING-010-055`。新增第五项 closed `claim_consistency` 已有三模块 62/62 定向证据，完整 deterministic 与 fresh live 尚未闭合。
-
-上述修复最终通过 Engineering QA 99/99、docs 450/450、compile/diff；允许 AF_UNIX 的 full 1165 项中 1160 PASS，raw 唯一 4 FAIL +
-1 ERROR 仍为冻结 historical hold，没有 ITER-010 新失败，见 `FINDING-010-056`。确定性 Gate 已闭合，新 clean/fresh live 尚未执行。
-
-该处置形成 clean `274e5ea…`，run-020 fresh DeepSeek Conformance 2/2 PASS。Q1 以 10 次 dispatch 获得独立可接受的 `APPROVED`；Q2 已
-声明 4 个 mandatory paths，却因没有 direct locator 而把 path/filename 当内容搜索词，5 次 dispatch 后触发
-`NO_PROGRESS_FUSE_EXHAUSTED`；同一 listener 随后接受 Q3，后者以 11 次 dispatch 完整读取四个决定性实现，却在一个 `SUPPORTED`
-FINISH item 混入 `LIMITATION` 与 search-only boundary reference，被本地 validator 以 `STRUCTURED_OUTPUT_INVALID` 正确关闭。22,000
-ASCII 字符约 22 KB，低于 65,536-byte server limit，合法发生 1 次 dispatch 后人工停止；terminal receipt `sha256:1408e827…` 记录
-4 题、27 dispatch（10/5/11/1）、retry/switch 0、verified transport 与 Production `NOT_EXECUTED`。见 `FINDING-010-057/058`。
-Request + attempt + Profile-bound direct locator、结构互斥 FINISH arrays 和 modality-minimal Understanding Prompt 的 Engineering QA
-101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167 项中 1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见
-`FINDING-010-059`。确定性 Gate 已闭合，新 clean/fresh live 尚未执行。
-
-该确定性处置形成 clean `dfba244…`，run-021 fresh Conformance 2/2 PASS。同一持续 Alpha 中，Q1/Q3 各以 8 次 dispatch 得到独立可接受的
-`APPROVED`；Q2 的 4 个 mandatory paths 已全部通过 direct locator READ，但第 5 个 Investigation call 在仍有 8 个含当前动作 call 时
-FINISH，并把 3 个 UNKNOWN 同时放入 supported 与 non-supported arrays，被本地 Schema 以 `STRUCTURED_OUTPUT_INVALID` 正确关闭。
-Q2 后 listener 继续接受 Q3；66,000-byte 输入在 Provider 前拒绝且 Gateway 根保持 22。terminal receipt `sha256:d38d94bb…` 记录
-8/6/8 dispatch、retry/switch 0、verified TLS、private files 和 Production `NOT_EXECUTED`。见 `FINDING-010-060`。当前 exact-once
-partition 与 post-mandatory material-gap exhaustion 的 Engineering QA 101/101、docs/compile/diff PASS；允许 AF_UNIX 的 full 1167 项中
-1162 PASS，raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见 `FINDING-010-061`。deterministic Gate 已闭合，新 clean/fresh live
-尚待执行。
-
-该处置形成 clean `be15a0a…`，run-022 fresh Conformance 2/2 PASS。Q1 的 Understanding 正常；第一个 Investigation 选择合法 direct
-locator、current required basis 与空 FINISH partitions，却返回空 `checklist_item_ids`。Domain 以 structured-output violation 正确关闭，
-证明 Provider Schema 与 non-empty/unique Domain binding contract 不一致。会话在 2 次 dispatch 后停止，未提交 Q2/Q3 或超限输入；
-retry/switch 0、verified TLS、private files 和 Production `NOT_EXECUTED`，不能借 run-021 补齐。见 `FINDING-010-062`。当前修复把 Initial/
-Verification checklist/basis binding arrays 的 Provider Schema、Prompt 与 Domain 对齐；完整 deterministic 与新 clean/fresh live 待闭合。
-
-该 Schema—Domain 修复的三模块定向 65/65、Engineering QA 102/102、docs/compile/diff PASS；默认 sandbox full 1168 项为 5 FAIL +
-7 ERROR，允许 AF_UNIX 后为 1163 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。
-见 `FINDING-010-063`。deterministic Gate 已闭合，新 clean candidate/fresh live 仍待执行。
-
-该处置形成 clean `656b549…` / run-023：fresh Conformance 2/2 PASS，同一 listener 顺序完成三题 8/8/7 dispatch，retry/switch 0、
-verified TLS、private files、Production `NOT_EXECUTED`；66,000-byte UTF-8 输入在 Provider 前拒绝且 Gateway 根保持 23。Q1/Q2 独立
-可接受；Q3 虽获模型 `APPROVED`，却仅凭 empty authentication context 与 authorization deny 推导最终 401/403，把同一局部条件赋予
-互斥外部结果，Reviewer 仍误判 consistency PASS。见 `FINDING-010-064`。Prompt/Contract 现要求下游 response/exception mapper
-full-content ownership evidence，拒绝用 handler wiring/framework default 补写外部输出，并区分 transport status 与 response-body code；
-定向 65/65、Engineering QA 102/102、compile/diff PASS，完整 docs/full 与新 clean/fresh live 待闭合。
-
-`FINDING-010-065` 已闭合该修复的 deterministic Gate：current docs 459/459、compile/diff PASS；默认 sandbox full 1168 项为 5 FAIL +
-7 ERROR，其中新增 1 FAIL + 6 ERROR 精确来自 AF_UNIX 禁止；允许 AF_UNIX 后同一 1168 项为 1163 PASS，raw 唯一 4 FAIL + 1 ERROR
-仍是冻结 V-009/Codex historical hold，没有 ITER-010 新失败。新的 clean candidate/fresh live 仍待执行。
-
-该处置形成 clean `740c74a…` / run-024：fresh Conformance 2/2 PASS，同一 listener 完成 Q1/Q2/Q3 共 25 次 dispatch（6/14/5），
-retry/switch 0、逐题 verified TLS、private files、Production `NOT_EXECUTED`；66,000-byte UTF-8 输入在 Provider 前拒绝且 Gateway 根保持
-25。Q1 的 child observation 引用未被 Provider 完整重抄到 parent，Q3 把 UNKNOWN item 重复分装进两个 FINISH arrays；Q2 Reviewer
-两次明确识别 dynamic authorization implementation 缺证，却分别维护成 `REWRITE_REQUIRED + null request` 并触发 same-Package rewrite
-fuse。见 `FINDING-010-066/067`。现已将 FINISH 收敛为单一 outcome-tagged array 并由 trusted Adapter 派生 parent reference closure；Review
-只返回 typed Finding remediation，由 Application 派生 action 与 Verification Request。`FINDING-010-068` 同时校正历史 ITER-007 oracle
-把冻结摘要用 current System 文档重算的测试缺陷。最终 Engineering QA 106/106、current docs 463/463、含 docs Gate 139/139、compile/diff PASS；默认
-sandbox full 1172 项为 5 FAIL + 7 ERROR，其中额外 1 FAIL + 6 ERROR 精确属于 AF_UNIX 禁止；允许 AF_UNIX 的同一 full 为 1167 PASS，
-raw 唯一 4 FAIL + 1 ERROR 仍为冻结 historical hold，见 `FINDING-010-069`。deterministic Gate 已闭合，
-新的 clean candidate/fresh live 仍待执行。
-
-该处置形成 clean `7fb7e7c…` / run-025：fresh Conformance 2/2 PASS；同一 listener 完成 Q1/Q2/Q3 共 33 次 dispatch（8/13/12），
-retry/switch 0、逐题 verified TLS、private files、Production `NOT_EXECUTED`；66,000-byte UTF-8 输入在 Provider 前拒绝。Q1 独立可接受且
-四个 Citation 已打开核对。Q2 的 Reviewer 正确派生只绑定 `check-3` 的 Verification Request，补证 FINISH 也正确返回单项 delta，却被
-Application 旧“全 Checklist exact-once”规则拒绝。Q3 所需 handler implementation 不在 exact allowlist，重复 intent 被 Broker 拒绝并由
-no-progress fuse 安全关闭。见 `FINDING-010-070/071`。当前处置把 Verification FINISH 收窄为 authorized single-gap delta，由可信
-Application stable merge，并投影 Package full reads 与最新 Broker rejection；run-025 仍为 1 PASS + 2 FAIL，新 deterministic Gate 与
-clean/fresh live 均待闭合。
-
-`FINDING-010-072` 已闭合该修复的 deterministic Gate：Engineering QA 109/109、docs 组合 142/142、历史 oracle 组合 74/74、current docs
-466/466、compile/diff PASS；默认 sandbox full 1175 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1170 PASS，raw 唯一 4 FAIL + 1 ERROR
-仍精确属于冻结 V-009/Codex historical hold，没有 ITER-010 新失败。新的 clean candidate/fresh Conformance 与三题仍是下一 Gate。
-
-clean `32a00a3…` / run-026 完成 fresh Conformance 与同一 Browser 会话三题：8/12/14 dispatch、retry/switch 0、66,000-byte 输入在
-Provider 前拒绝、private files 与 Production `NOT_EXECUTED` 成立。Q1 `APPROVED`；Q2 证明 Verification limitation 可错借 predecessor
-Package 的无关 cognition unknown，Q3 证明 Reviewer 可重复请求已经 bounded Verification 穷尽且诚实披露的同一 gap。两题均安全失败，
-run-026 保持 1 PASS + 2 FAIL。`FINDING-010-073` 已排除 predecessor boundary、强制每个非支持 child 绑定 current gap，并投影 terminal
-typed `VERIFICATION_GAP` 给 Reviewer；三模块 76/76 PASS，扩展 deterministic/fresh live Gate 待闭合。
-
-`FINDING-010-074` 已闭合 deterministic Gate：Engineering QA 113/113、docs 组合 146/146、历史 oracle 组合 78/78、
-current docs 468/468、compile/diff PASS；默认 sandbox full 1179 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1174 PASS，raw
-唯一 4 FAIL + 1 ERROR 仍精确属于冻结 V-009/Codex historical hold。新 clean candidate/fresh live 仍是下一 Gate。
-
-clean `b709fad…` / run-027 的 fresh Conformance 2/2 PASS；同一 Browser 会话三题共 23 dispatch、retry/switch 0，66,000-byte 输入在
-Provider 前拒绝，private files、console clean 与 Production `NOT_EXECUTED` 成立。Q1 独立复核 PASS；Q2/Q3 虽被页面错误标为
-`APPROVED`，但 raw evidence 证明 placeholder 被扩张为具体 header、caller/import 被扩张为未挂载 DTO fields/handler output、上游
-local decision 被扩张为下游 401/403。23 calls 没有 Verification，唯一 Reviewer 复述同一扩张并五项全 PASS，实际仍为 1 PASS + 2 FAIL。
-`FINDING-010-075` 已要求 comprehensive provisional Review 后运行 fresh evidence-boundary challenge，Application 投影三类通用 leads，
-Gateway 强制 focus 顺序，Authorization 只接受 challenge。focused 78/78、Engineering QA 115/115 PASS；docs/oracle/full deterministic
-Gate 与新 clean/fresh live 仍待闭合。
-
-`FINDING-010-076` 已闭合 deterministic Gate：docs 组合 148/148、历史 oracle 组合 80/80、current docs/compile/diff PASS；默认
-sandbox full 1181 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1176 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结
-V-009/Codex historical hold，没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-027 不追认。
-
-clean `f832ceb…` / run-028 的 fresh Conformance 2/2 PASS；同一 Browser 会话三题共 26 dispatch（9/9/8）、retry/switch 0，66,000-byte
-输入在 Provider 前拒绝且调用数不变，private files、console clean、listener continuity 与 Production `NOT_EXECUTED` 成立。Q1/Q3 独立
-PASS；Q2 虽保留具体配置值为未知，却把 caller getter 扩张为未挂载 DTO field/wire property。fresh challenge 已收到 exact type lead 仍原样
-复述并错误 `APPROVED`，实际为 2 PASS + 1 FAIL。`FINDING-010-077` 已要求 Application-owned stable challenge ID、逐项
-evidence/Draft scope assessment、exact ID 集合重算与越界 Finding-on-challenged-Claim 绑定；focused 78/78、Engineering QA 115/115
-PASS，扩展 deterministic 与新 clean/fresh live 待闭合。
-
-`FINDING-010-078` 已闭合 deterministic Gate：docs 组合 148/148、历史 oracle 组合 80/80、current docs/compile/diff PASS；默认
-sandbox full 1181 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1176 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结
-V-009/Codex historical hold，没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-028 不追认。
-
-clean `e0ad3c8…` / run-029 的 fresh DeepSeek Conformance 2/2 PASS；同一持续 Browser 会话三题共 28 dispatch（9/11/8），retry/switch/
-outcome-unknown 0，66,000-byte 输入在 Provider 前拒绝且调用数不变，private files、console clean、listener continuity 与 Production
-`NOT_EXECUTED` 成立。答案质量为 0/3：Q1 被错误 `APPROVED` 但遗漏 Service full entry 中的登录审计持久化副作用；Q2 正确识别未挂载
-DTO 扩张后，rewrite 又丢掉另一个安全 material observation，并由 Application 失败关闭；Q3 正确识别 401/403 扩张，但 assessment 的
-Finding Claim 与 exact challenge scope 错绑并由 Application 失败关闭。`FINDING-010-079` 已投影逐 cited full-content Java entry 的
-material-effect scan，增加 `DRAFT_OMITS_MATERIAL_EFFECT`，为 Answer 提供 early exact observation coverage table，并明确所有非 passing
-assessment 的 exact challenged-Claim binding。focused 79/79、Engineering QA 116/116 PASS；扩展 deterministic 与新 clean/fresh live
-待闭合，run-029 不追认。
-
-`FINDING-010-080` 已闭合 deterministic Gate：docs 组合 149/149、历史 oracle 组合 81/81、current docs/compile/diff PASS；默认
-sandbox full 1182 项为 5 FAIL + 7 ERROR，允许 AF_UNIX 后为 1177 PASS，raw 唯一 4 FAIL + 1 ERROR 仍精确属于冻结
-V-009/Codex historical hold，没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-029 不追认。
-
-clean `9ae982b…` / run-030 的 fresh DeepSeek Conformance 2/2 PASS；同一持续 Browser 会话三题共 36 dispatch（14/14/8），retry/switch/
-outcome-unknown 0，66,000-byte 输入在 Provider 前拒绝且调用数不变，private files、console clean、listener continuity、clean SQLite
-checkpoint 与 Production `NOT_EXECUTED` 成立。Q1 最终覆盖登录审计持久化，Q3 正确区分 token 校验、SecurityContext 与动态权限并保留
-handler mapping unknown，两题独立 PASS；Q2 虽被页面错误 `APPROVED`，却没有把登录响应 token/tokenHead 交接为受保护请求输入，也没有
-明确 configuration-backed header/prefix unknown，实际 2 PASS + 1 FAIL。见 `FINDING-010-081`。
-
-`FINDING-010-082` 已增加 operational Question Understanding/Answer handoff、通用 `ORIGINAL_QUESTION_FULFILLMENT_SCAN`、
-`DRAFT_OMITS_MATERIAL_REQUIREMENT` 与专用 disposition/challenge-kind matching。focused 80/80、Engineering QA 117/117 PASS；
-`FINDING-010-083` 再以 docs 组合 150/150、历史 oracle 组合 82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178
-exact historical hold 闭合 deterministic Gate；没有 ITER-010 新失败。新 clean candidate/fresh live 仍是下一 Gate，run-030 不追认。
-
-clean `3c45072…` / run-031 的 fresh DeepSeek Conformance 2/2 PASS；Q1 使用 12 dispatch，retry/switch/outcome-unknown 0，但第二次
-challenge 发现 cache write 时没有声明 Application observation omission，错误请求第二次同包 rewrite，最终
-`SAME_PACKAGE_REWRITE_FUSE_EXHAUSTED` / Q1 FAIL；Q2/Q3 与 66,000-byte 负测未执行。`FINDING-010-084` 要求 exact omitted-effect
-statements 与 `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer，并由 Application 重算 observation membership、entry/evidence class 与
-remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Engineering QA 117/117、docs 组合 150/150、历史 oracle 组合
-82/82、current docs/compile/diff 与允许 AF_UNIX 的 full 1183/1178 exact historical hold 闭合 deterministic Gate。新 clean/fresh live
-仍待执行，run-031 不追认。
+### 当前 Slice1 Cases
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-PLAN-RECOVERY-001 | 用户显式改变开发计划时，以一次性治理恢复出口中断不可达的旧动作图，不由候选计划自我授权 | project / governance | trusted `04e8b6cc3df2c9335b9cd6fb4e4f5a8a955c8c4e` / tree `aca4b4718724d8e2b49f58c35e7ed15256d47635`；exact recovery authorization `local-user-message-utf8:sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5`；interrupted `ITER-010-PDR-009 / ITER-010-ACTION-DIRECTION-FREEZE-001`；recovery runner identity | 只允许治理、计划、门禁及其定向测试；产品代码、旧四路 runner、Provider dispatch、Web、hardening、full regression 均保持锁定；runner 与自己的 Result 分提交；PASS Result 自环且不直接授权产品，后续 PDR-010 必须在独立提交依赖该 sealed Result 与新的未复用 decision ref | `ITER-010-RESULT-V-PLAN-RECOVERY-001` 与 raw-byte-bound JSON evidence；trusted-base runner 隔离重放；模型/Provider/credential/TLS/HTTP/full regression 均为 0 | PASS / blocking |
-| V-DIRECTION-FREEZE-001 | 四路方向 Gate 输入冻结 | product / plan execution | clean product `3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19` / tree `b1fd51bb533c8ff393dc42b6864a08e5c94929c0`；`current Codex actual identity`；`三道异质问题`覆盖用途/入口/结构、行为调用链与实质副作用、故障/授权/未知且至少两题未参与开发、无 POM-only；四路 runner、独立 exact-source truth ledger、blind rubric、首选/备用 execution profile refs、Result Schema；外部调用 0 | Agent/Codex identity、问题、原始证据、隔离/随机化、绝对质量和逐臂判定字段可重放；具体 Provider/model identity 只由 execution profile 配置和执行收据绑定；直接证据和 Codex 都不是 Oracle/Reviewer；前三路同一 execution profile，两个 Agent 路除认知开关外无变量差异；密封关闭 Schema 的 provider-neutral root input set：三个唯一 `Q-*` ID × 三个固定系统臂共九项，每项只有 question/system-arm ID 与 exact root-input digest，任何额外 route/provider/model/profile/plugin 控制字段失败关闭；后续只允许替换 route profile；`产品代码、Prompt/Reviewer、Web canary、hardening、full regression、Provider dispatch 保持锁定`；只允许 Manifest 白名单路径；Result 精确绑定 `plan_revision_ref/action_ref/verification_case_id/plan_gate_verdict` | not-executed；dirty v7 为 `QUARANTINED / NOT_INPUT`，不得作为本 Case 输入 | NOT-RUN / blocking |
-| V-PUBLIC-OSS-AUTHORITY-ADMISSION-001 | 四路评测与最小 Web 在外部调用前机械证明公开源码 standing-authority 准入 | security / local admission | PDR-008/PDR-009；公开 mall upstream、exact revision/source scope；preferred/fallback route roles、execution-profile/admission-plugin refs、披露和预算边界；Freeze runner；外部调用 0 | 本地派生 exact one-use scope；replay、revision/provider/model/endpoint/account/disclosure/budget/admission-policy 漂移在 credential/TLS/HTTP 前失败；所有计数与 runner identity 写入 digest-bound JSON 收据；本 Case 只证明外调前 admission，不冒充完整 live terminal reconciliation | not-executed；由 Freeze 与 `V-DIRECTION-FREEZE-001` 一起按 `INVALID > FAIL > PASS` 聚合 | NOT-RUN / blocking |
-| V-DIRECTION-QUALITY-001 | 四路价值比较；首选/备用执行配置两个预注册 Result 最多一个 PASS | product / strict direction quality | `direct relevant evidence`、`same-agent source-only`、`same-agent World Model + source`、`current Codex`；Freeze PASS 后的 immutable runner/questions/ledger/rubric/identities 和 provider-neutral root input set；答案跨臂披露前密封；事实由 independent exact-source ledger 提供；Preferred Result=`ITER-010-RESULT-V-DIRECTION-QUALITY-PREFERRED-001`，Fallback Result=`ITER-010-RESULT-V-DIRECTION-QUALITY-FALLBACK-001`；具体 Provider/model 只记录在 execution profile 与 sealed receipts | 目标系统先过`绝对质量 PASS`；逐题`不得输给任一对照臂`；`总体严格超过 current Codex`；`至少一项非 locator 世界模型贡献`；`全体打平 FAIL`；`成本或延迟不能补偿答案质量`；任一重大错误、物质遗漏、无据/错误 Citation、假 Limitation/Unknown、Reviewer 重大漏判均 FAIL。首选配置 PASS→MinimumWeb、FAIL→DirectionRework、INVALID→FallbackRefreeze；备用配置 PASS→MinimumWeb、FAIL→DirectionRework、INVALID 自环失败关闭；不得混批或合并首选与备用路线输出 | not-executed；Preferred 仅在 Freeze PASS 后解锁，Fallback 仅在 FallbackRefreeze PASS 后解锁；两个 Result 最多一个 PASS | NOT-RUN / blocking |
-| V-DIRECTION-FALLBACK-REFREEZE-001 | 首选路线 INVALID 后把三个系统路统一冻结到备用执行配置；不重跑、不混批、不请求新人工授权 | operations / route transition | exact preferred-route Quality `INVALID` Result seal；Freeze 的 immutable provider-neutral root input set；fallback execution profile ref/digest；fallback admission policy plugin ref and digest；current standing authority | 外部模型调用=0、人工授权请求=0、Provider dispatch=0；三个系统路 input digest 集合；no mixed batch；只有首选尝试在任何授权答案形成前以 `TERMINAL_UNAVAILABLE` 结束时 PASS；不得修改任何非路由输入或复用首选中间输出；Refreeze 不生成 live price/window/dispatch receipt；PASS→FallbackQuality，FAIL→PreferredQuality，INVALID 留在 FallbackRefreeze 失败关闭 | branch not entered；只有 Preferred Quality INVALID 可解锁，且其分类仍须由本 Case机械判定 | NOT-RUN / blocking |
-| V-DIRECTION-FREEZE-REWORK-001 | Freeze 自身失败时只修冻结工件，不借机改产品 | project / fail branch | exact Freeze Result=`FAIL`；base-tree 预注册 freeze-rework action、路径白名单和同一 clean product | 只修 value-gate runner/test 与绑定 Result/Finding，外部调用 0、全部产品/Prompt/Web/Provider 锁保持；PASS 后回到 Freeze，FAIL/INVALID 留在本动作 | branch not entered | NOT-RUN / blocking |
-| V-DIRECTION-REWORK-001 | 四路质量 FAIL 后先做责任层归因，不直接碰答案 | architecture / fail branch | exact Quality Result=`FAIL`、四路密封输出、独立 truth ledger、每路 Agent/World Model/Reviewer trace 和 Web 不参与证明 | 区分 World Model 构建、认知投影、Agent 调查/综合、Reviewer 与 delivery 的 earliest divergence/guard failure；零外部调用、零产品/Prompt/Web 变更；只有归因 PASS 才可进入新的 layer-specific repair plan，未预注册动作 fail closed | branch not entered | NOT-RUN / blocking |
-| V-RESPONSIBILITY-PLAN-001 | 质量失败完成分层归因后只制定对应责任层计划 | project / governance | sealed Direction Rework PASS Result、exact earliest-divergence/guard-failure、Finding、用户授权引用 | 先密封本治理动作 Result；随后计划修订必须独立提交并读取 base Result，只能改治理/系统文档和门禁，不得夹带产品、Provider、Web 或 validation 实现 | branch not entered | NOT-RUN / blocking |
-| V-WEB-FAILURE-ATTRIBUTION-001 | 最小 Web 失败后离线定位最早偏差而非针对单题调参 | project / governance | sealed Minimum Web FAIL Result、World Model/Agent/Reviewer/Delivery trace、浏览器实际输出 | 逐层给出 first divergence 和 guard failure；外部调用 0、产品/Prompt 不变；先密封本动作 PASS Result，后续计划修订另行绑定新 Finding/PDR/用户决定 | branch not entered | NOT-RUN / blocking |
+| V-MVP-EXPERIENCE-001 | 同一已交付候选完成严格方向证据并形成最终 Result handoff | product / final direction handoff | `V-CHAT-EXPERIENCE-001` 同一 clean candidate；至少三条异质问题且至少两条未参与修复；actual current Codex fresh baseline；或一次通用修复仍失败的完整归因与复验 | 比较完成并记录世界模型、Agent、源码补证、Evidence/Review、多轮、新 Conversation 隔离、绝对质量、逐题差异、总体结论与非 locator 贡献；或证明一次通用修复后同类重大失败仍存在；此时才 `requires_result=true`，密封一次 Result 并移动到 `V-PREVIEW-002`；full regression=0 | 当前未执行；`ITER010_MVP_LIGHT@2` 校验候选等于实际可信父 commit/tree、内嵌最低可判证据、冻结 standing scope 和 exact session/config/input/disclosure/budget/Secret Reference receipt；机器 `PASS` 仅表示 handoff 包完整，不认证本地捕获或语义质量，包内严格质量结论必须连同原始记录交给用户判向 | NOT-RUN / blocking |
+| V-PUBLIC-OSS-AUTHORITY-ADMISSION-001 | 当前公开源码 standing scope 允许完整体验动作直接进入逐 dispatch runtime 准入，不建设独立 Freeze 阶段 | security / local admission | PDR-008/PDR-010；公开 Apache-2.0 mall upstream；clean exact commit `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7` / tree `047d79d8588b76013c260f3f1a9565707301a60a`；只读 allowlist；通用 route roles；既有披露、预算、调度和 loopback evaluation 边界 | standing scope 可复用且人工重复审批请求=0；每个真实 Turn/dispatch 在 Source disclosure、credential 和 network 前自动派生 one-use exact receipt；revision、route、account、disclosure、budget、调度或 admission policy 的真实 scope delta 失败关闭并申请最小增量权限 | PDR-008、PDR-010 与 exact Source identity；runtime receipt 由真实体验证据逐 dispatch 验证 | PASS / blocking |
+| V-DIRECTION-QUALITY-001 | 完整浏览器体验后的异质问题与 current Codex 严格方向质量判断 | product / post-experience strict direction quality | `V-CHAT-EXPERIENCE-001` 已交付的同一候选；至少三条异质问题且至少两条未参与修复；actual current Codex 保留真实客户端、model、reasoning、tools 与权限；独立源码事实与技术评估；双方答案披露前隔离 | 系统绝对质量 PASS；逐题相对 Codex 无物质退步；总体严格超过 current Codex；至少一项非 locator 世界模型贡献；重大错误、物质遗漏、无据/错误 Citation、假 Limitation/Unknown 或 Reviewer 重大漏判均 FAIL；成本或调用次数不得补偿质量 | 当前未执行；在首次完整浏览器交付后、最终 `V-MVP-EXPERIENCE-001` handoff 前执行；完整四路因果消融须在用户 CONTINUE 后经新 PDR、明确授权与可信父 cutover | NOT-RUN / blocking |
+| V-PUBLIC-OSS-AUTHORITY-001 | 公开开源测试工程的 standing authority 自动派生逐 Turn/dispatch 机器收据，不重复请求人工批准 | security / authorization + runtime | `PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1`；公开 mall upstream/exact revision；current Slice/root authority；通用 route roles、budget、disclosure 与 admission policy | 同一 scope 自动派生 one-use exact receipt且人工审批请求=0；receipt 绑定 product/source/session/route/config/input/disclosure/budget/time；过期、消费或漂移在 Source disclosure、credential/network 前失败；不同或私有 Source、扩大披露/预算、account 或 admission exception 不自动扩权 | 计划与 standing-scope 设计已闭合；完整 runtime 正负向、人工审批计数和 terminal reconciliation 由 `V-MVP-EXPERIENCE-001` 的实际 dispatch evidence 聚合 | NOT-RUN / blocking |
+| V-CHAT-EXPERIENCE-001 | 第一条完整浏览器主链可操作即交付 | product / first operable browser delivery | 固定启动命令和 loopback URL；公开工程 exact revision；代表性的至少三 Turn 语义链；新 Conversation 泄漏负测；完整世界模型—Agent—源码—Evidence/Citation—fresh Review—Web 责任链 | 无认证；初问后的指代追问、纠正、深入或总结真实使用当前 Context；每 Turn 有 Evidence/Citation/fresh Review；失败只关闭当前 Turn；新 Conversation 不继承旧 Context/Evidence/provider memory；第一次达成即交付；`requires_result=false`、不移动游标、不等待 Codex 比较 | 当前未执行；属于 `V-MVP-EXPERIENCE-001` 长动作的即时用户出口，不等待预先比较或 full regression | NOT-RUN / blocking |
+| V-CHAT-001 | 主工程 Agent 完成真正语义多轮 Chat 且新 Conversation 不泄漏 | product / chat | 同一 Conversation 的初问、指代追问或纠正、进一步深入或总结；随后新 Conversation 省略指代 probe | Context 维护用户目标、约束、实体、开放问题和 reviewed/superseded conclusion refs；模糊指代先澄清；每轮独立 Evidence/Answer/Review；三个独立问答不算 Chat | 当前未执行；先由 `V-CHAT-EXPERIENCE-001` 的首次浏览器主链验证，后由 `V-MVP-EXPERIENCE-001` 汇总方向证据 | NOT-RUN / blocking |
+| V-CHAT-QUALITY-001 | 当前完整体验每个 Turn 的答案与独立审核满足工程质量 | product / quality | `V-CHAT-001` 语义链和两个未参与修复问题的逐 Turn Context/Work State/Ledger/Package/Answer/Review；fresh independent Reviewer | 每 Turn 重大错误=0、Reviewer 重大漏判=0、重要结论有 Citation；答案先解决用户目标，代码走读只作证据；Unknown 来自 Coverage/Gap；prior Answer/Review 不作事实；Finding 回主 Agent 后形成新 identity；无特判 | 当前未执行；失败先定位最早责任层并做一次最小通用修复，不按单题碰答案 | NOT-RUN / blocking |
+| V-CHAT-XD-001 | 主工程 Agent 在同一答案链组合有资格的 World Model Cognition 与 query-time Source 证据 | product / integration | 至少一个异质问题需要多域 Cognition 与 repository source/doc/config/test 证据；exact Context/Work State/Ledger/Package/Answer/Review | 同一主工程 Agent 组合两类认知并分别绑定正确 Citation；至少一个非 locator 结论来自问题相关世界模型投影；Source 只核实、补全或纠正，不回填为世界模型贡献；无平行答案或模式拼接 | 认知资格已有本地 PASS；真实浏览器组合尚未执行 | NOT-RUN / blocking |
+| V-PREVIEW-002 | 用户基于完整浏览器体验、异质问题和 current Codex 质量证据决定方向 | product / direction + architecture / reflection | `V-MVP-EXPERIENCE-001` 最终 Result、exact candidate、URL、逐 Turn Citation/Review、比较或一次通用修复仍失败证据、限制、最早责任层与 A1—A6 复盘 | 用户实际追问、纠正、深入或总结后决定 CONTINUE/REWORK/REDIRECT/REJECT；receipt 只记录方向且 action 自环；`CONTINUE` 后仍需新 PDR、明确用户授权和可信父 cutover才可解锁后续；严格质量未过必须如实呈现 | 完整体验和用户判向尚未执行 | NOT-RUN / blocking |
 | V-LAYER-ATTRIBUTION-001 | 回答错误先定位到最早偏差层，而不是继续针对问题碰答案 | architecture / diagnostic | run-042 的 exact Source、Maven Snapshot/Read Set、Cognition 投影、Conversation/Work State、工具观察、Ledger/Package、Draft、Review、Delivery 与页面 Result；原问题加两个未参与修复的异质问题；外部模型调用 0 | 对每个 material fact 分别给出 `Source truth → construction/admission → cognition projection/query → conversation understanding → Agent → Package → Answer → Review → Web` 的 verdict、first divergence、应拦未拦的 guard failure 和 display failure；允许同题多个故障；用 World Model-only、同 Agent source-only、同 Agent eligible-cognition+source、complete-evidence bypass、Reviewer seeded-good/bad 和 Result→Web 替换实验隔离责任；未密封前不得改 Prompt/Schema/Tool/Review | `ITER-010-RESULT-V-LAYER-ATTRIBUTION-001 / FINDING-010-134`：固定 run-042 action trace 的六臂离线替换、逐 material-fact chain 与 exact digest 已密封，外部调用 0。行为事实 first divergence 是 Knowledge construction/admission；Agent 漏读和 Reviewer 放行/扩域为独立下游故障；authorized Result→Web 一致，无 display failure。eligible-cognition arm 只用 behavior oracle 隔离责任，不追认下一 Gate | PASS / blocking |
 | V-COGNITION-ELIGIBILITY-001 | 世界模型向主 Agent 提供能回答实际工程问题的版本化认知，而不是只提供 Maven 模块目录 | product / knowledge + application | 同一 exact repository revision；Profile-specific Snapshot/Read Authority；Cognition Capability Manifest；三个预先冻结的异质类别：结构、行为/调用流程、职责/失败边界或 Unknown | Manifest 至少覆盖结构和实现/行为两类维度，逐 Profile 给出 exact Read Authority、Coverage/Gap、来源和同 revision 绑定；Application 只读组合多个 Profile，不创建 mixed-profile Snapshot/Read Set；逐题只投影相关认知或准确 Gap；Maven-only 对行为题明确不合格；Source 后续补证不回填为 World Model 贡献；至少一项非 locator 的问题相关结论可追溯到 World Model | `ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001 / FINDING-010-135/136`：exact mall revision 上固定 Maven 与 Java 两个独立 Profile、Snapshot、Read Authority 和 capability digest；结构/行为/职责边界三题分别形成 23/32/32 个 support item 与准确 Gap，行为题含 `login → loadUserByUsername/insertLoginLog` 等非 locator 正向事实。Maven-only 行为题失败关闭，artifact Session `@2` 本地组合通过；projection Source read、Provider/model、listener/browser 均为 0 | PASS / blocking |
 | V-FALLBACK-ROUTE-ADMISSION-001 | 当前备用执行配置的准入插件已冻结并可在外调前失败关闭 | operations / model-transparent route admission | 通用 route role、execution-profile ref/digest、admission-plugin ref/digest；当前配置插件的 `V-DEEPSEEK-IDLE-001` 密封 Result | 动作图只依赖本通用 Case，不读取 Provider/model 名称；配置插件必须证明每次备用路线调用前的准入、失败关闭、质量不降级与完整收据；替换具体 Provider/model 时只替换 execution profile 与插件并重跑本 Case，不改动作、分支或质量标准 | 当前配置映射由 `ITER-010-RESULT-V-DEEPSEEK-IDLE-001 / FINDING-010-139` 支持；具体身份仅属于配置与收据 | PASS / blocking |
-| V-DEEPSEEK-IDLE-001 | 当前配置插件的所有 planned DeepSeek dispatch 只在冻结闲时窗口或一次性 exact peak override 下发生 | operations / current configuration plugin | `DEEPSEEK_DISPATCH_ADMISSION@1`；零剩余时长的半开边界时钟 `08:59:59/09:00:00/12:00:00/14:00:00/18:00:00` 与非零 worst-case latest-start；无/有 exact override；Ark success 与 Application/Source/Security failure；跨窗口 planned session；run-043 audit | `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)` 内且 `now + worst_case_duration <= window_end` 才允许；其余时间无 exact override 时在 Provider socket/descriptor/TLS/credential/HTTP 前关闭且相关计数为 0；override 只能覆盖 exact run/call/token/time；Ark success 与非 Provider/model fallback failure 时 DeepSeek=0；窗口结束后不创建新 request；每个 dispatch 回指 fresh official-check/window/authorization receipt；质量链不裁剪；本地 PASS 不授权 live，Ark/local 继续 | `ITER-010-RESULT-V-DEEPSEEK-IDLE-001 / FINDING-010-139`：clean `03520eb…` 实现 Artifact `@3`、run receipt、逐 envelope Gateway preflight/invoke 重验和 terminal 对账；边界/latest-start/override/价格检查/identity/budget/跨窗口测试 PASS，真实 runtime 峰时拒绝的 credential/TLS/HTTP 均为 0。run-043 的 18 次峰时 HTTP 永久保留为历史 FAIL；后继 live receipt 仍需单独证明 | PASS / configuration evidence |
-| V-PUBLIC-OSS-AUTHORITY-001 | 公开开源测试工程的持续 human authority 自动派生逐 run/Turn/dispatch 机器收据，不重复请求人工批准 | security / authorization + runtime | `PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1`；`https://github.com/macrozheng/mall.git`；Apache-2.0；clean source `0504e86b1f1d2a05df86644e40a0d2580866024` / tree `047d79d8588b76013c260f3f1a9565707301a60a`；current Slice/root authorization；preferred/fallback execution profiles、budget/disclosure、fallback admission plugin；same-upstream clean revision、unverified drift、private/unknown/different-upstream source、Provider/model/endpoint/account、budget/disclosure 和 admission-policy-exception fixtures | 同一 current scope 的 preferred run 与合法 admitted fallback 自动派生 exact one-use parent/child receipts，人工审批请求计数 0；receipt 绑定 product/source/session/provider/model/input/disclosure/budget/time/fallback 和 parent digest，过期/消费/漂移在 Source disclosure/credential/network 前失败；同 approved upstream/policy 的新 clean commit 经 Source Authority 复核后自动重封且 human approval=0；未验证 revision drift 失败关闭但不自动转人工；private/unknown/different upstream、Provider/model/endpoint/account、扩大披露/预算和 fallback admission policy exception 不自动扩权；历史 grant/run 不改写 | `ITER-010-PDR-008 / FINDING-010-140` 已闭合文档和设计；runtime 自动派生、负向 fail-closed、人工审批计数与 terminal reconciliation 尚无执行证据。PDR-009 已修订其不是独立入口，当前唯一入口仍是 Freeze；Freeze 只能证明较窄 Admission，完整本 Case 只能由实际 Quality Route/Web receipts 聚合 | NOT-RUN / blocking |
-| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
+| V-MODEL-TRANSPARENT-ROUTING-001 | 产品逻辑只使用通用 execution-profile role/ref 和可信 availability verdict，备用路线只处理真实不可用 | application / AI infrastructure / executable routing contract | 两组可互换的虚拟 preferred/fallback profile 身份；独立 availability boundary；preferred success、`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE`、structured-output-invalid、Reviewer reject、原始 HTTP/outcome 无 availability verdict 的确定性 stub；同 profile 修复/重写边界 | 互换具体 Provider/model 身份不改变动作与分支；只有密封 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` 才产生一个受准入约束的 fallback attempt；structured output invalid 和 Reviewer reject 的 fallback dispatch=0，并在同 profile 以新 request identity/receipt 有界修复或重写；原始 HTTP/outcome 无 verdict 时 fallback=0；耗尽后准确失败关闭；静态/结构测试阻断产品代码按具体 identity 或 `provider_identity/model_identity` 值分支 | 当前未执行；在同一 `V-MVP-EXPERIENCE-001` 长动作内运行定向 executable case；PASS 前禁止实际 fallback dispatch 和最终 handoff；不创建新动作、Result 或游标迁移，不以 full regression 延迟修复后的首次可操作浏览器交付 | NOT-RUN / blocking |
 | V-ALPHA-ACCESS-001 | PDR-004 下在答案质量验收前先交付真实、可操作 Chat Web | product / access | 固定启动命令、loopback 页面、消息历史、“新对话”、Provider/失败状态；最多一个 Provider 前本地或 Mock Access smoke | 页面无需认证；能建立/继续/新建 Conversation 并真实提交 Turn；明确“质量未验收/非生产”；Provider 未配置/未资格/失败如实显示而不阻塞页面；完成后立即把命令、URL、版本和限制交给用户，不等待 Chat/Quality/Comparison；静态回放不通过 | `ITER-010-RESULT-V-ALPHA-ACCESS-001 / FINDING-010-096`：clean `cf2883b…` 固定 listener + in-app Browser；同会话两次失败仍 ACTIVE/历史完整，新会话不同 identity/EMPTY CONTEXT/旧消息不泄漏；2 Conversation、3 Turn、Provider dispatch 0、console clean、Production 未执行；listener 已优雅停止 | PASS / blocking |
-| V-TIMEBOX-001 | 体验优先、根因优先与轻量 live-attempt 纪律成立 | project / delivery | Slice 授权后首个产品变化时间、page/alpha/hard-stop 时间、qualification/smoke/full-regression 计数、sealed version/question/provider dispatch audit、failure signatures、最早偏差层、可证伪根因假设、本地最小复现、两个未参与修复的相邻案例、用户可见增量 | 60/180/240 检查点可核对；本轮已超过 hard stop 并停止 scope expansion/external batch；首次体验前 qualification≤1、smoke≤1、full regression=0 且仅跑 targeted impact/startup/safety；无根因假设不得改 Prompt/Schema/Contract；本地最小复现与两个相邻案例通过后才跑一题 canary；同签名只修一次，复现则架构职责评审；连续两次无用户可见增量停止外部重跑；full regression 只在 Alpha CONTINUE 后 hardening 与正式验收前 | 用户报告约14小时无新体验；PDR-003 hard-stop/root-cause recovery active | FAIL / blocking |
-| V-TIMEBOX-CHAT-001 | PDR-009 下方向先证伪、体验后夯实、持续执行与逐 Turn live-attempt 纪律成立 | project / delivery | 旧 14 小时及 run-035—043、`四个微检查点`、`Conversation/Turn/provider dispatch` 永久保留；PDR-004/005 的 60/180/240/360/480 字段只作历史审计，不定义 current 顺序；实际 Quality Route PASS 后才开始最小 Web Chat 的 current 体验计时 | current 严格按 Freeze→PreferredQuality；首选配置 PASS→MinimumWeb、FAIL→DirectionRework、INVALID→零外部/零人工请求/零 dispatch FallbackRefreeze；FallbackRefreeze PASS→FallbackQuality、FAIL→PreferredQuality、INVALID 自环；备用配置 PASS→MinimumWeb、FAIL→DirectionRework、INVALID 自环失败关闭；MinimumWeb→用户决定。Freeze 外部调用 0、产品代码 0；实际 Quality PASS 前 Web/产品/Prompt/Reviewer/hardening/full regression 全锁。兼容历史审计仍逐字保留：`60 分钟页面`；`180 分钟同一五轮脚本前三轮方向 Alpha 交付线，未交即 timebox FAIL`；`181—239 分钟迟到 Alpha 只作 `FAIL / REWORK` 证据`；`240 分钟绝对停止`；`每个检查点立即交付用户`；`三轮停止时五轮 canary 为 `INCOMPLETE / FAIL``；`计划/测试/文档完成不算用户可见增量`；`每个 Provider-dispatched Turn 分别计 live attempt`。这些历史标签不能恢复 Web-first 顺序；方向 FAIL 进入归因而非同题重跑；实际备用配置仍须满足其绑定的准入策略插件 | Layer、Cognition、current fallback admission plugin 与 Web Access 已 PASS；run-043 质量/调度 FAIL 永久保留；PDR-009 Freeze/Quality 尚未执行 | NOT-RUN / blocking |
-| V-CHAT-EXPERIENCE-001 | 同一产品成为可持续体验的多轮 Chat Alpha | product / browser | 一条固定启动命令；loopback；固定工程/exact revision；一条至少三 Turn 的真实语义链；两个未参与修复的异质问题；“新对话”泄漏负测 | 无认证；体验者不拼装内部参数；语义链显示初问→省略指代追问或纠正→深入/总结，三个独立问答不通过；每 Turn 有 Evidence/Citation/fresh Review；失败只关闭当前 Turn；新 Conversation 必须澄清省略指代且不继承旧 Context/Evidence/provider memory；完整五轮套件不反向阻塞本方向体验 | `FINDING-010-130 / run-042-chat-alpha` 是旧五轮失败历史；PDR-009 的 Web 阶段须等待四路 Gate PASS，尚未解锁 | NOT-RUN / blocking |
-| V-CHAT-001 | 主 Agent 完成真正语义多轮 Chat 且新对话不泄漏 | product / chat | 一个 Conversation 的最小语义链：初始问题→省略指代追问或用户纠正→进一步区分/深入或按当前 Context 总结；另有两个未参与修复的异质问题；随后新 Conversation 省略指代 probe | Context 维护确认目标/约束、实体/主题、开放问题、reviewed/superseded conclusion refs 与 provenance；模糊指代先澄清；每轮独立 Evidence/Answer/Review；新对话 probe 必须澄清且不继承旧 Context/evidence/provider memory；三个独立问答不算 Chat | `FINDING-010-130` 只保存旧五轮 3/5 与 leakage PASS；PDR-009 的 Web 阶段尚未解锁 | NOT-RUN / blocking |
-| V-ANSWER-REWORK-001 | 答案与 Reviewer 的已知缺陷以通用机制修复 | product / quality | 一题 live canary 独立 PASS；原现场登录题；至少两个相邻或异质题；至少一题非实现走读；独立技术复核 | canary 失败不启动三题；重大错误 0；重要结论有 Citation；comprehensive 首审后必须由 fresh challenge 按 stable ID 逐项阻断层级错配、逐 full-entry material effect 遗漏、原问题动作/handoff/known-unknown 履约遗漏、配置值/未挂载类型/下游 status 扩张、无据结论和错误 Citation；material-effect omission 必须绑定 exact `APPLICATION_PACKAGE / DEFAULT_DRAFT` layer 与合法补证/rewrite；rewrite 必须保留全部安全 observation；所有非 passing assessment 必须绑定 exact challenged Claim；无工程/问题/关键词/符号/类/方法/fixture/Oracle 特判 | run-033 因 supported predecessor observations 被 replacement 删除而不通过；`FINDING-010-088/089` corrective deterministic Gate 已闭合。run-034 仅取得 HTTP 402 Conformance FAIL，未生成新答案证据 | FAIL / blocking |
-| V-CHAT-QUALITY-001 | 当前方向体验每个 Turn 的答案与独立审核以主 Agent 通用机制满足质量 | product / quality | `V-CHAT-001` 语义链和两个未参与修复异质问题的逐 Turn Context/Work State/Ledger/Package/Answer/Review；fresh independent Reviewer | 每 Turn 重大错误 0、Reviewer 重大漏判 0、重要结论有 Citation；回答先解决用户目标，代码走读只作证据；Unknown 必须来自 Coverage/Need Gap；prior Answer/Review 不作事实；Reviewer Finding 回主 Agent补证或重写并形成全新 identity；无直接权限、无特判 | `FINDING-010-130/133` 证明旧 run 的 Agent 与 Reviewer 均有故障；PDR-009 的 Web 质量 Gate 尚未解锁 | NOT-RUN / blocking |
-| V-CHAT-XD-001 | 主 Agent 在同一多轮答案链中组合有资格的 World Model Cognition 与 query-time Source 证据 | product / integration | 三个异质问题中至少一个需要 `V-COGNITION-ELIGIBILITY-001` 已接受的多域认知与 repository source/doc/config/test 证据；exact Context/Work State/Ledger/Package/Answer/Review | 一个主 Agent 在同一 Turn 组合两类认知，结论分别绑定正确 Citation；至少一个非 locator 结论来自问题相关 World Model 投影；Source 只核实、补全或纠正且不回填为 World Model 贡献；无两个平行答案、模式拼接或旧证据追认 | `ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001` 已提供本 Case 的 eligible cognition 前置条件；但没有 external grant，尚未执行主 Agent + query-time Source + Review 的真实多轮组合，run-042 历史 FAIL 不追认 | NOT-RUN / blocking |
-| V-COMP-ALPHA-001 | PDR-005 的 Web 后三路方向信号（已被 PDR-009 取代） | historical compatibility / comparison | 旧同 exact revision、current Codex、source-only、eligible-cognition+source 协议 | 不得作为 current Gate，不得在 Web 后恢复执行，不得把旧三路结果升级为四路严格价值证明 | not-executed | SUPERSEDED / non-blocking |
-| V-PREVIEW-002 | 用户基于四路严格价值 Gate、最小 Web Chat 和 A1—A6 复盘决定是否进入夯实 | product / direction + architecture / reflection | `V-DIRECTION-FREEZE-001/V-DIRECTION-QUALITY-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001` 的真实 Result、限制、Findings 和假设证据 | 先确认四路 Gate 严格 PASS，独立技术复核给出 A1—A6 exact Verdict；用户实际追问、纠正、深入、总结并查看四路严格价值 Gate 后决定 CONTINUE/REWORK/REDIRECT/REJECT；只有 CONTINUE 解锁 hardening/full regression；单题失败按最早责任层 REWORK，不自动拒绝制定计划或重定向 | Layer、Cognition、fallback-route admission 与 Web Access 前置已 PASS；四路 Gate、最小 Web Chat 和用户判向尚未执行 | NOT-RUN / blocking |
+
+### Readiness Cases
 
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
-| V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并在答案质量上严格超过 current Codex | product / comparison | 未参与实现的真实工程；独立持有的 held-out 和现场问题；exact current Codex identity/protocol；双方密封答案；随机匿名映射；独立盲评量表 | 系统绝对质量 PASS；逐题无物质退步；总体答案质量差值严格为正；全体打平 FAIL；次级效率指标不得补偿；同一正式 Web 可人工验证 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-000 | FAIL / blocking |
-| V-PRE-001 | exact product baseline、planning input 与 ITER-009 rejected 产品结论被准确分离 | readiness / baseline | product commit `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree `1369ce932c778c57a118123e8257ede476229d73`；planning commit `01dcfe2233625dfaa021495850fb18ae1323063b` / tree `8e364ae854bfaa48580ab080a3e0d9c9c43c3d6f`；predecessor Result | 技术资产复用；不继承 Acceptance/live grant/qualification；授权只基于 exact planning input；dirty baseline 禁止 | Git object/tree/branch inspection；Proposal/Manifest/Readiness | PASS / readiness blocking |
-| V-PRE-002 | ITER-009 用户反馈被判为系统性架构/产品方向证据而非单题文风 | readiness / evidence | `ITER-009-RESULT-SLICE-001-STOP-REDIRECT`、ROADMAP Candidate、现场答案与用户裁决 | baseline gap 是默认实现走读、Reviewer 层级 Gate 缺失和 Source-off 通用问答边界，不按个别问题修 Prompt | Proposal Trigger、Result、Candidate | PASS / readiness blocking |
-| V-PRE-003 | ENGINEERING_QA、严格 WORLD_MODEL 和显式 DIRECT 三种模式及新自适应调查职责已冻结 | readiness / architecture | FINDING-010-002、ADR-013/014/015/016、owning Contract list、V-ARCH-001 | World Model 概念不变；ENGINEERING_QA 使用 Investigation→Broker/Worker→Ledger→seal→Answer/Review；无 silent fallback | Proposal、Readiness、Slice1 Phase0 | PASS / readiness blocking |
-| V-PRE-004 | 新收据只授权 Slice1 产品开发，没有扩大 live、Source disclosure、credential、Provider、browser、hidden 或 Production 权限 | readiness / authorization | planning receipt `d3b60bda…`、development receipt `585f02c4…`、此前设计绑定的 `1b327024… + 5cdb7000…`、Manifest authorization | Slice1 authorized/coding true 且是唯一 active Slice；Slice2/3 proposed/coding false；所有 live/disclosure 另取 exact grant | Readiness、Manifest、Current、Slice1 | PASS / readiness blocking |
-| V-PRE-005 | hidden、成熟 Agent 历史输入、三臂消融授权边界、burn 和当时的方向体验顺序明确 | readiness / historical comparison | final 10+2、early 5+2；旧 `6ca47f7d…` Agent/rubric/cache/source-bytes protocol；旧 `engineering_qa_ablation` proposed mapping | 本行只证明 PDR-004 时的历史边界；其 preview-first/三臂顺序不得恢复或伪用旧收据。PDR-009 当前四路 Gate 及后续 Slice 的新 freeze/授权独立成立；披露后产品变化仍烧毁输入 | Proposal、Manifest legacy-disabled binding | PASS / readiness blocking |
-| V-PRE-006 | A1—A5、逐 Slice Reflection、自适应调查、证据分区、独立补证调查和资源/质量边界可机械核对 | readiness / architecture | Proposal assumption catalog、Manifest 三 nested mappings、System fileset、answer_protocol | prior-result/Broker/Ledger/seal 精确；support/citation 与 boundary/audit 不混；Slice1 仅 preview 一次补证，后续无永久一轮上限；answerable 超限 FAIL | Proposal、Manifest、Readiness、docs gate | PASS / readiness blocking |
-| V-PRE-CHAT-001 | PDR-004 current planning freeze 与 rejected product baseline 精确分离 | readiness / baseline | product baseline `1fb997bab6444523f82ebf1a514a1abbf79656c7` / tree `1369ce932c778c57a118123e8257ede476229d73`；planning commit `b66ff9f058b92cebd78d5644ffef042753567b4d` / tree `30e437eea83e048e3fb59ddd90a8d1b76242d82c` | 技术资产与历史失败保留；新编码只依据 exact PDR-004 planning freeze；不继承旧答案、资格、grant 或 Acceptance | Git object/tree inspection；Current、Proposal、Manifest、Readiness | PASS / readiness blocking |
-| V-PRE-CHAT-002 | 双核心主 Agent/Conversation System Owner 已冻结且旧固定角色只作兼容 | readiness / architecture | ADR-018、Engineering Conversation、Agentic Task、Response Control、Source Artifact、Security、ADR-016 legacy markers | World Model/Conversation Work State/Turn Evidence 分离；主 Agent 负责目标—观察—重规划；平台拥有权限/执行/证据；fresh Reviewer 独立；旧固定角色不得成为 current delivery | System contract set、Manifest cutover、docs gate | PASS / readiness blocking |
-| V-PRE-CHAT-003 | 最早体验顺序、五轮 Chat 和逐 Turn attempt 语义可执行 | readiness / experience | `V-ALPHA-ACCESS-001/V-TIMEBOX-CHAT-001/V-CHAT-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001`；五轮脚本与新对话负测 | Access 先于 Quality；Provider 前最多一个本地/Mock smoke；首个 live canary 是五轮 Conversation；每个 dispatched Turn 分别计 attempt；首次体验前 full regression=0 | Proposal、Slice1、Verification current rows、PDR-003/004 | PASS / readiness blocking |
-| V-PRE-CHAT-004 | 本次用户收据只恢复 Slice1 开发而不扩大外部执行权限 | readiness / authorization | `codex-user-message:sha256:f76ba3e864f6612b3dcc14c83392ec54db686fdb5653e408fa300785b97ceef5`；Readiness；Manifest；Current | Slice1 是唯一 active/coding input；授权产品/System 代码与本地确定性验证；Provider/model、credential、动态源码披露、live browser、hidden、Slice2/3、Production 仍未授权 | Readiness/Manifest/Current/Slice1 exact authorization fields | PASS / readiness blocking |
-| V-PRE-CHAT-005 | Codex 外部基线与 World Model 因果贡献已纳入同一四路协议 | readiness / comparison | direct relevant evidence；same-agent source-only；same-agent full-cognition+source；current Codex；盲化独立评估协议 | Codex 与 direct evidence 都不是 Oracle/裁判；两个 Agent 臂除认知开关外保持同一 Agent/model/tool/budget/cache/Reviewer；独立 source ledger 给出事实，独立评估者技术判读，用户决定产品方向 | Proposal A5、Manifest `direction_quality_gate`、V-DIRECTION-FREEZE-001/V-DIRECTION-QUALITY-001 | PASS / readiness blocking |
-| V-PRE-CHAT-006 | A1—A6、REWORK 历史、根因优先和体验后夯实边界机械一致 | readiness / architecture + delivery | current A1—A6 catalog；historical A1—A5/Case/Result；PDR-003/004；rework/experience policies | 历史证据不改写；新 Chat Gate 不复用历史 Case；失败先定位最早偏差；同签名一次修复上限；跨重启、第二工程、完整矩阵和 full regression 延至用户 CONTINUE 后 | Manifest cutover、Readiness、Verification、docs gate | PASS / readiness blocking |
-| V-PRE-CHAT-007 | Access browser grant 精确收窄且已消费 | execution / authorization | `codex-user-message:sha256:7256a886d863712b27a7012c1c791eaca91c98f7183f732b463ce98543a469b6`；exact `cf2883bef861e0345afc36415d4216f943d31cf4`；`ITER-010-RESULT-V-ALPHA-ACCESS-001` | 只启动 `127.0.0.1:8765` 并执行 V-ALPHA 本机浏览器；Provider/model、源码/resources、Production 均禁止；完成后 listener 停止；不扩展后续 live 权限 | Result、health counters、shutdown/port check | PASS / consumed |
-| V-BASELINE-001 | Slice1 实际开发 subject 仍是 exact baseline 且没有未记录产品变化 | development / baseline | Git ancestry/tree、worktree、predecessor Result | baseline 可复现；任何变化归属 Slice1；旧运行 identity 不继承 | not-executed | NOT-RUN / blocking |
-| V-ARCH-001 | 新模式先取得正式架构与 Contract Owner，世界模型概念及旧模式边界不被静默改写 | architecture / contract | FINDING-010-001/002、SYS-ADR-016、Product Success、runtime/Agentic/Evidence/World Model/Response/Source/Security/Browser、Manifest fileset、docs gate/tests | ENGINEERING_QA 明确为 adaptive investigation；World Model 保持持久外部认知；strict WORLD_MODEL source-off 与 DIRECT identity 保留 | not-executed | NOT-RUN / blocking |
-| V-QINTENT-001 | Question Understanding 忠实表达用户目标、受众、抽象层级、物质结论和证据需求 | application / contract | 用途/架构/运行/故障/影响/实现、多条件、改述、不同受众 fixture | 原问题约束不丢失/新增；无题型/工程/关键词/符号路由；输出 schema 可审计 | not-executed | NOT-RUN / blocking |
-| V-COGNITION-001 | World Model 作为 exact、持久、版本化、可验证、可更新的软件外部认知进入问答 | architecture / knowledge | context/scope/schema/snapshot、实体/关系/行为/约束/状态/evidence/coverage/unknown fixtures | 手册/地图只作为投影；认知不退化为 cache/hints；coverage 不足不成为 Source recall Gate | not-executed | NOT-RUN / blocking |
-| V-INVESTIGATE-001 | Investigation LLM 根据 prior Ledger Result 自适应提出下一步并合法结束 | application / investigation | 至少两步依赖链、partial/zero cognition、no-progress、premature finish、改述 fixture | 每步引用 prior result/progress；不是 upfront 固定计划；无题目/工程/关键词/符号/类/方法/fixture/oracle 分支 | not-executed | NOT-RUN / blocking |
-| V-BROKER-001 | Source Broker/Worker 在模型无直接 Source 权限下编译并执行受控读操作 | security / integration | 合法抽象 proposal、request/attempt/profile-bound mandatory-path locator、跨 attempt/forged locator、path/symlink/write/exec/network/secret/disclosure probes、exact revision drift | Broker policy 决定唯一合法操作；direct locator 不赋予模型 path authority；Worker execution only；所有模型 direct FS/Shell/network/credential/source=0；完整操作/bytes/outcome audit | not-executed | NOT-RUN / blocking |
-| V-LEDGER-001 | Evidence Ledger 只追加，调查结束后才密封双分区 Package，identity 与 seal 语义正确 | application / evidence | append/overwrite、finish/stop、admissible/rejected、gap/failure/partial/conflict/unknown、old/new revision、single-gap delta fixtures | 历史不可改；未 finish 不 seal；support/citation 仅 admissible；boundary/audit 强制保留且不得支持肯定 Claim；seal 非 truth；Verification Ledger 记录单 gap delta，trusted merge 只形成 successor 且保留非目标 disposition；predecessor boundary 不得进入 delta，非支持 child 必须绑定 current gap；旧 Review 不批新包 | `FINDING-010-070/072/073/076`；focused/full deterministic regression closed，clean exact candidate pending | NOT-RUN / blocking |
-| V-ISOLATION-001 | Investigation、Answer、Reviewer 与实际 Source 权限物理/应用隔离 | security / isolation | source injection、path/write/exec/network/secret probes；role package/import/mount audit | 只有 Broker/Worker 受控读；Source untrusted；Investigation/Answer/Reviewer 直接 repo/source/tool access=0；非法动作失败关闭 | not-executed | NOT-RUN / blocking |
-| V-ANSWER-001 | Preview 跨类型问题先给直接、层级匹配的答案，代码细节按需 | product / answer | 一个真实工程 4 条不同覆盖维度问题、exact Package、结论级 rubric | 至少 3 supported 且覆盖至少 2 个非实现维度；重大错误 0；每个物质结论 Citation；无内部诊断平铺 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-ANSWER-001 | FAIL / blocking |
-| V-REVIEW-001 | Reviewer 阻断缺陷并以具体 gap 启动独立 Verification Investigation | application / review | 对抗 Draft、current Package/Ledger、configuration placeholder、status literal absent from cited content、unmounted application type、specific/invalid gap、两步结果驱动补证、predecessor consumed path/boundary、Broker rejection 与 terminal verified gap fixture | comprehensive approval 只放行 fresh challenge；Gateway 强制 focus 顺序；每个 lead 有 stable ID，challenge 必须逐项返回 evidence/Draft scope 与 disposition，Application 重算 exact 集合，越界项绑定被挑战 Claim Finding，只有全 within + empty Finding 才可授权；Reviewer 不提可执行操作；新调查用新上下文读一个 authorized gap+current Package/Ledger，经 Application/Broker/Worker 多步适应；Package full reads 不重复、predecessor boundary 不借用、最近拒绝显式；FINISH 单 gap delta 可信合并后新包重答双审；诚实 terminal unknown 不重复请求；非 material Draft 扩张不扩大调查；不回初始调查 | run-028 证明仅投影/focus 仍可跳过 lead；`FINDING-010-077/078` deterministic regression closed，fresh live pending | FAIL / blocking |
-| V-LIMIT-001 | Preview 在调查或证据不足、安全熔断耗尽时保持诚实 | application / boundary | 可回答、证据不足、合法补证、无进展、上限耗尽、answerable/boundary fixture | 不伪造、不把未查到写成不存在；Slice1 最多一次补证；answerable 因熔断未回答计 FAIL；boundary 仅可独立审核 Limitation 或 fail closed | not-executed | NOT-RUN / blocking |
-| V-SEC-001 | Slice1 exact revision、allowlist、untrusted Source、Provider disclosure、Secret、预算与 Web 安全成立 | security / integration | drift、oversize、injection、unauthorized fragment/provider、review tamper、outcome unknown、late preferred、non-loopback probes | 每个 attempt 失败关闭；same-Provider retry/source write/update/silent mode fallback=0；只有 ADR-017 预授权、通过 profile-specific admission 且重跑完整链的一次 fallback attempt 合法；跨 attempt 中间态/late overwrite=0；合法本地确定性路径完成 | not-executed | NOT-RUN / blocking |
-| V-XD-001 | 同一 ENGINEERING_QA 答案组合 ITER-006 accepted World Model 认知与 query-time 新来源 Evidence | product / integration | declaration/`CALLS` Result + repository document/config/test/source conclusion；无符号自然问题 | 同一 Ledger/Package/Answer/Review；结论分别绑定正确来源；不是两个正文或模式拼接 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-XD-001 | FAIL / blocking |
-| V-WEB-000 | Slice1 在完整夯实前交付最早可体验的真实 Web 微纵切 | product / browser | exact freeze/live grant、普通用户无认证、一条 World Model + query-time Source 代表问题 | 最小真实链可用；exact revision/read-only/untrusted Source/support-citation 分区/Citation/独立 Review 全部成立；非回放/CLI | `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`；candidate `f38f6cc…` / exact mall `0504e86…` / Result `engineering_result_2025ba4a523a363c6a8f463e670dfc31` / 9 dispatch / 6 opened Citation / Review APPROVED / retry 0 / switch 0 / Production Activation NOT_EXECUTED；前 8 run 永久失败保留 | PASS / blocking |
-| V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-WEB-001 | PASS / blocking |
-| V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-PREVIEW-001 | FAIL / blocking |
-| V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-REFLECT-001 | PASS / blocking |
+| V-PRE-CHAT-001 | PDR-010 计划、可信 baseline 与历史失败精确分离 | readiness / baseline | Manifest、Current、PDR-010、sealed historical Results 和 clean working tree | 历史运行不改写；当前开发只依据 `V-MVP-EXPERIENCE-001` 的 action allowlist/locks；旧答案、旧 grant 和旧候选不取得 current 权威 | Proposal、Manifest、Current、Slice1、PDR-010 | PASS / readiness blocking |
+| V-PRE-CHAT-002 | 双核心职责与安全边界已有当前 System Owner | readiness / architecture | ADR-018、Engineering Conversation、Agentic Task、Evidence/World Model Answering、Source Artifact 和 Security 合同 | 软件世界模型提供版本化认知；主工程 Agent 拥有理解—调查—综合—重规划；平台拥有权限/执行/证据；fresh Reviewer 独立；旧固定角色不是 current delivery | System contracts、Proposal、Slice1 | PASS / readiness blocking |
+| V-PRE-CHAT-003 | 完整体验优先的执行顺序可机械判定 | readiness / experience | `V-CHAT-EXPERIENCE-001/V-MVP-EXPERIENCE-001/V-CHAT-001/V-CHAT-QUALITY-001/V-CHAT-XD-001/V-PREVIEW-002` | `V-CHAT-EXPERIENCE-001` 第一条完整主链可操作即无 Result 交付且不移动游标；随后同候选异质问题和 current Codex 比较；最终 `V-MVP-EXPERIENCE-001` 才密封 Result；首次体验前只跑 targeted/startup/safety，full regression=0 | PDR-010、Manifest、Slice1、Verification current rows | PASS / readiness blocking |
+| V-PRE-CHAT-004 | 当前开发与公开工程外调 standing scope 已被授权且边界明确 | readiness / authorization | current Slice/root authority；PDR-008/PDR-010；公开 mall exact revision；既有 route/disclosure/budget scope | Slice1 产品/System、loopback 与 scope 内外调可直接推进；逐 dispatch 自动 exact receipt；只对真实 scope delta 申请增量授权；hardening、full regression、hidden、Slice2/3 与 Production 未授权 | Readiness、Manifest、Current、standing-scope policy | PASS / readiness blocking |
+| V-PRE-CHAT-005 | current Codex 强基线与后续 World Model 因果消融职责分离 | readiness / comparison | 完整体验候选、至少三条异质问题、actual current Codex；用户 CONTINUE 后的 same-agent source-only/full-cognition 对照 | 首次体验后立即验证系统绝对质量、逐题不输、总体严格超过 Codex和非 locator 世界模型贡献；Codex 不是 Oracle/裁判；完整四路因果消融在 CONTINUE 后且只改变认知输入 | Proposal A5、Manifest direction quality policy、V-DIRECTION-QUALITY-001 | PASS / readiness blocking |
+| V-PRE-CHAT-006 | A1—A6、根因优先、一次通用修复和体验后夯实边界一致 | readiness / architecture + delivery | current A1—A6 catalog；PDR-010；历史失败；当前 repair/experience policy | 普通失败留在同一动作；先定位最早偏差；一次最小通用修复并验证两个异质案例；同类故障仍复现则带可运行版本和限制交用户判向；第二工程、完整四路、hardening/full regression 延至 CONTINUE 后 | Manifest、Proposal、Readiness、Slice1、docs gate | PASS / readiness blocking |
+| V-PRE-CHAT-007 | 模型透明与 availability-only fallback 已有唯一机器可执行合同 | readiness / architecture + routing | PDR-010；Manifest `QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2`；`V-MODEL-TRANSPARENT-ROUTING-001` | route policy 不含具体 Provider/model；身份只在 execution-profile 配置；availability boundary 是唯一不可用结论 Owner；结构化输出无效与审核拒绝不回退；Case 属当前长动作且不改 action/allowlist/cursor | Manifest、PDR-010、Slice1、Verification current rows | PASS / readiness blocking |
+
+### `CONTINUE` 后经新 PDR、明确授权与可信父 cutover 才可解锁的 Cases
+
+以下 Case 保留为后续质量与验收合同。它们当前不可执行，也不得反向阻塞第一次完整浏览器体验。
+
+| Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
+|---|---|---|---|---|---|---|
 | V-GENERAL-002 | 同一协议跨第二工程、不同命名/结构/来源仍不依赖特判 | product / generalization | 第二真实工程、改述、不同目录/框架、source/doc/config/test mixes | 问题层级正确；无 project/question/keyword/symbol/class/method/fixture/oracle branch | not-executed | NOT-RUN / blocking |
 | V-RERETRIEVE-002 | 主工程 Agent 根据 Reviewer Finding 在复杂 gap、冲突、重复和 no-progress 上可重规划并收敛 | application / contract | current Conversation Context/Work State/Package/Ledger、omission、unsupported inference、citation gap、specific/duplicate/conflicting gap、持久恢复和 no-progress cases | Reviewer 只返回具体 Finding；主 Agent 依观察决定同包重写或继续受控调查；新证据形成新 Ledger/Package/Answer/fresh Review identity；去重/恢复正确；不可修复时失败关闭；不启动固定 Verification Investigation 角色 | not-executed | NOT-RUN / blocking |
 | V-ASYNC-002 | 知识沉淀不阻塞或改写当前问答 | application / knowledge | approved Package/Answer、async proposal success/reject/failure | Delivery 独立完成；异步路径重新走 Update/Admission/Publication；任何结果不追认/撤销原答案 | not-executed | NOT-RUN / blocking |
@@ -776,34 +85,28 @@ remediation；不放宽 rewrite fuse。`FINDING-010-085` 以 focused 80/80、Eng
 | V-010 | 本机验证和 Acceptance 不产生 Production Activation | activation | exact final Iteration Result | NOT_EXECUTED | not-executed | NOT-RUN / blocking |
 | V-REFLECT-003 | 最终复盘 A1—A6 并由用户裁决 | architecture / reflection | 三个 exact Slice Results、10+2、现场多轮对话、Agent/value、安全、Findings | A1—A6 exact Verdict；只有全部 SUPPORTED 与用户新 ACCEPT 才能申请 Acceptance | not-executed | NOT-RUN / blocking |
 
-### Historical Slice1 rework evidence（PDR-005 前）
+### 不可改写的历史结果
 
-- run-033（clean `d70a3e6…`）保持 `V-ANSWER-001 / V-REVIEW-001 / V-LEDGER-001` blocking：Q1 的 single-gap Verification
-  replacement 删除了 supported predecessor target observations，Q2 被 admissible-reference Gate 正确关闭，Q3 为零重试
-  post-dispatch outcome unknown；66,000-byte Provider-before-call negative PASS。总体不是 live PASS。
-- `FINDING-010-088/089` 要求并以 focused/Engineering QA/docs/oracle/full exact historical hold 验证 supported target observation 的
-  exact/relative-order monotonic merge、caller-visible effect gap 与未挂载 callee boundary；deterministic Gate 已闭合，新 clean/fresh live
-  仍必须另行执行，不能以 run-033 或旧 run 补齐。
-- run-034（clean `fe6b6b6…`）在用户表示充值后启动，第一条 fresh Conformance request 仍收到 DeepSeek HTTP 402；
-  request 1、token 0、retry/switch 0，第二条 canary 未发送，无 Qualification/Alpha/Browser。`FINDING-010-090` 因此
-  保持 configuration-environment hold；当前 key 所属账户恢复 Provider 可用性后必须启动新的 fresh run。
+以下行只保存已经执行的结果与证据语义。它们不属于 PDR-010 当前动作，不会被升级为新体验或质量 PASS。详细运行过程见
+[Findings](findings/README.md) 与 [Results](results/README.md)。
 
-## Freeze and scoring rules
+| Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
+|---|---|---|---|---|---|---|
+| V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并在答案质量上严格超过 current Codex | product / comparison | 未参与实现的真实工程；独立持有的 held-out 和现场问题；exact current Codex identity/protocol；双方密封答案；随机匿名映射；独立盲评量表 | 系统绝对质量 PASS；逐题无物质退步；总体答案质量差值严格为正；全体打平 FAIL；次级效率指标不得补偿；同一正式 Web 可人工验证 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-000 | FAIL / blocking |
+| V-ANSWER-001 | Preview 跨类型问题先给直接、层级匹配的答案，代码细节按需 | product / answer | 一个真实工程 4 条不同覆盖维度问题、exact Package、结论级 rubric | 至少 3 supported 且覆盖至少 2 个非实现维度；重大错误 0；每个物质结论 Citation；无内部诊断平铺 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-ANSWER-001 | FAIL / blocking |
+| V-REVIEW-001 | Reviewer 阻断缺陷并以具体 gap 启动独立 Verification Investigation | application / review | 对抗 Draft、current Package/Ledger、configuration placeholder、status literal absent from cited content、unmounted application type、specific/invalid gap、两步结果驱动补证、predecessor consumed path/boundary、Broker rejection 与 terminal verified gap fixture | comprehensive approval 只放行 fresh challenge；Gateway 强制 focus 顺序；每个 lead 有 stable ID，challenge 必须逐项返回 evidence/Draft scope 与 disposition，Application 重算 exact 集合，越界项绑定被挑战 Claim Finding，只有全 within + empty Finding 才可授权；Reviewer 不提可执行操作；新调查用新上下文读一个 authorized gap+current Package/Ledger，经 Application/Broker/Worker 多步适应；Package full reads 不重复、predecessor boundary 不借用、最近拒绝显式；FINISH 单 gap delta 可信合并后新包重答双审；诚实 terminal unknown 不重复请求；非 material Draft 扩张不扩大调查；不回初始调查 | run-028 证明仅投影/focus 仍可跳过 lead；`FINDING-010-077/078` deterministic regression closed，fresh live pending | FAIL / blocking |
+| V-XD-001 | 同一 ENGINEERING_QA 答案组合 ITER-006 accepted World Model 认知与 query-time 新来源 Evidence | product / integration | declaration/`CALLS` Result + repository document/config/test/source conclusion；无符号自然问题 | 同一 Ledger/Package/Answer/Review；结论分别绑定正确来源；不是两个正文或模式拼接 | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-XD-001 | FAIL / blocking |
+| V-EXPERIENCE-001 | 同一产品成为可持续体验的 Web Alpha | product / browser | 一条固定且文档化的启动命令；`http://127.0.0.1:8765/`；固定一个工程和 exact revision；同一启动会话提交原失败题、至少两个相邻或异质问题及一个受控失败场景 | 无认证；体验者不拼装逐题 freeze/grant/run 参数；连续自由提问无需逐题重启；页面显示产品/工程版本、已知限制、答案/Citation/请求失败；受控失败只关闭当前 Request，服务继续且 identity 不串扰；Gateway DB/WAL/SHM 从创建起为 `0600`；答案真实经过世界模型—调查—Broker/Source—证据链而非预制回放；无平行演示入口 | run-033 完成同会话三题与 Provider 前负测，但答案为 Q1/Q2 FAIL、Q3 OUTCOME_UNKNOWN；run-034 又在 fresh Conformance 第一次 dispatch 收到 HTTP 402，因而无 Alpha。持续运行或确定性 PASS 都不能替代新的完整 live 质量 Gate | FAIL / blocking |
+| V-WEB-000 | Slice1 在完整夯实前交付最早可体验的真实 Web 微纵切 | product / browser | exact freeze/live grant、普通用户无认证、一条 World Model + query-time Source 代表问题 | 最小真实链可用；exact revision/read-only/untrusted Source/support-citation 分区/Citation/独立 Review 全部成立；非回放/CLI | `ITER-010-RESULT-V-WEB-000-LIVE-RUN-009`；candidate `f38f6cc…` / exact mall `0504e86…` / Result `engineering_result_2025ba4a523a363c6a8f463e670dfc31` / 9 dispatch / 6 opened Citation / Review APPROVED / retry 0 / switch 0 / Production Activation NOT_EXECUTED；前 8 run 永久失败保留 | PASS / blocking |
+| V-WEB-001 | 微纵切后从同一 product-owned ENGINEERING_QA loopback Web 执行完整方向体验 | product / browser | V-WEB-000 后 exact freeze/live grant、4 条任务和至少一条现场题 | 页面交付答案/limitation与可打开 Citation；诊断折叠；console clean；持久恢复/复杂矩阵未完成不冒充 Acceptance | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-WEB-001 | PASS / blocking |
+| V-PREVIEW-001 | 在全面夯实前取得真实用户方向裁决 | product / directional-preview | V-WEB-001、4 个不同覆盖维度、现场题、非验收/非生产标识 | 用户能判断是否像工程问答助手并决定 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-PREVIEW-001 | FAIL / blocking |
+| V-REFLECT-001 | Slice1 复盘架构迁移、真实 preview 和 A1—A3 | architecture / reflection | Slice1 exact Result、A1—A5、owned Cases、Findings、用户新 decision receipt | A1—A3 exact Verdict；A4/A5 early signal；完整决策 CONTINUE/REDIRECT/REJECT | ITER-010-RESULT-SLICE-001-STOP-REDIRECT#V-REFLECT-001 | PASS / blocking |
 
-- Slice1 复用已通过的 Layer/Cognition/通用备用路线准入/Web Access；先以外部调用 0 和产品代码变更 0 完成
-  `V-DIRECTION-FREEZE-001`，再用首选 execution profile 运行 `V-DIRECTION-QUALITY-001`。首选配置 PASS 直接进最小 Web；首选配置 FAIL 进归因；首选配置 INVALID 只能经零
-  外部调用、零人工授权请求、零 Provider dispatch 的 Fallback Refreeze，绑定 exact INVALID Result seal、通用 admission plugin、三个系统路统一备用配置
-  input digest 集合和 no mixed batch，PASS 后运行 Fallback Quality。备用配置 PASS 进 Web，FAIL 进归因，INVALID 自环失败关闭。两个
-  Quality Result 最多一个 PASS。只有实际 Quality Route 严格 PASS 才交付一条至少三 Turn 的真实语义链、两个异质问题和新对话隔离负测；
-  随后由用户决定是否 `CONTINUE`。完整五轮、hardening 和 full regression 只在 `CONTINUE` 后执行。
-- Slice2 early canary 与最终 10+2 互不复用，在所属 Slice code freeze 后由用户披露；披露后任何产品/Prompt/schema/route/disclosure 改动
-  烧毁输入并保留失败 Result。最终 10 条 answerable 是 supported 分母，Gap 不计 PASS；2 条 boundary 单独要求 2/2。
-- 四路 Gate 在同一批中分别给出复杂度控制、Agent/source control、World Model 增益和 current Codex 产品强基线。前三路共享同一首选 execution
-  profile，两个 Agent 路除 eligible Cognition 开关外完全相同；current Codex 保留实际客户端、model、reasoning、tools、permissions
-  和 budget。任何模型答案都不是 Oracle 或裁判，独立 truth ledger 与盲评者分别拥有事实和技术裁决。目标系统绝对质量不合格、逐题输任一
-  对照、总体未严格超过 Codex、没有非 locator 贡献或全体打平，均 FAIL。
-- Reviewer Finding 只返回主工程 Agent；主 Agent 选择同包重写或继续受控取证。current 协议不固定 Verification Investigation 角色、补证轮数或双 Review，
-  而用预密封 package revision、model call、Broker operations、source bytes、wall-time 和 no-progress 高安全熔断防止失控；answerable 因熔断未答计 FAIL。
-- 调用次数和成本不构成质量裁剪目标；高安全上限触发失败关闭，不能删除用户目标、Evidence、Citation 或独立 Review。
-- `V-PREVIEW-002/V-REFLECT-002/V-REFLECT-003` PASS 只表示复盘完整。Slice1/2 需要新的 `CONTINUE` 才能授权下一段；最终需要新的 `ACCEPT` 才能接受迭代。
-- Product Result 必须聚合三个唯一 Slice Result；测试数量、模型调用成功、旧 Web result 或旧资格不能替代。
+## Current scoring and handoff rules
+
+- 第一次完整主链以 `V-CHAT-EXPERIENCE-001` 可操作就交付，但必须明确“质量待验证”；该交付无 Result、不移动游标。最终 `V-MVP-EXPERIENCE-001` handoff 才聚合同候选的异质问题、current Codex 比较、Citation、Review、限制和最早责任层并密封 Result。
+- current Codex 保留真实客户端、model、reasoning、tools 与权限，只作强基线；任何模型答案都不是真值、Oracle、Reviewer 或裁判。
+- Slice1 方向 PASS 要求重大错误为 0、逐题无物质退步、总体严格超过 Codex，并有非 locator 世界模型贡献。成本、时延或调用次数不能补偿质量。
+- 普通失败先作跨层归因，再做一次最小通用修复并验证原失败与两个异质案例；同类故障仍复现时停止无新证据外调并交用户判向。
+- 当前 standing scope 内人工重复授权请求为 0；每个真实 dispatch 仍须 one-use exact receipt。真实 scope delta 失败关闭并单独申请。
+- 用户方向 Result/receipt 只记录决定且 action 自环。`CONTINUE` 仅使完整四路因果消融、第二工程、hidden、hardening 和 full regression 具备下一份计划资格；真正解锁需要新 PDR、明确用户授权和可信父 cutover。本地消息 digest 不是平台认证身份、签名或授权；最终 Acceptance 仍需用户新的明确决定。

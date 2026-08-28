@@ -13,8 +13,8 @@ product_goal_outcome: user-visible-general-source-qa-delta
 product_goal_evaluation: independent-hidden-plus-live-ad-hoc
 product_goal_result_id: pending
 plan_revision_ref: ITER-NNN-PDR-NNN
-current_action_ref: ITER-NNN-ACTION-DIRECTION-FREEZE-NNN
-current_action_case_id: V-DIRECTION-FREEZE-NNN
+current_action_ref: ITER-NNN-ACTION-COMPLETE-EXPERIENCE-NNN
+current_action_case_id: V-MVP-EXPERIENCE-NNN
 ---
 
 # Iteration NNN Verification Matrix
@@ -22,48 +22,23 @@ current_action_case_id: V-DIRECTION-FREEZE-NNN
 | Case | Claim | Level | Frozen input / oracle | Expected | Evidence | Status / blocking meaning |
 |---|---|---|---|---|---|---|
 | V-000 | 本轮相对 baseline 可测缩短通用源码问答 MVP 差距，并在答案质量上严格超过 current Codex | product / comparison | 未参与实现的真实工程；独立持有的 held-out 和现场问题；exact current Codex identity/protocol；双方密封答案；随机匿名映射；独立盲评量表 | 系统绝对质量 PASS；逐题无物质退步；总体答案质量差值严格为正；全体打平 FAIL；次级效率指标不得补偿；同一正式 Web 可人工验证 | pending | not-run / blocking |
-| V-DIRECTION-FREEZE-001 | 在任何产品/Web 变更前冻结可复现四路方向 Gate | product / gate freeze | 三条异质真实工程问题（至少两条 unseen、无 POM-only）；四路 runner；independent exact-source ledger；盲化 rubric；exact model/tool/permission/cache identities；Result Schema | 外部调用 0、产品代码变更 0；四路输入和单变量边界完整；答案密封/匿名/独立裁决可重放；Result exact plan fields 已冻结 | pending | not-run / blocking |
-| V-DIRECTION-QUALITY-001 | 世界模型+Agent 在最早价值 Gate 中产生严格正价值 | product / four-arm blind comparison | `V-DIRECTION-FREEZE-001` exact freeze；direct relevant evidence、same-Agent source-only、same-Agent World Model+source、current Codex；独立 source ledger | 世界模型臂绝对质量 PASS、逐题不输任一基线、总体 Codex margin > 0、至少一项非 locator 世界模型贡献；全体打平/物质退步/both-fail/unresolved/invalid/盲化失效均 FAIL；成本/时延/调用/缓存不得补偿 | pending | not-run / blocks product and Web change |
-| V-ALPHA-ACCESS-001 | 四路方向 Gate PASS 后交付真实可操作产品入口 | product / first user handoff | `V-DIRECTION-QUALITY-001` PASS Result；固定启动命令、loopback 页面、请求通路、版本/限制、Provider/失败状态；声明 Chat 时包含消息历史和新对话 | 页面真实可操作；Provider 未配置、未资格或失败如实显示；Access PASS 不产生 Chat/Quality/Comparison PASS，也不能替代方向 Gate | pending | not-run / blocking |
-| V-TIMEBOX-001 | 首个持续 Web Alpha 遵守微检查点、root-cause-first、授权连续性和轻量 live-attempt 停止规则 | product / delivery | 从 Slice 授权后的第一次产品代码变更计时；exact commit、本轮冻结的用户交付出口、外部 dispatch、failure-signature ledger、earliest-divergence hypothesis、本地复现与相邻案例、standing authority、scope-delta request、等待期间本地工作 | 60 分钟页面、180 分钟持续 Alpha；240 分钟无 Alpha 时停止扩域、hardening、full regression 和无新证据的外部重跑，但继续最小体验恢复；standing authority 内直接执行并生成机器收据，只有 scope delta 在 exact freeze 后申请；只有 delta request 已发出且独立安全工作穷尽才可等待；每点立即交付，计划/测试/文档不算用户可见增量 | pending | not-run / blocking |
-| V-PUBLIC-SOURCE-AUTHORITY-001 | 公开开源 exact revision、clean、allowlisted、只读测试在 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 内无需逐 run/逐题人工授权，同时每次动作可精确审计 | security / external authority | human standing authority receipt、scope digest 与 revision selection policy；公开来源/许可证/exact commit-tree/clean 证明；approved Provider/model/endpoint/credential account route；预算/调度/有效期/loopback sink；两个不同问题或 run 的机器 receipt；同 approved upstream/policy 的新 clean commit；private/unknown/local/dirty、different-or-unverified source drift、route change、budget increase、fallback admission override、write、non-loopback、Production 负测 | standing scope 内两次动作及经 Source Authority 复核的同 upstream 新 clean commit 均不请求新用户收据，并在网络/credential 前生成回指同一 authority 的不同 exact Manifest/one-use receipt；receipt 缺失/失配失败关闭；每类真正 scope delta 在外部动作前阻断并要求 exact human delta grant | pending | not-run / blocking |
-| V-FALLBACK-ROUTE-ADMISSION-001 | 所有 planned fallback-route dispatch 只在冻结 execution profile 引用的 admission plugin 准入或一次性 exact override 下发生 | operations / dispatch admission | `FALLBACK_ROUTE_DISPATCH_ADMISSION@1`；fallback execution profile 与 plugin identity/configuration digest；plugin 所需 trusted input 边界；无/有 exact override；preferred-route success 与 fallback-ineligible failure；跨准入边界 run；policy source missing/changed；run receipt 和逐 request audit | admission plugin PASS 且最坏质量链可在准入范围内完成才准入；其余情况无 exact override 时在 Provider socket/descriptor/TLS/credential/HTTP 前关闭且相关计数为 0；standing route/canary authority 不能绕过 admission gate；每个 request 重验准入/override 并回指 receipt；准入失效后不创建新 request；质量链不裁剪；等待期间 preferred-route/local 继续 | pending | not-run / blocking |
-| V-EXPERIENCE-001 | 首次方向体验是真正可持续操作的版本 | product / browser | <exact-version-single-launch-command-fixed-loopback-address-diverse-visible-cases-and-controlled-failure> | 可重复启动；版本和限制可见；问题真实经过产品链；失败后服务继续接受输入；声明 Chat 时具备消息历史与新对话 | pending | not-run / blocking |
-| V-CHAT-001 | 主工程 Agent 在同一 Conversation 完成语义多轮 Chat | product / conversation | 固定工程/revision 的五轮追问、纠正和总结脚本；随后新对话中的无指代问题 | Agent 守恒目标并按观察重规划；追问解析正确；纠正取代旧解释；每轮独立证据/审核；新对话不泄漏旧指代并在歧义时澄清 | pending | not-run / blocking |
-| V-PREVIEW-001 | 用户在四路 Gate PASS 后的可持续 Alpha 上实际体验并决定是否进入夯实 | product / directional-preview | <V-DIRECTION-QUALITY-001-and-V-EXPERIENCE-001-results-diverse-visible-cases-and-new-live-input> | 独立四路技术 Gate 和 Web 质量先通过；用户给出 CONTINUE、REWORK、REDIRECT 或 REJECT；非 CONTINUE 时禁止 hardening | pending | not-run / blocks hardening, not acceptance evidence |
-| V-XD-001 | `<prior-acceptance-id>` 与 `<current-slice-id>` 在同一问题中组合 | product / integration | <stage-appropriate-exact-cross-domain-case> | <evidence-bound-answer-or-honest-gap> | pending | not-run / blocking |
-| V-WEB-001 | `<current-slice-id>` 通过正式 Web 执行 `V-XD-001` | product / browser | <exact-web-subject> | <manual-user-visible-result> | pending | not-run / blocking |
-| V-ADHOC-001 | `<current-slice-id>` 通过正式 Web 接受现场临时问题并覆盖 `V-XD-001` | product / browser | <user-owned-live-question-protocol> | <manual-user-visible-result> | pending | not-run / blocking |
-| V-REFLECT-001 | `<current-slice-id>` 根据产品证据复盘关键方案假设并作出继续或停止决定 | architecture / reflection | <exact-slice-result-assumptions-findings-and-stage-applicable-baseline-signal-or-comparison> | <complete-review-and-explicit-decision> | pending | not-run / blocking |
-| V-001 | <claim> | unit / contract / CC / CE / product / activation | <exact identity> | <result> | pending | not-run / blocking |
+| V-PUBLIC-SOURCE-AUTHORITY-NNN | standing authority 范围内无需逐 run/逐题人工授权，同时每次外部分派有 exact receipt | security / authority | human standing authority；公开性/许可证；revision policy；exact clean revision；只读 allowlist；route/预算/调度/有效期/loopback scope；scope-delta 负测 | 范围内直接执行且每次在 Source disclosure/network/credential 前生成 one-use receipt；receipt 不扩权；scope mismatch 失败关闭；只有真实 delta 申请最小授权 | pending | not-run / prerequisite |
+| V-CHAT-EXPERIENCE-NNN | 第一条完整浏览器主链可操作即交付 | product / first operable browser delivery | exact version；重复启动命令；固定 loopback 地址；目标工程/revision；代表性语义 Conversation；新对话隔离和故障输入 | 用户可持续操作完整世界模型—Agent—源码—Evidence/Citation—独立审核—Web 主链；版本/限制可见；单题失败不关闭服务；第一次达成立即交付；`requires_result=false`、不移动游标、不等待 Codex 比较 | pending | not-run / blocks first-delivery claim, not ongoing development or cursor |
+| V-MVP-EXPERIENCE-NNN | 同一已交付候选完成严格方向证据并形成最终 handoff | product / final result handoff | `V-CHAT-EXPERIENCE-NNN` 同一候选；至少 3 个异质问题、至少 2 个 unseen；actual current Codex fresh 隔离答案；独立 source evidence/evaluator；或一次通用修复仍失败的完整证据 | 比较完成并如实报告绝对质量、逐题差异、总体结论与非 locator 贡献；或证明一次通用修复后同类重大失败仍存在；`requires_result=true`，密封一次 Result 并移动到 `V-PREVIEW-NNN` | pending | not-run / blocks final direction handoff, not first delivery |
+| V-CHAT-NNN | 同一 Conversation 支持语义追问、纠正、总结和新对话隔离 | product / conversation | 至少三轮语义链及新对话负测；逐轮 evidence/review trace | 目标与已确认上下文守恒；纠正替换旧解释；总结基于当前上下文；新对话不泄漏旧指代 | pending | not-run / part of V-MVP-EXPERIENCE-NNN |
+| V-FAILURE-TRUTH-NNN | 产品失败如实、隔离且不以降质答案冒充成功 | product / reliability | Provider/source/review/引用失败；未知边界；下一次正常输入 | 当前 Turn 失败关闭；服务和 Conversation 可继续；没有伪造引用、静默跳过 Reviewer 或错误网络分类 | pending | not-run / part of V-MVP-EXPERIENCE-NNN |
+| V-DIRECTION-QUALITY-NNN | 完整体验后，同一候选在异质问题上达到严格质量下限 | product / post-experience comparison | 至少 3 个异质真实问题，其中至少 2 个 unseen；system 与 actual current Codex fresh 隔离密封答案；独立 exact-source evidence；独立 evaluator | 系统绝对质量 PASS；逐题无物质落后；总体质量严格超过 current Codex；至少一项非 locator 世界模型贡献；平局、重大错误或 unresolved 均 FAIL | pending | not-run / blocks direction PASS and hardening, not first handoff |
+| V-ROOT-CAUSE-NNN | 答案失败按最早偏差归因后只做通用修复 | engineering / diagnosis | failure trace；可证伪假设；最小复现；至少两个未参与修复的相邻案例；一个有界 live canary | 修改发生在假设之后；没有单题特判；相邻案例通过；同签名一次修复仍复现时进入架构职责评审 | pending | not-run / blocks quality PASS, not ongoing development |
+| V-PREVIEW-NNN | 用户基于完整体验和严格比较决定方向 | product / user decision | `V-MVP-EXPERIENCE-NNN` 最终 Result；`V-DIRECTION-QUALITY-NNN` 结论或一次通用修复仍失败证据；限制可见 | 用户给出 `CONTINUE / REWORK / REDIRECT / REJECT`；receipt 只记录方向且 action 自环；`CONTINUE` 后仍需新 PDR、明确用户授权与可信父 cutover 才能解锁 hardening、full regression、hidden、跨工程和四路因果消融 | pending | not-run / blocks next plan revision |
+| V-FOUR-ARM-NNN | `CONTINUE` 后隔离世界模型认知的因果贡献 | product / causal ablation | direct evidence；同 Agent 仅源码；同 Agent 世界模型认知+源码；current Codex；同题、exact identities、密封答案、独立 source truth/evaluator | 世界模型臂绝对质量 PASS，逐题无物质退步，总体正 margin，且有非 locator 贡献；Codex 与 direct evidence 都不是 Oracle | pending | locked until CONTINUE plus new PDR, explicit authorization and trusted-parent cutover |
+| V-HARDEN-NNN | `CONTINUE` 后完成 full regression、hidden、跨工程和工程夯实 | product / acceptance preparation | accepted experience candidate；user CONTINUE receipt；held-out/cross-project suite；full suite | 契约、安全、兼容、性能、hidden、跨工程和 full regression 达到正式验收标准 | pending | locked until CONTINUE plus new PDR, explicit authorization and trusted-parent cutover |
+| V-REFLECT-NNN | 根据体验、比较和 Finding 作出架构复盘 | architecture / reflection | complete experience Result；quality report；root-cause findings；user decision | 关键假设逐项 disposition；系统文档同步；没有用单题成功替代方向证据 | pending | not-run / blocking acceptance |
+| V-001 | <claim> | unit / contract / product | <exact identity> | <result> | pending | not-run / blocking |
 
-`blocking` 只阻止对应 Case 的 PASS 声明、晋级、扩域、hardening 或 exact external action，不自动结束开发目标。活动 Slice 的本地授权仍
-覆盖修复时保持 `IN_PROGRESS / coding_input=true`。结束开发回合必须有阶段交付，或已有 actual scope-delta request 且独立安全工作穷尽，或
-用户明确停止/转向/拒绝，或不可绕过的安全禁止。
+`blocking` 阻止对应声明或阶段晋级，不自动停止长运行开发动作。首次完整体验前只执行 targeted impact、startup、safety 和 failure-truthfulness；不得因 strict comparison、full regression、hidden 或 hardening 尚未执行而推迟 `V-CHAT-EXPERIENCE-NNN` 的无 Result 即时交付。
 
-V-000 不能由新增 Profile/View 的封闭题集、测试数量或旧能力回归替代。测试、CC、CE、Product Validation 与 Activation 不得
-互相替代。每项 Result 必须绑定 exact subject、运行身份、限制和有效期。完成时每个 Manifest 绑定的 `V-XD`、`V-WEB`、
-`V-CANARY`、`V-ADHOC`、`V-REFLECT` 行都必须为 `PASS / blocking`，Evidence 必须精确填写
-`<拥有该 Case 的 Slice Result ID>#<case-id>`；最终 Product Result 依赖并聚合全部唯一 Slice Result。只让 V-000 或汇总计数
-PASS 不算完成。`V-REFLECT PASS` 只表示复盘完整，不表示方案通过；继续或接受必须由 Result 的独立 decision 字段表达。
+`V-DIRECTION-QUALITY-NNN` 在首次交接之后执行，并使用同一候选。current Codex 是强外部基线，不是 Oracle 或裁判；事实来自 exact source evidence。比较 FAIL 时保持当前 Slice，先用 `V-ROOT-CAUSE-NNN` 定位最早偏差并做一次通用修复。
 
-`V-DIRECTION-FREEZE` 与 `V-DIRECTION-QUALITY` 是同一 Slice 中任何新产品/Web 变更之前的两个 action，不是新的产品 Slice。只有 freeze
-的 exact Result PASS 才能按预注册 transition 执行四路质量 Gate；只有四路 PASS 才能进入 Web。current Codex 与直接证据都不是 Oracle
-或裁判；事实来自同一 exact revision 的独立 source ledger。最终 `V-000` 必须在 held-out 套件重跑四路严格比较，不能复用方向 Result。
+用户 `CONTINUE` 之前，`V-FOUR-ARM-NNN` 和 `V-HARDEN-NNN` 必须保持 locked/not-run。不得把它们倒置为第一次完整浏览器体验的前置条件。
 
-`V-ALPHA-ACCESS` 只证明真实产品入口和请求通路已经交给用户操作；页面 availability 不依赖答案质量 PASS，`V-TIMEBOX` 因此不能等待
-完整质量回归后才开始。Provider 资格状态必须真实显示，但不是页面交付前置。Access 也
-不能替代 `V-DIRECTION-QUALITY` 或本 Slice 的 Web 答案质量 Case；只有方向 Gate PASS、Web 质量 PASS 且用户 `CONTINUE` 才可进入
-hardening。时间盒和
-live-attempt 限制发生在问题之间，已经开始的问题必须保留完整调查、答案、Citation 和独立审核链。
-`V-FALLBACK-ROUTE-ADMISSION` 发生在 Provider 外部网络之前，并独立于 Provider 资格和 fallback eligibility；任何
-dispatch-without-valid-admission 都使该 Case `FAIL / blocking`，不能通过补写收据追认。失败只阻断 fallback-route 外部动作及其依赖 Gate，不结束本地 Slice 开发。
-通用 Matrix 不得在 action/Case ID 或规范性语义中写死 Provider/model 名称；具体名称只能出现在当次 execution profile 配置和执行收据中。
-
-`V-PUBLIC-SOURCE-AUTHORITY` 同时防止两种错误：不得把系统派生 receipt 冒充用户授权，也不得在 active standing scope 内制造逐 run/逐题审批。
-standing authority 不免除每次 exact receipt 和 fail-closed 校验；机器 receipt 也不能放行任何 scope delta。
-
-每个 active Matrix 还必须让 Manifest 的唯一 current action Case 恰好解析为一行。动作迁移只接受该 action 指定路径上的 sealed Result
-与 digest-bound JSON 收据组合；门禁重算原始字节摘要、受保护 runner identity、case report digest 和
-`INVALID > FAIL > PASS` 聚合，手写 frontmatter 不能单独放行。当前树检查之外，候选 diff 必须由 trusted base action 的
-allowlist/locks 和预注册 transition 审核；候选 Manifest 不得自行放宽路径或一次推进多步。
+每个 active Matrix 必须让 Manifest 的唯一 current action Case 解析为一行。首次可操作浏览器交付不生成 Result、不迁移游标；Result 只用于最终方向 handoff 或证明一次通用修复仍失败后的游标迁移，并绑定 exact evidence bytes 与预先冻结的最小 runner。普通提交、失败、测试或 Provider dispatch 不生成 Result。方向 receipt 只记录决定；`CONTINUE` 的真正解锁需要新 PDR、明确用户授权和可信父 cutover，本地消息 digest 不是平台认证授权。standing authority 不能替代每次 runtime receipt，receipt 也不能替代真实 scope-delta 人工授权。
