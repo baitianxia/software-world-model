@@ -209,9 +209,14 @@ class LightweightIter010GateTests(unittest.TestCase):
                 "plan_revision_ref": docs_gate.ITER010_LIGHTWEIGHT_PLAN_REVISION_REF,
             }
         }
+        failure_handoff = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF,
+            }
+        }
         unrelated = {
             "plan_execution_control": {
-                "plan_revision_ref": "ITER-010-PDR-011",
+                "plan_revision_ref": "ITER-010-PDR-012",
             }
         }
 
@@ -219,8 +224,20 @@ class LightweightIter010GateTests(unittest.TestCase):
         self.assertFalse(docs_gate.uses_lightweight_iter010_plan(legacy))
         self.assertFalse(docs_gate.uses_legacy_iter010_plan(lightweight))
         self.assertTrue(docs_gate.uses_lightweight_iter010_plan(lightweight))
+        self.assertFalse(
+            docs_gate.uses_failure_handoff_iter010_plan(lightweight)
+        )
+        self.assertTrue(
+            docs_gate.uses_failure_handoff_iter010_plan(failure_handoff)
+        )
+        self.assertTrue(
+            docs_gate.uses_post_pdr009_iter010_plan(failure_handoff)
+        )
         self.assertFalse(docs_gate.uses_legacy_iter010_plan(unrelated))
         self.assertFalse(docs_gate.uses_lightweight_iter010_plan(unrelated))
+        self.assertFalse(
+            docs_gate.uses_failure_handoff_iter010_plan(unrelated)
+        )
 
         downstream_verification = docs_gate.Document(
             docs_gate.REPOSITORY
@@ -266,6 +283,12 @@ class LightweightIter010GateTests(unittest.TestCase):
             },
             "experience_delivery_policy": {},
         }
+        failure_handoff = {
+            "plan_execution_control": {
+                "plan_revision_ref": docs_gate.ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF,
+            },
+            "experience_delivery_policy": {},
+        }
         other_iteration = {
             "plan_execution_control": {
                 "plan_revision_ref": "ITER-012-PDR-011",
@@ -304,6 +327,16 @@ class LightweightIter010GateTests(unittest.TestCase):
             lightweight_validator.reset_mock()
             self.assertEqual(
                 docs_gate.validate_experience_first_delivery_policy(
+                    failure_handoff, *arguments, required=True
+                ),
+                ["lightweight-validator"],
+            )
+            legacy_validator.assert_not_called()
+            lightweight_validator.assert_called_once()
+
+            lightweight_validator.reset_mock()
+            self.assertEqual(
+                docs_gate.validate_experience_first_delivery_policy(
                     other_iteration, *arguments, required=True
                 ),
                 ["legacy-validator"],
@@ -311,7 +344,7 @@ class LightweightIter010GateTests(unittest.TestCase):
             legacy_validator.assert_called_once()
             lightweight_validator.assert_not_called()
 
-    def test_experience_policy_dispatch_rejects_unregistered_pdr011_or_later(
+    def test_experience_policy_dispatch_rejects_unregistered_pdr012_or_later(
         self,
     ) -> None:
         arguments = ({}, [], [], "manifest.yaml")
@@ -324,7 +357,7 @@ class LightweightIter010GateTests(unittest.TestCase):
             "_validate_iter010_lightweight_experience_policy",
             return_value=[],
         ) as lightweight_validator:
-            for revision in (11, 12, 100):
+            for revision in (12, 100):
                 with self.subTest(revision=revision):
                     manifest = {
                         "plan_execution_control": {
@@ -430,7 +463,7 @@ class LightweightIter010GateTests(unittest.TestCase):
         )
 
         for field, original in (
-            docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES
+            docs_gate.ITER010_FAILURE_HANDOFF_EXPERIENCE_POLICY_EXACT_VALUES
         ):
             with self.subTest(policy_field=field):
                 candidate = copy.deepcopy(manifest)
@@ -470,7 +503,11 @@ class LightweightIter010GateTests(unittest.TestCase):
 
         for path, value, expected_error in (
             (("current_action", "case_id"), "V-CHAT-EXPERIENCE-001", "action.case_id"),
-            (("control_locks", "full_regression"), False, "lock hardening"),
+            (
+                ("control_locks", "full_regression"),
+                False,
+                "lock all product and execution work",
+            ),
             (
                 ("experience_version_binding", "repeatable_start"),
                 False,
@@ -521,6 +558,42 @@ class LightweightIter010GateTests(unittest.TestCase):
         self.assertTrue(
             any("requires_result=false" in error for error in result_backed_errors),
             result_backed_errors,
+        )
+
+    def test_failure_handoff_policy_allows_registered_direction_action(self) -> None:
+        manifest_path = (
+            docs_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest = docs_gate.safe_load_manifest(manifest_text)
+        for field, expected in (
+            docs_gate.ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES
+        ):
+            manifest["experience_delivery_policy"][field] = list(expected)  # type: ignore[index]
+        contract = manifest["plan_execution_control"]["next_action_contracts"][  # type: ignore[index]
+            "user_direction_decision"
+        ]
+        manifest["plan_execution_control"]["current_action"] = contract  # type: ignore[index]
+        manifest["plan_execution_control"]["transition"] = contract["transition"]  # type: ignore[index]
+        manifest["plan_execution_control"]["locks"] = contract["locks"]  # type: ignore[index]
+        blocking = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "blocking_case_ids"
+        )
+        new_refs = docs_gate.manifest_resolved_sequence_items(
+            manifest_text, "product_goal_alignment", "new_capability_slice_refs"
+        )
+        assert blocking is not None and new_refs is not None
+        self.assertEqual(
+            docs_gate.validate_experience_first_delivery_policy(
+                manifest,
+                manifest["product_goal_alignment"],
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            ),
+            [],
         )
 
     def test_post_experience_comparison_is_two_arm_and_heterogeneous(self) -> None:
@@ -603,7 +676,7 @@ class LightweightIter010GateTests(unittest.TestCase):
         )
 
         for field, original in (
-            docs_gate.ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES
+            docs_gate.ITER010_FAILURE_HANDOFF_STANDING_AUTHORITY_EXACT_VALUES
         ):
             with self.subTest(authority_field=field):
                 candidate = copy.deepcopy(manifest)
@@ -618,7 +691,7 @@ class LightweightIter010GateTests(unittest.TestCase):
                 self.assertTrue(any(f".{field}" in error for error in errors), errors)
 
         for field, original in (
-            docs_gate.ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES
+            docs_gate.ITER010_FAILURE_HANDOFF_AUTHORIZATION_STATE_EXACT_VALUES
         ):
             with self.subTest(authorization_field=field):
                 candidate = copy.deepcopy(manifest)
@@ -10856,7 +10929,8 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ),
             [],
         )
-        self.assertTrue(docs_gate.uses_lightweight_iter010_plan(manifest))
+        self.assertTrue(docs_gate.uses_post_pdr009_iter010_plan(manifest))
+        self.assertTrue(docs_gate.uses_failure_handoff_iter010_plan(manifest))
         self.assertFalse(docs_gate.uses_legacy_iter010_plan(manifest))
 
         for field, value in (

@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, ITER-010-PDR-010]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, ITER-010-PDR-010, ITER-010-PDR-011]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,9 +12,12 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-163](FINDING-010-163.md)：普通 plan revision 要求 base governance action + PASS Result，而当前非治理动作只能先生成被
+  @2 expressiveness gap 阻止的 Result，形成机械自锁。用户已明确授权 exact 最小 trust-root recovery；PDR-011 只先冻结 @3 runner，
+  产品/Provider/Result 均不进入该恢复提交。
 - [FINDING-010-162](FINDING-010-162.md)：PDR-010 的失败出口允许答案前停止，但冻结 `ITER010_MVP_LIGHT@2` 仍要求三份完整系统答案、
   Citation、Review、Codex 比较和单一 Session，且只接受 PASS；当前动作又禁止修改 runner/PDR。为避免伪造 handoff，Result/游标保持未变，
-  下一步必须由用户明确授权最小 forward governance revision，并先形成新的 trusted parent。
+  PDR-011 已按用户授权采用 runner-first、Result-second 的 forward recovery。
 - [FINDING-010-161](FINDING-010-161.md)：owner 纠正后的 run-051/052/053 已完成原失败与两个异质复验。结构化输出无效始终留在 Ark
   same-profile repair，DeepSeek 0；只有 run-051 的真实 Ark pre-HTTP TLS unavailable 曾使 fallback eligible，随后仍由 DeepSeek 硬门禁在
   network 前拒绝。run-053 的 17 个 Ark TLS/HTTP 全成功，但一个异质案例连续误用 BOUNDARY support，另一个初始/repair 再次缺

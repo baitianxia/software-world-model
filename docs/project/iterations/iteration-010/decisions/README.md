@@ -4,7 +4,7 @@ kind: project-decision-index
 status: current
 authority: project
 owners: [project]
-depends_on: [ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, ITER-010-PDR-008, ITER-010-PDR-009, ITER-010-PDR-010]
+depends_on: [ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, ITER-010-PDR-008, ITER-010-PDR-009, ITER-010-PDR-010, ITER-010-PDR-011]
 code: []
 tests: []
 iteration: ITER-010
@@ -21,4 +21,5 @@ iteration: ITER-010
 - [PDR-007：DeepSeek 闲时从调度偏好升级为调用前硬门禁](PDR-007-deepseek-off-peak-hard-admission.md)
 - [PDR-008：公开开源测试工程采用持续执行授权和自动机器收据](PDR-008-public-oss-standing-model-execution-authority.md)
 - [PDR-009：先验证产品价值，并用机器锁定唯一下一动作（历史顺序，已由 PDR-010 取代）](PDR-009-value-first-four-arm-and-plan-lock.md)
-- [PDR-010：先形成完整可体验版本，再验证和夯实（当前）](PDR-010-complete-mvp-vertical-slice.md)
+- [PDR-010：先形成完整可体验版本，再验证和夯实（产品设计与停止条件）](PDR-010-complete-mvp-vertical-slice.md)
+- [PDR-011：如实密封答案前失败并进入用户判向（当前）](PDR-011-truthful-pre-answer-failure-handoff.md)

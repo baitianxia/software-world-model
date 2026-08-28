@@ -2149,6 +2149,14 @@ class PathTests(unittest.TestCase):
 
 
 class TransitionTests(unittest.TestCase):
+    @staticmethod
+    def _current_manifest() -> dict[str, object]:
+        path = (
+            plan_gate.REPOSITORY
+            / "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+        return plan_gate.load_safe_yaml(path.read_text(encoding="utf-8"))
+
     def test_lightweight_handoff_binds_actual_trusted_parent(self) -> None:
         action = {
             "evidence_verifier": plan_gate.ITER010_MVP_LIGHT_VERIFIER,
@@ -2158,7 +2166,7 @@ class TransitionTests(unittest.TestCase):
         evidence = json.dumps(
             {
                 "action_evidence": {
-                    "candidate_identity": {
+                    "handoff_parent_identity": {
                         "commit": "a" * 40,
                         "tree": "b" * 40,
                     }
@@ -2181,7 +2189,7 @@ class TransitionTests(unittest.TestCase):
         evidence = json.dumps(
             {
                 "action_evidence": {
-                    "candidate_identity": {
+                    "handoff_parent_identity": {
                         "commit": "e" * 40,
                         "tree": "f" * 40,
                     }
@@ -2194,6 +2202,80 @@ class TransitionTests(unittest.TestCase):
         self.assertEqual(2, len(errors), errors)
         self.assertTrue(any("actual trusted parent commit" in error for error in errors))
         self.assertTrue(any("actual trusted parent tree" in error for error in errors))
+
+    def test_failure_handoff_recovery_root_is_exact(self) -> None:
+        recovery = {
+            "schema": plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_SCHEMA,
+            "status": "authorized-recovery-root-installed",
+            "authorization_ref": (
+                plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_AUTHORIZATION_REF
+            ),
+            "authorization_reusable": False,
+            "trusted_base_commit": (
+                plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_BASE_COMMIT
+            ),
+            "trusted_base_tree": (
+                plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_BASE_TREE
+            ),
+            "interrupted_plan_revision_ref": "ITER-010-PDR-010",
+            "interrupted_action_id": (
+                plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID
+            ),
+            "target_plan_revision_ref": (
+                plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_TARGET_REVISION
+            ),
+            "scope": "governance-only-failure-handoff-contract-recovery",
+            "old_gate_compliance_claimed": False,
+            "product_code_changes_allowed": False,
+            "external_execution_allowed": False,
+            "one_time_recovery": True,
+        }
+        manifest_value = {
+            "mvp_failure_handoff_recovery": recovery,
+            "plan_execution_control": {
+                "plan_revision_ref": (
+                    plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_TARGET_REVISION
+                ),
+                "authorization_refs": [
+                    plan_gate.ITER010_FAILURE_HANDOFF_RECOVERY_AUTHORIZATION_REF
+                ],
+                "current_action": {
+                    "id": plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+                    "case_id": plan_gate.ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID,
+                    "kind": "mvp-failure-handoff",
+                    "evidence_verifier": plan_gate.ITER010_MVP_LIGHT_VERIFIER,
+                    "coding_allowed": False,
+                    "external_execution_allowed": False,
+                },
+                "locks": {field: True for field in plan_gate.LOCK_KEYS},
+            },
+        }
+        self.assertEqual(
+            plan_gate._failure_handoff_recovery_errors(manifest_value), []
+        )
+        recovery["old_gate_compliance_claimed"] = True
+        errors = plan_gate._failure_handoff_recovery_errors(manifest_value)
+        self.assertTrue(any("old_gate_compliance_claimed" in error for error in errors), errors)
+
+        recovery["old_gate_compliance_claimed"] = False
+        del manifest_value["mvp_failure_handoff_recovery"]
+        missing_errors = plan_gate._failure_handoff_recovery_errors(manifest_value)
+        self.assertTrue(
+            any("requires mvp_failure_handoff_recovery" in error for error in missing_errors),
+            missing_errors,
+        )
+
+    def test_failure_handoff_recovery_allows_registered_direction_action(self) -> None:
+        manifest_value = copy.deepcopy(self._current_manifest())
+        contract = manifest_value["plan_execution_control"]["next_action_contracts"][  # type: ignore[index]
+            "user_direction_decision"
+        ]
+        manifest_value["plan_execution_control"]["current_action"] = contract  # type: ignore[index]
+        manifest_value["plan_execution_control"]["transition"] = contract["transition"]  # type: ignore[index]
+        manifest_value["plan_execution_control"]["locks"] = contract["locks"]  # type: ignore[index]
+        self.assertEqual(
+            plan_gate._failure_handoff_recovery_errors(manifest_value), []
+        )
 
     def test_lightweight_user_direction_does_not_require_candidate_identity(self) -> None:
         action = {

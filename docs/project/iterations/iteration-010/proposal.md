@@ -9,14 +9,18 @@ code: []
 tests: []
 iteration: ITER-010
 coding_input: false
-current_execution_decision_ref: ITER-010-PDR-010
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153]
+current_execution_decision_ref: ITER-010-PDR-011
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163]
 current_scheduling_finding_ref: FINDING-010-139
 ---
 
 # ITER-010 Proposal：软件世界模型与主工程 Agent 驱动的多轮工程 Chat
 
-## PDR-010 current amendment：完整体验优先
+## PDR-011 current amendment：只密封既有答案前失败
+
+PDR-010 的产品设计与一次通用修复停止条件保持有效；run-052/053 已满足失败出口。PDR-011 不修改产品目标，而是关闭 coding/external
+execution，只允许用 @3 verifier 如实密封多 Session pre-answer failure 并进入用户判向。以下完整体验设计保留为 PDR-010 的产品背景，
+不是当前编码授权。
 
 ITER-010 保持“双核心”产品架构：软件世界模型维护 exact revision 上持久、版本化、可验证、可更新的软件认知；主工程 Agent 以该认知为
 起点，持续维护用户目标、假设、计划和对话上下文，并按证据缺口通过受控工具读取源码、文档、配置或测试。Application 密封逐 Turn

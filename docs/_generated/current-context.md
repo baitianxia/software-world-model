@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-product-stop-condition-met-result-verifier-gap`
+- Worktree status: `iteration-010-slice-001-pdr011-failure-handoff-runner-freeze`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `product-repair-stopped-forward-governance-revision-required-before-failure-handoff`
+- Live model path: `product-and-provider-work-stopped-existing-run052-run053-failure-evidence-handoff-only`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

@@ -13,18 +13,12 @@ coding_input: true
 
 # ITER-010 Development Design
 
-当前处于 `PDR-010 complete MVP experience first / machine-enforced unique action / direction-exploration`，hardening 未解锁。可启动 Chat 页面、
-分层归因、结构+实现/行为 Cognition 资格和执行配置本地准入已经有证据；run-035—043 及 v7 继续作为失败/隔离输入。
-
-新的开发对话直接执行完整体验版开发。Manifest v2 为可信父提交连续性保留机器 ID
-`ITER-010-ACTION-USER-PLAN-RECOVERY-001`，但当前 Case 已是 `V-MVP-EXPERIENCE-001`，不再表示 recovery 或 Activation。该动作允许跨提交
-持续实现产品、运行受影响模块测试、执行 current public mall standing scope 内的模型调用并做真实 loopback 浏览器体验；普通失败保持在同一
-动作内，先归因再做一次通用修复，不因调用次数或测试未全过停止。run-045 已证明 standing authority runtime chain 与新 Conversation
-隔离，但主链答案质量失败；`FINDING-010-155` 已完成一次通用 Source 最后槽位修复，fresh successor 仍待 live 复验。
+当前处于 `PDR-011 truthful pre-answer failure handoff / product-and-provider-stopped`。run-052/053 已满足 PDR-010 的一次通用修复失败出口；
+新的开发对话不得继续修产品或执行 live 复验。唯一顺序是先冻结 `ITER010_MVP_LIGHT@3`，再由下一 trusted-parent 提交密封既有 failure Result。
 
 | Slice | 状态 | 目的 | 进入条件 |
 |---|---|---|---|
-| [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `authorized / active / rework / complete experience development` | 先交付软件世界模型 + 主工程 Agent + 受控源码 + Evidence/Review + 语义多轮 Web 的完整 MVP，再在同一候选上做异质问题和 current Codex 定向比较 | 无额外 Activation；产品与 standing-scope 外部执行已解锁，hardening/full regression/第二工程/hidden/Production 仍锁定 |
+| [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | `authorized / active / rework / failure handoff only` | 如实密封 product candidate `a5c780f…` 的 run-052/053 pre-answer failure 并进入用户判向 | coding/external execution 全锁；runner-first、Result-second |
 | [SLICE-002](SLICE-002-cross-project-hardening.md) | `proposed` | Conversation 持久恢复、复杂冲突/去重/异常、跨工程与正式复验 | Slice1 完整体验与方向质量经用户 `CONTINUE` 后再授权 |
 | [SLICE-003](SLICE-003-formal-product-acceptance.md) | `proposed` | 未见工程、多轮现场对话、严格 Codex 对照、安全和最终验收 | Slice2 exact Result=`CONTINUE`，再取得新授权 |
 

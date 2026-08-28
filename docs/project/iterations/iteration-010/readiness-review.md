@@ -17,20 +17,23 @@ historical_product_goal_alignment_review_ref: codex-user-message:sha256:585f02c4
 historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
 coding_input: false
-current_execution_decision_ref: ITER-010-PDR-010
+current_execution_decision_ref: ITER-010-PDR-011
 current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153]
 current_scheduling_finding_ref: FINDING-010-139
 ---
 
 # ITER-010 Readiness Review
 
-Front matter 的 `coding_input: false` 表示本文件本身不是开发设计；当前编码权威来自 Manifest、Current 和
-`ITER-010-SLICE-001 coding_input: true`。
+Front matter 仍表示本 Readiness 文件本身不是 coding input；活动 Slice 依治理约束保持 `coding_input: true`，但 PDR-011
+当前 action 以 `coding_allowed=false` 和全部执行锁覆盖该宽口径，只允许 governance runner freeze 与 existing-evidence Result handoff。
 
-## PDR-010 current readiness
+## PDR-011 current readiness
 
-Readiness 结论是：**可以直接开发完整体验版**。当前同一长动作允许 Manifest 白名单内的产品代码、主工程 Agent、Evidence/Reviewer、
-配置选择的模型路线、公开工程受控源码和 loopback Web。无需 Activation、Freeze、分钟收据、阶段 Result 或相同 standing scope 的再次人工确认。
+PDR-010 的产品开发已达到一次通用修复仍失败的停止条件。PDR-011 不重新打开产品开发；它只恢复 frozen verifier 对真实 pre-answer
+failure handoff 的表达能力。当前 coding/external execution 均为 false，所有执行锁关闭。
+
+Readiness 结论是：**不得继续开发完整体验版**。当前动作只允许 runner-first、Result-second 的 failure handoff；产品代码、主工程 Agent、
+Evidence/Reviewer、模型路线、受控源码读取和 loopback Web 新执行全部锁定。
 
 执行顺序只有四步：
 
@@ -89,9 +92,8 @@ request identity/receipt，不属于 transport request retry；仍失败则如�
 
 ## Slice, dependency and risk closure
 
-Slice1 是唯一 active/coding input。普通失败、定向测试失败、内部候选变化和首次可操作浏览器交付不移动计划游标、不生成 Result、不停止开发。答案失败必须先
-保存同一 trace，按世界模型构建/投影、Agent 调查/综合、Evidence/Review、Chat/Web 找到最早偏差；只做一次最小通用修复，并复验原失败
-与两个异质案例。同一故障仍复现时停止无新证据外调，交付最后可运行版本、根因证据和限制给用户判向。
+Slice1 仍是唯一 active Slice，宽口径 `coding_input=true`；PDR-011 当前 action 的 `coding_allowed=false` 才是更精确的停工边界。PDR-010 规定的归因、一次通用修复、原失败与两个异质复验已经完成；同类
+pre-answer failure 仍复现，因此产品和外调均已停止。PDR-011 只允许把既有 trace 如实交给用户判向。
 
 首次体验前只运行改动相关测试、启动 smoke、安全与失败真实性检查。full regression、hardening、第二工程和 hidden 在用户 `CONTINUE`
 前保持锁定。
@@ -99,17 +101,18 @@ Slice1 是唯一 active/coding input。普通失败、定向测试失败、内�
 ## Verification readiness
 
 `V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001`、`V-FALLBACK-ROUTE-ADMISSION-001` 与 `V-ALPHA-ACCESS-001` 的既有
-PASS 可作为输入；`V-MODEL-TRANSPARENT-ROUTING-001`、`V-CHAT-EXPERIENCE-001`、`V-MVP-EXPERIENCE-001` 和 `V-PREVIEW-002`
-尚未执行。模型透明 Case 是当前动作内的定向可执行阻断项，不创建新动作或改变游标。第一条完整主链的即时体验交付不要求 Result、不移动游标；仅在同候选完成三条异质问题、两条 unseen 与 Codex 比较形成最终 handoff，
-或一次通用修复后同类重大失败仍存在需要用户判向时，由轻量 verifier 密封一次 handoff evidence。
+PASS 可作为输入；`V-MODEL-TRANSPARENT-ROUTING-001` 已由定向测试通过，`V-MVP-EXPERIENCE-001` 已达到 failure branch 的业务停止
+条件但尚待 @3 密封，`V-PREVIEW-002` 尚未进入。@3 verifier 不要求不存在的 Answer/Citation/Review/Codex comparison，只验证原失败、
+两个 unseen 异质复验、多 Session 原始记录和 19/0 Provider 执行对账。
 
 当前公开工程、exact revision、既有披露/预算和配置路线属于 standing scope，人工重复授权请求应为 0。每个真实 Turn/dispatch 仍须在
 Source disclosure、credential 和 network 前自动派生 one-use exact receipt；真实 scope delta 继续失败关闭并申请最小增量权限。
 
 ## Authorization decision
 
-**CURRENT READINESS ACCEPTED / PDR-010 COMPLETE-EXPERIENCE-FIRST / ITERATION AND SLICE1 AUTHORIZED。**
+**CURRENT READINESS ACCEPTED / PDR-011 FAILURE-HANDOFF-ONLY / ITERATION AND SLICE1 AUTHORIZED。**
 
-可以直接开始 `V-MVP-EXPERIENCE-001`。当前授权不扩大到 hardening、full regression、第二工程、hidden、非 loopback、Source 写入、
+当前只能先冻结 @3 runner，再由下一 trusted-parent 提交密封既有 run-052/053 failure Result。当前授权不包括产品代码、Prompt、Provider 调用、
+hardening、full regression、第二工程、hidden、非 loopback、Source 写入、
 后续 Slice 或 Production；这些边界只有用户 `CONTINUE`、后续新 PDR、明确用户授权和可信父 cutover 共同成立时才能改变。front matter 中的
 本地消息 digest 仅是项目记录的内容证据引用，不代表平台认证身份、签名或可自行扩权的授权。

@@ -139,6 +139,7 @@ ITER010_DIRECTION_CHECKPOINT_MISS_ACTION = (
 ITER010_PLAN_EXECUTION_CONTROL_SCHEMA = "DEVELOPMENT_PLAN_EXECUTION_CONTROL@1"
 ITER010_PLAN_REVISION_REF = "ITER-010-PDR-009"
 ITER010_LIGHTWEIGHT_PLAN_REVISION_REF = "ITER-010-PDR-010"
+ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF = "ITER-010-PDR-011"
 ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID = "V-MVP-EXPERIENCE-001"
 ITER010_LIGHTWEIGHT_FIRST_OPERABLE_CASE_ID = "V-CHAT-EXPERIENCE-001"
 ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES: tuple[
@@ -261,6 +262,26 @@ ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES: tuple[
         ("ITER-010-RESULT-SLICE-001-STOP-REDIRECT",),
     ),
 )
+ITER010_FAILURE_HANDOFF_EXPERIENCE_POLICY_EXACT_VALUES: tuple[
+    tuple[str, object], ...
+] = tuple(
+    (
+        field,
+        ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF
+        if field in {"current_execution_decision_ref", "current_gate_decision_ref"}
+        else expected,
+    )
+    for field, expected in ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES
+) + (
+    ("pdr011_failure_handoff_only", True),
+    ("pdr011_product_candidate_commit", "a5c780f51fa5242ee8209766712ad408ed023f80"),
+    ("pdr011_multi_artifact_session_failure_records_allowed", True),
+    (
+        "pdr011_missing_answer_citation_review_or_codex_records_must_not_be_fabricated",
+        True,
+    ),
+    ("pdr011_new_external_dispatch_allowed", False),
+)
 ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES: tuple[
     tuple[str, object], ...
 ] = (
@@ -358,6 +379,21 @@ ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES: tuple[
         "standing-authority-active-runtime-receipt-required-per-dispatch",
     ),
 )
+ITER010_FAILURE_HANDOFF_STANDING_AUTHORITY_EXACT_VALUES: tuple[
+    tuple[str, object], ...
+] = tuple(
+    (
+        field,
+        (
+            ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF
+            if field == "current_plan_amendment_ref"
+            else "locked-by-pdr011-no-new-dispatch"
+        )
+        if field in {"current_plan_amendment_ref", "current_external_execution_status"}
+        else expected,
+    )
+    for field, expected in ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES
+)
 ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES: tuple[
     tuple[str, object], ...
 ] = (
@@ -378,6 +414,25 @@ ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES: tuple[
         "current_successor_runtime_gate_status",
         "machine-receipt-required-before-each-dispatch",
     ),
+)
+ITER010_FAILURE_HANDOFF_AUTHORIZATION_STATE_EXACT_VALUES: tuple[
+    tuple[str, object], ...
+] = tuple(
+    (
+        field,
+        (
+            "not-authorized"
+            if field == "external_execution_authorization_status"
+            else "locked-by-pdr011-no-new-dispatch"
+        ),
+    )
+    if field
+    in {
+        "external_execution_authorization_status",
+        "external_execution_authorization_status_scope",
+    }
+    else (field, expected)
+    for field, expected in ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES
 )
 ITER010_PLAN_AUTHORIZATION_REFS = (
     "local-user-message-utf8:sha256:612341017bef3d98db372608d22b0d57744a96883e23dd51a6552c13da183989",
@@ -2629,16 +2684,20 @@ def _validate_iter010_lightweight_experience_policy(
     *,
     manifest_text: str | None,
 ) -> list[str]:
-    """Validate the complete PDR-010 policy as one closed contract."""
+    """Validate the PDR-010/PDR-011 experience policy as a closed contract."""
 
     policy = manifest.get("experience_delivery_policy")
     if not isinstance(policy, dict):
         return [f"{label}: experience_delivery_policy must be a mapping"]
 
     errors: list[str] = []
-    expected_scalar_values = dict(
-        ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES
+    failure_handoff = uses_failure_handoff_iter010_plan(manifest)
+    scalar_contract = (
+        ITER010_FAILURE_HANDOFF_EXPERIENCE_POLICY_EXACT_VALUES
+        if failure_handoff
+        else ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES
     )
+    expected_scalar_values = dict(scalar_contract)
     expected_sequence_fields = {
         field
         for field, _ in ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_SEQUENCE_VALUES
@@ -2653,7 +2712,7 @@ def _validate_iter010_lightweight_experience_policy(
             + (f"; missing={','.join(missing)}" if missing else "")
             + (f"; unexpected={','.join(extra)}" if extra else "")
         )
-    for field, expected in ITER010_LIGHTWEIGHT_EXPERIENCE_POLICY_EXACT_VALUES:
+    for field, expected in scalar_contract:
         if not _exact_plan_scalar(policy.get(field), expected):
             errors.append(
                 f"{label}: lightweight experience_delivery_policy.{field} "
@@ -2749,27 +2808,66 @@ def _validate_iter010_lightweight_experience_policy(
             f"{label}: lightweight ITER-010 current experience action must be a mapping"
         )
     else:
-        for field, expected in (
-            ("id", "ITER-010-ACTION-USER-PLAN-RECOVERY-001"),
-            ("kind", "mvp-experience-development"),
-            ("case_id", final_case),
-            ("result_ref", "ITER-010-RESULT-V-MVP-EXPERIENCE-001"),
-            ("coding_allowed", True),
-            ("external_execution_allowed", True),
+        if failure_handoff and current_action.get("id") == (
+            "ITER-010-ACTION-USER-DIRECTION-DECISION-001"
         ):
+            expected_action = (
+                ("id", "ITER-010-ACTION-USER-DIRECTION-DECISION-001"),
+                ("kind", "governance"),
+                ("case_id", "V-PREVIEW-002"),
+                ("result_ref", "ITER-010-RESULT-V-USER-DIRECTION-DECISION-001"),
+                ("evidence_verifier", "ITER010_MVP_LIGHT@3"),
+                ("coding_allowed", False),
+                ("external_execution_allowed", False),
+            )
+        elif failure_handoff:
+            expected_action = (
+                ("id", "ITER-010-ACTION-USER-PLAN-RECOVERY-001"),
+                ("kind", "mvp-failure-handoff"),
+                ("case_id", final_case),
+                ("result_ref", "ITER-010-RESULT-V-MVP-EXPERIENCE-001"),
+                ("evidence_verifier", "ITER010_MVP_LIGHT@3"),
+                ("coding_allowed", False),
+                ("external_execution_allowed", False),
+            )
+        else:
+            expected_action = (
+                ("id", "ITER-010-ACTION-USER-PLAN-RECOVERY-001"),
+                ("kind", "mvp-experience-development"),
+                ("case_id", final_case),
+                ("result_ref", "ITER-010-RESULT-V-MVP-EXPERIENCE-001"),
+                ("coding_allowed", True),
+                ("external_execution_allowed", True),
+            )
+        for field, expected in expected_action:
             if not _exact_plan_scalar(current_action.get(field), expected):
                 errors.append(
                     f"{label}: lightweight current experience action.{field} "
                     f"must equal {expected}"
                 )
         locks = control.get("locks") if isinstance(control, dict) else None
-        if not isinstance(locks, dict) or (
-            locks.get("hardening") is not True
-            or locks.get("full_regression") is not True
+        required_locks = (
+            {
+                "product_code_changes",
+                "prompt_or_reviewer_changes",
+                "web_canary",
+                "hardening",
+                "full_regression",
+                "provider_dispatch",
+            }
+            if failure_handoff
+            else {"hardening", "full_regression"}
+        )
+        if not isinstance(locks, dict) or any(
+            locks.get(lock) is not True for lock in required_locks
         ):
             errors.append(
                 f"{label}: lightweight current experience action must lock "
-                "hardening and full regression until user CONTINUE"
+                + (
+                    "all product and execution work during the PDR-011 failure handoff"
+                    if failure_handoff
+                    else "hardening and full regression until user CONTINUE"
+                )
             )
 
     action_contracts = (
@@ -2814,7 +2912,9 @@ def validate_experience_first_delivery_policy(
             errors.append(f"{label}: experience_delivery_policy is required")
     elif not isinstance(policy, dict):
         errors.append(f"{label}: experience_delivery_policy must be a mapping")
-    elif uses_lightweight_iter010_plan(manifest):
+    elif uses_lightweight_iter010_plan(manifest) or (
+        uses_failure_handoff_iter010_plan(manifest)
+    ):
         errors.extend(
             _validate_iter010_lightweight_experience_policy(
                 manifest,
@@ -3512,7 +3612,14 @@ def iter010_pending_codex_identity_allowed(
         and current_action.get("status") == "authorized"
         and gate.get("status") == "post-experience-quality-policy-not-current-action"
     )
-    return legacy_pending or experience_first_pending
+    failure_handoff_pending = (
+        control.get("plan_revision_ref")
+        == ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF
+        and isinstance(current_action, dict)
+        and current_action.get("status") == "authorized"
+        and gate.get("status") == "post-experience-quality-policy-not-current-action"
+    )
+    return legacy_pending or experience_first_pending or failure_handoff_pending
 
 
 def validate_strict_codex_baseline_alignment(
@@ -7623,12 +7730,31 @@ def uses_lightweight_iter010_plan(manifest: dict[str, object]) -> bool:
     )
 
 
+def uses_failure_handoff_iter010_plan(manifest: dict[str, object]) -> bool:
+    """Return whether the truthful pre-answer failure PDR-011 owns the snapshot."""
+
+    control = manifest.get("plan_execution_control")
+    return (
+        isinstance(control, dict)
+        and control.get("plan_revision_ref")
+        == ITER010_FAILURE_HANDOFF_PLAN_REVISION_REF
+    )
+
+
+def uses_post_pdr009_iter010_plan(manifest: dict[str, object]) -> bool:
+    """Return whether a registered lightweight ITER-010 contract owns the snapshot."""
+
+    return uses_lightweight_iter010_plan(
+        manifest
+    ) or uses_failure_handoff_iter010_plan(manifest)
+
+
 def validate_iter010_lightweight_standing_authority(
     manifest: dict[str, object], label: str
 ) -> list[str]:
-    """Freeze PDR-010 public-source authority and its runtime safety boundary."""
+    """Freeze public-source authority and the active plan's runtime boundary."""
 
-    if not uses_lightweight_iter010_plan(manifest):
+    if not uses_post_pdr009_iter010_plan(manifest):
         return []
     authority = manifest.get("public_oss_evaluation_standing_authority")
     if not isinstance(authority, dict):
@@ -7638,7 +7764,13 @@ def validate_iter010_lightweight_standing_authority(
         ]
 
     errors: list[str] = []
-    expected_values = dict(ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES)
+    failure_handoff = uses_failure_handoff_iter010_plan(manifest)
+    standing_contract = (
+        ITER010_FAILURE_HANDOFF_STANDING_AUTHORITY_EXACT_VALUES
+        if failure_handoff
+        else ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES
+    )
+    expected_values = dict(standing_contract)
     actual_fields = set(map(str, authority))
     expected_fields = set(expected_values)
     if actual_fields != expected_fields:
@@ -7649,7 +7781,7 @@ def validate_iter010_lightweight_standing_authority(
             + (f"; missing={','.join(missing)}" if missing else "")
             + (f"; unexpected={','.join(extra)}" if extra else "")
         )
-    for field, expected in ITER010_LIGHTWEIGHT_STANDING_AUTHORITY_EXACT_VALUES:
+    for field, expected in standing_contract:
         if not _exact_plan_scalar(authority.get(field), expected):
             errors.append(
                 f"{label}: public_oss_evaluation_standing_authority.{field} "
@@ -7683,7 +7815,12 @@ def validate_iter010_lightweight_standing_authority(
         return errors + [
             f"{label}: lightweight ITER-010 authorization must be a mapping"
         ]
-    for field, expected in ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES:
+    authorization_contract = (
+        ITER010_FAILURE_HANDOFF_AUTHORIZATION_STATE_EXACT_VALUES
+        if failure_handoff
+        else ITER010_LIGHTWEIGHT_AUTHORIZATION_STATE_EXACT_VALUES
+    )
+    for field, expected in authorization_contract:
         if not _exact_plan_scalar(authorization.get(field), expected):
             errors.append(
                 f"{label}: lightweight ITER-010 authorization.{field} "
@@ -7782,7 +7919,7 @@ def validate_historical_gate_catalog(
             f"{label}: current blocking_case_ids must not reuse historical executed Cases: "
             + ", ".join(reused)
         )
-    if uses_lightweight_iter010_plan(manifest):
+    if uses_post_pdr009_iter010_plan(manifest):
         required_current_cases = {
             ITER010_LIGHTWEIGHT_EXPERIENCE_CASE_ID,
             ITER010_DIRECTION_QUALITY_CASE_ID,
@@ -7823,7 +7960,7 @@ def validate_historical_gate_catalog(
             errors.append(
                 f"{label}: historical Case {case_id} must preserve its immutable Evidence"
             )
-    if uses_lightweight_iter010_plan(manifest):
+    if uses_post_pdr009_iter010_plan(manifest):
         obsolete_cases = {
             ITER010_PLAN_RECOVERY_CASE_ID,
             ITER010_CURRENT_ACTION_CASE_ID,

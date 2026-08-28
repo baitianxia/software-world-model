@@ -157,11 +157,15 @@ VERDICT_TO_TRANSITION_FIELD = {
 EVIDENCE_SCHEMA = "DEVELOPMENT_PLAN_GATE_EVIDENCE@1"
 ITER010_VALUE_GATE_VERIFIER = "ITER010_VALUE_GATE@1"
 ITER010_PLAN_RECOVERY_VERIFIER = "ITER010_PLAN_RECOVERY@1"
-ITER010_MVP_LIGHT_VERIFIER = "ITER010_MVP_LIGHT@2"
+ITER010_MVP_LIGHT_VERIFIER = "ITER010_MVP_LIGHT@3"
 ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID = (
     "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
 )
 ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID = "V-MVP-EXPERIENCE-001"
+ITER010_MVP_LIGHT_DIRECTION_ACTION_ID = (
+    "ITER-010-ACTION-USER-DIRECTION-DECISION-001"
+)
+ITER010_MVP_LIGHT_DIRECTION_CASE_ID = "V-PREVIEW-002"
 ITER010_PLAN_RECOVERY_ACTION_ID = "ITER-010-ACTION-USER-PLAN-RECOVERY-001"
 ITER010_PLAN_RECOVERY_RESULT_ID = "ITER-010-RESULT-V-PLAN-RECOVERY-001"
 ITER010_PLAN_RECOVERY_CASE_ID = "V-PLAN-RECOVERY-001"
@@ -175,6 +179,20 @@ ITER010_PLAN_RECOVERY_AUTHORIZATION_REF = (
     "local-user-message-utf8:"
     "sha256:6cf2531ab1119b67ad2010040ae1ac73f817785684fccc26111b3b70ef5fcbe5"
 )
+ITER010_FAILURE_HANDOFF_RECOVERY_SCHEMA = (
+    "USER_DIRECTED_FAILURE_HANDOFF_RECOVERY@1"
+)
+ITER010_FAILURE_HANDOFF_RECOVERY_AUTHORIZATION_REF = (
+    "local-user-message-utf8:"
+    "sha256:382638cd16fdbc85c08a4202a94e630fe4c973ce03bb0d8a1671cbe4ee151aa7"
+)
+ITER010_FAILURE_HANDOFF_RECOVERY_BASE_COMMIT = (
+    "120a8903462caf04fbf7bda0c1afa07e3133d448"
+)
+ITER010_FAILURE_HANDOFF_RECOVERY_BASE_TREE = (
+    "883bdde37eec62856139e7fc00ee38691d311b73"
+)
+ITER010_FAILURE_HANDOFF_RECOVERY_TARGET_REVISION = "ITER-010-PDR-011"
 PLAN_RESULT_SEAL_SCHEMA = "DEVELOPMENT_PLAN_RESULT_SEAL@1"
 PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2"
 LEGACY_PROVIDER_ROUTE_POLICY_SCHEMA = "QUALIFIED_PROVIDER_PREFERENCE@1"
@@ -1067,6 +1085,106 @@ def _route_policy_migration_bridge_errors(
     return errors
 
 
+def _failure_handoff_recovery_errors(
+    manifest: Mapping[str, object],
+) -> list[str]:
+    """Keep the one-use PDR-011 recovery root exact after its trust cut-over."""
+
+    control = _control(manifest)
+    pdr011_active = (
+        isinstance(control, Mapping)
+        and control.get("plan_revision_ref")
+        == ITER010_FAILURE_HANDOFF_RECOVERY_TARGET_REVISION
+    )
+    recovery = manifest.get("mvp_failure_handoff_recovery")
+    if recovery is None:
+        return (
+            ["ITER-010-PDR-011 requires mvp_failure_handoff_recovery"]
+            if pdr011_active
+            else []
+        )
+    if not isinstance(recovery, Mapping):
+        return ["mvp_failure_handoff_recovery must be a mapping"]
+    expected = {
+        "schema": ITER010_FAILURE_HANDOFF_RECOVERY_SCHEMA,
+        "status": "authorized-recovery-root-installed",
+        "authorization_ref": ITER010_FAILURE_HANDOFF_RECOVERY_AUTHORIZATION_REF,
+        "authorization_reusable": False,
+        "trusted_base_commit": ITER010_FAILURE_HANDOFF_RECOVERY_BASE_COMMIT,
+        "trusted_base_tree": ITER010_FAILURE_HANDOFF_RECOVERY_BASE_TREE,
+        "interrupted_plan_revision_ref": "ITER-010-PDR-010",
+        "interrupted_action_id": ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+        "target_plan_revision_ref": (
+            ITER010_FAILURE_HANDOFF_RECOVERY_TARGET_REVISION
+        ),
+        "scope": "governance-only-failure-handoff-contract-recovery",
+        "old_gate_compliance_claimed": False,
+        "product_code_changes_allowed": False,
+        "external_execution_allowed": False,
+        "one_time_recovery": True,
+    }
+    errors = _exact_keys(
+        recovery,
+        set(expected),
+        "mvp_failure_handoff_recovery",
+    )
+    for field, value in expected.items():
+        if recovery.get(field) != value or type(recovery.get(field)) is not type(value):
+            errors.append(
+                f"mvp_failure_handoff_recovery.{field} must equal {value}"
+            )
+
+    if not isinstance(control, Mapping):
+        return errors + [
+            "mvp_failure_handoff_recovery requires plan_execution_control"
+        ]
+    if control.get("plan_revision_ref") != (
+        ITER010_FAILURE_HANDOFF_RECOVERY_TARGET_REVISION
+    ):
+        errors.append("failure handoff recovery is limited to ITER-010-PDR-011")
+    if control.get("authorization_refs") != [
+        ITER010_FAILURE_HANDOFF_RECOVERY_AUTHORIZATION_REF
+    ]:
+        errors.append(
+            "failure handoff recovery must bind only its exact one-use authorization"
+        )
+    action = control.get("current_action")
+    if isinstance(action, Mapping):
+        action_identity = (action.get("id"), action.get("case_id"))
+        allowed_action_identities = {
+            (
+                ITER010_MVP_LIGHT_EXPERIENCE_ACTION_ID,
+                ITER010_MVP_LIGHT_EXPERIENCE_CASE_ID,
+            ): "mvp-failure-handoff",
+            (
+                ITER010_MVP_LIGHT_DIRECTION_ACTION_ID,
+                ITER010_MVP_LIGHT_DIRECTION_CASE_ID,
+            ): "governance",
+        }
+        if action_identity not in allowed_action_identities or (
+            action.get("kind")
+            != allowed_action_identities.get(action_identity)
+        ) or action.get("evidence_verifier") != ITER010_MVP_LIGHT_VERIFIER:
+            errors.append(
+                "failure handoff recovery must preserve a registered PDR-011 action and use ITER010_MVP_LIGHT@3"
+            )
+        if (
+            action.get("coding_allowed") is not False
+            or action.get("external_execution_allowed") is not False
+        ):
+            errors.append(
+                "failure handoff recovery must stop coding and external execution"
+            )
+    else:
+        errors.append("failure handoff recovery current_action must be a mapping")
+    locks = control.get("locks")
+    if not isinstance(locks, Mapping) or any(
+        locks.get(field) is not True for field in LOCK_KEYS
+    ):
+        errors.append("failure handoff recovery must keep every execution lock closed")
+    return errors
+
+
 def _is_route_policy_migration_bridge(manifest: Mapping[str, object]) -> bool:
     return (
         manifest.get("provider_route_policy_migration") is not None
@@ -1547,6 +1665,7 @@ def validate_snapshot(
             allow_legacy_route_policy=allow_legacy_route_policy,
         )
     )
+    errors.extend(_failure_handoff_recovery_errors(manifest))
     _, configured_identities, _ = _configured_execution_profiles(manifest)
     control = _control(manifest)
     if control is None:
@@ -1884,20 +2003,20 @@ def _validate_lightweight_handoff_parent_binding(
         return [f"lightweight handoff evidence cannot bind the trusted parent: {error}"]
     action_evidence = artifact.get("action_evidence")
     candidate = (
-        action_evidence.get("candidate_identity")
+        action_evidence.get("handoff_parent_identity")
         if isinstance(action_evidence, Mapping)
         else None
     )
     if not isinstance(candidate, Mapping):
-        return ["lightweight handoff candidate_identity is missing"]
+        return ["lightweight handoff handoff_parent_identity is missing"]
     errors: list[str] = []
     if candidate.get("commit") != trusted_parent_commit:
         errors.append(
-            "lightweight handoff candidate commit must equal the actual trusted parent commit"
+            "lightweight handoff parent commit must equal the actual trusted parent commit"
         )
     if candidate.get("tree") != trusted_parent_tree:
         errors.append(
-            "lightweight handoff candidate tree must equal the actual trusted parent tree"
+            "lightweight handoff parent tree must equal the actual trusted parent tree"
         )
     return errors
 

@@ -3296,6 +3296,19 @@
       "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
+  "FINDING-010-163": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-163.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py",
+      "validation/iteration_010_mvp/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py",
+      "tests/test_iteration_010_mvp_value_gate.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -4345,6 +4358,19 @@
   },
   "ITER-010-PDR-010": {
     "path": "docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py",
+      "validation/iteration_010_mvp/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py",
+      "tests/test_iteration_010_mvp_value_gate.py"
+    ]
+  },
+  "ITER-010-PDR-011": {
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-011-truthful-pre-answer-failure-handoff.md",
     "code": [
       "scripts/docs.py",
       "scripts/plan_gate.py",

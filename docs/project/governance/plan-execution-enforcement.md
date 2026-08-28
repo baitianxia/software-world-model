@@ -98,3 +98,19 @@ slot 都不是通用合法性条件。进度应频繁对用户可见；长时间
 
 紧急安全事件可以停止动作。需要改变计划时，先形成 Finding、Project Decision 与明确用户授权引用，再由一个治理 cutover 提交修改计划；
 不得把候选产品代码与自授权计划混在同一提交。
+
+## 冻结 verifier 表达能力恢复
+
+如果当前动作已经达到文档规定的终止/交接条件，但 frozen verifier 无法表示实际证据，且填写其必填字段会伪造未发生的产品输出，则先停止
+产品修改和外部执行并形成 Finding。若该 verifier 同时阻止动作进入预注册 governance action，普通 Result 与 plan revision 因而形成机械自锁，
+可以在用户对 exact 最小差量作出明确授权后执行一次 trust-root recovery，但必须同时满足：
+
+- 绑定 exact trusted base commit/tree、fresh 一次性用户消息内容引用和 forward-only PDR；
+- 明确声明 recovery commit 不冒充被中断动作或旧 gate 合规；
+- 只修改治理、Manifest、冻结 runner 及其定向测试，不夹带产品代码、Prompt、Provider 调用或 Result；
+- coding、external execution、Web、hardening、full regression 和 Production 全部锁定；
+- runner 先独立提交成为新 trusted parent，后续提交才可生成并密封 Result；
+- machine PASS 只证明新 failure-handoff 包的结构、identity、digest 和执行计数闭合，不得追认缺失的 Answer、Citation、Review 或语义质量。
+
+新计划设计应给每个外部/产品长动作预留不依赖该动作待验证 Result 的治理恢复入口。该入口只解决 verifier 或计划表达能力错误，不得成为普通
+失败、质量不通过、未完成开发或扩大 scope 的旁路。

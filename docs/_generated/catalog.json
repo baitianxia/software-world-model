@@ -3875,6 +3875,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-162.md"
   },
   {
+    "id": "FINDING-010-163",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "project",
+      "quality",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-163.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -5714,6 +5727,22 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/decisions/PDR-010-complete-mvp-vertical-slice.md"
+  },
+  {
+    "id": "ITER-010-PDR-011",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-011-truthful-pre-answer-failure-handoff.md"
   },
   {
     "id": "ITER-010-PROPOSAL",
