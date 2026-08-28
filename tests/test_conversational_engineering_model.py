@@ -417,7 +417,36 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "$.tool_catalog[1].action_template.arguments[0].name",
             authorizer.disclosure_requests[0].disclosed_leaf_paths,
         )
+        self.assertIn(
+            "$.final_output_preflight.non_null_action."
+            "effective_action_templates[1].operation",
+            authorizer.disclosure_requests[0].disclosed_leaf_paths,
+        )
         self.assertEqual(len(adapter.requests), 1)
+        self.assertEqual(
+            tuple(item.input_item_id for item in adapter.requests[0].messages),
+            ("instruction", "sealed-role-input", "final-output-preflight"),
+        )
+        output_preflight = json.loads(adapter.requests[0].messages[-1].content)
+        self.assertEqual(
+            output_preflight["schema"],
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@1",
+        )
+        self.assertTrue(output_preflight["shape_only"])
+        self.assertFalse(output_preflight["semantic_or_tool_authority"])
+        self.assertEqual(
+            output_preflight["non_null_action"]["required_fields"],
+            ["operation", "arguments", "evidence_need"],
+        )
+        self.assertEqual(
+            tuple(
+                item["operation"]
+                for item in output_preflight["non_null_action"][
+                    "effective_action_templates"
+                ]
+            ),
+            ("WORLD_MODEL_QUERY", "SOURCE_SEARCH"),
+        )
         rendered = "\n".join(
             item.content for item in adapter.requests[0].messages
         )
@@ -714,6 +743,33 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "evidence_need": "",
             },
         )
+        self.assertEqual(
+            adapter.requests[1].messages[-1].input_item_id,
+            "final-output-preflight",
+        )
+        repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
+        self.assertEqual(repair_preflight["format_repair"]["attempt"], 1)
+        self.assertEqual(
+            repair_preflight["format_repair"]["validation_failure_code"],
+            ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        self.assertEqual(
+            repair_preflight["format_repair"]["validation_failure_message"],
+            repair_policy["validation_failure_message"],
+        )
+        self.assertEqual(
+            repair_preflight["non_null_action"][
+                "effective_action_templates"
+            ],
+            [
+                {
+                    "operation": "WORLD_MODEL_QUERY",
+                    "arguments": [],
+                    "evidence_need": "",
+                }
+            ],
+        )
+        self.assertNotIn("prior_output_text", repair_preflight)
 
     def test_format_repair_identifies_cross_disposition_claim_reference(self) -> None:
         capture = CapturingTurnExecutor()

@@ -80,6 +80,9 @@ ENGINEERING_AGENT_MODEL_PROMPT_REF = (
 )
 ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@8"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
+ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@1"
+)
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
 )
@@ -212,6 +215,14 @@ Broker independently enforces the exact Source Profile and may reject a class or
 query.
 Do not expose hidden rationale, invent IDs, add fields, or grant yourself any
 authority.
+The final-output-preflight item follows the sealed role input. It is trusted
+only as a redundant closed-shape checklist: it grants no fact, semantic, tool,
+review, or delivery authority. Immediately before returning, compare the whole
+object with that checklist. For every non-null action, copy one complete
+effective_action_template from the checklist, replace its empty values, and
+verify that operation, arguments, and evidence_need are all present exactly
+once. When the checklist repeats a repair diagnostic, returning the same named
+shape defect again is forbidden.
 """
 
 _REVIEW_PROMPT = """You are a fresh independent Reviewer for one sealed Chat Turn.
@@ -237,6 +248,10 @@ evidence standard, invent findings, or treat the prior output as facts.
 validation_failure_code and validation_failure_message are trusted output from
 the local closed-schema validator. Fix that exact shape violation before
 returning; the diagnostic grants no evidence or review authority.
+The final-output-preflight item follows the sealed review input. It is trusted
+only as a redundant closed-shape checklist and grants no evidence, review, or
+delivery authority. Compare the complete object with it immediately before
+returning; do not repeat a named repair defect.
 Check correctness, completeness, relevance, user corrections and constraints,
 claim-to-support closure, honest unknown boundaries, material conditions,
 ordering, outcomes, state changes, and side effects. APPROVED requires an empty
@@ -991,12 +1006,31 @@ class EngineeringAgentRoleDisclosureRequest:
                 "Engineering Agent role input or output contract drifted",
             )
         payload_bytes = canonical_json_bytes(role_input_payload)
-        if len(payload_bytes) > configuration.maximum_input_bytes:
+        output_preflight = _output_preflight_view(
+            role=role,
+            role_input_payload=role_input_payload,
+            output_schema_ref=output_schema_ref,
+        )
+        output_preflight_bytes = canonical_json_bytes(output_preflight)
+        disclosed_payload_byte_count = len(payload_bytes) + len(
+            output_preflight_bytes
+        )
+        if disclosed_payload_byte_count > configuration.maximum_input_bytes:
             raise DomainError(
                 ErrorCode.BUDGET_EXHAUSTED,
                 "Engineering Agent model input byte fuse is exhausted",
             )
-        leaves = tuple(sorted(_json_leaves(role_input_payload)))
+        leaves = tuple(
+            sorted(
+                (
+                    *_json_leaves(role_input_payload),
+                    *_json_leaves(
+                        output_preflight,
+                        "$.final_output_preflight",
+                    ),
+                )
+            )
+        )
         leaf_paths = tuple(path for path, _ in leaves)
         fragments_digest = digest_of(
             [
@@ -1026,7 +1060,7 @@ class EngineeringAgentRoleDisclosureRequest:
             "disclosed_leaf_paths": leaf_paths,
             "disclosed_fragment_count": len(leaves),
             "disclosed_fragments_digest": fragments_digest.value,
-            "payload_byte_count": len(payload_bytes),
+            "payload_byte_count": disclosed_payload_byte_count,
             "output_schema_ref": output_schema_ref,
             "output_schema_digest": output_digest.value,
             "prompt_ref": ENGINEERING_AGENT_MODEL_PROMPT_REF,
@@ -1065,7 +1099,7 @@ class EngineeringAgentRoleDisclosureRequest:
             disclosed_leaf_paths=leaf_paths,
             disclosed_fragment_count=len(leaves),
             disclosed_fragments_digest=fragments_digest,
-            payload_byte_count=len(payload_bytes),
+            payload_byte_count=disclosed_payload_byte_count,
             output_schema_ref=output_schema_ref,
             output_schema_digest=output_digest,
             prompt_ref=ENGINEERING_AGENT_MODEL_PROMPT_REF,
@@ -1969,6 +2003,14 @@ def _gateway_manifest(
 ) -> AuthorizedInputManifest:
     prompt = engineering_agent_role_prompt(role)
     payload = canonical_json_bytes(role_input_payload).decode("utf-8")
+    output_preflight = _output_preflight_view(
+        role=role,
+        role_input_payload=role_input_payload,
+        output_schema_ref=output_schema_ref,
+    )
+    output_preflight_payload = canonical_json_bytes(output_preflight).decode(
+        "utf-8"
+    )
     return AuthorizedInputManifest.create(
         capability_id=_CAPABILITY_ID,
         strategy_ref=ENGINEERING_AGENT_MODEL_STRATEGY_REF,
@@ -1996,6 +2038,16 @@ def _gateway_manifest(
                 transformation_ref="canonical-json-utf8@1",
             ),
             AuthorizedInputItem.create(
+                item_id="final-output-preflight",
+                schema_ref=ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA,
+                classification=configuration.classification,
+                purpose="final trusted closed-output shape preflight",
+                authority_reference=digest_of(output_preflight).value,
+                disposition=InputDisposition.PROVIDED,
+                content=output_preflight_payload,
+                transformation_ref="canonical-json-utf8@1",
+            ),
+            AuthorizedInputItem.create(
                 item_id="session-disclosure-authority",
                 schema_ref=session_authority.schema,
                 classification=configuration.classification,
@@ -2005,6 +2057,75 @@ def _gateway_manifest(
             ),
         ),
     )
+
+
+def _output_preflight_view(
+    *,
+    role: EngineeringAgentModelRole,
+    role_input_payload: Mapping[str, object],
+    output_schema_ref: str,
+) -> dict[str, object]:
+    expected_output_schema_ref, output_schema = _output_schema_for_role(role)
+    required = output_schema.schema.get("required")
+    repair_policy = role_input_payload.get("format_repair_policy")
+    if (
+        output_schema_ref != expected_output_schema_ref
+        or not isinstance(required, list)
+        or not all(isinstance(item, str) for item in required)
+        or not isinstance(repair_policy, Mapping)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent output preflight source is invalid",
+        )
+    preflight: dict[str, object] = {
+        "schema": ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA,
+        "role": role.value,
+        "shape_only": True,
+        "semantic_or_tool_authority": False,
+        "required_top_level_fields": tuple(required),
+        "format_repair": {
+            "attempt": repair_policy.get("attempt"),
+            "validation_failure_code": repair_policy.get(
+                "validation_failure_code"
+            ),
+            "validation_failure_message": repair_policy.get(
+                "validation_failure_message"
+            ),
+        },
+    }
+    if role is EngineeringAgentModelRole.PRIMARY_AGENT:
+        tool_catalog = role_input_payload.get("tool_catalog")
+        if not isinstance(tool_catalog, (tuple, list)):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent output preflight tool catalog is invalid",
+            )
+        action_templates: list[object] = []
+        for entry in tool_catalog:
+            if not isinstance(entry, Mapping):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight tool entry is invalid",
+                )
+            template = entry.get("action_template")
+            if not isinstance(template, Mapping):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight action template is invalid",
+                )
+            action_templates.append(deepcopy(dict(template)))
+        preflight["non_null_action"] = {
+            "required_fields": tuple(_ACTION_SCHEMA["required"]),
+            "effective_action_templates": tuple(action_templates),
+            "copy_one_complete_template": True,
+            "replace_every_empty_string": True,
+            "final_check": (
+                "A non-null action is invalid unless operation, arguments, and "
+                "evidence_need are each present exactly once."
+            ),
+        }
+    return preflight
 
 
 def _validate_gateway_context(
@@ -2050,6 +2171,7 @@ def _validate_gateway_context(
         != (
             "instruction",
             "sealed-role-input",
+            "final-output-preflight",
             "session-disclosure-authority",
         )
     ):
@@ -2083,7 +2205,27 @@ def _validate_gateway_context(
         "proposal_vocabulary_ref": context.manifest.proposal_vocabulary_ref,
         "items": context.manifest.items,
     }
-    instruction, sealed, session = items
+    instruction, sealed, output_preflight, session = items
+    try:
+        sealed_payload = json.loads(sealed.content)
+    except json.JSONDecodeError as exc:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent sealed role input is not canonical JSON",
+        ) from exc
+    if not isinstance(sealed_payload, dict):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent sealed role input is not an object",
+        )
+    expected_output_preflight = _output_preflight_view(
+        role=role,
+        role_input_payload=sealed_payload,
+        output_schema_ref=output_schema_ref,
+    )
+    expected_output_preflight_payload = canonical_json_bytes(
+        expected_output_preflight
+    ).decode("utf-8")
     if (
         context.manifest.digest != digest_of(manifest_core)
         or instruction.schema_ref != "text@1"
@@ -2099,7 +2241,19 @@ def _validate_gateway_context(
         != "exact authorized conversational engineering role input"
         or sealed.disposition is not InputDisposition.PROVIDED
         or sealed.transformation_ref != "canonical-json-utf8@1"
-        or len(sealed.content.encode("utf-8")) > configuration.maximum_input_bytes
+        or len(sealed.content.encode("utf-8"))
+        + len(output_preflight.content.encode("utf-8"))
+        > configuration.maximum_input_bytes
+        or output_preflight.schema_ref
+        != ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA
+        or output_preflight.classification != configuration.classification
+        or output_preflight.purpose
+        != "final trusted closed-output shape preflight"
+        or output_preflight.authority_reference
+        != digest_of(expected_output_preflight).value
+        or output_preflight.disposition is not InputDisposition.PROVIDED
+        or output_preflight.content != expected_output_preflight_payload
+        or output_preflight.transformation_ref != "canonical-json-utf8@1"
         or session.schema_ref != session_authority.schema
         or session.classification != configuration.classification
         or session.purpose

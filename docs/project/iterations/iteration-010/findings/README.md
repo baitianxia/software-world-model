@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-167](FINDING-010-167.md)：run-055 首个同一 Conversation 三轮链已真实成功并交付，但新 Conversation 的异质问题在初始/
+  repair 中逐字重复遗漏 `action.operation`，尽管 sealed input 已含同形 template 与 exact diagnostic。现于 sealed role input 后追加受信但
+  shape-only 的 final-output preflight，重复有效 templates/required fields/repair diagnostic；Application 仍不补字段，fresh successor 待验证。
 - [FINDING-010-166](FINDING-010-166.md)：run-052/053 原始输入证明模型可见 tool signature 与 closed action 不同形，SUPPORT/BOUNDARY
   内容也未就地分区，分别对应参数错形/遗漏 operation 与跨 disposition Claim 引用。现改为完整 action copy template、用途分区 evidence
   和带 exact path 的语义诊断；Application 仍不补字段、不改标证据，74 项受影响测试 PASS，fresh Browser successor 待验证。
