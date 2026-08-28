@@ -4,9 +4,9 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-pdr011-failure-handoff-runner-freeze`
+- Worktree status: `iteration-010-slice-001-pdr011-awaiting-user-direction`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
-- Live model path: `product-and-provider-work-stopped-existing-run052-run053-failure-evidence-handoff-only`
+- Live model path: `product-and-provider-work-stopped-sealed-failure-handoff-awaiting-user-direction`
 - Normative source: `docs/system/`
 - Current development source: `docs/project/current.md`
 - Roadmap authority: planning-only

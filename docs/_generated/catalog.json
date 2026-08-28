@@ -5894,6 +5894,20 @@
     "path": "docs/project/iterations/iteration-010/results/v-layer-attribution-001.md"
   },
   {
+    "id": "ITER-010-RESULT-V-MVP-EXPERIENCE-001",
+    "kind": "iteration-result",
+    "status": "sealed",
+    "authority": "evidence",
+    "owners": [
+      "product",
+      "project",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/v-mvp-experience-001.md"
+  },
+  {
     "id": "ITER-010-RESULT-V-PLAN-RECOVERY-001",
     "kind": "iteration-result",
     "status": "sealed",

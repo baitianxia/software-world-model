@@ -4479,6 +4479,17 @@
       "tests/test_engineering_chat_alpha_cli.py"
     ]
   },
+  "ITER-010-RESULT-V-MVP-EXPERIENCE-001": {
+    "path": "docs/project/iterations/iteration-010/results/v-mvp-experience-001.md",
+    "code": [
+      "validation/iteration_010_mvp/value_gate/runner.py"
+    ],
+    "tests": [
+      "tests/test_iteration_010_mvp_value_gate.py",
+      "tests/test_plan_gate.py",
+      "tests/test_docs_gate.py"
+    ]
+  },
   "ITER-010-RESULT-V-PLAN-RECOVERY-001": {
     "path": "docs/project/iterations/iteration-010/results/v-plan-recovery-001.md",
     "code": [

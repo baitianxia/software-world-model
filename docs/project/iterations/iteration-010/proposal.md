@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-011
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165]
 current_scheduling_finding_ref: FINDING-010-139
 ---
 
@@ -19,17 +19,16 @@ current_scheduling_finding_ref: FINDING-010-139
 ## PDR-011 current amendment：只密封既有答案前失败
 
 PDR-010 的产品设计与一次通用修复停止条件保持有效；run-052/053 已满足失败出口。PDR-011 不修改产品目标，而是关闭 coding/external
-execution，只允许用 @3 verifier 如实密封多 Session pre-answer failure 并进入用户判向。以下完整体验设计保留为 PDR-010 的产品背景，
-不是当前编码授权。
+execution，并已用 @3 verifier 如实密封多 Session pre-answer failure。当前已进入 `V-PREVIEW-002` 用户判向；以下完整体验设计保留为
+PDR-010 的产品背景，不是当前编码授权。
 
 ITER-010 保持“双核心”产品架构：软件世界模型维护 exact revision 上持久、版本化、可验证、可更新的软件认知；主工程 Agent 以该认知为
 起点，持续维护用户目标、假设、计划和对话上下文，并按证据缺口通过受控工具读取源码、文档、配置或测试。Application 密封逐 Turn
 Evidence Package，主工程 Agent 形成自然答案，fresh independent Reviewer 检查问题满足度、证据支持和 Citation。
 
-当前只执行一个跨提交长动作 `V-MVP-EXPERIENCE-001`。先恢复完整浏览器主链，主链第一次可操作就以 `V-CHAT-EXPERIENCE-001` 立即交给用户；
-该交付 `requires_result=false`、不移动游标。随后在同一候选上用至少三条异质问题和 actual current Codex 严格验证方向，再由
-`V-MVP-EXPERIENCE-001` 密封最终 Result 并进入用户判向。Build、Live、Quality、Attribution 和 Recheck 不再拆成独立动作，
-也不存在 Activation、Freeze-first、分钟硬停或逐候选人工授权。
+PDR-010 的跨提交长动作 `V-MVP-EXPERIENCE-001` 已沿 failure branch 结束：一次通用修复后，同类答案前 contract failure 仍在原问题与两个
+unseen 异质案例复现。`ITER-010-RESULT-V-MVP-EXPERIENCE-001` 的 machine PASS 只证明 failure handoff 完整，产品质量结论仍是
+`QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。当前动作只记录用户方向，不存在 Activation、Freeze-first、分钟硬停或逐候选人工授权。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。
@@ -75,7 +74,7 @@ World Model Answering、Knowledge Update/Use、Response Control、Model Gateway�
 
 ## Development slices and dependencies
 
-1. `SLICE-001`：当前唯一动作。形成完整浏览器 MVP；第一条主链无 Result 立即交付；同候选完成至少三条异质问题与 current Codex 比较；最终 Result 后用户判向。
+1. `SLICE-001`：当前 active Slice。failure handoff Result 已密封，当前只等待用户方向；产品与 Provider 工作保持停止。
 2. `SLICE-002`：用户 `CONTINUE` 后才可由新 PDR 提议，并须明确用户授权与可信父 cutover 才解锁。完成持久恢复、第二工程、复杂冲突/去重/性能/安全、完整四路因果消融与 full regression。
 3. `SLICE-003`：再次授权后执行最终隐藏工程、现场问题、安全与正式 Acceptance。
 
@@ -122,7 +121,8 @@ Codex 是强基线，不是真值、Oracle、Reviewer 或裁判。完整四路�
 
 ## Authorization decision
 
-**ACCEPTED PROPOSAL / PDR-010 COMPLETE-EXPERIENCE-FIRST / ITERATION AND SLICE1 AUTHORIZED。**
+**ACCEPTED PROPOSAL / PDR-011 FAILURE HANDOFF SEALED / AWAITING USER DIRECTION。**
 
-当前可直接进入 Manifest 的 `V-MVP-EXPERIENCE-001` 产品开发，不需额外 Activation、Freeze、阶段 Result 或重复人工确认。用户在
-`V-PREVIEW-002` 作出的方向 receipt 只记录决定且 action 自环；`CONTINUE` 仅使 hardening、full regression、第二工程、hidden 与后续 Slice 具备下一份计划资格，仍须新 PDR、明确用户授权和可信父 cutover。任何本地消息 digest 都只是内容证据引用，不是平台认证身份、签名或授权；Production 始终未授权。
+当前 Manifest 动作是 `V-PREVIEW-002` 用户方向决定，不授权产品开发或 Provider dispatch。方向 receipt 只记录决定且 action 自环；
+`CONTINUE` 仅使 hardening、full regression、第二工程、hidden 与后续 Slice 具备下一份计划资格，仍须新 PDR、明确用户授权和可信父
+cutover。任何本地消息 digest 都只是内容证据引用，不是平台认证身份、签名或授权；Production 始终未授权。

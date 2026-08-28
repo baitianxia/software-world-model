@@ -18,22 +18,22 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:e3de1f72a131c150e34ad29639002e9b8c84c867d163999bce5201f2b9679da1
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-011
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165]
 current_scheduling_finding_ref: FINDING-010-139
 ---
 
 # ITER-010 Readiness Review
 
 Front matter 仍表示本 Readiness 文件本身不是 coding input；活动 Slice 依治理约束保持 `coding_input: true`，但 PDR-011
-当前 action 以 `coding_allowed=false` 和全部执行锁覆盖该宽口径，只允许 governance runner freeze 与 existing-evidence Result handoff。
+当前 action 以 `coding_allowed=false` 和全部执行锁覆盖该宽口径，只允许记录用户方向。
 
 ## PDR-011 current readiness
 
-PDR-010 的产品开发已达到一次通用修复仍失败的停止条件。PDR-011 不重新打开产品开发；它只恢复 frozen verifier 对真实 pre-answer
-failure handoff 的表达能力。当前 coding/external execution 均为 false，所有执行锁关闭。
+PDR-010 的产品开发已达到一次通用修复仍失败的停止条件。PDR-011 没有重新打开产品开发；它恢复 frozen verifier 对真实 pre-answer
+failure handoff 的表达能力，并已密封 `ITER-010-RESULT-V-MVP-EXPERIENCE-001`。当前 coding/external execution 均为 false，所有执行锁关闭。
 
-Readiness 结论是：**不得继续开发完整体验版**。当前动作只允许 runner-first、Result-second 的 failure handoff；产品代码、主工程 Agent、
-Evidence/Reviewer、模型路线、受控源码读取和 loopback Web 新执行全部锁定。
+Readiness 结论是：**不得继续开发完整体验版**。当前动作是 `V-PREVIEW-002` 用户方向决定；产品代码、主工程 Agent、Evidence/Reviewer、
+模型路线、受控源码读取和 loopback Web 新执行全部锁定。
 
 执行顺序只有四步：
 
@@ -53,8 +53,8 @@ Conversation、Agentic Task、Evidence Answering、World Model Answering、Model
 历史 baseline、公开 mall exact revision、既有分层归因/认知资格/备用路线准入/Web Access Result 继续作为证据；它们不冒充新的完整体验或
 答案质量 PASS。
 
-当前机器动作 ID `ITER-010-ACTION-USER-PLAN-RECOVERY-001` 只因可信父提交连续性保留，其 PDR-010 语义是
-`V-MVP-EXPERIENCE-001 / mvp-experience-development`，不表示仍需计划恢复。
+当前机器动作 ID 是 `ITER-010-ACTION-USER-DIRECTION-DECISION-001`，Case 是 `V-PREVIEW-002`；它只记录用户方向，且保持自环直到后续新
+PDR、明确用户授权和可信父 cutover。
 
 ## Product-goal alignment gate
 
@@ -102,17 +102,19 @@ pre-answer failure 仍复现，因此产品和外调均已停止。PDR-011 只�
 
 `V-LAYER-ATTRIBUTION-001`、`V-COGNITION-ELIGIBILITY-001`、`V-FALLBACK-ROUTE-ADMISSION-001` 与 `V-ALPHA-ACCESS-001` 的既有
 PASS 可作为输入；`V-MODEL-TRANSPARENT-ROUTING-001` 已由定向测试通过，`V-MVP-EXPERIENCE-001` 已达到 failure branch 的业务停止
-条件但尚待 @3 密封，`V-PREVIEW-002` 尚未进入。@3 verifier 不要求不存在的 Answer/Citation/Review/Codex comparison，只验证原失败、
-两个 unseen 异质复验、多 Session 原始记录和 19/0 Provider 执行对账。
+条件并已由 @3 密封为 machine PASS failure handoff；`FINDING-010-165` 只修正当前 sealing 权限与历史 19 次调用对账的治理语义。产品质量仍为
+`QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。`V-PREVIEW-002` 已进入，
+尚待用户方向。@3 verifier 不要求不存在的 Answer/Citation/Review/Codex comparison，只验证原失败、两个 unseen 异质复验、多 Session
+原始记录和 19/0 Provider 执行对账。
 
 当前公开工程、exact revision、既有披露/预算和配置路线属于 standing scope，人工重复授权请求应为 0。每个真实 Turn/dispatch 仍须在
 Source disclosure、credential 和 network 前自动派生 one-use exact receipt；真实 scope delta 继续失败关闭并申请最小增量权限。
 
 ## Authorization decision
 
-**CURRENT READINESS ACCEPTED / PDR-011 FAILURE-HANDOFF-ONLY / ITERATION AND SLICE1 AUTHORIZED。**
+**CURRENT READINESS ACCEPTED / PDR-011 FAILURE RESULT SEALED / AWAITING USER DIRECTION。**
 
-当前只能先冻结 @3 runner，再由下一 trusted-parent 提交密封既有 run-052/053 failure Result。当前授权不包括产品代码、Prompt、Provider 调用、
-hardening、full regression、第二工程、hidden、非 loopback、Source 写入、
+当前只能取得并记录用户的 `CONTINUE / REWORK / REDIRECT / REJECT`。当前授权不包括产品代码、Prompt、Provider 调用、hardening、full
+regression、第二工程、hidden、非 loopback、Source 写入、
 后续 Slice 或 Production；这些边界只有用户 `CONTINUE`、后续新 PDR、明确用户授权和可信父 cutover 共同成立时才能改变。front matter 中的
 本地消息 digest 仅是项目记录的内容证据引用，不代表平台认证身份、签名或可自行扩权的授权。

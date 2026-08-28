@@ -10,7 +10,7 @@ tests: [tests]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-011
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165]
 current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -26,13 +26,13 @@ product_goal_slice_gate_case_ids: [V-MVP-EXPERIENCE-001, V-PUBLIC-OSS-AUTHORITY-
 
 ## Status and dependencies
 
-状态：`AUTHORIZED / PDR-011 / coding_input=true / ACTION-LEVEL PRODUCT-AND-PROVIDER-STOPPED / NON-PRODUCTION`。当前 Case 仍是
-`V-MVP-EXPERIENCE-001`，但机器 action ID 的语义已收窄为 existing-evidence failure handoff，不再授权完整体验版开发。
+状态：`AUTHORIZED / PDR-011 / coding_input=true / ACTION-LEVEL PRODUCT-AND-PROVIDER-STOPPED / AWAITING-USER-DIRECTION / NON-PRODUCTION`。
+当前 Case 是 `V-PREVIEW-002`；action-level `coding_allowed=false`，不授权完整体验版开发。
 
 run-052 原失败与 run-053 两个异质案例在一次通用修复后仍于 Answer/Citation/Review 前失败；Ark TLS/credential/HTTP 总计
 `19/19/19`，DeepSeek dispatch/credential/TLS/HTTP 全部为 0。`FINDING-010-161` 的产品停止条件保持成立。用户已明确授权最小
-governance recovery；`FINDING-010-163 / PDR-011` 只允许先冻结 `ITER010_MVP_LIGHT@3`，再由后续 trusted-parent 提交密封真实失败
-Result。产品代码、Prompt、Web 和外部执行全部锁定。
+governance recovery；修正后的 `ITER010_MVP_LIGHT@3` 已由 trusted parent 重放真实证据，
+`ITER-010-RESULT-V-MVP-EXPERIENCE-001` 已密封。产品代码、Prompt、Web 和外部执行全部锁定。
 
 ## Current vs expected behavior
 
@@ -89,7 +89,7 @@ current Codex 独立作答作强外部基线。Codex 不是事实源、Oracle、
   具体 Provider/model；
 - 体验证据：只在最终 handoff 时记录 exact candidate、URL、问题、trace/Citation、比较、限制和测试计数。
 
-PDR-011 当前只允许治理 runner 冻结后的 existing-evidence Result handoff；不得再修改上述产品组件。
+PDR-011 当前只允许记录用户方向；不得再修改上述产品组件。
 
 ## Compatibility, data and security boundaries
 
@@ -110,6 +110,8 @@ disclosure、调度与 admission policy。真实 scope delta 必须失败关闭�
 | 3. current Codex 强基线 | 用相同问题和 exact revision，由 actual current Codex 保留真实客户端、model、reasoning、tools 与权限独立作答；独立技术判断 | 如实给出逐题差异、重大错误、物质遗漏和总体结论 |
 | 4. 最终 handoff 与用户判向 | 比较完成，或证明一次通用修复后同类重大失败仍存在时，密封一次 `V-MVP-EXPERIENCE-001` Result；进入 `V-PREVIEW-002` | 用户决定 `CONTINUE / REWORK / REDIRECT / REJECT`；receipt 只记录方向且 action 自环 |
 
+当前已沿第 4 步的 failure branch 密封 Result，正等待用户方向；前三步的缺失 Answer/Citation/Review/Codex comparison 没有被补造。
+
 严格方向通过要求重大错误为 0、逐题相对 Codex 无物质退步、总体严格超过 Codex，并有至少一项非 locator 世界模型贡献。第一次可操作体验
 可以先于该结论交付，但不能被描述为质量 PASS。
 
@@ -118,9 +120,9 @@ turn-scope/terminal/browser/Gateway 摘要、digest 与执行计数闭合。run-
 不存在的系统 Answer、Citation、Review 和 current Codex comparison 必须明确为 false/0。machine `PASS` 只代表 failure handoff 包完整，
 包内质量结论固定为 `QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。
 
-## Failure attribution and repair
+## Failure attribution and completed stop
 
-普通失败留在当前动作中持续处理：
+PDR-010 产品动作中的普通失败按以下顺序处理：
 
 1. 保存同一 Turn 的 Source truth、World Model construction/projection、Conversation/Work State、Agent observation/plan、Ledger/Package、Answer、Review 和 Web output；
 2. 找到最早 material divergence 与本应阻断却未阻断的 guard failure；允许同题同时存在多个下游故障，但修复从最早责任层开始；
@@ -132,7 +134,8 @@ turn-scope/terminal/browser/Gateway 摘要、digest 与执行计数闭合。run-
 标准碰正确答案。
 
 `FINDING-010-161` 已完成上述第 4/5 步并停止产品路径；`FINDING-010-162` 证明 @2 表达缺口；`FINDING-010-163 / PDR-011`
-已取得一次性用户授权并把唯一下一步限定为 runner-first、Result-second 的 truthful failure handoff。
+取得一次性用户授权，`FINDING-010-164` 对齐 Gateway digest codec，`FINDING-010-165` 分离当前治理权限与历史 runtime 对账，最终 Result
+已完成 truthful failure handoff。唯一下一步是用户方向。
 
 ## Open questions and implementation risks
 
@@ -153,9 +156,9 @@ turn-scope/terminal/browser/Gateway 摘要、digest 与执行计数闭合。run-
 |---|---|
 | `V-CHAT-EXPERIENCE-001` | 第一条完整浏览器主链含世界模型、主 Agent、受控源码、逐 Turn Evidence/Citation/fresh Review、至少 3 Turn 语义链和新 Conversation 隔离；可操作即无 Result 交付，不移动游标、不等待 Codex 比较 |
 | `V-MODEL-TRANSPARENT-ROUTING-001` | 可执行定向测试证明产品代码只按 route role/profile ref 与 availability verdict 分支；互换配置身份不改行为；仅首选 profile 不可用结论可回退；结构化输出无效与 Reviewer 拒绝只在同 profile 形成有界新 call，不能触发备用路线；耗尽后准确失败关闭 |
-| `V-MVP-EXPERIENCE-001` | 完整浏览器链可运行；至少 3 条异质问题、至少 2 条未参与修复；至少 3 Turn 语义链和新 Conversation 隔离；逐 Turn Evidence/Citation/fresh Review；targeted/startup/safety PASS；full regression=0；记录 current Codex 比较和世界模型非 locator 贡献，或诚实记录最早责任层与失败限制 |
+| `V-MVP-EXPERIENCE-001` | failure branch machine PASS：一次通用修复后原问题和两个 unseen 异质案例仍在 Answer 前失败；Result 如实记录最早责任层、缺失产物、19/0 Provider 对账和限制；产品质量 FAIL |
 | `V-DIRECTION-QUALITY-001` | 在首次体验之后，以同一候选证明绝对质量、逐题不退步、总体严格超过 current Codex 和非 locator 世界模型贡献；不要求体验前四路 Freeze |
-| `V-PREVIEW-002` | 用户能真实追问、纠正、深入或总结并查看证据、比较和限制；方向 receipt 只记录决定。`CONTINUE` 后仍需新 PDR、明确用户授权与可信父 cutover 才能解锁后续夯实 |
+| `V-PREVIEW-002` | 当前等待用户查看失败证据并决定 `CONTINUE / REWORK / REDIRECT / REJECT`；方向 receipt 只记录决定。`CONTINUE` 后仍需新 PDR、明确用户授权与可信父 cutover 才能解锁后续夯实 |
 | `V-PUBLIC-OSS-AUTHORITY-ADMISSION-001` | standing scope 不重复人工审批；逐 dispatch exact receipt 与 scope-delta fail-close 成立 |
 
 ## Architecture reflection checkpoint

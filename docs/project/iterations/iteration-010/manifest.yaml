@@ -57,40 +57,43 @@ plan_execution_control:
   authorization_refs:
     - local-user-message-utf8:sha256:382638cd16fdbc85c08a4202a94e630fe4c973ce03bb0d8a1671cbe4ee151aa7
   current_action:
-    id: ITER-010-ACTION-USER-PLAN-RECOVERY-001
+    id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
     owner_slice_ref: ITER-010-SLICE-001
-    kind: mvp-failure-handoff
+    kind: governance
     status: authorized
-    case_id: V-MVP-EXPERIENCE-001
+    case_id: V-PREVIEW-002
     coding_allowed: false
     external_execution_allowed: false
-    result_ref: ITER-010-RESULT-V-MVP-EXPERIENCE-001
-    result_path: docs/project/iterations/iteration-010/results/v-mvp-experience-001.md
+    result_ref: ITER-010-RESULT-V-USER-DIRECTION-DECISION-001
+    result_path: docs/project/iterations/iteration-010/results/v-user-direction-decision-001.md
     evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-mvp-experience-001.json
+    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-user-direction-decision-001.json
     evidence_verifier: ITER010_MVP_LIGHT@3
     runner_identity_paths:
       - scripts/plan_gate.py
       - validation/iteration_010_mvp/value_gate/runner.py
       - tests/test_iteration_010_mvp_value_gate.py
     produced_case_ids:
-      - V-MVP-EXPERIENCE-001
+      - V-PREVIEW-002
     prerequisite_case_ids:
-      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
+      - V-MVP-EXPERIENCE-001
     allowed_change_paths:
-      - docs/_generated/**
-      - docs/project/current.md
       - docs/project/iterations/iteration-010/**
-    forbidden_change_paths:
-      - src/**
-      - tests/**
-      - validation/**
-      - scripts/**
+      - docs/project/current.md
       - AGENTS.md
+      - docs/_generated/**
       - docs/system/**
       - docs/project/governance/**
-      - docs/project/roadmap/**
-      - docs/project/iterations/iteration-010/decisions/**
+      - scripts/docs.py
+      - scripts/plan_gate.py
+      - tests/test_docs_gate.py
+      - tests/test_plan_gate.py
+      - validation/iteration_010_mvp/value_gate/**
+      - tests/test_iteration_010_mvp_value_gate.py
+    forbidden_change_paths:
+      - src/software_world_model/**
+      - validation/structure_world_model_iteration_010/**
+      - validation/iteration_010_mvp/experience/**
       - .githooks/**
       - .github/workflows/**
   transition:
@@ -621,14 +624,14 @@ authorization_continuation_policy:
   hard_stop_ends: scope-expansion-hardening-full-regression-rule-accumulation-and-no-new-evidence-external-reruns-only
   hard_stop_ends_minimum_experience_recovery: false
   exit_conditions: stage-delivered,exact-request-sent-and-independent-safe-work-exhausted,explicit-user-stop-redirect-reject,unavoidable-safety-prohibition
-  current_status: product-and-external-execution-stopped-failure-handoff-only
-  current_case_id: V-MVP-EXPERIENCE-001
+  current_status: awaiting-user-direction-decision-product-and-external-execution-locked
+  current_case_id: V-PREVIEW-002
   current_root_grant_status: standing-authority-active
   current_root_grant_ref: local-user-message-utf8:sha256:15a8f8100f8cb6ac333edf85166cf572bb67a5e69d5a731a75c574d36fa5a4e4
   current_request_status: no-human-request-required-within-standing-scope
   current_human_authority_status: active-public-oss-evaluation-standing-authority
   current_human_reauthorization_required: false
-  current_blocker: no-product-or-provider-work-authorized-only-existing-evidence-seal
+  current_blocker: user-direction-decision-required-no-work-unlocked
 
 public_oss_evaluation_standing_authority:
   schema: PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1

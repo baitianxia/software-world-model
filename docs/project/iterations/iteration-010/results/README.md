@@ -4,7 +4,7 @@ kind: results-index
 status: completed
 authority: project-evidence
 owners: [quality, project]
-depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY, ITER-010-RESULT-V-DEEPSEEK-IDLE-001, ITER-010-RESULT-V-PLAN-RECOVERY-001, ITER-010-PDR-001, ITER-010-PDR-010]
+depends_on: [ITER-010-VERIFICATION, ITER-010-RESULT-SLICE-001-STOP-REDIRECT, ITER-010-RESULT-V-ALPHA-ACCESS-001, ITER-010-RESULT-V-LAYER-ATTRIBUTION-001, ITER-010-RESULT-V-COGNITION-ELIGIBILITY-001, ITER-010-RESULT-V-CHAT-EXPERIENCE-001-PDR005-DIRECTION-CANARY, ITER-010-RESULT-V-DEEPSEEK-IDLE-001, ITER-010-RESULT-V-PLAN-RECOVERY-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-PDR-001, ITER-010-PDR-010, ITER-010-PDR-011]
 code: []
 tests: []
 iteration: ITER-010
@@ -15,6 +15,9 @@ iteration: ITER-010
 - [V-PLAN-RECOVERY-001 Result](v-plan-recovery-001.md)：一次性用户计划恢复入口以治理专用边界 PASS；可信父 runner 重放绑定两条 exact 用户消息，
   产品、模型、Provider、credential、TLS、HTTP 与 full regression 均为 0。它只恢复了独立采纳 PDR-010 的决策能力，没有形成、验证或解锁
   任何产品；当前完整体验开发权威来自 PDR-010 与 Manifest。
+- [V-MVP-EXPERIENCE-001 Failure Handoff Result](v-mvp-experience-001.md)：@3 runner 对 run-052/053 的多 Session 原始摘要、Git identity、
+  digest 与 19 次 Ark / 0 次 DeepSeek 执行对账给出 machine PASS；产品质量结论严格为 `QUALITY_FAIL_AFTER_ONE_GENERAL_REPAIR`。
+  Answer/Citation/Review/current Codex comparison 均未产生且未补造，当前只进入用户方向决定，不解锁任何产品或 Provider 工作。
 - [V-WEB-000 Live Run 009](v-web-000-live-run-009.md)：最早真实 Web 微纵切 PASS；exact mall + Maven Cognition + adaptive Source +
   sealed Package + Answer + independent Review + 6 个可打开 Citation。它是 `NOT_ACCEPTANCE / NOT_PRODUCTION` 微检查点，不是 Slice Result。
 - [V-WEB-001 Public Direction Questions](v-web-001-public-direction-questions.md)：同一真实 Web 的 4 条不同覆盖维度公开题已执行；3 个
