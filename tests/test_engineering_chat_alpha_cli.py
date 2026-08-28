@@ -171,7 +171,7 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
         self.assertEqual(events[0][0:3], ("127.0.0.1", 8765, application))
         self.assertEqual(events[1:], ["enter", "serve", "exit"])
 
-    def test_artifact_main_seals_launch_before_fixed_listener_and_terminal_after(self) -> None:
+    def test_artifact_main_starts_with_denied_unused_fallback_and_seals_receipts(self) -> None:
         events: list[object] = []
         application = object()
         session_path = self.root / "session.json"
@@ -226,8 +226,8 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
                     transport=FallbackTransport(),
                     dispatch_admission_controller=SimpleNamespace(
                         receipt=SimpleNamespace(
-                            allowed=True,
-                            decision=SimpleNamespace(value="ALLOWED_OFF_PEAK"),
+                            allowed=False,
+                            decision=SimpleNamespace(value="DENIED_PEAK_WINDOW"),
                         )
                     ),
                 ),

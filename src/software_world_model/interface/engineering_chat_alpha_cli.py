@@ -256,18 +256,15 @@ def _run_artifact_session(value: str | Path, output: TextIO) -> None:
                     prepared.runtime.fallback_provider_runtime
                     .dispatch_admission_controller
                 )
-                if admission is None or not admission.receipt.allowed:
+                if admission is None:
                     raise DomainError(
-                        ErrorCode.CONTROL_STATE_DENIED,
-                        "DeepSeek dispatch admission denied this planned artifact Session",
-                        {
-                            "decision": (
-                                admission.receipt.decision.value
-                                if admission is not None
-                                else "MISSING"
-                            )
-                        },
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "Engineering Chat fallback route is missing its dispatch gate",
                     )
+                # A denied fallback receipt closes DeepSeek before credentials or
+                # network.  It must not prevent an otherwise valid preferred-only
+                # browser Session from starting; authorize_dispatch rechecks the
+                # receipt if a trusted availability verdict later selects fallback.
                 with make_server(
                     "127.0.0.1",
                     ENGINEERING_CHAT_ALPHA_PORT,
