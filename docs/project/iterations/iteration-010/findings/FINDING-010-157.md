@@ -54,3 +54,8 @@ target: SYS-OPS-LOCAL-BROWSER
 `DENIED_PEAK_WINDOW` receipt 证明 listener/launch/terminal 生命周期仍成立；Provider runtime 与 admission 定向测试证明实际 fallback 在
 credential/TLS/HTTP 前失败关闭。合计 22 tests PASS，外部 Provider/network dispatch 0，full regression 0。历史
 `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 保留为当时实现证据，但 Result 不拥有或覆盖 current System Contract。
+
+fresh `run-048` 又提供了 live 证据：fallback receipt 为 `DENIED_PRICING_CHECK` 时 listener 正常启动，Ark 产生 3 个 model call receipt、
+其中 2 个完成 HTTP，DeepSeek authorization/TLS/credential/HTTP 全部为 0。因此“denied fallback admission 不阻塞 preferred-only Session”已
+由真实 Browser 链确认；第三个 Ark call 的 TLS 前失败及缺失 availability Owner 属于新的 `FINDING-010-158`，不能回写成 DeepSeek listener
+门禁问题。

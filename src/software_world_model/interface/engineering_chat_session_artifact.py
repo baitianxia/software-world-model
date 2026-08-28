@@ -1235,6 +1235,7 @@ def prepare_engineering_chat_artifact_session(
         ),
         artifact_session_config_digest=session_config.file_digest,
         fixed_command_wired=True,
+        availability_clock=runtime_clock,
     )
     if (
         runtime.receipt.status

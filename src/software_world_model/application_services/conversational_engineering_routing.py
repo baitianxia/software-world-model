@@ -13,7 +13,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from enum import Enum
 from threading import Lock
-from typing import Protocol, Sequence
+from typing import Callable, Protocol, Sequence
 
 from software_world_model.cross_cutting import (
     Digest,
@@ -813,6 +813,52 @@ class FailClosedEngineeringExecutionProfileAvailabilityBoundary:
         return None
 
 
+class SealedPreDispatchUnavailableAvailabilityBoundary:
+    """Promote only Gateway-sealed, zero-HTTP unavailability evidence.
+
+    The router deliberately does not infer availability from raw failures.  This
+    independent owner accepts only the typed Model Gateway result reserved for a
+    request that could not reach HTTP, then seals the exact profile/attempt
+    verdict consumed by the router.  HTTP errors, outcome-unknown calls, output
+    contract failures, and Reviewer findings remain ineligible.
+    """
+
+    availability_owner_ref = "provider-availability-boundary"
+
+    def __init__(self, *, clock: Callable[[], datetime] | None = None) -> None:
+        current_clock = clock or (lambda: datetime.now(timezone.utc))
+        if not callable(current_clock):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "execution-profile availability owner requires a clock",
+            )
+        self._clock = current_clock
+
+    def assess_preferred(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        route: EngineeringProviderRouteSpec,
+        preferred_attempt_receipt: EngineeringProviderAttemptReceipt,
+    ) -> EngineeringExecutionProfileAvailabilityVerdict | None:
+        if (
+            preferred_attempt_receipt.provider_failure_classification
+            is not EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE
+            or preferred_attempt_receipt.provider_failure_code
+            != "PROVIDER_UNAVAILABLE"
+            or preferred_attempt_receipt.provider_dispatch_count < 1
+            or not preferred_attempt_receipt.model_dispatch_receipt_refs
+        ):
+            return None
+        return EngineeringExecutionProfileAvailabilityVerdict.seal(
+            availability_owner_ref=self.availability_owner_ref,
+            request=request,
+            route=route,
+            preferred_attempt_receipt=preferred_attempt_receipt,
+            assessed_at=self._clock(),
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringProviderRouteReceipt:
     schema: str
@@ -1358,6 +1404,7 @@ __all__ = [
     "EngineeringExecutionProfileAvailabilityDecision",
     "EngineeringExecutionProfileAvailabilityVerdict",
     "FailClosedEngineeringExecutionProfileAvailabilityBoundary",
+    "SealedPreDispatchUnavailableAvailabilityBoundary",
     "EngineeringProviderAttemptAuthority",
     "EngineeringProviderAttemptFactory",
     "EngineeringProviderAttemptReceipt",

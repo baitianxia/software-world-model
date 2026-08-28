@@ -13,6 +13,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRoutePlan,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
+    SealedPreDispatchUnavailableAvailabilityBoundary,
     engineering_agent_dual_provider_route_ref,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
@@ -273,6 +274,10 @@ class EngineeringChatProviderLauncherTests(unittest.TestCase):
         self.assertFalse(receipt.request_retry_allowed)
         self.assertEqual(receipt.production_activation, "NOT_EXECUTED")
         self.assertEqual(prepared.service.statistics(), (0, 0))
+        self.assertIsInstance(
+            prepared.router._availability_boundary,
+            SealedPreDispatchUnavailableAvailabilityBoundary,
+        )
         self.assertEqual(self.callback_calls, [])
         status = json.dumps(receipt.public_status(), sort_keys=True)
         self.assertNotIn("ARK_API_KEY", status)

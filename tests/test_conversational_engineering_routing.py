@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+from datetime import datetime, timezone
 from pathlib import Path
 import unittest
 
@@ -12,6 +13,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRoutePlan,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
+    SealedPreDispatchUnavailableAvailabilityBoundary,
     engineering_agent_execution_profile_route_ref,
 )
 from software_world_model.application_services.engineering_conversation import (
@@ -445,6 +447,114 @@ class ConversationalEngineeringRoutingTests(unittest.TestCase):
             audit.route_receipt.selected_execution_profile_ref,
             _FALLBACK_PROFILE_REF,
         )
+
+    def test_real_owner_promotes_only_gateway_sealed_pre_dispatch_unavailability(self) -> None:
+        boundary = SealedPreDispatchUnavailableAvailabilityBoundary(
+            clock=lambda: datetime(2099, 1, 1, tzinfo=timezone.utc),
+        )
+        factory = _Factory(
+            _preferred_failure(
+                EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE,
+                "PROVIDER_UNAVAILABLE",
+            )
+        )
+        service, router = _service(
+            factory,
+            availability_boundary=boundary,
+        )
+        submission = _submit(service)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 1)
+        self.assertEqual(len(factory.authorities), 2)
+        audit = router.audit_for(submission.turn.request_digest)
+        self.assertIsNotNone(audit.preferred_availability_verdict)
+        self.assertEqual(
+            audit.preferred_availability_verdict.raw_failure_code,
+            "PROVIDER_UNAVAILABLE",
+        )
+        self.assertFalse(
+            audit.preferred_availability_verdict.potential_duplicate_cost_risk
+        )
+
+    def test_real_owner_rejects_noncanonical_or_non_predispatch_raw_evidence(self) -> None:
+        cases = (
+            (
+                EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE,
+                "TLS_FAILURE",
+                1,
+                "untrusted-unavailable-code",
+            ),
+            (
+                EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR,
+                "PROVIDER_UNAVAILABLE",
+                1,
+                "http-error",
+            ),
+            (
+                EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN,
+                "PROVIDER_UNAVAILABLE",
+                1,
+                "outcome-unknown",
+            ),
+            (
+                EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE,
+                "PROVIDER_UNAVAILABLE",
+                0,
+                None,
+            ),
+        )
+        for classification, code, dispatches, receipt_ref in cases:
+            with self.subTest(
+                classification=classification,
+                code=code,
+                dispatches=dispatches,
+            ):
+                factory = _Factory(
+                    {
+                        EngineeringProviderRouteRole.PREFERRED: (
+                            lambda request,
+                            classification=classification,
+                            code=code,
+                            dispatches=dispatches,
+                            receipt_ref=receipt_ref: _failure(
+                                request,
+                                code="AGENT_MODEL_CALL_REJECTED",
+                                classification=classification,
+                                provider_code=code,
+                                dispatches=dispatches,
+                                receipt_ref=receipt_ref,
+                            )
+                        ),
+                        EngineeringProviderRouteRole.FALLBACK: lambda request: _success(
+                            request,
+                            label="must-not-run",
+                            dispatches=1,
+                            receipt_ref="must-not-run",
+                        ),
+                    }
+                )
+                service, _ = _service(
+                    factory,
+                    availability_boundary=(
+                        SealedPreDispatchUnavailableAvailabilityBoundary(
+                            clock=lambda: datetime(
+                                2099, 1, 1, tzinfo=timezone.utc
+                            ),
+                        )
+                    ),
+                )
+                submission = _submit(service)
+
+                self.assertEqual(
+                    submission.turn.state,
+                    ConversationTurnState.FAILED,
+                )
+                self.assertEqual(
+                    submission.turn.fallback_provider_attempt_count,
+                    0,
+                )
+                self.assertEqual(len(factory.authorities), 1)
 
     def test_outcome_unknown_verdict_records_duplicate_cost_risk(self) -> None:
         factory = _Factory(

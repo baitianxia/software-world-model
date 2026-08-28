@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import Lock
+from typing import Callable
 
 from software_world_model.application_services.conversational_engineering_agent import (
     EngineeringAgentLoopLimits,
@@ -309,6 +310,7 @@ def prepare_engineering_chat_session_runtime(
     required_conversation_turns: int = 5,
     artifact_session_config_digest: Digest | None = None,
     fixed_command_wired: bool = False,
+    availability_clock: Callable[[], datetime] | None = None,
 ) -> PreparedEngineeringChatSessionRuntime:
     """Join prebuilt exact runtime assets without starting the product."""
 
@@ -432,6 +434,7 @@ def prepare_engineering_chat_session_runtime(
         attempt_factory=attempt_factory,
         checked_at=current,
         required_conversation_turns=required_conversation_turns,
+        availability_clock=availability_clock,
     )
     core = {
         "schema": ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA,

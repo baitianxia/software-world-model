@@ -5,7 +5,7 @@ status: current
 authority: operational
 owners: [operations, interface]
 depends_on: [SYS-ARCH-DEPLOYMENT, SYS-ADR-014, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-029, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-157]
+derived_from: [FINDING-010-029, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-157, FINDING-010-158]
 code: [pyproject.toml, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/public_source_model_authority.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/http_api.py, src/software_world_model/interface/browser_ui.py, src/software_world_model/interface/world_model_browser.py, src/software_world_model/interface/world_model_browser_ui.py, src/software_world_model/interface/world_model_http.py, src/software_world_model/interface/world_model_runtime.py, src/software_world_model/interface/world_model_product.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_browser_ui.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_browser.py, src/software_world_model/interface/engineering_qa_browser_ui.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_preview_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_browser_chat_interface.py, tests/test_world_model_browser.py, tests/test_iteration_004_interactive_browser.py, tests/test_world_model_http.py, tests/test_world_model_evaluation_grant.py, tests/test_world_model_gateway_authorization.py, tests/test_iteration_007_slice1_freeze.py, tests/test_iteration_008_slice1_freeze.py, tests/test_iteration_008_slice1_live_authorize.py, tests/test_world_model_product.py, tests/test_engineering_question_model_source.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_public_source_model_authority.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_preview_cli.py, tests/test_engineering_qa_alpha_cli.py, tests/test_engineering_qa_browser.py]
 ---
@@ -193,6 +193,15 @@ fallback dispatch admission 是逐请求外调门禁，不是整个 listener 的
 但不得阻止资格、authority 和 artifact 均有效的 preferred-only Browser Session 启动；listener 启动也不得把该 receipt 改成允许或授予
 fallback。只有 registered availability owner 对 exact preferred attempt 密封不可用 verdict、Application 因而创建 fallback attempt 后，
 逐请求 controller 才重验窗口、官方检查、预算和 exact envelope；拒绝必须发生在 credential resolution、TLS 和 HTTP 前且三类计数均为 0。
+
+current Artifact launcher 的 registered owner policy 固定为
+`GATEWAY_SEALED_PRE_DISPATCH_UNAVAILABLE_ONLY@1`。通用 Router 在没有显式 composition 时继续使用 fail-closed boundary；launcher 只能把
+exact preferred attempt 上由 Model Gateway 密封的 closed `PROVIDER_UNAVAILABLE` classification、canonical
+`PROVIDER_UNAVAILABLE` failure code、非零 model dispatch count 和至少一个 model call receipt 组合成
+`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict。verdict 必须绑定 exact logical request、preferred profile、attempt receipt 与 runtime
+injected aware clock。raw transport reason（包括 `TLS_FAILURE`）、HTTP error、outcome unknown、输出合同无效、Reviewer reject 或没有 model
+call receipt 的合成失败都不得形成 verdict。该 Owner 只授权 Router 创建一次隔离 fallback attempt，不授权外调；fallback attempt 仍逐请求通过
+上述 admission controller。由此 preferred-only listener 不等待 fallback 窗口，而真正选择 fallback 时仍不能绕过其硬门禁。
 
 字段名 `authorization_message_digest` 只属于 `@1—@3` 兼容实现。公开来源 current `@4` 使用明确 standing parent 与 exact Session child
 ref/digest，不要求每次 run 新增用户消息；每个 Turn attempt 和 call receipt 继续自动派生、one-use 并记录人工重复审批数 0。兼容 schema

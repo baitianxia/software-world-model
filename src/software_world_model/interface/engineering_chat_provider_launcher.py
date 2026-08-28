@@ -36,6 +36,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRoutePlan,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
+    SealedPreDispatchUnavailableAvailabilityBoundary,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
@@ -424,6 +425,7 @@ def prepare_engineering_chat_provider_launcher(
     attempt_factory: EngineeringChatProviderAttemptFactory,
     checked_at: datetime,
     required_conversation_turns: int = 5,
+    availability_clock: Callable[[], datetime] | None = None,
 ) -> PreparedEngineeringChatProviderLauncher:
     """Wire the fixed routed Browser application without executing any I/O."""
 
@@ -510,6 +512,11 @@ def prepare_engineering_chat_provider_launcher(
     router = ApplicationOwnedEngineeringProviderRouter(
         plan=route_plan,
         attempt_factory=attempt_factory,
+        availability_boundary=(
+            SealedPreDispatchUnavailableAvailabilityBoundary(
+                clock=availability_clock,
+            )
+        ),
     )
     service = InMemoryEngineeringConversationService(
         binding,
