@@ -410,6 +410,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         )
 
         self.assertEqual(submission.turn.provider_dispatch_count, 5)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 0)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(driver.calls, 3)
         self.assertEqual(len(reviewer.requests), 2)
         self.assertEqual(
             reviewer.requests[0].package.digest,

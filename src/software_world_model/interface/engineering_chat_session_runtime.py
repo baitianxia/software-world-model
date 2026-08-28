@@ -341,9 +341,7 @@ def prepare_engineering_chat_session_runtime(
         blocking_gaps = ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS
     primary_route, fallback_route = route_plan.routes
     if (
-        primary_provider_runtime.provider_type != "VOLCENGINE_ARK"
-        or fallback_provider_runtime.provider_type != "DEEPSEEK"
-        or primary_provider_runtime.status
+        primary_provider_runtime.status
         != ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS
         or fallback_provider_runtime.status
         != ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS
@@ -358,9 +356,9 @@ def prepare_engineering_chat_session_runtime(
         or primary_provider_runtime.chat_binding_digest != binding.digest
         or fallback_provider_runtime.chat_binding_digest != binding.digest
         or primary_provider_runtime.configuration.digest
-        != primary_route.provider_configuration_digest
+        != primary_route.execution_profile_digest
         or fallback_provider_runtime.configuration.digest
-        != fallback_route.provider_configuration_digest
+        != fallback_route.execution_profile_digest
         or primary_provider_runtime.session_authority.digest
         != primary_route.session_disclosure_authority_digest
         or fallback_provider_runtime.session_authority.digest
@@ -399,14 +397,16 @@ def prepare_engineering_chat_session_runtime(
         tool_factory=evidence_factory,
         response_control_factory=response_control_factory,
         response_control_ref=(
-            "engineering-agent-response-control:VOLCENGINE_ARK@1"
+            f"engineering-agent-response-control:{primary_route.execution_profile_ref}@1"
         ),
     )
     fallback_dependencies = fallback_provider_runtime.attempt_dependencies(
         route=fallback_route,
         tool_factory=evidence_factory,
         response_control_factory=response_control_factory,
-        response_control_ref="engineering-agent-response-control:DEEPSEEK@1",
+        response_control_ref=(
+            f"engineering-agent-response-control:{fallback_route.execution_profile_ref}@1"
+        ),
     )
     attempt_factory = EngineeringChatProviderAttemptFactory(
         plan=route_plan,

@@ -245,8 +245,13 @@ from .conversational_engineering_agent import (
     SealedEngineeringAgentResponseControl,
 )
 from .conversational_engineering_routing import (
+    ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA,
     ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS,
     ApplicationOwnedEngineeringProviderRouter,
+    EngineeringExecutionProfileAvailabilityBoundary,
+    EngineeringExecutionProfileAvailabilityDecision,
+    EngineeringExecutionProfileAvailabilityVerdict,
+    FailClosedEngineeringExecutionProfileAvailabilityBoundary,
     EngineeringProviderAttemptAuthority,
     EngineeringProviderAttemptFactory,
     EngineeringProviderAttemptReceipt,
@@ -258,6 +263,7 @@ from .conversational_engineering_routing import (
     EngineeringProviderRouteReceipt,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
+    engineering_agent_execution_profile_route_ref,
     engineering_agent_dual_provider_route_ref,
 )
 from .conversational_engineering_tools import (
@@ -680,7 +686,12 @@ __all__ = [
     "InMemoryEngineeringAgentWorkStateRepository",
     "SealedEngineeringAgentResponseControl",
     "ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS",
+    "ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA",
     "ApplicationOwnedEngineeringProviderRouter",
+    "EngineeringExecutionProfileAvailabilityBoundary",
+    "EngineeringExecutionProfileAvailabilityDecision",
+    "EngineeringExecutionProfileAvailabilityVerdict",
+    "FailClosedEngineeringExecutionProfileAvailabilityBoundary",
     "EngineeringProviderAttemptAuthority",
     "EngineeringProviderAttemptFactory",
     "EngineeringProviderAttemptReceipt",
@@ -692,6 +703,7 @@ __all__ = [
     "EngineeringProviderRouteReceipt",
     "EngineeringProviderRouteRole",
     "EngineeringProviderRouteSpec",
+    "engineering_agent_execution_profile_route_ref",
     "engineering_agent_dual_provider_route_ref",
     "DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF",
     "DEEPSEEK_DISPATCH_ADMISSION_SCHEMA",

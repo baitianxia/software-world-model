@@ -451,6 +451,9 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
         ),
         "provider_failure_code": turn.provider_failure_code,
         "provider_route_receipt_ref": turn.provider_route_receipt_ref,
+        "provider_availability_verdict_ref": (
+            turn.provider_availability_verdict_ref
+        ),
         "provider_attempt_receipt_refs": list(
             turn.provider_attempt_receipt_refs
         ),

@@ -372,7 +372,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
         self.addCleanup(deepseek.transport.close)
         primary_route = self._route(
             ordinal=1,
-            role=EngineeringProviderRouteRole.PRIMARY,
+            role=EngineeringProviderRouteRole.PREFERRED,
             configuration=self.ark_configuration,
             authority=self.ark_authority,
         )
@@ -398,7 +398,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
         )
         plan = EngineeringProviderRoutePlan.create(
             binding=self.binding,
-            primary=primary_route,
+            preferred=primary_route,
             fallback=fallback_route,
         )
         evidence_tools = EngineeringAgentEvidenceToolConfiguration.create(
@@ -628,7 +628,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
         self.addCleanup(deepseek.transport.close)
         primary_route = self._route(
             ordinal=1,
-            role=EngineeringProviderRouteRole.PRIMARY,
+            role=EngineeringProviderRouteRole.PREFERRED,
             configuration=self.ark_configuration,
             authority=self.ark_authority,
         )
@@ -640,7 +640,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
         )
         plan = EngineeringProviderRoutePlan.create(
             binding=self.binding,
-            primary=primary_route,
+            preferred=primary_route,
             fallback=fallback_route,
         )
         binding_id = StableId("binding_" + "2" * 32)
@@ -799,12 +799,13 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
         return EngineeringProviderRouteSpec.create(
             ordinal=ordinal,
             role=role,
-            provider_type=configuration.provider_type,
-            endpoint=configuration.endpoint,
-            model_ref=configuration.model_ref,
-            provider_configuration_digest=configuration.digest,
+            execution_profile_ref=(
+                "runtime-config:preferred-qualified-profile"
+                if role is EngineeringProviderRouteRole.PREFERRED
+                else "runtime-config:fallback-qualified-profile"
+            ),
+            execution_profile_digest=configuration.digest,
             session_disclosure_authority_digest=authority.digest,
-            qualification_ref=configuration.qualification_ref,
             maximum_dispatches_per_turn=(
                 authority.maximum_dispatches_per_turn
             ),

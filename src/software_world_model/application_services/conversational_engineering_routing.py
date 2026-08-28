@@ -1,18 +1,19 @@
-"""Application-owned Ark-primary / DeepSeek-fallback Turn routing.
+"""Application-owned execution-profile routing for one Engineering Chat Turn.
 
-The router treats one Chat Turn as the immutable logical interaction.  Each
-Provider receives a separately authorized, separately constructed full-chain
-attempt.  Only the five ADR-017 classifications may start the fallback, and no
-primary intermediate object is passed to the fallback factory.
+The product route is deliberately model-transparent.  It sees only the
+``preferred``/``fallback`` roles, exact execution-profile references/digests,
+and a verdict sealed by the registered availability boundary.  Provider and
+model identities remain configuration/runtime receipt data and never drive a
+product branch here.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from enum import Enum
 from threading import Lock
 from typing import Protocol, Sequence
-from urllib.parse import urlsplit
 
 from software_world_model.cross_cutting import (
     Digest,
@@ -37,21 +38,24 @@ from .engineering_conversation import (
 )
 
 
-ENGINEERING_PROVIDER_ROUTE_SCHEMA = "ENGINEERING_PROVIDER_ROUTE_PLAN@1"
+ENGINEERING_PROVIDER_ROUTE_SCHEMA = "ENGINEERING_EXECUTION_PROFILE_ROUTE_PLAN@1"
 ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA = (
-    "ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY@1"
+    "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_AUTHORITY@1"
 )
 ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY_SCHEMA_V2 = (
-    "ENGINEERING_PROVIDER_ATTEMPT_AUTHORITY@2"
+    "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_AUTHORITY@2"
 )
 ENGINEERING_PROVIDER_ATTEMPT_RUNTIME_SCHEMA = (
-    "ENGINEERING_PROVIDER_ATTEMPT_RUNTIME@1"
+    "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_RUNTIME@1"
 )
 ENGINEERING_PROVIDER_ATTEMPT_RECEIPT_SCHEMA = (
-    "ENGINEERING_PROVIDER_ATTEMPT_RECEIPT@1"
+    "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_RECEIPT@1"
 )
 ENGINEERING_PROVIDER_ROUTE_RECEIPT_SCHEMA = (
-    "ENGINEERING_PROVIDER_ROUTE_RECEIPT@1"
+    "ENGINEERING_EXECUTION_PROFILE_ROUTE_RECEIPT@1"
+)
+ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA = (
+    "ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT@1"
 )
 
 ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS = (
@@ -65,8 +69,12 @@ ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS = (
 
 
 class EngineeringProviderRouteRole(str, Enum):
-    PRIMARY = "PRIMARY"
+    PREFERRED = "PREFERRED"
     FALLBACK = "FALLBACK"
+
+    # Source compatibility for callers that used the pre-ADR-017 role name.
+    # It is an Enum alias and therefore serializes as the normative role.
+    PRIMARY = "PREFERRED"
 
 
 class EngineeringProviderAttemptTerminalState(str, Enum):
@@ -79,36 +87,74 @@ class EngineeringProviderLateResultPolicy(str, Enum):
     QUARANTINE_AUDIT_ONLY = "QUARANTINE_AUDIT_ONLY"
 
 
+class EngineeringExecutionProfileAvailabilityDecision(str, Enum):
+    PREFERRED_EXECUTION_PROFILE_UNAVAILABLE = (
+        "PREFERRED_EXECUTION_PROFILE_UNAVAILABLE"
+    )
+
+
+def engineering_agent_execution_profile_route_ref(
+    *,
+    preferred_execution_profile_ref: str,
+    preferred_execution_profile_digest: Digest,
+    fallback_execution_profile_ref: str,
+    fallback_execution_profile_digest: Digest,
+) -> str:
+    """Create a route identity without exposing configuration identities."""
+
+    route_digest = digest_of(
+        [
+            "ENGINEERING_AGENT_EXECUTION_PROFILE_ROUTE_REF@1",
+            (
+                (
+                    EngineeringProviderRouteRole.PREFERRED.value,
+                    _text(
+                        preferred_execution_profile_ref,
+                        "preferred execution profile reference",
+                    ),
+                    preferred_execution_profile_digest.value,
+                ),
+                (
+                    EngineeringProviderRouteRole.FALLBACK.value,
+                    _text(
+                        fallback_execution_profile_ref,
+                        "fallback execution profile reference",
+                    ),
+                    fallback_execution_profile_digest.value,
+                ),
+            ),
+        ]
+    )
+    return f"engineering-agent-execution-profile-route:{route_digest.value}"
+
+
 def engineering_agent_dual_provider_route_ref(
     *,
     primary_configuration_digest: Digest,
     fallback_configuration_digest: Digest,
 ) -> str:
-    """Create the non-circular route identity used by the Chat binding."""
+    """Compatibility wrapper for the former configuration-digest API."""
 
-    route_digest = digest_of(
-        [
-            "ENGINEERING_AGENT_DUAL_PROVIDER_ROUTE_REF@1",
-            (
-                ("VOLCENGINE_ARK", primary_configuration_digest.value),
-                ("DEEPSEEK", fallback_configuration_digest.value),
-            ),
-        ]
+    return engineering_agent_execution_profile_route_ref(
+        preferred_execution_profile_ref=(
+            "runtime-config:preferred-qualified-profile"
+        ),
+        preferred_execution_profile_digest=primary_configuration_digest,
+        fallback_execution_profile_ref=(
+            "runtime-config:fallback-qualified-profile"
+        ),
+        fallback_execution_profile_digest=fallback_configuration_digest,
     )
-    return f"engineering-agent-dual-route:{route_digest.value}"
 
 
 @dataclass(frozen=True, slots=True)
 class EngineeringProviderRouteSpec:
     ordinal: int
     role: EngineeringProviderRouteRole
-    provider_type: str
-    endpoint: str
-    model_ref: str
-    provider_configuration_digest: Digest
+    execution_profile_ref: str
+    execution_profile_digest: Digest
     session_disclosure_authority_digest: Digest
     standing_authority_digest: Digest | None
-    qualification_ref: str
     maximum_dispatches_per_turn: int
     digest: Digest
 
@@ -118,13 +164,10 @@ class EngineeringProviderRouteSpec:
         *,
         ordinal: int,
         role: EngineeringProviderRouteRole,
-        provider_type: str,
-        endpoint: str,
-        model_ref: str,
-        provider_configuration_digest: Digest,
+        execution_profile_ref: str,
+        execution_profile_digest: Digest,
         session_disclosure_authority_digest: Digest,
         standing_authority_digest: Digest | None = None,
-        qualification_ref: str,
         maximum_dispatches_per_turn: int,
     ) -> "EngineeringProviderRouteSpec":
         if (
@@ -138,16 +181,15 @@ class EngineeringProviderRouteSpec:
                 ErrorCode.INVALID_ARGUMENT,
                 "Provider route ordinal, role, or dispatch fuse is invalid",
             )
-        provider_type = _text(provider_type, "Provider type")
-        endpoint = _text(endpoint, "Provider endpoint")
-        model_ref = _text(model_ref, "Provider model reference")
-        qualification_ref = _text(qualification_ref, "Provider qualification")
-        if not isinstance(provider_configuration_digest, Digest) or not isinstance(
+        execution_profile_ref = _text(
+            execution_profile_ref, "execution profile reference"
+        )
+        if not isinstance(execution_profile_digest, Digest) or not isinstance(
             session_disclosure_authority_digest, Digest
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "Provider route requires exact configuration and disclosure digests",
+                "execution-profile route requires exact profile and disclosure digests",
             )
         if standing_authority_digest is not None and not isinstance(
             standing_authority_digest, Digest
@@ -156,31 +198,15 @@ class EngineeringProviderRouteSpec:
                 ErrorCode.INVALID_ARGUMENT,
                 "Provider route standing authority digest is invalid",
             )
-        parsed = urlsplit(endpoint)
-        if (
-            parsed.scheme != "https"
-            or not parsed.hostname
-            or parsed.username
-            or parsed.password
-            or parsed.query
-            or parsed.fragment
-        ):
-            raise DomainError(
-                ErrorCode.INVALID_ARGUMENT,
-                "Provider route endpoint must be exact credential-free HTTPS",
-            )
         core = {
-            "schema": "ENGINEERING_PROVIDER_ROUTE_SPEC@1",
+            "schema": "ENGINEERING_EXECUTION_PROFILE_ROUTE_SPEC@1",
             "ordinal": ordinal,
             "role": role.value,
-            "provider_type": provider_type,
-            "endpoint": endpoint,
-            "model_ref": model_ref,
-            "provider_configuration_digest": provider_configuration_digest.value,
+            "execution_profile_ref": execution_profile_ref,
+            "execution_profile_digest": execution_profile_digest.value,
             "session_disclosure_authority_digest": (
                 session_disclosure_authority_digest.value
             ),
-            "qualification_ref": qualification_ref,
             "maximum_dispatches_per_turn": maximum_dispatches_per_turn,
             "request_retry_allowed": False,
         }
@@ -189,15 +215,12 @@ class EngineeringProviderRouteSpec:
         return cls(
             ordinal=ordinal,
             role=role,
-            provider_type=provider_type,
-            endpoint=endpoint,
-            model_ref=model_ref,
-            provider_configuration_digest=provider_configuration_digest,
+            execution_profile_ref=execution_profile_ref,
+            execution_profile_digest=execution_profile_digest,
             session_disclosure_authority_digest=(
                 session_disclosure_authority_digest
             ),
             standing_authority_digest=standing_authority_digest,
-            qualification_ref=qualification_ref,
             maximum_dispatches_per_turn=maximum_dispatches_per_turn,
             digest=digest_of(core),
         )
@@ -209,6 +232,7 @@ class EngineeringProviderRoutePlan:
     chat_binding_digest: Digest
     provider_route_ref: str
     routes: tuple[EngineeringProviderRouteSpec, EngineeringProviderRouteSpec]
+    preferred_availability_owner_ref: str
     maximum_fallback_attempts: int
     request_retry_count: int
     late_result_policy: EngineeringProviderLateResultPolicy
@@ -221,40 +245,53 @@ class EngineeringProviderRoutePlan:
         cls,
         *,
         binding: EngineeringChatBinding,
-        primary: EngineeringProviderRouteSpec,
+        preferred: EngineeringProviderRouteSpec | None = None,
         fallback: EngineeringProviderRouteSpec,
+        primary: EngineeringProviderRouteSpec | None = None,
+        preferred_availability_owner_ref: str = "provider-availability-boundary",
     ) -> "EngineeringProviderRoutePlan":
-        expected_primary = EngineeringProviderRouteSpec.create(
-            ordinal=primary.ordinal,
-            role=primary.role,
-            provider_type=primary.provider_type,
-            endpoint=primary.endpoint,
-            model_ref=primary.model_ref,
-            provider_configuration_digest=primary.provider_configuration_digest,
+        if preferred is not None and primary is not None:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "route plan accepts one preferred profile",
+            )
+        preferred = preferred if preferred is not None else primary
+        availability_owner_ref = _text(
+            preferred_availability_owner_ref,
+            "preferred execution-profile availability owner",
+        )
+        if preferred is None:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "route plan requires a preferred profile",
+            )
+        expected_preferred = EngineeringProviderRouteSpec.create(
+            ordinal=preferred.ordinal,
+            role=preferred.role,
+            execution_profile_ref=preferred.execution_profile_ref,
+            execution_profile_digest=preferred.execution_profile_digest,
             session_disclosure_authority_digest=(
-                primary.session_disclosure_authority_digest
+                preferred.session_disclosure_authority_digest
             ),
-            standing_authority_digest=primary.standing_authority_digest,
-            qualification_ref=primary.qualification_ref,
-            maximum_dispatches_per_turn=primary.maximum_dispatches_per_turn,
+            standing_authority_digest=preferred.standing_authority_digest,
+            maximum_dispatches_per_turn=preferred.maximum_dispatches_per_turn,
         )
         expected_fallback = EngineeringProviderRouteSpec.create(
             ordinal=fallback.ordinal,
             role=fallback.role,
-            provider_type=fallback.provider_type,
-            endpoint=fallback.endpoint,
-            model_ref=fallback.model_ref,
-            provider_configuration_digest=fallback.provider_configuration_digest,
+            execution_profile_ref=fallback.execution_profile_ref,
+            execution_profile_digest=fallback.execution_profile_digest,
             session_disclosure_authority_digest=(
                 fallback.session_disclosure_authority_digest
             ),
             standing_authority_digest=fallback.standing_authority_digest,
-            qualification_ref=fallback.qualification_ref,
             maximum_dispatches_per_turn=fallback.maximum_dispatches_per_turn,
         )
-        expected_ref = engineering_agent_dual_provider_route_ref(
-            primary_configuration_digest=primary.provider_configuration_digest,
-            fallback_configuration_digest=fallback.provider_configuration_digest,
+        expected_ref = engineering_agent_execution_profile_route_ref(
+            preferred_execution_profile_ref=preferred.execution_profile_ref,
+            preferred_execution_profile_digest=preferred.execution_profile_digest,
+            fallback_execution_profile_ref=fallback.execution_profile_ref,
+            fallback_execution_profile_digest=fallback.execution_profile_digest,
         )
         if (
             binding.provider_status is not RuntimeCapabilityStatus.READY
@@ -263,7 +300,7 @@ class EngineeringProviderRoutePlan:
             or binding.provider_route_ref != expected_ref
             or binding.world_model_authority_digest is None
             or binding.source_profile_ref is None
-            or primary != expected_primary
+            or preferred != expected_preferred
             or fallback != expected_fallback
         ):
             raise DomainError(
@@ -271,29 +308,29 @@ class EngineeringProviderRoutePlan:
                 "dual Provider route requires a fully bound ready Engineering Chat",
             )
         if (
-            primary.ordinal != 1
-            or primary.role is not EngineeringProviderRouteRole.PRIMARY
-            or primary.provider_type != "VOLCENGINE_ARK"
+            preferred.ordinal != 1
+            or preferred.role is not EngineeringProviderRouteRole.PREFERRED
             or fallback.ordinal != 2
             or fallback.role is not EngineeringProviderRouteRole.FALLBACK
-            or fallback.provider_type != "DEEPSEEK"
-            or primary.provider_configuration_digest
-            == fallback.provider_configuration_digest
-            or primary.session_disclosure_authority_digest
+            or preferred.execution_profile_ref == fallback.execution_profile_ref
+            or preferred.execution_profile_digest
+            == fallback.execution_profile_digest
+            or preferred.session_disclosure_authority_digest
             == fallback.session_disclosure_authority_digest
-            or primary.standing_authority_digest
+            or preferred.standing_authority_digest
             != fallback.standing_authority_digest
         ):
             raise DomainError(
                 ErrorCode.STRATEGY_CONTRACT_MISMATCH,
-                "Provider route must be exact distinct VOLCENGINE_ARK then DEEPSEEK",
+                "route must bind distinct ordered preferred and fallback profiles",
             )
-        routes = (primary, fallback)
+        routes = (preferred, fallback)
         core = {
             "schema": ENGINEERING_PROVIDER_ROUTE_SCHEMA,
             "chat_binding_digest": binding.digest.value,
             "provider_route_ref": expected_ref,
             "route_digests": tuple(item.digest.value for item in routes),
+            "preferred_availability_owner_ref": availability_owner_ref,
             "maximum_fallback_attempts": 1,
             "request_retry_count": 0,
             "late_result_policy": (
@@ -308,6 +345,7 @@ class EngineeringProviderRoutePlan:
             chat_binding_digest=binding.digest,
             provider_route_ref=expected_ref,
             routes=routes,
+            preferred_availability_owner_ref=availability_owner_ref,
             maximum_fallback_attempts=1,
             request_retry_count=0,
             late_result_policy=(
@@ -332,8 +370,8 @@ class EngineeringProviderAttemptAuthority:
     route_spec_digest: Digest
     ordinal: int
     role: EngineeringProviderRouteRole
-    provider_type: str
-    provider_configuration_digest: Digest
+    execution_profile_ref: str
+    execution_profile_digest: Digest
     session_disclosure_authority_digest: Digest
     standing_authority_digest: Digest | None
     source_profile_ref: str
@@ -386,10 +424,8 @@ class EngineeringProviderAttemptAuthority:
             "route_spec_digest": route.digest.value,
             "ordinal": route.ordinal,
             "role": route.role.value,
-            "provider_type": route.provider_type,
-            "provider_configuration_digest": (
-                route.provider_configuration_digest.value
-            ),
+            "execution_profile_ref": route.execution_profile_ref,
+            "execution_profile_digest": route.execution_profile_digest.value,
             "session_disclosure_authority_digest": (
                 route.session_disclosure_authority_digest.value
             ),
@@ -420,8 +456,8 @@ class EngineeringProviderAttemptAuthority:
             route_spec_digest=route.digest,
             ordinal=route.ordinal,
             role=route.role,
-            provider_type=route.provider_type,
-            provider_configuration_digest=route.provider_configuration_digest,
+            execution_profile_ref=route.execution_profile_ref,
+            execution_profile_digest=route.execution_profile_digest,
             session_disclosure_authority_digest=(
                 route.session_disclosure_authority_digest
             ),
@@ -495,11 +531,13 @@ class EngineeringProviderAttemptReceipt:
     schema: str
     attempt_id: StableId
     attempt_authority_digest: Digest
+    logical_turn_request_digest: Digest
     runtime_digest: Digest | None
     route_spec_digest: Digest
     ordinal: int
     role: EngineeringProviderRouteRole
-    provider_type: str
+    execution_profile_ref: str
+    execution_profile_digest: Digest
     terminal_state: EngineeringProviderAttemptTerminalState
     outcome_digest: Digest
     failure_code: str | None
@@ -556,11 +594,15 @@ class EngineeringProviderAttemptReceipt:
             "schema": ENGINEERING_PROVIDER_ATTEMPT_RECEIPT_SCHEMA,
             "attempt_id": authority.attempt_id.value,
             "attempt_authority_digest": authority.digest.value,
+            "logical_turn_request_digest": (
+                authority.logical_turn_request_digest.value
+            ),
             "runtime_digest": runtime.digest.value if runtime else None,
             "route_spec_digest": authority.route_spec_digest.value,
             "ordinal": authority.ordinal,
             "role": authority.role.value,
-            "provider_type": authority.provider_type,
+            "execution_profile_ref": authority.execution_profile_ref,
+            "execution_profile_digest": authority.execution_profile_digest.value,
             "terminal_state": terminal_state.value,
             "outcome_digest": outcome_digest.value,
             "failure_code": outcome.failure_code,
@@ -588,11 +630,13 @@ class EngineeringProviderAttemptReceipt:
             schema=ENGINEERING_PROVIDER_ATTEMPT_RECEIPT_SCHEMA,
             attempt_id=authority.attempt_id,
             attempt_authority_digest=authority.digest,
+            logical_turn_request_digest=authority.logical_turn_request_digest,
             runtime_digest=runtime.digest if runtime else None,
             route_spec_digest=authority.route_spec_digest,
             ordinal=authority.ordinal,
             role=authority.role,
-            provider_type=authority.provider_type,
+            execution_profile_ref=authority.execution_profile_ref,
+            execution_profile_digest=authority.execution_profile_digest,
             terminal_state=terminal_state,
             outcome_digest=outcome_digest,
             failure_code=outcome.failure_code,
@@ -618,13 +662,168 @@ class EngineeringProviderAttemptReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringExecutionProfileAvailabilityVerdict:
+    """One exact availability-owner decision for the preferred profile."""
+
+    schema: str
+    verdict: EngineeringExecutionProfileAvailabilityDecision
+    availability_owner_ref: str
+    logical_turn_request_digest: Digest
+    execution_profile_ref: str
+    execution_profile_digest: Digest
+    preferred_attempt_receipt_digest: Digest
+    raw_failure_classification: EngineeringProviderFailureClassification
+    raw_failure_code: str
+    assessed_at: datetime
+    potential_duplicate_cost_risk: bool
+    digest: Digest
+
+    @classmethod
+    def seal(
+        cls,
+        *,
+        availability_owner_ref: str,
+        request: EngineeringTurnExecutionRequest,
+        route: EngineeringProviderRouteSpec,
+        preferred_attempt_receipt: EngineeringProviderAttemptReceipt,
+        assessed_at: datetime,
+    ) -> "EngineeringExecutionProfileAvailabilityVerdict":
+        current = _aware_utc(assessed_at, "availability assessment time")
+        requested_at = _aware_utc(
+            request.requested_at, "logical Turn request time"
+        )
+        classification = preferred_attempt_receipt.provider_failure_classification
+        raw_code = preferred_attempt_receipt.provider_failure_code
+        if (
+            route.role is not EngineeringProviderRouteRole.PREFERRED
+            or route.ordinal != 1
+            or preferred_attempt_receipt.role
+            is not EngineeringProviderRouteRole.PREFERRED
+            or preferred_attempt_receipt.ordinal != 1
+            or preferred_attempt_receipt.route_spec_digest != route.digest
+            or preferred_attempt_receipt.logical_turn_request_digest
+            != request.request_digest
+            or preferred_attempt_receipt.execution_profile_ref
+            != route.execution_profile_ref
+            or preferred_attempt_receipt.execution_profile_digest
+            != route.execution_profile_digest
+            or preferred_attempt_receipt.terminal_state
+            is EngineeringProviderAttemptTerminalState.SUCCEEDED
+            or preferred_attempt_receipt.authorized_answer_ref is not None
+            or classification
+            not in {
+                EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE,
+                EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR,
+                EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN,
+            }
+            or raw_code is None
+            or current < requested_at
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "availability verdict requires exact eligible raw evidence from the failed preferred profile",
+            )
+        owner_ref = _text(
+            availability_owner_ref, "execution-profile availability owner"
+        )
+        duplicate_risk = (
+            classification
+            is EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN
+        )
+        core = {
+            "schema": ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA,
+            "verdict": EngineeringExecutionProfileAvailabilityDecision.PREFERRED_EXECUTION_PROFILE_UNAVAILABLE.value,
+            "availability_owner_ref": owner_ref,
+            "logical_turn_request_digest": request.request_digest.value,
+            "execution_profile_ref": route.execution_profile_ref,
+            "execution_profile_digest": route.execution_profile_digest.value,
+            "preferred_attempt_receipt_digest": (
+                preferred_attempt_receipt.digest.value
+            ),
+            "raw_failure_classification": classification.value,
+            "raw_failure_code": raw_code,
+            "assessed_at": current.isoformat().replace("+00:00", "Z"),
+            "potential_duplicate_cost_risk": duplicate_risk,
+            "fallback_authority_granted": True,
+            "request_retry_count": 0,
+        }
+        return cls(
+            schema=ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA,
+            verdict=(
+                EngineeringExecutionProfileAvailabilityDecision.PREFERRED_EXECUTION_PROFILE_UNAVAILABLE
+            ),
+            availability_owner_ref=owner_ref,
+            logical_turn_request_digest=request.request_digest,
+            execution_profile_ref=route.execution_profile_ref,
+            execution_profile_digest=route.execution_profile_digest,
+            preferred_attempt_receipt_digest=preferred_attempt_receipt.digest,
+            raw_failure_classification=classification,
+            raw_failure_code=raw_code,
+            assessed_at=current,
+            potential_duplicate_cost_risk=duplicate_risk,
+            digest=digest_of(core),
+        )
+
+    def require_exact(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        route: EngineeringProviderRouteSpec,
+        preferred_attempt_receipt: EngineeringProviderAttemptReceipt,
+    ) -> None:
+        expected = EngineeringExecutionProfileAvailabilityVerdict.seal(
+            availability_owner_ref=self.availability_owner_ref,
+            request=request,
+            route=route,
+            preferred_attempt_receipt=preferred_attempt_receipt,
+            assessed_at=self.assessed_at,
+        )
+        if self != expected:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "execution-profile availability verdict is inconsistent",
+            )
+
+
+class EngineeringExecutionProfileAvailabilityBoundary(Protocol):
+    availability_owner_ref: str
+
+    def assess_preferred(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        route: EngineeringProviderRouteSpec,
+        preferred_attempt_receipt: EngineeringProviderAttemptReceipt,
+    ) -> EngineeringExecutionProfileAvailabilityVerdict | None: ...
+
+
+class FailClosedEngineeringExecutionProfileAvailabilityBoundary:
+    """Default boundary: raw execution evidence never authorizes fallback."""
+
+    availability_owner_ref = "provider-availability-boundary"
+
+    def assess_preferred(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        route: EngineeringProviderRouteSpec,
+        preferred_attempt_receipt: EngineeringProviderAttemptReceipt,
+    ) -> None:
+        del request, route, preferred_attempt_receipt
+        return None
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringProviderRouteReceipt:
     schema: str
     logical_turn_request_digest: Digest
     route_plan_digest: Digest
     attempt_receipt_refs: tuple[str, ...]
     selected_attempt_receipt_ref: str
-    selected_provider_type: str
+    selected_execution_profile_ref: str
+    selected_execution_profile_digest: Digest
+    preferred_availability_verdict_ref: str | None
+    preferred_availability_owner_ref: str | None
     state: ConversationTurnState
     fallback_attempt_count: int
     provider_dispatch_count: int
@@ -643,19 +842,44 @@ class EngineeringProviderRouteReceipt:
         plan: EngineeringProviderRoutePlan,
         attempts: Sequence[EngineeringProviderAttemptReceipt],
         selected_outcome: EngineeringTurnExecutionOutcome,
+        preferred_availability_verdict: EngineeringExecutionProfileAvailabilityVerdict | None,
     ) -> "EngineeringProviderRouteReceipt":
         receipts = tuple(attempts)
+        if receipts and preferred_availability_verdict is not None:
+            if (
+                preferred_availability_verdict.availability_owner_ref
+                != plan.preferred_availability_owner_ref
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "availability verdict does not come from the registered owner",
+                )
+            preferred_availability_verdict.require_exact(
+                request=request,
+                route=plan.routes[0],
+                preferred_attempt_receipt=receipts[0],
+            )
         if (
             len(receipts) not in {1, 2}
-            or receipts[0].role is not EngineeringProviderRouteRole.PRIMARY
+            or any(
+                receipt.logical_turn_request_digest != request.request_digest
+                or receipt.route_spec_digest != plan.routes[index].digest
+                or receipt.execution_profile_ref
+                != plan.routes[index].execution_profile_ref
+                or receipt.execution_profile_digest
+                != plan.routes[index].execution_profile_digest
+                for index, receipt in enumerate(receipts)
+            )
+            or receipts[0].role is not EngineeringProviderRouteRole.PREFERRED
             or receipts[0].ordinal != 1
+            or (len(receipts) == 1 and preferred_availability_verdict is not None)
             or (
                 len(receipts) == 2
                 and (
                     receipts[1].role
                     is not EngineeringProviderRouteRole.FALLBACK
                     or receipts[1].ordinal != 2
-                    or receipts[0].provider_failure_classification is None
+                    or preferred_availability_verdict is None
                 )
             )
             or receipts[-1].outcome_digest
@@ -676,18 +900,33 @@ class EngineeringProviderRouteReceipt:
                 "Provider attempts cannot share a model dispatch receipt",
             )
         dispatch_count = sum(item.provider_dispatch_count for item in receipts)
-        duplicate_risk = len(receipts) == 2 and (
-            receipts[0].provider_failure_classification
-            is EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN
+        duplicate_risk = bool(
+            preferred_availability_verdict is not None
+            and preferred_availability_verdict.potential_duplicate_cost_risk
         )
         attempt_refs = tuple(item.digest.value for item in receipts)
+        availability_ref = (
+            preferred_availability_verdict.digest.value
+            if preferred_availability_verdict is not None
+            else None
+        )
+        availability_owner_ref = (
+            preferred_availability_verdict.availability_owner_ref
+            if preferred_availability_verdict is not None
+            else None
+        )
         core = {
             "schema": ENGINEERING_PROVIDER_ROUTE_RECEIPT_SCHEMA,
             "logical_turn_request_digest": request.request_digest.value,
             "route_plan_digest": plan.digest.value,
             "attempt_receipt_refs": attempt_refs,
             "selected_attempt_receipt_ref": receipts[-1].digest.value,
-            "selected_provider_type": receipts[-1].provider_type,
+            "selected_execution_profile_ref": receipts[-1].execution_profile_ref,
+            "selected_execution_profile_digest": (
+                receipts[-1].execution_profile_digest.value
+            ),
+            "preferred_availability_verdict_ref": availability_ref,
+            "preferred_availability_owner_ref": availability_owner_ref,
             "state": selected_outcome.state.value,
             "fallback_attempt_count": len(receipts) - 1,
             "provider_dispatch_count": dispatch_count,
@@ -704,7 +943,12 @@ class EngineeringProviderRouteReceipt:
             route_plan_digest=plan.digest,
             attempt_receipt_refs=attempt_refs,
             selected_attempt_receipt_ref=receipts[-1].digest.value,
-            selected_provider_type=receipts[-1].provider_type,
+            selected_execution_profile_ref=receipts[-1].execution_profile_ref,
+            selected_execution_profile_digest=(
+                receipts[-1].execution_profile_digest
+            ),
+            preferred_availability_verdict_ref=availability_ref,
+            preferred_availability_owner_ref=availability_owner_ref,
             state=selected_outcome.state,
             fallback_attempt_count=len(receipts) - 1,
             provider_dispatch_count=dispatch_count,
@@ -722,6 +966,7 @@ class EngineeringProviderRouteAudit:
     route_receipt: EngineeringProviderRouteReceipt
     attempt_authorities: tuple[EngineeringProviderAttemptAuthority, ...]
     attempt_receipts: tuple[EngineeringProviderAttemptReceipt, ...]
+    preferred_availability_verdict: EngineeringExecutionProfileAvailabilityVerdict | None
 
 
 @dataclass(slots=True)
@@ -735,22 +980,33 @@ class _AttemptRun:
 class ApplicationOwnedEngineeringProviderRouter(
     EngineeringConversationTurnExecutor
 ):
-    """Execute one immutable Turn through Ark and at most one DeepSeek chain."""
+    """Execute one Turn through preferred and, with a verdict, fallback."""
 
     def __init__(
         self,
         *,
         plan: EngineeringProviderRoutePlan,
         attempt_factory: EngineeringProviderAttemptFactory,
+        availability_boundary: EngineeringExecutionProfileAvailabilityBoundary | None = None,
         id_generator: IdGenerator | None = None,
     ) -> None:
-        if not callable(getattr(attempt_factory, "create", None)):
+        boundary = (
+            availability_boundary
+            if availability_boundary is not None
+            else FailClosedEngineeringExecutionProfileAvailabilityBoundary()
+        )
+        if not callable(getattr(attempt_factory, "create", None)) or not callable(
+            getattr(boundary, "assess_preferred", None)
+        ) or getattr(boundary, "availability_owner_ref", None) != (
+            plan.preferred_availability_owner_ref
+        ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "Provider router requires an attempt runtime factory",
+                "execution-profile router requires attempt and availability boundaries",
             )
         self._plan = plan
         self._factory = attempt_factory
+        self._availability_boundary = boundary
         self._ids = id_generator or Uuid4IdGenerator()
         self._lock = Lock()
         self._issued_ids: set[StableId] = set()
@@ -763,8 +1019,11 @@ class ApplicationOwnedEngineeringProviderRouter(
         try:
             expected_plan = EngineeringProviderRoutePlan.create(
                 binding=request.binding,
-                primary=self._plan.routes[0],
+                preferred=self._plan.routes[0],
                 fallback=self._plan.routes[1],
+                preferred_availability_owner_ref=(
+                    self._plan.preferred_availability_owner_ref
+                ),
             )
         except (DomainError, IndexError):
             expected_plan = None
@@ -787,10 +1046,11 @@ class ApplicationOwnedEngineeringProviderRouter(
             prior_runtime=None,
         )
         runs = [primary]
-        if (
-            primary.outcome.state is ConversationTurnState.FAILED
-            and primary.outcome.provider_failure_classification is not None
-        ):
+        availability_verdict = self._preferred_availability_verdict(
+            request=request,
+            preferred=primary,
+        )
+        if availability_verdict is not None:
             fallback = self._execute_attempt(
                 request=request,
                 route=self._plan.routes[1],
@@ -804,6 +1064,7 @@ class ApplicationOwnedEngineeringProviderRouter(
             plan=self._plan,
             attempts=tuple(item.receipt for item in runs),
             selected_outcome=selected.outcome,
+            preferred_availability_verdict=availability_verdict,
         )
         routed_outcome = replace(
             selected.outcome,
@@ -812,6 +1073,9 @@ class ApplicationOwnedEngineeringProviderRouter(
                 route_receipt.model_dispatch_receipt_refs
             ),
             provider_route_receipt_ref=route_receipt.digest.value,
+            provider_availability_verdict_ref=(
+                route_receipt.preferred_availability_verdict_ref
+            ),
             provider_attempt_receipt_refs=(
                 route_receipt.attempt_receipt_refs
             ),
@@ -825,10 +1089,47 @@ class ApplicationOwnedEngineeringProviderRouter(
             route_receipt=route_receipt,
             attempt_authorities=tuple(item.authority for item in runs),
             attempt_receipts=tuple(item.receipt for item in runs),
+            preferred_availability_verdict=availability_verdict,
         )
         with self._lock:
             self._audits[request.request_digest] = audit
         return routed_outcome
+
+    def _preferred_availability_verdict(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        preferred: _AttemptRun,
+    ) -> EngineeringExecutionProfileAvailabilityVerdict | None:
+        if preferred.outcome.state is not ConversationTurnState.FAILED:
+            return None
+        try:
+            verdict = self._availability_boundary.assess_preferred(
+                request=request,
+                route=self._plan.routes[0],
+                preferred_attempt_receipt=preferred.receipt,
+            )
+            if verdict is None:
+                return None
+            if not isinstance(
+                verdict, EngineeringExecutionProfileAvailabilityVerdict
+            ) or verdict.availability_owner_ref != (
+                self._plan.preferred_availability_owner_ref
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "availability boundary returned an untyped verdict",
+                )
+            verdict.require_exact(
+                request=request,
+                route=self._plan.routes[0],
+                preferred_attempt_receipt=preferred.receipt,
+            )
+        except Exception:
+            # Availability is an independent authority boundary.  Missing,
+            # malformed, or ineligible verdicts fail closed without fallback.
+            return None
+        return verdict
 
     def audit_for(self, request_digest: Digest) -> EngineeringProviderRouteAudit:
         with self._lock:
@@ -892,6 +1193,7 @@ class ApplicationOwnedEngineeringProviderRouter(
                 validate_engineering_turn_execution_outcome(request, candidate)
                 if (
                     candidate.provider_route_receipt_ref is not None
+                    or candidate.provider_availability_verdict_ref is not None
                     or candidate.provider_attempt_receipt_refs
                     or candidate.fallback_provider_attempt_count != 0
                     or candidate.provider_duplicate_cost_risk
@@ -1021,6 +1323,9 @@ def _execution_outcome_digest(outcome: EngineeringTurnExecutionOutcome) -> Diges
                 else None
             ),
             "provider_failure_code": outcome.provider_failure_code,
+            "provider_availability_verdict_ref": (
+                outcome.provider_availability_verdict_ref
+            ),
             "retry_count": outcome.retry_count,
             "quality_status": outcome.quality_status,
         }
@@ -1033,12 +1338,26 @@ def _text(value: str, label: str) -> str:
     return value.strip()
 
 
+def _aware_utc(value: datetime, label: str) -> datetime:
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"{label} must be timezone-aware",
+        )
+    return value.astimezone(timezone.utc)
+
+
 __all__ = [
     "ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS",
     "ENGINEERING_PROVIDER_ATTEMPT_RECEIPT_SCHEMA",
+    "ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA",
     "ENGINEERING_PROVIDER_ROUTE_RECEIPT_SCHEMA",
     "ENGINEERING_PROVIDER_ROUTE_SCHEMA",
     "ApplicationOwnedEngineeringProviderRouter",
+    "EngineeringExecutionProfileAvailabilityBoundary",
+    "EngineeringExecutionProfileAvailabilityDecision",
+    "EngineeringExecutionProfileAvailabilityVerdict",
+    "FailClosedEngineeringExecutionProfileAvailabilityBoundary",
     "EngineeringProviderAttemptAuthority",
     "EngineeringProviderAttemptFactory",
     "EngineeringProviderAttemptReceipt",
@@ -1050,5 +1369,6 @@ __all__ = [
     "EngineeringProviderRouteReceipt",
     "EngineeringProviderRouteRole",
     "EngineeringProviderRouteSpec",
+    "engineering_agent_execution_profile_route_ref",
     "engineering_agent_dual_provider_route_ref",
 ]

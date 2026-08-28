@@ -242,22 +242,31 @@ class EngineeringAgentModelCallFailure(DomainError):
         receipt: EngineeringAgentModelCallReceipt,
         code: ErrorCode,
         message: str,
+        prior_receipts: Sequence[EngineeringAgentModelCallReceipt] = (),
+        invalid_output_text: str | None = None,
     ) -> None:
-        expected = EngineeringAgentModelCallReceipt.create(
-            model_call_ref=receipt.model_call_ref,
-            gateway_call_ref=receipt.gateway_call_ref,
-            role=receipt.role,
-            state=receipt.state,
-            failure_kind=receipt.failure_kind,
-            failure_code=receipt.failure_code,
-        )
-        if receipt != expected or receipt.successful:
+        receipts = (*tuple(prior_receipts), receipt)
+        if (
+            not _exact_model_receipt_sequence(
+                receipts,
+                role=receipt.role,
+                terminal_must_succeed=False,
+            )
+            or invalid_output_text is not None
+            and not isinstance(invalid_output_text, str)
+        ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "model call failure requires an exact non-success receipt",
+                "model call failure requires exact unique non-success receipts",
             )
         super().__init__(code, message)
         self.receipt = receipt
+        self.prior_receipts = tuple(prior_receipts)
+        self.invalid_output_text = invalid_output_text
+
+    @property
+    def receipts(self) -> tuple[EngineeringAgentModelCallReceipt, ...]:
+        return (*self.prior_receipts, self.receipt)
 
 
 @dataclass(frozen=True, slots=True)
@@ -667,6 +676,7 @@ class EngineeringAgentDriver(Protocol):
 class EngineeringAgentDriverModelResult:
     proposal: EngineeringAgentWorkStateProposal
     receipt: EngineeringAgentModelCallReceipt
+    prior_receipts: tuple[EngineeringAgentModelCallReceipt, ...] = ()
 
     @classmethod
     def create(
@@ -674,17 +684,26 @@ class EngineeringAgentDriverModelResult:
         *,
         proposal: EngineeringAgentWorkStateProposal,
         receipt: EngineeringAgentModelCallReceipt,
+        prior_receipts: Sequence[EngineeringAgentModelCallReceipt] = (),
     ) -> "EngineeringAgentDriverModelResult":
         if (
             receipt.role is not EngineeringAgentModelRole.PRIMARY_AGENT
-            or not receipt.successful
             or receipt.model_call_ref != proposal.model_call_ref
+            or not _exact_model_receipt_sequence(
+                (*tuple(prior_receipts), receipt),
+                role=EngineeringAgentModelRole.PRIMARY_AGENT,
+                terminal_must_succeed=True,
+            )
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Agent proposal does not bind its successful model call receipt",
             )
-        return cls(proposal=proposal, receipt=receipt)
+        return cls(
+            proposal=proposal,
+            receipt=receipt,
+            prior_receipts=tuple(prior_receipts),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1286,6 +1305,7 @@ class EngineeringAgentReviewer(Protocol):
 class EngineeringAgentReviewerModelResult:
     proposal: EngineeringAgentReviewProposal
     receipt: EngineeringAgentModelCallReceipt
+    prior_receipts: tuple[EngineeringAgentModelCallReceipt, ...] = ()
 
     @classmethod
     def create(
@@ -1293,17 +1313,26 @@ class EngineeringAgentReviewerModelResult:
         *,
         proposal: EngineeringAgentReviewProposal,
         receipt: EngineeringAgentModelCallReceipt,
+        prior_receipts: Sequence[EngineeringAgentModelCallReceipt] = (),
     ) -> "EngineeringAgentReviewerModelResult":
         if (
             receipt.role is not EngineeringAgentModelRole.INDEPENDENT_REVIEWER
-            or not receipt.successful
             or receipt.model_call_ref != proposal.model_call_ref
+            or not _exact_model_receipt_sequence(
+                (*tuple(prior_receipts), receipt),
+                role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+                terminal_must_succeed=True,
+            )
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Reviewer proposal does not bind its successful model call receipt",
             )
-        return cls(proposal=proposal, receipt=receipt)
+        return cls(
+            proposal=proposal,
+            receipt=receipt,
+            prior_receipts=tuple(prior_receipts),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1532,16 +1561,17 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             if not role_matches:
                 failure_code = "AGENT_PROTOCOL_VIOLATION"
             try:
-                _record_model_receipt(audit, exc.receipt)
-                self._record_model_call(
-                    audit.model_call_refs, exc.receipt.model_call_ref
-                )
+                for receipt in exc.receipts:
+                    _record_model_receipt(audit, receipt)
+                    self._record_model_call(
+                        audit.model_call_refs, receipt.model_call_ref
+                    )
             except DomainError:
                 failure_code = "AGENT_PROTOCOL_VIOLATION"
             else:
                 if role_matches:
                     provider_failure_classification = (
-                        _provider_fallback_classification(
+                        _provider_failure_classification(
                             exc.receipt.failure_kind
                         )
                     )
@@ -1626,6 +1656,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 expected_driver_output = EngineeringAgentDriverModelResult.create(
                     proposal=driver_output.proposal,
                     receipt=driver_output.receipt,
+                    prior_receipts=driver_output.prior_receipts,
                 )
                 if driver_output != expected_driver_output:
                     raise DomainError(
@@ -1633,6 +1664,11 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         "Agent driver model result identity is invalid",
                     )
                 proposal = driver_output.proposal
+                for receipt in driver_output.prior_receipts:
+                    _record_model_receipt(audit, receipt)
+                    self._record_model_call(
+                        model_call_refs, receipt.model_call_ref
+                    )
                 _record_model_receipt(audit, driver_output.receipt)
             else:
                 if self._require_model_call_receipts:
@@ -1773,6 +1809,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     EngineeringAgentReviewerModelResult.create(
                         proposal=reviewer_output.proposal,
                         receipt=reviewer_output.receipt,
+                        prior_receipts=reviewer_output.prior_receipts,
                     )
                 )
                 if reviewer_output != expected_reviewer_output:
@@ -1781,6 +1818,11 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         "Reviewer model result identity is invalid",
                     )
                 review_proposal = reviewer_output.proposal
+                for receipt in reviewer_output.prior_receipts:
+                    _record_model_receipt(audit, receipt)
+                    self._record_model_call(
+                        model_call_refs, receipt.model_call_ref
+                    )
                 _record_model_receipt(audit, reviewer_output.receipt)
             else:
                 if self._require_model_call_receipts:
@@ -2752,6 +2794,44 @@ def _record_model_receipt(
     audit.provider_dispatch_count += receipt.provider_dispatch_count
 
 
+def _exact_model_receipt_sequence(
+    receipts: Sequence[EngineeringAgentModelCallReceipt],
+    *,
+    role: EngineeringAgentModelRole,
+    terminal_must_succeed: bool,
+) -> bool:
+    normalized = tuple(receipts)
+    if not normalized:
+        return False
+    for receipt in normalized:
+        expected = EngineeringAgentModelCallReceipt.create(
+            model_call_ref=receipt.model_call_ref,
+            gateway_call_ref=receipt.gateway_call_ref,
+            role=receipt.role,
+            state=receipt.state,
+            failure_kind=receipt.failure_kind,
+            failure_code=receipt.failure_code,
+        )
+        if receipt != expected or receipt.role is not role:
+            return False
+    terminal = normalized[-1]
+    if terminal.successful is not terminal_must_succeed:
+        return False
+    if terminal_must_succeed and any(
+        receipt.successful for receipt in normalized[:-1]
+    ):
+        return False
+    if not terminal_must_succeed and any(
+        receipt.successful for receipt in normalized
+    ):
+        return False
+    return (
+        len({receipt.digest for receipt in normalized}) == len(normalized)
+        and len({receipt.model_call_ref for receipt in normalized})
+        == len(normalized)
+    )
+
+
 def _model_failure_code(receipt: EngineeringAgentModelCallReceipt) -> str:
     role = (
         "AGENT"
@@ -2773,7 +2853,7 @@ def _model_failure_code(receipt: EngineeringAgentModelCallReceipt) -> str:
     return f"{role}_{outcome}"
 
 
-def _provider_fallback_classification(
+def _provider_failure_classification(
     failure_kind: EngineeringAgentModelFailureKind | None,
 ) -> EngineeringProviderFailureClassification | None:
     return {

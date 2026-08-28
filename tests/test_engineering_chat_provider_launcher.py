@@ -102,7 +102,7 @@ class EngineeringChatProviderLauncherTests(unittest.TestCase):
         )
         primary_route = self._route(
             ordinal=1,
-            role=EngineeringProviderRouteRole.PRIMARY,
+            role=EngineeringProviderRouteRole.PREFERRED,
             configuration=self.primary_configuration,
             authority=self.primary_authority,
         )
@@ -114,7 +114,7 @@ class EngineeringChatProviderLauncherTests(unittest.TestCase):
         )
         self.plan = EngineeringProviderRoutePlan.create(
             binding=self.binding,
-            primary=primary_route,
+            preferred=primary_route,
             fallback=fallback_route,
         )
         self.tools = EngineeringAgentEvidenceToolConfiguration.create(
@@ -184,12 +184,13 @@ class EngineeringChatProviderLauncherTests(unittest.TestCase):
         return EngineeringProviderRouteSpec.create(
             ordinal=ordinal,
             role=role,
-            provider_type=configuration.provider_type,
-            endpoint=configuration.endpoint,
-            model_ref=configuration.model_ref,
-            provider_configuration_digest=configuration.digest,
+            execution_profile_ref=(
+                "runtime-config:preferred-qualified-profile"
+                if role is EngineeringProviderRouteRole.PREFERRED
+                else "runtime-config:fallback-qualified-profile"
+            ),
+            execution_profile_digest=configuration.digest,
             session_disclosure_authority_digest=authority.digest,
-            qualification_ref=configuration.qualification_ref,
             maximum_dispatches_per_turn=(
                 authority.maximum_dispatches_per_turn
             ),
@@ -320,7 +321,7 @@ class EngineeringChatProviderLauncherTests(unittest.TestCase):
         )
         plan = EngineeringProviderRoutePlan.create(
             binding=self.binding,
-            primary=self.plan.routes[0],
+            preferred=self.plan.routes[0],
             fallback=fallback_route,
         )
         model = _UnusedModelBoundary()

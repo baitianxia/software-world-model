@@ -44,7 +44,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRoutePlan,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
-    engineering_agent_dual_provider_route_ref,
+    engineering_agent_execution_profile_route_ref,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
@@ -145,6 +145,8 @@ ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS_V2 = (
 ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS = (
     "PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE"
 )
+_PREFERRED_EXECUTION_PROFILE_REF = "runtime-config:preferred-qualified-profile"
+_FALLBACK_EXECUTION_PROFILE_REF = "runtime-config:fallback-qualified-profile"
 _MAXIMUM_SESSION_CONFIG_BYTES = 1_048_576
 _SESSION_CONFIG_COMMON_FIELDS = frozenset(
     {
@@ -976,9 +978,11 @@ def prepare_engineering_chat_artifact_session(
         ),
         at=current,
     )
-    route_ref = engineering_agent_dual_provider_route_ref(
-        primary_configuration_digest=ark_configuration.digest,
-        fallback_configuration_digest=deepseek_configuration.digest,
+    route_ref = engineering_agent_execution_profile_route_ref(
+        preferred_execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
+        preferred_execution_profile_digest=ark_configuration.digest,
+        fallback_execution_profile_ref=_FALLBACK_EXECUTION_PROFILE_REF,
+        fallback_execution_profile_digest=deepseek_configuration.digest,
     )
     binding = EngineeringChatBinding.create(
         product_version="CONVERSATIONAL_ENGINEERING_AGENT@1",
@@ -1005,13 +1009,21 @@ def prepare_engineering_chat_artifact_session(
     provider_scopes = (
         _public_source_provider_scope(
             ordinal=1,
-            route_role=EngineeringProviderRouteRole.PRIMARY,
+            route_role=(
+                standing_authority.provider_scopes[0].route_role
+                if standing_authority is not None
+                else EngineeringProviderRouteRole.PREFERRED
+            ),
             configuration=ark_configuration,
             dispatch_admission_policy_ref=NO_DISPATCH_ADMISSION_POLICY,
         ),
         _public_source_provider_scope(
             ordinal=2,
-            route_role=EngineeringProviderRouteRole.FALLBACK,
+            route_role=(
+                standing_authority.provider_scopes[1].route_role
+                if standing_authority is not None
+                else EngineeringProviderRouteRole.FALLBACK
+            ),
             configuration=deepseek_configuration,
             dispatch_admission_policy_ref=(
                 DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF
@@ -1140,19 +1152,21 @@ def prepare_engineering_chat_artifact_session(
     )
     primary_route = _route_spec(
         ordinal=1,
-        role=EngineeringProviderRouteRole.PRIMARY,
+        role=EngineeringProviderRouteRole.PREFERRED,
+        execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
         configuration=ark_configuration,
         authority=ark_authority,
     )
     fallback_route = _route_spec(
         ordinal=2,
         role=EngineeringProviderRouteRole.FALLBACK,
+        execution_profile_ref=_FALLBACK_EXECUTION_PROFILE_REF,
         configuration=deepseek_configuration,
         authority=deepseek_authority,
     )
     route_plan = EngineeringProviderRoutePlan.create(
         binding=binding,
-        primary=primary_route,
+        preferred=primary_route,
         fallback=fallback_route,
     )
     evidence_tools = EngineeringAgentEvidenceToolConfiguration.create(
@@ -1843,9 +1857,14 @@ def _public_source_provider_scope(
     configuration,
     dispatch_admission_policy_ref: str,
 ) -> PublicSourceProviderScope:
+    route_role_value = (
+        route_role.value
+        if isinstance(route_role, EngineeringProviderRouteRole)
+        else route_role
+    )
     return PublicSourceProviderScope.create(
         ordinal=ordinal,
-        route_role=route_role.value,
+        route_role=route_role_value,
         provider_type=configuration.provider_type,
         adapter_version=configuration.adapter_version,
         endpoint=configuration.endpoint,
@@ -1927,17 +1946,16 @@ def _legacy_provider_session_authority(
     )
 
 
-def _route_spec(*, ordinal, role, configuration, authority):
+def _route_spec(
+    *, ordinal, role, execution_profile_ref, configuration, authority
+):
     return EngineeringProviderRouteSpec.create(
         ordinal=ordinal,
         role=role,
-        provider_type=configuration.provider_type,
-        endpoint=configuration.endpoint,
-        model_ref=configuration.model_ref,
-        provider_configuration_digest=configuration.digest,
+        execution_profile_ref=execution_profile_ref,
+        execution_profile_digest=configuration.digest,
         session_disclosure_authority_digest=authority.digest,
         standing_authority_digest=authority.standing_authority_digest,
-        qualification_ref=configuration.qualification_ref,
         maximum_dispatches_per_turn=authority.maximum_dispatches_per_turn,
     )
 

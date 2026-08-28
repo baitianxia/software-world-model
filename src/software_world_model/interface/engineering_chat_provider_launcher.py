@@ -1,7 +1,7 @@
 """Fixed, non-starting composition root for the routed Engineering Chat.
 
-Preparation validates the exact product, Chat, evidence tools, Ark/DeepSeek
-route, per-Provider disclosure authorities, and lazy attempt factory.  It wires
+Preparation validates the exact product, Chat, evidence tools, ordered
+execution profiles, per-Provider disclosure authorities, and lazy attempt factory.  It wires
 the Browser application but deliberately does not open port 8765, create an
 attempt runtime, resolve a credential, read Source, or call a Provider.
 """
@@ -124,13 +124,9 @@ class EngineeringChatProviderAttemptDependencies:
         ):
             _text(value, label)
         if (
-            route.provider_type != configuration.provider_type
-            or route.endpoint != configuration.endpoint
-            or route.model_ref != configuration.model_ref
-            or route.provider_configuration_digest != configuration.digest
+            route.execution_profile_digest != configuration.digest
             or route.session_disclosure_authority_digest
             != session_authority.digest
-            or route.qualification_ref != configuration.qualification_ref
             or session_authority.provider_binding_digest != configuration.digest
             or not callable(getattr(driver, "propose", None))
             or not callable(getattr(reviewer, "review", None))
@@ -202,7 +198,7 @@ class EngineeringChatProviderAttemptFactory:
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "attempt factory requires distinct exact Ark and DeepSeek boundaries",
+                "attempt factory requires distinct exact execution-profile boundaries",
             )
         self.plan = plan
         self.evidence_tool_configuration_digest = (
@@ -258,7 +254,7 @@ class EngineeringChatProviderAttemptFactory:
             )
         dependencies = (
             self.primary
-            if authority.role is EngineeringProviderRouteRole.PRIMARY
+            if authority.role is EngineeringProviderRouteRole.PREFERRED
             else self.fallback
         )
         if dependencies.route_spec_digest != authority.route_spec_digest:
@@ -486,12 +482,8 @@ def prepare_engineering_chat_provider_launcher(
             at=current,
         )
         if (
-            route.provider_type != configuration.provider_type
-            or route.endpoint != configuration.endpoint
-            or route.model_ref != configuration.model_ref
-            or route.provider_configuration_digest != configuration.digest
+            route.execution_profile_digest != configuration.digest
             or route.session_disclosure_authority_digest != authority.digest
-            or route.qualification_ref != configuration.qualification_ref
             or route.maximum_dispatches_per_turn
             != authority.maximum_dispatches_per_turn
             or authority.product_candidate_digest != product_candidate_digest
@@ -524,7 +516,7 @@ def prepare_engineering_chat_provider_launcher(
         turn_executor=router,
     )
     application = EngineeringChatBrowserApplication(service)
-    ordered_types = tuple(item.provider_type for item in route_plan.routes)
+    ordered_types = tuple(item.provider_type for item in configurations)
     configuration_digests = tuple(item.digest for item in configurations)
     authority_digests = tuple(item.digest for item in authorities)
     core = {

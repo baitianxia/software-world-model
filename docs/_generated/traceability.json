@@ -3192,11 +3192,17 @@
       "src/software_world_model/application_services/conversational_engineering_routing.py",
       "src/software_world_model/application_services/engineering_conversation.py",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
-      "src/software_world_model/interface/engineering_chat_session_artifact.py"
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/interface/engineering_chat_provider_launcher.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py"
     ],
     "tests": [
       "tests/test_conversational_engineering_routing.py",
       "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_provider_launcher.py",
+      "tests/test_engineering_chat_provider_runtime.py",
       "tests/test_engineering_chat_session_artifact.py"
     ]
   },

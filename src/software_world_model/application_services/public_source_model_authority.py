@@ -90,7 +90,7 @@ class PublicSourceProviderScope:
                 "public Source Provider scope ordinal is invalid",
             )
         route_role = _text(route_role, "Provider route role")
-        if route_role not in {"PRIMARY", "FALLBACK"}:
+        if route_role not in {"PREFERRED", "PRIMARY", "FALLBACK"}:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "public Source Provider route role is invalid",
@@ -307,7 +307,7 @@ class PublicSourceModelStandingAuthority:
             or any(not isinstance(item, PublicSourceProviderScope) for item in scopes)
             or tuple(item.ordinal for item in scopes)
             != tuple(range(1, len(scopes) + 1))
-            or scopes[0].route_role != "PRIMARY"
+            or scopes[0].route_role not in {"PREFERRED", "PRIMARY"}
             or any(item.route_role != "FALLBACK" for item in scopes[1:])
             or len({item.digest for item in scopes}) != len(scopes)
         ):

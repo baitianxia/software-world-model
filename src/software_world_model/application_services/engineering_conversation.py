@@ -71,7 +71,7 @@ class ConversationTurnState(str, Enum):
 
 
 class EngineeringProviderFailureClassification(str, Enum):
-    """Closed ADR-017 reasons that may authorize one fallback attempt."""
+    """Closed raw execution/application evidence; never fallback authority."""
 
     PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
     PROVIDER_HTTP_ERROR = "PROVIDER_HTTP_ERROR"
@@ -348,6 +348,7 @@ class EngineeringConversationTurn:
     provider_failure_classification: EngineeringProviderFailureClassification | None
     provider_failure_code: str | None
     provider_route_receipt_ref: str | None
+    provider_availability_verdict_ref: str | None
     provider_attempt_receipt_refs: tuple[str, ...]
     fallback_provider_attempt_count: int
     provider_duplicate_cost_risk: bool
@@ -489,6 +490,7 @@ class EngineeringTurnExecutionOutcome:
     provider_failure_classification: EngineeringProviderFailureClassification | None
     provider_failure_code: str | None
     provider_route_receipt_ref: str | None
+    provider_availability_verdict_ref: str | None
     provider_attempt_receipt_refs: tuple[str, ...]
     fallback_provider_attempt_count: int
     provider_duplicate_cost_risk: bool
@@ -518,6 +520,7 @@ class EngineeringTurnExecutionOutcome:
         quality_status: str,
         model_dispatch_receipt_refs: Sequence[str] = (),
         provider_route_receipt_ref: str | None = None,
+        provider_availability_verdict_ref: str | None = None,
         provider_attempt_receipt_refs: Sequence[str] = (),
         fallback_provider_attempt_count: int = 0,
         provider_duplicate_cost_risk: bool = False,
@@ -548,6 +551,9 @@ class EngineeringTurnExecutionOutcome:
             provider_failure_classification=None,
             provider_failure_code=None,
             provider_route_receipt_ref=provider_route_receipt_ref,
+            provider_availability_verdict_ref=(
+                provider_availability_verdict_ref
+            ),
             provider_attempt_receipt_refs=tuple(provider_attempt_receipt_refs),
             fallback_provider_attempt_count=fallback_provider_attempt_count,
             provider_duplicate_cost_risk=provider_duplicate_cost_risk,
@@ -579,6 +585,7 @@ class EngineeringTurnExecutionOutcome:
         provider_failure_classification: EngineeringProviderFailureClassification | None = None,
         provider_failure_code: str | None = None,
         provider_route_receipt_ref: str | None = None,
+        provider_availability_verdict_ref: str | None = None,
         provider_attempt_receipt_refs: Sequence[str] = (),
         fallback_provider_attempt_count: int = 0,
         provider_duplicate_cost_risk: bool = False,
@@ -609,6 +616,9 @@ class EngineeringTurnExecutionOutcome:
             provider_failure_classification=provider_failure_classification,
             provider_failure_code=provider_failure_code,
             provider_route_receipt_ref=provider_route_receipt_ref,
+            provider_availability_verdict_ref=(
+                provider_availability_verdict_ref
+            ),
             provider_attempt_receipt_refs=tuple(provider_attempt_receipt_refs),
             fallback_provider_attempt_count=fallback_provider_attempt_count,
             provider_duplicate_cost_risk=provider_duplicate_cost_risk,
@@ -655,6 +665,7 @@ class EngineeringTurnExecutionOutcome:
             provider_failure_classification=None,
             provider_failure_code=None,
             provider_route_receipt_ref=None,
+            provider_availability_verdict_ref=None,
             provider_attempt_receipt_refs=(),
             fallback_provider_attempt_count=0,
             provider_duplicate_cost_risk=False,
@@ -1199,6 +1210,10 @@ def _validate_execution_outcome(
     route_receipt_ref = _optional_text(
         outcome.provider_route_receipt_ref, "Provider route receipt reference"
     )
+    availability_verdict_ref = _optional_text(
+        outcome.provider_availability_verdict_ref,
+        "execution-profile availability verdict reference",
+    )
     attempt_receipts = tuple(
         _text(item, "Provider attempt receipt reference")
         for item in outcome.provider_attempt_receipt_refs
@@ -1218,6 +1233,7 @@ def _validate_execution_outcome(
                 attempt_receipts
                 or outcome.fallback_provider_attempt_count != 0
                 or outcome.provider_duplicate_cost_risk
+                or availability_verdict_ref is not None
             )
         )
         or (
@@ -1228,6 +1244,14 @@ def _validate_execution_outcome(
         or (
             outcome.provider_duplicate_cost_risk
             and outcome.fallback_provider_attempt_count != 1
+        )
+        or (
+            outcome.fallback_provider_attempt_count == 0
+            and availability_verdict_ref is not None
+        )
+        or (
+            outcome.fallback_provider_attempt_count == 1
+            and availability_verdict_ref is None
         )
     ):
         raise DomainError(
@@ -1402,6 +1426,7 @@ def _validate_execution_outcome(
                 outcome.failure_code,
                 outcome.failure_message,
                 route_receipt_ref,
+                availability_verdict_ref,
             )
             if (
                 outcome.assistant_kind
@@ -1505,7 +1530,7 @@ def _turn(
     completed_at: datetime,
 ) -> EngineeringConversationTurn:
     core = {
-        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@3",
+        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@4",
         "turn_id": request.turn_id.value,
         "result_id": request.result_id.value,
         "conversation_id": request.snapshot_before.conversation.conversation_id.value,
@@ -1549,6 +1574,9 @@ def _turn(
         ),
         "provider_failure_code": outcome.provider_failure_code,
         "provider_route_receipt_ref": outcome.provider_route_receipt_ref,
+        "provider_availability_verdict_ref": (
+            outcome.provider_availability_verdict_ref
+        ),
         "provider_attempt_receipt_refs": outcome.provider_attempt_receipt_refs,
         "fallback_provider_attempt_count": (
             outcome.fallback_provider_attempt_count
@@ -1590,6 +1618,9 @@ def _turn(
         ),
         provider_failure_code=outcome.provider_failure_code,
         provider_route_receipt_ref=outcome.provider_route_receipt_ref,
+        provider_availability_verdict_ref=(
+            outcome.provider_availability_verdict_ref
+        ),
         provider_attempt_receipt_refs=outcome.provider_attempt_receipt_refs,
         fallback_provider_attempt_count=outcome.fallback_provider_attempt_count,
         provider_duplicate_cost_risk=outcome.provider_duplicate_cost_risk,

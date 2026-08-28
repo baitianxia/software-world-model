@@ -146,6 +146,67 @@ class OfflineAgentAdapter:
         )
 
 
+class SequencedLiveAgentAdapter:
+    provider_type = OfflineAgentAdapter.provider_type
+    adapter_version = OfflineAgentAdapter.adapter_version
+
+    def __init__(self, outputs=None) -> None:
+        self.capabilities = ProviderAdapterCapabilities(
+            no_external_access=True,
+            hidden_context_disabled=True,
+            stateless_session=True,
+            structured_output=True,
+            actual_fingerprint_reported=True,
+            conformance_level=AdapterConformanceLevel.LIVE_CURRENT,
+            conformance_result_ref="CC-AGENT-OFFLINE-FIXTURE",
+            qualified_model_fingerprints=("agent-fixture-model@1",),
+        )
+        self.requests = []
+        default_outputs = (
+            "not-json",
+            json.dumps(
+                {
+                    "goal": "登录流程是怎样的？",
+                    "response_language": "zh-CN",
+                    "audience": "software engineer",
+                    "constraints": [],
+                    "resolved_referents": [],
+                    "accepted_correction_message_ids": [],
+                    "superseded_conclusion_refs": [],
+                    "hypotheses": [],
+                    "plan": [],
+                    "observation_ids": [],
+                    "open_items": [],
+                    "phase": "RESPONSE_READY",
+                    "action": None,
+                    "draft": {
+                        "response_kind": "CLARIFICATION",
+                        "content": "请明确登录入口。",
+                        "claims": [],
+                        "boundary_observation_ids": [],
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+        )
+        self.outputs = tuple(outputs) if outputs is not None else default_outputs
+
+    def invoke(self, request):
+        self.requests.append(request)
+        output = self.outputs[len(self.requests) - 1]
+        return AdapterResponse.create(
+            provider_request_id=f"agent-live-request-{len(self.requests)}",
+            actual_model_fingerprint="agent-fixture-model@1",
+            replay_classification=ReplayClassification.PINNED,
+            output_text=output,
+            input_tokens=20,
+            output_tokens=12,
+            usage_complete=True,
+            termination_reason="stop",
+        )
+
+
 class UnusedToolPort:
     def __init__(self) -> None:
         self.requests = []
@@ -230,6 +291,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         failure_code: ErrorCode | None = None,
         authority_binding_digest=None,
         standing_authority: bool = False,
+        adapter=None,
     ):
         binding = _binding()
         configuration = _configuration(self.now)
@@ -268,7 +330,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             configuration=configuration,
             clock=lambda: self.now,
         )
-        adapter = OfflineAgentAdapter(
+        adapter = adapter or OfflineAgentAdapter(
             outcome_unknown=outcome_unknown,
             provider_unavailable=provider_unavailable,
             failure_code=failure_code,
@@ -470,7 +532,142 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "PROVIDER_OUTCOME_UNKNOWN",
         )
 
-    def test_sealed_http_failure_is_fallback_eligible(self) -> None:
+    def test_invalid_output_gets_one_fresh_same_profile_format_repair_call(self) -> None:
+        adapter = SequencedLiveAgentAdapter()
+        service, model, authorizer, _, tool, response = self._service(
+            adapter=adapter
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 3)
+        self.assertEqual(len(submission.turn.model_dispatch_receipt_refs), 3)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(len(model.audits), 3)
+        self.assertEqual(len(authorizer.disclosure_requests), 3)
+        self.assertEqual(len(adapter.requests), 3)
+        self.assertEqual(tool.requests, [])
+        self.assertEqual(len(response.requests), 1)
+        self.assertEqual(
+            model.audits[0].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        )
+        self.assertTrue(model.audits[1].receipt.successful)
+        self.assertTrue(model.audits[2].receipt.successful)
+        self.assertNotEqual(adapter.requests[0].digest, adapter.requests[1].digest)
+        first_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[0].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[1].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        self.assertEqual(first_payload["format_repair_policy"]["attempt"], 0)
+        self.assertEqual(repair_payload["format_repair_policy"]["attempt"], 1)
+        self.assertEqual(
+            repair_payload["format_repair_policy"]["prior_model_call_ref"],
+            model.audits[0].receipt.model_call_ref,
+        )
+        self.assertEqual(
+            repair_payload["format_repair_policy"][
+                "prior_model_call_receipt_ref"
+            ],
+            model.audits[0].receipt.digest.value,
+        )
+        self.assertEqual(
+            repair_payload["format_repair_policy"]["prior_output_text"],
+            "not-json",
+        )
+
+    def test_format_repair_exhaustion_fails_closed_without_request_retry(self) -> None:
+        adapter = SequencedLiveAgentAdapter(
+            outputs=("not-json", "still-not-json")
+        )
+        service, model, _, _, tool, response = self._service(adapter=adapter)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 2)
+        self.assertEqual(len(submission.turn.model_dispatch_receipt_refs), 2)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 0)
+        self.assertEqual(
+            submission.turn.provider_failure_classification,
+            EngineeringProviderFailureClassification.PROVIDER_OUTPUT_INVALID,
+        )
+        self.assertEqual(len(model.audits), 2)
+        self.assertEqual(len(adapter.requests), 2)
+        self.assertNotEqual(adapter.requests[0].digest, adapter.requests[1].digest)
+        self.assertEqual(tool.requests, [])
+        self.assertEqual(response.requests, [])
+
+    def test_reviewer_invalid_output_gets_fresh_same_profile_repair_call(self) -> None:
+        primary_output = SequencedLiveAgentAdapter().outputs[1]
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                primary_output,
+                "Reviewer natural-language analysis",
+                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+            )
+        )
+        service, model, _, _, tool, response = self._service(adapter=adapter)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 3)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(len(adapter.requests), 3)
+        self.assertEqual(
+            model.audits[1].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        )
+        self.assertTrue(model.audits[2].receipt.successful)
+        self.assertNotEqual(adapter.requests[1].digest, adapter.requests[2].digest)
+        reviewer_repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[2].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        self.assertEqual(
+            reviewer_repair_payload["format_repair_policy"]["attempt"], 1
+        )
+        self.assertEqual(
+            reviewer_repair_payload["format_repair_policy"][
+                "prior_output_text"
+            ],
+            "Reviewer natural-language analysis",
+        )
+        self.assertEqual(tool.requests, [])
+        self.assertEqual(len(response.requests), 1)
+
+    def test_sealed_http_failure_is_preserved_as_raw_route_evidence(self) -> None:
         service, model, _, adapter, _, _ = self._service(
             failure_code=ErrorCode.PROVIDER_HTTP_ERROR
         )
@@ -498,7 +695,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ErrorCode.PROVIDER_HTTP_ERROR.value,
         )
 
-    def test_typed_provider_unavailable_is_fallback_eligible(self) -> None:
+    def test_typed_provider_unavailable_is_preserved_as_raw_route_evidence(self) -> None:
         service, model, _, adapter, _, _ = self._service(
             provider_unavailable=True
         )

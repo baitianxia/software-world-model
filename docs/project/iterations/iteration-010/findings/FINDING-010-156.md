@@ -5,8 +5,8 @@ status: dispositioned
 authority: development-evidence
 owners: [application, ai, architecture, quality]
 depends_on: [FINDING-010-154, FINDING-010-155]
-code: [src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/interface/engineering_chat_session_artifact.py]
-tests: [tests/test_conversational_engineering_routing.py, tests/test_conversational_engineering_agent.py, tests/test_engineering_chat_session_artifact.py]
+code: [src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_session_runtime.py]
+tests: [tests/test_conversational_engineering_routing.py, tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py]
 iteration: ITER-010
 classification: system-contract
 scope: systemic
@@ -54,3 +54,18 @@ fallback branch 不得读取这些身份。
 
 本次只纠正权威文档与计划机械门禁，没有修改上述产品代码，也没有运行外部 Provider。当前实现因此被明确标记为不符合新契约；后续开发的第一项
 产品任务是完成通用 route/profile/availability boundary 重构及定向测试，在该 Case PASS 前禁止真实 fallback dispatch 和最终方向 handoff。
+
+## Implementation evidence（2026-08-28）
+
+后续同一活动长动作已完成该处置，不改动作、Result 或计划游标：
+
+- Application route spec/authority/attempt/route receipt 只保留 `PREFERRED/FALLBACK`、execution-profile ref/digest、披露/standing authority 与预算；
+  具体 Provider/model/endpoint/qualification 已移回配置、Adapter 与 runtime receipt 层。首选 profile 的 registered availability owner 及 verdict 被 route plan、
+  logical Turn、exact profile、exact preferred attempt receipt、raw failure 和时间共同绑定；无 verdict、owner 漂移或 malformed verdict 均失败关闭。
+- `PROVIDER_OUTPUT_INVALID` 与 `MODEL_REVIEW_REJECTED` 不再授予 fallback。Primary/Reviewer 结构无效时，模型边界最多创建一次同 profile 的 fresh call，
+  新 input Manifest/request digest/model receipt 均不同，旧 output 作为 untrusted repair input，transport request retry 仍为 0；第二次失败保留两次准确调用并关闭当前 Turn。
+- `tests.test_conversational_engineering_routing` 的 14 个确定性用例覆盖虚拟 profile 身份互换、静态身份分支阻断、raw HTTP/outcome 无 verdict、registered owner、
+  exact unavailable verdict、output-invalid、Reviewer reject、fresh fallback chain 与 duplicate-cost risk。`tests.test_conversational_engineering_model` 覆盖 Primary/Reviewer
+  fresh format repair 和 repair exhaustion；Agent 既有 Finding rewrite 用例证明同 profile 新 Agent/Reviewer call 与 fresh Review。
+- 定向 impact/startup/safety/failure-truthfulness 组合共 95 tests PASS，外部 Provider/network dispatch 0，full regression 0。该证据使
+  `V-MODEL-TRANSPARENT-ROUTING-001` PASS；真实 Session 仍使用 fail-closed availability owner，除非未来取得当前 exact availability verdict，否则不会发起实际 fallback。
