@@ -868,54 +868,50 @@ engineering_cognition_eligibility:
   next_gate_current_runtime_status: automatic-machine-receipt-derivation-not-yet-verified
   status: passed-local-cognition
 
-provider_route_policy_migration:
-  schema: TRUSTED_PARENT_ROUTE_POLICY_MIGRATION@1
-  state: trusted-parent-bridge
-  from_schema: QUALIFIED_PROVIDER_PREFERENCE@1
-  to_schema: QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2
-  plan_revision_ref: ITER-010-PDR-010
-  only_next_change: finalize-model-transparent-route-policy
-  external_dispatch_allowed: false
-
 provider_route_policy:
-  schema: QUALIFIED_PROVIDER_PREFERENCE@1
+  schema: QUALIFIED_EXECUTION_PROFILE_PREFERENCE@2
   preferred_execution_profile_ref: runtime-config:preferred-qualified-profile
   fallback_execution_profile_ref: runtime-config:fallback-qualified-profile
-  fallback_admission_policy_plugin_ref: deepseek_dispatch_admission_policy
-  preferred_model_identity: glm-5-2-260617
-  fallback_model_identity: deepseek-v4-pro
   preference_order:
-    - VOLCENGINE_ARK
-    - DEEPSEEK
-  primary_provider: VOLCENGINE_ARK
-  fallback_provider: DEEPSEEK
-  primary_unavailable_evidence_required: true
-  implementation_gap_counts_as_primary_unavailable: false
-  primary_availability_requires: credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold
+    - preferred
+    - fallback
+  product_control_flow_allowed_inputs: route-role,execution-profile-ref-and-digest,availability-verdict
+  product_control_flow_forbidden_inputs: provider-identity,model-identity
+  verification_case_id: V-MODEL-TRANSPARENT-ROUTING-001
+  fallback_dispatch_requires_verification_pass: true
+  availability_owner: provider-availability-boundary
+  required_fallback_verdict: PREFERRED_EXECUTION_PROFILE_UNAVAILABLE
+  preferred_unavailable_evidence_required: true
+  implementation_gap_counts_as_preferred_unavailable: false
+  preferred_availability_requires: credential-reference-configured-current-exact-conformance-current-exact-strategy-capability-qualification-and-no-active-provider-account-or-model-hold
   route_freeze_time: before-conversation-start-and-before-any-interaction-unit-dispatch
   ordered_routes_preauthorized_at_session_start: true
   ordered_route_disclosure_scopes_preauthorized_at_session_start: true
   transparent_logical_interaction_fallback_allowed: true
   user_resubmission_or_new_session_required: false
-  fallback_requires_primary_attempt_terminal_without_authorized_answer: true
-  fallback_trigger: sealed-primary-attempt-terminal-without-authorized-answer-for-provider-or-model-capability-reason
+  fallback_requires_preferred_attempt_terminal_without_authorized_answer: true
+  fallback_trigger: sealed-provider-availability-verdict:PREFERRED_EXECUTION_PROFILE_UNAVAILABLE
   fallback_eligible_outcomes:
-    - provider-unavailable
-    - provider-http-error
-    - provider-outcome-unknown
-    - provider-output-invalid
-    - model-review-rejected
+    - preferred-execution-profile-unavailable
+  structured_output_invalid_allows_fallback: false
+  model_review_rejected_allows_fallback: false
+  raw_http_or_outcome_without_availability_verdict_allows_fallback: false
   application_source_security_failure_allows_fallback: false
   fallback_reason_classification_required: true
   capability_failure_must_not_be_misclassified_as_unavailable: true
+  structured_output_invalid_recovery: bounded-new-call-on-same-execution-profile-with-new-request-identity-and-receipt
+  model_review_rejected_recovery: bounded-rewrite-new-call-on-same-execution-profile-with-new-request-identity-and-receipt-and-fresh-review
+  same_profile_application_repair_is_transport_request_retry: false
+  same_profile_application_repair_bound: current-interaction-safety-and-no-progress-policy
+  same_profile_application_repair_exhausted_action: fail-current-turn-with-exact-reason-without-fallback
   fallback_attempt_restarts_full_chain: true
   fallback_attempt_inputs: immutable-original-interaction-input-exact-relevant-application-sealed-conversation-context-when-chat-and-exact-cognition
   cross_attempt_intermediate_state_reuse_allowed: false
-  late_primary_result_policy: quarantine-audit-only
-  late_primary_result_overwrite_allowed: false
-  post_dispatch_provider_switch_requires: new-provider-attempt-under-same-logical-interaction-unit-and-preauthorized-route
-  maximum_fallback_provider_attempts: 1
-  same_provider_retry_allowed: false
+  late_preferred_result_policy: quarantine-audit-only
+  late_preferred_result_overwrite_allowed: false
+  post_dispatch_execution_profile_switch_requires: new-fallback-attempt-under-same-logical-interaction-unit-preauthorized-route-and-required-availability-verdict
+  maximum_fallback_execution_profile_attempts: 1
+  transport_request_retry_allowed: false
   outcome_unknown_duplicate_cost_risk_recorded: true
   peak_urgent_override_requires: audited-explicit-override
   cost_can_reduce_answer_quality: false
@@ -924,7 +920,7 @@ provider_route_policy:
   unchanged_current_conformance_reuse_required: true
 
 execution_profile_configurations:
-  schema: MODEL_TRANSPARENT_EXECUTION_PROFILES@1
+  schema: MODEL_TRANSPARENT_EXECUTION_PROFILES@2
   preferred:
     execution_profile_ref: runtime-config:preferred-qualified-profile
     provider_identity: VOLCENGINE_ARK
@@ -933,6 +929,7 @@ execution_profile_configurations:
     execution_profile_ref: runtime-config:fallback-qualified-profile
     provider_identity: DEEPSEEK
     model_identity: deepseek-v4-pro
+    admission_policy_plugin_ref: deepseek_dispatch_admission_policy
 
 deepseek_dispatch_admission_policy:
   schema: DEEPSEEK_DISPATCH_ADMISSION@1
