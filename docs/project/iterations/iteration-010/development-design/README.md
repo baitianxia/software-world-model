@@ -19,7 +19,8 @@ coding_input: true
 新的开发对话直接执行完整体验版开发。Manifest v2 为可信父提交连续性保留机器 ID
 `ITER-010-ACTION-USER-PLAN-RECOVERY-001`，但当前 Case 已是 `V-MVP-EXPERIENCE-001`，不再表示 recovery 或 Activation。该动作允许跨提交
 持续实现产品、运行受影响模块测试、执行 current public mall standing scope 内的模型调用并做真实 loopback 浏览器体验；普通失败保持在同一
-动作内，先归因再做一次通用修复，不因调用次数或测试未全过停止。
+动作内，先归因再做一次通用修复，不因调用次数或测试未全过停止。run-045 已证明 standing authority runtime chain 与新 Conversation
+隔离，但主链答案质量失败；`FINDING-010-155` 已完成一次通用 Source 最后槽位修复，fresh successor 仍待 live 复验。
 
 | Slice | 状态 | 目的 | 进入条件 |
 |---|---|---|---|

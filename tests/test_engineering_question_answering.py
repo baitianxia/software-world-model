@@ -65,6 +65,7 @@ from software_world_model.cross_cutting import (
     DomainError,
     ErrorCode,
     StableId,
+    digest_of,
 )
 from software_world_model.interface.engineering_qa_source import (
     LocalGitEvidenceClassProfile,
@@ -2196,6 +2197,74 @@ class Service {
             "LOCATOR_NOT_ISSUED_BY_CURRENT_LEDGER",
         )
         self.assertIsNone(compilation.operation)
+
+    def test_broker_reserves_last_file_slot_for_an_unread_locator(self):
+        req = request()
+        cognition = CognitionProjector().project(request=req)
+        ledger = EvidenceLedger.start(request=req, cognition=cognition)
+        operation_id = sid("source_operation", "4")
+        item = RetrievalItem.create(
+            operation_id=operation_id,
+            ordinal=1,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            path="src/LoginService.java",
+            content="final class LoginService {}",
+            modality="SOURCE_SEARCH_MATCH",
+            coverage_complete=False,
+            line_start=1,
+            line_end=1,
+        )
+        ledger = ledger.append(
+            kind=LedgerEntryKind.SOURCE_RESULT,
+            subject_id="retrieval_result_" + "5" * 32,
+            subject_digest=digest_of("last-slot-search-result"),
+            references=(operation_id.value, item.item_id.value),
+            details={"status": RetrievalStatus.PARTIAL.value},
+        )
+        input_stub = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": sid("investigation_attempt", "6"),
+                "role_context_id": sid("role_context", "7"),
+                "step_index": 2,
+                "request": req,
+            },
+        )()
+        proposal = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            query="generateToken",
+        )
+        usage = EngineeringQuestionResourceUsage(source_files=63)
+        broker = SourceBroker(source_profile=source_profile())
+
+        reserved = broker.compile(
+            request=req,
+            proposal=proposal,
+            ledger=ledger,
+            locator_catalog={item.locator_reference: item},
+            usage=usage,
+        )
+
+        self.assertEqual(reserved.decision.status.value, "REJECTED")
+        self.assertEqual(
+            reserved.decision.reason_code,
+            "SOURCE_SEARCH_READ_SLOT_RESERVED",
+        )
+        self.assertIsNone(reserved.operation)
+
+        no_locator = broker.compile(
+            request=req,
+            proposal=proposal,
+            ledger=ledger,
+            locator_catalog={},
+            usage=usage,
+        )
+        self.assertEqual(no_locator.decision.status.value, "AUTHORIZED")
+        self.assertEqual(no_locator.operation.maximum_files, 1)
 
     def test_broker_authorizes_request_bound_required_path_locator_without_search(self):
         req = request()

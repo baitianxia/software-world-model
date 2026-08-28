@@ -863,6 +863,7 @@ def _append_resource_receipt(
         field_name: str(getattr(usage, field_name))
         for field_name in usage.__dataclass_fields__
     }
+    details["maximum_source_files"] = str(request.limits.maximum_source_files)
     receipt_digest = digest_of(
         [
             "ENGINEERING_QA_RESOURCE_RECEIPT@1",

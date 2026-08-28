@@ -3173,6 +3173,19 @@
       "tests/test_engineering_chat_session_artifact.py"
     ]
   },
+  "FINDING-010-155": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-155.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_answering.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -5264,6 +5277,7 @@
       "tests/test_structure_publication.py",
       "tests/test_maven_structure_update.py",
       "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_question_answering.py",
       "tests/test_conversational_engineering_tools.py",
       "tests/test_conversational_engineering_model.py"
     ]

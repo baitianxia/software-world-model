@@ -3766,6 +3766,20 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-154.md"
   },
   {
+    "id": "FINDING-010-155",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "source",
+      "application",
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-155.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -7200,7 +7214,8 @@
       "DD-SRC-SOURCE-ARTIFACT",
       "FINDING-010-108",
       "FINDING-010-110",
-      "FINDING-010-112"
+      "FINDING-010-112",
+      "FINDING-010-155"
     ],
     "path": "docs/system/contracts/source/source-artifact.md"
   },

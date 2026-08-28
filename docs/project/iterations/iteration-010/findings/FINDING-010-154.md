@@ -51,7 +51,18 @@ Session `@3` 可以装载并运行，但不能证明人工重复审批请求为 
 4. launch/terminal/public status 显示 parent/Session digest 和 `human_approval_request_count=0`。旧 `@1—@3` 保持 exact-human-delta 只读兼容，
    不取得新 preparation 状态。
 
-本地正向、伪造 authority、Source upstream/clean/tree、Provider scope、预算、过期、Turn parent 和 one-use call parent 测试已通过。该处置只证明
-`PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE`；current mall `@4` artifact、真实 Provider dispatch、terminal reconciliation、
-Citation 与 Browser 体验仍未执行，`V-PUBLIC-OSS-AUTHORITY-001` 和 `V-MVP-EXPERIENCE-001` 保持 `NOT-RUN / blocking`。本地 message digest
-与配置仍不是平台认证签名或不可绕过的远端 trust root。
+本地正向、伪造 authority、Source upstream/clean/tree、Provider scope、预算、过期、Turn parent 和 one-use call parent 测试已通过。
+
+## Live evidence
+
+`run-045-mvp-experience` 随后以 current public mall exact commit/tree 和 Artifact Session `@4` 完成真实 preparation、loopback Browser 与
+terminal reconciliation。preparation 状态为 `PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE`；2 个 Conversation、4 个 Turn
+累计派生 28 个 one-use dispatch receipt（Ark 7、DeepSeek 21），retry 0、human approval request 0、Production 0。standing parent、exact
+public-Source Session child、Turn attempt 与 role receipt 均进入 launch/terminal audit；terminal digest 为
+`sha256:00ad46545e8d31699ace4ff1f7fa8b6b8cf662a04e86f480698684f1cbf9914f`。结合既有 scope-drift/expiry/consume 负测，
+`V-PUBLIC-OSS-AUTHORITY-001` 的 runtime claim 已有正负向证据。
+
+这不追认产品体验质量：主 Conversation 的 Turn 2/3 失败，最早可修复偏差见 `FINDING-010-155`；因此 `V-MVP-EXPERIENCE-001`、
+`V-CHAT-EXPERIENCE-001` 和质量 Cases 仍未通过。Manifest 中 `runtime_implementation_status / verification_status` 是可信父冻结的
+pre-execution planning scalar，按 plan gate 保持原值，不能由候选自报执行成功；actual 状态由本 Finding 和 Verification Matrix 记录。
+本地 message digest 与配置仍不是平台认证签名或不可绕过的远端 trust root。

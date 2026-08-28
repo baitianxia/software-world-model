@@ -748,6 +748,96 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             locator_reference,
         )
 
+        resource_details = tuple(
+            sorted(
+                {
+                    "maximum_source_files": "64",
+                    "source_files": "63",
+                }.items()
+            )
+        )
+        resource_subject_digest = digest_of(
+            ["test-source-resource-receipt", resource_details]
+        )
+        resource_entry_core = {
+            "ledger_id": ledger_ref,
+            "sequence": 1,
+            "kind": "RESOURCE_RECEIPT",
+            "subject_id": "resource_receipt_" + "8" * 32,
+            "subject_digest": resource_subject_digest.value,
+            "references": (),
+            "details": resource_details,
+            "previous_entry_digest": None,
+        }
+        resource_source_digest = digest_of(
+            ["EVIDENCE_LEDGER_ENTRY@1", resource_entry_core]
+        )
+        resource_entry = EngineeringAgentLedgerEntryReceipt.create(
+            sequence=1,
+            kind="RESOURCE_RECEIPT",
+            subject_ref=resource_entry_core["subject_id"],
+            subject_digest=resource_subject_digest,
+            references=(),
+            details=resource_details,
+            previous_entry_digest=None,
+            source_entry_digest=resource_source_digest,
+        )
+        budget_receipt = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=EngineeringAgentToolAuthorityKind.SOURCE,
+            turn_request_digest=capture.request.request_digest,
+            tool_request_digest=authority_receipt.tool_request_digest,
+            evidence_request_digest=evidence_request_digest,
+            repository_revision=capture.request.binding.repository_revision,
+            evidence_digest=authority_receipt.evidence_digest,
+            ledger_ref=ledger_ref,
+            ledger_generation=1,
+            ledger_parent_seal_digest=None,
+            ledger_prefix_digest=digest_of(
+                [
+                    "EVIDENCE_LEDGER_PREFIX@1",
+                    ledger_ref,
+                    evidence_request_digest.value,
+                    1,
+                    None,
+                    (resource_source_digest.value,),
+                ]
+            ),
+            ledger_entries=(resource_entry,),
+            citations=authority_receipt.citations,
+        )
+        reserved_invocation = replace(
+            invocation,
+            observations=(
+                replace(observation, authority_receipt=budget_receipt),
+            ),
+        )
+        reserved_view = _primary_input_view(reserved_invocation)
+        self.assertEqual(
+            tuple(item["operation"] for item in reserved_view["tool_catalog"]),
+            ("SOURCE_READ",),
+        )
+        reserved_search_payload = {
+            **payload,
+            "action": {
+                "operation": "SOURCE_SEARCH",
+                "arguments": [
+                    {"name": "evidence_class", "value": "SOURCE"},
+                    {"name": "query", "value": "generateToken"},
+                ],
+                "evidence_need": "search after a locator is already available",
+            },
+        }
+        with self.assertRaises(DomainError) as reserved_search:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(reserved_search_payload),
+                invocation=reserved_invocation,
+                model_call_ref="reserved-source-read-slot-call",
+            )
+        self.assertEqual(
+            reserved_search.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
         prior_read = EngineeringAgentToolActionProposal.create(
             operation=EngineeringAgentToolOperation.SOURCE_READ,
             arguments=(("locator_reference", locator_reference),),

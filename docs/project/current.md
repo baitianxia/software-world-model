@@ -40,8 +40,12 @@ Activation、Freeze、分钟收据、阶段 Result 或新的 standing-scope 人�
 - 答案失败先沿“世界模型构建/投影 → Agent 调查/综合 → Evidence/Review → Chat/Web”找最早偏差；只做一次最小通用修复，并复验原失败与两个异质案例。不得按题面、工程、关键词、符号、类或方法加特判。
 - 首次体验前只运行改动相关测试、启动 smoke、安全与失败真实性检查；full regression 不得延迟第一次完整浏览器体验。
 - 当前公开 mall exact revision 和既有披露/预算/路线属于 standing scope。每个真实 dispatch 仍由 runtime 自动派生 one-use exact receipt；只有来源、revision policy、账户、披露、预算或路线准入出现真实 scope delta 才申请新授权。
-- `FINDING-010-154` 已把 Artifact Session `@4` 的 standing→exact Session→Turn attempt→one-use call receipt 形成本地确定性候选；current
-  actual artifact、真实 dispatch 与 Browser 仍未执行，不能把该状态写成 live PASS。
+- `FINDING-010-154` 的 Artifact Session `@4` 已在 run-045 实际派生 standing→exact Session→Turn attempt→28 个 one-use call receipt；
+  terminal 对账为 human approval request 0、retry 0、Production 0，`V-PUBLIC-OSS-AUTHORITY-001` 已有 live PASS 证据。Manifest 的 NOT-RUN
+  字段是可信父冻结的 planning scalar，不允许候选用自述改写。
+- run-045 主 Conversation 的 Turn 2/3 质量失败，不能作为首次可操作完整主链交付；`FINDING-010-155` 已将 first divergence 归因到
+  Source 最后文件槽位，并用不增加预算的 model-catalog + Broker 双层通用修复处置。fresh successor Browser 复验仍待执行，不封存 Result、
+  不移动游标。
 - 模型配置对产品流程透明；产品代码只能读取 `preferred/fallback` route role、execution-profile ref/digest 和独立可用性结论，禁止按具体
   Provider/model 身份形成动作、分支或质量标准。具体身份只存在于 execution profile 配置与运行收据。
 - 备用路线只在 Provider availability boundary 密封 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` 后可用。结构化输出无效和 Reviewer

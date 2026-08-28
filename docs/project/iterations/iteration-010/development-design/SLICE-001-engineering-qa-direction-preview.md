@@ -10,7 +10,7 @@ tests: [tests]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-010
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155]
 current_scheduling_finding_ref: FINDING-010-139
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -36,7 +36,8 @@ Manifest 当前动作的 path allowlist、forbid list 与 locks 是唯一机械�
 ## Current vs expected behavior
 
 当前可复用资产包括 loopback Chat Access、Conversation/Turn 骨架、主工程 Agent 候选、世界模型 Cognition、受控 Source、Evidence/
-Citation、独立 Review、模型路线组合和历史失败 trace；它们尚未共同证明一个可供普通用户持续体验的完整 MVP。
+Citation、独立 Review、模型路线组合和历史失败 trace。run-045 已把这些组件放入同一真实 Browser 链，并证明 standing authority runtime
+与新 Conversation 隔离；但主 Conversation 的第二、三 Turn 失败，尚未共同证明一个可供普通用户持续体验的完整 MVP。
 
 期望行为是同一真实浏览器路径完成：
 
@@ -169,7 +170,8 @@ Review、A5 current Codex 严格质量、A6 语义多轮必须在当前候选可
 
 ## Findings
 
-当前纠偏由 [FINDING-010-153](../findings/FINDING-010-153.md) 和
-[PDR-010](../decisions/PDR-010-complete-mvp-vertical-slice.md) 拥有。既有实现/运行发现与失败证据继续在
+当前计划纠偏由 [FINDING-010-153](../findings/FINDING-010-153.md) 和
+[PDR-010](../decisions/PDR-010-complete-mvp-vertical-slice.md) 拥有；当前 live authority 与 Source 最后槽位实现发现分别由
+[FINDING-010-154](../findings/FINDING-010-154.md) 和 [FINDING-010-155](../findings/FINDING-010-155.md) 处置。既有实现/运行发现与失败证据继续在
 [Findings index](../findings/README.md) 和 [Results index](../results/README.md) 中保留，不在本当前执行卡重复展开。后续发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 处置。

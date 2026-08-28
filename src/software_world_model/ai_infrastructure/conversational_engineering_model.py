@@ -2498,6 +2498,18 @@ def _effective_available_operations(
     )
     terminal_source_denial = policy["terminal_source_denial_reason"] is not None
     source_read_available = bool(policy["source_read_options"])
+    source_file_budget = _latest_source_file_budget(invocation)
+    source_files_exhausted = (
+        source_file_budget is not None
+        and source_file_budget[0] >= source_file_budget[1]
+    )
+    source_search_read_slot_reserved = (
+        source_file_budget is not None
+        and source_file_budget[0] == source_file_budget[1] - 1
+        and source_read_available
+        and EngineeringAgentToolOperation.SOURCE_READ
+        in invocation.available_operations
+    )
     return tuple(
         operation
         for operation in invocation.available_operations
@@ -2510,10 +2522,68 @@ def _effective_available_operations(
             and terminal_source_denial
         )
         and not (
+            operation
+            in {
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            }
+            and source_files_exhausted
+        )
+        and not (
+            operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+            and source_search_read_slot_reserved
+        )
+        and not (
             operation is EngineeringAgentToolOperation.SOURCE_READ
             and not source_read_available
         )
     )
+
+
+def _latest_source_file_budget(
+    invocation: EngineeringAgentInvocation,
+) -> tuple[int, int] | None:
+    latest: tuple[int, int, int, int] | None = None
+    for observation in invocation.observations:
+        receipt = observation.authority_receipt
+        if (
+            receipt is None
+            or receipt.authority_kind
+            is not EngineeringAgentToolAuthorityKind.SOURCE
+        ):
+            continue
+        for entry in receipt.ledger_entries:
+            if entry.kind != "RESOURCE_RECEIPT":
+                continue
+            details = dict(entry.details)
+            if "maximum_source_files" not in details:
+                continue
+            try:
+                source_files = int(details["source_files"])
+                maximum_source_files = int(details["maximum_source_files"])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source resource receipt lacks a valid file budget",
+                ) from exc
+            if (
+                source_files < 0
+                or maximum_source_files < 1
+                or source_files > maximum_source_files
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source resource receipt file budget is inconsistent",
+                )
+            candidate = (
+                receipt.ledger_generation,
+                entry.sequence,
+                source_files,
+                maximum_source_files,
+            )
+            if latest is None or candidate[:2] > latest[:2]:
+                latest = candidate
+    return None if latest is None else latest[2:]
 
 
 def _trusted_action_view(

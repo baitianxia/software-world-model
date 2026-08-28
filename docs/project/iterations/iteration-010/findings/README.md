@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, ITER-010-PDR-010]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, ITER-010-PDR-010]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,9 +12,13 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-155](FINDING-010-155.md)：run-045 在 `63/64` 且已有未读 locator 时仍向模型暴露 SEARCH，第三次搜索吞掉最后槽位并使
+  exact READ 失败。Resource receipt、动态 tool catalog 与 Broker backstop 现共同保留最后 READ；`56 + 7 + 1 = 64` 定向回归 PASS，
+  run-045 质量失败保持不变，fresh Browser successor 待复验。
 - [FINDING-010-154](FINDING-010-154.md)：Artifact Session `@3` 仍把 exact machine receipt 绑定为逐 run user-message grant，未实现
   `SYS-ADR-019` 的 standing parent；`@4` 现重验公开 upstream/clean exact commit-tree/license object，并派生 exact Session、Turn attempt
-  与 one-use call authority chain。正负向本地测试 PASS；current actual artifact、真实 dispatch 与 Browser 仍为 NOT-RUN。
+  与 one-use call authority chain。正负向本地测试及 run-045 的 28 个真实 dispatch/terminal 对账均 PASS，人工重复审批请求为 0；
+  产品答案质量仍 FAIL。
 - [FINDING-010-153](FINDING-010-153.md)：PDR-009 动作图没有 fresh 用户方向的可达治理出口，导致用户明确调整计划后既不能继续旧动作也不能合法修订；
   一次性 recovery Result 只恢复了采纳 PDR-010 的治理能力，PDR-010 已用可跨提交的完整体验开发动作和显式用户方向分支完成处置，不再设置
   rotating slot、分钟收据或整份 Manifest 摘要门禁。

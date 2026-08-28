@@ -2599,6 +2599,25 @@ class SourceBroker:
                 reason="EVIDENCE_CLASS_BYTE_FUSE_EXHAUSTED",
             )
         remaining_files = request.limits.maximum_source_files - usage.source_files
+        if (
+            source_operation is SourceReadOperation.SEARCH
+            and remaining_files == 1
+            and any(
+                operation
+                in {SourceReadOperation.READ, SourceReadOperation.PARSE}
+                for operation in request.registered_operations
+            )
+            and _has_unread_locator_resource(
+                ledger=ledger,
+                locator_catalog=locator_catalog,
+            )
+        ):
+            return self._reject(
+                request=request,
+                proposal=proposal,
+                ledger=ledger,
+                reason="SOURCE_SEARCH_READ_SLOT_RESERVED",
+            )
         maximum_files = min(remaining_files, 64)
         if source_operation is SourceReadOperation.SEARCH:
             # A directory scan and a whole-Turn read budget are different fuses.
@@ -2848,6 +2867,33 @@ def _duplicates_prior_action_intent(
         ):
             return True
     return False
+
+
+def _has_unread_locator_resource(
+    *,
+    ledger: EvidenceLedger,
+    locator_catalog: Mapping[StableId, RetrievalItem],
+) -> bool:
+    catalog_by_reference = {
+        reference.value: item for reference, item in locator_catalog.items()
+    }
+    attempted_paths: set[str] = set()
+    for entry in ledger.entries:
+        if entry.kind is not LedgerEntryKind.INVESTIGATION_PROPOSAL:
+            continue
+        details = dict(entry.details)
+        if details.get("operation") not in {
+            InvestigationOperation.READ.value,
+            InvestigationOperation.PARSE.value,
+        }:
+            continue
+        locator_reference = details.get("locator_reference")
+        item = catalog_by_reference.get(locator_reference)
+        if item is not None:
+            attempted_paths.add(item.path)
+    return any(
+        item.path not in attempted_paths for item in locator_catalog.values()
+    )
 
 
 def _eligible_locator_references(
@@ -8345,6 +8391,7 @@ class EngineeringQuestionAnsweringService:
             field: str(getattr(usage, field))
             for field in usage.__dataclass_fields__
         }
+        details["maximum_source_files"] = str(request.limits.maximum_source_files)
         receipt_digest = digest_of(
             [
                 "ENGINEERING_QA_RESOURCE_RECEIPT@1",

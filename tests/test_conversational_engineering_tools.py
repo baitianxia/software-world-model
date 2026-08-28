@@ -376,6 +376,78 @@ class FiveTurnLiteralSearchDriver:
         )
 
 
+class TwoSearchThenReadDriver:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def propose(self, invocation):
+        self.calls += 1
+        if self.calls == 1:
+            return proposal(
+                invocation,
+                call_ref="two-search-read-1",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        ("evidence_class", EngineeringEvidenceClass.SOURCE.value),
+                        ("query", "LoginService"),
+                    ),
+                    evidence_need="locate the login service",
+                ),
+            )
+        if self.calls == 2:
+            return proposal(
+                invocation,
+                call_ref="two-search-read-2",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        ("evidence_class", EngineeringEvidenceClass.SOURCE.value),
+                        ("query", "token"),
+                    ),
+                    evidence_need="locate the related token implementation",
+                ),
+            )
+        if self.calls == 3:
+            locator = next(
+                observation.citation_refs[0]
+                for observation in invocation.observations
+                if observation.operation
+                is EngineeringAgentToolOperation.SOURCE_SEARCH
+                and observation.disposition
+                is EngineeringAgentEvidenceDisposition.SUPPORT
+                and observation.citation_refs
+            )
+            return proposal(
+                invocation,
+                call_ref="two-search-read-3",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_READ,
+                    arguments=(("locator_reference", locator),),
+                    evidence_need="use the reserved slot for the exact source",
+                ),
+            )
+        support = tuple(
+            item.observation_id
+            for item in invocation.observations
+            if item.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+        )
+        return proposal(
+            invocation,
+            call_ref="two-search-read-4",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="登录服务和 token 生成的精确源码已读取。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="最后一个文件槽位用于精确源码读取。",
+                        support_observation_ids=support,
+                    ),
+                ),
+            ),
+        )
+
+
 class RawPathReadDriver:
     def propose(self, invocation):
         return proposal(
@@ -706,6 +778,8 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             )
             self.assertEqual(search_usage["source_files"], "56")
             self.assertEqual(read_usage["source_files"], "57")
+            self.assertEqual(search_usage["maximum_source_files"], "64")
+            self.assertEqual(read_usage["maximum_source_files"], "64")
             current = submission.snapshot
 
         self.assertEqual(driver.previous_state_revisions, [None, 3, 6, 9, 12])
@@ -819,6 +893,72 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
         self.assertEqual(search_usage["source_files"], "56")
         self.assertEqual(final_read_usage["source_files"], "59")
+
+    def test_two_searches_preserve_the_last_slot_for_an_exact_read(self) -> None:
+        source_root = self.repository / "src/main/java/example"
+        source_root.mkdir(parents=True)
+        for index in range(70):
+            (source_root / f"AUnrelated{index:02d}.java").write_text(
+                f"final class AUnrelated{index:02d} {{}}\n",
+                encoding="utf-8",
+            )
+        (source_root / "LoginService.java").write_text(
+            "final class LoginService { String token() { return \"token\"; } }\n",
+            encoding="utf-8",
+        )
+        self.git("add", "src/main/java")
+        self.git("commit", "-q", "-m", "two-search source fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.configuration = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name="fixture",
+            response_language="zh-CN",
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.profile.profile_ref,
+            source_profile_digest=self.profile.profile_digest,
+            world_model_read_authority_digest=self.world_authority,
+            source_allowlist=("README.md", "src/main/java"),
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.profile,
+        )
+        driver = TwoSearchThenReadDriver()
+        reviewer = RecordingReviewer()
+        service = self.service(driver, reviewer)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录后 token 是怎么生成的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(driver.calls, 4)
+        package = reviewer.requests[-1].package
+        support = package.support_observations
+        observations = (*support, *package.boundary_observations)
+        source_file_usage = {
+            dict(observation.authority_receipt.ledger_entries[-1].details)[
+                "source_files"
+            ]
+            for observation in observations
+        }
+        self.assertEqual(source_file_usage, {"56", "63", "64"})
+        self.assertTrue(
+            all(
+                dict(observation.authority_receipt.ledger_entries[-1].details)[
+                    "maximum_source_files"
+                ]
+                == "64"
+                for observation in observations
+            )
+        )
+        self.assertIn("LoginService.java", support[-1].content)
 
     def test_configuration_rejects_allowlist_that_contains_resources(self) -> None:
         with self.assertRaises(DomainError):
