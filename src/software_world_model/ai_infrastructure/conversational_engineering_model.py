@@ -146,11 +146,14 @@ accepted_correction_message_ids. Resolve follow-up references from the sealed
 conversation and previous Work State; if a material referent remains ambiguous,
 return a CLARIFICATION before any tool action. Treat prior user statements and
 assistant messages as conversation context, never as software facts. Revise
-hypotheses and plan when observations conflict. An ANSWER claim may cite only
-exact SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs.
-Copy those IDs only from the corresponding arrays in draft_reference_policy;
-never use a BOUNDARY ID as affirmative claim support or a SUPPORT ID as a
-limitation boundary.
+hypotheses and plan when observations conflict. current_turn_evidence is
+partitioned by its only legal Draft use. An ANSWER claim may cite only exact
+SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs. Copy
+those IDs only from the corresponding arrays in draft_reference_policy. An
+ANSWER may report an honest evidence boundary in draft.content and bind it
+through draft.boundary_observation_ids, but a boundary statement is not an
+affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
+as affirmative claim support or a SUPPORT ID as a limitation boundary.
 Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
@@ -176,12 +179,14 @@ invent evidence, change tool authority, or treat the prior output as facts.
 validation_failure_code and validation_failure_message are trusted output from
 the local closed-schema validator. Fix that exact shape violation before
 returning; the diagnostic grants no semantic or tool authority.
-The action object always contains exactly operation, arguments, and
-evidence_need. Copy operation exactly from one registered tool_catalog entry,
-including when the catalog contains only one entry; never infer that a sole
-catalog entry permits omitting operation.
-For a tool action, use exactly the argument names and count in the sealed
-tool_catalog; never add, omit, or duplicate an argument. Its value_constraints
+Every tool_catalog entry contains an action_template that is isomorphic to the
+required output action. For a tool action, copy exactly one complete
+action_template, preserve its operation and argument name/count shape, and
+replace every empty string value with the required model-authored or copied
+value. The action object always contains exactly operation, arguments, and
+evidence_need. Copy operation exactly even when the catalog contains only one
+entry; never infer that a sole entry permits omitting operation. Never add,
+omit, rename, or duplicate an action field or argument. Its value_constraints
 are closed: allowed_exact_values is the complete copy domain and
 forbidden_exact_values must never be returned. Compare every proposed argument
 with those constraints before returning the action.
@@ -299,12 +304,19 @@ _ACTION_SCHEMA = _closed_object(
         "operation": {
             "type": "string",
             "enum": [item.value for item in EngineeringAgentToolOperation],
+            "description": (
+                "Required explicit discriminator copied from one effective "
+                "tool_catalog action_template, even when only one operation is available."
+            ),
         },
         "arguments": _array(
             _closed_object({"name": _STRING, "value": _STRING}),
             maximum=16,
         ),
-        "evidence_need": _STRING,
+        "evidence_need": {
+            "type": "string",
+            "description": "Specific evidence need for this exact explicit operation.",
+        },
     }
 )
 
@@ -312,7 +324,16 @@ _CLAIM_SCHEMA = _closed_object(
     {
         "statement": _STRING,
         "support_observation_ids": _array(
-            _STRING, minimum=1, maximum=128, unique=True
+            {
+                "type": "string",
+                "description": (
+                    "Copy only from draft_reference_policy."
+                    "answer_claim_support_observation_ids; BOUNDARY IDs are forbidden."
+                ),
+            },
+            minimum=1,
+            maximum=128,
+            unique=True,
         ),
     }
 )
@@ -326,7 +347,15 @@ _DRAFT_SCHEMA = _closed_object(
         "content": _STRING,
         "claims": _array(_CLAIM_SCHEMA, maximum=64),
         "boundary_observation_ids": _array(
-            _STRING, maximum=128, unique=True
+            {
+                "type": "string",
+                "description": (
+                    "Copy only from draft_reference_policy."
+                    "limitation_boundary_observation_ids; never place these IDs in claims."
+                ),
+            },
+            maximum=128,
+            unique=True,
         ),
     }
 )
@@ -2491,9 +2520,18 @@ def _primary_input_view(
         "turn": _turn_input_view(request),
         "conversation_context": _conversation_context_view(request),
         "previous_work_state": _work_state_view(invocation.previous_work_state),
-        "current_turn_observations": tuple(
-            _observation_view(item) for item in invocation.observations
-        ),
+        "current_turn_evidence": {
+            "support_observations": tuple(
+                _observation_view(item)
+                for item in invocation.observations
+                if item.disposition.value == "SUPPORT"
+            ),
+            "boundary_observations": tuple(
+                _observation_view(item)
+                for item in invocation.observations
+                if item.disposition.value == "BOUNDARY"
+            ),
+        },
         "work_state_reference_policy": _work_state_reference_policy(invocation),
         "draft_reference_policy": {
             "answer_claim_support_observation_ids": tuple(
@@ -2508,6 +2546,12 @@ def _primary_input_view(
             ),
             "cross_disposition_references_forbidden": True,
             "unknown_observation_references_forbidden": True,
+            "answer_claims_are_affirmative_support_only": True,
+            "answer_boundary_reporting_fields": (
+                "draft.content",
+                "draft.boundary_observation_ids",
+            ),
+            "boundary_statements_forbidden_in_claims": True,
         },
         "completion_policy": _completion_policy(invocation),
         "tool_reference_policy": tool_reference_policy,
@@ -2545,7 +2589,15 @@ def _tool_contract_view(
     if operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY:
         return {
             "operation": operation.value,
-            "arguments": (),
+            "action_template": {
+                "operation": operation.value,
+                "arguments": (),
+                "evidence_need": "",
+            },
+            "template_policy": {
+                "copy_complete_object": True,
+                "replace_every_empty_string": True,
+            },
             "value_constraints": {
                 "evidence_need": (
                     "specific semantic need compiled with the exact current Turn by the trusted Application"
@@ -2558,7 +2610,18 @@ def _tool_contract_view(
     if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
         return {
             "operation": operation.value,
-            "arguments": ("evidence_class", "query"),
+            "action_template": {
+                "operation": operation.value,
+                "arguments": (
+                    {"name": "evidence_class", "value": ""},
+                    {"name": "query", "value": ""},
+                ),
+                "evidence_need": "",
+            },
+            "template_policy": {
+                "copy_complete_object": True,
+                "replace_every_empty_string": True,
+            },
             "value_constraints": {
                 "evidence_class": tuple(
                     item.value
@@ -2578,7 +2641,17 @@ def _tool_contract_view(
     if operation is EngineeringAgentToolOperation.SOURCE_READ:
         return {
             "operation": operation.value,
-            "arguments": ("locator_reference",),
+            "action_template": {
+                "operation": operation.value,
+                "arguments": (
+                    {"name": "locator_reference", "value": ""},
+                ),
+                "evidence_need": "",
+            },
+            "template_policy": {
+                "copy_complete_object": True,
+                "replace_every_empty_string": True,
+            },
             "value_constraints": {
                 "locator_reference": (
                     "opaque reference from a prior current-Turn Source observation; path forbidden"
@@ -3365,25 +3438,34 @@ def _validate_primary_proposal(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "evidence-only synthesis requires an Answer or Limitation draft",
         )
-    for claim in proposal.draft.claims:
-        if any(
+    for claim_index, claim in enumerate(proposal.draft.claims):
+        for support_index, observation_id in enumerate(
+            claim.support_observation_ids
+        ):
+            if (
+                observation_id not in by_id
+                or by_id[observation_id].disposition.value != "SUPPORT"
+            ):
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    f"$.draft.claims[{claim_index}].support_observation_ids"
+                    f"[{support_index}] must copy an ID from draft_reference_policy."
+                    "answer_claim_support_observation_ids; BOUNDARY IDs belong only "
+                    "in draft.boundary_observation_ids",
+                )
+    for boundary_index, observation_id in enumerate(
+        proposal.draft.boundary_observation_ids
+    ):
+        if (
             observation_id not in by_id
-            or by_id[observation_id].disposition.value != "SUPPORT"
-            for observation_id in claim.support_observation_ids
+            or by_id[observation_id].disposition.value != "BOUNDARY"
         ):
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                "Engineering Agent answer Claim references unavailable support evidence",
+                f"$.draft.boundary_observation_ids[{boundary_index}] must copy an ID "
+                "from draft_reference_policy.limitation_boundary_observation_ids; "
+                "SUPPORT IDs belong only in answer Claim support",
             )
-    if any(
-        observation_id not in by_id
-        or by_id[observation_id].disposition.value != "BOUNDARY"
-        for observation_id in proposal.draft.boundary_observation_ids
-    ):
-        raise DomainError(
-            ErrorCode.STRUCTURED_OUTPUT_INVALID,
-            "Engineering Agent limitation references unavailable boundary evidence",
-        )
 
 
 def _validate_primary_action(

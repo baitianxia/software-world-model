@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, ITER-010-PDR-010, ITER-010-PDR-011]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-166](FINDING-010-166.md)：run-052/053 原始输入证明模型可见 tool signature 与 closed action 不同形，SUPPORT/BOUNDARY
+  内容也未就地分区，分别对应参数错形/遗漏 operation 与跨 disposition Claim 引用。现改为完整 action copy template、用途分区 evidence
+  和带 exact path 的语义诊断；Application 仍不补字段、不改标证据，74 项受影响测试 PASS，fresh Browser successor 待验证。
 - [FINDING-010-165](FINDING-010-165.md)：通用 plan gate 曾把 PDR-011 sealing action 的“禁止新外调”与 Result 对 PDR-010 历史 19 次 Ark
   调用的“运行对账”混为一谈。现只对 exact @3 failure packet 允许历史 external counters，其他 non-external action、错误 schema 与非零
   full regression 继续失败关闭；该治理修正必须先成为 trusted parent，Result 后置重建。

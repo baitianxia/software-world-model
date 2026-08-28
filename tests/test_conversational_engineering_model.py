@@ -414,7 +414,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             authorizer.disclosure_requests[0].disclosed_leaf_paths,
         )
         self.assertIn(
-            "$.tool_catalog[1].arguments[0]",
+            "$.tool_catalog[1].action_template.arguments[0].name",
             authorizer.disclosure_requests[0].disclosed_leaf_paths,
         )
         self.assertEqual(len(adapter.requests), 1)
@@ -441,6 +441,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "The action object always contains exactly operation, arguments, and",
             rendered,
         )
+        self.assertIn("action_template", rendered)
+        self.assertIn("copy exactly one complete", rendered)
         self.assertIn("never infer that a sole", rendered)
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertNotIn("literal or semantic search proposal", rendered)
@@ -703,6 +705,147 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             tuple(item["operation"] for item in repair_payload["tool_catalog"]),
             ("WORLD_MODEL_QUERY",),
+        )
+        self.assertEqual(
+            repair_payload["tool_catalog"][0]["action_template"],
+            {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": [],
+                "evidence_need": "",
+            },
+        )
+
+    def test_format_repair_identifies_cross_disposition_claim_reference(self) -> None:
+        capture = CapturingTurnExecutor()
+        capture_service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = capture_service.create_conversation()
+        capture_service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="说明登录链，并明确当前证据边界。",
+        )
+        support = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'1' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'2' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="support-result",
+            content="sealed affirmative support",
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("support-evidence"),
+            digest=digest_of("support-observation"),
+        )
+        boundary = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'3' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'4' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="boundary-result",
+            content="sealed evidence boundary",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("boundary-evidence"),
+            digest=digest_of("boundary-observation"),
+        )
+        base = {
+            "goal": "说明登录链",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [
+                support.observation_id.value,
+                boundary.observation_id.value,
+            ],
+            "open_items": [],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "ANSWER",
+                "content": "当前证据支持登录链；运行时边界仍未知。",
+                "claims": [
+                    {
+                        "statement": "当前证据支持登录链。",
+                        "support_observation_ids": [
+                            boundary.observation_id.value
+                        ],
+                    }
+                ],
+                "boundary_observation_ids": [boundary.observation_id.value],
+            },
+        }
+        repaired = json.loads(json.dumps(base))
+        repaired["draft"]["claims"][0]["support_observation_ids"] = [
+            support.observation_id.value
+        ]
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(json.dumps(base), json.dumps(repaired))
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
+        result = model.propose(
+            EngineeringAgentInvocation(
+                request=capture.request,
+                previous_work_state=None,
+                observations=(support, boundary),
+                review_findings=(),
+                review_digest=None,
+                available_operations=(
+                    EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                ),
+            )
+        )
+
+        self.assertEqual(
+            result.proposal.draft.claims[0].support_observation_ids,
+            (support.observation_id,),
+        )
+        self.assertEqual(len(result.prior_receipts), 1)
+        repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[1].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        diagnostic = repair_payload["format_repair_policy"][
+            "validation_failure_message"
+        ]
+        self.assertIn(
+            "$.draft.claims[0].support_observation_ids[0]",
+            diagnostic,
+        )
+        self.assertIn("answer_claim_support_observation_ids", diagnostic)
+        self.assertIn("BOUNDARY IDs belong only", diagnostic)
+        self.assertEqual(
+            tuple(
+                item["observation_id"]
+                for item in repair_payload["current_turn_evidence"][
+                    "support_observations"
+                ]
+            ),
+            (support.observation_id.value,),
+        )
+        self.assertEqual(
+            tuple(
+                item["observation_id"]
+                for item in repair_payload["current_turn_evidence"][
+                    "boundary_observations"
+                ]
+            ),
+            (boundary.observation_id.value,),
         )
 
     def test_format_repair_exhaustion_fails_closed_without_request_retry(self) -> None:
@@ -997,6 +1140,27 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         rendered_tools = {
             item["operation"]: item for item in rendered_invocation["tool_catalog"]
         }
+        self.assertEqual(
+            rendered_tools["SOURCE_SEARCH"]["action_template"],
+            {
+                "operation": "SOURCE_SEARCH",
+                "arguments": (
+                    {"name": "evidence_class", "value": ""},
+                    {"name": "query", "value": ""},
+                ),
+                "evidence_need": "",
+            },
+        )
+        self.assertEqual(
+            rendered_tools["SOURCE_READ"]["action_template"],
+            {
+                "operation": "SOURCE_READ",
+                "arguments": (
+                    {"name": "locator_reference", "value": ""},
+                ),
+                "evidence_need": "",
+            },
+        )
         self.assertEqual(
             rendered_invocation["completion_policy"]["allowed_response_kinds"],
             ("ANSWER", "CLARIFICATION"),
@@ -1481,7 +1645,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         rendered = _primary_input_view(invocation)
         world_model = rendered["tool_catalog"][0]
         self.assertEqual(world_model["operation"], "WORLD_MODEL_QUERY")
-        self.assertEqual(world_model["arguments"], ())
+        self.assertEqual(
+            world_model["action_template"],
+            {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": (),
+                "evidence_need": "",
+            },
+        )
         self.assertIn("evidence_need", world_model["value_constraints"])
 
         payload = {
@@ -1800,7 +1971,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             tool_evidence_digest=digest_of("boundary-evidence"),
             digest=digest_of("boundary-observation"),
         )
-        policy_view = _primary_input_view(
+        primary_view = _primary_input_view(
             EngineeringAgentInvocation(
                 request=capture.request,
                 previous_work_state=None,
@@ -1811,7 +1982,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
                 ),
             )
-        )["draft_reference_policy"]
+        )
+        policy_view = primary_view["draft_reference_policy"]
+        current_evidence = primary_view["current_turn_evidence"]
+        self.assertEqual(
+            tuple(
+                item["observation_id"]
+                for item in current_evidence["support_observations"]
+            ),
+            (support_observation.observation_id.value,),
+        )
+        self.assertEqual(
+            tuple(
+                item["observation_id"]
+                for item in current_evidence["boundary_observations"]
+            ),
+            (boundary_observation.observation_id.value,),
+        )
         self.assertEqual(
             policy_view,
             {
@@ -1823,6 +2010,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 ),
                 "cross_disposition_references_forbidden": True,
                 "unknown_observation_references_forbidden": True,
+                "answer_claims_are_affirmative_support_only": True,
+                "answer_boundary_reporting_fields": (
+                    "draft.content",
+                    "draft.boundary_observation_ids",
+                ),
+                "boundary_statements_forbidden_in_claims": True,
             },
         )
         payload = {
