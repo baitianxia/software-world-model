@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture]
 depends_on: [SYS-PRODUCT-VISION, SYS-ADR-017, SYS-ADR-019]
-derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140]
+derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140, FINDING-010-156]
 code: [src/software_world_model]
 tests: [tests]
 ---

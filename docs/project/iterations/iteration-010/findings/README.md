@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, ITER-010-PDR-010]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, ITER-010-PDR-010]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-156](FINDING-010-156.md)：run-045 的 Ark 7 次 TLS/credential/HTTP 均成功，2 次完整响应仅因输出合同无效被拒，却触发了
+  备用路线；现已把 availability-only fallback、同 profile 新调用和模型透明路由写入系统契约与机械门禁。现有产品路由仍固定具体
+  Provider 且按任意失败分类回退，已明确为下一项 blocking 通用重构，PASS 前禁止真实 fallback dispatch。
 - [FINDING-010-155](FINDING-010-155.md)：run-045 在 `63/64` 且已有未读 locator 时仍向模型暴露 SEARCH，第三次搜索吞掉最后槽位并使
   exact READ 失败。Resource receipt、动态 tool catalog 与 Broker backstop 现共同保留最后 READ；`56 + 7 + 1 = 64` 定向回归 PASS，
   run-045 质量失败保持不变，fresh Browser successor 待复验。

@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [security, architecture]
 depends_on: [SYS-ARCH-INVARIANTS, SYS-ADR-017, SYS-ADR-018, SYS-ADR-019]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-008, FINDING-010-009, FINDING-010-011, FINDING-010-012, FINDING-010-029, FINDING-010-031, FINDING-010-070, FINDING-010-071, FINDING-010-073, FINDING-010-092, FINDING-010-093, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/source_integration, src/software_world_model/application_services/citation_projection.py, src/software_world_model/application_services/engineering_question_answering.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/infrastructure/file_structure_read_bundle.py, src/software_world_model/infrastructure/file_citation_observation_store.py, src/software_world_model/interface, validation/structure_world_model_iteration_003/isolation, validation/structure_world_model_iteration_003/g3b, validation/structure_world_model_iteration_007/slice1_live_evaluator.py, validation/structure_world_model_iteration_008/slice1_live_evaluator.py]
 tests: [tests]
 ---
