@@ -8,6 +8,7 @@ import unittest
 from software_world_model.application_services.engineering_conversation import (
     ConversationMessageKind,
     EngineeringChatBinding,
+    EngineeringTurnCitation,
     EngineeringTurnExecutionOutcome,
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
@@ -123,6 +124,9 @@ class EngineeringChatBrowserTests(unittest.TestCase):
             "value.capabilities.semantic_agent_execution",
             script["body"].decode(),
         )
+        self.assertIn("turnEvidenceNode", script["body"].decode())
+        self.assertIn("fresh Review", script["body"].decode())
+        self.assertIn("citation.locator", script["body"].decode())
 
         value = self.value(health)
         self.assertEqual(value["status"], "READY")
@@ -138,6 +142,14 @@ class EngineeringChatBrowserTests(unittest.TestCase):
             def execute(self, request):
                 work_state_digest = digest_of(
                     {"work_state": request.request_digest.value}
+                )
+                citation = EngineeringTurnCitation.create(
+                    citation_ref="citation-ref",
+                    evidence_class="SOURCE",
+                    source_revision=request.binding.repository_revision,
+                    locator="src/main/java/example/LoginService.java:L10-L18",
+                    modality="JAVA_SOURCE",
+                    content_digest=digest_of("exact-source-content"),
                 )
                 return EngineeringTurnExecutionOutcome.succeeded(
                     request_digest=request.request_digest,
@@ -157,6 +169,7 @@ class EngineeringChatBrowserTests(unittest.TestCase):
                     delivery_authorization_ref="delivery-ref",
                     provider_dispatch_count=2,
                     quality_status="ACCEPTED",
+                    citations=(citation,),
                 )
 
         binding = EngineeringChatBinding.create(
@@ -187,6 +200,9 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         )
         value = self.value(response)
 
+        self.assertEqual(
+            value["schema"], "ENGINEERING_CHAT_CONVERSATION_PROJECTION@2"
+        )
         self.assertEqual(health["implementation_scope"], "CONVERSATIONAL_AGENT_EXECUTOR")
         self.assertTrue(health["capabilities"]["semantic_agent_execution"])
         self.assertTrue(health["provider"]["external_dispatch"])
@@ -196,6 +212,29 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertEqual(value["messages"][-1]["kind"], "ANSWER")
         self.assertEqual(value["context"]["work_state_ref"], "work-state-ref")
         self.assertEqual(value["submitted_turn"]["work_state_revision"], 1)
+        self.assertEqual(
+            value["submitted_turn"]["citations"],
+            [
+                {
+                    "citation_ref": "citation-ref",
+                    "evidence_class": "SOURCE",
+                    "source_revision": "b" * 40,
+                    "locator": "src/main/java/example/LoginService.java:L10-L18",
+                    "modality": "JAVA_SOURCE",
+                    "content_digest": digest_of(
+                        "exact-source-content"
+                    ).value,
+                    "digest": EngineeringTurnCitation.create(
+                        citation_ref="citation-ref",
+                        evidence_class="SOURCE",
+                        source_revision="b" * 40,
+                        locator="src/main/java/example/LoginService.java:L10-L18",
+                        modality="JAVA_SOURCE",
+                        content_digest=digest_of("exact-source-content"),
+                    ).digest.value,
+                }
+            ],
+        )
         after = self.value(self.call("GET", "/health"))
         self.assertEqual(after["statistics"]["provider_dispatch_count"], 2)
 

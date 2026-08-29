@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -115,5 +115,7 @@ projector 与 Source Broker/Worker，并把 support/boundary Observation、可�
 `EVIDENCE_TOOLS_LOCAL_CANDIDATE`；该证据只来自确定性 World Model fixture 与临时 Git exact search/read。单 Provider primary Agent/fresh
 Reviewer 的 separate no-tools Prompt、closed role input/output、逐 dispatch exact Disclosure/Gateway receipt、失败计数和 non-dispatching
 candidate preflight 又形成 `MODEL_BOUNDARY_LOCAL_CANDIDATE`；成功输出仅由 pure decoder fixture 证明，真实 Gateway 测试使用的 offline
-Adapter 被明确拒绝为非 live。ADR-017 双 Provider fallback、真实 Adapter/transport、Citation browser projection、产品 fixed launcher
-wiring 与五轮 Chat 仍为 `NOT_INTEGRATED / NOT_QUALIFIED / NOT_LIVE`。
+Adapter 被明确拒绝为非 live。后续实现已把 Draft 实际引用的 authority Citation 接入不可变 Turn Result 与 Browser expandable projection，
+形成 `CITATION_BROWSER_PROJECTION_LOCAL_CANDIDATE`；它尚待新的 exact product identity 在真实三轮 Browser successor 中复验，不能由本地
+fixture 追认为 live 或质量合格。双 Provider、真实 transport、fixed launcher 与后续 Chat 的 current 集成/执行状态以 Engineering
+Conversation 合同的“当前配置实例与历史实现证据”为准，本段早期 deterministic fixture 不单独拥有其状态。

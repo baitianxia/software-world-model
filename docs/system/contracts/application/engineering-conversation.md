@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -146,8 +146,18 @@ no-progress failure 关闭。
    Model/Source query 就地投影为对应 tool argument 的 `forbidden_exact_values`，把未使用 Source locator 投影为 Source Read argument 的
    exhaustive `allowed_exact_values`；这些 model-facing 值不能取代 Application 从原 action history 与 authority receipt 的重算。
    `completion_policy.allowed_response_kinds` 也是 exhaustive current-Turn domain：没有 SUPPORT 不得列 `ANSWER`，没有 BOUNDARY 不得列
-   `LIMITATION`；旧 Answer 的总结、改写或收窄仍须 current-Turn Evidence。Decoder 必须独立检查 response kind 与 Claim/Boundary copy
-   domain。已执行 live 基线的 model strategy/prompt/Primary input identity 为 `conversational-engineering-agent@6`、
+   `LIMITATION`；当前 World Model 已形成 BOUNDARY、但第一次受权 Source follow-up 仍可执行且尚未尝试时，也不得列 `LIMITATION`。若
+   Source Search 已返回未读取的 opaque locator，则在第一次 Source Read 前继续禁止该 Limitation；一次实际 Read、一次没有可读 option 的
+   Search、terminal Source denial 或 effective Source operation 不存在后，才可按 current BOUNDARY 重新开放。该规则不强制读取全部文件，
+   不把 Source availability 提升为证据，也不阻止 current SUPPORT 已完整解决目标时直接提交 Answer。旧 Answer 的总结、改写或收窄仍须
+   current-Turn Evidence。Decoder 必须从原 action history、Observation、authority receipt 和 effective catalog 独立重算 response kind 与
+   Claim/Boundary copy domain。
+
+   成功 Turn 的不可变 Result 还必须只投影 Draft 实际引用的 Observation 所签发的 ordered unique Citation；每项保留 evidence class、exact
+   source revision、locator、modality、content digest、Citation ref 与 authority digest。未被 Claim/boundary 引用的 Package Citation 不得顺带
+   暴露，identity 不一致必须在浏览器投影前失败关闭。Browser 必须在对应助手消息下提供可展开 Citation，并同时显示本 Turn 的 Evidence
+   Package、Answer、fresh Review 与 Delivery Authorization reference；展开只读取已密封 Turn projection，不发起新的 Source operation。
+   已执行 live 基线的 model strategy/prompt/Primary input identity 为 `conversational-engineering-agent@6`、
    `conversational-engineering-agent-no-tools-prompt@6` 和 `ENGINEERING_AGENT_PRIMARY_INPUT@6`；产品 Conversation protocol 仍为
    `CONVERSATIONAL_ENGINEERING_AGENT@1`。
 3. 每个可交付工程 Draft 至少经过一个 fresh、与主 Agent 隔离的独立 Reviewer。前述 deterministic empty-context input clarification 不是

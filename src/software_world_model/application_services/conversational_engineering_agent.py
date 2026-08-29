@@ -29,6 +29,7 @@ from .engineering_conversation import (
     ConversationMessageKind,
     ConversationTurnState,
     EngineeringConversationTurnExecutor,
+    EngineeringTurnCitation,
     EngineeringTurnExecutionOutcome,
     EngineeringTurnExecutionRequest,
     EngineeringProviderFailureClassification,
@@ -2512,6 +2513,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             request.snapshot_before.context.included_user_message_ids,
             request.user_message.message_id,
         )
+        citations = _draft_citations(package=package, draft=draft)
         return EngineeringTurnExecutionOutcome.succeeded(
             request_digest=request.request_digest,
             assistant_kind=kind,
@@ -2531,6 +2533,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             provider_dispatch_count=provider_dispatch_count,
             model_dispatch_receipt_refs=model_dispatch_receipt_refs,
             quality_status=quality,
+            citations=citations,
         )
 
     def _failed_outcome(
@@ -2722,6 +2725,87 @@ def _package_matches_observations(
         package.support_observations == support
         and package.boundary_observations == boundary
     )
+
+
+def _draft_citations(
+    *,
+    package: EngineeringAgentEvidencePackage,
+    draft: EngineeringAgentAnswerDraft,
+) -> tuple[EngineeringTurnCitation, ...]:
+    """Project only authority Citations reached by the delivered Draft."""
+
+    referenced_observation_ids: list[StableId] = []
+    for claim in draft.claims:
+        for observation_id in claim.support_observation_ids:
+            if observation_id not in referenced_observation_ids:
+                referenced_observation_ids.append(observation_id)
+    for observation_id in draft.boundary_observation_ids:
+        if observation_id not in referenced_observation_ids:
+            referenced_observation_ids.append(observation_id)
+
+    observations = {
+        item.observation_id: item
+        for item in (
+            *package.support_observations,
+            *package.boundary_observations,
+        )
+    }
+    projected_by_ref: dict[str, EngineeringTurnCitation] = {}
+    projected: list[EngineeringTurnCitation] = []
+    for observation_id in referenced_observation_ids:
+        observation = observations.get(observation_id)
+        if observation is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Draft Citation projection references an unknown Observation",
+            )
+        if not observation.citation_refs:
+            continue
+        receipt = observation.authority_receipt
+        if receipt is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Draft Citation projection lacks an authority receipt",
+            )
+        authority_citations = {
+            item.citation_ref: item for item in receipt.citations
+        }
+        if len(authority_citations) != len(receipt.citations):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Citation authority receipt contains duplicate references",
+            )
+        for citation_ref in observation.citation_refs:
+            citation = authority_citations.get(citation_ref)
+            if citation is None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Observation Citation is absent from its authority receipt",
+                )
+            turn_citation = EngineeringTurnCitation.create(
+                citation_ref=citation.citation_ref,
+                evidence_class=citation.evidence_class,
+                source_revision=citation.source_revision,
+                locator=citation.locator,
+                modality=citation.modality,
+                content_digest=citation.content_digest,
+            )
+            if turn_citation.digest != citation.digest:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Turn Citation projection changed the authority identity",
+                )
+            previous = projected_by_ref.get(citation_ref)
+            if previous is not None:
+                if previous != turn_citation:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "Turn Citation reference resolves to inconsistent identities",
+                    )
+                continue
+            projected_by_ref[citation_ref] = turn_citation
+            projected.append(turn_citation)
+    return tuple(projected)
 
 
 def _append_unique(values: Sequence[StableId], value: StableId) -> tuple[StableId, ...]:

@@ -664,6 +664,25 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
         self.assertIn("README.md", support[1].content)
         self.assertIn("issuing a token", support[1].content)
+        self.assertGreaterEqual(len(submission.turn.citations), 2)
+        self.assertEqual(
+            tuple(item.source_revision for item in submission.turn.citations),
+            (self.revision,) * len(submission.turn.citations),
+        )
+        self.assertTrue(
+            any("README.md" in item.locator for item in submission.turn.citations)
+        )
+        receipt_citations = {
+            item.citation_ref: item
+            for observation in support
+            for item in observation.authority_receipt.citations
+        }
+        for citation in submission.turn.citations:
+            authority_citation = receipt_citations[citation.citation_ref]
+            self.assertEqual(citation.evidence_class, authority_citation.evidence_class)
+            self.assertEqual(citation.locator, authority_citation.locator)
+            self.assertEqual(citation.content_digest, authority_citation.content_digest)
+            self.assertEqual(citation.digest, authority_citation.digest)
 
     def test_raw_path_read_is_rejected_before_retrieval(self) -> None:
         reviewer = RecordingReviewer()

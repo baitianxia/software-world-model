@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 from threading import Event, Thread
 import unittest
@@ -12,6 +13,7 @@ from software_world_model.application_services.engineering_conversation import (
     ConversationNotFoundError,
     ConversationTurnState,
     EngineeringChatBinding,
+    EngineeringTurnCitation,
     EngineeringTurnExecutionOutcome,
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
@@ -478,6 +480,71 @@ class EngineeringConversationTests(unittest.TestCase):
             first.snapshot.context.work_state_digest,
         )
         self.assertEqual(second.snapshot.conversation.revision, Revision(3))
+
+    def test_tampered_turn_citation_fails_closed_before_projection(self) -> None:
+        class TamperedCitationExecutor:
+            def execute(self, request):
+                citation = EngineeringTurnCitation.create(
+                    citation_ref="citation-ref",
+                    evidence_class="SOURCE",
+                    source_revision=request.binding.repository_revision,
+                    locator="README.md:L1-L2",
+                    modality="REPOSITORY_DOCUMENT",
+                    content_digest=digest_of("source-content"),
+                )
+                citation = replace(citation, locator="README.md:L9")
+                return EngineeringTurnExecutionOutcome.succeeded(
+                    request_digest=request.request_digest,
+                    assistant_kind=ConversationMessageKind.ANSWER,
+                    assistant_content="候选答案。",
+                    included_user_message_ids=(request.user_message.message_id,),
+                    accepted_correction_message_ids=(),
+                    reviewed_conclusion_refs=("answer-ref",),
+                    superseded_conclusion_refs=(),
+                    reducer_status="EXECUTED_APPLICATION_SEALED",
+                    work_state_ref="work-state-ref",
+                    work_state_revision=Revision(1),
+                    work_state_digest=digest_of("work-state"),
+                    evidence_package_ref="package-ref",
+                    answer_ref="answer-ref",
+                    review_ref="review-ref",
+                    delivery_authorization_ref="delivery-ref",
+                    provider_dispatch_count=2,
+                    quality_status="ACCEPTED",
+                    citations=(citation,),
+                )
+
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of("world-model"),
+            source_profile_ref="source-profile@1",
+            source_access_status=RuntimeCapabilityStatus.READY,
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route@1",
+            known_limitations=("Alpha only",),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=TamperedCitationExecutor(),
+            id_generator=SequentialIdGenerator(),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="解释当前行为",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(
+            submission.turn.failure_code,
+            "TURN_EXECUTOR_PROTOCOL_VIOLATION",
+        )
+        self.assertEqual(submission.turn.citations, ())
 
 
 if __name__ == "__main__":

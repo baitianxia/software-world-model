@@ -497,6 +497,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("copy exactly one complete", rendered)
         self.assertIn("never infer that a sole", rendered)
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
+        self.assertIn(
+            "source_follow_up_required_before_limitation", rendered
+        )
         self.assertNotIn("literal or semantic search proposal", rendered)
         self.assertNotIn("AGENT_FIXTURE_API_KEY", rendered)
         self.assertNotIn(authorizer.session_authority.digest.value, rendered)
@@ -1693,6 +1696,122 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ]
         )
 
+    def test_world_model_boundary_requires_first_available_source_follow_up(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="确认当前源码中的失败副作用",
+        )
+        world_action = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            arguments=(),
+            evidence_need="identify the failure-side-effect boundary",
+        )
+        world_boundary = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'1' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'2' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="world-model-gap",
+            content="The requested side effect is outside current cognition.",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("world-boundary-evidence"),
+            digest=digest_of("world-boundary-observation"),
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(world_boundary,),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ),
+            action_history=(world_action,),
+        )
+
+        completion = _primary_input_view(invocation)["completion_policy"]
+        self.assertTrue(
+            completion["source_follow_up_required_before_limitation"]
+        )
+        self.assertEqual(completion["allowed_response_kinds"], ("CLARIFICATION",))
+
+        limitation = {
+            "goal": "确认当前源码中的失败副作用",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [world_boundary.observation_id.value],
+            "open_items": [],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "LIMITATION",
+                "content": "当前 World Model 证据不足。",
+                "claims": [],
+                "boundary_observation_ids": [
+                    world_boundary.observation_id.value
+                ],
+            },
+        }
+        with self.assertRaises(DomainError) as premature:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(limitation),
+                invocation=invocation,
+                model_call_ref="premature-limitation",
+            )
+        self.assertEqual(
+            premature.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
+        )
+
+        source_action = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            arguments=(("evidence_class", "SOURCE"), ("query", "side effect")),
+            evidence_need="locate exact source for the failure side effect",
+        )
+        source_boundary = replace(
+            world_boundary,
+            observation_id=StableId(f"observation_{'3' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'4' * 32}"),
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            result_ref="source-search-gap",
+            content="The bounded Source search found no readable result.",
+            tool_evidence_digest=digest_of("source-boundary-evidence"),
+            digest=digest_of("source-boundary-observation"),
+        )
+        after_source_search = replace(
+            invocation,
+            observations=(world_boundary, source_boundary),
+            action_history=(world_action, source_action),
+        )
+        completion = _primary_input_view(after_source_search)[
+            "completion_policy"
+        ]
+        self.assertFalse(
+            completion["source_follow_up_required_before_limitation"]
+        )
+        self.assertEqual(
+            completion["allowed_response_kinds"],
+            ("CLARIFICATION", "LIMITATION"),
+        )
+
     def test_evidence_only_synthesis_is_a_response_only_model_contract(self) -> None:
         capture = CapturingTurnExecutor()
         service = InMemoryEngineeringConversationService(
@@ -1731,6 +1850,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "tool_action_required": False,
                 "draft_required": True,
                 "allowed_response_kinds": (),
+                "source_follow_up_required_before_limitation": False,
                 "new_evidence_claim_forbidden": True,
                 "answer_requires_current_turn_support": True,
                 "limitation_requires_current_turn_boundary": True,

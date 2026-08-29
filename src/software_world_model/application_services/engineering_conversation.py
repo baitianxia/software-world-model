@@ -320,6 +320,62 @@ class EngineeringConversationMessage:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringTurnCitation:
+    """Application projection of an exact Citation used by the delivered Draft."""
+
+    citation_ref: str
+    evidence_class: str
+    source_revision: str
+    locator: str
+    modality: str
+    content_digest: Digest
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        citation_ref: str,
+        evidence_class: str,
+        source_revision: str,
+        locator: str,
+        modality: str,
+        content_digest: Digest,
+    ) -> "EngineeringTurnCitation":
+        if not isinstance(content_digest, Digest):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Citation content digest is invalid",
+            )
+        core = {
+            # Preserve the authority-owned Citation identity while avoiding an
+            # Application -> Agent module dependency cycle.
+            "schema": "ENGINEERING_AGENT_CITATION@1",
+            "citation_ref": _text(citation_ref, "Citation reference"),
+            "evidence_class": _text(
+                evidence_class, "Citation evidence class"
+            ),
+            "source_revision": _git_revision(
+                source_revision, "Citation source revision"
+            ),
+            "locator": _bounded_text(
+                locator, "Citation locator", maximum_bytes=4_096
+            ),
+            "modality": _text(modality, "Citation modality"),
+            "content_digest": content_digest.value,
+        }
+        return cls(
+            citation_ref=core["citation_ref"],
+            evidence_class=core["evidence_class"],
+            source_revision=core["source_revision"],
+            locator=core["locator"],
+            modality=core["modality"],
+            content_digest=content_digest,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringConversationTurn:
     turn_id: StableId
     result_id: StableId
@@ -339,6 +395,7 @@ class EngineeringConversationTurn:
     answer_ref: str | None
     review_ref: str | None
     delivery_authorization_ref: str | None
+    citations: tuple[EngineeringTurnCitation, ...]
     work_state_ref: str | None
     work_state_revision: Revision | None
     work_state_digest: Digest | None
@@ -485,6 +542,7 @@ class EngineeringTurnExecutionOutcome:
     answer_ref: str | None
     review_ref: str | None
     delivery_authorization_ref: str | None
+    citations: tuple[EngineeringTurnCitation, ...]
     provider_dispatch_count: int
     model_dispatch_receipt_refs: tuple[str, ...]
     provider_failure_classification: EngineeringProviderFailureClassification | None
@@ -524,6 +582,7 @@ class EngineeringTurnExecutionOutcome:
         provider_attempt_receipt_refs: Sequence[str] = (),
         fallback_provider_attempt_count: int = 0,
         provider_duplicate_cost_risk: bool = False,
+        citations: Sequence[EngineeringTurnCitation] = (),
     ) -> "EngineeringTurnExecutionOutcome":
         return cls(
             request_digest=request_digest,
@@ -546,6 +605,7 @@ class EngineeringTurnExecutionOutcome:
             answer_ref=answer_ref,
             review_ref=review_ref,
             delivery_authorization_ref=delivery_authorization_ref,
+            citations=tuple(citations),
             provider_dispatch_count=provider_dispatch_count,
             model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
             provider_failure_classification=None,
@@ -611,6 +671,7 @@ class EngineeringTurnExecutionOutcome:
             answer_ref=answer_ref,
             review_ref=review_ref,
             delivery_authorization_ref=None,
+            citations=(),
             provider_dispatch_count=provider_dispatch_count,
             model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
             provider_failure_classification=provider_failure_classification,
@@ -660,6 +721,7 @@ class EngineeringTurnExecutionOutcome:
             answer_ref=None,
             review_ref=None,
             delivery_authorization_ref=None,
+            citations=(),
             provider_dispatch_count=0,
             model_dispatch_receipt_refs=(),
             provider_failure_classification=None,
@@ -1311,6 +1373,33 @@ def _validate_execution_outcome(
         (outcome.failure_message, "failure message"),
     ):
         _optional_text(value, label)
+    citations = tuple(outcome.citations)
+    citation_refs: list[str] = []
+    for citation in citations:
+        if not isinstance(citation, EngineeringTurnCitation):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Turn Citation projection is untyped",
+            )
+        expected_citation = EngineeringTurnCitation.create(
+            citation_ref=citation.citation_ref,
+            evidence_class=citation.evidence_class,
+            source_revision=citation.source_revision,
+            locator=citation.locator,
+            modality=citation.modality,
+            content_digest=citation.content_digest,
+        )
+        if citation != expected_citation:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Turn Citation projection identity is inconsistent",
+            )
+        citation_refs.append(citation.citation_ref)
+    if len(citation_refs) != len(set(citation_refs)):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Turn Citation references must be unique",
+        )
     _text(outcome.reducer_status, "Context reducer status")
     _text(outcome.quality_status, "quality status")
     application_clarification = (
@@ -1444,6 +1533,7 @@ def _validate_execution_outcome(
                 or attempt_receipts
                 or outcome.fallback_provider_attempt_count != 0
                 or outcome.provider_duplicate_cost_risk
+                or citations
             ):
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -1499,6 +1589,7 @@ def _validate_execution_outcome(
             or not outcome.failure_message
             or outcome.delivery_authorization_ref is not None
             or outcome.quality_status != "NOT_ACCEPTED"
+            or citations
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -1530,7 +1621,7 @@ def _turn(
     completed_at: datetime,
 ) -> EngineeringConversationTurn:
     core = {
-        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@4",
+        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@5",
         "turn_id": request.turn_id.value,
         "result_id": request.result_id.value,
         "conversation_id": request.snapshot_before.conversation.conversation_id.value,
@@ -1549,6 +1640,9 @@ def _turn(
         "answer_ref": outcome.answer_ref,
         "review_ref": outcome.review_ref,
         "delivery_authorization_ref": outcome.delivery_authorization_ref,
+        "citations": tuple(
+            (item.citation_ref, item.digest.value) for item in outcome.citations
+        ),
         "work_state_ref": outcome.work_state_ref,
         "work_state_revision": (
             outcome.work_state_revision.value
@@ -1607,6 +1701,7 @@ def _turn(
         answer_ref=outcome.answer_ref,
         review_ref=outcome.review_ref,
         delivery_authorization_ref=outcome.delivery_authorization_ref,
+        citations=outcome.citations,
         work_state_ref=outcome.work_state_ref,
         work_state_revision=outcome.work_state_revision,
         work_state_digest=outcome.work_state_digest,
@@ -1725,6 +1820,20 @@ def _text(value: str, label: str) -> str:
     return value
 
 
+def _bounded_text(value: str, label: str, *, maximum_bytes: int) -> str:
+    if not isinstance(value, str) or not value or value != value.strip():
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"{label} must be non-empty without surrounding whitespace",
+        )
+    if len(value.encode("utf-8")) > maximum_bytes:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"{label} exceeds its UTF-8 boundary",
+        )
+    return value
+
+
 __all__ = [
     "ConversationContext",
     "ConversationLifecycleState",
@@ -1743,6 +1852,7 @@ __all__ = [
     "EngineeringConversationSnapshot",
     "EngineeringConversationTurnExecutor",
     "EngineeringConversationTurn",
+    "EngineeringTurnCitation",
     "EngineeringTurnExecutionOutcome",
     "EngineeringTurnExecutionRequest",
     "EngineeringTurnSubmission",

@@ -164,6 +164,11 @@ or CLARIFICATION, and never imply that more evidence was obtained.
 completion_policy.allowed_response_kinds is the exhaustive response domain for
 this invocation, not a list of examples. ANSWER is absent until current-Turn
 SUPPORT exists, and LIMITATION is absent until a current-Turn BOUNDARY exists.
+When completion_policy.source_follow_up_required_before_limitation is true, a
+current World Model boundary still has its first authorized Source follow-up
+available. Do not return LIMITATION. Either return a fully SUPPORT-bound ANSWER
+when current evidence already resolves the goal, or select one legal Source
+action. This field does not authorize a tool or make Source evidence true.
 Even a summary, restatement, or narrowing of an earlier answer requires fresh
 current-Turn evidence; prior Conversation answers may guide reinvestigation but
 never authorize a Draft. When the request is unambiguous and no evidence-backed
@@ -2994,6 +2999,9 @@ def _completion_policy(
     boundary_available = any(
         item.disposition.value == "BOUNDARY" for item in invocation.observations
     )
+    source_follow_up_required = (
+        _source_follow_up_required_before_limitation(invocation)
+    )
     return {
         "mode": invocation.mode.value,
         "tool_action_allowed": not evidence_only,
@@ -3012,14 +3020,50 @@ def _completion_policy(
                 or (
                     item is EngineeringAgentResponseKind.LIMITATION
                     and boundary_available
+                    and not source_follow_up_required
                 )
             )
+        ),
+        "source_follow_up_required_before_limitation": (
+            source_follow_up_required
         ),
         "new_evidence_claim_forbidden": evidence_only,
         "answer_requires_current_turn_support": True,
         "limitation_requires_current_turn_boundary": True,
         "prior_answer_restatement_requires_current_turn_evidence": True,
     }
+
+
+def _source_follow_up_required_before_limitation(
+    invocation: EngineeringAgentInvocation,
+) -> bool:
+    if (
+        invocation.mode
+        is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
+        or not any(
+            item.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+            and item.disposition.value == "BOUNDARY"
+            for item in invocation.observations
+        )
+    ):
+        return False
+    effective_operations = set(_effective_available_operations(invocation))
+    source_search_attempted = any(
+        item.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        for item in invocation.action_history
+    )
+    source_read_attempted = any(
+        item.operation is EngineeringAgentToolOperation.SOURCE_READ
+        for item in invocation.action_history
+    )
+    return (
+        EngineeringAgentToolOperation.SOURCE_READ in effective_operations
+        and not source_read_attempted
+    ) or (
+        EngineeringAgentToolOperation.SOURCE_SEARCH in effective_operations
+        and not source_search_attempted
+        and not source_read_attempted
+    )
 
 
 def _effective_available_operations(

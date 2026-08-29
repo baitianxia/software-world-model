@@ -343,7 +343,7 @@ def _snapshot_view(
 ) -> dict[str, object]:
     conversation = snapshot.conversation
     return {
-        "schema": "ENGINEERING_CHAT_CONVERSATION_PROJECTION@1",
+        "schema": "ENGINEERING_CHAT_CONVERSATION_PROJECTION@2",
         "protocol": ENGINEERING_CHAT_PROTOCOL,
         "experience": ENGINEERING_CHAT_EXPERIENCE,
         "quality": "NOT_ACCEPTED",
@@ -428,6 +428,18 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
         "answer_ref": turn.answer_ref,
         "review_ref": turn.review_ref,
         "delivery_authorization_ref": turn.delivery_authorization_ref,
+        "citations": [
+            {
+                "citation_ref": item.citation_ref,
+                "evidence_class": item.evidence_class,
+                "source_revision": item.source_revision,
+                "locator": item.locator,
+                "modality": item.modality,
+                "content_digest": item.content_digest.value,
+                "digest": item.digest.value,
+            }
+            for item in turn.citations
+        ],
         "work_state_ref": turn.work_state_ref,
         "work_state_revision": (
             turn.work_state_revision.value
