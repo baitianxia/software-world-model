@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-29
@@ -42,12 +42,12 @@ Source → 世界模型构建/查询 → Agent → Evidence/Answer → Review �
 
 ## 唯一下一开发动作
 
-run-074 已完成并即时交付第一条非 POM/Maven 真实三轮浏览器 Conversation：同一登录 Conversation 的初问、追问与口径纠正均显示自然
-Answer、current Citation、fresh Review 和 Delivery Authorization。它是 `requires_result=false` 的“开发体验候选”，不是 MVP、质量 PASS、
-方向 PASS 或完成。
+run-075 已以 fresh clean product 复验 run-074 的 Maven/启动链失败题并形成 `SUCCEEDED / ACCEPTED`，也完成订单创建、同 Conversation
+库存失败追问和新 Conversation 省略指代隔离 probe。它延续已交付的 `requires_result=false`“开发体验候选”，仍不是 MVP、质量 PASS、方向
+PASS 或完成；其中库存追问存在标题分类错误且 fresh Reviewer 漏判，角色重分配题又在 Source budget/reference contract 矛盾处失败。
 
-当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：完成 `FINDING-010-184` 的 fresh clean successor，先复验
-run-074 的 Maven/启动链失败题，再用未参与修复的异质题与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
+当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186` 的 clean successor 复验角色重分配题、
+容器语义审核和未参与修复的异质题，再与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
 相对 Codex 无物质退步、总体严格更优，且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一
 开发闭环，不新建迭代、PDR、失败 Result 或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
 
@@ -95,3 +95,13 @@ Ark 5 次后因 `SOURCE_SEARCH.arguments` 的单个 malformed item 必须重建�
 unknown 0、Production 未执行，故不是 Ark 不可用。current local candidate 以 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5` 仅允许完全没有既存
 allowlisted item value 的 invalid array 子树重建，并在 Proposal decode 前恢复其余 prior exact value；受影响组合 `141/141` PASS。fresh
 clean successor 仍须复验失败题并完成 current Codex 质量比较，不能把首个可操作链或本地修复称为 MVP。
+
+`FINDING-010-185/186 / run-075` 已给出新的最早偏差。Maven/启动链旧失败题以 Ark 8 次成功，证明 `@5` repair 已通过真实 successor；订单
+创建题也成功，同 Conversation 的库存失败追问与新 Conversation 省略指代 probe 分别完成语义追问和零 dispatch Clarification，故
+`V-CHAT-001` 的显式隔离定义已有真实证据。库存追问却把 `cancelOrderSender.sendMessage` 放在“数据库写入一定尚未发生”的标题下，Claim
+只枚举调用顺序，fresh Reviewer 对 10 个窄 Claim 全部 `SUPPORTED`，所以质量仍 FAIL。角色重分配题在 latest Source receipt `64/64` 时
+effective catalog 已撤销 Source operation，`source_read_options` 却保留 controller locator，same-profile repair 提议 dangling READ 后被拒。
+run-075 总计 Ark dispatch/TLS/credential/HTTP `31/31/31/31`，DeepSeek 0、retry/unknown 0、Production 未执行，明确不是 Ark 不可用。
+current local candidate 现投影 `ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1` 并让 budget/options/catalog 同步，同时要求 Claim/Reviewer 审核
+heading/table/list 继承的 category、scope、condition、certainty、negation；无 AF_UNIX 依赖的受影响组合 `127/127` PASS。扩展 141 项 raw
+为 135 PASS + 1 FAIL + 5 ERROR，六项均是 sandbox 禁止本机 socket 的环境噪声；fresh successor 仍待执行。

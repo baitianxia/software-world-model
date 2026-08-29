@@ -179,6 +179,11 @@ entry with direct current SUPPORT. A caveat elsewhere does not turn an
 unsupported affirmative statement into a boundary. When evidence for a requested
 chain segment is missing, report only that boundary and never render the unknown
 relation as an affirmative chain step.
+A heading, table column header, list lead-in, label, or surrounding sentence adds
+inherited category, scope, condition, certainty, and negation to every assertion
+it contains. Each corresponding draft.claims[].statement must restate every
+material inherited qualifier; an action or outcome alone does not enumerate a
+categorical assertion created by its container.
 Never infer a type relationship or catch boundary, database constraint,
 runtime configuration value, or external side effect from only a path, package,
 import, symbol name, or caller syntax. Require current evidence that directly
@@ -285,6 +290,12 @@ resource identity and current-Turn read capability; it is not evidence and does
 not support any claim until this Turn executes SOURCE_READ and receives a new
 SUPPORT observation. When such an option is material to a follow-up, prefer its
 bounded direct read before spending the Source file fuse on a new content search.
+tool_reference_policy.source_file_budget is the Application-owned projection of
+the latest sealed Source resource receipt, or null when no such receipt exists.
+source_read_options contains only opaque locators that are executable under that
+budget and the current catalog. When source_file_budget.exhausted is true, the
+options array is empty and no Source action may be reconstructed from observations,
+prior actions, paths, or open items.
 The catalog exposes at most one opaque locator for each canonical Source resource;
 choose a different resource, not another matching line from a resource already
 read. Choose only a resource that directly matches the current unresolved
@@ -403,6 +414,13 @@ approval. Any material affirmative conclusion in prose, a summary, table,
 diagram, or code comment that lacks a corresponding claim is a global
 completeness Finding with claim_index null. A boundary caveat cannot authorize
 the same unknown relation when it is asserted affirmatively elsewhere.
+Reconstruct every content assertion with the category, scope, condition,
+certainty, and negation inherited from its heading, table column, list lead-in,
+label, or surrounding sentence. If a claim inventory entry records only the
+contained action or outcome and omits a material inherited qualifier, return a
+global completeness Finding with claim_index null. If the inherited qualifier is
+itself false, unsupported, or misclassifies the contained assertion, return a
+concrete defect; approval of the narrower claim does not approve its container.
 Treat a path, package, import, symbol name, or caller syntax as insufficient to
 establish a type relationship or catch boundary, database constraint, runtime
 configuration value, or external side effect. A material affirmative claim
@@ -3371,6 +3389,14 @@ def _primary_input_view(
                 "draft.boundary_observation_ids",
             ),
             "boundary_statements_forbidden_in_claims": True,
+            "container_context_is_part_of_contained_assertion": True,
+            "claim_statement_required_inherited_material_qualifiers": (
+                "category",
+                "scope",
+                "condition",
+                "certainty",
+                "negation",
+            ),
         },
         "tool_action_budget": _tool_action_budget(invocation),
         "investigation_policy": _investigation_policy(invocation),
@@ -3756,10 +3782,17 @@ def _tool_reference_policy(
         for resource, option in options.items()
         if resource not in attempted_resources
     }
+    source_file_budget = _source_file_budget_view(invocation)
     terminal_source_denial_reason = _terminal_source_denial_reason(
         invocation.observations
     )
-    if terminal_source_denial_reason is not None:
+    if (
+        terminal_source_denial_reason is not None
+        or (
+            source_file_budget is not None
+            and source_file_budget["exhausted"]
+        )
+    ):
         options = {}
     target_projection = _cognition_source_search_target_projection(invocation)
     return {
@@ -3781,6 +3814,7 @@ def _tool_reference_policy(
             sorted(attempted_resources)
         ),
         "source_read_options": tuple(options.values()),
+        "source_file_budget": source_file_budget,
         "cognition_source_search_target_projection": target_projection,
         "first_source_search_requires_cognition_target_copy": (
             _first_source_search_requires_cognition_target_copy(
@@ -3989,14 +4023,14 @@ def _effective_available_operations(
     )
     terminal_source_denial = policy["terminal_source_denial_reason"] is not None
     source_read_available = bool(policy["source_read_options"])
-    source_file_budget = _latest_source_file_budget(invocation)
+    source_file_budget = policy["source_file_budget"]
     source_files_exhausted = (
         source_file_budget is not None
-        and source_file_budget[0] >= source_file_budget[1]
+        and bool(source_file_budget["exhausted"])
     )
     source_search_read_slot_reserved = (
         source_file_budget is not None
-        and source_file_budget[0] == source_file_budget[1] - 1
+        and source_file_budget["remaining"] == 1
         and source_read_available
         and EngineeringAgentToolOperation.SOURCE_READ
         in invocation.available_operations
@@ -4075,6 +4109,22 @@ def _latest_source_file_budget(
             if latest is None or candidate[:2] > latest[:2]:
                 latest = candidate
     return None if latest is None else latest[2:]
+
+
+def _source_file_budget_view(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object] | None:
+    budget = _latest_source_file_budget(invocation)
+    if budget is None:
+        return None
+    used, maximum = budget
+    return {
+        "schema": "ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1",
+        "used": used,
+        "maximum": maximum,
+        "remaining": maximum - used,
+        "exhausted": used >= maximum,
+    }
 
 
 def _trusted_action_view(
@@ -4160,6 +4210,9 @@ def _review_input_view(
             "supported_claim_findings_forbidden": True,
             "defect_claim_finding_required": True,
             "approved_findings_must_be_empty": True,
+            "container_context_is_part_of_contained_assertion": True,
+            "inherited_material_qualifier_omission_is_global_completeness_finding": True,
+            "global_completeness_finding_claim_index": None,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,

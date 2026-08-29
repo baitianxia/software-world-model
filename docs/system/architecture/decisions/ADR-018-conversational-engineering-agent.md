@@ -155,3 +155,13 @@ item 都没有任何既存 allowlisted value 时，该子树才不形成 copy ob
 restoration，再重验机械相等；它不生成 missing field、不映射 unexpected field、不重建 invalid subtree，也不授予事实、Tool、Review 或
 Delivery 权限。raw repair 漂移仍不获授权，无法恢复或 downstream contract 不成立仍失败关闭。当前增加
 `SCHEMA-INVALID-ZERO-COPY-SUBTREE-REBUILD_AND_EXISTING-VALUE-RESTORATION_LOCAL_CANDIDATE`，fresh Browser successor 仍须验证失败题与异质题。
+
+fresh `run-075` 已让 Maven/启动链旧失败题以 Ark 8 次形成 Answer/Review/Delivery，证明 `FINDING-010-184` 越过真实失败点；但两个新系统性
+偏差继续阻止质量资格。角色重分配题的最新 Source receipt 已达 `64/64`，effective catalog 只剩 `WORLD_MODEL_QUERY`，model-facing
+`source_read_options` 却继续暴露未读 controller locator，repair 复制 dangling `SOURCE_READ` 后被正确拒绝；`FINDING-010-185` 因而要求
+Application 投影 `ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1`，并让 executable read options 与 effective catalog 在 exhausted 状态共同关闭，
+同时不伪造 Broker terminal denial。订单追问又把消息发送放在“数据库写入一定未发生”的标题下，但 Claim 只枚举调用顺序，fresh Reviewer
+遂对窄 Claim 全部 `SUPPORTED`；`FINDING-010-186` 因而把 heading/table/list 的 category、scope、condition、certainty、negation 纳入完整
+assertion 与 Claim inventory，Reviewer 必须以容器语境重建 assertion，漏 qualifier 用 global Finding、错误 qualifier 用 concrete defect。
+当前增加 `SOURCE-BUDGET-REFERENCE-CATALOG-COHERENCE_AND_INHERITED-CONTAINER-ASSERTION-CLOSURE_LOCAL_CANDIDATE`；fresh Browser successor 与
+独立技术复核仍是质量阻断。

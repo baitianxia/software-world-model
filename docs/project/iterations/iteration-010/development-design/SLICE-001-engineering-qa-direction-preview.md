@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -71,6 +71,12 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   value 的 invalid array 子树必须从 sealed schema/domain/template 重建，不继承原长度；其余 array 长度/顺序继续守恒。Application 在 Proposal
   decode 前只把 repair 对可对齐既存值的漂移恢复为 prior exact value，再执行原 closed-schema、tool catalog、Context/Evidence 和 completion
   校验；它不生成缺失字段、不解释 unexpected key、不扩大工具或把 raw drift 追认为授权语义。
+- Source resource receipt 的 file budget 必须进入与 effective catalog 同源的 model-facing policy。`64/64` 等 exhausted 状态同时清空
+  Source Search/Read operation 和 read options；`63/64` 且已有 locator 时继续保留唯一 READ slot。预算状态不代替或伪造 Broker terminal
+  denial，Decoder 仍从受信 receipt 重算。
+- Claim inventory 与 fresh Reviewer 都必须把 heading、table column、list lead-in、label 或 surrounding sentence 继承的 category、scope、
+  condition、certainty、negation 视为 contained assertion 的一部分；漏 qualifier 是 global completeness Finding，错误 qualifier 是 concrete
+  defect。不得只审核脱离容器的窄 action/outcome Claim。
 
 该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
 组合成普通用户可直接判断方向的产品结果。

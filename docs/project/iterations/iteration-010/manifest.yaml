@@ -839,7 +839,7 @@ engineering_cognition_eligibility:
       eligible_behavior_profile_ref: JAVA_SOURCE_SEMANTICS@1
       overall_eligibility: false
       explicit_missing_dimensions: STATE,CONSTRAINT
-  next_gate_case_id: V-CHAT-EXPERIENCE-001
+  next_gate_case_id: V-CHAT-QUALITY-001
   next_gate_external_authorization_status: prior-grant-consumed-run-043-schedule-fail-successor-grant-after-exact-freeze
   next_gate_external_authorization_status_is_legacy_validator_compatibility_only: true
   next_gate_current_human_authority_status: active-public-oss-standing-authority-no-new-approval-required
@@ -1220,6 +1220,20 @@ conversational_engineering_agent:
   current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@8
   current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@2
   current_agent_review_output_schema: engineering-agent-independent-review-proposal@2
+  current_agent_output_preflight_schema: ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5
+  current_closed_shape_repair_evidence_ref: FINDING-010-184
+  source_file_budget_projection_schema: ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1
+  source_file_budget_projection_origin: latest-trusted-source-resource-receipt-or-null
+  source_read_options_domain: executable-under-current-source-file-budget-and-effective-catalog-only
+  source_file_budget_exhausted_behavior: clear-source-read-options-and-source-search-read-catalog-without-fabricating-broker-denial
+  source_file_budget_reserved_read_behavior: remaining-one-with-unused-read-option-preserves-read-and-removes-search
+  current_source_budget_catalog_coherence_evidence_ref: FINDING-010-185
+  contained_assertion_inherited_material_qualifiers: category,scope,condition,certainty,negation
+  claim_inventory_container_context_required: true
+  reviewer_container_context_reconstruction_required: true
+  inherited_qualifier_omission_finding_binding: global-claim-index-null
+  inherited_qualifier_false_or_misclassified_finding_binding: concrete-defect
+  current_inherited_container_assertion_evidence_ref: FINDING-010-186
   cognition_source_search_target_schema: ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1
   cognition_source_search_first_literal_policy: exact-closed-domain-from-current-nontruncated-world-model-projection
   cognition_source_search_path_scope_operation_schema: COMPILED_SOURCE_OPERATION@2
@@ -1240,12 +1254,19 @@ conversational_engineering_agent:
   same_package_rewrite_current_delivery_chain: successor-work-state-and-draft-and-fresh-review-and-exact-immutable-package-and-same-turn
   same_package_rewrite_revalidates_package_identity: true
   current_same_package_rewrite_evidence_ref: FINDING-010-183
-  latest_browser_execution_ref: run-073-mvp-experience
-  latest_browser_product_commit: ebb1a3262d9e79cd7c07fe82e236fd278a8d6ce8
-  latest_browser_product_tree: d25a0dea3781728f11e76c2675e156e918f30e7a
-  latest_browser_terminal_receipt_digest: sha256:ae7f0e2800d140778adb89740ca29b85b0adb2aaf690e8c3e07b2d28cf28b2ff
-  latest_browser_turn_result: failed-agent-protocol-violation-after-same-package-approved-review-no-delivery
-  latest_browser_ark_dispatch_tls_credential_http: 10,10,10,10
+  latest_browser_execution_ref: run-075-mvp-experience
+  latest_browser_execution_finding_refs:
+    - FINDING-010-185
+    - FINDING-010-186
+  latest_browser_product_commit: bba64e75d7f6a8bfac17ddcb98c47982cdf24611
+  latest_browser_product_tree: c026679ab11eaa168d4143c81bac7759ba11300c
+  latest_browser_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+  latest_browser_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
+  latest_browser_session_config_file_digest: sha256:408fa764e44dba2507231b65d39cb9e5f02a0ae6c5d42df4601550e8f4513ab2
+  latest_browser_terminal_receipt_digest: sha256:eecdabf3a81f9f62be60ef72d506883c7fdb20e6aca2e84cc47030d106068785
+  latest_browser_terminal_file_sha256: 1140aaa0a4a1be971fe8bab5a3bd19f60fec0746413eba8241b871ce43996d6a
+  latest_browser_turn_result: two-accepted-one-accepted-with-material-reviewer-miss-one-zero-dispatch-clarification-one-failed-source-budget-reference-catalog-contradiction
+  latest_browser_ark_dispatch_tls_credential_http: 31,31,31,31
   latest_browser_deepseek_dispatch_tls_credential_http: 0,0,0,0
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
@@ -1258,7 +1279,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-073-fail-preserved-source-limit-and-same-package-local-candidate-awaiting-fresh-browser-successor
+  agent_execution_status: run-075-quality-fail-preserved-source-budget-catalog-and-container-assertion-local-candidate-awaiting-fresh-browser-successor
   status: implemented-eighth-live-failed-schedule-fail-v8-local-candidate
 
 question_evidence_package_classes:
@@ -1608,7 +1629,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:55cde02e6d24426506808ec4b185023cc49de3513b1ff02759e4d052883f1482
+  system_contract_set_digest: sha256:5afcf756ad3f362383e440dde7f45f7db5556b4021b305753d0c31a5f2f81357
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

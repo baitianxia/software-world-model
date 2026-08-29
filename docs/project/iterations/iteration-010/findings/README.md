@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,12 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-186](FINDING-010-186.md)：run-075 的库存失败追问把消息发送列入“数据库写入一定未发生”，而 Claim 只记录调用顺序，fresh
+  Reviewer 对 10 个窄 Claim 全部 `SUPPORTED` 并漏掉标题继承的错误分类。现要求 Claim 和 Reviewer 都把 heading/table/list 容器的
+  category/scope/condition/certainty/negation 纳入完整 assertion；漏枚举用 global Finding，错误分类用 concrete defect。
+- [FINDING-010-185](FINDING-010-185.md)：run-075 的角色重分配题在 Source `64/64` 时，effective catalog 已正确撤销 Source operation，
+  `source_read_options` 却仍暴露 controller locator，same-profile repair 复制 dangling READ 后被拒。现投影 exact Source file budget，并让
+  read options 与 catalog 在 exhausted 状态共同关闭；`63/64` 预留 READ 与真实 terminal denial 语义保持不变。
 - [FINDING-010-184](FINDING-010-184.md)：run-074 首次交付真实三轮 Chat，分类删除异质题也成功；Maven/启动链题随后因
   `SOURCE_SEARCH.arguments` 的单个 malformed item 必须重建为两个 sealed-template item，却被 `@4` 无条件 array-length copy obligation
   拒绝，并伴随 `—`→`-` 的既存文本漂移。现以 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5` 只允许完全没有既存 allowlisted item value 的 invalid

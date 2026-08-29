@@ -176,7 +176,9 @@ no-progress failure 关闭。
 2. Draft 可以由同一主 Agent 综合多条证据自然回答，不要求把证据记录逐条变成答案句子。每个物质肯定结论必须绑定
    `support/citation`；未知或限制必须绑定相应 `boundary/audit`。答案应延续相关对话目标、响应用户最新纠正，并区分本 Turn 新结论、
    对先前答案的修订和仍未知范围。`draft.claims` 必须覆盖 `draft.content` 正文、summary、table、diagram 或 code comment 中每个 material
-   affirmative conclusion；同一 Draft 在一处承认 Boundary，不能在另一处把该未知关系写成肯定步骤。Primary model input 必须由可信
+   affirmative conclusion；heading、table column、list lead-in、label 或 surrounding sentence 继承给所含 assertion 的 category、scope、
+   condition、certainty 与 negation 同样属于结论，Claim statement 必须显式重述物质 qualifier，不能只枚举局部 action/outcome；同一 Draft
+   在一处承认 Boundary，不能在另一处把该未知关系写成肯定步骤。Primary model input 必须由可信
    Application 从 exact current-Turn observations 投影两个 closed
    reference domain：affirmative Claim 只能复制 SUPPORT ID，Limitation 只能复制 BOUNDARY ID；cross-disposition 和 unknown ID 禁止。
    Decoder 必须从原 Observation 重算并 fail closed，不能删除错误 Claim、替换引用、提升 Boundary 或自动授权 Draft。current model
@@ -186,7 +188,10 @@ no-progress failure 关闭。
    current-Turn revalidation candidate；后者在执行 READ 前不是 Evidence，相关 follow-up 应优先用它重验已知 full resource，而不是先以内容
    SEARCH 消耗目录扫描熔断。每个 canonical Source resource 至多暴露一个 read option；
    任一 line reference 被读取后，同一 resource 的全部 reference 都离开 legal domain；没有未使用 option 时 `SOURCE_READ` 不得出现在
-   effective tool catalog。受信 Ledger 已出现 operation/file/byte terminal fuse rejection 时，Source Search/Read 也必须离开 effective
+   effective tool catalog。Application 还必须从最新受信 Source `RESOURCE_RECEIPT` 投影 exact `used / maximum / remaining / exhausted`
+   file budget；没有 receipt 时为 `null`，不得推测。`source_read_options` 只含当前预算与 catalog 下可执行的 opaque locator；
+   `exhausted=true` 时 options 与 Source Search/Read catalog 一起关闭，但不能伪造 Broker terminal rejection。受信 Ledger 已出现
+   operation/file/byte terminal fuse rejection 时，Source Search/Read 也必须离开 effective
    tool catalog；World Model operation 不被 Source terminal state 连带撤销。
    Decoder 从原 action/Observation/receipt 重算，fallback-route attempt 不继承 preferred-route attempt 的中间 action 或 resource catalog。tool catalog 的
    argument name 与 count 都是 exact closed domain；Provider 不得增加、遗漏或重复参数。Primary input 还必须把每个已用 World
@@ -224,7 +229,9 @@ no-progress failure 关闭。
    Finding；`APPROVED` 只允许全 SUPPORTED + empty Findings。global completeness/relevance Finding 可用 `claim_index=null`，但不能把
    “证据已支持/没有 defect”编码为 claim Finding。它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查
    通过不能抵消重大错误。Reviewer 必须先比较完整 `draft.content` 与枚举 Claim；未进入 Claim inventory 的 material affirmative
-   conclusion 形成 `claim_index=null` 的 global completeness Finding，不能因所有枚举 Claim 都 SUPPORTED 而批准。路径、package、import、
+   conclusion 形成 `claim_index=null` 的 global completeness Finding，不能因所有枚举 Claim 都 SUPPORTED 而批准。比较时必须以 heading、
+   table column、list lead-in、label 与 surrounding sentence 重建完整 assertion；Claim 漏掉物质继承 qualifier 属 global completeness
+   Finding，qualifier 错误、无据或误分类属 concrete defect，窄 Claim 获支持不能批准其容器扩张。路径、package、import、
    symbol name 或 caller syntax 不能单独证明类型继承/catch coverage、数据库约束、运行时
    配置值或外部副作用；Primary 必须取得直接声明/执行该关系的 current Evidence，或把结论收窄为不依赖未知关系的结果，Reviewer 对违反
    该规则的 material Claim 必须返回 Finding。current Source 行直接包含 call expression 时，它只直接证明 caller 调用该表达式及源码可见

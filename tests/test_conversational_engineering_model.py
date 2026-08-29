@@ -504,7 +504,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("answer_claim_support_observation_ids", rendered)
         self.assertIn("limitation_boundary_observation_ids", rendered)
         self.assertIn("cross_disposition_references_forbidden", rendered)
+        self.assertIn(
+            "claim_statement_required_inherited_material_qualifiers",
+            rendered,
+        )
         self.assertIn("source_read_options", rendered)
+        self.assertIn("source_file_budget", rendered)
         self.assertIn("exact_action_repetition_forbidden", rendered)
         self.assertIn("forbidden_exact_values", rendered)
         self.assertIn("allowed_exact_values", rendered)
@@ -522,6 +527,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "A source line that directly contains a call expression",
+            rendered,
+        )
+        self.assertIn(
+            "A heading, table column header, list lead-in, label, or surrounding sentence",
+            rendered,
+        )
+        self.assertIn(
+            "source_read_options contains only opaque locators that are executable",
             rendered,
         )
         self.assertIn(
@@ -1582,6 +1595,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_preflight["json_serialization"]["parse_before_return"]
         )
+        reviewer_policy = reviewer_repair_payload[
+            "review_reference_policy"
+        ]
+        self.assertTrue(
+            reviewer_policy[
+                "container_context_is_part_of_contained_assertion"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "inherited_material_qualifier_omission_is_global_completeness_finding"
+            ]
+        )
+        self.assertIsNone(
+            reviewer_policy["global_completeness_finding_claim_index"]
+        )
         reviewer_prompt = adapter.requests[2].messages[0].content
         self.assertIn(
             "Compare the complete draft.content against the enumerated claims",
@@ -1589,6 +1618,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "global completeness Finding",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Reconstruct every content assertion with the category, scope, condition",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "approval of the narrower claim does not approve its container",
             reviewer_prompt,
         )
         self.assertIn(
@@ -1822,6 +1859,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             tuple(item["locator_reference"] for item in policy["source_read_options"]),
             (locator_reference, other_resource_reference),
         )
+        self.assertIsNone(policy["source_file_budget"])
         self.assertEqual(
             tuple(item["resource_locator"] for item in policy["source_read_options"]),
             (
@@ -2124,6 +2162,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         reserved_view = _primary_input_view(reserved_invocation)
         self.assertEqual(
+            reserved_view["tool_reference_policy"]["source_file_budget"],
+            {
+                "schema": "ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1",
+                "used": 63,
+                "maximum": 64,
+                "remaining": 1,
+                "exhausted": False,
+            },
+        )
+        self.assertEqual(
             tuple(item["operation"] for item in reserved_view["tool_catalog"]),
             ("SOURCE_READ",),
         )
@@ -2146,6 +2194,100 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             )
         self.assertEqual(
             reserved_search.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        exhausted_resource_details = tuple(
+            sorted(
+                {
+                    "maximum_source_files": "64",
+                    "source_files": "64",
+                }.items()
+            )
+        )
+        exhausted_resource_subject_digest = digest_of(
+            ["test-source-resource-receipt", exhausted_resource_details]
+        )
+        exhausted_resource_entry_core = {
+            **resource_entry_core,
+            "subject_id": "resource_receipt_" + "7" * 32,
+            "subject_digest": exhausted_resource_subject_digest.value,
+            "details": exhausted_resource_details,
+        }
+        exhausted_resource_source_digest = digest_of(
+            ["EVIDENCE_LEDGER_ENTRY@1", exhausted_resource_entry_core]
+        )
+        exhausted_resource_entry = EngineeringAgentLedgerEntryReceipt.create(
+            sequence=1,
+            kind="RESOURCE_RECEIPT",
+            subject_ref=exhausted_resource_entry_core["subject_id"],
+            subject_digest=exhausted_resource_subject_digest,
+            references=(),
+            details=exhausted_resource_details,
+            previous_entry_digest=None,
+            source_entry_digest=exhausted_resource_source_digest,
+        )
+        exhausted_budget_receipt = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=EngineeringAgentToolAuthorityKind.SOURCE,
+            turn_request_digest=capture.request.request_digest,
+            tool_request_digest=authority_receipt.tool_request_digest,
+            evidence_request_digest=evidence_request_digest,
+            repository_revision=capture.request.binding.repository_revision,
+            evidence_digest=authority_receipt.evidence_digest,
+            ledger_ref=ledger_ref,
+            ledger_generation=1,
+            ledger_parent_seal_digest=None,
+            ledger_prefix_digest=digest_of(
+                [
+                    "EVIDENCE_LEDGER_PREFIX@1",
+                    ledger_ref,
+                    evidence_request_digest.value,
+                    1,
+                    None,
+                    (exhausted_resource_source_digest.value,),
+                ]
+            ),
+            ledger_entries=(exhausted_resource_entry,),
+            citations=authority_receipt.citations,
+        )
+        source_exhausted_invocation = replace(
+            invocation,
+            observations=(
+                replace(
+                    observation,
+                    authority_receipt=exhausted_budget_receipt,
+                ),
+            ),
+        )
+        source_exhausted_view = _primary_input_view(
+            source_exhausted_invocation
+        )
+        source_exhausted_policy = source_exhausted_view[
+            "tool_reference_policy"
+        ]
+        self.assertEqual(
+            source_exhausted_policy["source_file_budget"],
+            {
+                "schema": "ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1",
+                "used": 64,
+                "maximum": 64,
+                "remaining": 0,
+                "exhausted": True,
+            },
+        )
+        self.assertEqual(source_exhausted_policy["source_read_options"], ())
+        self.assertIsNone(
+            source_exhausted_policy["terminal_source_denial_reason"]
+        )
+        self.assertEqual(source_exhausted_view["tool_catalog"], ())
+        with self.assertRaises(DomainError) as exhausted_source_read:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=source_exhausted_invocation,
+                model_call_ref="exhausted-source-read-call",
+            )
+        self.assertEqual(
+            exhausted_source_read.exception.code,
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
 
@@ -3009,6 +3151,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             rendered["tool_reference_policy"]["terminal_source_denial_reason"],
             "SOURCE_FILE_FUSE_EXHAUSTED",
         )
+        self.assertIsNone(
+            rendered["tool_reference_policy"]["source_file_budget"]
+        )
         self.assertEqual(
             tuple(item["operation"] for item in rendered["tool_catalog"]),
             ("WORLD_MODEL_QUERY",),
@@ -3297,6 +3442,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         policy_view = primary_view["draft_reference_policy"]
         current_evidence = primary_view["current_turn_evidence"]
+        self.assertTrue(
+            policy_view[
+                "container_context_is_part_of_contained_assertion"
+            ]
+        )
+        self.assertEqual(
+            policy_view[
+                "claim_statement_required_inherited_material_qualifiers"
+            ],
+            ("category", "scope", "condition", "certainty", "negation"),
+        )
         self.assertEqual(
             tuple(
                 item["observation_id"]
@@ -3328,6 +3484,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "draft.boundary_observation_ids",
                 ),
                 "boundary_statements_forbidden_in_claims": True,
+                "container_context_is_part_of_contained_assertion": True,
+                "claim_statement_required_inherited_material_qualifiers": (
+                    "category",
+                    "scope",
+                    "condition",
+                    "certainty",
+                    "negation",
+                ),
             },
         )
         payload = {
