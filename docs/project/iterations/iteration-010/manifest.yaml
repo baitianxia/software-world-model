@@ -1263,27 +1263,28 @@ conversational_engineering_agent:
   same_package_rewrite_current_delivery_chain: successor-work-state-and-draft-and-fresh-review-and-exact-immutable-package-and-same-turn
   same_package_rewrite_revalidates_package_identity: true
   current_same_package_rewrite_evidence_ref: FINDING-010-183
-  latest_browser_execution_ref: run-076-mvp-experience
+  latest_browser_execution_ref: run-077-mvp-experience
   latest_browser_execution_finding_refs:
-    - FINDING-010-187
-    - FINDING-010-188
-    - FINDING-010-189
-  latest_browser_product_commit: bc964f364944be883a5e8de9a2c4f68e270470cb
-  latest_browser_product_tree: 12724847fe191e42c829acff445293464d37e971
+    - FINDING-010-190
+  latest_browser_product_commit: 1336ca73a3200d8b946c483f56acb14ca42eab68
+  latest_browser_product_tree: 7bdbd3398070ec81da7c6b97a9aaa1973057d1c4
   latest_browser_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
   latest_browser_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-  latest_browser_turn_scope_file_sha256: dc5ebb6ae87d1bb2f8e707ed90008ceaf4b495ed6c228a865a8fc9a8159036f5
-  latest_browser_session_config_file_digest: sha256:21f0f07522637185cef1de4d311a9108ae1063fd116395f611f04ab8820f0779
-  latest_browser_public_source_session_authority_digest: sha256:5472e5c714f971527b730ebd6ddbbcd44bdf5bc426adfaf31b6150a2067c706f
-  latest_browser_terminal_receipt_digest: sha256:97c0a62e7a2ce7083b2ee8fed8d0e19ac49353ec7f6ddc58d09ed26367956524
-  latest_browser_terminal_file_sha256: 7144c3f3641e47dbe1a79aeab2827949b68321d42028650c0c1da806490f2102
-  latest_browser_turn_result: five-failed-first-turn-reached-answer-draft-then-repair-http-error-next-four-first-call-http-error-no-delivery
-  latest_browser_ark_model_calls_completed_failed: 9,5
+  latest_browser_turn_scope_file_sha256: 728117184942f00592be4a3cf44fb38c1cf838db02371922d3cb2f68a49da6a5
+  latest_browser_session_config_file_digest: sha256:9486090ff199443c00f8b46bbc00c9c01bde7db04e6192f36d132e1e48c9004c
+  latest_browser_public_source_session_authority_digest: sha256:f0bccb9cc300e9ad21e4c2a57d32611dc86836120af271f14d8420ee7431f7b0
+  latest_browser_terminal_receipt_digest: sha256:b791303fa723b5596721161ac39575b91c70777cd5169bd037fd56ecf44bd30b
+  latest_browser_terminal_file_sha256: 6a660323e6fa5fd240c8607980f55f02a41370b4da91fbe68220b3afe30fb520
+  latest_browser_turn_result: one-failed-raw-http-with-layered-display-one-zero-dispatch-plural-referent-clarification
+  latest_browser_ark_model_calls_completed_failed: 0,1
   latest_browser_ark_raw_failure_code: PROVIDER_HTTP_ERROR
   latest_browser_trusted_unavailable_verdict_count: 0
-  latest_browser_ark_dispatch_tls_credential_http: 14,14,14,14
+  latest_browser_ark_dispatch_tls_credential_http: 1,1,1,1
   latest_browser_deepseek_dispatch_tls_credential_http: 0,0,0,0
   latest_browser_deepseek_admission_status: ALLOWED_OFF_PEAK-unused-no-fallback-authority
+  latest_browser_same_signature_external_stop_applied: true
+  latest_browser_plural_referent_probe: pass-empty-context-clarification-zero-dispatch
+  latest_browser_failure_layer_display: pass-execution-stage-and-raw-provider-evidence-visible
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
   current_dual_provider_qualification_status: reuse-when-adapter-configuration-endpoint-model-transport-and-rendering-identity-remain-valid-domain-prompt-or-answer-schema-change-alone-does-not-invalidate-conformance
@@ -1295,7 +1296,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-076-no-delivery-after-raw-ark-http-errors-plural-referent-and-failure-display-local-candidate-awaiting-fresh-browser-successor
+  agent_execution_status: run-077-real-referent-and-failure-display-pass-same-raw-ark-http-signature-external-repeat-stopped-quality-still-not-run
   status: implemented-eighth-live-failed-schedule-fail-v8-local-candidate
 
 question_evidence_package_classes:
