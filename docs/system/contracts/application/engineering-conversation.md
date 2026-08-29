@@ -196,13 +196,15 @@ no-progress failure 关闭。
    关闭。生成者不能自审，Reviewer 不能自行执行工具或放行。同包重写、补证后重答与每次 fresh Review 都是当前 execution profile 内的新 authorized
    model call，必须有新 call identity、Manifest 和 one-use receipts；它们不是重发同一 Provider request。closed JSON 输出无效时，若已资格化的通用格式修复步骤、
    权威和预算都存在，也只能用同一 execution profile 创建新 authorized call；否则当前 Turn 失败关闭。格式修复输入必须把 trusted local
-   validator error code 与 Application-owned bounded diagnostic（保留失败路径，并把该路径上 trusted schema 的完整 exact field allowlist、
-   缺失 field names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
+   validator error code 与 Application-owned bounded diagnostic（以 deterministic trusted-schema traversal 一次收集 parent 与 nested
+   object 中最多 32 处可机械定位的 mismatch；每处保留失败路径，并把该路径上 trusted schema 的完整 exact field allowlist、缺失 field
+   names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 还必须递归比较 prior 与 repair 中已存在
    的 allowlisted field：其 value/顺序必须完全不变，只允许增加原先缺失的 allowlisted field 和移除 unexpected field；否则 repair 以
    structured-output-invalid 失败关闭。nullable union、本地 schema reference 或嵌套 object 不得隐藏可机械定位的字段缺失。该比较不把
-   prior output 规范化为 Proposal。diagnostic 只定位 shape，不授予事实、工具或审核权，Application 也不得据此静默规范化模型输出或改变 Provider adapter
+   prior output 规范化为 Proposal；parent mismatch 不得提前结束对仍存在的 allowlisted child value 的遍历。diagnostic 只定位 shape，不授予
+   事实、工具或审核权，Application 也不得据此静默规范化模型输出或改变 Provider adapter
    identity/qualification。两种情况都不允许改换 route role。该诊断性修复沿用 current
    `conversational-engineering-agent-no-tools-prompt@8 / ENGINEERING_AGENT_PRIMARY_INPUT@8 / ENGINEERING_AGENT_REVIEW_INPUT@2` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
@@ -286,7 +288,9 @@ Conformance。`run-060/061/062` 又依次暴露同 Turn 重复 Cognition、close
 `FINDING-010-170/171/172` 已分别形成 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CLOSED_TOOL_DIAGNOSTIC_LOCAL_CANDIDATE /
 CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE`。run-063 已真实证明 revalidation locator 在 Turn 2 生成相同 content digest 的新
 current-Turn Citation，但同一答案又包含 indirect type-relation overclaim 且 Reviewer 漏判，Turn 3 的 initial/repair output 连续把
-input-only `work_state_ref` 加入 closed output。`FINDING-010-173` 已形成 `EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE`；完整三轮仍须
-新 exact product identity 的 fresh Browser successor 验证，不能追认这些失败 run 或把前两轮技术成功称为 MVP。
+input-only `work_state_ref` 加入 closed output。`FINDING-010-173` 已形成 `EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE`。run-064 随后
+证明 parent mismatch 的 early return 会隐藏同份 output 的 nested missing field；`FINDING-010-174` 已形成
+`BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，不能
+追认这些失败 run 或把局部技术成功称为 MVP。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

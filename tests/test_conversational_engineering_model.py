@@ -982,7 +982,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertNotIn("prior_output_text", repair_preflight)
 
-    def test_format_repair_rebuilds_from_exact_root_field_allowlist(self) -> None:
+    def test_format_repair_projects_root_and_nested_shape_mismatches(self) -> None:
         capture = CapturingTurnExecutor()
         capture_service = InMemoryEngineeringConversationService(
             _binding(),
@@ -997,8 +997,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             message="修订当前结论。",
         )
         repaired = json.loads(SequencedLiveAgentAdapter().outputs[1])
+        repaired["phase"] = "INVESTIGATING"
+        repaired["action"] = {
+            "operation": "WORLD_MODEL_QUERY",
+            "arguments": [],
+            "evidence_need": "Locate the exact login entry point",
+        }
+        repaired["draft"] = None
+        malformed_action = {
+            key: value
+            for key, value in repaired["action"].items()
+            if key != "operation"
+        }
+        malformed_action["input_owned_hint"] = None
         malformed = {
             **repaired,
+            "action": malformed_action,
             "input_owned_identity": "must-not-cross-the-output-boundary",
         }
         adapter = SequencedLiveAgentAdapter(
@@ -1022,7 +1036,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual(result.proposal.goal, repaired["goal"])
+        self.assertEqual(
+            result.proposal.action.operation,
+            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+        )
         self.assertEqual(len(result.prior_receipts), 1)
         self.assertEqual(len(adapter.requests), 2)
         repair_payload = json.loads(adapter.requests[1].messages[1].content)
@@ -1034,10 +1051,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             f"allowed_exact=[{','.join(expected_fields)}]",
             diagnostic,
         )
-        self.assertIn("missing=[none]", diagnostic)
-        self.assertIn("unexpected_count=1", diagnostic)
+        self.assertIn("$ object fields do not match", diagnostic)
+        self.assertIn("$.action object fields do not match", diagnostic)
+        self.assertIn("missing=[operation]", diagnostic)
+        self.assertEqual(diagnostic.count("unexpected_count=1"), 2)
         self.assertIn("additional_fields_forbidden=true", diagnostic)
         self.assertNotIn("input_owned_identity", diagnostic)
+        self.assertNotIn("input_owned_hint", diagnostic)
         preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             sorted(preflight["required_top_level_fields"]),

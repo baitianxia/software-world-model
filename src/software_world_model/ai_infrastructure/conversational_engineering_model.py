@@ -129,6 +129,7 @@ _TERMINAL_SOURCE_DENIAL_REASONS = frozenset(
         "SOURCE_BYTE_FUSE_EXHAUSTED",
     }
 )
+_MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS = 32
 
 
 _PRIMARY_PROMPT = """OUTPUT ENVELOPE IS MANDATORY FOR THIS ROLE.
@@ -2651,12 +2652,15 @@ def _structured_output_diagnostic(
             f"line {exc.lineno}, column {exc.colno}, character {exc.pos}: "
             f"{exc.msg}"
         )
-    return _first_closed_object_shape_mismatch(
+    mismatches: list[str] = []
+    _collect_closed_object_shape_mismatches(
         decoded,
         schema,
         root_schema=schema,
         path="$",
+        mismatches=mismatches,
     )
+    return " | ".join(mismatches) or None
 
 
 def _structured_output_failure_category(
@@ -2677,81 +2681,121 @@ def _structured_output_failure_category(
     return "CLOSED_OUTPUT_CONTRACT"
 
 
-def _first_closed_object_shape_mismatch(
+def _collect_closed_object_shape_mismatches(
     value: object,
     schema: Mapping[str, object],
     *,
     root_schema: Mapping[str, object],
     path: str,
-) -> str | None:
+    mismatches: list[str],
+) -> None:
+    if len(mismatches) >= _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS:
+        return
     reference = schema.get("$ref")
     if isinstance(reference, str):
         resolved = _resolve_repair_schema_reference(root_schema, reference)
         if resolved is None:
-            return None
-        return _first_closed_object_shape_mismatch(
+            return
+        _collect_closed_object_shape_mismatches(
             value,
             resolved,
             root_schema=root_schema,
             path=path,
+            mismatches=mismatches,
         )
+        return
     any_of = schema.get("anyOf")
     if isinstance(any_of, list):
+        candidate_mismatches: list[list[str]] = []
         for option in any_of:
-            if not isinstance(option, Mapping):
+            if not isinstance(option, Mapping) or not _repair_schema_matches_type(
+                value,
+                option,
+                root_schema=root_schema,
+            ):
                 continue
-            mismatch = _first_closed_object_shape_mismatch(
+            option_mismatches: list[str] = []
+            _collect_closed_object_shape_mismatches(
                 value,
                 option,
                 root_schema=root_schema,
                 path=path,
+                mismatches=option_mismatches,
             )
-            if mismatch is not None:
-                return mismatch
-        return None
+            if not option_mismatches:
+                return
+            candidate_mismatches.append(option_mismatches)
+        if candidate_mismatches:
+            remaining = _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS - len(mismatches)
+            mismatches.extend(candidate_mismatches[0][:remaining])
+        return
     kind = schema.get("type")
     kinds = kind if isinstance(kind, list) else [kind]
     if not any(_repair_schema_type_matches(value, item) for item in kinds):
-        return None
+        return
     if isinstance(value, dict):
         properties = schema.get("properties")
         if not isinstance(properties, Mapping):
-            return None
+            return
         expected = set(properties)
         actual = set(value)
         if actual != expected:
             allowed = ",".join(sorted(expected))
             missing = ",".join(sorted(expected - actual)) or "none"
-            return (
+            mismatches.append(
                 f"{path} object fields do not match the closed schema "
                 f"(allowed_exact=[{allowed}]; missing=[{missing}]; "
                 f"unexpected_count={len(actual - expected)}; "
                 "additional_fields_forbidden=true)"
             )
+            if len(mismatches) >= _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS:
+                return
         for name, child in properties.items():
-            if not isinstance(child, Mapping):
+            if name not in value or not isinstance(child, Mapping):
                 continue
-            mismatch = _first_closed_object_shape_mismatch(
+            _collect_closed_object_shape_mismatches(
                 value[name],
                 child,
                 root_schema=root_schema,
                 path=f"{path}.{name}",
+                mismatches=mismatches,
             )
-            if mismatch is not None:
-                return mismatch
+            if len(mismatches) >= _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS:
+                return
     elif isinstance(value, list):
         items = schema.get("items")
         if isinstance(items, Mapping):
             for index, item in enumerate(value):
-                mismatch = _first_closed_object_shape_mismatch(
+                _collect_closed_object_shape_mismatches(
                     item,
                     items,
                     root_schema=root_schema,
                     path=f"{path}[{index}]",
+                    mismatches=mismatches,
                 )
-                if mismatch is not None:
-                    return mismatch
-    return None
+                if len(mismatches) >= _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS:
+                    return
+
+
+def _repair_schema_matches_type(
+    value: object,
+    schema: Mapping[str, object],
+    *,
+    root_schema: Mapping[str, object],
+) -> bool:
+    reference = schema.get("$ref")
+    if isinstance(reference, str):
+        resolved = _resolve_repair_schema_reference(root_schema, reference)
+        return resolved is not None and _repair_schema_matches_type(
+            value,
+            resolved,
+            root_schema=root_schema,
+        )
+    kind = schema.get("type")
+    kinds = kind if isinstance(kind, list) else [kind]
+    return kind is None or any(
+        _repair_schema_type_matches(value, item) for item in kinds
+    )
 
 
 def _resolve_repair_schema_reference(

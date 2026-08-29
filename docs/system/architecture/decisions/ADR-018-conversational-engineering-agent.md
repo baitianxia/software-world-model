@@ -128,5 +128,8 @@ Conversation 合同的“当前配置实例与历史实现证据”为准，本�
 JSON object 前叙述；`FINDING-010-172` 又补齐 current Request-bound prior full-source revalidation locator；`FINDING-010-173` 要求
 closed-shape repair 只按 trusted exact field allowlist 重建输出、机械保持所有既有 allowlisted field value，并禁止 Primary/Reviewer 仅凭路径、package、import、symbol name 或 caller
 syntax 推断类型关系/catch coverage、数据库约束、运行时配置或外部副作用。run-063 已真实证明 revalidation locator，但三轮链在后续 closed
-output 失败，故当前仍只是 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE /
-EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE`，须由 fresh exact Browser successor 验证。
+output 失败；`FINDING-010-174` 又要求同一个 bounded diagnostic 在唯一 repair 前收集 parent 与 nested closed-shape mismatch，避免 parent
+early return 隐藏可机械定位的 child missing field。run-064 只证明该 early-return 缺口并在答案前失败，故当前仍只是
+`BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE /
+EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE / BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`，须由 fresh exact Browser successor
+验证。
