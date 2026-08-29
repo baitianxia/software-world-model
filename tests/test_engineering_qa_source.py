@@ -293,7 +293,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         )
 
         self.assertEqual(result.status, RetrievalStatus.PARTIAL)
-        self.assertEqual(result.failure_code, "SOURCE_FILE_FUSE_EXHAUSTED")
+        self.assertEqual(result.failure_code, "SOURCE_SEARCH_FILE_LIMIT_REACHED")
         self.assertEqual(result.files_read, 2)
         self.assertEqual(len(result.items), 1)
         self.assertEqual(result.items[0].path, "search/LoginService.java")
@@ -301,6 +301,24 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             dict(result.coverage)["candidate_ordering"],
             "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
         )
+
+    def test_search_reports_compiled_operation_byte_limit_as_local_partial(self):
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("large.txt",),
+                query="not-present",
+                maximum_source_bytes=16,
+            )
+        )
+
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(
+            result.failure_code,
+            "SOURCE_SEARCH_BYTE_LIMIT_REACHED",
+        )
+        self.assertEqual(result.files_read, 0)
+        self.assertEqual(result.bytes_read, 0)
 
     def test_trusted_target_path_scope_bounds_literal_search_to_exact_files(self):
         search_root = self.repository / "scoped"

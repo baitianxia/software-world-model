@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -234,7 +234,11 @@ no-progress failure 关闭。
    通过删除、收窄、限定或重组 offending statement 保留全部已支持的 requested conclusions，则必须为 false，不能一边给出这种同包修复一边
    要求新 Evidence。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取
    substring 追认。
-5. 现有 Package 足够时，Response Control 把 Finding 绑定到同一主 Agent的新 Work State Revision，形成同包针对性重写；任一 Finding 标记
+5. 现有 Package 足够时，Response Control 把 Finding 绑定到同一主 Agent的新 Work State Revision，形成同包针对性重写。Package 的
+   `origin_work_state_digest` 永久表示首次密封该 exact Observation 集合的 Work State；它不是 successor Draft 的 Delivery Work State，
+   因而同包重写不得改写 Package origin，也不得要求 current Work State 等于 origin。Response Control 必须重验 immutable Package
+   identity/partition，并把当前 successor Work State、Draft、fresh Review、同一 Package 和 Turn 绑定为 exact approved chain；任何新
+   Observation 仍形成新 Package。任一 Finding 标记
    `requires_evidence=true` 时，standard successor Primary input 必须把 `tool_action_required` 设为 true，并把 Draft response kind domain 置空；
    主 Agent 只能从 effective tool catalog 提交一个 exact action，不能只重写被拒 Draft。任何新 Observation 都形成新 Ledger/Package
    Revision，旧 Review 不得放行新 Draft。evidence-only completion 不恢复工具；此时 Reviewer 要求新 Evidence 仍按 no-progress failure

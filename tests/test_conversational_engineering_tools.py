@@ -1300,7 +1300,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
                 package.support_observations[0].content,
             )
             self.assertIn(
-                "SOURCE_FILE_FUSE_EXHAUSTED",
+                "SOURCE_SEARCH_FILE_LIMIT_REACHED",
                 package.boundary_observations[0].content,
             )
             self.assertIn(
@@ -1419,7 +1419,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertEqual(len(package.support_observations), 4)
         self.assertEqual(len(package.boundary_observations), 1)
         self.assertIn(
-            "SOURCE_FILE_FUSE_EXHAUSTED",
+            "SOURCE_SEARCH_FILE_LIMIT_REACHED",
             package.boundary_observations[0].content,
         )
         search_usage = dict(

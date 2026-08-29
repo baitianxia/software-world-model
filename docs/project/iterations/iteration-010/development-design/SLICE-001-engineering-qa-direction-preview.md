@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -60,9 +60,13 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - exact literal 若命中同一可信 projection 的 canonical `source_path`，Application/Broker 还要把这些路径密封为 Search-only scope，让
   Worker 只在 scope 内验证 case-sensitive literal 并签发 locator；scope 不进入模型 action、不授予 READ authority，Broker 仍重验
   allowlist/Profile/revision/fuse，Coverage 也不能把 scoped complete 冒充全 Evidence Class complete。普通无 scope Search 保持原行为。
+- Search operation 自身达到 file/byte maximum 只产生 operation-local Partial Boundary；只有 Broker 因 whole-Turn actual resource 不足
+  拒绝 operation 才是 terminal Source fuse。两个层级不得复用同一 failure code，使主 Agent 把仍可用 Source 错当成已撤销。
 - Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
 - fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
   具体 Finding，不替主 Agent 规划或执行工具。
+- Reviewer 指定现有 Package 足够时，同包 rewrite 必须生成 successor Work State/Draft/fresh Review；Package origin 保留首次封装该证据集的
+  Work State，不随 rewrite 改写，也不能被 Response Control 当成当前 Delivery Work State。任何新 Observation 仍形成新 Package。
 
 该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
 组合成普通用户可直接判断方向的产品结果。

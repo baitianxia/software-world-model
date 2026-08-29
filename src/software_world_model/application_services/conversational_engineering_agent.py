@@ -1507,12 +1507,16 @@ class SealedEngineeringAgentResponseControl:
     def authorize(
         self, request: EngineeringAgentDeliveryRequest
     ) -> EngineeringAgentDeliveryAuthorization:
+        if not isinstance(request, EngineeringAgentDeliveryRequest):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "Response Control requires a typed Delivery request",
+            )
+        _validate_evidence_package_identity(request.package)
         if (
-            not isinstance(request, EngineeringAgentDeliveryRequest)
-            or request.review.decision
+            request.review.decision
             is not EngineeringAgentReviewDecision.APPROVED
             or request.review.findings
-            or request.work_state.digest != request.package.origin_work_state_digest
             or request.work_state.digest != request.draft.work_state_digest
             or request.package.digest != request.draft.package_digest
             or request.work_state.digest != request.review.work_state_digest
@@ -2513,10 +2517,15 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             *package.support_observations,
             *package.boundary_observations,
         )
-        if not _package_matches_observations(package, observations):
+        _validate_evidence_package_identity(package)
+        if (
+            package.turn_id != request.turn_id
+            or work_state.turn_id != request.turn_id
+            or not _package_matches_observations(package, observations)
+        ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "answer Package does not match the current sealed observations",
+                "answer Package does not match the current Turn and sealed observations",
             )
         by_id = {item.observation_id: item for item in packaged_observations}
         if proposal.response_kind is EngineeringAgentResponseKind.ANSWER:
@@ -2887,6 +2896,69 @@ def _package_matches_observations(
         package.support_observations == support
         and package.boundary_observations == boundary
     )
+
+
+def _validate_evidence_package_identity(
+    package: EngineeringAgentEvidencePackage,
+) -> None:
+    """Validate one immutable current-Turn evidence set.
+
+    ``origin_work_state_digest`` records the Work State that first sealed the
+    evidence set.  A Reviewer-directed rewrite can intentionally reuse that
+    exact Package while producing a successor Work State, Draft, and Review;
+    the Package origin therefore is not the Delivery Work State identity.
+    """
+
+    if not isinstance(package, EngineeringAgentEvidencePackage):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent evidence Package is untyped",
+        )
+    observations = (
+        *package.support_observations,
+        *package.boundary_observations,
+    )
+    if (
+        any(
+            not isinstance(item, EngineeringAgentToolObservation)
+            for item in observations
+        )
+        or any(
+            item.disposition
+            is not EngineeringAgentEvidenceDisposition.SUPPORT
+            for item in package.support_observations
+        )
+        or any(
+            item.disposition
+            is not EngineeringAgentEvidenceDisposition.BOUNDARY
+            for item in package.boundary_observations
+        )
+        or len({item.observation_id for item in observations})
+        != len(observations)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent evidence Package partitions are invalid",
+        )
+    core = {
+        "schema": "ENGINEERING_AGENT_EVIDENCE_PACKAGE@1",
+        "package_id": package.package_id.value,
+        "turn_id": package.turn_id.value,
+        "origin_work_state_digest": package.origin_work_state_digest.value,
+        "support_observations": tuple(
+            (item.observation_id.value, item.digest.value)
+            for item in package.support_observations
+        ),
+        "boundary_observations": tuple(
+            (item.observation_id.value, item.digest.value)
+            for item in package.boundary_observations
+        ),
+    }
+    if package.digest != digest_of(core):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent evidence Package identity is invalid",
+        )
 
 
 def _draft_citations(

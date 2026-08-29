@@ -489,13 +489,13 @@ class LocalGitRetrievalWorker:
                 continue
             if files_read >= operation.maximum_files:
                 truncated = True
-                failure_code = "SOURCE_FILE_FUSE_EXHAUSTED"
+                failure_code = "SOURCE_SEARCH_FILE_LIMIT_REACHED"
                 break
             object_size = self._object_size(entry.object_id)
             remaining = operation.maximum_source_bytes - bytes_read
             if object_size > remaining:
                 truncated = True
-                failure_code = "SOURCE_BYTE_FUSE_EXHAUSTED"
+                failure_code = "SOURCE_SEARCH_BYTE_LIMIT_REACHED"
                 break
             raw = self._connector.read_path(operation.repository_revision, entry.path)
             if len(raw) != object_size:

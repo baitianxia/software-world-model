@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,12 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-183](FINDING-010-183.md)：run-073 的 same-Package targeted rewrite 已获第二次 fresh Reviewer `APPROVED`，却因 Response
+  Control 要求 successor Work State 等于 Package 首次封装状态而失败。现明确 immutable Package origin 语义，并重验 Package identity 与
+  current Work State→Draft→Review exact chain；真实 sealed-control 正负向回归 PASS，fresh Browser successor 待验证。
+- [FINDING-010-182](FINDING-010-182.md)：run-073 的 cognition scoped Search 只检查 1 个文件，但普通 `JwtTokenUtil` Search 达到单次
+  56-file scan 上限时误报整轮 `SOURCE_FILE_FUSE_EXHAUSTED`，Agent 在实际 `59/64` 且 Source catalog 仍可用时提前作答。现分离
+  Search operation-local file/byte limit code 与 Broker whole-Turn rejection；相关八模块 `225 tests / 3 skipped / 0 failure`。
 - [FINDING-010-181](FINDING-010-181.md)：run-072 的 first Source query 已精确选择 `UmsAdminServiceImpl`，但两个 exact Search 为全类路径
   覆盖仍分别读取 56/6 个文件，与两个 full READ 合计耗尽 `64/64`，后续 `AdminUserDetails` repair 因 Source catalog 撤销而失败。现把
   cognition canonical paths 密封为 Broker-validated Search-only scope，不授予模型 path/READ authority；受影响四模块 `102/102` PASS，

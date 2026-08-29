@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-29
@@ -78,3 +78,12 @@ catalog 已撤销，`AdminUserDetails` repair 因而被拒；页面如实 `AGENT
 fallback 正确。current local candidate 现以 `COMPILED_SOURCE_OPERATION@2` 把同一 cognition projection 的 canonical paths 密封为
 Broker-validated Search-only scope；无模型 path/READ authority、无 fuse 提高，受影响四模块 `102/102` PASS。fresh Browser successor 仍待新
 product/run identity，run-072 不取得开发体验、质量或 MVP PASS。
+
+`FINDING-010-182/183` 已封存 run-073 的两个独立根因。Search-only scope 真实把第一次
+`SOURCE_SEARCH(UmsAdminServiceImpl)` 收窄到 1 个文件，但后续普通 `JwtTokenUtil` Search 达到单次 56-file scan 上限时仍误报
+`SOURCE_FILE_FUSE_EXHAUSTED`；整轮实际只用 `59/64` 且 catalog 仍有两个 Source operation，Agent 因而提前放弃
+`UmsAdminController` HTTP 入口证据。随后同一 Package 的修订稿已获第二次 fresh Reviewer `APPROVED`，Response Control 又因错误要求
+successor Work State 等于 Package 首次封装状态而拒绝 Delivery，页面如实 `AGENT_PROTOCOL_VIOLATION`。Ark 10 次 TLS/HTTP 全成功、
+DeepSeek 0、retry 0、Production 未执行。current local candidate 已分离 Search operation-local 与 whole-Turn codes，并保持 immutable
+Package origin 跨同包 rewrite；相关八模块 `225 tests / 3 skipped / 0 failure`。fresh Browser successor 仍待新 product/run identity，
+run-073 不取得开发体验、质量或 MVP PASS。

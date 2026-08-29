@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
@@ -399,9 +400,23 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     decision=EngineeringAgentReviewDecision.APPROVED,
                 )
 
+        class RecordingSealedResponseControl:
+            def __init__(self):
+                self.requests = []
+                self.delegate = SealedEngineeringAgentResponseControl()
+
+            def authorize(self, request):
+                self.requests.append(request)
+                return self.delegate.authorize(request)
+
         driver = RewriteDriver()
         reviewer = RewriteReviewer()
-        service, _, _, response = _service(driver, reviewer=reviewer)
+        response = RecordingSealedResponseControl()
+        service, _, _, _ = _service(
+            driver,
+            reviewer=reviewer,
+            response=response,
+        )
         conversation = service.create_conversation()
         submission = service.submit_turn(
             conversation_id=conversation.conversation.conversation_id,
@@ -1415,6 +1430,17 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         )
         request = response.requests[0]
         control = SealedEngineeringAgentResponseControl()
+
+        forged_package = replace(
+            request.package,
+            origin_work_state_digest=digest_of({"forged": "origin"}),
+        )
+        with self.assertRaises(DomainError) as raised:
+            control.authorize(replace(request, package=forged_package))
+        self.assertEqual(
+            raised.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+        )
 
         authorization = control.authorize(request)
 
