@@ -131,5 +131,8 @@ syntax 推断类型关系/catch coverage、数据库约束、运行时配置或�
 output 失败；`FINDING-010-174` 又要求同一个 bounded diagnostic 在唯一 repair 前收集 parent 与 nested closed-shape mismatch，避免 parent
 early return 隐藏可机械定位的 child missing field。run-064 只证明该 early-return 缺口并在答案前失败，故当前仍只是
 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE /
-EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE / BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`，须由 fresh exact Browser successor
-验证。
+EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE / BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。run-065 随后证明 nested
+diagnostic 已生效，但 shape repair 会在补字段时释义既有合法值；同一 run 还证明正文中的 material affirmative conclusion 可在未进入
+Claim inventory 时绕过 final Reviewer。`FINDING-010-175` 因此以 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4` 投影 exact-copy checklist，并要求
+Primary/Reviewer 闭合完整 content-to-claim coverage；当前再增加
+`EXACT_REPAIR_COPY_AND_DRAFT_CLAIM_CLOSURE_LOCAL_CANDIDATE`，仍须由 fresh exact Browser successor 验证。

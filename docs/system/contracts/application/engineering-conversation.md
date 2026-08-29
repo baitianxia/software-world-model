@@ -139,7 +139,9 @@ no-progress failure 关闭。
    Conflict、Unknown、拒绝和资源收据。seal 只证明身份、完整性、来源与版本，不赋予内容真值。
 2. Draft 可以由同一主 Agent 综合多条证据自然回答，不要求把证据记录逐条变成答案句子。每个物质肯定结论必须绑定
    `support/citation`；未知或限制必须绑定相应 `boundary/audit`。答案应延续相关对话目标、响应用户最新纠正，并区分本 Turn 新结论、
-   对先前答案的修订和仍未知范围。Primary model input 必须由可信 Application 从 exact current-Turn observations 投影两个 closed
+   对先前答案的修订和仍未知范围。`draft.claims` 必须覆盖 `draft.content` 正文、summary、table、diagram 或 code comment 中每个 material
+   affirmative conclusion；同一 Draft 在一处承认 Boundary，不能在另一处把该未知关系写成肯定步骤。Primary model input 必须由可信
+   Application 从 exact current-Turn observations 投影两个 closed
    reference domain：affirmative Claim 只能复制 SUPPORT ID，Limitation 只能复制 BOUNDARY ID；cross-disposition 和 unknown ID 禁止。
    Decoder 必须从原 Observation 重算并 fail closed，不能删除错误 Claim、替换引用、提升 Boundary 或自动授权 Draft。current model
    input 还必须由可信 Application 从 current isolated attempt 的 typed action history 与 Source authority-receipt Citations 投影
@@ -185,7 +187,9 @@ no-progress failure 关闭。
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
    Finding；`APPROVED` 只允许全 SUPPORTED + empty Findings。global completeness/relevance Finding 可用 `claim_index=null`，但不能把
    “证据已支持/没有 defect”编码为 claim Finding。它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查
-   通过不能抵消重大错误。路径、package、import、symbol name 或 caller syntax 不能单独证明类型继承/catch coverage、数据库约束、运行时
+   通过不能抵消重大错误。Reviewer 必须先比较完整 `draft.content` 与枚举 Claim；未进入 Claim inventory 的 material affirmative
+   conclusion 形成 `claim_index=null` 的 global completeness Finding，不能因所有枚举 Claim 都 SUPPORTED 而批准。路径、package、import、
+   symbol name 或 caller syntax 不能单独证明类型继承/catch coverage、数据库约束、运行时
    配置值或外部副作用；Primary 必须取得直接声明/执行该关系的 current Evidence，或把结论收窄为不依赖未知关系的结果，Reviewer 对违反
    该规则的 material Claim 必须返回 Finding。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取
    substring 追认。
@@ -203,7 +207,12 @@ no-progress failure 关闭。
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 还必须递归比较 prior 与 repair 中已存在
    的 allowlisted field：其 value/顺序必须完全不变，只允许增加原先缺失的 allowlisted field 和移除 unexpected field；否则 repair 以
    structured-output-invalid 失败关闭。nullable union、本地 schema reference 或嵌套 object 不得隐藏可机械定位的字段缺失。该比较不把
-   prior output 规范化为 Proposal；parent mismatch 不得提前结束对仍存在的 allowlisted child value 的遍历。diagnostic 只定位 shape，不授予
+   prior output 规范化为 Proposal；parent mismatch 不得提前结束对仍存在的 allowlisted child value 的遍历。
+   `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4` 必须从 untrusted prior output 与 trusted schema 递归形成
+   `existing_allowed_field_copy_projection`：只保留已存在的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席；
+   Primary/Reviewer 对其中 primitive value 与 array 长度/顺序逐值精确复制，不得释义。该 projection 只把既有守恒义务做成 checklist，不赋予
+   事实、语义、Tool、Review 或 Delivery authority。`CLOSED_OUTPUT_CONTRACT` repair 若发现真实缺口只是绑定到错误 Claim，不得为满足一致性
+   而删除缺口；针对未枚举正文结论的 Finding 应保留并使用 `claim_index=null`。diagnostic 只定位 shape，不授予
    事实、工具或审核权，Application 也不得据此静默规范化模型输出或改变 Provider adapter
    identity/qualification。两种情况都不允许改换 route role。该诊断性修复沿用 current
    `conversational-engineering-agent-no-tools-prompt@8 / ENGINEERING_AGENT_PRIMARY_INPUT@8 / ENGINEERING_AGENT_REVIEW_INPUT@2` 协议族；每次
@@ -290,7 +299,9 @@ CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE`。run-063 已真实证明 revali
 current-Turn Citation，但同一答案又包含 indirect type-relation overclaim 且 Reviewer 漏判，Turn 3 的 initial/repair output 连续把
 input-only `work_state_ref` 加入 closed output。`FINDING-010-173` 已形成 `EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE`。run-064 随后
 证明 parent mismatch 的 early return 会隐藏同份 output 的 nested missing field；`FINDING-010-174` 已形成
-`BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，不能
-追认这些失败 run 或把局部技术成功称为 MVP。
+`BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。run-065 Turn 1 真实成功但 material narrative conclusion 未进入 claims 且 Reviewer
+漏判，Turn 2 的 nested diagnostic 正确、shape repair 却改写既有合法值而被机械守恒拒绝；`FINDING-010-175` 已形成
+`EXACT_REPAIR_COPY_AND_DRAFT_CLAIM_CLOSURE_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，
+不能追认这些失败 run 或把局部技术成功称为 MVP。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

@@ -432,7 +432,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@3",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -733,7 +733,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@3",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -999,8 +999,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repaired = json.loads(SequencedLiveAgentAdapter().outputs[1])
         repaired["phase"] = "INVESTIGATING"
         repaired["action"] = {
-            "operation": "WORLD_MODEL_QUERY",
-            "arguments": [],
+            "operation": "SOURCE_SEARCH",
+            "arguments": [
+                {"name": "evidence_class", "value": "SOURCE"},
+                {"name": "query", "value": "UmsAdminController"},
+            ],
             "evidence_need": "Locate the exact login entry point",
         }
         repaired["draft"] = None
@@ -1009,6 +1012,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             for key, value in repaired["action"].items()
             if key != "operation"
         }
+        malformed_action["arguments"] = [
+            {"evidence_class": "SOURCE"},
+            repaired["action"]["arguments"][1],
+        ]
         malformed_action["input_owned_hint"] = None
         malformed = {
             **repaired,
@@ -1031,14 +1038,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 review_findings=(),
                 review_digest=None,
                 available_operations=(
-                    EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    EngineeringAgentToolOperation.SOURCE_SEARCH,
                 ),
             )
         )
 
         self.assertEqual(
             result.proposal.action.operation,
-            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            EngineeringAgentToolOperation.SOURCE_SEARCH,
         )
         self.assertEqual(len(result.prior_receipts), 1)
         self.assertEqual(len(adapter.requests), 2)
@@ -1053,8 +1060,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn("$ object fields do not match", diagnostic)
         self.assertIn("$.action object fields do not match", diagnostic)
+        self.assertIn(
+            "$.action.arguments[0] object fields do not match",
+            diagnostic,
+        )
         self.assertIn("missing=[operation]", diagnostic)
-        self.assertEqual(diagnostic.count("unexpected_count=1"), 2)
+        self.assertIn("missing=[name,value]", diagnostic)
+        self.assertEqual(diagnostic.count("unexpected_count=1"), 3)
         self.assertIn("additional_fields_forbidden=true", diagnostic)
         self.assertNotIn("input_owned_identity", diagnostic)
         self.assertNotIn("input_owned_hint", diagnostic)
@@ -1067,12 +1079,48 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             preflight["format_repair"]["validation_failure_message"],
             diagnostic,
         )
+        copy_policy = preflight["format_repair"]
+        self.assertTrue(copy_policy["existing_values_exact_copy_required"])
+        self.assertTrue(
+            copy_policy["array_length_and_order_exact_copy_required"]
+        )
+        self.assertEqual(
+            copy_policy["permitted_mutations"],
+            [
+                "ADD_MISSING_ALLOWLISTED_FIELD",
+                "REMOVE_UNEXPECTED_FIELD",
+            ],
+        )
+        projection = copy_policy["existing_allowed_field_copy_projection"]
+        self.assertEqual(projection["goal"], repaired["goal"])
+        self.assertEqual(
+            projection["action"],
+            {
+                "arguments": [
+                    {},
+                    {"name": "query", "value": "UmsAdminController"},
+                ],
+                "evidence_need": "Locate the exact login entry point",
+            },
+        )
+        projection_text = json.dumps(projection, ensure_ascii=False)
+        self.assertNotIn("input_owned_identity", projection_text)
+        self.assertNotIn("input_owned_hint", projection_text)
+        self.assertNotIn("evidence_class", projection_text)
         self.assertIn(
             "exhaustive top-level allowlist",
             adapter.requests[1].messages[0].content,
         )
         self.assertIn(
+            "Copy every projected primitive value and array length/order",
+            adapter.requests[1].messages[0].content,
+        )
+        self.assertIn(
             "Never infer a type relationship or catch boundary",
+            adapter.requests[1].messages[0].content,
+        )
+        self.assertIn(
+            "material affirmative conclusion in draft.content",
             adapter.requests[1].messages[0].content,
         )
 
@@ -1341,7 +1389,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@3",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1356,6 +1404,19 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_preflight["json_serialization"]["parse_before_return"]
+        )
+        reviewer_prompt = adapter.requests[2].messages[0].content
+        self.assertIn(
+            "Compare the complete draft.content against the enumerated claims",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "global completeness Finding",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "claim_index null and preserve",
+            reviewer_prompt,
         )
         self.assertEqual(tool.requests, [])
         self.assertEqual(len(response.requests), 1)
@@ -2580,6 +2641,35 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model_call_ref="review-finding",
         )
         self.assertEqual(finding.decision.value, "FINDINGS")
+
+        global_completeness_finding = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "FINDINGS",
+                    "claim_assessments": [
+                        {"claim_index": 0, "verdict": "SUPPORTED"},
+                        {"claim_index": 1, "verdict": "SUPPORTED"},
+                    ],
+                    "findings": [
+                        {
+                            "code": "UNENUMERATED_MATERIAL_CONCLUSION",
+                            "message": (
+                                "Draft content asserts one material relation "
+                                "that is absent from the claim inventory."
+                            ),
+                            "requires_evidence": True,
+                            "claim_index": None,
+                        }
+                    ],
+                }
+            ),
+            request=request,
+            model_call_ref="review-global-completeness-finding",
+        )
+        self.assertEqual(
+            global_completeness_finding.findings[0].claim_index,
+            None,
+        )
 
         defect_without_finding = {
             "decision": "APPROVED",
