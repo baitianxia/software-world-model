@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -113,6 +114,54 @@ class QueryAwareCognitionProjector(ExactCognitionProjector):
             items=(item,),
             coverage=("Query-relevant behavior is represented.",),
         )
+
+
+class OverlappingQueryCognitionProjector(ExactCognitionProjector):
+    def __init__(self) -> None:
+        self.queries = []
+
+    def project_for_query(self, *, request, query):
+        self.queries.append(query)
+        shared = CognitionItem.create(
+            dimension=CognitionDimension.BEHAVIOR,
+            statement="Shared login behavior.",
+            modality="QUERY_RELEVANT_BEHAVIOR_RELATION",
+            context_ref="overlap-context",
+            source_revision=request.repository_revision,
+            locator="world-model:shared-login-behavior",
+            support_references=("shared-snapshot-evidence",),
+            coverage="Shared behavior represented for both queries.",
+        )
+        unique = CognitionItem.create(
+            dimension=CognitionDimension.RELATION,
+            statement=f"Unique cognition for {query}.",
+            modality="QUERY_RELEVANT_RESPONSIBILITY_RELATION",
+            context_ref="overlap-context",
+            source_revision=request.repository_revision,
+            locator=f"world-model:unique-{len(self.queries)}",
+            support_references=(f"unique-snapshot-{len(self.queries)}",),
+            coverage="One query-specific responsibility is represented.",
+        )
+        return WorldModelCognitionContext.create(
+            request=request,
+            scope_ref="fixture-scope",
+            context_ref="overlap-context",
+            schema_ref="fixture-schema@1",
+            snapshot_ids=("fixture-snapshot",),
+            read_authority_digest=request.world_model_read_authority_digest,
+            source_revision=request.repository_revision,
+            items=(shared, unique),
+            coverage=("Overlapping query cognition is represented.",),
+        )
+
+
+class RepeatedQueryCognitionProjector(ExactCognitionProjector):
+    def __init__(self) -> None:
+        self.queries = []
+
+    def project_for_query(self, *, request, query):
+        self.queries.append(query)
+        return self.project(request=request)
 
 
 class RecordingReviewer:
@@ -230,6 +279,43 @@ class SemanticNeedWorldThenAnswerDriver(WorldThenAnswerDriver):
                 ),
             )
         return super().propose(invocation)
+
+
+class TwoWorldQueriesThenAnswerDriver:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def propose(self, invocation):
+        self.calls += 1
+        if self.calls <= 2:
+            return proposal(
+                invocation,
+                call_ref=f"two-world-agent-{self.calls}",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    arguments=(("query", f"semantic need {self.calls}"),),
+                    evidence_need=f"inspect semantic need {self.calls}",
+                ),
+            )
+        support = tuple(
+            item.observation_id
+            for item in invocation.observations
+            if item.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+        )
+        return proposal(
+            invocation,
+            call_ref="two-world-agent-3",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="世界模型提供共享行为与两条独有职责认知。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="共享行为与两条独有职责认知均有支持。",
+                        support_observation_ids=support,
+                    ),
+                ),
+            ),
+        )
 
 
 class SearchReadAnswerDriver:
@@ -630,6 +716,76 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         query = projector.queries[0]
         self.assertIn("AdminService login", query)
         self.assertIn("管理员登录", query)
+
+    def test_world_model_tool_projects_only_novel_items_across_one_turn(self) -> None:
+        reviewer = RecordingReviewer()
+        projector = OverlappingQueryCognitionProjector()
+        service = self.service(
+            TwoWorldQueriesThenAnswerDriver(),
+            reviewer,
+            cognition_projector=projector,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录行为和职责分别是什么？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(projector.queries, ["semantic need 1", "semantic need 2"])
+        support = reviewer.requests[0].package.support_observations
+        self.assertEqual(len(support), 2)
+        first = json.loads(support[0].content)
+        second = json.loads(support[1].content)
+        self.assertEqual(first["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@2")
+        self.assertEqual(first["projection"]["novel_item_count"], 2)
+        self.assertEqual(
+            first["projection"]["previously_observed_item_count"],
+            0,
+        )
+        self.assertEqual(second["projection"]["current_context_item_count"], 2)
+        self.assertEqual(second["projection"]["novel_item_count"], 1)
+        self.assertEqual(
+            second["projection"]["previously_observed_item_count"],
+            1,
+        )
+        self.assertIn("Shared login behavior.", support[0].content)
+        self.assertNotIn("Shared login behavior.", support[1].content)
+        self.assertIn("Unique cognition for semantic need 2.", support[1].content)
+        self.assertEqual(len(support[0].citation_refs), 2)
+        self.assertEqual(len(support[1].citation_refs), 1)
+        self.assertEqual(len(submission.turn.citations), 3)
+
+    def test_world_model_tool_marks_fully_repeated_context_as_no_progress(self) -> None:
+        reviewer = RecordingReviewer()
+        projector = RepeatedQueryCognitionProjector()
+        service = self.service(
+            TwoWorldQueriesThenAnswerDriver(),
+            reviewer,
+            cognition_projector=projector,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="重复查询不应复制认知。",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        package = reviewer.requests[0].package
+        self.assertEqual(len(package.support_observations), 1)
+        self.assertEqual(len(package.boundary_observations), 2)
+        repeated = next(
+            item
+            for item in package.boundary_observations
+            if "WORLD_MODEL_HAS_NO_NEW_SUPPORTED_ITEMS" in item.content
+        )
+        self.assertFalse(repeated.progress)
+        self.assertIn("WORLD_MODEL_HAS_NO_NEW_SUPPORTED_ITEMS", repeated.content)
+        self.assertEqual(len(submission.turn.citations), 1)
 
     def test_source_search_then_opaque_read_extends_one_turn_ledger(self) -> None:
         reviewer = RecordingReviewer()

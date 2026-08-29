@@ -430,7 +430,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@2",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@3",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -655,6 +655,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "NON_JSON_OBJECT_PREFIX",
+        )
+        self.assertEqual(
+            repair_payload["format_repair_policy"][
                 "validation_failure_code"
             ],
             ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
@@ -663,9 +669,84 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             repair_payload["format_repair_policy"][
                 "validation_failure_message"
             ],
-            "$ JSON syntax is invalid at line 1, column 1, character 0: "
-            "Expecting value",
+            "$ JSON object envelope is invalid "
+            "(first_non_whitespace_character_class="
+            "NON_JSON_OBJECT_PREFIX; "
+            "required_first_non_whitespace_character={; "
+            "text_before_object_forbidden=true)",
         )
+
+    def test_analysis_prefix_gets_explicit_bounded_envelope_repair(self) -> None:
+        valid_primary = SequencedLiveAgentAdapter().outputs[1]
+        invalid_primary = "Let me analyze the evidence first.\n" + valid_primary
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                invalid_primary,
+                valid_primary,
+                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+            )
+        )
+        service, model, _, _, tool, response = self._service(adapter=adapter)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 3)
+        self.assertEqual(len(model.audits), 3)
+        self.assertEqual(tool.requests, [])
+        self.assertEqual(len(response.requests), 1)
+        self.assertTrue(
+            adapter.requests[1].messages[0].content.startswith(
+                "OUTPUT ENVELOPE IS MANDATORY FOR THIS ROLE."
+            )
+        )
+        repair_payload = json.loads(adapter.requests[1].messages[1].content)
+        repair_policy = repair_payload["format_repair_policy"]
+        self.assertEqual(
+            repair_policy["validation_failure_category"],
+            "NON_JSON_OBJECT_PREFIX",
+        )
+        self.assertIn(
+            "first_non_whitespace_character_class=NON_JSON_OBJECT_PREFIX",
+            repair_policy["validation_failure_message"],
+        )
+        self.assertNotIn(
+            "Let me analyze",
+            repair_policy["validation_failure_message"],
+        )
+        repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
+        self.assertEqual(
+            repair_preflight["schema"],
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@3",
+        )
+        self.assertEqual(
+            repair_preflight["format_repair"][
+                "validation_failure_category"
+            ],
+            "NON_JSON_OBJECT_PREFIX",
+        )
+        self.assertTrue(
+            repair_preflight["format_repair"][
+                "repeat_same_failure_forbidden"
+            ]
+        )
+        self.assertEqual(
+            repair_preflight["output_envelope"][
+                "required_first_non_whitespace_character"
+            ],
+            "{",
+        )
+        self.assertTrue(
+            repair_preflight["output_envelope"][
+                "analysis_or_narration_outside_object_forbidden"
+            ]
+        )
+        self.assertNotIn("Let me analyze", adapter.requests[1].messages[-1].content)
 
     def test_unescaped_draft_quote_gets_bounded_json_syntax_repair(self) -> None:
         repaired = json.loads(SequencedLiveAgentAdapter().outputs[1])
@@ -710,6 +791,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         diagnostic = repair_payload["format_repair_policy"][
             "validation_failure_message"
         ]
+        self.assertEqual(
+            repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "JSON_SYNTAX_ERROR",
+        )
         error = syntax_failure.exception
         self.assertEqual(
             diagnostic,
@@ -818,6 +905,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             )
         )
         repair_policy = repair_payload["format_repair_policy"]
+        self.assertEqual(
+            repair_policy["validation_failure_category"],
+            "CLOSED_SCHEMA_SHAPE",
+        )
         self.assertEqual(
             repair_policy["validation_failure_code"],
             ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
@@ -1082,7 +1173,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@2",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@3",
+        )
+        self.assertEqual(
+            reviewer_repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "NON_JSON_OBJECT_PREFIX",
         )
         self.assertTrue(
             reviewer_preflight["json_serialization"][
