@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-178](FINDING-010-178.md)：run-068 真实证明修复后的 World Model-first 与精确 `UmsAdminController` Source target 已生效，
+  但随后 run-068/069 的 raw Ark HTTP error 和 run-070 的 Ark pre-HTTP unavailable + DeepSeek pricing-admission denial 使三轮链继续环境
+  hold。三个 run 均独立停止、retry/fallback HTTP/Production 为 0；不改产品或准入，等待已授权 route 可执行后用 fresh identity 续验。
 - [FINDING-010-177](FINDING-010-177.md)：run-067 在 fresh Turn 跳过 World Model，先用 broad/已读 caller-expression search 和辅助
   Mapper read 消耗 Source slot，随后又对同一 service implementation gap 换句式重复查询，最终在第九个 Primary call 提出第九项 Tool
   action 并被 8-action 上限失败关闭。现精确投影 remaining budget、机械要求 fresh World Model-first/zero-budget convergence，并明确
