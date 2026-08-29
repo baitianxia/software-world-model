@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import unittest
 
 from software_world_model.application_services.deepseek_dispatch_admission import (
+    DEEPSEEK_OFF_PEAK_WINDOWS,
     DEEPSEEK_PRICING_SOURCE,
     DeepSeekDispatchAdmissionController,
     DeepSeekDispatchAdmissionDecision,
@@ -24,9 +25,24 @@ class _Clock:
 
 
 class DeepSeekDispatchAdmissionTests(unittest.TestCase):
-    def _at(self, hour: int, minute: int = 0, second: int = 0) -> datetime:
-        # Asia/Shanghai is UTC+08:00 for the frozen policy dates.
-        return datetime(2026, 8, 27, hour - 8, minute, second, tzinfo=timezone.utc)
+    def _at(
+        self,
+        hour: int,
+        minute: int = 0,
+        second: int = 0,
+        *,
+        day: int = 27,
+    ) -> datetime:
+        shanghai = timezone(timedelta(hours=8))
+        return datetime(
+            2026,
+            8,
+            day,
+            hour,
+            minute,
+            second,
+            tzinfo=shanghai,
+        ).astimezone(timezone.utc)
 
     def _plan(
         self,
@@ -35,7 +51,7 @@ class DeepSeekDispatchAdmissionTests(unittest.TestCase):
         duration: int = 60,
         override: DeepSeekPeakOverride | None = None,
         status: DeepSeekPricingEffectiveStatus = (
-            DeepSeekPricingEffectiveStatus.NOT_YET_EFFECTIVE
+            DeepSeekPricingEffectiveStatus.EFFECTIVE
         ),
     ) -> DeepSeekDispatchAdmissionPlan:
         return DeepSeekDispatchAdmissionPlan.create(
@@ -58,7 +74,10 @@ class DeepSeekDispatchAdmissionTests(unittest.TestCase):
                 source=DEEPSEEK_PRICING_SOURCE,
                 checked_at=current - timedelta(seconds=30),
                 content_digest=digest_of("official-pricing-page"),
-                content_summary="官方页面仍列出峰谷时段，生效时间待通知。",
+                content_summary=(
+                    "官方页面定义北京时间周一至周五高峰，周末全天闲时，"
+                    "峰谷价格已经生效。"
+                ),
                 effective_status=status,
             ),
             peak_override=override,
@@ -81,6 +100,72 @@ class DeepSeekDispatchAdmissionTests(unittest.TestCase):
                     clock=clock,
                 )
                 self.assertEqual(controller.receipt.allowed, allowed)
+
+    def test_weekend_is_off_peak_all_day(self) -> None:
+        cases = (
+            self._at(0, 0, 0, day=29),
+            self._at(11, 0, 0, day=29),
+            self._at(17, 0, 0, day=30),
+            self._at(23, 59, 59, day=30),
+        )
+        for current in cases:
+            with self.subTest(current=current):
+                controller = DeepSeekDispatchAdmissionController(
+                    plan=self._plan(current, duration=1),
+                    admitted_at=current,
+                    clock=_Clock(current),
+                )
+                self.assertEqual(
+                    controller.receipt.decision,
+                    DeepSeekDispatchAdmissionDecision.ALLOWED_OFF_PEAK,
+                )
+                self.assertEqual(
+                    controller.receipt.matched_window,
+                    "SATURDAY-SUNDAY 00:00-24:00",
+                )
+                self.assertEqual(
+                    controller.receipt.public_status()["allowed_windows"],
+                    DEEPSEEK_OFF_PEAK_WINDOWS,
+                )
+                self.assertEqual(
+                    controller.receipt.public_status()["policy_ref"],
+                    "ITER-010-PDR-007@2",
+                )
+
+        monday_peak = self._at(11, 0, 0, day=31)
+        controller = DeepSeekDispatchAdmissionController(
+            plan=self._plan(monday_peak, duration=1),
+            admitted_at=monday_peak,
+            clock=_Clock(monday_peak),
+        )
+        self.assertEqual(
+            controller.receipt.decision,
+            DeepSeekDispatchAdmissionDecision.DENIED_PEAK_WINDOW,
+        )
+
+    def test_contiguous_off_peak_span_crosses_into_weekend(self) -> None:
+        current = self._at(23, 59, 0, day=28)
+        clock = _Clock(current)
+        controller = DeepSeekDispatchAdmissionController(
+            plan=self._plan(current, duration=180),
+            admitted_at=current,
+            clock=clock,
+        )
+        first = controller.authorize_dispatch(
+            execution_envelope_ref="deepseek:friday",
+            input_token_upper_bound=1_000,
+            maximum_output_tokens=8_192,
+        )
+        controller.mark_invoked(first.execution_envelope_ref)
+
+        clock.value = self._at(0, 0, 0, day=29)
+        second = controller.authorize_dispatch(
+            execution_envelope_ref="deepseek:saturday",
+            input_token_upper_bound=1_000,
+            maximum_output_tokens=8_192,
+        )
+        controller.mark_invoked(second.execution_envelope_ref)
+        self.assertEqual(controller.public_audit()["invoked_dispatch_count"], 2)
 
     def test_peak_denial_happens_before_any_dispatch_authorization(self) -> None:
         current = self._at(11, 19)
@@ -204,7 +289,7 @@ class DeepSeekDispatchAdmissionTests(unittest.TestCase):
         self.assertEqual(controller.public_audit()["invoked_dispatch_count"], 2)
 
     def test_changed_or_stale_pricing_check_fails_closed(self) -> None:
-        current = self._at(12, 0)
+        current = self._at(14, 50, day=29)
         changed = DeepSeekDispatchAdmissionController(
             plan=self._plan(
                 current,

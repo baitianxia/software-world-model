@@ -19,7 +19,7 @@ critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
 current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165]
-current_scheduling_finding_ref: FINDING-010-139
+current_scheduling_finding_ref: FINDING-010-179
 ---
 
 # ITER-010 Readiness Review

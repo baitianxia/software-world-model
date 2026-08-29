@@ -31,8 +31,9 @@ availability Owner 密封为 `PROVIDER_UNAVAILABLE`；route 因而合法选择 f
 `2026-08-29T14:50:43+08:00` 为 `DENIED_PRICING_CHECK`，在 credential/TLS/HTTP 前拒绝。页面如实显示
 `AGENT_PRE_DISPATCH_REJECTED`。
 
-根因类别是当前外部 `configuration/environment`，不是新的 architecture 或 implementation defect。当前没有合法证据支持修改 Prompt、
-提高 budget、把 HTTP error 强行提升为 unavailable、绕过 DeepSeek pricing admission、重试同一 request 或切换到未授权 Provider。
+本 Finding 当时把根因暂归为外部 `configuration/environment`，并且正确拒绝了修改 Prompt、提高 budget、把 HTTP error 强行提升为
+unavailable、绕过 admission、重试同一 request 或切换到未授权 Provider。后续 `FINDING-010-179` 取得了新的官方 schedule 证据，纠正了
+“没有 implementation defect / 只能等待”的部分结论；本 Finding 的原始 run、路由和 transport 计数仍保持有效。
 
 ## Evidence
 
@@ -60,7 +61,8 @@ availability Owner 密封为 `PROVIDER_UNAVAILABLE`；route 因而合法选择 f
    `BOUNDED_INVESTIGATION_BUDGET_AND_TARGET_RELEVANCE_LOCAL_CANDIDATE` 仍不是 Browser/质量 PASS。
 2. run-068/069/070 只作为失败与路由边界证据；不得形成 Answer/Citation/Review/Delivery，也不产生失败 Result、PDR、重复人工授权或计划游标
    变化。active standing authority 与同一开发动作仍有效。
-3. 下一次 live 验证必须使用新的 clean exact product/run identity，并等待至少一条已授权 route 实际可执行：Ark transport/HTTP 恢复，或
-   Ark 取得可信 unavailable verdict 且 fallback 同时通过既有 off-peak admission。不得为消除 hold 修改 pricing policy 或伪造 availability。
-4. 当前无新的 evidence-backed product change；本地 `115/115` 受影响测试、583-document check 与 plan snapshot/diff PASS 继续属于
+3. 下一次 live 验证必须使用新的 clean exact product/run identity。`FINDING-010-179` 已证明 run-070 的 pricing check 过期，并把 current
+   policy 修订为工作日三个时段、周末全天；fresh successor 可在 900 秒内 pricing check 与正常 route 条件成立时继续，不再等待周末窗口。
+   仍不得伪造 Ark availability 或绕过 fallback admission。
+4. 本 Finding 当时没有支持新的答案链 product change；本地 `115/115` 受影响测试、583-document check 与 plan snapshot/diff PASS 继续属于
    `FINDING-010-177` 候选证据，不追认上述 live run。

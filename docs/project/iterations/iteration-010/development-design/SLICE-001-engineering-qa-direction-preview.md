@@ -11,7 +11,7 @@ iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
 current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165]
-current_scheduling_finding_ref: FINDING-010-139
+current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]

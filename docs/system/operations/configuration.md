@@ -5,7 +5,7 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-029, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-156]
+derived_from: [FINDING-010-029, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-179]
 code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
@@ -78,14 +78,15 @@ PYTHONPATH=src python3 -m software_world_model.interface.provider_cli probe
 `status` 不联网且不得显示密钥；`probe` 只证明最小传输，不替代完整 Contract Conformance、Capability Evaluation 或产品验收。
 
 DeepSeek 的所有 planned development/evaluation 外部分派——包括 probe、Conformance、Capability Evaluation、canary、比较、回归和 Web
-体验——只允许在 `Asia/Shanghai` 半开窗口 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)`。截至 `2026-08-27`，DeepSeek 官方页面
-仍将北京时间每日 `09:00–12:00`、`14:00–18:00` 定义为高峰，峰谷价格正式生效日以公告为准；本项目硬门禁不依赖价格是否已经生效。
+体验——在 `Asia/Shanghai` 按以下日历准入：周一至周五的半开窗口 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)`，以及周六、
+周日全天。相邻允许时段连续计算，不因午夜换日截断，因此周五 `18:00` 至周一 `09:00` 是一个连续闲时区间。截至 `2026-08-29`，官方
+峰谷价格已经生效；current policy ref 为 `ITER-010-PDR-007@2`。
 每次 run 必须重新检查 <https://api-docs.deepseek.com/quick_start/pricing/>，密封 check time、内容摘要和
 `EFFECTIVE / NOT_YET_EFFECTIVE / CHANGED`，但官方状态本身不能替代窗口判定；检查缺失或返回 `CHANGED` 时，本次准入失败关闭并先
 重新规划，不能由运行器自行扩张窗口。
 
 每个 run 在任何 DeepSeek socket/connected descriptor provisioning、TLS、credential 或 HTTP 前必须密封
-`DEEPSEEK_DISPATCH_ADMISSION@1`；每个新 DeepSeek request 前重验
+`DEEPSEEK_DISPATCH_ADMISSION@1`（current policy `ITER-010-PDR-007@2`）；每个新 DeepSeek request 前重验
 可信时钟仍在允许窗口，或存在一次性 exact human peak override。允许窗口内的 receipt 由 trusted admission authority 从 standing
 authority 自动派生；override 必须绑定 Provider/model、run/Turn、原因、最大 calls/tokens/duration、start 和 expiry；普通 standing
 authority、开发、canary、route 或 fallback 均不包含该例外。计划必须把完整最坏质量链安排在窗口内；窗口关闭

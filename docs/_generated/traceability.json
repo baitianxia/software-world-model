@@ -3450,6 +3450,16 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-179": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-179.md",
+    "code": [
+      "src/software_world_model/application_services/deepseek_dispatch_admission.py"
+    ],
+    "tests": [
+      "tests/test_deepseek_dispatch_admission.py",
+      "tests/test_engineering_chat_session_artifact.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

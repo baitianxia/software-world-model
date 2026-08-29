@@ -23,16 +23,17 @@ from software_world_model.cross_cutting import (
 )
 
 
-DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF = "ITER-010-PDR-007@1"
+DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF = "ITER-010-PDR-007@2"
 DEEPSEEK_DISPATCH_ADMISSION_SCHEMA = "DEEPSEEK_DISPATCH_ADMISSION@1"
 DEEPSEEK_DISPATCH_AUTHORIZATION_SCHEMA = (
     "DEEPSEEK_DISPATCH_AUTHORIZATION@1"
 )
 DEEPSEEK_OFF_PEAK_TIMEZONE = "Asia/Shanghai"
 DEEPSEEK_OFF_PEAK_WINDOWS = (
-    "00:00-09:00",
-    "12:00-14:00",
-    "18:00-24:00",
+    "MONDAY-FRIDAY 00:00-09:00",
+    "MONDAY-FRIDAY 12:00-14:00",
+    "MONDAY-FRIDAY 18:00-24:00",
+    "SATURDAY-SUNDAY 00:00-24:00",
 )
 DEEPSEEK_PRICING_SOURCE = (
     "https://api-docs.deepseek.com/quick_start/pricing/"
@@ -580,10 +581,10 @@ class DeepSeekDispatchAdmissionController:
             )
         if self.receipt.decision is DeepSeekDispatchAdmissionDecision.ALLOWED_OFF_PEAK:
             window = _off_peak_window(current)
-            if window is None or window[0] != self.receipt.matched_window:
+            if window is None:
                 raise DomainError(
                     ErrorCode.CONTROL_STATE_DENIED,
-                    "DeepSeek dispatch crossed outside its admitted off-peak window",
+                    "DeepSeek dispatch crossed outside the off-peak schedule",
                 )
         else:
             override = self.plan.peak_override
@@ -732,27 +733,42 @@ def _override_matches(
 def _off_peak_window(value: datetime) -> tuple[str, datetime] | None:
     local = _local_time(value)
     minute = local.hour * 60 + local.minute
-    definitions = (
-        (0, 9 * 60, DEEPSEEK_OFF_PEAK_WINDOWS[0]),
-        (12 * 60, 14 * 60, DEEPSEEK_OFF_PEAK_WINDOWS[1]),
-        (18 * 60, 24 * 60, DEEPSEEK_OFF_PEAK_WINDOWS[2]),
-    )
-    for start, end, reference in definitions:
-        if start <= minute < end:
-            if end == 24 * 60:
-                end_local = datetime.combine(
-                    local.date() + timedelta(days=1),
-                    time.min,
-                    tzinfo=local.tzinfo,
-                )
-            else:
-                end_local = local.replace(
-                    hour=end // 60,
-                    minute=end % 60,
-                    second=0,
-                    microsecond=0,
-                )
-            return reference, end_local.astimezone(timezone.utc)
+    weekday = local.weekday()
+    if weekday >= 5:
+        days_until_monday = 7 - weekday
+        end_local = datetime.combine(
+            local.date() + timedelta(days=days_until_monday),
+            time(hour=9),
+            tzinfo=local.tzinfo,
+        )
+        return (
+            DEEPSEEK_OFF_PEAK_WINDOWS[3],
+            end_local.astimezone(timezone.utc),
+        )
+    if minute < 9 * 60:
+        end_local = local.replace(
+            hour=9,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        return DEEPSEEK_OFF_PEAK_WINDOWS[0], end_local.astimezone(timezone.utc)
+    if 12 * 60 <= minute < 14 * 60:
+        end_local = local.replace(
+            hour=14,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        return DEEPSEEK_OFF_PEAK_WINDOWS[1], end_local.astimezone(timezone.utc)
+    if 18 * 60 <= minute:
+        days_until_morning_end = 3 if weekday == 4 else 1
+        end_local = datetime.combine(
+            local.date() + timedelta(days=days_until_morning_end),
+            time(hour=9),
+            tzinfo=local.tzinfo,
+        )
+        return DEEPSEEK_OFF_PEAK_WINDOWS[2], end_local.astimezone(timezone.utc)
     return None
 
 

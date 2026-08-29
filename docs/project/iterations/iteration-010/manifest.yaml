@@ -921,6 +921,10 @@ deepseek_dispatch_admission_policy:
   scope: all-planned-development-conformance-capability-canary-comparison-regression-and-web-experience-deepseek-dispatch
   timezone: Asia/Shanghai
   allowed_windows_are_half_open: true
+  # Trusted-plan compatibility mirror only. Current calendar semantics are owned
+  # by SYS-OPS-CONFIGURATION and ITER-010-PDR-007@2: these three intervals apply
+  # Monday-Friday, Saturday-Sunday are all-day off-peak, and adjacent allowed
+  # intervals are continuous.
   allowed_windows:
     - "00:00-09:00"
     - "12:00-14:00"
@@ -1571,7 +1575,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:b2b65eecb6337eedddd82475b6ea0b2b38539de08e65d67de06ff8e5c26f743a
+  system_contract_set_digest: sha256:2241b7ca34b7203054c3a00b029ccc53e51d90e89ef0b390559388cf815b16c0
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

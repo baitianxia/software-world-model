@@ -4,7 +4,7 @@ kind: project-decision
 status: accepted
 authority: project-decision
 owners: [product, project, engineering, quality, ai, operations]
-depends_on: [ITER-010-PDR-003, ITER-010-PDR-005, ITER-010-PDR-006, FINDING-010-139, SYS-ADR-017, SYS-OPS-CONFIGURATION]
+depends_on: [ITER-010-PDR-003, ITER-010-PDR-005, ITER-010-PDR-006, FINDING-010-139, FINDING-010-179, SYS-ADR-017, SYS-OPS-CONFIGURATION]
 code: [src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py]
 iteration: ITER-010
@@ -21,6 +21,10 @@ coding_input: true
 > runtime 自动派生逐 run/request machine receipts；允许窗口内不再取得新的 human grant。峰时仍只能使用一次性 exact user override，
 > PDR-007 的时间、质量、网络前 fail-closed 和逐 request 重验均不放宽。
 
+> 2026-08-29 current correction：原实现和本文把三个时段错误地套用于一周七天。current policy revision
+> `ITER-010-PDR-007@2` 改为工作日使用三个时段，周六、周日全天闲时；相邻闲时按连续区间计算。该修正由
+> `FINDING-010-179` 闭合，不改变 Ark 优先、合法 fallback、fresh 价格检查或其他安全边界。
+
 ## Context
 
 PDR-003 已规定 Ark 优先并要求 DeepSeek 高成本批量调用尽量放到官方定义的非高峰时段，但“默认/优先”没有成为可验证的调用准入。
@@ -36,13 +40,17 @@ window check 或 override receipt。`FINDING-010-139` 因而将问题归因为�
 
 当前允许窗口固定为 `Asia/Shanghai` 半开区间：
 
-- `[00:00,09:00)`；
-- `[12:00,14:00)`；
-- `[18:00,24:00)`。
+- 周一至周五 `[00:00,09:00)`；
+- 周一至周五 `[12:00,14:00)`；
+- 周一至周五 `[18:00,24:00)`；
+- 周六 `[00:00,24:00)` 与周日 `[00:00,24:00)`，即周末全天。
+
+首尾相接的允许时段属于同一个连续闲时区间，不因午夜换日人为截断；因此普通工作日晚间可连续到次日 `09:00`，周五 `18:00` 可连续到
+周一 `09:00`。`valid_until` 仍取连续闲时结束、run 最坏时长和 run/override expiry 的最早值。
 
 门禁覆盖所有由开发或评测安排的 DeepSeek 请求，包括 probe、Conformance、Capability Evaluation、direction canary、Web 体验脚本、
-比较、回归和多问题运行；不能通过把批次改名为单题、fallback、smoke 或 live 来规避。DeepSeek 官方是否已经正式执行峰谷计价只作为
-成本事实记录，不影响本项目已经冻结的允许窗口。
+比较、回归和多问题运行；不能通过把批次改名为单题、fallback、smoke 或 live 来规避。截至 `2026-08-29`，DeepSeek 官方峰谷价格已
+生效，并明确高峰只发生在周一至周五；后续官方价格事实仍须逐 run fresh 检查，不能由运行器自行猜测或扩张窗口。
 
 当前 ITER-010 尚未进入不可预先安排的生产流量。所有 direction canary 都是 planned run，必须整体安排在允许窗口；本决定不为尚未授权的
 Production 设计异步排队协议，也不以该未来问题延迟当前 Web 体验。
@@ -89,7 +97,8 @@ authority → machine receipt runtime Gate；该 Gate 与允许窗口同时成�
 新增 `V-DEEPSEEK-IDLE-001`，至少验证：
 
 - 使用零剩余时长 fixture 验证半开窗口边界：`08:59:59` 允许、`09:00:00` 阻止、`12:00:00` 允许、`14:00:00` 阻止、
-  `18:00:00` 允许；另以非零最坏时长验证 latest start 满足 `now + worst_case_duration <= window_end`；
+  `18:00:00` 允许；周六、周日任意时刻允许，周一工作日峰时仍阻止；另验证周五晚跨入周末及周末跨午夜不会误阻断，并以非零最坏时长
+  验证 latest start 满足 `now + worst_case_duration <= continuous_window_end`；
 - 峰时且无 override 时，在 Provider socket/connected descriptor/TLS/credential/HTTP 前失败关闭，相关计数均为 `0`；
 - exact override 只覆盖绑定的 run/call/token/time 上限；
 - Ark 成功、Application/Source/Security failure 或未授权时 DeepSeek dispatch 为 `0`；
@@ -103,9 +112,10 @@ Iteration/Slice。
 ## Consequences
 
 - PDR-003/PDR-005 的“默认/优先”措辞由本决定收紧为硬准入；PDR-006 的“持续开发”不能解释成峰时立即调用 DeepSeek。
-- 当前产品 runtime 已在 clean `03520eb…` 实现机械 schedule gate，并由
-  `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 以零外部调用闭合本地确定性验证；真实 planned run 仍须独立提交 `@3` artifact、fresh 官方检查、
-  允许窗口或 exact override 及逐 dispatch/terminal receipt，不能从本地 PASS 推导 live 合规。
+- 当前产品 runtime 的原始机械 schedule gate 由 clean `03520eb…` 和
+  `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 以零外部调用闭合；`FINDING-010-179` 又把 current policy 修订为 `@2` 并补上 weekday/weekend
+  维度。真实 planned run 仍须独立提交 current artifact、fresh 官方检查、允许窗口或 exact override 及逐 dispatch/terminal receipt，不能从
+  本地 PASS 推导 live 合规。
 - 通用治理和模板必须把 declared provider window 变成可验收 admission policy；现有静态 docs validator 仅作 compatibility，不证明 run
   合规。
 - 本决定本身不授权任何 Provider/model call、credential、Source disclosure、Browser、hidden、Production 或后续 Slice；current public mall

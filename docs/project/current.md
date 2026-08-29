@@ -4,10 +4,10 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
-as_of: 2026-08-28
+as_of: 2026-08-29
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
 worktree_status: iteration-010-slice-001-product-first-browser-chat-build
@@ -57,7 +57,10 @@ Manifest 中含 `MVP` 的既有动作/Case 技术 ID 仅为可信父兼容标识
 当前状态：AUTHORIZED / REWORK / PDR-012 / PRODUCT DEVELOPMENT ACTIVE / LOOPBACK EVALUATION / NON-PRODUCTION。
 
 当前 live checkpoint：`FINDING-010-178` 已确认 run-068 的前两步按修复后的 `World Model → exact Source target` 执行；其后
-run-068/069 遇到 raw Ark HTTP error，run-070 又遇到 Ark pre-HTTP unavailable，而当前 DeepSeek fallback 为
-`DENIED_PRICING_CHECK`。没有新 product defect 或合法 route 可供继续外调；下一 fresh run 等待 Ark 恢复，或等待可信 unavailable 与既有
-fallback off-peak admission 同时成立。该 environment hold 不撤销 standing authority、不移动计划游标，也不授权改变 pricing/availability
-policy。
+run-068/069 遇到 raw Ark HTTP error，run-070 又遇到 Ark pre-HTTP unavailable。run-070 的 DeepSeek `DENIED_PRICING_CHECK` 直接来自
+超过 900 秒 freshness 上限的旧 pricing check，不是周末窗口拒绝。
+
+`FINDING-010-179` 已纠正执行准备结论与 fallback 闲时日历：`Asia/Shanghai` 周六、周日全天属于闲时，工作日继续使用三个既有时段；
+相邻闲时连续计算，因此周五 `18:00` 至周一 `09:00` 不会因午夜换日被误阻断。当前不再处于“只能等待外部环境”的 hold；下一 fresh run
+使用 policy `ITER-010-PDR-007@2` 和 900 秒内的官方 pricing check，Ark 成功时继续 primary，Ark 产生可信 unavailable verdict 时可直接进入
+既有 DeepSeek fallback。standing authority、计划游标和 Production 边界均不改变。
