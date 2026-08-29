@@ -116,6 +116,49 @@ class QueryAwareCognitionProjector(ExactCognitionProjector):
         )
 
 
+class JavaEntityCognitionProjector:
+    def project(self, *, request):
+        item = CognitionItem.create(
+            dimension=CognitionDimension.ENTITY,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_ENTITY",
+                    "entity_type": "JAVA_METHOD",
+                    "root_fields": {
+                        "declaring_type_qualified_name": (
+                            "com.example.auth.CredentialVerifier"
+                        ),
+                        "method_name": "verify",
+                    },
+                    "state_fields": {
+                        "source_path": (
+                            "src/main/java/com/example/auth/CredentialVerifier.java"
+                        )
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_ENTITY_STATE",
+            context_ref="java-entity-context",
+            source_revision=request.repository_revision,
+            locator="world-model:credential-verifier",
+            support_references=("java-entity-snapshot-evidence",),
+            coverage="Exact Java declaring type and source path.",
+        )
+        return WorldModelCognitionContext.create(
+            request=request,
+            scope_ref="fixture-scope",
+            context_ref="java-entity-context",
+            schema_ref="java-source-semantics@1",
+            snapshot_ids=("fixture-snapshot",),
+            read_authority_digest=request.world_model_read_authority_digest,
+            source_revision=request.repository_revision,
+            items=(item,),
+            coverage=("Java entity state is represented.",),
+        )
+
+
 class OverlappingQueryCognitionProjector(ExactCognitionProjector):
     def __init__(self) -> None:
         self.queries = []
@@ -795,6 +838,49 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertIn("AdminService login", query)
         self.assertIn("管理员登录", query)
 
+    def test_world_model_tool_projects_exact_java_declaring_type_search_target(
+        self,
+    ) -> None:
+        reviewer = RecordingReviewer()
+        service = self.service(
+            WorldThenAnswerDriver(),
+            reviewer,
+            cognition_projector=JavaEntityCognitionProjector(),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="凭据校验实现在哪里？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        support = reviewer.requests[0].package.support_observations[0]
+        payload = json.loads(support.content)
+        item_view = payload["dimensions"][0]
+        self.assertEqual(payload["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3")
+        self.assertEqual(
+            payload["source_search_target_projection"],
+            {
+                "schema": "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1",
+                "kind": "JAVA_DECLARING_TYPE_LITERAL",
+                "options": [
+                    {
+                        "literal": "CredentialVerifier",
+                        "resource_locators": [
+                            "src/main/java/com/example/auth/CredentialVerifier.java"
+                        ],
+                        "source_revision": self.revision,
+                        "cognition_item_ids": [item_view["item_id"]],
+                        "cognition_item_digests": [item_view["digest"]],
+                    }
+                ],
+                "truncated": False,
+                "grants_source_authority": False,
+            },
+        )
+
     def test_world_model_tool_projects_only_novel_items_across_one_turn(self) -> None:
         reviewer = RecordingReviewer()
         projector = OverlappingQueryCognitionProjector()
@@ -817,7 +903,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertEqual(len(support), 2)
         first = json.loads(support[0].content)
         second = json.loads(support[1].content)
-        self.assertEqual(first["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@2")
+        self.assertEqual(first["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3")
         self.assertEqual(first["projection"]["novel_item_count"], 2)
         self.assertEqual(
             first["projection"]["previously_observed_item_count"],

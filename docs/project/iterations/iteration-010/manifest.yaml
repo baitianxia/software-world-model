@@ -1575,7 +1575,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:2241b7ca34b7203054c3a00b029ccc53e51d90e89ef0b390559388cf815b16c0
+  system_contract_set_digest: sha256:88e1241a4d0d25fd03c4f4119cf73e0989ab05551568481a5ec16b15bf0776f5
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

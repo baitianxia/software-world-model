@@ -9,6 +9,7 @@ opaque locator references issued by a prior Broker-authorized search.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+import json
 from pathlib import PurePosixPath
 import re
 from threading import Lock
@@ -45,6 +46,8 @@ from .engineering_conversation import (
 )
 from .engineering_question_answering import (
     BrokerDecisionStatus,
+    CognitionDimension,
+    CognitionItem,
     CompiledSourceOperation,
     EngineeringEvidenceClass,
     EngineeringQuestionRequest,
@@ -69,6 +72,7 @@ from .engineering_question_answering import (
 
 _OBSERVATION_PAYLOAD_LIMIT = 240_000
 _MAXIMUM_PRIOR_SOURCE_REVALIDATION_OPTIONS = 16
+_MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
 _SOURCE_LINE_LOCATOR = re.compile(
     r"^.+:L[1-9][0-9]*(?:-L?[1-9][0-9]*)?$"
 )
@@ -520,7 +524,7 @@ class EngineeringAgentEvidenceToolAdapter:
         evidence: list[EngineeringAgentToolEvidence] = []
         if novel_items and cognition.alignment.value == "ALIGNED":
             payload = {
-                "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@2",
+                "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3",
                 "query": query,
                 "cognition_context_id": cognition.cognition_context_id.value,
                 "cognition_context_digest": cognition.digest.value,
@@ -535,6 +539,9 @@ class EngineeringAgentEvidenceToolAdapter:
                     item.model_view(alignment=cognition.alignment)
                     for item in novel_items
                 ],
+                "source_search_target_projection": (
+                    _cognition_source_search_target_projection(novel_items)
+                ),
                 "coverage": list(cognition.coverage),
             }
             content = _payload(payload)
@@ -1187,6 +1194,81 @@ def _compile_world_model_semantic_query(
             "Application-compiled World Model semantic query exceeds its bound",
         )
     return query
+
+
+def _cognition_source_search_target_projection(
+    items: Sequence[CognitionItem],
+) -> dict[str, object]:
+    """Project exact Java declaring types into bounded Source-search literals.
+
+    The projection is navigation metadata, not Source authority or evidence.
+    It is deliberately derived only from typed entity states whose declared
+    Java type and exact source filename agree, so a broad member word cannot
+    masquerade as a cognition-derived resource target.
+    """
+
+    targets: dict[str, dict[str, object]] = {}
+    truncated = False
+    for item in items:
+        if (
+            item.dimension is not CognitionDimension.ENTITY
+            or item.modality != "STRUCTURE_ENTITY_STATE"
+        ):
+            continue
+        try:
+            statement = json.loads(item.statement)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if not isinstance(statement, dict) or statement.get("kind") != "STRUCTURE_ENTITY":
+            continue
+        root_fields = statement.get("root_fields")
+        state_fields = statement.get("state_fields")
+        if not isinstance(root_fields, dict) or not isinstance(state_fields, dict):
+            continue
+        qualified_name = root_fields.get("declaring_type_qualified_name")
+        source_path = state_fields.get("source_path")
+        if not isinstance(qualified_name, str) or not isinstance(source_path, str):
+            continue
+        path = PurePosixPath(source_path)
+        literal = qualified_name.rsplit(".", 1)[-1]
+        if (
+            path.is_absolute()
+            or any(part in {"", ".", ".."} for part in path.parts)
+            or path.suffix != ".java"
+            or path.stem != literal
+            or not re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", literal)
+        ):
+            continue
+        existing = targets.get(literal)
+        if existing is not None:
+            resources = existing["resource_locators"]
+            item_ids = existing["cognition_item_ids"]
+            item_digests = existing["cognition_item_digests"]
+            assert isinstance(resources, list)
+            assert isinstance(item_ids, list)
+            assert isinstance(item_digests, list)
+            if source_path not in resources:
+                resources.append(source_path)
+            item_ids.append(item.item_id.value)
+            item_digests.append(item.digest.value)
+            continue
+        if len(targets) == _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS:
+            truncated = True
+            continue
+        targets[literal] = {
+            "literal": literal,
+            "resource_locators": [source_path],
+            "source_revision": item.source_revision,
+            "cognition_item_ids": [item.item_id.value],
+            "cognition_item_digests": [item.digest.value],
+        }
+    return {
+        "schema": "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1",
+        "kind": "JAVA_DECLARING_TYPE_LITERAL",
+        "options": tuple(targets.values()),
+        "truncated": truncated,
+        "grants_source_authority": False,
+    }
 
 
 def _payload(value: Mapping[str, object]) -> str | None:

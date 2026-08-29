@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-29
@@ -64,3 +64,10 @@ run-068/069 遇到 raw Ark HTTP error，run-070 又遇到 Ark pre-HTTP unavailab
 相邻闲时连续计算，因此周五 `18:00` 至周一 `09:00` 不会因午夜换日被误阻断。当前不再处于“只能等待外部环境”的 hold；下一 fresh run
 使用 policy `ITER-010-PDR-007@2` 和 900 秒内的官方 pricing check，Ark 成功时继续 primary，Ark 产生可信 unavailable verdict 时可直接进入
 既有 DeepSeek fallback。standing authority、计划游标和 Production 边界均不改变。
+
+`FINDING-010-180` 已封存 run-071 的新最早偏差：首步 World Model 已给出 `UmsAdminServiceImpl` 等 exact declaring type/source path，Primary
+仍以宽泛 `login` 首搜 56 个文件，并在后续 search/read 后耗尽 `64/64` Source file fuse；真正的 service target 因而没有执行。第 14 个 Ark
+dispatch 最终以 post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN` 关闭，DeepSeek 0，页面如实失败。current local candidate 升为
+`conversational-engineering-agent@8 / ENGINEERING_AGENT_PRIMARY_INPUT@8`：non-empty、non-truncated cognition target projection 将第一次
+Source search 约束到 exact declaring-type literal；定向 Tool/Model suite `38/38` PASS。fresh Browser successor 仍待新 identity 验证，不能把
+该本地候选或 run-071 追认为开发体验、质量或 MVP PASS。

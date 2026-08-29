@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -54,6 +54,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   Gap、来源和检索入口；它不是文字手册、Maven 快照或 locator 缓存。
 - 主工程 Agent 是回答问题的大脑：维护用户目标、指代、约束、假设、计划和观察；先利用问题相关世界模型认知，认知不足时提出受控源码
   操作，根据结果重规划并形成自然答案。
+- World Model 的 query-relevant Java entity projection 若已给出 non-empty、non-truncated exact declaring-type target，第一次 Source search 只能
+  从该 closed target domain 复制精确字面量；它是 cognition→Source 导航约束，不是 path authority，也不限制首次 Source action 后根据新
+  Observation 继续发现其他 source-native symbol。
 - Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
 - fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
   具体 Finding，不替主 Agent 规划或执行工具。

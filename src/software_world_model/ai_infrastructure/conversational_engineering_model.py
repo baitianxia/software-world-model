@@ -130,6 +130,11 @@ _TERMINAL_SOURCE_DENIAL_REASONS = frozenset(
     }
 )
 _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS = 32
+_MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
+_WORLD_MODEL_SUPPORT_SCHEMA = "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3"
+_COGNITION_SOURCE_SEARCH_TARGET_SCHEMA = (
+    "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1"
+)
 
 
 _PRIMARY_PROMPT = """OUTPUT ENVELOPE IS MANDATORY FOR THIS ROLE.
@@ -291,7 +296,12 @@ never a semantic description or natural-language search request. Select the
 literal for the unread target resource: when locating a declaration or
 implementation, prefer its exact source-native type or member identifier from
 current cognition instead of a caller expression found only in an already-read
-resource. The trusted
+resource. When investigation_policy.first_source_search_requires_cognition_target_copy
+is true, the first Source search is a closed navigation step: copy query exactly
+from tool_reference_policy.cognition_source_search_target_projection.options[].literal
+and from SOURCE_SEARCH.value_constraints.allowed_exact_values. Do not shorten a
+declaring type to a broad member word, invent another symbol, or treat the
+associated resource locator as Source authority. The trusted
 Broker independently enforces the exact Source Profile and may reject a class or
 query.
 Do not expose hidden rationale, invent IDs, add fields, or grant yourself any
@@ -3231,6 +3241,31 @@ def _tool_contract_view(
             },
         }
     if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
+        target_projection = tool_reference_policy[
+            "cognition_source_search_target_projection"
+        ]
+        target_binding_required = tool_reference_policy[
+            "first_source_search_requires_cognition_target_copy"
+        ]
+        value_constraints: dict[str, object] = {
+            "evidence_class": tuple(
+                item.value
+                for item in EngineeringEvidenceClass
+                if item is not EngineeringEvidenceClass.WORLD_MODEL
+            ),
+            "query": (
+                "one new short case-sensitive literal token expected verbatim in selected "
+                "evidence; semantic descriptions and natural-language search requests "
+                "are forbidden"
+            ),
+            "forbidden_exact_values": tool_reference_policy[
+                "source_search_queries_already_attempted"
+            ],
+        }
+        if target_binding_required:
+            value_constraints["allowed_exact_values"] = tuple(
+                item["literal"] for item in target_projection["options"]
+            )
         return {
             "operation": operation.value,
             "action_template": {
@@ -3245,21 +3280,7 @@ def _tool_contract_view(
                 "copy_complete_object": True,
                 "replace_every_empty_string": True,
             },
-            "value_constraints": {
-                "evidence_class": tuple(
-                    item.value
-                    for item in EngineeringEvidenceClass
-                    if item is not EngineeringEvidenceClass.WORLD_MODEL
-                ),
-                "query": (
-                    "one new short case-sensitive literal token expected verbatim in selected "
-                    "evidence; semantic descriptions and natural-language search requests "
-                    "are forbidden"
-                ),
-                "forbidden_exact_values": tool_reference_policy[
-                    "source_search_queries_already_attempted"
-                ],
-            },
+            "value_constraints": value_constraints,
         }
     if operation is EngineeringAgentToolOperation.SOURCE_READ:
         return {
@@ -3289,6 +3310,152 @@ def _tool_contract_view(
     raise DomainError(
         ErrorCode.STRATEGY_CONTRACT_MISMATCH,
         "Engineering Agent operation has no current model-facing tool contract",
+    )
+
+
+def _cognition_source_search_target_projection(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    options: dict[str, dict[str, object]] = {}
+    truncated = False
+    for observation in invocation.observations:
+        if (
+            observation.operation is not EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+            or observation.disposition.value != "SUPPORT"
+        ):
+            continue
+        try:
+            payload = json.loads(observation.content)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(payload, dict) or payload.get("schema") != _WORLD_MODEL_SUPPORT_SCHEMA:
+            continue
+        projection = payload.get("source_search_target_projection")
+        if (
+            not isinstance(projection, dict)
+            or projection.get("schema") != _COGNITION_SOURCE_SEARCH_TARGET_SCHEMA
+            or projection.get("kind") != "JAVA_DECLARING_TYPE_LITERAL"
+            or type(projection.get("truncated")) is not bool
+            or projection.get("grants_source_authority") is not False
+            or not isinstance(projection.get("options"), list)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "World Model Source target projection is malformed",
+            )
+        truncated = truncated or projection["truncated"]
+        for option in projection["options"]:
+            if not isinstance(option, dict) or set(option) != {
+                "literal",
+                "resource_locators",
+                "source_revision",
+                "cognition_item_ids",
+                "cognition_item_digests",
+            }:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "World Model Source target option has an invalid shape",
+                )
+            literal = option["literal"]
+            resources = option["resource_locators"]
+            item_ids = option["cognition_item_ids"]
+            item_digests = option["cognition_item_digests"]
+            if (
+                not isinstance(literal, str)
+                or not re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", literal)
+                or option["source_revision"]
+                != invocation.request.binding.repository_revision
+                or not isinstance(resources, list)
+                or not resources
+                or any(
+                    not isinstance(item, str)
+                    or not item
+                    or _SOURCE_LINE_LOCATOR.fullmatch(item)
+                    for item in resources
+                )
+                or not isinstance(item_ids, list)
+                or not item_ids
+                or any(not isinstance(item, str) or not item for item in item_ids)
+                or not isinstance(item_digests, list)
+                or len(item_digests) != len(item_ids)
+                or any(
+                    not isinstance(item, str) or not item.startswith("sha256:")
+                    for item in item_digests
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "World Model Source target option is inconsistent",
+                )
+            existing = options.get(literal)
+            normalized = {
+                "literal": literal,
+                "resource_locators": tuple(resources),
+                "source_revision": option["source_revision"],
+                "cognition_item_ids": tuple(item_ids),
+                "cognition_item_digests": tuple(item_digests),
+            }
+            if existing is not None:
+                known_pairs = set(
+                    zip(
+                        existing["cognition_item_ids"],
+                        existing["cognition_item_digests"],
+                        strict=True,
+                    )
+                )
+                new_pairs = tuple(
+                    pair
+                    for pair in zip(item_ids, item_digests, strict=True)
+                    if pair not in known_pairs
+                )
+                options[literal] = {
+                    **existing,
+                    "resource_locators": tuple(
+                        dict.fromkeys((*existing["resource_locators"], *resources))
+                    ),
+                    "cognition_item_ids": (
+                        *existing["cognition_item_ids"],
+                        *(pair[0] for pair in new_pairs),
+                    ),
+                    "cognition_item_digests": (
+                        *existing["cognition_item_digests"],
+                        *(pair[1] for pair in new_pairs),
+                    ),
+                }
+                continue
+            if len(options) == _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS:
+                truncated = True
+                continue
+            options[literal] = normalized
+    return {
+        "schema": _COGNITION_SOURCE_SEARCH_TARGET_SCHEMA,
+        "options": tuple(options.values()),
+        "truncated": truncated,
+        "grants_source_authority": False,
+    }
+
+
+def _first_source_search_requires_cognition_target_copy(
+    invocation: EngineeringAgentInvocation,
+    *,
+    projection: Mapping[str, object] | None = None,
+) -> bool:
+    resolved = (
+        projection
+        if projection is not None
+        else _cognition_source_search_target_projection(invocation)
+    )
+    return (
+        bool(resolved["options"])
+        and not resolved["truncated"]
+        and not any(
+            item.operation
+            in {
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            }
+            for item in invocation.action_history
+        )
     )
 
 
@@ -3406,6 +3573,7 @@ def _tool_reference_policy(
     )
     if terminal_source_denial_reason is not None:
         options = {}
+    target_projection = _cognition_source_search_target_projection(invocation)
     return {
         "prior_actions": prior_actions,
         "source_search_queries_already_attempted": tuple(
@@ -3425,6 +3593,13 @@ def _tool_reference_policy(
             sorted(attempted_resources)
         ),
         "source_read_options": tuple(options.values()),
+        "cognition_source_search_target_projection": target_projection,
+        "first_source_search_requires_cognition_target_copy": (
+            _first_source_search_requires_cognition_target_copy(
+                invocation,
+                projection=target_projection,
+            )
+        ),
         "terminal_source_denial_reason": terminal_source_denial_reason,
         "exact_action_repetition_forbidden": True,
         "unlisted_source_read_reference_forbidden": True,
@@ -3558,8 +3733,11 @@ def _investigation_policy(
         in invocation.available_operations
     )
     return {
-        "schema": "ENGINEERING_AGENT_INVESTIGATION_POLICY@1",
+        "schema": "ENGINEERING_AGENT_INVESTIGATION_POLICY@2",
         "world_model_first_before_source_required": world_model_first,
+        "first_source_search_requires_cognition_target_copy": (
+            _first_source_search_requires_cognition_target_copy(invocation)
+        ),
         "paraphrased_semantic_need_is_new_need": False,
         "world_model_gap_requery_for_same_missing_implementation_allowed": False,
         "source_search_literal_targets_unread_material_resource": True,
@@ -4319,6 +4497,20 @@ def _validate_primary_action(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 "Engineering Agent Source search class is outside the sealed catalog",
             )
+        if reference_policy[
+            "first_source_search_requires_cognition_target_copy"
+        ]:
+            allowed_targets = {
+                item["literal"]
+                for item in reference_policy[
+                    "cognition_source_search_target_projection"
+                ]["options"]
+            }
+            if arguments["query"] not in allowed_targets:
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    "the first Source search query must copy one cognition-derived target literal",
+                )
     if action.operation is EngineeringAgentToolOperation.SOURCE_READ:
         available = {
             item["locator_reference"]

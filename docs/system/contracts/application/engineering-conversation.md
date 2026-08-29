@@ -141,6 +141,15 @@ expression 反复搜索同一调用点；Source read 必须直接对应 current 
 不让模型取得 path authority，也不让 Broker 从词汇自动推断业务相关性。达到 action/file fuse 仍只失败关闭或从现有证据诚实收敛，不能
 通过提高上限冒充 progress。
 
+`ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
+投影为 `ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1`：只有 declaring type 末段、`.java` 文件 stem 和 exact `source_path`
+一致时才形成候选；每项保留来源 cognition item/revision identity，并明确不授予 Source authority。若该 projection non-empty 且未截断，
+并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@8` 必须把这些 literal 投影为第一次
+`SOURCE_SEARCH.query` 的 exhaustive `allowed_exact_values`；Provider 只能精确复制，decoder 从原 World Model SUPPORT Observation 重算并
+拒绝宽泛 member word 或其他域外值。该闭域只负责第一次 cognition→Source 导航；执行一次 Source action 后，新 Observation 中出现的
+source-native symbol 仍可按既有短字面量 contract 提议。projection 缺失或有界截断时不得伪称 exhaustive，仍由原 proposal/Broker 路径
+失败关闭或受控执行；projection locator 不是 read capability，Broker 的 Profile、allowlist、revision 和 fuse 权限不变。
+
 每个 Proposal、Decision、Operation、Observation、Conflict、Unknown、Failure、Coverage 和资源收据按顺序追加到 Turn Evidence Ledger。
 主 Agent 可以读取本 Attempt 获准的密封 Ledger prefix 与工具 Observation，但隐藏 rationale 和未密封输出不进入权威状态。
 

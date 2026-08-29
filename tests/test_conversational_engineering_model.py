@@ -2297,6 +2297,171 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
         )
 
+    def test_first_source_search_copies_cognition_derived_declaring_type(
+        self,
+    ) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="解释凭据校验调用链。",
+        )
+        world_action = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            arguments=(),
+            evidence_need="identify the credential verifier implementation target",
+        )
+        item_id = f"cognition_item_{'3' * 32}"
+        item_digest = digest_of("credential-verifier-item").value
+        world_support = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'1' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'2' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="world-model-support",
+            content=json.dumps(
+                {
+                    "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3",
+                    "source_search_target_projection": {
+                        "schema": (
+                            "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1"
+                        ),
+                        "kind": "JAVA_DECLARING_TYPE_LITERAL",
+                        "options": [
+                            {
+                                "literal": "CredentialVerifier",
+                                "resource_locators": [
+                                    "src/main/java/example/CredentialVerifier.java"
+                                ],
+                                "source_revision": (
+                                    capture.request.binding.repository_revision
+                                ),
+                                "cognition_item_ids": [item_id],
+                                "cognition_item_digests": [item_digest],
+                            }
+                        ],
+                        "truncated": False,
+                        "grants_source_authority": False,
+                    },
+                }
+            ),
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(item_id,),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("world-support-evidence"),
+            digest=digest_of("world-support-observation"),
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(world_support,),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+            ),
+            action_history=(world_action,),
+        )
+
+        rendered = _primary_input_view(invocation)
+        self.assertEqual(
+            rendered["investigation_policy"]["schema"],
+            "ENGINEERING_AGENT_INVESTIGATION_POLICY@2",
+        )
+        self.assertTrue(
+            rendered["investigation_policy"]
+            ["first_source_search_requires_cognition_target_copy"]
+        )
+        target_projection = rendered["tool_reference_policy"]
+        target_projection = target_projection[
+            "cognition_source_search_target_projection"
+        ]
+        self.assertEqual(
+            tuple(item["literal"] for item in target_projection["options"]),
+            ("CredentialVerifier",),
+        )
+        source_tool = next(
+            item
+            for item in rendered["tool_catalog"]
+            if item["operation"] == "SOURCE_SEARCH"
+        )
+        self.assertEqual(
+            source_tool["value_constraints"]["allowed_exact_values"],
+            ("CredentialVerifier",),
+        )
+
+        payload = {
+            "goal": "解释凭据校验调用链",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [world_support.observation_id.value],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_SEARCH",
+                "arguments": [
+                    {"name": "evidence_class", "value": "SOURCE"},
+                    {"name": "query", "value": "login"},
+                ],
+                "evidence_need": "locate the credential verifier implementation",
+            },
+            "draft": None,
+        }
+        with self.assertRaises(DomainError) as broad_member_word:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="broad-source-target-call",
+            )
+        self.assertEqual(
+            broad_member_word.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        payload["action"]["arguments"][1]["value"] = "CredentialVerifier"
+        proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(payload),
+            invocation=invocation,
+            model_call_ref="exact-source-target-call",
+        )
+        self.assertEqual(
+            dict(proposal.action.arguments)["query"],
+            "CredentialVerifier",
+        )
+
+        after_first_source = replace(
+            invocation,
+            action_history=(world_action, proposal.action),
+        )
+        later = _primary_input_view(after_first_source)
+        self.assertFalse(
+            later["investigation_policy"]
+            ["first_source_search_requires_cognition_target_copy"]
+        )
+        later_source_tool = next(
+            item
+            for item in later["tool_catalog"]
+            if item["operation"] == "SOURCE_SEARCH"
+        )
+        self.assertNotIn(
+            "allowed_exact_values",
+            later_source_tool["value_constraints"],
+        )
+
     def test_world_model_boundary_requires_first_available_source_follow_up(self) -> None:
         capture = CapturingTurnExecutor()
         service = InMemoryEngineeringConversationService(
