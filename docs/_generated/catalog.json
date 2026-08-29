@@ -3980,6 +3980,18 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-170.md"
   },
   {
+    "id": "FINDING-010-171",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-171.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

@@ -2201,6 +2201,86 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ("CLARIFICATION", "LIMITATION"),
         )
 
+        unavailable_source_read = {
+            "goal": "继续读取认证源码",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": ["use only sealed evidence"],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": ["需要继续调查"],
+            "plan": ["读取另一个源码文件"],
+            "observation_ids": [observation.observation_id.value],
+            "open_items": ["认证实现"],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_READ",
+                "arguments": [
+                    {
+                        "name": "locator_reference",
+                        "value": "source_locator_" + "3" * 32,
+                    }
+                ],
+                "evidence_need": "read another authentication source file",
+            },
+            "draft": None,
+        }
+        repaired_world_model = {
+            **unavailable_source_read,
+            "plan": ["查询仍可用的世界模型认知"],
+            "action": {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": [],
+                "evidence_need": "inspect remaining authentication semantics",
+            },
+        }
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                json.dumps(unavailable_source_read, ensure_ascii=False),
+                json.dumps(repaired_world_model, ensure_ascii=False),
+            )
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
+        result = model.propose(invocation)
+
+        self.assertEqual(
+            result.proposal.action.operation,
+            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+        )
+        self.assertEqual(len(result.prior_receipts), 1)
+        repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[1].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        repair_policy = repair_payload["format_repair_policy"]
+        self.assertEqual(
+            repair_policy["validation_failure_category"],
+            "CLOSED_OUTPUT_CONTRACT",
+        )
+        self.assertEqual(
+            repair_policy["validation_failure_message"],
+            "$.action.operation must copy one operation from the current "
+            "tool_catalog (allowed=[WORLD_MODEL_QUERY])",
+        )
+        self.assertEqual(
+            tuple(item["operation"] for item in repair_payload["tool_catalog"]),
+            ("WORLD_MODEL_QUERY",),
+        )
+        repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
+        self.assertEqual(
+            repair_preflight["format_repair"]["validation_failure_category"],
+            "CLOSED_OUTPUT_CONTRACT",
+        )
+        self.assertNotIn(
+            "source_locator_",
+            repair_preflight["format_repair"]["validation_failure_message"],
+        )
+
     def test_review_decoder_requires_complete_consistent_claim_assessments(self) -> None:
         request = SimpleNamespace(
             draft=SimpleNamespace(claims=(object(), object()))

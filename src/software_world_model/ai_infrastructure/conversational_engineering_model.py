@@ -199,7 +199,10 @@ validation_failure_code and validation_failure_message are trusted output from
 the local closed-schema validator. Fix that exact shape violation before
 returning; the diagnostic grants no semantic or tool authority. If
 validation_failure_category is NON_JSON_OBJECT_PREFIX, do not repeat or explain
-the invalid prefix: the next response character must be {.
+the invalid prefix: the next response character must be {. If it is
+CLOSED_OUTPUT_CONTRACT, replace the invalid proposal with one that copies only
+the current sealed reference domains and effective tool_catalog; prior output
+does not preserve an operation that the current catalog excludes.
 Every tool_catalog entry contains an action_template that is isomorphic to the
 required output action. For a tool action, copy exactly one complete
 action_template, preserve its operation and argument name/count shape, and
@@ -2609,14 +2612,22 @@ def _structured_output_diagnostic(
     )
 
 
-def _structured_output_failure_category(output_text: str) -> str:
+def _structured_output_failure_category(
+    output_text: str,
+    validation_failure_message: str,
+) -> str:
     if not output_text.lstrip().startswith("{"):
         return "NON_JSON_OBJECT_PREFIX"
     try:
         json.loads(output_text)
     except json.JSONDecodeError:
         return "JSON_SYNTAX_ERROR"
-    return "CLOSED_SCHEMA_SHAPE"
+    if (
+        "object fields do not match the closed schema"
+        in validation_failure_message
+    ):
+        return "CLOSED_SCHEMA_SHAPE"
+    return "CLOSED_OUTPUT_CONTRACT"
 
 
 def _first_closed_object_shape_mismatch(
@@ -2748,7 +2759,8 @@ def _format_repair_input_view(
         "prior_model_call_receipt_ref": failure.receipt.digest.value,
         "prior_output_text": failure.invalid_output_text,
         "validation_failure_category": _structured_output_failure_category(
-            failure.invalid_output_text
+            failure.invalid_output_text,
+            failure.message,
         ),
         "validation_failure_code": failure.code.value,
         "validation_failure_message": failure.message,
@@ -3677,6 +3689,17 @@ def _validate_primary_proposal(
     reviewed = set(
         invocation.request.snapshot_before.context.reviewed_conclusion_refs
     )
+    effective_operations = _effective_available_operations(invocation)
+    if (
+        proposal.action is not None
+        and proposal.action.operation not in effective_operations
+    ):
+        allowed = ",".join(item.value for item in effective_operations) or "none"
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "$.action.operation must copy one operation from the current "
+            f"tool_catalog (allowed=[{allowed}])",
+        )
     if (
         proposal.observation_ids != expected_observation_ids
         or proposal.accepted_correction_message_ids[: len(previous_corrections)]
@@ -3687,11 +3710,6 @@ def _validate_primary_proposal(
         or proposal.superseded_conclusion_refs[: len(previous_superseded)]
         != previous_superseded
         or not set(proposal.superseded_conclusion_refs).issubset(reviewed)
-        or (
-            proposal.action is not None
-            and proposal.action.operation
-            not in _effective_available_operations(invocation)
-        )
     ):
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
