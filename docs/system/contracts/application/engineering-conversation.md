@@ -249,16 +249,21 @@ no-progress failure 关闭。
    object 中最多 32 处可机械定位的 mismatch；每处保留失败路径，并把该路径上 trusted schema 的完整 exact field allowlist、缺失 field
    names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
-   同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 还必须递归比较 prior 与 repair 中已存在
-   的 allowlisted field：其 value/顺序必须完全不变，只允许增加原先缺失的 allowlisted field 和移除 unexpected field；否则 repair 以
-   structured-output-invalid 失败关闭。nullable union、本地 schema reference 或嵌套 object 不得隐藏可机械定位的字段缺失。该比较不把
-   prior output 规范化为 Proposal；parent mismatch 不得提前结束对仍存在的 allowlisted child value 的遍历。
-   `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4` 必须从 untrusted prior output 与 trusted schema 递归形成
-   `existing_allowed_field_copy_projection`：只保留已存在的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席；
-   Primary/Reviewer 对其中 primitive value 与 array 长度/顺序逐值精确复制，不得释义。该 projection 只把既有守恒义务做成 checklist，不赋予
-   事实、语义、Tool、Review 或 Delivery authority。`CLOSED_OUTPUT_CONTRACT` repair 若发现真实缺口只是绑定到错误 Claim，不得为满足一致性
+   同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 必须从 untrusted prior output 与
+   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
+   可对齐的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席。若一个 schema-invalid array 的所有 item 都没有任何
+   已存在 allowlisted value，则整个 array 子树不形成 copy obligation；repair 只能从 current sealed schema/domain/template 重建它。只要该
+   array 仍有一个既存 allowlisted item value，原长度/顺序与所有可对齐值就必须保持，不能用重建吞掉合法 sibling。
+   Primary/Reviewer 仍须精确复制 projection；在 Proposal decode 前，Application 还必须以
+   `RESTORE_SCHEMA_MATCHING_ALLOWLISTED_VALUES_BEFORE_DECODE@1` 把 repair 对这些既存值的任何原始漂移机械恢复为 prior exact value，再递归重验
+   最终值与顺序守恒。该 restoration 不能生成 missing field、保留 unexpected field、重建无 copy obligation 的 invalid 子树、改变 array
+   对齐或授予 Tool/事实/Review 权限；不能恢复到完全相等时仍以 structured-output-invalid 失败关闭。raw Provider output、prior output、schema
+   与最终 sealed Work State identity 必须保留可重算关系，raw 漂移本身从不获得授权。nullable union、本地 schema reference 或嵌套 object
+   不得隐藏可机械定位的字段缺失；parent mismatch 不得提前结束对仍存在的 allowlisted child value 的遍历。该 projection/restoration 只把
+   既有守恒义务做成可信机械边界，不赋予事实、语义、Tool、Review 或 Delivery authority，也不得被扩张成任意输出正规化。
+   `CLOSED_OUTPUT_CONTRACT` repair 若发现真实缺口只是绑定到错误 Claim，不得为满足一致性
    而删除缺口；针对未枚举正文结论的 Finding 应保留并使用 `claim_index=null`。diagnostic 只定位 shape，不授予
-   事实、工具或审核权，Application 也不得据此静默规范化模型输出或改变 Provider adapter
+   事实、工具或审核权；除上述显式、版本化、可重算的 existing-value restoration 外，Application 不得据此静默规范化模型输出或改变 Provider adapter
    identity/qualification。两种情况都不允许改换 route role。该诊断性修复沿用 current
    `conversational-engineering-agent-no-tools-prompt@8 / ENGINEERING_AGENT_PRIMARY_INPUT@8 / ENGINEERING_AGENT_REVIEW_INPUT@2` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若

@@ -449,7 +449,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -762,7 +762,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1110,6 +1110,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         copy_policy = preflight["format_repair"]
         self.assertTrue(copy_policy["existing_values_exact_copy_required"])
+        self.assertEqual(
+            copy_policy["existing_values_application_restoration"],
+            "RESTORE_SCHEMA_MATCHING_ALLOWLISTED_VALUES_BEFORE_DECODE@1",
+        )
+        self.assertFalse(
+            copy_policy["application_restoration_generates_missing_fields"]
+        )
+        self.assertFalse(
+            copy_policy["application_restoration_rebuilds_schema_invalid_subtrees"]
+        )
+        self.assertFalse(copy_policy["raw_repair_value_drift_authorized"])
         self.assertTrue(
             copy_policy["array_length_and_order_exact_copy_required"]
         )
@@ -1118,6 +1129,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             [
                 "ADD_MISSING_ALLOWLISTED_FIELD",
                 "REMOVE_UNEXPECTED_FIELD",
+                "REBUILD_SCHEMA_INVALID_SUBTREE_WITH_NO_EXISTING_ALLOWLISTED_VALUES",
             ],
         )
         projection = copy_policy["existing_allowed_field_copy_projection"]
@@ -1145,6 +1157,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             adapter.requests[1].messages[0].content,
         )
         self.assertIn(
+            "no existing allowlisted value",
+            adapter.requests[1].messages[0].content,
+        )
+        self.assertIn(
             "Never infer a type relationship or catch boundary",
             adapter.requests[1].messages[0].content,
         )
@@ -1153,7 +1169,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             adapter.requests[1].messages[0].content,
         )
 
-    def test_closed_shape_repair_cannot_change_existing_allowed_fields(self) -> None:
+    def test_closed_shape_repair_restores_existing_allowed_fields(self) -> None:
         capture = CapturingTurnExecutor()
         capture_service = InMemoryEngineeringConversationService(
             _binding(),
@@ -1184,6 +1200,55 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         _, model, _, _, _, _ = self._service(adapter=adapter)
 
+        result = model.propose(
+            EngineeringAgentInvocation(
+                request=capture.request,
+                previous_work_state=None,
+                observations=(),
+                review_findings=(),
+                review_digest=None,
+                available_operations=(
+                    EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                ),
+            )
+        )
+
+        self.assertEqual(result.proposal.goal, valid["goal"])
+        self.assertNotEqual(result.proposal.goal, semantic_drift["goal"])
+        self.assertEqual(len(adapter.requests), 2)
+        self.assertTrue(model.audits[-1].receipt.successful)
+
+    def test_closed_shape_repair_cannot_change_existing_array_length(self) -> None:
+        capture = CapturingTurnExecutor()
+        capture_service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = capture_service.create_conversation()
+        capture_service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="修订当前结论。",
+        )
+        valid = json.loads(SequencedLiveAgentAdapter().outputs[1])
+        malformed = {
+            **valid,
+            "input_owned_identity": "must-not-cross-the-output-boundary",
+        }
+        array_drift = {
+            **valid,
+            "plan": [*valid["plan"], "repair must not append a plan item"],
+        }
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                json.dumps(malformed, ensure_ascii=False),
+                json.dumps(array_drift, ensure_ascii=False),
+            )
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
         with self.assertRaises(EngineeringAgentModelCallFailure) as failure:
             model.propose(
                 EngineeringAgentInvocation(
@@ -1207,6 +1272,89 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model.audits[-1].receipt.failure_kind,
             EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
         )
+
+    def test_closed_shape_repair_rebuilds_argument_array_without_copy_obligation(self) -> None:
+        capture = CapturingTurnExecutor()
+        capture_service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = capture_service.create_conversation()
+        capture_service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="解释 mall-search 的构建和启动依赖。",
+        )
+        repaired = json.loads(SequencedLiveAgentAdapter().outputs[1])
+        repaired["phase"] = "INVESTIGATING"
+        repaired["open_items"] = [
+            "mall-search Spring Boot entry point unknown - no Java type observed"
+        ]
+        repaired["action"] = {
+            "operation": "SOURCE_SEARCH",
+            "arguments": [
+                {"name": "evidence_class", "value": "BUILD_CONFIGURATION"},
+                {"name": "query", "value": "docker-maven-plugin"},
+            ],
+            "evidence_need": "Locate the exact build plugin declaration",
+        }
+        repaired["draft"] = None
+        malformed = {
+            **repaired,
+            "open_items": [
+                "mall-search Spring Boot entry point unknown — no Java type observed"
+            ],
+            "action": {
+                **repaired["action"],
+                "arguments": [
+                    {
+                        "evidence_class": "BUILD_CONFIGURATION",
+                        "query": "docker-maven-plugin",
+                    }
+                ],
+            },
+        }
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                json.dumps(malformed, ensure_ascii=False),
+                json.dumps(repaired, ensure_ascii=False),
+            )
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
+        result = model.propose(
+            EngineeringAgentInvocation(
+                request=capture.request,
+                previous_work_state=None,
+                observations=(),
+                review_findings=(),
+                review_digest=None,
+                available_operations=(
+                    EngineeringAgentToolOperation.SOURCE_SEARCH,
+                ),
+            )
+        )
+
+        self.assertEqual(
+            result.proposal.open_items,
+            (
+                "mall-search Spring Boot entry point unknown — no Java type observed",
+            ),
+        )
+        self.assertEqual(
+            result.proposal.action.arguments,
+            (
+                ("evidence_class", "BUILD_CONFIGURATION"),
+                ("query", "docker-maven-plugin"),
+            ),
+        )
+        repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
+        action_projection = repair_preflight["format_repair"][
+            "existing_allowed_field_copy_projection"
+        ]["action"]
+        self.assertNotIn("arguments", action_projection)
 
     def test_format_repair_identifies_cross_disposition_claim_reference(self) -> None:
         capture = CapturingTurnExecutor()
@@ -1418,7 +1566,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][

@@ -67,6 +67,10 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   具体 Finding，不替主 Agent 规划或执行工具。
 - Reviewer 指定现有 Package 足够时，同包 rewrite 必须生成 successor Work State/Draft/fresh Review；Package origin 保留首次封装该证据集的
   Work State，不随 rewrite 改写，也不能被 Response Control 当成当前 Delivery Work State。任何新 Observation 仍形成新 Package。
+- closed-shape repair 的 copy obligation 只覆盖 prior output 中已经存在、allowlisted 且可按 schema 对齐的值。完全没有既存 allowlisted item
+  value 的 invalid array 子树必须从 sealed schema/domain/template 重建，不继承原长度；其余 array 长度/顺序继续守恒。Application 在 Proposal
+  decode 前只把 repair 对可对齐既存值的漂移恢复为 prior exact value，再执行原 closed-schema、tool catalog、Context/Evidence 和 completion
+  校验；它不生成缺失字段、不解释 unexpected key、不扩大工具或把 raw drift 追认为授权语义。
 
 该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
 组合成普通用户可直接判断方向的产品结果。

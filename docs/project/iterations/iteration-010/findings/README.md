@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,10 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-184](FINDING-010-184.md)：run-074 首次交付真实三轮 Chat，分类删除异质题也成功；Maven/启动链题随后因
+  `SOURCE_SEARCH.arguments` 的单个 malformed item 必须重建为两个 sealed-template item，却被 `@4` 无条件 array-length copy obligation
+  拒绝，并伴随 `—`→`-` 的既存文本漂移。现以 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5` 只允许完全没有既存 allowlisted item value 的 invalid
+  array 子树重建，并在 decode 前恢复其余 prior exact value；受影响组合 `141/141` PASS，fresh successor 待验证。
 - [FINDING-010-183](FINDING-010-183.md)：run-073 的 same-Package targeted rewrite 已获第二次 fresh Reviewer `APPROVED`，却因 Response
   Control 要求 successor Work State 等于 Package 首次封装状态而失败。现明确 immutable Package origin 语义，并重验 Package identity 与
   current Work State→Draft→Review exact chain；真实 sealed-control 正负向回归 PASS，fresh Browser successor 待验证。

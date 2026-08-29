@@ -42,14 +42,14 @@ Source → 世界模型构建/查询 → Agent → Evidence/Answer → Review �
 
 ## 唯一下一开发动作
 
-使用已有 run-052/053 trace 和当前代码确定最早可证实的产品偏差，完成一条非 POM/Maven 问题的真实三轮浏览器 Conversation。世界模型
-必须产生可观察的非 locator 认知贡献；认知不足时主 Agent 必须按 Gap 只读源码；最终页面必须显示自然答案、Citation 和本轮 fresh Review。
+run-074 已完成并即时交付第一条非 POM/Maven 真实三轮浏览器 Conversation：同一登录 Conversation 的初问、追问与口径纠正均显示自然
+Answer、current Citation、fresh Review 和 Delivery Authorization。它是 `requires_result=false` 的“开发体验候选”，不是 MVP、质量 PASS、
+方向 PASS 或完成。
 
-该链一旦可操作，立即启动在 http://127.0.0.1:8765/ 作为“开发体验候选”交给用户，requires_result=false；它不等待 current Codex
-比较，但也不得称为 MVP、质量 PASS、方向 PASS 或完成。交付开发体验候选后不暂停、不等待新的用户决定，立即在同一候选上用至少两个
-未参与修复的异质问题和 current Codex 强基线完成质量资格判断。只有系统自身重大错误为 0、逐题相对 Codex 无物质退步、总体严格更优，
-且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一开发闭环，不新建迭代、PDR、失败 Result
-或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
+当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：完成 `FINDING-010-184` 的 fresh clean successor，先复验
+run-074 的 Maven/启动链失败题，再用未参与修复的异质题与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
+相对 Codex 无物质退步、总体严格更优，且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一
+开发闭环，不新建迭代、PDR、失败 Result 或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
 
 Manifest 中含 `MVP` 的既有动作/Case 技术 ID 仅为可信父兼容标识，不构成 MVP 资格或完成声明；MVP 资格只由上述绝对质量与同题 Codex
 比较共同决定。
@@ -87,3 +87,11 @@ successor Work State 等于 Package 首次封装状态而拒绝 Delivery，页�
 DeepSeek 0、retry 0、Production 未执行。current local candidate 已分离 Search operation-local 与 whole-Turn codes，并保持 immutable
 Package origin 跨同包 rewrite；相关八模块 `225 tests / 3 skipped / 0 failure`。fresh Browser successor 仍待新 product/run identity，
 run-073 不取得开发体验、质量或 MVP PASS。
+
+`FINDING-010-184 / run-074` 已把上述 local candidate 贯通为真实三轮开发体验：登录 Conversation 三个 Turn 以 Ark `14/9/4` 次 dispatch
+全部 `SUCCEEDED / ACCEPTED`，独立分类删除题又以 Ark 7 次成功；该三轮页面已经作为非 MVP 开发体验候选交付。第五个 Maven/启动链题在
+Ark 5 次后因 `SOURCE_SEARCH.arguments` 的单个 malformed item 必须重建为两个 sealed-template item、却被旧 array-length copy obligation
+拒绝而失败；同一 repair 还把既存 `—` 释义为 `-`。run-074 总计 Ark dispatch/TLS/credential/HTTP `39/39/39/39`，DeepSeek 0、retry 0、
+unknown 0、Production 未执行，故不是 Ark 不可用。current local candidate 以 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5` 仅允许完全没有既存
+allowlisted item value 的 invalid array 子树重建，并在 Proposal decode 前恢复其余 prior exact value；受影响组合 `141/141` PASS。fresh
+clean successor 仍须复验失败题并完成 current Codex 质量比较，不能把首个可操作链或本地修复称为 MVP。

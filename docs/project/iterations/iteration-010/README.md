@@ -51,11 +51,14 @@ scope 内 Provider dispatch 已恢复；首次完整链可操作即以开发体�
 历史失败，不撤销 PDR-008 的公开工程 standing authority。普通失败留在当前 BUILD 做分层归因、通用修复与异质复验；不得生成失败 Result、
 新 PDR 或重复授权。只有真实 scope delta、用户明确 STOP/REDIRECT/REJECT 或不可绕过的安全禁止才停止相关工作。
 
-当前最新证据是 `FINDING-010-182/183 / run-073`：Search-only scope 已真实把 cognition target 首搜收窄到 1 个文件；后续普通 Search
-达到单次 56-file scan 上限时却被 Worker 误标为 whole-Turn fuse，导致 Agent 在实际 `59/64`、Source catalog 仍可用时提前作答。第二次
-fresh Review 已批准同一 Package 的 targeted rewrite，但 Response Control 又把 Package 首次封装状态误当成 successor Delivery Work State，
-最终页面如实 `AGENT_PROTOCOL_VIOLATION`。current local candidate 已分离 operation-local/whole-Turn codes，并保持 immutable Package origin
-跨同包 rewrite；相关八模块 `225 tests / 3 skipped / 0 failure`，fresh Browser successor 仍待验证。
+当前最新证据是 `FINDING-010-184 / run-074`。`FINDING-010-182/183` 的 Source Boundary 与 same-Package Delivery 修复已经真实贯通：同一
+登录 Conversation 的三个语义 Turn 以 Ark `14/9/4` 次全部 `SUCCEEDED / ACCEPTED`，页面逐轮显示 Answer、current Citation、fresh Review
+和 Delivery Authorization，并已作为非 MVP 开发体验候选立即交付；独立分类删除题也以 Ark 7 次成功。第五个 Maven/启动链题随后在
+same-profile closed-shape repair 中失败：一个完全不含 allowlisted item field 的 malformed arguments array 必须从 1 item 重建为 sealed
+template 的 2 item，旧 `@4` 却把原长度当作 copy obligation；repair 还把既存 `—` 释义为 `-`。run-074 总计 Ark
+dispatch/TLS/credential/HTTP `39/39/39/39`，DeepSeek 0、retry/unknown 0、Production 未执行。current `@5` local candidate 只允许无既存
+allowlisted item value 的 invalid array 子树重建，并机械恢复其余 prior exact value；受影响组合 `141/141` PASS。下一步是 fresh clean
+复验失败题、未参与修复异质题和 actual current Codex 比较，首个可操作链仍不能称为 MVP。
 
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 

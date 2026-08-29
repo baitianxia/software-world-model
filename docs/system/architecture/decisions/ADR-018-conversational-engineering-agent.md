@@ -143,3 +143,15 @@ call expression”混同为对 callee semantics 的断言，并在给出同包�
 World Model，最终在答案前撞上 8-action 上限。`FINDING-010-177` 因而把 exact budget projection、fresh World Model-first、semantic-gap
 no-requery 和 unresolved-target Source relevance 纳入主 Agent interface；上限保持 8，零预算只允许基于现有 Evidence 收敛或失败关闭。当前
 增加 `BOUNDED_INVESTIGATION_BUDGET_AND_TARGET_RELEVANCE_LOCAL_CANDIDATE`，仍须由 fresh exact Browser successor 验证。
+
+后续 `FINDING-010-180/181/182/183` 又依次把 cognition-derived first Source target、trusted Search-only path scope、Search
+operation-local Boundary 与 whole-Turn fuse、以及 same-Package rewrite 的 immutable origin/current Delivery chain 闭合。fresh
+`run-074` 首次形成并交付真实三轮语义 Conversation，另一个独立分类删除问题也成功；Maven/启动链问题则暴露新的 repair 合同矛盾：初始
+`SOURCE_SEARCH.arguments` 只有一个完全不含 allowlisted item field 的 invalid object，合法 repair 必须从 sealed action template 重建为两个
+`name/value` item，但 `@4` projection 仍把原 array 长度 `1` 当作 copy obligation，且模型同时把既存文本中的 `—` 释义为 `-`，所以安全
+guard 必然拒绝。`FINDING-010-184` 因而把 final preflight 升为 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5`：只有 schema-invalid array 的全部
+item 都没有任何既存 allowlisted value 时，该子树才不形成 copy obligation并可从 current sealed schema/domain/template 重建；只要存在一个
+合法 item value，原长度、顺序与 sibling 守恒不变。对其余可对齐既存值，Application 在 Proposal decode 前只执行版本化的 prior-exact
+restoration，再重验机械相等；它不生成 missing field、不映射 unexpected field、不重建 invalid subtree，也不授予事实、Tool、Review 或
+Delivery 权限。raw repair 漂移仍不获授权，无法恢复或 downstream contract 不成立仍失败关闭。当前增加
+`SCHEMA-INVALID-ZERO-COPY-SUBTREE-REBUILD_AND_EXISTING-VALUE-RESTORATION_LOCAL_CANDIDATE`，fresh Browser successor 仍须验证失败题与异质题。
