@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -31,7 +31,7 @@ CURRENT READINESS ACCEPTED / PDR-012 PRODUCT DEVELOPMENT ACTIVE。
 SLICE-001 是唯一 active coding input。当前公开 mall exact revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的
 standing authority 仍有效，因此产品代码、主工程 Agent、Prompt/Reviewer、loopback Web 和范围内 Provider dispatch 可以直接继续。
 PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-012、run-052/053 及
-run-074/075 trace、当前 System Contracts 与公开 mall exact revision。
+run-074/075/076 trace、当前 System Contracts 与公开 mall exact revision。
 
 ## Outcome, scope and non-goals
 
@@ -45,9 +45,10 @@ run-074/075 trace、当前 System Contracts 与公开 mall exact revision。
 
 run-074 的第一条真实三轮链已经作为“开发体验候选”交付，requires_result=false；它不得称为 MVP、质量 PASS、方向 PASS 或完成。首次交付前
 只运行了 targeted impact、startup、安全和失败真实性验证，没有以全量回归、hidden、跨工程、完整比较基础设施或工程夯实延迟早期反馈。
-候选交付后开发未暂停。run-075 已复验旧 Maven/启动链失败题并完成显式新 Conversation 省略指代 probe，但同时发现 Reviewer 漏判标题
-继承分类和 exhausted Source budget 仍暴露 dangling read option；当前继续完成通用修复、绝对质量检查和 current Codex 同题比较，两者通过
-才取得 MVP 资格。
+候选交付后开发未暂停。run-075 已复验旧 Maven/启动链失败题，并暴露 Reviewer 漏判标题继承分类和 exhausted Source budget 仍暴露
+dangling read option；run-076 又证明 Source 修复已越过旧矛盾，但 9 次成功 Ark call 后的 repair 与后四题均遇到 raw HTTP error，五题都未
+交付。它同时暴露空 Context 的复数/类别指代和 Browser failure 分层显示缺口；当前继续完成通用修复、绝对质量检查和 current Codex 同题
+比较，两者通过才取得 MVP 资格。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 
@@ -72,8 +73,9 @@ SLICE-001 保持 authorized/coding_input=true。主要风险是继续碰单题�
 ## System contracts and unresolved decisions
 
 SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model Answering、Source Artifact、Security 和 Local Browser 合同
-继续拥有跨模块语义。run-074/075 暴露的 closed-shape repair、Source budget/reference/catalog coherence 与 inherited-container assertion
-偏差已由 `FINDING-010-184/185/186` 回写 Engineering Conversation 唯一 Owner；当前
+继续拥有跨模块语义。run-074/075/076 暴露的 closed-shape repair、Source budget/reference/catalog coherence、inherited-container assertion、
+空 Context plural/class demonstrative 与 failure evidence display 偏差已由 `FINDING-010-184/185/186/188/189` 回写 Engineering Conversation
+唯一 Owner；当前
 没有会阻止后续质量资格开发的未决架构问题。实现若发现新的合同级偏差，继续按 Finding policy 回写唯一 Owner，同时继续不受影响的产品工作。
 
 ## Verification readiness
@@ -92,7 +94,8 @@ SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model A
 工作计划不能创建、扩大、撤销或消费 standing authority。只有私有/新 Source、新接收方或账户、扩大披露/预算、外部写入、非 loopback、
 Production 或破坏性动作需要最小增量权限。用户明确 STOP / REDIRECT / REJECT 或不可绕过的安全禁止会停止对应工作；普通失败不会。
 
-当前没有权限、计划或环境阻塞。开发体验候选已交付，Maven/启动链旧失败也已由 run-075 真实复验；唯一下一动作是用
-`FINDING-010-185/186` 的 clean successor 复验角色重分配题、容器语义审核与未参与修复的异质题，随后继续 actual current Codex 比较，直到
+当前没有权限或计划阻塞。run-076 的 raw Ark HTTP error 只阻止该运行，不撤销 standing authority 或本地开发；唯一下一动作是用
+`FINDING-010-185/186/188/189` 的 clean successor 复验角色重分配题、容器语义审核、空 Context plural/class demonstrative、失败分层显示与
+未参与修复的异质题，随后继续 actual current Codex 比较，直到
 同候选取得或如实未取得质量合格 MVP。技术 Case ID
 `V-BROWSER-CHAT-MVP-BUILD-001` 只作兼容标识，不能单独证明 MVP 完成。

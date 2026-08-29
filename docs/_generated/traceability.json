@@ -3534,6 +3534,24 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-188": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-188.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_conversation.py"
+    ],
+    "tests": [
+      "tests/test_engineering_conversation.py"
+    ]
+  },
+  "FINDING-010-189": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-189.md",
+    "code": [
+      "src/software_world_model/interface/engineering_chat_browser_ui.py"
+    ],
+    "tests": [
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

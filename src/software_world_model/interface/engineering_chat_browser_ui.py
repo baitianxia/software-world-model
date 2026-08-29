@@ -165,7 +165,7 @@ function messageNode(message, turns) {
       const failed=turn.state==="FAILED";
       state.className=`small${failed?" turn-failure":""}`;
       state.textContent=failed
-        ?`Turn ${turn.sequence} · FAILED · ${turn.failure.code} · Provider dispatch ${turn.provider_dispatch_count}`
+        ?turnFailureSummary(turn)
         :`Turn ${turn.sequence} · ${turn.state} · ${turn.quality_status} · Provider dispatch ${turn.provider_dispatch_count}`;
       article.append(state);
       if (turn.evidence_package_ref||turn.review_ref||turn.delivery_authorization_ref||(turn.citations||[]).length) {
@@ -174,6 +174,13 @@ function messageNode(message, turns) {
     }
   }
   return article;
+}
+
+function turnFailureSummary(turn) {
+  const providerEvidence=turn.provider_failure_code
+    ?` · Provider evidence ${turn.provider_failure_classification} / ${turn.provider_failure_code}`
+    :"";
+  return `Turn ${turn.sequence} · FAILED · Execution ${turn.failure.code}${providerEvidence} · Provider dispatch ${turn.provider_dispatch_count}`;
 }
 
 function renderProjection(value) {
@@ -235,7 +242,7 @@ byId("composer").addEventListener("submit",async event=>{
     if (turn.state==="SUCCEEDED") {
       setNotice(`Turn ${turn.sequence} 已交付：${turn.state} / ${turn.quality_status}。Conversation 保持 ${value.conversation.state}。`,false);
     } else {
-      setNotice(`Turn ${turn.sequence} 已记录：${turn.state} / ${turn.failure.code}。Conversation 保持 ${value.conversation.state}。`,true);
+      setNotice(`${turnFailureSummary(turn)}。Conversation 保持 ${value.conversation.state}。`,true);
     }
   } catch (error) {
     setNotice(`Turn 提交失败：${error.message}`,true);

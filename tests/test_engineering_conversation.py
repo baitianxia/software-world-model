@@ -179,33 +179,41 @@ class EngineeringConversationTests(unittest.TestCase):
             turn_executor=executor,
             id_generator=SequentialIdGenerator(),
         )
-        conversation = service.create_conversation()
+        for message in (
+            "它失败时会记录什么？",
+            "这些失败也会回滚吗？",
+            "那些写入都会回滚吗？",
+            "此类副作用能确认吗？",
+        ):
+            with self.subTest(message=message):
+                conversation = service.create_conversation()
+                submission = service.submit_turn(
+                    conversation_id=conversation.conversation.conversation_id,
+                    expected_revision=Revision(1),
+                    message=message,
+                )
 
-        submission = service.submit_turn(
-            conversation_id=conversation.conversation.conversation_id,
-            expected_revision=Revision(1),
-            message="它失败时会记录什么？",
-        )
-
-        self.assertEqual(executor.requests, [])
-        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
-        self.assertEqual(
-            submission.snapshot.messages[-1].kind,
-            ConversationMessageKind.CLARIFICATION,
-        )
-        self.assertIn("请明确", submission.snapshot.messages[-1].content)
-        self.assertEqual(submission.turn.provider_dispatch_count, 0)
-        self.assertEqual(submission.turn.retry_count, 0)
-        self.assertEqual(submission.turn.delivery_state, "NOT_AUTHORIZED")
-        self.assertEqual(
-            submission.turn.quality_status,
-            ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY,
-        )
-        self.assertIsNone(submission.turn.work_state_ref)
-        self.assertEqual(
-            submission.snapshot.context.included_user_message_ids,
-            (submission.turn.user_message_id,),
-        )
+                self.assertEqual(executor.requests, [])
+                self.assertEqual(
+                    submission.turn.state, ConversationTurnState.SUCCEEDED
+                )
+                self.assertEqual(
+                    submission.snapshot.messages[-1].kind,
+                    ConversationMessageKind.CLARIFICATION,
+                )
+                self.assertIn("请明确", submission.snapshot.messages[-1].content)
+                self.assertEqual(submission.turn.provider_dispatch_count, 0)
+                self.assertEqual(submission.turn.retry_count, 0)
+                self.assertEqual(submission.turn.delivery_state, "NOT_AUTHORIZED")
+                self.assertEqual(
+                    submission.turn.quality_status,
+                    ENGINEERING_CHAT_APPLICATION_CLARIFICATION_QUALITY,
+                )
+                self.assertIsNone(submission.turn.work_state_ref)
+                self.assertEqual(
+                    submission.snapshot.context.included_user_message_ids,
+                    (submission.turn.user_message_id,),
+                )
 
         explicit = service.create_conversation()
         explicit_submission = service.submit_turn(

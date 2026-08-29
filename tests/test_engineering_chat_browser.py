@@ -8,6 +8,7 @@ import unittest
 from software_world_model.application_services.engineering_conversation import (
     ConversationMessageKind,
     EngineeringChatBinding,
+    EngineeringProviderFailureClassification,
     EngineeringTurnCitation,
     EngineeringTurnExecutionOutcome,
     InMemoryEngineeringConversationService,
@@ -125,6 +126,8 @@ class EngineeringChatBrowserTests(unittest.TestCase):
             script["body"].decode(),
         )
         self.assertIn("turnEvidenceNode", script["body"].decode())
+        self.assertIn("turnFailureSummary", script["body"].decode())
+        self.assertIn("Provider evidence", script["body"].decode())
         self.assertIn("fresh Review", script["body"].decode())
         self.assertIn("citation.locator", script["body"].decode())
 
@@ -269,6 +272,60 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertEqual(value["submitted_turn"]["provider_dispatch_count"], 0)
         self.assertEqual(value["submitted_turn"]["delivery_state"], "NOT_AUTHORIZED")
         self.assertEqual(value["submitted_turn"]["quality_status"], "NOT_ACCEPTED")
+
+    def test_failed_turn_projects_execution_and_raw_provider_failure_layers(
+        self,
+    ) -> None:
+        class ProviderHttpFailureExecutor:
+            def execute(self, request):
+                return EngineeringTurnExecutionOutcome.failed(
+                    request_digest=request.request_digest,
+                    assistant_content="首选执行配置返回了原始 HTTP 失败。",
+                    included_user_message_ids=(request.user_message.message_id,),
+                    failure_code="AGENT_MODEL_CALL_REJECTED",
+                    failure_message="Primary Agent model call was rejected",
+                    provider_dispatch_count=1,
+                    provider_failure_classification=(
+                        EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+                    ),
+                    provider_failure_code="PROVIDER_HTTP_ERROR",
+                )
+
+        binding = EngineeringChatBinding.create(
+            product_revision="a" * 40,
+            project_name="mall",
+            repository_revision="b" * 40,
+            world_model_status=RuntimeCapabilityStatus.READY,
+            world_model_authority_digest=digest_of({"world_model": "exact"}),
+            provider_status=RuntimeCapabilityStatus.READY,
+            provider_route_ref="qualified-route@1",
+            known_limitations=("Alpha only",),
+        )
+        self.app = EngineeringChatBrowserApplication(
+            InMemoryEngineeringConversationService(
+                binding,
+                turn_executor=ProviderHttpFailureExecutor(),
+                id_generator=SequentialIdGenerator(),
+            )
+        )
+        created = self.create_conversation()
+
+        value = self.value(
+            self.call(
+                "POST",
+                "/v1/engineering-chat/conversations/"
+                f"{created['conversation']['conversation_id']}/turns",
+                {"conversation_revision": 1, "message": "登录流程是什么？"},
+            )
+        )
+
+        turn = value["submitted_turn"]
+        self.assertEqual(turn["failure"]["code"], "AGENT_MODEL_CALL_REJECTED")
+        self.assertEqual(
+            turn["provider_failure_classification"], "PROVIDER_HTTP_ERROR"
+        )
+        self.assertEqual(turn["provider_failure_code"], "PROVIDER_HTTP_ERROR")
+        self.assertEqual(turn["provider_dispatch_count"], 1)
 
     def test_failure_does_not_stop_next_turn_and_get_returns_full_history(self) -> None:
         created = self.create_conversation()

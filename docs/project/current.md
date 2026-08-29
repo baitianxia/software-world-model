@@ -4,10 +4,10 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
-as_of: 2026-08-29
+as_of: 2026-08-30
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
 worktree_status: iteration-010-slice-001-product-first-browser-chat-build
@@ -46,8 +46,8 @@ run-075 已以 fresh clean product 复验 run-074 的 Maven/启动链失败题�
 库存失败追问和新 Conversation 省略指代隔离 probe。它延续已交付的 `requires_result=false`“开发体验候选”，仍不是 MVP、质量 PASS、方向
 PASS 或完成；其中库存追问存在标题分类错误且 fresh Reviewer 漏判，角色重分配题又在 Source budget/reference contract 矛盾处失败。
 
-当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186` 的 clean successor 复验角色重分配题、
-容器语义审核和未参与修复的异质题，再与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
+当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189` 的 clean successor 复验角色重分配题、
+容器语义审核、空上下文复数指代、失败分层显示和未参与修复的异质题，再与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
 相对 Codex 无物质退步、总体严格更优，且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一
 开发闭环，不新建迭代、PDR、失败 Result 或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
 
@@ -105,3 +105,11 @@ run-075 总计 Ark dispatch/TLS/credential/HTTP `31/31/31/31`，DeepSeek 0、ret
 current local candidate 现投影 `ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1` 并让 budget/options/catalog 同步，同时要求 Claim/Reviewer 审核
 heading/table/list 继承的 category、scope、condition、certainty、negation；无 AF_UNIX 依赖的受影响组合 `127/127` PASS。扩展 141 项 raw
 为 135 PASS + 1 FAIL + 5 ERROR，六项均是 sandbox 禁止本机 socket 的环境噪声；fresh successor 仍待执行。
+
+`FINDING-010-187/188/189 / run-076` 随后证明角色重分配题已越过旧 Source contradiction：前 9 个 Ark call 完成真实
+World Model、Source Search/Read 和 Answer Draft，Application 又正确拒绝把 BOUNDARY observation 当作 Claim support。其 repair 与后四个
+冻结 Turn 的首个 call 连续得到 raw `PROVIDER_HTTP_ERROR`；没有 availability owner 的受信 unavailable verdict，因此 DeepSeek 虽通过
+周末 `ALLOWED_OFF_PEAK` admission 仍保持 0 dispatch，行为正确。五个 Turn 均未交付，不能验证答案/Reviewer 质量。新 Conversation 的
+“这些失败也会回滚吗？”还暴露复数指代 marker 缺口，页面又只显示 stage `AGENT_MODEL_CALL_REJECTED` 而未展示已保留的 raw Provider
+字段。current candidate 已通用补齐单数/复数/类别指示 Clarification，并让 Browser 分层显示 execution 与 raw Provider evidence；定向
+Conversation/Browser `20/20` PASS、外调 0。fresh successor 仍是唯一产品验证，run-076 不取得 MVP 或质量 PASS。

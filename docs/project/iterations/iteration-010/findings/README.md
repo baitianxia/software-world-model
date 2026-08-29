@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,14 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-189](FINDING-010-189.md)：run-076 的 Turn/route projection 已保留 raw `PROVIDER_HTTP_ERROR`，Browser 主消息与 notice 却只显示
+  `AGENT_MODEL_CALL_REJECTED`。现把 execution-stage code 与 raw Provider classification/code 分层展示；UI 不取得 availability/fallback
+  权威，也不暴露错误正文、凭据或未密封输出。
+- [FINDING-010-188](FINDING-010-188.md)：新 Conversation 的“这些失败也会回滚吗？”没有命中旧 zh-CN marker 集，错误进入 Ark attempt。
+  current Binding-owned policy 已通用覆盖单数、复数和类别性指示表达，仍仅在真正 EMPTY CONTEXT 下以零 dispatch Clarification 关闭。
+- [FINDING-010-187](FINDING-010-187.md)：run-076 的角色重分配题已完成 9 次 Ark call、真实 Source Read 和 Answer Draft，越过旧 dangling
+  locator 矛盾；repair 与后四题随后连续收到 raw `PROVIDER_HTTP_ERROR`。没有受信 unavailable verdict，故已获周末闲时 admission 的
+  DeepSeek 保持 0 dispatch 正确。五题均未交付，质量仍未验证。
 - [FINDING-010-186](FINDING-010-186.md)：run-075 的库存失败追问把消息发送列入“数据库写入一定未发生”，而 Claim 只记录调用顺序，fresh
   Reviewer 对 10 个窄 Claim 全部 `SUPPORTED` 并漏掉标题继承的错误分类。现要求 Claim 和 Reviewer 都把 heading/table/list 容器的
   category/scope/condition/certainty/negation 纳入完整 assertion；漏枚举用 global Finding，错误分类用 concrete defect。

@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -77,6 +77,10 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - Claim inventory 与 fresh Reviewer 都必须把 heading、table column、list lead-in、label 或 surrounding sentence 继承的 category、scope、
   condition、certainty、negation 视为 contained assertion 的一部分；漏 qualifier 是 global completeness Finding，错误 qualifier 是 concrete
   defect。不得只审核脱离容器的窄 action/outcome Claim。
+- 空新 Conversation 的语言 policy 必须在任何 external attempt 前覆盖单数、复数与类别性指示表达；例如没有先行对象的“这些/那些/此类”
+  只能形成零 dispatch Clarification。该规则只看 versioned language capability 和可信 Context，不按业务名词、问题或工程分支。
+- 失败 Turn 的 Browser projection 与显示必须区分 execution-stage failure 和 raw Provider classification/code。raw evidence 不自动等于
+  trusted unavailable verdict；UI 不能隐藏该差异，也不能据此启动 fallback。
 
 该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
 组合成普通用户可直接判断方向的产品结果。

@@ -459,6 +459,11 @@ class _EmptyContextZhCnReferentPolicy:
     _ANAPHORIC_MARKERS = (
         "它",
         "它们",
+        "这些",
+        "那些",
+        "这类",
+        "那类",
+        "此类",
         "前者",
         "后者",
         "上述",

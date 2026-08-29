@@ -76,7 +76,7 @@ World Model Citation、失败/未授权 Turn、不同 revision 或新 Conversati
    用户约束、当前工作状态和摘要的 identity/digest；不得直接依赖 Provider 会话记忆或无边界拼接全部历史。
 3. 主 Agent 必须处理追问、指代、纠正、深入、收窄和总结。若指代在密封上下文内仍不唯一，必须请求澄清或给出明确条件化解释，不能把
    猜测写成事实。对于没有 message、Turn、Work State 或 reviewed conclusion 的新 Conversation，Binding-owned、按语言显式版本化的 input
-   policy 必须先识别依赖先行对象的表达；命中时由 Application 在任何 World Model、Source、credential 或 Provider attempt 前要求用户明确
+   policy 必须先识别依赖先行对象的表达，包括所注册语言中的单数、复数和类别性指示；命中时由 Application 在任何 World Model、Source、credential 或 Provider attempt 前要求用户明确
    对象。这个响应只是 input clarification，不含工程事实，不创建 Evidence Package/Review/Delivery，也不能用于非空 Context 或普通显式首问。
    Application 必须从密封 Request 与 Binding 重新计算 policy 命中和澄清文本；Turn executor 或 Provider 自报 clarification quality 不能取得该
    例外。
@@ -302,6 +302,10 @@ Gateway/repository/result identity、Application、Source、authorization/admiss
 availability owner/verdict、admission plugin/session、execution-profile/disclosure/dispatch-admission/transport/model/terminal receipts 和 same-request retry 0；logical Turn Result 只取最后一个完整 attempt 的 Outcome，
 但汇总全部 attempt dispatch。availability owner 若基于 preferred outcome unknown 形成 unavailable verdict，后续 fallback 必须标记 duplicate-cost risk；late preferred-route result 固定
 `QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
+
+Browser 的失败视图必须把 logical Turn/Agent/Application 的 execution-stage failure 与已密封 raw Provider evidence 分层显示；存在
+`provider_failure_classification/provider_failure_code` 时不能只显示上层 stage code，不存在时也不能推测 Provider 原因。这个显示不取得
+availability 或 fallback 权威，不得暴露 Provider 错误正文、credential、secret reference 或未密封模型输出。
 
 ## 当前配置实例与历史实现证据
 

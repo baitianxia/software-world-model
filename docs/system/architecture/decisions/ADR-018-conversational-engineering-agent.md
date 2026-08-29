@@ -165,3 +165,10 @@ Application 投影 `ENGINEERING_AGENT_SOURCE_FILE_BUDGET@1`，并让 executable 
 assertion 与 Claim inventory，Reviewer 必须以容器语境重建 assertion，漏 qualifier 用 global Finding、错误 qualifier 用 concrete defect。
 当前增加 `SOURCE-BUDGET-REFERENCE-CATALOG-COHERENCE_AND_INHERITED-CONTAINER-ASSERTION-CLOSURE_LOCAL_CANDIDATE`；fresh Browser successor 与
 独立技术复核仍是质量阻断。
+
+fresh `run-076` 的角色重分配题已完成前 9 个 Ark call、真实 Source Search/Read 和 Answer Draft，证明旧 dangling locator divergence 已被
+越过；Application 随后正确阻断 BOUNDARY observation 被 Claim 当作 support。repair 与后四个冻结 Turn 的首个 call 连续返回 raw
+`PROVIDER_HTTP_ERROR`，但没有 availability owner 的受信 unavailable verdict，故已获周末闲时 admission 的 fallback profile 保持零 dispatch。
+该 run 没有交付答案，不能验证容器语义或质量。它还证明 EMPTY CONTEXT policy 漏掉“这些/那些/此类”等复数/类别指示，Browser 又只显示
+execution-stage code；`FINDING-010-188/189` 已分别闭合 Provider 前通用 Clarification 与 execution/raw-provider 分层显示，不改变 Agent、
+route 或 fallback architecture。fresh exact Browser successor 仍是唯一产品证据。
