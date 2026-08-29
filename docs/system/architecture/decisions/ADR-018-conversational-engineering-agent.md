@@ -134,5 +134,8 @@ early return 隐藏可机械定位的 child missing field。run-064 只证明该
 EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE / BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。run-065 随后证明 nested
 diagnostic 已生效，但 shape repair 会在补字段时释义既有合法值；同一 run 还证明正文中的 material affirmative conclusion 可在未进入
 Claim inventory 时绕过 final Reviewer。`FINDING-010-175` 因此以 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@4` 投影 exact-copy checklist，并要求
-Primary/Reviewer 闭合完整 content-to-claim coverage；当前再增加
-`EXACT_REPAIR_COPY_AND_DRAFT_CLAIM_CLOSURE_LOCAL_CANDIDATE`，仍须由 fresh exact Browser successor 验证。
+Primary/Reviewer 闭合完整 content-to-claim coverage。run-066 随后取得 Controller/Service current Source，但 Reviewer 把“caller 源码中执行
+call expression”混同为对 callee semantics 的断言，并在给出同包收窄方案时仍标记必须补证，最终让正确的 Application 强制 action policy
+关闭 Turn。`FINDING-010-176` 因此要求角色区分 invocation/order 与 callee implementation/dynamic semantics，并让 existing-Package rewrite
+和真正 material evidence gap 的 remediation 互斥；当前再增加
+`EXACT_REPAIR_COPY_DRAFT_CLAIM_CLOSURE_AND_REVIEW_REMEDIATION_LOCAL_CANDIDATE`，仍须由 fresh exact Browser successor 验证。

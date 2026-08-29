@@ -191,7 +191,12 @@ no-progress failure 关闭。
    conclusion 形成 `claim_index=null` 的 global completeness Finding，不能因所有枚举 Claim 都 SUPPORTED 而批准。路径、package、import、
    symbol name 或 caller syntax 不能单独证明类型继承/catch coverage、数据库约束、运行时
    配置值或外部副作用；Primary 必须取得直接声明/执行该关系的 current Evidence，或把结论收窄为不依赖未知关系的结果，Reviewer 对违反
-   该规则的 material Claim 必须返回 Finding。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取
+   该规则的 material Claim 必须返回 Finding。current Source 行直接包含 call expression 时，它只直接证明 caller 调用该表达式及源码可见
+   的局部顺序，不证明 callee 实现、动态目标、返回语义、类型继承或外部副作用；Draft 只陈述该 invocation/order 并明确把 callee semantics
+   留在 evidence boundary 时，Reviewer 不得因后者未知而拒绝前者。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
+   current User Message 真正要求的 material fact，且删除/收窄会让该要求仍未回答时，才可 `requires_evidence=true`；若 current Package 已能
+   通过删除、收窄、限定或重组 offending statement 保留全部已支持的 requested conclusions，则必须为 false，不能一边给出这种同包修复一边
+   要求新 Evidence。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取
    substring 追认。
 5. 现有 Package 足够时，Response Control 把 Finding 绑定到同一主 Agent的新 Work State Revision，形成同包针对性重写；任一 Finding 标记
    `requires_evidence=true` 时，standard successor Primary input 必须把 `tool_action_required` 设为 true，并把 Draft response kind domain 置空；
@@ -301,7 +306,10 @@ input-only `work_state_ref` 加入 closed output。`FINDING-010-173` 已形成 `
 证明 parent mismatch 的 early return 会隐藏同份 output 的 nested missing field；`FINDING-010-174` 已形成
 `BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。run-065 Turn 1 真实成功但 material narrative conclusion 未进入 claims 且 Reviewer
 漏判，Turn 2 的 nested diagnostic 正确、shape repair 却改写既有合法值而被机械守恒拒绝；`FINDING-010-175` 已形成
-`EXACT_REPAIR_COPY_AND_DRAFT_CLAIM_CLOSURE_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，
+`EXACT_REPAIR_COPY_AND_DRAFT_CLAIM_CLOSURE_LOCAL_CANDIDATE`。run-066 又在 current Controller/Service Source 已足够证明 caller
+invocation/order、Draft 已声明 callee semantics 未知时，被 Reviewer 错标为强制补证；Application 正确执行 tool-action-only successor 并
+在 Primary 未服从时失败关闭。`FINDING-010-176` 已形成
+`CALL_EXPRESSION_EVIDENCE_AND_REVIEW_REMEDIATION_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，
 不能追认这些失败 run 或把局部技术成功称为 MVP。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

@@ -503,6 +503,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "Never infer a type relationship or catch boundary",
             rendered,
         )
+        self.assertIn(
+            "A source line that directly contains a call expression",
+            rendered,
+        )
+        self.assertIn(
+            "It is not evidence of the callee implementation",
+            rendered,
+        )
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertIn(
             "source_follow_up_required_before_limitation", rendered
@@ -1416,6 +1424,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "claim_index null and preserve",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "set requires_evidence=true only when the current Package lacks",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "requires_evidence=false",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "when deleting, narrowing, qualifying, or reorganizing",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Do not reject a Draft that states only",
             reviewer_prompt,
         )
         self.assertEqual(tool.requests, [])

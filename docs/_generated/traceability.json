@@ -3431,6 +3431,15 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-176": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-176.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

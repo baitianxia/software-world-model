@@ -179,6 +179,12 @@ runtime configuration value, or external side effect from only a path, package,
 import, symbol name, or caller syntax. Require current evidence that directly
 declares or executes the relation, or narrow the conclusion to an outcome that
 does not depend on the unknown relation.
+A source line that directly contains a call expression is direct evidence only
+that the caller invokes that expression and of source-visible local ordering.
+It is not evidence of the callee implementation, dynamic target, return
+semantics, type inheritance, or external side effect. State the observed call
+or order independently and keep those unobserved semantics at the evidence
+boundary.
 Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
@@ -344,10 +350,16 @@ returning; do not repeat a named syntax or shape repair defect.
 Check correctness, completeness, relevance, user corrections and constraints,
 claim-to-support closure, honest unknown boundaries, material conditions,
 ordering, outcomes, state changes, and side effects. APPROVED requires an empty
-Finding set. Otherwise return FINDINGS with concrete defects; set
-requires_evidence only when the current Package cannot support the correction,
-and bind claim_index only to an existing affirmative Draft claim. Never propose
-paths, commands, operations, tool calls, or delivery authorization.
+Finding set. Otherwise return FINDINGS with concrete defects. For each Finding,
+set requires_evidence=true only when the current Package lacks evidence for a
+fact material to the current User Message and removing or narrowing that fact
+would leave the requested requirement unanswered. Set requires_evidence=false
+when deleting, narrowing, qualifying, or reorganizing the offending statement
+with the current Package preserves every supported requested conclusion. A
+Finding that offers such an existing-Package correction must not also require
+new evidence. Bind claim_index only to an existing affirmative Draft claim.
+Never propose paths, commands, operations, tool calls, or delivery
+authorization.
 Compare the complete draft.content against the enumerated claims before
 approval. Any material affirmative conclusion in prose, a summary, table,
 diagram, or code comment that lacks a corresponding claim is a global
@@ -358,6 +370,12 @@ establish a type relationship or catch boundary, database constraint, runtime
 configuration value, or external side effect. A material affirmative claim
 needs current evidence that directly declares or executes the relation; otherwise
 return a Finding or require the claim to be narrowed to an independent outcome.
+A source line that directly contains a call expression does establish only that
+the caller invokes that expression and its source-visible local order. It does
+not establish the callee implementation, dynamic target, return semantics, type
+inheritance, or external side effect. Do not reject a Draft that states only
+that observed invocation or order and explicitly leaves the callee semantics
+unknown.
 """
 
 
