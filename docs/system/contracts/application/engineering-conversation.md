@@ -150,6 +150,15 @@ expression 反复搜索同一调用点；Source read 必须直接对应 current 
 source-native symbol 仍可按既有短字面量 contract 提议。projection 缺失或有界截断时不得伪称 exhaustive，仍由原 proposal/Broker 路径
 失败关闭或受控执行；projection locator 不是 read capability，Broker 的 Profile、allowlist、revision 和 fuse 权限不变。
 
+精确 literal 约束还必须保留同一 non-truncated projection 中已经机械校验的 canonical `source_path`，但它只能成为受信 Application 提供给
+Broker 的 Search-only scope，不能成为模型 argument、direct READ locator 或 Source authority。当 `SOURCE` 类
+`SOURCE_SEARCH.query` 精确等于该 projection 的 literal 时，Broker 可在 `COMPILED_SOURCE_OPERATION@2` 中密封对应
+`search_path_scope`；它必须重新验证 path canonical/unique/bounded、`.java` stem 与 query 精确一致、Request allowlist、Source Profile 与
+exact revision，并把 `maximum_files` 收紧到 scope 大小。Worker 仍执行 case-sensitive literal content Search，只为实际命中项签发 opaque
+locator；Coverage 必须明确是 `TRUSTED_COGNITION_TARGET_PATHS` scope，不能把 scoped complete 冒充整个 Evidence Class complete。scope path
+在 exact tree 缺失时必须以 `SOURCE_SEARCH_PATH_SCOPE_INCONSISTENT` 形成 Boundary，不得隐式退化为全类路径扫描。没有可信 scope 的普通
+Search 保持原有授权路径和覆盖语义；该机制不提高 action/file/byte fuse，也不改变 Source Broker、Provider route 或 disclosure 权限。
+
 每个 Proposal、Decision、Operation、Observation、Conflict、Unknown、Failure、Coverage 和资源收据按顺序追加到 Turn Evidence Ledger。
 主 Agent 可以读取本 Attempt 获准的密封 Ledger prefix 与工具 Observation，但隐藏 rationale 和未密封输出不进入权威状态。
 

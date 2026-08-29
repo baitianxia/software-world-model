@@ -226,6 +226,9 @@ class _TurnToolState:
     next_step_index: int = 1
     progress_digests: set[Digest] = field(default_factory=set)
     world_model_item_digests: set[Digest] = field(default_factory=set)
+    cognition_source_search_path_scopes: dict[str, tuple[str, ...]] = field(
+        default_factory=dict
+    )
     world_model_receipt_recorded: bool = False
     lock: Lock = field(default_factory=Lock)
 
@@ -523,6 +526,9 @@ class EngineeringAgentEvidenceToolAdapter:
         state.progress_digests.add(cognition.digest)
         evidence: list[EngineeringAgentToolEvidence] = []
         if novel_items and cognition.alignment.value == "ALIGNED":
+            source_search_target_projection = (
+                _cognition_source_search_target_projection(novel_items)
+            )
             payload = {
                 "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3",
                 "query": query,
@@ -540,7 +546,7 @@ class EngineeringAgentEvidenceToolAdapter:
                     for item in novel_items
                 ],
                 "source_search_target_projection": (
-                    _cognition_source_search_target_projection(novel_items)
+                    source_search_target_projection
                 ),
                 "coverage": list(cognition.coverage),
             }
@@ -560,6 +566,22 @@ class EngineeringAgentEvidenceToolAdapter:
                 state.world_model_item_digests.update(
                     item.digest for item in novel_items
                 )
+                for literal, paths in (
+                    _cognition_source_search_path_scopes(
+                        source_search_target_projection
+                    ).items()
+                ):
+                    state.cognition_source_search_path_scopes[literal] = tuple(
+                        sorted(
+                            {
+                                *state.cognition_source_search_path_scopes.get(
+                                    literal,
+                                    (),
+                                ),
+                                *paths,
+                            }
+                        )
+                    )
         boundary_reasons = []
         if cognition.alignment.value != "ALIGNED":
             boundary_reasons.append("WORLD_MODEL_REVISION_UNALIGNED")
@@ -634,6 +656,11 @@ class EngineeringAgentEvidenceToolAdapter:
             proposal_operation = InvestigationOperation.SEARCH
             query: str | None = arguments["query"]
             locator_reference: StableId | None = None
+            trusted_search_path_scope = (
+                state.cognition_source_search_path_scopes.get(query, ())
+                if evidence_class is EngineeringEvidenceClass.SOURCE
+                else ()
+            )
         else:
             arguments = _arguments(request, expected=("locator_reference",))
             try:
@@ -664,6 +691,7 @@ class EngineeringAgentEvidenceToolAdapter:
             )
             proposal_operation = InvestigationOperation.READ
             query = None
+            trusted_search_path_scope = ()
 
         pre_proposal_ledger = state.ledger
         proposal = InvestigationStepProposal.create(
@@ -693,6 +721,7 @@ class EngineeringAgentEvidenceToolAdapter:
             required_path_locator_catalog=(
                 state.required_path_locator_catalog
             ),
+            trusted_search_path_scope=trusted_search_path_scope,
         )
         state.next_step_index += 1
         proposal_details = {
@@ -704,6 +733,25 @@ class EngineeringAgentEvidenceToolAdapter:
         }
         if query is not None:
             proposal_details["query"] = query
+        if trusted_search_path_scope:
+            proposal_details.update(
+                {
+                    "search_path_scope_origin": (
+                        "CURRENT_TURN_WORLD_MODEL_COGNITION_TARGET"
+                    ),
+                    "search_path_scope_count": str(
+                        len(trusted_search_path_scope)
+                    ),
+                    "search_path_scope_digest": digest_of(
+                        [
+                            "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_PATH_SCOPE@1",
+                            query,
+                            trusted_search_path_scope,
+                        ]
+                    ).value,
+                    "search_path_scope_grants_read_authority": "false",
+                }
+            )
         if locator_reference is not None:
             proposal_details["locator_reference"] = locator_reference.value
             revalidation_option = state.revalidation_options_by_reference.get(
@@ -983,6 +1031,18 @@ def _append_operation(
             ).value,
             "evidence_class": operation.evidence_class.value,
             "result_modality": operation.result_modality,
+            "search_path_scope_digest": (
+                digest_of(
+                    [
+                        "ENGINEERING_AGENT_COMPILED_SOURCE_SEARCH_PATH_SCOPE@1",
+                        operation.query,
+                        operation.search_path_scope,
+                    ]
+                ).value
+                if operation.search_path_scope
+                else "NONE"
+            ),
+            "search_path_scope_count": str(len(operation.search_path_scope)),
         },
         maximum_bytes=maximum_bytes,
     )
@@ -1269,6 +1329,67 @@ def _cognition_source_search_target_projection(
         "truncated": truncated,
         "grants_source_authority": False,
     }
+
+
+def _cognition_source_search_path_scopes(
+    projection: Mapping[str, object],
+) -> dict[str, tuple[str, ...]]:
+    """Retain emitted cognition targets as trusted SEARCH-only path scopes.
+
+    These paths never become model-supplied arguments or direct READ
+    capabilities.  The Source Broker still validates every path against the
+    exact Request, Source Profile, literal query, revision, and resource fuses
+    before the Worker may inspect it.
+    """
+
+    if (
+        projection.get("schema")
+        != "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1"
+        or projection.get("kind") != "JAVA_DECLARING_TYPE_LITERAL"
+        or projection.get("truncated") is not False
+        or projection.get("grants_source_authority") is not False
+    ):
+        return {}
+    options = projection.get("options")
+    if not isinstance(options, (list, tuple)):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "cognition Source search target projection has invalid options",
+        )
+    scopes: dict[str, tuple[str, ...]] = {}
+    for option in options:
+        if not isinstance(option, Mapping):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "cognition Source search target option is malformed",
+            )
+        literal = option.get("literal")
+        paths = option.get("resource_locators")
+        if (
+            not isinstance(literal, str)
+            or not isinstance(paths, (list, tuple))
+            or not paths
+            or any(not isinstance(path, str) for path in paths)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "cognition Source search target path scope is malformed",
+            )
+        canonical_paths = tuple(sorted({_relative_path(path) for path in paths}))
+        if (
+            len(canonical_paths) != len(paths)
+            or any(
+                PurePosixPath(path).suffix != ".java"
+                or PurePosixPath(path).stem != literal
+                for path in canonical_paths
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "cognition Source search path scope does not bind its literal",
+            )
+        scopes[literal] = canonical_paths
+    return scopes
 
 
 def _payload(value: Mapping[str, object]) -> str | None:

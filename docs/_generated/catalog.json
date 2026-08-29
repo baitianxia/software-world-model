@@ -4108,6 +4108,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-180.md"
   },
   {
+    "id": "FINDING-010-181",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "application",
+      "source-integration",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-181.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

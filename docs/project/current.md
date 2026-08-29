@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-29
@@ -71,3 +71,10 @@ dispatch 最终以 post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN
 `conversational-engineering-agent@8 / ENGINEERING_AGENT_PRIMARY_INPUT@8`：non-empty、non-truncated cognition target projection 将第一次
 Source search 约束到 exact declaring-type literal；定向 Tool/Model suite `38/38` PASS。fresh Browser successor 仍待新 identity 验证，不能把
 该本地候选或 run-071 追认为开发体验、质量或 MVP PASS。
+
+`FINDING-010-181` 又封存 run-072 的 successor 证据：exact `UmsAdminServiceImpl` 首搜已生效，但 Search 为声明全 Evidence Class 覆盖仍读取
+56 个文件；service read 1、`UmsAdminController` Search 6、controller read 1 后精确耗尽 `64/64`。剩余 action budget 仍为 3，但 Source
+catalog 已撤销，`AdminUserDetails` repair 因而被拒；页面如实 `AGENT_MODEL_CALL_REJECTED`。Ark 7 次 TLS/HTTP 全成功，DeepSeek 0，故无
+fallback 正确。current local candidate 现以 `COMPILED_SOURCE_OPERATION@2` 把同一 cognition projection 的 canonical paths 密封为
+Broker-validated Search-only scope；无模型 path/READ authority、无 fuse 提高，受影响四模块 `102/102` PASS。fresh Browser successor 仍待新
+product/run identity，run-072 不取得开发体验、质量或 MVP PASS。

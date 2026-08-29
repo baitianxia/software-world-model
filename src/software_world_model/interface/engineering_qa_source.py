@@ -418,6 +418,68 @@ class LocalGitRetrievalWorker:
         binary_entries = 0
         truncated = False
         failure_code: str | None = None
+        allowed_entry_count = len(entries)
+        candidate_ordering = "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1"
+        search_scope_coverage: dict[str, str] = {
+            "search_path_scope_count": "0",
+            "search_path_scope_digest": "NONE",
+            "search_scope": "AUTHORIZED_EVIDENCE_CLASS_ALLOWLIST",
+        }
+        if operation.search_path_scope:
+            entries_by_path = {entry.path: entry for entry in entries}
+            missing_paths = tuple(
+                path
+                for path in operation.search_path_scope
+                if path not in entries_by_path
+            )
+            search_scope_coverage = {
+                "search_path_scope_count": str(
+                    len(operation.search_path_scope)
+                ),
+                "search_path_scope_digest": digest_of(
+                    [
+                        "ENGINEERING_QA_TRUSTED_SOURCE_SEARCH_PATH_SCOPE@1",
+                        operation.query,
+                        operation.search_path_scope,
+                    ]
+                ).value,
+                "search_scope": "TRUSTED_COGNITION_TARGET_PATHS",
+            }
+            candidate_ordering = "TRUSTED_TARGET_PATH_SCOPE_THEN_CANONICAL@1"
+            if missing_paths:
+                return RetrievalResult.create(
+                    operation=operation,
+                    status=RetrievalStatus.FAILED,
+                    items=(),
+                    bytes_read=0,
+                    files_read=0,
+                    truncated=False,
+                    coverage=self._coverage(
+                        operation,
+                        {
+                            "allowed_entry_count": str(allowed_entry_count),
+                            "examined_file_count": "0",
+                            "match_count": "0",
+                            "unsafe_entry_count": "0",
+                            "binary_entry_count": "0",
+                            "missing_search_path_scope_count": str(
+                                len(missing_paths)
+                            ),
+                            "query_digest": digest_of(
+                                [
+                                    "ENGINEERING_QA_LITERAL_QUERY@1",
+                                    operation.query,
+                                ]
+                            ).value,
+                            "candidate_ordering": candidate_ordering,
+                            **search_scope_coverage,
+                        },
+                    ),
+                    failure_code="SOURCE_SEARCH_PATH_SCOPE_INCONSISTENT",
+                )
+            entries = tuple(
+                entries_by_path[path] for path in operation.search_path_scope
+            )
         ordered_entries = tuple(
             sorted(entries, key=lambda entry: _search_entry_rank(entry.path, operation.query))
         )
@@ -487,7 +549,7 @@ class LocalGitRetrievalWorker:
             coverage=self._coverage(
                 operation,
                 {
-                    "allowed_entry_count": str(len(entries)),
+                    "allowed_entry_count": str(allowed_entry_count),
                     "examined_file_count": str(files_read),
                     "match_count": str(len(items)),
                     "unsafe_entry_count": str(unsafe_entries),
@@ -495,7 +557,8 @@ class LocalGitRetrievalWorker:
                     "query_digest": digest_of(
                         ["ENGINEERING_QA_LITERAL_QUERY@1", operation.query]
                     ).value,
-                    "candidate_ordering": "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
+                    "candidate_ordering": candidate_ordering,
+                    **search_scope_coverage,
                 },
             ),
             failure_code=failure_code,

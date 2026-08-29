@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -57,6 +57,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - World Model 的 query-relevant Java entity projection 若已给出 non-empty、non-truncated exact declaring-type target，第一次 Source search 只能
   从该 closed target domain 复制精确字面量；它是 cognition→Source 导航约束，不是 path authority，也不限制首次 Source action 后根据新
   Observation 继续发现其他 source-native symbol。
+- exact literal 若命中同一可信 projection 的 canonical `source_path`，Application/Broker 还要把这些路径密封为 Search-only scope，让
+  Worker 只在 scope 内验证 case-sensitive literal 并签发 locator；scope 不进入模型 action、不授予 READ authority，Broker 仍重验
+  allowlist/Profile/revision/fuse，Coverage 也不能把 scoped complete 冒充全 Evidence Class complete。普通无 scope Search 保持原行为。
 - Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
 - fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
   具体 Finding，不替主 Agent 规划或执行工具。

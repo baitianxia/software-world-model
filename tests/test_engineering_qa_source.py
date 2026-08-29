@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from software_world_model.application_services.engineering_question_answering import (
+    COMPILED_SOURCE_OPERATION_SCHEMA,
     ENGINEERING_QA_BROKER_POLICY,
     CompiledSourceOperation,
     EngineeringEvidenceClass,
@@ -96,6 +97,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         allowlist=(".",),
         query=None,
         path=None,
+        search_path_scope=(),
         maximum_source_bytes=4096,
         maximum_files=16,
         evidence_class=EngineeringEvidenceClass.SOURCE,
@@ -128,6 +130,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
                 operation=operation,
             ),
             "query": query,
+            "search_path_scope": tuple(search_path_scope),
             "path": path,
             "locator_reference": (
                 locator_reference.value if locator_reference else None
@@ -161,12 +164,13 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
                 operation=operation,
             ),
             query=query,
+            search_path_scope=tuple(search_path_scope),
             path=path,
             locator_reference=locator_reference,
             maximum_files=maximum_files,
             maximum_source_bytes=maximum_source_bytes,
             maximum_result_items=32,
-            digest=digest_of(["COMPILED_SOURCE_OPERATION@1", core]),
+            digest=digest_of([COMPILED_SOURCE_OPERATION_SCHEMA, core]),
         )
 
     def test_search_and_read_use_exact_committed_bytes(self):
@@ -296,6 +300,113 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         self.assertEqual(
             dict(result.coverage)["candidate_ordering"],
             "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
+        )
+
+    def test_trusted_target_path_scope_bounds_literal_search_to_exact_files(self):
+        search_root = self.repository / "scoped"
+        search_root.mkdir()
+        for index in range(20):
+            (search_root / f"Unrelated{index:02d}.java").write_text(
+                "final class Unrelated {}\n",
+                encoding="utf-8",
+            )
+        target = search_root / "CredentialVerifier.java"
+        target.write_text(
+            "public final class CredentialVerifier {}\n",
+            encoding="utf-8",
+        )
+        self.git("add", "scoped")
+        self.git("commit", "-q", "-m", "trusted search scope fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-trusted-search-scope-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("scoped",),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("scoped",),
+                query="CredentialVerifier",
+                search_path_scope=("scoped/CredentialVerifier.java",),
+                maximum_files=1,
+            )
+        )
+
+        self.assertEqual(result.status, RetrievalStatus.COMPLETE)
+        self.assertEqual(result.files_read, 1)
+        self.assertEqual(len(result.items), 1)
+        self.assertEqual(result.items[0].path, "scoped/CredentialVerifier.java")
+        coverage = dict(result.coverage)
+        self.assertEqual(coverage["allowed_entry_count"], "21")
+        self.assertEqual(coverage["examined_file_count"], "1")
+        self.assertEqual(coverage["search_path_scope_count"], "1")
+        self.assertEqual(
+            coverage["candidate_ordering"],
+            "TRUSTED_TARGET_PATH_SCOPE_THEN_CANONICAL@1",
+        )
+
+    def test_trusted_target_path_scope_missing_from_exact_tree_fails_closed(self):
+        search_root = self.repository / "scoped"
+        search_root.mkdir()
+        (search_root / "Present.java").write_text(
+            "final class Present {}\n",
+            encoding="utf-8",
+        )
+        self.git("add", "scoped")
+        self.git("commit", "-q", "-m", "trusted search scope exact tree fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-missing-search-scope-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("scoped",),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("scoped",),
+                query="Missing",
+                search_path_scope=("scoped/Missing.java",),
+                maximum_files=1,
+            )
+        )
+
+        self.assertEqual(result.status, RetrievalStatus.FAILED)
+        self.assertEqual(
+            result.failure_code,
+            "SOURCE_SEARCH_PATH_SCOPE_INCONSISTENT",
+        )
+        self.assertEqual(result.files_read, 0)
+        self.assertEqual(result.bytes_read, 0)
+        coverage = dict(result.coverage)
+        self.assertEqual(coverage["missing_search_path_scope_count"], "1")
+        self.assertEqual(
+            coverage["search_scope"],
+            "TRUSTED_COGNITION_TARGET_PATHS",
         )
 
     def test_worker_rejects_another_repository_identity(self):

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from enum import Enum
+from pathlib import PurePosixPath
 import re
 from time import monotonic_ns
 from typing import Mapping, Protocol, Sequence
@@ -35,6 +36,7 @@ ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
 ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@2"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
 ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@2"
+COMPILED_SOURCE_OPERATION_SCHEMA = "COMPILED_SOURCE_OPERATION@2"
 ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA = (
     "ENGINEERING_QA_REQUIRED_EVIDENCE_PATH_LOCATOR@1"
 )
@@ -1937,6 +1939,7 @@ class CompiledSourceOperation:
     evidence_class: EngineeringEvidenceClass
     result_modality: str
     query: str | None
+    search_path_scope: tuple[str, ...]
     path: str | None
     locator_reference: StableId | None
     maximum_files: int
@@ -1960,6 +1963,15 @@ class CompiledSourceOperation:
                 )
             )
             or self.evidence_class not in _RETRIEVAL_EVIDENCE_CLASSES
+            or self.search_path_scope
+            != tuple(
+                sorted(
+                    {
+                        _canonical_relative_path(path)
+                        for path in self.search_path_scope
+                    }
+                )
+            )
             or not isinstance(self.result_modality, str)
             or not _SAFE_REFERENCE.fullmatch(self.result_modality)
             or any(
@@ -1972,11 +1984,30 @@ class CompiledSourceOperation:
             )
             or (
                 self.operation is SourceReadOperation.SEARCH
-                and (self.query is None or self.path is not None or self.locator_reference is not None)
+                and (
+                    self.query is None
+                    or self.path is not None
+                    or self.locator_reference is not None
+                    or any(
+                        PurePosixPath(candidate).suffix != ".java"
+                        or PurePosixPath(candidate).stem != self.query
+                        or not _path_allowed(candidate, self.source_allowlist)
+                        or not _path_allowed(
+                            candidate,
+                            self.evidence_class_allowlist,
+                        )
+                        for candidate in self.search_path_scope
+                    )
+                )
             )
             or (
                 self.operation in {SourceReadOperation.READ, SourceReadOperation.PARSE}
-                and (self.query is not None or self.path is None or self.locator_reference is None)
+                and (
+                    self.query is not None
+                    or self.search_path_scope
+                    or self.path is None
+                    or self.locator_reference is None
+                )
             )
         ):
             raise DomainError(
@@ -1998,6 +2029,7 @@ class CompiledSourceOperation:
             "evidence_class": self.evidence_class.value,
             "result_modality": self.result_modality,
             "query": self.query,
+            "search_path_scope": self.search_path_scope,
             "path": self.path,
             "locator_reference": (
                 self.locator_reference.value if self.locator_reference else None
@@ -2009,7 +2041,7 @@ class CompiledSourceOperation:
         if (
             self.broker_policy != ENGINEERING_QA_BROKER_POLICY
             or self.digest
-            != digest_of(["COMPILED_SOURCE_OPERATION@1", core])
+            != digest_of([COMPILED_SOURCE_OPERATION_SCHEMA, core])
             or self.operation_id != _stable_id("source_operation", core)
         ):
             raise DomainError(
@@ -2427,6 +2459,7 @@ class SourceBroker:
         required_path_locator_catalog: Mapping[
             StableId, RequiredEvidencePathLocator
         ] | None = None,
+        trusted_search_path_scope: Sequence[str] = (),
     ) -> SourceBrokerCompilation:
         self._require_binding(request=request, proposal=proposal, ledger=ledger)
         self.registered_evidence_classes(request=request)
@@ -2497,6 +2530,37 @@ class SourceBroker:
             )
         path: str | None = None
         locator_reference: StableId | None = None
+        search_path_scope: tuple[str, ...] = ()
+        if trusted_search_path_scope:
+            search_path_scope = tuple(
+                sorted(
+                    {
+                        _canonical_relative_path(candidate)
+                        for candidate in trusted_search_path_scope
+                    }
+                )
+            )
+            if (
+                source_operation is not SourceReadOperation.SEARCH
+                or proposal.evidence_class is not EngineeringEvidenceClass.SOURCE
+                or proposal.query is None
+                or len(search_path_scope) != len(tuple(trusted_search_path_scope))
+                or len(search_path_scope) > 64
+                or any(
+                    PurePosixPath(candidate).suffix != ".java"
+                    or PurePosixPath(candidate).stem != proposal.query
+                    or not _path_allowed(candidate, request.source_allowlist)
+                    or not self._source_profile.permits(
+                        evidence_class=proposal.evidence_class,
+                        path=candidate,
+                    )
+                    for candidate in search_path_scope
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "trusted Source search path scope is not bound to the exact proposal",
+                )
         if source_operation in {SourceReadOperation.READ, SourceReadOperation.PARSE}:
             locator_reference = proposal.locator_reference
             locator = locator_catalog.get(locator_reference) if locator_reference else None
@@ -2639,6 +2703,8 @@ class SourceBroker:
                 # remaining budget.  Preserve at least one exact locator use in
                 # that case without increasing the total file fuse.
                 maximum_files = min(maximum_files, remaining_files - 1)
+            if search_path_scope:
+                maximum_files = min(maximum_files, len(search_path_scope))
         operation_core = {
             "broker_policy": ENGINEERING_QA_BROKER_POLICY,
             "request_digest": request.digest.value,
@@ -2654,6 +2720,7 @@ class SourceBroker:
             "evidence_class": proposal.evidence_class.value,
             "result_modality": result_modality,
             "query": proposal.query,
+            "search_path_scope": search_path_scope,
             "path": path,
             "locator_reference": (
                 locator_reference.value if locator_reference else None
@@ -2664,7 +2731,9 @@ class SourceBroker:
                 request.limits.maximum_support_items, 1_024
             ),
         }
-        operation_digest = digest_of(["COMPILED_SOURCE_OPERATION@1", operation_core])
+        operation_digest = digest_of(
+            [COMPILED_SOURCE_OPERATION_SCHEMA, operation_core]
+        )
         operation = CompiledSourceOperation(
             operation_id=_stable_id("source_operation", operation_core),
             broker_policy=ENGINEERING_QA_BROKER_POLICY,
@@ -2681,6 +2750,7 @@ class SourceBroker:
             evidence_class=proposal.evidence_class,
             result_modality=result_modality,
             query=proposal.query,
+            search_path_scope=search_path_scope,
             path=path,
             locator_reference=locator_reference,
             maximum_files=operation_core["maximum_files"],
@@ -8520,6 +8590,7 @@ class EngineeringQuestionAnsweringService:
 
 
 __all__ = [
+    "COMPILED_SOURCE_OPERATION_SCHEMA",
     "ENGINEERING_QA_BROKER_POLICY",
     "ENGINEERING_QA_MODE",
     "ENGINEERING_QA_PACKAGE_SCHEMA",

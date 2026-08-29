@@ -411,6 +411,7 @@ from .product_validation import (
     ProductValidationService,
 )
 from .engineering_question_answering import (
+    COMPILED_SOURCE_OPERATION_SCHEMA,
     ENGINEERING_QA_BROKER_POLICY,
     ENGINEERING_QA_MODE,
     ENGINEERING_QA_PACKAGE_SCHEMA,
@@ -446,6 +447,7 @@ from .engineering_question_cognition import (
 )
 
 __all__ = [
+    "COMPILED_SOURCE_OPERATION_SCHEMA",
     "ENGINEERING_QA_BROKER_POLICY",
     "ENGINEERING_QA_MODE",
     "ENGINEERING_QA_PACKAGE_SCHEMA",

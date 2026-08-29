@@ -324,6 +324,56 @@ class SemanticNeedWorldThenAnswerDriver(WorldThenAnswerDriver):
         return super().propose(invocation)
 
 
+class WorldTargetSearchThenAnswerDriver:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def propose(self, invocation):
+        self.calls += 1
+        if self.calls == 1:
+            return proposal(
+                invocation,
+                call_ref="world-target-agent-1",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    arguments=(("query", "credential verifier target"),),
+                    evidence_need="identify the exact credential verifier target",
+                ),
+            )
+        if self.calls == 2:
+            return proposal(
+                invocation,
+                call_ref="world-target-agent-2",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        ("evidence_class", EngineeringEvidenceClass.SOURCE.value),
+                        ("query", "CredentialVerifier"),
+                    ),
+                    evidence_need="locate the exact credential verifier declaration",
+                ),
+            )
+        support = tuple(
+            item.observation_id
+            for item in invocation.observations
+            if item.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+        )
+        return proposal(
+            invocation,
+            call_ref="world-target-agent-3",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="世界模型目标经过受控源码检索得到精确声明。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="凭据校验类型存在于精确版本源码中。",
+                        support_observation_ids=support,
+                    ),
+                ),
+            ),
+        )
+
+
 class TwoWorldQueriesThenAnswerDriver:
     def __init__(self) -> None:
         self.calls = 0
@@ -879,6 +929,91 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
                 "truncated": False,
                 "grants_source_authority": False,
             },
+        )
+
+    def test_cognition_target_search_uses_broker_validated_exact_path_scope(
+        self,
+    ) -> None:
+        source_path = (
+            self.repository
+            / "src/main/java/com/example/auth/CredentialVerifier.java"
+        )
+        source_path.parent.mkdir(parents=True)
+        source_path.write_text(
+            "public final class CredentialVerifier {}\n",
+            encoding="utf-8",
+        )
+        for index in range(20):
+            (source_path.parent / f"Unrelated{index:02d}.java").write_text(
+                "final class Unrelated {}\n",
+                encoding="utf-8",
+            )
+        self.git("add", "src/main/java")
+        self.git("commit", "-q", "-m", "cognition target search fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.configuration = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name="fixture",
+            response_language="zh-CN",
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.profile.profile_ref,
+            source_profile_digest=self.profile.profile_digest,
+            world_model_read_authority_digest=self.world_authority,
+            source_allowlist=("README.md", "src/main/java"),
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.profile,
+        )
+        reviewer = RecordingReviewer()
+        service = self.service(
+            WorldTargetSearchThenAnswerDriver(),
+            reviewer,
+            cognition_projector=JavaEntityCognitionProjector(),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="凭据校验实现在哪里？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        search_support = next(
+            item
+            for item in reviewer.requests[0].package.support_observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        )
+        retrieval = json.loads(search_support.content)["retrieval_result"]
+        self.assertEqual(retrieval["files_read"], 1)
+        self.assertEqual(retrieval["status"], "COMPLETE")
+        coverage = retrieval["coverage"]
+        self.assertEqual(coverage["allowed_entry_count"], "21")
+        self.assertEqual(coverage["examined_file_count"], "1")
+        self.assertEqual(coverage["search_path_scope_count"], "1")
+        self.assertEqual(
+            coverage["search_scope"],
+            "TRUSTED_COGNITION_TARGET_PATHS",
+        )
+        proposal_entry = next(
+            entry
+            for entry in search_support.authority_receipt.ledger_entries
+            if entry.kind == "INVESTIGATION_PROPOSAL"
+            and dict(entry.details).get("operation") == "search"
+        )
+        self.assertEqual(
+            dict(proposal_entry.details)["search_path_scope_origin"],
+            "CURRENT_TURN_WORLD_MODEL_COGNITION_TARGET",
+        )
+        self.assertEqual(
+            dict(proposal_entry.details)[
+                "search_path_scope_grants_read_authority"
+            ],
+            "false",
         )
 
     def test_world_model_tool_projects_only_novel_items_across_one_turn(self) -> None:

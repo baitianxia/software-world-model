@@ -2266,6 +2266,60 @@ class Service {
         self.assertEqual(no_locator.decision.status.value, "AUTHORIZED")
         self.assertEqual(no_locator.operation.maximum_files, 1)
 
+    def test_broker_seals_only_exact_canonical_trusted_search_path_scope(self):
+        req = request()
+        cognition = CognitionProjector().project(request=req)
+        ledger = EvidenceLedger.start(request=req, cognition=cognition)
+        input_stub = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": sid("investigation_attempt", "1"),
+                "role_context_id": sid("role_context", "2"),
+                "step_index": 1,
+                "request": req,
+            },
+        )()
+        proposal = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            query="LoginService",
+        )
+        broker = SourceBroker(source_profile=source_profile())
+
+        compilation = broker.compile(
+            request=req,
+            proposal=proposal,
+            ledger=ledger,
+            locator_catalog={},
+            usage=EngineeringQuestionResourceUsage(),
+            trusted_search_path_scope=("src/LoginService.java",),
+        )
+
+        self.assertEqual(compilation.decision.status.value, "AUTHORIZED")
+        self.assertEqual(
+            compilation.operation.search_path_scope,
+            ("src/LoginService.java",),
+        )
+        self.assertEqual(compilation.operation.maximum_files, 1)
+        compilation.operation.validate_identity()
+
+        with self.assertRaises(DomainError) as mismatched:
+            broker.compile(
+                request=req,
+                proposal=proposal,
+                ledger=ledger,
+                locator_catalog={},
+                usage=EngineeringQuestionResourceUsage(),
+                trusted_search_path_scope=("src/OtherService.java",),
+            )
+        self.assertEqual(
+            mismatched.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+        )
+
     def test_broker_authorizes_request_bound_required_path_locator_without_search(self):
         req = request()
         cognition = CognitionProjector().project(request=req)

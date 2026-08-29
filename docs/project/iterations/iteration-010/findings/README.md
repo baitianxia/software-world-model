@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,13 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-181](FINDING-010-181.md)：run-072 的 first Source query 已精确选择 `UmsAdminServiceImpl`，但两个 exact Search 为全类路径
+  覆盖仍分别读取 56/6 个文件，与两个 full READ 合计耗尽 `64/64`，后续 `AdminUserDetails` repair 因 Source catalog 撤销而失败。现把
+  cognition canonical paths 密封为 Broker-validated Search-only scope，不授予模型 path/READ authority；受影响四模块 `102/102` PASS，
+  fresh Browser successor 待验证。
+- [FINDING-010-180](FINDING-010-180.md)：run-071 的 World Model 已给出 exact declaring type/source path，Primary 却仍以宽泛 `login`
+  首搜并耗尽 Source file fuse；第 14 个 Ark dispatch post-dispatch outcome unknown 后正确停止且 DeepSeek 0。current @8 local candidate 把
+  第一次 Source search 约束到 cognition-derived exact declaring type；其执行范围缺口已由 `FINDING-010-181` 继续处置。
 - [FINDING-010-179](FINDING-010-179.md)：fresh 官方价格页与用户纠正确认 DeepSeek 高峰只发生在周一至周五，周末全天闲时；run-070 的
   `DENIED_PRICING_CHECK` 则直接来自超过 900 秒的旧 check。现以 policy `ITER-010-PDR-007@2` 补齐 weekday/weekend 与连续闲时，且
   stale/changed check 仍失败关闭；下一 fresh run 不再错误等待周末窗口。
