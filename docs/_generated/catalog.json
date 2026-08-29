@@ -4058,6 +4058,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-176.md"
   },
   {
+    "id": "FINDING-010-177",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai-infrastructure",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-177.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -6959,7 +6972,9 @@
       "FINDING-010-136",
       "FINDING-010-169",
       "FINDING-010-170",
-      "FINDING-010-172"
+      "FINDING-010-172",
+      "FINDING-010-176",
+      "FINDING-010-177"
     ],
     "path": "docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md"
   },
@@ -7218,7 +7233,9 @@
       "FINDING-010-160",
       "FINDING-010-169",
       "FINDING-010-170",
-      "FINDING-010-172"
+      "FINDING-010-172",
+      "FINDING-010-176",
+      "FINDING-010-177"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },

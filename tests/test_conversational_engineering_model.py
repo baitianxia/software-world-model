@@ -429,6 +429,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             tuple(item.input_item_id for item in adapter.requests[0].messages),
             ("instruction", "sealed-role-input", "final-output-preflight"),
         )
+        primary_payload = json.loads(adapter.requests[0].messages[1].content)
+        self.assertEqual(
+            primary_payload["tool_action_budget"],
+            {
+                "schema": "ENGINEERING_AGENT_TOOL_ACTION_BUDGET@1",
+                "maximum": 8,
+                "used": 0,
+                "remaining": 8,
+                "remaining_is_not_a_consumption_target": True,
+                "zero_remaining_allows_new_tool_action": False,
+            },
+        )
+        self.assertTrue(
+            primary_payload["investigation_policy"][
+                "world_model_first_before_source_required"
+            ]
+        )
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
@@ -511,6 +528,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "It is not evidence of the callee implementation",
             rendered,
         )
+        self.assertIn("Follow tool_action_budget exactly", rendered)
+        self.assertIn("Rewording a prior semantic", rendered)
+        self.assertIn("need does not make it new", rendered)
+        self.assertIn("source-native type or member identifier", rendered)
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertIn(
             "source_follow_up_required_before_limitation", rendered
@@ -1626,6 +1647,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         policy = rendered_invocation["tool_reference_policy"]
         work_state_policy = rendered_invocation["work_state_reference_policy"]
 
+        self.assertEqual(
+            rendered_invocation["tool_action_budget"],
+            {
+                "schema": "ENGINEERING_AGENT_TOOL_ACTION_BUDGET@1",
+                "maximum": 8,
+                "used": 1,
+                "remaining": 7,
+                "remaining_is_not_a_consumption_target": True,
+                "zero_remaining_allows_new_tool_action": False,
+            },
+        )
         self.assertEqual(policy["source_search_queries_already_attempted"], ("login",))
         self.assertEqual(
             work_state_policy["required_current_turn_observation_ids"],
@@ -1699,6 +1731,55 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ],
             (locator_reference, other_resource_reference),
         )
+        exhausted_invocation = replace(
+            invocation,
+            maximum_tool_actions=1,
+        )
+        exhausted_view = _primary_input_view(exhausted_invocation)
+        self.assertEqual(exhausted_view["tool_catalog"], ())
+        self.assertEqual(
+            exhausted_view["tool_action_budget"]["remaining"],
+            0,
+        )
+        self.assertFalse(
+            exhausted_view["completion_policy"]["tool_action_allowed"]
+        )
+        self.assertTrue(
+            exhausted_view["completion_policy"]["draft_required"]
+        )
+        exhausted_payload = {
+            "goal": "确认登录失败记录",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [observation.observation_id.value],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_SEARCH",
+                "arguments": [
+                    {"name": "evidence_class", "value": "SOURCE"},
+                    {"name": "query", "value": "UmsAdminServiceImpl"},
+                ],
+                "evidence_need": "locate the service implementation",
+            },
+            "draft": None,
+        }
+        with self.assertRaises(DomainError) as exhausted_without_draft:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(exhausted_payload),
+                invocation=exhausted_invocation,
+                model_call_ref="exhausted-without-draft-call",
+            )
+        self.assertEqual(
+            exhausted_without_draft.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
         unreceipted_view = _primary_input_view(
             replace(
                 invocation,
@@ -1757,6 +1838,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             tuple(item["operation"] for item in preissued_view["tool_catalog"]),
             ("SOURCE_SEARCH", "SOURCE_READ"),
+        )
+        self.assertFalse(
+            preissued_view["investigation_policy"][
+                "world_model_first_before_source_required"
+            ]
         )
         preissued_payload = {
             "goal": "确认登录失败记录",
@@ -2125,6 +2211,90 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             next_turn_view["completion_policy"][
                 "prior_answer_restatement_requires_current_turn_evidence"
             ]
+        )
+
+    def test_fresh_investigation_requires_world_model_before_source(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="解释管理端登录调用链。",
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+            ),
+        )
+        rendered = _primary_input_view(invocation)
+        self.assertTrue(
+            rendered["investigation_policy"][
+                "world_model_first_before_source_required"
+            ]
+        )
+        self.assertEqual(
+            tuple(item["operation"] for item in rendered["tool_catalog"]),
+            ("WORLD_MODEL_QUERY", "SOURCE_SEARCH"),
+        )
+        payload = {
+            "goal": "解释管理端登录调用链",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_SEARCH",
+                "arguments": [
+                    {"name": "evidence_class", "value": "SOURCE"},
+                    {"name": "query", "value": "UmsAdminServiceImpl"},
+                ],
+                "evidence_need": "locate the login service implementation",
+            },
+            "draft": None,
+        }
+        with self.assertRaises(DomainError) as source_before_world_model:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload),
+                invocation=invocation,
+                model_call_ref="source-before-world-model-call",
+            )
+        self.assertEqual(
+            source_before_world_model.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        payload["action"] = {
+            "operation": "WORLD_MODEL_QUERY",
+            "arguments": [],
+            "evidence_need": "identify the login implementation target symbols",
+        }
+        proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(payload),
+            invocation=invocation,
+            model_call_ref="world-model-first-call",
+        )
+        self.assertEqual(
+            proposal.action.operation,
+            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
         )
 
     def test_world_model_boundary_requires_first_available_source_follow_up(self) -> None:

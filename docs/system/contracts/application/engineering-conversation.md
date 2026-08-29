@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -122,6 +122,24 @@ current `conversational-engineering-agent@8` 对 `WORLD_MODEL_QUERY` 只允许�
 query；模型不能直接取得 query argument domain。相同 need 的 current-Turn 重复、显式 query 或 identity 漂移在 Cognition 执行前失败关闭。
 受信旧调用方的 explicit-query 兼容路径不扩大 current 模型权限。每个非空 action 必须显式包含且只包含 `operation/arguments/evidence_need`；
 即使 effective catalog 只有一个 operation，也不得省略 `operation` 或由 Application 猜测、补写该字段。
+
+Primary input 还必须从 Application-owned loop limit 和 exact current action history 重算并密封
+`tool_action_budget = {maximum, used, remaining}`；`remaining` 是最多仍可执行的 action 数，不是消费目标。current maximum 保持 8。
+`remaining=0` 时 effective tool catalog 机械变空，普通 successor 的 completion policy 必须要求基于 current SUPPORT/BOUNDARY 的 Draft；
+若 Review Finding 要求新 Evidence 而已经没有合法 action，则当前 Turn 失败关闭，不能恢复工具、扩大预算或以 Draft 绕过 Finding。
+
+没有 current observation/action history 且没有 prior exact-source revalidation candidate 的 fresh investigation，只要 effective catalog 含
+World Model，第一步必须为 `WORLD_MODEL_QUERY`；decoder 从原 invocation 重算并拒绝先行 Source proposal。这个稳定认知起点用于取得
+repository-native target symbol，不要求把全部问题都交给世界模型，也不阻止 current-Turn 重签的 prior full-source candidate 直接重验。
+同一 material semantic need 的换句式不是新 need；World Model 已明确给出同一 implementation gap 后，Primary 不得继续询问缺失实现，
+必须转向一个命中该 gap 的 Source target 或保留诚实 Boundary。Application 的 exact duplicate/no-progress guard 仍机械执行，但不声称用
+字符串规则完整判定语义等价。
+
+Source search 必须优先使用 current cognition/observation 给出的 unread source-native type/member identifier，不得用只存在于已读 caller 的
+expression 反复搜索同一调用点；Source read 必须直接对应 current unresolved material target，不能仅因 mapper、DTO、entity、test 或相邻
+文件共享词汇就消费 bounded slot。Broker 继续独占 authorization、Profile、allowlist、revision 和 resource backstop；这些调查相关性义务
+不让模型取得 path authority，也不让 Broker 从词汇自动推断业务相关性。达到 action/file fuse 仍只失败关闭或从现有证据诚实收敛，不能
+通过提高上限冒充 progress。
 
 每个 Proposal、Decision、Operation、Observation、Conflict、Unknown、Failure、Coverage 和资源收据按顺序追加到 Turn Evidence Ledger。
 主 Agent 可以读取本 Attempt 获准的密封 Ledger prefix 与工具 Observation，但隐藏 rationale 和未密封输出不进入权威状态。
@@ -311,5 +329,11 @@ invocation/order、Draft 已声明 callee semantics 未知时，被 Reviewer 错
 在 Primary 未服从时失败关闭。`FINDING-010-176` 已形成
 `CALL_EXPRESSION_EVIDENCE_AND_REVIEW_REMEDIATION_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，
 不能追认这些失败 run 或把局部技术成功称为 MVP。
+run-067 随后在 fresh Turn 跳过 World Model，以 broad Source search、已读 caller expression search 和辅助 Mapper read 消耗 Source slots，
+再对同一 service implementation gap 连续换句式查询 World Model；第九个 Primary call 提出第九项 Tool action，Application 在执行前以
+8-action 上限失败关闭，仍无 Draft/Review/Delivery。`FINDING-010-177` 已形成
+`BOUNDED_INVESTIGATION_BUDGET_AND_TARGET_RELEVANCE_LOCAL_CANDIDATE`：Primary input 精确投影 remaining budget，零预算撤销 catalog 并要求
+收敛；fresh 无 revalidation 调查机械要求 World Model-first；同义 gap requery 与不命中 unresolved target 的 Source 选择被明确禁止。上限
+保持 8，不以扩容掩盖路径漂移；fresh exact Browser successor 仍是唯一产品验证。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

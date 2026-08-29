@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -138,4 +138,8 @@ Primary/Reviewer 闭合完整 content-to-claim coverage。run-066 随后取得 C
 call expression”混同为对 callee semantics 的断言，并在给出同包收窄方案时仍标记必须补证，最终让正确的 Application 强制 action policy
 关闭 Turn。`FINDING-010-176` 因此要求角色区分 invocation/order 与 callee implementation/dynamic semantics，并让 existing-Package rewrite
 和真正 material evidence gap 的 remediation 互斥；当前再增加
-`EXACT_REPAIR_COPY_DRAFT_CLAIM_CLOSURE_AND_REVIEW_REMEDIATION_LOCAL_CANDIDATE`，仍须由 fresh exact Browser successor 验证。
+`EXACT_REPAIR_COPY_DRAFT_CLAIM_CLOSURE_AND_REVIEW_REMEDIATION_LOCAL_CANDIDATE`。run-067 又证明模型若看不到 exact remaining Tool budget，
+会先以 broad Source scan、已读 caller-expression search 和辅助资源 read 消耗 Source slot，再对同一 implementation gap 换句式重复查询
+World Model，最终在答案前撞上 8-action 上限。`FINDING-010-177` 因而把 exact budget projection、fresh World Model-first、semantic-gap
+no-requery 和 unresolved-target Source relevance 纳入主 Agent interface；上限保持 8，零预算只允许基于现有 Evidence 收敛或失败关闭。当前
+增加 `BOUNDED_INVESTIGATION_BUDGET_AND_TARGET_RELEVANCE_LOCAL_CANDIDATE`，仍须由 fresh exact Browser successor 验证。

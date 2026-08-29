@@ -189,6 +189,17 @@ Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
 or CLARIFICATION, and never imply that more evidence was obtained.
+Follow tool_action_budget exactly. remaining is the number of Tool actions that
+may still execute, not a target to consume. When remaining is zero the current
+tool_catalog is empty; never propose another action. Follow completion_policy:
+an ordinary exhausted successor requires a Draft from evidence already obtained,
+while an evidence-required Review with no legal action fails closed rather than
+restoring a tool or bypassing the Finding with a Draft. When only one action
+remains, use it only if it closes one still-unanswered material requirement that
+the current evidence cannot answer or bound honestly.
+When investigation_policy.world_model_first_before_source_required is true,
+the first action must be WORLD_MODEL_QUERY. Use that stable cognition result to
+identify source-native target symbols before spending the bounded Source scan.
 completion_policy.allowed_response_kinds is the exhaustive response domain for
 this invocation, not a list of examples. ANSWER is absent until current-Turn
 SUPPORT exists, and LIMITATION is absent until a current-Turn BOUNDARY exists.
@@ -251,7 +262,11 @@ fact, relation, state transition, failure boundary, or repository-native symbol
 you need in evidence_need; the trusted Application binds it to the exact current
 Turn and compiles the bounded cognition query. Do not copy the User Message as
 evidence_need when a more precise semantic need is available, and do not repeat
-an evidence_need listed by tool_reference_policy.
+an evidence_need listed by tool_reference_policy. Rewording a prior semantic
+need does not make it new. After a current World Model observation reports an
+explicit coverage gap or incomplete implementation for that same material
+need, do not ask World Model for the missing implementation again; move to one
+targeted Source action or preserve the honest boundary.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
 current-Turn observation or issued to the current Turn as a prior exact-source
 revalidation candidate, never a path. Copy it only from an unused entry in
@@ -263,14 +278,20 @@ SUPPORT observation. When such an option is material to a follow-up, prefer its
 bounded direct read before spending the Source file fuse on a new content search.
 The catalog exposes at most one opaque locator for each canonical Source resource;
 choose a different resource, not another matching line from a resource already
-read. Never repeat an entry in
+read. Choose only a resource that directly matches the current unresolved
+material target; do not consume an auxiliary mapper, DTO, entity, test, or
+neighbor merely because it shares vocabulary with that target. Never repeat an entry in
 tool_reference_policy.prior_actions. If a prior search was insufficient, choose
 a different source-native literal from the question, World Model, observation,
 or Review Finding; if no legal action can improve the evidence, return an honest
 LIMITATION rather than repeating or inventing an argument. SOURCE_SEARCH
 evidence_class is only a proposal vocabulary; its query must be one short
 case-sensitive literal token that may appear verbatim in the selected evidence,
-never a semantic description or natural-language search request. The trusted
+never a semantic description or natural-language search request. Select the
+literal for the unread target resource: when locating a declaration or
+implementation, prefer its exact source-native type or member identifier from
+current cognition instead of a caller expression found only in an already-read
+resource. The trusted
 Broker independently enforces the exact Source Profile and may reject a class or
 query.
 Do not expose hidden rationale, invent IDs, add fields, or grant yourself any
@@ -3153,6 +3174,8 @@ def _primary_input_view(
             ),
             "boundary_statements_forbidden_in_claims": True,
         },
+        "tool_action_budget": _tool_action_budget(invocation),
+        "investigation_policy": _investigation_policy(invocation),
         "completion_policy": _completion_policy(invocation),
         "tool_reference_policy": tool_reference_policy,
         "review_feedback": {
@@ -3451,6 +3474,8 @@ def _completion_policy(
         invocation.mode
         is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
     )
+    effective_operations = _effective_available_operations(invocation)
+    tool_action_allowed = not evidence_only and bool(effective_operations)
     tool_action_required = not evidence_only and any(
         item.requires_evidence for item in invocation.review_findings
     )
@@ -3465,9 +3490,12 @@ def _completion_policy(
     )
     return {
         "mode": invocation.mode.value,
-        "tool_action_allowed": not evidence_only,
+        "tool_action_allowed": tool_action_allowed,
         "tool_action_required": tool_action_required,
-        "draft_required": evidence_only,
+        "draft_required": (
+            evidence_only
+            or (not tool_action_allowed and not tool_action_required)
+        ),
         "allowed_response_kinds": tuple(
             item.value
             for item in EngineeringAgentResponseKind
@@ -3492,6 +3520,50 @@ def _completion_policy(
         "answer_requires_current_turn_support": True,
         "limitation_requires_current_turn_boundary": True,
         "prior_answer_restatement_requires_current_turn_evidence": True,
+    }
+
+
+def _tool_action_budget(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    maximum = invocation.maximum_tool_actions
+    used = len(invocation.action_history)
+    if (
+        type(maximum) is not int
+        or maximum < 1
+        or used > maximum
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Agent Tool action budget is inconsistent",
+        )
+    return {
+        "schema": "ENGINEERING_AGENT_TOOL_ACTION_BUDGET@1",
+        "maximum": maximum,
+        "used": used,
+        "remaining": maximum - used,
+        "remaining_is_not_a_consumption_target": True,
+        "zero_remaining_allows_new_tool_action": False,
+    }
+
+
+def _investigation_policy(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    world_model_first = (
+        not invocation.action_history
+        and not invocation.observations
+        and not invocation.preissued_source_read_options
+        and EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+        in invocation.available_operations
+    )
+    return {
+        "schema": "ENGINEERING_AGENT_INVESTIGATION_POLICY@1",
+        "world_model_first_before_source_required": world_model_first,
+        "paraphrased_semantic_need_is_new_need": False,
+        "world_model_gap_requery_for_same_missing_implementation_allowed": False,
+        "source_search_literal_targets_unread_material_resource": True,
+        "source_read_must_match_current_unresolved_material_target": True,
     }
 
 
@@ -3541,6 +3613,8 @@ def _effective_available_operations(
         invocation.mode
         is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
     ):
+        return ()
+    if _tool_action_budget(invocation)["remaining"] == 0:
         return ()
     policy = (
         tool_reference_policy
@@ -4108,13 +4182,16 @@ def _validate_primary_proposal(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent output drifted from the sealed Context or observation prefix",
         )
-    if (
-        _completion_policy(invocation)["tool_action_required"]
-        and proposal.action is None
-    ):
+    completion_policy = _completion_policy(invocation)
+    if completion_policy["tool_action_required"] and proposal.action is None:
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "an evidence-required Review Finding requires one legal tool action",
+        )
+    if completion_policy["draft_required"] and proposal.draft is None:
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "the exhausted or evidence-only Tool domain requires one legal Draft",
         )
     _validate_primary_action(proposal.action, invocation)
     by_id = {item.observation_id: item for item in observations}
@@ -4176,6 +4253,17 @@ def _validate_primary_action(
 ) -> None:
     if action is None:
         return
+    if (
+        _investigation_policy(invocation)[
+            "world_model_first_before_source_required"
+        ]
+        and action.operation
+        is not EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "the fresh investigation requires WORLD_MODEL_QUERY before Source",
+        )
     if action.operation not in _effective_available_operations(invocation):
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,

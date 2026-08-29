@@ -626,10 +626,14 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             def __init__(self):
                 self.calls = 0
                 self.modes = []
+                self.maximum_tool_actions = []
 
             def propose(self, invocation):
                 self.calls += 1
                 self.modes.append(invocation.mode)
+                self.maximum_tool_actions.append(
+                    invocation.maximum_tool_actions
+                )
                 if (
                     invocation.mode
                     is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
@@ -697,6 +701,7 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS,
             ],
         )
+        self.assertEqual(driver.maximum_tool_actions, [4, 4, 4])
         self.assertEqual(
             submission.snapshot.conversation.state.value,
             "ACTIVE",

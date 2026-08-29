@@ -37,6 +37,9 @@ from .engineering_conversation import (
 )
 
 
+_DEFAULT_MAXIMUM_TOOL_ACTIONS = 8
+
+
 class EngineeringAgentToolOperation(str, Enum):
     WORLD_MODEL_QUERY = "WORLD_MODEL_QUERY"
     SOURCE_SEARCH = "SOURCE_SEARCH"
@@ -668,6 +671,7 @@ class EngineeringAgentInvocation:
     preissued_source_read_options: tuple[
         "EngineeringAgentSourceReadOption", ...
     ] = ()
+    maximum_tool_actions: int = _DEFAULT_MAXIMUM_TOOL_ACTIONS
 
 
 class EngineeringAgentDriver(Protocol):
@@ -1554,7 +1558,7 @@ class SealedEngineeringAgentResponseControl:
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentLoopLimits:
     maximum_agent_steps: int = 12
-    maximum_tool_actions: int = 8
+    maximum_tool_actions: int = _DEFAULT_MAXIMUM_TOOL_ACTIONS
     maximum_reviews: int = 3
     maximum_consecutive_no_progress: int = 2
     maximum_evidence_package_bytes: int = 4_194_304
@@ -1751,6 +1755,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         mode=invocation_mode,
                         preissued_source_read_options=(
                             preissued_source_read_options
+                        ),
+                        maximum_tool_actions=(
+                            self._limits.maximum_tool_actions
                         ),
                     )
                 )
