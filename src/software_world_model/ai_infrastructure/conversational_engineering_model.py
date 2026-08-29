@@ -145,8 +145,11 @@ source-tool, evidence-write, review, or delivery authority.
 
 Use only the sealed input and return exactly one JSON object matching the
 closed schema. Return the complete Application-owned Work State proposal and
-exactly one registered tool action or one response draft. Preserve the complete
-ordered observation_ids prefix by copying exactly
+exactly one registered tool action or one response draft. A sealed input
+field is input-only unless its name is present in the output schema. The final-output-preflight
+required_top_level_fields array is the exhaustive top-level allowlist, not a
+minimum set; emit every listed field exactly once and no other top-level field.
+Preserve the complete ordered observation_ids prefix by copying exactly
 work_state_reference_policy.required_current_turn_observation_ids. Prior-Turn
 Observation IDs are not disclosed or authorized for the current Turn. Preserve
 the exact accepted-correction and superseded-conclusion prefixes from
@@ -164,6 +167,11 @@ ANSWER may report an honest evidence boundary in draft.content and bind it
 through draft.boundary_observation_ids, but a boundary statement is not an
 affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
 as affirmative claim support or a SUPPORT ID as a limitation boundary.
+Never infer a type relationship or catch boundary, database constraint,
+runtime configuration value, or external side effect from only a path, package,
+import, symbol name, or caller syntax. Require current evidence that directly
+declares or executes the relation, or narrow the conclusion to an outcome that
+does not depend on the unknown relation.
 Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
@@ -201,6 +209,9 @@ the local closed-schema validator. Fix that exact shape violation before
 returning; the diagnostic grants no semantic or tool authority. If
 validation_failure_category is NON_JSON_OBJECT_PREFIX, do not repeat or explain
 the invalid prefix: the next response character must be {. If it is
+CLOSED_SCHEMA_SHAPE, allowed_exact is the exhaustive field allowlist at the
+reported object path. Rebuild that object with exactly those fields; unexpected
+field names are intentionally not echoed and must not be preserved. If it is
 CLOSED_OUTPUT_CONTRACT, replace the invalid proposal with one that copies only
 the current sealed reference domains and effective tool_catalog; prior output
 does not preserve an operation that the current catalog excludes.
@@ -269,6 +280,9 @@ memory or the primary Agent's confidence.
 
 Use only the sealed current Turn, relevant Conversation Context, current sealed
 Package, and Draft. Return exactly one JSON object matching the closed schema.
+The final-output-preflight required_top_level_fields array is the exhaustive
+top-level allowlist, not a minimum set; emit every listed field exactly once and
+never copy another sealed input field into the output.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object. Before returning, serialize the complete object as syntactically
@@ -292,6 +306,10 @@ the local closed-schema validator. Fix that exact shape violation before
 returning; the diagnostic grants no evidence or review authority. If
 validation_failure_category is NON_JSON_OBJECT_PREFIX, do not repeat or explain
 the invalid prefix: the next response character must be {.
+If validation_failure_category is CLOSED_SCHEMA_SHAPE, allowed_exact is the
+exhaustive field allowlist at the reported object path. Rebuild that object with
+exactly those fields; unexpected field names are intentionally not echoed and
+must not be preserved.
 The final-output-preflight item follows the sealed review input. It is trusted
 only as a redundant structured-output form checklist and grants no evidence,
 review, or delivery authority. Apply its json_serialization rules and compare
@@ -304,6 +322,11 @@ Finding set. Otherwise return FINDINGS with concrete defects; set
 requires_evidence only when the current Package cannot support the correction,
 and bind claim_index only to an existing affirmative Draft claim. Never propose
 paths, commands, operations, tool calls, or delivery authorization.
+Treat a path, package, import, symbol name, or caller syntax as insufficient to
+establish a type relationship or catch boundary, database constraint, runtime
+configuration value, or external side effect. A material affirmative claim
+needs current evidence that directly declares or executes the relation; otherwise
+return a Finding or require the claim to be narrowed to an independent outcome.
 """
 
 
@@ -1662,13 +1685,29 @@ class ModelBackedConversationalEngineeringAgent(
                 role_input_payload,
                 failure=initial_failure,
             )
+            _, repair_output_schema = _output_schema_for_role(role)
+
+            def decode_shape_repair(output, model_call_ref):
+                if (
+                    repair_payload["format_repair_policy"][
+                        "validation_failure_category"
+                    ]
+                    == "CLOSED_SCHEMA_SHAPE"
+                ):
+                    _require_shape_repair_preserves_existing_fields(
+                        prior_output_text=initial_failure.invalid_output_text,
+                        repaired_output=output,
+                        schema=repair_output_schema.schema,
+                    )
+                return decode(output, model_call_ref)
+
             try:
                 proposal, receipt = self._dispatch_once(
                     role=role,
                     turn_request=turn_request,
                     role_input_schema_ref=role_input_schema_ref,
                     role_input_payload=repair_payload,
-                    decode=decode,
+                    decode=decode_shape_repair,
                 )
             except EngineeringAgentModelCallFailure as repair_failure:
                 raise EngineeringAgentModelCallFailure(
@@ -2681,11 +2720,13 @@ def _first_closed_object_shape_mismatch(
         expected = set(properties)
         actual = set(value)
         if actual != expected:
+            allowed = ",".join(sorted(expected))
             missing = ",".join(sorted(expected - actual)) or "none"
             return (
                 f"{path} object fields do not match the closed schema "
-                f"(missing=[{missing}]; "
-                f"unexpected_count={len(actual - expected)})"
+                f"(allowed_exact=[{allowed}]; missing=[{missing}]; "
+                f"unexpected_count={len(actual - expected)}; "
+                "additional_fields_forbidden=true)"
             )
         for name, child in properties.items():
             if not isinstance(child, Mapping):
@@ -2738,6 +2779,101 @@ def _repair_schema_type_matches(value: object, kind: object) -> bool:
         "boolean": isinstance(value, bool),
         "null": value is None,
     }.get(kind, False)
+
+
+def _require_shape_repair_preserves_existing_fields(
+    *,
+    prior_output_text: str,
+    repaired_output: object,
+    schema: Mapping[str, object],
+) -> None:
+    """Reject semantic drift while one parseable output receives shape repair."""
+
+    try:
+        prior_output = json.loads(prior_output_text)
+    except json.JSONDecodeError as exc:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "closed-shape repair requires one parseable prior output",
+        ) from exc
+    if not _existing_schema_fields_equal(
+        prior_output,
+        repaired_output,
+        schema,
+        root_schema=schema,
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "closed-shape repair changed an existing allowed field",
+        )
+
+
+def _existing_schema_fields_equal(
+    prior: object,
+    repaired: object,
+    schema: Mapping[str, object],
+    *,
+    root_schema: Mapping[str, object],
+) -> bool:
+    reference = schema.get("$ref")
+    if isinstance(reference, str):
+        resolved = _resolve_repair_schema_reference(root_schema, reference)
+        return resolved is None or _existing_schema_fields_equal(
+            prior,
+            repaired,
+            resolved,
+            root_schema=root_schema,
+        )
+    any_of = schema.get("anyOf")
+    if isinstance(any_of, list):
+        for option in any_of:
+            if not isinstance(option, Mapping):
+                continue
+            kind = option.get("type")
+            kinds = kind if isinstance(kind, list) else [kind]
+            if any(_repair_schema_type_matches(prior, item) for item in kinds):
+                return _existing_schema_fields_equal(
+                    prior,
+                    repaired,
+                    option,
+                    root_schema=root_schema,
+                )
+        return prior == repaired
+    if isinstance(prior, dict):
+        if not isinstance(repaired, dict):
+            return False
+        properties = schema.get("properties")
+        if not isinstance(properties, Mapping):
+            return prior == repaired
+        for name, child in properties.items():
+            if name not in prior:
+                continue
+            if name not in repaired or not isinstance(child, Mapping):
+                return False
+            if not _existing_schema_fields_equal(
+                prior[name],
+                repaired[name],
+                child,
+                root_schema=root_schema,
+            ):
+                return False
+        return True
+    if isinstance(prior, list):
+        if not isinstance(repaired, list) or len(prior) != len(repaired):
+            return False
+        items = schema.get("items")
+        if not isinstance(items, Mapping):
+            return prior == repaired
+        return all(
+            _existing_schema_fields_equal(
+                prior_item,
+                repaired_item,
+                items,
+                root_schema=root_schema,
+            )
+            for prior_item, repaired_item in zip(prior, repaired, strict=True)
+        )
+    return prior == repaired
 
 
 def _format_repair_input_view(

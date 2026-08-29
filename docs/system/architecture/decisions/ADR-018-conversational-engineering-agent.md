@@ -125,5 +125,8 @@ Adapter 被明确拒绝为非 live。后续实现已把 Draft 实际引用的 au
 fixture 追认为 live 或质量合格。双 Provider、真实 transport、fixed launcher 与后续 Chat 的 current 集成/执行状态以 Engineering
 Conversation 合同的“当前配置实例与历史实现证据”为准，本段早期 deterministic fixture 不单独拥有其状态。后续
 `FINDING-010-170` 又把同一 Turn 的重复 World Model Cognition snapshot 改为 exact-item append-only delta，并让一次同 profile repair 明确识别
-JSON object 前叙述；`FINDING-010-172` 又补齐 current Request-bound prior full-source revalidation locator。它们目前仍只是
-`BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE`，须由 fresh exact Browser successor 验证。
+JSON object 前叙述；`FINDING-010-172` 又补齐 current Request-bound prior full-source revalidation locator；`FINDING-010-173` 要求
+closed-shape repair 只按 trusted exact field allowlist 重建输出、机械保持所有既有 allowlisted field value，并禁止 Primary/Reviewer 仅凭路径、package、import、symbol name 或 caller
+syntax 推断类型关系/catch coverage、数据库约束、运行时配置或外部副作用。run-063 已真实证明 revalidation locator，但三轮链在后续 closed
+output 失败，故当前仍只是 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE /
+EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE`，须由 fresh exact Browser successor 验证。

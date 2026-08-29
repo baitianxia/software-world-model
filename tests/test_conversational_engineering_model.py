@@ -35,6 +35,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentInvocationMode,
     EngineeringAgentLedgerEntryReceipt,
     EngineeringAgentLoopLimits,
+    EngineeringAgentModelCallFailure,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
     EngineeringAgentReviewFinding,
@@ -497,6 +498,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("action_template", rendered)
         self.assertIn("copy exactly one complete", rendered)
         self.assertIn("never infer that a sole", rendered)
+        self.assertIn("exhaustive top-level allowlist", rendered)
+        self.assertIn(
+            "Never infer a type relationship or catch boundary",
+            rendered,
+        )
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertIn(
             "source_follow_up_required_before_limitation", rendered
@@ -615,6 +621,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(len(model.audits), 3)
         self.assertEqual(len(authorizer.disclosure_requests), 3)
         self.assertEqual(len(adapter.requests), 3)
+        self.assertIn(
+            "Treat a path, package, import, symbol name, or caller syntax as insufficient",
+            adapter.requests[2].messages[0].content,
+        )
         self.assertEqual(tool.requests, [])
         self.assertEqual(len(response.requests), 1)
         self.assertEqual(
@@ -917,7 +927,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("$.action", repair_policy["validation_failure_message"])
         self.assertIn("operation", repair_policy["validation_failure_message"])
         self.assertIn(
+            "allowed_exact=[arguments,evidence_need,operation]",
+            repair_policy["validation_failure_message"],
+        )
+        self.assertIn(
             "unexpected_count=1",
+            repair_policy["validation_failure_message"],
+        )
+        self.assertIn(
+            "additional_fields_forbidden=true",
             repair_policy["validation_failure_message"],
         )
         self.assertNotIn(
@@ -963,6 +981,135 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ],
         )
         self.assertNotIn("prior_output_text", repair_preflight)
+
+    def test_format_repair_rebuilds_from_exact_root_field_allowlist(self) -> None:
+        capture = CapturingTurnExecutor()
+        capture_service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = capture_service.create_conversation()
+        capture_service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="修订当前结论。",
+        )
+        repaired = json.loads(SequencedLiveAgentAdapter().outputs[1])
+        malformed = {
+            **repaired,
+            "input_owned_identity": "must-not-cross-the-output-boundary",
+        }
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                json.dumps(malformed, ensure_ascii=False),
+                json.dumps(repaired, ensure_ascii=False),
+            )
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
+        result = model.propose(
+            EngineeringAgentInvocation(
+                request=capture.request,
+                previous_work_state=None,
+                observations=(),
+                review_findings=(),
+                review_digest=None,
+                available_operations=(
+                    EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                ),
+            )
+        )
+
+        self.assertEqual(result.proposal.goal, repaired["goal"])
+        self.assertEqual(len(result.prior_receipts), 1)
+        self.assertEqual(len(adapter.requests), 2)
+        repair_payload = json.loads(adapter.requests[1].messages[1].content)
+        diagnostic = repair_payload["format_repair_policy"][
+            "validation_failure_message"
+        ]
+        expected_fields = sorted(repaired)
+        self.assertIn(
+            f"allowed_exact=[{','.join(expected_fields)}]",
+            diagnostic,
+        )
+        self.assertIn("missing=[none]", diagnostic)
+        self.assertIn("unexpected_count=1", diagnostic)
+        self.assertIn("additional_fields_forbidden=true", diagnostic)
+        self.assertNotIn("input_owned_identity", diagnostic)
+        preflight = json.loads(adapter.requests[1].messages[-1].content)
+        self.assertEqual(
+            sorted(preflight["required_top_level_fields"]),
+            expected_fields,
+        )
+        self.assertEqual(
+            preflight["format_repair"]["validation_failure_message"],
+            diagnostic,
+        )
+        self.assertIn(
+            "exhaustive top-level allowlist",
+            adapter.requests[1].messages[0].content,
+        )
+        self.assertIn(
+            "Never infer a type relationship or catch boundary",
+            adapter.requests[1].messages[0].content,
+        )
+
+    def test_closed_shape_repair_cannot_change_existing_allowed_fields(self) -> None:
+        capture = CapturingTurnExecutor()
+        capture_service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = capture_service.create_conversation()
+        capture_service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="修订当前结论。",
+        )
+        valid = json.loads(SequencedLiveAgentAdapter().outputs[1])
+        malformed = {
+            **valid,
+            "input_owned_identity": "must-not-cross-the-output-boundary",
+        }
+        semantic_drift = {
+            **valid,
+            "goal": "repair must not replace the original semantic proposal",
+        }
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                json.dumps(malformed, ensure_ascii=False),
+                json.dumps(semantic_drift, ensure_ascii=False),
+            )
+        )
+        _, model, _, _, _, _ = self._service(adapter=adapter)
+
+        with self.assertRaises(EngineeringAgentModelCallFailure) as failure:
+            model.propose(
+                EngineeringAgentInvocation(
+                    request=capture.request,
+                    previous_work_state=None,
+                    observations=(),
+                    review_findings=(),
+                    review_digest=None,
+                    available_operations=(
+                        EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    ),
+                )
+            )
+
+        self.assertEqual(
+            failure.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertEqual(len(adapter.requests), 2)
+        self.assertEqual(
+            model.audits[-1].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        )
 
     def test_format_repair_identifies_cross_disposition_claim_reference(self) -> None:
         capture = CapturingTurnExecutor()
