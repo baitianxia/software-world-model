@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from pathlib import PurePosixPath
+import re
 from threading import Lock
 from typing import Mapping, Sequence
 
@@ -33,8 +34,12 @@ from .conversational_engineering_agent import (
     EngineeringAgentToolOperation,
     EngineeringAgentToolRequest,
     EngineeringAgentToolResult,
+    EngineeringAgentSourceReadOption,
 )
 from .engineering_conversation import (
+    ConversationTurnState,
+    EngineeringConversationTurn,
+    EngineeringTurnCitation,
     EngineeringTurnExecutionRequest,
     RuntimeCapabilityStatus,
 )
@@ -54,6 +59,7 @@ from .engineering_question_answering import (
     RetrievalResult,
     RetrievalStatus,
     RetrievalWorker,
+    RequiredEvidencePathLocator,
     SourceBroker,
     SourceReadOperation,
     WorldModelCognitionContext,
@@ -62,6 +68,10 @@ from .engineering_question_answering import (
 
 
 _OBSERVATION_PAYLOAD_LIMIT = 240_000
+_MAXIMUM_PRIOR_SOURCE_REVALIDATION_OPTIONS = 16
+_SOURCE_LINE_LOCATOR = re.compile(
+    r"^.+:L[1-9][0-9]*(?:-L?[1-9][0-9]*)?$"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,9 +176,14 @@ class EngineeringAgentEvidenceToolConfiguration:
         )
 
     def request_for(self, tool_request: EngineeringAgentToolRequest) -> EngineeringQuestionRequest:
+        return self.request_for_turn(tool_request.turn_request)
+
+    def request_for_turn(
+        self, turn_request: EngineeringTurnExecutionRequest
+    ) -> EngineeringQuestionRequest:
         return EngineeringQuestionRequest.create(
-            request_ref=tool_request.turn_request.turn_id.value,
-            original_question=tool_request.turn_request.user_message.content,
+            request_ref=turn_request.turn_id.value,
+            original_question=turn_request.user_message.content,
             response_language=self.response_language,
             repository_id=self.repository_id,
             binding_id=self.binding_id,
@@ -192,6 +207,15 @@ class _TurnToolState:
     attempt_id: StableId
     role_context_id: StableId
     locator_catalog: dict[StableId, RetrievalItem] = field(default_factory=dict)
+    required_path_locator_catalog: dict[
+        StableId, RequiredEvidencePathLocator
+    ] = field(default_factory=dict)
+    preissued_source_read_options: tuple[
+        EngineeringAgentSourceReadOption, ...
+    ] = ()
+    revalidation_options_by_reference: dict[
+        StableId, EngineeringAgentSourceReadOption
+    ] = field(default_factory=dict)
     usage: EngineeringQuestionResourceUsage = field(
         default_factory=EngineeringQuestionResourceUsage
     )
@@ -243,6 +267,14 @@ class EngineeringAgentEvidenceToolAdapter:
             "Agent requested an operation outside the evidence tool adapter catalog",
         )
 
+    def source_read_options(
+        self, request: EngineeringTurnExecutionRequest
+    ) -> tuple[EngineeringAgentSourceReadOption, ...]:
+        """Issue current-Turn opaque locators for prior delivered full sources."""
+
+        state = self._state_for_turn(request)
+        return state.preissued_source_read_options
+
     def _validate_tool_request(self, request: EngineeringAgentToolRequest) -> None:
         action = request.action
         expected_action = EngineeringAgentToolActionProposal.create(
@@ -273,10 +305,16 @@ class EngineeringAgentEvidenceToolAdapter:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Agent evidence tool request identity is invalid",
             )
+        self._validate_turn_binding(turn)
+
+    def _validate_turn_binding(
+        self, turn: EngineeringTurnExecutionRequest
+    ) -> None:
         binding = turn.binding
         configuration = self._configuration
         if (
-            binding.project_name != configuration.project_name
+            turn.snapshot_before.conversation.binding_digest != binding.digest
+            or binding.project_name != configuration.project_name
             or binding.repository_revision != configuration.repository_revision
             or binding.world_model_status is not RuntimeCapabilityStatus.READY
             or binding.world_model_authority_digest
@@ -293,11 +331,17 @@ class EngineeringAgentEvidenceToolAdapter:
             )
 
     def _state_for(self, request: EngineeringAgentToolRequest) -> _TurnToolState:
-        turn_id = request.turn_request.turn_id
+        return self._state_for_turn(request.turn_request)
+
+    def _state_for_turn(
+        self, turn_request: EngineeringTurnExecutionRequest
+    ) -> _TurnToolState:
+        self._validate_turn_binding(turn_request)
+        turn_id = turn_request.turn_id
         with self._states_lock:
             current = self._states.get(turn_id)
             if current is not None:
-                if current.turn_request != request.turn_request:
+                if current.turn_request != turn_request:
                     raise DomainError(
                         ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                         "retained tool state binds a different Turn request",
@@ -308,7 +352,7 @@ class EngineeringAgentEvidenceToolAdapter:
                     ErrorCode.BUDGET_EXHAUSTED,
                     "retained Engineering Agent tool Turn fuse is exhausted",
                 )
-            evidence_request = self._configuration.request_for(request)
+            evidence_request = self._configuration.request_for_turn(turn_request)
             self._source_broker.registered_evidence_classes(
                 request=evidence_request
             )
@@ -328,14 +372,40 @@ class EngineeringAgentEvidenceToolAdapter:
                 request=evidence_request,
                 cognition=cognition,
             )
+            attempt_id = _derived_id(
+                "agent_investigation", evidence_request.digest.value
+            )
+            candidates = _prior_full_source_candidates(turn_request)
+            required_path_locators = (
+                self._source_broker.issue_required_path_locators(
+                    request=evidence_request,
+                    attempt_id=attempt_id,
+                    paths=tuple(item[1].locator for item in candidates),
+                )
+                if candidates
+                else ()
+            )
+            options = tuple(
+                EngineeringAgentSourceReadOption.create(
+                    locator_reference=locator.locator_reference,
+                    locator=locator.path,
+                    evidence_class=locator.evidence_class.value,
+                    source_revision=citation.source_revision,
+                    modality=citation.modality,
+                    content_digest=citation.content_digest,
+                    origin_turn_id=turn.turn_id,
+                    origin_citation_digest=citation.digest,
+                )
+                for (turn, citation), locator in zip(
+                    candidates, required_path_locators, strict=True
+                )
+            )
             state = _TurnToolState(
-                turn_request=request.turn_request,
+                turn_request=turn_request,
                 evidence_request=evidence_request,
                 cognition=cognition,
                 ledger=ledger,
-                attempt_id=_derived_id(
-                    "agent_investigation", evidence_request.digest.value
-                ),
+                attempt_id=attempt_id,
                 role_context_id=_derived_id(
                     "agent_tool_context", evidence_request.digest.value
                 ),
@@ -344,6 +414,14 @@ class EngineeringAgentEvidenceToolAdapter:
                         canonical_json_bytes(cognition.model_view())
                     )
                 ),
+                required_path_locator_catalog={
+                    item.locator_reference: item
+                    for item in required_path_locators
+                },
+                preissued_source_read_options=options,
+                revalidation_options_by_reference={
+                    item.locator_reference: item for item in options
+                },
             )
             self._states[turn_id] = state
             return state
@@ -559,12 +637,24 @@ class EngineeringAgentEvidenceToolAdapter:
                     "Source read locator reference is malformed",
                 ) from exc
             locator = state.locator_catalog.get(locator_reference)
-            if locator is None:
+            required_path_locator = state.required_path_locator_catalog.get(
+                locator_reference
+            )
+            if locator is not None and required_path_locator is not None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source read locator resolves to ambiguous authority",
+                )
+            if locator is None and required_path_locator is None:
                 raise DomainError(
                     ErrorCode.CONTROL_STATE_DENIED,
-                    "Source read requires a locator issued by this Turn Ledger",
+                    "Source read requires a locator issued for this Turn",
                 )
-            evidence_class = locator.evidence_class
+            evidence_class = (
+                locator.evidence_class
+                if locator is not None
+                else required_path_locator.evidence_class
+            )
             proposal_operation = InvestigationOperation.READ
             query = None
 
@@ -593,6 +683,9 @@ class EngineeringAgentEvidenceToolAdapter:
             ledger=pre_proposal_ledger,
             locator_catalog=state.locator_catalog,
             usage=state.usage,
+            required_path_locator_catalog=(
+                state.required_path_locator_catalog
+            ),
         )
         state.next_step_index += 1
         proposal_details = {
@@ -606,6 +699,23 @@ class EngineeringAgentEvidenceToolAdapter:
             proposal_details["query"] = query
         if locator_reference is not None:
             proposal_details["locator_reference"] = locator_reference.value
+            revalidation_option = state.revalidation_options_by_reference.get(
+                locator_reference
+            )
+            if revalidation_option is not None:
+                proposal_details.update(
+                    {
+                        "locator_origin": (
+                            "PRIOR_TURN_EXACT_SOURCE_REVALIDATION"
+                        ),
+                        "origin_turn_id": (
+                            revalidation_option.origin_turn_id.value
+                        ),
+                        "origin_citation_digest": (
+                            revalidation_option.origin_citation_digest.value
+                        ),
+                    }
+                )
         state.ledger = state.ledger.append(
             kind=LedgerEntryKind.INVESTIGATION_PROPOSAL,
             subject_id=proposal.proposal_id.value,
@@ -685,6 +795,25 @@ class EngineeringAgentEvidenceToolAdapter:
             operation=compiled,
             result=result,
         )
+        revalidation_option = (
+            state.revalidation_options_by_reference.get(locator_reference)
+            if locator_reference is not None
+            else None
+        )
+        if revalidation_option is not None and result.items:
+            if (
+                len(result.items) != 1
+                or result.items[0].path != revalidation_option.resource_locator
+                or result.items[0].line_start is not None
+                or not result.items[0].coverage_complete
+                or result.items[0].content_digest
+                != revalidation_option.content_digest
+                or result.items[0].modality != revalidation_option.modality
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "revalidated Source content differs from its prior exact Citation",
+                )
         for item in result.items:
             state.locator_catalog[item.locator_reference] = item
         state.ledger = _append_result(
@@ -958,6 +1087,67 @@ def _validate_retrieval_result(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Retrieval Worker returned duplicate locator references",
         )
+
+
+def _prior_full_source_candidates(
+    request: EngineeringTurnExecutionRequest,
+) -> tuple[tuple[EngineeringConversationTurn, EngineeringTurnCitation], ...]:
+    """Select bounded delivered full resources as current-Turn read candidates.
+
+    The historical Citation contributes only path/digest identity.  It never
+    contributes content or an Observation to the current Turn; the caller must
+    mint a new Request-bound locator and execute a new Broker-authorized read.
+    """
+
+    candidates: list[
+        tuple[EngineeringConversationTurn, EngineeringTurnCitation]
+    ] = []
+    seen_resources: set[str] = set()
+    conversation_id = request.snapshot_before.conversation.conversation_id
+    for turn in reversed(request.snapshot_before.turns):
+        if turn.conversation_id != conversation_id:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "prior Source Citation belongs to a different Conversation",
+            )
+        if (
+            turn.state is not ConversationTurnState.SUCCEEDED
+            or turn.delivery_state != "AUTHORIZED"
+        ):
+            continue
+        for citation in turn.citations:
+            expected_citation = EngineeringTurnCitation.create(
+                citation_ref=citation.citation_ref,
+                evidence_class=citation.evidence_class,
+                source_revision=citation.source_revision,
+                locator=citation.locator,
+                modality=citation.modality,
+                content_digest=citation.content_digest,
+            )
+            if citation != expected_citation:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "prior Source Citation identity is invalid",
+                )
+            try:
+                evidence_class = EngineeringEvidenceClass(
+                    citation.evidence_class
+                )
+            except ValueError:
+                continue
+            if (
+                evidence_class is EngineeringEvidenceClass.WORLD_MODEL
+                or citation.source_revision
+                != request.binding.repository_revision
+                or _SOURCE_LINE_LOCATOR.fullmatch(citation.locator)
+                or citation.locator in seen_resources
+            ):
+                continue
+            candidates.append((turn, citation))
+            seen_resources.add(citation.locator)
+            if len(candidates) == _MAXIMUM_PRIOR_SOURCE_REVALIDATION_OPTIONS:
+                return tuple(candidates)
+    return tuple(candidates)
 
 
 def _arguments(

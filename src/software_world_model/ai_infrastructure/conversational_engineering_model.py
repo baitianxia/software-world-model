@@ -39,6 +39,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentReviewRequest,
     EngineeringAgentReviewer,
     EngineeringAgentReviewerModelResult,
+    EngineeringAgentSourceReadOption,
     EngineeringAgentToolActionProposal,
     EngineeringAgentToolAuthorityKind,
     EngineeringAgentToolObservation,
@@ -221,10 +222,17 @@ Turn and compiles the bounded cognition query. Do not copy the User Message as
 evidence_need when a more precise semantic need is available, and do not repeat
 an evidence_need listed by tool_reference_policy.
 SOURCE_READ accepts only an opaque locator_reference returned by an earlier
-current-Turn observation, never a path. Copy it only from an unused entry in
-tool_reference_policy.source_read_options. That catalog exposes at most one
-opaque locator for each canonical Source resource; choose a different resource,
-not another matching line from a resource already read. Never repeat an entry in
+current-Turn observation or issued to the current Turn as a prior exact-source
+revalidation candidate, never a path. Copy it only from an unused entry in
+tool_reference_policy.source_read_options. An entry whose origin is
+PRIOR_TURN_EXACT_SOURCE_REVALIDATION carries only a previously delivered full
+resource identity and current-Turn read capability; it is not evidence and does
+not support any claim until this Turn executes SOURCE_READ and receives a new
+SUPPORT observation. When such an option is material to a follow-up, prefer its
+bounded direct read before spending the Source file fuse on a new content search.
+The catalog exposes at most one opaque locator for each canonical Source resource;
+choose a different resource, not another matching line from a resource already
+read. Never repeat an entry in
 tool_reference_policy.prior_actions. If a prior search was insufficient, choose
 a different source-native literal from the question, World Model, observation,
 or Review Finding; if no legal action can improve the evidence, return an honest
@@ -2918,7 +2926,8 @@ def _tool_contract_view(
             },
             "value_constraints": {
                 "locator_reference": (
-                    "opaque reference from a prior current-Turn Source observation; path forbidden"
+                    "opaque reference from a current-Turn Source observation or "
+                    "current-Turn prior-evidence revalidation option; path forbidden"
                 ),
                 "allowed_exact_values": tuple(
                     item["locator_reference"]
@@ -2945,6 +2954,51 @@ def _tool_reference_policy(
         for value in (_action_argument(item, "locator_reference"),)
         if value is not None
     )
+    options: dict[str, dict[str, object]] = {}
+    reference_resources: dict[str, str] = {}
+    for option in invocation.preissued_source_read_options:
+        if not isinstance(option, EngineeringAgentSourceReadOption):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "preissued Source read option is untyped",
+            )
+        expected = EngineeringAgentSourceReadOption.create(
+            locator_reference=option.locator_reference,
+            locator=option.locator,
+            evidence_class=option.evidence_class,
+            source_revision=option.source_revision,
+            modality=option.modality,
+            content_digest=option.content_digest,
+            origin_turn_id=option.origin_turn_id,
+            origin_citation_digest=option.origin_citation_digest,
+        )
+        reference = option.locator_reference.value
+        resource_locator = option.resource_locator
+        if (
+            option != expected
+            or option.source_revision
+            != invocation.request.binding.repository_revision
+            or reference in reference_resources
+            or resource_locator in options
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "preissued Source read options do not form a unique current-revision domain",
+            )
+        reference_resources[reference] = resource_locator
+        options[resource_locator] = {
+            "locator_reference": reference,
+            "locator": option.locator,
+            "resource_locator": resource_locator,
+            "evidence_class": option.evidence_class,
+            "modality": option.modality,
+            "content_digest": option.content_digest.value,
+            "source_observation_id": None,
+            "origin": "PRIOR_TURN_EXACT_SOURCE_REVALIDATION",
+            "origin_turn_id": option.origin_turn_id.value,
+            "origin_citation_digest": option.origin_citation_digest.value,
+        }
+
     citation_catalog: dict[str, tuple[EngineeringAgentCitation, str]] = {}
     for observation in invocation.observations:
         if (
@@ -2966,15 +3020,16 @@ def _tool_reference_policy(
                 (citation, observation.observation_id.value),
             )
 
-    attempted_resources = {
-        _source_resource_locator(citation_catalog[reference][0].locator)
-        for reference in attempted_reads
-        if reference in citation_catalog
-    }
-    options: dict[str, dict[str, object]] = {}
     for reference, (citation, source_observation_id) in citation_catalog.items():
         resource_locator = _source_resource_locator(citation.locator)
-        if resource_locator in attempted_resources or resource_locator in options:
+        previous_resource = reference_resources.get(reference)
+        if previous_resource is not None and previous_resource != resource_locator:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source locator reference resolves to multiple resources",
+            )
+        reference_resources[reference] = resource_locator
+        if resource_locator in options:
             continue
         options[resource_locator] = {
             "locator_reference": reference,
@@ -2985,6 +3040,16 @@ def _tool_reference_policy(
             "content_digest": citation.content_digest.value,
             "source_observation_id": source_observation_id,
         }
+    attempted_resources = {
+        reference_resources[reference]
+        for reference in attempted_reads
+        if reference in reference_resources
+    }
+    options = {
+        resource: option
+        for resource, option in options.items()
+        if resource not in attempted_resources
+    }
     terminal_source_denial_reason = _terminal_source_denial_reason(
         invocation.observations
     )

@@ -2610,6 +2610,9 @@ class SourceBroker:
             and _has_unread_locator_resource(
                 ledger=ledger,
                 locator_catalog=locator_catalog,
+                required_path_locator_catalog=(
+                    required_path_locator_catalog or {}
+                ),
             )
         ):
             return self._reject(
@@ -2873,9 +2876,16 @@ def _has_unread_locator_resource(
     *,
     ledger: EvidenceLedger,
     locator_catalog: Mapping[StableId, RetrievalItem],
+    required_path_locator_catalog: Mapping[
+        StableId, RequiredEvidencePathLocator
+    ] | None = None,
 ) -> bool:
     catalog_by_reference = {
         reference.value: item for reference, item in locator_catalog.items()
+    }
+    direct_by_reference = {
+        reference.value: item
+        for reference, item in (required_path_locator_catalog or {}).items()
     }
     attempted_paths: set[str] = set()
     for entry in ledger.entries:
@@ -2891,8 +2901,15 @@ def _has_unread_locator_resource(
         item = catalog_by_reference.get(locator_reference)
         if item is not None:
             attempted_paths.add(item.path)
+            continue
+        direct = direct_by_reference.get(locator_reference)
+        if direct is not None:
+            attempted_paths.add(direct.path)
     return any(
         item.path not in attempted_paths for item in locator_catalog.values()
+    ) or any(
+        item.path not in attempted_paths
+        for item in (required_path_locator_catalog or {}).values()
     )
 
 

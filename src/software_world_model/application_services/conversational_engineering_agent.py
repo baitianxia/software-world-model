@@ -665,6 +665,9 @@ class EngineeringAgentInvocation:
     available_operations: tuple[EngineeringAgentToolOperation, ...]
     action_history: tuple[EngineeringAgentToolActionProposal, ...] = ()
     mode: EngineeringAgentInvocationMode = EngineeringAgentInvocationMode.STANDARD
+    preissued_source_read_options: tuple[
+        "EngineeringAgentSourceReadOption", ...
+    ] = ()
 
 
 class EngineeringAgentDriver(Protocol):
@@ -757,6 +760,96 @@ class EngineeringAgentCitation:
             locator=core["locator"],
             modality=core["modality"],
             content_digest=content_digest,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentSourceReadOption:
+    """Current-Turn opaque read capability derived from prior exact evidence.
+
+    The option carries no source content and is not evidence.  It only lets the
+    current Turn ask the Source Broker to re-read a previously delivered full
+    resource under the current Request, attempt, Profile, allowlist, revision,
+    and resource fuses.
+    """
+
+    locator_reference: StableId
+    locator: str
+    resource_locator: str
+    evidence_class: str
+    source_revision: str
+    modality: str
+    content_digest: Digest
+    origin_turn_id: StableId
+    origin_citation_digest: Digest
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        locator_reference: StableId,
+        locator: str,
+        evidence_class: str,
+        source_revision: str,
+        modality: str,
+        content_digest: Digest,
+        origin_turn_id: StableId,
+        origin_citation_digest: Digest,
+    ) -> "EngineeringAgentSourceReadOption":
+        if not isinstance(locator_reference, StableId) or not isinstance(
+            origin_turn_id, StableId
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Source revalidation option identifiers are invalid",
+            )
+        if not isinstance(content_digest, Digest) or not isinstance(
+            origin_citation_digest, Digest
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Source revalidation option digests are invalid",
+            )
+        locator = _bounded_text(
+            locator, "Source revalidation locator", maximum_bytes=4_096
+        )
+        evidence_class = _text(
+            evidence_class, "Source revalidation evidence class"
+        )
+        if evidence_class not in {
+            "SOURCE",
+            "REPOSITORY_DOCUMENT",
+            "BUILD_CONFIGURATION",
+            "TEST",
+        }:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Source revalidation option needs a retrievable evidence class",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_SOURCE_READ_OPTION@1",
+            "locator_reference": locator_reference.value,
+            "locator": locator,
+            "resource_locator": locator,
+            "evidence_class": evidence_class,
+            "source_revision": _repository_revision(source_revision),
+            "modality": _text(modality, "Source revalidation modality"),
+            "content_digest": content_digest.value,
+            "origin_turn_id": origin_turn_id.value,
+            "origin_citation_digest": origin_citation_digest.value,
+        }
+        return cls(
+            locator_reference=locator_reference,
+            locator=locator,
+            resource_locator=locator,
+            evidence_class=evidence_class,
+            source_revision=core["source_revision"],
+            modality=core["modality"],
+            content_digest=content_digest,
+            origin_turn_id=origin_turn_id,
+            origin_citation_digest=origin_citation_digest,
             digest=digest_of(core),
         )
 
@@ -1195,6 +1288,10 @@ class EngineeringAgentToolResult:
 
 
 class EngineeringAgentToolPort(Protocol):
+    def source_read_options(
+        self, request: EngineeringTurnExecutionRequest
+    ) -> tuple[EngineeringAgentSourceReadOption, ...]: ...
+
     def execute(
         self, request: EngineeringAgentToolRequest
     ) -> EngineeringAgentToolResult: ...
@@ -1631,6 +1728,11 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         last_draft: EngineeringAgentAnswerDraft | None = None
         last_review: EngineeringAgentReview | None = None
         available_operations = self._authorized_operations(request)
+        preissued_source_read_options = (
+            self._prepare_source_read_options(request)
+            if EngineeringAgentToolOperation.SOURCE_READ in available_operations
+            else ()
+        )
 
         for _ in range(self._limits.maximum_agent_steps):
             audit.expected_model_role = EngineeringAgentModelRole.PRIMARY_AGENT
@@ -1647,6 +1749,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         available_operations=available_operations,
                         action_history=action_history,
                         mode=invocation_mode,
+                        preissued_source_read_options=(
+                            preissued_source_read_options
+                        ),
                     )
                 )
             except BaseException:
@@ -1919,6 +2024,56 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             model_dispatch_receipt_refs=_model_receipt_refs(audit),
             failure_code="AGENT_STEP_LIMIT_REACHED",
         )
+
+    def _prepare_source_read_options(
+        self, request: EngineeringTurnExecutionRequest
+    ) -> tuple[EngineeringAgentSourceReadOption, ...]:
+        provider = getattr(self._tool_port, "source_read_options", None)
+        if not callable(provider):
+            return ()
+        options = tuple(provider(request))
+        if len(options) > 16:
+            raise DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "prior-Turn Source revalidation option fuse is exhausted",
+            )
+        normalized: list[EngineeringAgentSourceReadOption] = []
+        for option in options:
+            if not isinstance(option, EngineeringAgentSourceReadOption):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source tool port returned an untyped read option",
+                )
+            expected = EngineeringAgentSourceReadOption.create(
+                locator_reference=option.locator_reference,
+                locator=option.locator,
+                evidence_class=option.evidence_class,
+                source_revision=option.source_revision,
+                modality=option.modality,
+                content_digest=option.content_digest,
+                origin_turn_id=option.origin_turn_id,
+                origin_citation_digest=option.origin_citation_digest,
+            )
+            if (
+                option != expected
+                or option.source_revision != request.binding.repository_revision
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source read option does not bind the current repository revision",
+                )
+            normalized.append(option)
+        if (
+            len({item.locator_reference for item in normalized})
+            != len(normalized)
+            or len({item.resource_locator for item in normalized})
+            != len(normalized)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source revalidation options must have unique references and resources",
+            )
+        return tuple(normalized)
 
     def _seal_work_state(
         self,

@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -44,6 +44,11 @@ comprehensive Review、evidence-boundary challenge 和 Verification Investigatio
 结构化、可密封 Revision 保存；用户纠正形成新 Revision，不改写历史。世界模型、对话工作状态和当前 Turn 证据是三类不同对象：前者可跨
 会话复用，第二类只服务当前对话目标，第三类只支持当前候选答案。先前助手答案只有在当前 Turn 重新获得 admissible evidence 支持时才能
 作为结论延续。
+
+“重新获得”不要求重新发现已经由同一 Conversation 成功交付的 full Source path。历史 Delivery Citation 可以成为不含 content 的候选；
+Application/Source Broker 必须在 current Request/attempt/Profile/revision 下重签 direct opaque locator，Worker 当前重读并核对完整
+path/coverage/modality/content digest 后才产生新的 current-Turn Observation、Package 与 Citation。该机制复用定位身份而不复用旧事实权威，
+也不允许模型提交 path 或把旧 Answer/Observation 复制进当前 Claim domain。
 
 主 Agent 可以使用的能力只有受控端口：读取 exact World Model Cognition、查询其结构/行为/覆盖，以及向 Source Broker 提交注册的
 `search/read/parse` 等只读 Proposal。模型不取得 Repository mount、路径权威、Source Tool、shell、任意网络、credential、写入或正式知识
@@ -120,4 +125,5 @@ Adapter 被明确拒绝为非 live。后续实现已把 Draft 实际引用的 au
 fixture 追认为 live 或质量合格。双 Provider、真实 transport、fixed launcher 与后续 Chat 的 current 集成/执行状态以 Engineering
 Conversation 合同的“当前配置实例与历史实现证据”为准，本段早期 deterministic fixture 不单独拥有其状态。后续
 `FINDING-010-170` 又把同一 Turn 的重复 World Model Cognition snapshot 改为 exact-item append-only delta，并让一次同 profile repair 明确识别
-JSON object 前叙述；它们目前仍只是 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE`，须由 fresh exact Browser successor 验证。
+JSON object 前叙述；`FINDING-010-172` 又补齐 current Request-bound prior full-source revalidation locator。它们目前仍只是
+`BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE`，须由 fresh exact Browser successor 验证。

@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -51,6 +51,13 @@ Response Control 放行边界继续由原 Owner 拥有。
 全部 exact match 时才可作为本 Turn 的复用 candidate；Application 仍须按本 Turn 的问题、目标和证据需求重新校验，并把实际使用项重新绑定
 到本 Turn Package。旧 Answer Authorization、Review Decision、Limitation、未密封 Tool Result、Provider memory 或隐藏状态一律不可复用。
 用户陈述、纠正和偏好可以改变对话目标或待验证假设，但不能成为 Source truth 或支持软件事实。
+
+对于成功且已获 Delivery Authorization 的历史 Turn，Application 可以从其已交付 Citation projection 中选择同 revision 的 full-resource
+Source Citation，按 canonical resource 去重并以固定上限形成 current-Turn revalidation candidate。candidate 只携带 prior path、modality、
+content digest 和 origin identity，不携带 source content、旧 Observation 或 Claim authority；Source Broker 必须为 current Request/attempt/
+Profile/class/path 重新签发 direct opaque locator。只有本 Turn 实际 READ 后由 Worker 返回完整相同 path/coverage/modality/content digest，才
+形成新的 current-Turn SUPPORT、Ledger Result、Citation 与 Package closure；任一 identity/content mismatch 失败关闭。search line hit、
+World Model Citation、失败/未授权 Turn、不同 revision 或新 Conversation 不得生成该能力。
 
 ## Conversation and turn invariants
 
@@ -137,7 +144,9 @@ no-progress failure 关闭。
    Decoder 必须从原 Observation 重算并 fail closed，不能删除错误 Claim、替换引用、提升 Boundary 或自动授权 Draft。current model
    input 还必须由可信 Application 从 current isolated attempt 的 typed action history 与 Source authority-receipt Citations 投影
    `tool_reference_policy`：列出已执行 exact action、已尝试 query/read 和未使用的 `source_read_options`；Provider 只能复制列出的 opaque
-   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。每个 canonical Source resource 至多暴露一个 read option；
+   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。read option 可以来自本 Turn Search receipt，也可以是前述
+   current-Turn revalidation candidate；后者在执行 READ 前不是 Evidence，相关 follow-up 应优先用它重验已知 full resource，而不是先以内容
+   SEARCH 消耗目录扫描熔断。每个 canonical Source resource 至多暴露一个 read option；
    任一 line reference 被读取后，同一 resource 的全部 reference 都离开 legal domain；没有未使用 option 时 `SOURCE_READ` 不得出现在
    effective tool catalog。受信 Ledger 已出现 operation/file/byte terminal fuse rejection 时，Source Search/Read 也必须离开 effective
    tool catalog；World Model operation 不被 Source terminal state 连带撤销。
@@ -266,5 +275,8 @@ clarification/隔离/零 dispatch 继续 PASS。后续 v7 的 path-relevance pro
 验证，只是已停止的本地症状实验，不能成为 current Contract、Conformance 失效原因或下一次 live 重跑入口。run-043 随后把 first
 divergence 定位到 semantic `evidence_need` 未进入 Cognition query；current v8 已在 Application 边界本地闭合该绑定，并以两个未参与修复
 的异质问题做真实 bundle 诊断。run-043 的答案质量和 DeepSeek 峰时调度 FAIL 均保持；领域 Prompt 变化本身不触发 ADR-017 Provider
-Conformance。旧
+Conformance。`run-060/061/062` 又依次暴露同 Turn 重复 Cognition、closed operation repair 诊断和跨 Turn full-source 重验缺口；
+`FINDING-010-170/171/172` 已分别形成 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CLOSED_TOOL_DIAGNOSTIC_LOCAL_CANDIDATE /
+CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE`，都必须由新 exact product identity 的 fresh Browser successor 验证，不能追认这些失败 run。
+旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

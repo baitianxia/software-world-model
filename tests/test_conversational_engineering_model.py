@@ -38,6 +38,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
     EngineeringAgentReviewFinding,
+    EngineeringAgentSourceReadOption,
     EngineeringAgentToolActionProposal,
     EngineeringAgentToolAuthorityKind,
     EngineeringAgentToolAuthorityReceipt,
@@ -1457,6 +1458,87 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             tuple(item["operation"] for item in unreceipted_view["tool_catalog"]),
             ("SOURCE_SEARCH",),
+        )
+
+        preissued_reference = StableId(
+            "required_path_locator_" + "2" * 32
+        )
+        preissued = EngineeringAgentSourceReadOption.create(
+            locator_reference=preissued_reference,
+            locator="src/main/java/example/LoginService.java",
+            evidence_class="SOURCE",
+            source_revision=capture.request.binding.repository_revision,
+            modality="EXACT_STATIC_SOURCE_TEXT",
+            content_digest=digest_of("prior-full-login-source"),
+            origin_turn_id=StableId("turn_" + "1" * 32),
+            origin_citation_digest=digest_of("prior-login-citation"),
+        )
+        preissued_invocation = replace(
+            invocation,
+            observations=(),
+            action_history=(),
+            preissued_source_read_options=(preissued,),
+        )
+        preissued_view = _primary_input_view(preissued_invocation)
+        preissued_policy = preissued_view["tool_reference_policy"]
+        self.assertEqual(
+            preissued_policy["source_read_options"],
+            (
+                {
+                    "locator_reference": preissued_reference.value,
+                    "locator": "src/main/java/example/LoginService.java",
+                    "resource_locator": (
+                        "src/main/java/example/LoginService.java"
+                    ),
+                    "evidence_class": "SOURCE",
+                    "modality": "EXACT_STATIC_SOURCE_TEXT",
+                    "content_digest": preissued.content_digest.value,
+                    "source_observation_id": None,
+                    "origin": "PRIOR_TURN_EXACT_SOURCE_REVALIDATION",
+                    "origin_turn_id": preissued.origin_turn_id.value,
+                    "origin_citation_digest": (
+                        preissued.origin_citation_digest.value
+                    ),
+                },
+            ),
+        )
+        self.assertEqual(
+            tuple(item["operation"] for item in preissued_view["tool_catalog"]),
+            ("SOURCE_SEARCH", "SOURCE_READ"),
+        )
+        preissued_payload = {
+            "goal": "确认登录失败记录",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_READ",
+                "arguments": [
+                    {
+                        "name": "locator_reference",
+                        "value": preissued_reference.value,
+                    }
+                ],
+                "evidence_need": "revalidate the prior exact resource",
+            },
+            "draft": None,
+        }
+        preissued_proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(preissued_payload),
+            invocation=preissued_invocation,
+            model_call_ref="trusted-preissued-read-call",
+        )
+        self.assertEqual(
+            dict(preissued_proposal.action.arguments)["locator_reference"],
+            preissued_reference.value,
         )
 
         payload = {

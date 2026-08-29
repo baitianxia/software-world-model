@@ -376,6 +376,84 @@ class SearchReadAnswerDriver:
         )
 
 
+class CrossTurnSourceRevalidationDriver:
+    def __init__(self) -> None:
+        self.calls_by_turn = {}
+        self.second_turn_options = ()
+
+    def propose(self, invocation):
+        turn_ref = invocation.request.turn_id.value
+        step = self.calls_by_turn.get(turn_ref, 0)
+        self.calls_by_turn[turn_ref] = step + 1
+        if invocation.request.sequence == 1 and step == 0:
+            return proposal(
+                invocation,
+                call_ref="revalidation-turn-1-search",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        (
+                            "evidence_class",
+                            EngineeringEvidenceClass.REPOSITORY_DOCUMENT.value,
+                        ),
+                        ("query", "login"),
+                    ),
+                    evidence_need="locate the exact login documentation",
+                ),
+            )
+        if invocation.request.sequence == 1 and step == 1:
+            locator = next(
+                reference
+                for observation in invocation.observations
+                for reference in observation.citation_refs
+            )
+            return proposal(
+                invocation,
+                call_ref="revalidation-turn-1-read",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_READ,
+                    arguments=(("locator_reference", locator),),
+                    evidence_need="read the exact login documentation",
+                ),
+            )
+        if invocation.request.sequence == 2 and step == 0:
+            self.second_turn_options = invocation.preissued_source_read_options
+            option = self.second_turn_options[0]
+            return proposal(
+                invocation,
+                call_ref="revalidation-turn-2-read",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_READ,
+                    arguments=(
+                        ("locator_reference", option.locator_reference.value),
+                    ),
+                    evidence_need=(
+                        "revalidate the prior exact login resource for this follow-up"
+                    ),
+                ),
+            )
+        read_support = tuple(
+            item.observation_id
+            for item in invocation.observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+            and item.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+        )
+        return proposal(
+            invocation,
+            call_ref=f"revalidation-turn-{invocation.request.sequence}-answer",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="当前轮重新读取的精确来源支持登录说明。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="登录说明由当前轮精确来源读取支持。",
+                        support_observation_ids=read_support,
+                    ),
+                ),
+            ),
+        )
+
+
 class FiveTurnLiteralSearchDriver:
     def __init__(self, *, read_count: int = 1) -> None:
         self.calls_by_turn = {}
@@ -839,6 +917,73 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             self.assertEqual(citation.locator, authority_citation.locator)
             self.assertEqual(citation.content_digest, authority_citation.content_digest)
             self.assertEqual(citation.digest, authority_citation.digest)
+
+    def test_follow_up_revalidates_prior_full_source_without_search(self) -> None:
+        driver = CrossTurnSourceRevalidationDriver()
+        reviewer = RecordingReviewer()
+        service = self.service(driver, reviewer)
+        conversation = service.create_conversation()
+
+        first = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录说明是什么？",
+        )
+        first_citation = next(
+            item for item in first.turn.citations if item.locator == "README.md"
+        )
+        second = service.submit_turn(
+            conversation_id=first.snapshot.conversation.conversation_id,
+            expected_revision=first.snapshot.conversation.revision,
+            message="沿用上一轮，失败分支呢？",
+        )
+
+        self.assertEqual(second.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(len(driver.second_turn_options), 1)
+        option = driver.second_turn_options[0]
+        self.assertEqual(option.locator, "README.md")
+        self.assertEqual(option.source_revision, self.revision)
+        self.assertEqual(option.content_digest, first_citation.content_digest)
+        self.assertEqual(option.origin_turn_id, first.turn.turn_id)
+        self.assertEqual(
+            option.origin_citation_digest,
+            first_citation.digest,
+        )
+        package = reviewer.requests[-1].package
+        self.assertEqual(len(package.support_observations), 1)
+        support = package.support_observations[0]
+        self.assertIs(
+            support.operation,
+            EngineeringAgentToolOperation.SOURCE_READ,
+        )
+        self.assertIn("issuing a token", support.content)
+        proposal_entry = next(
+            item
+            for item in support.authority_receipt.ledger_entries
+            if item.kind == "INVESTIGATION_PROPOSAL"
+        )
+        proposal_details = dict(proposal_entry.details)
+        self.assertEqual(
+            proposal_details["locator_origin"],
+            "PRIOR_TURN_EXACT_SOURCE_REVALIDATION",
+        )
+        self.assertEqual(
+            proposal_details["origin_turn_id"],
+            first.turn.turn_id.value,
+        )
+        usage = dict(support.authority_receipt.ledger_entries[-1].details)
+        self.assertEqual(usage["source_files"], "1")
+        second_citation = next(
+            item for item in second.turn.citations if item.locator == "README.md"
+        )
+        self.assertNotEqual(
+            second_citation.citation_ref,
+            first_citation.citation_ref,
+        )
+        self.assertEqual(
+            second_citation.content_digest,
+            first_citation.content_digest,
+        )
 
     def test_raw_path_read_is_rejected_before_retrieval(self) -> None:
         reviewer = RecordingReviewer()
