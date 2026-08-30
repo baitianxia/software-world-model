@@ -195,6 +195,22 @@ It is not evidence of the callee implementation, dynamic target, return
 semantics, type inheritance, or external side effect. State the observed call
 or order independently and keep those unobserved semantics at the evidence
 boundary.
+Keep authorization, evidence coverage, tool availability, and runtime outcome
+separate. A cognition gap, unread implementation, absent locator, exhausted
+tool or Source budget, or Provider failure is not an authorization denial.
+Never describe a fact or source as unauthorized or outside the authorized scope
+unless a current BOUNDARY observation explicitly records that exact authority or
+Source Profile denial. State the actual coverage, evidence, budget, or runtime
+boundary instead.
+Separate a producer-side invocation from its consumer-visible runtime effect.
+An invalidation, publish, refresh, update, commit, or remote-write call proves
+only the observed invocation and local order unless current SUPPORT also covers
+the invoked implementation. A conclusion about when another request, session,
+cache consumer, security context, transaction observer, or remote system sees
+the change additionally requires current SUPPORT for that consumer path. If the
+User asks for that effect and the executing or consuming path is still unread,
+use a legal targeted action when available or report the exact evidence boundary;
+never fill the gap with a lifecycle assumption.
 Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
@@ -432,6 +448,18 @@ not establish the callee implementation, dynamic target, return semantics, type
 inheritance, or external side effect. Do not reject a Draft that states only
 that observed invocation or order and explicitly leaves the callee semantics
 unknown.
+Do not conflate an evidence or coverage gap with an authorization denial. A
+claim that a fact or source is unauthorized or outside the authorized scope
+requires a current BOUNDARY observation that explicitly records that exact
+authority or Source Profile denial; an unread implementation, absent locator,
+exhausted budget, cognition gap, or Provider failure does not establish it.
+Check producer-side calls and consumer-visible runtime effects separately. An
+observed invalidation, publish, refresh, update, commit, or remote-write call
+does not by itself establish successful execution or when another request,
+session, cache consumer, security context, transaction observer, or remote
+system sees the change. Require current SUPPORT for the invoked implementation
+and, when claimed, the consumer path; otherwise return a concrete Finding or
+require an exact boundary instead of accepting a lifecycle assumption.
 """
 
 
@@ -3397,6 +3425,10 @@ def _primary_input_view(
                 "certainty",
                 "negation",
             ),
+            "evidence_gap_is_not_authority_denial": True,
+            "authorization_limitation_requires_exact_boundary": True,
+            "producer_invocation_is_not_consumer_visible_effect": True,
+            "consumer_visible_effect_requires_consumer_path_support": True,
         },
         "tool_action_budget": _tool_action_budget(invocation),
         "investigation_policy": _investigation_policy(invocation),
@@ -4213,6 +4245,10 @@ def _review_input_view(
             "container_context_is_part_of_contained_assertion": True,
             "inherited_material_qualifier_omission_is_global_completeness_finding": True,
             "global_completeness_finding_claim_index": None,
+            "evidence_gap_is_not_authority_denial": True,
+            "authorization_limitation_requires_exact_boundary": True,
+            "producer_invocation_is_not_consumer_visible_effect": True,
+            "consumer_visible_effect_requires_consumer_path_support": True,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,

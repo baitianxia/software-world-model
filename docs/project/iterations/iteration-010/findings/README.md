@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,6 +12,12 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-192](FINDING-010-192.md)：run-076 的 World Model SUPPORT 顶层夹带已在 BOUNDARY 中的 global Coverage/Gap，使合法
+  SUPPORT ID 可承载边界语义。current adapter 只在 SUPPORT 保留 novel affirmative item 与 per-item coverage，global
+  coverage/conflict/unknown 只进入 BOUNDARY；相邻七模块 `91/91` PASS，fresh live 仍待验证。
+- [FINDING-010-191](FINDING-010-191.md)：run-076 的 pre-delivery Draft 把 Cognition coverage gap 误称为授权边界，并在只读角色更新的
+  producer 实现时推断 request/session 何时看到新权限。Primary/Reviewer 现须区分 authority、coverage、tool、runtime state，以及
+  producer invocation、callee effect 与 consumer-visible lifecycle；模型边界直接 `28/28`、相邻组合 `77/77` PASS，fresh live 仍待验证。
 - [FINDING-010-190](FINDING-010-190.md)：run-077 的首个 Ark call 再次 raw `PROVIDER_HTTP_ERROR`，页面已真实分层显示 execution 与 Provider
   evidence；新 EMPTY CONTEXT 的“这些失败也会回滚吗？”则以零 dispatch Clarification 成功。相同外调 signature 随即停止；DeepSeek 虽获
   周末闲时 admission，但无 trusted unavailable verdict，故 0 dispatch 正确。工程答案质量仍未验证。

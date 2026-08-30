@@ -1234,6 +1234,18 @@ conversational_engineering_agent:
   inherited_qualifier_omission_finding_binding: global-claim-index-null
   inherited_qualifier_false_or_misclassified_finding_binding: concrete-defect
   current_inherited_container_assertion_evidence_ref: FINDING-010-186
+  authorization_coverage_tool_runtime_states_are_distinct: true
+  authorization_limitation_requires_exact_boundary: true
+  cognition_gap_unread_source_absent_locator_budget_or_provider_failure_is_authorization_denial: false
+  producer_invocation_establishes_consumer_visible_effect: false
+  consumer_visible_effect_requires_invoked_implementation_and_consumer_path_support: true
+  authority_runtime_semantics_business_term_branching: false
+  current_authority_runtime_semantics_evidence_ref: FINDING-010-191
+  world_model_support_global_coverage_conflict_unknown_allowed: false
+  world_model_support_per_item_coverage_preserved: true
+  world_model_global_coverage_conflict_unknown_destination: boundary-only
+  formal_cognition_context_global_coverage_binding: unchanged
+  current_world_model_evidence_partition_ref: FINDING-010-192
   empty_context_referent_policy_ref: EMPTY_CONTEXT_REFERENT_CLARIFICATION_ZH_CN@1
   empty_context_referent_marker_categories: singular,plural,class-demonstrative
   empty_context_referent_match_result: application-input-clarification-before-world-model-source-credential-or-provider
@@ -1646,7 +1658,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:010f42a9320461f226a8ed68041bd4d3f0076cd091d40d289a5957645285654c
+  system_contract_set_digest: sha256:7ecae1e50c0feddf398519765034c88f36d6383eba20a4d436876ee9e6c4f4c0
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

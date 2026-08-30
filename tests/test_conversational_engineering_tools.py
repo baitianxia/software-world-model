@@ -833,8 +833,27 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertEqual(len(package.boundary_observations), 1)
         support = package.support_observations[0]
         boundary = package.boundary_observations[0]
+        support_payload = json.loads(support.content)
+        boundary_payload = json.loads(boundary.content)
         self.assertEqual(support.authority_receipt, boundary.authority_receipt)
         self.assertEqual(len(support.citation_refs), 1)
+        self.assertNotIn("coverage", support_payload)
+        self.assertEqual(
+            support_payload["dimensions"][0]["coverage"],
+            "Exact fixture behavior relation.",
+        )
+        self.assertEqual(
+            boundary_payload["coverage"],
+            ["Controller behavior is represented."],
+        )
+        self.assertNotIn(
+            "Runtime credential store remains outside this Snapshot.",
+            support.content,
+        )
+        self.assertIn(
+            "Runtime credential store remains outside this Snapshot.",
+            boundary.content,
+        )
         self.assertEqual(
             tuple(item.kind for item in support.authority_receipt.ledger_entries),
             ("COGNITION_CONTEXT", "RESOURCE_RECEIPT"),

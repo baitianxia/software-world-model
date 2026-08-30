@@ -548,7 +548,6 @@ class EngineeringAgentEvidenceToolAdapter:
                 "source_search_target_projection": (
                     source_search_target_projection
                 ),
-                "coverage": list(cognition.coverage),
             }
             content = _payload(payload)
             if content is not None:

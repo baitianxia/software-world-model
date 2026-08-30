@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -172,3 +172,14 @@ fresh `run-076` 的角色重分配题已完成前 9 个 Ark call、真实 Source
 该 run 没有交付答案，不能验证容器语义或质量。它还证明 EMPTY CONTEXT policy 漏掉“这些/那些/此类”等复数/类别指示，Browser 又只显示
 execution-stage code；`FINDING-010-188/189` 已分别闭合 Provider 前通用 Clarification 与 execution/raw-provider 分层显示，不改变 Agent、
 route 或 fallback architecture。fresh exact Browser successor 仍是唯一产品证据。
+
+同一 run-076 的 pre-delivery Draft 后续审计又发现 Primary 把 Cognition coverage gap 写成“超出当前授权”，并在只读 producer-side
+`UmsAdminServiceImpl` 时推断 consumer-side 登录态权限刷新；Source Profile 实际仍授权相关 Java，且该 Turn 还剩一个合法 action。
+`FINDING-010-191` 因而要求 Primary/Reviewer 分开 authority、coverage、tool 和 runtime state，并把 producer invocation、callee effect 与
+consumer-visible lifecycle 作为不同证据义务。该 local candidate 只由 exact artifact/source 对照和定向测试支持，尚未取得 fresh
+Primary/Reviewer live 质量证据。
+
+继续向上游审计同一 Draft 的 exact model input 后，`FINDING-010-192` 把 first divergence 前移到 World Model evidence-tool adapter：正式
+Cognition Context 的 global Coverage/Gap 已正确进入 BOUNDARY，却又被复制进 model-facing SUPPORT 顶层，使 Primary 可只引用 SUPPORT ID
+而使用 Boundary 语义。当前决策要求 SUPPORT 只携带 novel affirmative item 及其 per-item coverage；global coverage/conflict/unknown
+继续绑定正式 Context、Ledger 和 receipt，但 model-facing 内容只进入 BOUNDARY。Primary/Reviewer policy 仍保留为独立下游 guard。

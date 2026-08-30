@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -206,9 +206,11 @@ no-progress failure 关闭。
    Claim/Boundary copy domain。
 
    同一 current Turn 内多次 `WORLD_MODEL_QUERY` 的 SUPPORT Observation 是 append-only cognition delta，不是完整快照的重复副本。可信
-   evidence-tool adapter 按 exact Cognition item digest 保留首次出现顺序：每次 query 仍绑定完整 current Cognition Context digest、exact
-   revision、coverage、Ledger 和 authority receipt，但 model-facing SUPPORT content 与 Citation refs 只追加该 Turn 先前 SUPPORT 尚未投影的
-   item，并机械记录 current/novel/already-observed counts。重复 item 的首次 Observation 不得删除、重排或改写；后续 Claim 需要该事实时引用
+   evidence-tool adapter 按 exact Cognition item digest 保留首次出现顺序：每次 query 的正式 Context、Ledger 和 authority receipt 仍绑定完整
+   current Cognition Context digest、exact revision 与 global coverage，但 model-facing SUPPORT 顶层不得复制 global
+   `cognition.coverage/conflicts/unknowns`；这些全局 Gap/Conflict/Unknown 只进入 BOUNDARY。SUPPORT 只追加该 Turn 先前尚未投影的 affirmative
+   item 及其自身的 per-item coverage，Citation refs 也只追加对应 item，并机械记录 current/novel/already-observed counts。重复 item 的首次
+   Observation 不得删除、重排或改写；后续 Claim 需要该事实时引用
    首次携带它的 SUPPORT ID。一个 query 没有 novel supported item 时不得制造重复 SUPPORT，而须形成明确 no-new boundary/no-progress；含新
    boundary、conflict 或 unknown 的 Context 仍按其自身 disposition 保留。该压缩不改变正式 Cognition Context、Evidence Ledger、receipt 或
    Citation identity，也不能把未见 item、Boundary 或旧 Turn Evidence 提升为支持。
@@ -236,7 +238,13 @@ no-progress failure 关闭。
    配置值或外部副作用；Primary 必须取得直接声明/执行该关系的 current Evidence，或把结论收窄为不依赖未知关系的结果，Reviewer 对违反
    该规则的 material Claim 必须返回 Finding。current Source 行直接包含 call expression 时，它只直接证明 caller 调用该表达式及源码可见
    的局部顺序，不证明 callee 实现、动态目标、返回语义、类型继承或外部副作用；Draft 只陈述该 invocation/order 并明确把 callee semantics
-   留在 evidence boundary 时，Reviewer 不得因后者未知而拒绝前者。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
+   留在 evidence boundary 时，Reviewer 不得因后者未知而拒绝前者。Authorization、Evidence Coverage、Tool availability 与 runtime
+   outcome 也是彼此独立的状态：只有 current BOUNDARY 明确记录 exact authority/Source Profile denial 时，Draft 才能把事实或来源称为
+   未授权或超出授权；Cognition Gap、未读实现、无 locator、预算耗尽或 Provider failure 必须按其真实边界表述。producer-side
+   invalidation/publish/refresh/update/commit/remote-write 调用只支持 invocation 与源码局部顺序；若 Draft 声称 invoked implementation、
+   成功效果或另一个 request/session/cache consumer/security context/transaction observer/remote system 的可见时点，必须分别取得该
+   implementation 和 consumer path 的 current SUPPORT，否则选择仍合法的 targeted action 或报告 exact Evidence boundary。Primary 与
+   Reviewer input 必须对称投影这些规则；Application 不以题目、技术名词或语言关键词改写 Draft。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
    current User Message 真正要求的 material fact，且删除/收窄会让该要求仍未回答时，才可 `requires_evidence=true`；若 current Package 已能
    通过删除、收窄、限定或重组 offending statement 保留全部已支持的 requested conclusions，则必须为 false，不能一边给出这种同包修复一边
    要求新 Evidence。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取

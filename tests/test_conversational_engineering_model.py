@@ -380,6 +380,68 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         return service, model, authorizer, adapter, tool, response
 
+    def test_authority_and_runtime_evidence_policy_is_question_agnostic(self) -> None:
+        policies = []
+        messages = (
+            "缓存失效后，下一次请求何时看到新权限？",
+            "事件发布后，另一个消费者何时观察到状态变化？",
+            "远端文档写入后，后续查询何时能读取新版本？",
+        )
+        for message in messages:
+            capture = CapturingTurnExecutor()
+            service = InMemoryEngineeringConversationService(
+                _binding(),
+                turn_executor=capture,
+                id_generator=SequenceIds(),
+                clock=lambda: self.now,
+            )
+            conversation = service.create_conversation()
+            service.submit_turn(
+                conversation_id=conversation.conversation.conversation_id,
+                expected_revision=Revision(1),
+                message=message,
+            )
+            view = _primary_input_view(
+                EngineeringAgentInvocation(
+                    request=capture.request,
+                    previous_work_state=None,
+                    observations=(),
+                    review_findings=(),
+                    review_digest=None,
+                    available_operations=(
+                        EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    ),
+                )
+            )
+            policy = view["draft_reference_policy"]
+            policies.append(
+                {
+                    "evidence_gap_is_not_authority_denial": policy[
+                        "evidence_gap_is_not_authority_denial"
+                    ],
+                    "authorization_limitation_requires_exact_boundary": policy[
+                        "authorization_limitation_requires_exact_boundary"
+                    ],
+                    "producer_invocation_is_not_consumer_visible_effect": policy[
+                        "producer_invocation_is_not_consumer_visible_effect"
+                    ],
+                    "consumer_visible_effect_requires_consumer_path_support": policy[
+                        "consumer_visible_effect_requires_consumer_path_support"
+                    ],
+                }
+            )
+
+        self.assertEqual(policies, [policies[0]] * len(messages))
+        self.assertEqual(
+            policies[0],
+            {
+                "evidence_gap_is_not_authority_denial": True,
+                "authorization_limitation_requires_exact_boundary": True,
+                "producer_invocation_is_not_consumer_visible_effect": True,
+                "consumer_visible_effect_requires_consumer_path_support": True,
+            },
+        )
+
     def test_offline_gateway_dispatch_is_audited_but_cannot_qualify_output(self) -> None:
         service, model, authorizer, adapter, tool, response = self._service()
         conversation = service.create_conversation()
@@ -539,6 +601,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "It is not evidence of the callee implementation",
+            rendered,
+        )
+        self.assertIn("evidence_gap_is_not_authority_denial", rendered)
+        self.assertIn(
+            "A cognition gap, unread implementation, absent locator",
+            rendered,
+        )
+        self.assertIn(
+            "producer_invocation_is_not_consumer_visible_effect",
+            rendered,
+        )
+        self.assertIn(
+            "Separate a producer-side invocation from its consumer-visible runtime effect",
+            rendered,
+        )
+        self.assertIn(
+            "requires current SUPPORT for that consumer path",
             rendered,
         )
         self.assertIn("Follow tool_action_budget exactly", rendered)
@@ -1611,6 +1690,24 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIsNone(
             reviewer_policy["global_completeness_finding_claim_index"]
         )
+        self.assertTrue(
+            reviewer_policy["evidence_gap_is_not_authority_denial"]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "authorization_limitation_requires_exact_boundary"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "producer_invocation_is_not_consumer_visible_effect"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "consumer_visible_effect_requires_consumer_path_support"
+            ]
+        )
         reviewer_prompt = adapter.requests[2].messages[0].content
         self.assertIn(
             "Compare the complete draft.content against the enumerated claims",
@@ -1622,6 +1719,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "Reconstruct every content assertion with the category, scope, condition",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Do not conflate an evidence or coverage gap with an authorization denial",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Check producer-side calls and consumer-visible runtime effects separately",
             reviewer_prompt,
         )
         self.assertIn(
@@ -3492,6 +3597,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "certainty",
                     "negation",
                 ),
+                "evidence_gap_is_not_authority_denial": True,
+                "authorization_limitation_requires_exact_boundary": True,
+                "producer_invocation_is_not_consumer_visible_effect": True,
+                "consumer_visible_effect_requires_consumer_path_support": True,
             },
         )
         payload = {

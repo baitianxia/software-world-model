@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -50,6 +50,9 @@ dangling read option；run-076 又证明 Source 修复已越过旧矛盾，但 9
 交付。它同时暴露空 Context 的复数/类别指代和 Browser failure 分层显示缺口；当前继续完成通用修复、绝对质量检查和 current Codex 同题
 比较，两者通过才取得 MVP 资格。run-077 已真实验证复数指代零 dispatch Clarification 和 Browser failure 分层显示；首个 Ark call 的相同
 raw HTTP signature 复现后没有继续提交其余外部题，工程答案质量仍未取得新证据。
+run-076 pre-delivery Draft 的后续本地审计又以 `FINDING-010-191` 记录 authority/coverage 混淆和 producer→consumer lifecycle 扩张；继续审计
+exact model input 后，`FINDING-010-192` 把 first divergence 前移到 SUPPORT 顶层夹带 global Coverage/Gap。evidence-tool adapter 与
+Primary/Reviewer 已取得分区、对称 policy/prompt 修复及相邻七模块 `91/91` 定向测试，但尚无 fresh live 质量证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 
@@ -75,7 +78,8 @@ SLICE-001 保持 authorized/coding_input=true。主要风险是继续碰单题�
 
 SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model Answering、Source Artifact、Security 和 Local Browser 合同
 继续拥有跨模块语义。run-074/075/076 暴露的 closed-shape repair、Source budget/reference/catalog coherence、inherited-container assertion、
-空 Context plural/class demonstrative 与 failure evidence display 偏差已由 `FINDING-010-184/185/186/188/189` 回写 Engineering Conversation
+空 Context plural/class demonstrative、failure evidence display、authority/coverage 与 producer/consumer runtime 语义偏差已由
+`FINDING-010-184/185/186/188/189/191/192` 回写 Engineering Conversation
 唯一 Owner；当前
 没有会阻止后续质量资格开发的未决架构问题。实现若发现新的合同级偏差，继续按 Finding policy 回写唯一 Owner，同时继续不受影响的产品工作。
 
@@ -96,7 +100,7 @@ SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model A
 Production 或破坏性动作需要最小增量权限。用户明确 STOP / REDIRECT / REJECT 或不可绕过的安全禁止会停止对应工作；普通失败不会。
 
 当前没有权限或计划阻塞。run-076/077 的 raw Ark HTTP error 只阻止相同 signature 外调，不撤销 standing authority 或本地开发；
-`FINDING-010-188/189` 已由 fresh Browser 真实通过。当前继续本地质量归因与证据准备，并在 materially new availability evidence 或新的
+`FINDING-010-188/189` 已由 fresh Browser 真实通过；`FINDING-010-191/192` 仅有本地 exact artifact/source/input 对照和定向测试。当前继续本地质量归因与证据准备，并在 materially new availability evidence 或新的
 product divergence 出现后复验角色重分配题、容器语义审核与未参与修复的异质题，随后继续 actual current Codex 比较，直到
 同候选取得或如实未取得质量合格 MVP。技术 Case ID
 `V-BROWSER-CHAT-MVP-BUILD-001` 只作兼容标识，不能单独证明 MVP 完成。
