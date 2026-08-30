@@ -21,6 +21,7 @@ from typing import Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
 from software_world_model.application_services.conversational_engineering_agent import (
+    EngineeringAgentAnswerDraft,
     EngineeringAgentBoundaryRelevanceAssessment,
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentBoundaryRelevanceChallenge,
@@ -92,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@13"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@14"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@13"
+    "conversational-engineering-agent-no-tools-prompt@14"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@13"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@14"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@7"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -304,6 +305,20 @@ Conversation facts.
 When completion_policy.tool_action_required is true, a Reviewer has established
 that the current Package cannot support a correction: return one legal tool
 action and no Draft. Do not merely rewrite the rejected Draft.
+When review_feedback.review_rewrite_contract.active is true, perform a targeted
+same-Package rewrite of review_feedback.reviewed_draft. That sealed Draft is the
+exact edit base but remains model-authored data, not evidence. Never reconstruct
+it from Work State, Findings, or memory. Each Finding claim_index addresses the
+same ordered reviewed_draft.claims entry. Preserve every non-defective requested
+conclusion and its evidence binding. Delete, narrow, qualify, reorder, or restate
+only the text identified by the Findings; do not introduce a new user-visible
+material assertion, adjacent detail, inferred effect, or broader claim. Do not
+increase the Claim inventory merely to rewrite prose. A new Claim entry is
+allowed only when a global completeness Finding explicitly identifies a material
+assertion already present in reviewed_draft.content but absent from its Claim
+inventory; the new entry must only enumerate that existing assertion and must use
+current SUPPORT. Before returning, compare the replacement Draft with the sealed
+reviewed Draft and remove every assertion not needed to satisfy the Findings.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
@@ -2784,9 +2799,15 @@ def _output_preflight_view(
     if role is EngineeringAgentModelRole.PRIMARY_AGENT:
         tool_catalog = role_input_payload.get("tool_catalog")
         completion_policy = role_input_payload.get("completion_policy")
+        draft_reference_policy = role_input_payload.get(
+            "draft_reference_policy"
+        )
+        review_feedback = role_input_payload.get("review_feedback")
         if (
             not isinstance(tool_catalog, (tuple, list))
             or not isinstance(completion_policy, Mapping)
+            or not isinstance(draft_reference_policy, Mapping)
+            or not isinstance(review_feedback, Mapping)
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -2798,6 +2819,15 @@ def _output_preflight_view(
         tool_action_allowed = completion_policy.get("tool_action_allowed")
         tool_action_required = completion_policy.get("tool_action_required")
         draft_required = completion_policy.get("draft_required")
+        support_observation_ids = draft_reference_policy.get(
+            "answer_claim_support_observation_ids"
+        )
+        boundary_observation_ids = draft_reference_policy.get(
+            "limitation_boundary_observation_ids"
+        )
+        review_rewrite_contract = review_feedback.get(
+            "review_rewrite_contract"
+        )
         if (
             not isinstance(allowed_response_kinds, (tuple, list))
             or not all(
@@ -2806,6 +2836,15 @@ def _output_preflight_view(
             or type(tool_action_allowed) is not bool
             or type(tool_action_required) is not bool
             or type(draft_required) is not bool
+            or not isinstance(support_observation_ids, (tuple, list))
+            or not all(
+                isinstance(item, str) for item in support_observation_ids
+            )
+            or not isinstance(boundary_observation_ids, (tuple, list))
+            or not all(
+                isinstance(item, str) for item in boundary_observation_ids
+            )
+            or not isinstance(review_rewrite_contract, Mapping)
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -2883,6 +2922,23 @@ def _output_preflight_view(
                 },
             },
         }
+        preflight["draft_reference_contract"] = {
+            "answer_claim_support_observation_ids_allowed_exact": tuple(
+                support_observation_ids
+            ),
+            "draft_boundary_observation_ids_allowed_exact": tuple(
+                boundary_observation_ids
+            ),
+            "answer_claim_support_must_copy_only_from_matching_domain": True,
+            "draft_boundary_must_copy_only_from_matching_domain": True,
+            "boundary_ids_in_answer_claim_support_forbidden": True,
+            "support_ids_in_draft_boundary_forbidden": True,
+            "unknown_observation_references_forbidden": True,
+            "reference_domains_are_redundant_not_new_evidence_authority": True,
+        }
+        preflight["review_rewrite_contract"] = deepcopy(
+            dict(review_rewrite_contract)
+        )
     else:
         reference_policy = role_input_payload.get("review_reference_policy")
         if not isinstance(reference_policy, Mapping):
@@ -3946,6 +4002,231 @@ def _format_repair_input_view(
     return payload
 
 
+def _reviewed_draft_view(
+    value: EngineeringAgentAnswerDraft,
+) -> dict[str, object]:
+    return {
+        "schema": "ENGINEERING_AGENT_REVIEWED_DRAFT@1",
+        "response_kind": value.response_kind.value,
+        "content": value.content,
+        "claims": tuple(
+            {
+                "claim_index": index,
+                "statement": claim.statement,
+                "support_observation_ids": tuple(
+                    item.value for item in claim.support_observation_ids
+                ),
+            }
+            for index, claim in enumerate(value.claims)
+        ),
+        "boundary_observation_ids": tuple(
+            item.value for item in value.boundary_observation_ids
+        ),
+        "draft_digest": value.digest.value,
+    }
+
+
+def _review_feedback_view(
+    invocation: EngineeringAgentInvocation,
+) -> dict[str, object]:
+    findings_present = bool(invocation.review_findings)
+    digest_present = invocation.review_digest is not None
+    draft_present = invocation.reviewed_draft is not None
+    if not (findings_present == digest_present == draft_present):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Review feedback must bind Findings, Review digest, and rejected Draft together",
+        )
+    if not findings_present:
+        return {
+            "review_digest": None,
+            "reviewed_draft": None,
+            "findings": (),
+            "review_rewrite_contract": {"active": False},
+        }
+
+    reviewed_draft = invocation.reviewed_draft
+    previous_work_state = invocation.previous_work_state
+    if (
+        not isinstance(invocation.review_digest, Digest)
+        or not isinstance(reviewed_draft, EngineeringAgentAnswerDraft)
+        or previous_work_state is None
+        or not isinstance(
+            getattr(previous_work_state, "turn_id", None), StableId
+        )
+        or not isinstance(
+            getattr(previous_work_state, "digest", None), Digest
+        )
+        or not all(
+            isinstance(item, EngineeringAgentToolObservation)
+            for item in invocation.observations
+        )
+        or not all(
+            isinstance(item, EngineeringAgentReviewFinding)
+            for item in invocation.review_findings
+        )
+        or not isinstance(reviewed_draft.answer_id, StableId)
+        or not isinstance(reviewed_draft.turn_id, StableId)
+        or not isinstance(reviewed_draft.work_state_digest, Digest)
+        or not isinstance(reviewed_draft.package_digest, Digest)
+        or not isinstance(reviewed_draft.response_kind, EngineeringAgentResponseKind)
+        or not isinstance(reviewed_draft.content, str)
+        or not isinstance(reviewed_draft.claims, tuple)
+        or not all(
+            isinstance(item, EngineeringAgentClaimProposal)
+            for item in reviewed_draft.claims
+        )
+        or not all(
+            isinstance(claim.statement, str)
+            and isinstance(claim.support_observation_ids, tuple)
+            and all(
+                isinstance(item, StableId)
+                for item in claim.support_observation_ids
+            )
+            for claim in reviewed_draft.claims
+        )
+        or not isinstance(reviewed_draft.boundary_observation_ids, tuple)
+        or not all(
+            isinstance(item, StableId)
+            for item in reviewed_draft.boundary_observation_ids
+        )
+        or not isinstance(reviewed_draft.digest, Digest)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Review feedback contains an untyped rejected Draft",
+        )
+    expected_draft_digest = digest_of(
+        {
+            "schema": "ENGINEERING_AGENT_ANSWER@1",
+            "answer_id": reviewed_draft.answer_id.value,
+            "turn_id": reviewed_draft.turn_id.value,
+            "work_state_digest": reviewed_draft.work_state_digest.value,
+            "package_digest": reviewed_draft.package_digest.value,
+            "response_kind": reviewed_draft.response_kind.value,
+            "content": reviewed_draft.content,
+            "claims": tuple(
+                {
+                    "statement": claim.statement,
+                    "support_observation_ids": tuple(
+                        item.value for item in claim.support_observation_ids
+                    ),
+                }
+                for claim in reviewed_draft.claims
+            ),
+            "boundary_observation_ids": tuple(
+                item.value for item in reviewed_draft.boundary_observation_ids
+            ),
+        }
+    )
+    support_ids = {
+        item.observation_id
+        for item in invocation.observations
+        if item.disposition.value == "SUPPORT"
+    }
+    boundary_ids = {
+        item.observation_id
+        for item in invocation.observations
+        if item.disposition.value == "BOUNDARY"
+    }
+    if (
+        previous_work_state.turn_id != invocation.request.turn_id
+        or not reviewed_draft.content
+        or reviewed_draft.content != reviewed_draft.content.strip()
+        or (
+            reviewed_draft.response_kind
+            is EngineeringAgentResponseKind.ANSWER
+            and not reviewed_draft.claims
+        )
+        or (
+            reviewed_draft.response_kind
+            is not EngineeringAgentResponseKind.ANSWER
+            and reviewed_draft.claims
+        )
+        or (
+            reviewed_draft.response_kind
+            is EngineeringAgentResponseKind.LIMITATION
+            and not reviewed_draft.boundary_observation_ids
+        )
+        or (
+            reviewed_draft.response_kind
+            is EngineeringAgentResponseKind.CLARIFICATION
+            and reviewed_draft.boundary_observation_ids
+        )
+        or any(
+            not claim.support_observation_ids
+            or len(claim.support_observation_ids)
+            != len(set(claim.support_observation_ids))
+            or not claim.statement
+            or claim.statement != claim.statement.strip()
+            for claim in reviewed_draft.claims
+        )
+        or len(reviewed_draft.boundary_observation_ids)
+        != len(set(reviewed_draft.boundary_observation_ids))
+        or reviewed_draft.turn_id != invocation.request.turn_id
+        or reviewed_draft.work_state_digest != previous_work_state.digest
+        or reviewed_draft.digest != expected_draft_digest
+        or any(
+            finding.claim_index is not None
+            and finding.claim_index >= len(reviewed_draft.claims)
+            for finding in invocation.review_findings
+        )
+        or any(
+            not set(claim.support_observation_ids).issubset(support_ids)
+            for claim in reviewed_draft.claims
+        )
+        or not set(reviewed_draft.boundary_observation_ids).issubset(
+            boundary_ids
+        )
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Review feedback does not bind the exact current-Turn rejected Draft",
+        )
+    evidence_required = any(
+        item.requires_evidence for item in invocation.review_findings
+    )
+    rewrite_active = not evidence_required
+    rewrite_contract: dict[str, object] = {
+        "active": rewrite_active,
+        "reviewed_draft_digest": reviewed_draft.digest.value,
+        "reviewed_draft_is_evidence": False,
+        "evidence_required_finding_present": evidence_required,
+    }
+    if rewrite_active:
+        rewrite_contract.update(
+            {
+                "same_package": True,
+                "reviewed_draft_is_exact_edit_base": True,
+                "finding_claim_indices_bind_reviewed_draft_order": True,
+                "preserve_non_defective_requested_conclusions": True,
+                "new_user_visible_material_assertions_forbidden": True,
+                "claim_inventory_increase_forbidden_except_global_completeness": True,
+                "global_completeness_exception_requires_existing_content_assertion": True,
+                "allowed_targeted_transformations": (
+                    "DELETE",
+                    "NARROW",
+                    "QUALIFY",
+                    "REORDER",
+                    "RESTATE",
+                ),
+                "global_finding_codes": tuple(
+                    item.code
+                    for item in invocation.review_findings
+                    if item.claim_index is None
+                ),
+            }
+        )
+    return {
+        "review_digest": invocation.review_digest.value,
+        "reviewed_draft": _reviewed_draft_view(reviewed_draft),
+        "findings": tuple(
+            _finding_view(item) for item in invocation.review_findings
+        ),
+        "review_rewrite_contract": rewrite_contract,
+    }
+
+
 def _primary_input_view(
     invocation: EngineeringAgentInvocation,
 ) -> dict[str, object]:
@@ -3958,6 +4239,7 @@ def _primary_input_view(
         invocation,
         tool_reference_policy=tool_reference_policy,
     )
+    review_feedback = _review_feedback_view(invocation)
     return {
         "schema": ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA,
         "protocol": ENGINEERING_AGENT_MODEL_STRATEGY_REF,
@@ -4033,14 +4315,7 @@ def _primary_input_view(
         "investigation_policy": _investigation_policy(invocation),
         "completion_policy": _completion_policy(invocation),
         "tool_reference_policy": tool_reference_policy,
-        "review_feedback": {
-            "review_digest": (
-                invocation.review_digest.value
-                if invocation.review_digest is not None
-                else None
-            ),
-            "findings": tuple(_finding_view(item) for item in invocation.review_findings),
-        },
+        "review_feedback": review_feedback,
         "tool_catalog": tuple(
             _tool_contract_view(
                 item,

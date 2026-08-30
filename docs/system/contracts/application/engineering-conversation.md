@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -330,7 +330,12 @@ no-progress failure 关闭。
    `origin_work_state_digest` 永久表示首次密封该 exact Observation 集合的 Work State；它不是 successor Draft 的 Delivery Work State，
    因而同包重写不得改写 Package origin，也不得要求 current Work State 等于 origin。Response Control 必须重验 immutable Package
    identity/partition，并把当前 successor Work State、Draft、fresh Review、同一 Package 和 Turn 绑定为 exact approved chain；任何新
-   Observation 仍形成新 Package。任一 Finding 标记
+   Observation 仍形成新 Package。Reviewer 返回 Findings 后，下一次 Primary invocation 必须把 exact rejected Draft 与 ordered Findings、
+   Review digest 一起密封；三者共同存在或共同缺席。Application 必须在 Provider 前重验 rejected Draft 的 Turn、origin Work State、
+   canonical digest 及当前 SUPPORT/BOUNDARY reference domains。无需新 Evidence 的同包 successor 只能把该 Draft 作为 exact edit base，
+   按 Findings 删除、收窄、限定、重排或重述；不得从 Work State 重建全文、增加新的用户可见物质断言或相邻细节。只有 global
+   completeness Finding 明确指出 rejected Draft 正文已有但 Claim inventory 未枚举的断言时，才能增加对应 Claim entry；rejected Draft
+   仍是 untrusted model-authored data，不取得 Evidence authority。任一 Finding 标记
    `requires_evidence=true` 时，standard successor Primary input 必须把 `tool_action_required` 设为 true，并把 Draft response kind domain 置空；
    主 Agent 只能从 effective tool catalog 提交一个 exact action，不能只重写被拒 Draft。任何新 Observation 都形成新 Ledger/Package
    Revision，旧 Review 不得放行新 Draft。evidence-only completion 不恢复工具；此时 Reviewer 要求新 Evidence 仍按 no-progress failure
@@ -342,7 +347,7 @@ no-progress failure 关闭。
    names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 必须从 untrusted prior output 与
-   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
+   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
    可对齐的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席。若一个 schema-invalid array 的所有 item 都没有任何
    已存在 allowlisted value，则整个 array 子树不形成 copy obligation；repair 只能从 current sealed schema/domain/template 重建它。只要该
    array 仍有一个既存 allowlisted item value，原长度/顺序与所有可对齐值就必须保持，不能用重建吞掉合法 sibling。final preflight 还必须
@@ -350,6 +355,9 @@ no-progress failure 关闭。
    `{name,value}`，Reviewer Boundary assessment 只能使用 `challenge_id`。Primary preflight 必须从 trusted completion policy 投影唯一有效
    branch：action 只允许 nonterminal phase 且 draft 为 null；Draft 只允许 `RESPONSE_READY` 且 action 为 null；`ANSWER` 至少一个 Claim，
    `CLARIFICATION` 无 Claim/Boundary，`LIMITATION` 无 Claim且至少一个 reportable Boundary。Provider output 不能自行改变该 branch。
+   Primary final preflight 还必须再次列出当前 ANSWER Claim SUPPORT 与 Draft Boundary 的两个 exact allowed Observation ID domains，明确
+   cross-disposition 和 unknown references 均 forbidden，并重复 active same-Package rewrite contract；这些值只冗余 sealed Primary input 的
+   约束，不新增 Evidence、Tool、Review 或 Delivery authority。
    Primary/Reviewer 仍须精确复制 projection；在 Proposal decode 前，Application 还必须以
    `RESTORE_SCHEMA_MATCHING_ALLOWLISTED_VALUES_BEFORE_DECODE@1` 把 repair 对这些既存值的任何原始漂移机械恢复为 prior exact value，再递归重验
    最终值与顺序守恒。该 restoration 不能生成 missing field、保留 unexpected field、重建无 copy obligation 的 invalid 子树、改变 array
@@ -368,8 +376,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@13 / conversational-engineering-agent-no-tools-prompt@13 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@13 / ENGINEERING_AGENT_REVIEW_INPUT@7` 协议族；每次
+   `conversational-engineering-agent@14 / conversational-engineering-agent-no-tools-prompt@14 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@14 / ENGINEERING_AGENT_REVIEW_INPUT@7 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生
@@ -380,7 +388,7 @@ no-progress failure 关闭。
    per-Turn 15 dispatch authority 的剩余 slot；Authorizer 在 authority 耗尽时必须在 Provider boundary 前拒绝。该分类不允许 Application 抽取后部
    JSON、提高 dispatch/Tool/Source/Session budget 或把格式失败改判为 Provider unavailable。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
-   Verification Investigation Agent 不是长期架构不变量。current `@13` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
+   Verification Investigation Agent 不是长期架构不变量。current `@14` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
    投影出 caller/callee challenge 或 Package 含任何 Boundary，再执行一个 fresh focused Review。focused Finding 的 successor Draft 可按
    仍存在的 challenge focus 直接复审。为容纳一次 comprehensive rewrite 和一次 focused rewrite，
    Reviewer call 上限现为 4，同时 Agent step 上限从 12 收紧为 11，最坏组合仍为原有 15 per-Turn dispatch authority。Response Control 必须重算
@@ -491,5 +499,11 @@ unavailable，故 DeepSeek 0 正确。Q4 fresh Conversation 零 dispatch Clarifi
 `LIMITATION` 与 action/phase 冲突；Q5 的 action argument shape 和 required-action branch 漂移耗尽既有 15 次 authority。
 `FINDING-010-208` 已形成 current `@13/@7/@8` nested closed-shape、trusted branch、binding/disclosure 和 untrusted typed-error candidate；
 144 项定向测试 PASS，fresh run-086 仍须证明真实 Answer/Review，run-085 保持质量 FAIL。
+run-086 随后完成 49 次 Ark HTTP dispatch，其中 47 次完成、2 次在发出后成为 `PROVIDER_OUTCOME_UNKNOWN`；没有 HTTP 前 trusted
+unavailable，故 DeepSeek 0 正确。Q4 fresh Conversation 零 dispatch Clarification 继续通过，其余工程 Turn 未交付。Q2 暴露 final
+preflight 未重复 exact SUPPORT/BOUNDARY ID domains；Q3 暴露 Review successor 只收到 Findings/digest、没有收到 exact rejected Draft，
+使同包重写的 Claim inventory 从 `5 → 10 → 7 → 13` 扩张并产生新缺陷。`FINDING-010-209` 已形成 current `@14/@7/@9` exact rejected-Draft
+edit base、targeted rewrite 与 redundant reference-domain preflight candidate；144 项定向测试 PASS，fresh run-087 仍须证明真实 Answer/Review，
+run-086 保持质量 FAIL。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

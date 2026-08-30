@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -22,6 +22,10 @@ run-085 五题 Browser successor，而不是等待 Ark、DeepSeek 或重复人�
 `FINDING-010-208 / run-085` 进一步把偏差定位到 nested closed fields、trusted ACTION/DRAFT/phase branch 和 Boundary
 binding/disclosure。current `@13/@7/@8` candidate 已通用闭合，144 项定向验证 PASS；下一项执行是 fresh run-086，仍不等待 Provider 或重复
 人工授权。
+
+`FINDING-010-209 / run-086` 进一步把偏差定位到 Review successor 丢失 exact rejected Draft，以及 final preflight 未重复 exact
+SUPPORT/BOUNDARY ID domains。current `@14/@7/@9` candidate 已通用闭合，144 项定向验证 PASS；下一项执行是 fresh run-087，仍不等待
+Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

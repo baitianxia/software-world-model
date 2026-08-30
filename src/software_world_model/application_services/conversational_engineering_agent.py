@@ -751,6 +751,7 @@ class EngineeringAgentInvocation:
         "EngineeringAgentSourceReadOption", ...
     ] = ()
     maximum_tool_actions: int = _DEFAULT_MAXIMUM_TOOL_ACTIONS
+    reviewed_draft: "EngineeringAgentAnswerDraft | None" = None
 
 
 class EngineeringAgentDriver(Protocol):
@@ -2787,6 +2788,17 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
 
         for _ in range(self._limits.maximum_agent_steps):
             audit.expected_model_role = EngineeringAgentModelRole.PRIMARY_AGENT
+            reviewed_draft = last_draft if pending_review is not None else None
+            if pending_review is not None and (
+                reviewed_draft is None
+                or pending_review.answer_digest != reviewed_draft.digest
+                or pending_review.findings != review_findings
+                or pending_review.turn_id != request.turn_id
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "pending Review does not bind the exact rejected Draft",
+                )
             try:
                 driver_output = self._driver.propose(
                     EngineeringAgentInvocation(
@@ -2806,6 +2818,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         maximum_tool_actions=(
                             self._limits.maximum_tool_actions
                         ),
+                        reviewed_draft=reviewed_draft,
                     )
                 )
             except BaseException:

@@ -589,7 +589,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1004,7 +1004,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1847,7 +1847,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2795,8 +2795,69 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
 
+        reviewed_work_state = SimpleNamespace(
+            work_state_id=StableId(f"work_state_{'8' * 32}"),
+            conversation_id=(
+                capture.request.snapshot_before.conversation.conversation_id
+            ),
+            turn_id=capture.request.turn_id,
+            revision=Revision(1),
+            previous_digest=None,
+            context_digest=capture.request.snapshot_before.context.digest,
+            goal="确认登录失败记录",
+            response_language="zh-CN",
+            audience="software engineer",
+            constraints=(),
+            resolved_referents=(),
+            accepted_correction_message_ids=(),
+            superseded_conclusion_refs=(),
+            hypotheses=(),
+            plan=(),
+            observation_ids=(observation.observation_id,),
+            open_items=(),
+            phase=SimpleNamespace(value="RESPONSE_READY"),
+            review_input_digest=None,
+            proposal_digest=digest_of("reviewed proposal"),
+            digest=digest_of("reviewed work state"),
+        )
+        reviewed_claim = EngineeringAgentClaimProposal.create(
+            statement="当前证据支持这一条登录结论。",
+            support_observation_ids=(observation.observation_id,),
+        )
+        reviewed_answer_id = StableId(f"agent_answer_{'9' * 32}")
+        reviewed_package_digest = digest_of("reviewed package")
+        reviewed_draft_core = {
+            "schema": "ENGINEERING_AGENT_ANSWER@1",
+            "answer_id": reviewed_answer_id.value,
+            "turn_id": capture.request.turn_id.value,
+            "work_state_digest": reviewed_work_state.digest.value,
+            "package_digest": reviewed_package_digest.value,
+            "response_kind": "ANSWER",
+            "content": "当前证据支持这一条登录结论。",
+            "claims": (
+                {
+                    "statement": reviewed_claim.statement,
+                    "support_observation_ids": (
+                        observation.observation_id.value,
+                    ),
+                },
+            ),
+            "boundary_observation_ids": (),
+        }
+        reviewed_draft = EngineeringAgentAnswerDraft(
+            answer_id=reviewed_answer_id,
+            turn_id=capture.request.turn_id,
+            work_state_digest=reviewed_work_state.digest,
+            package_digest=reviewed_package_digest,
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content="当前证据支持这一条登录结论。",
+            claims=(reviewed_claim,),
+            boundary_observation_ids=(),
+            digest=digest_of(reviewed_draft_core),
+        )
         evidence_required_invocation = replace(
             invocation,
+            previous_work_state=reviewed_work_state,
             review_findings=(
                 EngineeringAgentReviewFinding.create(
                     code="INCOMPLETE_EVIDENCE",
@@ -2806,9 +2867,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 ),
             ),
             review_digest=digest_of("evidence-required-review"),
+            reviewed_draft=reviewed_draft,
         )
         evidence_required_view = _primary_input_view(
             evidence_required_invocation
+        )
+        self.assertFalse(
+            evidence_required_view["review_feedback"][
+                "review_rewrite_contract"
+            ]["active"]
+        )
+        with self.assertRaises(DomainError) as missing_reviewed_draft:
+            _primary_input_view(
+                replace(evidence_required_invocation, reviewed_draft=None)
+            )
+        self.assertEqual(
+            missing_reviewed_draft.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
         )
         evidence_required_policy = evidence_required_view[
             "completion_policy"
@@ -2826,6 +2901,84 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "effective_required_branch"
             ],
             "ACTION",
+        )
+        self.assertEqual(
+            evidence_required_preflight["draft_reference_contract"][
+                "answer_claim_support_observation_ids_allowed_exact"
+            ],
+            (observation.observation_id.value,),
+        )
+        same_package_invocation = replace(
+            evidence_required_invocation,
+            review_findings=(
+                EngineeringAgentReviewFinding.create(
+                    code="DIRECTNESS",
+                    message="直接回答后再解释。",
+                    requires_evidence=False,
+                    claim_index=0,
+                ),
+            ),
+            review_digest=digest_of("same-package-review"),
+        )
+        same_package_view = _primary_input_view(same_package_invocation)
+        same_package_feedback = same_package_view["review_feedback"]
+        self.assertEqual(
+            set(same_package_feedback["reviewed_draft"]),
+            {
+                "schema",
+                "response_kind",
+                "content",
+                "claims",
+                "boundary_observation_ids",
+                "draft_digest",
+            },
+        )
+        self.assertEqual(
+            same_package_feedback["reviewed_draft"]["draft_digest"],
+            reviewed_draft.digest.value,
+        )
+        self.assertEqual(
+            same_package_feedback["reviewed_draft"]["claims"],
+            (
+                {
+                    "claim_index": 0,
+                    "statement": reviewed_claim.statement,
+                    "support_observation_ids": (
+                        observation.observation_id.value,
+                    ),
+                },
+            ),
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"]["active"]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "new_user_visible_material_assertions_forbidden"
+            ]
+        )
+        with self.assertRaises(DomainError) as forged_reviewed_draft:
+            _primary_input_view(
+                replace(
+                    same_package_invocation,
+                    reviewed_draft=replace(
+                        reviewed_draft,
+                        digest=digest_of("forged reviewed draft"),
+                    ),
+                )
+            )
+        self.assertEqual(
+            forged_reviewed_draft.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+        )
+        same_package_preflight = _output_preflight_view(
+            role=EngineeringAgentModelRole.PRIMARY_AGENT,
+            role_input_payload=same_package_view,
+            output_schema_ref=ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF,
+        )
+        self.assertEqual(
+            same_package_preflight["review_rewrite_contract"],
+            same_package_feedback["review_rewrite_contract"],
         )
         evidence_required_draft = {
             "goal": "确认登录失败记录",
@@ -4668,6 +4821,28 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 for item in current_evidence["boundary_observations"]
             ),
             (boundary_observation.observation_id.value,),
+        )
+        reference_preflight = _output_preflight_view(
+            role=EngineeringAgentModelRole.PRIMARY_AGENT,
+            role_input_payload=primary_view,
+            output_schema_ref=ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF,
+        )["draft_reference_contract"]
+        self.assertEqual(
+            reference_preflight[
+                "answer_claim_support_observation_ids_allowed_exact"
+            ],
+            (support_observation.observation_id.value,),
+        )
+        self.assertEqual(
+            reference_preflight[
+                "draft_boundary_observation_ids_allowed_exact"
+            ],
+            (boundary_observation.observation_id.value,),
+        )
+        self.assertTrue(
+            reference_preflight[
+                "boundary_ids_in_answer_claim_support_forbidden"
+            ]
         )
         self.assertEqual(
             policy_view,

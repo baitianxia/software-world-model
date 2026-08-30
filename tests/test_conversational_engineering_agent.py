@@ -704,11 +704,13 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 self.calls = 0
                 self.findings_seen = []
                 self.review_digests_seen = []
+                self.reviewed_drafts_seen = []
 
             def propose(self, invocation):
                 self.calls += 1
                 self.findings_seen.append(invocation.review_findings)
                 self.review_digests_seen.append(invocation.review_digest)
+                self.reviewed_drafts_seen.append(invocation.reviewed_draft)
                 if self.calls == 1:
                     return _proposal(
                         invocation,
@@ -796,6 +798,14 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         )
         self.assertEqual(len(driver.findings_seen[2]), 1)
         self.assertIsNotNone(driver.review_digests_seen[2])
+        self.assertEqual(
+            driver.reviewed_drafts_seen,
+            [None, None, reviewer.requests[0].draft],
+        )
+        self.assertEqual(
+            driver.reviewed_drafts_seen[2].digest,
+            reviewer.requests[0].draft.digest,
+        )
         self.assertEqual(
             reviewer.requests[1].work_state.review_input_digest,
             driver.review_digests_seen[2],
