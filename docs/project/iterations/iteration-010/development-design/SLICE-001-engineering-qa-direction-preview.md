@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -65,6 +65,11 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
 - fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
   具体 Finding，不替主 Agent 规划或执行工具。
+- 每个 Draft 先取得 comprehensive Review。Application 从 cited full Java Source 与 Claim 结构投影 exact caller/callee challenge，并从同一
+  Search locator 已被后续 full exact Source Read 消费、且 Draft 仍引用其 Boundary 的结构投影 resolved-acquisition relevance challenge；
+  存在任一 challenge 时再执行 fresh focused Review。两类投影都只是 review lead：Reviewer 逐项区分 caller invocation 与 callee effect，及
+  explicit diagnostic request 与 resolved audit-only diagnostic。Response Control 重算 exact ordered assessment set；每 Turn Reviewer 上限 3、
+  per-Turn dispatch authority 15，不提高 Tool/Source fuse 或 retry。
 - World Model evidence-tool adapter 必须把 model-facing SUPPORT 与 BOUNDARY 按认识论语义分区：SUPPORT 顶层不得复制 global
   coverage/conflict/unknown，只保留 novel affirmative item 及其 per-item coverage；完整 Context、Ledger、receipt 继续绑定 global
   Coverage，且该全局边界只在 BOUNDARY 中呈现。
@@ -80,8 +85,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   Coverage root 与其完全不相交的非 repository-wide Profile；其 affirmative item 与 Profile gap 都不得进入 Context。selector 只来自原始
   问题的 exact boundary match，模型 query 不能改写；mismatch 是 Coverage Boundary 而非授权拒绝，repository-wide partial Profile 仍可参与。
 - Boundary/Audit 的完整保留不要求全部写入用户答案。只有仍限制 current User Message material requirement 或用户明确询问的诊断才可披露；
-  已被后续 SUPPORT 闭合的 acquisition diagnostic 和不限制具体结论的 global inventory/coverage metric 只留 audit，Reviewer 对泄漏返回
-  `requires_evidence=false` 的 relevance Finding。
+  已被后续 SUPPORT 闭合的 acquisition diagnostic 和不限制具体结论的 global inventory/coverage metric 通常只留 audit。Application 不自动
+  删除 resolved candidate；Draft 实际引用时由 focused Reviewer 返回 `MATERIAL_TO_USER_REQUEST`，或以
+  `RESOLVED_AUDIT_ONLY + claim_index=null + requires_evidence=false` 阻断泄漏，从而保留用户明确询问诊断本身的合法路径。
 - 所有普通 affirmative detail 与 Boundary 同样执行反事实相关性测试：删除后仍完整回答并诚实定界的邻接 declaration/helper/provenance
   必须省略，不能为 Draft 自己引入的细节扩大调查；code-generation/tool provenance 不能从 path/package/import/symbol/directory convention
   推断，material claim 必须有 direct current SUPPORT。

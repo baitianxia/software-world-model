@@ -20,11 +20,15 @@ from typing import Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
 from software_world_model.application_services.conversational_engineering_agent import (
+    EngineeringAgentBoundaryRelevanceAssessment,
+    EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentCitation,
     EngineeringAgentClaimProposal,
     EngineeringAgentDraftProposal,
     EngineeringAgentDriver,
     EngineeringAgentDriverModelResult,
+    EngineeringAgentEvidenceBoundaryAssessment,
+    EngineeringAgentEvidenceBoundaryAssessmentDisposition,
     EngineeringAgentInvocation,
     EngineeringAgentInvocationMode,
     EngineeringAgentModelCallFailure,
@@ -35,6 +39,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentResponseKind,
     EngineeringAgentReviewDecision,
     EngineeringAgentReviewFinding,
+    EngineeringAgentReviewFocus,
     EngineeringAgentReviewProposal,
     EngineeringAgentReviewRequest,
     EngineeringAgentReviewer,
@@ -46,6 +51,9 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentToolOperation,
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
+    project_engineering_agent_draft_boundaries,
+    project_engineering_agent_boundary_relevance_challenges,
+    project_engineering_agent_evidence_boundary_challenges,
 )
 from software_world_model.application_services.engineering_conversation import (
     EngineeringTurnExecutionRequest,
@@ -78,12 +86,12 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@8"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@9"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@8"
+    "conversational-engineering-agent-no-tools-prompt@9"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@8"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@2"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@9"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@3"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
     "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5"
 )
@@ -91,7 +99,7 @@ ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@1"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@2"
+    "engineering-agent-independent-review-proposal@3"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -219,6 +227,12 @@ User asks for that effect and the executing or consuming path is still unread,
 use a legal targeted action when available or report the exact evidence boundary;
 never fill the gap with a lifecycle assumption.
 Evidence Ledger audit retention and user-visible answer disclosure are different.
+draft_reference_policy.resolved_acquisition_candidate_observation_ids is a
+structured relevance-review lead, not an automatic defect or exclusion. Those
+observations remain legal Draft boundary references because the User may have
+explicitly asked for the acquisition diagnostic itself. If a Draft references
+one, the Application requires an independent focused relevance assessment before
+delivery.
 Do not surface a BOUNDARY merely because it remains in the sealed audit record.
 Report it in draft.content only when it still leaves a material requirement of
 the current User Message unresolved, or when the User explicitly asks for that
@@ -410,6 +424,34 @@ SUPPORT observations establish it; a SUPPORTED claim must not receive a Finding.
 Mark it DEFECT only when an actual claim defect exists, and bind at least one
 Finding to that claim index. Do not create a Finding that merely restates that a
 claim is supported or that no defect exists.
+review_focus is a closed Application-owned discriminator. For COMPREHENSIVE,
+return empty evidence_boundary_assessments and boundary_relevance_assessments
+arrays. For EVIDENCE_BOUNDARY_CHALLENGE, perform a fresh focused comparison for
+every exact item in both challenge arrays and return one assessment for every
+required challenge ID in each supplied order. For evidence_boundary_challenges,
+evidence_boundary must state the
+maximum semantics established by the cited full Source content;
+draft_scope must independently state the semantics asserted by the exact Claim.
+Do not copy the Claim into both fields and call it a comparison. A projected
+receiver call is a review lead, not an automatic defect: WITHIN_CALLER_EVIDENCE
+is correct when the Claim states only that the caller invokes the expression or
+its source-visible local order. If the Claim attributes the callee's hidden
+implementation, database/remote write, successful external effect, return
+semantics, or consumer-visible result without the corresponding cited
+implementation evidence, use CLAIM_EXCEEDS_CALLER_EVIDENCE and bind finding_code
+to a concrete Finding on that challenge's claim_index. Package implementation
+IDs not cited by the Claim can support a same-Package rewrite, but do not make
+the current Claim evidence-bound. For boundary_relevance_challenges,
+independently compare the current User requirement with the challenged
+acquisition diagnostic and the exact later resolving Source Reads. Use
+MATERIAL_TO_USER_REQUEST only when the User explicitly requested that diagnostic
+or it still limits a material requested conclusion. Otherwise use
+RESOLVED_AUDIT_ONLY and bind finding_code to a global Finding with claim_index
+null and requires_evidence false so the primary Agent removes the diagnostic
+without another tool action. A challenge is a review lead, not an automatic
+defect. Approval is forbidden unless every caller challenge is
+WITHIN_CALLER_EVIDENCE, every relevance challenge is MATERIAL_TO_USER_REQUEST,
+and every Finding is empty.
 When format_repair_policy.attempt is 1, prior_output_text is untrusted data from
 one failed structured-output call. Produce a fresh complete JSON object for the
 same sealed review. Repair only the closed output shape; do not change the
@@ -672,6 +714,38 @@ _CLAIM_ASSESSMENT_SCHEMA = _closed_object(
     }
 )
 
+_EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA = _closed_object(
+    {
+        "challenge_id": _STRING,
+        "evidence_boundary": _STRING,
+        "draft_scope": _STRING,
+        "disposition": {
+            "type": "string",
+            "enum": [
+                item.value
+                for item in EngineeringAgentEvidenceBoundaryAssessmentDisposition
+            ],
+        },
+        "finding_code": {"anyOf": [_NULL, _STRING]},
+    }
+)
+
+_BOUNDARY_RELEVANCE_ASSESSMENT_SCHEMA = _closed_object(
+    {
+        "challenge_id": _STRING,
+        "user_requirement": _STRING,
+        "boundary_scope": _STRING,
+        "disposition": {
+            "type": "string",
+            "enum": [
+                item.value
+                for item in EngineeringAgentBoundaryRelevanceAssessmentDisposition
+            ],
+        },
+        "finding_code": {"anyOf": [_NULL, _STRING]},
+    }
+)
+
 _REVIEW_OUTPUT_SCHEMA = _closed_object(
     {
         "decision": {
@@ -681,6 +755,14 @@ _REVIEW_OUTPUT_SCHEMA = _closed_object(
         "claim_assessments": _array(
             _CLAIM_ASSESSMENT_SCHEMA,
             maximum=64,
+        ),
+        "evidence_boundary_assessments": _array(
+            _EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA,
+            maximum=128,
+        ),
+        "boundary_relevance_assessments": _array(
+            _BOUNDARY_RELEVANCE_ASSESSMENT_SCHEMA,
+            maximum=128,
         ),
         "findings": _array(_FINDING_SCHEMA, maximum=32),
     }
@@ -3450,6 +3532,9 @@ def _primary_input_view(
     invocation: EngineeringAgentInvocation,
 ) -> dict[str, object]:
     request = invocation.request
+    boundary_projection = project_engineering_agent_draft_boundaries(
+        invocation.observations
+    )
     tool_reference_policy = _tool_reference_policy(invocation)
     effective_operations = _effective_available_operations(
         invocation,
@@ -3482,10 +3567,14 @@ def _primary_input_view(
                 if item.disposition.value == "SUPPORT"
             ),
             "limitation_boundary_observation_ids": tuple(
-                item.observation_id.value
-                for item in invocation.observations
-                if item.disposition.value == "BOUNDARY"
+                item.value
+                for item in boundary_projection.reportable_boundary_observation_ids
             ),
+            "resolved_acquisition_candidate_observation_ids": tuple(
+                item.value
+                for item in boundary_projection.resolved_acquisition_candidate_observation_ids
+            ),
+            "boundary_projection_digest": boundary_projection.digest.value,
             "cross_disposition_references_forbidden": True,
             "unknown_observation_references_forbidden": True,
             "answer_claims_are_affirmative_support_only": True,
@@ -3507,8 +3596,12 @@ def _primary_input_view(
             "producer_invocation_is_not_consumer_visible_effect": True,
             "consumer_visible_effect_requires_consumer_path_support": True,
             "audit_retention_requires_answer_disclosure": False,
-            "answer_boundary_requires_unresolved_material_requirement": True,
-            "resolved_acquisition_diagnostic_is_answer_boundary": False,
+            (
+                "answer_boundary_requires_unresolved_material_requirement_"
+                "or_explicit_diagnostic_request"
+            ): True,
+            "resolved_acquisition_candidate_requires_relevance_review": True,
+            "resolved_acquisition_candidate_is_automatic_exclusion": False,
             "global_inventory_metrics_require_material_user_relevance": True,
             "answer_detail_requires_material_user_relevance": True,
             "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
@@ -4330,10 +4423,29 @@ def _action_argument(
 def _review_input_view(
     request: EngineeringAgentReviewRequest,
 ) -> dict[str, object]:
+    challenges = (
+        project_engineering_agent_evidence_boundary_challenges(
+            request.package,
+            request.draft,
+        )
+        if request.focus
+        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        else ()
+    )
+    relevance_challenges = (
+        project_engineering_agent_boundary_relevance_challenges(
+            request.package,
+            request.draft,
+        )
+        if request.focus
+        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        else ()
+    )
     return {
         "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
         "protocol": ENGINEERING_AGENT_MODEL_STRATEGY_REF,
         "format_repair_policy": _initial_format_repair_policy(),
+        "review_focus": request.focus.value,
         "turn": _turn_input_view(request.turn_request),
         "conversation_context": _conversation_context_view(request.turn_request),
         "work_state": _work_state_view(request.work_state),
@@ -4373,6 +4485,49 @@ def _review_input_view(
             ),
             "digest": request.draft.digest.value,
         },
+        "evidence_boundary_challenges": tuple(
+            {
+                "challenge_id": item.challenge_id.value,
+                "claim_index": item.claim_index,
+                "support_observation_id": (
+                    item.support_observation_id.value
+                ),
+                "source_locator": item.source_locator,
+                "call_expression": item.call_expression,
+                "receiver_declared_type": item.receiver_declared_type,
+                "cited_implementation_observation_ids": tuple(
+                    value.value
+                    for value in item.cited_implementation_observation_ids
+                ),
+                "package_implementation_observation_ids": tuple(
+                    value.value
+                    for value in item.package_implementation_observation_ids
+                ),
+                "maximum_scope_without_cited_implementation": (
+                    "CALLER_INVOCATION_AND_SOURCE_VISIBLE_LOCAL_ORDER_ONLY"
+                ),
+                "digest": item.digest.value,
+            }
+            for item in challenges
+        ),
+        "boundary_relevance_challenges": tuple(
+            {
+                "challenge_id": item.challenge_id.value,
+                "boundary_observation_id": (
+                    item.boundary_observation_id.value
+                ),
+                "resolving_support_observation_ids": tuple(
+                    value.value
+                    for value in item.resolving_support_observation_ids
+                ),
+                "review_rule": (
+                    "MATERIAL_ONLY_IF_EXPLICITLY_REQUESTED_OR_STILL_LIMITS_"
+                    "A_MATERIAL_USER_REQUIREMENT"
+                ),
+                "digest": item.digest.value,
+            }
+            for item in relevance_challenges
+        ),
         "review_reference_policy": {
             "claim_indices": tuple(range(len(request.draft.claims))),
             "complete_claim_assessments_required": True,
@@ -4387,13 +4542,27 @@ def _review_input_view(
             "producer_invocation_is_not_consumer_visible_effect": True,
             "consumer_visible_effect_requires_consumer_path_support": True,
             "audit_retention_requires_answer_disclosure": False,
-            "answer_boundary_requires_unresolved_material_requirement": True,
-            "resolved_acquisition_diagnostic_is_answer_boundary": False,
+            (
+                "answer_boundary_requires_unresolved_material_requirement_"
+                "or_explicit_diagnostic_request"
+            ): True,
+            "resolved_acquisition_candidate_is_automatic_exclusion": False,
             "global_inventory_metrics_require_material_user_relevance": True,
             "answer_detail_requires_material_user_relevance": True,
             "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
             "self_introduced_adjacent_detail_allows_evidence_expansion": False,
             "generation_or_tool_provenance_requires_direct_support": True,
+            "comprehensive_challenge_assessments_must_be_empty": True,
+            "challenge_assessment_ids_required_exact_order": tuple(
+                item.challenge_id.value for item in challenges
+            ),
+            "boundary_relevance_assessment_ids_required_exact_order": tuple(
+                item.challenge_id.value for item in relevance_challenges
+            ),
+            "challenge_approval_requires_all_within_caller_evidence": True,
+            "exceeded_challenge_requires_matching_claim_finding": True,
+            "boundary_relevance_approval_requires_all_material": True,
+            "resolved_audit_only_requires_global_no_evidence_finding": True,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,
@@ -4832,18 +5001,24 @@ def _validate_primary_proposal(
                     "answer_claim_support_observation_ids; BOUNDARY IDs belong only "
                     "in draft.boundary_observation_ids",
                 )
+    reportable_boundary_ids = set(
+        project_engineering_agent_draft_boundaries(
+            observations
+        ).reportable_boundary_observation_ids
+    )
     for boundary_index, observation_id in enumerate(
         proposal.draft.boundary_observation_ids
     ):
         if (
             observation_id not in by_id
             or by_id[observation_id].disposition.value != "BOUNDARY"
+            or observation_id not in reportable_boundary_ids
         ):
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 f"$.draft.boundary_observation_ids[{boundary_index}] must copy an ID "
                 "from draft_reference_policy.limitation_boundary_observation_ids; "
-                "SUPPORT IDs belong only in answer Claim support",
+                "SUPPORT and non-reportable Boundary IDs are forbidden",
             )
 
 
@@ -4941,7 +5116,8 @@ def _validate_primary_action(
         if arguments["locator_reference"] not in available:
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                "Engineering Agent Source read reference is outside the trusted current-Turn copy domain",
+                "Engineering Agent Source read reference is outside the trusted "
+                "current-Turn copy domain",
             )
 
 
@@ -4981,6 +5157,94 @@ def _decode_review_output(
                 output["claim_assessments"], "claim assessments"
             )
         )
+        evidence_boundary_assessments = tuple(
+            EngineeringAgentEvidenceBoundaryAssessment.create(
+                challenge_id=StableId(
+                    _string(
+                        _mapping(item, "evidence-boundary assessment")[
+                            "challenge_id"
+                        ],
+                        "evidence-boundary challenge ID",
+                    )
+                ),
+                evidence_boundary=_string(
+                    _mapping(item, "evidence-boundary assessment")[
+                        "evidence_boundary"
+                    ],
+                    "assessment evidence boundary",
+                ),
+                draft_scope=_string(
+                    _mapping(item, "evidence-boundary assessment")[
+                        "draft_scope"
+                    ],
+                    "assessment Draft scope",
+                ),
+                disposition=(
+                    EngineeringAgentEvidenceBoundaryAssessmentDisposition(
+                        _string(
+                            _mapping(item, "evidence-boundary assessment")[
+                                "disposition"
+                            ],
+                            "assessment disposition",
+                        )
+                    )
+                ),
+                finding_code=_optional_string(
+                    _mapping(item, "evidence-boundary assessment")[
+                        "finding_code"
+                    ],
+                    "assessment Finding code",
+                ),
+            )
+            for item in _sequence(
+                output["evidence_boundary_assessments"],
+                "evidence-boundary assessments",
+            )
+        )
+        boundary_relevance_assessments = tuple(
+            EngineeringAgentBoundaryRelevanceAssessment.create(
+                challenge_id=StableId(
+                    _string(
+                        _mapping(item, "boundary-relevance assessment")[
+                            "challenge_id"
+                        ],
+                        "boundary-relevance challenge ID",
+                    )
+                ),
+                user_requirement=_string(
+                    _mapping(item, "boundary-relevance assessment")[
+                        "user_requirement"
+                    ],
+                    "boundary-relevance user requirement",
+                ),
+                boundary_scope=_string(
+                    _mapping(item, "boundary-relevance assessment")[
+                        "boundary_scope"
+                    ],
+                    "boundary-relevance boundary scope",
+                ),
+                disposition=(
+                    EngineeringAgentBoundaryRelevanceAssessmentDisposition(
+                        _string(
+                            _mapping(item, "boundary-relevance assessment")[
+                                "disposition"
+                            ],
+                            "boundary-relevance disposition",
+                        )
+                    )
+                ),
+                finding_code=_optional_string(
+                    _mapping(item, "boundary-relevance assessment")[
+                        "finding_code"
+                    ],
+                    "boundary-relevance Finding code",
+                ),
+            )
+            for item in _sequence(
+                output["boundary_relevance_assessments"],
+                "boundary-relevance assessments",
+            )
+        )
         findings = tuple(
             EngineeringAgentReviewFinding.create(
                 code=_string(
@@ -5002,12 +5266,20 @@ def _decode_review_output(
             )
             for item in _sequence(output["findings"], "Review Findings")
         )
+        focus = getattr(
+            request,
+            "focus",
+            EngineeringAgentReviewFocus.COMPREHENSIVE,
+        )
         proposal = EngineeringAgentReviewProposal.create(
             model_call_ref=model_call_ref,
             decision=EngineeringAgentReviewDecision(
                 _string(output["decision"], "Review decision")
             ),
             findings=findings,
+            focus=focus,
+            evidence_boundary_assessments=evidence_boundary_assessments,
+            boundary_relevance_assessments=boundary_relevance_assessments,
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise DomainError(
@@ -5025,6 +5297,40 @@ def _decode_review_output(
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer did not assess the exact ordered Claim set",
+        )
+    expected_challenges = (
+        project_engineering_agent_evidence_boundary_challenges(
+            request.package,
+            request.draft,
+        )
+        if focus
+        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        else ()
+    )
+    if tuple(
+        item.challenge_id for item in evidence_boundary_assessments
+    ) != tuple(item.challenge_id for item in expected_challenges):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer did not assess the exact ordered "
+            "caller evidence challenges",
+        )
+    expected_relevance_challenges = (
+        project_engineering_agent_boundary_relevance_challenges(
+            request.package,
+            request.draft,
+        )
+        if focus
+        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        else ()
+    )
+    if tuple(
+        item.challenge_id for item in boundary_relevance_assessments
+    ) != tuple(item.challenge_id for item in expected_relevance_challenges):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer did not assess the exact ordered "
+            "boundary relevance challenges",
         )
     if any(
         item.claim_index is not None
@@ -5053,6 +5359,46 @@ def _decode_review_output(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer Claim assessments and Findings disagree",
         )
+    findings_by_code = {item.code: item for item in proposal.findings}
+    if len(findings_by_code) != len(proposal.findings):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer Finding codes must be unique",
+        )
+    challenge_by_id = {
+        item.challenge_id: item for item in expected_challenges
+    }
+    for assessment in evidence_boundary_assessments:
+        challenge = challenge_by_id[assessment.challenge_id]
+        if (
+            assessment.disposition
+            is EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE
+        ):
+            finding = findings_by_code.get(assessment.finding_code or "")
+            if (
+                finding is None
+                or finding.claim_index != challenge.claim_index
+                or verdicts[challenge.claim_index] != "DEFECT"
+            ):
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    "an exceeded caller evidence challenge must bind a defective Claim Finding",
+                )
+    for assessment in boundary_relevance_assessments:
+        if (
+            assessment.disposition
+            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+        ):
+            finding = findings_by_code.get(assessment.finding_code or "")
+            if (
+                finding is None
+                or finding.claim_index is not None
+                or finding.requires_evidence
+            ):
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    "an audit-only boundary challenge must bind a global no-evidence Finding",
+                )
     if (
         proposal.decision is EngineeringAgentReviewDecision.APPROVED
         and any(verdict != "SUPPORTED" for _, verdict in claim_assessments)
@@ -5267,6 +5613,10 @@ def _string(value: object, label: str) -> str:
             f"{label} must be non-empty text",
         )
     return value
+
+
+def _optional_string(value: object, label: str) -> str | None:
+    return None if value is None else _string(value, label)
 
 
 def _string_sequence(value: object, label: str) -> tuple[str, ...]:

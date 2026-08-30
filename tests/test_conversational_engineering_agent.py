@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import json
 import unittest
 from dataclasses import replace
 
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
+    EngineeringAgentBoundaryRelevanceAssessment,
+    EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentClaimProposal,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentDraftProposal,
     EngineeringAgentDriverModelResult,
+    EngineeringAgentEvidenceBoundaryAssessment,
+    EngineeringAgentEvidenceBoundaryAssessmentDisposition,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentInvocationMode,
     EngineeringAgentLoopLimits,
@@ -20,6 +25,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentResponseKind,
     EngineeringAgentReviewDecision,
     EngineeringAgentReviewFinding,
+    EngineeringAgentReviewFocus,
     EngineeringAgentReviewProposal,
     EngineeringAgentReviewerModelResult,
     EngineeringAgentToolActionProposal,
@@ -29,6 +35,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkStateProposal,
     InMemoryEngineeringAgentWorkStateRepository,
     SealedEngineeringAgentResponseControl,
+    project_engineering_agent_evidence_boundary_challenges,
 )
 from software_world_model.application_services.engineering_conversation import (
     ConversationMessageKind,
@@ -171,6 +178,112 @@ class ApprovingReviewer:
         )
 
 
+class JavaCallerToolPort:
+    def __init__(self) -> None:
+        self.requests = []
+
+    def execute(self, request):
+        self.requests.append(request)
+        return EngineeringAgentToolResult.create(
+            tool_request_digest=request.digest,
+            result_ref="java-source-read",
+            content=json.dumps(
+                {
+                    "schema": "ENGINEERING_AGENT_SOURCE_SUPPORT@1",
+                    "retrieval_result": {
+                        "items": [
+                            {
+                                "locator": "module/src/main/java/example/ProductService.java",
+                                "modality": "EXACT_STATIC_SOURCE_TEXT",
+                                "coverage_complete": True,
+                                "content": (
+                                    "package example;\n"
+                                    "class ProductService {\n"
+                                    "  private ProductRepository productRepository;\n"
+                                    "  void save() { productRepository.save(item); }\n"
+                                    "}\n"
+                                ),
+                            }
+                        ]
+                    },
+                }
+            ),
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+        )
+
+
+class JavaCallerAnswerDriver:
+    def __init__(self) -> None:
+        self.invocations = []
+
+    def propose(self, invocation):
+        self.invocations.append(invocation)
+        if not invocation.observations:
+            return _proposal(
+                invocation,
+                call_ref="caller-agent-1",
+                phase=EngineeringAgentWorkPhase.INVESTIGATING,
+                action=_action(
+                    EngineeringAgentToolOperation.SOURCE_READ,
+                    query="read caller",
+                ),
+            )
+        observation_id = invocation.observations[0].observation_id
+        return _proposal(
+            invocation,
+            call_ref="caller-agent-2",
+            phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="源码显示 productRepository.save(item) 调用。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="源码显示 productRepository.save(item) 调用。",
+                        support_observation_ids=(observation_id,),
+                    ),
+                ),
+            ),
+            open_items=(),
+        )
+
+
+class FocusAwareApprovingReviewer:
+    def __init__(self) -> None:
+        self.requests = []
+
+    def review(self, request):
+        self.requests.append(request)
+        assessments = ()
+        if (
+            request.focus
+            is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        ):
+            assessments = tuple(
+                EngineeringAgentEvidenceBoundaryAssessment.create(
+                    challenge_id=item.challenge_id,
+                    evidence_boundary=(
+                        "The cited source establishes the caller invocation only."
+                    ),
+                    draft_scope="The Claim states only that invocation.",
+                    disposition=(
+                        EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+                    ),
+                    finding_code=None,
+                )
+                for item in project_engineering_agent_evidence_boundary_challenges(
+                    request.package,
+                    request.draft,
+                )
+            )
+        return EngineeringAgentReviewProposal.create(
+            model_call_ref=f"focused-review-call-{len(self.requests)}",
+            decision=EngineeringAgentReviewDecision.APPROVED,
+            focus=request.focus,
+            evidence_boundary_assessments=assessments,
+        )
+
+
 class RecordingResponseControl:
     def __init__(self) -> None:
         self.requests = []
@@ -273,6 +386,36 @@ class ReplanningAnswerDriver:
 
 
 class ConversationalEngineeringAgentTests(unittest.TestCase):
+    def test_audit_only_relevance_assessment_requires_global_no_evidence_finding(
+        self,
+    ) -> None:
+        assessment = EngineeringAgentBoundaryRelevanceAssessment.create(
+            challenge_id=StableId("boundary_challenge_" + "a" * 32),
+            user_requirement="Explain the business flow.",
+            boundary_scope="An earlier search stopped after an exact filename match.",
+            disposition=(
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+            ),
+            finding_code="RESOLVED_DIAGNOSTIC",
+        )
+        finding = EngineeringAgentReviewFinding.create(
+            code="RESOLVED_DIAGNOSTIC",
+            message="Remove the resolved acquisition diagnostic.",
+            requires_evidence=True,
+            claim_index=None,
+        )
+
+        with self.assertRaises(DomainError) as caught:
+            EngineeringAgentReviewProposal.create(
+                model_call_ref="focused-review-invalid-audit-finding",
+                decision=EngineeringAgentReviewDecision.FINDINGS,
+                findings=(finding,),
+                focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+                boundary_relevance_assessments=(assessment,),
+            )
+
+        self.assertEqual(caught.exception.code, ErrorCode.INVALID_ARGUMENT)
+
     def test_observation_driven_replan_closes_a_reviewed_turn(self) -> None:
         driver = ReplanningAnswerDriver()
         service, tool, reviewer, response = _service(driver)
@@ -336,6 +479,47 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             "EXECUTED_APPLICATION_SEALED",
         )
         self.assertEqual(len(submission.snapshot.context.reviewed_conclusion_refs), 1)
+
+    def test_structural_caller_risk_requires_fresh_focused_review(self) -> None:
+        driver = JavaCallerAnswerDriver()
+        tool = JavaCallerToolPort()
+        reviewer = FocusAwareApprovingReviewer()
+        service, _, _, response = _service(
+            driver,
+            tool=tool,
+            reviewer=reviewer,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="这个保存调用在哪里？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(
+            tuple(item.focus for item in reviewer.requests),
+            (
+                EngineeringAgentReviewFocus.COMPREHENSIVE,
+                EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            ),
+        )
+        challenges = project_engineering_agent_evidence_boundary_challenges(
+            reviewer.requests[1].package,
+            reviewer.requests[1].draft,
+        )
+        self.assertEqual(len(challenges), 1)
+        self.assertEqual(challenges[0].call_expression, "productRepository.save")
+        self.assertEqual(len(response.requests), 1)
+        self.assertEqual(
+            response.requests[0].review.focus,
+            EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        self.assertEqual(
+            response.requests[0].review.evidence_boundary_assessments[0].challenge_id,
+            challenges[0].challenge_id,
+        )
 
     def test_reviewer_finding_returns_to_same_agent_and_reuses_package(self) -> None:
         class RewriteDriver:

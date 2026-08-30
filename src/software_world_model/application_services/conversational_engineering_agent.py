@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import json
+import re
 from threading import Lock
 from typing import Protocol, Sequence
 
@@ -72,6 +74,21 @@ class EngineeringAgentWorkPhase(str, Enum):
 class EngineeringAgentReviewDecision(str, Enum):
     APPROVED = "APPROVED"
     FINDINGS = "FINDINGS"
+
+
+class EngineeringAgentReviewFocus(str, Enum):
+    COMPREHENSIVE = "COMPREHENSIVE"
+    EVIDENCE_BOUNDARY_CHALLENGE = "EVIDENCE_BOUNDARY_CHALLENGE"
+
+
+class EngineeringAgentEvidenceBoundaryAssessmentDisposition(str, Enum):
+    WITHIN_CALLER_EVIDENCE = "WITHIN_CALLER_EVIDENCE"
+    CLAIM_EXCEEDS_CALLER_EVIDENCE = "CLAIM_EXCEEDS_CALLER_EVIDENCE"
+
+
+class EngineeringAgentBoundaryRelevanceAssessmentDisposition(str, Enum):
+    MATERIAL_TO_USER_REQUEST = "MATERIAL_TO_USER_REQUEST"
+    RESOLVED_AUDIT_ONLY = "RESOLVED_AUDIT_ONLY"
 
 
 class EngineeringAgentModelRole(str, Enum):
@@ -1387,11 +1404,253 @@ class EngineeringAgentAnswerDraft:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringAgentEvidenceBoundaryChallenge:
+    challenge_id: StableId
+    claim_index: int
+    support_observation_id: StableId
+    source_locator: str
+    call_expression: str
+    receiver_declared_type: str | None
+    cited_implementation_observation_ids: tuple[StableId, ...]
+    package_implementation_observation_ids: tuple[StableId, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        claim_index: int,
+        support_observation_id: StableId,
+        source_locator: str,
+        call_expression: str,
+        receiver_declared_type: str | None,
+        cited_implementation_observation_ids: Sequence[StableId] = (),
+        package_implementation_observation_ids: Sequence[StableId] = (),
+    ) -> "EngineeringAgentEvidenceBoundaryChallenge":
+        if type(claim_index) is not int or claim_index < 0:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "evidence-boundary challenge Claim index is invalid",
+            )
+        cited = tuple(cited_implementation_observation_ids)
+        package = tuple(package_implementation_observation_ids)
+        if (
+            len(cited) != len(set(cited))
+            or len(package) != len(set(package))
+            or not set(cited).issubset(package)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "evidence-boundary challenge implementation references are invalid",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_EVIDENCE_BOUNDARY_CHALLENGE@1",
+            "claim_index": claim_index,
+            "support_observation_id": support_observation_id.value,
+            "source_locator": _text(source_locator, "challenge Source locator"),
+            "call_expression": _text(call_expression, "challenge call expression"),
+            "receiver_declared_type": (
+                _text(receiver_declared_type, "challenge receiver type")
+                if receiver_declared_type is not None
+                else None
+            ),
+            "cited_implementation_observation_ids": tuple(
+                item.value for item in cited
+            ),
+            "package_implementation_observation_ids": tuple(
+                item.value for item in package
+            ),
+        }
+        challenge_digest = digest_of(core)
+        return cls(
+            challenge_id=StableId(
+                f"evidence_challenge_{challenge_digest.value[-32:]}"
+            ),
+            claim_index=claim_index,
+            support_observation_id=support_observation_id,
+            source_locator=core["source_locator"],
+            call_expression=core["call_expression"],
+            receiver_declared_type=core["receiver_declared_type"],
+            cited_implementation_observation_ids=cited,
+            package_implementation_observation_ids=package,
+            digest=challenge_digest,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentEvidenceBoundaryAssessment:
+    challenge_id: StableId
+    evidence_boundary: str
+    draft_scope: str
+    disposition: EngineeringAgentEvidenceBoundaryAssessmentDisposition
+    finding_code: str | None
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        challenge_id: StableId,
+        evidence_boundary: str,
+        draft_scope: str,
+        disposition: EngineeringAgentEvidenceBoundaryAssessmentDisposition,
+        finding_code: str | None,
+    ) -> "EngineeringAgentEvidenceBoundaryAssessment":
+        if not isinstance(
+            disposition,
+            EngineeringAgentEvidenceBoundaryAssessmentDisposition,
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "evidence-boundary assessment disposition is invalid",
+            )
+        finding_code = _optional_text(
+            finding_code,
+            "evidence-boundary assessment Finding code",
+        )
+        within_boundary = (
+            disposition
+            is EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+        )
+        if (within_boundary and finding_code is not None) or (
+            not within_boundary and finding_code is None
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "only an exceeded evidence boundary may bind a Finding code",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_EVIDENCE_BOUNDARY_ASSESSMENT@1",
+            "challenge_id": challenge_id.value,
+            "evidence_boundary": _bounded_text(
+                evidence_boundary,
+                "assessment evidence boundary",
+            ),
+            "draft_scope": _bounded_text(draft_scope, "assessment Draft scope"),
+            "disposition": disposition.value,
+            "finding_code": finding_code,
+        }
+        return cls(
+            challenge_id=challenge_id,
+            evidence_boundary=core["evidence_boundary"],
+            draft_scope=core["draft_scope"],
+            disposition=disposition,
+            finding_code=finding_code,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentBoundaryRelevanceChallenge:
+    challenge_id: StableId
+    boundary_observation_id: StableId
+    resolving_support_observation_ids: tuple[StableId, ...]
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        boundary_observation_id: StableId,
+        resolving_support_observation_ids: Sequence[StableId],
+    ) -> "EngineeringAgentBoundaryRelevanceChallenge":
+        resolving = tuple(resolving_support_observation_ids)
+        if not resolving or len(resolving) != len(set(resolving)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance challenge requires unique resolving support",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_CHALLENGE@1",
+            "boundary_observation_id": boundary_observation_id.value,
+            "resolving_support_observation_ids": tuple(
+                item.value for item in resolving
+            ),
+        }
+        challenge_digest = digest_of(core)
+        return cls(
+            challenge_id=StableId(
+                f"boundary_challenge_{challenge_digest.value[-32:]}"
+            ),
+            boundary_observation_id=boundary_observation_id,
+            resolving_support_observation_ids=resolving,
+            digest=challenge_digest,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentBoundaryRelevanceAssessment:
+    challenge_id: StableId
+    user_requirement: str
+    boundary_scope: str
+    disposition: EngineeringAgentBoundaryRelevanceAssessmentDisposition
+    finding_code: str | None
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        challenge_id: StableId,
+        user_requirement: str,
+        boundary_scope: str,
+        disposition: EngineeringAgentBoundaryRelevanceAssessmentDisposition,
+        finding_code: str | None,
+    ) -> "EngineeringAgentBoundaryRelevanceAssessment":
+        if not isinstance(
+            disposition,
+            EngineeringAgentBoundaryRelevanceAssessmentDisposition,
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance assessment disposition is invalid",
+            )
+        finding_code = _optional_text(
+            finding_code,
+            "boundary relevance assessment Finding code",
+        )
+        material = (
+            disposition
+            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+        )
+        if (material and finding_code is not None) or (
+            not material and finding_code is None
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "only an audit-only boundary assessment may bind a Finding code",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@1",
+            "challenge_id": challenge_id.value,
+            "user_requirement": _bounded_text(
+                user_requirement,
+                "boundary relevance user requirement",
+            ),
+            "boundary_scope": _bounded_text(
+                boundary_scope,
+                "boundary relevance scope",
+            ),
+            "disposition": disposition.value,
+            "finding_code": finding_code,
+        }
+        return cls(
+            challenge_id=challenge_id,
+            user_requirement=core["user_requirement"],
+            boundary_scope=core["boundary_scope"],
+            disposition=disposition,
+            finding_code=finding_code,
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringAgentReviewRequest:
     turn_request: EngineeringTurnExecutionRequest
     work_state: EngineeringAgentWorkState
     package: EngineeringAgentEvidencePackage
     draft: EngineeringAgentAnswerDraft
+    focus: EngineeringAgentReviewFocus = EngineeringAgentReviewFocus.COMPREHENSIVE
 
 
 @dataclass(frozen=True, slots=True)
@@ -1399,6 +1658,13 @@ class EngineeringAgentReviewProposal:
     model_call_ref: str
     decision: EngineeringAgentReviewDecision
     findings: tuple[EngineeringAgentReviewFinding, ...]
+    focus: EngineeringAgentReviewFocus
+    evidence_boundary_assessments: tuple[
+        EngineeringAgentEvidenceBoundaryAssessment, ...
+    ]
+    boundary_relevance_assessments: tuple[
+        EngineeringAgentBoundaryRelevanceAssessment, ...
+    ]
 
     @classmethod
     def create(
@@ -1407,6 +1673,13 @@ class EngineeringAgentReviewProposal:
         model_call_ref: str,
         decision: EngineeringAgentReviewDecision,
         findings: Sequence[EngineeringAgentReviewFinding] = (),
+        focus: EngineeringAgentReviewFocus = EngineeringAgentReviewFocus.COMPREHENSIVE,
+        evidence_boundary_assessments: Sequence[
+            EngineeringAgentEvidenceBoundaryAssessment
+        ] = (),
+        boundary_relevance_assessments: Sequence[
+            EngineeringAgentBoundaryRelevanceAssessment
+        ] = (),
     ) -> "EngineeringAgentReviewProposal":
         if not isinstance(decision, EngineeringAgentReviewDecision):
             raise DomainError(
@@ -1414,10 +1687,49 @@ class EngineeringAgentReviewProposal:
                 "Reviewer decision is invalid",
             )
         normalized = tuple(findings)
+        assessments = tuple(evidence_boundary_assessments)
+        relevance_assessments = tuple(boundary_relevance_assessments)
         if any(not isinstance(item, EngineeringAgentReviewFinding) for item in normalized):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "Reviewer Findings must use the typed contract",
+            )
+        if not isinstance(focus, EngineeringAgentReviewFocus) or any(
+            not isinstance(item, EngineeringAgentEvidenceBoundaryAssessment)
+            for item in assessments
+        ) or any(
+            not isinstance(item, EngineeringAgentBoundaryRelevanceAssessment)
+            for item in relevance_assessments
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer focus or evidence-boundary assessments are invalid",
+            )
+        if (
+            focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            and (assessments or relevance_assessments)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "comprehensive Review cannot pre-disposition evidence-boundary challenges",
+            )
+        if decision is EngineeringAgentReviewDecision.APPROVED and (
+            any(
+                item.disposition
+                is not EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+                for item in assessments
+            )
+            or any(
+                item.disposition
+                is not (
+                    EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+                )
+                for item in relevance_assessments
+            )
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "an approved Review cannot leave an evidence-boundary challenge open",
             )
         if decision is EngineeringAgentReviewDecision.APPROVED and normalized:
             raise DomainError(
@@ -1429,10 +1741,34 @@ class EngineeringAgentReviewProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "a non-approved Review requires Findings",
             )
+        finding_by_code = {item.code: item for item in normalized}
+        if len(finding_by_code) != len(normalized):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Reviewer Finding codes must be unique",
+            )
+        for assessment in relevance_assessments:
+            if assessment.disposition is not (
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+            ):
+                continue
+            finding = finding_by_code.get(assessment.finding_code or "")
+            if (
+                finding is None
+                or finding.claim_index is not None
+                or finding.requires_evidence
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "an audit-only boundary assessment requires a global no-evidence Finding",
+                )
         return cls(
             model_call_ref=_text(model_call_ref, "Reviewer model call reference"),
             decision=decision,
             findings=normalized,
+            focus=focus,
+            evidence_boundary_assessments=assessments,
+            boundary_relevance_assessments=relevance_assessments,
         )
 
 
@@ -1485,8 +1821,399 @@ class EngineeringAgentReview:
     answer_digest: Digest
     decision: EngineeringAgentReviewDecision
     findings: tuple[EngineeringAgentReviewFinding, ...]
+    focus: EngineeringAgentReviewFocus
+    evidence_boundary_assessments: tuple[
+        EngineeringAgentEvidenceBoundaryAssessment, ...
+    ]
+    boundary_relevance_assessments: tuple[
+        EngineeringAgentBoundaryRelevanceAssessment, ...
+    ]
     model_call_ref: str
     digest: Digest
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentDraftBoundaryProjection:
+    reportable_boundary_observation_ids: tuple[StableId, ...]
+    resolved_acquisition_candidate_observation_ids: tuple[StableId, ...]
+    digest: Digest
+
+
+@dataclass(frozen=True, slots=True)
+class _EngineeringAgentJavaSourceItem:
+    observation_id: StableId
+    locator: str
+    content: str
+
+
+_JAVA_NON_CODE_RE = re.compile(
+    r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\n]*|/\*.*?\*/',
+    re.DOTALL,
+)
+_JAVA_FIELD_RE = re.compile(
+    r"(?m)^[ \t]*(?:public|protected|private)[ \t]+"
+    r"(?:(?:static|final|volatile|transient)[ \t]+)*"
+    r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*(?:\s*<[^;=\n]+>)?(?:\[\])?)"
+    r"[ \t]+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]*(?:[;=])"
+)
+_JAVA_RECEIVER_CALL_RE = re.compile(
+    r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*"
+    r"(?:\s*\([^()\n;{}]*\))?)\s*\.\s*"
+    r"(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+)
+
+
+def project_engineering_agent_draft_boundaries(
+    observations: Sequence[EngineeringAgentToolObservation],
+) -> EngineeringAgentDraftBoundaryProjection:
+    """Separate retained audit diagnostics from Draft-reportable boundaries.
+
+    A Source Search boundary becomes a relevance-challenge candidate once a
+    later full Source Read consumes a locator issued by that exact search.  The
+    immutable Package and copy domain retain it because the User may have asked
+    for the acquisition diagnostic itself; a focused Review decides materiality.
+    """
+
+    normalized = tuple(observations)
+    support_sequence = tuple(
+        item
+        for item in normalized
+        if item.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+    )
+    support_position = {
+        item.observation_id: index
+        for index, item in enumerate(support_sequence)
+    }
+    search_support_by_request: dict[
+        StableId, EngineeringAgentToolObservation
+    ] = {
+        item.tool_request_id: item
+        for item in support_sequence
+        if item.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        and item.citation_refs
+    }
+    resolved_candidates: set[StableId] = set()
+    full_reads = tuple(
+        (
+            support_position[observation.observation_id],
+            set(_engineering_agent_full_source_read_citation_refs(observation)),
+        )
+        for observation in support_sequence
+        if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+    )
+    for item in normalized:
+        if (
+            item.operation is not EngineeringAgentToolOperation.SOURCE_SEARCH
+            or item.disposition
+            is not EngineeringAgentEvidenceDisposition.BOUNDARY
+        ):
+            continue
+        paired_support = search_support_by_request.get(item.tool_request_id)
+        if paired_support is None:
+            continue
+        issued_locators = set(paired_support.citation_refs)
+        search_position = support_position[paired_support.observation_id]
+        if any(
+            read_position > search_position
+            and bool(issued_locators.intersection(read_references))
+            for read_position, read_references in full_reads
+        ):
+            resolved_candidates.add(item.observation_id)
+    boundary_ids = tuple(
+        item.observation_id
+        for item in normalized
+        if item.disposition is EngineeringAgentEvidenceDisposition.BOUNDARY
+    )
+    reportable = boundary_ids
+    candidates = tuple(
+        item for item in boundary_ids if item in resolved_candidates
+    )
+    core = {
+        "schema": "ENGINEERING_AGENT_DRAFT_BOUNDARY_PROJECTION@1",
+        "reportable_boundary_observation_ids": tuple(
+            item.value for item in reportable
+        ),
+        "resolved_acquisition_candidate_observation_ids": tuple(
+            item.value for item in candidates
+        ),
+    }
+    return EngineeringAgentDraftBoundaryProjection(
+        reportable_boundary_observation_ids=reportable,
+        resolved_acquisition_candidate_observation_ids=candidates,
+        digest=digest_of(core),
+    )
+
+
+def _engineering_agent_full_source_read_citation_refs(
+    observation: EngineeringAgentToolObservation,
+) -> tuple[str, ...]:
+    try:
+        payload = json.loads(observation.content)
+    except (TypeError, json.JSONDecodeError):
+        return ()
+    retrieval = payload.get("retrieval_result")
+    if not isinstance(retrieval, dict):
+        return ()
+    raw_items = retrieval.get("items")
+    if not isinstance(raw_items, list):
+        return ()
+    authorized = set(observation.citation_refs)
+    references: list[str] = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        reference = item.get("locator_reference")
+        if (
+            item.get("coverage_complete") is True
+            and item.get("modality") == "EXACT_STATIC_SOURCE_TEXT"
+            and isinstance(reference, str)
+            and reference in authorized
+            and reference not in references
+        ):
+            references.append(reference)
+    return tuple(references)
+
+
+def project_engineering_agent_boundary_relevance_challenges(
+    package: EngineeringAgentEvidencePackage,
+    draft: EngineeringAgentAnswerDraft,
+) -> tuple[EngineeringAgentBoundaryRelevanceChallenge, ...]:
+    observations = (
+        *package.support_observations,
+        *package.boundary_observations,
+    )
+    projection = project_engineering_agent_draft_boundaries(observations)
+    candidates = set(
+        projection.resolved_acquisition_candidate_observation_ids
+    ).intersection(draft.boundary_observation_ids)
+    search_support_by_request = {
+        item.tool_request_id: item
+        for item in package.support_observations
+        if item.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        and item.citation_refs
+    }
+    support_position = {
+        item.observation_id: index
+        for index, item in enumerate(package.support_observations)
+    }
+    boundary_by_id = {
+        item.observation_id: item for item in package.boundary_observations
+    }
+    challenges: list[EngineeringAgentBoundaryRelevanceChallenge] = []
+    for boundary_id in draft.boundary_observation_ids:
+        if boundary_id not in candidates:
+            continue
+        boundary = boundary_by_id[boundary_id]
+        search_support = search_support_by_request.get(boundary.tool_request_id)
+        if search_support is None:
+            continue
+        issued = set(search_support.citation_refs)
+        search_position = support_position[search_support.observation_id]
+        resolving = tuple(
+            item.observation_id
+            for index, item in enumerate(package.support_observations)
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+            and index > search_position
+            and bool(
+                issued.intersection(
+                    _engineering_agent_full_source_read_citation_refs(item)
+                )
+            )
+        )
+        if resolving:
+            challenges.append(
+                EngineeringAgentBoundaryRelevanceChallenge.create(
+                    boundary_observation_id=boundary_id,
+                    resolving_support_observation_ids=resolving,
+                )
+            )
+    return tuple(challenges)
+
+
+def project_engineering_agent_evidence_boundary_challenges(
+    package: EngineeringAgentEvidencePackage,
+    draft: EngineeringAgentAnswerDraft,
+) -> tuple[EngineeringAgentEvidenceBoundaryChallenge, ...]:
+    """Project caller/callee review leads without interpreting answer prose.
+
+    The projector uses source structure only: a Claim that cites a full Java
+    read and repeats one of that file's receiver call expressions receives an
+    exact challenge.  The Reviewer, not a language keyword filter, decides
+    whether the Claim stays at invocation/order scope or exceeds it.
+    """
+
+    source_items = _engineering_agent_java_source_items(
+        package.support_observations
+    )
+    items_by_observation: dict[StableId, list[_EngineeringAgentJavaSourceItem]] = {}
+    for item in source_items:
+        items_by_observation.setdefault(item.observation_id, []).append(item)
+    challenges: list[EngineeringAgentEvidenceBoundaryChallenge] = []
+    seen: set[tuple[object, ...]] = set()
+    for claim_index, claim in enumerate(draft.claims):
+        compact_statement = re.sub(r"\s+", "", claim.statement)
+        for support_observation_id in claim.support_observation_ids:
+            for source_item in items_by_observation.get(
+                support_observation_id, ()
+            ):
+                code = _JAVA_NON_CODE_RE.sub(" ", source_item.content)
+                fields = {
+                    match.group("name"): _java_simple_type(match.group("type"))
+                    for match in _JAVA_FIELD_RE.finditer(code)
+                }
+                for match in _JAVA_RECEIVER_CALL_RE.finditer(code):
+                    receiver = re.sub(r"\s+", "", match.group("receiver"))
+                    method = match.group("method")
+                    call_expression = f"{receiver}.{method}"
+                    if re.search(
+                        rf"(?<![A-Za-z0-9_$]){re.escape(call_expression)}"
+                        rf"(?![A-Za-z0-9_$])",
+                        compact_statement,
+                    ) is None:
+                        continue
+                    receiver_type = _java_receiver_type(
+                        code=code,
+                        receiver=receiver,
+                        fields=fields,
+                    )
+                    package_implementations = (
+                        _java_method_implementation_observation_ids(
+                            source_items,
+                            receiver_type=receiver_type,
+                            method=method,
+                        )
+                        if receiver_type is not None
+                        else ()
+                    )
+                    cited_implementations = tuple(
+                        item
+                        for item in package_implementations
+                        if item in claim.support_observation_ids
+                    )
+                    identity = (
+                        claim_index,
+                        support_observation_id,
+                        source_item.locator,
+                        call_expression,
+                        receiver_type,
+                    )
+                    if identity in seen:
+                        continue
+                    seen.add(identity)
+                    challenges.append(
+                        EngineeringAgentEvidenceBoundaryChallenge.create(
+                            claim_index=claim_index,
+                            support_observation_id=support_observation_id,
+                            source_locator=source_item.locator,
+                            call_expression=call_expression,
+                            receiver_declared_type=receiver_type,
+                            cited_implementation_observation_ids=(
+                                cited_implementations
+                            ),
+                            package_implementation_observation_ids=(
+                                package_implementations
+                            ),
+                        )
+                    )
+    return tuple(challenges)
+
+
+def _engineering_agent_java_source_items(
+    observations: Sequence[EngineeringAgentToolObservation],
+) -> tuple[_EngineeringAgentJavaSourceItem, ...]:
+    items: list[_EngineeringAgentJavaSourceItem] = []
+    for observation in observations:
+        if (
+            observation.operation is not EngineeringAgentToolOperation.SOURCE_READ
+            or observation.disposition
+            is not EngineeringAgentEvidenceDisposition.SUPPORT
+        ):
+            continue
+        try:
+            payload = json.loads(observation.content)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        retrieval = payload.get("retrieval_result")
+        if not isinstance(retrieval, dict):
+            continue
+        raw_items = retrieval.get("items")
+        if not isinstance(raw_items, list):
+            continue
+        for raw_item in raw_items:
+            if not isinstance(raw_item, dict):
+                continue
+            locator = raw_item.get("locator")
+            content = raw_item.get("content")
+            if (
+                raw_item.get("modality") != "EXACT_STATIC_SOURCE_TEXT"
+                or raw_item.get("coverage_complete") is not True
+                or not isinstance(locator, str)
+                or not locator.endswith(".java")
+                or not isinstance(content, str)
+            ):
+                continue
+            items.append(
+                _EngineeringAgentJavaSourceItem(
+                    observation_id=observation.observation_id,
+                    locator=locator,
+                    content=content,
+                )
+            )
+    return tuple(items)
+
+
+def _java_simple_type(value: str) -> str:
+    without_generic = value.split("<", 1)[0].strip().removesuffix("[]")
+    return without_generic.rsplit(".", 1)[-1]
+
+
+def _java_receiver_type(
+    *,
+    code: str,
+    receiver: str,
+    fields: dict[str, str],
+) -> str | None:
+    if receiver in fields:
+        return fields[receiver]
+    if not receiver.endswith("()"):
+        return None
+    accessor = re.escape(receiver[:-2])
+    declaration = re.search(
+        rf"\b(?P<type>[A-Za-z_$][A-Za-z0-9_$.<>\[\]]*)\s+"
+        rf"{accessor}\s*\([^)]*\)\s*(?:throws\s+[^{{]+)?\{{",
+        code,
+    )
+    return (
+        _java_simple_type(declaration.group("type"))
+        if declaration is not None
+        else None
+    )
+
+
+def _java_method_implementation_observation_ids(
+    source_items: Sequence[_EngineeringAgentJavaSourceItem],
+    *,
+    receiver_type: str,
+    method: str,
+) -> tuple[StableId, ...]:
+    matched: list[StableId] = []
+    for item in source_items:
+        code = _JAVA_NON_CODE_RE.sub(" ", item.content)
+        declares_receiver = re.search(
+            rf"\b(?:class|record|enum)\s+{re.escape(receiver_type)}\b",
+            code,
+        ) or re.search(
+            rf"\b(?:implements|extends)\s+[^{{;]*\b{re.escape(receiver_type)}\b",
+            code,
+        )
+        declares_body = re.search(
+            rf"\b{re.escape(method)}\s*\([^;{{}}]*\)\s*"
+            rf"(?:throws\s+[^{{]+)?\{{",
+            code,
+        )
+        if declares_receiver and declares_body and item.observation_id not in matched:
+            matched.append(item.observation_id)
+    return tuple(matched)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1564,6 +2291,11 @@ class SealedEngineeringAgentResponseControl:
             or request.work_state.turn_id != request.package.turn_id
             or request.work_state.turn_id != request.draft.turn_id
             or request.work_state.turn_id != request.review.turn_id
+            or not _engineering_agent_review_closes_boundary_challenges(
+                package=request.package,
+                draft=request.draft,
+                review=request.review,
+            )
         ):
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
@@ -1784,6 +2516,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         last_package: EngineeringAgentEvidencePackage | None = None
         last_draft: EngineeringAgentAnswerDraft | None = None
         last_review: EngineeringAgentReview | None = None
+        next_review_focus = EngineeringAgentReviewFocus.COMPREHENSIVE
         available_operations = self._authorized_operations(request)
         preissued_source_read_options = (
             self._prepare_source_read_options(request)
@@ -1936,75 +2669,45 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 observations=observations,
             )
             audit.draft = draft
+            challenges = project_engineering_agent_evidence_boundary_challenges(
+                package,
+                draft,
+            )
+            relevance_challenges = (
+                project_engineering_agent_boundary_relevance_challenges(
+                    package,
+                    draft,
+                )
+            )
+            focused_review_required = bool(
+                challenges or relevance_challenges
+            )
+            review_focus = (
+                next_review_focus
+                if focused_review_required
+                else EngineeringAgentReviewFocus.COMPREHENSIVE
+            )
+            review_request = EngineeringAgentReviewRequest(
+                turn_request=request,
+                work_state=work_state,
+                package=package,
+                draft=draft,
+                focus=review_focus,
+            )
             review_count += 1
             if review_count > self._limits.maximum_reviews:
-                return self._failed_outcome(
+                return self._review_limit_outcome(
                     request=request,
                     work_state=work_state,
                     package=package,
                     draft=draft,
                     review=last_review,
-                    provider_dispatch_count=audit.provider_dispatch_count,
-                    model_dispatch_receipt_refs=_model_receipt_refs(audit),
-                    failure_code="AGENT_REVIEW_LIMIT_REACHED",
-                    provider_failure_classification=(
-                        EngineeringProviderFailureClassification.MODEL_REVIEW_REJECTED
-                    ),
-                    provider_failure_code="AGENT_REVIEW_LIMIT_REACHED",
+                    audit=audit,
                 )
-            audit.expected_model_role = (
-                EngineeringAgentModelRole.INDEPENDENT_REVIEWER
-            )
-            try:
-                reviewer_output = self._reviewer.review(
-                    EngineeringAgentReviewRequest(
-                        turn_request=request,
-                        work_state=work_state,
-                        package=package,
-                        draft=draft,
-                    )
-                )
-            except BaseException:
-                raise
-            else:
-                audit.expected_model_role = None
-            if isinstance(
-                reviewer_output, EngineeringAgentReviewerModelResult
-            ):
-                expected_reviewer_output = (
-                    EngineeringAgentReviewerModelResult.create(
-                        proposal=reviewer_output.proposal,
-                        receipt=reviewer_output.receipt,
-                        prior_receipts=reviewer_output.prior_receipts,
-                    )
-                )
-                if reviewer_output != expected_reviewer_output:
-                    raise DomainError(
-                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                        "Reviewer model result identity is invalid",
-                    )
-                review_proposal = reviewer_output.proposal
-                for receipt in reviewer_output.prior_receipts:
-                    _record_model_receipt(audit, receipt)
-                    self._record_model_call(
-                        model_call_refs, receipt.model_call_ref
-                    )
-                _record_model_receipt(audit, reviewer_output.receipt)
-            else:
-                if self._require_model_call_receipts:
-                    raise DomainError(
-                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                        "qualified Agent Reviewer requires an exact model call receipt",
-                    )
-                review_proposal = reviewer_output
-                audit.provider_dispatch_count += 1
-            if not isinstance(review_proposal, EngineeringAgentReviewProposal):
-                raise DomainError(
-                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "Reviewer returned an untyped proposal",
-                )
-            self._record_model_call(
-                model_call_refs, review_proposal.model_call_ref
+            review_proposal = self._request_review_proposal(
+                review_request=review_request,
+                audit=audit,
+                model_call_refs=model_call_refs,
             )
             review = self._seal_review(
                 request=request,
@@ -2012,10 +2715,47 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 package=package,
                 draft=draft,
                 proposal=review_proposal,
+                focus=review_request.focus,
             )
+            if (
+                review.decision is EngineeringAgentReviewDecision.APPROVED
+                and focused_review_required
+                and review.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            ):
+                review_request = EngineeringAgentReviewRequest(
+                    turn_request=request,
+                    work_state=work_state,
+                    package=package,
+                    draft=draft,
+                    focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+                )
+                review_count += 1
+                if review_count > self._limits.maximum_reviews:
+                    return self._review_limit_outcome(
+                        request=request,
+                        work_state=work_state,
+                        package=package,
+                        draft=draft,
+                        review=review,
+                        audit=audit,
+                    )
+                review_proposal = self._request_review_proposal(
+                    review_request=review_request,
+                    audit=audit,
+                    model_call_refs=model_call_refs,
+                )
+                review = self._seal_review(
+                    request=request,
+                    work_state=work_state,
+                    package=package,
+                    draft=draft,
+                    proposal=review_proposal,
+                    focus=review_request.focus,
+                )
             last_package, last_draft, last_review = package, draft, review
             audit.review = review
             if review.decision is EngineeringAgentReviewDecision.FINDINGS:
+                next_review_focus = review.focus
                 review_findings = review.findings
                 pending_review = review
                 if any(item.requires_evidence for item in review.findings):
@@ -2084,6 +2824,77 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             model_dispatch_receipt_refs=_model_receipt_refs(audit),
             failure_code="AGENT_STEP_LIMIT_REACHED",
         )
+
+    def _review_limit_outcome(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        work_state: EngineeringAgentWorkState,
+        package: EngineeringAgentEvidencePackage,
+        draft: EngineeringAgentAnswerDraft,
+        review: EngineeringAgentReview | None,
+        audit: _EngineeringAgentExecutionAudit,
+    ) -> EngineeringTurnExecutionOutcome:
+        return self._failed_outcome(
+            request=request,
+            work_state=work_state,
+            package=package,
+            draft=draft,
+            review=review,
+            provider_dispatch_count=audit.provider_dispatch_count,
+            model_dispatch_receipt_refs=_model_receipt_refs(audit),
+            failure_code="AGENT_REVIEW_LIMIT_REACHED",
+            provider_failure_classification=(
+                EngineeringProviderFailureClassification.MODEL_REVIEW_REJECTED
+            ),
+            provider_failure_code="AGENT_REVIEW_LIMIT_REACHED",
+        )
+
+    def _request_review_proposal(
+        self,
+        *,
+        review_request: EngineeringAgentReviewRequest,
+        audit: _EngineeringAgentExecutionAudit,
+        model_call_refs: list[str],
+    ) -> EngineeringAgentReviewProposal:
+        audit.expected_model_role = EngineeringAgentModelRole.INDEPENDENT_REVIEWER
+        try:
+            reviewer_output = self._reviewer.review(review_request)
+        except BaseException:
+            raise
+        else:
+            audit.expected_model_role = None
+        if isinstance(reviewer_output, EngineeringAgentReviewerModelResult):
+            expected_reviewer_output = EngineeringAgentReviewerModelResult.create(
+                proposal=reviewer_output.proposal,
+                receipt=reviewer_output.receipt,
+                prior_receipts=reviewer_output.prior_receipts,
+            )
+            if reviewer_output != expected_reviewer_output:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Reviewer model result identity is invalid",
+                )
+            review_proposal = reviewer_output.proposal
+            for receipt in reviewer_output.prior_receipts:
+                _record_model_receipt(audit, receipt)
+                self._record_model_call(model_call_refs, receipt.model_call_ref)
+            _record_model_receipt(audit, reviewer_output.receipt)
+        else:
+            if self._require_model_call_receipts:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "qualified Agent Reviewer requires an exact model call receipt",
+                )
+            review_proposal = reviewer_output
+            audit.provider_dispatch_count += 1
+        if not isinstance(review_proposal, EngineeringAgentReviewProposal):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer returned an untyped proposal",
+            )
+        self._record_model_call(model_call_refs, review_proposal.model_call_ref)
+        return review_proposal
 
     def _prepare_source_read_options(
         self, request: EngineeringTurnExecutionRequest
@@ -2643,14 +3454,33 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         package: EngineeringAgentEvidencePackage,
         draft: EngineeringAgentAnswerDraft,
         proposal: EngineeringAgentReviewProposal,
+        focus: EngineeringAgentReviewFocus,
     ) -> EngineeringAgentReview:
-        if not isinstance(proposal.decision, EngineeringAgentReviewDecision) or any(
-            not isinstance(item, EngineeringAgentReviewFinding)
-            for item in proposal.findings
+        if (
+            not isinstance(proposal.decision, EngineeringAgentReviewDecision)
+            or proposal.focus is not focus
+            or any(
+                not isinstance(item, EngineeringAgentReviewFinding)
+                for item in proposal.findings
+            )
+            or any(
+                not isinstance(
+                    item,
+                    EngineeringAgentEvidenceBoundaryAssessment,
+                )
+                for item in proposal.evidence_boundary_assessments
+            )
+            or any(
+                not isinstance(
+                    item,
+                    EngineeringAgentBoundaryRelevanceAssessment,
+                )
+                for item in proposal.boundary_relevance_assessments
+            )
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Reviewer proposal violates the typed decision contract",
+                "Reviewer proposal violates the typed focus or decision contract",
             )
         if (
             proposal.decision is EngineeringAgentReviewDecision.APPROVED
@@ -2663,6 +3493,105 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Reviewer decision and Finding shape are inconsistent",
             )
+        expected_challenges = (
+            project_engineering_agent_evidence_boundary_challenges(
+                package,
+                draft,
+            )
+            if focus
+            is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+            else ()
+        )
+        expected_relevance_challenges = (
+            project_engineering_agent_boundary_relevance_challenges(
+                package,
+                draft,
+            )
+            if focus
+            is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+            else ()
+        )
+        expected_challenge_ids = tuple(
+            item.challenge_id for item in expected_challenges
+        )
+        assessment_ids = tuple(
+            item.challenge_id
+            for item in proposal.evidence_boundary_assessments
+        )
+        if assessment_ids != expected_challenge_ids:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer did not disposition the exact ordered caller evidence challenges",
+            )
+        if tuple(
+            item.challenge_id
+            for item in proposal.boundary_relevance_assessments
+        ) != tuple(
+            item.challenge_id for item in expected_relevance_challenges
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer did not disposition the exact ordered boundary relevance challenges",
+            )
+        challenge_by_id = {
+            item.challenge_id: item for item in expected_challenges
+        }
+        finding_by_code = {item.code: item for item in proposal.findings}
+        if len(finding_by_code) != len(proposal.findings):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer Finding codes must be unique within one Review",
+            )
+        for assessment in proposal.evidence_boundary_assessments:
+            if (
+                assessment.disposition
+                is (
+                    EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE
+                )
+            ):
+                finding = finding_by_code.get(assessment.finding_code or "")
+                if (
+                    finding is None
+                    or finding.claim_index
+                    != challenge_by_id[assessment.challenge_id].claim_index
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "an exceeded caller evidence boundary must bind a Finding on its Claim",
+                    )
+        for assessment in proposal.boundary_relevance_assessments:
+            if (
+                assessment.disposition
+                is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+            ):
+                finding = finding_by_code.get(assessment.finding_code or "")
+                if (
+                    finding is None
+                    or finding.claim_index is not None
+                    or finding.requires_evidence
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "an audit-only boundary must bind one global no-evidence relevance Finding",
+                    )
+        if proposal.decision is EngineeringAgentReviewDecision.APPROVED and (
+            any(
+                item.disposition
+                is not EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+                for item in proposal.evidence_boundary_assessments
+            )
+            or any(
+                item.disposition
+                is not (
+                    EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+                )
+                for item in proposal.boundary_relevance_assessments
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "an approved Review cannot leave an evidence-boundary challenge open",
+            )
         _text(proposal.model_call_ref, "Reviewer model call reference")
         for finding in proposal.findings:
             if finding.claim_index is not None and finding.claim_index >= len(
@@ -2674,13 +3603,14 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
         review_id = self._new_id("agent_review")
         core = {
-            "schema": "ENGINEERING_AGENT_REVIEW@1",
+            "schema": "ENGINEERING_AGENT_REVIEW@2",
             "review_id": review_id.value,
             "turn_id": request.turn_id.value,
             "work_state_digest": work_state.digest.value,
             "package_digest": package.digest.value,
             "answer_digest": draft.digest.value,
             "decision": proposal.decision.value,
+            "focus": focus.value,
             "findings": tuple(
                 {
                     "code": item.code,
@@ -2689,6 +3619,28 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     "claim_index": item.claim_index,
                 }
                 for item in proposal.findings
+            ),
+            "evidence_boundary_assessments": tuple(
+                {
+                    "challenge_id": item.challenge_id.value,
+                    "evidence_boundary": item.evidence_boundary,
+                    "draft_scope": item.draft_scope,
+                    "disposition": item.disposition.value,
+                    "finding_code": item.finding_code,
+                    "digest": item.digest.value,
+                }
+                for item in proposal.evidence_boundary_assessments
+            ),
+            "boundary_relevance_assessments": tuple(
+                {
+                    "challenge_id": item.challenge_id.value,
+                    "user_requirement": item.user_requirement,
+                    "boundary_scope": item.boundary_scope,
+                    "disposition": item.disposition.value,
+                    "finding_code": item.finding_code,
+                    "digest": item.digest.value,
+                }
+                for item in proposal.boundary_relevance_assessments
             ),
             "model_call_ref": proposal.model_call_ref,
         }
@@ -2700,6 +3652,13 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             answer_digest=draft.digest,
             decision=proposal.decision,
             findings=proposal.findings,
+            focus=focus,
+            evidence_boundary_assessments=(
+                proposal.evidence_boundary_assessments
+            ),
+            boundary_relevance_assessments=(
+                proposal.boundary_relevance_assessments
+            ),
             model_call_ref=proposal.model_call_ref,
             digest=digest_of(core),
         )
@@ -2926,11 +3885,58 @@ def _validate_delivery_authorization(
         or authorization.package_digest != package.digest
         or authorization.answer_digest != draft.digest
         or authorization.review_digest != review.digest
+        or not _engineering_agent_review_closes_boundary_challenges(
+            package=package,
+            draft=draft,
+            review=review,
+        )
     ):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Delivery authorization is bound to different Turn artifacts",
         )
+
+
+def _engineering_agent_review_closes_boundary_challenges(
+    *,
+    package: EngineeringAgentEvidencePackage,
+    draft: EngineeringAgentAnswerDraft,
+    review: EngineeringAgentReview,
+) -> bool:
+    expected = project_engineering_agent_evidence_boundary_challenges(
+        package,
+        draft,
+    )
+    expected_relevance = project_engineering_agent_boundary_relevance_challenges(
+        package,
+        draft,
+    )
+    assessments = review.evidence_boundary_assessments
+    relevance_assessments = review.boundary_relevance_assessments
+    if not expected and not expected_relevance:
+        return (
+            review.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            and not assessments
+            and not relevance_assessments
+        )
+    return (
+        review.focus
+        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        and tuple(item.challenge_id for item in assessments)
+        == tuple(item.challenge_id for item in expected)
+        and tuple(item.challenge_id for item in relevance_assessments)
+        == tuple(item.challenge_id for item in expected_relevance)
+        and all(
+            item.disposition
+            is EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+            for item in assessments
+        )
+        and all(
+            item.disposition
+            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+            for item in relevance_assessments
+        )
+    )
 
 
 def _package_matches_observations(
@@ -3292,6 +4298,13 @@ __all__ = [
     "EngineeringAgentDraftProposal",
     "EngineeringAgentDriver",
     "EngineeringAgentDriverModelResult",
+    "EngineeringAgentDraftBoundaryProjection",
+    "EngineeringAgentBoundaryRelevanceAssessment",
+    "EngineeringAgentBoundaryRelevanceAssessmentDisposition",
+    "EngineeringAgentBoundaryRelevanceChallenge",
+    "EngineeringAgentEvidenceBoundaryAssessment",
+    "EngineeringAgentEvidenceBoundaryAssessmentDisposition",
+    "EngineeringAgentEvidenceBoundaryChallenge",
     "EngineeringAgentEvidenceDisposition",
     "EngineeringAgentEvidencePackage",
     "EngineeringAgentInvocation",
@@ -3308,6 +4321,7 @@ __all__ = [
     "EngineeringAgentReview",
     "EngineeringAgentReviewDecision",
     "EngineeringAgentReviewFinding",
+    "EngineeringAgentReviewFocus",
     "EngineeringAgentReviewProposal",
     "EngineeringAgentReviewRequest",
     "EngineeringAgentReviewer",
@@ -3327,4 +4341,7 @@ __all__ = [
     "EngineeringAgentWorkStateProposal",
     "InMemoryEngineeringAgentWorkStateRepository",
     "SealedEngineeringAgentResponseControl",
+    "project_engineering_agent_draft_boundaries",
+    "project_engineering_agent_boundary_relevance_challenges",
+    "project_engineering_agent_evidence_boundary_challenges",
 ]

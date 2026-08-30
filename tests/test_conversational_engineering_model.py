@@ -32,9 +32,14 @@ from software_world_model.ai_infrastructure.provider_http_failure_evidence impor
 )
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
+    EngineeringAgentAnswerDraft,
+    EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentCitation,
+    EngineeringAgentClaimProposal,
     EngineeringAgentDeliveryAuthorization,
+    EngineeringAgentEvidenceBoundaryAssessmentDisposition,
     EngineeringAgentEvidenceDisposition,
+    EngineeringAgentEvidencePackage,
     EngineeringAgentInvocation,
     EngineeringAgentInvocationMode,
     EngineeringAgentLedgerEntryReceipt,
@@ -43,12 +48,17 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
     EngineeringAgentReviewFinding,
+    EngineeringAgentReviewFocus,
+    EngineeringAgentResponseKind,
     EngineeringAgentSourceReadOption,
     EngineeringAgentToolActionProposal,
     EngineeringAgentToolAuthorityKind,
     EngineeringAgentToolAuthorityReceipt,
     EngineeringAgentToolOperation,
     EngineeringAgentToolObservation,
+    project_engineering_agent_draft_boundaries,
+    project_engineering_agent_boundary_relevance_challenges,
+    project_engineering_agent_evidence_boundary_challenges,
 )
 from software_world_model.application_services.engineering_conversation import (
     ConversationTurnState,
@@ -200,7 +210,7 @@ class SequencedLiveAgentAdapter:
                 },
                 ensure_ascii=False,
             ),
-            '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+            '{"decision":"APPROVED","claim_assessments":[],"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
         )
         self.outputs = tuple(outputs) if outputs is not None else default_outputs
 
@@ -449,11 +459,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "audit_retention_requires_answer_disclosure": policy[
                         "audit_retention_requires_answer_disclosure"
                     ],
-                    "answer_boundary_requires_unresolved_material_requirement": policy[
-                        "answer_boundary_requires_unresolved_material_requirement"
+                    "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request": policy[
+                        "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request"
                     ],
-                    "resolved_acquisition_diagnostic_is_answer_boundary": policy[
-                        "resolved_acquisition_diagnostic_is_answer_boundary"
+                    "resolved_acquisition_candidate_requires_relevance_review": policy[
+                        "resolved_acquisition_candidate_requires_relevance_review"
+                    ],
+                    "resolved_acquisition_candidate_is_automatic_exclusion": policy[
+                        "resolved_acquisition_candidate_is_automatic_exclusion"
                     ],
                     "global_inventory_metrics_require_material_user_relevance": policy[
                         "global_inventory_metrics_require_material_user_relevance"
@@ -482,8 +495,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "producer_invocation_is_not_consumer_visible_effect": True,
                 "consumer_visible_effect_requires_consumer_path_support": True,
                 "audit_retention_requires_answer_disclosure": False,
-                "answer_boundary_requires_unresolved_material_requirement": True,
-                "resolved_acquisition_diagnostic_is_answer_boundary": False,
+                "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request": True,
+                "resolved_acquisition_candidate_requires_relevance_review": True,
+                "resolved_acquisition_candidate_is_automatic_exclusion": False,
                 "global_inventory_metrics_require_material_user_relevance": True,
                 "answer_detail_requires_material_user_relevance": True,
                 "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
@@ -887,7 +901,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outputs=(
                 invalid_primary,
                 valid_primary,
-                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+                '{"decision":"APPROVED","claim_assessments":[],"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
             )
         )
         service, model, _, _, tool, response = self._service(adapter=adapter)
@@ -968,7 +982,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outputs=(
                 malformed_output,
                 repaired_output,
-                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+                '{"decision":"APPROVED","claim_assessments":[],"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
             )
         )
         service, model, _, _, tool, response = self._service(adapter=adapter)
@@ -1687,7 +1701,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outputs=(
                 primary_output,
                 "Reviewer natural-language analysis",
-                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}',
+                '{"decision":"APPROVED","claim_assessments":[],"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
             )
         )
         service, model, _, _, tool, response = self._service(adapter=adapter)
@@ -1785,12 +1799,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_policy[
-                "answer_boundary_requires_unresolved_material_requirement"
+                "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request"
             ]
         )
         self.assertFalse(
             reviewer_policy[
-                "resolved_acquisition_diagnostic_is_answer_boundary"
+                "resolved_acquisition_candidate_is_automatic_exclusion"
             ]
         )
         self.assertTrue(
@@ -3683,6 +3697,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         {"claim_index": 0, "verdict": "SUPPORTED"},
                         {"claim_index": 1, "verdict": "SUPPORTED"},
                     ],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [],
                     "findings": [],
                 }
             ),
@@ -3697,6 +3713,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {"claim_index": 0, "verdict": "SUPPORTED"},
                 {"claim_index": 1, "verdict": "SUPPORTED"},
             ],
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
             "findings": [
                 {
                     "code": "UNSUPPORTED_CLAIM",
@@ -3730,6 +3748,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         {"claim_index": 0, "verdict": "SUPPORTED"},
                         {"claim_index": 1, "verdict": "SUPPORTED"},
                     ],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [],
                     "findings": [
                         {
                             "code": "UNENUMERATED_MATERIAL_CONCLUSION",
@@ -3796,6 +3816,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {"claim_index": 0, "verdict": "SUPPORTED"},
                 {"claim_index": 1, "verdict": "SUPPORTED"},
             ],
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
             "findings": [],
             "rationale": "not in the closed schema",
         }
@@ -3806,6 +3828,307 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 model_call_ref="review-extra-field",
             )
         self.assertEqual(extra.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+
+    def test_structural_caller_challenge_requires_exact_focused_assessment(self) -> None:
+        turn_id = StableId(f"turn_{'1' * 32}")
+        observation_id = StableId(f"observation_{'2' * 32}")
+        source_observation = EngineeringAgentToolObservation(
+            observation_id=observation_id,
+            tool_request_id=StableId(f"tool_request_{'3' * 32}"),
+            operation=EngineeringAgentToolOperation.SOURCE_READ,
+            result_ref="source-read-support",
+            content=json.dumps(
+                {
+                    "schema": "ENGINEERING_AGENT_SOURCE_SUPPORT@1",
+                    "retrieval_result": {
+                        "items": [
+                            {
+                                "locator": "module/src/main/java/example/ProductService.java",
+                                "modality": "EXACT_STATIC_SOURCE_TEXT",
+                                "coverage_complete": True,
+                                "content": (
+                                    "package example;\n"
+                                    "class ProductService {\n"
+                                    "  private ProductRepository productRepository;\n"
+                                    "  void importAll() { productRepository.saveAll(items); }\n"
+                                    "}\n"
+                                ),
+                            }
+                        ]
+                    },
+                }
+            ),
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(f"source_locator_{'4' * 32}",),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("source-evidence"),
+            digest=digest_of("source-observation"),
+        )
+        package_digest = digest_of("challenge-package")
+        package = EngineeringAgentEvidencePackage(
+            package_id=StableId(f"evidence_package_{'5' * 32}"),
+            turn_id=turn_id,
+            origin_work_state_digest=digest_of("origin-work-state"),
+            support_observations=(source_observation,),
+            boundary_observations=(),
+            digest=package_digest,
+        )
+        claim = EngineeringAgentClaimProposal.create(
+            statement=(
+                "productRepository.saveAll(items) 将所有商品写入 Elasticsearch。"
+            ),
+            support_observation_ids=(observation_id,),
+        )
+        draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId(f"agent_answer_{'6' * 32}"),
+            turn_id=turn_id,
+            work_state_digest=digest_of("current-work-state"),
+            package_digest=package_digest,
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content=claim.statement,
+            claims=(claim,),
+            boundary_observation_ids=(),
+            digest=digest_of("challenge-draft"),
+        )
+        challenges = project_engineering_agent_evidence_boundary_challenges(
+            package,
+            draft,
+        )
+        self.assertEqual(len(challenges), 1)
+        challenge = challenges[0]
+        self.assertEqual(challenge.call_expression, "productRepository.saveAll")
+        self.assertEqual(challenge.receiver_declared_type, "ProductRepository")
+        self.assertEqual(challenge.package_implementation_observation_ids, ())
+        request = SimpleNamespace(
+            draft=draft,
+            package=package,
+            focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        missing_assessment = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as missing:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(missing_assessment),
+                request=request,
+                model_call_ref="focused-review-missing-assessment",
+            )
+        self.assertEqual(missing.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+        exceeded = {
+            "decision": "FINDINGS",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "DEFECT"}
+            ],
+            "evidence_boundary_assessments": [
+                {
+                    "challenge_id": challenge.challenge_id.value,
+                    "evidence_boundary": (
+                        "The source proves only that ProductService invokes "
+                        "productRepository.saveAll in local order."
+                    ),
+                    "draft_scope": (
+                        "The Claim attributes a completed Elasticsearch write."
+                    ),
+                    "disposition": (
+                        EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE.value
+                    ),
+                    "finding_code": "UNMOUNTED_CALLEE_EFFECT",
+                }
+            ],
+            "boundary_relevance_assessments": [],
+            "findings": [
+                {
+                    "code": "UNMOUNTED_CALLEE_EFFECT",
+                    "message": "Narrow the Claim to the visible invocation.",
+                    "requires_evidence": False,
+                    "claim_index": 0,
+                }
+            ],
+        }
+        proposal = decode_engineering_agent_review_output(
+            output_text=json.dumps(exceeded),
+            request=request,
+            model_call_ref="focused-review-finding",
+        )
+        self.assertEqual(proposal.decision.value, "FINDINGS")
+        self.assertEqual(
+            proposal.evidence_boundary_assessments[0].challenge_id,
+            challenge.challenge_id,
+        )
+
+    def test_downstream_full_read_projects_search_boundary_relevance_challenge(self) -> None:
+        locator_ref = f"source_locator_{'7' * 32}"
+        search_request_id = StableId(f"tool_request_{'8' * 32}")
+        search_support = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'9' * 32}"),
+            tool_request_id=search_request_id,
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            result_ref="search-result-support",
+            content="search candidate",
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(locator_ref,),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("search-support-evidence"),
+            digest=digest_of("search-support-observation"),
+        )
+        search_boundary = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'a' * 32}"),
+            tool_request_id=search_request_id,
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            result_ref="search-result-boundary",
+            content="partial acquisition diagnostic",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("search-boundary-evidence"),
+            digest=digest_of("search-boundary-observation"),
+        )
+        read_support = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'b' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'c' * 32}"),
+            operation=EngineeringAgentToolOperation.SOURCE_READ,
+            result_ref="read-result-support",
+            content=json.dumps(
+                {
+                    "retrieval_result": {
+                        "items": [
+                            {
+                                "locator_reference": locator_ref,
+                                "modality": "EXACT_STATIC_SOURCE_TEXT",
+                                "coverage_complete": True,
+                            }
+                        ]
+                    }
+                }
+            ),
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(locator_ref,),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("read-support-evidence"),
+            digest=digest_of("read-support-observation"),
+        )
+        projection = project_engineering_agent_draft_boundaries(
+            (search_support, search_boundary, read_support)
+        )
+        self.assertEqual(
+            projection.reportable_boundary_observation_ids,
+            (search_boundary.observation_id,),
+        )
+        self.assertEqual(
+            projection.resolved_acquisition_candidate_observation_ids,
+            (search_boundary.observation_id,),
+        )
+        prior_read_projection = project_engineering_agent_draft_boundaries(
+            (read_support, search_support, search_boundary)
+        )
+        self.assertEqual(
+            prior_read_projection.resolved_acquisition_candidate_observation_ids,
+            (),
+        )
+        package_digest = digest_of("boundary-relevance-package")
+        turn_id = StableId(f"turn_{'d' * 32}")
+        package = EngineeringAgentEvidencePackage(
+            package_id=StableId(f"evidence_package_{'e' * 32}"),
+            turn_id=turn_id,
+            origin_work_state_digest=digest_of("boundary-relevance-work"),
+            support_observations=(search_support, read_support),
+            boundary_observations=(search_boundary,),
+            digest=package_digest,
+        )
+        draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId(f"agent_answer_{'f' * 32}"),
+            turn_id=turn_id,
+            work_state_digest=digest_of("boundary-relevance-work"),
+            package_digest=package_digest,
+            response_kind=EngineeringAgentResponseKind.LIMITATION,
+            content="搜索阶段只返回了部分候选。",
+            claims=(),
+            boundary_observation_ids=(search_boundary.observation_id,),
+            digest=digest_of("boundary-relevance-draft"),
+        )
+        challenges = project_engineering_agent_boundary_relevance_challenges(
+            package,
+            draft,
+        )
+        self.assertEqual(len(challenges), 1)
+        self.assertEqual(
+            challenges[0].resolving_support_observation_ids,
+            (read_support.observation_id,),
+        )
+
+        focused_request = SimpleNamespace(
+            draft=draft,
+            package=package,
+            focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        audit_only = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "FINDINGS",
+                    "claim_assessments": [],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [
+                        {
+                            "challenge_id": challenges[0].challenge_id.value,
+                            "user_requirement": "Explain the resolved source path.",
+                            "boundary_scope": "Partial acquisition diagnostic.",
+                            "disposition": (
+                                EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                                .RESOLVED_AUDIT_ONLY.value
+                            ),
+                            "finding_code": "RESOLVED_DIAGNOSTIC_LEAK",
+                        }
+                    ],
+                    "findings": [
+                        {
+                            "code": "RESOLVED_DIAGNOSTIC_LEAK",
+                            "message": "Remove the resolved acquisition diagnostic.",
+                            "requires_evidence": False,
+                            "claim_index": None,
+                        }
+                    ],
+                }
+            ),
+            request=focused_request,
+            model_call_ref="focused-boundary-relevance-finding",
+        )
+        self.assertEqual(audit_only.decision.value, "FINDINGS")
+
+        material = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "APPROVED",
+                    "claim_assessments": [],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [
+                        {
+                            "challenge_id": challenges[0].challenge_id.value,
+                            "user_requirement": "Explain the search diagnostic itself.",
+                            "boundary_scope": "Partial acquisition diagnostic.",
+                            "disposition": (
+                                EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                                .MATERIAL_TO_USER_REQUEST.value
+                            ),
+                            "finding_code": None,
+                        }
+                    ],
+                    "findings": [],
+                }
+            ),
+            request=focused_request,
+            model_call_ref="focused-boundary-relevance-approved",
+        )
+        self.assertEqual(material.decision.value, "APPROVED")
 
     def test_closed_decoders_inject_trusted_call_identity_and_reject_extra_fields(self) -> None:
         binding = _binding()
@@ -3904,6 +4227,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "limitation_boundary_observation_ids": (
                     boundary_observation.observation_id.value,
                 ),
+                "resolved_acquisition_candidate_observation_ids": (),
+                "boundary_projection_digest": digest_of(
+                    {
+                        "schema": "ENGINEERING_AGENT_DRAFT_BOUNDARY_PROJECTION@1",
+                        "reportable_boundary_observation_ids": (
+                            boundary_observation.observation_id.value,
+                        ),
+                        "resolved_acquisition_candidate_observation_ids": (),
+                    }
+                ).value,
                 "cross_disposition_references_forbidden": True,
                 "unknown_observation_references_forbidden": True,
                 "answer_claims_are_affirmative_support_only": True,
@@ -3925,8 +4258,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "producer_invocation_is_not_consumer_visible_effect": True,
                 "consumer_visible_effect_requires_consumer_path_support": True,
                 "audit_retention_requires_answer_disclosure": False,
-                "answer_boundary_requires_unresolved_material_requirement": True,
-                "resolved_acquisition_diagnostic_is_answer_boundary": False,
+                (
+                    "answer_boundary_requires_unresolved_material_requirement_"
+                    "or_explicit_diagnostic_request"
+                ): True,
+                "resolved_acquisition_candidate_requires_relevance_review": True,
+                "resolved_acquisition_candidate_is_automatic_exclusion": False,
                 "global_inventory_metrics_require_material_user_relevance": True,
                 "answer_detail_requires_material_user_relevance": True,
                 "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
@@ -3963,7 +4300,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         review = decode_engineering_agent_review_output(
             output_text=(
-                '{"decision":"APPROVED","claim_assessments":[],"findings":[]}'
+                '{"decision":"APPROVED","claim_assessments":[],"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}'
             ),
             request=SimpleNamespace(draft=SimpleNamespace(claims=())),
             model_call_ref="trusted-review-call",
