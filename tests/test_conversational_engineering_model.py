@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import unittest
 
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
+    ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF,
     ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2,
     EngineeringAgentModelConfiguration,
     EngineeringAgentSessionDisclosureAuthority,
@@ -14,6 +15,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     PolicyEnforcingEngineeringAgentModelGateway,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
     _boundary_relevance_allowed_dispositions,
+    _output_preflight_view,
     _primary_input_view,
     decode_engineering_agent_primary_output,
     decode_engineering_agent_review_output,
@@ -48,6 +50,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelCallFailure,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
+    EngineeringAgentModelRole,
     EngineeringAgentReviewFinding,
     EngineeringAgentReviewFocus,
     EngineeringAgentResponseKind,
@@ -458,6 +461,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "audit_retention_requires_answer_disclosure": policy[
                         "audit_retention_requires_answer_disclosure"
                     ],
+                    "limitation_requires_at_least_one_boundary_reference": policy[
+                        "limitation_requires_at_least_one_boundary_reference"
+                    ],
+                    "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": policy[
+                        "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure"
+                    ],
+                    "boundary_metadata_absent_from_draft_content_is_not_disclosed": policy[
+                        "boundary_metadata_absent_from_draft_content_is_not_disclosed"
+                    ],
                     "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request": policy[
                         "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request"
                     ],
@@ -494,6 +506,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "producer_invocation_is_not_consumer_visible_effect": True,
                 "consumer_visible_effect_requires_consumer_path_support": True,
                 "audit_retention_requires_answer_disclosure": False,
+                "limitation_requires_at_least_one_boundary_reference": True,
+                "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+                "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
                 "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request": True,
                 "resolved_acquisition_candidate_requires_relevance_review": True,
                 "resolved_acquisition_candidate_is_automatic_exclusion": False,
@@ -574,7 +589,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -604,6 +619,53 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             output_preflight["non_null_action"]["required_fields"],
             ["operation", "arguments", "evidence_need"],
+        )
+        self.assertEqual(
+            output_preflight["non_null_action"][
+                "argument_item_required_fields"
+            ],
+            ["name", "value"],
+        )
+        self.assertTrue(
+            output_preflight["non_null_action"][
+                "direct_keyed_arguments_object_forbidden"
+            ]
+        )
+        self.assertEqual(
+            output_preflight["closed_nested_object_fields"],
+            {
+                "$.action": ["operation", "arguments", "evidence_need"],
+                "$.action.arguments[]": ["name", "value"],
+                "$.draft": [
+                    "response_kind",
+                    "content",
+                    "claims",
+                    "boundary_observation_ids",
+                ],
+                "$.draft.claims[]": [
+                    "statement",
+                    "support_observation_ids",
+                ],
+            },
+        )
+        primary_branch = output_preflight["primary_branch_contract"]
+        self.assertEqual(
+            primary_branch["effective_required_branch"],
+            "ACTION_OR_DRAFT",
+        )
+        self.assertEqual(
+            primary_branch["action_branch"]["allowed_phases_exact"],
+            ["PLANNING", "INVESTIGATING", "REVISING"],
+        )
+        self.assertEqual(
+            primary_branch["draft_branch"]["required_phase"],
+            "RESPONSE_READY",
+        )
+        self.assertEqual(
+            primary_branch["response_kind_constraints"]["LIMITATION"][
+                "boundary_observation_ids_minimum"
+            ],
+            1,
         )
         self.assertEqual(
             tuple(
@@ -645,6 +707,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("action_template", rendered)
         self.assertIn("copy exactly one complete", rendered)
         self.assertIn("never infer that a sole", rendered)
+        self.assertIn("arguments is always a JSON array", rendered)
+        self.assertIn("Every LIMITATION must copy at least one", rendered)
+        self.assertIn("evidence binding, not automatic disclosure", rendered)
         self.assertIn("exhaustive top-level allowlist", rendered)
         self.assertIn(
             "Never infer a type relationship or catch boundary",
@@ -939,7 +1004,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1782,7 +1847,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1801,6 +1866,33 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_preflight["format_repair"][
                 "authored_string_surrounding_whitespace_forbidden"
+            ]
+        )
+        self.assertEqual(
+            reviewer_preflight["closed_nested_object_fields"][
+                "$.boundary_relevance_assessments[]"
+            ],
+            [
+                "challenge_id",
+                "user_requirement",
+                "boundary_scope",
+                "disposition",
+                "finding_code",
+            ],
+        )
+        self.assertEqual(
+            reviewer_preflight["closed_nested_object_fields"]["$.findings[]"],
+            ["code", "message", "requires_evidence", "claim_index"],
+        )
+        self.assertEqual(
+            reviewer_preflight["review_output_contract"][
+                "challenge_id_field_name_exact"
+            ],
+            "challenge_id",
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "existing_shape_repair_values_may_not_be_changed_for_consistency"
             ]
         )
         reviewer_policy = reviewer_repair_payload[
@@ -1839,6 +1931,26 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertFalse(
             reviewer_policy["audit_retention_requires_answer_disclosure"]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "boundary_metadata_absent_from_draft_content_is_not_disclosed"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "limitation_requires_at_least_one_boundary_reference"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "removing_last_material_limitation_boundary_without_replacement_forbidden"
+            ]
         )
         self.assertTrue(
             reviewer_policy[
@@ -1898,6 +2010,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "Audit retention does not make every BOUNDARY relevant",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "automatic user-visible disclosure",
             reviewer_prompt,
         )
         self.assertIn(
@@ -2691,12 +2807,26 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             review_digest=digest_of("evidence-required-review"),
         )
-        evidence_required_policy = _primary_input_view(
+        evidence_required_view = _primary_input_view(
             evidence_required_invocation
-        )["completion_policy"]
+        )
+        evidence_required_policy = evidence_required_view[
+            "completion_policy"
+        ]
         self.assertTrue(evidence_required_policy["tool_action_required"])
         self.assertFalse(evidence_required_policy["draft_required"])
         self.assertEqual(evidence_required_policy["allowed_response_kinds"], ())
+        evidence_required_preflight = _output_preflight_view(
+            role=EngineeringAgentModelRole.PRIMARY_AGENT,
+            role_input_payload=evidence_required_view,
+            output_schema_ref=ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF,
+        )
+        self.assertEqual(
+            evidence_required_preflight["primary_branch_contract"][
+                "effective_required_branch"
+            ],
+            "ACTION",
+        )
         evidence_required_draft = {
             "goal": "确认登录失败记录",
             "response_language": "zh-CN",
@@ -3162,6 +3292,52 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             completion["allowed_response_kinds"],
             ("CLARIFICATION", "LIMITATION"),
+        )
+        empty_boundary_limitation = {
+            **limitation,
+            "draft": {
+                **limitation["draft"],
+                "boundary_observation_ids": [],
+            },
+        }
+        with self.assertRaises(DomainError) as empty_boundary:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(empty_boundary_limitation),
+                invocation=after_source_search,
+                model_call_ref="empty-boundary-limitation",
+            )
+        self.assertEqual(
+            empty_boundary.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "a limitation requires boundary evidence",
+            str(empty_boundary.exception),
+        )
+
+        response_ready_action = {
+            **limitation,
+            "phase": "RESPONSE_READY",
+            "action": {
+                "operation": "WORLD_MODEL_QUERY",
+                "arguments": [],
+                "evidence_need": "identify one remaining implementation gap",
+            },
+            "draft": None,
+        }
+        with self.assertRaises(DomainError) as terminal_action_phase:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(response_ready_action),
+                invocation=after_source_search,
+                model_call_ref="response-ready-action",
+            )
+        self.assertEqual(
+            terminal_action_phase.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "a tool action requires a non-terminal Work State phase",
+            str(terminal_action_phase.exception),
         )
 
     def test_path_segment_source_rejection_requires_distinct_content_query(self) -> None:
@@ -4520,6 +4696,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "draft.boundary_observation_ids",
                 ),
                 "boundary_statements_forbidden_in_claims": True,
+                "limitation_requires_at_least_one_boundary_reference": True,
+                "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+                "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
                 "container_context_is_part_of_contained_assertion": True,
                 "claim_statement_required_inherited_material_qualifiers": (
                     "category",

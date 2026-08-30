@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -42,6 +42,12 @@ fallback 问题。新的最早偏差是 Q2 的 syntax→closed-contract 分层�
 Search `LITERAL_TEXT_SEARCH_HIT` 与 full Read `EXACT_STATIC_SOURCE_TEXT`，逐 challenge 投影 closed disposition domain 并禁止 authored string
 首尾 whitespace；DeepSeek `@3` 只在 first real fallback preflight 激活并重验 active receipt。15 次 Turn authority、route、budget、retry 与
 Production 边界不变，144 tests PASS；fresh run-085 是下一项真实证据。
+
+`FINDING-010-208 / run-085` 又证明 Ark preferred route 并未不可用：52 次 HTTP dispatch 中 51 次完成、1 次 post-dispatch outcome unknown，
+因此 DeepSeek 0 正确。Q4 零 dispatch Clarification 保持，其余四题仍未形成完整交付。current `@13/@7/@8` candidate 闭合 nested object exact
+fields、trusted ACTION/DRAFT/phase branch、Limitation 的最小 Boundary binding，并区分结构化 binding 与正文实际 disclosure；同时保持既有值
+repair 守恒和 untrusted typed-output error 边界。15 次 Turn authority、route、fallback、预算、retry 与 Production 边界不变，144 tests
+PASS；fresh run-086 是下一项真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

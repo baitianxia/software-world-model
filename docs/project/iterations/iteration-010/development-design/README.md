@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -18,6 +18,10 @@ coding_input: true
 `@12/@6/@7` candidate 按真实 Search/Read modality、authorized Citation、exact resource identity、allowed dispositions 和 no-surrounding-
 whitespace contract 闭合；DeepSeek `@3` 在 first real preflight 激活并重验 active receipt。144 项定向验证 PASS；下一项执行是 fresh
 run-085 五题 Browser successor，而不是等待 Ark、DeepSeek 或重复人工授权。
+
+`FINDING-010-208 / run-085` 进一步把偏差定位到 nested closed fields、trusted ACTION/DRAFT/phase branch 和 Boundary
+binding/disclosure。current `@13/@7/@8` candidate 已通用闭合，144 项定向验证 PASS；下一项执行是 fresh run-086，仍不等待 Provider 或重复
+人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

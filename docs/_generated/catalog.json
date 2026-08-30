@@ -4468,6 +4468,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-207.md"
   },
   {
+    "id": "FINDING-010-208",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "ai-infrastructure",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-208.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -7661,7 +7674,8 @@
       "FINDING-010-200",
       "FINDING-010-201",
       "FINDING-010-203",
-      "FINDING-010-204"
+      "FINDING-010-204",
+      "FINDING-010-208"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },

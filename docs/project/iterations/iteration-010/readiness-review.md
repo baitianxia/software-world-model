@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -105,6 +105,12 @@ all-Package-Boundary materiality challenge 修复，仍受 15 次 per-Turn autho
 domain。Ark 另有一次 HTTP 前 typed TLS unavailable，但旧 DeepSeek 600 秒 receipt 已在 listener preparation 后过期，尽管 pricing check 当时
 仍小于 900 秒且周六闲时。current `@12/@6/@7` 与 DeepSeek policy `@3` 已分别闭合真实 Search/Read modality、allowed dispositions、authored
 string whitespace 和 first-real-preflight receipt activation；144 tests PASS、外调 0。fresh run-085 是质量 Gate 的下一执行证据。
+
+`FINDING-010-208 / run-085` 的 Q4 继续零 dispatch Clarification，其余工程 Turn 均未交付。Ark 52 次 HTTP dispatch 中 51 次完成、1 次
+post-dispatch outcome unknown；没有 trusted pre-dispatch unavailable，故 DeepSeek 0 正确。新的最早偏差是 nested Reviewer/argument fields、
+trusted ACTION/DRAFT/phase branch 未在 final preflight 明示，以及把 Boundary evidence binding 误作所有 raw metadata 的用户披露。current
+`@13/@7/@8` 已闭合这些通用合同并保持 15 次 authority、route、fallback、budget、retry 与 Production 不变；144 tests PASS、外调 0。
+fresh run-086 是质量 Gate 的下一执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

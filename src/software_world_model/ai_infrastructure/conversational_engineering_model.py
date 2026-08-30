@@ -92,14 +92,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@12"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@13"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@12"
+    "conversational-engineering-agent-no-tools-prompt@13"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@12"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@6"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@13"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@7"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@8"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -175,6 +175,13 @@ exactly one registered tool action or one response draft. A sealed input
 field is input-only unless its name is present in the output schema. The final-output-preflight
 required_top_level_fields array is the exhaustive top-level allowlist, not a
 minimum set; emit every listed field exactly once and no other top-level field.
+The final-output-preflight closed_nested_object_fields map is the exhaustive
+field list for every listed nested object. Never rename a field, encode a tool
+argument as a direct keyed object, or substitute a related input field name.
+Follow primary_branch_contract exactly: action and draft are mutually exclusive;
+a non-null action uses only PLANNING, INVESTIGATING, or REVISING, while a
+non-null draft uses RESPONSE_READY. Its effective_required_branch is derived
+from the same sealed completion_policy and does not grant another branch.
 observation_ids is Application-owned bookkeeping and is not an output field.
 The Application binds the complete ordered current-Turn Observation prefix
 directly from work_state_reference_policy.required_current_turn_observation_ids;
@@ -194,8 +201,15 @@ those IDs only from the corresponding arrays in draft_reference_policy. An
 ANSWER may report an honest evidence boundary in draft.content and bind it
 through draft.boundary_observation_ids, but a boundary statement is not an
 affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
-as affirmative claim support or a SUPPORT ID as a limitation boundary. Every
-material affirmative conclusion in draft.content, including one repeated in a
+as affirmative claim support or a SUPPORT ID as a limitation boundary.
+Every LIMITATION must copy at least one exact reportable BOUNDARY ID into
+draft.boundary_observation_ids; it is invalid with an empty array. A structured
+Boundary ID is an evidence binding, not automatic disclosure of every field or
+audit fragment in the underlying Observation. Only text actually present in
+draft.content is user-visible disclosure. Keep at least one material Boundary
+binding for a LIMITATION even when removing unrelated audit detail from its
+content.
+Every material affirmative conclusion in draft.content, including one repeated in a
 summary, table, diagram, or code comment, must have a corresponding draft.claims
 entry with direct current SUPPORT. A caveat elsewhere does not turn an
 unsupported affirmative statement into a boundary. When evidence for a requested
@@ -317,7 +331,9 @@ field names are intentionally not echoed and must not be preserved. The
 final-output-preflight format_repair.existing_allowed_field_copy_projection is
 an Application-derived shape-only projection of every allowlisted field that
 was already present. Copy every projected primitive value and array length/order
-exactly without paraphrase. The only permitted changes are adding missing
+exactly without paraphrase before filling a missing field. Do not reconcile or
+improve the prior output's semantics by changing a projected value. The only
+permitted changes are adding missing
 allowlisted fields and removing unexpected fields. A schema-invalid subtree
 whose array items contain no existing allowlisted value is omitted from the
 projection and may be rebuilt only by copying the current sealed
@@ -339,6 +355,10 @@ omit, rename, or duplicate an action field or argument. Its value_constraints
 are closed: allowed_exact_values is the complete copy domain and
 forbidden_exact_values must never be returned. Compare every proposed argument
 with those constraints before returning the action.
+arguments is always a JSON array whose every item contains exactly name and
+value. Never encode SOURCE_READ as a direct arguments object keyed by
+locator_reference, or as an array item whose key is locator_reference; copy the
+supplied name/value item shape and replace only value.
 WORLD_MODEL_QUERY has no model-authored argument. Put the specific semantic
 fact, relation, state transition, failure boundary, or repository-native symbol
 you need in evidence_need; the trusted Application binds it to the exact current
@@ -422,7 +442,10 @@ Use only the sealed current Turn, relevant Conversation Context, current sealed
 Package, and Draft. Return exactly one JSON object matching the closed schema.
 The final-output-preflight required_top_level_fields array is the exhaustive
 top-level allowlist, not a minimum set; emit every listed field exactly once and
-never copy another sealed input field into the output.
+never copy another sealed input field into the output. Its
+closed_nested_object_fields map is the exhaustive field list for each listed
+assessment and Finding item. In particular, every boundary relevance item uses
+challenge_id, never boundary_challenge_id or another related input name.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object. Before returning, serialize the complete object as syntactically
@@ -479,6 +502,15 @@ challenged Boundary and, when supplied, the exact later resolving Source Reads.
 Use MATERIAL_TO_USER_REQUEST only when every fragment disclosed from that
 Boundary was explicitly requested or still limits a material requested
 conclusion, and only when the Draft binds the supplied Boundary reference. A
+structured draft.boundary_observation_ids reference is evidence binding, not
+automatic user-visible disclosure of the complete raw Boundary Observation.
+Apply the fragment test only to text actually present in the complete Draft;
+retained metrics or diagnostics absent from draft.content are not disclosed.
+For a LIMITATION, do not demand removal of its last material Boundary binding
+merely because the underlying audit Observation also retains metadata that the
+Draft does not quote. If the Draft actually mixes a material limitation with
+non-material prose, return the audit-only Finding so the primary Agent removes
+that prose while preserving or replacing a material evidence binding. A
 material limitation does not make adjacent global inventory counts, unrelated
 coverage statistics, or acquisition diagnostics material. Use
 NOT_DISCLOSED_IN_DRAFT when the Draft neither binds nor discloses the Boundary.
@@ -511,7 +543,9 @@ must not be preserved. The final-output-preflight
 format_repair.existing_allowed_field_copy_projection is an Application-derived
 shape-only projection of every allowlisted field that was already present. Copy
 every projected primitive value and array length/order exactly without
-paraphrase. The only permitted changes are adding missing allowlisted fields and
+paraphrase before filling a missing field. Do not change decision, disposition,
+Finding, or another projected value to reconcile semantics during a shape
+repair. The only permitted changes are adding missing allowlisted fields and
 removing unexpected fields. A schema-invalid subtree whose array items contain
 no existing allowlisted value is omitted from the projection and may be rebuilt
 only from the current sealed schema/domain; this does not permit changes to any
@@ -2509,6 +2543,113 @@ def _gateway_manifest(
     )
 
 
+def _closed_schema_required_fields(
+    schema: Mapping[str, object],
+    *,
+    label: str,
+) -> tuple[str, ...]:
+    required = schema.get("required")
+    if (
+        schema.get("type") != "object"
+        or schema.get("additionalProperties") is not False
+        or not isinstance(required, list)
+        or not all(isinstance(item, str) for item in required)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            f"{label} is not one closed object schema",
+        )
+    return tuple(required)
+
+
+def _closed_schema_property(
+    schema: Mapping[str, object],
+    name: str,
+    *,
+    label: str,
+) -> Mapping[str, object]:
+    properties = schema.get("properties")
+    value = properties.get(name) if isinstance(properties, Mapping) else None
+    if not isinstance(value, Mapping):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            f"{label} lacks the expected {name} schema",
+        )
+    return value
+
+
+def _closed_schema_array_item(
+    schema: Mapping[str, object],
+    *,
+    label: str,
+) -> Mapping[str, object]:
+    item = schema.get("items")
+    if schema.get("type") != "array" or not isinstance(item, Mapping):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            f"{label} is not one array schema",
+        )
+    return item
+
+
+def _closed_nested_object_fields(
+    role: EngineeringAgentModelRole,
+) -> dict[str, tuple[str, ...]]:
+    if role is EngineeringAgentModelRole.PRIMARY_AGENT:
+        action_arguments = _closed_schema_array_item(
+            _closed_schema_property(
+                _ACTION_SCHEMA,
+                "arguments",
+                label="Agent action",
+            ),
+            label="Agent action arguments",
+        )
+        draft_claims = _closed_schema_array_item(
+            _closed_schema_property(
+                _DRAFT_SCHEMA,
+                "claims",
+                label="Agent Draft",
+            ),
+            label="Agent Draft claims",
+        )
+        return {
+            "$.action": _closed_schema_required_fields(
+                _ACTION_SCHEMA,
+                label="Agent action",
+            ),
+            "$.action.arguments[]": _closed_schema_required_fields(
+                action_arguments,
+                label="Agent action argument",
+            ),
+            "$.draft": _closed_schema_required_fields(
+                _DRAFT_SCHEMA,
+                label="Agent Draft",
+            ),
+            "$.draft.claims[]": _closed_schema_required_fields(
+                draft_claims,
+                label="Agent Draft claim",
+            ),
+        }
+    return {
+        "$.claim_assessments[]": _closed_schema_required_fields(
+            _CLAIM_ASSESSMENT_SCHEMA,
+            label="Reviewer Claim assessment",
+        ),
+        "$.evidence_boundary_assessments[]": _closed_schema_required_fields(
+            _EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA,
+            label="Reviewer evidence-boundary assessment",
+        ),
+        "$.boundary_relevance_assessments[]": _closed_schema_required_fields(
+            _BOUNDARY_RELEVANCE_ASSESSMENT_SCHEMA,
+            label="Reviewer boundary-relevance assessment",
+        ),
+        "$.findings[]": _closed_schema_required_fields(
+            _FINDING_SCHEMA,
+            label="Reviewer Finding",
+        ),
+    }
+
+
 def _output_preflight_view(
     *,
     role: EngineeringAgentModelRole,
@@ -2557,6 +2698,8 @@ def _output_preflight_view(
         "shape_only": True,
         "semantic_or_tool_authority": False,
         "required_top_level_fields": tuple(required),
+        "closed_nested_object_fields": _closed_nested_object_fields(role),
+        "additional_fields_forbidden_at_listed_object_paths": True,
         "json_serialization": {
             "parseable_json_object_required": True,
             "embedded_double_quote_rule": (
@@ -2610,6 +2753,10 @@ def _output_preflight_view(
             "existing_values_exact_copy_required": (
                 repair_category == "CLOSED_SCHEMA_SHAPE"
             ),
+            "copy_projected_existing_values_before_filling_missing_fields": (
+                repair_category == "CLOSED_SCHEMA_SHAPE"
+            ),
+            "semantic_reconciliation_may_change_projected_values": False,
             "existing_values_application_restoration": (
                 "RESTORE_SCHEMA_MATCHING_ALLOWLISTED_VALUES_BEFORE_DECODE@1"
                 if repair_category == "CLOSED_SCHEMA_SHAPE"
@@ -2636,10 +2783,33 @@ def _output_preflight_view(
     }
     if role is EngineeringAgentModelRole.PRIMARY_AGENT:
         tool_catalog = role_input_payload.get("tool_catalog")
-        if not isinstance(tool_catalog, (tuple, list)):
+        completion_policy = role_input_payload.get("completion_policy")
+        if (
+            not isinstance(tool_catalog, (tuple, list))
+            or not isinstance(completion_policy, Mapping)
+        ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Engineering Agent output preflight tool catalog is invalid",
+                "Engineering Agent output preflight Primary input is invalid",
+            )
+        allowed_response_kinds = completion_policy.get(
+            "allowed_response_kinds"
+        )
+        tool_action_allowed = completion_policy.get("tool_action_allowed")
+        tool_action_required = completion_policy.get("tool_action_required")
+        draft_required = completion_policy.get("draft_required")
+        if (
+            not isinstance(allowed_response_kinds, (tuple, list))
+            or not all(
+                isinstance(item, str) for item in allowed_response_kinds
+            )
+            or type(tool_action_allowed) is not bool
+            or type(tool_action_required) is not bool
+            or type(draft_required) is not bool
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent output preflight completion policy is invalid",
             )
         action_templates: list[object] = []
         for entry in tool_catalog:
@@ -2657,6 +2827,8 @@ def _output_preflight_view(
             action_templates.append(deepcopy(dict(template)))
         preflight["non_null_action"] = {
             "required_fields": tuple(_ACTION_SCHEMA["required"]),
+            "argument_item_required_fields": ("name", "value"),
+            "direct_keyed_arguments_object_forbidden": True,
             "effective_action_templates": tuple(action_templates),
             "copy_one_complete_template": True,
             "replace_every_empty_string": True,
@@ -2664,6 +2836,94 @@ def _output_preflight_view(
                 "A non-null action is invalid unless operation, arguments, and "
                 "evidence_need are each present exactly once."
             ),
+        }
+        effective_required_branch = (
+            "ACTION"
+            if tool_action_required
+            else "DRAFT"
+            if draft_required
+            else "ACTION_OR_DRAFT"
+        )
+        preflight["primary_branch_contract"] = {
+            "exactly_one_of_action_or_draft_non_null": True,
+            "effective_required_branch": effective_required_branch,
+            "effective_tool_action_allowed": tool_action_allowed,
+            "allowed_response_kinds_exact": tuple(allowed_response_kinds),
+            "allowed_response_kinds_are_not_expanded_by_this_checklist": True,
+            "action_branch": {
+                "action_non_null": True,
+                "draft_null": True,
+                "allowed_phases_exact": tuple(
+                    item.value
+                    for item in (
+                        EngineeringAgentWorkPhase.PLANNING,
+                        EngineeringAgentWorkPhase.INVESTIGATING,
+                        EngineeringAgentWorkPhase.REVISING,
+                    )
+                ),
+            },
+            "draft_branch": {
+                "action_null": True,
+                "draft_non_null": True,
+                "required_phase": (
+                    EngineeringAgentWorkPhase.RESPONSE_READY.value
+                ),
+            },
+            "response_kind_constraints": {
+                EngineeringAgentResponseKind.ANSWER.value: {
+                    "claims_minimum": 1,
+                },
+                EngineeringAgentResponseKind.CLARIFICATION.value: {
+                    "claims_exact": 0,
+                    "boundary_observation_ids_exact": 0,
+                },
+                EngineeringAgentResponseKind.LIMITATION.value: {
+                    "claims_exact": 0,
+                    "boundary_observation_ids_minimum": 1,
+                },
+            },
+        }
+    else:
+        reference_policy = role_input_payload.get("review_reference_policy")
+        if not isinstance(reference_policy, Mapping):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent output preflight Review input is invalid",
+            )
+        claim_indices = reference_policy.get("claim_indices")
+        caller_challenge_ids = reference_policy.get(
+            "challenge_assessment_ids_required_exact_order"
+        )
+        relevance_challenge_ids = reference_policy.get(
+            "boundary_relevance_assessment_ids_required_exact_order"
+        )
+        if not all(
+            isinstance(value, (tuple, list))
+            for value in (
+                claim_indices,
+                caller_challenge_ids,
+                relevance_challenge_ids,
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent output preflight Review domains are invalid",
+            )
+        preflight["review_output_contract"] = {
+            "claim_assessment_indices_required_exact_order": tuple(
+                claim_indices
+            ),
+            "evidence_boundary_assessment_ids_required_exact_order": tuple(
+                caller_challenge_ids
+            ),
+            "boundary_relevance_assessment_ids_required_exact_order": tuple(
+                relevance_challenge_ids
+            ),
+            "challenge_id_field_name_exact": "challenge_id",
+            "approved_requires_empty_findings": True,
+            "findings_decision_requires_non_empty_findings": True,
+            "audit_only_assessment_requires_global_no_evidence_finding": True,
+            "existing_shape_repair_values_may_not_be_changed_for_consistency": True,
         }
     return preflight
 
@@ -3741,6 +4001,9 @@ def _primary_input_view(
                 "draft.boundary_observation_ids",
             ),
             "boundary_statements_forbidden_in_claims": True,
+            "limitation_requires_at_least_one_boundary_reference": True,
+            "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+            "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
             "container_context_is_part_of_contained_assertion": True,
             "claim_statement_required_inherited_material_qualifiers": (
                 "category",
@@ -4697,6 +4960,9 @@ def _review_input_view(
                 "materiality_applies_to_every_disclosed_fragment": True,
                 "mixed_material_and_non_material_disclosure_requires_audit_only_finding": True,
                 "material_gap_does_not_authorize_adjacent_global_metrics": True,
+                "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+                "materiality_applies_only_to_text_present_in_draft_content": True,
+                "retained_metadata_absent_from_draft_content_is_not_disclosed": True,
                 "digest": item.digest.value,
             }
             for item in relevance_challenges
@@ -4715,6 +4981,10 @@ def _review_input_view(
             "producer_invocation_is_not_consumer_visible_effect": True,
             "consumer_visible_effect_requires_consumer_path_support": True,
             "audit_retention_requires_answer_disclosure": False,
+            "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+            "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
+            "limitation_requires_at_least_one_boundary_reference": True,
+            "removing_last_material_limitation_boundary_without_replacement_forbidden": True,
             (
                 "answer_boundary_requires_unresolved_material_requirement_"
                 "or_explicit_diagnostic_request"
@@ -5029,6 +5299,14 @@ def _decode_primary_output(
             action=action,
             draft=draft,
         )
+    except DomainError as exc:
+        if exc.code is not ErrorCode.INVALID_ARGUMENT:
+            raise
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent output violates the typed Work State contract: "
+            f"{exc.message}",
+        ) from exc
     except (KeyError, TypeError, ValueError) as exc:
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
@@ -5493,6 +5771,14 @@ def _decode_review_output(
             evidence_boundary_assessments=evidence_boundary_assessments,
             boundary_relevance_assessments=boundary_relevance_assessments,
         )
+    except DomainError as exc:
+        if exc.code is not ErrorCode.INVALID_ARGUMENT:
+            raise
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer output violates the typed contract: "
+            f"{exc.message}",
+        ) from exc
     except (KeyError, TypeError, ValueError) as exc:
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
