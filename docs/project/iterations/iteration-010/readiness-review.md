@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -153,6 +153,12 @@ no-retry post-dispatch unknown。Ark 37 个 call 完成、1 个 unknown；无可
 `@19/@11/@14` 已改为 evidence action 后保留全 Findings、Limitation 零 SUPPORT、material literal replan 与 resolved-candidate audit-only
 preflight，并保持 15 次 authority、route、fallback、freshness、budget、retry 与 Production 不变；58 项核心测试与相邻十二模块 148 tests
 均 PASS、外调 0。计划门禁、提交和 fresh run-092 是质量 Gate 的下一连续执行证据。
+
+`FINDING-010-215 / run-092` 的 Ark 53 个 call 全部完成，DeepSeek 因无 trusted Ark unavailable 而保持 0；Q3/Q4 成功，Q1/Q2/Q5
+失败。共同 first divergence 是未绑定且未披露的 resolved Search Boundary 仍能制造 audit-only 空操作 Finding并在 replacement 后重现。
+current `@20/@12/@15` 以 exact `draft_disclosed_fragments[]` 让 Application 机械核验真实修复面：no reference + empty fragments 只能
+NOT_DISCLOSED，audit-only 必须有真实 stale reference 或 Draft fragment。15 次 authority、4-Review、route、fallback、freshness、budget、retry
+与 Production 不变；Agent/Tool/Model 73 tests PASS。相邻验证、门禁、提交和 fresh run-093 是质量 Gate 的下一连续执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

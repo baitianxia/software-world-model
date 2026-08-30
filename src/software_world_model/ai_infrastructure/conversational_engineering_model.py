@@ -93,20 +93,20 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@19"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@20"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@19"
+    "conversational-engineering-agent-no-tools-prompt@20"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@19"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@11"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@20"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@12"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@6"
+    "engineering-agent-independent-review-proposal@7"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -628,11 +628,13 @@ that prose while preserving or replacing a material evidence binding. A
 material limitation does not make adjacent global inventory counts, unrelated
 coverage statistics, or acquisition diagnostics material. Use
 NOT_DISCLOSED_IN_DRAFT when the Draft neither binds nor discloses the Boundary.
-For any other RESOLVED_ACQUISITION use RESOLVED_AUDIT_ONLY; for any other
-BOUNDARY_MATERIALITY use NON_MATERIAL_AUDIT_ONLY. Bind either audit-only
-disposition's finding_code to a global Finding with claim_index null and
-requires_evidence false so the primary Agent removes non-material prose or a
-stale Boundary reference without another tool action. Approval is forbidden unless every caller
+When at least one stale reference or disclosed fragment remains, use
+RESOLVED_AUDIT_ONLY for a non-material RESOLVED_ACQUISITION or
+NON_MATERIAL_AUDIT_ONLY for a non-material BOUNDARY_MATERIALITY. Bind either
+audit-only disposition's finding_code to a global Finding with claim_index null
+and requires_evidence false so the primary Agent removes the exact non-material
+prose or stale Boundary reference without another tool action. Never create a
+Finding only to record audit retention or prevent a future disclosure. Approval is forbidden unless every caller
 challenge is WITHIN_CALLER_EVIDENCE, every relevance challenge is either
 MATERIAL_TO_USER_REQUEST or NOT_DISCLOSED_IN_DRAFT, and every Finding is empty.
 In focused Review, the relationship is bidirectional: the exact set of DEFECT
@@ -645,6 +647,19 @@ Finding during focused Review.
 For every boundary_relevance_challenge, copy disposition only from that
 challenge's allowed_exact_dispositions. Do not infer a resolved-acquisition
 disposition from boundary prose when the trusted kind is BOUNDARY_MATERIALITY.
+For every boundary relevance assessment, return draft_disclosed_fragments as
+the exact, non-empty, unique substrings copied from draft.content that actually
+disclose the challenged Boundary. Use the smallest complete clause or sentence
+that demonstrates each disclosure; do not copy a generic word shared with an
+unrelated statement. Return an empty array when no challenged Boundary fragment
+is disclosed. The Application verifies every string byte-for-byte against the
+Draft. NOT_DISCLOSED_IN_DRAFT requires both no structured Boundary reference and
+an empty fragment array. MATERIAL_TO_USER_REQUEST requires both the structured
+Boundary reference and at least one exact disclosed fragment. An audit-only
+disposition requires at least one stale structured Boundary reference or at
+least one exact disclosed fragment; when both are absent, audit-only is a no-op
+Finding and is forbidden. Every audit-only Finding must identify removal of at
+least one such reference or exact fragment.
 Every authored string field must contain non-whitespace text and must not begin
 or end with whitespace. Exact sealed values that the input requires you to copy
 remain exact.
@@ -984,6 +999,7 @@ _BOUNDARY_RELEVANCE_ASSESSMENT_SCHEMA = _closed_object(
         "challenge_id": _STRING,
         "user_requirement": _STRING,
         "boundary_scope": _STRING,
+        "draft_disclosed_fragments": _array(_STRING, maximum=16),
         "disposition": {
             "type": "string",
             "enum": [
@@ -3583,8 +3599,13 @@ def _closed_contract_repair_directive(message: str) -> str:
     if (
         "audit-only boundary relevance assessment requires a Finding code"
         in message
+        or "must use exact Draft disclosure fragments" in message
     ):
-        return "BIND_AUDIT_ONLY_TO_GLOBAL_NO_EVIDENCE_FINDING_AND_USE_FINDINGS"
+        return (
+            "RECOMPUTE_EXACT_DRAFT_DISCLOSED_FRAGMENTS_THEN_USE_NOT_DISCLOSED_"
+            "WHEN_REFERENCE_AND_FRAGMENTS_ARE_ABSENT_OTHERWISE_BIND_AUDIT_ONLY_"
+            "TO_ONE_REAL_REFERENCE_OR_FRAGMENT_REMOVAL_FINDING"
+        )
     if (
         "the first Source search query must copy one cognition-derived target literal"
         in message
@@ -5515,6 +5536,8 @@ def _review_input_view(
                 "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
                 "materiality_applies_only_to_text_present_in_draft_content": True,
                 "retained_metadata_absent_from_draft_content_is_not_disclosed": True,
+                "draft_disclosed_fragments_are_exact_draft_content_substrings": True,
+                "unbound_undisclosed_audit_only_is_forbidden": True,
                 "digest": item.digest.value,
             }
             for item in relevance_challenges
@@ -5550,6 +5573,11 @@ def _review_input_view(
             "audit_retention_requires_answer_disclosure": False,
             "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
             "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
+            "draft_disclosed_fragments_required_for_every_relevance_assessment": True,
+            "draft_disclosed_fragments_must_be_exact_unique_draft_content_substrings": True,
+            "not_disclosed_requires_empty_fragments_and_no_reference": True,
+            "material_requires_nonempty_fragments_and_reference": True,
+            "audit_only_requires_reference_or_nonempty_fragments": True,
             "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
             "missing_boundary_binding_finding_requires_exact_id_absence": True,
             "search_or_interface_evidence_does_not_close_implementation_or_remote_effect": True,
@@ -6402,6 +6430,18 @@ def _decode_review_output(
                     ],
                     "boundary-relevance boundary scope",
                 ),
+                draft_disclosed_fragments=tuple(
+                    _string(
+                        fragment,
+                        "boundary-relevance Draft disclosed fragment",
+                    )
+                    for fragment in _sequence(
+                        _mapping(item, "boundary-relevance assessment")[
+                            "draft_disclosed_fragments"
+                        ],
+                        "boundary-relevance Draft disclosed fragments",
+                    )
+                ),
                 disposition=(
                     EngineeringAgentBoundaryRelevanceAssessmentDisposition(
                         _string(
@@ -6582,11 +6622,13 @@ def _decode_review_output(
         if not engineering_agent_boundary_relevance_assessment_matches_challenge(
             challenge,
             assessment,
+            draft_content=request.draft.content,
         ):
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 "Engineering Agent Reviewer boundary_relevance_assessments["
-                f"{index}].disposition must copy one allowed disposition for "
+                f"{index}] must use exact Draft disclosure fragments and a "
+                "coherent allowed disposition for "
                 f"challenge {challenge.challenge_id.value} "
                 "(allowed_exact=["
                 + ",".join(_boundary_relevance_allowed_dispositions(challenge))

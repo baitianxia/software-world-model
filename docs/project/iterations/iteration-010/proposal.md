@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -88,6 +88,12 @@ dispatch/credential/TLS/HTTP 均为 0。Q4 零 dispatch Clarification 保持；Q
 Q2 补证后丢失完整 Findings，Q3 cognition literal repair 原样重复非法 query，Q5 按 unknown no-retry 失败。current `@19/@11/@14`
 candidate 保留 evidence action 后的 rejected Draft/Findings/Review baseline，把 Limitation 限于零 SUPPORT，并闭合 material literal replan 与
 resolved-candidate audit-only final preflight；authority、route、fallback、freshness、retry 和 Production 边界不变。fresh run-092 是下一真实证据。
+
+`FINDING-010-215 / run-092` 密封 Ark 53/53 completed、DeepSeek 0、retry/人工审批/Production 0。Q3/Q4 成功，Q1/Q2/Q5 共同暴露
+unbound + undisclosed resolved Search Boundary 仍可被 Reviewer 判为 audit-only，并生成没有真实 rewrite surface 的 Finding。current
+`@20/@12/@15` candidate 用 exact Draft substring 数组闭合 disclosure、reference 与 disposition；no-op audit-only 和虚构 fragment 失败关闭，
+而 bound stale reference 或真实 disclosed fragment 仍可形成合法无补证修复。authority、route、fallback、freshness、retry 和 Production 边界
+不变；fresh run-093 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

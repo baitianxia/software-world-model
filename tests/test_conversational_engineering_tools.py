@@ -290,6 +290,11 @@ class RecordingReviewer:
                         else EngineeringAgentBoundaryRelevanceAssessmentDisposition.NOT_DISCLOSED_IN_DRAFT
                     ),
                     finding_code=None,
+                    draft_disclosed_fragments=(
+                        (request.draft.content,)
+                        if item.draft_declared_boundary_reference
+                        else ()
+                    ),
                 )
                 for item in project_engineering_agent_boundary_relevance_challenges(
                     request.package,

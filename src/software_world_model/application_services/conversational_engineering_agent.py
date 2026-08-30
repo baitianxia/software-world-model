@@ -1652,6 +1652,7 @@ class EngineeringAgentBoundaryRelevanceAssessment:
     challenge_id: StableId
     user_requirement: str
     boundary_scope: str
+    draft_disclosed_fragments: tuple[str, ...]
     disposition: EngineeringAgentBoundaryRelevanceAssessmentDisposition
     finding_code: str | None
     digest: Digest
@@ -1665,6 +1666,7 @@ class EngineeringAgentBoundaryRelevanceAssessment:
         boundary_scope: str,
         disposition: EngineeringAgentBoundaryRelevanceAssessmentDisposition,
         finding_code: str | None,
+        draft_disclosed_fragments: Sequence[str] = (),
     ) -> "EngineeringAgentBoundaryRelevanceAssessment":
         if not isinstance(
             disposition,
@@ -1693,8 +1695,30 @@ class EngineeringAgentBoundaryRelevanceAssessment:
                 "a non-audit-only boundary relevance assessment must not "
                 "bind a Finding code",
             )
+        if isinstance(draft_disclosed_fragments, (str, bytes)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance Draft disclosed fragments must be a sequence",
+            )
+        disclosed_fragments = tuple(
+            _bounded_text(
+                item,
+                "boundary relevance Draft disclosed fragment",
+            )
+            for item in draft_disclosed_fragments
+        )
+        if len(disclosed_fragments) > 16:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance Draft disclosed fragments exceed the maximum",
+            )
+        if len(set(disclosed_fragments)) != len(disclosed_fragments):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance Draft disclosed fragments must be unique",
+            )
         core = {
-            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@2",
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@3",
             "challenge_id": challenge_id.value,
             "user_requirement": _bounded_text(
                 user_requirement,
@@ -1704,6 +1728,7 @@ class EngineeringAgentBoundaryRelevanceAssessment:
                 boundary_scope,
                 "boundary relevance scope",
             ),
+            "draft_disclosed_fragments": disclosed_fragments,
             "disposition": disposition.value,
             "finding_code": finding_code,
         }
@@ -1711,6 +1736,7 @@ class EngineeringAgentBoundaryRelevanceAssessment:
             challenge_id=challenge_id,
             user_requirement=core["user_requirement"],
             boundary_scope=core["boundary_scope"],
+            draft_disclosed_fragments=disclosed_fragments,
             disposition=disposition,
             finding_code=finding_code,
             digest=digest_of(core),
@@ -2259,17 +2285,25 @@ def engineering_agent_evidence_boundary_assessment_matches_challenge(
 def engineering_agent_boundary_relevance_assessment_matches_challenge(
     challenge: EngineeringAgentBoundaryRelevanceChallenge,
     assessment: EngineeringAgentBoundaryRelevanceAssessment,
+    *,
+    draft_content: str,
 ) -> bool:
+    disclosed = bool(assessment.draft_disclosed_fragments)
+    if any(
+        fragment not in draft_content
+        for fragment in assessment.draft_disclosed_fragments
+    ):
+        return False
     if (
         assessment.disposition
         is EngineeringAgentBoundaryRelevanceAssessmentDisposition.NOT_DISCLOSED_IN_DRAFT
     ):
-        return not challenge.draft_declared_boundary_reference
+        return not challenge.draft_declared_boundary_reference and not disclosed
     if (
         assessment.disposition
         is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
     ):
-        return challenge.draft_declared_boundary_reference
+        return challenge.draft_declared_boundary_reference and disclosed
     if (
         assessment.disposition
         is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
@@ -2277,6 +2311,7 @@ def engineering_agent_boundary_relevance_assessment_matches_challenge(
         return (
             challenge.kind
             is EngineeringAgentBoundaryRelevanceChallengeKind.RESOLVED_ACQUISITION
+            and (challenge.draft_declared_boundary_reference or disclosed)
         )
     if (
         assessment.disposition
@@ -2285,6 +2320,7 @@ def engineering_agent_boundary_relevance_assessment_matches_challenge(
         return (
             challenge.kind
             is EngineeringAgentBoundaryRelevanceChallengeKind.BOUNDARY_MATERIALITY
+            and (challenge.draft_declared_boundary_reference or disclosed)
         )
     return True
 
@@ -3869,6 +3905,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             if not engineering_agent_boundary_relevance_assessment_matches_challenge(
                 relevance_challenge_by_id[assessment.challenge_id],
                 assessment,
+                draft_content=draft.content,
             ):
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -3969,6 +4006,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     "challenge_id": item.challenge_id.value,
                     "user_requirement": item.user_requirement,
                     "boundary_scope": item.boundary_scope,
+                    "draft_disclosed_fragments": (
+                        item.draft_disclosed_fragments
+                    ),
                     "disposition": item.disposition.value,
                     "finding_code": item.finding_code,
                     "digest": item.digest.value,
@@ -4280,7 +4320,9 @@ def _engineering_agent_review_closes_boundary_challenges(
         )
         and all(
             engineering_agent_boundary_relevance_assessment_matches_challenge(
-                relevance_challenge_by_id[item.challenge_id], item
+                relevance_challenge_by_id[item.challenge_id],
+                item,
+                draft_content=draft.content,
             )
             for item in relevance_assessments
         )

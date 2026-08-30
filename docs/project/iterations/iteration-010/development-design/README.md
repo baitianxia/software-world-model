@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -51,6 +51,12 @@ Limitation、cognition literal closed-contract repair 原样重试，以及 fina
 lead。current `@19/@11/@14` candidate 保留补证后的完整 correction baseline，要求零 SUPPORT 才允许 Limitation，并为 material literal replan
 和 resolved-candidate inventory 边界提供 closed projection；15 次 authority、route、fallback、freshness、retry 与 Production 边界不变。
 58 项核心验证与相邻十二模块 148 项验证均 PASS；下一项是计划门禁、提交与 fresh run-092，仍不等待 Provider 或重复人工授权。
+
+`FINDING-010-215 / run-092` 把共同偏差定位到 relevance assessment 没有可机械核验的 Draft disclosure surface：Reviewer 可在同时声明
+“未披露、未绑定”时仍选 audit-only，并要求删除不存在的内容，replacement Draft 后再生成同一 Finding。current `@20/@12/@15`
+candidate 新增 exact `draft_disclosed_fragments[]`，要求每个 fragment 逐字存在于 current Draft；reference=false 且 fragments 为空只能
+`NOT_DISCLOSED_IN_DRAFT`，audit-only 必须对应真实 stale reference 或 fragment。15 次 authority、4-Review、route、fallback、freshness、retry
+与 Production 边界不变。Agent/Tool/Model 73 项验证 PASS；下一项是相邻验证、文档门禁、提交与 fresh run-093，仍不等待 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

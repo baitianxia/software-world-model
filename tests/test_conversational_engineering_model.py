@@ -332,7 +332,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             _closed_contract_repair_directive(
                 "an audit-only boundary relevance assessment requires a Finding code"
             ),
-            "BIND_AUDIT_ONLY_TO_GLOBAL_NO_EVIDENCE_FINDING_AND_USE_FINDINGS",
+            "RECOMPUTE_EXACT_DRAFT_DISCLOSED_FRAGMENTS_THEN_USE_NOT_DISCLOSED_"
+            "WHEN_REFERENCE_AND_FRAGMENTS_ARE_ABSENT_OTHERWISE_BIND_AUDIT_ONLY_"
+            "TO_ONE_REAL_REFERENCE_OR_FRAGMENT_REMOVAL_FINDING",
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "assessment must use exact Draft disclosure fragments"
+            ),
+            "RECOMPUTE_EXACT_DRAFT_DISCLOSED_FRAGMENTS_THEN_USE_NOT_DISCLOSED_"
+            "WHEN_REFERENCE_AND_FRAGMENTS_ARE_ABSENT_OTHERWISE_BIND_AUDIT_ONLY_"
+            "TO_ONE_REAL_REFERENCE_OR_FRAGMENT_REMOVAL_FINDING",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
@@ -628,7 +638,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1070,7 +1080,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1919,7 +1929,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1948,6 +1958,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "challenge_id",
                 "user_requirement",
                 "boundary_scope",
+                "draft_disclosed_fragments",
                 "disposition",
                 "finding_code",
             ],
@@ -2343,7 +2354,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -5116,6 +5127,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                             "challenge_id": challenges[0].challenge_id.value,
                             "user_requirement": "Explain the resolved source path.",
                             "boundary_scope": "Partial acquisition diagnostic.",
+                            "draft_disclosed_fragments": [
+                                "搜索阶段只返回了部分候选。"
+                            ],
                             "disposition": (
                                 EngineeringAgentBoundaryRelevanceAssessmentDisposition
                                 .RESOLVED_AUDIT_ONLY.value
@@ -5156,6 +5170,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                                 "boundary_scope": (
                                     "Partial acquisition diagnostic."
                                 ),
+                                "draft_disclosed_fragments": [
+                                    "搜索阶段只返回了部分候选。"
+                                ],
                                 "disposition": (
                                     EngineeringAgentBoundaryRelevanceAssessmentDisposition
                                     .RESOLVED_AUDIT_ONLY.value
@@ -5189,6 +5206,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                             "challenge_id": challenges[0].challenge_id.value,
                             "user_requirement": "Explain the search diagnostic itself.",
                             "boundary_scope": "Partial acquisition diagnostic.",
+                            "draft_disclosed_fragments": [
+                                "搜索阶段只返回了部分候选。"
+                            ],
                             "disposition": (
                                 EngineeringAgentBoundaryRelevanceAssessmentDisposition
                                 .MATERIAL_TO_USER_REQUEST.value
@@ -5210,7 +5230,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             work_state_digest=digest_of("boundary-relevance-work"),
             package_digest=package_digest,
             response_kind=EngineeringAgentResponseKind.ANSWER,
-            content="搜索阶段只返回了部分候选。",
+            content="业务流程见已确认调用顺序。",
             claims=(),
             boundary_observation_ids=(),
             digest=digest_of("unbound-boundary-relevance-draft"),
@@ -5244,6 +5264,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                                 ),
                                 "user_requirement": "Explain the diagnostic.",
                                 "boundary_scope": "Partial diagnostic.",
+                                "draft_disclosed_fragments": [
+                                    "业务流程见已确认调用顺序。"
+                                ],
                                 "disposition": "MATERIAL_TO_USER_REQUEST",
                                 "finding_code": None,
                             }
@@ -5275,6 +5298,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                             ),
                             "user_requirement": "Explain the business flow.",
                             "boundary_scope": "Not present in the Draft.",
+                            "draft_disclosed_fragments": [],
                             "disposition": "NOT_DISCLOSED_IN_DRAFT",
                             "finding_code": None,
                         }
@@ -5286,6 +5310,86 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model_call_ref="undisclosed-diagnostic-approved",
         )
         self.assertEqual(not_disclosed.decision.value, "APPROVED")
+
+        with self.assertRaises(DomainError) as no_op_audit_only:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(
+                    {
+                        "decision": "FINDINGS",
+                        "claim_assessments": [],
+                        "evidence_boundary_assessments": [],
+                        "boundary_relevance_assessments": [
+                            {
+                                "challenge_id": (
+                                    unbound_challenges[0].challenge_id.value
+                                ),
+                                "user_requirement": "Explain the business flow.",
+                                "boundary_scope": "Not present in the Draft.",
+                                "draft_disclosed_fragments": [],
+                                "disposition": "RESOLVED_AUDIT_ONLY",
+                                "finding_code": "REMOVE_ABSENT_DIAGNOSTIC",
+                            }
+                        ],
+                        "findings": [
+                            {
+                                "code": "REMOVE_ABSENT_DIAGNOSTIC",
+                                "message": "Remove the absent diagnostic.",
+                                "requires_evidence": False,
+                                "claim_index": None,
+                            }
+                        ],
+                    }
+                ),
+                request=unbound_request,
+                model_call_ref="unbound-undisclosed-no-op-audit",
+            )
+        self.assertEqual(
+            no_op_audit_only.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "exact Draft disclosure fragments",
+            str(no_op_audit_only.exception),
+        )
+
+        with self.assertRaises(DomainError) as invented_disclosure_fragment:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(
+                    {
+                        "decision": "FINDINGS",
+                        "claim_assessments": [],
+                        "evidence_boundary_assessments": [],
+                        "boundary_relevance_assessments": [
+                            {
+                                "challenge_id": (
+                                    unbound_challenges[0].challenge_id.value
+                                ),
+                                "user_requirement": "Explain the business flow.",
+                                "boundary_scope": "Not present in the Draft.",
+                                "draft_disclosed_fragments": [
+                                    "搜索阶段只返回了部分候选。"
+                                ],
+                                "disposition": "RESOLVED_AUDIT_ONLY",
+                                "finding_code": "REMOVE_INVENTED_DIAGNOSTIC",
+                            }
+                        ],
+                        "findings": [
+                            {
+                                "code": "REMOVE_INVENTED_DIAGNOSTIC",
+                                "message": "Remove the invented diagnostic.",
+                                "requires_evidence": False,
+                                "claim_index": None,
+                            }
+                        ],
+                    }
+                ),
+                request=unbound_request,
+                model_call_ref="invented-disclosure-fragment",
+            )
+        self.assertEqual(
+            invented_disclosure_fragment.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
 
         materiality_boundary = EngineeringAgentToolObservation(
             observation_id=StableId(f"observation_{'2' * 32}"),
@@ -5350,6 +5454,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                             ),
                             "user_requirement": "Explain the material state gap.",
                             "boundary_scope": "Includes unrelated global metrics.",
+                            "draft_disclosed_fragments": [
+                                "无关全局清单数字"
+                            ],
                             "disposition": "NON_MATERIAL_AUDIT_ONLY",
                             "finding_code": "REMOVE_NON_MATERIAL_METRICS",
                         }
