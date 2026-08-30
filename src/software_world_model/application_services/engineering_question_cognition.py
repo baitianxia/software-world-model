@@ -9,6 +9,7 @@ unknown boundary.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -1053,8 +1054,7 @@ class MultiProfileWorldModelCognitionProjector:
                         if other_ref != profile_ref
                     )
                 )
-        query_tokens = _feature_tokens(relevance_query)
-        ranked: list[tuple[int, str, CognitionItem]] = []
+        candidates: list[CognitionItem] = []
         for profile, projector in zip(
             self.manifest.profiles, self.projectors, strict=True
         ):
@@ -1067,14 +1067,12 @@ class MultiProfileWorldModelCognitionProjector:
                     CognitionDimension.UNKNOWN,
                 }:
                     continue
-                score = _relevance_score(
-                    query_tokens,
-                    _statement_feature_tokens(item.statement),
-                )
-                if score:
-                    ranked.append((-score, item.digest.value, item))
-        ranked.sort(key=lambda value: (value[0], value[1]))
-        relevant = tuple(item for _, _, item in ranked[: self.maximum_items])
+                candidates.append(item)
+        relevant = _rank_relevant_cognition_items(
+            relevance_query,
+            candidates,
+            maximum_items=self.maximum_items,
+        )
 
         manifest_items = tuple(
             CognitionItem.create(
@@ -1335,7 +1333,16 @@ def _statement_feature_tokens(value: str) -> tuple[str, ...]:
     while stack:
         current = stack.pop()
         if isinstance(current, Mapping):
-            stack.extend(current.values())
+            for key, item in current.items():
+                if key in _NON_SEMANTIC_STATEMENT_FIELDS:
+                    continue
+                if (
+                    key in _BASENAME_ONLY_STATEMENT_FIELDS
+                    and isinstance(item, str)
+                ):
+                    values.append(item.rsplit("/", 1)[-1])
+                    continue
+                stack.append(item)
         elif isinstance(current, (list, tuple)):
             stack.extend(current)
         elif isinstance(current, str):
@@ -1343,21 +1350,148 @@ def _statement_feature_tokens(value: str) -> tuple[str, ...]:
     return _feature_tokens(" ".join(values))
 
 
-def _relevance_score(
+_NON_SEMANTIC_STATEMENT_FIELDS = frozenset(
+    {
+        "atom_kind",
+        "declaration_completeness",
+        "disposition",
+        "entity_type",
+        "entity_root_id",
+        "evidence_references",
+        "implementation_semantics_completeness",
+        "kind",
+        "legacy_static_call_completeness",
+        "method_disposition",
+        "object_entity_root_id",
+        "observation_modality",
+        "owning_scope_id",
+        "resolution_class",
+        "schema_ref",
+        "source_revision",
+        "subject_entity_root_id",
+    }
+)
+
+_BASENAME_ONLY_STATEMENT_FIELDS = frozenset({"source_path"})
+
+_EXACT_RELEVANCE_MATCH_WEIGHT = 4
+_PREFIX_RELEVANCE_MATCH_WEIGHT = 1
+_MINIMUM_RELATIVE_RELEVANCE_NUMERATOR = 3
+_MINIMUM_RELATIVE_RELEVANCE_DENOMINATOR = 4
+
+_RELEVANCE_QUERY_STOP_TOKENS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "in",
+        "into",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "the",
+        "these",
+        "this",
+        "to",
+        "with",
+    }
+)
+
+
+def _rank_relevant_cognition_items(
+    query: str,
+    items: Sequence[CognitionItem],
+    *,
+    maximum_items: int,
+) -> tuple[CognitionItem, ...]:
+    candidates = tuple(items)
+    if not candidates:
+        return ()
+    query_tokens = tuple(
+        item
+        for item in _feature_tokens(query)
+        if item not in _RELEVANCE_QUERY_STOP_TOKENS
+    )
+    item_tokens = tuple(
+        frozenset(_statement_feature_tokens(item.statement))
+        for item in candidates
+    )
+    document_frequency = Counter(
+        token for tokens in item_tokens for token in tokens
+    )
+    discriminative_query_tokens = tuple(
+        token
+        for token in query_tokens
+        if document_frequency[token] * 2 <= len(candidates)
+    )
+    if not discriminative_query_tokens:
+        discriminative_query_tokens = query_tokens
+
+    matches = tuple(
+        _relevance_match_counts(discriminative_query_tokens, tokens)
+        for tokens in item_tokens
+    )
+    strongest_exact_match = max(
+        (exact for exact, _ in matches),
+        default=0,
+    )
+    strongest_score = max(
+        (
+            exact * _EXACT_RELEVANCE_MATCH_WEIGHT
+            + prefix * _PREFIX_RELEVANCE_MATCH_WEIGHT
+            for exact, prefix in matches
+        ),
+        default=0,
+    )
+    minimum_score = (
+        strongest_score * _MINIMUM_RELATIVE_RELEVANCE_NUMERATOR
+        + _MINIMUM_RELATIVE_RELEVANCE_DENOMINATOR
+        - 1
+    ) // _MINIMUM_RELATIVE_RELEVANCE_DENOMINATOR
+    ranked: list[tuple[int, int, str, CognitionItem]] = []
+    for item, (exact_matches, prefix_matches) in zip(
+        candidates, matches, strict=True
+    ):
+        score = (
+            exact_matches * _EXACT_RELEVANCE_MATCH_WEIGHT
+            + prefix_matches * _PREFIX_RELEVANCE_MATCH_WEIGHT
+        )
+        if score < max(1, minimum_score) or (
+            strongest_exact_match >= 2 and exact_matches == 0
+        ):
+            continue
+        ranked.append(
+            (-score, -exact_matches, item.digest.value, item)
+        )
+    ranked.sort(key=lambda value: (value[0], value[1], value[2]))
+    return tuple(item for _, _, _, item in ranked[:maximum_items])
+
+
+def _relevance_match_counts(
     query_tokens: Sequence[str], item_tokens: Sequence[str]
-) -> int:
-    score = 0
-    for query in query_tokens:
-        for item in item_tokens:
-            if query == item:
-                score += 4
-                break
-            if min(len(query), len(item)) >= 4 and (
-                query.startswith(item) or item.startswith(query)
-            ):
-                score += 1
-                break
-    return score
+) -> tuple[int, int]:
+    item_set = frozenset(item_tokens)
+    exact = sum(query in item_set for query in query_tokens)
+    prefix = sum(
+        1
+        for query in query_tokens
+        if query not in item_set
+        and any(
+            min(len(query), len(item)) >= 4
+            and (query.startswith(item) or item.startswith(query))
+            for item in item_set
+        )
+    )
+    return exact, prefix
 
 
 def _gap_relevant(

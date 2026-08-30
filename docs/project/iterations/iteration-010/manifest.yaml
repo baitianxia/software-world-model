@@ -1252,6 +1252,18 @@ conversational_engineering_agent:
   formal_cognition_context_global_coverage_binding: unchanged
   current_world_model_evidence_partition_ref: FINDING-010-192
   current_world_model_typed_item_partition_ref: FINDING-010-194
+  cognition_relevance_statement_field_names_are_features: false
+  cognition_relevance_representation_values_are_features: false
+  cognition_relevance_source_path_feature_scope: basename-only
+  cognition_relevance_function_tokens_are_anchors: false
+  cognition_relevance_common_exact_token_threshold: at-most-half-candidate-cohort
+  cognition_relevance_all-common-token_fallback: original-query-tokens
+  cognition_relevance_exact_prefix_weights: 4,1
+  cognition_relevance_prefix_only_behavior: allowed-unless-multi-exact-anchor-exists
+  cognition_relevance_minimum_relative_score_percent: 75
+  cognition_relevance_tie_break: item-digest
+  cognition_relevance_changes_snapshot_or_source_authority: false
+  current_cognition_relevance_noise_evidence_ref: FINDING-010-195
   audit_retention_requires_answer_disclosure: false
   answer_boundary_requires_unresolved_material_requirement: true
   resolved_acquisition_diagnostic_destination: audit-only
@@ -1670,7 +1682,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:c43dcb858797594bce6a5d4b7dca3d1e3654108729a07b578f625bcccb871b6d
+  system_contract_set_digest: sha256:2e6513ce6a1227649214db09aa4a6fb24bff87e1fbd615fcc52cc4b76b7c0768
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

@@ -3591,6 +3591,15 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-195": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-195.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_cognition.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_cognition.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

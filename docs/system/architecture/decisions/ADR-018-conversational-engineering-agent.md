@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -192,3 +192,8 @@ requested conclusion 的 global inventory/coverage metric，只留在 audit；Re
 当前 `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 在 adapter 机械限制 affirmative dimensions 为
 `ENTITY/RELATION/BEHAVIOR/CONSTRAINT/STATE`，并让 counts、Citation refs 与 Source target 同域；`COVERAGE/EVIDENCE/UNKNOWN` 只保留正式
 Context/receipt/audit 身份，metadata-only Context 形成 Boundary。
+
+`FINDING-010-195` 又把 run-076 的商品、营销和通用 Controller 噪声定位到更早的 Application query projection：结构 discriminator、公共
+`source_path` 前缀、function token 和任何正分尾部被误当成 relevance。current 决策要求 cohort-aware、representation-free 的确定性排序：
+path 只贡献 basename，公共 exact token 不作 anchor，prefix-only 与弱尾部在已有强 exact match 时关闭；正式 Snapshot、Coverage、authority、
+Source 权限和 incomplete Profile 边界均不改变。

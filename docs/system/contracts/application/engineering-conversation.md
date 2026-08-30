@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -122,6 +122,13 @@ current `conversational-engineering-agent@8` 对 `WORLD_MODEL_QUERY` 只允许�
 query；模型不能直接取得 query argument domain。相同 need 的 current-Turn 重复、显式 query 或 identity 漂移在 Cognition 执行前失败关闭。
 受信旧调用方的 explicit-query 兼容路径不扩大 current 模型权限。每个非空 action 必须显式包含且只包含 `operation/arguments/evidence_need`；
 即使 effective catalog 只有一个 operation，也不得省略 `operation` 或由 Application 猜测、补写该字段。
+
+multi-Profile query projection 的 relevance 必须只使用 statement 的语义 value，不得让 JSON field name、schema/discriminator、entity/modality/
+disposition/completeness/resolution/revision 等表示层 value 成为 query match。`source_path` 只以 basename 参与相关性，不能让 module/package
+公共前缀为整个候选集合增权；这不改变正式 path、locator、Citation 或 Source target identity。英语 function token 与出现在超过候选 cohort
+一半 item 中的 exact token 不作 discriminative anchor；若所有 token 都因此被排除，则确定性回退原 query token。exact/prefix 权重分别为
+4/1；存在至少两个 exact anchor 时 prefix-only item 不进入结果，并只保留达到本次 strongest score 75% 的尾部，最后按 digest 稳定排序及
+既有 item 上限截断。该规则不得按工程、问题、业务词、类、方法或 Provider 分支，也不得把 Profile incomplete 的实现细节伪装为 cognition。
 
 Primary input 还必须从 Application-owned loop limit 和 exact current action history 重算并密封
 `tool_action_budget = {maximum, used, remaining}`；`remaining` 是最多仍可执行的 action 数，不是消费目标。current maximum 保持 8。

@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -46,7 +46,7 @@ run-075 已以 fresh clean product 复验 run-074 的 Maven/启动链失败题�
 库存失败追问和新 Conversation 省略指代隔离 probe。它延续已交付的 `requires_result=false`“开发体验候选”，仍不是 MVP、质量 PASS、方向
 PASS 或完成；其中库存追问存在标题分类错误且 fresh Reviewer 漏判，角色重分配题又在 Source budget/reference contract 矛盾处失败。
 
-当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189/191/192/193/194` 的 clean successor 复验角色重分配题、
+当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189/191/192/193/194/195` 的 clean successor 复验角色重分配题、
 容器语义审核、空上下文复数指代、失败分层显示和未参与修复的异质题，再与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
 相对 Codex 无物质退步、总体严格更优，且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一
 开发闭环，不新建迭代、PDR、失败 Result 或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
@@ -140,3 +140,9 @@ Boundary：已解决或无关诊断只留审计，Reviewer 以无需补证的 re
 `FINDING-010-192` 的顶层字段修复尚未闭合。current `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 现只允许
 `ENTITY/RELATION/BEHAVIOR/CONSTRAINT/STATE`，metadata-only Context 只形成 Boundary；Tool/Model `43/43`、相邻七模块 `92/92` PASS、
 外调 0。
+
+`FINDING-010-195` 又定位到 World Model query projection 的 relevance 污染：结构 discriminator、`mall-admin` 公共 path、英语 function
+token 和任何正分尾部会把商品、营销与通用 Role Controller item 填入 32-item SUPPORT。current cohort-aware ranking 只使用语义 value、
+path basename 和 discriminative token，并在强 exact match 存在时关闭 prefix-only/弱尾部。run-076 原 artifact/evidence need 零外调
+replay 已从 32 收敛到 14，三类已知异域 item 均为 0，同时保留 `updateRole`、关系 insertion 与 cache 相关 cognition；Profile 未完整捕获的
+旧关系删除仍诚实交给 Source 补证。认知 `10/10`、相邻八模块 `102/102` PASS，外调 0；fresh Delivery/Review 仍待验证。

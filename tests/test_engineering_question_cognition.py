@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import json
 import unittest
 from unittest.mock import patch
 
 from software_world_model.application_services.engineering_question_answering import (
     CognitionDimension,
+    CognitionItem,
     EngineeringQuestionAnsweringService,
     EngineeringQuestionRequest,
     EngineeringQuestionResourceLimits,
@@ -15,6 +17,8 @@ from software_world_model.application_services.engineering_question_answering im
 from software_world_model.application_services.engineering_question_cognition import (
     MultiProfileWorldModelCognitionProjector,
     StructureBundleWorldModelCognitionProjector,
+    _rank_relevant_cognition_items,
+    _statement_feature_tokens,
 )
 from software_world_model.cross_cutting import (
     DomainError,
@@ -308,6 +312,160 @@ class MultiProfileEngineeringQuestionCognitionTests(unittest.TestCase):
                 and "issueSession" in item.statement
                 for item in behavior.items
             )
+        )
+
+    def test_relevance_ranking_ignores_common_and_structural_noise(self) -> None:
+        relevant = CognitionItem.create(
+            dimension=CognitionDimension.ENTITY,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_ENTITY",
+                    "entity_type": "JAVA_METHOD",
+                    "root_fields": {
+                        "declaring_type_qualified_name": (
+                            "com.macro.mall.controller.UmsAdminController"
+                        ),
+                        "method_name": "updateRole",
+                        "parameter_types": [
+                            "jakarta.servlet.http.HttpServletRequest"
+                        ],
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_ENTITY_STATE",
+            context_ref="relevance-fixture",
+            source_revision=self.multi.source_revision,
+            locator="world-model:relevance:update-role",
+            support_references=("relevance-update-role",),
+            coverage="Exact updateRole entity.",
+        )
+        unrelated = CognitionItem.create(
+            dimension=CognitionDimension.BEHAVIOR,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_RELATION",
+                    "subject_entity_root_id": "entity_root_admin_noise",
+                    "predicate": "CALL_SITE_TARGETS",
+                    "subject_identity": {
+                        "owning_method": {
+                            "declaring_type_qualified_name": (
+                                "com.macro.mall.service.impl.PmsProductServiceImpl"
+                            ),
+                            "method_name": "create",
+                            "source_path": (
+                                "mall-admin/src/main/java/com/macro/mall/service/"
+                                "impl/PmsProductServiceImpl.java"
+                            ),
+                        }
+                    },
+                    "object_identity": {
+                        "declaring_type_qualified_name": (
+                            "com.macro.mall.service.impl.PmsProductServiceImpl"
+                        ),
+                        "method_name": "relateAndInsertList",
+                    },
+                    "state_fields": {
+                        "disposition": "UNSUPPORTED_EXCLUDED",
+                        "evidence_references": ["evidence_admin_noise"],
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_BEHAVIOR_RELATION",
+            context_ref="relevance-fixture",
+            source_revision=self.multi.source_revision,
+            locator="world-model:relevance:product-relation",
+            support_references=("relevance-product-relation",),
+            coverage="Exact unrelated product relation.",
+        )
+        weak_tail = CognitionItem.create(
+            dimension=CognitionDimension.ENTITY,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_ENTITY",
+                    "entity_type": "JAVA_SOURCE_FILE",
+                    "root_fields": {
+                        "source_path": (
+                            "mall-admin/src/main/java/com/macro/mall/controller/"
+                            "SmsHomeNewProductController.java"
+                        ),
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_ENTITY_STATE",
+            context_ref="relevance-fixture",
+            source_revision=self.multi.source_revision,
+            locator="world-model:relevance:weak-tail",
+            support_references=("relevance-weak-tail",),
+            coverage="Exact unrelated weak-tail Controller.",
+        )
+
+        self.assertNotIn(
+            "structure",
+            _statement_feature_tokens(unrelated.statement),
+        )
+        self.assertNotIn(
+            "admin",
+            _statement_feature_tokens(unrelated.statement),
+        )
+        self.assertNotIn(
+            "unsupported",
+            _statement_feature_tokens(unrelated.statement),
+        )
+        self.assertNotIn(
+            "evidence",
+            _statement_feature_tokens(unrelated.statement),
+        )
+        self.assertNotIn(
+            "admin",
+            _statement_feature_tokens(weak_tail.statement),
+        )
+        ranked = _rank_relevant_cognition_items(
+            (
+                "mall admin backend HTTP controller role relation insertion "
+                "and new permission cache refresh"
+            ),
+            (relevant, unrelated, weak_tail),
+            maximum_items=32,
+        )
+
+        self.assertEqual(ranked, (relevant,))
+
+    def test_relevance_ranking_keeps_prefix_only_match_without_exact_anchor(self) -> None:
+        authenticate = CognitionItem.create(
+            dimension=CognitionDimension.ENTITY,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_ENTITY",
+                    "entity_type": "JAVA_METHOD",
+                    "root_fields": {
+                        "declaring_type_qualified_name": "example.CredentialService",
+                        "method_name": "authenticate",
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_ENTITY_STATE",
+            context_ref="relevance-fixture",
+            source_revision=self.multi.source_revision,
+            locator="world-model:relevance:authenticate",
+            support_references=("relevance-authenticate",),
+            coverage="Exact authenticate entity.",
+        )
+
+        self.assertEqual(
+            _rank_relevant_cognition_items(
+                "authenticated",
+                (authenticate,),
+                maximum_items=32,
+            ),
+            (authenticate,),
         )
 
     def test_failure_boundary_need_preserves_constraint_gap(self) -> None:
