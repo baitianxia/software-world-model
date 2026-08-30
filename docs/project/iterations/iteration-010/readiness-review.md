@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -86,7 +86,14 @@ early-stop 已完成 Cognition `12/12`、Source/Tool/Question `81/81`，fresh ex
 `FINDING-010-203 / run-080` 已取得 4 accepted、1 local Clarification；Ark 32 次 TLS/credential/HTTP 全成功，DeepSeek 0 正确，证明不存在
 Provider 等待点。Q2 仍披露已由 full READ 闭合的 Search diagnostic，Q1/Q2/Q5 又把 caller expression 扩张为 callee/database/Elasticsearch
 effect，fresh Reviewer 全部漏判；Q5 仍剩 Tool `3/8` 与 Source `59/64`。current `@9/@3` candidate 将两类风险投影成 exact focused
-challenge/assessment，Response Control 重算闭合；定向 131 tests PASS、外调 0。fresh run-081 仍是质量 Gate 的下一执行证据。
+challenge/assessment，Response Control 重算闭合；定向 131 tests PASS、外调 0。其后继执行由 `FINDING-010-204 / run-081/082` 记录。
+
+`FINDING-010-204 / run-081/082` 已完成该执行。run-081 因 pricing freshness 超限在 0 dispatch 前正确停止；fresh 官方 pricing capture 令
+run-082 的 DeepSeek admission 成为周末 `ALLOWED_OFF_PEAK`，但 Ark preferred route 持续可用并完成 41 次 TLS/credential/HTTP，故 DeepSeek 0
+正确。Q1/Q5 accepted、Q4 local Clarification；Q5 通过未声明 Boundary ID 的正文绕过 relevance challenge，并仍把 caller 说成数据库/ES effect；
+Q3 需要合法第四次 Review，Q2 连续抄错 Application-owned Observation ID。current `@10/@4` candidate 删除 Provider Observation-ID copy
+obligation、对所有 resolved candidate 审核披露、以 closed semantic scope 检查 caller/effect disposition，并将总容量固定为
+`11 Agent + 4 Review = 15`；相邻 Chat 132 tests PASS、外调 0。fresh run-083 仍是质量 Gate 的下一执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

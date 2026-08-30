@@ -148,7 +148,6 @@ class OfflineAgentAdapter:
                     "superseded_conclusion_refs": [],
                     "hypotheses": [],
                     "plan": [],
-                    "observation_ids": [],
                     "open_items": [],
                     "phase": "RESPONSE_READY",
                     "action": None,
@@ -197,7 +196,6 @@ class SequencedLiveAgentAdapter:
                     "superseded_conclusion_refs": [],
                     "hypotheses": [],
                     "plan": [],
-                    "observation_ids": [],
                     "open_items": [],
                     "phase": "RESPONSE_READY",
                     "action": None,
@@ -1070,7 +1068,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": ["需要查询版本化世界模型认知"],
             "plan": ["查询登录调用关系"],
-            "observation_ids": [],
             "open_items": ["登录调用关系"],
             "phase": "INVESTIGATING",
             "action": {
@@ -1584,10 +1581,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [
-                support.observation_id.value,
-                boundary.observation_id.value,
-            ],
             "open_items": [],
             "phase": "RESPONSE_READY",
             "action": None,
@@ -1630,6 +1623,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             result.proposal.draft.claims[0].support_observation_ids,
             (support.observation_id,),
+        )
+        self.assertEqual(
+            result.proposal.observation_ids,
+            (support.observation_id, boundary.observation_id),
         )
         self.assertEqual(len(result.prior_receipts), 1)
         repair_payload = json.loads(
@@ -2203,7 +2200,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [observation.observation_id.value],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -2300,7 +2296,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -2335,7 +2330,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [observation.observation_id.value],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -2667,7 +2661,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [observation.observation_id.value],
             "open_items": [],
             "phase": "RESPONSE_READY",
             "action": None,
@@ -2808,7 +2801,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -2958,7 +2950,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [world_support.observation_id.value],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -3074,7 +3065,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [world_boundary.observation_id.value],
             "open_items": [],
             "phase": "RESPONSE_READY",
             "action": None,
@@ -3282,10 +3272,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [
-                world_boundary.observation_id.value,
-                source_boundary.observation_id.value,
-            ],
             "open_items": [],
             "phase": "RESPONSE_READY",
             "action": None,
@@ -3365,7 +3351,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -3452,7 +3437,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [],
             "open_items": [],
             "phase": "INVESTIGATING",
             "action": {
@@ -3615,7 +3599,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": ["需要继续调查"],
             "plan": ["读取另一个源码文件"],
-            "observation_ids": [observation.observation_id.value],
             "open_items": ["认证实现"],
             "phase": "INVESTIGATING",
             "action": {
@@ -3936,6 +3919,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "draft_scope": (
                         "The Claim attributes a completed Elasticsearch write."
                     ),
+                    "draft_semantic_scopes": [
+                        "CALLER_INVOCATION",
+                        "DATABASE_OR_EXTERNAL_STATE_EFFECT",
+                    ],
                     "disposition": (
                         EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE.value
                     ),
@@ -3961,6 +3948,40 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             proposal.evidence_boundary_assessments[0].challenge_id,
             challenge.challenge_id,
+        )
+        forged_within = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "evidence_boundary_assessments": [
+                {
+                    "challenge_id": challenge.challenge_id.value,
+                    "evidence_boundary": (
+                        "The source proves only the caller invocation."
+                    ),
+                    "draft_scope": (
+                        "The Claim attributes a completed Elasticsearch write."
+                    ),
+                    "draft_semantic_scopes": [
+                        "DATABASE_OR_EXTERNAL_STATE_EFFECT"
+                    ],
+                    "disposition": "WITHIN_CALLER_EVIDENCE",
+                    "finding_code": None,
+                }
+            ],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as inconsistent_scope:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(forged_within),
+                request=request,
+                model_call_ref="focused-review-inconsistent-scope",
+            )
+        self.assertEqual(
+            inconsistent_scope.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
 
     def test_downstream_full_read_projects_search_boundary_relevance_challenge(self) -> None:
@@ -4065,6 +4086,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             challenges[0].resolving_support_observation_ids,
             (read_support.observation_id,),
         )
+        self.assertTrue(challenges[0].draft_declared_boundary_reference)
 
         focused_request = SimpleNamespace(
             draft=draft,
@@ -4129,6 +4151,85 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model_call_ref="focused-boundary-relevance-approved",
         )
         self.assertEqual(material.decision.value, "APPROVED")
+
+        unbound_draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId(f"agent_answer_{'1' * 32}"),
+            turn_id=turn_id,
+            work_state_digest=digest_of("boundary-relevance-work"),
+            package_digest=package_digest,
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content="搜索阶段只返回了部分候选。",
+            claims=(),
+            boundary_observation_ids=(),
+            digest=digest_of("unbound-boundary-relevance-draft"),
+        )
+        unbound_challenges = (
+            project_engineering_agent_boundary_relevance_challenges(
+                package,
+                unbound_draft,
+            )
+        )
+        self.assertEqual(len(unbound_challenges), 1)
+        self.assertFalse(
+            unbound_challenges[0].draft_declared_boundary_reference
+        )
+        unbound_request = SimpleNamespace(
+            draft=unbound_draft,
+            package=package,
+            focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+        )
+        with self.assertRaises(DomainError) as unbound_material:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(
+                    {
+                        "decision": "APPROVED",
+                        "claim_assessments": [],
+                        "evidence_boundary_assessments": [],
+                        "boundary_relevance_assessments": [
+                            {
+                                "challenge_id": (
+                                    unbound_challenges[0].challenge_id.value
+                                ),
+                                "user_requirement": "Explain the diagnostic.",
+                                "boundary_scope": "Partial diagnostic.",
+                                "disposition": "MATERIAL_TO_USER_REQUEST",
+                                "finding_code": None,
+                            }
+                        ],
+                        "findings": [],
+                    }
+                ),
+                request=unbound_request,
+                model_call_ref="unbound-material-diagnostic",
+            )
+        self.assertEqual(
+            unbound_material.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        not_disclosed = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "APPROVED",
+                    "claim_assessments": [],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [
+                        {
+                            "challenge_id": (
+                                unbound_challenges[0].challenge_id.value
+                            ),
+                            "user_requirement": "Explain the business flow.",
+                            "boundary_scope": "Not present in the Draft.",
+                            "disposition": "NOT_DISCLOSED_IN_DRAFT",
+                            "finding_code": None,
+                        }
+                    ],
+                    "findings": [],
+                }
+            ),
+            request=unbound_request,
+            model_call_ref="undisclosed-diagnostic-approved",
+        )
+        self.assertEqual(not_disclosed.decision.value, "APPROVED")
 
     def test_closed_decoders_inject_trusted_call_identity_and_reject_extra_fields(self) -> None:
         binding = _binding()
@@ -4281,7 +4382,6 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "superseded_conclusion_refs": [],
             "hypotheses": [],
             "plan": [],
-            "observation_ids": [],
             "open_items": [],
             "phase": "RESPONSE_READY",
             "action": None,
@@ -4308,6 +4408,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
 
         self.assertEqual(proposal.model_call_ref, "trusted-gateway-call")
         self.assertEqual(review.model_call_ref, "trusted-review-call")
+        payload["observation_ids"] = []
+        with self.assertRaises(DomainError) as provider_owned_observation_ids:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(payload, ensure_ascii=False),
+                invocation=invocation,
+                model_call_ref="trusted-gateway-call",
+            )
+        self.assertEqual(
+            provider_owned_observation_ids.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        payload.pop("observation_ids")
         payload["model_call_ref"] = "forged-provider-call"
         with self.assertRaises(DomainError) as raised:
             decode_engineering_agent_primary_output(

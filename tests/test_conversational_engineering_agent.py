@@ -9,6 +9,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentBoundaryRelevanceAssessment,
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentClaimProposal,
+    EngineeringAgentClaimSemanticScope,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentDraftProposal,
     EngineeringAgentDriverModelResult,
@@ -266,6 +267,9 @@ class FocusAwareApprovingReviewer:
                         "The cited source establishes the caller invocation only."
                     ),
                     draft_scope="The Claim states only that invocation.",
+                    draft_semantic_scopes=(
+                        EngineeringAgentClaimSemanticScope.CALLER_INVOCATION,
+                    ),
                     disposition=(
                         EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
                     ),
@@ -520,6 +524,159 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             response.requests[0].review.evidence_boundary_assessments[0].challenge_id,
             challenges[0].challenge_id,
         )
+
+    def test_fourth_review_closes_comprehensive_and_focused_rewrites(self) -> None:
+        class RewriteDriver:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def propose(self, invocation):
+                self.calls += 1
+                if not invocation.observations:
+                    return _proposal(
+                        invocation,
+                        call_ref="four-review-agent-1",
+                        phase=EngineeringAgentWorkPhase.INVESTIGATING,
+                        action=_action(
+                            EngineeringAgentToolOperation.SOURCE_READ,
+                            query="read caller",
+                        ),
+                    )
+                observation_id = invocation.observations[0].observation_id
+                caller_only = self.calls >= 4
+                statement = (
+                    "源码显示 productRepository.save(item) 调用。"
+                    if caller_only
+                    else (
+                        "productRepository.save(item) 已把商品写入外部数据库。"
+                    )
+                )
+                return _proposal(
+                    invocation,
+                    call_ref=f"four-review-agent-{self.calls}",
+                    phase=EngineeringAgentWorkPhase.RESPONSE_READY,
+                    draft=EngineeringAgentDraftProposal.create(
+                        response_kind=EngineeringAgentResponseKind.ANSWER,
+                        content=statement,
+                        claims=(
+                            EngineeringAgentClaimProposal.create(
+                                statement=statement,
+                                support_observation_ids=(observation_id,),
+                            ),
+                        ),
+                    ),
+                    open_items=(),
+                )
+
+        class FourStageReviewer:
+            def __init__(self) -> None:
+                self.requests = []
+
+            def review(self, request):
+                self.requests.append(request)
+                ordinal = len(self.requests)
+                if ordinal == 1:
+                    return EngineeringAgentReviewProposal.create(
+                        model_call_ref="four-review-comprehensive-finding",
+                        decision=EngineeringAgentReviewDecision.FINDINGS,
+                        findings=(
+                            EngineeringAgentReviewFinding.create(
+                                code="COMPREHENSIVE_REWRITE",
+                                message="Rewrite one unsupported qualifier.",
+                                requires_evidence=False,
+                                claim_index=0,
+                            ),
+                        ),
+                        focus=request.focus,
+                    )
+                if ordinal == 2:
+                    return EngineeringAgentReviewProposal.create(
+                        model_call_ref="four-review-comprehensive-approved",
+                        decision=EngineeringAgentReviewDecision.APPROVED,
+                        focus=request.focus,
+                    )
+                challenges = (
+                    project_engineering_agent_evidence_boundary_challenges(
+                        request.package,
+                        request.draft,
+                    )
+                )
+                challenge = challenges[0]
+                if ordinal == 3:
+                    return EngineeringAgentReviewProposal.create(
+                        model_call_ref="four-review-focused-finding",
+                        decision=EngineeringAgentReviewDecision.FINDINGS,
+                        findings=(
+                            EngineeringAgentReviewFinding.create(
+                                code="CALLEE_EFFECT_REWRITE",
+                                message="Narrow the effect to the caller invocation.",
+                                requires_evidence=False,
+                                claim_index=0,
+                            ),
+                        ),
+                        focus=request.focus,
+                        evidence_boundary_assessments=(
+                            EngineeringAgentEvidenceBoundaryAssessment.create(
+                                challenge_id=challenge.challenge_id,
+                                evidence_boundary="Caller invocation only.",
+                                draft_scope="External database effect.",
+                                draft_semantic_scopes=(
+                                    EngineeringAgentClaimSemanticScope.DATABASE_OR_EXTERNAL_STATE_EFFECT,
+                                ),
+                                disposition=(
+                                    EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE
+                                ),
+                                finding_code="CALLEE_EFFECT_REWRITE",
+                            ),
+                        ),
+                    )
+                return EngineeringAgentReviewProposal.create(
+                    model_call_ref="four-review-focused-approved",
+                    decision=EngineeringAgentReviewDecision.APPROVED,
+                    focus=request.focus,
+                    evidence_boundary_assessments=(
+                        EngineeringAgentEvidenceBoundaryAssessment.create(
+                            challenge_id=challenge.challenge_id,
+                            evidence_boundary="Caller invocation only.",
+                            draft_scope="Caller invocation only.",
+                            draft_semantic_scopes=(
+                                EngineeringAgentClaimSemanticScope.CALLER_INVOCATION,
+                            ),
+                            disposition=(
+                                EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+                            ),
+                            finding_code=None,
+                        ),
+                    ),
+                )
+
+        driver = RewriteDriver()
+        reviewer = FourStageReviewer()
+        service, _, _, response = _service(
+            driver,
+            tool=JavaCallerToolPort(),
+            reviewer=reviewer,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="这个保存调用会产生什么效果？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 8)
+        self.assertEqual(
+            tuple(item.focus for item in reviewer.requests),
+            (
+                EngineeringAgentReviewFocus.COMPREHENSIVE,
+                EngineeringAgentReviewFocus.COMPREHENSIVE,
+                EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+                EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            ),
+        )
+        self.assertEqual(len(response.requests), 1)
 
     def test_reviewer_finding_returns_to_same_agent_and_reuses_package(self) -> None:
         class RewriteDriver:

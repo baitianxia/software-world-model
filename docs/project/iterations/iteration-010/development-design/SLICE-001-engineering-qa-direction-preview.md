@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -65,11 +65,12 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
 - fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
   具体 Finding，不替主 Agent 规划或执行工具。
-- 每个 Draft 先取得 comprehensive Review。Application 从 cited full Java Source 与 Claim 结构投影 exact caller/callee challenge，并从同一
-  Search locator 已被后续 full exact Source Read 消费、且 Draft 仍引用其 Boundary 的结构投影 resolved-acquisition relevance challenge；
-  存在任一 challenge 时再执行 fresh focused Review。两类投影都只是 review lead：Reviewer 逐项区分 caller invocation 与 callee effect，及
-  explicit diagnostic request 与 resolved audit-only diagnostic。Response Control 重算 exact ordered assessment set；每 Turn Reviewer 上限 3、
-  per-Turn dispatch authority 15，不提高 Tool/Source fuse 或 retry。
+- 每个 Draft 先取得 comprehensive Review。Application 从 cited full Java Source 与 Claim 结构投影 exact caller/callee challenge，并对同一
+  Search locator 已被后续 full exact Source Read 消费的每个 resolved-acquisition candidate 投影 relevance challenge，不得因 Draft 未声明
+  Boundary ID 而跳过；存在任一 challenge 时再执行 fresh focused Review。两类投影都只是 review lead：Reviewer 用 closed semantic scope 区分
+  caller invocation、local order、callee/return、external-state effect 和 consumer-visible effect，并区分 material bound diagnostic、resolved
+  audit-only 与 not-disclosed。Response Control 重算 exact ordered assessment set；Observation prefix 由 Application 直接绑定，不作为 Provider
+  output copy obligation；每 Turn `11 Agent + 4 Review = 15`，不提高 Tool/Source fuse、retry 或 dispatch authority。
 - World Model evidence-tool adapter 必须把 model-facing SUPPORT 与 BOUNDARY 按认识论语义分区：SUPPORT 顶层不得复制 global
   coverage/conflict/unknown，只保留 novel affirmative item 及其 per-item coverage；完整 Context、Ledger、receipt 继续绑定 global
   Coverage，且该全局边界只在 BOUNDARY 中呈现。
@@ -197,7 +198,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191 与既有 Results 保留计划自锁、答案前失败和最新本地质量归因证据。新实现发现按
+当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。新实现发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

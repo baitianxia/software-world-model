@@ -86,9 +86,18 @@ class EngineeringAgentEvidenceBoundaryAssessmentDisposition(str, Enum):
     CLAIM_EXCEEDS_CALLER_EVIDENCE = "CLAIM_EXCEEDS_CALLER_EVIDENCE"
 
 
+class EngineeringAgentClaimSemanticScope(str, Enum):
+    CALLER_INVOCATION = "CALLER_INVOCATION"
+    SOURCE_VISIBLE_LOCAL_ORDER = "SOURCE_VISIBLE_LOCAL_ORDER"
+    CALLEE_IMPLEMENTATION_OR_RETURN = "CALLEE_IMPLEMENTATION_OR_RETURN"
+    DATABASE_OR_EXTERNAL_STATE_EFFECT = "DATABASE_OR_EXTERNAL_STATE_EFFECT"
+    CONSUMER_VISIBLE_RUNTIME_EFFECT = "CONSUMER_VISIBLE_RUNTIME_EFFECT"
+
+
 class EngineeringAgentBoundaryRelevanceAssessmentDisposition(str, Enum):
     MATERIAL_TO_USER_REQUEST = "MATERIAL_TO_USER_REQUEST"
     RESOLVED_AUDIT_ONLY = "RESOLVED_AUDIT_ONLY"
+    NOT_DISCLOSED_IN_DRAFT = "NOT_DISCLOSED_IN_DRAFT"
 
 
 class EngineeringAgentModelRole(str, Enum):
@@ -1482,6 +1491,7 @@ class EngineeringAgentEvidenceBoundaryAssessment:
     challenge_id: StableId
     evidence_boundary: str
     draft_scope: str
+    draft_semantic_scopes: tuple[EngineeringAgentClaimSemanticScope, ...]
     disposition: EngineeringAgentEvidenceBoundaryAssessmentDisposition
     finding_code: str | None
     digest: Digest
@@ -1493,6 +1503,7 @@ class EngineeringAgentEvidenceBoundaryAssessment:
         challenge_id: StableId,
         evidence_boundary: str,
         draft_scope: str,
+        draft_semantic_scopes: Sequence[EngineeringAgentClaimSemanticScope],
         disposition: EngineeringAgentEvidenceBoundaryAssessmentDisposition,
         finding_code: str | None,
     ) -> "EngineeringAgentEvidenceBoundaryAssessment":
@@ -1503,6 +1514,19 @@ class EngineeringAgentEvidenceBoundaryAssessment:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "evidence-boundary assessment disposition is invalid",
+            )
+        semantic_scopes = tuple(draft_semantic_scopes)
+        if (
+            not semantic_scopes
+            or len(semantic_scopes) != len(set(semantic_scopes))
+            or any(
+                not isinstance(item, EngineeringAgentClaimSemanticScope)
+                for item in semantic_scopes
+            )
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "evidence-boundary assessment requires unique typed Draft semantic scopes",
             )
         finding_code = _optional_text(
             finding_code,
@@ -1520,13 +1544,16 @@ class EngineeringAgentEvidenceBoundaryAssessment:
                 "only an exceeded evidence boundary may bind a Finding code",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_EVIDENCE_BOUNDARY_ASSESSMENT@1",
+            "schema": "ENGINEERING_AGENT_EVIDENCE_BOUNDARY_ASSESSMENT@2",
             "challenge_id": challenge_id.value,
             "evidence_boundary": _bounded_text(
                 evidence_boundary,
                 "assessment evidence boundary",
             ),
             "draft_scope": _bounded_text(draft_scope, "assessment Draft scope"),
+            "draft_semantic_scopes": tuple(
+                item.value for item in semantic_scopes
+            ),
             "disposition": disposition.value,
             "finding_code": finding_code,
         }
@@ -1534,6 +1561,7 @@ class EngineeringAgentEvidenceBoundaryAssessment:
             challenge_id=challenge_id,
             evidence_boundary=core["evidence_boundary"],
             draft_scope=core["draft_scope"],
+            draft_semantic_scopes=semantic_scopes,
             disposition=disposition,
             finding_code=finding_code,
             digest=digest_of(core),
@@ -1545,6 +1573,7 @@ class EngineeringAgentBoundaryRelevanceChallenge:
     challenge_id: StableId
     boundary_observation_id: StableId
     resolving_support_observation_ids: tuple[StableId, ...]
+    draft_declared_boundary_reference: bool
     digest: Digest
 
     @classmethod
@@ -1553,6 +1582,7 @@ class EngineeringAgentBoundaryRelevanceChallenge:
         *,
         boundary_observation_id: StableId,
         resolving_support_observation_ids: Sequence[StableId],
+        draft_declared_boundary_reference: bool,
     ) -> "EngineeringAgentBoundaryRelevanceChallenge":
         resolving = tuple(resolving_support_observation_ids)
         if not resolving or len(resolving) != len(set(resolving)):
@@ -1560,11 +1590,19 @@ class EngineeringAgentBoundaryRelevanceChallenge:
                 ErrorCode.INVALID_ARGUMENT,
                 "boundary relevance challenge requires unique resolving support",
             )
+        if type(draft_declared_boundary_reference) is not bool:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance challenge Draft reference flag is invalid",
+            )
         core = {
-            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_CHALLENGE@1",
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_CHALLENGE@2",
             "boundary_observation_id": boundary_observation_id.value,
             "resolving_support_observation_ids": tuple(
                 item.value for item in resolving
+            ),
+            "draft_declared_boundary_reference": (
+                draft_declared_boundary_reference
             ),
         }
         challenge_digest = digest_of(core)
@@ -1574,6 +1612,9 @@ class EngineeringAgentBoundaryRelevanceChallenge:
             ),
             boundary_observation_id=boundary_observation_id,
             resolving_support_observation_ids=resolving,
+            draft_declared_boundary_reference=(
+                draft_declared_boundary_reference
+            ),
             digest=challenge_digest,
         )
 
@@ -1609,16 +1650,16 @@ class EngineeringAgentBoundaryRelevanceAssessment:
             finding_code,
             "boundary relevance assessment Finding code",
         )
-        material = (
+        requires_finding = (
             disposition
-            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
         )
-        if (material and finding_code is not None) or (
-            not material and finding_code is None
+        if (requires_finding and finding_code is None) or (
+            not requires_finding and finding_code is not None
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "only an audit-only boundary assessment may bind a Finding code",
+                "only a disclosed audit-only boundary assessment may bind a Finding code",
             )
         core = {
             "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@1",
@@ -1720,10 +1761,7 @@ class EngineeringAgentReviewProposal:
                 for item in assessments
             )
             or any(
-                item.disposition
-                is not (
-                    EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
-                )
+                not engineering_agent_boundary_relevance_assessment_is_closed(item)
                 for item in relevance_assessments
             )
         ):
@@ -1983,9 +2021,6 @@ def project_engineering_agent_boundary_relevance_challenges(
         *package.boundary_observations,
     )
     projection = project_engineering_agent_draft_boundaries(observations)
-    candidates = set(
-        projection.resolved_acquisition_candidate_observation_ids
-    ).intersection(draft.boundary_observation_ids)
     search_support_by_request = {
         item.tool_request_id: item
         for item in package.support_observations
@@ -2000,9 +2035,7 @@ def project_engineering_agent_boundary_relevance_challenges(
         item.observation_id: item for item in package.boundary_observations
     }
     challenges: list[EngineeringAgentBoundaryRelevanceChallenge] = []
-    for boundary_id in draft.boundary_observation_ids:
-        if boundary_id not in candidates:
-            continue
+    for boundary_id in projection.resolved_acquisition_candidate_observation_ids:
         boundary = boundary_by_id[boundary_id]
         search_support = search_support_by_request.get(boundary.tool_request_id)
         if search_support is None:
@@ -2025,9 +2058,67 @@ def project_engineering_agent_boundary_relevance_challenges(
                 EngineeringAgentBoundaryRelevanceChallenge.create(
                     boundary_observation_id=boundary_id,
                     resolving_support_observation_ids=resolving,
+                    draft_declared_boundary_reference=(
+                        boundary_id in draft.boundary_observation_ids
+                    ),
                 )
             )
     return tuple(challenges)
+
+
+_CALLER_ONLY_SEMANTIC_SCOPES = frozenset(
+    {
+        EngineeringAgentClaimSemanticScope.CALLER_INVOCATION,
+        EngineeringAgentClaimSemanticScope.SOURCE_VISIBLE_LOCAL_ORDER,
+    }
+)
+
+
+def engineering_agent_evidence_boundary_assessment_matches_challenge(
+    challenge: EngineeringAgentEvidenceBoundaryChallenge,
+    assessment: EngineeringAgentEvidenceBoundaryAssessment,
+) -> bool:
+    semantic_scopes = set(assessment.draft_semantic_scopes)
+    exceeds_caller_scope = not semantic_scopes.issubset(
+        _CALLER_ONLY_SEMANTIC_SCOPES
+    )
+    if not exceeds_caller_scope:
+        return (
+            assessment.disposition
+            is EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+        )
+    if not challenge.cited_implementation_observation_ids:
+        return (
+            assessment.disposition
+            is EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE
+        )
+    return True
+
+
+def engineering_agent_boundary_relevance_assessment_matches_challenge(
+    challenge: EngineeringAgentBoundaryRelevanceChallenge,
+    assessment: EngineeringAgentBoundaryRelevanceAssessment,
+) -> bool:
+    if (
+        assessment.disposition
+        is EngineeringAgentBoundaryRelevanceAssessmentDisposition.NOT_DISCLOSED_IN_DRAFT
+    ):
+        return not challenge.draft_declared_boundary_reference
+    if (
+        assessment.disposition
+        is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+    ):
+        return challenge.draft_declared_boundary_reference
+    return True
+
+
+def engineering_agent_boundary_relevance_assessment_is_closed(
+    assessment: EngineeringAgentBoundaryRelevanceAssessment,
+) -> bool:
+    return assessment.disposition in {
+        EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST,
+        EngineeringAgentBoundaryRelevanceAssessmentDisposition.NOT_DISCLOSED_IN_DRAFT,
+    }
 
 
 def project_engineering_agent_evidence_boundary_challenges(
@@ -2332,9 +2423,9 @@ class SealedEngineeringAgentResponseControl:
 
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentLoopLimits:
-    maximum_agent_steps: int = 12
+    maximum_agent_steps: int = 11
     maximum_tool_actions: int = _DEFAULT_MAXIMUM_TOOL_ACTIONS
-    maximum_reviews: int = 3
+    maximum_reviews: int = 4
     maximum_consecutive_no_progress: int = 2
     maximum_evidence_package_bytes: int = 4_194_304
 
@@ -3536,6 +3627,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         challenge_by_id = {
             item.challenge_id: item for item in expected_challenges
         }
+        relevance_challenge_by_id = {
+            item.challenge_id: item for item in expected_relevance_challenges
+        }
         finding_by_code = {item.code: item for item in proposal.findings}
         if len(finding_by_code) != len(proposal.findings):
             raise DomainError(
@@ -3543,6 +3637,14 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 "Reviewer Finding codes must be unique within one Review",
             )
         for assessment in proposal.evidence_boundary_assessments:
+            if not engineering_agent_evidence_boundary_assessment_matches_challenge(
+                challenge_by_id[assessment.challenge_id],
+                assessment,
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Reviewer caller-scope classification contradicts the trusted challenge",
+                )
             if (
                 assessment.disposition
                 is (
@@ -3560,6 +3662,14 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         "an exceeded caller evidence boundary must bind a Finding on its Claim",
                     )
         for assessment in proposal.boundary_relevance_assessments:
+            if not engineering_agent_boundary_relevance_assessment_matches_challenge(
+                relevance_challenge_by_id[assessment.challenge_id],
+                assessment,
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Reviewer disclosure classification contradicts the Draft reference set",
+                )
             if (
                 assessment.disposition
                 is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
@@ -3581,10 +3691,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 for item in proposal.evidence_boundary_assessments
             )
             or any(
-                item.disposition
-                is not (
-                    EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
-                )
+                not engineering_agent_boundary_relevance_assessment_is_closed(item)
                 for item in proposal.boundary_relevance_assessments
             )
         ):
@@ -3625,6 +3732,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     "challenge_id": item.challenge_id.value,
                     "evidence_boundary": item.evidence_boundary,
                     "draft_scope": item.draft_scope,
+                    "draft_semantic_scopes": tuple(
+                        scope.value for scope in item.draft_semantic_scopes
+                    ),
                     "disposition": item.disposition.value,
                     "finding_code": item.finding_code,
                     "digest": item.digest.value,
@@ -3913,6 +4023,10 @@ def _engineering_agent_review_closes_boundary_challenges(
     )
     assessments = review.evidence_boundary_assessments
     relevance_assessments = review.boundary_relevance_assessments
+    challenge_by_id = {item.challenge_id: item for item in expected}
+    relevance_challenge_by_id = {
+        item.challenge_id: item for item in expected_relevance
+    }
     if not expected and not expected_relevance:
         return (
             review.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
@@ -3932,8 +4046,19 @@ def _engineering_agent_review_closes_boundary_challenges(
             for item in assessments
         )
         and all(
-            item.disposition
-            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+            engineering_agent_evidence_boundary_assessment_matches_challenge(
+                challenge_by_id[item.challenge_id], item
+            )
+            for item in assessments
+        )
+        and all(
+            engineering_agent_boundary_relevance_assessment_is_closed(item)
+            for item in relevance_assessments
+        )
+        and all(
+            engineering_agent_boundary_relevance_assessment_matches_challenge(
+                relevance_challenge_by_id[item.challenge_id], item
+            )
             for item in relevance_assessments
         )
     )
@@ -4292,6 +4417,7 @@ __all__ = [
     "ApplicationOwnedEngineeringAgentTurnExecutor",
     "EngineeringAgentAnswerDraft",
     "EngineeringAgentClaimProposal",
+    "EngineeringAgentClaimSemanticScope",
     "EngineeringAgentCitation",
     "EngineeringAgentDeliveryAuthorization",
     "EngineeringAgentDeliveryRequest",
@@ -4341,6 +4467,9 @@ __all__ = [
     "EngineeringAgentWorkStateProposal",
     "InMemoryEngineeringAgentWorkStateRepository",
     "SealedEngineeringAgentResponseControl",
+    "engineering_agent_boundary_relevance_assessment_is_closed",
+    "engineering_agent_boundary_relevance_assessment_matches_challenge",
+    "engineering_agent_evidence_boundary_assessment_matches_challenge",
     "project_engineering_agent_draft_boundaries",
     "project_engineering_agent_boundary_relevance_challenges",
     "project_engineering_agent_evidence_boundary_challenges",

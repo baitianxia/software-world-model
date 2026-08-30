@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -191,4 +191,14 @@ Q5 的窄证据则来自精确 controller/service filename 已命中后仍扫描
 又把 caller expression 扩张为 callee/database/Elasticsearch effect，fresh Reviewer 全部放行。Q5 结束时 Tool action `5/8`、Source file
 `5/64`，仍有 read option，证明不是预算耗尽。current `@9/@3` candidate 由 Application 投影 exact caller/callee 和 resolved-acquisition
 relevance challenge，focused Reviewer 逐项 disposition，Response Control 重算闭合；定向 131 tests PASS、外调 0。run-080 永久保留
-Provider/体验 positive evidence 与质量 FAIL；下一步是不暂停地提交 candidate 并执行 fresh run-081 五问 Browser successor。
+Provider/体验 positive evidence 与质量 FAIL；该 candidate 的后续 run-081/082 结果由 `FINDING-010-204` 记录。
+
+`FINDING-010-204 / run-081/082` 已执行该 successor。run-081 因旧 pricing check 超过 900 秒 freshness，在外调前以
+`STOPPED_WITHOUT_DISPATCH / DENIED_PRICING_CHECK` 正确停止；fresh 官方页面 capture 随后令 run-082 的 DeepSeek admission 匹配周末全天
+`ALLOWED_OFF_PEAK`。Ark preferred route 全程可用并完成 41 次 TLS/HTTP dispatch，DeepSeek 0、retry/unknown/人工审批/Production 0，故不存在
+Ark 等待或 fallback 权限问题。Q1/Q5 虽交付，Q5 仍以未声明 Boundary ID 的正文绕过 relevance challenge，focused Reviewer 又把自己已认定为
+caller-only 的证据批准为数据库/Elasticsearch effect；Q3 在合法 comprehensive/focused 两阶段修订后耗尽 3 次 Review；Q2 则连续两次抄错完全由
+Application 持有的 Observation ID。current `@10/@4` candidate 现让 Application 直接绑定 Observation prefix，对所有 resolved candidate 执行
+focused disclosure assessment，以 closed semantic scope 阻断 caller→effect 自相矛盾，并用 `11 Agent + 4 Review = 15` 保持原 per-Turn dispatch
+authority。相邻 Chat 边界 132 tests PASS、外调 0；下一步是不暂停地提交 candidate 并执行 fresh run-083 五问 Browser successor，run-081/082
+仍不是质量或 MVP PASS。
