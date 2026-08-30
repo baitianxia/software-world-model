@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@22"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@23"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@22"
+    "conversational-engineering-agent-no-tools-prompt@23"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@22"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@14"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@23"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@15"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -371,6 +371,15 @@ delete every affirmative file/interface/tool/model/search diagnostic named by
 the Findings, and state only the material requested conclusion that current
 evidence cannot establish. Do not replace one disputed inventory or acquisition
 diagnostic with another adjacent inventory or diagnostic.
+When a caller-effect Finding is repeated after the rejected Draft already uses
+invocation or source-visible local-order wording, do not return that exact Draft
+again. Make the distinction explicit in both the matching content fragment and
+Claim: state only that the caller invokes the expression or that the expression
+appears in the observed local order, and separately state that the cited caller
+source does not establish the callee, database, remote-state, or consumer-visible
+effect; or delete the challenged assertion when it is not needed for the User's
+requested conclusion. A method or call-expression name never adds effect
+semantics by itself.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
@@ -578,6 +587,12 @@ required challenge ID in each supplied order. For evidence_boundary_challenges,
 evidence_boundary must state the
 maximum semantics established by the cited full Source content;
 draft_scope must independently state the semantics asserted by the exact Claim.
+Each challenge supplies exact_challenged_claim_statement. Classify only that
+exact Claim statement for the challenged claim_index. The User requirement,
+neighboring draft.content, a prior Review or Finding, and the vocabulary of the
+method or call-expression name are not part of that Claim's semantic scope.
+Do not import an effect merely because an identifier conventionally resembles
+a persistence, update, deletion, publication, or remote-write operation.
 Classify every material assertion in that Claim into the exact closed
 draft_semantic_scopes vocabulary. CALLER_INVOCATION covers only invocation;
 SOURCE_VISIBLE_LOCAL_ORDER covers only local ordering.
@@ -3148,12 +3163,29 @@ def _output_preflight_view(
         relevance_challenge_ids = reference_policy.get(
             "boundary_relevance_assessment_ids_required_exact_order"
         )
+        exact_claim_scope_only = reference_policy.get(
+            "scope_classification_must_use_exact_claim_statement_only"
+        )
+        method_name_has_no_effect_semantics = reference_policy.get(
+            "method_or_call_expression_name_has_no_effect_semantics"
+        )
+        neighboring_context_is_not_claim_scope = reference_policy.get(
+            "user_requirement_neighboring_content_and_prior_review_"
+            "are_not_claim_scope"
+        )
         if not all(
             isinstance(value, (tuple, list))
             for value in (
                 claim_indices,
                 caller_challenge_ids,
                 relevance_challenge_ids,
+            )
+        ) or not all(
+            value is True
+            for value in (
+                exact_claim_scope_only,
+                method_name_has_no_effect_semantics,
+                neighboring_context_is_not_claim_scope,
             )
         ):
             raise DomainError(
@@ -3176,6 +3208,12 @@ def _output_preflight_view(
             "audit_only_assessment_requires_global_no_evidence_finding": True,
             "focused_defect_claims_equal_exceeded_challenge_claims": True,
             "focused_findings_equal_challenge_bound_findings": True,
+            "scope_classification_must_use_exact_claim_statement_only": True,
+            "method_or_call_expression_name_has_no_effect_semantics": True,
+            (
+                "user_requirement_neighboring_content_and_prior_review_"
+                "are_not_claim_scope"
+            ): True,
             "successful_empty_finding_decision_must_repair_to_approved": True,
             "unreferenced_duplicate_finding_codes_are_stably_disambiguated": True,
             "limitation_finding_must_not_require_claim_addition": True,
@@ -3609,7 +3647,11 @@ def _closed_contract_repair_directive(message: str) -> str:
         or "post-evidence review correction returned the exact rejected Draft"
         in message
     ):
-        return "CHANGE_THE_REPLACEMENT_DRAFT_TO_RESOLVE_EVERY_ORDERED_FINDING"
+        return (
+            "MAKE_EACH_FINDING_TARGET_A_STRICTER_DIFFERENT_DRAFT_EDIT_AND_FOR_"
+            "CALLER_EFFECT_FINDINGS_STATE_ONLY_INVOCATION_OR_LOCAL_ORDER_PLUS_"
+            "EXPLICIT_UNCONFIRMED_EFFECT_OR_DELETE_THE_CHALLENGED_ASSERTION"
+        )
     if (
         "audit-only boundary relevance assessment requires a Finding code"
         in message
@@ -4492,6 +4534,11 @@ def _review_feedback_view(
                 "work_state_only_change_does_not_resolve_a_finding": True,
                 "unchanged_named_semantic_defect_forbidden": True,
                 "caller_effect_finding_narrows_claim_and_matching_content": True,
+                (
+                    "caller_effect_repeat_repair_makes_unknown_effect_"
+                    "explicit_or_deletes_assertion"
+                ): True,
+                "method_or_call_expression_name_has_no_effect_semantics": True,
                 "pure_boundary_must_not_be_promoted_to_affirmative_claim": True,
                 "limitation_global_finding_preferred_repair": (
                     "DELETE_AFFIRMATIVE_DIAGNOSTICS_AND_STATE_ONLY_"
@@ -5427,6 +5474,57 @@ def _action_argument(
     return dict(action.arguments).get(name)
 
 
+def _evidence_boundary_challenge_view(
+    request: EngineeringAgentReviewRequest,
+    challenge: EngineeringAgentEvidenceBoundaryChallenge,
+) -> dict[str, object]:
+    """Anchor one semantic-scope review lead to its exact current Claim."""
+
+    if (
+        type(challenge.claim_index) is not int
+        or challenge.claim_index < 0
+        or challenge.claim_index >= len(request.draft.claims)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "evidence-boundary challenge references an unknown exact Claim",
+        )
+    return {
+        "challenge_id": challenge.challenge_id.value,
+        "claim_index": challenge.claim_index,
+        "exact_challenged_claim_statement": (
+            request.draft.claims[challenge.claim_index].statement
+        ),
+        "support_observation_id": challenge.support_observation_id.value,
+        "source_locator": challenge.source_locator,
+        "call_expression": challenge.call_expression,
+        "receiver_declared_type": challenge.receiver_declared_type,
+        "cited_implementation_observation_ids": tuple(
+            value.value
+            for value in challenge.cited_implementation_observation_ids
+        ),
+        "package_implementation_observation_ids": tuple(
+            value.value
+            for value in challenge.package_implementation_observation_ids
+        ),
+        "maximum_scope_without_cited_implementation": (
+            "CALLER_INVOCATION_AND_SOURCE_VISIBLE_LOCAL_ORDER_ONLY"
+        ),
+        "caller_supported_semantic_scopes": (
+            EngineeringAgentClaimSemanticScope.CALLER_INVOCATION.value,
+            EngineeringAgentClaimSemanticScope.SOURCE_VISIBLE_LOCAL_ORDER.value,
+        ),
+        "additional_semantic_scope_requires_cited_implementation": True,
+        "scope_classification_must_use_exact_claim_statement_only": True,
+        "method_or_call_expression_name_has_no_effect_semantics": True,
+        (
+            "user_requirement_neighboring_content_and_prior_review_"
+            "are_not_claim_scope"
+        ): True,
+        "digest": challenge.digest.value,
+    }
+
+
 def _review_input_view(
     request: EngineeringAgentReviewRequest,
 ) -> dict[str, object]:
@@ -5493,33 +5591,7 @@ def _review_input_view(
             "digest": request.draft.digest.value,
         },
         "evidence_boundary_challenges": tuple(
-            {
-                "challenge_id": item.challenge_id.value,
-                "claim_index": item.claim_index,
-                "support_observation_id": (
-                    item.support_observation_id.value
-                ),
-                "source_locator": item.source_locator,
-                "call_expression": item.call_expression,
-                "receiver_declared_type": item.receiver_declared_type,
-                "cited_implementation_observation_ids": tuple(
-                    value.value
-                    for value in item.cited_implementation_observation_ids
-                ),
-                "package_implementation_observation_ids": tuple(
-                    value.value
-                    for value in item.package_implementation_observation_ids
-                ),
-                "maximum_scope_without_cited_implementation": (
-                    "CALLER_INVOCATION_AND_SOURCE_VISIBLE_LOCAL_ORDER_ONLY"
-                ),
-                "caller_supported_semantic_scopes": (
-                    EngineeringAgentClaimSemanticScope.CALLER_INVOCATION.value,
-                    EngineeringAgentClaimSemanticScope.SOURCE_VISIBLE_LOCAL_ORDER.value,
-                ),
-                "additional_semantic_scope_requires_cited_implementation": True,
-                "digest": item.digest.value,
-            }
+            _evidence_boundary_challenge_view(request, item)
             for item in challenges
         ),
         "boundary_relevance_challenges": tuple(
@@ -5616,6 +5688,12 @@ def _review_input_view(
             ),
             "challenge_approval_requires_all_within_caller_evidence": True,
             "caller_scope_classification_must_match_trusted_challenge": True,
+            "scope_classification_must_use_exact_claim_statement_only": True,
+            "method_or_call_expression_name_has_no_effect_semantics": True,
+            (
+                "user_requirement_neighboring_content_and_prior_review_"
+                "are_not_claim_scope"
+            ): True,
             "exceeded_challenge_requires_matching_claim_finding": True,
             "focused_defect_claims_equal_exceeded_challenge_claims": True,
             "focused_findings_equal_challenge_bound_findings": True,

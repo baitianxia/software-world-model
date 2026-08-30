@@ -175,7 +175,7 @@ Provider unavailable 或允许过早 Limitation 的依据。
 `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
 投影为 `ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1`：只有 declaring type 末段、`.java` 文件 stem 和 exact `source_path`
 一致时才形成候选；每项保留来源 cognition item/revision identity，并明确不授予 Source authority。若该 projection non-empty 且未截断，
-并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@22` 必须把这些 literal 投影为第一次
+并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@23` 必须把这些 literal 投影为第一次
 `SOURCE_SEARCH.query` 的 exhaustive `allowed_exact_values`；Provider 只能精确复制，decoder 从原 World Model SUPPORT Observation 重算并
 拒绝宽泛 member word 或其他域外值。该闭域只负责第一次 cognition→Source 导航；执行一次 Source action 后，新 Observation 中出现的
 source-native symbol 仍可按既有短字面量 contract 提议。projection 缺失或有界截断时不得伪称 exhaustive，仍由原 proposal/Broker 路径
@@ -314,7 +314,7 @@ no-progress failure 关闭。
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   `ENGINEERING_AGENT_REVIEW_INPUT@14` 必须投影 exact ordered Claim indices；`engineering-agent-independent-review-proposal@8` 必须为每个 Claim 返回一个
+   `ENGINEERING_AGENT_REVIEW_INPUT@15` 必须投影 exact ordered Claim indices；`engineering-agent-independent-review-proposal@8` 必须为每个 Claim 返回一个
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
    Finding；`APPROVED` 只允许全 SUPPORTED + empty Findings。global completeness/relevance Finding 可用 `claim_index=null`，但不能把
    “证据已支持/没有 defect”编码为 claim Finding。它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查
@@ -342,7 +342,10 @@ no-progress failure 关闭。
    的局部顺序，不证明 callee 实现、动态目标、返回语义、类型继承或外部副作用；Draft 只陈述该 invocation/order 并明确把 callee semantics
    留在 evidence boundary 时，Reviewer 不得因后者未知而拒绝前者。对于 Claim 引用 full exact Java Source 且复现其中 receiver method call
    expression 的情况，Application 必须投影 exact caller/callee challenge，绑定 Claim index、Source Observation/locator、call expression、
-   declared receiver type，以及 Package/cited callee implementation Observation IDs。该结构投影只是 review lead，不是自动 defect：focused
+   declared receiver type、exact current challenged Claim statement，以及 Package/cited callee implementation Observation IDs。focused Reviewer
+   只能从该 exact ordered Claim statement 分类语义 scope；User requirement、邻接 `draft.content`、先前 Review/Finding 与 method/call-expression
+   name 都不能为 Claim 增加 effect semantics。identifier 即使惯常表示 insert/save/delete/update/publish/remote write，也不能单独证明 effect。
+   该结构投影只是 review lead，不是自动 defect：focused
    Reviewer 必须逐项返回 non-empty closed `draft_semantic_scopes` 与 `WITHIN_CALLER_EVIDENCE` 或
    `CLAIM_EXCEEDS_CALLER_EVIDENCE`。scope vocabulary 为 `CALLER_INVOCATION / SOURCE_VISIBLE_LOCAL_ORDER /
    CALLEE_IMPLEMENTATION_OR_RETURN / DATABASE_OR_EXTERNAL_STATE_EFFECT / CONSUMER_VISIBLE_RUNTIME_EFFECT`；没有 cited implementation 时，任何
@@ -401,7 +404,7 @@ no-progress failure 关闭。
    names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 必须从 untrusted prior output 与
-   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
+   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
    可对齐的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席。若一个 schema-invalid array 的所有 item 都没有任何
    已存在 allowlisted value，则整个 array 子树不形成 copy obligation；repair 只能从 current sealed schema/domain/template 重建它。只要该
    array 仍有一个既存 allowlisted item value，原长度/顺序与所有可对齐值就必须保持，不能用重建吞掉合法 sibling。final preflight 还必须
@@ -436,6 +439,9 @@ no-progress failure 关闭。
    APPROVE，不能重复 `MATERIAL_TO_USER_REQUEST + null finding_code + extra Finding`。audit-only 缺少 Finding binding 时必须保留该 disposition、增加 matching global no-evidence Finding 并改为 FINDINGS。
    第一次 Source Search 未复制 cognition-derived target literal 时，repair 必须选择 sealed domain 中与当前用户目标 material 的 allowed literal；
    若不存在，则改用合法且不同的 `WORLD_MODEL_QUERY`，不得原样重复非法 literal，也不得为满足字面 allowlist 选择无关 target。
+   same-Package 或 post-evidence correction 若逐字返回 exact rejected Draft，repair 必须对每个 Finding 指定的 fragment 做更严格且不同的
+   edit；caller-effect Finding 在 baseline 已是 invocation/local-order wording 时，必须在正文与 Claim 中显式区分 observed invocation/order
+   与未确认的 callee/database/remote/consumer effect，或删除非必要 challenged assertion，不能让 method name 重新授予 effect semantics。
    focused diagnostic 可以投影实际 DEFECT/EXCEEDS index set，但不得把 untrusted Finding message 提升成 trusted instruction。final preflight
    必须冗余投影该 closed-contract directive，但不从中取得新事实或审核权。这些 directive 不新增 Tool、Evidence、Review 或 Delivery
    authority。除上述显式、版本化、可重算的 existing-value restoration 外，Application
@@ -443,8 +449,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@22 / conversational-engineering-agent-no-tools-prompt@22 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@22 / ENGINEERING_AGENT_REVIEW_INPUT@14 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17` 协议族；每次
+   `conversational-engineering-agent@23 / conversational-engineering-agent-no-tools-prompt@23 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@23 / ENGINEERING_AGENT_REVIEW_INPUT@15 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生
@@ -455,7 +461,7 @@ no-progress failure 关闭。
    per-Turn 15 dispatch authority 的剩余 slot；Authorizer 在 authority 耗尽时必须在 Provider boundary 前拒绝。该分类不允许 Application 抽取后部
    JSON、提高 dispatch/Tool/Source/Session budget 或把格式失败改判为 Provider unavailable。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
-   Verification Investigation Agent 不是长期架构不变量。current `@21` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
+   Verification Investigation Agent 不是长期架构不变量。current `@23` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
    投影出 caller/callee challenge 或 Package 含任何 Boundary，再执行一个 fresh focused Review。focused Finding 的 successor Draft 可按
    仍存在的 challenge focus 直接复审。为容纳一次 comprehensive rewrite 和一次 focused rewrite，
    Reviewer call 上限现为 4，同时 Agent step 上限从 12 收紧为 11，最坏组合仍为原有 15 per-Turn dispatch authority。Response Control 必须重算

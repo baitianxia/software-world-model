@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -77,6 +77,12 @@ post-dispatch unknown；Q3 的 focused Review 让 material/null-code assessments
 current Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转 stale 或 idle ≥60 秒的 session，base Adapter/Conformance
 identity不变；current `@22/@14/@17` repair 要求 Finding 与 exact challenge 闭合或删除并 APPROVE。相邻十七模块 `255/255` tests与
 current Conformance loader PASS，下一项是门禁、提交与 run-096。
+
+`FINDING-010-221 / run-096` 证明 stale/idle rotation 已让 DeepSeek 37/37 call completed，Q1/Q5 ACCEPTED、Q4 零 dispatch
+Clarification；Q2/Q3 仍使整体 FAIL。Q2 focused Reviewer 没有把已经收窄的 exact caller-only Claim 当作唯一 scope 来源，Primary 又在
+Review successor 与 format repair 两次原样返回 rejected Draft。current `@23/@15/@18` 给每个 caller challenge 增加 exact current Claim
+anchor，排除 User requirement/邻接正文/prior Review/method name 的 effect semantics，并为 exact-repeat caller Finding 密封 stricter
+rewrite；targeted `34/34`、相邻 16 模块 `261/261` PASS，下一项是文档/可信父门禁、提交与 run-097。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -175,6 +175,12 @@ prefix selection 已闭合且六模块 `154/154`、相邻十五模块 `229/229` 
 Review reject 使质量 Gate仍未通过。current Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转可读/异常或 idle ≥60 秒
 的 session，base Adapter/Conformance identity不变；current `@22/@14/@17` repair 对 retained Finding 做 exact challenge binding 或删除
 并 APPROVE。相邻十七模块 `255/255` tests与 current Conformance loader PASS。文档/可信父计划门禁、提交与 run-096 是下一质量 Gate 证据。
+
+`FINDING-010-221 / run-096` 的 4 个 Ark sealed 429 已自动触发 DeepSeek，37 个 fallback call 全部完成，transport 无 unknown；
+Q1/Q5 ACCEPTED、Q4 零调用 Clarification，但 Q2 的 exact caller-only Claim 被 focused Reviewer 重解释为 database effect，Primary
+又两次逐字返回 rejected Draft，Q3 因前题未交付只形成 reviewed limitation。current `@23/@15/@18` 以 exact challenged Claim anchor
+关闭 scope 污染，并让 repeated caller-effect rewrite 必须更严格地区分 invocation/order 与未确认 effect或删除 assertion；targeted
+`34/34`、相邻 16 模块 `261/261` PASS。文档/可信父门禁、提交和 fresh run-097 是质量 Gate 的下一连续执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

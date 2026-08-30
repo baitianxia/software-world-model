@@ -16,6 +16,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     SealedEngineeringAgentRoleDisclosureAuthorizer,
     _boundary_relevance_allowed_dispositions,
     _closed_contract_repair_directive,
+    _evidence_boundary_challenge_view,
     _output_preflight_view,
     _primary_input_view,
     _review_output_with_unique_finding_codes,
@@ -333,7 +334,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             _closed_contract_repair_directive(
                 "same-Package review rewrite returned the exact rejected Draft"
             ),
-            "CHANGE_THE_REPLACEMENT_DRAFT_TO_RESOLVE_EVERY_ORDERED_FINDING",
+            "MAKE_EACH_FINDING_TARGET_A_STRICTER_DIFFERENT_DRAFT_EDIT_AND_FOR_"
+            "CALLER_EFFECT_FINDINGS_STATE_ONLY_INVOCATION_OR_LOCAL_ORDER_PLUS_"
+            "EXPLICIT_UNCONFIRMED_EFFECT_OR_DELETE_THE_CHALLENGED_ASSERTION",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
@@ -645,7 +648,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1087,7 +1090,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1936,7 +1939,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1997,6 +2000,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
+                "scope_classification_must_use_exact_claim_statement_only"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "method_or_call_expression_name_has_no_effect_semantics"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
                 "successful_empty_finding_decision_must_repair_to_approved"
             ]
         )
@@ -2026,6 +2039,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_policy[
                 "focused_findings_equal_challenge_bound_findings"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "scope_classification_must_use_exact_claim_statement_only"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "method_or_call_expression_name_has_no_effect_semantics"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "user_requirement_neighboring_content_and_prior_review_"
+                "are_not_claim_scope"
             ]
         )
         self.assertTrue(
@@ -2180,6 +2209,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         reviewer_prompt = adapter.requests[2].messages[0].content
         reviewer_prompt_compact = " ".join(reviewer_prompt.split())
+        self.assertIn(
+            "Each challenge supplies exact_challenged_claim_statement",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "method or call-expression name are not part of that Claim's semantic scope",
+            reviewer_prompt_compact,
+        )
         self.assertIn(
             "Compare the complete draft.content against the enumerated claims",
             reviewer_prompt,
@@ -2365,7 +2402,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -3397,6 +3434,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             same_package_feedback["review_rewrite_contract"][
                 "replacement_draft_must_differ_from_exact_rejected_draft"
+            ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "caller_effect_repeat_repair_makes_unknown_effect_"
+                "explicit_or_deletes_assertion"
+            ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "method_or_call_expression_name_has_no_effect_semantics"
             ]
         )
         self.assertEqual(
@@ -4874,6 +4922,30 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             package,
             narrow_draft,
         )[0]
+        narrow_challenge_view = _evidence_boundary_challenge_view(
+            SimpleNamespace(draft=narrow_draft),
+            narrow_challenge,
+        )
+        self.assertEqual(
+            narrow_challenge_view["exact_challenged_claim_statement"],
+            narrow_claim.statement,
+        )
+        self.assertTrue(
+            narrow_challenge_view[
+                "scope_classification_must_use_exact_claim_statement_only"
+            ]
+        )
+        self.assertTrue(
+            narrow_challenge_view[
+                "method_or_call_expression_name_has_no_effect_semantics"
+            ]
+        )
+        self.assertTrue(
+            narrow_challenge_view[
+                "user_requirement_neighboring_content_and_prior_review_"
+                "are_not_claim_scope"
+            ]
+        )
         redundant_findings_decision = {
             "decision": "FINDINGS",
             "claim_assessments": [

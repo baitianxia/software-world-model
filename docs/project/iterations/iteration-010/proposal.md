@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -112,6 +112,12 @@ keep-alive，以及 focused Review 的 material/null-code assessments 与 unboun
 以 Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转 stale 或 idle ≥60 秒的 session，并为 challenge-bound Finding
 mismatch 提供 exact 二选一 repair；base Adapter/Conformance identity、`PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` 的 3/20 bounds、
 零 retry、route、budget 与 Production 边界不变，run-096 是下一真实证据。
+
+`FINDING-010-221 / run-096` 密封 Ark 4 个 sealed 429、DeepSeek 37/37 completed，stale/idle rotation 已真实通过；Q1/Q5
+ACCEPTED、Q4 零调用 Clarification，Q2 structured-invalid、Q3 reviewed limitation 使整体仍 FAIL。Q2 first divergence 是 focused
+Reviewer 从 method vocabulary或 prior Finding 向 exact caller-only Claim 重导入 database effect，随后 Primary 两次 exact-repeat rejected
+Draft。current `@23/@15/@18` 把 exact challenged Claim 独立投影给 Reviewer，并要求 repeat repair 显式区分 invocation/order 与未确认 effect
+或删除 assertion；wire output schema、authority、route、budget、retry 与 Production 边界不变，fresh run-097 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。
