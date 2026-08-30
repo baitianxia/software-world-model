@@ -49,13 +49,17 @@ ENGINEERING_PROVIDER_ATTEMPT_RUNTIME_SCHEMA = (
     "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_RUNTIME@1"
 )
 ENGINEERING_PROVIDER_ATTEMPT_RECEIPT_SCHEMA = (
-    "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_RECEIPT@1"
+    "ENGINEERING_EXECUTION_PROFILE_ATTEMPT_RECEIPT@2"
 )
 ENGINEERING_PROVIDER_ROUTE_RECEIPT_SCHEMA = (
     "ENGINEERING_EXECUTION_PROFILE_ROUTE_RECEIPT@1"
 )
 ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA = (
-    "ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT@1"
+    "ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT@2"
+)
+
+ENGINEERING_EXECUTION_PROFILE_UNAVAILABLE_HTTP_STATUSES = frozenset(
+    {402, 408, 425, 429, 500, 502, 503, 504}
 )
 
 ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS = (
@@ -543,6 +547,8 @@ class EngineeringProviderAttemptReceipt:
     failure_code: str | None
     provider_failure_classification: EngineeringProviderFailureClassification | None
     provider_failure_code: str | None
+    provider_http_status: int | None
+    provider_http_failure_evidence_digest: Digest | None
     provider_dispatch_count: int
     model_dispatch_receipt_refs: tuple[str, ...]
     authorized_answer_ref: str | None
@@ -612,6 +618,12 @@ class EngineeringProviderAttemptReceipt:
                 else None
             ),
             "provider_failure_code": outcome.provider_failure_code,
+            "provider_http_status": outcome.provider_http_status,
+            "provider_http_failure_evidence_digest": (
+                outcome.provider_http_failure_evidence_digest.value
+                if outcome.provider_http_failure_evidence_digest is not None
+                else None
+            ),
             "provider_dispatch_count": outcome.provider_dispatch_count,
             "model_dispatch_receipt_refs": outcome.model_dispatch_receipt_refs,
             "authorized_answer_ref": (
@@ -644,6 +656,10 @@ class EngineeringProviderAttemptReceipt:
                 outcome.provider_failure_classification
             ),
             provider_failure_code=outcome.provider_failure_code,
+            provider_http_status=outcome.provider_http_status,
+            provider_http_failure_evidence_digest=(
+                outcome.provider_http_failure_evidence_digest
+            ),
             provider_dispatch_count=outcome.provider_dispatch_count,
             model_dispatch_receipt_refs=outcome.model_dispatch_receipt_refs,
             authorized_answer_ref=(
@@ -674,6 +690,8 @@ class EngineeringExecutionProfileAvailabilityVerdict:
     preferred_attempt_receipt_digest: Digest
     raw_failure_classification: EngineeringProviderFailureClassification
     raw_failure_code: str
+    raw_http_status: int | None
+    raw_failure_evidence_digest: Digest | None
     assessed_at: datetime
     potential_duplicate_cost_risk: bool
     digest: Digest
@@ -694,6 +712,10 @@ class EngineeringExecutionProfileAvailabilityVerdict:
         )
         classification = preferred_attempt_receipt.provider_failure_classification
         raw_code = preferred_attempt_receipt.provider_failure_code
+        raw_http_status = preferred_attempt_receipt.provider_http_status
+        raw_failure_evidence_digest = (
+            preferred_attempt_receipt.provider_http_failure_evidence_digest
+        )
         if (
             route.role is not EngineeringProviderRouteRole.PREFERRED
             or route.ordinal != 1
@@ -717,6 +739,19 @@ class EngineeringExecutionProfileAvailabilityVerdict:
                 EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN,
             }
             or raw_code is None
+            or classification
+            is EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+            and (
+                type(raw_http_status) is not int
+                or not 100 <= raw_http_status <= 599
+                or not isinstance(raw_failure_evidence_digest, Digest)
+            )
+            or classification
+            is not EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+            and (
+                raw_http_status is not None
+                or raw_failure_evidence_digest is not None
+            )
             or current < requested_at
         ):
             raise DomainError(
@@ -742,6 +777,12 @@ class EngineeringExecutionProfileAvailabilityVerdict:
             ),
             "raw_failure_classification": classification.value,
             "raw_failure_code": raw_code,
+            "raw_http_status": raw_http_status,
+            "raw_failure_evidence_digest": (
+                raw_failure_evidence_digest.value
+                if raw_failure_evidence_digest is not None
+                else None
+            ),
             "assessed_at": current.isoformat().replace("+00:00", "Z"),
             "potential_duplicate_cost_risk": duplicate_risk,
             "fallback_authority_granted": True,
@@ -759,6 +800,8 @@ class EngineeringExecutionProfileAvailabilityVerdict:
             preferred_attempt_receipt_digest=preferred_attempt_receipt.digest,
             raw_failure_classification=classification,
             raw_failure_code=raw_code,
+            raw_http_status=raw_http_status,
+            raw_failure_evidence_digest=raw_failure_evidence_digest,
             assessed_at=current,
             potential_duplicate_cost_risk=duplicate_risk,
             digest=digest_of(core),
@@ -813,14 +856,14 @@ class FailClosedEngineeringExecutionProfileAvailabilityBoundary:
         return None
 
 
-class SealedPreDispatchUnavailableAvailabilityBoundary:
-    """Promote only Gateway-sealed, zero-HTTP unavailability evidence.
+class SealedExecutionProfileAvailabilityBoundary:
+    """Promote only exact Gateway-sealed execution-profile unavailability.
 
-    The router deliberately does not infer availability from raw failures.  This
-    independent owner accepts only the typed Model Gateway result reserved for a
-    request that could not reach HTTP, then seals the exact profile/attempt
-    verdict consumed by the router.  HTTP errors, outcome-unknown calls, output
-    contract failures, and Reviewer findings remain ineligible.
+    The independent owner accepts either canonical pre-HTTP unavailability or
+    a terminal HTTP response carrying a Gateway-sealed evidence digest and an
+    explicitly admitted unavailable status.  Generic HTTP strings, auth/config
+    statuses, outcome-unknown calls, output failures, and Reviewer findings
+    remain ineligible.
     """
 
     availability_owner_ref = "provider-availability-boundary"
@@ -841,13 +884,33 @@ class SealedPreDispatchUnavailableAvailabilityBoundary:
         route: EngineeringProviderRouteSpec,
         preferred_attempt_receipt: EngineeringProviderAttemptReceipt,
     ) -> EngineeringExecutionProfileAvailabilityVerdict | None:
-        if (
+        has_exact_dispatch = (
+            preferred_attempt_receipt.provider_dispatch_count >= 1
+            and bool(preferred_attempt_receipt.model_dispatch_receipt_refs)
+        )
+        canonical_pre_http_unavailable = (
             preferred_attempt_receipt.provider_failure_classification
-            is not EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE
-            or preferred_attempt_receipt.provider_failure_code
-            != "PROVIDER_UNAVAILABLE"
-            or preferred_attempt_receipt.provider_dispatch_count < 1
-            or not preferred_attempt_receipt.model_dispatch_receipt_refs
+            is EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE
+            and preferred_attempt_receipt.provider_failure_code
+            == "PROVIDER_UNAVAILABLE"
+            and preferred_attempt_receipt.provider_http_status is None
+            and preferred_attempt_receipt.provider_http_failure_evidence_digest
+            is None
+        )
+        sealed_http_unavailable = (
+            preferred_attempt_receipt.provider_failure_classification
+            is EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+            and preferred_attempt_receipt.provider_failure_code
+            == ErrorCode.PROVIDER_HTTP_ERROR.value
+            and preferred_attempt_receipt.provider_http_status
+            in ENGINEERING_EXECUTION_PROFILE_UNAVAILABLE_HTTP_STATUSES
+            and isinstance(
+                preferred_attempt_receipt.provider_http_failure_evidence_digest,
+                Digest,
+            )
+        )
+        if not has_exact_dispatch or not (
+            canonical_pre_http_unavailable or sealed_http_unavailable
         ):
             return None
         return EngineeringExecutionProfileAvailabilityVerdict.seal(
@@ -857,6 +920,12 @@ class SealedPreDispatchUnavailableAvailabilityBoundary:
             preferred_attempt_receipt=preferred_attempt_receipt,
             assessed_at=self._clock(),
         )
+
+
+# Compatibility alias for callers compiled against the earlier owner name.
+SealedPreDispatchUnavailableAvailabilityBoundary = (
+    SealedExecutionProfileAvailabilityBoundary
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1330,7 +1399,7 @@ def _conservative_dispatch_count(value: object) -> int:
 def _execution_outcome_digest(outcome: EngineeringTurnExecutionOutcome) -> Digest:
     return digest_of(
         {
-            "schema": "ENGINEERING_TURN_ATTEMPT_OUTCOME@1",
+            "schema": "ENGINEERING_TURN_ATTEMPT_OUTCOME@2",
             "request_digest": outcome.request_digest.value,
             "state": outcome.state.value,
             "assistant_kind": outcome.assistant_kind.value,
@@ -1369,6 +1438,12 @@ def _execution_outcome_digest(outcome: EngineeringTurnExecutionOutcome) -> Diges
                 else None
             ),
             "provider_failure_code": outcome.provider_failure_code,
+            "provider_http_status": outcome.provider_http_status,
+            "provider_http_failure_evidence_digest": (
+                outcome.provider_http_failure_evidence_digest.value
+                if outcome.provider_http_failure_evidence_digest is not None
+                else None
+            ),
             "provider_availability_verdict_ref": (
                 outcome.provider_availability_verdict_ref
             ),
@@ -1397,6 +1472,7 @@ __all__ = [
     "ENGINEERING_PROVIDER_ATTEMPT_COMPONENTS",
     "ENGINEERING_PROVIDER_ATTEMPT_RECEIPT_SCHEMA",
     "ENGINEERING_EXECUTION_PROFILE_AVAILABILITY_VERDICT_SCHEMA",
+    "ENGINEERING_EXECUTION_PROFILE_UNAVAILABLE_HTTP_STATUSES",
     "ENGINEERING_PROVIDER_ROUTE_RECEIPT_SCHEMA",
     "ENGINEERING_PROVIDER_ROUTE_SCHEMA",
     "ApplicationOwnedEngineeringProviderRouter",
@@ -1404,6 +1480,7 @@ __all__ = [
     "EngineeringExecutionProfileAvailabilityDecision",
     "EngineeringExecutionProfileAvailabilityVerdict",
     "FailClosedEngineeringExecutionProfileAvailabilityBoundary",
+    "SealedExecutionProfileAvailabilityBoundary",
     "SealedPreDispatchUnavailableAvailabilityBoundary",
     "EngineeringProviderAttemptAuthority",
     "EngineeringProviderAttemptFactory",

@@ -404,6 +404,8 @@ class EngineeringConversationTurn:
     model_dispatch_receipt_refs: tuple[str, ...]
     provider_failure_classification: EngineeringProviderFailureClassification | None
     provider_failure_code: str | None
+    provider_http_status: int | None
+    provider_http_failure_evidence_digest: Digest | None
     provider_route_receipt_ref: str | None
     provider_availability_verdict_ref: str | None
     provider_attempt_receipt_refs: tuple[str, ...]
@@ -552,6 +554,8 @@ class EngineeringTurnExecutionOutcome:
     model_dispatch_receipt_refs: tuple[str, ...]
     provider_failure_classification: EngineeringProviderFailureClassification | None
     provider_failure_code: str | None
+    provider_http_status: int | None
+    provider_http_failure_evidence_digest: Digest | None
     provider_route_receipt_ref: str | None
     provider_availability_verdict_ref: str | None
     provider_attempt_receipt_refs: tuple[str, ...]
@@ -615,6 +619,8 @@ class EngineeringTurnExecutionOutcome:
             model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
             provider_failure_classification=None,
             provider_failure_code=None,
+            provider_http_status=None,
+            provider_http_failure_evidence_digest=None,
             provider_route_receipt_ref=provider_route_receipt_ref,
             provider_availability_verdict_ref=(
                 provider_availability_verdict_ref
@@ -649,6 +655,8 @@ class EngineeringTurnExecutionOutcome:
         model_dispatch_receipt_refs: Sequence[str] = (),
         provider_failure_classification: EngineeringProviderFailureClassification | None = None,
         provider_failure_code: str | None = None,
+        provider_http_status: int | None = None,
+        provider_http_failure_evidence_digest: Digest | None = None,
         provider_route_receipt_ref: str | None = None,
         provider_availability_verdict_ref: str | None = None,
         provider_attempt_receipt_refs: Sequence[str] = (),
@@ -681,6 +689,10 @@ class EngineeringTurnExecutionOutcome:
             model_dispatch_receipt_refs=tuple(model_dispatch_receipt_refs),
             provider_failure_classification=provider_failure_classification,
             provider_failure_code=provider_failure_code,
+            provider_http_status=provider_http_status,
+            provider_http_failure_evidence_digest=(
+                provider_http_failure_evidence_digest
+            ),
             provider_route_receipt_ref=provider_route_receipt_ref,
             provider_availability_verdict_ref=(
                 provider_availability_verdict_ref
@@ -731,6 +743,8 @@ class EngineeringTurnExecutionOutcome:
             model_dispatch_receipt_refs=(),
             provider_failure_classification=None,
             provider_failure_code=None,
+            provider_http_status=None,
+            provider_http_failure_evidence_digest=None,
             provider_route_receipt_ref=None,
             provider_availability_verdict_ref=None,
             provider_attempt_receipt_refs=(),
@@ -1274,6 +1288,28 @@ def _validate_execution_outcome(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Provider failure classification and raw code must be present together",
         )
+    has_http_evidence = outcome.provider_http_status is not None
+    if has_http_evidence != (
+        outcome.provider_http_failure_evidence_digest is not None
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider HTTP status and failure-evidence digest must be present together",
+        )
+    if has_http_evidence and (
+        type(outcome.provider_http_status) is not int
+        or not 100 <= outcome.provider_http_status <= 599
+        or not isinstance(
+            outcome.provider_http_failure_evidence_digest, Digest
+        )
+        or classification
+        is not EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+        or provider_failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Provider HTTP failure evidence is inconsistent with the raw failure",
+        )
     route_receipt_ref = _optional_text(
         outcome.provider_route_receipt_ref, "Provider route receipt reference"
     )
@@ -1626,7 +1662,7 @@ def _turn(
     completed_at: datetime,
 ) -> EngineeringConversationTurn:
     core = {
-        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@5",
+        "schema": "ENGINEERING_CONVERSATION_TURN_RESULT@6",
         "turn_id": request.turn_id.value,
         "result_id": request.result_id.value,
         "conversation_id": request.snapshot_before.conversation.conversation_id.value,
@@ -1672,6 +1708,12 @@ def _turn(
             else None
         ),
         "provider_failure_code": outcome.provider_failure_code,
+        "provider_http_status": outcome.provider_http_status,
+        "provider_http_failure_evidence_digest": (
+            outcome.provider_http_failure_evidence_digest.value
+            if outcome.provider_http_failure_evidence_digest is not None
+            else None
+        ),
         "provider_route_receipt_ref": outcome.provider_route_receipt_ref,
         "provider_availability_verdict_ref": (
             outcome.provider_availability_verdict_ref
@@ -1717,6 +1759,10 @@ def _turn(
             outcome.provider_failure_classification
         ),
         provider_failure_code=outcome.provider_failure_code,
+        provider_http_status=outcome.provider_http_status,
+        provider_http_failure_evidence_digest=(
+            outcome.provider_http_failure_evidence_digest
+        ),
         provider_route_receipt_ref=outcome.provider_route_receipt_ref,
         provider_availability_verdict_ref=(
             outcome.provider_availability_verdict_ref

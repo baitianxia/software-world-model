@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture, application]
 depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-139, FINDING-010-140, FINDING-010-156]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -129,6 +129,10 @@ availability owner 从 exact raw receipts 密封 `PREFERRED_EXECUTION_PROFILE_UN
 unavailable/HTTP/outcome 信号只是裁决输入，不能直接开启 fallback。Output-invalid、Reviewer reject、Capability/qualification、Application、Source、
 authorization/admission 或 Security failure 均为 non-eligible。格式修复、答案重写、补证后重答和 fresh Review 只能在当前 preferred profile 内以新的
 authorized model call 进行，每次都重建 call identity、Manifest 和 one-use receipts，不得重发同一 request；无合法新调用时当前 interaction 失败关闭。
+Provider HTTP failure 先由 Gateway 只密封 status 和受限 code/type/request-id，绑定 call/request/isolation 后经 repository、Model Egress、
+model receipt、Turn 与 attempt 逐层重验。当前 availability owner 仅从 typed pre-HTTP unavailable，或 exact dispatch/call receipt 下
+Gateway-sealed 的 `{402,408,425,429,500,502,503,504}` 形成 unavailable verdict；auth/config/client status、缺 evidence digest 的 status 与
+字符串相似性 fail closed。
 fallback attempt 从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition
 Context 重新运行完整链，不能读取或拼接 preferred attempt 的 Ledger/Package/Draft/Review。迟到的 preferred-route 结果进入 quarantine 且不能覆盖。用户不选择
 Provider、不重提问题、不新建 Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的独立身份、availability-verdict、

@@ -5,9 +5,9 @@ status: accepted
 authority: normative
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
-derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
-tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
+derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_browser.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # ADR-017：对用户透明的合格执行配置有序路由
@@ -35,8 +35,13 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
    attempt 状态，不要求用户选择模型、重提当前 Turn 或启动新 Session/Conversation。
 3. 只有 preferred execution profile 已密封 terminal、没有 authorized answer，且该 profile 登记的受信 availability owner
    对 exact profile ref/digest、当前时间与运行边界密封 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才可自动创建最多一个
-   fallback-route attempt。Raw `PROVIDER_UNAVAILABLE`、HTTP error/status 或 `PROVIDER_OUTCOME_UNKNOWN` 只是 availability owner 可验证的输入证据；
-   它们不得被 Gateway、Adapter、Application 或字符串映射直接转成 fallback eligibility。没有该 exact verdict 就必须视为
+   fallback-route attempt。Gateway 必须把 Provider HTTP failure 的最小安全字段密封为绑定 model call、provider request 与 isolation
+   receipt 的 digest evidence，并在 repository replay、Model Egress 与 Application receipt 投影中重验；不得持久化 response body、header、
+   credential、Secret Reference 或任意错误正文。Raw `PROVIDER_UNAVAILABLE`、HTTP error/status 或 `PROVIDER_OUTCOME_UNKNOWN` 只是
+   availability owner 可验证的输入证据；它们不得被 Gateway、Adapter、Application 或字符串映射直接转成 fallback eligibility。
+   当前通用 availability owner 只接受 typed pre-HTTP unavailable，或 dispatch/call receipt 成立且 Gateway-sealed HTTP status 属于
+   `{402,408,425,429,500,502,503,504}`；`402` 只表示当前 execution profile 的付款/资源服务能力不可用。`400/401/403/404/409/422`、
+   缺少 evidence digest 的 status、普通 owner code 或相似字符串都必须 fail closed。没有该 exact verdict 就必须视为
    `FALLBACK_NOT_ELIGIBLE`。`PROVIDER_OUTPUT_INVALID`、`MODEL_REVIEW_REJECTED`、Capability/qualification failure、Application orchestration failure、
    Source/Broker/Worker failure、authorization/dispatch-admission failure 和 Security failure 都明确不具备 fallback 资格，不得伪装成 unavailable。
    Availability verdict 只证明 fallback route 可被考虑，不替代 fallback profile 自身的资格、披露、预算和 dispatch admission。

@@ -4330,6 +4330,20 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-197.md"
   },
   {
+    "id": "FINDING-010-198",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "application",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-198.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -7206,7 +7220,8 @@
       "FINDING-010-101",
       "FINDING-010-139",
       "FINDING-010-140",
-      "FINDING-010-156"
+      "FINDING-010-156",
+      "FINDING-010-198"
     ],
     "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md"
   },
@@ -7338,7 +7353,8 @@
       "FINDING-010-092",
       "FINDING-010-139",
       "FINDING-010-140",
-      "FINDING-010-156"
+      "FINDING-010-156",
+      "FINDING-010-198"
     ],
     "path": "docs/system/architecture/runtime-flows.md"
   },
@@ -7365,7 +7381,8 @@
       "FINDING-010-029",
       "FINDING-010-139",
       "FINDING-010-140",
-      "FINDING-010-156"
+      "FINDING-010-156",
+      "FINDING-010-198"
     ],
     "path": "docs/system/architecture/invariants.md"
   },
@@ -7430,7 +7447,8 @@
       "FINDING-010-139",
       "FINDING-010-140",
       "FINDING-010-154",
-      "FINDING-010-156"
+      "FINDING-010-156",
+      "FINDING-010-198"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -7509,7 +7527,8 @@
       "FINDING-010-194",
       "FINDING-010-195",
       "FINDING-010-196",
-      "FINDING-010-197"
+      "FINDING-010-197",
+      "FINDING-010-198"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },

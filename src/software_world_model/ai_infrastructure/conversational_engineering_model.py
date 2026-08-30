@@ -2648,6 +2648,9 @@ def _receipt_for_gateway_result(
     response = result.response
     isolation = result.isolation_receipt
     eligibility = result.eligibility
+    http_evidence = call.provider_http_failure_evidence
+    if http_evidence is not None:
+        http_evidence.require_exact()
     expected_isolation_digest = digest_of(
         {
             "receipt_id": isolation.receipt_id.value,
@@ -2699,6 +2702,16 @@ def _receipt_for_gateway_result(
         or eligibility.isolation_receipt_id != isolation.receipt_id
         or eligibility.model_call_id != call.model_call_id
         or eligibility.digest != expected_eligibility_digest
+        or http_evidence is not None
+        and (
+            call.state is not ModelCallState.FAILED
+            or call.failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
+            or http_evidence.model_call_id != call.model_call_id
+            or http_evidence.provider_request_digest
+            != call.provider_request_digest
+            or http_evidence.isolation_receipt_digest
+            != call.isolation_receipt_digest
+        )
     ):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -2767,6 +2780,14 @@ def _receipt_for_gateway_result(
             state=state,
             failure_kind=_gateway_failure_kind(call.failure_code),
             failure_code=call.failure_code,
+            provider_http_status=(
+                http_evidence.http_status
+                if http_evidence is not None
+                else None
+            ),
+            provider_http_failure_evidence_digest=(
+                http_evidence.digest if http_evidence is not None else None
+            ),
         )
     if response is None or not response.usage_complete:
         raise DomainError(

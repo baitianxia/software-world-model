@@ -1294,8 +1294,18 @@ conversational_engineering_agent:
   current_empty_context_plural_referent_evidence_ref: FINDING-010-188
   browser_failure_execution_stage_display: required
   browser_failure_raw_provider_evidence_display: required-when-sealed-otherwise-absent
+  browser_failure_sealed_http_status_display: required-when-evidence-digest-is-present
   browser_failure_display_grants_fallback_authority: false
   current_browser_failure_layer_display_evidence_ref: FINDING-010-189
+  provider_http_failure_evidence_schema: MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@1
+  provider_http_failure_evidence_safe_fields: http-status,provider-error-code,provider-error-type,provider-request-id
+  provider_http_failure_evidence_forbidden_fields: response-body,response-headers,credential,secret-reference,arbitrary-error-text
+  provider_http_failure_evidence_binding: model-call-provider-request-isolation-receipt
+  provider_http_failure_evidence_round_trip: gateway-repository-model-egress-model-receipt-turn-attempt
+  availability_owner_http_unavailable_statuses: 402,408,425,429,500,502,503,504
+  availability_owner_http_fail_closed_statuses: 400,401,403,404,409,422
+  availability_owner_unsealed_http_status_allowed: false
+  current_provider_http_availability_evidence_ref: FINDING-010-198
   cognition_source_search_target_schema: ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1
   cognition_source_search_first_literal_policy: exact-closed-domain-from-current-nontruncated-world-model-projection
   cognition_source_search_path_scope_operation_schema: COMPILED_SOURCE_OPERATION@2
@@ -1699,7 +1709,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:70ccfdcce5f681b2726ce976e414df1c22ca2058d66d8e5c876565feb21a3af0
+  system_contract_set_digest: sha256:848a64b01bda469f2c84ace75aff78dba45fa1bca6c6a45e314796077861fc4a
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

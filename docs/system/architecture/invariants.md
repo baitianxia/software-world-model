@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture]
 depends_on: [SYS-PRODUCT-VISION, SYS-ADR-017, SYS-ADR-019]
-derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140, FINDING-010-156]
+derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198]
 code: [src/software_world_model]
 tests: [tests]
 ---
@@ -67,6 +67,9 @@ tests: [tests]
    不得进入产品分支、Agent 决策或质量规则。用户一次提交只形成一个 immutable logical Turn。只有 preferred-route attempt 已密封 terminal、
    没有 authorized answer，且该 preferred profile 登记的受信 availability owner 密封了 exact
    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才可启动最多一个 fallback-route attempt。Raw unavailable/HTTP/outcome 信号本身不授予 fallback；
+   HTTP failure 的最小安全 evidence 必须由 Gateway 绑定 call/request/isolation 后密封，并经 repository/egress/Application receipt 重验。
+   当前 owner 只可从 typed pre-HTTP unavailable，或 exact dispatch/call receipt 下 Gateway-sealed 的
+   `{402,408,425,429,500,502,503,504}` 形成 unavailable；`400/401/403/404/409/422`、缺 evidence digest 的 status 和字符串匹配均失败关闭。
    结构化输出无效、Reviewer 拒绝、Capability/qualification、Application、Source、authorization/admission 或 Security failure 全部 non-eligible。格式修复、
    答案重写、补证后重答和 fresh Review 若在当前 profile 内继续，每次都必须是新的 authorized call，而不是重发同一 Provider request；无合法新调用时当前 Turn
    失败关闭，不 fallback。每个 fallback attempt 从同一受信 Turn input、Conversation Context 与 exact Cognition 独立运行完整主 Agent—证据—答案—审核链，

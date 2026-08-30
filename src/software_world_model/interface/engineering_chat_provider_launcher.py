@@ -36,7 +36,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRoutePlan,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
-    SealedPreDispatchUnavailableAvailabilityBoundary,
+    SealedExecutionProfileAvailabilityBoundary,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
@@ -513,7 +513,7 @@ def prepare_engineering_chat_provider_launcher(
         plan=route_plan,
         attempt_factory=attempt_factory,
         availability_boundary=(
-            SealedPreDispatchUnavailableAvailabilityBoundary(
+            SealedExecutionProfileAvailabilityBoundary(
                 clock=availability_clock,
             )
         ),

@@ -9,6 +9,7 @@ import threading
 import time
 import unittest
 
+from software_world_model.ai_infrastructure import model_egress_gateway
 from software_world_model.ai_infrastructure import (
     AdapterResponse,
     AuthorizedInputItem,
@@ -21,6 +22,7 @@ from software_world_model.ai_infrastructure import (
     ModelEgressGatewayServer,
     ModelExecutionContext,
     ModelGatewayResult,
+    ModelProviderHTTPFailureEvidence,
     ModelResultEligibility,
     PlatformProposalMode,
     ReplayClassification,
@@ -155,6 +157,7 @@ class _FixtureGateway:
             output_tokens=response.output_tokens,
             usage_complete=response.usage_complete,
             failure_code=None,
+            provider_http_failure_evidence=None,
             created_at=now,
             revised_at=now,
         )
@@ -660,6 +663,63 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 server_audits[0]["response_digest"],
             )
             self.assertFalse(socket_path.exists())
+
+    def test_http_failure_evidence_round_trips_through_closed_response_value(self) -> None:
+        base = _FixtureGateway().invoke(self.context())
+        evidence = ModelProviderHTTPFailureEvidence.seal(
+            model_call_id=base.call.model_call_id,
+            provider_request_digest=base.call.provider_request_digest,
+            isolation_receipt_digest=base.call.isolation_receipt_digest,
+            details={
+                "http_status": 503,
+                "provider_error_code": "service_unavailable",
+                "provider_request_id": "provider-request-safe-1",
+            },
+        )
+        assert evidence is not None
+        failed_call = replace(
+            base.call,
+            state=ModelCallState.FAILED,
+            actual_model_fingerprint=None,
+            provider_request_id=None,
+            output_digest=None,
+            input_tokens=None,
+            output_tokens=None,
+            usage_complete=False,
+            failure_code=ErrorCode.PROVIDER_HTTP_ERROR.value,
+            provider_http_failure_evidence=evidence,
+        )
+        eligibility_core = {
+            "eligible": False,
+            "reason": "MODEL_CALL_FAILED",
+            "actual_model_fingerprint": None,
+            "isolation_receipt_id": base.isolation_receipt.receipt_id.value,
+            "model_call_id": failed_call.model_call_id.value,
+        }
+        failed = ModelGatewayResult(
+            failed_call,
+            None,
+            base.isolation_receipt,
+            ModelResultEligibility(
+                eligible_for_production_domain_output=False,
+                reason="MODEL_CALL_FAILED",
+                actual_model_fingerprint=None,
+                isolation_receipt_id=base.isolation_receipt.receipt_id,
+                model_call_id=failed_call.model_call_id,
+                digest=digest_of(eligibility_core),
+            ),
+        )
+
+        decoded = model_egress_gateway._result_from_value(
+            model_egress_gateway._result_value(failed)
+        )
+
+        self.assertEqual(decoded.call, failed_call)
+        self.assertEqual(
+            decoded.call.provider_http_failure_evidence,
+            evidence,
+        )
+        self.assertIsNone(decoded.response)
 
     def test_round_trip_uses_an_exact_prebound_listener(self) -> None:
         fixture_gateway = _FixtureGateway()

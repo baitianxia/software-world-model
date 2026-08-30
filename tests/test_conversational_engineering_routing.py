@@ -13,7 +13,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRoutePlan,
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
-    SealedPreDispatchUnavailableAvailabilityBoundary,
+    SealedExecutionProfileAvailabilityBoundary,
     engineering_agent_execution_profile_route_ref,
 )
 from software_world_model.application_services.engineering_conversation import (
@@ -188,6 +188,8 @@ def _failure(
     code: str,
     classification: EngineeringProviderFailureClassification | None = None,
     provider_code: str | None = None,
+    provider_http_status: int | None = None,
+    provider_http_failure_evidence_digest: Digest | None = None,
     dispatches: int = 0,
     receipt_ref: str | None = None,
 ):
@@ -214,6 +216,10 @@ def _failure(
         model_dispatch_receipt_refs=((receipt_ref,) if receipt_ref else ()),
         provider_failure_classification=classification,
         provider_failure_code=provider_code,
+        provider_http_status=provider_http_status,
+        provider_http_failure_evidence_digest=(
+            provider_http_failure_evidence_digest
+        ),
     )
 
 
@@ -290,13 +296,24 @@ def _submit(service):
     )
 
 
-def _preferred_failure(classification, code, *, receipt_ref="preferred-failure"):
+def _preferred_failure(
+    classification,
+    code,
+    *,
+    receipt_ref="preferred-failure",
+    provider_http_status=None,
+    provider_http_failure_evidence_digest=None,
+):
     return {
         EngineeringProviderRouteRole.PREFERRED: lambda request: _failure(
             request,
             code="AGENT_MODEL_CALL_REJECTED",
             classification=classification,
             provider_code=code,
+            provider_http_status=provider_http_status,
+            provider_http_failure_evidence_digest=(
+                provider_http_failure_evidence_digest
+            ),
             dispatches=1,
             receipt_ref=receipt_ref,
         ),
@@ -449,7 +466,7 @@ class ConversationalEngineeringRoutingTests(unittest.TestCase):
         )
 
     def test_real_owner_promotes_only_gateway_sealed_pre_dispatch_unavailability(self) -> None:
-        boundary = SealedPreDispatchUnavailableAvailabilityBoundary(
+        boundary = SealedExecutionProfileAvailabilityBoundary(
             clock=lambda: datetime(2099, 1, 1, tzinfo=timezone.utc),
         )
         factory = _Factory(
@@ -476,6 +493,102 @@ class ConversationalEngineeringRoutingTests(unittest.TestCase):
         self.assertFalse(
             audit.preferred_availability_verdict.potential_duplicate_cost_risk
         )
+
+    def test_real_owner_promotes_gateway_sealed_unavailable_http_status(self) -> None:
+        evidence_digest = digest_of("gateway-sealed-http-503")
+        boundary = SealedExecutionProfileAvailabilityBoundary(
+            clock=lambda: datetime(2099, 1, 1, tzinfo=timezone.utc),
+        )
+        factory = _Factory(
+            _preferred_failure(
+                EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR,
+                "PROVIDER_HTTP_ERROR",
+                provider_http_status=503,
+                provider_http_failure_evidence_digest=evidence_digest,
+            )
+        )
+        service, router = _service(factory, availability_boundary=boundary)
+
+        submission = _submit(service)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 1)
+        self.assertEqual(len(factory.authorities), 2)
+        verdict = router.audit_for(
+            submission.turn.request_digest
+        ).preferred_availability_verdict
+        self.assertIsNotNone(verdict)
+        assert verdict is not None
+        self.assertEqual(verdict.raw_http_status, 503)
+        self.assertEqual(verdict.raw_failure_evidence_digest, evidence_digest)
+        self.assertFalse(verdict.potential_duplicate_cost_risk)
+
+    def test_real_owner_treats_current_profile_payment_required_as_unavailable(self) -> None:
+        boundary = SealedExecutionProfileAvailabilityBoundary(
+            clock=lambda: datetime(2099, 1, 1, tzinfo=timezone.utc),
+        )
+        factory = _Factory(
+            _preferred_failure(
+                EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR,
+                "PROVIDER_HTTP_ERROR",
+                provider_http_status=402,
+                provider_http_failure_evidence_digest=digest_of(
+                    "gateway-sealed-http-402"
+                ),
+            )
+        )
+        service, _ = _service(factory, availability_boundary=boundary)
+
+        submission = _submit(service)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 1)
+        self.assertEqual(len(factory.authorities), 2)
+
+    def test_real_owner_rejects_auth_config_and_unsealed_http_failures(self) -> None:
+        cases = (
+            (400, digest_of("http-400")),
+            (401, digest_of("http-401")),
+            (403, digest_of("http-403")),
+            (404, digest_of("http-404")),
+            (409, digest_of("http-409")),
+            (422, digest_of("http-422")),
+            (503, None),
+        )
+        for status, evidence_digest in cases:
+            with self.subTest(status=status, sealed=evidence_digest is not None):
+                factory = _Factory(
+                    _preferred_failure(
+                        EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR,
+                        "PROVIDER_HTTP_ERROR",
+                        provider_http_status=(
+                            status if evidence_digest is not None else None
+                        ),
+                        provider_http_failure_evidence_digest=evidence_digest,
+                    )
+                )
+                service, _ = _service(
+                    factory,
+                    availability_boundary=(
+                        SealedExecutionProfileAvailabilityBoundary(
+                            clock=lambda: datetime(
+                                2099, 1, 1, tzinfo=timezone.utc
+                            )
+                        )
+                    ),
+                )
+
+                submission = _submit(service)
+
+                self.assertEqual(
+                    submission.turn.state,
+                    ConversationTurnState.FAILED,
+                )
+                self.assertEqual(
+                    submission.turn.fallback_provider_attempt_count,
+                    0,
+                )
+                self.assertEqual(len(factory.authorities), 1)
 
     def test_real_owner_rejects_noncanonical_or_non_predispatch_raw_evidence(self) -> None:
         cases = (
@@ -537,7 +650,7 @@ class ConversationalEngineeringRoutingTests(unittest.TestCase):
                 service, _ = _service(
                     factory,
                     availability_boundary=(
-                        SealedPreDispatchUnavailableAvailabilityBoundary(
+                        SealedExecutionProfileAvailabilityBoundary(
                             clock=lambda: datetime(
                                 2099, 1, 1, tzinfo=timezone.utc
                             ),

@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -333,16 +333,19 @@ Agent question-eligible multi-domain Cognition+源码和 current Codex，同时�
 unknown 都使当前 provider attempt 或 Turn 失败关闭，除非同一 profile 内存在前述已授权新调用。Provider fallback 只能按 ADR-017 在同一 logical Turn 下从受信 original Turn input、
 exact Conversation Context 与 exact Cognition 重启完整 Agent attempt；不得复用失败 Provider 的隐藏状态或未密封中间产物。
 
-Fallback eligibility 不得从 raw error string、owner code、HTTP status 或 outcome 直接推断。model boundary receipt 必须保存原始 owner code 和 trusted failure kind，但它们只是证据。
+Fallback eligibility 不得从 raw error string、owner code、HTTP status 或 outcome 直接推断。model boundary receipt 必须保存原始 owner code 和 trusted failure kind；若 Gateway 密封了 HTTP failure evidence，还必须成对保存受限 status 与 evidence digest，并把两者经 Turn outcome、attempt receipt 和 availability verdict 绑定传递，但它们仍只是证据。
 只有 preferred execution profile 登记的受信 availability owner 能对 exact profile/ref、当前时间与 receipts 密封
-`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` route verdict。`PROVIDER_OUTPUT_INVALID`、`MODEL_REVIEW_REJECTED`、pre-dispatch、Capability/qualification、
+`PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` route verdict。当前 owner 只接受 typed pre-HTTP unavailable，或拥有 exact dispatch/call receipt 与
+Gateway evidence digest 的 `{402,408,425,429,500,502,503,504}`；`400/401/403/404/409/422`、未密封 status 和字符串相似性都 fail closed。
+`PROVIDER_OUTPUT_INVALID`、`MODEL_REVIEW_REJECTED`、pre-dispatch、Capability/qualification、
 Gateway/repository/result identity、Application、Source、authorization/admission 或 Security failure 均保持 non-eligible。每个 attempt authority/receipt 绑定 logical Turn parent、route role、execution profile、
 availability owner/verdict、admission plugin/session、execution-profile/disclosure/dispatch-admission/transport/model/terminal receipts 和 same-request retry 0；logical Turn Result 只取最后一个完整 attempt 的 Outcome，
 但汇总全部 attempt dispatch。availability owner 若基于 preferred outcome unknown 形成 unavailable verdict，后续 fallback 必须标记 duplicate-cost risk；late preferred-route result 固定
 `QUARANTINE_AUDIT_ONLY`，没有覆盖、拼接或追认最终结果的接口。
 
 Browser 的失败视图必须把 logical Turn/Agent/Application 的 execution-stage failure 与已密封 raw Provider evidence 分层显示；存在
-`provider_failure_classification/provider_failure_code` 时不能只显示上层 stage code，不存在时也不能推测 Provider 原因。这个显示不取得
+`provider_failure_classification/provider_failure_code` 时不能只显示上层 stage code，存在 Gateway-sealed HTTP evidence 时还要显示受限
+status 并保留 evidence digest identity，不存在时也不能推测 Provider 原因。这个显示不取得
 availability 或 fallback 权威，不得暴露 Provider 错误正文、credential、secret reference 或未密封模型输出。
 
 ## 当前配置实例与历史实现证据

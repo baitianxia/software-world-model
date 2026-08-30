@@ -37,6 +37,7 @@ from .model_gateway import (
     ModelGateway,
     ModelGatewayResult,
     ModelGatewayRepository,
+    ModelProviderHTTPFailureEvidence,
     ModelResultEligibility,
     PlatformProposalMode,
     ProviderAdapter,

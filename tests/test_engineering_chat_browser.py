@@ -128,6 +128,7 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertIn("turnEvidenceNode", script["body"].decode())
         self.assertIn("turnFailureSummary", script["body"].decode())
         self.assertIn("Provider evidence", script["body"].decode())
+        self.assertIn("provider_http_status", script["body"].decode())
         self.assertIn("fresh Review", script["body"].decode())
         self.assertIn("citation.locator", script["body"].decode())
 
@@ -289,6 +290,10 @@ class EngineeringChatBrowserTests(unittest.TestCase):
                         EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
                     ),
                     provider_failure_code="PROVIDER_HTTP_ERROR",
+                    provider_http_status=503,
+                    provider_http_failure_evidence_digest=digest_of(
+                        "gateway-http-failure-evidence"
+                    ),
                 )
 
         binding = EngineeringChatBinding.create(
@@ -325,6 +330,11 @@ class EngineeringChatBrowserTests(unittest.TestCase):
             turn["provider_failure_classification"], "PROVIDER_HTTP_ERROR"
         )
         self.assertEqual(turn["provider_failure_code"], "PROVIDER_HTTP_ERROR")
+        self.assertEqual(turn["provider_http_status"], 503)
+        self.assertEqual(
+            turn["provider_http_failure_evidence_digest"],
+            digest_of("gateway-http-failure-evidence").value,
+        )
         self.assertEqual(turn["provider_dispatch_count"], 1)
 
     def test_failure_does_not_stop_next_turn_and_get_returns_full_history(self) -> None:

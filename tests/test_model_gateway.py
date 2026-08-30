@@ -57,6 +57,7 @@ class RecordingAdapter:
         replay_classification: ReplayClassification = ReplayClassification.PINNED,
         usage_complete: bool = True,
         reject_output: bool = False,
+        http_failure_details: dict[str, str | int] | None = None,
     ) -> None:
         self.capabilities = ProviderAdapterCapabilities(
             no_external_access=isolated,
@@ -73,11 +74,18 @@ class RecordingAdapter:
         self.replay_classification = replay_classification
         self.usage_complete = usage_complete
         self.reject_output = reject_output
+        self.http_failure_details = http_failure_details
 
     def invoke(self, request):
         self.requests.append(request)
         if self.outcome_unknown:
             raise ProviderOutcomeUnknown("response connection lost")
+        if self.http_failure_details is not None:
+            raise DomainError(
+                ErrorCode.PROVIDER_HTTP_ERROR,
+                "fixture Provider returned a non-success HTTP response",
+                self.http_failure_details,
+            )
         response = AdapterResponse.create(
             provider_request_id="test-request-1",
             actual_model_fingerprint="fixture-model@1",
@@ -248,6 +256,69 @@ class ModelGatewayTests(unittest.TestCase):
         self.assertFalse(loaded.usage_complete)
         self.assertIsNone(loaded.input_tokens)
         self.assertFalse(result.eligibility.eligible_for_production_domain_output)
+
+    def test_safe_http_failure_evidence_is_sealed_persisted_and_replayed(self) -> None:
+        adapter = RecordingAdapter(
+            http_failure_details={
+                "http_status": 503,
+                "provider_error_code": "service_unavailable",
+                "provider_error_type": "server_error",
+                "provider_request_id": "provider-request-safe-1",
+                "ignored": "must-not-cross-the-gateway",
+            }
+        )
+        gateway = ModelGateway(
+            self.repository,
+            (adapter,),
+            id_generator=self.ids,
+            clock=self.clock,
+        )
+        context = self.context(self.manifest())
+
+        result = gateway.invoke(context)
+        evidence = result.call.provider_http_failure_evidence
+
+        self.assertEqual(result.call.state, ModelCallState.FAILED)
+        self.assertEqual(
+            result.call.failure_code,
+            ErrorCode.PROVIDER_HTTP_ERROR.value,
+        )
+        self.assertIsNotNone(evidence)
+        assert evidence is not None
+        self.assertEqual(evidence.http_status, 503)
+        self.assertEqual(evidence.provider_error_code, "service_unavailable")
+        self.assertEqual(evidence.provider_error_type, "server_error")
+        self.assertEqual(evidence.provider_request_id, "provider-request-safe-1")
+        recovered = gateway.recover_call(result.call.model_call_id)
+        self.assertEqual(recovered.call.provider_http_failure_evidence, evidence)
+
+        replayed = gateway.invoke(context)
+        self.assertTrue(replayed.replayed)
+        self.assertEqual(
+            replayed.call.provider_http_failure_evidence,
+            evidence,
+        )
+        self.assertEqual(len(adapter.requests), 1)
+
+    def test_http_failure_without_valid_status_has_no_availability_evidence(self) -> None:
+        adapter = RecordingAdapter(
+            http_failure_details={"provider_error_code": "unknown"}
+        )
+        gateway = ModelGateway(
+            self.repository,
+            (adapter,),
+            id_generator=self.ids,
+            clock=self.clock,
+        )
+
+        result = gateway.invoke(self.context(self.manifest()))
+
+        self.assertEqual(result.call.state, ModelCallState.FAILED)
+        self.assertEqual(
+            result.call.failure_code,
+            ErrorCode.PROVIDER_HTTP_ERROR.value,
+        )
+        self.assertIsNone(result.call.provider_http_failure_evidence)
 
     def test_rejected_output_preserves_completed_response_and_usage_for_audit(self) -> None:
         adapter = RecordingAdapter(

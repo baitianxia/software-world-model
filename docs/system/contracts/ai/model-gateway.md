@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -60,7 +60,10 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     用户的一次提交只创建一个 logical interaction unit；Engineering Conversation 中该单位是一个密封 Turn，兼容单轮协议中是 logical question。每个 route 使用不同
     attempt identity、Manifest、execution-profile/disclosure/dispatch-admission/transport/call/terminal receipts、Ledger/Package/Answer/Review 和 transport audit。
     只有 preferred-route attempt 已密封 terminal、没有 authorized answer，且 preferred profile 登记的受信 availability owner 密封 exact
-    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway 只保存 raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。
+    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway 对 HTTP failure 只密封
+    status 与字符集/长度受限的 provider code/type/request-id，证据必须绑定 call、provider request 与 isolation receipt，并在 repository
+    replay 和 Model Egress round-trip 中重验；response body、header、credential、Secret Reference 与任意错误正文不得进入。Gateway 只保存
+    raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。
     Output-invalid、Reviewer reject、Capability/qualification、Application、Source、authorization/admission 或 Security failure 均 non-eligible。Fallback attempt 必须从 immutable original
     interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，不得读取 preferred attempt 中间态；
     迟到的 preferred response 必须 quarantine 且永不覆盖。同一 Provider request retry 为 0，用户无需重提问题或新建 Session。availability owner 若基于 outcome unknown
@@ -77,7 +80,9 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     `PROVIDER_UNAVAILABLE` failed call；这与 HTTP bytes 已可能发送后的 `ProviderOutcomeUnknown` 不同。只有前者可证明 transport HTTP count
     为 0，后者必须保留潜在副作用/重复成本。两者以及 HTTP status/error 都只是 raw execution evidence，不直接授予 fallback；只有该
     execution profile 登记的受信 availability owner 可以结合 exact profile 与当前收据密封 availability verdict。普通 Domain/Gateway error 不得按字符串相似性取得
-    unavailable verdict 或 fallback 权力。
+    unavailable verdict 或 fallback 权力。当前通用 availability owner 只有在 exact dispatch/call receipt 与 Gateway HTTP evidence digest
+    成立时才可按 `{402,408,425,429,500,502,503,504}` 密封 unavailable；`400/401/403/404/409/422`、缺 evidence digest 的 status 与普通
+    owner code 必须 fail closed。
 14. Route execution profile 选择 admission plugin 时，每个 planned external run 必须在任何对应 Provider socket/connected descriptor
     provisioning、TLS、credential resolution 或 HTTP 前提交当前有效的通用 dispatch-admission receipt；每个新 request 还必须重验插件要求
     的可信输入或绑定该 request/run 的一次性 exact policy override。Receipt 必须绑定 route role、execution-profile/plugin ref+digest、
@@ -127,7 +132,8 @@ contract 把 schema authority 与 leading semantic authority 合并为恰好一�
 fallback、late-result quarantine、typed unavailable raw evidence 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
 clean identity 上 PASS。当前状态是
 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS /
-AVAILABILITY_OWNER_VERDICT_NOT_YET_ATTESTED / PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE / NOT_LIVE`。Artifact Session `@4` 已在本地确定性测试中把 standing parent
+HTTP_EVIDENCE_AVAILABILITY_OWNER_LOCAL_CANDIDATE / LIVE_ROUTE_NOT_YET_REATTESTED /
+PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE / NOT_LIVE`。Artifact Session `@4` 已在本地确定性测试中把 standing parent
 逐级绑定到 exact Session、Provider route、Turn attempt 与 one-use role disclosure receipt，并对 Source/provider/account/profile/budget/time
 drift 失败关闭；旧 `@1—@3` 不取得该状态。这些名称、策略与状态是当前配置实例和本地实现证据；current actual artifact、真实
 Gateway/transport dispatch 与 Browser 体验仍须验证，不能由 local candidate 推导 live PASS。

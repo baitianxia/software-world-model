@@ -177,8 +177,11 @@ function messageNode(message, turns) {
 }
 
 function turnFailureSummary(turn) {
+  const httpStatus=Number.isInteger(turn.provider_http_status)
+    ?` · HTTP ${turn.provider_http_status}`
+    :"";
   const providerEvidence=turn.provider_failure_code
-    ?` · Provider evidence ${turn.provider_failure_classification} / ${turn.provider_failure_code}`
+    ?` · Provider evidence ${turn.provider_failure_classification} / ${turn.provider_failure_code}${httpStatus}`
     :"";
   return `Turn ${turn.sequence} · FAILED · Execution ${turn.failure.code}${providerEvidence} · Provider dispatch ${turn.provider_dispatch_count}`;
 }

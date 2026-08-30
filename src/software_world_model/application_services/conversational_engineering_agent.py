@@ -121,6 +121,8 @@ class EngineeringAgentModelCallReceipt:
     provider_dispatch_count: int
     failure_kind: EngineeringAgentModelFailureKind | None
     failure_code: str | None
+    provider_http_status: int | None
+    provider_http_failure_evidence_digest: Digest | None
     digest: Digest
 
     @classmethod
@@ -133,6 +135,8 @@ class EngineeringAgentModelCallReceipt:
         gateway_call_ref: str | None = None,
         failure_kind: EngineeringAgentModelFailureKind | None = None,
         failure_code: str | None = None,
+        provider_http_status: int | None = None,
+        provider_http_failure_evidence_digest: Digest | None = None,
     ) -> "EngineeringAgentModelCallReceipt":
         if not isinstance(role, EngineeringAgentModelRole) or not isinstance(
             state, EngineeringAgentModelDispatchState
@@ -160,6 +164,31 @@ class EngineeringAgentModelCallReceipt:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "Agent model failure kind is invalid",
+            )
+        has_http_evidence = provider_http_status is not None
+        if has_http_evidence != (
+            provider_http_failure_evidence_digest is not None
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Provider HTTP status and failure-evidence digest must be present together",
+            )
+        if has_http_evidence and (
+            type(provider_http_status) is not int
+            or not 100 <= provider_http_status <= 599
+            or not isinstance(provider_http_failure_evidence_digest, Digest)
+            or failure_kind
+            is not EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR
+            or failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
+            or state
+            not in {
+                EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+                EngineeringAgentModelDispatchState.REPLAYED_REJECTED,
+            }
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Provider HTTP failure evidence does not bind an exact failed Gateway call",
             )
         if (
             (gateway_call_ref is not None)
@@ -205,7 +234,7 @@ class EngineeringAgentModelCallReceipt:
                 "Agent model dispatch state, Gateway reference, and failure disagree",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_MODEL_CALL_RECEIPT@2",
+            "schema": "ENGINEERING_AGENT_MODEL_CALL_RECEIPT@3",
             "model_call_ref": _text(
                 model_call_ref, "Agent model call reference"
             ),
@@ -217,6 +246,12 @@ class EngineeringAgentModelCallReceipt:
                 failure_kind.value if failure_kind is not None else None
             ),
             "failure_code": failure_code,
+            "provider_http_status": provider_http_status,
+            "provider_http_failure_evidence_digest": (
+                provider_http_failure_evidence_digest.value
+                if provider_http_failure_evidence_digest is not None
+                else None
+            ),
         }
         return cls(
             model_call_ref=core["model_call_ref"],
@@ -226,6 +261,10 @@ class EngineeringAgentModelCallReceipt:
             provider_dispatch_count=core["provider_dispatch_count"],
             failure_kind=failure_kind,
             failure_code=failure_code,
+            provider_http_status=provider_http_status,
+            provider_http_failure_evidence_digest=(
+                provider_http_failure_evidence_digest
+            ),
             digest=digest_of(core),
         )
 
@@ -1663,6 +1702,8 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             failure_code = _model_failure_code(exc.receipt)
             provider_failure_classification = None
             provider_failure_code = None
+            provider_http_status = None
+            provider_http_failure_evidence_digest = None
             role_matches = audit.expected_model_role is exc.receipt.role
             if not role_matches:
                 failure_code = "AGENT_PROTOCOL_VIOLATION"
@@ -1683,6 +1724,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     )
                     if provider_failure_classification is not None:
                         provider_failure_code = exc.receipt.failure_code
+                        provider_http_status = exc.receipt.provider_http_status
+                        provider_http_failure_evidence_digest = (
+                            exc.receipt.provider_http_failure_evidence_digest
+                        )
             outcome = self._failed_outcome(
                 request=request,
                 work_state=audit.work_state,
@@ -1696,6 +1741,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     provider_failure_classification
                 ),
                 provider_failure_code=provider_failure_code,
+                provider_http_status=provider_http_status,
+                provider_http_failure_evidence_digest=(
+                    provider_http_failure_evidence_digest
+                ),
             )
         except DomainError:
             outcome = self._failed_outcome(
@@ -2720,6 +2769,8 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         failure_code: str,
         provider_failure_classification: EngineeringProviderFailureClassification | None = None,
         provider_failure_code: str | None = None,
+        provider_http_status: int | None = None,
+        provider_http_failure_evidence_digest: Digest | None = None,
     ) -> EngineeringTurnExecutionOutcome:
         message = (
             "主工程 Agent 在本 Turn 的高安全熔断内未形成可授权结果；"
@@ -2775,6 +2826,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 provider_failure_classification
             ),
             provider_failure_code=provider_failure_code,
+            provider_http_status=provider_http_status,
+            provider_http_failure_evidence_digest=(
+                provider_http_failure_evidence_digest
+            ),
         )
 
     def _new_id(self, kind: str) -> StableId:
@@ -3100,6 +3155,10 @@ def _record_model_receipt(
         state=receipt.state,
         failure_kind=receipt.failure_kind,
         failure_code=receipt.failure_code,
+        provider_http_status=receipt.provider_http_status,
+        provider_http_failure_evidence_digest=(
+            receipt.provider_http_failure_evidence_digest
+        ),
     )
     if receipt != expected or any(
         item.digest == receipt.digest for item in audit.model_call_receipts
@@ -3129,6 +3188,10 @@ def _exact_model_receipt_sequence(
             state=receipt.state,
             failure_kind=receipt.failure_kind,
             failure_code=receipt.failure_code,
+            provider_http_status=receipt.provider_http_status,
+            provider_http_failure_evidence_digest=(
+                receipt.provider_http_failure_evidence_digest
+            ),
         )
         if receipt != expected or receipt.role is not role:
             return False

@@ -462,6 +462,12 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
             else None
         ),
         "provider_failure_code": turn.provider_failure_code,
+        "provider_http_status": turn.provider_http_status,
+        "provider_http_failure_evidence_digest": (
+            turn.provider_http_failure_evidence_digest.value
+            if turn.provider_http_failure_evidence_digest is not None
+            else None
+        ),
         "provider_route_receipt_ref": turn.provider_route_receipt_ref,
         "provider_availability_verdict_ref": (
             turn.provider_availability_verdict_ref

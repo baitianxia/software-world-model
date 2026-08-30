@@ -86,6 +86,7 @@ class OfflineAgentAdapter:
         outcome_unknown: bool = False,
         provider_unavailable: bool = False,
         failure_code: ErrorCode | None = None,
+        failure_details: dict[str, str | int] | None = None,
     ) -> None:
         self.capabilities = ProviderAdapterCapabilities(
             no_external_access=True,
@@ -100,6 +101,7 @@ class OfflineAgentAdapter:
         self.outcome_unknown = outcome_unknown
         self.provider_unavailable = provider_unavailable
         self.failure_code = failure_code
+        self.failure_details = failure_details or {}
         self.requests = []
 
     def invoke(self, request):
@@ -112,7 +114,11 @@ class OfflineAgentAdapter:
                 reason_code="CONNECTION_REFUSED",
             )
         if self.failure_code is not None:
-            raise DomainError(self.failure_code, "fixture Provider failure")
+            raise DomainError(
+                self.failure_code,
+                "fixture Provider failure",
+                self.failure_details,
+            )
         return AdapterResponse.create(
             provider_request_id="agent-fixture-request-1",
             actual_model_fingerprint="agent-fixture-model@1",
@@ -291,6 +297,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         outcome_unknown: bool = False,
         provider_unavailable: bool = False,
         failure_code: ErrorCode | None = None,
+        failure_details: dict[str, str | int] | None = None,
         authority_binding_digest=None,
         standing_authority: bool = False,
         adapter=None,
@@ -336,6 +343,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outcome_unknown=outcome_unknown,
             provider_unavailable=provider_unavailable,
             failure_code=failure_code,
+            failure_details=failure_details,
         )
         gateway = ModelGateway(
             SqliteModelGatewayRepository(
@@ -1867,7 +1875,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
 
     def test_sealed_http_failure_is_preserved_as_raw_route_evidence(self) -> None:
         service, model, _, adapter, _, _ = self._service(
-            failure_code=ErrorCode.PROVIDER_HTTP_ERROR
+            failure_code=ErrorCode.PROVIDER_HTTP_ERROR,
+            failure_details={
+                "http_status": 503,
+                "provider_error_code": "service_unavailable",
+                "provider_request_id": "safe-request-1",
+            },
         )
         conversation = service.create_conversation()
 
@@ -1891,6 +1904,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             submission.turn.provider_failure_code,
             ErrorCode.PROVIDER_HTTP_ERROR.value,
+        )
+        self.assertEqual(submission.turn.provider_http_status, 503)
+        self.assertIsNotNone(
+            submission.turn.provider_http_failure_evidence_digest
+        )
+        self.assertEqual(model.audits[0].receipt.provider_http_status, 503)
+        self.assertEqual(
+            model.audits[0].receipt.provider_http_failure_evidence_digest,
+            submission.turn.provider_http_failure_evidence_digest,
         )
 
     def test_typed_provider_unavailable_is_preserved_as_raw_route_evidence(self) -> None:

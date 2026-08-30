@@ -41,6 +41,7 @@ from .model_gateway import (
     ModelCallState,
     ModelExecutionContext,
     ModelGatewayResult,
+    ModelProviderHTTPFailureEvidence,
     ModelResultEligibility,
     PlatformProposalMode,
     ReplayClassification,
@@ -69,7 +70,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
 )
 MODEL_EGRESS_REQUEST_SCHEMA = "swm.model-egress-request@1"
-MODEL_EGRESS_RESPONSE_SCHEMA = "swm.model-egress-response@1"
+MODEL_EGRESS_RESPONSE_SCHEMA = "swm.model-egress-response@2"
 
 _HEADER = struct.Struct("!I")
 _MAX_FRAME_BYTES = 16 * 1024 * 1024
@@ -1452,6 +1453,38 @@ def _result_value(result: ModelGatewayResult) -> dict[str, object]:
             "output_tokens": call.output_tokens,
             "usage_complete": call.usage_complete,
             "failure_code": call.failure_code,
+            "provider_http_failure_evidence": (
+                {
+                    "schema": call.provider_http_failure_evidence.schema,
+                    "model_call_id": (
+                        call.provider_http_failure_evidence.model_call_id.value
+                    ),
+                    "provider_request_digest": (
+                        call.provider_http_failure_evidence.provider_request_digest.value
+                    ),
+                    "isolation_receipt_digest": (
+                        call.provider_http_failure_evidence.isolation_receipt_digest.value
+                    ),
+                    "failure_code": (
+                        call.provider_http_failure_evidence.failure_code
+                    ),
+                    "http_status": (
+                        call.provider_http_failure_evidence.http_status
+                    ),
+                    "provider_error_code": (
+                        call.provider_http_failure_evidence.provider_error_code
+                    ),
+                    "provider_error_type": (
+                        call.provider_http_failure_evidence.provider_error_type
+                    ),
+                    "provider_request_id": (
+                        call.provider_http_failure_evidence.provider_request_id
+                    ),
+                    "digest": call.provider_http_failure_evidence.digest.value,
+                }
+                if call.provider_http_failure_evidence is not None
+                else None
+            ),
             "created_at": call.created_at.isoformat(),
             "revised_at": call.revised_at.isoformat(),
         },
@@ -1614,6 +1647,7 @@ def _result_from_value(value: object) -> ModelGatewayResult:
             "output_tokens",
             "usage_complete",
             "failure_code",
+            "provider_http_failure_evidence",
             "created_at",
             "revised_at",
         },
@@ -1648,6 +1682,76 @@ def _result_from_value(value: object) -> ModelGatewayResult:
         },
         "model eligibility",
     )
+    evidence_value = call_value["provider_http_failure_evidence"]
+    provider_http_failure_evidence = None
+    if evidence_value is not None:
+        evidence_mapping = _mapping(
+            evidence_value, "Provider HTTP failure evidence"
+        )
+        _exact_keys(
+            evidence_mapping,
+            {
+                "schema",
+                "model_call_id",
+                "provider_request_digest",
+                "isolation_receipt_digest",
+                "failure_code",
+                "http_status",
+                "provider_error_code",
+                "provider_error_type",
+                "provider_request_id",
+                "digest",
+            },
+            "Provider HTTP failure evidence",
+        )
+        provider_http_failure_evidence = ModelProviderHTTPFailureEvidence(
+            schema=_text_value(
+                evidence_mapping["schema"],
+                "Provider HTTP failure evidence schema",
+            ),
+            model_call_id=StableId(
+                _text_value(
+                    evidence_mapping["model_call_id"],
+                    "Provider HTTP failure model call ID",
+                )
+            ),
+            provider_request_digest=Digest(
+                _text_value(
+                    evidence_mapping["provider_request_digest"],
+                    "Provider HTTP failure request digest",
+                )
+            ),
+            isolation_receipt_digest=Digest(
+                _text_value(
+                    evidence_mapping["isolation_receipt_digest"],
+                    "Provider HTTP failure isolation receipt digest",
+                )
+            ),
+            failure_code=_text_value(
+                evidence_mapping["failure_code"],
+                "Provider HTTP failure code",
+            ),
+            http_status=_exact_positive_int(
+                evidence_mapping["http_status"],
+                "Provider HTTP failure status",
+            ),
+            provider_error_code=_optional_text(
+                evidence_mapping["provider_error_code"]
+            ),
+            provider_error_type=_optional_text(
+                evidence_mapping["provider_error_type"]
+            ),
+            provider_request_id=_optional_text(
+                evidence_mapping["provider_request_id"]
+            ),
+            digest=Digest(
+                _text_value(
+                    evidence_mapping["digest"],
+                    "Provider HTTP failure evidence digest",
+                )
+            ),
+        )
+        provider_http_failure_evidence.require_exact()
     call = ModelCallRecord(
         model_call_id=StableId(
             _text_value(call_value["model_call_id"], "model call ID")
@@ -1703,9 +1807,23 @@ def _result_from_value(value: object) -> ModelGatewayResult:
         output_tokens=_optional_nonnegative_int(call_value["output_tokens"]),
         usage_complete=_exact_bool(call_value["usage_complete"], "usage complete"),
         failure_code=_optional_text(call_value["failure_code"]),
+        provider_http_failure_evidence=provider_http_failure_evidence,
         created_at=_time_value(call_value["created_at"], "created at"),
         revised_at=_time_value(call_value["revised_at"], "revised at"),
     )
+    if provider_http_failure_evidence is not None and (
+        call.state is not ModelCallState.FAILED
+        or call.failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
+        or provider_http_failure_evidence.model_call_id != call.model_call_id
+        or provider_http_failure_evidence.provider_request_digest
+        != call.provider_request_digest
+        or provider_http_failure_evidence.isolation_receipt_digest
+        != call.isolation_receipt_digest
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "egress Provider HTTP failure evidence does not bind its model call",
+        )
     response_value = result["response"]
     response: AdapterResponse | None
     if response_value is None:

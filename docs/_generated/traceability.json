@@ -3618,6 +3618,27 @@
       "tests/test_engineering_question_cognition.py"
     ]
   },
+  "FINDING-010-198": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-198.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/conversational_engineering_routing.py",
+      "src/software_world_model/application_services/engineering_conversation.py",
+      "src/software_world_model/infrastructure/sqlite_model_gateway_repository.py",
+      "src/software_world_model/interface/engineering_chat_browser.py",
+      "src/software_world_model/interface/engineering_chat_provider_launcher.py"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_conversational_engineering_routing.py",
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -5042,6 +5063,8 @@
       "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py",
       "src/software_world_model/application_services/conversational_engineering_routing.py",
       "src/software_world_model/application_services/deepseek_dispatch_admission.py",
+      "src/software_world_model/infrastructure/sqlite_model_gateway_repository.py",
+      "src/software_world_model/interface/engineering_chat_browser.py",
       "src/software_world_model/interface/engineering_chat_provider_launcher.py",
       "src/software_world_model/interface/engineering_chat_provider_runtime.py",
       "src/software_world_model/interface/engineering_chat_session_artifact.py",
@@ -5053,6 +5076,7 @@
       "tests/test_model_egress_gateway.py",
       "tests/test_conversational_engineering_model.py",
       "tests/test_conversational_engineering_routing.py",
+      "tests/test_engineering_chat_browser.py",
       "tests/test_deepseek_dispatch_admission.py",
       "tests/test_engineering_chat_provider_launcher.py",
       "tests/test_engineering_chat_provider_runtime.py",
