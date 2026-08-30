@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@24"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@25"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@24"
+    "conversational-engineering-agent-no-tools-prompt@25"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@24"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@25"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@16"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -378,8 +378,13 @@ Claim: state only that the caller invokes the expression or that the expression
 appears in the observed local order, and separately state that the cited caller
 source does not establish the callee, database, remote-state, or consumer-visible
 effect; or delete the challenged assertion when it is not needed for the User's
-requested conclusion. A method or call-expression name never adds effect
-semantics by itself.
+requested conclusion. Remove every model-authored effect label surrounding the
+exact call expression: wording such as a database write, persistence, state
+update, cleanup effect, message side effect, successful insert, or corresponding
+"... call" label still asserts that effect. An adjacent caveat that the effect is
+unconfirmed does not cure a contradictory effect label. Use only the exact call
+expression and its source-visible local order until current SUPPORT covers the
+effect. A method or call-expression name never adds effect semantics by itself.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
@@ -3790,6 +3795,11 @@ def _initial_format_repair_policy() -> dict[str, object]:
 def _closed_contract_repair_directive(message: str) -> str:
     if "repeated a forbidden current-Turn Source query" in message:
         return "CHOOSE_DIFFERENT_LEGAL_ACTION_OR_ALLOWED_PURE_BOUNDARY_DRAFT"
+    if "non-approved Review requires Findings" in message:
+        return (
+            "CHANGE_ONLY_DECISION_TO_APPROVED_KEEP_ALL_CLOSED_ASSESSMENTS_"
+            "AND_EMPTY_FINDINGS"
+        )
     if "focused Reviewer Findings" in message:
         return (
             "BIND_EACH_RETAINED_FINDING_TO_ONE_ALLOWED_CHALLENGE_ASSESSMENT_"
@@ -4695,6 +4705,11 @@ def _review_feedback_view(
                     "caller_effect_repeat_repair_makes_unknown_effect_"
                     "explicit_or_deletes_assertion"
                 ): True,
+                "caller_effect_repair_removes_authored_effect_labels": True,
+                "adjacent_unknown_effect_caveat_cures_effect_label": False,
+                "caller_effect_safe_restatement": (
+                    "EXACT_CALL_EXPRESSION_AND_SOURCE_VISIBLE_LOCAL_ORDER_ONLY"
+                ),
                 "method_or_call_expression_name_has_no_effect_semantics": True,
                 "pure_boundary_must_not_be_promoted_to_affirmative_claim": True,
                 "limitation_global_finding_preferred_repair": (

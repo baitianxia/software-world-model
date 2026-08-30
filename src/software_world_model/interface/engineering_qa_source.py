@@ -36,6 +36,9 @@ from software_world_model.source_integration import LocalGitConnector
 _REGULAR_GIT_MODES = frozenset({"100644", "100755"})
 _LOCAL_GIT_SOURCE_PROFILE_SCHEMA = "ENGINEERING_QA_LOCAL_GIT_SOURCE_PROFILE@1"
 _PROFILE_REFERENCE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$")
+_IDENTIFIER_NAVIGATION_TOKEN = re.compile(
+    r"[A-Z]+(?=[A-Z][a-z]|[0-9]|$)|[A-Z]?[a-z]+|[0-9]+"
+)
 _PROFILE_EVIDENCE_CLASSES = frozenset(
     {
         EngineeringEvidenceClass.SOURCE,
@@ -108,6 +111,26 @@ def _paths_overlap(left: str, right: str) -> bool:
     )
 
 
+def _identifier_navigation_terms(value: str) -> tuple[str, ...]:
+    """Project identifier components for trusted path-only navigation.
+
+    A content literal such as ``createOrder`` need not occur in the filename
+    of the declaring implementation.  Its stable identifier component
+    ``Order`` can still prioritize ``OmsPortalOrderServiceImpl.java`` using
+    only already-authorized tree metadata.  Short components are excluded to
+    avoid turning generic ``id``/``by`` fragments into a broad path cohort.
+    """
+
+    return tuple(
+        dict.fromkeys(
+            token.casefold()
+            for fragment in re.split(r"[^A-Za-z0-9]+", value)
+            for token in _IDENTIFIER_NAVIGATION_TOKEN.findall(fragment)
+            if len(token) >= 4
+        )
+    )
+
+
 def _search_entry_rank(path: str, query: str) -> tuple[int, str]:
     """Prefer authorized path names that contain the literal search token.
 
@@ -121,11 +144,15 @@ def _search_entry_rank(path: str, query: str) -> tuple[int, str]:
     folded_path = path.casefold()
     name = PurePosixPath(path).name.casefold()
     stem = PurePosixPath(path).stem.casefold()
+    query_terms = frozenset(_identifier_navigation_terms(query))
+    stem_terms = frozenset(
+        _identifier_navigation_terms(PurePosixPath(path).stem)
+    )
     if stem == folded_query or name == folded_query:
         priority = 0
     elif folded_query in name:
         priority = 1
-    elif folded_query in folded_path:
+    elif folded_query in folded_path or query_terms.intersection(stem_terms):
         priority = 2
     else:
         priority = 3
@@ -420,7 +447,7 @@ class LocalGitRetrievalWorker:
         failure_code: str | None = None
         allowed_entry_count = len(entries)
         candidate_ordering = (
-            "QUERY_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@2"
+            "QUERY_IDENTIFIER_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@3"
         )
         search_scope_coverage: dict[str, str] = {
             "search_path_scope_count": "0",
@@ -516,7 +543,7 @@ class LocalGitRetrievalWorker:
                 "search_scope": "ORIGINAL_QUESTION_EXPLICIT_SOURCE_PREFIXES",
             }
             candidate_ordering = (
-                "QUESTION_PREFIX_QUERY_PATH_THEN_ROTATING_CANONICAL_FALLBACK@1"
+                "QUESTION_PREFIX_QUERY_IDENTIFIER_PATH_THEN_ROTATING_CANONICAL_FALLBACK@2"
             )
         ranked_candidates = tuple(
             sorted(
@@ -544,6 +571,9 @@ class LocalGitRetrievalWorker:
             *fallback_candidates[:fallback_offset_applied],
         )
         folded_query = operation.query.casefold()
+        identifier_navigation_terms = _identifier_navigation_terms(
+            operation.query
+        )
         exact_stem_candidate_count = sum(
             PurePosixPath(entry.path).stem.casefold() == folded_query
             for _, entry in ranked_entries
@@ -669,6 +699,19 @@ class LocalGitRetrievalWorker:
                         filename_content_match_count
                     ),
                     "filename_early_stop": str(filename_early_stop).lower(),
+                    "identifier_navigation_term_count": str(
+                        len(identifier_navigation_terms)
+                    ),
+                    "identifier_navigation_term_digest": (
+                        digest_of(
+                            [
+                                "ENGINEERING_QA_IDENTIFIER_NAVIGATION_TERMS@1",
+                                identifier_navigation_terms,
+                            ]
+                        ).value
+                        if identifier_navigation_terms
+                        else "NONE"
+                    ),
                     "query_digest": digest_of(
                         ["ENGINEERING_QA_LITERAL_QUERY@1", operation.query]
                     ).value,

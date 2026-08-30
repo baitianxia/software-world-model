@@ -322,6 +322,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             _closed_contract_repair_directive(
+                "non-approved Review requires Findings"
+            ),
+            "CHANGE_ONLY_DECISION_TO_APPROVED_KEEP_ALL_CLOSED_ASSESSMENTS_"
+            "AND_EMPTY_FINDINGS",
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
                 "focused Reviewer DEFECT Claim indices must equal the exact caller challenges"
             ),
             "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE",
@@ -655,7 +662,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1097,7 +1104,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1946,7 +1953,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2437,7 +2444,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -3476,6 +3483,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "caller_effect_repeat_repair_makes_unknown_effect_"
                 "explicit_or_deletes_assertion"
             ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "caller_effect_repair_removes_authored_effect_labels"
+            ]
+        )
+        self.assertFalse(
+            same_package_feedback["review_rewrite_contract"][
+                "adjacent_unknown_effect_caveat_cures_effect_label"
+            ]
+        )
+        self.assertEqual(
+            same_package_feedback["review_rewrite_contract"][
+                "caller_effect_safe_restatement"
+            ],
+            "EXACT_CALL_EXPRESSION_AND_SOURCE_VISIBLE_LOCAL_ORDER_ONLY",
         )
         self.assertTrue(
             same_package_feedback["review_rewrite_contract"][

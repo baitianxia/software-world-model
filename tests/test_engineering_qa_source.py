@@ -312,7 +312,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         coverage = dict(result.coverage)
         self.assertEqual(
             coverage["candidate_ordering"],
-            "QUERY_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@2",
+            "QUERY_IDENTIFIER_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@3",
         )
         self.assertEqual(coverage["exact_stem_candidate_count"], "1")
         self.assertEqual(coverage["filename_candidate_count"], "1")
@@ -338,6 +338,72 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             filename_only_coverage["exact_stem_candidate_count"], "0"
         )
         self.assertEqual(filename_only_coverage["filename_early_stop"], "false")
+
+    def test_search_prioritizes_identifier_component_beyond_file_fuse(self):
+        search_root = self.repository / "module/src/main/java/example"
+        search_root.mkdir(parents=True)
+        for index in range(75):
+            (search_root / f"AFile{index:02d}.java").write_text(
+                "final class Fixture {}\n",
+                encoding="utf-8",
+            )
+        target = search_root / "OmsPortalOrderServiceImpl.java"
+        target.write_text(
+            "final class OmsPortalOrderServiceImpl { void createOrder() {} }\n",
+            encoding="utf-8",
+        )
+        for index in range(8):
+            (search_root / f"ZFile{index:02d}.java").write_text(
+                "final class Fixture {}\n",
+                encoding="utf-8",
+            )
+        self.git("add", "module")
+        self.git("commit", "-q", "-m", "identifier component search fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-identifier-component-search-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("module/src/main/java",),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("module/src/main/java",),
+                query="createOrder",
+                search_path_prefix_scope=("module/src/main/java",),
+                maximum_files=56,
+                maximum_source_bytes=64_000,
+            )
+        )
+
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(result.failure_code, "SOURCE_SEARCH_FILE_LIMIT_REACHED")
+        self.assertEqual(result.files_read, 56)
+        self.assertEqual(len(result.items), 1)
+        self.assertEqual(
+            result.items[0].path,
+            "module/src/main/java/example/OmsPortalOrderServiceImpl.java",
+        )
+        coverage = dict(result.coverage)
+        self.assertEqual(coverage["scoped_entry_count"], "84")
+        self.assertEqual(coverage["fallback_examined_file_count"], "55")
+        self.assertEqual(coverage["identifier_navigation_term_count"], "2")
+        self.assertEqual(
+            coverage["candidate_ordering"],
+            "QUESTION_PREFIX_QUERY_IDENTIFIER_PATH_THEN_ROTATING_CANONICAL_FALLBACK@2",
+        )
 
     def test_search_reads_every_exact_stem_candidate_before_early_stop(self):
         for module in ("first", "second"):

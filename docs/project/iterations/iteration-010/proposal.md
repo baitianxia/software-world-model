@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -124,6 +124,13 @@ Draft。current `@23/@15/@18` 把 exact challenged Claim 独立投影给 Reviewe
 `NOT_DISCLOSED_IN_DRAFT`。current `@24/@16/@19` 逐 challenge 投影 sealed reference flag 与 fragment-state closed disposition 表；
 targeted `34/34`、相邻 16 模块 `261/261` PASS，wire output schema、authority、route、budget、retry 与 Production 边界不变，fresh
 run-098 是下一真实证据。
+
+`FINDING-010-223/224/225 / run-098` 密封 Ark 24 dispatch（21 completed、1 pre-dispatch TLS failure、2 sealed 429）与 DeepSeek
+32/32 completed；fallback 仍只由 trusted Ark unavailable 自动触发，retry、人工审批与 Production 均为 0。Q1 ACCEPTED、Q4 零调用
+Clarification；Q2 错误 ACCEPTED 一份仅含 12 个无关 Controller Citation 的不完整答案，Q3 review-limit failure，Q5 structured-invalid，
+整体仍 FAIL。current Worker 以 Java identifier components 导航 authorized tree path 而不提高 56/64 fuse；current `@25/@16/@20` 删除
+caller-only rewrite 的 authored effect labels，并把 closed body + empty Findings 的 repair 收敛为 decision-only APPROVED。wire output schema、
+authority、route、budget、retry 与 Production 边界不变，fresh run-099 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

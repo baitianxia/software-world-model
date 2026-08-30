@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -88,6 +88,12 @@ rewrite；targeted `34/34`、相邻 16 模块 `261/261` PASS，下一项是文�
 post-dispatch unknown。Q3 的 exact-Claim/caller-effect closure 已通过 13 个 challenge，但 bound + empty Boundary 被 focused Reviewer
 与 repair 两次错标 `NOT_DISCLOSED_IN_DRAFT`。current `@24/@16/@19` 密封逐 challenge reference/fragment-state disposition 表；targeted
 `34/34`、相邻 16 模块 `261/261`、documentation check `628`、plan snapshot/diff 与 current hook 均 PASS，下一项是提交与 run-098。
+
+`FINDING-010-223/224/225 / run-098` 已验证 Ark trusted-unavailable → DeepSeek fallback 仍正常：Ark 24 dispatch、DeepSeek 32/32
+completed。Q1/Q4 通过，Q2 的第 76 个 implementation 越过 file fuse并被错误接受，Q3 caller rewrite 保留 authored effect label，Q5
+empty-Findings Review 缺少 decision-only repair。current Worker 做 bounded identifier-component path navigation；current `@25/@16/@20`
+分别闭合 effect-label rewrite 与 empty-Findings repair。六模块 `155/155`、相邻 19 模块 `265/265`、documentation check `631`、plan
+snapshot/diff 与 current hook 均 PASS，下一项是提交与 run-099。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|
