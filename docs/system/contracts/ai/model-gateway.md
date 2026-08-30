@@ -84,11 +84,14 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     成立时才可按 `{402,408,425,429,500,502,503,504}` 密封 unavailable；`400/401/403/404/409/422`、缺 evidence digest 的 status 与普通
     owner code 必须 fail closed。
 14. Route execution profile 选择 admission plugin 时，每个 planned external run 必须在任何对应 Provider socket/connected descriptor
-    provisioning、TLS、credential resolution 或 HTTP 前提交当前有效的通用 dispatch-admission receipt；每个新 request 还必须重验插件要求
+    provisioning、TLS、credential resolution 或 HTTP 前提交当前有效的通用 dispatch-admission receipt；plugin 可以在 listener preparation
+    时先密封不授权外调的 plan/preparation decision，并在该 route 第一次真实 request preflight 才激活 run receipt，但激活必须重新执行全部
+    time-sensitive checks、保持同一 exact plan，且仍早于 credential/TLS/HTTP。每个后续 request 还必须重验插件要求
     的可信输入或绑定该 request/run 的一次性 exact policy override。Receipt 必须绑定 route role、execution-profile/plugin ref+digest、
     plugin version、trusted input source、run/Provider/model/product/source/session identity、calls/tokens/duration 上限、verdict、standing/delta
     authority chain 和完整质量预算。正常允许 verdict 可由可信系统自动派生；任何策略例外都必须由 profile 声明的 exact authority 提供。
-    receipt 缺失、过期、identity/plugin/input 漂移、条件失效或 override 越界都必须在外部网络前失败关闭，并证明该 route 的 socket/
+    preparation decision 不能消耗 active receipt 的 duration，也不能作为 dispatch authorization；active receipt 缺失、过期、
+    identity/plugin/input 漂移、条件失效或 override 越界都必须在外部网络前失败关闭，并证明该 route 的 socket/
     descriptor、TLS、credential 和 HTTP dispatch 均为 0。这类拒绝是 dispatch admission failure，不得伪装为 `ProviderUnavailable`、HTTP
     error 或 outcome unknown，也不得取得 retry/fallback 权力。条件失效后不得创建该 route 的新 request；已发出的 request 继续沿既有
     零重试/结果未知语义密封，但不能由不完整 Answer/Review 获得交付权。

@@ -98,8 +98,13 @@ obligation、对所有 resolved candidate 审核披露、以 closed semantic sco
 `FINDING-010-205 / run-083` 随后取得 Q1/Q3/Q5 accepted、Q4 零 dispatch Clarification，且 Q5 已关闭旧 diagnostic/effect 缺陷；Ark
 `43/43/43/43` 全成功、DeepSeek 0 正确。Q2 的 JSON syntax repair 后才出现独立 cross-disposition contract failure；Q1 仍披露无关 global
 metric 并保留 stale Boundary。current `@11/@5` candidate 用严格单调 validator-stage second repair、exact canonical Source resource identity 与
-all-Package-Boundary materiality challenge 修复，仍受 15 次 per-Turn authority 硬限制；144 tests PASS、外调 0。fresh run-084 是质量 Gate 的下一
-执行证据。
+all-Package-Boundary materiality challenge 修复，仍受 15 次 per-Turn authority 硬限制；其后继结果由 `FINDING-010-206/207` 记录。
+
+`FINDING-010-206/207 / run-084` 的 Q4 继续零 dispatch Clarification，其余工程 Turn 均失败。最早产品偏差是 matcher 错误要求 Search 使用
+`EXACT_STATIC_SOURCE_TEXT`，而真实 retrieval 为 `LITERAL_TEXT_SEARCH_HIT`；Review input 也未直接给出 kind-specific closed disposition
+domain。Ark 另有一次 HTTP 前 typed TLS unavailable，但旧 DeepSeek 600 秒 receipt 已在 listener preparation 后过期，尽管 pricing check 当时
+仍小于 900 秒且周六闲时。current `@12/@6/@7` 与 DeepSeek policy `@3` 已分别闭合真实 Search/Read modality、allowed dispositions、authored
+string whitespace 和 first-real-preflight receipt activation；144 tests PASS、外调 0。fresh run-085 是质量 Gate 的下一执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

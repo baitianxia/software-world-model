@@ -129,7 +129,7 @@ class DeepSeekDispatchAdmissionTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     controller.receipt.public_status()["policy_ref"],
-                    "ITER-010-PDR-007@2",
+                    "ITER-010-PDR-007@3",
                 )
 
         monday_peak = self._at(11, 0, 0, day=31)
@@ -287,6 +287,73 @@ class DeepSeekDispatchAdmissionTests(unittest.TestCase):
             {controller.receipt.digest},
         )
         self.assertEqual(controller.public_audit()["invoked_dispatch_count"], 2)
+
+    def test_fallback_duration_starts_at_first_deepseek_preflight(self) -> None:
+        prepared_at = self._at(18, 46, day=29)
+        clock = _Clock(prepared_at)
+        controller = DeepSeekDispatchAdmissionController(
+            plan=self._plan(prepared_at, duration=600),
+            admitted_at=prepared_at,
+            clock=clock,
+        )
+        preparation_digest = controller.preparation_receipt.digest
+
+        clock.value = prepared_at + timedelta(minutes=11)
+        authorization = controller.authorize_dispatch(
+            execution_envelope_ref="deepseek:late-fallback",
+            input_token_upper_bound=1_000,
+            maximum_output_tokens=8_192,
+        )
+        self.assertNotEqual(controller.receipt.digest, preparation_digest)
+        self.assertEqual(controller.receipt.admitted_at, clock.value)
+        self.assertEqual(
+            controller.receipt.valid_until,
+            clock.value + timedelta(seconds=600),
+        )
+        self.assertEqual(
+            authorization.admission_receipt_digest,
+            controller.receipt.digest,
+        )
+        audit = controller.public_audit()
+        self.assertTrue(audit["dispatch_admission_activated"])
+        self.assertEqual(
+            audit["activation_mode"],
+            "FIRST_DEEPSEEK_PREFLIGHT",
+        )
+        self.assertEqual(
+            audit["preparation_admission_receipt"]["digest"],
+            preparation_digest.value,
+        )
+        self.assertEqual(
+            audit["admission_receipt"]["digest"],
+            controller.receipt.digest.value,
+        )
+
+    def test_first_preflight_rechecks_pricing_freshness(self) -> None:
+        prepared_at = self._at(18, 46, day=29)
+        clock = _Clock(prepared_at)
+        controller = DeepSeekDispatchAdmissionController(
+            plan=self._plan(prepared_at, duration=600),
+            admitted_at=prepared_at,
+            clock=clock,
+        )
+        self.assertTrue(controller.preparation_receipt.allowed)
+
+        clock.value = prepared_at + timedelta(minutes=16)
+        with self.assertRaises(DomainError):
+            controller.authorize_dispatch(
+                execution_envelope_ref="deepseek:stale-first-fallback",
+                input_token_upper_bound=1_000,
+                maximum_output_tokens=8_192,
+            )
+        self.assertEqual(
+            controller.receipt.decision,
+            DeepSeekDispatchAdmissionDecision.DENIED_PRICING_CHECK,
+        )
+        self.assertEqual(
+            controller.public_audit()["authorized_dispatch_count"],
+            0,
+        )
 
     def test_changed_or_stale_pricing_check_fails_closed(self) -> None:
         current = self._at(14, 50, day=29)

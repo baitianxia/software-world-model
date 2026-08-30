@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -62,7 +62,7 @@ run-068/069 遇到 raw Ark HTTP error，run-070 又遇到 Ark pre-HTTP unavailab
 
 `FINDING-010-179` 已纠正执行准备结论与 fallback 闲时日历：`Asia/Shanghai` 周六、周日全天属于闲时，工作日继续使用三个既有时段；
 相邻闲时连续计算，因此周五 `18:00` 至周一 `09:00` 不会因午夜换日被误阻断。当前不再处于“只能等待外部环境”的 hold；下一 fresh run
-使用 policy `ITER-010-PDR-007@2` 和 900 秒内的官方 pricing check，Ark 成功时继续 primary，Ark 产生可信 unavailable verdict 时可直接进入
+使用 policy `ITER-010-PDR-007@3` 和 900 秒内的官方 pricing check，Ark 成功时继续 primary，Ark 产生可信 unavailable verdict 时可直接进入
 既有 DeepSeek fallback。standing authority、计划游标和 Production 边界均不改变。
 
 `FINDING-010-180` 已封存 run-071 的新最早偏差：首步 World Model 已给出 `UmsAdminServiceImpl` 等 exact declaring type/source path，Primary
@@ -210,3 +210,15 @@ Clarification；Q5 已关闭 resolved Search diagnostic 与 caller→effect 两�
 validator category 严格前进时允许第二次 same-profile repair，以 exact canonical resource identity 关联 Search/Read，并对每个 Package Boundary
 执行 typed materiality challenge；per-Turn 15 dispatch authority 不变。直接和相邻 Chat 边界 144 tests PASS、外调 0；下一步是不暂停地提交
 candidate 并执行 fresh run-084 五问 Browser successor。run-083 仍不是质量或 MVP PASS。
+
+`FINDING-010-206/207 / run-084` 已执行该 successor。Ark 创建 44 个 call：43 个 TLS/credential/HTTP 完成，另 1 个在 HTTP 前发生 typed
+`TLS_FAILURE`；post-dispatch unknown、retry、人工审批和 Production 均为 0。该可信 unavailable 出现在 listener preparation 约 11 分钟后；
+DeepSeek pricing check 当时仍小于 900 秒且周六全天闲时，但旧 `@2` receipt 的 600 秒已从 listener 启动提前耗尽，故 DeepSeek 在
+credential/TLS/HTTP 前保持 0。Q4 fresh Conversation 继续零 dispatch Clarification，其余四题失败。最早产品偏差是 matcher 错把真实
+Search `LITERAL_TEXT_SEARCH_HIT` 当成 `EXACT_STATIC_SOURCE_TEXT`，使同资源 full Read 不能形成 `RESOLVED_ACQUISITION`；同时 Review input
+没有直接给出 kind-specific closed disposition domain，Prompt/preflight 也未显式禁止 authored string 尾随换行。current
+`@12/@6/@7` candidate 已按真实 Search/Read modality、authorized Citation 和 exact canonical path 重算，逐 challenge 投影
+`allowed_exact_dispositions`，并显式密封无首尾 whitespace contract。DeepSeek policy `ITER-010-PDR-007@3` 则只在 first real DeepSeek
+preflight 激活 active receipt 并重验 pricing/window/run/budget；preparation decision 不授权外调或提前消耗 duration。相邻 Chat/route/launcher
+边界 144 tests PASS、外调 0；下一步是不暂停地提交 candidate 并执行 fresh run-085 五问 Browser successor。run-084 保留真实 route/质量
+FAIL 证据，不追认为 MVP。

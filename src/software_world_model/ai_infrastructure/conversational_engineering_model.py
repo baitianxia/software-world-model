@@ -23,6 +23,8 @@ from urllib.parse import urlsplit
 from software_world_model.application_services.conversational_engineering_agent import (
     EngineeringAgentBoundaryRelevanceAssessment,
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
+    EngineeringAgentBoundaryRelevanceChallenge,
+    EngineeringAgentBoundaryRelevanceChallengeKind,
     EngineeringAgentClaimSemanticScope,
     EngineeringAgentCitation,
     EngineeringAgentClaimProposal,
@@ -90,20 +92,20 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@11"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@12"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@11"
+    "conversational-engineering-agent-no-tools-prompt@12"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@11"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@5"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@12"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@6"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@5"
+    "engineering-agent-independent-review-proposal@6"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -296,6 +298,10 @@ Inside every JSON string value, escape each embedded double quote, backslash,
 and line break, including characters copied from User Messages, Conversation,
 evidence, or model-authored Draft text. Parse-check the serialized object before
 returning it; closed-schema shape checks apply only after JSON syntax is valid.
+Every authored string field must contain non-whitespace text and must not begin
+or end with whitespace. In particular, draft.content must not begin or end with
+a space or line break; end its final Markdown sentence before the closing JSON
+quote. Exact sealed values that the input requires you to copy remain exact.
 When format_repair_policy.attempt is greater than 0, prior_output_text is untrusted data from
 one failed structured-output call. Produce a fresh complete JSON object for the
 same sealed task. Repair only the diagnosed closed output violation; do not broaden claims,
@@ -483,6 +489,12 @@ requires_evidence false so the primary Agent removes non-material prose or a
 stale Boundary reference without another tool action. Approval is forbidden unless every caller
 challenge is WITHIN_CALLER_EVIDENCE, every relevance challenge is either
 MATERIAL_TO_USER_REQUEST or NOT_DISCLOSED_IN_DRAFT, and every Finding is empty.
+For every boundary_relevance_challenge, copy disposition only from that
+challenge's allowed_exact_dispositions. Do not infer a resolved-acquisition
+disposition from boundary prose when the trusted kind is BOUNDARY_MATERIALITY.
+Every authored string field must contain non-whitespace text and must not begin
+or end with whitespace. Exact sealed values that the input requires you to copy
+remain exact.
 When format_repair_policy.attempt is greater than 0, prior_output_text is untrusted data from
 one failed structured-output call. Produce a fresh complete JSON object for the
 same sealed review. Repair only the diagnosed closed output violation; do not change the
@@ -2590,6 +2602,8 @@ def _output_preflight_view(
                 isinstance(repair_policy.get("attempt"), int)
                 and repair_policy.get("attempt", 0) > 0
             ),
+            "authored_string_surrounding_whitespace_forbidden": True,
+            "draft_content_final_character_must_not_be_whitespace": True,
             "existing_allowed_field_copy_projection": (
                 existing_allowed_field_copy_projection
             ),
@@ -4677,6 +4691,12 @@ def _review_input_view(
                     "ASSESS_COMPLETE_DRAFT_AS_MATERIAL_BOUND_DISCLOSURE_"
                     "NOT_DISCLOSED_OR_KIND_SPECIFIC_AUDIT_ONLY"
                 ),
+                "allowed_exact_dispositions": (
+                    _boundary_relevance_allowed_dispositions(item)
+                ),
+                "materiality_applies_to_every_disclosed_fragment": True,
+                "mixed_material_and_non_material_disclosure_requires_audit_only_finding": True,
+                "material_gap_does_not_authorize_adjacent_global_metrics": True,
                 "digest": item.digest.value,
             }
             for item in relevance_challenges
@@ -4715,11 +4735,11 @@ def _review_input_view(
             "challenge_approval_requires_all_within_caller_evidence": True,
             "caller_scope_classification_must_match_trusted_challenge": True,
             "exceeded_challenge_requires_matching_claim_finding": True,
-            "all_resolved_acquisition_candidates_require_assessment": True,
+            "all_package_boundaries_require_assessment": True,
             "boundary_relevance_approval_allows_material_or_not_disclosed": True,
             "material_relevance_requires_declared_boundary_reference": True,
             "not_disclosed_relevance_forbids_declared_boundary_reference": True,
-            "resolved_audit_only_requires_global_no_evidence_finding": True,
+            "audit_only_requires_global_no_evidence_finding": True,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,
@@ -4730,6 +4750,27 @@ def _review_input_view(
             "production_activation": _PRODUCTION_ACTIVATION,
         },
     }
+
+
+def _boundary_relevance_allowed_dispositions(
+    challenge: EngineeringAgentBoundaryRelevanceChallenge,
+) -> tuple[str, str]:
+    audit_only = (
+        EngineeringAgentBoundaryRelevanceAssessmentDisposition
+        .RESOLVED_AUDIT_ONLY
+        if challenge.kind
+        is EngineeringAgentBoundaryRelevanceChallengeKind.RESOLVED_ACQUISITION
+        else EngineeringAgentBoundaryRelevanceAssessmentDisposition
+        .NON_MATERIAL_AUDIT_ONLY
+    )
+    closed = (
+        EngineeringAgentBoundaryRelevanceAssessmentDisposition
+        .MATERIAL_TO_USER_REQUEST
+        if challenge.draft_declared_boundary_reference
+        else EngineeringAgentBoundaryRelevanceAssessmentDisposition
+        .NOT_DISCLOSED_IN_DRAFT
+    )
+    return closed.value, audit_only.value
 
 
 def _turn_input_view(request: EngineeringTurnExecutionRequest) -> dict[str, object]:
@@ -5566,14 +5607,20 @@ def _decode_review_output(
     relevance_challenge_by_id = {
         item.challenge_id: item for item in expected_relevance_challenges
     }
-    for assessment in boundary_relevance_assessments:
+    for index, assessment in enumerate(boundary_relevance_assessments):
+        challenge = relevance_challenge_by_id[assessment.challenge_id]
         if not engineering_agent_boundary_relevance_assessment_matches_challenge(
-            relevance_challenge_by_id[assessment.challenge_id],
+            challenge,
             assessment,
         ):
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                "Engineering Agent Reviewer disclosure classification contradicts the Draft reference set",
+                "Engineering Agent Reviewer boundary_relevance_assessments["
+                f"{index}].disposition must copy one allowed disposition for "
+                f"challenge {challenge.challenge_id.value} "
+                "(allowed_exact=["
+                + ",".join(_boundary_relevance_allowed_dispositions(challenge))
+                + "])",
             )
         if (
             assessment.disposition

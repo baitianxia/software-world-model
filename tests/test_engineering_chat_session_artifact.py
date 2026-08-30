@@ -237,7 +237,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3
         document["deepseek_dispatch_admission"] = {
             "schema": "DEEPSEEK_DISPATCH_ADMISSION_INPUT@1",
-            "policy_ref": "ITER-010-PDR-007@2",
+            "policy_ref": "ITER-010-PDR-007@3",
             "run_type": "LOCAL_ARTIFACT_TEST",
             "run_ref": "test-engineering-chat-session-artifact",
             "turn_scope_digest": digest_of(
@@ -325,7 +325,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
                     "disclosure_policy_ref": (
                         "engineering-agent-exact-role-disclosure@1"
                     ),
-                    "dispatch_admission_policy_ref": "ITER-010-PDR-007@2",
+                    "dispatch_admission_policy_ref": "ITER-010-PDR-007@3",
                     "maximum_calls": 75,
                     "maximum_input_bytes": 4_194_304,
                     "maximum_output_tokens": 8_192,

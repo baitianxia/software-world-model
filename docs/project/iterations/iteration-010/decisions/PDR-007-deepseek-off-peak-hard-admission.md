@@ -25,6 +25,11 @@ coding_input: true
 > `ITER-010-PDR-007@2` 改为工作日使用三个时段，周六、周日全天闲时；相邻闲时按连续区间计算。该修正由
 > `FINDING-010-179` 闭合，不改变 Ark 优先、合法 fallback、fresh 价格检查或其他安全边界。
 
+> 2026-08-30 current correction：policy revision `ITER-010-PDR-007@3` 将 active receipt 的时长起点移到第一次真实 DeepSeek preflight。
+> listener preparation 只密封 non-dispatching decision；trusted Ark unavailable 真正选择 fallback 后，runtime 以同一 plan 和当前时钟重新核验
+> 900 秒 pricing freshness、闲时/override、run authority 与完整最坏质量链，再在 credential/TLS/HTTP 前激活 receipt。该修正由
+> `FINDING-010-207` 闭合，不放宽 route、预算、freshness、窗口或失败关闭边界。
+
 ## Context
 
 PDR-003 已规定 Ark 优先并要求 DeepSeek 高成本批量调用尽量放到官方定义的非高峰时段，但“默认/优先”没有成为可验证的调用准入。
@@ -55,10 +60,13 @@ window check 或 override receipt。`FINDING-010-139` 因而将问题归因为�
 当前 ITER-010 尚未进入不可预先安排的生产流量。所有 direction canary 都是 planned run，必须整体安排在允许窗口；本决定不为尚未授权的
 Production 设计异步排队协议，也不以该未来问题延迟当前 Web 体验。
 
-### 2. Provider 网络和凭据之前必须有逐 run 准入收据
+### 2. Provider 网络和凭据之前必须激活逐 run 准入收据
 
-每个 planned run 在首次 DeepSeek Provider socket/connected descriptor provisioning、TLS acquisition、credential resolution 或 HTTP
-dispatch 前必须密封 `DEEPSEEK_DISPATCH_ADMISSION@1`，至少包含：
+每个 planned run 在 listener 前必须以 exact plan 构造 controller，并密封不执行外部 I/O、不授权 dispatch 的 preparation decision。它用于
+验证当前输入和展示准备时 verdict，但不启动 `maximum_duration_seconds` 计时。只有受信 availability owner 使 Router 创建 DeepSeek fallback
+attempt 后，第一次 DeepSeek request preflight 才以同一 exact plan 和当时可信时钟重新执行全部准入检查，并在首次 Provider socket/connected
+descriptor provisioning、TLS acquisition、credential resolution 或 HTTP dispatch 前激活 `DEEPSEEK_DISPATCH_ADMISSION@1`。active receipt
+至少包含：
 
 - trusted UTC time、`Asia/Shanghai` 换算时间、时区数据库/时钟来源和策略版本；
 - run 类型、exact product/source/session、Provider/model、最大 calls/tokens/duration；
@@ -67,7 +75,7 @@ dispatch 前必须密封 `DEEPSEEK_DISPATCH_ADMISSION@1`，至少包含：
 - 命中的允许窗口，或 exact peak override receipt；
 - Ark-first/合法 fallback 条件、完整质量预算和授权 identity。
 
-窗口、时钟、官方检查或 override 任一缺失/无效时，DeepSeek 必须在 Provider socket/connected descriptor provisioning、TLS
+激活时窗口、时钟、900 秒内官方检查或 override 任一缺失/无效时，DeepSeek 必须在 Provider socket/connected descriptor provisioning、TLS
 acquisition、credential resolution 和 HTTP dispatch 前失败关闭，四类实际计数均为 `0`。run receipt 不能替代逐 request 检查；每个新
 DeepSeek request 都要回指同一有效 receipt，并重验当前窗口、剩余 calls/tokens/duration 或 exact override。planned run 还必须保证最坏
 完整质量链能在当前窗口结束前完成；进入高峰后不得再创建新的 DeepSeek request，已经发出的单个 request 只按既有零重试/结果未知规则
@@ -104,6 +112,8 @@ authority → machine receipt runtime Gate；该 Gate 与允许窗口同时成�
 - Ark 成功、Application/Source/Security failure 或未授权时 DeepSeek dispatch 为 `0`；
 - planned session 不能跨入高峰后继续创建新 DeepSeek requests；
 - 每个实际 DeepSeek dispatch 都能回指同一有效 admission receipt；
+- listener preparation 后延迟到第一次合法 fallback 时，active duration 从该 first preflight 开始；激活时 pricing check 超过 900 秒则
+  零 credential/TLS/HTTP 失败关闭，不能沿用 preparation allowed verdict；
 - 调度门禁不能删减 Evidence、Citation、答案或独立 Review，也不能把失败改判为 PASS。
 
 `V-DEEPSEEK-IDLE-001` 在下一次 DeepSeek 外部 dispatch 前阻断；它不阻断 Ark-only 和本地开发，不要求 full regression，也不创建新的
@@ -113,9 +123,9 @@ Iteration/Slice。
 
 - PDR-003/PDR-005 的“默认/优先”措辞由本决定收紧为硬准入；PDR-006 的“持续开发”不能解释成峰时立即调用 DeepSeek。
 - 当前产品 runtime 的原始机械 schedule gate 由 clean `03520eb…` 和
-  `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 以零外部调用闭合；`FINDING-010-179` 又把 current policy 修订为 `@2` 并补上 weekday/weekend
-  维度。真实 planned run 仍须独立提交 current artifact、fresh 官方检查、允许窗口或 exact override 及逐 dispatch/terminal receipt，不能从
-  本地 PASS 推导 live 合规。
+  `ITER-010-RESULT-V-DEEPSEEK-IDLE-001` 以零外部调用闭合；`FINDING-010-179` 把 policy 修订为 `@2` 并补上 weekday/weekend 维度，
+  `FINDING-010-207` 又以 `@3` 把 active duration 起点移到 first DeepSeek preflight。真实 planned run 仍须独立提交 current artifact、fresh
+  官方检查、允许窗口或 exact override 及逐 dispatch/terminal receipt，不能从本地 PASS 推导 live 合规。
 - 通用治理和模板必须把 declared provider window 变成可验收 admission policy；现有静态 docs validator 仅作 compatibility，不证明 run
   合规。
 - 本决定本身不授权任何 Provider/model call、credential、Source disclosure、Browser、hidden、Production 或后续 Slice；current public mall

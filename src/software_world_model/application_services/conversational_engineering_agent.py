@@ -2047,6 +2047,19 @@ def _engineering_agent_retrieval_resource_locators(
 ) -> tuple[str, ...]:
     """Return trusted resource identities independent of one-use locator IDs."""
 
+    expected_operation = (
+        EngineeringAgentToolOperation.SOURCE_READ
+        if full_resource_required
+        else EngineeringAgentToolOperation.SOURCE_SEARCH
+    )
+    expected_modality = (
+        "EXACT_STATIC_SOURCE_TEXT"
+        if full_resource_required
+        else "LITERAL_TEXT_SEARCH_HIT"
+    )
+    if observation.operation is not expected_operation:
+        return ()
+
     try:
         payload = json.loads(observation.content)
     except (TypeError, json.JSONDecodeError):
@@ -2065,7 +2078,7 @@ def _engineering_agent_retrieval_resource_locators(
         reference = item.get("locator_reference")
         locator = item.get("locator")
         if (
-            item.get("modality") != "EXACT_STATIC_SOURCE_TEXT"
+            item.get("modality") != expected_modality
             or (
                 full_resource_required
                 and item.get("coverage_complete") is not True
@@ -2089,7 +2102,9 @@ def _engineering_agent_search_is_resolved_by_full_read(
     search_support: EngineeringAgentToolObservation,
     read_support: EngineeringAgentToolObservation,
 ) -> bool:
-    issued_references = set(search_support.citation_refs)
+    issued_references = set(
+        _engineering_agent_search_citation_refs(search_support)
+    )
     read_references = set(
         _engineering_agent_full_source_read_citation_refs(read_support)
     )
@@ -2108,6 +2123,35 @@ def _engineering_agent_search_is_resolved_by_full_read(
         )
     )
     return bool(issued_resources.intersection(read_resources))
+
+
+def _engineering_agent_search_citation_refs(
+    observation: EngineeringAgentToolObservation,
+) -> tuple[str, ...]:
+    if observation.operation is not EngineeringAgentToolOperation.SOURCE_SEARCH:
+        return ()
+    try:
+        payload = json.loads(observation.content)
+    except (TypeError, json.JSONDecodeError):
+        return ()
+    retrieval = payload.get("retrieval_result")
+    raw_items = retrieval.get("items") if isinstance(retrieval, dict) else None
+    if not isinstance(raw_items, list):
+        return ()
+    authorized = set(observation.citation_refs)
+    references: list[str] = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        reference = item.get("locator_reference")
+        if (
+            item.get("modality") == "LITERAL_TEXT_SEARCH_HIT"
+            and isinstance(reference, str)
+            and reference in authorized
+            and reference not in references
+        ):
+            references.append(reference)
+    return tuple(references)
 
 
 def project_engineering_agent_boundary_relevance_challenges(

@@ -13,6 +13,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     ModelBackedConversationalEngineeringAgent,
     PolicyEnforcingEngineeringAgentModelGateway,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
+    _boundary_relevance_allowed_dispositions,
     _primary_input_view,
     decode_engineering_agent_primary_output,
     decode_engineering_agent_review_output,
@@ -573,7 +574,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -938,7 +939,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1781,7 +1782,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1796,6 +1797,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_preflight["json_serialization"]["parse_before_return"]
+        )
+        self.assertTrue(
+            reviewer_preflight["format_repair"][
+                "authored_string_surrounding_whitespace_forbidden"
+            ]
         )
         reviewer_policy = reviewer_repair_payload[
             "review_reference_policy"
@@ -4041,7 +4047,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                             {
                                 "locator_reference": locator_ref,
                                 "locator": f"{resource_locator}:L45-52",
-                                "modality": "EXACT_STATIC_SOURCE_TEXT",
+                                "modality": "LITERAL_TEXT_SEARCH_HIT",
                                 "coverage_complete": False,
                             }
                         ]
@@ -4105,6 +4111,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             projection.resolved_acquisition_candidate_observation_ids,
             (search_boundary.observation_id,),
         )
+        wrong_search_modality = replace(
+            search_support,
+            content=search_support.content.replace(
+                "LITERAL_TEXT_SEARCH_HIT",
+                "EXACT_STATIC_SOURCE_TEXT",
+            ),
+            digest=digest_of("wrong-search-modality"),
+        )
+        self.assertEqual(
+            project_engineering_agent_draft_boundaries(
+                (wrong_search_modality, search_boundary, read_support)
+            ).resolved_acquisition_candidate_observation_ids,
+            (),
+        )
         prior_read_projection = project_engineering_agent_draft_boundaries(
             (read_support, search_support, search_boundary)
         )
@@ -4147,6 +4167,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             (read_support.observation_id,),
         )
         self.assertTrue(challenges[0].draft_declared_boundary_reference)
+        self.assertEqual(
+            _boundary_relevance_allowed_dispositions(challenges[0]),
+            ("MATERIAL_TO_USER_REQUEST", "RESOLVED_AUDIT_ONLY"),
+        )
 
         focused_request = SimpleNamespace(
             draft=draft,
@@ -4266,6 +4290,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             unbound_material.exception.code,
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
+        self.assertIn(
+            "allowed_exact=[NOT_DISCLOSED_IN_DRAFT,RESOLVED_AUDIT_ONLY]",
+            str(unbound_material.exception),
+        )
         not_disclosed = decode_engineering_agent_review_output(
             output_text=json.dumps(
                 {
@@ -4334,6 +4362,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             materiality_challenges[0].kind.value,
             "BOUNDARY_MATERIALITY",
+        )
+        self.assertEqual(
+            _boundary_relevance_allowed_dispositions(
+                materiality_challenges[0]
+            ),
+            ("MATERIAL_TO_USER_REQUEST", "NON_MATERIAL_AUDIT_ONLY"),
         )
         materiality_finding = decode_engineering_agent_review_output(
             output_text=json.dumps(

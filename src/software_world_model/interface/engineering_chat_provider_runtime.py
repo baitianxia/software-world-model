@@ -129,7 +129,12 @@ class EngineeringChatProviderModelRuntime:
             "gateway_repository_ref": self.gateway_repository_ref,
             "transport_ref": self.transport_ref,
             "dispatch_admission": (
-                self.dispatch_admission_controller.receipt.public_status()
+                self.dispatch_admission_controller.preparation_receipt.public_status()
+                if self.dispatch_admission_controller is not None
+                else None
+            ),
+            "dispatch_admission_activation_mode": (
+                "FIRST_DEEPSEEK_PREFLIGHT"
                 if self.dispatch_admission_controller is not None
                 else None
             ),
@@ -556,7 +561,12 @@ def _provider_runtime(
         "transport_ref": transport_ref,
         "model_boundary": "MODEL_BACKED_CONVERSATIONAL_ENGINEERING_AGENT@1",
         "dispatch_admission_receipt_digest": (
-            dispatch_admission_controller.receipt.digest.value
+            dispatch_admission_controller.preparation_receipt.digest.value
+            if dispatch_admission_controller is not None
+            else None
+        ),
+        "dispatch_admission_activation_mode": (
+            "FIRST_DEEPSEEK_PREFLIGHT"
             if dispatch_admission_controller is not None
             else None
         ),

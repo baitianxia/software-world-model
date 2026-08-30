@@ -111,14 +111,15 @@ data 处理。
 
 ```text
 derive exact run / route role / execution profile / quality budget from standing authority or exact human delta
-  → execute the frozen admission plugin against its trusted inputs
-  → seal a generic dispatch-admission receipt for an allowed verdict, or bind an exact policy-specific override
+  → execute the frozen admission plugin against its trusted inputs and seal a non-dispatching preparation decision when the plugin uses JIT activation
+  → at the route's first real request preflight, re-evaluate every time-sensitive input and seal the active generic dispatch-admission receipt, or bind an exact policy-specific override
   → before every new request on that route, revalidate the plugin verdict / override
   → only then allow socket/connected descriptor provisioning, TLS, credential resolution and HTTP
   → otherwise fail before external network with that route's dispatch = 0
 ```
 
-完整最坏质量链必须在开始前满足插件的允许条件；条件失效后不得再创建该 route 的 request。已经发出的单个 request 继续按零重试和结果未知
+完整最坏质量链必须在 active receipt 激活前满足插件的允许条件；preparation decision 不提前消耗 active duration，也不授权外调。条件失效后
+不得再创建该 route 的 request。已经发出的单个 request 继续按零重试和结果未知
 规则密封，但未完成 Evidence/Answer/Review 的 interaction 失败关闭，不交付降质答案。准入阻断只阻断该 execution profile 的外部分派，
 不停止其他合格 route 或本地开发。已有 Provider 资格不能替代每次 planned run 的 exact dispatch-admission receipt；standing scope 内的
 receipt 由可信系统派生，不是逐 run 人工审批。

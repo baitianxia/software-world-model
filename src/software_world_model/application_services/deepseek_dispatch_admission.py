@@ -1,9 +1,10 @@
 """Fail-closed admission for planned DeepSeek development dispatches.
 
 The policy is intentionally independent from Provider transport code.  A
-controller seals one run-level receipt before any DeepSeek credential, TLS, or
-HTTP work and then authorizes each exact model execution envelope against that
-same receipt.  The caller may inject a clock for deterministic boundary tests.
+controller seals a preparation decision without external I/O, activates the
+run-level receipt at the first DeepSeek preflight, and then authorizes each
+exact model execution envelope against that same active receipt.  The caller
+may inject a clock for deterministic boundary tests.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from software_world_model.cross_cutting import (
 )
 
 
-DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF = "ITER-010-PDR-007@2"
+DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF = "ITER-010-PDR-007@3"
 DEEPSEEK_DISPATCH_ADMISSION_SCHEMA = "DEEPSEEK_DISPATCH_ADMISSION@1"
 DEEPSEEK_DISPATCH_AUTHORIZATION_SCHEMA = (
     "DEEPSEEK_DISPATCH_AUTHORIZATION@1"
@@ -416,7 +417,7 @@ class DeepSeekDispatchAuthorization:
 
 
 class DeepSeekDispatchAdmissionController:
-    """Seal one run receipt and gate every exact DeepSeek model dispatch."""
+    """Activate one run receipt at first preflight and gate every dispatch."""
 
     def __init__(
         self,
@@ -433,8 +434,10 @@ class DeepSeekDispatchAdmissionController:
         current = _aware_utc(admitted_at, "DeepSeek admission time")
         self.plan = plan
         self._clock = clock
-        self.receipt = _seal_receipt(plan, current)
+        self.preparation_receipt = _seal_receipt(plan, current)
+        self.receipt = self.preparation_receipt
         self._lock = Lock()
+        self._activated = False
         self._authorizations: dict[str, DeepSeekDispatchAuthorization] = {}
         self._invoked_envelopes: set[str] = set()
         self._reserved_input_tokens = 0
@@ -473,6 +476,9 @@ class DeepSeekDispatchAdmissionController:
             )
         current = _aware_utc(self._clock(), "DeepSeek dispatch clock")
         with self._lock:
+            if not self._activated:
+                self.receipt = _seal_receipt(self.plan, current)
+                self._activated = True
             existing = self._authorizations.get(envelope)
             if existing is not None:
                 if (
@@ -552,8 +558,15 @@ class DeepSeekDispatchAdmissionController:
             invoked = tuple(sorted(self._invoked_envelopes))
             reserved_input = self._reserved_input_tokens
             reserved_output = self._reserved_output_tokens
+            activated = self._activated
+            receipt = self.receipt
         return {
-            "admission_receipt": self.receipt.public_status(),
+            "activation_mode": "FIRST_DEEPSEEK_PREFLIGHT",
+            "dispatch_admission_activated": activated,
+            "preparation_admission_receipt": (
+                self.preparation_receipt.public_status()
+            ),
+            "admission_receipt": receipt.public_status(),
             "dispatch_authorization_digests": tuple(
                 item.digest.value for item in authorizations
             ),

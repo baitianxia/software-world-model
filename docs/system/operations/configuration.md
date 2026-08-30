@@ -80,21 +80,24 @@ PYTHONPATH=src python3 -m software_world_model.interface.provider_cli probe
 DeepSeek 的所有 planned development/evaluation 外部分派——包括 probe、Conformance、Capability Evaluation、canary、比较、回归和 Web
 体验——在 `Asia/Shanghai` 按以下日历准入：周一至周五的半开窗口 `[00:00,09:00)`、`[12:00,14:00)`、`[18:00,24:00)`，以及周六、
 周日全天。相邻允许时段连续计算，不因午夜换日截断，因此周五 `18:00` 至周一 `09:00` 是一个连续闲时区间。截至 `2026-08-29`，官方
-峰谷价格已经生效；current policy ref 为 `ITER-010-PDR-007@2`。
+峰谷价格已经生效；current policy ref 为 `ITER-010-PDR-007@3`。
 每次 run 必须重新检查 <https://api-docs.deepseek.com/quick_start/pricing/>，密封 check time、内容摘要和
 `EFFECTIVE / NOT_YET_EFFECTIVE / CHANGED`，但官方状态本身不能替代窗口判定；检查缺失或返回 `CHANGED` 时，本次准入失败关闭并先
 重新规划，不能由运行器自行扩张窗口。
 
-每个 run 在任何 DeepSeek socket/connected descriptor provisioning、TLS、credential 或 HTTP 前必须密封
-`DEEPSEEK_DISPATCH_ADMISSION@1`（current policy `ITER-010-PDR-007@2`）；每个新 DeepSeek request 前重验
-可信时钟仍在允许窗口，或存在一次性 exact human peak override。允许窗口内的 receipt 由 trusted admission authority 从 standing
-authority 自动派生；override 必须绑定 Provider/model、run/Turn、原因、最大 calls/tokens/duration、start 和 expiry；普通 standing
-authority、开发、canary、route 或 fallback 均不包含该例外。计划必须把完整最坏质量链安排在窗口内；窗口关闭
+每个 run 在 listener 前必须从 exact plan 密封 non-dispatching preparation decision；它只证明 controller/输入可构造，不消耗真正 fallback 的
+`maximum_duration_seconds`，也不授权 credential、TLS 或 HTTP。只有 trusted availability owner 选择 DeepSeek fallback 后，第一次 DeepSeek
+request preflight 才以同一 plan 和当时可信时钟重新核验 run authority、900 秒 pricing freshness、当前闲时/override 与完整最坏质量链，并密封
+active `DEEPSEEK_DISPATCH_ADMISSION@1`（current policy `ITER-010-PDR-007@3`）。该激活仍发生在任何 DeepSeek socket/connected descriptor
+provisioning、TLS、credential 或 HTTP 前；后续 request 回指同一 active receipt 并重验其窗口、expiry 和预算。允许窗口内的 receipt 由 trusted
+admission authority 从 standing authority 自动派生；override 必须绑定 Provider/model、run/Turn、原因、最大 calls/tokens/duration、start 和
+expiry；普通 standing authority、开发、canary、route 或 fallback 均不包含该例外。计划必须把完整最坏质量链安排在激活时的窗口内；窗口关闭
 后不再创建新 request，已发出的 request 仍按零重试和 outcome-unknown 规则密封。任何缺失或越界都在外部网络前失败关闭并证明
 DeepSeek socket/descriptor、TLS、credential、HTTP 均为 0；不能用删减 Evidence、Citation、Answer 或独立 Review 换取完成。
 
 **当前执行限制：** runtime 已实现该机械 admission gate 和 receipt，并由 `V-DEEPSEEK-IDLE-001` 本地 PASS；运维只可启动 closed `@3`
-artifact，且必须在启动前取得 fresh 官方检查、有效 standing/delta authority chain、完整最坏时长窗口判定或 exact human peak override。
+artifact，且 preparation 时必须取得 fresh 官方检查、有效 standing/delta authority chain 与可构造 plan；真正 fallback 的 first preflight
+还会重新核验同一检查仍 fresh、完整最坏时长窗口或 exact human peak override。
 缺少任一对象时 CLI 在 listener/credential/TLS/HTTP 前关闭。非高峰 run/dispatch receipt 必须由系统派生，不得要求用户逐次批准。该能力
 不是异步排队，也不授权 Production；Provider/Model、Agent Strategy 或 Prompt/Tool identity 变化仍按各自 owning gate 单独重新资格化，
 不能因为 Provider 对产品语义透明而跳过验证。

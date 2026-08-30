@@ -1215,13 +1215,13 @@ conversational_engineering_agent:
   v7_unaccepted_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@7
   v7_unaccepted_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@3
   v7_status: stopped-unaccepted-symptom-experiment-not-current-system-truth
-  current_agent_model_strategy_ref: conversational-engineering-agent@11
-  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@11
-  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@11
+  current_agent_model_strategy_ref: conversational-engineering-agent@12
+  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@12
+  current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@12
   current_agent_primary_output_schema: engineering-agent-work-state-proposal@2
-  current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@5
-  current_agent_review_output_schema: engineering-agent-independent-review-proposal@5
-  current_agent_output_preflight_schema: ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6
+  current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@6
+  current_agent_review_output_schema: engineering-agent-independent-review-proposal@6
+  current_agent_output_preflight_schema: ENGINEERING_AGENT_OUTPUT_PREFLIGHT@7
   current_review_focus_order: comprehensive-then-exact-caller-callee-and-all-package-boundary-focused-challenge
   current_agent_step_upper_bound_per_turn: 11
   current_independent_review_model_call_upper_bound_per_turn: 4
@@ -1309,17 +1309,23 @@ conversational_engineering_agent:
   boundary_materiality_challenge_resolving_support: must-be-empty
   resolved_acquisition_candidate_projection: same-search-support-item-closed-by-later-full-exact-source-read-regardless-of-draft-boundary-reference
   resolved_acquisition_resource_identity: exact-authorized-opaque-reference-or-exact-canonical-resource-locator-after-line-suffix-removal
-  resolved_acquisition_canonical_match_requires: exact-static-source-text-and-full-read-coverage-complete
+  resolved_acquisition_canonical_match_requires: source-search-literal-text-search-hit-and-later-source-read-exact-static-source-text-full-coverage-with-authorized-citations
   resolved_acquisition_basename_or_fuzzy_path_match_allowed: false
   boundary_relevance_challenge_draft_reference_flag: required
   boundary_relevance_assessment_vocabulary: MATERIAL_TO_USER_REQUEST,RESOLVED_AUDIT_ONLY,NON_MATERIAL_AUDIT_ONLY,NOT_DISCLOSED_IN_DRAFT
+  boundary_relevance_allowed_exact_dispositions_origin: trusted-challenge-kind-and-draft-reference-flag
+  boundary_relevance_allowed_exact_dispositions_required_in_input_and_decoder: true
   resolved_acquisition_material_assessment_requires_declared_boundary_reference: true
   resolved_acquisition_not_disclosed_assessment_forbids_declared_boundary_reference: true
   boundary_relevance_audit-only_finding_binding: global-claim-index-null-requires-evidence-false
   material-boundary-observation_makes_all-contained_fragments_material: false
   global_inventory_metric_answer_disclosure: material-user-relevance-required
   irrelevant_or_resolved_diagnostic_review_remediation: relevance-finding-requires-evidence-false
-  current_audit_answer_boundary_relevance_ref: FINDING-010-205
+  current_audit_answer_boundary_relevance_ref: FINDING-010-206
+  current_provider_authored_string_surrounding_whitespace_allowed: false
+  current_draft_content_final_whitespace_allowed: false
+  current_real_search_read_modality_evidence_ref: FINDING-010-206
+  current_deepseek_jit_admission_evidence_ref: FINDING-010-207
   caller_callee_evidence_boundary_projection: cited-full-exact-java-read-plus-exact-claim-receiver-call-expression
   caller_callee_projection_is_semantic_verdict: false
   caller_callee_assessment_vocabulary: WITHIN_CALLER_EVIDENCE,CLAIM_EXCEEDS_CALLER_EVIDENCE
@@ -1395,41 +1401,41 @@ conversational_engineering_agent:
   prior_browser_preparation_status: STOPPED_WITHOUT_DISPATCH-DENIED_PRICING_CHECK-stale-over-900-seconds
   prior_browser_preparation_terminal_receipt_digest: sha256:44e905e2449cfc87db8ff96d243b2d44c990ff607250c15253273ab12e85b1e6
   prior_browser_preparation_provider_dispatch_count: 0
-  latest_browser_execution_ref: run-083-mvp-experience
+  latest_browser_execution_ref: run-084-mvp-experience
   latest_browser_execution_finding_refs:
-    - FINDING-010-204
-    - FINDING-010-205
-  latest_browser_product_commit: 9589694a7597b1c08b61ddc0c4e66d57baebdb3c
-  latest_browser_product_tree: 78d4e1f6e69a1071873b0b7eee117fc225836220
+    - FINDING-010-206
+    - FINDING-010-207
+  latest_browser_product_commit: 88ac7da2796be3d2bed5f67c60c6e2cbfcfb1328
+  latest_browser_product_tree: 4348e24843ac1da07fbeb3a9f4f5cd5006fe08cd
   latest_browser_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
   latest_browser_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-  latest_browser_turn_scope_file_sha256: 33be9c2941b000829fd983e9693ee348f307d87b04fe2facd7cc61e172cb01ea
-  latest_browser_session_config_file_digest: sha256:d3f766a5a0926562773fec48fc04fddb0b5202e1054b573e50d13ec2a7ad953e
-  latest_browser_launch_config_file_digest: sha256:baf38abbe8abd06d0c3a359aae29c0253123be20d690c5171f71d1df5f7d7776
-  latest_browser_public_source_session_authority_digest: sha256:5d4e339754777f22e2b3825f2051d3594e674c55e37677ec0a854e83b31a2361
-  latest_browser_terminal_receipt_digest: sha256:c9761ca9621f5b59e6ec9d4ac262459e04b417c84c08c8151d1ce6813e2807e4
-  latest_browser_terminal_file_sha256: 5e7ed47cb5d575f1c5eb9c9832edf38aaad6ea053621e462543b8394da664b7f
-  latest_browser_ark_gateway_file_sha256: 5b050fdfd07d74ea273be8841e5231e3e5d42088493c025a435f864fc53887bf
+  latest_browser_turn_scope_file_sha256: 921cef44fe6591c4ad998adab555a87d6572f029e0d8bd56a894bb12a4fff05a
+  latest_browser_session_config_file_digest: sha256:e2b5d4c08c4c5e7422f1bfb76c2c2ecb380198cf111086e5c80ae9b4d810e56f
+  latest_browser_launch_config_file_digest: sha256:c2de6460b09112af34b49a1d0aaa9031c70058d572dd3dd9fdec623ffd3b49d5
+  latest_browser_public_source_session_authority_digest: sha256:7b9d0d9f3d980f3866395a21b36269ea2acb3848aa9efcb4234c498678cf0209
+  latest_browser_terminal_receipt_digest: sha256:e1ff2882aa8af33bdc4a3838e41c6a42440190815f3fdf7e21a5718fd72a085c
+  latest_browser_terminal_file_sha256: 13519d402495210e5c320753e47deccfc4dde19ccd37289bc8c1fc1ed1524db2
+  latest_browser_ark_gateway_file_sha256: 5c984a957aefd731aa0eabeb12877f7fb3cf18205eee4b750ffc1c4eeb1b141a
   latest_browser_deepseek_gateway_file_sha256: 0f539b3df4c6127e4b2a90005b287ed8e49b3701f314994f6d1ce8e79dd6672c
-  latest_browser_turn_result: q1-accepted-with-global-metric-and-stale-boundary-q2-layered-model-output-invalid-q3-accepted-q4-zero-dispatch-clarification-q5-accepted-target-defects-closed-overall-quality-fail
-  latest_browser_dispatches_by_turn: 10,7,15,0,11
-  latest_browser_ark_model_calls_completed_failed_unknown: 43,0,0
-  latest_browser_ark_structured_output_invalid_revision_count: 2
-  latest_browser_ark_raw_failure_codes: none
+  latest_browser_turn_result: q1-reviewer-output-invalid-q2-primary-output-invalid-q3-ark-unavailable-and-expired-deepseek-preparation-receipt-q4-zero-dispatch-clarification-q5-reviewer-output-invalid-overall-quality-fail
+  latest_browser_dispatches_by_turn: 13,6,14,0,11
+  latest_browser_ark_model_calls_completed_failed_unknown: 43,1,0
+  latest_browser_ark_structured_output_invalid_terminal_turn_count: 3
+  latest_browser_ark_raw_failure_codes: TLS_FAILURE
   latest_browser_ark_post_dispatch_transport_failure_code: none
-  latest_browser_trusted_unavailable_verdict_count: 0
-  latest_browser_ark_dispatch_tls_credential_http: 43,43,43,43
-  latest_browser_deepseek_model_calls_completed_failed_unknown: 0,0,0
+  latest_browser_trusted_unavailable_verdict_count: 1
+  latest_browser_ark_dispatch_tls_credential_http: 44,44,43,43
+  latest_browser_deepseek_model_calls_completed_failed_unknown: 0,1,0
   latest_browser_deepseek_post_dispatch_transport_failure_code: none
   latest_browser_deepseek_dispatch_tls_credential_http: 0,0,0,0
-  latest_browser_deepseek_admission_status: ALLOWED_OFF_PEAK-SATURDAY-SUNDAY-00:00-24:00-not-invoked-ark-remained-available
-  latest_browser_deepseek_pricing_checked_at: "2026-08-30T09:45:11.631Z"
-  latest_browser_deepseek_pricing_capture_file_sha256: 22b578502e4529261b0d1ba10e205771b2b1cf1cac7d296bfd4e93f8855eb5ed
+  latest_browser_deepseek_admission_status: ALLOWED_OFF_PEAK-SATURDAY-SUNDAY-00:00-24:00-preparation-receipt-expired-before-first-fallback-preflight-under-policy-at2
+  latest_browser_deepseek_pricing_checked_at: "2026-08-30T10:43:39.130Z"
+  latest_browser_deepseek_pricing_capture_file_sha256: b912d59e6c0f10fc7de5c40cd369a5788eb995c844f26818222909ac16e4ef15
   latest_browser_deepseek_pricing_visible_text_digest: sha256:9c9dd4d22764599ade403c0ba6cd95abcb947810d5230ee95cb96a56a62d7668
   latest_browser_same_signature_external_stop_applied: false-materially-new-product-and-system-divergence
   latest_browser_plural_referent_probe: pass-empty-context-clarification-zero-dispatch
-  latest_browser_initial_owner-private_config_denial: pre-listener-pre-source-pre-credential-pre-tls-pre-dispatch-corrected-locally
-  latest_browser_failure_layer_display: q2-application-layered-model-output-invalid-without-provider-http-failure
+  latest_browser_initial_owner-private_config_denial: none
+  latest_browser_failure_layer_display: q1-q2-q5-application-structured-output-invalid-and-q3-ark-pre-dispatch-tls-failure
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
   current_dual_provider_qualification_status: reuse-when-adapter-configuration-endpoint-model-transport-and-rendering-identity-remain-valid-domain-prompt-or-answer-schema-change-alone-does-not-invalidate-conformance
@@ -1441,7 +1447,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-083-three-accepted-one-clarification-one-layered-output-failure-current-layered-repair-all-boundary-materiality-local-candidate
+  agent_execution_status: run-084-one-zero-dispatch-clarification-four-engineering-failures-current-real-search-modality-review-domain-whitespace-and-deepseek-jit-admission-local-candidate
   status: implemented-not-qualified
 
 question_evidence_package_classes:
@@ -1791,7 +1797,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:060771aae06d777c6c58cfa16a3d6b70bebf12e77a6458f5f3d1922562696c7b
+  system_contract_set_digest: sha256:d70ee888ca80723e6439fe61f5ccd2f7a1968e06bd1494efa308d86da2d00c91
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

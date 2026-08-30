@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -37,8 +37,11 @@ Observation ID 抄写、未声明 diagnostic 绕过、caller effect scope 自相
 
 `FINDING-010-205 / run-083` 已证明该 candidate 关闭了 Q5 的两个目标缺陷，且 Ark 43 次 dispatch 全部成功；当前不是 Provider 等待或
 fallback 问题。新的最早偏差是 Q2 的 syntax→closed-contract 分层输出失败，以及 Q1 对 global metric/stale Boundary 的 materiality 漏审。
-current `@11/@5` candidate 只在 validator category 严格前进且现有 15 次 authority 尚有余量时允许第二次 same-profile repair，按 exact canonical
-resource identity 关联 Search/Read，并挑战每个 Package Boundary；fresh run-084 是下一项真实证据。
+`FINDING-010-206/207 / run-084` 又证明真实 Search modality 与首版 matcher fixture 不一致，导致 resolved acquisition 被误分类；同时 Ark
+首次 typed TLS unavailable 发生时，旧 DeepSeek receipt 已从 listener preparation 提前耗尽 600 秒。current `@12/@6/@7` candidate 分开验证
+Search `LITERAL_TEXT_SEARCH_HIT` 与 full Read `EXACT_STATIC_SOURCE_TEXT`，逐 challenge 投影 closed disposition domain 并禁止 authored string
+首尾 whitespace；DeepSeek `@3` 只在 first real fallback preflight 激活并重验 active receipt。15 次 Turn authority、route、budget、retry 与
+Production 边界不变，144 tests PASS；fresh run-085 是下一项真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

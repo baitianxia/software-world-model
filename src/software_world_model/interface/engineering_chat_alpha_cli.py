@@ -261,10 +261,10 @@ def _run_artifact_session(value: str | Path, output: TextIO) -> None:
                         ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                         "Engineering Chat fallback route is missing its dispatch gate",
                     )
-                # A denied fallback receipt closes DeepSeek before credentials or
-                # network.  It must not prevent an otherwise valid preferred-only
-                # browser Session from starting; authorize_dispatch rechecks the
-                # receipt if a trusted availability verdict later selects fallback.
+                # The preparation decision never grants fallback dispatch and must
+                # not block an otherwise valid preferred-only Browser Session.
+                # authorize_dispatch activates a fresh receipt from the same plan
+                # if a trusted availability verdict later selects fallback.
                 with make_server(
                     "127.0.0.1",
                     ENGINEERING_CHAT_ALPHA_PORT,

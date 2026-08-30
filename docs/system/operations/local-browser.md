@@ -188,11 +188,13 @@ Disclosure/model-boundary audits 与各自经过 strict verifier 的 Ark/DeepSee
 Conformance 均已 PASS；但尚未用 current actual artifact 启动真实 Provider/browser，所以状态只是
 `DUAL_PROVIDER_QUALIFICATION_CURRENT / PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE / NOT_LIVE`，不是 live PASS。
 
-fallback dispatch admission 是逐请求外调门禁，不是整个 listener 的可用性门禁。launcher 在启动前必须构造 admission controller 并密封
-真实 receipt；controller 缺失、artifact 漂移或 receipt 无法构造仍关闭 listener。receipt 为 `DENIED_*` 时，状态如实展示 fallback 当前不可调用，
-但不得阻止资格、authority 和 artifact 均有效的 preferred-only Browser Session 启动；listener 启动也不得把该 receipt 改成允许或授予
-fallback。只有 registered availability owner 对 exact preferred attempt 密封不可用 verdict、Application 因而创建 fallback attempt 后，
-逐请求 controller 才重验窗口、官方检查、预算和 exact envelope；拒绝必须发生在 credential resolution、TLS 和 HTTP 前且三类计数均为 0。
+fallback dispatch admission 是逐请求外调门禁，不是整个 listener 的可用性门禁。launcher 在启动前必须构造 admission controller 并从 exact
+plan 密封 non-dispatching preparation decision；controller 缺失、artifact 漂移或 decision 无法构造仍关闭 listener。preparation verdict
+为 `DENIED_*` 时，状态如实展示当时 fallback 不可调用，但不得阻止资格、authority 和 artifact 均有效的 preferred-only Browser Session 启动；
+它为 allowed 也不授予 fallback，且不能从 listener 启动时提前消耗 active duration。只有 registered availability owner 对 exact preferred
+attempt 密封不可用 verdict、Application 因而创建 fallback attempt 后，第一次 DeepSeek request preflight 才从同一 plan 重新核验 run authority、
+官方检查 freshness、窗口/override、预算和 exact envelope 并激活 active receipt；后续 request 回指同一 receipt。任何拒绝必须发生在 credential
+resolution、TLS 和 HTTP 前且三类计数均为 0。
 
 current Artifact launcher 的 registered owner policy 固定为
 `GATEWAY_SEALED_PRE_DISPATCH_UNAVAILABLE_ONLY@1`。通用 Router 在没有显式 composition 时继续使用 fail-closed boundary；launcher 只能把
