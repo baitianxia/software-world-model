@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -200,5 +200,13 @@ Ark 等待或 fallback 权限问题。Q1/Q5 虽交付，Q5 仍以未声明 Bound
 caller-only 的证据批准为数据库/Elasticsearch effect；Q3 在合法 comprehensive/focused 两阶段修订后耗尽 3 次 Review；Q2 则连续两次抄错完全由
 Application 持有的 Observation ID。current `@10/@4` candidate 现让 Application 直接绑定 Observation prefix，对所有 resolved candidate 执行
 focused disclosure assessment，以 closed semantic scope 阻断 caller→effect 自相矛盾，并用 `11 Agent + 4 Review = 15` 保持原 per-Turn dispatch
-authority。相邻 Chat 边界 132 tests PASS、外调 0；下一步是不暂停地提交 candidate 并执行 fresh run-083 五问 Browser successor，run-081/082
+authority。相邻 Chat 边界 132 tests PASS、外调 0；该 candidate 当时的下一步是提交并执行 fresh run-083 五问 Browser successor，run-081/082
 仍不是质量或 MVP PASS。
+
+`FINDING-010-205 / run-083` 已执行该 successor。Ark 43 次 dispatch 的 TLS/credential/HTTP 全部成功，DeepSeek admission 虽为周末
+`ALLOWED_OFF_PEAK` 但 dispatch 0 正确；retry/unknown/人工审批/Production 仍为 0。Q1/Q3/Q5 accepted，Q4 fresh Conversation 零 dispatch
+Clarification；Q5 已关闭 resolved Search diagnostic 与 caller→effect 两个目标缺陷。Q2 则先返回 JSON syntax error，第一次 repair 修复语法后才暴露
+独立的 cross-disposition Observation 引用；Q1 仍泄漏 global `559/866` metric 并绑定 stale Search Boundary。current `@11/@5` candidate 只在
+validator category 严格前进时允许第二次 same-profile repair，以 exact canonical resource identity 关联 Search/Read，并对每个 Package Boundary
+执行 typed materiality challenge；per-Turn 15 dispatch authority 不变。直接和相邻 Chat 边界 144 tests PASS、外调 0；下一步是不暂停地提交
+candidate 并执行 fresh run-084 五问 Browser successor。run-083 仍不是质量或 MVP PASS。

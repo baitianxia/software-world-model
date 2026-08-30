@@ -8,17 +8,21 @@ import unittest
 
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
+    EngineeringAgentBoundaryRelevanceAssessment,
+    EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentClaimProposal,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentDraftProposal,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentResponseKind,
     EngineeringAgentReviewDecision,
+    EngineeringAgentReviewFocus,
     EngineeringAgentReviewProposal,
     EngineeringAgentToolActionProposal,
     EngineeringAgentToolOperation,
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
+    project_engineering_agent_boundary_relevance_challenges,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolAdapter,
@@ -270,9 +274,33 @@ class RecordingReviewer:
 
     def review(self, request):
         self.requests.append(request)
+        relevance_assessments = ()
+        if (
+            request.focus
+            is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+        ):
+            relevance_assessments = tuple(
+                EngineeringAgentBoundaryRelevanceAssessment.create(
+                    challenge_id=item.challenge_id,
+                    user_requirement="Assess the requested answer boundary.",
+                    boundary_scope="Retained tool acquisition or coverage boundary.",
+                    disposition=(
+                        EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+                        if item.draft_declared_boundary_reference
+                        else EngineeringAgentBoundaryRelevanceAssessmentDisposition.NOT_DISCLOSED_IN_DRAFT
+                    ),
+                    finding_code=None,
+                )
+                for item in project_engineering_agent_boundary_relevance_challenges(
+                    request.package,
+                    request.draft,
+                )
+            )
         return EngineeringAgentReviewProposal.create(
             model_call_ref=f"tool-review-{len(self.requests)}",
             decision=EngineeringAgentReviewDecision.APPROVED,
+            focus=request.focus,
+            boundary_relevance_assessments=relevance_assessments,
         )
 
 
@@ -1429,7 +1457,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             )
 
             self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
-            self.assertEqual(submission.turn.provider_dispatch_count, 4)
+            self.assertEqual(submission.turn.provider_dispatch_count, 5)
             self.assertEqual(
                 submission.snapshot.messages[-1].kind,
                 ConversationMessageKind.ANSWER,
@@ -1481,8 +1509,8 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             current.context.accepted_correction_message_ids,
             (current.messages[4].message_id,),
         )
-        self.assertEqual(len(reviewer.requests), 5)
-        self.assertEqual(service.provider_dispatch_count(), 20)
+        self.assertEqual(len(reviewer.requests), 10)
+        self.assertEqual(service.provider_dispatch_count(), 25)
         sealed_conversation_digest = current.conversation.digest
 
         fresh = service.create_conversation()
@@ -1508,8 +1536,8 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
         self.assertIn("请明确", probe.snapshot.messages[-1].content)
         self.assertEqual(driver.calls_by_turn, calls_before_probe)
-        self.assertEqual(len(reviewer.requests), 5)
-        self.assertEqual(service.provider_dispatch_count(), 20)
+        self.assertEqual(len(reviewer.requests), 10)
+        self.assertEqual(service.provider_dispatch_count(), 25)
         self.assertEqual(
             service.get_conversation(
                 current.conversation.conversation_id
@@ -1567,7 +1595,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
 
         self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
-        self.assertEqual(submission.turn.provider_dispatch_count, 6)
+        self.assertEqual(submission.turn.provider_dispatch_count, 7)
         package = reviewer.requests[-1].package
         self.assertEqual(len(package.support_observations), 4)
         self.assertEqual(len(package.boundary_observations), 1)

@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -93,7 +93,13 @@ run-082 的 DeepSeek admission 成为周末 `ALLOWED_OFF_PEAK`，但 Ark preferr
 正确。Q1/Q5 accepted、Q4 local Clarification；Q5 通过未声明 Boundary ID 的正文绕过 relevance challenge，并仍把 caller 说成数据库/ES effect；
 Q3 需要合法第四次 Review，Q2 连续抄错 Application-owned Observation ID。current `@10/@4` candidate 删除 Provider Observation-ID copy
 obligation、对所有 resolved candidate 审核披露、以 closed semantic scope 检查 caller/effect disposition，并将总容量固定为
-`11 Agent + 4 Review = 15`；相邻 Chat 132 tests PASS、外调 0。fresh run-083 仍是质量 Gate 的下一执行证据。
+`11 Agent + 4 Review = 15`；相邻 Chat 132 tests PASS、外调 0。fresh run-083 是该 candidate 当时的下一执行证据。
+
+`FINDING-010-205 / run-083` 随后取得 Q1/Q3/Q5 accepted、Q4 零 dispatch Clarification，且 Q5 已关闭旧 diagnostic/effect 缺陷；Ark
+`43/43/43/43` 全成功、DeepSeek 0 正确。Q2 的 JSON syntax repair 后才出现独立 cross-disposition contract failure；Q1 仍披露无关 global
+metric 并保留 stale Boundary。current `@11/@5` candidate 用严格单调 validator-stage second repair、exact canonical Source resource identity 与
+all-Package-Boundary materiality challenge 修复，仍受 15 次 per-Turn authority 硬限制；144 tests PASS、外调 0。fresh run-084 是质量 Gate 的下一
+执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

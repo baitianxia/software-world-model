@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -14,8 +14,9 @@ coding_input: true
 # ITER-010 Development Design
 
 当前处于 PDR-012 product-first browser Chat build。PDR-011 的 failure handoff 只保留历史事实，不再停止产品、Web 或 standing scope 内外调。
-`FINDING-010-204` 的 current `@10/@4` candidate 已完成 132 项定向验证；下一项执行是 fresh run-083 五题 Browser successor，而不是等待
-Ark、DeepSeek 或重复人工授权。
+`FINDING-010-205 / run-083` 已证明 Ark 43 次 dispatch 全成功、DeepSeek 0 正确，并把剩余偏差定位到 layered structured-output repair 与
+all-Boundary materiality Review。current `@11/@5` candidate 已完成 144 项定向验证；下一项执行是 fresh run-084 五题 Browser successor，而不是
+等待 Ark、DeepSeek 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

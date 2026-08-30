@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -33,7 +33,12 @@ Evidence Package，主工程 Agent 形成自然答案，fresh independent Review
 `FINDING-010-204 / run-081/082` 进一步证明当前没有 Provider 等待点：run-081 是 stale pricing evidence 导致的外调前失败；fresh pricing
 admission 后，run-082 的 Ark 41 次 dispatch 全部成功，故 DeepSeek 0 符合 preferred-first 合同。该 run 暴露的是 Application-owned
 Observation ID 抄写、未声明 diagnostic 绕过、caller effect scope 自相矛盾和三次 Review 容量不足。current `@10/@4` candidate 在不改变
-15 次 per-Turn dispatch authority 的前提下作通用闭合，fresh run-083 是下一项真实证据。
+15 次 per-Turn dispatch authority 的前提下作通用闭合；其下一项真实证据当时为 fresh run-083。
+
+`FINDING-010-205 / run-083` 已证明该 candidate 关闭了 Q5 的两个目标缺陷，且 Ark 43 次 dispatch 全部成功；当前不是 Provider 等待或
+fallback 问题。新的最早偏差是 Q2 的 syntax→closed-contract 分层输出失败，以及 Q1 对 global metric/stale Boundary 的 materiality 漏审。
+current `@11/@5` candidate 只在 validator category 严格前进且现有 15 次 authority 尚有余量时允许第二次 same-profile repair，按 exact canonical
+resource identity 关联 Search/Read，并挑战每个 Package Boundary；fresh run-084 是下一项真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

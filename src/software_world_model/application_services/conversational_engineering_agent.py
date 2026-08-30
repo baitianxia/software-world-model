@@ -97,7 +97,21 @@ class EngineeringAgentClaimSemanticScope(str, Enum):
 class EngineeringAgentBoundaryRelevanceAssessmentDisposition(str, Enum):
     MATERIAL_TO_USER_REQUEST = "MATERIAL_TO_USER_REQUEST"
     RESOLVED_AUDIT_ONLY = "RESOLVED_AUDIT_ONLY"
+    NON_MATERIAL_AUDIT_ONLY = "NON_MATERIAL_AUDIT_ONLY"
     NOT_DISCLOSED_IN_DRAFT = "NOT_DISCLOSED_IN_DRAFT"
+
+
+class EngineeringAgentBoundaryRelevanceChallengeKind(str, Enum):
+    RESOLVED_ACQUISITION = "RESOLVED_ACQUISITION"
+    BOUNDARY_MATERIALITY = "BOUNDARY_MATERIALITY"
+
+
+_BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS = frozenset(
+    {
+        EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY,
+        EngineeringAgentBoundaryRelevanceAssessmentDisposition.NON_MATERIAL_AUDIT_ONLY,
+    }
+)
 
 
 class EngineeringAgentModelRole(str, Enum):
@@ -1571,6 +1585,7 @@ class EngineeringAgentEvidenceBoundaryAssessment:
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentBoundaryRelevanceChallenge:
     challenge_id: StableId
+    kind: EngineeringAgentBoundaryRelevanceChallengeKind
     boundary_observation_id: StableId
     resolving_support_observation_ids: tuple[StableId, ...]
     draft_declared_boundary_reference: bool
@@ -1580,15 +1595,24 @@ class EngineeringAgentBoundaryRelevanceChallenge:
     def create(
         cls,
         *,
+        kind: EngineeringAgentBoundaryRelevanceChallengeKind,
         boundary_observation_id: StableId,
         resolving_support_observation_ids: Sequence[StableId],
         draft_declared_boundary_reference: bool,
     ) -> "EngineeringAgentBoundaryRelevanceChallenge":
         resolving = tuple(resolving_support_observation_ids)
-        if not resolving or len(resolving) != len(set(resolving)):
+        if not isinstance(kind, EngineeringAgentBoundaryRelevanceChallengeKind):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "boundary relevance challenge requires unique resolving support",
+                "boundary relevance challenge kind is invalid",
+            )
+        if len(resolving) != len(set(resolving)) or (
+            kind
+            is EngineeringAgentBoundaryRelevanceChallengeKind.RESOLVED_ACQUISITION
+        ) != bool(resolving):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "only a resolved-acquisition challenge requires unique resolving support",
             )
         if type(draft_declared_boundary_reference) is not bool:
             raise DomainError(
@@ -1596,7 +1620,8 @@ class EngineeringAgentBoundaryRelevanceChallenge:
                 "boundary relevance challenge Draft reference flag is invalid",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_CHALLENGE@2",
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_CHALLENGE@3",
+            "kind": kind.value,
             "boundary_observation_id": boundary_observation_id.value,
             "resolving_support_observation_ids": tuple(
                 item.value for item in resolving
@@ -1610,6 +1635,7 @@ class EngineeringAgentBoundaryRelevanceChallenge:
             challenge_id=StableId(
                 f"boundary_challenge_{challenge_digest.value[-32:]}"
             ),
+            kind=kind,
             boundary_observation_id=boundary_observation_id,
             resolving_support_observation_ids=resolving,
             draft_declared_boundary_reference=(
@@ -1651,18 +1677,17 @@ class EngineeringAgentBoundaryRelevanceAssessment:
             "boundary relevance assessment Finding code",
         )
         requires_finding = (
-            disposition
-            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+            disposition in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
         )
         if (requires_finding and finding_code is None) or (
             not requires_finding and finding_code is not None
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "only a disclosed audit-only boundary assessment may bind a Finding code",
+                "only an audit-only boundary assessment may bind a Finding code",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@1",
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@2",
             "challenge_id": challenge_id.value,
             "user_requirement": _bounded_text(
                 user_requirement,
@@ -1786,8 +1811,9 @@ class EngineeringAgentReviewProposal:
                 "Reviewer Finding codes must be unique",
             )
         for assessment in relevance_assessments:
-            if assessment.disposition is not (
-                EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+            if (
+                assessment.disposition
+                not in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
             ):
                 continue
             finding = finding_by_code.get(assessment.finding_code or "")
@@ -1899,6 +1925,9 @@ _JAVA_RECEIVER_CALL_RE = re.compile(
     r"(?:\s*\([^()\n;{}]*\))?)\s*\.\s*"
     r"(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
 )
+_SOURCE_LINE_LOCATOR_RE = re.compile(
+    r"^(?P<resource>.+):L[1-9][0-9]*(?:-[1-9][0-9]*)?$"
+)
 
 
 def project_engineering_agent_draft_boundaries(
@@ -1932,10 +1961,7 @@ def project_engineering_agent_draft_boundaries(
     }
     resolved_candidates: set[StableId] = set()
     full_reads = tuple(
-        (
-            support_position[observation.observation_id],
-            set(_engineering_agent_full_source_read_citation_refs(observation)),
-        )
+        (support_position[observation.observation_id], observation)
         for observation in support_sequence
         if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
     )
@@ -1949,12 +1975,14 @@ def project_engineering_agent_draft_boundaries(
         paired_support = search_support_by_request.get(item.tool_request_id)
         if paired_support is None:
             continue
-        issued_locators = set(paired_support.citation_refs)
         search_position = support_position[paired_support.observation_id]
         if any(
             read_position > search_position
-            and bool(issued_locators.intersection(read_references))
-            for read_position, read_references in full_reads
+            and _engineering_agent_search_is_resolved_by_full_read(
+                search_support=paired_support,
+                read_support=read_support,
+            )
+            for read_position, read_support in full_reads
         ):
             resolved_candidates.add(item.observation_id)
     boundary_ids = tuple(
@@ -2012,6 +2040,76 @@ def _engineering_agent_full_source_read_citation_refs(
     return tuple(references)
 
 
+def _engineering_agent_retrieval_resource_locators(
+    observation: EngineeringAgentToolObservation,
+    *,
+    full_resource_required: bool,
+) -> tuple[str, ...]:
+    """Return trusted resource identities independent of one-use locator IDs."""
+
+    try:
+        payload = json.loads(observation.content)
+    except (TypeError, json.JSONDecodeError):
+        return ()
+    retrieval = payload.get("retrieval_result")
+    if not isinstance(retrieval, dict):
+        return ()
+    raw_items = retrieval.get("items")
+    if not isinstance(raw_items, list):
+        return ()
+    authorized = set(observation.citation_refs)
+    resources: list[str] = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        reference = item.get("locator_reference")
+        locator = item.get("locator")
+        if (
+            item.get("modality") != "EXACT_STATIC_SOURCE_TEXT"
+            or (
+                full_resource_required
+                and item.get("coverage_complete") is not True
+            )
+            or not isinstance(reference, str)
+            or reference not in authorized
+            or not isinstance(locator, str)
+        ):
+            continue
+        line_match = _SOURCE_LINE_LOCATOR_RE.fullmatch(locator)
+        resource = (
+            line_match.group("resource") if line_match is not None else locator
+        )
+        if resource not in resources:
+            resources.append(resource)
+    return tuple(resources)
+
+
+def _engineering_agent_search_is_resolved_by_full_read(
+    *,
+    search_support: EngineeringAgentToolObservation,
+    read_support: EngineeringAgentToolObservation,
+) -> bool:
+    issued_references = set(search_support.citation_refs)
+    read_references = set(
+        _engineering_agent_full_source_read_citation_refs(read_support)
+    )
+    if issued_references.intersection(read_references):
+        return True
+    issued_resources = set(
+        _engineering_agent_retrieval_resource_locators(
+            search_support,
+            full_resource_required=False,
+        )
+    )
+    read_resources = set(
+        _engineering_agent_retrieval_resource_locators(
+            read_support,
+            full_resource_required=True,
+        )
+    )
+    return bool(issued_resources.intersection(read_resources))
+
+
 def project_engineering_agent_boundary_relevance_challenges(
     package: EngineeringAgentEvidencePackage,
     draft: EngineeringAgentAnswerDraft,
@@ -2031,38 +2129,50 @@ def project_engineering_agent_boundary_relevance_challenges(
         item.observation_id: index
         for index, item in enumerate(package.support_observations)
     }
-    boundary_by_id = {
-        item.observation_id: item for item in package.boundary_observations
-    }
+    resolved_candidates = set(
+        projection.resolved_acquisition_candidate_observation_ids
+    )
     challenges: list[EngineeringAgentBoundaryRelevanceChallenge] = []
-    for boundary_id in projection.resolved_acquisition_candidate_observation_ids:
-        boundary = boundary_by_id[boundary_id]
+    for boundary in package.boundary_observations:
+        boundary_id = boundary.observation_id
         search_support = search_support_by_request.get(boundary.tool_request_id)
-        if search_support is None:
-            continue
-        issued = set(search_support.citation_refs)
-        search_position = support_position[search_support.observation_id]
-        resolving = tuple(
-            item.observation_id
-            for index, item in enumerate(package.support_observations)
-            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
-            and index > search_position
-            and bool(
-                issued.intersection(
-                    _engineering_agent_full_source_read_citation_refs(item)
+        resolving: tuple[StableId, ...] = ()
+        if boundary_id in resolved_candidates:
+            if search_support is None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "resolved Source boundary lacks its paired Search support",
                 )
+            search_position = support_position[search_support.observation_id]
+            resolving = tuple(
+                item.observation_id
+                for index, item in enumerate(package.support_observations)
+                if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+                and index > search_position
+                and _engineering_agent_search_is_resolved_by_full_read(
+                    search_support=search_support,
+                    read_support=item,
+                )
+            )
+            if not resolving:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "resolved Source boundary lacks exact full-read support",
+                )
+        challenges.append(
+            EngineeringAgentBoundaryRelevanceChallenge.create(
+                kind=(
+                    EngineeringAgentBoundaryRelevanceChallengeKind.RESOLVED_ACQUISITION
+                    if resolving
+                    else EngineeringAgentBoundaryRelevanceChallengeKind.BOUNDARY_MATERIALITY
+                ),
+                boundary_observation_id=boundary_id,
+                resolving_support_observation_ids=resolving,
+                draft_declared_boundary_reference=(
+                    boundary_id in draft.boundary_observation_ids
+                ),
             )
         )
-        if resolving:
-            challenges.append(
-                EngineeringAgentBoundaryRelevanceChallenge.create(
-                    boundary_observation_id=boundary_id,
-                    resolving_support_observation_ids=resolving,
-                    draft_declared_boundary_reference=(
-                        boundary_id in draft.boundary_observation_ids
-                    ),
-                )
-            )
     return tuple(challenges)
 
 
@@ -2109,6 +2219,22 @@ def engineering_agent_boundary_relevance_assessment_matches_challenge(
         is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
     ):
         return challenge.draft_declared_boundary_reference
+    if (
+        assessment.disposition
+        is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+    ):
+        return (
+            challenge.kind
+            is EngineeringAgentBoundaryRelevanceChallengeKind.RESOLVED_ACQUISITION
+        )
+    if (
+        assessment.disposition
+        is EngineeringAgentBoundaryRelevanceAssessmentDisposition.NON_MATERIAL_AUDIT_ONLY
+    ):
+        return (
+            challenge.kind
+            is EngineeringAgentBoundaryRelevanceChallengeKind.BOUNDARY_MATERIALITY
+        )
     return True
 
 
@@ -3672,7 +3798,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
             if (
                 assessment.disposition
-                is EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY
+                in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
             ):
                 finding = finding_by_code.get(assessment.finding_code or "")
                 if (
@@ -4428,6 +4554,7 @@ __all__ = [
     "EngineeringAgentBoundaryRelevanceAssessment",
     "EngineeringAgentBoundaryRelevanceAssessmentDisposition",
     "EngineeringAgentBoundaryRelevanceChallenge",
+    "EngineeringAgentBoundaryRelevanceChallengeKind",
     "EngineeringAgentEvidenceBoundaryAssessment",
     "EngineeringAgentEvidenceBoundaryAssessmentDisposition",
     "EngineeringAgentEvidenceBoundaryChallenge",

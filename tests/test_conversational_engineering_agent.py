@@ -36,6 +36,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkStateProposal,
     InMemoryEngineeringAgentWorkStateRepository,
     SealedEngineeringAgentResponseControl,
+    project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_evidence_boundary_challenges,
 )
 from software_world_model.application_services.engineering_conversation import (
@@ -256,6 +257,7 @@ class FocusAwareApprovingReviewer:
     def review(self, request):
         self.requests.append(request)
         assessments = ()
+        relevance_assessments = ()
         if (
             request.focus
             is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
@@ -280,11 +282,29 @@ class FocusAwareApprovingReviewer:
                     request.draft,
                 )
             )
+            relevance_assessments = tuple(
+                EngineeringAgentBoundaryRelevanceAssessment.create(
+                    challenge_id=item.challenge_id,
+                    user_requirement="State the material evidence limitation.",
+                    boundary_scope="The Draft binds this retained Boundary.",
+                    disposition=(
+                        EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+                        if item.draft_declared_boundary_reference
+                        else EngineeringAgentBoundaryRelevanceAssessmentDisposition.NOT_DISCLOSED_IN_DRAFT
+                    ),
+                    finding_code=None,
+                )
+                for item in project_engineering_agent_boundary_relevance_challenges(
+                    request.package,
+                    request.draft,
+                )
+            )
         return EngineeringAgentReviewProposal.create(
             model_call_ref=f"focused-review-call-{len(self.requests)}",
             decision=EngineeringAgentReviewDecision.APPROVED,
             focus=request.focus,
             evidence_boundary_assessments=assessments,
+            boundary_relevance_assessments=relevance_assessments,
         )
 
 
@@ -1027,10 +1047,11 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         service, tool, reviewer, response = _service(
             driver,
             tool=RecordingToolPort(progress=False),
+            reviewer=FocusAwareApprovingReviewer(),
             limits=EngineeringAgentLoopLimits(
                 maximum_agent_steps=4,
                 maximum_tool_actions=4,
-                maximum_reviews=1,
+                maximum_reviews=2,
                 maximum_consecutive_no_progress=2,
             ),
         )
@@ -1045,9 +1066,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         self.assertIsNone(submission.turn.failure_code)
         self.assertEqual(submission.turn.delivery_state, "AUTHORIZED")
         self.assertEqual(submission.turn.quality_status, "REVIEWED_LIMITATION")
-        self.assertEqual(submission.turn.provider_dispatch_count, 4)
+        self.assertEqual(submission.turn.provider_dispatch_count, 5)
         self.assertEqual(len(tool.requests), 2)
-        self.assertEqual(len(reviewer.requests), 1)
+        self.assertEqual(len(reviewer.requests), 2)
         self.assertEqual(len(response.requests), 1)
         self.assertEqual(
             driver.modes,

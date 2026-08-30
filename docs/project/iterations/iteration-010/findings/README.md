@@ -4,7 +4,7 @@ kind: iteration-findings-index
 status: open
 authority: development-evidence
 owners: [engineering, architecture, quality]
-depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
+depends_on: [PROJECT-GOVERNANCE-IMPLEMENTATION-FEEDBACK, ITER-010-PROPOSAL, FINDING-010-141, FINDING-010-153, FINDING-010-154, FINDING-010-155, FINDING-010-156, FINDING-010-157, FINDING-010-158, FINDING-010-159, FINDING-010-160, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-166, FINDING-010-167, FINDING-010-168, FINDING-010-177, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012]
 code: []
 tests: []
 iteration: ITER-010
@@ -12,11 +12,16 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-205](FINDING-010-205.md)：run-083 的 Ark 43 次 TLS/credential/HTTP 全成功，DeepSeek 0 正确；Q1/Q3/Q5 accepted、Q4
+  零 dispatch Clarification，Q5 已关闭旧 diagnostic/effect 缺陷。Q2 暴露 syntax→closed-contract 分层修复缺口；Q1 暴露不同 opaque locator 的
+  same-resource Search/Read 漏配与普通 Boundary materiality 漏审。current `@11/@5` 只允许严格后继 validator stage 的第二次 repair，按 exact
+  canonical resource identity 关联 Source item，并挑战每个 Package Boundary；15 次 authority 不变，144 项定向 PASS，fresh run-084 待验证。
 - [FINDING-010-204](FINDING-010-204.md)：run-081 因 stale pricing evidence 在外调前停止，不是 Ark unavailable；刷新官方证据后的
   run-082 获周末 fallback admission，但 Ark 41 次 TLS/credential/HTTP 全成功，DeepSeek 0 正确。Q2 暴露 Application-owned Observation ID
   冗余抄写漂移，Q3 暴露三次 Review 容量不足；Q5 的未声明 resolved diagnostic 绕过旧 relevance 交集投影，Reviewer 又把 external-effect
   scope 自相矛盾地判成 caller evidence 内。current `@10/@4` 由 Application 绑定 exact Observation prefix、挑战全部 resolved candidate、
-  密封 closed semantic scope，并以 `11+4=15` 保持 dispatch authority；132 项定向 PASS，fresh run-083 待验证。
+  密封 closed semantic scope，并以 `11+4=15` 保持 dispatch authority；132 项定向 PASS；该 candidate 的 run-083 后继结果见
+  `FINDING-010-205`。
 - [FINDING-010-203](FINDING-010-203.md)：run-080 四个工程答案均 `ACCEPTED`、隔离 Clarification 零 dispatch，Ark 32 次
   TLS/credential/HTTP 全成功且 DeepSeek 0 正确；fresh Reviewer 却继续放行已由 full READ 闭合的 Search 诊断，以及只凭 caller
   expression 断言 callee/database/Elasticsearch effect。current Application 投影 exact caller/callee 与 resolved-acquisition relevance

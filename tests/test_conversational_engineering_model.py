@@ -573,7 +573,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -938,7 +938,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1531,7 +1531,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         ]["action"]
         self.assertNotIn("arguments", action_projection)
 
-    def test_format_repair_identifies_cross_disposition_claim_reference(self) -> None:
+    def test_layered_format_repair_reaches_cross_disposition_claim_reference(self) -> None:
         capture = CapturingTurnExecutor()
         capture_service = InMemoryEngineeringConversationService(
             _binding(),
@@ -1602,8 +1602,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repaired["draft"]["claims"][0]["support_observation_ids"] = [
             support.observation_id.value
         ]
+        semantic_invalid_output = json.dumps(base, ensure_ascii=False)
+        syntax_invalid_output = semantic_invalid_output.replace(
+            "当前证据支持登录链；运行时边界仍未知。",
+            "当前证据支持登录链；\n运行时边界仍未知。",
+            1,
+        )
+        with self.assertRaises(json.JSONDecodeError):
+            json.loads(syntax_invalid_output)
         adapter = SequencedLiveAgentAdapter(
-            outputs=(json.dumps(base), json.dumps(repaired))
+            outputs=(
+                syntax_invalid_output,
+                semantic_invalid_output,
+                json.dumps(repaired, ensure_ascii=False),
+            )
         )
         _, model, _, _, _, _ = self._service(adapter=adapter)
 
@@ -1628,13 +1640,41 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             result.proposal.observation_ids,
             (support.observation_id, boundary.observation_id),
         )
-        self.assertEqual(len(result.prior_receipts), 1)
-        repair_payload = json.loads(
+        self.assertEqual(len(result.prior_receipts), 2)
+        first_repair_payload = json.loads(
             next(
                 item.content
                 for item in adapter.requests[1].messages
                 if item.input_item_id == "sealed-role-input"
             )
+        )
+        self.assertEqual(
+            first_repair_payload["format_repair_policy"]["attempt"],
+            1,
+        )
+        self.assertEqual(
+            first_repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "JSON_SYNTAX_ERROR",
+        )
+        repair_payload = json.loads(
+            next(
+                item.content
+                for item in adapter.requests[2].messages
+                if item.input_item_id == "sealed-role-input"
+            )
+        )
+        self.assertEqual(repair_payload["format_repair_policy"]["attempt"], 2)
+        self.assertEqual(
+            repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "CLOSED_OUTPUT_CONTRACT",
+        )
+        self.assertEqual(
+            repair_payload["format_repair_policy"]["prior_model_call_ref"],
+            model.audits[1].receipt.model_call_ref,
         )
         diagnostic = repair_payload["format_repair_policy"][
             "validation_failure_message"
@@ -1741,7 +1781,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@5",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@6",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -3986,13 +4026,28 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
 
     def test_downstream_full_read_projects_search_boundary_relevance_challenge(self) -> None:
         locator_ref = f"source_locator_{'7' * 32}"
+        full_read_locator_ref = f"source_locator_{'6' * 32}"
+        resource_locator = "module/src/main/java/example/LoginService.java"
         search_request_id = StableId(f"tool_request_{'8' * 32}")
         search_support = EngineeringAgentToolObservation(
             observation_id=StableId(f"observation_{'9' * 32}"),
             tool_request_id=search_request_id,
             operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
             result_ref="search-result-support",
-            content="search candidate",
+            content=json.dumps(
+                {
+                    "retrieval_result": {
+                        "items": [
+                            {
+                                "locator_reference": locator_ref,
+                                "locator": f"{resource_locator}:L45-52",
+                                "modality": "EXACT_STATIC_SOURCE_TEXT",
+                                "coverage_complete": False,
+                            }
+                        ]
+                    }
+                }
+            ),
             disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
             progress=True,
             citation_refs=(locator_ref,),
@@ -4023,7 +4078,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "retrieval_result": {
                         "items": [
                             {
-                                "locator_reference": locator_ref,
+                                "locator_reference": full_read_locator_ref,
+                                "locator": resource_locator,
                                 "modality": "EXACT_STATIC_SOURCE_TEXT",
                                 "coverage_complete": True,
                             }
@@ -4033,7 +4089,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
             progress=True,
-            citation_refs=(locator_ref,),
+            citation_refs=(full_read_locator_ref,),
             authority_receipt=None,
             tool_evidence_digest=digest_of("read-support-evidence"),
             digest=digest_of("read-support-observation"),
@@ -4082,6 +4138,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             draft,
         )
         self.assertEqual(len(challenges), 1)
+        self.assertEqual(
+            challenges[0].kind.value,
+            "RESOLVED_ACQUISITION",
+        )
         self.assertEqual(
             challenges[0].resolving_support_observation_ids,
             (read_support.observation_id,),
@@ -4230,6 +4290,86 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model_call_ref="undisclosed-diagnostic-approved",
         )
         self.assertEqual(not_disclosed.decision.value, "APPROVED")
+
+        materiality_boundary = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'2' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'3' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="world-model-boundary",
+            content="global inventory metrics and a material state gap",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("world-model-boundary-evidence"),
+            digest=digest_of("world-model-boundary-observation"),
+        )
+        materiality_package_digest = digest_of("materiality-package")
+        materiality_package = EngineeringAgentEvidencePackage(
+            package_id=StableId(f"evidence_package_{'4' * 32}"),
+            turn_id=turn_id,
+            origin_work_state_digest=digest_of("materiality-work"),
+            support_observations=(),
+            boundary_observations=(materiality_boundary,),
+            digest=materiality_package_digest,
+        )
+        materiality_draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId(f"agent_answer_{'5' * 32}"),
+            turn_id=turn_id,
+            work_state_digest=digest_of("materiality-work"),
+            package_digest=materiality_package_digest,
+            response_kind=EngineeringAgentResponseKind.LIMITATION,
+            content="状态缺口仍限制结论，并附带了无关全局清单数字。",
+            claims=(),
+            boundary_observation_ids=(materiality_boundary.observation_id,),
+            digest=digest_of("materiality-draft"),
+        )
+        materiality_challenges = (
+            project_engineering_agent_boundary_relevance_challenges(
+                materiality_package,
+                materiality_draft,
+            )
+        )
+        self.assertEqual(len(materiality_challenges), 1)
+        self.assertEqual(
+            materiality_challenges[0].kind.value,
+            "BOUNDARY_MATERIALITY",
+        )
+        materiality_finding = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "FINDINGS",
+                    "claim_assessments": [],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [
+                        {
+                            "challenge_id": (
+                                materiality_challenges[0].challenge_id.value
+                            ),
+                            "user_requirement": "Explain the material state gap.",
+                            "boundary_scope": "Includes unrelated global metrics.",
+                            "disposition": "NON_MATERIAL_AUDIT_ONLY",
+                            "finding_code": "REMOVE_NON_MATERIAL_METRICS",
+                        }
+                    ],
+                    "findings": [
+                        {
+                            "code": "REMOVE_NON_MATERIAL_METRICS",
+                            "message": "Keep the material gap but remove unrelated metrics.",
+                            "requires_evidence": False,
+                            "claim_index": None,
+                        }
+                    ],
+                }
+            ),
+            request=SimpleNamespace(
+                draft=materiality_draft,
+                package=materiality_package,
+                focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
+            ),
+            model_call_ref="focused-boundary-materiality-finding",
+        )
+        self.assertEqual(materiality_finding.decision.value, "FINDINGS")
 
     def test_closed_decoders_inject_trusted_call_identity_and_reject_extra_fields(self) -> None:
         binding = _binding()
