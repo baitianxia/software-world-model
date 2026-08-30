@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -130,6 +130,14 @@ disposition/completeness/resolution/revision 等表示层 value 成为 query mat
 4/1；存在至少两个 exact anchor 时 prefix-only item 不进入结果，并只保留达到本次 strongest score 75% 的尾部，最后按 digest 稳定排序及
 既有 item 上限截断。该规则不得按工程、问题、业务词、类、方法或 Provider 分支，也不得把 Profile incomplete 的实现细节伪装为 cognition。
 
+当 immutable original User Message 精确点名 sealed Source allowlist 中一个或多个 top-level Source scope 时，Application 必须在
+multi-Profile relevance ranking 前把该 scope 集与每个 Profile 的 formal Coverage root scope 比较。具有 non-repository-wide root 且与
+显式 scope 完全不相交的 Profile 不得贡献 affirmative item 或 Profile gap；repository-wide root 仍可贡献相容的 partial cognition，并如实
+披露缺失维度。scope selector 只允许对 original question 与 allowlist top-level segment 做 exact boundary match；Provider/model 生成的
+relevance query 不能扩大、缩小或改写它。问题未明确点名已知 scope 时不得猜测；异域 Profile mismatch 是 Coverage Boundary，不是 Source
+authorization denial。该门控不合并或改写 Snapshot/Read Set，不改变 Capability Manifest、Read Authority、Source Profile、Broker allowlist
+或 Citation identity。
+
 Primary input 还必须从 Application-owned loop limit 和 exact current action history 重算并密封
 `tool_action_budget = {maximum, used, remaining}`；`remaining` 是最多仍可执行的 action 数，不是消费目标。current maximum 保持 8。
 `remaining=0` 时 effective tool catalog 机械变空，普通 successor 的 completion policy 必须要求基于 current SUPPORT/BOUNDARY 的 Draft；
@@ -250,8 +258,8 @@ no-progress failure 关闭。
    conclusion 形成 `claim_index=null` 的 global completeness Finding，不能因所有枚举 Claim 都 SUPPORTED 而批准。比较时必须以 heading、
    table column、list lead-in、label 与 surrounding sentence 重建完整 assertion；Claim 漏掉物质继承 qualifier 属 global completeness
    Finding，qualifier 错误、无据或误分类属 concrete defect，窄 Claim 获支持不能批准其容器扩张。路径、package、import、
-   symbol name 或 caller syntax 不能单独证明类型继承/catch coverage、数据库约束、运行时
-   配置值或外部副作用；Primary 必须取得直接声明/执行该关系的 current Evidence，或把结论收窄为不依赖未知关系的结果，Reviewer 对违反
+   symbol name、directory convention 或 caller syntax 不能单独证明类型继承/catch coverage、数据库约束、运行时配置值、
+   code-generation/tool provenance 或外部副作用；Primary 必须取得直接声明/执行该关系的 current Evidence，或把结论收窄为不依赖未知关系的结果，Reviewer 对违反
    该规则的 material Claim 必须返回 Finding。current Source 行直接包含 call expression 时，它只直接证明 caller 调用该表达式及源码可见
    的局部顺序，不证明 callee 实现、动态目标、返回语义、类型继承或外部副作用；Draft 只陈述该 invocation/order 并明确把 callee semantics
    留在 evidence boundary 时，Reviewer 不得因后者未知而拒绝前者。Authorization、Evidence Coverage、Tool availability 与 runtime
@@ -261,8 +269,12 @@ no-progress failure 关闭。
    成功效果或另一个 request/session/cache consumer/security context/transaction observer/remote system 的可见时点，必须分别取得该
    implementation 和 consumer path 的 current SUPPORT，否则选择仍合法的 targeted action 或报告 exact Evidence boundary。Primary 与
    Reviewer input 必须对称投影这些规则；Reviewer 还必须把无关或已由后续 SUPPORT 闭合的 acquisition diagnostic 判为 relevance Finding，
-   并令 `requires_evidence=false`，因为删除它不损失已支持的 requested conclusion。Application 不以题目、技术名词、failure code 或语言关键词
-   改写 Draft。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
+   并令 `requires_evidence=false`，因为删除它不损失已支持的 requested conclusion。Primary 和 Reviewer 对每个普通 affirmative detail 与
+   Boundary 也必须执行 counterfactual relevance test：若删除该细节后 current User Message 的每个 requested conclusion 仍完整回答并诚实
+   定界，则必须省略；只有用户明确要求，或该细节改变 requested condition、result、comparison 或 guarantee 时才保留。neighbor declaration、
+   alternate helper/overload、package neighbor 或 implementation provenance 不因共享 artifact/vocabulary 自动 material；不能为 Draft 自己引入的
+   邻接细节扩大调查。Reviewer 对这种自扩张返回 `requires_evidence=false` 的 relevance Finding。Application 不以题目、技术名词、failure code
+   或语言关键词改写 Draft。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
    current User Message 真正要求的 material fact，且删除/收窄会让该要求仍未回答时，才可 `requires_evidence=true`；若 current Package 已能
    通过删除、收窄、限定或重组 offending statement 保留全部已支持的 requested conclusions，则必须为 false，不能一边给出这种同包修复一边
    要求新 Evidence。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取

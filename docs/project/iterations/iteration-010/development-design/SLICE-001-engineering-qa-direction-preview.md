@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -73,9 +73,15 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - World Model query relevance 只使用语义 value：表示层 value 与 path 公共前缀不作特征，cohort-common exact token 不作 anchor；强 exact
   match 存在时关闭 prefix-only 和低于 strongest score 75% 的弱尾部。排序必须确定性且不按工程、题面、业务词、类或方法特判；Profile
   incomplete 的实现细节继续形成 Source gap，不能由 relevance 补造。
+- original User Message 精确点名 sealed Source allowlist 的 top-level scope 时，multi-Profile projection 在 relevance ranking 前排除 formal
+  Coverage root 与其完全不相交的非 repository-wide Profile；其 affirmative item 与 Profile gap 都不得进入 Context。selector 只来自原始
+  问题的 exact boundary match，模型 query 不能改写；mismatch 是 Coverage Boundary 而非授权拒绝，repository-wide partial Profile 仍可参与。
 - Boundary/Audit 的完整保留不要求全部写入用户答案。只有仍限制 current User Message material requirement 或用户明确询问的诊断才可披露；
   已被后续 SUPPORT 闭合的 acquisition diagnostic 和不限制具体结论的 global inventory/coverage metric 只留 audit，Reviewer 对泄漏返回
   `requires_evidence=false` 的 relevance Finding。
+- 所有普通 affirmative detail 与 Boundary 同样执行反事实相关性测试：删除后仍完整回答并诚实定界的邻接 declaration/helper/provenance
+  必须省略，不能为 Draft 自己引入的细节扩大调查；code-generation/tool provenance 不能从 path/package/import/symbol/directory convention
+  推断，material claim 必须有 direct current SUPPORT。
 - Reviewer 指定现有 Package 足够时，同包 rewrite 必须生成 successor Work State/Draft/fresh Review；Package origin 保留首次封装该证据集的
   Work State，不随 rewrite 改写，也不能被 Response Control 当成当前 Delivery Work State。任何新 Observation 仍形成新 Package。
 - closed-shape repair 的 copy obligation 只覆盖 prior output 中已经存在、allowlisted 且可按 schema 对齐的值。完全没有既存 allowlisted item

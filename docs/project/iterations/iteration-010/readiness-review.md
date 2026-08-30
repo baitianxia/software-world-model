@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -61,6 +61,12 @@ dimension 机械分区，Tool/Model `43/43`、相邻七模块 `92/92` PASS、外
 `FINDING-010-195` 继续把 run-076 的商品/营销/通用 Controller SUPPORT 噪声定位到 query relevance。current cohort-aware ranking
 排除表示层 value、公共 path/function token 与弱正分尾部；原 artifact 零外调 replay 从 32 收敛到 14，已知异域 item 为 0，认知
 `10/10`、相邻八模块 `102/102` PASS。Profile incomplete 的旧关系删除仍须 Source 补证，未被伪造为 cognition。
+`FINDING-010-196` 又把剩余普通邻接扩张定位到 synthesis/review：current counterfactual materiality policy 省略不改变 requested
+conclusion 的 detail/Boundary，禁止为 Draft 自引入细节扩大调查，并要求 generation/tool provenance 有 direct SUPPORT；Model `28/28`
+PASS、外调 0。
+`FINDING-010-197` 再以冻结异质题把 first divergence 前移到 Profile selection：显式 `mall-search` / `mall-portal` scope 未约束
+`mall-admin` Java Coverage root。current original-question + sealed-allowlist scope gate 排除异域 Profile 的 affirmative item 与 gap；真实
+artifact 零外调复演分别只保留对应 Maven module item，认知 `11/11` PASS。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 
@@ -87,7 +93,7 @@ SLICE-001 保持 authorized/coding_input=true。主要风险是继续碰单题�
 SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model Answering、Source Artifact、Security 和 Local Browser 合同
 继续拥有跨模块语义。run-074/075/076 暴露的 closed-shape repair、Source budget/reference/catalog coherence、inherited-container assertion、
 空 Context plural/class demonstrative、failure evidence display、authority/coverage 与 producer/consumer runtime 语义偏差已由
-`FINDING-010-184/185/186/188/189/191/192/193/194/195` 回写 Engineering Conversation
+`FINDING-010-184/185/186/188/189/191/192/193/194/195/196` 回写 Engineering Conversation
 唯一 Owner；当前
 没有会阻止后续质量资格开发的未决架构问题。实现若发现新的合同级偏差，继续按 Finding policy 回写唯一 Owner，同时继续不受影响的产品工作。
 
@@ -108,7 +114,7 @@ SYS-ADR-018 及 Engineering Conversation、Agentic Task、Evidence/World Model A
 Production 或破坏性动作需要最小增量权限。用户明确 STOP / REDIRECT / REJECT 或不可绕过的安全禁止会停止对应工作；普通失败不会。
 
 当前没有权限或计划阻塞。run-076/077 的 raw Ark HTTP error 只阻止相同 signature 外调，不撤销 standing authority 或本地开发；
-`FINDING-010-188/189` 已由 fresh Browser 真实通过；`FINDING-010-191/192/193/194/195` 仅有本地 exact artifact/source/input 对照、
+`FINDING-010-188/189` 已由 fresh Browser 真实通过；`FINDING-010-191/192/193/194/195/196` 仅有本地 exact artifact/source/input 对照、
 replay 和定向测试。当前继续本地质量归因与证据准备，并在 materially new availability evidence 或新的
 product divergence 出现后复验角色重分配题、容器语义审核与未参与修复的异质题，随后继续 actual current Codex 比较，直到
 同候选取得或如实未取得质量合格 MVP。技术 Case ID

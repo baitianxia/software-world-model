@@ -1032,10 +1032,36 @@ class MultiProfileWorldModelCognitionProjector:
             manifest=self.manifest,
         )
         required = set(assessment.required_dimensions)
+        explicit_source_scopes = _explicit_question_source_scopes(
+            request.original_question,
+            request.source_allowlist,
+        )
+        profile_source_scopes = {
+            profile.profile_ref: _projector_source_scopes(projector)
+            for profile, projector in zip(
+                self.manifest.profiles,
+                self.projectors,
+                strict=True,
+            )
+        }
+        scope_incompatible_profile_refs = {
+            profile_ref
+            for profile_ref, source_scopes in profile_source_scopes.items()
+            if explicit_source_scopes
+            and source_scopes
+            and explicit_source_scopes.isdisjoint(source_scopes)
+        }
+        scope_compatible_profile_refs = {
+            profile.profile_ref for profile in self.manifest.profiles
+        } - scope_incompatible_profile_refs
         active_profile_refs: set[str] = set()
         for entry in assessment.needs:
-            if entry.eligible_profile_refs:
-                active_profile_refs.update(entry.eligible_profile_refs)
+            eligible_profile_refs = (
+                set(entry.eligible_profile_refs)
+                & scope_compatible_profile_refs
+            )
+            if eligible_profile_refs:
+                active_profile_refs.update(eligible_profile_refs)
             else:
                 partial_dimensions = {
                     profile.profile_ref: (
@@ -1043,6 +1069,7 @@ class MultiProfileWorldModelCognitionProjector:
                         & set(entry.need.required_dimensions)
                     )
                     for profile in self.manifest.profiles
+                    if profile.profile_ref in scope_compatible_profile_refs
                 }
                 active_profile_refs.update(
                     profile_ref
@@ -1124,6 +1151,15 @@ class MultiProfileWorldModelCognitionProjector:
         )
         mandatory = (*manifest_items, *assessment_items)
         unknowns: list[str] = []
+        for profile in self.manifest.profiles:
+            if profile.profile_ref not in scope_incompatible_profile_refs:
+                continue
+            unknowns.append(
+                f"{profile.profile_ref}: explicit Source scope(s) "
+                f"{', '.join(sorted(explicit_source_scopes))} are outside "
+                "Profile root scope(s) "
+                f"{', '.join(sorted(profile_source_scopes[profile.profile_ref]))}."
+            )
         for entry in assessment.needs:
             if entry.missing_dimensions:
                 unknowns.append(
@@ -1474,6 +1510,40 @@ def _rank_relevant_cognition_items(
         )
     ranked.sort(key=lambda value: (value[0], value[1], value[2]))
     return tuple(item for _, _, _, item in ranked[:maximum_items])
+
+
+def _explicit_question_source_scopes(
+    question: str,
+    source_allowlist: Sequence[str],
+) -> frozenset[str]:
+    normalized = question.casefold()
+    available: set[str] = set()
+    for path in source_allowlist:
+        first, separator, _ = path.partition("/")
+        if separator or (first not in {"", "."} and "." not in first):
+            available.add(first.casefold())
+    return frozenset(
+        scope
+        for scope in available
+        if re.search(
+            rf"(?<![0-9a-z_.-]){re.escape(scope)}(?![0-9a-z_.-])",
+            normalized,
+        )
+    )
+
+
+def _projector_source_scopes(
+    projector: StructureBundleWorldModelCognitionProjector,
+) -> frozenset[str]:
+    scopes: set[str] = set()
+    for coverage in projector.snapshot_bundle.coverages:
+        root = coverage.root.logical_reactor_root
+        first, separator, _ = root.partition("/")
+        if not separator and (first in {"", "."} or "." in first):
+            return frozenset()
+        if separator or (first not in {"", "."} and "." not in first):
+            scopes.add(first.casefold())
+    return frozenset(scopes)
 
 
 def _relevance_match_counts(

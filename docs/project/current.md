@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -46,7 +46,7 @@ run-075 已以 fresh clean product 复验 run-074 的 Maven/启动链失败题�
 库存失败追问和新 Conversation 省略指代隔离 probe。它延续已交付的 `requires_result=false`“开发体验候选”，仍不是 MVP、质量 PASS、方向
 PASS 或完成；其中库存追问存在标题分类错误且 fresh Reviewer 漏判，角色重分配题又在 Source budget/reference contract 矛盾处失败。
 
-当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189/191/192/193/194/195` 的 clean successor 复验角色重分配题、
+当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189/191/192/193/194/195/196` 的 clean successor 复验角色重分配题、
 容器语义审核、空上下文复数指代、失败分层显示和未参与修复的异质题，再与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
 相对 Codex 无物质退步、总体严格更优，且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一
 开发闭环，不新建迭代、PDR、失败 Result 或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
@@ -146,3 +146,13 @@ token 和任何正分尾部会把商品、营销与通用 Role Controller item �
 path basename 和 discriminative token，并在强 exact match 存在时关闭 prefix-only/弱尾部。run-076 原 artifact/evidence need 零外调
 replay 已从 32 收敛到 14，三类已知异域 item 均为 0，同时保留 `updateRole`、关系 insertion 与 cache 相关 cognition；Profile 未完整捕获的
 旧关系删除仍诚实交给 Source 补证。认知 `10/10`、相邻八模块 `102/102` PASS，外调 0；fresh Delivery/Review 仍待验证。
+
+`FINDING-010-196` 继续审计同一 Draft 的普通邻接细节：`UmsAdminRoleRelationMapper` 的 MyBatis Generator provenance 只有
+import/field/caller syntax，没有直接生成证据；Primary/Reviewer 也缺少将辅助 DAO、替代 helper 与真正 requested conclusion 分开的确定性
+materiality 判据。current sealed policy/prompt 现对每个 answer detail/Boundary 执行 counterfactual omission test，并禁止为 Draft 自引入细节
+扩大调查；generation/tool provenance 必须有 direct SUPPORT。Model `28/28` PASS、外调 0；fresh live 仍待验证。
+
+`FINDING-010-197` 转向 run-076 的冻结异质题，定位到 formal Profile scope 未参与 query selection：`mall-search` 题会收到 7 个
+`mall-admin` Java item，`mall-portal` 题虽无 affirmative item 仍继承该 Profile 的 559/866 gap。current projection 现从 original question 与
+sealed allowlist 精确取得 top-level Source scope，在 ranking 前排除 Coverage root 完全不相交的非 repository-wide Profile；同 artifact 零外调
+复演分别只保留 `mall-search` / `mall-portal` Maven module item，异域 Java item 与 gap 为 0，认知 `11/11` PASS。fresh live 仍待验证。

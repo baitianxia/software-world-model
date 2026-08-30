@@ -198,7 +198,13 @@ class MultiProfileEngineeringQuestionCognitionTests(unittest.TestCase):
             projectors=(structure_projector, java_projector),
         )
 
-    def request(self, *, question: str, projector=None):
+    def request(
+        self,
+        *,
+        question: str,
+        projector=None,
+        source_allowlist: tuple[str, ...] = ("src",),
+    ):
         projector = projector or self.multi
         return EngineeringQuestionRequest.create(
             request_ref="multi-profile-cognition-question",
@@ -210,7 +216,7 @@ class MultiProfileEngineeringQuestionCognitionTests(unittest.TestCase):
             source_profile_ref="multi-profile-cognition-source:1",
             source_profile_digest=self.multi.manifest.digest,
             world_model_read_authority_digest=projector.read_authority_digest,
-            source_allowlist=("src",),
+            source_allowlist=source_allowlist,
         )
 
     def test_maven_only_is_ineligible_for_behavior_question(self) -> None:
@@ -312,6 +318,67 @@ class MultiProfileEngineeringQuestionCognitionTests(unittest.TestCase):
                 and "issueSession" in item.statement
                 for item in behavior.items
             )
+        )
+
+    def test_explicit_source_scope_excludes_other_profile_items(self) -> None:
+        source_allowlist = (
+            "src/main/java",
+            "search/src/main/java",
+        )
+        query = "search authenticate credentials session"
+        unscoped = self.multi.project_for_query(
+            request=self.request(
+                question="How does authentication behavior work?",
+                source_allowlist=source_allowlist,
+            ),
+            query=query,
+        )
+        context = self.multi.project_for_query(
+            request=self.request(
+                question="How does the search module authenticate credentials?",
+                source_allowlist=source_allowlist,
+            ),
+            query=query,
+        )
+        unscoped_affirmative = tuple(
+            item
+            for item in unscoped.items
+            if item.dimension
+            not in {
+                CognitionDimension.COVERAGE,
+                CognitionDimension.EVIDENCE,
+                CognitionDimension.UNKNOWN,
+            }
+        )
+        affirmative = tuple(
+            item
+            for item in context.items
+            if item.dimension
+            not in {
+                CognitionDimension.COVERAGE,
+                CognitionDimension.EVIDENCE,
+                CognitionDimension.UNKNOWN,
+            }
+        )
+
+        self.assertTrue(
+            any('"source_path":' in item.statement for item in unscoped_affirmative)
+        )
+        self.assertTrue(
+            any('"module_path":"search"' in item.statement for item in affirmative)
+        )
+        self.assertFalse(
+            any('"source_path":' in item.statement for item in affirmative)
+        )
+        self.assertTrue(
+            any(
+                "explicit Source scope(s) search are outside Profile root scope(s) src"
+                in item
+                for item in context.unknowns
+            )
+        )
+        self.assertFalse(
+            any("INCOMPLETE_IMPLEMENTATION_METHODS" in item for item in context.unknowns)
         )
 
     def test_relevance_ranking_ignores_common_and_structural_noise(self) -> None:

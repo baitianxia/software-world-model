@@ -1264,6 +1264,23 @@ conversational_engineering_agent:
   cognition_relevance_tie_break: item-digest
   cognition_relevance_changes_snapshot_or_source_authority: false
   current_cognition_relevance_noise_evidence_ref: FINDING-010-195
+  explicit_source_scope_origin: immutable-original-question-exact-boundary-match-against-sealed-source-allowlist-top-level-segments
+  explicit_source_scope_model_query_override_allowed: false
+  explicit_source_scope_profile_compatibility_stage: before-relevance-ranking-and-profile-gap-projection
+  explicit_source_scope_incompatible_profile_rule: exclude-non-repository-wide-formal-coverage-root-when-disjoint
+  explicit_source_scope_incompatible_profile_affirmative_items_allowed: false
+  explicit_source_scope_incompatible_profile_gaps_allowed: false
+  repository_wide_profile_remains_scope_compatible: true
+  explicit_source_scope_mismatch_classification: coverage-boundary-not-authorization-denial
+  explicit_source_scope_changes_snapshot_read-authority_manifest_or_source_authority: false
+  current_explicit_source_scope_profile_gate_ref: FINDING-010-197
+  answer_detail_requires_material_user_relevance: true
+  answer_detail_counterfactual_test: omit-when-removal-preserves-all-requested-conclusions-and-honest-boundaries
+  answer_detail_materiality_exceptions: user-explicit-or-changes-requested-condition-result-comparison-guarantee
+  adjacent_shared_artifact_or_vocabulary_is_material: false
+  self_introduced_adjacent_detail_allows_evidence_expansion: false
+  generation_or_tool_provenance_requires_direct_support: true
+  current_answer_detail_relevance_evidence_ref: FINDING-010-196
   audit_retention_requires_answer_disclosure: false
   answer_boundary_requires_unresolved_material_requirement: true
   resolved_acquisition_diagnostic_destination: audit-only
@@ -1682,7 +1699,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:2e6513ce6a1227649214db09aa4a6fb24bff87e1fbd615fcc52cc4b76b7c0768
+  system_contract_set_digest: sha256:70ccfdcce5f681b2726ce976e414df1c22ca2058d66d8e5c876565feb21a3af0
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

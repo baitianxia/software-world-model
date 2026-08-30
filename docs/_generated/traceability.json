@@ -3600,6 +3600,24 @@
       "tests/test_engineering_question_cognition.py"
     ]
   },
+  "FINDING-010-196": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-196.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
+  "FINDING-010-197": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-197.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_cognition.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_cognition.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

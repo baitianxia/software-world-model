@@ -185,10 +185,11 @@ it contains. Each corresponding draft.claims[].statement must restate every
 material inherited qualifier; an action or outcome alone does not enumerate a
 categorical assertion created by its container.
 Never infer a type relationship or catch boundary, database constraint,
-runtime configuration value, or external side effect from only a path, package,
-import, symbol name, or caller syntax. Require current evidence that directly
-declares or executes the relation, or narrow the conclusion to an outcome that
-does not depend on the unknown relation.
+runtime configuration value, code-generation or tool provenance, or external
+side effect from only a path, package, import, symbol name, directory convention,
+or caller syntax. Require current evidence that directly declares or executes
+the relation, or narrow the conclusion to an outcome that does not depend on the
+unknown relation.
 A source line that directly contains a call expression is direct evidence only
 that the caller invokes that expression and of source-visible local ordering.
 It is not evidence of the callee implementation, dynamic target, return
@@ -221,6 +222,14 @@ resolves the same material need. Global inventory counts and profile-wide
 coverage metrics are not answer content unless they materially limit a requested
 conclusion. Remove or correct hypotheses and open items once current SUPPORT
 resolves them; never preserve a resolved acquisition diagnostic as a caveat.
+Apply a counterfactual relevance test before adding every user-visible
+affirmative detail or boundary. Omit it when removing it leaves every requested
+conclusion fully answered and honestly bounded, unless the User explicitly asks
+for the detail or it changes a requested condition, result, comparison, or
+guarantee. A neighboring declaration, alternate helper or overload, package
+neighbor, or implementation provenance is not material merely because it shares
+an artifact or vocabulary with the requested path. Do not spend a tool action
+solely to support a self-introduced adjacent detail; delete or narrow it instead.
 Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
@@ -447,11 +456,12 @@ contained action or outcome and omits a material inherited qualifier, return a
 global completeness Finding with claim_index null. If the inherited qualifier is
 itself false, unsupported, or misclassifies the contained assertion, return a
 concrete defect; approval of the narrower claim does not approve its container.
-Treat a path, package, import, symbol name, or caller syntax as insufficient to
-establish a type relationship or catch boundary, database constraint, runtime
-configuration value, or external side effect. A material affirmative claim
-needs current evidence that directly declares or executes the relation; otherwise
-return a Finding or require the claim to be narrowed to an independent outcome.
+Treat a path, package, import, symbol name, directory convention, or caller
+syntax as insufficient to establish a type relationship or catch boundary,
+database constraint, runtime configuration value, code-generation or tool
+provenance, or external side effect. A material affirmative claim needs current
+evidence that directly declares or executes the relation; otherwise return a
+Finding or require the claim to be narrowed to an independent outcome.
 A source line that directly contains a call expression does establish only that
 the caller invokes that expression and its source-visible local order. It does
 not establish the callee implementation, dynamic target, return semantics, type
@@ -479,6 +489,14 @@ the same need. Treat global inventory counts and profile-wide coverage metrics
 as answer content only when they materially limit a requested conclusion.
 Irrelevant or resolved diagnostics are a relevance defect with
 requires_evidence=false because deleting them preserves the supported answer.
+Apply the same counterfactual relevance test to every affirmative detail and
+boundary, not only diagnostics. If deleting a neighboring declaration,
+alternate helper or overload, package neighbor, implementation provenance, or
+other adjacent detail leaves every requested conclusion fully answered and
+honestly bounded, require its removal unless the User named it or it changes a
+requested condition, result, comparison, or guarantee. This is a relevance
+Finding with requires_evidence=false; never expand the investigation merely to
+support a detail introduced by the Draft itself.
 """
 
 
@@ -3452,6 +3470,10 @@ def _primary_input_view(
             "answer_boundary_requires_unresolved_material_requirement": True,
             "resolved_acquisition_diagnostic_is_answer_boundary": False,
             "global_inventory_metrics_require_material_user_relevance": True,
+            "answer_detail_requires_material_user_relevance": True,
+            "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
+            "self_introduced_adjacent_detail_allows_evidence_expansion": False,
+            "generation_or_tool_provenance_requires_direct_support": True,
         },
         "tool_action_budget": _tool_action_budget(invocation),
         "investigation_policy": _investigation_policy(invocation),
@@ -4276,6 +4298,10 @@ def _review_input_view(
             "answer_boundary_requires_unresolved_material_requirement": True,
             "resolved_acquisition_diagnostic_is_answer_boundary": False,
             "global_inventory_metrics_require_material_user_relevance": True,
+            "answer_detail_requires_material_user_relevance": True,
+            "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
+            "self_introduced_adjacent_detail_allows_evidence_expansion": False,
+            "generation_or_tool_provenance_requires_direct_support": True,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,

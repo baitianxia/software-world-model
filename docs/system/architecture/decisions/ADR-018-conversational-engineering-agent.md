@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -197,3 +197,14 @@ Context/receipt/audit 身份，metadata-only Context 形成 Boundary。
 `source_path` 前缀、function token 和任何正分尾部被误当成 relevance。current 决策要求 cohort-aware、representation-free 的确定性排序：
 path 只贡献 basename，公共 exact token 不作 anchor，prefix-only 与弱尾部在已有强 exact match 时关闭；正式 Snapshot、Coverage、authority、
 Source 权限和 incomplete Profile 边界均不改变。
+
+`FINDING-010-196` 继续关闭 answer synthesis/review 的普通邻接扩张：Primary 与 Reviewer 对每个 user-visible affirmative detail 和 Boundary
+执行 counterfactual relevance test，删除后 requested conclusions 仍完整时必须省略，且不得为 Draft 自己引入的细节扩大调查。path、package、
+import、symbol 或 directory convention 也不能证明 code-generation/tool provenance；真正 material 的 provenance 结论必须有 direct current
+SUPPORT。该规则不让 Application 按关键词删句，也不改变 Tool、Source、Evidence 或 Delivery authority。
+
+`FINDING-010-197` 又关闭 multi-Profile projection 的 cross-scope 泄漏：当 original User Message 精确点名 sealed Source allowlist 的
+top-level scope 时，Application 在 relevance ranking 前排除 formal Coverage root 与它完全不相交的非 repository-wide Profile，其
+affirmative item 与 Profile gap 都不得进入该 query Context；repository-wide partial Profile 仍可参与。selector 只来自原始问题与 allowlist
+的 exact boundary match，模型 query 不能改写；mismatch 作为 Coverage Boundary 披露，不冒充授权拒绝。Snapshot、Read Authority、Manifest、
+Source Profile 和 Broker authority 均保持不变。

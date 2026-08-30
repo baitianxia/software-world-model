@@ -440,6 +440,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "global_inventory_metrics_require_material_user_relevance": policy[
                         "global_inventory_metrics_require_material_user_relevance"
                     ],
+                    "answer_detail_requires_material_user_relevance": policy[
+                        "answer_detail_requires_material_user_relevance"
+                    ],
+                    "counterfactual_omission_preserving_requested_conclusions_means_omit": policy[
+                        "counterfactual_omission_preserving_requested_conclusions_means_omit"
+                    ],
+                    "self_introduced_adjacent_detail_allows_evidence_expansion": policy[
+                        "self_introduced_adjacent_detail_allows_evidence_expansion"
+                    ],
+                    "generation_or_tool_provenance_requires_direct_support": policy[
+                        "generation_or_tool_provenance_requires_direct_support"
+                    ],
                 }
             )
 
@@ -455,6 +467,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "answer_boundary_requires_unresolved_material_requirement": True,
                 "resolved_acquisition_diagnostic_is_answer_boundary": False,
                 "global_inventory_metrics_require_material_user_relevance": True,
+                "answer_detail_requires_material_user_relevance": True,
+                "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
+                "self_introduced_adjacent_detail_allows_evidence_expansion": False,
+                "generation_or_tool_provenance_requires_direct_support": True,
             },
         )
 
@@ -649,6 +665,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "coverage metrics are not answer content",
             rendered,
         )
+        self.assertIn(
+            "Apply a counterfactual relevance test before adding every user-visible",
+            rendered,
+        )
+        self.assertIn(
+            "Do not spend a tool action",
+            rendered,
+        )
+        self.assertIn("code-generation or tool provenance", rendered)
         self.assertIn("Follow tool_action_budget exactly", rendered)
         self.assertIn("Rewording a prior semantic", rendered)
         self.assertIn("need does not make it new", rendered)
@@ -772,7 +797,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(len(authorizer.disclosure_requests), 3)
         self.assertEqual(len(adapter.requests), 3)
         self.assertIn(
-            "Treat a path, package, import, symbol name, or caller syntax as insufficient",
+            "Treat a path, package, import, symbol name, directory convention, or caller",
             adapter.requests[2].messages[0].content,
         )
         self.assertEqual(tool.requests, [])
@@ -1755,6 +1780,26 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "global_inventory_metrics_require_material_user_relevance"
             ]
         )
+        self.assertTrue(
+            reviewer_policy[
+                "answer_detail_requires_material_user_relevance"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "counterfactual_omission_preserving_requested_conclusions_means_omit"
+            ]
+        )
+        self.assertFalse(
+            reviewer_policy[
+                "self_introduced_adjacent_detail_allows_evidence_expansion"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "generation_or_tool_provenance_requires_direct_support"
+            ]
+        )
         reviewer_prompt = adapter.requests[2].messages[0].content
         self.assertIn(
             "Compare the complete draft.content against the enumerated claims",
@@ -1784,6 +1829,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "Irrelevant or resolved diagnostics are a relevance defect",
             reviewer_prompt,
         )
+        self.assertIn(
+            "Apply the same counterfactual relevance test to every affirmative detail",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "never expand the investigation merely to",
+            reviewer_prompt,
+        )
+        self.assertIn("code-generation or tool", reviewer_prompt)
         self.assertIn(
             "approval of the narrower claim does not approve its container",
             reviewer_prompt,
@@ -3660,6 +3714,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "answer_boundary_requires_unresolved_material_requirement": True,
                 "resolved_acquisition_diagnostic_is_answer_boundary": False,
                 "global_inventory_metrics_require_material_user_relevance": True,
+                "answer_detail_requires_material_user_relevance": True,
+                "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
+                "self_introduced_adjacent_detail_allows_evidence_expansion": False,
+                "generation_or_tool_provenance_requires_direct_support": True,
             },
         )
         payload = {
