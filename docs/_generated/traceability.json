@@ -3669,6 +3669,25 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-201": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-201.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_cognition.py"
+    ],
+    "tests": [
+      "tests/test_engineering_question_cognition.py"
+    ]
+  },
+  "FINDING-010-202": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-202.md",
+    "code": [
+      "src/software_world_model/interface/engineering_qa_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_source.py",
+      "tests/test_conversational_engineering_tools.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -73,6 +73,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - World Model query relevance 只使用语义 value：表示层 value 与 path 公共前缀不作特征，cohort-common exact token 不作 anchor；强 exact
   match 存在时关闭 prefix-only 和低于 strongest score 75% 的弱尾部。排序必须确定性且不按工程、题面、业务词、类或方法特判；Profile
   incomplete 的实现细节继续形成 Source gap，不能由 relevance 补造。
+- 已选 typed relation 必须在同一 Snapshot/Revision 和剩余 item/byte bound 内紧邻保留 exact subject/object 的直接 Entity state；只作一跳
+  graph closure、按 subject→object 与 digest 去重，不恢复词法弱尾部或递归邻居。verified endpoint path 只进入既有 Source navigation，
+  Broker/Source authority 不变。
 - original User Message 精确点名 sealed Source allowlist 的 top-level scope 时，multi-Profile projection 在 relevance ranking 前排除 formal
   Coverage root 与其完全不相交的非 repository-wide Profile；其 affirmative item 与 Profile gap 都不得进入 Context。selector 只来自原始
   问题的 exact boundary match，模型 query 不能改写；mismatch 是 Coverage Boundary 而非授权拒绝，repository-wide partial Profile 仍可参与。
@@ -107,6 +110,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - Source content Search 不能把 authorized module/directory/file-name path segment 当作正文 literal。Broker 必须在 Worker 与资源消费前 typed reject；该
   Boundary 不等于 Source 撤销，并且在 Source 仍可用时不满足 material follow-up。Primary 必须读取 latest sealed Broker decision、禁止重复
   rejected query，并改用可能在目标正文逐字出现的不同 source-native literal，不能交付假 Limitation。
+- Worker 遇到 exact filename-stem anchor 时，必须先检查全部 basename equals/contains query 的安全 cohort；取得 case-sensitive 正文 hit 后可在
+  进入低排名 fallback 前以 `SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP` Partial 停止。结果必须披露 truncation/coverage，实际读取继续计入
+  56/64 fuse；无 anchor/hit 或 cohort 有安全、编码、fuse gap 时继续原 bounded scan，不能冒充 corpus complete。
 
 该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
 组合成普通用户可直接判断方向的产品结果。

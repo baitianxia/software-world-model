@@ -535,6 +535,99 @@ class MultiProfileEngineeringQuestionCognitionTests(unittest.TestCase):
             (authenticate,),
         )
 
+    def test_relevance_ranking_keeps_direct_relation_endpoint_entity(self) -> None:
+        context_ref = "relation-endpoint-closure-fixture"
+        source_revision = self.multi.source_revision
+        endpoint = CognitionItem.create(
+            dimension=CognitionDimension.ENTITY,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_ENTITY",
+                    "entity_type": "JAVA_METHOD",
+                    "root_fields": {
+                        "declaring_type_qualified_name": (
+                            "example.permission.RoleRefreshService"
+                        ),
+                        "method_name": "refreshRole",
+                        "parameter_types": ["java.lang.Long"],
+                    },
+                    "state_fields": {
+                        "source_path": (
+                            "src/main/java/example/permission/"
+                            "RoleRefreshService.java"
+                        ),
+                        "source_revision": source_revision,
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_ENTITY_STATE",
+            context_ref=context_ref,
+            source_revision=source_revision,
+            locator=(
+                f"world-model:snapshot:{context_ref}:"
+                "entity:entity_root_refresh_role"
+            ),
+            support_references=("relation-endpoint-entity-evidence",),
+            coverage="Exact relation endpoint Entity state.",
+        )
+        relation = CognitionItem.create(
+            dimension=CognitionDimension.BEHAVIOR,
+            statement=json.dumps(
+                {
+                    "kind": "STRUCTURE_RELATION",
+                    "subject_entity_root_id": "entity_root_refresh_call",
+                    "predicate": "CALL_SITE_TARGETS",
+                    "object_entity_root_id": "entity_root_refresh_role",
+                    "subject_identity": {
+                        "owning_method": {
+                            "declaring_type_qualified_name": (
+                                "example.permission.RoleAssignmentService"
+                            ),
+                            "method_name": "assignRole",
+                        }
+                    },
+                    "object_identity": {
+                        "declaring_type_qualified_name": (
+                            "example.permission.RoleRefreshService"
+                        ),
+                        "method_name": "refreshRole",
+                    },
+                    "state_fields": {
+                        "effect": "permission cache refresh after role write"
+                    },
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            modality="STRUCTURE_BEHAVIOR_RELATION",
+            context_ref=context_ref,
+            source_revision=source_revision,
+            locator=(
+                f"world-model:snapshot:{context_ref}:"
+                "relation:relation_root_refresh_role"
+            ),
+            support_references=("relation-endpoint-relation-evidence",),
+            coverage="Exact behavior relation.",
+        )
+
+        ranked = _rank_relevant_cognition_items(
+            "role write permission cache refresh effect",
+            (endpoint, relation),
+            maximum_items=32,
+        )
+
+        self.assertEqual(ranked, (relation, endpoint))
+        self.assertEqual(
+            _rank_relevant_cognition_items(
+                "role write permission cache refresh effect",
+                (endpoint, relation),
+                maximum_items=1,
+            ),
+            (relation,),
+        )
+
     def test_failure_boundary_need_preserves_constraint_gap(self) -> None:
         context = self.multi.project_for_query(
             request=self.request(

@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -78,6 +78,10 @@ unknown 则保持 0 retry/不继续回退；因此 current fallback route 已有
 `mall-portal` directory segment 当作 content literal，空扫 56 文件后交付假 Limitation。current Broker 在 Worker 前零读取拒绝该 query，
 Primary 读取 sealed rejection 后必须选不同正文 literal；`82/82` 定向 PASS，fresh exact Browser successor 待验证。run-078 的 1 accepted、
 1 reviewed limitation、2 failed engineering Turn 和 1 local clarification 不能取得质量或 MVP PASS。
+`FINDING-010-201 / FINDING-010-202 / run-079` 又取得 3 accepted、1 local clarification、1 failed engineering Turn；Ark 21 次
+TLS/credential/HTTP 全成功，DeepSeek 0 正确。Q1 暴露 selected relation 丢失 same-Snapshot direct Entity endpoint，Q5 暴露 exact filename
+navigation 命中后继续低排名扫描而耗尽 Source `64/64`。current bounded one-hop endpoint closure 与 typed filename-cohort Partial
+early-stop 已完成 Cognition `12/12`、Source/Tool/Question `81/81`，fresh exact Browser successor 待验证；质量和 MVP Gate 仍未通过。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

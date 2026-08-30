@@ -480,12 +480,34 @@ class LocalGitRetrievalWorker:
             entries = tuple(
                 entries_by_path[path] for path in operation.search_path_scope
             )
-        ordered_entries = tuple(
-            sorted(entries, key=lambda entry: _search_entry_rank(entry.path, operation.query))
+        ranked_entries = tuple(
+            sorted(
+                (
+                    (_search_entry_rank(entry.path, operation.query), entry)
+                    for entry in entries
+                ),
+                key=lambda candidate: candidate[0],
+            )
         )
-        for entry in ordered_entries:
+        folded_query = operation.query.casefold()
+        exact_stem_candidate_count = sum(
+            PurePosixPath(entry.path).stem.casefold() == folded_query
+            for _, entry in ranked_entries
+        )
+        filename_candidate_count = sum(
+            rank[0] <= 1 for rank, _ in ranked_entries
+        )
+        filename_candidates_processed = 0
+        filename_content_match_count = 0
+        filename_unsafe_count = 0
+        filename_early_stop = False
+        for rank, entry in ranked_entries:
+            filename_candidate = rank[0] <= 1
             if entry.object_type != "blob" or entry.mode not in _REGULAR_GIT_MODES:
                 unsafe_entries += 1
+                if filename_candidate:
+                    filename_candidates_processed += 1
+                    filename_unsafe_count += 1
                 continue
             if files_read >= operation.maximum_files:
                 truncated = True
@@ -507,12 +529,19 @@ class LocalGitRetrievalWorker:
             files_read += 1
             if b"\x00" in raw:
                 binary_entries += 1
+                if filename_candidate:
+                    filename_candidates_processed += 1
+                    filename_unsafe_count += 1
                 continue
             try:
                 content = raw.decode("utf-8")
             except UnicodeDecodeError:
                 binary_entries += 1
+                if filename_candidate:
+                    filename_candidates_processed += 1
+                    filename_unsafe_count += 1
                 continue
+            matches_before_entry = len(items)
             for line_number, line in enumerate(content.splitlines(), 1):
                 if operation.query not in line:
                     continue
@@ -535,6 +564,26 @@ class LocalGitRetrievalWorker:
                 )
             if truncated and failure_code == "SOURCE_RESULT_ITEM_FUSE_EXHAUSTED":
                 break
+            if filename_candidate:
+                filename_candidates_processed += 1
+                filename_content_match_count += len(items) - matches_before_entry
+                if (
+                    exact_stem_candidate_count > 0
+                    and filename_candidates_processed
+                    == filename_candidate_count
+                    and filename_content_match_count > 0
+                    and filename_unsafe_count == 0
+                    and len(ranked_entries) > filename_candidate_count
+                ):
+                    # The exact-stem anchor and every related filename have
+                    # yielded all of their case-sensitive content hits.  Keep
+                    # the unexamined lower-ranked corpus explicit as PARTIAL
+                    # instead of spending the whole-Turn file budget merely to
+                    # rediscover a locator already present in this cohort.
+                    truncated = True
+                    filename_early_stop = True
+                    failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
+                    break
         if unsafe_entries or binary_entries:
             truncated = True
             failure_code = failure_code or "UNSUPPORTED_SOURCE_ENTRY"
@@ -554,6 +603,14 @@ class LocalGitRetrievalWorker:
                     "match_count": str(len(items)),
                     "unsafe_entry_count": str(unsafe_entries),
                     "binary_entry_count": str(binary_entries),
+                    "exact_stem_candidate_count": str(
+                        exact_stem_candidate_count
+                    ),
+                    "filename_candidate_count": str(filename_candidate_count),
+                    "filename_content_match_count": str(
+                        filename_content_match_count
+                    ),
+                    "filename_early_stop": str(filename_early_stop).lower(),
                     "query_digest": digest_of(
                         ["ENGINEERING_QA_LITERAL_QUERY@1", operation.query]
                     ).value,

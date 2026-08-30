@@ -1509,7 +1509,92 @@ def _rank_relevant_cognition_items(
             (-score, -exact_matches, item.digest.value, item)
         )
     ranked.sort(key=lambda value: (value[0], value[1], value[2]))
-    return tuple(item for _, _, _, item in ranked[:maximum_items])
+    return _append_ranked_relation_endpoint_entities(
+        tuple(item for _, _, _, item in ranked),
+        candidates=candidates,
+        maximum_items=maximum_items,
+    )
+
+
+def _append_ranked_relation_endpoint_entities(
+    ranked: Sequence[CognitionItem],
+    *,
+    candidates: Sequence[CognitionItem],
+    maximum_items: int,
+) -> tuple[CognitionItem, ...]:
+    """Keep direct typed relation endpoints with their selected relation.
+
+    Lexical ranking may select a relation because the relation expresses the
+    requested behavior while placing one of its endpoint Entity states below a
+    global relative-score cutoff.  Appending the exact endpoint immediately
+    after that relation preserves a bounded, deterministic graph projection and
+    lets downstream navigation use the endpoint's verified source identity.
+    This is direct graph closure only; it does not walk transitive neighbors or
+    admit an otherwise unrelated lexical tail.
+    """
+
+    entities: dict[tuple[str, str, str], CognitionItem] = {}
+    for item in candidates:
+        entity_root_id = _cognition_entity_root_id(item)
+        if entity_root_id is None:
+            continue
+        entities[(item.context_ref, item.source_revision, entity_root_id)] = item
+
+    selected: list[CognitionItem] = []
+    selected_digests: set[Digest] = set()
+    for item in ranked:
+        if item.digest not in selected_digests:
+            selected.append(item)
+            selected_digests.add(item.digest)
+        if len(selected) == maximum_items:
+            break
+        for entity_root_id in _relation_endpoint_root_ids(item):
+            endpoint = entities.get(
+                (item.context_ref, item.source_revision, entity_root_id)
+            )
+            if endpoint is None or endpoint.digest in selected_digests:
+                continue
+            selected.append(endpoint)
+            selected_digests.add(endpoint.digest)
+            if len(selected) == maximum_items:
+                break
+        if len(selected) == maximum_items:
+            break
+    return tuple(selected)
+
+
+def _cognition_entity_root_id(item: CognitionItem) -> str | None:
+    if item.modality != "STRUCTURE_ENTITY_STATE":
+        return None
+    prefix = f"world-model:snapshot:{item.context_ref}:entity:"
+    if not item.locator.startswith(prefix):
+        return None
+    entity_root_id = item.locator[len(prefix) :]
+    return entity_root_id or None
+
+
+def _relation_endpoint_root_ids(item: CognitionItem) -> tuple[str, ...]:
+    if item.modality not in {
+        "STRUCTURE_BEHAVIOR_RELATION",
+        "STRUCTURE_RELATION_FACT",
+    }:
+        return ()
+    try:
+        statement = json.loads(item.statement)
+    except (TypeError, json.JSONDecodeError):
+        return ()
+    if (
+        not isinstance(statement, Mapping)
+        or statement.get("kind") != "STRUCTURE_RELATION"
+    ):
+        return ()
+    roots = (
+        statement.get("subject_entity_root_id"),
+        statement.get("object_entity_root_id"),
+    )
+    return tuple(
+        dict.fromkeys(root for root in roots if isinstance(root, str) and root)
+    )
 
 
 def _explicit_question_source_scopes(

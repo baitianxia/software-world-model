@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -129,6 +129,12 @@ disposition/completeness/resolution/revision 等表示层 value 成为 query mat
 一半 item 中的 exact token 不作 discriminative anchor；若所有 token 都因此被排除，则确定性回退原 query token。exact/prefix 权重分别为
 4/1；存在至少两个 exact anchor 时 prefix-only item 不进入结果，并只保留达到本次 strongest score 75% 的尾部，最后按 digest 稳定排序及
 既有 item 上限截断。该规则不得按工程、问题、业务词、类、方法或 Provider 分支，也不得把 Profile incomplete 的实现细节伪装为 cognition。
+
+relevance 已选中的 typed relation 必须在同一 Snapshot、same revision 和既有 item/byte bound 内保留可由 relation exact
+`subject_entity_root_id / object_entity_root_id` 解析的直接 Entity endpoint state，并按 subject→object 顺序、item digest 去重后紧邻
+relation 投影。该 direct graph closure 只使用 Snapshot 已有 evidence；缺失或超出 bound 时保持 Unknown/截断，不递归邻居、不以名称或弱
+词法尾部猜 Entity。endpoint 的 verified declaring type/source path 可以进入既有 cognition→Source navigation projection，但不改变
+Snapshot、Read Authority、Coverage、Citation、Broker 重验或 Source authority。
 
 当 immutable original User Message 精确点名 sealed Source allowlist 中一个或多个 top-level Source scope 时，Application 必须在
 multi-Profile relevance ranking 前把该 scope 集与每个 Profile 的 formal Coverage root scope 比较。具有 non-repository-wide root 且与

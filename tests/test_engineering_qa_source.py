@@ -262,7 +262,10 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
                 "no matching token\n", encoding="utf-8"
             )
         target = search_root / "LoginService.java"
-        target.write_text("public interface LoginService {}\n", encoding="utf-8")
+        target.write_text(
+            "// LoginService.java\npublic interface Authentication {}\n",
+            encoding="utf-8",
+        )
         self.git("add", "search")
         self.git("commit", "-q", "-m", "search ranking fixture")
         self.revision = self.git("rev-parse", "HEAD").strip()
@@ -293,14 +296,107 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         )
 
         self.assertEqual(result.status, RetrievalStatus.PARTIAL)
-        self.assertEqual(result.failure_code, "SOURCE_SEARCH_FILE_LIMIT_REACHED")
-        self.assertEqual(result.files_read, 2)
+        self.assertEqual(
+            result.failure_code,
+            "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP",
+        )
+        self.assertEqual(result.files_read, 1)
         self.assertEqual(len(result.items), 1)
         self.assertEqual(result.items[0].path, "search/LoginService.java")
+        coverage = dict(result.coverage)
         self.assertEqual(
-            dict(result.coverage)["candidate_ordering"],
+            coverage["candidate_ordering"],
             "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
         )
+        self.assertEqual(coverage["exact_stem_candidate_count"], "1")
+        self.assertEqual(coverage["filename_candidate_count"], "1")
+        self.assertEqual(coverage["filename_content_match_count"], "1")
+        self.assertEqual(coverage["filename_early_stop"], "true")
+
+        filename_only_result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("search",),
+                query="LoginService.java",
+                maximum_files=2,
+            )
+        )
+        filename_only_coverage = dict(filename_only_result.coverage)
+        self.assertEqual(filename_only_result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(
+            filename_only_result.failure_code,
+            "SOURCE_SEARCH_FILE_LIMIT_REACHED",
+        )
+        self.assertEqual(filename_only_result.files_read, 2)
+        self.assertEqual(
+            filename_only_coverage["exact_stem_candidate_count"], "0"
+        )
+        self.assertEqual(filename_only_coverage["filename_early_stop"], "false")
+
+    def test_search_reads_every_exact_stem_candidate_before_early_stop(self):
+        for module in ("first", "second"):
+            root = self.repository / module
+            root.mkdir()
+            (root / "LoginService.java").write_text(
+                f"package {module}; public interface LoginService {{}}\n",
+                encoding="utf-8",
+            )
+            (root / "Unrelated.java").write_text(
+                "final class Unrelated {}\n",
+                encoding="utf-8",
+            )
+        (self.repository / "first" / "LoginServiceAudit.java").write_text(
+            "final class LoginServiceAudit {}\n",
+            encoding="utf-8",
+        )
+        self.git("add", "first", "second")
+        self.git("commit", "-q", "-m", "duplicate stem search fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-multi-stem-search-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("first", "second"),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("first", "second"),
+                query="LoginService",
+                maximum_files=4,
+            )
+        )
+
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(
+            result.failure_code,
+            "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP",
+        )
+        self.assertEqual(result.files_read, 3)
+        self.assertEqual(
+            tuple(item.path for item in result.items),
+            (
+                "first/LoginService.java",
+                "second/LoginService.java",
+                "first/LoginServiceAudit.java",
+            ),
+        )
+        coverage = dict(result.coverage)
+        self.assertEqual(coverage["exact_stem_candidate_count"], "2")
+        self.assertEqual(coverage["filename_candidate_count"], "3")
+        self.assertEqual(coverage["filename_content_match_count"], "3")
+        self.assertEqual(coverage["filename_early_stop"], "true")
 
     def test_search_reports_compiled_operation_byte_limit_as_local_partial(self):
         result = self.worker.execute(

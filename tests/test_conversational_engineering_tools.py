@@ -1453,7 +1453,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
                 package.support_observations[0].content,
             )
             self.assertIn(
-                "SOURCE_SEARCH_FILE_LIMIT_REACHED",
+                "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP",
                 package.boundary_observations[0].content,
             )
             self.assertIn(
@@ -1470,8 +1470,8 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
                 .authority_receipt.ledger_entries[-1]
                 .details
             )
-            self.assertEqual(search_usage["source_files"], "56")
-            self.assertEqual(read_usage["source_files"], "57")
+            self.assertEqual(search_usage["source_files"], "1")
+            self.assertEqual(read_usage["source_files"], "2")
             self.assertEqual(search_usage["maximum_source_files"], "64")
             self.assertEqual(read_usage["maximum_source_files"], "64")
             current = submission.snapshot
@@ -1572,7 +1572,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertEqual(len(package.support_observations), 4)
         self.assertEqual(len(package.boundary_observations), 1)
         self.assertIn(
-            "SOURCE_SEARCH_FILE_LIMIT_REACHED",
+            "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP",
             package.boundary_observations[0].content,
         )
         search_usage = dict(
@@ -1585,8 +1585,8 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             .authority_receipt.ledger_entries[-1]
             .details
         )
-        self.assertEqual(search_usage["source_files"], "56")
-        self.assertEqual(final_read_usage["source_files"], "59")
+        self.assertEqual(search_usage["source_files"], "3")
+        self.assertEqual(final_read_usage["source_files"], "6")
 
     def test_two_searches_preserve_the_last_slot_for_an_exact_read(self) -> None:
         source_root = self.repository / "src/main/java/example"
@@ -1642,7 +1642,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             ]
             for observation in observations
         }
-        self.assertEqual(source_file_usage, {"56", "63", "64"})
+        self.assertEqual(source_file_usage, {"1", "57", "58"})
         self.assertTrue(
             all(
                 dict(observation.authority_receipt.ledger_entries[-1].details)[
