@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -164,6 +164,11 @@ NOT_DISCLOSED，audit-only 必须有真实 stale reference 或 Draft fragment。
 Q1 exact fragment 的 backtick-only 展示差异被误拒；Q2/Q5 的显式 module scope 未进入 Source Search，后续 query 又重复扫描相同 canonical
 fallback 前缀。current `@21/@13/@16` 与 `COMPILED_SOURCE_OPERATION@3` 已在不提高 `56/64` fuse、reserved READ、route 或 disclosure
 authority 的前提下闭合；六模块 `154/154`、相邻十五模块 `229/229` 与可信父计划门禁均 PASS。提交和 fresh run-094 是下一质量 Gate 证据。
+
+`FINDING-010-218 / run-094` 的 4 个 Ark sealed 429 已自动触发 DeepSeek；20 个 fallback call完成、1 个 post-dispatch unknown，证明
+fallback与standing authority仍无阻塞。Q1 ACCEPTED/Q4零调用Clarification通过；Q2 unknown、Q3 limitation、Q5 protocol violation使质量
+Gate仍未通过。Q5 的 valid SOURCE Search 揭示同 module POM/TEST prefixes 被混入 SOURCE-only restriction；current evidence-class-only
+prefix selection 已闭合且六模块 `154/154`、相邻十五模块 `229/229` tests与文档/可信父计划门禁均 PASS。提交和 fresh run-095 是下一质量 Gate 证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

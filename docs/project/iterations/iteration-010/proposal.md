@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -99,6 +99,12 @@ unbound + undisclosed resolved Search Boundary 仍可被 Reviewer 判为 audit-o
 Production 仍为 0。Q1 暴露 inline-code backticks 造成 exact fragment 假阴性，Q2/Q5 暴露显式 module scope 没有进入 Source Broker 与
 bounded fallback 重扫。current `@21/@13/@16` 与 `COMPILED_SOURCE_OPERATION@3` 分别做 presentation-normalized verbatim closure 和
 Broker-recomputed prefix/rotating fallback closure；所有预算与 authority 不变，fresh run-094 是下一真实证据。
+
+`FINDING-010-218 / run-094` 密封 Ark 4 个 sealed 429、DeepSeek 20 completed + 1 post-dispatch unknown；Q1 ACCEPTED/Q4 零调用
+Clarification 通过，Q2 unknown、Q3 limitation、Q5 protocol violation 使整体仍 FAIL。Q5 的最早偏差是 original-question module helper 把
+同 module 的 POM/TEST path 混入 SOURCE prefix，Broker 按 class 正确拒绝。current closure 保留完整 Request scope recognition，并只从
+current operation evidence-class allowlist 选择 prefix；`COMPILED_SOURCE_OPERATION@3`、route、budget、retry 和 Production 边界不变，
+fresh run-095 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

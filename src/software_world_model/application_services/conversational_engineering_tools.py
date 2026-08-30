@@ -67,7 +67,6 @@ from .engineering_question_answering import (
     SourceReadOperation,
     WorldModelCognitionContext,
     WorldModelCognitionProjector,
-    explicit_question_source_path_prefixes,
 )
 
 
@@ -681,9 +680,9 @@ class EngineeringAgentEvidenceToolAdapter:
                 else ()
             )
             trusted_search_path_prefix_scope = (
-                explicit_question_source_path_prefixes(
-                    state.evidence_request.original_question,
-                    state.evidence_request.source_allowlist,
+                self._source_broker.explicit_question_search_path_prefix_scope(
+                    request=state.evidence_request,
+                    evidence_class=evidence_class,
                 )
                 if evidence_class is EngineeringEvidenceClass.SOURCE
                 and not trusted_search_path_scope

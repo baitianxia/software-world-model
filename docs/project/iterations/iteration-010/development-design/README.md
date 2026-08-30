@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -64,6 +64,12 @@ fallback 前缀而丢失关键 implementation read。current `@21/@13/@16` 使�
 `COMPILED_SOURCE_OPERATION@3` 密封 Broker-recomputed prefix scope 与 current-Turn fallback offset，只轮转 rank-3 fallback并记录 actual
 coverage。`56/64` Source fuse、1 个 reserved READ、route/fallback/Production 边界不变；六模块 `154/154`、相邻十五模块 `229/229` 与可信父计划门禁均 PASS，下一项是提交和
 fresh run-094。
+
+`FINDING-010-218 / run-094` 证明 Q1 backtick closure 已以 ACCEPTED + 2 exact Citations 真实通过，Q4 继续零 dispatch Clarification；
+Q2 post-dispatch unknown、Q3 reviewed limitation 与 Q5 protocol violation 使整体保持 FAIL。Q5 的 valid SOURCE Search 暴露完整 Request
+scope 下同 module POM/TEST prefixes 被错误送入 SOURCE operation。current mapping 仍以 immutable question +完整 Request识别 scope，
+但只从 current evidence-class allowlist 选择 prefix；`COMPILED_SOURCE_OPERATION@3`、rotation、`56/64`、route与Production不变。两模块
+154 tests、相邻十五模块 229 tests与文档/可信父计划门禁均 PASS，下一项是提交和 fresh run-095。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

@@ -211,6 +211,12 @@ fragment 只因 inline-code backticks 展示差异被拒；Q2/Q5 的 ordinary So
 前缀重复扫描。current `@21/@13/@16` 只忽略 backtick delimiter presentation，`COMPILED_SOURCE_OPERATION@3` 由 Broker 重算 prefix scope
 并轮转 rank-3 fallback；`56/64` fuse和 reserved READ 不变，六模块 `154/154`、相邻十五模块 `229/229` PASS，fresh run-094 待验证。run-093 仍不取得质量或 MVP PASS。
 
+`FINDING-010-218 / run-094` 密封 Ark 4、DeepSeek 21；4 个 Ark sealed 429 后备用路线自动激活，DeepSeek 20 completed、1
+post-dispatch unknown，retry/人工审批/Production 均为 0。Q1 ACCEPTED 且有 2 个 exact Citation，Q4 零 dispatch Clarification；Q2
+按 unknown 失败，Q3 为 REVIEWED_LIMITATION。Q5 的 valid SOURCE Search 暴露 question module scope 把同 module POM/TEST prefix 混入
+SOURCE-only operation；current 修复只从 current evidence-class allowlist选择 prefix，wire schema、fuse与 authority 不变。六模块 `154/154`、
+相邻十五模块 `229/229` tests PASS，fresh run-095 待验证。run-094 仍不取得质量或 MVP PASS。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

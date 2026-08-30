@@ -163,18 +163,26 @@ def explicit_question_source_scopes(
 def explicit_question_source_path_prefixes(
     question: str,
     source_allowlist: Sequence[str],
+    *,
+    eligible_path_prefixes: Sequence[str] | None = None,
 ) -> tuple[str, ...]:
-    """Map exact question scopes to their canonical sealed path prefixes."""
+    """Map exact question scopes to canonical prefixes in one sealed class."""
 
     scopes = explicit_question_source_scopes(question, source_allowlist)
     if not scopes:
         return ()
+    candidates = (
+        source_allowlist
+        if eligible_path_prefixes is None
+        else eligible_path_prefixes
+    )
     return tuple(
         sorted(
             {
                 _canonical_relative_path(path)
-                for path in source_allowlist
+                for path in candidates
                 if path.partition("/")[0].casefold() in scopes
+                and _path_allowed(path, tuple(source_allowlist))
             }
         )
     )
@@ -2487,6 +2495,28 @@ class SourceBroker:
             if self._source_profile.paths_for(evidence_class)
         )
 
+    def explicit_question_search_path_prefix_scope(
+        self,
+        *,
+        request: EngineeringQuestionRequest,
+        evidence_class: EngineeringEvidenceClass,
+    ) -> tuple[str, ...]:
+        """Return the question-named prefixes sealed for one evidence class."""
+
+        registered = self.registered_evidence_classes(request=request)
+        if evidence_class not in registered:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "question Source search prefix scope requires a registered evidence class",
+            )
+        return explicit_question_source_path_prefixes(
+            request.original_question,
+            request.source_allowlist,
+            eligible_path_prefixes=self._source_profile.paths_for(
+                evidence_class
+            ),
+        )
+
     def evidence_class_for_path(
         self,
         *,
@@ -2697,6 +2727,7 @@ class SourceBroker:
             expected_prefix_scope = explicit_question_source_path_prefixes(
                 request.original_question,
                 request.source_allowlist,
+                eligible_path_prefixes=evidence_class_allowlist,
             )
             if (
                 source_operation is not SourceReadOperation.SEARCH

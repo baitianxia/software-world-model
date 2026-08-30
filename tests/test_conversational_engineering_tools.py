@@ -1780,6 +1780,9 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
                     "module-b/src/main/java",
                 ),
                 EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: (
+                    "module-a/pom.xml",
+                ),
             },
         )
         self.configuration = EngineeringAgentEvidenceToolConfiguration.create(
@@ -1794,6 +1797,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             source_allowlist=(
                 "README.md",
                 "module-a/src/main/java",
+                "module-a/pom.xml",
                 "module-b/src/main/java",
             ),
         )

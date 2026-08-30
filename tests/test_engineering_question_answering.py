@@ -2274,7 +2274,13 @@ class Service {
                 EngineeringEvidenceClass.SOURCE: (
                     "mall-portal/src/main/java",
                 ),
-                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("pom.xml",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: (
+                    "pom.xml",
+                    "mall-portal/pom.xml",
+                ),
+                EngineeringEvidenceClass.TEST: (
+                    "mall-portal/src/test/java",
+                ),
             },
         )
         req = EngineeringQuestionRequest.create(
@@ -2287,7 +2293,12 @@ class Service {
             source_profile_ref=profile.profile_ref,
             source_profile_digest=profile.profile_digest,
             world_model_read_authority_digest=Digest("sha256:" + "3" * 64),
-            source_allowlist=("mall-portal/src/main/java", "pom.xml"),
+            source_allowlist=(
+                "mall-portal/src/main/java",
+                "mall-portal/src/test/java",
+                "mall-portal/pom.xml",
+                "pom.xml",
+            ),
         )
         ledger = EvidenceLedger.start(
             request=req,
@@ -2373,6 +2384,13 @@ class Service {
         )
         self.assertEqual(authorized.operation.search_fallback_offset, 17)
         authorized.operation.validate_identity()
+        self.assertEqual(
+            broker.explicit_question_search_path_prefix_scope(
+                request=req,
+                evidence_class=EngineeringEvidenceClass.BUILD_CONFIGURATION,
+            ),
+            ("mall-portal/pom.xml",),
+        )
 
     def test_broker_seals_only_exact_canonical_trusted_search_path_scope(self):
         req = request()

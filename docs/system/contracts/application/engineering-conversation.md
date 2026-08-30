@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -191,8 +191,9 @@ locator；Coverage 必须明确是 `TRUSTED_COGNITION_TARGET_PATHS` scope，不�
 Search 保持原有授权路径和覆盖语义；该机制不提高 action/file/byte fuse，也不改变 Source Broker、Provider route 或 disclosure 权限。
 
 当不存在上述更强 exact-path scope、original User Message 又逐字命中 sealed Source allowlist 的 top-level scope 时，Application 必须把该
-scope 对应的完整 allowlist prefixes 作为 Search-only restriction 交给 Broker。Broker 必须从 immutable original question 与 Request
-allowlist 独立重算并 exact match，再验证 Source Profile/class；模型不能提交或扩展 prefix，prefix 也不签发 READ locator。Worker 先检查每个
+scope 对应、且属于 current operation evidence-class allowlist 的完整 prefixes 作为 Search-only restriction 交给 Broker。Broker 必须从
+immutable original question 与完整 Request allowlist 重新识别 scope，再只从 current Source Profile evidence class 独立重算 prefixes 并
+exact match；同 module 的 POM、TEST 或其他 class path 不得混入 SOURCE operation。模型不能提交或扩展 prefix，prefix 也不签发 READ locator。Worker 先检查每个
 query 的 stem/name/path candidate cohort，再只对其 rank-3 canonical fallback cohort 使用 current-Turn trusted offset 做确定性环形轮转。
 offset 只能由前一 validated SOURCE Search Result 的 actual `fallback_examined_file_count` 推进；Result 必须记录 requested/applied offset、
 scoped entry count 与 actual fallback count。query 改变导致 candidate cohort 改变时仍先执行新 candidate，不把 offset解释为全局完整游标。
@@ -619,5 +620,11 @@ run-093 随后以 Ark 3 个 sealed 429 合法自动激活 DeepSeek 并完成 28 
 query 重扫 canonical fallback 前缀。`FINDING-010-216/217` 已形成 current `@21/@13/@16` backtick-only normalization 与
 `COMPILED_SOURCE_OPERATION@3` Broker-recomputed prefix/rotating fallback contract；六模块 154 项、相邻十五模块 229 项定向测试 PASS，fresh run-094 仍须证明真实
 Answer/Review，run-093 保持质量 FAIL。
+run-094 随后以 Ark 4 个 sealed 429 合法自动激活 DeepSeek；DeepSeek 20 个 call 完成、1 个 post-dispatch unknown，retry、人工审批与
+Production 均为 0。Q1 以 2 个 exact Citation 取得 ACCEPTED，证明 backtick fragment closure 真实通过；Q4 零 dispatch Clarification 继续
+通过。Q5 的合法 `SOURCE_SEARCH(SOURCE, ElasticsearchRepository)` 暴露 question module prefix 初版把同 module POM/TEST paths 混入
+SOURCE restriction，Broker 按 class 正确失败关闭。`FINDING-010-218` 已把 scope 识别保留在完整 Request allowlist，同时只从 current
+evidence-class allowlist 选择 prefix；wire schema、route、rotation 与全部 fuse 不变。六模块 154 项、相邻十五模块 229 项定向测试 PASS，fresh run-095 待验证；
+Q2 的 post-dispatch unknown 与 Q3 limitation 不被追认为 product quality PASS。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。
