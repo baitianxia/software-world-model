@@ -885,9 +885,15 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         class GapDriver:
             def __init__(self):
                 self.calls = 0
+                self.findings_seen = []
+                self.evidence_action_completed_seen = []
 
             def propose(self, invocation):
                 self.calls += 1
+                self.findings_seen.append(invocation.review_findings)
+                self.evidence_action_completed_seen.append(
+                    invocation.review_feedback_evidence_action_completed
+                )
                 if self.calls == 1:
                     return _proposal(
                         invocation,
@@ -969,6 +975,10 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             reviewer.requests[0].package.digest,
             reviewer.requests[1].package.digest,
         )
+        self.assertEqual(len(driver.findings_seen[2]), 1)
+        self.assertFalse(driver.evidence_action_completed_seen[2])
+        self.assertEqual(len(driver.findings_seen[3]), 1)
+        self.assertTrue(driver.evidence_action_completed_seen[3])
         self.assertEqual(len(response.requests), 1)
         self.assertIn("补证后的", submission.snapshot.messages[-1].content)
 

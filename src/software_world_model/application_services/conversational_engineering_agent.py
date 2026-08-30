@@ -752,6 +752,7 @@ class EngineeringAgentInvocation:
     ] = ()
     maximum_tool_actions: int = _DEFAULT_MAXIMUM_TOOL_ACTIONS
     reviewed_draft: "EngineeringAgentAnswerDraft | None" = None
+    review_feedback_evidence_action_completed: bool = False
 
 
 class EngineeringAgentDriver(Protocol):
@@ -2784,6 +2785,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         last_draft: EngineeringAgentAnswerDraft | None = None
         last_review: EngineeringAgentReview | None = None
         next_review_focus = EngineeringAgentReviewFocus.COMPREHENSIVE
+        review_feedback_evidence_action_completed = False
         available_operations = self._authorized_operations(request)
         preissued_source_read_options = (
             self._prepare_source_read_options(request)
@@ -2824,6 +2826,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                             self._limits.maximum_tool_actions
                         ),
                         reviewed_draft=reviewed_draft,
+                        review_feedback_evidence_action_completed=(
+                            review_feedback_evidence_action_completed
+                        ),
                     )
                 )
             except BaseException:
@@ -2884,8 +2889,6 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             )
             previous = work_state
             audit.work_state = work_state
-            review_findings = ()
-            pending_review = None
 
             if proposal.action is not None:
                 tool_actions += 1
@@ -2921,6 +2924,15 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
                     )
                     available_operations = ()
+                if pending_review is not None and any(
+                    item.requires_evidence for item in review_findings
+                ):
+                    # The new Observation satisfies the one-action admission
+                    # condition for a redraft, but it does not erase the
+                    # rejected Draft or any mixed no-evidence correction. Keep
+                    # the sealed Review attached until a replacement Draft is
+                    # actually produced and reviewed.
+                    review_feedback_evidence_action_completed = True
                 continue
 
             assert proposal.draft is not None
@@ -2929,6 +2941,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     ErrorCode.CONTROL_STATE_DENIED,
                     "an evidence-required Review Finding must receive a new Observation before redrafting",
                 )
+            review_findings = ()
+            pending_review = None
+            review_feedback_evidence_action_completed = False
             package = (
                 last_package
                 if last_package is not None
@@ -3037,6 +3052,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 next_review_focus = review.focus
                 review_findings = review.findings
                 pending_review = review
+                review_feedback_evidence_action_completed = False
                 if any(item.requires_evidence for item in review.findings):
                     if invocation_mode is (
                         EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS

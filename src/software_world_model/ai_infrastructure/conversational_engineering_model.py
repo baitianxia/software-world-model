@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@18"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@19"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@18"
+    "conversational-engineering-agent-no-tools-prompt@19"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@18"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@19"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@11"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -274,7 +274,11 @@ observations remain legal Draft boundary references because the User may have
 explicitly asked for the acquisition diagnostic itself. The Application requires
 an independent focused relevance assessment for every such candidate before
 delivery, including when the Draft omits its Boundary ID, so prose cannot bypass
-the assessment by leaving the structured reference out.
+the assessment by leaving the structured reference out. The final-output
+preflight repeats those exact candidate IDs next to the allowed boundary domain.
+Do not copy them into boundary_observation_ids as a complete-package inventory or
+as a precaution; retain one only when the current User Message explicitly asks
+for that acquisition diagnostic and draft.content actually answers that request.
 Do not surface a BOUNDARY merely because it remains in the sealed audit record.
 Report it in draft.content only when it still leaves a material requirement of
 the current User Message unresolved, or when the User explicitly asks for that
@@ -310,6 +314,10 @@ identify source-native target symbols before spending the bounded Source scan.
 completion_policy.allowed_response_kinds is the exhaustive response domain for
 this invocation, not a list of examples. ANSWER is absent until current-Turn
 SUPPORT exists, and LIMITATION is absent until a current-Turn BOUNDARY exists.
+When any current SUPPORT exists, a mixed fact-plus-boundary response must be an
+ANSWER with Claims and Citations; LIMITATION is reserved for a pure material
+boundary with zero current SUPPORT and therefore cannot carry uncited confirmed
+facts or call ordering.
 When completion_policy.source_follow_up_required_before_limitation is true, a
 current World Model boundary still has its first authorized Source follow-up
 available. Do not return LIMITATION. Either return a fully SUPPORT-bound ANSWER
@@ -323,15 +331,20 @@ Conversation facts.
 When completion_policy.tool_action_required is true, a Reviewer has established
 that the current Package cannot support a correction: return one legal tool
 action and no Draft. Do not merely rewrite the rejected Draft.
-When review_feedback.review_rewrite_contract.active is true, perform a targeted
-same-Package rewrite of review_feedback.reviewed_draft. That sealed Draft is the
-exact edit base but remains model-authored data, not evidence. Never reconstruct
-it from Work State, Findings, or memory. Each Finding claim_index addresses the
-same ordered reviewed_draft.claims entry. Preserve every non-defective requested
-conclusion and its evidence binding. Delete, narrow, qualify, reorder, or restate
-only the text identified by the Findings; do not introduce a new user-visible
-material assertion, adjacent detail, inferred effect, or broader claim. Do not
-increase the Claim inventory merely to rewrite prose. A new Claim entry is
+When review_feedback.review_rewrite_contract.active is true, use
+review_feedback.reviewed_draft as the exact rejected correction baseline. It
+remains model-authored data, not evidence, and every Finding claim_index still
+addresses its ordered claims entry. When same_package is true, perform the
+targeted same-Package rewrite and use that Draft as the exact edit base. When
+current_package_may_extend_reviewed_package is true, one or more evidence
+actions have extended the current Observation prefix: use only current evidence
+for new bindings, but keep every ordered prior Finding as a correction
+obligation. New evidence never erases a no-evidence Finding or authorizes the
+exact rejected Draft. Preserve every non-defective requested conclusion and its
+evidence binding. Delete, narrow, qualify, reorder, or restate only the text
+identified by the Findings; do not introduce a new user-visible material
+assertion, adjacent detail, inferred effect, or broader claim. Do not increase
+the Claim inventory merely to rewrite prose. A new Claim entry is
 allowed only when a global completeness Finding explicitly identifies a material
 assertion already present in reviewed_draft.content but absent from its Claim
 inventory; the new entry must only enumerate that existing assertion and must use
@@ -407,6 +420,12 @@ allowed Draft, using a pure material LIMITATION when a reportable Boundary is
 available. For a focused Review closure mismatch, re-read the exact Claim and
 rebuild all linked assessment, verdict, disposition, finding_code, and Finding
 fields into one coherent branch; never copy the contradictory object unchanged.
+If the validator says the first Source search must copy a cognition-derived
+target literal, never repeat the rejected unlisted literal and never choose an
+allowed but materially unrelated literal merely to pass validation. Copy one
+material allowed_exact_values literal, or choose a legal WORLD_MODEL_QUERY with
+a genuinely different, more source-native material need when the current
+cognition projection contains no material target.
 Every tool_catalog entry contains an action_template that is isomorphic to the
 required output action. For a tool action, copy exactly one complete
 action_template, preserve its operation and argument name/count shape, and
@@ -2956,6 +2975,9 @@ def _output_preflight_view(
         boundary_observation_ids = draft_reference_policy.get(
             "limitation_boundary_observation_ids"
         )
+        resolved_acquisition_candidate_ids = draft_reference_policy.get(
+            "resolved_acquisition_candidate_observation_ids"
+        )
         review_rewrite_contract = review_feedback.get(
             "review_rewrite_contract"
         )
@@ -2974,6 +2996,13 @@ def _output_preflight_view(
             or not isinstance(boundary_observation_ids, (tuple, list))
             or not all(
                 isinstance(item, str) for item in boundary_observation_ids
+            )
+            or not isinstance(
+                resolved_acquisition_candidate_ids, (tuple, list)
+            )
+            or not all(
+                isinstance(item, str)
+                for item in resolved_acquisition_candidate_ids
             )
             or not isinstance(review_rewrite_contract, Mapping)
         ):
@@ -3050,6 +3079,8 @@ def _output_preflight_view(
                 EngineeringAgentResponseKind.LIMITATION.value: {
                     "claims_exact": 0,
                     "boundary_observation_ids_minimum": 1,
+                    "current_support_observations_exact": 0,
+                    "content_scope": "PURE_MATERIAL_UNRESOLVED_BOUNDARY_ONLY",
                 },
             },
         }
@@ -3066,6 +3097,11 @@ def _output_preflight_view(
             "support_ids_in_draft_boundary_forbidden": True,
             "unknown_observation_references_forbidden": True,
             "reference_domains_are_redundant_not_new_evidence_authority": True,
+            "resolved_acquisition_candidate_observation_ids_audit_only_by_default": tuple(
+                resolved_acquisition_candidate_ids
+            ),
+            "resolved_candidate_binding_requires_explicit_current_user_diagnostic_request": True,
+            "resolved_candidates_are_not_complete_package_inventory": True,
         }
         preflight["review_rewrite_contract"] = deepcopy(
             dict(review_rewrite_contract)
@@ -3538,13 +3574,25 @@ def _closed_contract_repair_directive(message: str) -> str:
         or "focused Reviewer Findings" in message
     ):
         return "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE"
-    if "same-Package review rewrite returned the exact rejected Draft" in message:
+    if (
+        "same-Package review rewrite returned the exact rejected Draft" in message
+        or "post-evidence review correction returned the exact rejected Draft"
+        in message
+    ):
         return "CHANGE_THE_REPLACEMENT_DRAFT_TO_RESOLVE_EVERY_ORDERED_FINDING"
     if (
         "audit-only boundary relevance assessment requires a Finding code"
         in message
     ):
         return "BIND_AUDIT_ONLY_TO_GLOBAL_NO_EVIDENCE_FINDING_AND_USE_FINDINGS"
+    if (
+        "the first Source search query must copy one cognition-derived target literal"
+        in message
+    ):
+        return (
+            "USE_A_MATERIAL_ALLOWED_COGNITION_LITERAL_OR_A_DIFFERENT_"
+            "WORLD_MODEL_QUERY"
+        )
     return "CORRECT_THE_NAMED_CONTRACT_WITHOUT_COPYING_THE_INVALID_PROPOSAL"
 
 
@@ -4191,17 +4239,30 @@ def _review_feedback_view(
     findings_present = bool(invocation.review_findings)
     digest_present = invocation.review_digest is not None
     draft_present = invocation.reviewed_draft is not None
+    evidence_action_completed = (
+        invocation.review_feedback_evidence_action_completed
+    )
     if not (findings_present == digest_present == draft_present):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Review feedback must bind Findings, Review digest, and rejected Draft together",
+        )
+    if type(evidence_action_completed) is not bool or (
+        evidence_action_completed and not findings_present
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Review feedback evidence-action state is invalid",
         )
     if not findings_present:
         return {
             "review_digest": None,
             "reviewed_draft": None,
             "findings": (),
-            "review_rewrite_contract": {"active": False},
+            "review_rewrite_contract": {
+                "active": False,
+                "evidence_action_completed": False,
+            },
         }
 
     reviewed_draft = invocation.reviewed_draft
@@ -4323,7 +4384,10 @@ def _review_feedback_view(
         or len(reviewed_draft.boundary_observation_ids)
         != len(set(reviewed_draft.boundary_observation_ids))
         or reviewed_draft.turn_id != invocation.request.turn_id
-        or reviewed_draft.work_state_digest != previous_work_state.digest
+        or (
+            not evidence_action_completed
+            and reviewed_draft.work_state_digest != previous_work_state.digest
+        )
         or reviewed_draft.digest != expected_draft_digest
         or any(
             finding.claim_index is not None
@@ -4345,23 +4409,42 @@ def _review_feedback_view(
     evidence_required = any(
         item.requires_evidence for item in invocation.review_findings
     )
-    rewrite_active = not evidence_required
+    if evidence_action_completed and not evidence_required:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "post-evidence Review feedback requires an evidence Finding",
+        )
+    rewrite_active = not evidence_required or evidence_action_completed
     rewrite_contract: dict[str, object] = {
         "active": rewrite_active,
         "reviewed_draft_digest": reviewed_draft.digest.value,
         "reviewed_response_kind": reviewed_draft.response_kind.value,
         "reviewed_draft_is_evidence": False,
         "evidence_required_finding_present": evidence_required,
+        "evidence_action_completed": evidence_action_completed,
     }
     if rewrite_active:
         rewrite_contract.update(
             {
-                "same_package": True,
-                "reviewed_draft_is_exact_edit_base": True,
+                "same_package": not evidence_action_completed,
+                "current_package_may_extend_reviewed_package": (
+                    evidence_action_completed
+                ),
+                "reviewed_draft_is_exact_edit_base": (
+                    not evidence_action_completed
+                ),
+                "reviewed_draft_is_exact_correction_baseline": True,
+                "new_evidence_does_not_erase_findings": True,
+                "no_evidence_findings_remain_mandatory": True,
                 "finding_claim_indices_bind_reviewed_draft_order": True,
                 "preserve_non_defective_requested_conclusions": True,
                 "new_user_visible_material_assertions_forbidden": True,
-                "claim_inventory_increase_forbidden_except_answer_global_completeness": True,
+                "claim_inventory_increase_forbidden_except_answer_global_completeness": (
+                    not evidence_action_completed
+                ),
+                "post_evidence_claim_changes_must_resolve_ordered_findings": (
+                    evidence_action_completed
+                ),
                 "global_completeness_exception_requires_existing_content_assertion": True,
                 "global_completeness_claim_addition_requires_answer_response_kind": True,
                 "limitation_claim_inventory_must_remain_empty": True,
@@ -5011,8 +5094,10 @@ def _completion_policy(
     )
     effective_operations = _effective_available_operations(invocation)
     tool_action_allowed = not evidence_only and bool(effective_operations)
-    tool_action_required = not evidence_only and any(
-        item.requires_evidence for item in invocation.review_findings
+    tool_action_required = (
+        not evidence_only
+        and not invocation.review_feedback_evidence_action_completed
+        and any(item.requires_evidence for item in invocation.review_findings)
     )
     support_available = any(
         item.disposition.value == "SUPPORT" for item in invocation.observations
@@ -5044,6 +5129,7 @@ def _completion_policy(
                 or (
                     item is EngineeringAgentResponseKind.LIMITATION
                     and boundary_available
+                    and not support_available
                     and not source_follow_up_required
                 )
             )
@@ -5054,6 +5140,7 @@ def _completion_policy(
         "new_evidence_claim_forbidden": evidence_only,
         "answer_requires_current_turn_support": True,
         "limitation_requires_current_turn_boundary": True,
+        "limitation_requires_zero_current_support": True,
         "prior_answer_restatement_requires_current_turn_evidence": True,
     }
 
@@ -5953,16 +6040,26 @@ def _validate_primary_proposal(
         return
     if (
         invocation.review_findings
-        and not any(item.requires_evidence for item in invocation.review_findings)
+        and (
+            invocation.review_feedback_evidence_action_completed
+            or not any(
+                item.requires_evidence for item in invocation.review_findings
+            )
+        )
         and isinstance(invocation.reviewed_draft, EngineeringAgentAnswerDraft)
         and _draft_proposal_matches_reviewed_draft(
             proposal.draft,
             invocation.reviewed_draft,
         )
     ):
+        correction_scope = (
+            "post-evidence review correction"
+            if invocation.review_feedback_evidence_action_completed
+            else "same-Package review rewrite"
+        )
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
-            "same-Package review rewrite returned the exact rejected Draft; "
+            f"{correction_scope} returned the exact rejected Draft; "
             "change the replacement Draft to resolve every ordered Finding",
         )
     if proposal.draft.response_kind.value not in _completion_policy(invocation)[

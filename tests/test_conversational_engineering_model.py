@@ -334,6 +334,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             "BIND_AUDIT_ONLY_TO_GLOBAL_NO_EVIDENCE_FINDING_AND_USE_FINDINGS",
         )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "the first Source search query must copy one cognition-derived target literal"
+            ),
+            "USE_A_MATERIAL_ALLOWED_COGNITION_LITERAL_OR_A_DIFFERENT_"
+            "WORLD_MODEL_QUERY",
+        )
 
     def _service(
         self,
@@ -621,7 +628,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1063,7 +1070,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1912,7 +1919,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2336,7 +2343,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -3234,6 +3241,72 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ],
             (observation.observation_id.value,),
         )
+        self.assertEqual(
+            evidence_required_preflight["draft_reference_contract"][
+                "resolved_acquisition_candidate_observation_ids_audit_only_by_default"
+            ],
+            (),
+        )
+        mixed_boundary = replace(
+            observation,
+            observation_id=StableId(f"observation_{'7' * 32}"),
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            tool_evidence_digest=digest_of("mixed-boundary-evidence"),
+            digest=digest_of("mixed-boundary-observation"),
+        )
+        mixed_support_view = _primary_input_view(
+            replace(
+                invocation,
+                observations=(observation, mixed_boundary),
+                available_operations=(),
+            )
+        )
+        self.assertEqual(
+            mixed_support_view["completion_policy"][
+                "allowed_response_kinds"
+            ],
+            ("ANSWER", "CLARIFICATION"),
+        )
+        self.assertTrue(
+            mixed_support_view["completion_policy"][
+                "limitation_requires_zero_current_support"
+            ]
+        )
+        post_evidence_invocation = replace(
+            evidence_required_invocation,
+            previous_work_state=SimpleNamespace(
+                **{
+                    **vars(reviewed_work_state),
+                    "digest": digest_of("post-evidence work state"),
+                }
+            ),
+            review_feedback_evidence_action_completed=True,
+        )
+        post_evidence_view = _primary_input_view(post_evidence_invocation)
+        post_evidence_feedback = post_evidence_view["review_feedback"][
+            "review_rewrite_contract"
+        ]
+        self.assertTrue(post_evidence_feedback["active"])
+        self.assertFalse(post_evidence_feedback["same_package"])
+        self.assertTrue(
+            post_evidence_feedback[
+                "current_package_may_extend_reviewed_package"
+            ]
+        )
+        self.assertTrue(
+            post_evidence_feedback["new_evidence_does_not_erase_findings"]
+        )
+        self.assertFalse(
+            post_evidence_view["completion_policy"]["tool_action_required"]
+        )
+        self.assertIn(
+            "ANSWER",
+            post_evidence_view["completion_policy"][
+                "allowed_response_kinds"
+            ],
+        )
         same_package_invocation = replace(
             evidence_required_invocation,
             review_findings=(
@@ -4081,6 +4154,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "new_evidence_claim_forbidden": True,
                 "answer_requires_current_turn_support": True,
                 "limitation_requires_current_turn_boundary": True,
+                "limitation_requires_zero_current_support": True,
                 "prior_answer_restatement_requires_current_turn_evidence": True,
             },
         )

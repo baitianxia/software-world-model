@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -175,7 +175,7 @@ Provider unavailable 或允许过早 Limitation 的依据。
 `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
 投影为 `ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1`：只有 declaring type 末段、`.java` 文件 stem 和 exact `source_path`
 一致时才形成候选；每项保留来源 cognition item/revision identity，并明确不授予 Source authority。若该 projection non-empty 且未截断，
-并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@13` 必须把这些 literal 投影为第一次
+并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@19` 必须把这些 literal 投影为第一次
 `SOURCE_SEARCH.query` 的 exhaustive `allowed_exact_values`；Provider 只能精确复制，decoder 从原 World Model SUPPORT Observation 重算并
 拒绝宽泛 member word 或其他域外值。该闭域只负责第一次 cognition→Source 导航；执行一次 Source action 后，新 Observation 中出现的
 source-native symbol 仍可按既有短字面量 contract 提议。projection 缺失或有界截断时不得伪称 exhaustive，仍由原 proposal/Broker 路径
@@ -228,8 +228,10 @@ no-progress failure 关闭。
    argument name 与 count 都是 exact closed domain；Provider 不得增加、遗漏或重复参数。Primary input 还必须把每个已用 World
    Model/Source query 就地投影为对应 tool argument 的 `forbidden_exact_values`，把未使用 Source locator 投影为 Source Read argument 的
    exhaustive `allowed_exact_values`；这些 model-facing 值不能取代 Application 从原 action history 与 authority receipt 的重算。
-   `completion_policy.allowed_response_kinds` 也是 exhaustive current-Turn domain：没有 SUPPORT 不得列 `ANSWER`，没有 BOUNDARY 不得列
-   `LIMITATION`；当前 World Model 已形成 BOUNDARY、但第一次受权 Source follow-up 仍可执行且尚未尝试时，也不得列 `LIMITATION`。若
+   `completion_policy.allowed_response_kinds` 也是 exhaustive current-Turn domain：没有 SUPPORT 不得列 `ANSWER`；`LIMITATION` 只在
+   current SUPPORT 为零且至少有一个 BOUNDARY 时可列。只要已有 current SUPPORT，混合已知事实与未决边界必须使用 `ANSWER`，以 Claim/Citation
+   表达所有 affirmative conclusion、以 Boundary 表达仍 material 的未知部分，不能用零 Claim Limitation 绕过 Citation。当前 World Model 已形成
+   BOUNDARY、但第一次受权 Source follow-up 仍可执行且尚未尝试时，也不得列 `LIMITATION`。若
    Source Search 已返回未读取的 opaque locator，则在第一次 Source Read 前继续禁止该 Limitation；一次实际 Read、一次没有可读 option 的
    Search、terminal Source denial 或 effective Source operation 不存在后，才可按 current BOUNDARY 重新开放。该规则不强制读取全部文件，
    不把 Source availability 提升为证据，也不阻止 current SUPPORT 已完整解决目标时直接提交 Answer。旧 Answer 的总结、改写或收窄仍须
@@ -277,9 +279,9 @@ no-progress failure 关闭。
    audit-only assessment 缺少 `finding_code` 与 non-audit-only assessment 非法携带 `finding_code` 必须形成两个单义 typed diagnostic；前者的
    bounded repair 必须保留 sealed allowed domain 中已选的 disposition，绑定 unique global no-evidence Finding 并返回 FINDINGS，不能伪改为
    material/not-disclosed 来取得 approval。一个 material gap 不得让同 Observation 内的 unrelated global inventory/coverage metric 自动
-   material。`LIMITATION` 必须始终绑定至少一个与用户请求相关的
-   reportable Boundary；删除 audit-only prose 时必须保留或替换该 material binding，不能把“结构化 binding 不等于全文披露”误作零 Boundary
-   Limitation 的许可。opaque Boundary ID 或 raw Observation 不需要出现在正文；Draft 已陈述 material unresolved requirement 并绑定对应
+   material。`LIMITATION` 必须始终绑定至少一个与用户请求相关的 reportable Boundary，并且 current SUPPORT 必须为零；其正文只能表达
+   material unresolved boundary，不能附带源码调用、结构、顺序或其他 affirmative diagnostic。删除 audit-only prose 时必须保留或替换该
+   material binding，不能把“结构化 binding 不等于全文披露”误作零 Boundary Limitation 的许可。opaque Boundary ID 或 raw Observation 不需要出现在正文；Draft 已陈述 material unresolved requirement 并绑定对应
    Boundary 时，Reviewer 不得仅因正文没有命名该 ID 或复述 raw metadata 而返回 Finding。Application 不按 failure code、问题词或语言关键词
    自动重写 Provider Draft。
 
@@ -368,8 +370,11 @@ no-progress failure 关闭。
    优先通过删除相邻 file/interface/tool/model/search affirmative diagnostic 并只保留 material unresolved boundary 收敛，不能用另一份
    inventory/diagnostic 替换争议内容。任一 Finding 标记
    `requires_evidence=true` 时，standard successor Primary input 必须把 `tool_action_required` 设为 true，并把 Draft response kind domain 置空；
-   主 Agent 只能从 effective tool catalog 提交一个 exact action，不能只重写被拒 Draft。任何新 Observation 都形成新 Ledger/Package
-   Revision，旧 Review 不得放行新 Draft。evidence-only completion 不恢复工具；此时 Reviewer 要求新 Evidence 仍按 no-progress failure
+   主 Agent 只能从 effective tool catalog 提交一个 exact action，不能只重写被拒 Draft。该 action 完成后，Application 必须保留 exact rejected
+   Draft、全部 ordered Findings 与 Review digest 作为下一 invocation 的 correction baseline；新 Evidence 扩展 Package，但不消除任何 Finding，
+   尤其不消除 `requires_evidence=false` 的删除、收窄或限定义务。补证后的 Primary 可以继续选择仍合法的 targeted action，或提交一个同时解决全部
+   Findings 的 replacement Draft；只有 replacement Draft 被接受为 Proposal 后才清除 review-correction state。任何新 Observation 都形成新
+   Ledger/Package Revision，旧 Review 不得放行新 Draft。evidence-only completion 不恢复工具；此时 Reviewer 要求新 Evidence 仍按 no-progress failure
    关闭。生成者不能自审，Reviewer 不能自行执行工具或放行。同包重写、补证后重答与每次 fresh Review 都是当前 execution profile 内的新 authorized
    model call，必须有新 call identity、Manifest 和 one-use receipts；它们不是重发同一 Provider request。closed JSON 输出无效时，若已资格化的通用格式修复步骤、
    权威和预算都存在，也只能用同一 execution profile 创建新 authorized call；否则当前 Turn 失败关闭。格式修复输入必须把 trusted local
@@ -378,17 +383,19 @@ no-progress failure 关闭。
    names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 必须从 untrusted prior output 与
-   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
+   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
    可对齐的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席。若一个 schema-invalid array 的所有 item 都没有任何
    已存在 allowlisted value，则整个 array 子树不形成 copy obligation；repair 只能从 current sealed schema/domain/template 重建它。只要该
    array 仍有一个既存 allowlisted item value，原长度/顺序与所有可对齐值就必须保持，不能用重建吞掉合法 sibling。final preflight 还必须
    递归列出 nested object/array item 的 exact required fields 并明确 additional fields forbidden：Primary action argument item 只能是
    `{name,value}`，Reviewer Boundary assessment 只能使用 `challenge_id`。Primary preflight 必须从 trusted completion policy 投影唯一有效
    branch：action 只允许 nonterminal phase 且 draft 为 null；Draft 只允许 `RESPONSE_READY` 且 action 为 null；`ANSWER` 至少一个 Claim，
-   `CLARIFICATION` 无 Claim/Boundary，`LIMITATION` 无 Claim且至少一个 reportable Boundary。Provider output 不能自行改变该 branch。
+   `CLARIFICATION` 无 Claim/Boundary，`LIMITATION` 无 Claim、current SUPPORT 必须为零且至少一个 reportable Boundary。Provider output 不能自行改变该 branch。
    Primary final preflight 还必须再次列出当前 ANSWER Claim SUPPORT 与 Draft Boundary 的两个 exact allowed Observation ID domains，明确
-   cross-disposition 和 unknown references 均 forbidden，并重复 active same-Package rewrite contract；这些值只冗余 sealed Primary input 的
-   约束，不新增 Evidence、Tool、Review 或 Delivery authority。
+   cross-disposition 和 unknown references 均 forbidden，并重复 active same-Package rewrite contract。final preflight 列出的
+   resolved-acquisition candidate Observation IDs 只是 audit-only-by-default 的 review lead，不是完整 Package inventory；只有 current User Message
+   明确询问该 acquisition diagnostic 时才能按 focused materiality contract 进入正文。这些值只冗余 sealed Primary input 的约束，不新增
+   Evidence、Tool、Review 或 Delivery authority。
    Primary/Reviewer 仍须精确复制 projection；在 Proposal decode 前，Application 还必须以
    `RESTORE_SCHEMA_MATCHING_ALLOWLISTED_VALUES_BEFORE_DECODE@1` 把 repair 对这些既存值的任何原始漂移机械恢复为 prior exact value，再递归重验
    最终值与顺序守恒。该 restoration 不能生成 missing field、保留 unexpected field、重建无 copy obligation 的 invalid 子树、改变 array
@@ -407,6 +414,8 @@ no-progress failure 关闭。
    violation 派生的 convergence directive：重复 Source query 只能换当前 sealed legal action，或在没有新 source-native literal 且当前
    response domain 允许时用现有 reportable Boundary 收敛；focused closure mismatch 必须重建 verdict、disposition、finding code 与 Finding
    的整组闭合；audit-only 缺少 Finding binding 时必须保留该 disposition、增加 matching global no-evidence Finding 并改为 FINDINGS。
+   第一次 Source Search 未复制 cognition-derived target literal 时，repair 必须选择 sealed domain 中与当前用户目标 material 的 allowed literal；
+   若不存在，则改用合法且不同的 `WORLD_MODEL_QUERY`，不得原样重复非法 literal，也不得为满足字面 allowlist 选择无关 target。
    focused diagnostic 可以投影实际 DEFECT/EXCEEDS index set，但不得把 untrusted Finding message 提升成 trusted instruction。final preflight
    必须冗余投影该 closed-contract directive，但不从中取得新事实或审核权。这些 directive 不新增 Tool、Evidence、Review 或 Delivery
    authority。除上述显式、版本化、可重算的 existing-value restoration 外，Application
@@ -414,8 +423,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@18 / conversational-engineering-agent-no-tools-prompt@18 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@18 / ENGINEERING_AGENT_REVIEW_INPUT@11 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13` 协议族；每次
+   `conversational-engineering-agent@19 / conversational-engineering-agent-no-tools-prompt@19 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@19 / ENGINEERING_AGENT_REVIEW_INPUT@11 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@14` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生
@@ -426,7 +435,7 @@ no-progress failure 关闭。
    per-Turn 15 dispatch authority 的剩余 slot；Authorizer 在 authority 耗尽时必须在 Provider boundary 前拒绝。该分类不允许 Application 抽取后部
    JSON、提高 dispatch/Tool/Source/Session budget 或把格式失败改判为 Provider unavailable。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
-   Verification Investigation Agent 不是长期架构不变量。current `@18` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
+   Verification Investigation Agent 不是长期架构不变量。current `@19` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
    投影出 caller/callee challenge 或 Package 含任何 Boundary，再执行一个 fresh focused Review。focused Finding 的 successor Draft 可按
    仍存在的 challenge focus 直接复审。为容纳一次 comprehensive rewrite 和一次 focused rewrite，
    Reviewer call 上限现为 4，同时 Agent step 上限从 12 收紧为 11，最坏组合仍为原有 15 per-Turn dispatch authority。Response Control 必须重算
@@ -575,5 +584,11 @@ dispatch Clarification 继续通过；Q1 的 coherent closed-contract repair 回
 slot，Q2 的 audit-only relevance assessment 缺 Finding code且 generic repair 原样返回。`FINDING-010-213` 已形成 current
 `@18/@11/@13` distinct-category final repair、单义 audit-only diagnostic/typed closure 与 final-preflight directive candidate；模型边界 34
 项测试 PASS，相邻定向集与 fresh run-091 仍须证明真实 Answer/Review，run-090 保持质量 FAIL。
+run-091 的 Ark 38 个 call 中 37 个完成、1 个 post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`，不存在可信 pre-dispatch
+unavailable verdict，故 DeepSeek dispatch/credential/TLS/HTTP 全为 0；retry、人工审批和 Production 仍为 0。Q4 fresh Conversation 零 dispatch
+Clarification 继续通过；Q1 以零 Citation 的混合事实/边界 Limitation 被错误交付，Q2 补证 action 后丢失完整 Review correction baseline 并在下一
+focused Review 前耗尽 authority，Q3 的 cognition-literal repair 原样重复非法 query，Q5 按 post-dispatch unknown no-retry 失败。
+`FINDING-010-214` 已形成 current `@19/@11/@14` 补证后全 Findings 保留、Limitation 零 SUPPORT、material cognition-literal replan 与
+resolved-candidate final-preflight 冗余 candidate；fresh run-092 仍须证明真实 Answer/Review，run-091 保持质量 FAIL。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

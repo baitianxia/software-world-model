@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -45,6 +45,12 @@ typed repair convergence directive、focused actual index diagnostic 与 respons
 在不同 validator category 间闭合，并为 audit-only missing binding 投影单义 typed closure；相同 category、两次上限、route、fallback、900 秒
 freshness、retry 与 Production 边界不变。模型边界 34 项、相邻十二模块 148 项定向验证均 PASS；下一项是提交和 launcher 前 fresh capture 的
 run-091，仍不等待 Provider 或重复人工授权。
+
+`FINDING-010-214 / run-091` 把下一偏差定位到 evidence action 后 Application 过早清空全量 Findings、mixed SUPPORT/BOUNDARY 仍允许零 Claim
+Limitation、cognition literal closed-contract repair 原样重试，以及 final preflight 未再次声明 resolved candidates 只是 audit-only-by-default
+lead。current `@19/@11/@14` candidate 保留补证后的完整 correction baseline，要求零 SUPPORT 才允许 Limitation，并为 material literal replan
+和 resolved-candidate inventory 边界提供 closed projection；15 次 authority、route、fallback、freshness、retry 与 Production 边界不变。
+58 项核心验证与相邻十二模块 148 项验证均 PASS；下一项是计划门禁、提交与 fresh run-092，仍不等待 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|
