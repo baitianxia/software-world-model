@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -187,3 +187,8 @@ Cognition Context 的 global Coverage/Gap 已正确进入 BOUNDARY，却又被�
 `FINDING-010-193` 进一步分开 audit retention 与 answer disclosure：Ledger/Package 继续完整保留 Boundary，但 Primary 只向用户报告仍限制
 current material requirement 的具体边界。后续 full SUPPORT 已闭合的 Search/budget/Provider acquisition diagnostic，以及没有限制具体
 requested conclusion 的 global inventory/coverage metric，只留在 audit；Reviewer 对其 user-visible 泄漏返回无需补证的 relevance Finding。
+
+`FINDING-010-194` 证明仅移除 SUPPORT 顶层 global Coverage 仍不足：原 `dimensions` 还混入 typed `COVERAGE/UNKNOWN` eligibility metadata。
+当前 `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 在 adapter 机械限制 affirmative dimensions 为
+`ENTITY/RELATION/BEHAVIOR/CONSTRAINT/STATE`，并让 counts、Citation refs 与 Source target 同域；`COVERAGE/EVIDENCE/UNKNOWN` 只保留正式
+Context/receipt/audit 身份，metadata-only Context 形成 Boundary。

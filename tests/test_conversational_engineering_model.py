@@ -2777,7 +2777,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             result_ref="world-model-support",
             content=json.dumps(
                 {
-                    "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3",
+                    "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4",
                     "source_search_target_projection": {
                         "schema": (
                             "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1"

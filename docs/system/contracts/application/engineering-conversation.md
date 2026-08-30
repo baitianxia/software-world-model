@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -141,7 +141,7 @@ expression 反复搜索同一调用点；Source read 必须直接对应 current 
 不让模型取得 path authority，也不让 Broker 从词汇自动推断业务相关性。达到 action/file fuse 仍只失败关闭或从现有证据诚实收敛，不能
 通过提高上限冒充 progress。
 
-`ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
+`ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
 投影为 `ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1`：只有 declaring type 末段、`.java` 文件 stem 和 exact `source_path`
 一致时才形成候选；每项保留来源 cognition item/revision identity，并明确不授予 Source authority。若该 projection non-empty 且未截断，
 并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@8` 必须把这些 literal 投影为第一次
@@ -208,12 +208,15 @@ no-progress failure 关闭。
    同一 current Turn 内多次 `WORLD_MODEL_QUERY` 的 SUPPORT Observation 是 append-only cognition delta，不是完整快照的重复副本。可信
    evidence-tool adapter 按 exact Cognition item digest 保留首次出现顺序：每次 query 的正式 Context、Ledger 和 authority receipt 仍绑定完整
    current Cognition Context digest、exact revision 与 global coverage，但 model-facing SUPPORT 顶层不得复制 global
-   `cognition.coverage/conflicts/unknowns`；这些全局 Gap/Conflict/Unknown 只进入 BOUNDARY。SUPPORT 只追加该 Turn 先前尚未投影的 affirmative
-   item 及其自身的 per-item coverage，Citation refs 也只追加对应 item，并机械记录 current/novel/already-observed counts。重复 item 的首次
+   `cognition.coverage/conflicts/unknowns`；这些全局 Gap/Conflict/Unknown 只进入 BOUNDARY。SUPPORT item domain 还必须按 typed
+   `CognitionDimension` 机械限制为 `ENTITY/RELATION/BEHAVIOR/CONSTRAINT/STATE`；`COVERAGE/EVIDENCE/UNKNOWN` metadata item 永不取得
+   affirmative Claim 资格。SUPPORT 只追加该 Turn 先前尚未投影的 affirmative item 及其自身的 per-item coverage，Citation refs、
+   current/novel/already-observed counts 和 cognition-derived Source target 也只按该 domain 计算。重复 item 的首次
    Observation 不得删除、重排或改写；后续 Claim 需要该事实时引用
    首次携带它的 SUPPORT ID。一个 query 没有 novel supported item 时不得制造重复 SUPPORT，而须形成明确 no-new boundary/no-progress；含新
    boundary、conflict 或 unknown 的 Context 仍按其自身 disposition 保留。该压缩不改变正式 Cognition Context、Evidence Ledger、receipt 或
-   Citation identity，也不能把未见 item、Boundary 或旧 Turn Evidence 提升为支持。
+   Citation identity，也不能把未见 item、metadata item、Boundary 或旧 Turn Evidence 提升为支持。metadata-only Context 必须形成明确
+   `WORLD_MODEL_HAS_NO_SUPPORTED_ITEMS` BOUNDARY，不能制造空或 metadata-only SUPPORT。
 
    Ledger/Package 的 audit retention 与 user-visible answer disclosure 必须分离。Boundary 只有在它仍使 current User Message 的 material
    requirement 未解决，或用户明确询问该诊断本身时才进入 Draft；它出现在 `boundary/audit` 不等于必须向用户披露。早期 partial/truncated

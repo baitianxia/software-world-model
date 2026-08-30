@@ -497,12 +497,24 @@ class EngineeringAgentEvidenceToolAdapter:
             )
             state.world_model_receipt_recorded = True
         current_items = tuple(cognition.items)
-        novel_items = tuple(
+        current_support_items = tuple(
             item
             for item in current_items
+            if item.dimension
+            not in {
+                CognitionDimension.COVERAGE,
+                CognitionDimension.EVIDENCE,
+                CognitionDimension.UNKNOWN,
+            }
+        )
+        novel_support_items = tuple(
+            item
+            for item in current_support_items
             if item.digest not in state.world_model_item_digests
         )
-        repeated_item_count = len(current_items) - len(novel_items)
+        repeated_support_item_count = len(current_support_items) - len(
+            novel_support_items
+        )
         citations = tuple(
             EngineeringAgentCitation.create(
                 citation_ref=item.item_id.value,
@@ -514,7 +526,9 @@ class EngineeringAgentEvidenceToolAdapter:
             )
             for item in current_items
         )
-        novel_citation_refs = tuple(item.item_id.value for item in novel_items)
+        novel_citation_refs = tuple(
+            item.item_id.value for item in novel_support_items
+        )
         receipt = self._receipt(
             request=request,
             state=state,
@@ -525,25 +539,29 @@ class EngineeringAgentEvidenceToolAdapter:
         fresh_context = cognition.digest not in state.progress_digests
         state.progress_digests.add(cognition.digest)
         evidence: list[EngineeringAgentToolEvidence] = []
-        if novel_items and cognition.alignment.value == "ALIGNED":
+        if novel_support_items and cognition.alignment.value == "ALIGNED":
             source_search_target_projection = (
-                _cognition_source_search_target_projection(novel_items)
+                _cognition_source_search_target_projection(
+                    novel_support_items
+                )
             )
             payload = {
-                "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3",
+                "schema": "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4",
                 "query": query,
                 "cognition_context_id": cognition.cognition_context_id.value,
                 "cognition_context_digest": cognition.digest.value,
                 "source_revision": cognition.source_revision,
                 "projection": {
                     "kind": "CURRENT_TURN_NOVEL_COGNITION_ITEMS",
-                    "current_context_item_count": len(current_items),
-                    "novel_item_count": len(novel_items),
-                    "previously_observed_item_count": repeated_item_count,
+                    "current_context_item_count": len(current_support_items),
+                    "novel_item_count": len(novel_support_items),
+                    "previously_observed_item_count": (
+                        repeated_support_item_count
+                    ),
                 },
                 "dimensions": [
                     item.model_view(alignment=cognition.alignment)
-                    for item in novel_items
+                    for item in novel_support_items
                 ],
                 "source_search_target_projection": (
                     source_search_target_projection
@@ -563,7 +581,7 @@ class EngineeringAgentEvidenceToolAdapter:
                     )
                 )
                 state.world_model_item_digests.update(
-                    item.digest for item in novel_items
+                    item.digest for item in novel_support_items
                 )
                 for literal, paths in (
                     _cognition_source_search_path_scopes(
@@ -584,7 +602,7 @@ class EngineeringAgentEvidenceToolAdapter:
         boundary_reasons = []
         if cognition.alignment.value != "ALIGNED":
             boundary_reasons.append("WORLD_MODEL_REVISION_UNALIGNED")
-        if not current_items:
+        if not current_support_items:
             boundary_reasons.append("WORLD_MODEL_HAS_NO_SUPPORTED_ITEMS")
         if cognition.conflicts:
             boundary_reasons.append("WORLD_MODEL_CONFLICT_REPORTED")
@@ -592,12 +610,12 @@ class EngineeringAgentEvidenceToolAdapter:
             boundary_reasons.append("WORLD_MODEL_UNKNOWN_REPORTED")
         if (
             not evidence
-            and current_items
+            and current_support_items
             and cognition.alignment.value == "ALIGNED"
         ):
             boundary_reasons.append(
                 "WORLD_MODEL_HAS_NO_NEW_SUPPORTED_ITEMS"
-                if not novel_items
+                if not novel_support_items
                 else "WORLD_MODEL_OBSERVATION_BYTE_LIMIT"
             )
         if boundary_reasons:

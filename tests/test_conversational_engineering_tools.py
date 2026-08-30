@@ -63,7 +63,7 @@ class SequentialIdGenerator:
 
 class ExactCognitionProjector:
     def project(self, *, request):
-        item = CognitionItem.create(
+        behavior = CognitionItem.create(
             dimension=CognitionDimension.BEHAVIOR,
             statement="LoginController delegates credential verification.",
             modality="STRUCTURE_BEHAVIOR_RELATION",
@@ -73,6 +73,36 @@ class ExactCognitionProjector:
             support_references=("snapshot-evidence",),
             coverage="Exact fixture behavior relation.",
         )
+        profile_coverage = CognitionItem.create(
+            dimension=CognitionDimension.COVERAGE,
+            statement="Fixture profile coverage metadata.",
+            modality="COGNITION_CAPABILITY_MANIFEST_PROFILE",
+            context_ref="fixture-context",
+            source_revision=request.repository_revision,
+            locator="world-model:fixture-profile-coverage",
+            support_references=(),
+            coverage="Fixture profile boundary metadata.",
+        )
+        eligibility_unknown = CognitionItem.create(
+            dimension=CognitionDimension.UNKNOWN,
+            statement="Fixture eligibility remains incomplete.",
+            modality="COGNITION_QUESTION_ELIGIBILITY",
+            context_ref="fixture-context",
+            source_revision=request.repository_revision,
+            locator="world-model:fixture-eligibility-unknown",
+            support_references=(),
+            coverage="Fixture eligibility boundary metadata.",
+        )
+        evidence_metadata = CognitionItem.create(
+            dimension=CognitionDimension.EVIDENCE,
+            statement="Fixture no-payload evidence identity.",
+            modality="STRUCTURE_EVIDENCE_METADATA",
+            context_ref="fixture-context",
+            source_revision=request.repository_revision,
+            locator="world-model:fixture-evidence-metadata",
+            support_references=("fixture-evidence-identity",),
+            coverage="No-payload evidence identity only.",
+        )
         return WorldModelCognitionContext.create(
             request=request,
             scope_ref="fixture-scope",
@@ -81,7 +111,12 @@ class ExactCognitionProjector:
             snapshot_ids=("fixture-snapshot",),
             read_authority_digest=request.world_model_read_authority_digest,
             source_revision=request.repository_revision,
-            items=(item,),
+            items=(
+                profile_coverage,
+                eligibility_unknown,
+                evidence_metadata,
+                behavior,
+            ),
             coverage=("Controller behavior is represented.",),
             unknowns=("Runtime credential store remains outside this Snapshot.",),
         )
@@ -113,6 +148,28 @@ class QueryAwareCognitionProjector(ExactCognitionProjector):
             source_revision=request.repository_revision,
             items=(item,),
             coverage=("Query-relevant behavior is represented.",),
+        )
+
+
+class MetadataOnlyCognitionProjector(ExactCognitionProjector):
+    def project(self, *, request):
+        context = super().project(request=request)
+        return WorldModelCognitionContext.create(
+            request=request,
+            scope_ref=context.scope_ref,
+            context_ref=context.context_ref,
+            schema_ref=context.schema_ref,
+            snapshot_ids=context.snapshot_ids,
+            read_authority_digest=context.read_authority_digest,
+            source_revision=context.source_revision,
+            items=tuple(
+                item
+                for item in context.items
+                if item.dimension is not CognitionDimension.BEHAVIOR
+            ),
+            coverage=context.coverage,
+            conflicts=context.conflicts,
+            unknowns=context.unknowns,
         )
 
 
@@ -322,6 +379,38 @@ class SemanticNeedWorldThenAnswerDriver(WorldThenAnswerDriver):
                 ),
             )
         return super().propose(invocation)
+
+
+class WorldThenLimitationDriver:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def propose(self, invocation):
+        self.calls += 1
+        if self.calls == 1:
+            return proposal(
+                invocation,
+                call_ref="metadata-world-agent-1",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                    arguments=(("query", "unknown runtime behavior"),),
+                    evidence_need="determine whether runtime behavior is known",
+                ),
+            )
+        boundaries = tuple(
+            item.observation_id
+            for item in invocation.observations
+            if item.disposition is EngineeringAgentEvidenceDisposition.BOUNDARY
+        )
+        return proposal(
+            invocation,
+            call_ref="metadata-world-agent-2",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.LIMITATION,
+                content="当前世界模型只有元数据与未知边界，不能确认运行时行为。",
+                boundary_observation_ids=boundaries,
+            ),
+        )
 
 
 class WorldTargetSearchThenAnswerDriver:
@@ -775,7 +864,18 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         )
         return completed.stdout
 
-    def service(self, driver, reviewer, *, cognition_projector=None):
+    def service(
+        self,
+        driver,
+        reviewer,
+        *,
+        cognition_projector=None,
+        available_operations=(
+            EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            EngineeringAgentToolOperation.SOURCE_SEARCH,
+            EngineeringAgentToolOperation.SOURCE_READ,
+        ),
+    ):
         binding = EngineeringChatBinding.create(
             product_revision="a" * 40,
             project_name="fixture",
@@ -802,11 +902,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             tool_port=tools,
             reviewer=reviewer,
             response_control=ResponseControl(),
-            available_operations=(
-                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
-                EngineeringAgentToolOperation.SOURCE_SEARCH,
-                EngineeringAgentToolOperation.SOURCE_READ,
-            ),
+            available_operations=available_operations,
             require_tool_authority_receipts=True,
             id_generator=SequentialIdGenerator(),
         )
@@ -839,6 +935,14 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertEqual(len(support.citation_refs), 1)
         self.assertNotIn("coverage", support_payload)
         self.assertEqual(
+            [item["dimension"] for item in support_payload["dimensions"]],
+            ["BEHAVIOR"],
+        )
+        self.assertNotIn("Fixture profile coverage metadata.", support.content)
+        self.assertNotIn("Fixture eligibility remains incomplete.", support.content)
+        self.assertNotIn("Fixture no-payload evidence identity.", support.content)
+        self.assertEqual(len(support.authority_receipt.citations), 4)
+        self.assertEqual(
             support_payload["dimensions"][0]["coverage"],
             "Exact fixture behavior relation.",
         )
@@ -859,6 +963,36 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             ("COGNITION_CONTEXT", "RESOURCE_RECEIPT"),
         )
         self.assertIn("WORLD_MODEL_UNKNOWN_REPORTED", boundary.content)
+
+    def test_world_model_metadata_only_context_has_no_support_observation(self) -> None:
+        reviewer = RecordingReviewer()
+        service = self.service(
+            WorldThenLimitationDriver(),
+            reviewer,
+            cognition_projector=MetadataOnlyCognitionProjector(),
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            ),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="运行时行为能否确认？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        package = reviewer.requests[0].package
+        self.assertEqual(package.support_observations, ())
+        self.assertEqual(len(package.boundary_observations), 1)
+        boundary = package.boundary_observations[0]
+        boundary_payload = json.loads(boundary.content)
+        self.assertIn(
+            "WORLD_MODEL_HAS_NO_SUPPORTED_ITEMS",
+            boundary_payload["reasons"],
+        )
+        self.assertEqual(len(boundary.authority_receipt.citations), 3)
 
     def test_world_model_tool_records_query_relevant_cognition_context(self) -> None:
         reviewer = RecordingReviewer()
@@ -928,7 +1062,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         support = reviewer.requests[0].package.support_observations[0]
         payload = json.loads(support.content)
         item_view = payload["dimensions"][0]
-        self.assertEqual(payload["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3")
+        self.assertEqual(payload["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4")
         self.assertEqual(
             payload["source_search_target_projection"],
             {
@@ -1057,7 +1191,7 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertEqual(len(support), 2)
         first = json.loads(support[0].content)
         second = json.loads(support[1].content)
-        self.assertEqual(first["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@3")
+        self.assertEqual(first["schema"], "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4")
         self.assertEqual(first["projection"]["novel_item_count"], 2)
         self.assertEqual(
             first["projection"]["previously_observed_item_count"],
