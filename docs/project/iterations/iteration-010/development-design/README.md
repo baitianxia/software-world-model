@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -39,6 +39,12 @@ Provider 或重复人工授权。
 收敛，以及 Limitation 审核在 Claim/inventory/diagnostic 间摆动。current `@17/@10/@12` candidate 已机械拒绝 unchanged replacement，密封
 typed repair convergence directive、focused actual index diagnostic 与 response-kind-aware Limitation Review；147 项定向验证 PASS；下一项执行
 是 fresh run-090，仍不等待 Provider 或重复人工授权。
+
+`FINDING-010-213 / run-090` 把下一偏差定位到 semantic closed-contract repair 回退为 non-JSON envelope 后被单向 category gate提前关闭，
+以及 audit-only relevance assessment 缺 Finding code时的含混 diagnostic/原样 repair。current `@18/@11/@13` candidate 允许最多两次 repair
+在不同 validator category 间闭合，并为 audit-only missing binding 投影单义 typed closure；相同 category、两次上限、route、fallback、900 秒
+freshness、retry 与 Production 边界不变。模型边界 34 项、相邻十二模块 148 项定向验证均 PASS；下一项是提交和 launcher 前 fresh capture 的
+run-091，仍不等待 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

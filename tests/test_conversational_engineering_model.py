@@ -328,6 +328,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             "CHANGE_THE_REPLACEMENT_DRAFT_TO_RESOLVE_EVERY_ORDERED_FINDING",
         )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "an audit-only boundary relevance assessment requires a Finding code"
+            ),
+            "BIND_AUDIT_ONLY_TO_GLOBAL_NO_EVIDENCE_FINDING_AND_USE_FINDINGS",
+        )
 
     def _service(
         self,
@@ -615,7 +621,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1057,7 +1063,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1906,7 +1912,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2257,6 +2263,85 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn(
             "caller-only semantics require WITHIN, SUPPORTED",
             reviewer_prompt_compact,
+        )
+        self.assertEqual(tool.requests, [])
+        self.assertEqual(len(response.requests), 1)
+
+    def test_contract_repair_prefix_regression_gets_final_distinct_category_repair(
+        self,
+    ) -> None:
+        primary_output = SequencedLiveAgentAdapter().outputs[1]
+        valid_review = (
+            '{"decision":"APPROVED","claim_assessments":[],'
+            '"evidence_boundary_assessments":[],'
+            '"boundary_relevance_assessments":[],"findings":[]}'
+        )
+        invalid_review = (
+            '{"decision":"FINDINGS","claim_assessments":[],'
+            '"evidence_boundary_assessments":[],'
+            '"boundary_relevance_assessments":[],"findings":[]}'
+        )
+        adapter = SequencedLiveAgentAdapter(
+            outputs=(
+                primary_output,
+                invalid_review,
+                "I will now return the corrected object.\n" + valid_review,
+                valid_review,
+            )
+        )
+        service, model, _, _, tool, response = self._service(adapter=adapter)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="登录流程是怎样的？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.provider_dispatch_count, 4)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(len(adapter.requests), 4)
+        self.assertEqual(
+            model.audits[1].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        )
+        self.assertEqual(
+            model.audits[2].receipt.failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        )
+        self.assertTrue(model.audits[3].receipt.successful)
+        first_repair_payload = json.loads(
+            adapter.requests[2].messages[1].content
+        )
+        self.assertEqual(
+            first_repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "CLOSED_OUTPUT_CONTRACT",
+        )
+        final_repair_payload = json.loads(
+            adapter.requests[3].messages[1].content
+        )
+        self.assertEqual(
+            final_repair_payload["format_repair_policy"]["attempt"],
+            2,
+        )
+        self.assertEqual(
+            final_repair_payload["format_repair_policy"][
+                "validation_failure_category"
+            ],
+            "NON_JSON_OBJECT_PREFIX",
+        )
+        final_preflight = json.loads(adapter.requests[3].messages[-1].content)
+        self.assertEqual(
+            final_preflight["schema"],
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13",
+        )
+        self.assertIsNone(
+            final_preflight["format_repair"][
+                "closed_contract_repair_directive"
+            ]
         )
         self.assertEqual(tool.requests, [])
         self.assertEqual(len(response.requests), 1)
@@ -4978,6 +5063,46 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             model_call_ref="focused-boundary-relevance-finding",
         )
         self.assertEqual(audit_only.decision.value, "FINDINGS")
+
+        with self.assertRaises(DomainError) as missing_audit_finding_code:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(
+                    {
+                        "decision": "APPROVED",
+                        "claim_assessments": [],
+                        "evidence_boundary_assessments": [],
+                        "boundary_relevance_assessments": [
+                            {
+                                "challenge_id": challenges[
+                                    0
+                                ].challenge_id.value,
+                                "user_requirement": (
+                                    "Explain the resolved source path."
+                                ),
+                                "boundary_scope": (
+                                    "Partial acquisition diagnostic."
+                                ),
+                                "disposition": (
+                                    EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                                    .RESOLVED_AUDIT_ONLY.value
+                                ),
+                                "finding_code": None,
+                            }
+                        ],
+                        "findings": [],
+                    }
+                ),
+                request=focused_request,
+                model_call_ref="focused-boundary-relevance-missing-code",
+            )
+        self.assertEqual(
+            missing_audit_finding_code.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "audit-only boundary relevance assessment requires a Finding code",
+            str(missing_audit_finding_code.exception),
+        )
 
         material = decode_engineering_agent_review_output(
             output_text=json.dumps(

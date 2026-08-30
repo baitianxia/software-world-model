@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -75,6 +75,13 @@ object；Q3 在两个 reportable Boundary 已允许 Limitation 时仍复制 forb
 又在 Limitation 上要求 Claim、误报已有 Boundary binding并把 Search/interface 当实现证据。current `@17/@10/@12` candidate 密封
 changed-replacement guard、typed contract-repair directive、actual focused index diagnostic 与 pure-boundary Limitation review；15 次 Turn
 authority、route、fallback、预算、retry 与 Production 边界不变，147 tests PASS；fresh run-090 是下一项真实证据。
+
+`FINDING-010-213 / run-090` 的 Ark 31 completed / 1 pre-dispatch TLS failure / 1 post-dispatch unknown 如实密封；Q3 fallback 因 pricing
+evidence 超过 900 秒在 DeepSeek credential/TLS/HTTP 前拒绝，DeepSeek dispatch 0。Q4 零 dispatch Clarification 保持；Q1 coherent semantic
+repair 回退为 non-JSON prefix 后旧单向 category gate 未使用第二个 slot，Q2 audit-only assessment 缺 Finding code且 repair 原样返回。current
+`@18/@11/@13` candidate 允许第二次 repair 处理任意不同 validator category，并对 audit-only missing binding 给出单义 diagnostic 与 typed
+closure directive；两次上限、15 次 Turn authority、route、fallback、freshness、retry 与 Production 边界不变。模型边界 34 tests、相邻
+十二模块 148 tests 均 PASS；提交后以 launcher 前最后时刻 fresh pricing capture 执行 run-091。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

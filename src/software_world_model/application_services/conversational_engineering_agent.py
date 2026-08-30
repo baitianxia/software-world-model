@@ -1680,12 +1680,17 @@ class EngineeringAgentBoundaryRelevanceAssessment:
         requires_finding = (
             disposition in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
         )
-        if (requires_finding and finding_code is None) or (
-            not requires_finding and finding_code is not None
-        ):
+        if requires_finding and finding_code is None:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "only an audit-only boundary assessment may bind a Finding code",
+                "an audit-only boundary relevance assessment requires a "
+                "Finding code",
+            )
+        if not requires_finding and finding_code is not None:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "a non-audit-only boundary relevance assessment must not "
+                "bind a Finding code",
             )
         core = {
             "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@2",

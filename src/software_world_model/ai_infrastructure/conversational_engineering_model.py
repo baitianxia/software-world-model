@@ -4,9 +4,9 @@ The Application owns the Agent loop and all authority-bearing state.  This
 module only renders sealed primary-Agent or independent-Reviewer inputs,
 narrows a user-authorized loopback session to each exact disclosure, crosses
 the Model Gateway, and decodes the closed result.  A malformed structured
-output may produce at most two fresh same-profile repairs for strictly later
-validator stages.  It never executes an Agent tool and never retries a Provider
-request.
+output may produce at most two fresh same-profile repairs for distinct local
+validator categories.  It never executes an Agent tool and never retries a
+Provider request.
 """
 
 from __future__ import annotations
@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@17"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@18"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@17"
+    "conversational-engineering-agent-no-tools-prompt@18"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@17"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@10"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@18"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@11"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@13"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -671,6 +671,13 @@ findings array is empty, every Claim assessment is SUPPORTED, and every focused
 assessment uses a closed disposition, change only decision to APPROVED. Never
 manufacture a Finding about the Review contract, and never demand that the Draft
 contain a Review Finding merely to make FINDINGS non-empty.
+If the validator says an audit-only boundary relevance assessment requires a
+Finding code, preserve the exact audit-only disposition selected from that
+challenge's sealed allowed domain. Assign it one unique finding_code, add the
+matching global Finding with claim_index null and requires_evidence false, and
+set decision to FINDINGS. Do not erase the audit-only assessment, change it to a
+material disposition merely to obtain approval, or return the unchanged invalid
+Review.
 The final-output-preflight item follows the sealed review input. It is trusted
 only as a redundant structured-output form checklist and grants no evidence,
 review, or delivery authority. Apply its json_serialization rules and compare
@@ -2877,6 +2884,9 @@ def _output_preflight_view(
             "validation_failure_message": repair_policy.get(
                 "validation_failure_message"
             ),
+            "closed_contract_repair_directive": repair_policy.get(
+                "closed_contract_repair_directive"
+            ),
             "repeat_same_failure_forbidden": (
                 isinstance(repair_policy.get("attempt"), int)
                 and repair_policy.get("attempt", 0) > 0
@@ -3530,6 +3540,11 @@ def _closed_contract_repair_directive(message: str) -> str:
         return "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE"
     if "same-Package review rewrite returned the exact rejected Draft" in message:
         return "CHANGE_THE_REPLACEMENT_DRAFT_TO_RESOLVE_EVERY_ORDERED_FINDING"
+    if (
+        "audit-only boundary relevance assessment requires a Finding code"
+        in message
+    ):
+        return "BIND_AUDIT_ONLY_TO_GLOBAL_NO_EVIDENCE_FINDING_AND_USE_FINDINGS"
     return "CORRECT_THE_NAMED_CONTRACT_WITHOUT_COPYING_THE_INVALID_PROPOSAL"
 
 
@@ -3587,14 +3602,6 @@ def _structured_output_failure_category(
     return "CLOSED_OUTPUT_CONTRACT"
 
 
-_FORMAT_REPAIR_CATEGORY_ORDER = {
-    "NON_JSON_OBJECT_PREFIX": 0,
-    "JSON_SYNTAX_ERROR": 1,
-    "CLOSED_SCHEMA_SHAPE": 2,
-    "CLOSED_OUTPUT_CONTRACT": 3,
-}
-
-
 def _can_followup_format_repair(
     previous_failure: EngineeringAgentModelCallFailure,
     failure: EngineeringAgentModelCallFailure,
@@ -3616,10 +3623,12 @@ def _can_followup_format_repair(
         failure.invalid_output_text,
         failure.message,
     )
-    return (
-        _FORMAT_REPAIR_CATEGORY_ORDER[category]
-        > _FORMAT_REPAIR_CATEGORY_ORDER[previous_category]
-    )
+    # A semantic repair can regress to an envelope or JSON error even after it
+    # corrected the named contract (run-090 demonstrated exactly that). The
+    # second and final repair may therefore address a distinct validator
+    # category in either direction. Repeating the same category still fails
+    # closed, so this cannot become an open-ended semantic retry loop.
+    return category != previous_category
 
 
 def _collect_closed_object_shape_mismatches(
@@ -4127,7 +4136,7 @@ def _format_repair_input_view(
     ):
         raise DomainError(
             ErrorCode.CONTROL_STATE_DENIED,
-            "format repair requires a bounded strictly later validator stage",
+            "format repair requires a bounded distinct validator category",
         )
     failure_category = _structured_output_failure_category(
         failure.invalid_output_text,
