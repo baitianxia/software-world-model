@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, product, application, source, quality, security]
 depends_on: [SYS-PRODUCT-SUCCESS, SYS-ADR-006, SYS-ADR-010, SYS-ADR-016]
-derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192]
+derived_from: [FINDING-010-093, FINDING-010-109, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-191, FINDING-010-192, FINDING-010-193]
 code: [src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/engineering_question_cognition.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_alpha_cli.py]
 tests: [tests/test_conversational_engineering_agent.py, tests/test_conversational_engineering_tools.py, tests/test_engineering_question_cognition.py, tests/test_conversational_engineering_model.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_conversation.py, tests/test_engineering_chat_browser.py, tests/test_engineering_chat_alpha_cli.py]
 ---
@@ -183,3 +183,7 @@ Primary/Reviewer live 质量证据。
 Cognition Context 的 global Coverage/Gap 已正确进入 BOUNDARY，却又被复制进 model-facing SUPPORT 顶层，使 Primary 可只引用 SUPPORT ID
 而使用 Boundary 语义。当前决策要求 SUPPORT 只携带 novel affirmative item 及其 per-item coverage；global coverage/conflict/unknown
 继续绑定正式 Context、Ledger 和 receipt，但 model-facing 内容只进入 BOUNDARY。Primary/Reviewer policy 仍保留为独立下游 guard。
+
+`FINDING-010-193` 进一步分开 audit retention 与 answer disclosure：Ledger/Package 继续完整保留 Boundary，但 Primary 只向用户报告仍限制
+current material requirement 的具体边界。后续 full SUPPORT 已闭合的 Search/budget/Provider acquisition diagnostic，以及没有限制具体
+requested conclusion 的 global inventory/coverage metric，只留在 audit；Reviewer 对其 user-visible 泄漏返回无需补证的 relevance Finding。

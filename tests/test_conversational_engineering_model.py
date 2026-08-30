@@ -428,6 +428,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "consumer_visible_effect_requires_consumer_path_support": policy[
                         "consumer_visible_effect_requires_consumer_path_support"
                     ],
+                    "audit_retention_requires_answer_disclosure": policy[
+                        "audit_retention_requires_answer_disclosure"
+                    ],
+                    "answer_boundary_requires_unresolved_material_requirement": policy[
+                        "answer_boundary_requires_unresolved_material_requirement"
+                    ],
+                    "resolved_acquisition_diagnostic_is_answer_boundary": policy[
+                        "resolved_acquisition_diagnostic_is_answer_boundary"
+                    ],
+                    "global_inventory_metrics_require_material_user_relevance": policy[
+                        "global_inventory_metrics_require_material_user_relevance"
+                    ],
                 }
             )
 
@@ -439,6 +451,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "authorization_limitation_requires_exact_boundary": True,
                 "producer_invocation_is_not_consumer_visible_effect": True,
                 "consumer_visible_effect_requires_consumer_path_support": True,
+                "audit_retention_requires_answer_disclosure": False,
+                "answer_boundary_requires_unresolved_material_requirement": True,
+                "resolved_acquisition_diagnostic_is_answer_boundary": False,
+                "global_inventory_metrics_require_material_user_relevance": True,
             },
         )
 
@@ -618,6 +634,19 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "requires current SUPPORT for that consumer path",
+            rendered,
+        )
+        self.assertIn("audit_retention_requires_answer_disclosure", rendered)
+        self.assertIn(
+            "Evidence Ledger audit retention and user-visible answer disclosure are different",
+            rendered,
+        )
+        self.assertIn(
+            "Global inventory counts and profile-wide",
+            rendered,
+        )
+        self.assertIn(
+            "coverage metrics are not answer content",
             rendered,
         )
         self.assertIn("Follow tool_action_budget exactly", rendered)
@@ -1708,6 +1737,24 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "consumer_visible_effect_requires_consumer_path_support"
             ]
         )
+        self.assertFalse(
+            reviewer_policy["audit_retention_requires_answer_disclosure"]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "answer_boundary_requires_unresolved_material_requirement"
+            ]
+        )
+        self.assertFalse(
+            reviewer_policy[
+                "resolved_acquisition_diagnostic_is_answer_boundary"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "global_inventory_metrics_require_material_user_relevance"
+            ]
+        )
         reviewer_prompt = adapter.requests[2].messages[0].content
         self.assertIn(
             "Compare the complete draft.content against the enumerated claims",
@@ -1727,6 +1774,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "Check producer-side calls and consumer-visible runtime effects separately",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Audit retention does not make every BOUNDARY relevant",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Irrelevant or resolved diagnostics are a relevance defect",
             reviewer_prompt,
         )
         self.assertIn(
@@ -3601,6 +3656,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "authorization_limitation_requires_exact_boundary": True,
                 "producer_invocation_is_not_consumer_visible_effect": True,
                 "consumer_visible_effect_requires_consumer_path_support": True,
+                "audit_retention_requires_answer_disclosure": False,
+                "answer_boundary_requires_unresolved_material_requirement": True,
+                "resolved_acquisition_diagnostic_is_answer_boundary": False,
+                "global_inventory_metrics_require_material_user_relevance": True,
             },
         )
         payload = {

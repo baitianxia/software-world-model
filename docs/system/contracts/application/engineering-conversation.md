@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -215,6 +215,12 @@ no-progress failure 关闭。
    boundary、conflict 或 unknown 的 Context 仍按其自身 disposition 保留。该压缩不改变正式 Cognition Context、Evidence Ledger、receipt 或
    Citation identity，也不能把未见 item、Boundary 或旧 Turn Evidence 提升为支持。
 
+   Ledger/Package 的 audit retention 与 user-visible answer disclosure 必须分离。Boundary 只有在它仍使 current User Message 的 material
+   requirement 未解决，或用户明确询问该诊断本身时才进入 Draft；它出现在 `boundary/audit` 不等于必须向用户披露。早期 partial/truncated
+   Search、budget、Provider 或其他 acquisition diagnostic 若已由后续 current SUPPORT 闭合同一 material need，只保留在 audit，Primary 还须
+   删除或纠正 Work State 中对应的已解决 Hypothesis/Open Item。global inventory count 或 Profile-wide coverage metric 只有在实际限制用户
+   要求的具体 conclusion 时才可进入答案，不能代替具体 Evidence boundary。
+
    成功 Turn 的不可变 Result 还必须只投影 Draft 实际引用的 Observation 所签发的 ordered unique Citation；每项保留 evidence class、exact
    source revision、locator、modality、content digest、Citation ref 与 authority digest。未被 Claim/boundary 引用的 Package Citation 不得顺带
    暴露，identity 不一致必须在浏览器投影前失败关闭。Browser 必须在对应助手消息下提供可展开 Citation，并同时显示本 Turn 的 Evidence
@@ -244,7 +250,9 @@ no-progress failure 关闭。
    invalidation/publish/refresh/update/commit/remote-write 调用只支持 invocation 与源码局部顺序；若 Draft 声称 invoked implementation、
    成功效果或另一个 request/session/cache consumer/security context/transaction observer/remote system 的可见时点，必须分别取得该
    implementation 和 consumer path 的 current SUPPORT，否则选择仍合法的 targeted action 或报告 exact Evidence boundary。Primary 与
-   Reviewer input 必须对称投影这些规则；Application 不以题目、技术名词或语言关键词改写 Draft。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
+   Reviewer input 必须对称投影这些规则；Reviewer 还必须把无关或已由后续 SUPPORT 闭合的 acquisition diagnostic 判为 relevance Finding，
+   并令 `requires_evidence=false`，因为删除它不损失已支持的 requested conclusion。Application 不以题目、技术名词、failure code 或语言关键词
+   改写 Draft。每个 Finding 的 remediation 还必须互斥：只有 current Package 缺少
    current User Message 真正要求的 material fact，且删除/收窄会让该要求仍未回答时，才可 `requires_evidence=true`；若 current Package 已能
    通过删除、收窄、限定或重组 offending statement 保留全部已支持的 requested conclusions，则必须为 false，不能一边给出这种同包修复一边
    要求新 Evidence。所有 role output 必须是唯一 closed JSON object；JSON 外叙述继续失败关闭，不能抽取

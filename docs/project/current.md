@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -46,7 +46,7 @@ run-075 已以 fresh clean product 复验 run-074 的 Maven/启动链失败题�
 库存失败追问和新 Conversation 省略指代隔离 probe。它延续已交付的 `requires_result=false`“开发体验候选”，仍不是 MVP、质量 PASS、方向
 PASS 或完成；其中库存追问存在标题分类错误且 fresh Reviewer 漏判，角色重分配题又在 Source budget/reference contract 矛盾处失败。
 
-当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189/191/192` 的 clean successor 复验角色重分配题、
+当前仍在同一个 `ITER-010-ACTION-BROWSER-CHAT-MVP-BUILD-001` 内继续质量资格：以 `FINDING-010-185/186/188/189/191/192/193` 的 clean successor 复验角色重分配题、
 容器语义审核、空上下文复数指代、失败分层显示和未参与修复的异质题，再与 actual current Codex 强基线判断绝对和相对质量。只有系统自身重大错误为 0、逐题
 相对 Codex 无物质退步、总体严格更优，且至少一项重要价值来自非 locator 世界模型认知时，才能称为 MVP 并交给用户判向。失败继续同一
 开发闭环，不新建迭代、PDR、失败 Result 或授权请求。全量回归、跨工程、hidden 和工程夯实仍不得成为 MVP 前置。
@@ -130,3 +130,8 @@ Application/Conversation/Browser/Candidate/Session 组合 `77/77` PASS、外调 
 `FINDING-010-192` 又把 first divergence 前移到 World Model evidence-tool adapter：global Coverage/Gap 已进入 BOUNDARY，却同时被复制进
 model-facing SUPPORT 顶层。当前 SUPPORT 只投影 novel affirmative item 与 per-item coverage；global coverage/conflict/unknown 只进入
 BOUNDARY，正式 Context/Ledger/receipt 仍完整绑定。相邻七模块 `91/91` PASS、外调 0；该通用投影修复仍待 fresh Browser 质量复验。
+
+`FINDING-010-193` 继续审计同一 Work State/Draft，发现后续 full READ 已补齐 `UmsAdminServiceImpl` 后，答案仍披露早期 Search 截断，并加入
+没有限制具体 requested conclusion 的 559/866 全局清单数字。current Primary/Reviewer 现分开 audit retention 与 user-visible material
+Boundary：已解决或无关诊断只留审计，Reviewer 以无需补证的 relevance Finding 阻断；模型边界直接 `28/28` PASS、外调 0。
+相邻七模块组合亦为 `91/91` PASS；仍无 fresh Delivery/Review，不能取得质量 PASS。

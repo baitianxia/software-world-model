@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -68,6 +68,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - World Model evidence-tool adapter 必须把 model-facing SUPPORT 与 BOUNDARY 按认识论语义分区：SUPPORT 顶层不得复制 global
   coverage/conflict/unknown，只保留 novel affirmative item 及其 per-item coverage；完整 Context、Ledger、receipt 继续绑定 global
   Coverage，且该全局边界只在 BOUNDARY 中呈现。
+- Boundary/Audit 的完整保留不要求全部写入用户答案。只有仍限制 current User Message material requirement 或用户明确询问的诊断才可披露；
+  已被后续 SUPPORT 闭合的 acquisition diagnostic 和不限制具体结论的 global inventory/coverage metric 只留 audit，Reviewer 对泄漏返回
+  `requires_evidence=false` 的 relevance Finding。
 - Reviewer 指定现有 Package 足够时，同包 rewrite 必须生成 successor Work State/Draft/fresh Review；Package origin 保留首次封装该证据集的
   Work State，不随 rewrite 改写，也不能被 Response Control 当成当前 Delivery Work State。任何新 Observation 仍形成新 Package。
 - closed-shape repair 的 copy obligation 只覆盖 prior output 中已经存在、allowlisted 且可按 schema 对齐的值。完全没有既存 allowlisted item

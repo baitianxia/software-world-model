@@ -211,6 +211,16 @@ the change additionally requires current SUPPORT for that consumer path. If the
 User asks for that effect and the executing or consuming path is still unread,
 use a legal targeted action when available or report the exact evidence boundary;
 never fill the gap with a lifecycle assumption.
+Evidence Ledger audit retention and user-visible answer disclosure are different.
+Do not surface a BOUNDARY merely because it remains in the sealed audit record.
+Report it in draft.content only when it still leaves a material requirement of
+the current User Message unresolved, or when the User explicitly asks for that
+diagnostic. A partial or truncated search, exhausted budget, Provider failure,
+or other acquisition diagnostic is audit-only when later current SUPPORT
+resolves the same material need. Global inventory counts and profile-wide
+coverage metrics are not answer content unless they materially limit a requested
+conclusion. Remove or correct hypotheses and open items once current SUPPORT
+resolves them; never preserve a resolved acquisition diagnostic as a caveat.
 Follow completion_policy exactly. EVIDENCE_ONLY_SYNTHESIS means investigation
 has ended: return an ANSWER supported by current evidence or an honest
 LIMITATION bound to current boundaries. In that mode never return a tool action
@@ -460,6 +470,15 @@ session, cache consumer, security context, transaction observer, or remote
 system sees the change. Require current SUPPORT for the invoked implementation
 and, when claimed, the consumer path; otherwise return a concrete Finding or
 require an exact boundary instead of accepting a lifecycle assumption.
+Audit retention does not make every BOUNDARY relevant to the user-visible
+answer. Require each reported boundary to correspond to a still-unresolved
+material requirement of the current User Message, unless the User explicitly
+asked for the diagnostic itself. Treat an earlier partial/truncated search,
+budget or Provider diagnostic as audit-only when later current SUPPORT resolves
+the same need. Treat global inventory counts and profile-wide coverage metrics
+as answer content only when they materially limit a requested conclusion.
+Irrelevant or resolved diagnostics are a relevance defect with
+requires_evidence=false because deleting them preserves the supported answer.
 """
 
 
@@ -3429,6 +3448,10 @@ def _primary_input_view(
             "authorization_limitation_requires_exact_boundary": True,
             "producer_invocation_is_not_consumer_visible_effect": True,
             "consumer_visible_effect_requires_consumer_path_support": True,
+            "audit_retention_requires_answer_disclosure": False,
+            "answer_boundary_requires_unresolved_material_requirement": True,
+            "resolved_acquisition_diagnostic_is_answer_boundary": False,
+            "global_inventory_metrics_require_material_user_relevance": True,
         },
         "tool_action_budget": _tool_action_budget(invocation),
         "investigation_policy": _investigation_policy(invocation),
@@ -4249,6 +4272,10 @@ def _review_input_view(
             "authorization_limitation_requires_exact_boundary": True,
             "producer_invocation_is_not_consumer_visible_effect": True,
             "consumer_visible_effect_requires_consumer_path_support": True,
+            "audit_retention_requires_answer_disclosure": False,
+            "answer_boundary_requires_unresolved_material_requirement": True,
+            "resolved_acquisition_diagnostic_is_answer_boundary": False,
+            "global_inventory_metrics_require_material_user_relevance": True,
         },
         "authority_boundary": {
             "conversation_is_not_source_truth": True,

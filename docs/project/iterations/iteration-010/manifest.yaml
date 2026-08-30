@@ -1246,6 +1246,12 @@ conversational_engineering_agent:
   world_model_global_coverage_conflict_unknown_destination: boundary-only
   formal_cognition_context_global_coverage_binding: unchanged
   current_world_model_evidence_partition_ref: FINDING-010-192
+  audit_retention_requires_answer_disclosure: false
+  answer_boundary_requires_unresolved_material_requirement: true
+  resolved_acquisition_diagnostic_destination: audit-only
+  global_inventory_metric_answer_disclosure: material-user-relevance-required
+  irrelevant_or_resolved_diagnostic_review_remediation: relevance-finding-requires-evidence-false
+  current_audit_answer_boundary_relevance_ref: FINDING-010-193
   empty_context_referent_policy_ref: EMPTY_CONTEXT_REFERENT_CLARIFICATION_ZH_CN@1
   empty_context_referent_marker_categories: singular,plural,class-demonstrative
   empty_context_referent_match_result: application-input-clarification-before-world-model-source-credential-or-provider
@@ -1658,7 +1664,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:7ecae1e50c0feddf398519765034c88f36d6383eba20a4d436876ee9e6c4f4c0
+  system_contract_set_digest: sha256:ecd04b577a391588c55b2187b45271df0bbec8f6e27d79a95098d8cfd6b1a2f1
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0
