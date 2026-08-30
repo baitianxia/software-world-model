@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -60,7 +60,7 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     用户的一次提交只创建一个 logical interaction unit；Engineering Conversation 中该单位是一个密封 Turn，兼容单轮协议中是 logical question。每个 route 使用不同
     attempt identity、Manifest、execution-profile/disclosure/dispatch-admission/transport/call/terminal receipts、Ledger/Package/Answer/Review 和 transport audit。
     只有 preferred-route attempt 已密封 terminal、没有 authorized answer，且 preferred profile 登记的受信 availability owner 密封 exact
-    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway 对 HTTP failure 只密封
+    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway decoration boundary 对 HTTP failure 只密封
     status 与字符集/长度受限的 provider code/type/request-id，证据必须绑定 call、provider request 与 isolation receipt，并在 repository
     replay 和 Model Egress round-trip 中重验；response body、header、credential、Secret Reference 与任意错误正文不得进入。Gateway 只保存
     raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。
@@ -113,6 +113,11 @@ post-dispatch unknown 和潜在重复成本，而不只声明配置。
 中为 Turn）和 provider attempt 分别闭合，不得把整段 Conversation 合并计为一次 live attempt。Provider 透明只描述产品语义；它不取消
 每条 route 自己的 dispatch admission、资格、authority chain、披露和 transport 审计。公开来源 standing authority 只消除重复人工批准，
 不消除任何逐调用机器控制。
+
+不改变 request bytes、response parsing、credential/TLS/HTTP 或 Adapter 的 post-terminal HTTP evidence capture/persistence 必须作为
+Gateway decorator 与 auxiliary repository 实现。decorator 原样委托 exact qualified Adapter，并只在 inner Gateway terminal Result 后
+enrich/replay evidence；写入失败、缺失或 drift 均 fail closed。Provider Conformance loader 的现有 implementation-file aggregate、配置、
+fixture、model 和有效期验证不得放宽；当 conformance-bound core raw bytes 未变化时，外围 decorator 变化也不得伪造 Provider identity drift。
 
 ## Verification ownership
 

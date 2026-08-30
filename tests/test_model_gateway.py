@@ -14,6 +14,8 @@ from software_world_model.ai_infrastructure import (
     ModelGateway,
     PlatformProposalMode,
     ProviderAdapterCapabilities,
+    ProviderHTTPFailureCapturingAdapter,
+    ProviderHTTPFailureEvidenceGateway,
     ProviderOutputRejected,
     ProviderOutcomeUnknown,
     ReplayClassification,
@@ -267,16 +269,21 @@ class ModelGatewayTests(unittest.TestCase):
                 "ignored": "must-not-cross-the-gateway",
             }
         )
-        gateway = ModelGateway(
-            self.repository,
-            (adapter,),
-            id_generator=self.ids,
-            clock=self.clock,
+        capturing_adapter = ProviderHTTPFailureCapturingAdapter(adapter)
+        gateway = ProviderHTTPFailureEvidenceGateway(
+            gateway=ModelGateway(
+                self.repository,
+                (capturing_adapter,),
+                id_generator=self.ids,
+                clock=self.clock,
+            ),
+            adapter=capturing_adapter,
+            repository=self.repository,
         )
         context = self.context(self.manifest())
 
         result = gateway.invoke(context)
-        evidence = result.call.provider_http_failure_evidence
+        evidence = result.provider_http_failure_evidence
 
         self.assertEqual(result.call.state, ModelCallState.FAILED)
         self.assertEqual(
@@ -289,13 +296,22 @@ class ModelGatewayTests(unittest.TestCase):
         self.assertEqual(evidence.provider_error_code, "service_unavailable")
         self.assertEqual(evidence.provider_error_type, "server_error")
         self.assertEqual(evidence.provider_request_id, "provider-request-safe-1")
-        recovered = gateway.recover_call(result.call.model_call_id)
-        self.assertEqual(recovered.call.provider_http_failure_evidence, evidence)
+        self.assertEqual(
+            adapter.requests[0].digest,
+            result.call.provider_request_digest,
+        )
+        self.assertFalse(
+            hasattr(result.call, "provider_http_failure_evidence")
+        )
+        recovered = self.repository.get_provider_http_failure_evidence(
+            result.call.model_call_id
+        )
+        self.assertEqual(recovered, evidence)
 
         replayed = gateway.invoke(context)
         self.assertTrue(replayed.replayed)
         self.assertEqual(
-            replayed.call.provider_http_failure_evidence,
+            replayed.provider_http_failure_evidence,
             evidence,
         )
         self.assertEqual(len(adapter.requests), 1)
@@ -304,11 +320,16 @@ class ModelGatewayTests(unittest.TestCase):
         adapter = RecordingAdapter(
             http_failure_details={"provider_error_code": "unknown"}
         )
-        gateway = ModelGateway(
-            self.repository,
-            (adapter,),
-            id_generator=self.ids,
-            clock=self.clock,
+        capturing_adapter = ProviderHTTPFailureCapturingAdapter(adapter)
+        gateway = ProviderHTTPFailureEvidenceGateway(
+            gateway=ModelGateway(
+                self.repository,
+                (capturing_adapter,),
+                id_generator=self.ids,
+                clock=self.clock,
+            ),
+            adapter=capturing_adapter,
+            repository=self.repository,
         )
 
         result = gateway.invoke(self.context(self.manifest()))
@@ -318,7 +339,7 @@ class ModelGatewayTests(unittest.TestCase):
             result.call.failure_code,
             ErrorCode.PROVIDER_HTTP_ERROR.value,
         )
-        self.assertIsNone(result.call.provider_http_failure_evidence)
+        self.assertIsNone(result.provider_http_failure_evidence)
 
     def test_rejected_output_preserves_completed_response_and_usage_for_audit(self) -> None:
         adapter = RecordingAdapter(

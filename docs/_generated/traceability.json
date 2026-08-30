@@ -3621,7 +3621,7 @@
   "FINDING-010-198": {
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-198.md",
     "code": [
-      "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py",
       "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/application_services/conversational_engineering_agent.py",
@@ -3629,7 +3629,8 @@
       "src/software_world_model/application_services/engineering_conversation.py",
       "src/software_world_model/infrastructure/sqlite_model_gateway_repository.py",
       "src/software_world_model/interface/engineering_chat_browser.py",
-      "src/software_world_model/interface/engineering_chat_provider_launcher.py"
+      "src/software_world_model/interface/engineering_chat_provider_launcher.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py"
     ],
     "tests": [
       "tests/test_model_gateway.py",
@@ -3637,6 +3638,24 @@
       "tests/test_conversational_engineering_model.py",
       "tests/test_conversational_engineering_routing.py",
       "tests/test_engineering_chat_browser.py"
+    ]
+  },
+  "FINDING-010-199": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-199.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/infrastructure/sqlite_model_gateway_repository.py",
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_deepseek_chat_conformance.py"
     ]
   },
   "ITER-001-DESIGN-INDEX": {
@@ -5057,6 +5076,7 @@
     "path": "docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md",
     "code": [
       "src/software_world_model/ai_infrastructure/model_gateway.py",
+      "src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py",
       "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
       "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",

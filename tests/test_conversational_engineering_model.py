@@ -26,6 +26,10 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ProviderUnavailable,
     ReplayClassification,
 )
+from software_world_model.ai_infrastructure.provider_http_failure_evidence import (
+    ProviderHTTPFailureCapturingAdapter,
+    ProviderHTTPFailureEvidenceGateway,
+)
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
     EngineeringAgentCitation,
@@ -345,14 +349,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             failure_code=failure_code,
             failure_details=failure_details,
         )
-        gateway = ModelGateway(
-            SqliteModelGatewayRepository(
-                self.database,
-                id_generator=SequenceIds(),
-            ),
-            (adapter,),
+        repository = SqliteModelGatewayRepository(
+            self.database,
             id_generator=SequenceIds(),
-            clock=lambda: self.now,
+        )
+        capturing_adapter = ProviderHTTPFailureCapturingAdapter(adapter)
+        gateway = ProviderHTTPFailureEvidenceGateway(
+            gateway=ModelGateway(
+                repository,
+                (capturing_adapter,),
+                id_generator=SequenceIds(),
+                clock=lambda: self.now,
+            ),
+            adapter=capturing_adapter,
+            repository=repository,
         )
         model = ModelBackedConversationalEngineeringAgent(
             gateway=PolicyEnforcingEngineeringAgentModelGateway(

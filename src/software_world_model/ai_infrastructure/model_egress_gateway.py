@@ -41,11 +41,14 @@ from .model_gateway import (
     ModelCallState,
     ModelExecutionContext,
     ModelGatewayResult,
-    ModelProviderHTTPFailureEvidence,
     ModelResultEligibility,
     PlatformProposalMode,
     ReplayClassification,
     RuntimeAccessMode,
+)
+from .provider_http_failure_evidence import (
+    ModelProviderHTTPFailureEvidence,
+    ProviderHTTPFailureEvidenceModelGatewayResult,
 )
 
 
@@ -1433,6 +1436,27 @@ def _result_value(result: ModelGatewayResult) -> dict[str, object]:
     receipt = result.isolation_receipt
     eligibility = result.eligibility
     response = result.response
+    http_evidence = getattr(result, "provider_http_failure_evidence", None)
+    if http_evidence is not None:
+        if not isinstance(http_evidence, ModelProviderHTTPFailureEvidence):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "egress Provider HTTP failure evidence has an invalid shape",
+            )
+        http_evidence.require_exact()
+        if (
+            call.state is not ModelCallState.FAILED
+            or call.failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
+            or http_evidence.model_call_id != call.model_call_id
+            or http_evidence.provider_request_digest
+            != call.provider_request_digest
+            or http_evidence.isolation_receipt_digest
+            != call.isolation_receipt_digest
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "egress Provider HTTP failure evidence does not bind its model call",
+            )
     return {
         "call": {
             "model_call_id": call.model_call_id.value,
@@ -1455,34 +1479,22 @@ def _result_value(result: ModelGatewayResult) -> dict[str, object]:
             "failure_code": call.failure_code,
             "provider_http_failure_evidence": (
                 {
-                    "schema": call.provider_http_failure_evidence.schema,
-                    "model_call_id": (
-                        call.provider_http_failure_evidence.model_call_id.value
-                    ),
+                    "schema": http_evidence.schema,
+                    "model_call_id": http_evidence.model_call_id.value,
                     "provider_request_digest": (
-                        call.provider_http_failure_evidence.provider_request_digest.value
+                        http_evidence.provider_request_digest.value
                     ),
                     "isolation_receipt_digest": (
-                        call.provider_http_failure_evidence.isolation_receipt_digest.value
+                        http_evidence.isolation_receipt_digest.value
                     ),
-                    "failure_code": (
-                        call.provider_http_failure_evidence.failure_code
-                    ),
-                    "http_status": (
-                        call.provider_http_failure_evidence.http_status
-                    ),
-                    "provider_error_code": (
-                        call.provider_http_failure_evidence.provider_error_code
-                    ),
-                    "provider_error_type": (
-                        call.provider_http_failure_evidence.provider_error_type
-                    ),
-                    "provider_request_id": (
-                        call.provider_http_failure_evidence.provider_request_id
-                    ),
-                    "digest": call.provider_http_failure_evidence.digest.value,
+                    "failure_code": http_evidence.failure_code,
+                    "http_status": http_evidence.http_status,
+                    "provider_error_code": http_evidence.provider_error_code,
+                    "provider_error_type": http_evidence.provider_error_type,
+                    "provider_request_id": http_evidence.provider_request_id,
+                    "digest": http_evidence.digest.value,
                 }
-                if call.provider_http_failure_evidence is not None
+                if http_evidence is not None
                 else None
             ),
             "created_at": call.created_at.isoformat(),
@@ -1807,7 +1819,6 @@ def _result_from_value(value: object) -> ModelGatewayResult:
         output_tokens=_optional_nonnegative_int(call_value["output_tokens"]),
         usage_complete=_exact_bool(call_value["usage_complete"], "usage complete"),
         failure_code=_optional_text(call_value["failure_code"]),
-        provider_http_failure_evidence=provider_http_failure_evidence,
         created_at=_time_value(call_value["created_at"], "created at"),
         revised_at=_time_value(call_value["revised_at"], "revised at"),
     )
@@ -1819,6 +1830,7 @@ def _result_from_value(value: object) -> ModelGatewayResult:
         != call.provider_request_digest
         or provider_http_failure_evidence.isolation_receipt_digest
         != call.isolation_receipt_digest
+        or result["response"] is not None
     ):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -1989,12 +2001,13 @@ def _result_from_value(value: object) -> ModelGatewayResult:
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "gateway model result cross-links do not verify",
         )
-    return ModelGatewayResult(
+    return ProviderHTTPFailureEvidenceModelGatewayResult(
         call=call,
         response=response,
         isolation_receipt=receipt,
         eligibility=eligibility,
         replayed=_exact_bool(result["replayed"], "replayed marker"),
+        provider_http_failure_evidence=provider_http_failure_evidence,
     )
 
 

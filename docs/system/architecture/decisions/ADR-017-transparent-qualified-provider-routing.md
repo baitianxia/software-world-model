@@ -5,8 +5,8 @@ status: accepted
 authority: normative
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
-derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
+derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199]
+code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_browser.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
@@ -65,6 +65,10 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
    密封的 logical-interaction result。Logical result 只从一个完整、独立审核并获授权的 attempt 派生。
 8. preferred 是首个 route role，但实现缺口不算 preferred unavailable。相同 exact Adapter/Configuration/endpoint/model/transport/rendering identity 且仍在
    有效期内的 Conformance 必须复用；与该 identity 无关的领域 Prompt、答案 Schema 或产品变化不触发重复 Conformance。
+   不改变 Provider request/response/transport 的 post-terminal availability-evidence 处理必须位于独立 Gateway decorator：它只可把同一
+   immutable request 原样委托给 exact qualified Adapter，并在 inner Gateway terminal 后写入 call/request/isolation-bound auxiliary evidence。
+   decorator、repository 或 Application 失败只使 availability fail closed，不能改写 Provider call。不得因这类外围证据实现变化让未变化的
+   Provider identity 资格失效，也不得以 decorator 为理由跳过 Conformance manifest 的现有 exact raw-digest、配置、model、fixture 或有效期校验。
 9. 成本只在 logical interaction unit 开始前决定是否允许完整的 preferred + fallback 最坏成本，不能在 attempt 开始后删减 Evidence、Citation、
    Answer 或 Review。所有 planned development/evaluation fallback 工作必须遵守其 execution profile 选择的 Operations admission plugin：在任何
    Provider socket/connected descriptor provisioning、TLS、credential resolution 或 HTTP 前密封通用 route-admission receipt，并在每个新外部 request 前重验插件要求的价格、时间、资格或 exact override。

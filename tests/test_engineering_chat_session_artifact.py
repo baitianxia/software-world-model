@@ -72,6 +72,16 @@ class _UnusedModelGatewayRepository:
             f"artifact preparation called get_manifest: {args!r} {kwargs!r}"
         )
 
+    def record_provider_http_failure_evidence(self, *args, **kwargs):
+        raise AssertionError(
+            f"artifact preparation recorded HTTP evidence: {args!r} {kwargs!r}"
+        )
+
+    def get_provider_http_failure_evidence(self, *args, **kwargs):
+        raise AssertionError(
+            f"artifact preparation read HTTP evidence: {args!r} {kwargs!r}"
+        )
+
 
 class _UnusedCognitionProjector:
     def __init__(self, *, binding_id, revision, authority):

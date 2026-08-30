@@ -1301,11 +1301,17 @@ conversational_engineering_agent:
   provider_http_failure_evidence_safe_fields: http-status,provider-error-code,provider-error-type,provider-request-id
   provider_http_failure_evidence_forbidden_fields: response-body,response-headers,credential,secret-reference,arbitrary-error-text
   provider_http_failure_evidence_binding: model-call-provider-request-isolation-receipt
-  provider_http_failure_evidence_round_trip: gateway-repository-model-egress-model-receipt-turn-attempt
+  provider_http_failure_evidence_capture_boundary: post-terminal-gateway-decorator-that-delegates-immutable-request-to-exact-qualified-adapter
+  provider_http_failure_evidence_repository: auxiliary-append-only-call-bound-store
+  provider_http_failure_evidence_round_trip: gateway-decorator-auxiliary-repository-model-egress-model-receipt-turn-attempt
+  provider_http_failure_evidence_changes_provider_request_or_transport: false
+  provider_http_failure_evidence_changes_conformance_identity: false
+  conformance_loader_exact_checks_relaxed: false
   availability_owner_http_unavailable_statuses: 402,408,425,429,500,502,503,504
   availability_owner_http_fail_closed_statuses: 400,401,403,404,409,422
   availability_owner_unsealed_http_status_allowed: false
   current_provider_http_availability_evidence_ref: FINDING-010-198
+  current_provider_conformance_identity_boundary_ref: FINDING-010-199
   cognition_source_search_target_schema: ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1
   cognition_source_search_first_literal_policy: exact-closed-domain-from-current-nontruncated-world-model-projection
   cognition_source_search_path_scope_operation_schema: COMPILED_SOURCE_OPERATION@2
@@ -1709,7 +1715,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:848a64b01bda469f2c84ace75aff78dba45fa1bca6c6a45e314796077861fc4a
+  system_contract_set_digest: sha256:2e469b696010e699f73caee33d4f3962244ccf3605989b2e34f61a088174a998
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

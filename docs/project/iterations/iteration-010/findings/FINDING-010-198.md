@@ -5,7 +5,7 @@ status: dispositioned
 authority: development-evidence
 owners: [ai, application, operations, quality]
 depends_on: [FINDING-010-187, FINDING-010-190, ITER-010-PDR-012]
-code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py]
+code: [src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/conversational_engineering_agent.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/engineering_conversation.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py]
 tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_browser.py]
 iteration: ITER-010
 classification: system-contract
@@ -32,9 +32,10 @@ owner 只能看到字符串分类，不能证明 exact execution profile 的可�
 - Ark Adapter 的 `ProviderHTTPError.details` 已包含受限 status/code/type/request-id，不包含 response body、credential 或 Secret Reference。
 - 修复前 Gateway 的 `DomainError(PROVIDER_HTTP_ERROR)` 分支只把 `exc.code` 写入 `ModelCallRecord.failure`；repository、Model Egress、model
   boundary receipt、Turn 与 attempt receipt 都没有 status 或其证据 digest。
-- current local candidate 新增 `MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@1`：Gateway 只接受 `100..599` 的整数 status 与字符集/长度受限的可选
-  code/type/request-id，绑定 model-call、provider-request 与 isolation receipt 后密封；SQLite 持久化、replay 和 Model Egress round-trip
-  均重验 digest 与父 identity。
+- current local candidate 新增 `MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@1`：Gateway decorator 只接受 `100..599` 的整数 status 与字符集/长度
+  受限的可选 code/type/request-id，绑定 model-call、provider-request 与 isolation receipt 后密封；独立 SQLite 表、replay 和 Model Egress
+  round-trip 均重验 digest 与父 identity。`FINDING-010-199` 又把该 post-terminal 职责移出 conformance-bound core，保证 wrapper 原样委托
+  immutable Provider Request，且不修改 Adapter/transport/rendering identity。
 - exact status 与 evidence digest 经 model boundary receipt、Turn outcome、attempt receipt 传到 availability owner。确定性测试证明密封
   `503` 与 `402` 可形成 unavailable verdict 并启动一个独立 fallback attempt；`400/401/403/404/409/422`、缺 evidence digest 的 `503`、
   output-invalid 和 Reviewer reject 都保持 fallback 0。
@@ -46,7 +47,7 @@ owner 只能看到字符串分类，不能证明 exact execution profile 的可�
 
 这是 `system-contract / systemic` Finding；修复不按 Ark、DeepSeek、错误正文、问题内容或历史 run 特判。
 
-1. Provider HTTP failure 必须由 Gateway 密封最小安全证据并贯穿持久化、replay、Model Egress、model receipt、Turn 与 route attempt；原始
+1. Provider HTTP failure 必须由 Gateway decoration boundary 密封最小安全证据并贯穿独立持久化、replay、Model Egress、model receipt、Turn 与 route attempt；原始
    response body、header、credential、Secret Reference 与任意错误字符串不得进入该证据。
 2. Gateway 只保存 raw evidence，不授予 fallback。当前受信 availability owner 仅在 preferred attempt 已 terminal、没有 authorized answer、
    exact dispatch/call receipt 成立，且 Gateway-sealed status 属于 `{402,408,425,429,500,502,503,504}` 时密封

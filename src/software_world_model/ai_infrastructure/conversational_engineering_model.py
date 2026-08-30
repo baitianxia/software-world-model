@@ -73,6 +73,9 @@ from .model_gateway import (
     RuntimeAccessMode,
 )
 from .openai_responses_adapter import OutputSchemaDefinition
+from .provider_http_failure_evidence import (
+    ModelProviderHTTPFailureEvidence,
+)
 
 
 ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@8"
@@ -2648,8 +2651,15 @@ def _receipt_for_gateway_result(
     response = result.response
     isolation = result.isolation_receipt
     eligibility = result.eligibility
-    http_evidence = call.provider_http_failure_evidence
-    if http_evidence is not None:
+    http_evidence = getattr(result, "provider_http_failure_evidence", None)
+    if http_evidence is not None and not isinstance(
+        http_evidence, ModelProviderHTTPFailureEvidence
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Gateway Provider HTTP failure evidence has an invalid shape",
+        )
+    if isinstance(http_evidence, ModelProviderHTTPFailureEvidence):
         http_evidence.require_exact()
     expected_isolation_digest = digest_of(
         {

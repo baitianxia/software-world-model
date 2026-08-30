@@ -13,12 +13,14 @@ from software_world_model.ai_infrastructure.model_gateway import (
     IsolationReceipt,
     ModelCallRecord,
     ModelCallState,
-    ModelProviderHTTPFailureEvidence,
     PlatformProposalMode,
     ProviderRequest,
     RecoveredModelCall,
     ReplayClassification,
     RuntimeAccessMode,
+)
+from software_world_model.ai_infrastructure.provider_http_failure_evidence import (
+    ModelProviderHTTPFailureEvidence,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -324,14 +326,11 @@ class SqliteModelGatewayRepository:
         target: ModelCallState,
         response: AdapterResponse | None,
         failure_code: str | None,
-        provider_http_failure_evidence: ModelProviderHTTPFailureEvidence | None,
         occurred_at: datetime,
     ) -> ModelCallRecord:
         with self._database.transaction() as connection:
             root = connection.execute(
-                """SELECT current_revision, current_state,
-                          provider_request_digest, isolation_receipt_digest
-                   FROM ai_model_call_roots WHERE model_call_id = ?""",
+                "SELECT current_revision, current_state FROM ai_model_call_roots WHERE model_call_id = ?",
                 (model_call_id.value,),
             ).fetchone()
             if root is None:
@@ -354,21 +353,6 @@ class SqliteModelGatewayRepository:
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "only a completed model call can record response fields",
                 )
-            if provider_http_failure_evidence is not None:
-                provider_http_failure_evidence.require_exact()
-            if provider_http_failure_evidence is not None and (
-                target is not ModelCallState.FAILED
-                or failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
-                or provider_http_failure_evidence.model_call_id != model_call_id
-                or provider_http_failure_evidence.provider_request_digest.value
-                != root["provider_request_digest"]
-                or provider_http_failure_evidence.isolation_receipt_digest.value
-                != root["isolation_receipt_digest"]
-            ):
-                raise DomainError(
-                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "Provider HTTP failure evidence does not bind the model call",
-                )
             revision = expected_revision.next()
             if response is not None:
                 connection.execute(
@@ -386,24 +370,6 @@ class SqliteModelGatewayRepository:
                         int(response.usage_complete),
                         response.termination_reason,
                         response.output_normalization,
-                    ),
-                )
-            if provider_http_failure_evidence is not None:
-                evidence = provider_http_failure_evidence
-                connection.execute(
-                    """INSERT INTO ai_model_call_http_failure_evidence
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        model_call_id.value,
-                        evidence.schema,
-                        evidence.provider_request_digest.value,
-                        evidence.isolation_receipt_digest.value,
-                        evidence.failure_code,
-                        evidence.http_status,
-                        evidence.provider_error_code,
-                        evidence.provider_error_type,
-                        evidence.provider_request_id,
-                        evidence.digest.value,
                     ),
                 )
             connection.execute(
@@ -442,6 +408,88 @@ class SqliteModelGatewayRepository:
     def get(self, model_call_id: StableId) -> ModelCallRecord:
         with self._database.read() as connection:
             return self._load(connection, model_call_id)
+
+    def record_provider_http_failure_evidence(
+        self, evidence: ModelProviderHTTPFailureEvidence
+    ) -> None:
+        evidence.require_exact()
+        with self._database.transaction() as connection:
+            call_row = connection.execute(
+                """SELECT root.provider_request_digest,
+                          root.isolation_receipt_digest,
+                          root.current_state,
+                          revision.failure_code
+                   FROM ai_model_call_roots AS root
+                   JOIN ai_model_call_revisions AS revision
+                     ON revision.model_call_id = root.model_call_id
+                    AND revision.revision = root.current_revision
+                   WHERE root.model_call_id = ?""",
+                (evidence.model_call_id.value,),
+            ).fetchone()
+            if call_row is None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Provider HTTP failure evidence has no model call",
+                )
+            self._require_http_evidence_binding(call_row, evidence)
+            existing_row = connection.execute(
+                "SELECT * FROM ai_model_call_http_failure_evidence WHERE model_call_id = ?",
+                (evidence.model_call_id.value,),
+            ).fetchone()
+            if existing_row is not None:
+                if self._http_failure_evidence(existing_row) != evidence:
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "Provider HTTP failure evidence was replayed with drift",
+                    )
+                return
+            connection.execute(
+                """INSERT INTO ai_model_call_http_failure_evidence
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    evidence.model_call_id.value,
+                    evidence.schema,
+                    evidence.provider_request_digest.value,
+                    evidence.isolation_receipt_digest.value,
+                    evidence.failure_code,
+                    evidence.http_status,
+                    evidence.provider_error_code,
+                    evidence.provider_error_type,
+                    evidence.provider_request_id,
+                    evidence.digest.value,
+                ),
+            )
+
+    def get_provider_http_failure_evidence(
+        self, model_call_id: StableId
+    ) -> ModelProviderHTTPFailureEvidence | None:
+        with self._database.read() as connection:
+            call_row = connection.execute(
+                """SELECT root.provider_request_digest,
+                          root.isolation_receipt_digest,
+                          root.current_state,
+                          revision.failure_code
+                   FROM ai_model_call_roots AS root
+                   JOIN ai_model_call_revisions AS revision
+                     ON revision.model_call_id = root.model_call_id
+                    AND revision.revision = root.current_revision
+                   WHERE root.model_call_id = ?""",
+                (model_call_id.value,),
+            ).fetchone()
+            if call_row is None:
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "model call was not found",
+                )
+            evidence_row = connection.execute(
+                "SELECT * FROM ai_model_call_http_failure_evidence WHERE model_call_id = ?",
+                (model_call_id.value,),
+            ).fetchone()
+            if evidence_row is None:
+                return None
+            evidence = self._http_failure_evidence(evidence_row)
+            self._require_http_evidence_binding(call_row, evidence)
+            return evidence
 
     def recover_by_id(self, model_call_id: StableId) -> RecoveredModelCall:
         with self._database.read() as connection:
@@ -595,6 +643,43 @@ class SqliteModelGatewayRepository:
         return response
 
     @staticmethod
+    def _http_failure_evidence(
+        row: sqlite3.Row,
+    ) -> ModelProviderHTTPFailureEvidence:
+        evidence = ModelProviderHTTPFailureEvidence(
+            schema=row["schema_ref"],
+            model_call_id=StableId(row["model_call_id"]),
+            provider_request_digest=Digest(row["provider_request_digest"]),
+            isolation_receipt_digest=Digest(row["isolation_receipt_digest"]),
+            failure_code=row["failure_code"],
+            http_status=row["http_status"],
+            provider_error_code=row["provider_error_code"],
+            provider_error_type=row["provider_error_type"],
+            provider_request_id=row["provider_request_id"],
+            digest=Digest(row["evidence_digest"]),
+        )
+        evidence.require_exact()
+        return evidence
+
+    @staticmethod
+    def _require_http_evidence_binding(
+        call_row: sqlite3.Row,
+        evidence: ModelProviderHTTPFailureEvidence,
+    ) -> None:
+        if (
+            call_row["current_state"] != ModelCallState.FAILED.value
+            or call_row["failure_code"] != ErrorCode.PROVIDER_HTTP_ERROR.value
+            or call_row["provider_request_digest"]
+            != evidence.provider_request_digest.value
+            or call_row["isolation_receipt_digest"]
+            != evidence.isolation_receipt_digest.value
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Provider HTTP failure evidence does not bind the model call",
+            )
+
+    @staticmethod
     def _load(connection: sqlite3.Connection, model_call_id: StableId) -> ModelCallRecord:
         row = connection.execute(
             """SELECT root.*, revision.actual_model_fingerprint,
@@ -610,41 +695,6 @@ class SqliteModelGatewayRepository:
         ).fetchone()
         if row is None:
             raise DomainError(ErrorCode.INVALID_ARGUMENT, "model call was not found")
-        evidence_row = connection.execute(
-            "SELECT * FROM ai_model_call_http_failure_evidence WHERE model_call_id = ?",
-            (model_call_id.value,),
-        ).fetchone()
-        evidence = None
-        if evidence_row is not None:
-            evidence = ModelProviderHTTPFailureEvidence(
-                schema=evidence_row["schema_ref"],
-                model_call_id=model_call_id,
-                provider_request_digest=Digest(
-                    evidence_row["provider_request_digest"]
-                ),
-                isolation_receipt_digest=Digest(
-                    evidence_row["isolation_receipt_digest"]
-                ),
-                failure_code=evidence_row["failure_code"],
-                http_status=evidence_row["http_status"],
-                provider_error_code=evidence_row["provider_error_code"],
-                provider_error_type=evidence_row["provider_error_type"],
-                provider_request_id=evidence_row["provider_request_id"],
-                digest=Digest(evidence_row["evidence_digest"]),
-            )
-            evidence.require_exact()
-            if (
-                row["current_state"] != ModelCallState.FAILED.value
-                or row["failure_code"] != ErrorCode.PROVIDER_HTTP_ERROR.value
-                or evidence.provider_request_digest.value
-                != row["provider_request_digest"]
-                or evidence.isolation_receipt_digest.value
-                != row["isolation_receipt_digest"]
-            ):
-                raise DomainError(
-                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "stored Provider HTTP failure evidence does not bind its model call",
-                )
         return ModelCallRecord(
             model_call_id=model_call_id,
             revision=Revision(row["current_revision"]),
@@ -664,7 +714,6 @@ class SqliteModelGatewayRepository:
             output_tokens=row["output_tokens"],
             usage_complete=bool(row["usage_complete"]),
             failure_code=row["failure_code"],
-            provider_http_failure_evidence=evidence,
             created_at=_parse_time(row["created_at"]),
             revised_at=_parse_time(row["revised_at"]),
         )

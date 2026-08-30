@@ -24,6 +24,7 @@ from software_world_model.ai_infrastructure import (
     ModelGatewayResult,
     ModelProviderHTTPFailureEvidence,
     ModelResultEligibility,
+    ProviderHTTPFailureEvidenceModelGatewayResult,
     PlatformProposalMode,
     ReplayClassification,
     RuntimeAccessMode,
@@ -157,7 +158,6 @@ class _FixtureGateway:
             output_tokens=response.output_tokens,
             usage_complete=response.usage_complete,
             failure_code=None,
-            provider_http_failure_evidence=None,
             created_at=now,
             revised_at=now,
         )
@@ -687,7 +687,6 @@ class ModelEgressGatewayTests(unittest.TestCase):
             output_tokens=None,
             usage_complete=False,
             failure_code=ErrorCode.PROVIDER_HTTP_ERROR.value,
-            provider_http_failure_evidence=evidence,
         )
         eligibility_core = {
             "eligible": False,
@@ -696,7 +695,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
             "isolation_receipt_id": base.isolation_receipt.receipt_id.value,
             "model_call_id": failed_call.model_call_id.value,
         }
-        failed = ModelGatewayResult(
+        failed = ProviderHTTPFailureEvidenceModelGatewayResult(
             failed_call,
             None,
             base.isolation_receipt,
@@ -708,6 +707,8 @@ class ModelEgressGatewayTests(unittest.TestCase):
                 model_call_id=failed_call.model_call_id,
                 digest=digest_of(eligibility_core),
             ),
+            False,
+            evidence,
         )
 
         decoded = model_egress_gateway._result_from_value(
@@ -716,7 +717,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
 
         self.assertEqual(decoded.call, failed_call)
         self.assertEqual(
-            decoded.call.provider_http_failure_evidence,
+            decoded.provider_http_failure_evidence,
             evidence,
         )
         self.assertIsNone(decoded.response)

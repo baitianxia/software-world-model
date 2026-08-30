@@ -41,6 +41,10 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ModelGatewayResult,
     ModelGatewayRepository,
 )
+from software_world_model.ai_infrastructure.provider_http_failure_evidence import (
+    ProviderHTTPFailureCapturingAdapter,
+    ProviderHTTPFailureEvidenceGateway,
+)
 from software_world_model.ai_infrastructure.volcengine_ark_chat_adapter import (
     DirectVerifiedVolcengineArkChatTransport,
     VolcengineArkChatCompletionsNoToolsAdapter,
@@ -505,7 +509,16 @@ def _provider_runtime(
             "Engineering Chat live Adapter capabilities do not match Conformance",
         )
     runtime_clock = clock or (lambda: datetime.now(timezone.utc))
-    raw_gateway = ModelGateway(repository, (adapter,), clock=runtime_clock)
+    capturing_adapter = ProviderHTTPFailureCapturingAdapter(adapter)
+    raw_gateway = ProviderHTTPFailureEvidenceGateway(
+        gateway=ModelGateway(
+            repository,
+            (capturing_adapter,),
+            clock=runtime_clock,
+        ),
+        adapter=capturing_adapter,
+        repository=repository,
+    )
     gateway = (
         _DeepSeekAdmissionEnforcingGateway(
             gateway=raw_gateway,
@@ -583,7 +596,7 @@ class _DeepSeekAdmissionEnforcingGateway:
     def __init__(
         self,
         *,
-        gateway: ModelGateway,
+        gateway: object,
         controller: DeepSeekDispatchAdmissionController,
     ) -> None:
         self._gateway = gateway

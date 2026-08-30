@@ -7,11 +7,10 @@ dispatch fence, and offline fixtures can never yield production eligibility.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Callable, Mapping, Protocol
+from typing import Callable, Protocol
 
 from software_world_model.cross_cutting import (
     Digest,
@@ -308,104 +307,6 @@ class IsolationReceipt:
     digest: Digest
 
 
-MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA = (
-    "MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@1"
-)
-
-
-@dataclass(frozen=True, slots=True)
-class ModelProviderHTTPFailureEvidence:
-    """Gateway-sealed, sanitized evidence for one terminal HTTP response.
-
-    This record preserves only the non-secret response metadata needed by an
-    execution-profile availability owner.  It is raw evidence, not fallback
-    authority: the Application must still apply the registered availability
-    policy and seal an exact profile verdict.
-    """
-
-    schema: str
-    model_call_id: StableId
-    provider_request_digest: Digest
-    isolation_receipt_digest: Digest
-    failure_code: str
-    http_status: int
-    provider_error_code: str | None
-    provider_error_type: str | None
-    provider_request_id: str | None
-    digest: Digest
-
-    @classmethod
-    def seal(
-        cls,
-        *,
-        model_call_id: StableId,
-        provider_request_digest: Digest,
-        isolation_receipt_digest: Digest,
-        details: Mapping[str, str | int],
-    ) -> "ModelProviderHTTPFailureEvidence | None":
-        """Return no evidence when an adapter did not supply a valid status."""
-
-        status = details.get("http_status")
-        if type(status) is not int or not 100 <= status <= 599:
-            return None
-        error_code = _safe_provider_error_token(details.get("provider_error_code"))
-        error_type = _safe_provider_error_token(details.get("provider_error_type"))
-        request_id = _safe_provider_request_id(details.get("provider_request_id"))
-        core = {
-            "schema": MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
-            "model_call_id": model_call_id.value,
-            "provider_request_digest": provider_request_digest.value,
-            "isolation_receipt_digest": isolation_receipt_digest.value,
-            "failure_code": ErrorCode.PROVIDER_HTTP_ERROR.value,
-            "http_status": status,
-            "provider_error_code": error_code,
-            "provider_error_type": error_type,
-            "provider_request_id": request_id,
-        }
-        return cls(
-            schema=MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
-            model_call_id=model_call_id,
-            provider_request_digest=provider_request_digest,
-            isolation_receipt_digest=isolation_receipt_digest,
-            failure_code=ErrorCode.PROVIDER_HTTP_ERROR.value,
-            http_status=status,
-            provider_error_code=error_code,
-            provider_error_type=error_type,
-            provider_request_id=request_id,
-            digest=digest_of(core),
-        )
-
-    def require_exact(self) -> None:
-        expected = self.seal(
-            model_call_id=self.model_call_id,
-            provider_request_digest=self.provider_request_digest,
-            isolation_receipt_digest=self.isolation_receipt_digest,
-            details={
-                "http_status": self.http_status,
-                **(
-                    {"provider_error_code": self.provider_error_code}
-                    if self.provider_error_code is not None
-                    else {}
-                ),
-                **(
-                    {"provider_error_type": self.provider_error_type}
-                    if self.provider_error_type is not None
-                    else {}
-                ),
-                **(
-                    {"provider_request_id": self.provider_request_id}
-                    if self.provider_request_id is not None
-                    else {}
-                ),
-            },
-        )
-        if expected is None or self != expected:
-            raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Model Provider HTTP failure evidence is inconsistent",
-            )
-
-
 @dataclass(frozen=True, slots=True)
 class ModelCallRecord:
     model_call_id: StableId
@@ -426,7 +327,6 @@ class ModelCallRecord:
     output_tokens: int | None
     usage_complete: bool
     failure_code: str | None
-    provider_http_failure_evidence: ModelProviderHTTPFailureEvidence | None
     created_at: datetime
     revised_at: datetime
 
@@ -506,7 +406,6 @@ class ModelGatewayRepository(Protocol):
         target: ModelCallState,
         response: AdapterResponse | None,
         failure_code: str | None,
-        provider_http_failure_evidence: ModelProviderHTTPFailureEvidence | None,
         occurred_at: datetime,
     ) -> ModelCallRecord: ...
 
@@ -690,7 +589,6 @@ class ModelGateway:
             target=ModelCallState.DISPATCHED,
             response=None,
             failure_code=None,
-            provider_http_failure_evidence=None,
             occurred_at=self._now(),
         )
         try:
@@ -702,7 +600,6 @@ class ModelGateway:
                 target=ModelCallState.FAILED,
                 response=None,
                 failure_code="PROVIDER_UNAVAILABLE",
-                provider_http_failure_evidence=None,
                 occurred_at=self._now(),
             )
             return self._result(call, None, receipt, adapter.capabilities, context)
@@ -713,7 +610,6 @@ class ModelGateway:
                 target=ModelCallState.OUTCOME_UNKNOWN,
                 response=None,
                 failure_code="PROVIDER_OUTCOME_UNKNOWN",
-                provider_http_failure_evidence=None,
                 occurred_at=self._now(),
             )
             return self._result(call, None, receipt, adapter.capabilities, context)
@@ -724,36 +620,19 @@ class ModelGateway:
                 target=ModelCallState.COMPLETED,
                 response=exc.response,
                 failure_code=exc.code.value,
-                provider_http_failure_evidence=None,
                 occurred_at=self._now(),
             )
             return self._result(
                 call, exc.response, receipt, adapter.capabilities, context
             )
         except Exception as exc:
-            failure_code = (
-                exc.code.value
-                if isinstance(exc, DomainError)
-                else type(exc).__name__
-            )
-            provider_http_failure_evidence = (
-                ModelProviderHTTPFailureEvidence.seal(
-                    model_call_id=call.model_call_id,
-                    provider_request_digest=call.provider_request_digest,
-                    isolation_receipt_digest=call.isolation_receipt_digest,
-                    details=exc.details,
-                )
-                if isinstance(exc, DomainError)
-                and exc.code is ErrorCode.PROVIDER_HTTP_ERROR
-                else None
-            )
+            failure_code = exc.code.value if isinstance(exc, DomainError) else type(exc).__name__
             call = self._repository.transition(
                 model_call_id=call.model_call_id,
                 expected_revision=call.revision,
                 target=ModelCallState.FAILED,
                 response=None,
                 failure_code=failure_code,
-                provider_http_failure_evidence=provider_http_failure_evidence,
                 occurred_at=self._now(),
             )
             return self._result(call, None, receipt, adapter.capabilities, context)
@@ -763,7 +642,6 @@ class ModelGateway:
             target=ModelCallState.COMPLETED,
             response=response,
             failure_code=None,
-            provider_http_failure_evidence=None,
             occurred_at=self._now(),
         )
         return self._result(call, response, receipt, adapter.capabilities, context)
@@ -778,21 +656,6 @@ class ModelGateway:
         *,
         replayed: bool = False,
     ) -> ModelGatewayResult:
-        evidence = call.provider_http_failure_evidence
-        if evidence is not None:
-            evidence.require_exact()
-        if evidence is not None and (
-            call.state is not ModelCallState.FAILED
-            or call.failure_code != ErrorCode.PROVIDER_HTTP_ERROR.value
-            or evidence.model_call_id != call.model_call_id
-            or evidence.provider_request_digest != call.provider_request_digest
-            or evidence.isolation_receipt_digest
-            != call.isolation_receipt_digest
-        ):
-            raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Model call and Provider HTTP failure evidence disagree",
-            )
         if call.state is not ModelCallState.COMPLETED:
             reason = f"MODEL_CALL_{call.state.value}"
             eligible = False
@@ -912,24 +775,3 @@ def _text(value: str, label: str) -> str:
     if not isinstance(value, str) or not value or value != value.strip():
         raise DomainError(ErrorCode.INVALID_ARGUMENT, f"{label} must be non-empty")
     return value
-
-
-def _safe_provider_error_token(value: object) -> str | None:
-    if (
-        isinstance(value, str)
-        and 0 < len(value) <= 128
-        and re.fullmatch(r"[A-Za-z0-9._-]+", value)
-    ):
-        return value
-    return None
-
-
-def _safe_provider_request_id(value: object) -> str | None:
-    if (
-        isinstance(value, str)
-        and value == value.strip()
-        and 0 < len(value) <= 256
-        and all(0x20 <= ord(character) <= 0x7E for character in value)
-    ):
-        return value
-    return None

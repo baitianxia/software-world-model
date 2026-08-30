@@ -37,7 +37,6 @@ from .model_gateway import (
     ModelGateway,
     ModelGatewayResult,
     ModelGatewayRepository,
-    ModelProviderHTTPFailureEvidence,
     ModelResultEligibility,
     PlatformProposalMode,
     ProviderAdapter,
@@ -47,6 +46,12 @@ from .model_gateway import (
     ProviderUnavailable,
     ReplayClassification,
     RuntimeAccessMode,
+)
+from .provider_http_failure_evidence import (
+    ModelProviderHTTPFailureEvidence,
+    ProviderHTTPFailureCapturingAdapter,
+    ProviderHTTPFailureEvidenceGateway,
+    ProviderHTTPFailureEvidenceModelGatewayResult,
 )
 from .model_egress_gateway import (
     BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF,
@@ -673,7 +678,11 @@ __all__ = [
     "ModelGateway",
     "ModelGatewayResult",
     "ModelGatewayRepository",
+    "ModelProviderHTTPFailureEvidence",
     "ModelResultEligibility",
+    "ProviderHTTPFailureCapturingAdapter",
+    "ProviderHTTPFailureEvidenceGateway",
+    "ProviderHTTPFailureEvidenceModelGatewayResult",
     "MODEL_EGRESS_GATEWAY_POLICY_REF",
     "MODEL_EGRESS_GATEWAY_ROUTE",
     "BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF",
