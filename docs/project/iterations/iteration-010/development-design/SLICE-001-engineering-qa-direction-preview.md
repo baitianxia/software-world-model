@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -91,7 +91,8 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - same-Package replacement 若完整 Draft 字段仍等于 exact rejected Draft，decoder 必须拒绝，不能只改 Work State。closed-contract repair
   显式禁止原样复制 prior invalid output，并从 local typed failure 派生不授权事实/Tool 的 convergence directive：repeated Source query 只能换
   sealed legal literal，或在没有新目标且 response domain 允许时用已有 Boundary 收敛；focused mismatch 必须按实际 DEFECT/EXCEEDS index set
-  重建 verdict/disposition/finding-code/Finding 闭合。
+  重建 verdict/disposition/finding-code/Finding 闭合。challenge-bound Finding set mismatch 使用专用二选一 directive：每个 retained Finding
+  绑定一个 exact challenge 的 allowed audit-only disposition 和同一 code；若全部 challenge material，则删除 unbound Findings 并 APPROVE。
 - `LIMITATION` 始终零 Claim。Reviewer 不得要求添加 exact-answer detail、interface/search inventory 或 Claim；pure、relevant、正确绑定的
   Limitation 不因 Package 无法产生用户原本要求的 full answer 而成为 completeness defect。已有 opaque Boundary ID 不能误报 missing binding，
   Search hit/interface declaration 不能冒充 implementation、remote effect 或 consumer-visible evidence；相邻 affirmative diagnostic 只能
@@ -99,6 +100,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - DeepSeek fallback 的 listener preparation 只密封 non-dispatching decision；真正的 600 秒 active receipt 在 trusted Ark unavailable 后的 first
   DeepSeek preflight 以同一 plan 激活，并重新核验 900 秒 pricing freshness、闲时/override、run authority 和完整质量预算。激活与任何拒绝都
   发生在 credential/TLS/HTTP 前；后续 request 不得重新延长 receipt。
+- DeepSeek persistent TLS 在每次 credential/HTTP 前检查 fully consumed socket：non-blocking readiness 为可读/异常，或自最后 HTTP
+  completion 起 idle ≥60 秒时先关闭并重新 acquisition。轮转仍受 transport lifetime 3 次 TLS 和每 session 20 dispatch 约束，不构成
+  request retry；HTTP 开始后的失败仍 outcome unknown、零 replay。
 - World Model evidence-tool adapter 必须把 model-facing SUPPORT 与 BOUNDARY 按认识论语义分区：SUPPORT 顶层不得复制 global
   coverage/conflict/unknown，只保留 novel affirmative item 及其 per-item coverage；完整 Context、Ledger、receipt 继续绑定 global
   Coverage，且该全局边界只在 BOUNDARY 中呈现。
@@ -229,7 +233,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—218 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-094 已证明 Ark trusted 429 后 DeepSeek 自动 fallback 正常、Q1 backtick closure真实通过，并暴露 question module prefix 必须按 current evidence class 选择；current 修复不提高 authority 或预算。新实现发现按
+当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—220 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-095 已证明 Ark trusted 429 后 DeepSeek 自动 fallback 正常、Q1/Q5真实通过，并暴露 idle keep-alive rotation 与 focused challenge-bound Finding repair 两个缺口；current 修复不提高 authority 或预算。新实现发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

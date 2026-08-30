@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -135,8 +135,10 @@ contract 把 schema authority 与 leading semantic authority 合并为恰好一�
 每 request 一个 verified TLS session、每 session 一个 HTTP dispatch、`Connection: close`、TLS 后逐 dispatch 解析 credential 与 retry 0。
 这些差异由各自 Conformance 和 execution profile 拥有，不定义通用 route 分支。
 
-当前 DeepSeek profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 session 最多 20 次 dispatch、最多 3 次 acquisition，并
-使用 `DEEPSEEK_DISPATCH_ADMISSION@1`。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、双 route、完整链
+当前 DeepSeek profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 session 最多 20 次 dispatch、transport lifetime 最多
+3 次 acquisition。fully consumed persistent socket 在下一次 credential resolution/HTTP 前若 non-blocking readiness probe 为可读或异常，
+或自最后一次 HTTP completion 起已 idle 至少 60 秒，必须先关闭并在上述 acquisition bound 内取得新 verified TLS；credential 仍只在
+verified TLS 后解析，已经开始的 HTTP 不 replay/retry。profile 同时使用 `DEEPSEEK_DISPATCH_ADMISSION@1`。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、双 route、完整链
 fallback、late-result quarantine、typed unavailable raw evidence 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
 clean identity 上 PASS。当前状态是
 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS /

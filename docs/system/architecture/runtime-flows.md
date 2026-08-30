@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture, application]
 depends_on: [SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
-derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199]
+derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
 ---
@@ -213,8 +213,9 @@ admission plugin 使用 `DEEPSEEK_DISPATCH_ADMISSION@1`，当前允许窗口与�
 通用 route 分支、质量或授权语义。
 
 当前 DeepSeek bounded profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`：最多 3 次 credential-free TLS acquisition，每条
-verified session 最多 20 次 HTTP dispatch；40-call Capability qualification 通常使用 2 条 session 并保留第 3 次 acquisition 余量，正式
-产品单题 4—6 calls 通常只使用第一条。当前 Ark profile 使用其独立的一请求一连接策略。这些数值是 execution profile 的当前实例和历史
+verified session 最多 20 次 HTTP dispatch；下一 dispatch 前可读/异常的 fully consumed socket 或 idle 至少 60 秒的 socket 必须先关闭，
+再在同一 acquisition bound 内重建 verified TLS，不能把该 pre-dispatch rotation 当作 request retry。40-call Capability qualification 通常
+使用 2 条 session 并保留第 3 次 acquisition 余量，正式产品单题 4—6 calls 通常只使用第一条。当前 Ark profile 使用其独立的一请求一连接策略。这些数值是 execution profile 的当前实例和历史
 实现证据，不可借给其他 profile。
 
 当前 runtime 已在 Gateway preflight/invoke 与 Artifact Session `@3` 对备用 profile 的 admission flow 形成本地 Case PASS；当前状态为

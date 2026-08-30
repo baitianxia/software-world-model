@@ -3977,6 +3977,24 @@
       "tests/test_conversational_engineering_tools.py"
     ]
   },
+  "FINDING-010-219": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-219.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py"
+    ],
+    "tests": [
+      "tests/test_deepseek_chat_adapter.py"
+    ]
+  },
+  "FINDING-010-220": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-220.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

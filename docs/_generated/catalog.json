@@ -4611,6 +4611,32 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-218.md"
   },
   {
+    "id": "FINDING-010-219",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-219.md"
+  },
+  {
+    "id": "FINDING-010-220",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-220.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -7623,7 +7649,8 @@
       "FINDING-010-140",
       "FINDING-010-156",
       "FINDING-010-198",
-      "FINDING-010-199"
+      "FINDING-010-199",
+      "FINDING-010-219"
     ],
     "path": "docs/system/architecture/runtime-flows.md"
   },
@@ -7719,7 +7746,8 @@
       "FINDING-010-154",
       "FINDING-010-156",
       "FINDING-010-198",
-      "FINDING-010-199"
+      "FINDING-010-199",
+      "FINDING-010-219"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -7815,7 +7843,8 @@
       "FINDING-010-215",
       "FINDING-010-216",
       "FINDING-010-217",
-      "FINDING-010-218"
+      "FINDING-010-218",
+      "FINDING-010-220"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },
@@ -8266,7 +8295,8 @@
       "FINDING-010-139",
       "FINDING-010-140",
       "FINDING-010-156",
-      "FINDING-010-179"
+      "FINDING-010-179",
+      "FINDING-010-219"
     ],
     "path": "docs/system/operations/configuration.md"
   },

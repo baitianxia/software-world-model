@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -70,6 +70,12 @@ Q2 post-dispatch unknown、Q3 reviewed limitation 与 Q5 protocol violation 使�
 scope 下同 module POM/TEST prefixes 被错误送入 SOURCE operation。current mapping 仍以 immutable question +完整 Request识别 scope，
 但只从 current evidence-class allowlist 选择 prefix；`COMPILED_SOURCE_OPERATION@3`、rotation、`56/64`、route与Production不变。两模块
 154 tests、相邻十五模块 229 tests与文档/可信父计划门禁均 PASS，下一项是提交和 fresh run-095。
+
+`FINDING-010-219/220 / run-095` 证明该 prefix closure 已让 Q5 以 2 个 exact Citations ACCEPTED，Q1也保持 ACCEPTED、Q4保持零
+dispatch Clarification；Q2/Q3 仍使整体 FAIL。Q2 的首个 DeepSeek fallback 在前一 Turn 后闲置约 141 秒，复用 stale keep-alive 后形成
+post-dispatch unknown；Q3 的 focused Review 让 material/null-code assessments 与 unbound Finding 并存且 generic repair 原样重复。
+current transport 在 credential/HTTP 前轮转 stale 或 idle ≥60 秒的 session，current `@22/@14/@17` repair 要求 Finding 与 exact
+challenge 闭合或删除并 APPROVE；相邻十七模块 `255/255` tests PASS，下一项是门禁、提交、fresh Conformance 与 run-096。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -105,6 +105,13 @@ Clarification 通过，Q2 unknown、Q3 limitation、Q5 protocol violation 使整
 同 module 的 POM/TEST path 混入 SOURCE prefix，Broker 按 class 正确拒绝。current closure 保留完整 Request scope recognition，并只从
 current operation evidence-class allowlist 选择 prefix；`COMPILED_SOURCE_OPERATION@3`、route、budget、retry 和 Production 边界不变，
 fresh run-095 是下一真实证据。
+
+`FINDING-010-219/220 / run-095` 密封 Ark 4 个 sealed 429、DeepSeek 27 completed + 1 post-dispatch unknown；Q1/Q5 ACCEPTED、
+Q4 零调用 Clarification 通过，Q2 unknown、Q3 Reviewer reject 使整体仍 FAIL。最早偏差分别是 interactive idle 后复用 stale DeepSeek
+keep-alive，以及 focused Review 的 material/null-code assessments 与 unbound Finding 同时存在且 generic repair 原样重复。current closure
+在 credential/HTTP 前轮转 stale 或 idle ≥60 秒的 session，并为 challenge-bound Finding mismatch 提供 exact 二选一 repair；
+`PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` 的 3/20 bounds、零 retry、route、budget 与 Production 边界不变，fresh Conformance 和
+run-096 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

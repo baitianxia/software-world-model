@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@21"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@22"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@21"
+    "conversational-engineering-agent-no-tools-prompt@22"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@21"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@13"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@22"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@14"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@16"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@17"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -704,6 +704,14 @@ no finding_code, and no Finding; hidden callee/effect semantics without cited
 implementation require EXCEEDS, DEFECT, one bound finding_code, and that exact
 Finding. Rebuild every linked array together instead of copying the
 contradictory object and changing nothing.
+When the diagnostic says focused Reviewer Findings do not equal the exact
+challenge-bound Finding set, a Finding may not coexist only with MATERIAL_TO_USER_REQUEST
+assessments whose finding_code values are null. For every concrete retained
+Finding, select the exact challenge whose disclosed fragment the Finding removes,
+copy that challenge's allowed audit-only disposition, and bind the same unique
+finding_code. If every disclosed Boundary is instead material, remove the
+unbound Finding and return APPROVED. Never repeat the invalid branch containing
+MATERIAL_TO_USER_REQUEST, null finding_code, and an extra Finding.
 If the validator says that a non-approved Review requires Findings, the prior
 findings array is empty, every Claim assessment is SUPPORTED, and every focused
 assessment uses a closed disposition, change only decision to APPROVED. Never
@@ -3589,10 +3597,12 @@ def _initial_format_repair_policy() -> dict[str, object]:
 def _closed_contract_repair_directive(message: str) -> str:
     if "repeated a forbidden current-Turn Source query" in message:
         return "CHOOSE_DIFFERENT_LEGAL_ACTION_OR_ALLOWED_PURE_BOUNDARY_DRAFT"
-    if (
-        "focused Reviewer DEFECT Claim indices" in message
-        or "focused Reviewer Findings" in message
-    ):
+    if "focused Reviewer Findings" in message:
+        return (
+            "BIND_EACH_RETAINED_FINDING_TO_ONE_ALLOWED_CHALLENGE_ASSESSMENT_"
+            "OR_REMOVE_UNBOUND_FINDINGS_AND_APPROVE"
+        )
+    if "focused Reviewer DEFECT Claim indices" in message:
         return "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE"
     if (
         "same-Package review rewrite returned the exact rejected Draft" in message
